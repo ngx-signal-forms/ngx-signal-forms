@@ -37,13 +37,18 @@ import {
 import { NgxSpartanFormFieldError } from './spartan-form-field-error';
 
 /**
- * Compile-time guard that the inline `BrnFieldA11yService` factory below
- * stays a structural superset of Brain's public contract. If Brain adds a
- * new public member, the `useFactory` return-type annotation fails at
- * typecheck time. We `Pick` the documented members (rather than asserting
- * full structural equivalence) because Brain's class also has `private`
- * fields the bridge intentionally keeps separate — DI matches by token
- * identity at runtime, not by structural compatibility.
+ * The subset of `BrnFieldA11yService`'s public contract this bridge
+ * re-implements. `Pick` alone is NOT a completeness guard — a `Pick` with a
+ * fixed key list still compiles unchanged when the source class gains new
+ * members; it only fails on removal/rename of a *listed* key. So this alias
+ * by itself would stay silently green if Brain 1.1 added e.g.
+ * `registerLabel()` and some helm primitive started calling it on the
+ * injected (bridged) service — that would throw a runtime `TypeError` with
+ * zero compile-time signal.
+ *
+ * The real exhaustiveness guard is `assertBrnFieldA11yPublicSurfaceIsExhaustive`
+ * below, which fails to typecheck if Brain's public surface grows beyond
+ * what's listed here.
  */
 type BrnFieldA11yPublicSurface = Pick<
   BrnFieldA11yService,
@@ -53,6 +58,42 @@ type BrnFieldA11yPublicSurface = Pick<
   | 'registerError'
   | 'unregisterError'
 >;
+
+/**
+ * Private fields on `BrnFieldA11yService` (per Brain 1.0.4's `.d.ts`) that
+ * the bridge intentionally does NOT implement — DI matches by token
+ * identity at runtime, not by structural compatibility, so these never need
+ * a bridged counterpart. Listed explicitly (rather than inferred) so this
+ * assertion fails loudly — not silently passes — if Brain ever makes one of
+ * these public, since a newly-public member would then need a real bridge
+ * implementation and a `BrnFieldA11yPublicSurface` entry above.
+ */
+type BrnFieldA11yKnownPrivateMembers = '_descriptions' | '_errors';
+
+/**
+ * Compile-time exhaustiveness guard: fails to typecheck if
+ * `BrnFieldA11yService` has any member that is neither in
+ * {@link BrnFieldA11yPublicSurface} nor {@link BrnFieldA11yKnownPrivateMembers}.
+ * That is the guard the `useFactory` return-type annotation on its own
+ * cannot provide (see the comment on `BrnFieldA11yPublicSurface`): if Brain
+ * adds a new public member, `keyof BrnFieldA11yService` grows, the
+ * `Exclude` below stops resolving to `never`, and assigning `true` to the
+ * conditional's non-`true` branch fails typecheck — turning an
+ * otherwise-silent structural gap into a build failure.
+ */
+type BrnFieldA11yUncoveredMembers = Exclude<
+  keyof BrnFieldA11yService,
+  BrnFieldA11yKnownPrivateMembers | keyof BrnFieldA11yPublicSurface
+>;
+type AssertBrnFieldA11yPublicSurfaceIsExhaustive =
+  BrnFieldA11yUncoveredMembers extends never
+    ? true
+    : [
+        'BrnFieldA11yService gained new member(s) not covered by BrnFieldA11yPublicSurface or BrnFieldA11yKnownPrivateMembers:',
+        BrnFieldA11yUncoveredMembers,
+      ];
+// eslint-disable-next-line @typescript-eslint/no-unused-vars -- type-only assertion; see comment above
+const assertBrnFieldA11yPublicSurfaceIsExhaustive: AssertBrnFieldA11yPublicSurfaceIsExhaustive = true;
 
 /**
  * Spartan-flavoured form-field wrapper composing `BrnField` (the unstyled
@@ -182,9 +223,10 @@ type BrnFieldA11yPublicSurface = Pick<
     // The factory delegates to the toolkit's `createAriaDescribedByBridge`
     // primitive — it merges the toolkit composition with any IDs registered
     // through Brain's `register*` API, so other helm primitives that push
-    // descriptions through the service stay compatible. The return-type
-    // annotation (`BrnFieldA11yPublicSurface`) is the typecheck guard that
-    // fires if Brain ever adds a new public member to its contract.
+    // descriptions through the service stay compatible. The exhaustiveness
+    // check above `assertBrnFieldA11yPublicSurfaceIsExhaustive` (not just
+    // the return-type annotation) is what fires if Brain ever adds a new
+    // public member to its contract.
     {
       provide: BrnFieldA11yService,
       useFactory: (): BrnFieldA11yPublicSurface =>

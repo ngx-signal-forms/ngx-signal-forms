@@ -2,8 +2,8 @@
 
 A runnable end-to-end example showing how to integrate
 [`@ngx-signal-forms/toolkit`](../../packages/toolkit/README.md) on top of
-**Angular Material 22+**. Pinned to the workspace's Angular 22 catalog,
-currently `@angular/material@22.0.3` and `@angular/cdk@22.0.3`.
+**Angular Material 22+**. Pinned via the workspace's `angular-material`
+pnpm catalog — see `pnpm-workspace.yaml` for the exact versions in use.
 
 ## Why use this on Material?
 
@@ -432,7 +432,12 @@ which Nx schedules automatically via the `test` target's `dependsOn` in
 
 ## Pinned versions
 
-| Package             | Version  |
-| ------------------- | -------- |
-| `@angular/material` | `22.0.3` |
-| `@angular/cdk`      | `22.0.3` |
+Versions are pinned via the workspace's pnpm catalogs (`pnpm-workspace.yaml`),
+not hard-coded here, so they stay in sync automatically. At the time of
+writing:
+
+| Package               | Version  |
+| --------------------- | -------- |
+| `@angular/material`   | `22.0.3` |
+| `@angular/cdk`        | `22.0.3` |
+| `@angular/animations` | `22.0.5` |

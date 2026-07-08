@@ -4,30 +4,19 @@
 import { mkdirSync, writeFileSync } from 'node:fs';
 import AxeBuilder from '@axe-core/playwright';
 import type { Page, TestInfo } from '@playwright/test';
+import {
+  WCAG_22_AA_TAGS,
+  type WCAG_22_AA_TAG,
+} from '@ngx-signal-forms/toolkit/testing';
 
 const WORKSPACE_ROOT = '.';
 
-/**
- * axe-core tag set mapping to **WCAG 2.2 Level AA** conformance.
- *
- * WCAG is additive: 2.2 AA requires every Level A and AA criterion from 2.0,
- * 2.1 and 2.2. axe exposes one tag per version/level and groups the two new
- * 2.2 Level A criteria under `wcag22aa`, so this union is the full surface.
- *
- * Kept in lockstep with the toolkit's `WCAG_22_AA_TAGS`
- * (packages/toolkit/testing/a11y.ts) so component- and app-level scans agree.
- *
- * @see https://www.w3.org/TR/WCAG22/
- */
-export const WCAG_22_AA_TAGS = [
-  'wcag2a',
-  'wcag2aa',
-  'wcag21a',
-  'wcag21aa',
-  'wcag22aa',
-] as const;
-
-export type WCAG_22_AA_TAG = (typeof WCAG_22_AA_TAGS)[number];
+// Re-exported so existing `@ngx-signal-forms/a11y-testing` consumers keep
+// working. The tag set itself lives in the toolkit's own public testing
+// entry point (`packages/toolkit/testing/a11y.ts`) so component-level specs
+// (hard fail) and these app-level baseline scans can never drift apart.
+export { WCAG_22_AA_TAGS };
+export type { WCAG_22_AA_TAG };
 
 /**
  * One axe violation, flattened to the fields the baseline diff cares about.

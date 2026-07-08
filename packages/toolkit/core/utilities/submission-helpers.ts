@@ -132,9 +132,22 @@ export function createSubmittedStatusTracker(
  * @param formTree The form tree to check submission history for
  * @returns Signal that emits `true` when form has been submitted
  *
+ * @remarks
+ * Must be called in an injection context — delegates to
+ * {@link createSubmittedStatusTracker}, which uses `effect()` internally.
+ * Calling this from a plain method (outside a constructor, field
+ * initializer, or `runInInjectionContext()`) throws Angular's NG0203, and
+ * the error will report `createSubmittedStatusTracker` (not `hasSubmitted`)
+ * as the offending call.
+ *
  * @public
  */
 export function hasSubmitted(formTree: FieldTree<unknown>): Signal<boolean> {
+  // Assert here (in addition to the check createSubmittedStatusTracker
+  // already performs) so a caller outside an injection context sees
+  // `hasSubmitted` named as the offending call in Angular's NG0203 error,
+  // not the internal delegate.
+  assertInInjectionContext(hasSubmitted);
   const submittedStatus = createSubmittedStatusTracker(formTree);
   return computed(() => submittedStatus() === 'submitted');
 }
@@ -201,6 +214,27 @@ export function canSubmitWithWarnings(
  * double-click, Enter spam, or an overlapping native submit — are silently
  * dropped. The in-flight guard is cleared in the `finally` block so the form
  * is always re-submittable after the current call settles (even on rejection).
+ *
+ * **`errorStrategy: 'on-submit'` interplay**: this helper runs `action`
+ * outside Angular's native `submit()` flow, so it never flips the native
+ * `submitting()` signal and has no integration with `NgxSignalForm`'s
+ * internal submitted-attempt tracking. When called from a `type="button"`
+ * click handler (i.e. there is no native `submit` event on
+ * `form[ngxSignalForm]`), `createSubmittedStatusTracker`'s derived status —
+ * and therefore any form configured with `errorStrategy: 'on-submit'` — never
+ * observes a completed submit attempt, so blocking errors never become
+ * visible after a failed `submitWithWarnings()` call. (`markAsTouched()`,
+ * called unconditionally above, only satisfies the `'on-touch'` strategy.)
+ * To surface errors after a blocked `submitWithWarnings()` call:
+ * - Trigger it from inside a real `<form (ngSubmit)>` / `[ngxSignalForm]`
+ *   submit handler so the native submit event still fires, or
+ * - Use `errorStrategy: 'on-touch'` (or `'always'`) instead of `'on-submit'`
+ *   for forms that call this from a plain button, or
+ * - Pass a `WritableSignal<boolean>` into your own
+ *   {@link createSubmittedStatusTracker} call (its `submitAttempted`
+ *   parameter) and set it to `true` when this function returns without
+ *   invoking `action`, mirroring how a native failed submit would be
+ *   recorded.
  *
  * @param formTree - The root `FieldTree` of the form to submit
  * @param action - Async callback invoked only when no blocking errors remain

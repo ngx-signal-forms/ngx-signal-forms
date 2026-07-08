@@ -1,5 +1,6 @@
 import { NgTemplateOutlet } from '@angular/common';
 import {
+  ChangeDetectionStrategy,
   booleanAttribute,
   Component,
   computed,
@@ -89,6 +90,7 @@ export interface WizardSubmitEvent {
  */
 @Component({
   selector: 'ngx-wizard',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 
   imports: [NgTemplateOutlet],
   templateUrl: './wizard.html',

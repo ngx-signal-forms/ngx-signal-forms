@@ -98,6 +98,20 @@ describe('ProfileFormComponent', () => {
     expect(roleCombobox.getAttribute('aria-invalid')).toBe('true');
   });
 
+  it("reflects aria-required on the role combobox via PrimeNG's own [required] passthrough, with no duplicate manual write", async () => {
+    await renderProfileForm();
+
+    // Regression test for audit #147: PrimeSelectControlComponent used to
+    // also copy `aria-required` onto the inner [role="combobox"] span by
+    // hand in its afterEveryRender block, duplicating PrimeNG's own
+    // `[attr.aria-required]="required()"` binding on that same span (fed by
+    // the same `[required]="ariaRequired() === 'true'"` input this shim
+    // sets). The shim now relies solely on that PrimeNG-owned binding — this
+    // asserts the attribute still lands correctly with the manual write gone.
+    const roleCombobox = screen.getByRole('combobox', { name: /^role$/i });
+    expect(roleCombobox.getAttribute('aria-required')).toBe('true');
+  });
+
   it("wires the visible 'Role' label to the select's inner combobox via aria-labelledby so the accessible name never derives from transient placeholder/selected-value content", async () => {
     await renderProfileForm();
 

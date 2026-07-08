@@ -1,4 +1,9 @@
-import { Component, inject, linkedSignal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  inject,
+  linkedSignal,
+} from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import {
   NavigationEnd,
@@ -13,6 +18,7 @@ type CategoryId = (typeof DEMO_CATEGORIES)[number]['id'];
 
 @Component({
   selector: 'ngx-nav-tree',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 
   imports: [RouterLink, RouterLinkActive],
   host: {

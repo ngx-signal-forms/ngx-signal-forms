@@ -35,6 +35,10 @@ export const toolkitEntryAliases = [
     replacement: resolve(__dirname, 'vest/src/index.ts'),
   },
   {
+    find: /^@ngx-signal-forms\/toolkit\/testing$/,
+    replacement: resolve(__dirname, 'testing/index.ts'),
+  },
+  {
     find: /^@ngx-signal-forms\/toolkit$/,
     replacement: resolve(__dirname, 'index.ts'),
   },
@@ -83,7 +87,6 @@ export const toolkitSharedConfig = {
         '**/index.ts',
         '**/public_api.ts',
         '**/test-setup*.ts',
-        '**/test.utilities.ts',
       ],
       thresholds: {
         statements: 80,

@@ -192,10 +192,28 @@ jobs:
           PACKAGE_NAME=$(node -p "require('./dist/packages/toolkit/package.json').name")
           PACKAGE_VERSION=$(node -p "require('./dist/packages/toolkit/package.json').version")
           DIST_TAG='${{ steps.release_info.outputs.dist_tag }}'
+          TAG='${{ steps.release_info.outputs.tag }}'
+
+          # Guard against a mis-pointed tag or a manual dispatch against the wrong
+          # SHA: the npm dist-tag is derived from the git tag name, while the
+          # published version comes from the built package.json. If they disagree,
+          # fail loudly instead of silently publishing under the wrong dist-tag.
+          if [ "v$PACKAGE_VERSION" != "$TAG" ]; then
+            echo "❌ Git tag '$TAG' does not match built package version 'v$PACKAGE_VERSION'." >&2
+            echo "Refusing to publish: this would tag/publish the wrong version." >&2
+            exit 1
+          fi
 
           if npm view "$PACKAGE_NAME@$PACKAGE_VERSION" version --json >/dev/null 2>&1; then
-            echo "Version already exists. Updating dist-tag to '$DIST_TAG'."
-            npm dist-tag add "$PACKAGE_NAME@$PACKAGE_VERSION" "$DIST_TAG"
+            # npm Trusted Publisher (OIDC) only mints credentials for the
+            # `npm publish` operation - this job intentionally has no
+            # NODE_AUTH_TOKEN/NPM_TOKEN, so `npm dist-tag add` cannot
+            # authenticate here and would fail with ENEEDAUTH. Fail with a
+            # clear message instead of attempting (and silently breaking).
+            echo "❌ $PACKAGE_NAME@$PACKAGE_VERSION is already published." >&2
+            echo "Re-pointing the '$DIST_TAG' dist-tag requires a granular npm token and cannot be done via OIDC trusted publishing in this workflow." >&2
+            echo "Run 'npm dist-tag add $PACKAGE_NAME@$PACKAGE_VERSION $DIST_TAG' manually with an authenticated npm session." >&2
+            exit 1
           else
             npm publish dist/packages/toolkit --tag="$DIST_TAG" --access public --provenance
           fi

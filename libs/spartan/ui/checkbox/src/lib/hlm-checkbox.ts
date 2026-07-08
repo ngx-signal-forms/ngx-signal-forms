@@ -1,6 +1,7 @@
 import type { BooleanInput } from '@angular/cdk/coercion';
 import {
   booleanAttribute,
+  ChangeDetectionStrategy,
   Component,
   computed,
   forwardRef,
@@ -30,7 +31,7 @@ export const HLM_CHECKBOX_VALUE_ACCESSOR = {
   imports: [BrnCheckbox, NgIcon, HlmIcon],
   providers: [HLM_CHECKBOX_VALUE_ACCESSOR],
   viewProviders: [provideIcons({ lucideCheck })],
-
+  changeDetection: ChangeDetectionStrategy.OnPush,
   hostDirectives: [BrnFieldControlDescribedBy],
   host: {
     class: 'contents peer',

@@ -1,4 +1,9 @@
-import { Component, computed, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  signal,
+} from '@angular/core';
 import type { ErrorDisplayStrategy } from '@ngx-signal-forms/toolkit';
 import {
   type NgxFormFieldsetAppearance,
@@ -98,6 +103,7 @@ const ERROR_PLACEMENT_LABELS: Record<NgxFormFieldErrorPlacement, string> = {
 
 @Component({
   selector: 'ngx-fieldset-appearance-form',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 
   imports: [
     DisplayControlsCardComponent,

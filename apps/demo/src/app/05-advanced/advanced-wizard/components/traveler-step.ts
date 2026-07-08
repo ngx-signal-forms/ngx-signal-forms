@@ -1,4 +1,5 @@
 import {
+  ChangeDetectionStrategy,
   Component,
   computed,
   ElementRef,
@@ -36,6 +37,7 @@ type ReadonlyDestination = Readonly<Omit<Destination, 'activities'>> & {
 
 @Component({
   selector: 'ngx-traveler-step',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 
   imports: [FormField, NgxSignalFormToolkit, NgxFormField],
   template: `

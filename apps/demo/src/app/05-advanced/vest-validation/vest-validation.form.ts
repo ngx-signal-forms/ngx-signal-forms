@@ -1,4 +1,10 @@
-import { Component, input, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  input,
+  signal,
+} from '@angular/core';
 import {
   form,
   FormField,
@@ -34,6 +40,7 @@ const vestValidationSchema: SchemaFn<Readonly<VestValidationModel>> = (
 
 @Component({
   selector: 'ngx-vest-validation',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 
   imports: [FormField, NgxSignalFormToolkit, NgxFormField],
   styles: `
@@ -278,11 +285,10 @@ export class VestValidationComponent {
     },
   });
 
-  protected useSingleColumnFieldRows(): boolean {
-    return (
-      this.appearance() === 'standard' && this.orientation() === 'horizontal'
-    );
-  }
+  protected readonly useSingleColumnFieldRows = computed(
+    () =>
+      this.appearance() === 'standard' && this.orientation() === 'horizontal',
+  );
 
   protected resetForm(): void {
     this.accountForm().reset();

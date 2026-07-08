@@ -1,4 +1,10 @@
-import { Component, computed, signal, viewChild } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  signal,
+  viewChild,
+} from '@angular/core';
 import type {
   ErrorDisplayStrategy,
   FormFieldAppearance,
@@ -28,6 +34,7 @@ import { CustomControlsFormComponent } from './custom-controls.form';
 
 @Component({
   selector: 'ngx-custom-controls-page',
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     CustomControlsFormComponent,
     ErrorDisplayModeSelectorComponent,

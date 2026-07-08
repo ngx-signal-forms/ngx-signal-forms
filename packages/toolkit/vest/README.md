@@ -343,6 +343,16 @@ persist across mounts:
 validateVest(path, signupSuite, { resetOnDestroy: false }); // opt out of teardown reset
 ```
 
+### Concurrent mounts of the same suite
+
+Registrations against the same suite are reference-counted, so mounting the
+same module-scope suite in two forms at once — e.g. a list/detail view, a
+wizard step rendered alongside a summary, or two tabs open simultaneously —
+is safe: the suite is only reset once the **last** surviving registration's
+injection context tears down, not the first one. Destroying one mount while
+a sibling mount is still using the same suite leaves that sibling's retained
+`only()`-run state and any in-flight async run untouched.
+
 ### Async caveats
 
 - `suite.run(data)` returns a synchronous `SuiteResult` that is _also_ a

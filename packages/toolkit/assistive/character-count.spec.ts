@@ -452,6 +452,45 @@ describe('NgxFormFieldCharacterCount', () => {
         'Character limit exceeded by 5 characters.',
       );
     });
+
+    it('should route announcements through a custom announcementFormatter for i18n', async () => {
+      // Regression test: the built-in announcement strings ("Approaching
+      // limit: N characters remaining.", etc.) were previously hardcoded
+      // English with no override hook, making them untranslatable without
+      // forking the component. `announcementFormatter` lets consumers
+      // supply localized strings.
+      @Component({
+        selector: 'ngx-test-i18n-announcement',
+        standalone: true,
+        imports: [NgxFormFieldCharacterCount],
+        template: `
+          <ngx-form-field-character-count
+            [formField]="testForm.text"
+            [maxLength]="100"
+            [liveAnnounce]="true"
+            [announcementFormatter]="formatter"
+          />
+        `,
+      })
+      class I18nWrapperComponent {
+        readonly #model = signal({ text: 'a'.repeat(80) });
+        protected readonly testForm = form(this.#model);
+        readonly formatter = (
+          state: 'warning' | 'danger' | 'exceeded',
+          info: { remaining: number; over: number },
+        ): string =>
+          `[${state}] restants: ${info.remaining}, dépassement: ${info.over}`;
+      }
+
+      const { container } = await render(I18nWrapperComponent);
+
+      const liveRegion = container.querySelector(
+        '.ngx-signal-form-field-char-count__sr',
+      );
+      expect(liveRegion).toHaveTextContent(
+        '[warning] restants: 20, dépassement: 0',
+      );
+    });
   });
 
   describe('Default token contrast (WCAG 1.4.3)', () => {

@@ -88,6 +88,23 @@ describe('resolveValidationErrorMessage — 3-tier priority', () => {
       'Please enter a valid email address',
     );
   });
+
+  it('should not resolve inherited Object.prototype members as registry entries', () => {
+    // 'constructor'/'toString'/etc. are not own properties of the registry
+    // object, but plain-object property access resolves them anyway via the
+    // prototype chain. Object.hasOwn must gate the lookup so these kinds
+    // fall through to the default (humanized) message instead of returning
+    // a non-string inherited function/value.
+    const error: ValidationError = { kind: 'constructor' };
+
+    expect(resolveValidationErrorMessage(error, registry)).toBe('constructor');
+    expect(resolveValidationErrorMessage(error, registry)).not.toBe(Object);
+
+    const toStringError: ValidationError = { kind: 'toString' };
+    expect(resolveValidationErrorMessage(toStringError, registry)).toBe(
+      'toString',
+    );
+  });
 });
 
 describe('getDefaultValidationMessage', () => {
