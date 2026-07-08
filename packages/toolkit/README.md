@@ -415,7 +415,7 @@ Building blocks for custom wrappers and headless UIs that want to join the
 > `warningStrategy` input on `NgxFormFieldError` (default:
 > `'immediate'`). See
 > [`WARNINGS_SUPPORT.md`](https://github.com/ngx-signal-forms/ngx-signal-forms/blob/main/docs/WARNINGS_SUPPORT.md#when-warnings-appear--warningstrategy)
-> and the [assistive README](./assistive/README.md#ngxformfielderrorcomponent)
+> and the [assistive README](./assistive/README.md#ngxformfielderror)
 > for usage.
 
 ### Field interactivity
