@@ -1,5 +1,8 @@
+import type { BooleanInput } from '@angular/cdk/coercion';
 import {
   afterEveryRender,
+  booleanAttribute,
+  ChangeDetectionStrategy,
   Component,
   computed,
   ElementRef,
@@ -21,7 +24,7 @@ import type { ClassValue } from 'clsx';
   selector: 'hlm-select-trigger',
   imports: [NgIcon, BrnSelectTrigger, BrnFieldControlDescribedBy],
   providers: [provideIcons({ lucideChevronDown })],
-
+  changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <button
       #trigger
@@ -30,6 +33,7 @@ import type { ClassValue } from 'clsx';
       [id]="buttonId()"
       [class]="_computedClass()"
       [attr.data-size]="size()"
+      [forceInvalid]="forceInvalid()"
       data-slot="select-trigger"
     >
       <ng-content />
@@ -63,11 +67,18 @@ export class HlmSelectTrigger {
    * this trigger's real `role="combobox"` button, so that toolkit-side
    * correction can't reach it — this fixes it at the source instead,
    * using Brain's own touched-aware signal (no toolkit coupling needed).
+   *
+   * `forceInvalid()` is OR'd in here too — it also feeds `[forceInvalid]`
+   * on the `brnSelectTrigger` binding above, which drives Brain's own
+   * `data-matches-spartan-invalid` (the destructive-ring styling below).
+   * Without the OR, a forced-invalid trigger would show the destructive
+   * ring without announcing invalidity to assistive tech.
    */
   private readonly _fieldControl = inject(BrnFieldControl, { optional: true });
 
   private readonly _gatedInvalid = computed(
-    () => this._fieldControl?.spartanInvalid() ?? false,
+    () =>
+      this.forceInvalid() || (this._fieldControl?.spartanInvalid() ?? false),
   );
 
   private readonly _triggerButton =
@@ -100,4 +111,9 @@ export class HlmSelectTrigger {
   );
 
   public readonly size = input<'default' | 'sm'>('default');
+
+  /** Whether to force the trigger into an invalid state. */
+  public readonly forceInvalid = input<boolean, BooleanInput>(false, {
+    transform: booleanAttribute,
+  });
 }
