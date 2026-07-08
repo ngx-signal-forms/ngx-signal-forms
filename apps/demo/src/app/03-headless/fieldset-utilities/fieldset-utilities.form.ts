@@ -132,6 +132,10 @@ export class HeadlessFieldsetUtilitiesComponent {
     },
   });
 
+  // Delivery notes is deliberately built from these four utilities instead
+  // of ngxHeadlessErrorState / ngxHeadlessCharacterCount — see the template
+  // for the "plain functions instead of directives" wiring they power.
+
   protected readonly notesCounterId = 'deliveryNotes-counter';
 
   protected readonly notesError = createErrorState({
