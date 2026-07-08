@@ -428,7 +428,7 @@ Selector: `ngx-form-field-notification`
 
 | Input       | Type                                       | Default     | Notes                                                             |
 | ----------- | ------------------------------------------ | ----------- | ----------------------------------------------------------------- |
-| `errors`    | `Signal<readonly ValidationError[]>`       | required    | Grouped validation messages to render (bound via host directive)  |
+| `errors`    | `ReactiveOrStatic<readonly ValidationError[]>` | required    | Grouped validation messages (plain array or signal/getter); bound via host directive |
 | `fieldName` | string                                     | optional    | Generates deterministic error/warning container ids when provided |
 | `title`     | string                                     | optional    | Optional heading rendered above the messages                      |
 | `listStyle` | `NgxFormFieldListStyle` (`plain`/`bullets`) | `'bullets'`  | Bullet list or stacked paragraph rendering                        |
