@@ -99,7 +99,7 @@ import { NgxHeadlessErrorSummary } from '@ngx-signal-forms/toolkit/headless';
         <ul class="ngx-form-field-error-summary__list" role="list">
           @for (
             entry of summary.entries();
-            track entry.kind + entry.fieldName
+            track entry.fieldName + '::' + entry.kind + '::' + entry.message
           ) {
             <li class="ngx-form-field-error-summary__item">
               <button
