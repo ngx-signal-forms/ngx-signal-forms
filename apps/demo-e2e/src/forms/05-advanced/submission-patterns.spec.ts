@@ -151,6 +151,31 @@ test.describe('Advanced - Submission Patterns', () => {
       await expect(page.errorSummary).toBeVisible({ timeout: 5000 });
       await expect(page.errorSummary).toContainText('already taken');
     });
+
+    // Regression coverage for #194: the submission action's server-error
+    // branch (submission-patterns.form.ts) returns a field-level error
+    // WITHOUT calling `formData().reset()` — unlike the success branch,
+    // which resets immediately and drives `submittedStatus` straight back to
+    // 'unsubmitted'. That means the green "Submitted" badge (the
+    // @case('submitted') branch of the state indicator's @switch) should
+    // stay visible at the same time as the error summary. No existing test
+    // ever asserted the badge for this branch — only `errorSummary` was
+    // checked.
+    test('badge shows the "Submitted" state alongside a simulated server error, not "Ready to Submit"', async () => {
+      await page.fillField('username', 'taken_user');
+      await page.fillField('password', 'password123');
+      await page.fillField('confirmPassword', 'password123');
+      await page.page.getByLabel('Simulate server error').check();
+
+      await page.submit();
+
+      await expect(page.errorSummary).toBeVisible({ timeout: 5000 });
+      await expect(page.stateBadge).toContainText('Submitted');
+      await expect(page.stateBadge).not.toContainText('Ready to Submit');
+      await expect(page.stateBadge).not.toContainText(
+        'Unhandled submittedStatus',
+      );
+    });
   });
 
   test.describe('Error Summary (GOV.UK Pattern)', () => {

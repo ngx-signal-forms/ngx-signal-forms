@@ -1,5 +1,6 @@
 import { DEMO_CATEGORIES, DEMO_PATHS } from '@ngx-signal-forms/demo-shared';
 import { expect, test } from '@playwright/test';
+import { collectConsoleErrors } from '../fixtures/form-validation.fixture';
 /**
  * Demo Application UI Tests - Responsive Behavior
  *
@@ -50,6 +51,37 @@ test.describe('Demo Application UI - Page Loading', () => {
         await routePage.close();
       }
     });
+  });
+
+  // Regression coverage for #194: nothing anywhere in this suite attaches a
+  // console listener across the full route set — `collectConsoleErrors` is
+  // otherwise only used on a single page (custom-controls.spec.ts) to filter
+  // for one specific regression string. This sweeps every routed page and
+  // asserts general console cleanliness, catching an accidental
+  // `console.error` regression on any page, not just the one previously
+  // known to be risky.
+  test('should not log console errors while loading any routed page', async ({
+    page,
+  }) => {
+    const routes = [
+      '/',
+      ...DEMO_CATEGORIES.flatMap((c) => c.links.map((l) => l.path)),
+    ];
+
+    for (const route of routes) {
+      const routePage = await page.context().newPage();
+      const consoleErrors = collectConsoleErrors(routePage);
+
+      await routePage.goto(route, { waitUntil: 'domcontentloaded' });
+      await routePage.locator('main, [role="main"]').first().waitFor({
+        state: 'visible',
+        timeout: 5000,
+      });
+
+      expect(consoleErrors, `Route ${route} logged console errors`).toEqual([]);
+
+      await routePage.close();
+    }
   });
 });
 
@@ -142,5 +174,52 @@ test.describe('Demo Application UI - Narrow viewport (< 900px)', () => {
     // RightRailComponent.onDialogBackdropClick, not a click "on" the panel.
     await page.mouse.click(2, 2);
     await expect(dialog).not.toHaveAttribute('open', '');
+  });
+});
+
+/**
+ * The narrow-viewport suite above only ever visits `yourFirstForm`, the
+ * simplest routed page (one flat field stack, no nested groups). The
+ * multi-step wizard is the app's most layout-dense page — a progress header
+ * of step buttons plus grid-based destination/activity cards — and had never
+ * been exercised below the 900px shell-reflow breakpoint.
+ */
+test.describe('Demo Application UI - Narrow viewport (advanced wizard)', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto(DEMO_PATHS.advancedWizard);
+  });
+
+  test('wizard reflows without introducing horizontal scroll at 390px', async ({
+    page,
+  }) => {
+    await expect(
+      page.getByRole('heading', { name: 'Traveler Information' }),
+    ).toBeVisible();
+
+    const overflow = await page.evaluate(() => ({
+      scrollWidth: document.documentElement.scrollWidth,
+      innerWidth: window.innerWidth,
+    }));
+    expect(overflow.scrollWidth).toBeLessThanOrEqual(overflow.innerWidth);
+  });
+
+  test('progress-header step buttons stay visible and operable at 390px', async ({
+    page,
+  }) => {
+    const travelerStep = page
+      .locator('.wizard-step-button')
+      .filter({ hasText: 'Traveler Info' });
+    await expect(travelerStep).toBeVisible();
+    await expect(travelerStep).toHaveAttribute('aria-current', 'step');
+
+    // Future steps are unvisited from a fresh load, so their header buttons
+    // are disabled — but still rendered and visible, not clipped off-screen
+    // by the narrower layout.
+    const tripStep = page
+      .locator('.wizard-step-button')
+      .filter({ hasText: 'Trip Details' });
+    await expect(tripStep).toBeVisible();
+    await expect(tripStep).toBeDisabled();
   });
 });
