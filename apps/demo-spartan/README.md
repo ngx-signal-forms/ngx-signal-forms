@@ -435,8 +435,8 @@ same convention for the same reason.
 | ------------------- | --------------------- |
 | `@spartan-ng/brain` | `1.0.4`               |
 | `@spartan-ng/cli`   | (catalog: `spartan:`) |
-| `@ng-icons/core`    | `>=32.0.0 <34.0.0`    |
-| `@ng-icons/lucide`  | `>=32.0.0 <34.0.0`    |
+| `@ng-icons/core`    | `>=33.4.0 <34.0.0`    |
+| `@ng-icons/lucide`  | `>=33.4.0 <34.0.0`    |
 | `tw-animate-css`    | (catalog: `spartan:`) |
 
 The toolkit itself is consumed in-tree via the workspace tsconfig path

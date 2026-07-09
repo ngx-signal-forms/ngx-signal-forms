@@ -182,18 +182,10 @@ field / component input
   ?? built-in default
 ```
 
-The **form context (`ngxSignalForm`)** tier carries only the form-owned settings
-— **error strategy** and **submitted status**. Appearance, orientation, markers,
-control presets, and renderers have no form-context equivalent, so they skip that
-tier and resolve `input ?? provider config ?? default`. A setting only consults a
-tier that can supply it; missing tiers fall through.
-
-Inheritance merges with nullish `??` **per key**: override one key and the rest
-still inherit, and an explicit falsy value is respected (`requiredMarker: ''`
-clears the marker; omitting the key inherits it). Every "you can override this"
-in the sections below is a link in this chain — see the
+See the
 [root README](https://github.com/ngx-signal-forms/ngx-signal-forms#how-settings-resolve-the-cascade)
-for the adopter-level walkthrough.
+for the full walkthrough (per-tier details, nullish-merge semantics). Every
+"you can override this" in the sections below is a link in this chain.
 
 ### Field marking
 
@@ -217,6 +209,8 @@ the relevant kind:
   <!-- fields… -->
 </form>
 ```
+
+`NgxFormMarkingLegend` is available from `@ngx-signal-forms/toolkit/assistive`.
 
 Per-field / per-legend overrides are available via the `showMarkerWhen`,
 `requiredMarker`, and `optionalMarker` inputs on both
@@ -367,7 +361,7 @@ provideFieldLabels(() => {
 | `createErrorVisibility(field, opts?)`                  | One call: `Signal<boolean>` with strategy + submitted status auto-read from the DI context |
 | `showErrors(field, strategy, status?)`                 | `Signal<boolean>` — whether errors should show now                                         |
 | `shouldShowErrors(invalid, touched, strategy, status)` | Pure boolean strategy helper                                                               |
-| `combineShowErrors(...signals)`                        | Combines multiple visibility signals                                                       |
+| `combineShowErrors(signals)`                           | Combines an array of visibility signals, e.g. `combineShowErrors([sigA, sigB])`            |
 | `createShowErrorsComputed(field, strategy, status?)`   | Lower-level extraction for custom UIs                                                      |
 | `readDirectErrors(state)`                              | Direct `errors()` of a field/group only — excludes nested-field errors                     |
 
@@ -376,13 +370,13 @@ provideFieldLabels(() => {
 Building blocks for custom wrappers and headless UIs that want to join the
 [cascade](#how-settings-resolve-the-cascade) exactly like the built-in surfaces:
 
-| Function                                                       | Description                                                              |
-| -------------------------------------------------------------- | ------------------------------------------------------------------------ |
-| `resolveErrorDisplayStrategy(input, context?, configDefault?)` | Pure resolution: input ?? context ?? config default ?? `'on-touch'`      |
-| `resolveStrategyFromContext(input)`                            | `Signal` resolution of a directive's strategy input against form context |
-| `resolveSubmittedStatusFromContext(input)`                     | Same cascade for `SubmittedStatus`                                       |
-| `injectFormContext()`                                          | Get the `ngxSignalForm` context, or `undefined`                          |
-| `injectFieldControl(element, injector?)`                       | Resolve the bound `FieldTree` for an element from the form context       |
+| Function                                                         | Description                                                                |
+| ---------------------------------------------------------------- | -------------------------------------------------------------------------- |
+| `resolveErrorDisplayStrategy(input, context?, configDefault?)`   | Pure resolution: input ?? context ?? config default ?? `'on-touch'`        |
+| `resolveStrategyFromContext(input, formContext, configDefault?)` | Resolved strategy value (call inside your own `computed()` for reactivity) |
+| `resolveSubmittedStatusFromContext(input, formContext)`          | Same cascade for `SubmittedStatus`                                         |
+| `injectFormContext()`                                            | Get the `ngxSignalForm` context, or `undefined`                            |
+| `injectFieldControl(element, injector?)`                         | Resolve the bound `FieldTree` for an element from the form context         |
 
 ### Focus management
 

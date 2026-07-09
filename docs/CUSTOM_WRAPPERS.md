@@ -268,7 +268,7 @@ return computed signals. None of them read DOM, none of them call `inject()`,
 and none of them know about manual-mode opt-out. That's deliberate: the
 manual-mode escape hatch lives in the directive shell that wires the
 factories, not in the factories themselves. (See
-[ADR-0002](decisions/0002-aria-primitives-as-factories.md) for the rationale.)
+[ADR-0005](decisions/0005-aria-primitives-as-factories.md) for the rationale.)
 
 ### Worked example
 

@@ -109,7 +109,7 @@ ngx-signal-form-debugger {
 
 ## Related documentation
 
-- [Toolkit core](../README.md) — error strategies, ARIA, submission helpers
+- [Toolkit core](../../packages/toolkit/README.md) — error strategies, ARIA, submission helpers
 
 ## License
 

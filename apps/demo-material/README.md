@@ -219,13 +219,11 @@ Material's ARIA ownership.
 
 ### Warnings under `submission.action`
 
-Angular Signal Forms' native `submit()` only runs `submission.action`
-when the field tree is not `invalid()` — and `invalid()` is `true` for
-**any** validation result on the tree, including the toolkit's
-non-blocking `warn:*` results. Left unpatched, a warning (e.g.
-`warn:short-name` on the contact form's `name` field) would silently
-prevent submission and route straight to `onInvalid`, contradicting the
-"gentle warning, not a blocker" contract warnings are supposed to have.
+Angular Signal Forms' native `submit()` blocks `submission.action` on
+any validation result on the tree, including the toolkit's non-blocking
+`warn:*` results — see the [toolkit README](../../packages/toolkit/README.md#warning-support)'s
+warning-support table for `hasOnlyWarnings()` / `submitWithWarnings()`
+and why that matters.
 
 The contact form's declarative `{ submission }` therefore sets
 `ignoreValidators: 'all'` and gates the actual submit logic on
@@ -252,9 +250,7 @@ This mirrors `apps/demo-primeng`'s profile form and is the pattern
 [`apps/demo`'s advanced section](../demo/src/app/05-advanced/README.md)
 documents as preferred for warning-tolerant submission when you're
 using declarative `{ submission }` rather than calling `submit()` /
-`submitWithWarnings()` by hand — see the
-[toolkit README](../../packages/toolkit/README.md)'s submission
-helpers table for `hasOnlyWarnings()` / `submitWithWarnings()`.
+`submitWithWarnings()` by hand.
 
 ### Warnings and Material's `ErrorStateMatcher`
 
@@ -442,6 +438,6 @@ writing:
 
 | Package               | Version  |
 | --------------------- | -------- |
-| `@angular/material`   | `22.0.3` |
-| `@angular/cdk`        | `22.0.3` |
+| `@angular/material`   | `22.0.4` |
+| `@angular/cdk`        | `22.0.4` |
 | `@angular/animations` | `22.0.5` |

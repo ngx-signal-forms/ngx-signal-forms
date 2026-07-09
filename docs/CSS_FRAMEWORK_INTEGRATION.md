@@ -291,10 +291,8 @@ Angular Material has its own form infrastructure. When using `mat-form-field`:
 
 ```typescript
 // app.config.ts
-import {
-  provideSignalFormsConfig,
-  NG_STATUS_CLASSES,
-} from '@angular/forms/signals';
+import { provideSignalFormsConfig } from '@angular/forms/signals';
+import { NG_STATUS_CLASSES } from '@angular/forms/signals/compat';
 
 export const appConfig: ApplicationConfig = {
   providers: [

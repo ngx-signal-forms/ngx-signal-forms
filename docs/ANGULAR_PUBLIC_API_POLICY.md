@@ -6,7 +6,7 @@ This document defines the ownership boundary between Angular Signal Forms and `@
 
 ### Angular Owns (Form Engine)
 
-These APIs are part of Angular's `@angular/forms/signals` package. The toolkit consumes them but never reimplements them:
+These APIs are part of Angular's `@angular/forms/signals` package. The toolkit consumes them but never reimplements them. Two entries (marked `*`) live in the separate `@angular/forms/signals/compat` subpath, not `@angular/forms/signals` itself:
 
 | API                        | Purpose                                             |
 | -------------------------- | --------------------------------------------------- |
@@ -20,13 +20,15 @@ These APIs are part of Angular's `@angular/forms/signals` package. The toolkit c
 | `errors()`                 | Direct validation errors for a field                |
 | `formFieldBindings`        | Track bound FormField directives                    |
 | `provideSignalFormsConfig` | Configure status classes, submit behavior           |
-| `NG_STATUS_CLASSES`        | CSS class bindings for field states                 |
+| `NG_STATUS_CLASSES` *      | CSS class bindings for field states                 |
 | `FormValueControl<T>`      | Interface for custom value controls                 |
 | `FormCheckboxControl`      | Interface for checkbox-like controls                |
 | `FormUiControl`            | Interface for UI-only controls                      |
-| `compatForm()`             | Bridge to existing reactive forms                   |
+| `compatForm()` *           | Bridge to existing reactive forms                   |
 | `FieldTree<T>`             | Reactive view of a data signal node                 |
 | `FieldState<T>`            | Runtime state interface (valid, touched, etc.)      |
+
+\* Imported from `@angular/forms/signals/compat`, not `@angular/forms/signals`.
 
 ### Toolkit Owns (Enhancement Layer)
 
@@ -37,7 +39,7 @@ These APIs are part of `@ngx-signal-forms/toolkit`. They build on top of Angular
 | `ngxSignalForm` directive | `toolkit`            | Form-level context: error strategy, submitted status |
 | Auto-ARIA directive       | `toolkit`            | Automatic `aria-invalid`, `aria-describedby`         |
 | Error display strategies  | `toolkit`            | `'on-touch'`, `'on-submit'`, `'immediate'`           |
-| Error message registry    | `toolkit`            | App-wide `NGX_ERROR_MESSAGES` provider               |
+| Error message registry    | `toolkit`            | App-wide registry via `provideErrorMessages()`       |
 | `focusFirstInvalid()`     | `toolkit`            | Focus first invalid field via `errorSummary()`       |
 | Submission helpers        | `toolkit`            | `createSubmittedStatusTracker()`                     |
 | Headless error state      | `toolkit/headless`   | Strategy-aware error/warning signals                 |
@@ -92,9 +94,7 @@ The toolkit uses duck-typing when accessing Angular Signal Forms internals that 
 
 ## Angular Version Baseline
 
-- **Tested baseline**: Angular 22.0.x
-- **Signal Forms status**: Stable as of Angular 22 (`@publicApi 22.0`) — semver-protected within the major
-- **Toolkit stance**: We follow Angular's public API surface. A future Angular **major** can still reshape Signal Forms; the toolkit will adapt when it does.
+Tracks the same Angular 22 baseline and stability contract as [Compatibility](../COMPATIBILITY.md#angular-signal-forms-status).
 
 ## Internal `/core` secondary entry point
 

@@ -26,6 +26,8 @@ This is the production frontier of the demo app. Each demo here stands on its ow
   - What you'll learn: schema-level cross-field rules · reactive re-validation · field-vs-group error placement.
 - **[server-integration](./server-integration/README.md)** — `resource()` prefill + declarative submission + server errors mapped onto `TreeValidationResult`.
   - What you'll learn: `resource()`-driven prefill · form-level vs. field-level server errors · the auto-clear semantics of submission errors · `reset(value)` after a successful save.
+- **[store-binding](./store-binding/README.md)** — honest two-way binding between a Signal Form and an `@ngrx/signals` store via `linkedSignal`, contrasted with the wizard's draft/commit buffer.
+  - What you'll learn: `linkedSignal({ source, computation })` read seam · overriding `set`/`update` to write straight through to `patchState` · when live binding beats draft/commit.
 
 ## 🧠 Core concepts
 

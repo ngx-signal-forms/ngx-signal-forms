@@ -37,8 +37,6 @@ Older standalone pages (accessibility comparison, field-state inspection) are no
 - [your-first-form](../01-getting-started/your-first-form/README.md) — accessibility onboarding.
 - Debugger panels inside the active demos — runtime field state.
 
-Archived folders remain in the repo for reference.
-
 ## ➡️ Next steps
 
 - Continue to **[03-headless](../03-headless/README.md)** — renderless primitives for design systems that can't adopt the wrapper.

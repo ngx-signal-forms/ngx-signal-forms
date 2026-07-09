@@ -1,4 +1,4 @@
-# ADR-0002: ARIA primitives are factories, not directives
+# ADR-0005: ARIA primitives are factories, not directives
 
 ## Status
 

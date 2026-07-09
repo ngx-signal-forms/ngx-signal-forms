@@ -139,6 +139,11 @@ pnpm nx build demo
 pnpm nx e2e demo-e2e
 ```
 
+> The plain `e2e` target has no port-preflight step and can hang locally on
+> port 4600 conflicts. For local runs prefer
+> `pnpm nx run demo-e2e:e2e-toolkit` or `pnpm nx run demo-e2e:e2e-demo-app`,
+> which clear the port before starting Playwright.
+
 ### Navigate Examples
 
 1. Start at **Getting Started** for the toolkit-first baseline

@@ -167,8 +167,10 @@ and [custom wrappers](./CUSTOM_WRAPPERS.md) for third-party design systems.
   `minLength`, …).
 - Put shared contract/shape rules in Zod / OpenAPI Standard Schema via
   `validateStandardSchema()`.
-- Express conditional business policy — and advisory `warn()` guidance — in
-  Vest via `validateVest()`.
+- Express conditional business policy in Vest via `validateVest()`, and
+  advisory `warn()` guidance via
+  `validateVest(path, suite, { includeWarnings: true })` (or
+  `validateVestWarnings()`).
 
 **Don't**
 
