@@ -1,0 +1,11 @@
+# Dynamic Nx Agents scaling based on PR size (% of workspace projects affected).
+# Referenced from .github/workflows/ci.yml via:
+#   nx-cloud start-ci-run --distribute-on=".nx/workflows/distribution-config.yaml"
+# https://nx.dev/docs/features/ci-features/dynamic-agents
+#
+# Changesets must be ordered smallest to largest - Nx Cloud uses position to
+# map the affected-project percentage of a run onto a tier.
+distribute-on:
+  small-changeset: 2 ngx-signal-forms-agent # 1-25% of projects affected
+  medium-changeset: 4 ngx-signal-forms-agent # 26-50% of projects affected
+  large-changeset: 6 ngx-signal-forms-agent # 51-100% of projects affected

@@ -1,0 +1,44 @@
+# Custom Nx Agents launch template. Referenced via `--distribute-on` in
+# .github/workflows/ci.yml (directly or through distribution-config.yaml).
+# https://nx.dev/docs/reference/nx-cloud/launch-templates
+common-init-steps: &common-init-steps
+  - name: Checkout
+    uses: 'nrwl/nx-cloud-workflows/v6/workflow-steps/checkout/main.yaml'
+
+  - group-name: Restore caches
+    steps:
+      - name: Restore node modules cache
+        uses: 'nrwl/nx-cloud-workflows/v6/workflow-steps/cache/main.yaml'
+        inputs:
+          key: 'pnpm-lock.yaml'
+          paths: |
+            ~/.local/share/pnpm/store
+          base-branch: 'main'
+      - name: Restore Playwright browser cache
+        uses: 'nrwl/nx-cloud-workflows/v6/workflow-steps/cache/main.yaml'
+        inputs:
+          key: 'pnpm-lock.yaml|"playwright-browsers"'
+          paths: |
+            ~/.cache/ms-playwright
+          base-branch: 'main'
+      - name: Restore oxc cache
+        uses: 'nrwl/nx-cloud-workflows/v6/workflow-steps/cache/main.yaml'
+        inputs:
+          key: 'pnpm-lock.yaml|"oxc"'
+          paths: |
+            ~/.cache/oxc
+          base-branch: 'main'
+
+  - name: Install node modules
+    uses: 'nrwl/nx-cloud-workflows/v6/workflow-steps/install-node-modules/main.yaml'
+
+  # test-browser and e2e-ci targets drive real browsers, so agents need the
+  # same Playwright binaries + system deps as the coordinator job.
+  - name: Install Playwright browsers
+    script: pnpm exec playwright install --with-deps
+
+launch-templates:
+  ngx-signal-forms-agent:
+    resource-class: 'docker_linux_amd64/medium'
+    image: 'ubuntu22.04-node24.14-v1'
+    init-steps: *common-init-steps
