@@ -446,7 +446,7 @@ export class NgxFormFieldCharacterCount {
       typeof fieldState === 'object' &&
       fieldState !== null &&
       'maxLength' in fieldState &&
-      typeof (fieldState as { maxLength: unknown }).maxLength === 'function'
+      typeof fieldState.maxLength === 'function'
     );
   }
 

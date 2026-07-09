@@ -6,7 +6,7 @@ import {
   viewChild,
 } from '@angular/core';
 import {
-  type ErrorDisplayStrategy,
+  type ResolvedErrorDisplayStrategy,
   type FormFieldAppearance,
 } from '@ngx-signal-forms/toolkit';
 import { NgxSignalFormDebugger } from '@ngx-signal-forms/debugger';
@@ -96,27 +96,27 @@ import { AsyncValidationComponent } from './async-validation.form';
     <ngx-example-cards
       [demonstrated]="content.demonstrated"
       [learning]="content.learning"
-    />
+    >
+      <ngx-split-layout>
+        <ngx-async-validation
+          [errorDisplayMode]="errorDisplayMode()"
+          [appearance]="selectedAppearance()"
+          [orientation]="selectedOrientation()"
+          left
+        />
 
-    <ngx-split-layout>
-      <ngx-async-validation
-        [errorDisplayMode]="errorDisplayMode()"
-        [appearance]="selectedAppearance()"
-        [orientation]="selectedOrientation()"
-        left
-      />
-
-      @if (formRef(); as form) {
-        <div right>
-          <ngx-signal-form-debugger [formTree]="form.regForm" />
-        </div>
-      }
-    </ngx-split-layout>
+        @if (formRef(); as form) {
+          <div right>
+            <ngx-signal-form-debugger [formTree]="form.regForm" />
+          </div>
+        }
+      </ngx-split-layout>
+    </ngx-example-cards>
   `,
 })
 export class AsyncValidationPageComponent {
   protected readonly errorDisplayMode =
-    signal<ErrorDisplayStrategy>('on-touch');
+    signal<ResolvedErrorDisplayStrategy>('on-touch');
   protected readonly selectedAppearance =
     signal<FormFieldAppearance>('outline');
   protected readonly selectedOrientation = createOrientationSelection(

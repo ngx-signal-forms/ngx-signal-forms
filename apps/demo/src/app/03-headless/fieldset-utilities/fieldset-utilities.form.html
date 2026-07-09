@@ -68,7 +68,7 @@
           #emailState="errorState"
           [field]="deliveryForm.contactEmail"
           [fieldName]="emailName.resolvedFieldName()"
-          class="space-y-2"
+          class="headless-field-stack"
         >
           <label
             [for]="emailName.resolvedFieldName()"
@@ -83,7 +83,11 @@
             [formField]="deliveryForm.contactEmail"
             placeholder="you@example.com"
             autocomplete="email"
-            [attr.aria-invalid]="emailState.hasErrors() ? 'true' : null"
+            [attr.aria-invalid]="
+              emailState.shouldShowErrors() && emailState.hasErrors()
+                ? 'true'
+                : null
+            "
             [attr.aria-describedby]="
               emailState.shouldShowErrors() && emailState.hasErrors()
                 ? emailState.errorId()
@@ -176,7 +180,7 @@
               #streetState="errorState"
               [field]="deliveryForm.address.street"
               [fieldName]="streetName.resolvedFieldName()"
-              class="space-y-2"
+              class="headless-field-stack"
             >
               <label
                 [for]="streetName.resolvedFieldName()"
@@ -191,7 +195,9 @@
                 [formField]="deliveryForm.address.street"
                 placeholder="123 Main St"
                 [attr.aria-invalid]="
-                  streetState.hasErrors() ? 'true' : null
+                  streetState.shouldShowErrors() && streetState.hasErrors()
+                    ? 'true'
+                    : null
                 "
                 [attr.aria-describedby]="
                   streetState.shouldShowErrors() && streetState.hasErrors()
@@ -242,7 +248,7 @@
               #cityState="errorState"
               [field]="deliveryForm.address.city"
               [fieldName]="cityName.resolvedFieldName()"
-              class="space-y-2"
+              class="headless-field-stack"
             >
               <label
                 [for]="cityName.resolvedFieldName()"
@@ -256,7 +262,11 @@
                 class="form-input"
                 [formField]="deliveryForm.address.city"
                 placeholder="Springfield"
-                [attr.aria-invalid]="cityState.hasErrors() ? 'true' : null"
+                [attr.aria-invalid]="
+                  cityState.shouldShowErrors() && cityState.hasErrors()
+                    ? 'true'
+                    : null
+                "
                 [attr.aria-describedby]="
                   cityState.shouldShowErrors() && cityState.hasErrors()
                     ? cityState.errorId()
@@ -292,7 +302,7 @@
               #postalState="errorState"
               [field]="deliveryForm.address.postalCode"
               [fieldName]="postalName.resolvedFieldName()"
-              class="space-y-2"
+              class="headless-field-stack"
             >
               <label
                 [for]="postalName.resolvedFieldName()"
@@ -307,7 +317,9 @@
                 [formField]="deliveryForm.address.postalCode"
                 placeholder="12345"
                 [attr.aria-invalid]="
-                  postalState.hasErrors() ? 'true' : null
+                  postalState.shouldShowErrors() && postalState.hasErrors()
+                    ? 'true'
+                    : null
                 "
                 [attr.aria-describedby]="
                   postalState.shouldShowErrors() && postalState.hasErrors()
@@ -424,7 +436,11 @@
                 rows="3"
                 [formField]="deliveryForm.deliveryNotes"
                 placeholder="Special instructions…"
-                [attr.aria-invalid]="notesError.hasErrors() ? 'true' : null"
+                [attr.aria-invalid]="
+                  notesError.shouldShowErrors() && notesError.hasErrors()
+                    ? 'true'
+                    : null
+                "
                 [attr.aria-describedby]="notesDescribedBy()"
               ></textarea>
 

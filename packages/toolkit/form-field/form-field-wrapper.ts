@@ -584,7 +584,7 @@ export class NgxFormFieldWrapper<TValue = unknown> {
       const raw = appearance as string;
       const hint =
         raw === 'stacked'
-          ? " The 'stacked' appearance was renamed to 'standard' in v1 rc.5."
+          ? " The legacy 'stacked' appearance alias resolves to 'standard'."
           : raw === 'bare'
             ? " The 'bare' appearance was renamed to 'plain' in v1 rc.1."
             : '';
@@ -1240,10 +1240,10 @@ export class NgxFormFieldWrapper<TValue = unknown> {
         // `"null"` and mislead downstream DOM queries.
         if (inputEl) {
           const fieldName = this.resolvedFieldName();
-          if (fieldName !== null) {
-            inputEl.setAttribute('data-signal-field', fieldName);
-          } else {
+          if (fieldName === null) {
             inputEl.removeAttribute('data-signal-field');
+          } else {
+            inputEl.setAttribute('data-signal-field', fieldName);
           }
         }
 

@@ -2275,7 +2275,7 @@ For a production-scale end-to-end implementation, use the maintained demo and pa
 
 ## Related Resources
 
-- [Angular Signal Forms Instructions](../.github/instructions/angular-signal-forms.instructions.md)
+- Angular Signal Forms API reference: `angular-developer` skill (`references/signal-forms.md`)
 - [NgRx Signal Store Documentation](https://ngrx.io/guide/signals/signal-store)
 - [NgRx Toolkit Documentation](https://ngrx-toolkit.angulararchitects.io/)
 - [NgRx Toolkit withMutations](https://ngrx-toolkit.angulararchitects.io/docs/mutations)

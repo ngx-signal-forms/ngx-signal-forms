@@ -94,9 +94,7 @@ export const appConfig = {
 ```typescript
 interface ErrorMessageRegistry {
   [errorKind: string]:
-    | string
-    | ((params: Record<string, unknown>) => string)
-    | undefined;
+    string | ((params: Record<string, unknown>) => string) | undefined;
 }
 
 type FieldLabelMap = Record<string, string>;
@@ -123,10 +121,7 @@ type NgxSignalFormControlKind =
   | 'slider'
   | 'composite';
 type NgxSignalFormControlLayout =
-  | 'stacked'
-  | 'inline-control'
-  | 'group'
-  | 'custom';
+  'stacked' | 'inline-control' | 'group' | 'custom';
 type NgxSignalFormControlAriaMode = 'auto' | 'manual';
 ```
 
@@ -832,11 +827,7 @@ panel.
 ```typescript
 type NgxSignalFormDebuggerBadgeVariant = 'solid' | 'outline' | 'ghost';
 type NgxSignalFormDebuggerBadgeAppearance =
-  | 'neutral'
-  | 'info'
-  | 'success'
-  | 'warning'
-  | 'danger';
+  'neutral' | 'info' | 'success' | 'warning' | 'danger';
 ```
 
 ### Production tree-shaking

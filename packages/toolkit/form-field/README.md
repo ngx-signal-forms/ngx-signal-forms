@@ -212,7 +212,7 @@ aggregation signals without any prebuilt markup, drop down to
 [`/headless`](../headless/README.md).
 
 ```html
-<ngx-form-fieldset [fieldsetField]="form.address" fieldsetId="address">
+<ngx-form-fieldset [field]="form.address" fieldsetId="address">
   <legend>Shipping Address</legend>
 
   <ngx-form-field-wrapper
@@ -232,7 +232,7 @@ aggregation signals without any prebuilt markup, drop down to
 
 | Input                 | Type                                                                     | Default     | Description                                                    |
 | --------------------- | ------------------------------------------------------------------------ | ----------- | -------------------------------------------------------------- |
-| `fieldsetField`       | `FieldTree` (required)                                                   | —           | Field tree to aggregate                                        |
+| `field`               | `FieldTree` (required)                                                   | —           | Field tree to aggregate                                        |
 | `fields`              | `FieldTree[]`                                                            | `null`      | Explicit field list (overrides tree traversal)                 |
 | `fieldsetId`          | `string`                                                                 | Generated   | ID for ARIA linking                                            |
 | `strategy`            | `ErrorDisplayStrategy`                                                   | Inherited   | Error display strategy                                         |
@@ -264,7 +264,7 @@ aggregation signals without any prebuilt markup, drop down to
   and see the grouped summary after the section.
 
 ```html
-<ngx-form-fieldset [fieldsetField]="form.deliveryMethod" errorPlacement="top">
+<ngx-form-fieldset [field]="form.deliveryMethod" errorPlacement="top">
   <legend>Delivery method</legend>
   <!-- grouped controls -->
 </ngx-form-fieldset>
@@ -340,7 +340,7 @@ setting.
 
 ```html
 <ngx-form-fieldset
-  [fieldsetField]="form.contactMethod"
+  [field]="form.contactMethod"
   surfaceTone="neutral"
   validationSurface="always"
 >
@@ -356,7 +356,7 @@ wrappers keep ownership of leaf validation such as required/min-length, while
 the fieldset is reserved for the shared cross-field message.
 
 ```html
-<ngx-form-fieldset [fieldsetField]="form.passwords" fieldsetId="passwords">
+<ngx-form-fieldset [field]="form.passwords" fieldsetId="passwords">
   <legend>Passwords</legend>
 
   <ngx-form-field-wrapper [formField]="form.passwords.password">
@@ -411,7 +411,7 @@ const signupForm = form(model, (path) => {
 Can also be used as an attribute selector on native `<fieldset>` or `<div>`:
 
 ```html
-<fieldset ngxFormFieldset [fieldsetField]="form.address" fieldsetId="address">
+<fieldset ngxFormFieldset [field]="form.address" fieldsetId="address">
   <legend>Address</legend>
   <!-- ... -->
 </fieldset>

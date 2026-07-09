@@ -211,9 +211,7 @@ See a runnable example at `apps/demo/src/app/03-headless/error-message-signal/`.
 ```typescript
 import { createErrorMessageSignal } from '@ngx-signal-forms/toolkit/headless';
 
-@Component({
-  /* ... */
-})
+@Component({/* ... */})
 export class EmailErrors {
   readonly field = input.required<FieldTree<string>>();
 

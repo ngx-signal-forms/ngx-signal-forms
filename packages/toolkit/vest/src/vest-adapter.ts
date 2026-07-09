@@ -193,7 +193,7 @@ type VestRunCache = WeakMap<
   VestRunCacheEntry<unknown>
 >;
 
-const VEST_PATH_SEGMENT = /[^.[\]]+/g;
+const VEST_PATH_SEGMENT = /[^.[\]]+/gu;
 const VEST_KIND_SEGMENT_MAX_LEN = 48;
 
 /**
@@ -275,8 +275,8 @@ function fnv1a4Hex(value: string): string {
 function normalizeWarningKindSegment(value: string): string {
   const normalized = value
     .toLowerCase()
-    .replaceAll(/[^a-z0-9]+/g, '-')
-    .replaceAll(/^-+|-+$/g, '');
+    .replaceAll(/[^a-z0-9]+/gu, '-')
+    .replaceAll(/^-+|-+$/gu, '');
 
   if (normalized.length <= VEST_KIND_SEGMENT_MAX_LEN) {
     return normalized;
@@ -311,7 +311,7 @@ function createVestValidationKind(
  */
 function parseVestFieldPath(fieldPath: string): Array<string | number> {
   return Array.from(fieldPath.matchAll(VEST_PATH_SEGMENT), ([segment]) => {
-    return /^\d+$/.test(segment) ? Number(segment) : segment;
+    return /^\d+$/u.test(segment) ? Number(segment) : segment;
   });
 }
 
@@ -358,14 +358,16 @@ function resolveVestWarningFieldTree(
 
   for (const segment of parseVestFieldPath(fieldPath)) {
     if (
-      !current ||
+      current === null ||
+      current === undefined ||
       (typeof current !== 'function' && typeof current !== 'object')
     ) {
       return fieldTree;
     }
 
-    // oxlint-disable-next-line unicorn/new-for-builtins -- Object() coercion is intentional runtime wrap for own-property probing on callable field trees.
-    const container = Object(current) as object;
+    // Field trees are callable proxies (functions), which are objects, so the
+    // narrowed value can be probed for own properties directly.
+    const container: object = current;
     const segmentKey = typeof segment === 'number' ? String(segment) : segment;
 
     // Angular Signal Forms field trees are proxies whose traps throw
@@ -415,7 +417,8 @@ function executeVestRun<TValue>(
   // Vest's `only`/`run` field selectors require a mutable string[]. We clone
   // readonly inputs so toolkit consumers can pass `readonly string[]` through
   // without widening their own types.
-  const focusArg = Array.isArray(focus) ? [...focus] : (focus as string);
+  const focusArg: string | string[] =
+    typeof focus === 'string' ? focus : [...focus];
 
   if (typeof suite.only === 'function') {
     const focused = suite.only(focusArg);
@@ -569,10 +572,23 @@ function awaitVestRunSettlement<TValue>(
     // call itself), `settle()` ran before `unsubscribe` was assigned, so its
     // `unsubscribe?.()` was a no-op. Clean up the now-stale subscription here
     // instead, now that we hold a reference to it.
+    // oxlint-disable-next-line @typescript-eslint/no-unnecessary-condition -- `settled` may be flipped synchronously by the subscribe callback above; static analysis cannot model that closure write.
     if (settled) {
       unsubscribe();
     }
   });
+}
+
+/**
+ * Type guard distinguishing Vest's field-scoped message list (an array) from
+ * the whole-suite failure map (a keyed object). Lets callers narrow the union
+ * without an unsafe cast — `Array.isArray` alone does not remove the
+ * `readonly string[]` branch.
+ */
+function isVestFieldMessages(
+  messages: VestFailureMessages | VestFieldMessages,
+): messages is VestFieldMessages {
+  return Array.isArray(messages);
 }
 
 /**
@@ -591,13 +607,13 @@ function toVestValidationEntries(
     return [];
   }
 
-  if (Array.isArray(messages)) {
+  if (isVestFieldMessages(messages)) {
     return createVestEntriesForField(VEST_ROOT_FIELD_SENTINEL, messages);
   }
 
-  return Object.entries(messages).flatMap(([fieldPath, fieldMessages]) => {
-    return createVestEntriesForField(fieldPath, fieldMessages);
-  });
+  return Object.entries(messages).flatMap(([fieldPath, fieldMessages]) =>
+    createVestEntriesForField(fieldPath, fieldMessages),
+  );
 }
 
 /**
@@ -710,9 +726,9 @@ function toVestValidationErrors(
  * Captures the sync snapshot from a Vest result so pending async validation can
  * later calculate only the newly resolved delta.
  */
-function createVestValidationSnapshot(
+function createVestValidationSnapshot<TValue>(
   result: VestResultLike,
-  options: VestValidationRegistrationOptions<unknown>,
+  options: VestValidationRegistrationOptions<TValue>,
 ): VestValidationSnapshot {
   return {
     errors: options.includeErrors
@@ -733,10 +749,10 @@ function createVestValidationSnapshot(
  * entries for other fields are dropped — see
  * {@link filterEntriesForBoundField}.
  */
-function mapVestValidationResult(
+function mapVestValidationResult<TValue>(
   result: VestResultLike,
   fieldTree: ReadonlyFieldTree<unknown>,
-  options: VestValidationRegistrationOptions<unknown>,
+  options: VestValidationRegistrationOptions<TValue>,
   boundFieldPath: string | undefined,
   baseline?: VestValidationSnapshot,
 ): readonly ValidationError.WithFieldTree[] {
@@ -785,8 +801,8 @@ function mapVestValidationResult(
  * suite settles, {@link mapVestValidationResult}'s async `onSuccess` mapping
  * surfaces them together with the final result.
  */
-function shouldDeferVestWarnings(
-  options: VestValidationRegistrationOptions<unknown>,
+function shouldDeferVestWarnings<TValue>(
+  options: VestValidationRegistrationOptions<TValue>,
   initialResult: VestResultLike,
 ): boolean {
   return options.includeWarnings && initialResult.isPending();
@@ -1059,7 +1075,7 @@ export function createVestAdapter(
       pendingTrees = new Map();
       pendingTreesBySuite.set(suiteKey, pendingTrees);
     }
-    pendingTrees.set(fieldTree, entry as VestRunCacheEntry<unknown>);
+    pendingTrees.set(fieldTree, entry);
 
     const untrack = (): void => {
       const currentPendingTrees = pendingTreesBySuite.get(suiteKey);
@@ -1108,10 +1124,11 @@ export function createVestAdapter(
   ): VestRunCacheEntry<TValue> & { readonly fromCache: boolean } {
     const suiteKey = suite as object;
     const suiteCache = getVestSuiteRunCache(suiteKey);
-    const cachedEntry = suiteCache.get(fieldTree as ReadonlyFieldTree<unknown>);
-    const focusKey = Array.isArray(focus)
-      ? focus.join(VEST_KEY_SEPARATOR)
-      : (focus as string | undefined);
+    const cachedEntry = suiteCache.get(fieldTree);
+    const focusKey =
+      typeof focus === 'string' || focus === undefined
+        ? focus
+        : focus.join(VEST_KEY_SEPARATOR);
 
     if (
       cachedEntry &&
@@ -1129,11 +1146,7 @@ export function createVestAdapter(
     }
 
     const isContested =
-      focus === undefined &&
-      isSuiteContestedByOtherTree(
-        suiteKey,
-        fieldTree as ReadonlyFieldTree<unknown>,
-      );
+      focus === undefined && isSuiteContestedByOtherTree(suiteKey, fieldTree);
     const runResult = isContested
       ? deferVestRunUntilIdle(suite, value, focus)
       : executeVestRun(suite, value, focus);
@@ -1155,7 +1168,7 @@ export function createVestAdapter(
       deferred: isContested,
     };
 
-    suiteCache.set(fieldTree as ReadonlyFieldTree<unknown>, nextEntry);
+    suiteCache.set(fieldTree, nextEntry);
     trackPendingVestRun(
       suiteKey,
       fieldTree as ReadonlyFieldTree<unknown>,
@@ -1224,11 +1237,11 @@ export function createVestAdapter(
     suite: VestRunnableSuite<TValue>,
     resetOnDestroy: boolean | undefined,
   ): void {
-    if (!resetOnDestroy) {
+    if (resetOnDestroy !== true) {
       return;
     }
 
-    const reset = (suite as { reset?: unknown }).reset;
+    const reset = suite.reset;
     if (typeof reset !== 'function') {
       return;
     }
@@ -1252,7 +1265,7 @@ export function createVestAdapter(
       // Also clear the per-suite run cache so a subsequent mount re-executes
       // `run()` even when the field tree reference happens to be reused.
       invalidate(suiteKey);
-      (suite as { reset: () => void }).reset();
+      reset();
     });
   }
 
@@ -1274,7 +1287,7 @@ export function createVestAdapter(
       }
 
       // Opt-in auto-focus: derive the Vest field name from the bound field.
-      if (validationOptions.focusCurrentField) {
+      if (validationOptions.focusCurrentField === true) {
         return deriveVestFieldNameFromContext(ctx);
       }
 
@@ -1295,7 +1308,7 @@ export function createVestAdapter(
       }
 
       const syncOptions = shouldDeferVestWarnings(
-        validationOptions as VestValidationRegistrationOptions<unknown>,
+        validationOptions,
         entry.initialResult,
       )
         ? {
@@ -1307,7 +1320,7 @@ export function createVestAdapter(
       return mapVestValidationResult(
         entry.initialResult,
         fieldTree,
-        syncOptions as VestValidationRegistrationOptions<unknown>,
+        syncOptions,
         deriveVestFieldNameFromContext(ctx),
       );
     });
@@ -1347,7 +1360,7 @@ export function createVestAdapter(
         // `onSuccess`'s `filterExistingVestEntries` would treat them as
         // already-emitted and drop them from the final, settled result.
         const snapshotOptions = shouldDeferVestWarnings(
-          validationOptions as VestValidationRegistrationOptions<unknown>,
+          validationOptions,
           entry.initialResult,
         )
           ? {
@@ -1360,7 +1373,7 @@ export function createVestAdapter(
           runResult: entry.runResult,
           initialSnapshot: createVestValidationSnapshot(
             entry.initialResult,
-            snapshotOptions as VestValidationRegistrationOptions<unknown>,
+            snapshotOptions,
           ),
           deferred: entry.deferred,
         } satisfies PendingVestValidationPayload;
@@ -1405,7 +1418,7 @@ export function createVestAdapter(
         return mapVestValidationResult(
           pendingResult.result,
           ctx.fieldTree,
-          validationOptions as VestValidationRegistrationOptions<unknown>,
+          validationOptions,
           deriveVestFieldNameFromContext(ctx),
           pendingResult.initialSnapshot,
         );

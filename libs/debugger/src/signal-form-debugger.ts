@@ -504,16 +504,16 @@ export class NgxSignalFormDebugger {
         errorsVisible = hasTouchedFields || submittedStatus !== 'unsubmitted';
         visibilityReason = hasTouchedFields
           ? 'Errors shown because fields were touched (blurred)'
-          : submittedStatus !== 'unsubmitted'
-            ? 'Errors shown because form was submitted'
-            : 'Errors hidden until you touch (blur) fields';
+          : submittedStatus === 'unsubmitted'
+            ? 'Errors hidden until you touch (blur) fields'
+            : 'Errors shown because form was submitted';
         break;
       case 'on-submit':
         errorsVisible = submittedStatus !== 'unsubmitted';
         visibilityReason =
-          submittedStatus !== 'unsubmitted'
-            ? 'Errors shown because form was submitted'
-            : 'Errors hidden until form submission';
+          submittedStatus === 'unsubmitted'
+            ? 'Errors hidden until form submission'
+            : 'Errors shown because form was submitted';
         break;
       default:
         strategy satisfies never;

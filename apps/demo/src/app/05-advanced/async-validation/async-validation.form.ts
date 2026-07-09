@@ -16,7 +16,7 @@ import {
   validateHttp,
 } from '@angular/forms/signals';
 import {
-  type ErrorDisplayStrategy,
+  type ResolvedErrorDisplayStrategy,
   type FormFieldAppearance,
   type FormFieldOrientation,
   createOnInvalidHandler,
@@ -265,7 +265,7 @@ const registrationSchema = schema<Registration>((path) => {
   `,
 })
 export class AsyncValidationComponent {
-  readonly errorDisplayMode = input<ErrorDisplayStrategy>('on-touch');
+  readonly errorDisplayMode = input<ResolvedErrorDisplayStrategy>('on-touch');
   readonly appearance = input<FormFieldAppearance>('outline');
   readonly orientation = input<FormFieldOrientation>('vertical');
 

@@ -6,7 +6,7 @@ import {
   viewChild,
 } from '@angular/core';
 import type {
-  ErrorDisplayStrategy,
+  ResolvedErrorDisplayStrategy,
   FormFieldAppearance,
 } from '@ngx-signal-forms/toolkit';
 import { NgxSignalFormDebugger } from '@ngx-signal-forms/debugger';
@@ -115,7 +115,8 @@ export class LabellessFieldsPage {
   protected readonly formComponent =
     viewChild.required<LabellessFieldsFormComponent>('formComponent');
 
-  protected readonly selectedMode = signal<ErrorDisplayStrategy>('on-touch');
+  protected readonly selectedMode =
+    signal<ResolvedErrorDisplayStrategy>('on-touch');
   protected readonly selectedAppearance =
     signal<FormFieldAppearance>('standard');
   protected readonly selectedOrientation = createOrientationSelection(

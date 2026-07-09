@@ -149,8 +149,8 @@ describe('Headless Utilities', () => {
           valid: 'yes', // Not a function
         };
 
-        expect(readFieldFlag(state, 'invalid' as BooleanStateKey)).toBe(false);
-        expect(readFieldFlag(state, 'valid' as BooleanStateKey)).toBe(false);
+        expect(readFieldFlag(state, 'invalid')).toBe(false);
+        expect(readFieldFlag(state, 'valid')).toBe(false);
       });
     });
   });

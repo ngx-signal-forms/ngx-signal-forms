@@ -85,7 +85,7 @@ export function* walkFieldTreeEntries<TModel>(
   // Angular does not produce cycles, but a hand-rolled or malformed tree can.
   // Guarding by reference keeps traversal total and prevents infinite recursion.
   const seen = new WeakSet<FieldTree<unknown>>();
-  yield* walk(root as FieldTree<unknown>, '', seen);
+  yield* walk(root, '', seen);
 }
 
 function* walk(
@@ -126,7 +126,7 @@ function* walk(
       throw invalidChildError(path, key);
     }
 
-    yield* walk(child as FieldTree<unknown>, joinPath(path, key), seen);
+    yield* walk(child, joinPath(path, key), seen);
   }
 }
 
@@ -145,11 +145,7 @@ function* walkArrayChildren(
       throw invalidChildError(path, String(index));
     }
 
-    yield* walk(
-      child as FieldTree<unknown>,
-      joinPath(path, String(index)),
-      seen,
-    );
+    yield* walk(child, joinPath(path, String(index)), seen);
   }
 }
 

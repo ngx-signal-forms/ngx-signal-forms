@@ -6,7 +6,7 @@ import {
 } from '@angular/core';
 import { form, FormField } from '@angular/forms/signals';
 import {
-  type ErrorDisplayStrategy,
+  type ResolvedErrorDisplayStrategy,
   type FormFieldAppearance,
   type FormFieldOrientation,
   provideErrorMessages,
@@ -243,7 +243,7 @@ import { globalConfigSchema } from './global-configuration.validations';
   `,
 })
 export class GlobalConfigurationComponent {
-  readonly errorDisplayMode = input<ErrorDisplayStrategy>('on-touch');
+  readonly errorDisplayMode = input<ResolvedErrorDisplayStrategy>('on-touch');
   readonly appearance = input<FormFieldAppearance>('outline');
   readonly orientation = input<FormFieldOrientation>('vertical');
 

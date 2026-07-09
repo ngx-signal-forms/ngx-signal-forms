@@ -303,22 +303,14 @@ layout behavior instead of implementation details:
 ```ts
 // before
 provideNgxSignalFormControlPresets({
-  'text-like': {
-    /* … */
-  },
-  'textarea-select-like': {
-    /* … */
-  },
+  'text-like': {/* … */},
+  'textarea-select-like': {/* … */},
 });
 
 // after
 provideNgxSignalFormControlPresets({
-  'input-like': {
-    /* … */
-  },
-  'standalone-field-like': {
-    /* … */
-  },
+  'input-like': {/* … */},
+  'standalone-field-like': {/* … */},
 });
 ```
 

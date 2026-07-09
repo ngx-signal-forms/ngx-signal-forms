@@ -17,16 +17,18 @@ import type { PasswordFormModel } from './warning-support.model';
  * - **Non-blocking warnings**: Provide guidance without blocking submission
  *
  * **Warning Implementation:**
- * Use `customError()` with `kind: 'warn:*'` to create non-blocking warnings.
- * The toolkit's form error component automatically:
- * - Separates warnings from blocking errors in the UI
- * - Displays warnings with ARIA role="status" aria-live="polite" (non-intrusive)
- * - Displays errors with ARIA role="alert" aria-live="assertive" (immediate)
- * - Styles warnings differently (amber vs red)
- * - Allows form submission even with warnings present
+ * Return a validation error literal with a `warn:*` prefixed `kind` to create a
+ * non-blocking warning (see the `validate()` blocks below). The toolkit's error
+ * components automatically:
+ * - Separate warnings from blocking errors in the UI
+ * - Display warnings with ARIA role="status" aria-live="polite" (non-intrusive)
+ * - Display errors with ARIA role="alert" aria-live="assertive" (immediate)
+ * - Style warnings differently (amber vs red)
+ * - Allow form submission even with warnings present
  *
- * **Alternative:** The toolkit also provides `warningError('kind', 'message')` helper
- * which wraps `customError({ kind: 'warn:kind', message })` for convenience.
+ * **Shortcut:** The toolkit also exports a `warningError('kind', 'message')`
+ * helper (from `@ngx-signal-forms/toolkit`) that builds the same
+ * `{ kind: 'warn:kind', message }` literal for you.
  */
 export const passwordFormSchema = schema<PasswordFormModel>((path) => {
   // Username validation - blocking errors

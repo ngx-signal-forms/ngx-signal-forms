@@ -70,5 +70,5 @@ Horizontal `FormFieldOrientation` is exercised via the shared `ui/orientation-to
 
 ### Instructions
 
-- `.github/instructions/angular-signal-forms.instructions.md` — Angular Signal Forms rules
 - `.github/instructions/ngx-signal-forms-toolkit.instructions.md` — Toolkit usage rules
+- Angular Signal Forms API reference: `angular-developer` skill, `references/signal-forms.md`

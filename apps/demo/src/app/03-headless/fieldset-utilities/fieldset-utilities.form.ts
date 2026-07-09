@@ -18,7 +18,7 @@ import {
 } from '@angular/forms/signals';
 import {
   createOnInvalidHandler,
-  type ErrorDisplayStrategy,
+  type ResolvedErrorDisplayStrategy,
   NgxSignalForm,
 } from '@ngx-signal-forms/toolkit';
 import {
@@ -107,7 +107,7 @@ export class HeadlessFieldsetUtilitiesComponent {
    * component injector — above the `<form>` context — so it receives the same
    * signal explicitly to stay in sync.
    */
-  readonly errorDisplayMode = input<ErrorDisplayStrategy>('on-touch');
+  readonly errorDisplayMode = input<ResolvedErrorDisplayStrategy>('on-touch');
 
   readonly #initialData: HeadlessDeliveryModel = {
     contactEmail: '',

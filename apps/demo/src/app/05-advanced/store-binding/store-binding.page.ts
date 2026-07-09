@@ -16,6 +16,7 @@ import {
   DisplayControlsCardComponent,
   DisplayControlsSectionComponent,
   ExampleCardsComponent,
+  NgxPageControlsDirective,
   OrientationToggleComponent,
   PageHeaderComponent,
   SplitLayoutComponent,
@@ -45,11 +46,39 @@ import { StoreBindingFormComponent } from './store-binding.form';
     OrientationToggleComponent,
     DisplayControlsCardComponent,
     DisplayControlsSectionComponent,
+    NgxPageControlsDirective,
     PageHeaderComponent,
     SplitLayoutComponent,
     NgxSignalFormDebugger,
   ],
   template: `
+    <ng-template ngxPageControls>
+      <ngx-display-controls-card
+        title="Binding seam framing"
+        description="Change the wrapper appearance and label orientation to confirm the live-binding form renders like any other toolkit form. The binding itself is unaffected by these controls."
+        [chips]="currentControlChips()"
+        layout="split"
+      >
+        <ngx-display-controls-section
+          display-controls-primary
+          title="🎨 Wrapper appearance"
+          description="The delegated-write model is an ordinary WritableSignal, so the wrappers render it normally."
+        >
+          <ngx-appearance-toggle [(value)]="selectedAppearance" />
+        </ngx-display-controls-section>
+
+        <ngx-display-controls-section
+          title="↔️ Label orientation"
+          description="Compare vertical and horizontal label columns for the non-outline appearances."
+        >
+          <ngx-orientation-toggle
+            [(value)]="selectedOrientation"
+            [appearance]="selectedAppearance()"
+          />
+        </ngx-display-controls-section>
+      </ngx-display-controls-card>
+    </ng-template>
+
     <ngx-page-header
       title="Store Binding"
       subtitle="Live two-way binding between a Signal Form and an @ngrx/signals store"
@@ -58,46 +87,21 @@ import { StoreBindingFormComponent } from './store-binding.form';
     <ngx-example-cards
       [demonstrated]="content.demonstrated"
       [learning]="content.learning"
-    />
-
-    <ngx-display-controls-card
-      title="Binding seam framing"
-      description="Change the wrapper appearance and label orientation to confirm the live-binding form renders like any other toolkit form. The binding itself is unaffected by these controls."
-      [chips]="currentControlChips()"
-      layout="split"
     >
-      <ngx-display-controls-section
-        display-controls-primary
-        title="🎨 Wrapper appearance"
-        description="The delegated-write model is an ordinary WritableSignal, so the wrappers render it normally."
-      >
-        <ngx-appearance-toggle [(value)]="selectedAppearance" />
-      </ngx-display-controls-section>
-
-      <ngx-display-controls-section
-        title="↔️ Label orientation"
-        description="Compare vertical and horizontal label columns for the non-outline appearances."
-      >
-        <ngx-orientation-toggle
-          [(value)]="selectedOrientation"
+      <ngx-split-layout>
+        <ngx-store-binding-form
           [appearance]="selectedAppearance()"
+          [orientation]="selectedOrientation()"
+          left
         />
-      </ngx-display-controls-section>
-    </ngx-display-controls-card>
 
-    <ngx-split-layout>
-      <ngx-store-binding-form
-        [appearance]="selectedAppearance()"
-        [orientation]="selectedOrientation()"
-        left
-      />
-
-      @if (formRef(); as form) {
-        <div right>
-          <ngx-signal-form-debugger [formTree]="form.settingsForm" />
-        </div>
-      }
-    </ngx-split-layout>
+        @if (formRef(); as form) {
+          <div right>
+            <ngx-signal-form-debugger [formTree]="form.settingsForm" />
+          </div>
+        }
+      </ngx-split-layout>
+    </ngx-example-cards>
   `,
 })
 export class StoreBindingPage {
