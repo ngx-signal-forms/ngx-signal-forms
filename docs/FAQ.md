@@ -122,12 +122,11 @@ async onSubmit() {
 
 `reset()` only clears interaction state and (optionally) value — it does not re-run your HTTP load;
 re-fetch and `model.set(...)` if you want server-canonical values back. You can also drive the
-model from `resource()`/`httpResource()` instead of an imperative `set`. There is no dedicated
-fetch→prefill→edit→submit→reset demo yet; the closest are field-state-patterns (prefilled + Reset
-button) and store-binding (store-backed reset).
+model from `resource()`/`httpResource()` instead of an imperative `set` — the server-integration
+demo shows the full fetch→prefill→edit→submit→reset flow with `resource()`.
 
 **See:** [packages/toolkit/README.md](../packages/toolkit/README.md) ·
-[docs/MIGRATING_FROM_NGX_VEST_FORMS.md](./MIGRATING_FROM_NGX_VEST_FORMS.md) ·
+[demo: server-integration](../apps/demo/src/app/05-advanced/server-integration/README.md) ·
 [demo: field-state-patterns](../apps/demo/src/app/05-advanced/field-state-patterns/README.md) ·
 [demo: store-binding](../apps/demo/src/app/05-advanced/store-binding/README.md)
 
@@ -427,14 +426,15 @@ submit(this.form, {
 });
 ```
 
-Show the general (non-field) error as a separate banner/toast from your catch block. If you want the
-error to **auto-clear as the user edits** the field, use the alternative pattern: hold the server
-errors in a signal and read it in a normal `validate(path.email, () => serverErrors()['email'] ?
-{ kind: 'server', message: … } : null)` — `validate()` re-runs on every edit, so the error clears
-itself (there is no `customError()` factory; validators just return `{ kind, message }`). No demo
-exercises the multi-field mapping end-to-end yet.
+An error returned with **no** `fieldTree` attaches to the root — render it as a form-level banner
+by reading `form().errors()`. Submission errors **auto-clear when the owning field's value
+changes**: the email error clears as the user edits email, and a root-attached banner clears on
+_any_ edit (the root's value is the whole model). If you need different clearing behavior, the
+alternative is holding server errors in a signal read by a normal `validate(path.email, () =>
+serverErrors()['email'] ? { kind: 'server', message: … } : null)`, which re-runs on every edit.
+The server-integration demo exercises the full mapping end-to-end.
 
-**See:** [docs/WARNINGS_SUPPORT.md](./WARNINGS_SUPPORT.md) ·
+**See:** [demo: server-integration](../apps/demo/src/app/05-advanced/server-integration/README.md) ·
 [demo: submission-patterns](../apps/demo/src/app/05-advanced/submission-patterns/README.md) ·
 [demo: async-validation](../apps/demo/src/app/05-advanced/async-validation/README.md)
 
