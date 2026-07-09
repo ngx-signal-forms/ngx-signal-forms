@@ -10,6 +10,7 @@ import type { FieldTree, ValidationError } from '@angular/forms/signals';
 import {
   injectFormContext,
   NGX_SIGNAL_FORM_FIELD_CONTEXT,
+  NGX_SIGNAL_FORMS_CONFIG,
   resolveStrategyFromContext,
   showErrors,
   unwrapValue,
@@ -236,6 +237,15 @@ export class NgxFormFieldError {
   readonly #injectedContext = injectFormContext();
 
   /**
+   * Global toolkit config, needed for the same reason: the warning-strategy
+   * cascade below must fall back to `NGX_SIGNAL_FORMS_CONFIG.defaultErrorStrategy`
+   * exactly like `NgxHeadlessErrorState.#resolvedStrategy` does for blocking
+   * errors, so a standalone `ngx-form-field-error` (no `[ngxSignalForm]` host)
+   * still honours `provideNgxSignalFormsConfig({ defaultErrorStrategy })`.
+   */
+  readonly #config = inject(NGX_SIGNAL_FORMS_CONFIG, { optional: true });
+
+  /**
    * Try to inject field context (optional - provided by form field wrapper).
    * Used to automatically resolve field name when not explicitly provided.
    */
@@ -378,7 +388,11 @@ export class NgxFormFieldError {
     () => {
       const explicit = this.warningStrategy();
       if (explicit !== undefined) {
-        return resolveStrategyFromContext(explicit, this.#injectedContext);
+        return resolveStrategyFromContext(
+          explicit,
+          this.#injectedContext,
+          this.#config?.defaultErrorStrategy,
+        );
       }
       return 'immediate';
     },

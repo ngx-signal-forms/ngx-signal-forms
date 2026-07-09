@@ -130,7 +130,7 @@ First-class adapter for Vest suites. Reads `suite.run()` results and maps blocki
 ```typescript
 validateVest(path, suite); // blocking errors only
 validateVest(path, suite, { includeWarnings: true }); // + warn() as toolkit warnings
-validateVest(path, suite, { resetOnDestroy: false }); // opt out of teardown reset (now the default)
+validateVest(path, suite, { resetOnDestroy: false }); // opt out of teardown reset (true is the default)
 validateVest(path, suite, { only: (ctx) => ctx.value().focusedField });
 validateVest(path.email, suite, { focusCurrentField: true }); // auto-focus the bound field
 ```

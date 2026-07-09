@@ -309,11 +309,22 @@ export class NgxSignalFormAutoAria {
 
     const managedIds = [...hintIds];
 
-    if (this.#shouldShowErrors()) {
+    const showsBlockingError = this.#shouldShowErrors();
+
+    if (showsBlockingError) {
       managedIds.push(generateErrorId(snapshot.fieldName));
     }
 
-    if (this.#shouldShowWarnings()) {
+    // Mutually exclusive with the blocking-error id, mirroring
+    // `createAriaDescribedBySignal`'s `!hasBlockingError && ...` guard: the
+    // default `NgxFormFieldError` renderer suppresses its warning live
+    // region whenever a blocking error is also visible, so no
+    // `${fieldName}-warning` element exists in the DOM at that point.
+    // Without this guard, a field with both a blocking error and a `warn:*`
+    // error would have this "which ids does the toolkit own" computation
+    // diverge from the DOM-writing factory — composing a dangling
+    // `${fieldName}-warning` reference (axe `aria-valid-attr-value`).
+    if (!showsBlockingError && this.#shouldShowWarnings()) {
       managedIds.push(generateWarningId(snapshot.fieldName));
     }
 

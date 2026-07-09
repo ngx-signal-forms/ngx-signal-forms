@@ -2,7 +2,9 @@ import { Component, signal, type Signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import {
   applyEach,
+  disabled,
   form,
+  hidden,
   required,
   schema,
   type FieldTree,
@@ -150,6 +152,35 @@ describe('summarizeFieldOptionality', () => {
       hasOptional: false,
     });
   });
+
+  it('excludes a required+hidden field from the summary', () => {
+    // A required field hidden via Angular's hidden() must not count toward
+    // the required-field summary — the user can never see or fill it in, so
+    // NgxFormMarkingLegend has nothing to explain about it.
+    const tree = makeForm({ email: '', secret: '' }, (path) => {
+      required(path.email);
+      required(path.secret);
+      hidden(path.secret, () => true);
+    });
+
+    expect(summarizeFieldOptionality(tree)).toEqual({
+      hasRequired: true,
+      hasOptional: false,
+    });
+  });
+
+  it('excludes a required+disabled field from the summary', () => {
+    const tree = makeForm({ email: '', token: '' }, (path) => {
+      required(path.email);
+      required(path.token);
+      disabled(path.token, () => true);
+    });
+
+    expect(summarizeFieldOptionality(tree)).toEqual({
+      hasRequired: true,
+      hasOptional: false,
+    });
+  });
 });
 
 describe('createFieldOptionalitySummary', () => {
@@ -208,6 +239,36 @@ describe('createFieldOptionalitySummary', () => {
     expect(summary.hasRequired()).toBe(true);
 
     model.set({ birthDate: new Date('2000-01-01') });
+    expect(summary.hasRequired()).toBe(true);
+  });
+
+  it('includes a required field reactively once it becomes visible again', () => {
+    const isSecretHidden = signal(true);
+
+    @Component({ template: '' })
+    class Host {
+      readonly model = signal({ email: '', secret: '' });
+      readonly tree = form(
+        this.model,
+        schema<{ email: string; secret: string }>((path) => {
+          required(path.secret);
+          hidden(path.secret, () => isSecretHidden());
+        }),
+      );
+      readonly summary = createFieldOptionalitySummary(() => this.tree);
+    }
+
+    const fixture = TestBed.createComponent(Host);
+    const { summary } = fixture.componentInstance;
+
+    // `secret` is required but hidden — excluded, so the only surviving leaf
+    // (`email`, optional) drives the summary.
+    expect(summary.hasRequired()).toBe(false);
+    expect(summary.hasOptional()).toBe(true);
+
+    // Once `secret` becomes visible again, its required() state is back in
+    // play and the summary updates reactively.
+    isSecretHidden.set(false);
     expect(summary.hasRequired()).toBe(true);
   });
 
