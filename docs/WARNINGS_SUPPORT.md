@@ -344,6 +344,47 @@ want to **override** an inherited form-level strategy that would otherwise
 apply. To gate warnings alongside errors, use `warningStrategy="inherit"` (or
 match `strategy` explicitly).
 
+### Fieldsets: `NgxFormFieldset` / `NgxHeadlessFieldset`
+
+`NgxHeadlessFieldset` (and `NgxFormFieldset`, which composes it via
+`hostDirectives`) exposes the same `warningStrategy` input, resolved with the
+same cascade as the wrapper / `NgxFormFieldError`:
+
+- Explicitly set (including `'inherit'`) → resolved against the ambient form
+  context, falling back to `'on-touch'` if there is none.
+- Left unset → `'immediate'` directly, **without** consulting the form
+  context or `NGX_SIGNAL_FORMS_CONFIG.defaultErrorStrategy`.
+
+Before this input existed, `NgxHeadlessFieldset` built a single internal
+"show" signal shared by both blocking errors and warnings, so aggregated
+warnings silently inherited whatever `strategy` the fieldset (or its form
+context) used — a fieldset under `errorStrategy="on-submit"` hid its warnings
+until submit too, unlike the wrapper. `warningStrategy` fixes that: fieldset
+warnings now default to `'immediate'`, matching `NgxFormFieldWrapper`'s
+contract, regardless of what blocking-error strategy is in effect.
+
+**Errors-present visibility**: `NgxHeadlessFieldset.shouldShowWarnings()` is
+no longer suppressed just because `shouldShowErrors()` is `true`. It now
+matches `NgxHeadlessErrorSummary.shouldShowWarnings()` — independent of error
+presence — rather than the old "hide warnings while blocking errors are
+visible" rule, because fieldsets aggregate across a subtree the same way a
+summary does. `NgxFormFieldset`'s rendered grouped-message region is still a
+single slot, though, so it applies "errors take visual priority" itself on
+top of these two independent signals (only one category is ever rendered or
+styled at a time — see `filteredErrorsSignal` and the `--warning` host class
+in `form-fieldset.ts`).
+
+```html
+<ngx-form-fieldset [field]="form.address" strategy="on-submit">
+  <!--
+    Blocking errors on form.address stay hidden until submit (`strategy`),
+    but aggregated warnings surface immediately (`warningStrategy` defaults
+    to 'immediate') — unless a blocking error is *also* currently visible,
+    in which case the fieldset's single message slot shows the error instead.
+  -->
+</ngx-form-fieldset>
+```
+
 ## Styling
 
 ### CSS Custom Properties
