@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { ProfileFormComponent } from './profile-form/profile-form';
 
 /**
@@ -12,6 +12,7 @@ import { ProfileFormComponent } from './profile-form/profile-form';
  */
 @Component({
   selector: 'ngx-root',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 
   imports: [ProfileFormComponent],
   template: `
