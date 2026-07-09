@@ -40,7 +40,7 @@ alone is enough — come back here when you hit the first group of related field
 When each field wraps itself, the fieldset only needs to show cross-field errors.
 
 ```html
-<ngx-form-fieldset [fieldsetField]="form.passwords">
+<ngx-form-fieldset [field]="form.passwords">
   <legend>Passwords</legend>
 
   <ngx-form-field-wrapper [formField]="form.passwords.password">
@@ -92,7 +92,7 @@ When you want a compact layout — e.g. a deep address group where individual
 fields stay plain — let the fieldset display every descendant error once.
 
 ```html
-<ngx-form-fieldset [fieldsetField]="form.address" [includeNestedErrors]="true">
+<ngx-form-fieldset [field]="form.address" [includeNestedErrors]="true">
   <legend>Address</legend>
   <input [formField]="form.address.street" />
   <input [formField]="form.address.city" />
@@ -142,12 +142,12 @@ picks up the same strategy via DI:
 
 ```html
 <form [formRoot]="wizardForm" ngxSignalForm errorStrategy="on-submit">
-  <ngx-form-fieldset [fieldsetField]="wizardForm.personalInfo">
+  <ngx-form-fieldset [field]="wizardForm.personalInfo">
     <legend>Personal</legend>
     <!-- wrappers inside inherit 'on-submit' automatically -->
   </ngx-form-fieldset>
 
-  <ngx-form-fieldset [fieldsetField]="wizardForm.billing">
+  <ngx-form-fieldset [field]="wizardForm.billing">
     <legend>Billing</legend>
     <!-- same strategy, no extra wiring -->
   </ngx-form-fieldset>
@@ -216,7 +216,7 @@ own fieldset so errors aggregate per row:
 
 ```html
 @for (item of form.lineItems; track $index; let i = $index) {
-<ngx-form-fieldset [fieldsetField]="form.lineItems[i]">
+<ngx-form-fieldset [field]="form.lineItems[i]">
   <legend>Line {{ i + 1 }}</legend>
   <ngx-form-field-wrapper [formField]="form.lineItems[i].description">
     <label [for]="'line-' + i + '-desc'">Description</label>

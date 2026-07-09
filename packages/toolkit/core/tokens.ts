@@ -138,8 +138,6 @@ export const NGX_SIGNAL_FORM_FIELD_CONTEXT =
  * auto-ARIA directive. Consumers should use `ngxSignalFormControlAria` on
  * their control host instead of providing this token directly — that keeps
  * the public API focused on the declarative directive input.
- *
- * @internal
  */
 export const NGX_SIGNAL_FORM_ARIA_MODE = new InjectionToken<
   Signal<NgxSignalFormControlAriaMode | null>
