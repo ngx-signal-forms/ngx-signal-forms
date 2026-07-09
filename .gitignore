@@ -59,6 +59,7 @@ playwright-report/
 build.log
 
 .claude/worktrees
+.worktrees/
 .claude/settings.local.json
 .claude/scheduled_tasks.lock
 .nx/polygraph
@@ -69,4 +70,4 @@ build.log
 .nx/migrate-runs
 
 # graphify knowledge graph output
-graphify-out/.worktrees/
+graphify-out/

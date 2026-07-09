@@ -10,6 +10,8 @@ process.env['NO_PROXY'] ??= 'localhost,127.0.0.1';
 
 const baseURL = process.env['BASE_URL'] ?? 'http://127.0.0.1:4600';
 const isCI = Boolean(process.env['CI']);
+const parsedCiWorkers = Number.parseInt(process.env['PW_WORKERS'] ?? '', 10);
+const ciWorkers = parsedCiWorkers > 0 ? parsedCiWorkers : 2;
 
 /**
  * Read environment variables from file.
@@ -32,6 +34,7 @@ export default defineConfig({
   updateSnapshots: isCI ? 'none' : 'missing',
   forbidOnly: isCI,
   retries: isCI ? 1 : 0,
+  workers: isCI ? ciWorkers : undefined,
   reporter: [
     ['list'],
     ['html', { open: 'never', outputFolder: 'playwright-report' }],

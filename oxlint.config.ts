@@ -60,6 +60,7 @@ export default defineConfig({
   ignorePatterns: [
     '.angular',
     '.nx',
+    '.worktrees',
     '.agents',
     '.github/skills',
     '**/dist',
