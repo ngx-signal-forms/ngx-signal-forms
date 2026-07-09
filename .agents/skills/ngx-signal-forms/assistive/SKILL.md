@@ -83,9 +83,7 @@ import { NgxFormFieldErrorSummary } from '@ngx-signal-forms/toolkit/assistive';
 })
 export class RegistrationFormComponent {
   readonly #model = signal({ email: '' });
-  protected readonly registrationForm = form(this.#model, {
-    /* validators */
-  });
+  protected readonly registrationForm = form(this.#model, {/* validators */});
 }
 ```
 
