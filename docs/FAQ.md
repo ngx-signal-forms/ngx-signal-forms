@@ -414,12 +414,13 @@ submit(this.form, {
     try {
       await this.api.save(form().value());
       return; // success
-    } catch (e) {
-      // e.fieldErrors === { email: 'already taken', … }
-      return Object.entries(e.fieldErrors).map(([key, message]) => ({
+    } catch (err) {
+      const { fieldErrors } = err as ApiError; // { email: 'already taken', … }
+      // `fieldTree` targets the field itself (form.email), not its state (form.email()).
+      return Object.entries(fieldErrors).map(([field, message]) => ({
         kind: 'server',
         message,
-        fieldTree: (form as Record<string, any>)[key](), // target the field
+        fieldTree: form[field as keyof Profile],
       }));
     }
   },
@@ -558,8 +559,8 @@ Mappings (Signal Forms + this toolkit):
 
 - **`setValue`/`patchValue`** → write the model signal: `model.set(next)` / `model.update(m => …)`.
   The model is the source of truth.
-- **`valueChanges`** → read the model reactively: `computed(() => model())`, or `effect(() =>
-someside(model()))`.
+- **`valueChanges`** → read the model reactively: `computed(() => model())`, or run a side effect
+  with `effect(() => this.autosave(model()))`.
 - **`markAllAsTouched`** → `form().markAsTouched()` cascades to every descendant; Angular's
   `submit()` also marks everything touched internally.
 - **custom `ValidatorFn`** → schema functions: `validate()`/`validateAsync()` for sync/async field

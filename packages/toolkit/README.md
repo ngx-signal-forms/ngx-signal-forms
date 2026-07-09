@@ -374,7 +374,7 @@ Building blocks for custom wrappers and headless UIs that want to join the
 | ---------------------------------------------------------------- | -------------------------------------------------------------------------- |
 | `resolveErrorDisplayStrategy(input, context?, configDefault?)`   | Pure resolution: input ?? context ?? config default ?? `'on-touch'`        |
 | `resolveStrategyFromContext(input, formContext, configDefault?)` | Resolved strategy value (call inside your own `computed()` for reactivity) |
-| `resolveSubmittedStatusFromContext(input)`                       | Same cascade for `SubmittedStatus`                                         |
+| `resolveSubmittedStatusFromContext(input, formContext)`          | Same cascade for `SubmittedStatus`                                         |
 | `injectFormContext()`                                            | Get the `ngxSignalForm` context, or `undefined`                            |
 | `injectFieldControl(element, injector?)`                         | Resolve the bound `FieldTree` for an element from the form context         |
 
