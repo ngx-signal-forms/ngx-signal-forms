@@ -322,6 +322,32 @@ describe('NgxSignalFormDebugger', () => {
       );
       expect(warningBadge?.textContent).toMatch(/\d+\/\d+/);
     });
+
+    it('should report Valid (not Invalid) when the only errors are warn:-only', () => {
+      // Angular's native `invalid()` is `true` for ANY error, including
+      // warn-only ones. The debugger must derive Valid/Invalid from
+      // blocking-error counts instead, so a form whose sole error is
+      // `warn:weak-password` reads as Valid throughout the panel.
+      const topBadge = warnEl.querySelector(
+        '.ngx-debugger__header ngx-signal-form-debugger-badge',
+      );
+      expect(topBadge?.textContent).toContain('Valid');
+      expect(topBadge?.textContent).not.toContain('Invalid');
+
+      const statusBadges = Array.from(
+        warnEl.querySelectorAll(
+          '.ngx-debugger__status-badges ngx-signal-form-debugger-badge',
+        ),
+      );
+      // Valid, Invalid, Dirty, Pending, Status
+      expect(statusBadges[0].getAttribute('data-appearance')).toBe('success'); // Valid
+      expect(statusBadges[1].getAttribute('data-appearance')).toBe('neutral'); // Invalid inactive
+
+      const warningBadge = warnEl.querySelector(
+        'ngx-signal-form-debugger-badge[data-appearance="warning"]',
+      );
+      expect(warningBadge?.textContent).toMatch(/\d+\/\d+/);
+    });
   });
 
   describe('Dev-mode diagnostics', () => {
@@ -493,6 +519,36 @@ describe('NgxSignalFormDebugger', () => {
       localFixture.componentRef.setInput('formTree', malformed);
       localFixture.detectChanges();
 
+      expect(localEl.querySelector('.ngx-debugger')).toBeNull();
+    });
+
+    it('treats a partially-conforming FieldState stub as unusable and renders nothing', () => {
+      const localFixture = TestBed.createComponent(NgxSignalFormDebugger);
+      const localEl: HTMLElement = localFixture.nativeElement;
+
+      // Satisfies the OLD (narrower) guard — fieldTree/value/touched/
+      // invalid/errors are all functions — but is missing valid/dirty/
+      // pending, which the component calls unconditionally during change
+      // detection. Before the fix this stub passed `isFieldStateLike` and
+      // then threw a TypeError the first time `dirty()` or `pending()` was
+      // invoked. The guard must now reject it up front, the same way it
+      // rejects a fully-malformed input.
+      const partialStub: Record<string, unknown> = {
+        value: () => ({ name: '', email: '' }),
+        touched: () => false,
+        invalid: () => false,
+        errors: () => [],
+      };
+      partialStub['fieldTree'] = () => partialStub;
+      const malformed = partialStub as unknown as ReturnType<
+        typeof form<TestData>
+      >;
+
+      localFixture.componentRef.setInput('formTree', malformed);
+
+      expect(() => {
+        localFixture.detectChanges();
+      }).not.toThrow();
       expect(localEl.querySelector('.ngx-debugger')).toBeNull();
     });
   });
