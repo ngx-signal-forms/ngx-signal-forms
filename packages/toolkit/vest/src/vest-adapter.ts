@@ -195,6 +195,7 @@ type VestRunCache = WeakMap<
 
 const VEST_PATH_SEGMENT = /[^.[\]]+/gu;
 const VEST_KIND_SEGMENT_MAX_LEN = 48;
+const resolveQueueTail = (): void => {};
 
 /**
  * Internal composite-key separator. A NUL code point can never appear in a Vest
@@ -476,10 +477,9 @@ function waitForSuiteIdle<TValue>(
 
 /**
  * Runs `suite` for `(value, focus)` after the previous queued run has settled
- * and once the suite is idle. A run for a field tree that finds this suite
- * instance CONTESTED by another, still-pending field tree (see
- * {@link isSuiteContestedByOtherTree}) therefore never overlaps with that
- * other run or another contender queued behind it.
+ * and once the suite is idle. Calls `onRunStarted` synchronously after this
+ * contender's own `suite.run()` begins, so its queue tail cannot be released
+ * by an earlier contender's idle event.
  *
  * This trades a small amount of latency (the deferred tree's validation
  * genuinely waits for the other tree's async work to finish before its own
@@ -493,10 +493,15 @@ async function deferVestRunUntilIdle<TValue>(
   value: TValue,
   focus: string | readonly string[] | undefined,
   previousRun: PromiseLike<void>,
+  onRunStarted: (
+    runResult: VestResultLike | PromiseLike<VestResultLike>,
+  ) => void,
 ): Promise<VestResultLike> {
   await previousRun;
   await waitForSuiteIdle(suite);
-  return executeVestRun(suite, value, focus);
+  const runResult = executeVestRun(suite, value, focus);
+  onRunStarted(runResult);
+  return runResult;
 }
 
 /**
@@ -1099,18 +1104,55 @@ export function createVestAdapter(
   }
 
   /**
-   * Records a run as the per-suite queue tail. Rejections are deliberately
-   * absorbed by the tail so a failed run reports through its own validation
-   * flow without permanently blocking later runs.
+   * Waits for a started run to leave the suite idle state. Vest 6's
+   * `SuiteResult` is thenable, but a later run can supersede its resolver and
+   * leave that thenable pending forever. The idle event is tied to the suite
+   * lifecycle instead, so it is the reliable queue boundary for real Vest
+   * suites. Hand-rolled suites retain the thenable-based best-effort fallback.
    */
-  function recordVestRun(
-    suiteKey: object,
+  function waitForStartedVestRunTail<TValue>(
+    suite: Pick<VestRunnableSuite<TValue>, 'subscribe' | 'get'>,
     runResult: VestResultLike | PromiseLike<VestResultLike>,
-  ): void {
-    const settled = Promise.resolve(runResult).then(
-      () => undefined,
-      () => undefined,
-    );
+  ): Promise<void> {
+    const settleRunResult = (): Promise<void> => {
+      return Promise.resolve(runResult).then(
+        () => undefined,
+        () => undefined,
+      );
+    };
+
+    if (
+      typeof suite.subscribe !== 'function' ||
+      typeof suite.get !== 'function'
+    ) {
+      return settleRunResult();
+    }
+
+    try {
+      return new Promise((resolve) => {
+        // A rejected run must not hold the queue forever. Successful Vest 6
+        // thenables are intentionally ignored here because they can be
+        // superseded; the suite idle event settles the normal path.
+        void Promise.resolve(runResult).then(
+          () => undefined,
+          () => {
+            resolve();
+            return undefined;
+          },
+        );
+        void Promise.resolve(waitForSuiteIdle(suite)).then(resolve, resolve);
+      });
+    } catch {
+      return settleRunResult();
+    }
+  }
+
+  /**
+   * Records a pre-built per-suite queue tail. Rejections are deliberately
+   * absorbed by callers before reaching this function, so a failed run reports
+   * through its own validation flow without blocking later runs.
+   */
+  function recordVestRunTail(suiteKey: object, settled: Promise<void>): void {
     runQueueBySuite.set(suiteKey, settled);
     void settled.then(() => {
       if (runQueueBySuite.get(suiteKey) === settled) {
@@ -1118,6 +1160,17 @@ export function createVestAdapter(
       }
       return undefined;
     });
+  }
+
+  /**
+   * Records an immediately started run as the per-suite queue tail.
+   */
+  function recordVestRun<TValue>(
+    suiteKey: object,
+    suite: Pick<VestRunnableSuite<TValue>, 'subscribe' | 'get'>,
+    runResult: VestResultLike | PromiseLike<VestResultLike>,
+  ): void {
+    recordVestRunTail(suiteKey, waitForStartedVestRunTail(suite, runResult));
   }
 
   /**
@@ -1135,8 +1188,33 @@ export function createVestAdapter(
     focus: string | readonly string[] | undefined,
   ): Promise<VestResultLike> {
     const previousRun = runQueueBySuite.get(suiteKey) ?? Promise.resolve();
-    const runResult = deferVestRunUntilIdle(suite, value, focus, previousRun);
-    recordVestRun(suiteKey, runResult);
+    let resolveTail: () => void = resolveQueueTail;
+    const tail = new Promise<void>((resolve) => {
+      resolveTail = resolve;
+    });
+    // Reserve this slot before the contender begins. Its tail remains pending
+    // until this contender has actually started and the suite subsequently
+    // becomes idle, preserving FIFO ordering for every later contender.
+    recordVestRunTail(suiteKey, tail);
+    const runResult = deferVestRunUntilIdle(
+      suite,
+      value,
+      focus,
+      previousRun,
+      (startedRunResult) => {
+        void waitForStartedVestRunTail(suite, startedRunResult).then(
+          resolveTail,
+          resolveTail,
+        );
+      },
+    );
+    void runResult.then(
+      () => undefined,
+      () => {
+        resolveTail();
+        return undefined;
+      },
+    );
     return runResult;
   }
 
@@ -1196,7 +1274,7 @@ export function createVestAdapter(
       ? enqueueVestRun(suiteKey, suite, value, focus)
       : executeVestRun(suite, value, focus);
     if (!isContested) {
-      recordVestRun(suiteKey, runResult);
+      recordVestRun(suiteKey, suite, runResult);
     }
 
     const nextEntry: VestRunCacheEntry<TValue> = {

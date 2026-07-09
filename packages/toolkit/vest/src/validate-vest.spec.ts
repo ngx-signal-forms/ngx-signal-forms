@@ -7,11 +7,13 @@ import { create, enforce, group, only, test, warn } from 'vest';
 import { describe, expect, it, vi } from 'vitest';
 import {
   type VestResultLike,
+  type VestRunnableSuite,
   VEST_ERROR_KIND_PREFIX,
   VEST_WARNING_KIND_PREFIX,
   validateVest,
   validateVestWarnings,
 } from './validate-vest';
+import { createVestAdapter } from './vest-adapter';
 
 describe('validateVest', () => {
   it('maps blocking Vest failures onto a signal form field after blur', async () => {
@@ -1587,6 +1589,108 @@ describe('validateVest', () => {
       releaseSecond?.();
       releaseThird?.();
     }
+  });
+
+  it('does not let a superseded queued run block the next queued run', async () => {
+    type RunValue = { readonly id: string };
+    type VestMessages = Readonly<Record<string, readonly string[]>>;
+
+    let pending = false;
+    const started: string[] = [];
+    const listeners = new Set<() => void>();
+    let activeRun:
+      | {
+          readonly id: string;
+          readonly resolve: (result: VestResultLike) => void;
+        }
+      | undefined;
+
+    function getMessages(): VestMessages;
+    function getMessages(_field: string): readonly string[];
+    function getMessages(_field?: string): VestMessages | readonly string[] {
+      return [];
+    }
+
+    const settledResult: VestResultLike = {
+      isPending: () => pending,
+      getErrors: getMessages,
+      getWarnings: getMessages,
+    };
+    const suite: VestRunnableSuite<RunValue> = {
+      run(value) {
+        started.push(value.id);
+        pending = true;
+
+        let resolveRun: (result: VestResultLike) => void = () => {};
+        const runResult = Object.assign(
+          new Promise<VestResultLike>((resolve) => {
+            resolveRun = resolve;
+          }),
+          settledResult,
+        );
+        // Vest 6 keeps only one resolver for a suite. A later run replaces
+        // this one, intentionally leaving the superseded thenable unsettled.
+        activeRun = { id: value.id, resolve: resolveRun };
+        return runResult;
+      },
+      subscribe(_event, callback) {
+        listeners.add(callback);
+        return () => {
+          listeners.delete(callback);
+        };
+      },
+      get: () => settledResult,
+    };
+    const completeActiveRun = (id: string): void => {
+      expect(activeRun?.id).toBe(id);
+      pending = false;
+      activeRun?.resolve(settledResult);
+      for (const callback of listeners) {
+        callback();
+      }
+    };
+    const adapter = createVestAdapter();
+    const fieldTree = (value: RunValue) => {
+      return TestBed.runInInjectionContext(() => form(signal(value), () => {}));
+    };
+
+    adapter.runVestSuite({
+      suite,
+      fieldTree: fieldTree({ id: 'first' }),
+      value: { id: 'first' },
+    });
+    adapter.runVestSuite({
+      suite,
+      fieldTree: fieldTree({ id: 'second' }),
+      value: { id: 'second' },
+    });
+    adapter.runVestSuite({
+      suite,
+      fieldTree: fieldTree({ id: 'third' }),
+      value: { id: 'third' },
+    });
+
+    expect(started).toEqual(['first']);
+    completeActiveRun('first');
+    await vi.waitFor(() => {
+      expect(started).toEqual(['first', 'second']);
+    });
+
+    // A focused run is immediate, so it supersedes the queued second run's
+    // Vest thenable while the third contender is waiting behind that run.
+    adapter.runVestSuite({
+      suite,
+      fieldTree: fieldTree({ id: 'superseding' }),
+      value: { id: 'superseding' },
+      focus: 'email',
+    });
+    expect(started).toEqual(['first', 'second', 'superseding']);
+    completeActiveRun('superseding');
+
+    await vi.waitFor(() => {
+      expect(started).toEqual(['first', 'second', 'superseding', 'third']);
+    });
+    completeActiveRun('third');
   });
 
   it('isolates warnings (not just blocking errors) across two concurrently-pending field trees sharing a suite (#214)', async () => {

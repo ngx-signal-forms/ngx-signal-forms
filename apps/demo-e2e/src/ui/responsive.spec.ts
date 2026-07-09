@@ -113,6 +113,7 @@ test.describe('Demo Application UI - Narrow viewport (< 900px)', () => {
   }) => {
     const nav = page.locator('.shell__nav');
     await expect(nav).toHaveCSS('visibility', 'hidden');
+    await expect(nav).toHaveAttribute('inert', '');
 
     const toggle = page.getByRole('button', { name: 'Open navigation' });
     await expect(toggle).toBeVisible();
@@ -127,12 +128,14 @@ test.describe('Demo Application UI - Narrow viewport (< 900px)', () => {
       });
       await expect(closeButton).toBeFocused();
       await expect(nav).toBeVisible();
+      await expect(nav).not.toHaveAttribute('inert');
     });
 
     await test.step('Escape closes the drawer and returns focus to the toggle', async () => {
       await page.keyboard.press('Escape');
       await expect(toggle).toHaveAttribute('aria-expanded', 'false');
       await expect(toggle).toBeFocused();
+      await expect(nav).toHaveAttribute('inert', '');
       await expect(nav).toHaveCSS('visibility', 'hidden');
     });
   });

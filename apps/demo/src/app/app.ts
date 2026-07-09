@@ -2,6 +2,9 @@ import {
   ChangeDetectionStrategy,
   afterNextRender,
   Component,
+  computed,
+  DestroyRef,
+  DOCUMENT,
   effect,
   ElementRef,
   inject,
@@ -87,13 +90,18 @@ import { PageControlsService } from './ui/page-controls';
         width: min(80vw, 18rem);
         transform: translateX(-100%);
         visibility: hidden;
-        transition: transform 220ms cubic-bezier(0.16, 1, 0.3, 1);
+        transition:
+          transform 220ms cubic-bezier(0.16, 1, 0.3, 1),
+          visibility 0s linear 220ms;
         box-shadow: 12px 0 32px -16px rgba(15, 23, 42, 0.35);
       }
 
       .shell__nav.is-nav-open {
         transform: translateX(0);
         visibility: visible;
+        transition:
+          transform 220ms cubic-bezier(0.16, 1, 0.3, 1),
+          visibility 0s;
       }
 
       @media (prefers-reduced-motion: reduce) {
@@ -480,6 +488,7 @@ import { PageControlsService } from './ui/page-controls';
         class="shell__nav"
         aria-label="Site navigation"
         [class.is-nav-open]="navOpen()"
+        [attr.inert]="navInert() ? '' : null"
         (keydown.escape)="closeNav()"
         (click)="onNavAreaClick($event)"
       >
@@ -652,6 +661,8 @@ import { PageControlsService } from './ui/page-controls';
   `,
 })
 export class AppComponent {
+  readonly #destroyRef = inject(DestroyRef);
+  readonly #document = inject(DOCUMENT);
   readonly #router = inject(Router);
   readonly #title = inject(Title);
   readonly #pageControls = inject(PageControlsService);
@@ -736,6 +747,27 @@ export class AppComponent {
   // ══════════════════════════════════════════════════════════════════════
 
   protected readonly navOpen = signal(false);
+  readonly #narrowViewport = signal(false);
+  protected readonly navInert = computed(
+    () => this.#narrowViewport() && !this.navOpen(),
+  );
+
+  constructor() {
+    const mediaQuery =
+      this.#document.defaultView?.matchMedia('(width < 900px)');
+    if (!mediaQuery) {
+      return;
+    }
+
+    this.#narrowViewport.set(mediaQuery.matches);
+    const updateViewport = (): void => {
+      this.#narrowViewport.set(mediaQuery.matches);
+    };
+    mediaQuery.addEventListener('change', updateViewport);
+    this.#destroyRef.onDestroy(() => {
+      mediaQuery.removeEventListener('change', updateViewport);
+    });
+  }
 
   private readonly navCloseButton =
     viewChild<ElementRef<HTMLButtonElement>>('navCloseButton');
