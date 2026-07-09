@@ -12,12 +12,13 @@ import {
   validateStandardSchema,
 } from '@angular/forms/signals';
 import {
-  type ErrorDisplayStrategy,
+  type ResolvedErrorDisplayStrategy,
   type FormFieldAppearance,
   type FormFieldOrientation,
   createOnInvalidHandler,
   hasOnlyWarnings,
   NgxSignalFormToolkit,
+  requiredFromStandardSchema,
 } from '@ngx-signal-forms/toolkit';
 import { NgxFormField } from '@ngx-signal-forms/toolkit/form-field';
 import { validateVest } from '@ngx-signal-forms/toolkit/vest';
@@ -33,6 +34,18 @@ const zodVestValidationSchema: SchemaFn<Readonly<ZodVestValidationModel>> = (
   path: Readonly<SchemaPathTree<Readonly<ZodVestValidationModel>>>,
 ) => {
   validateStandardSchema(path, zodVestAccountSchema);
+
+  // `validateStandardSchema` registers tree-level errors only — Zod's shape is
+  // not statically introspectable, so `aria-required` and the wrapper's auto
+  // marker need required-ness wired explicitly per required field (issue #118).
+  // companyName/vatNumber are conditionally required by Vest, not the Zod shape.
+  requiredFromStandardSchema(path.firstName, zodVestAccountSchema);
+  requiredFromStandardSchema(path.lastName, zodVestAccountSchema);
+  requiredFromStandardSchema(path.email, zodVestAccountSchema);
+  requiredFromStandardSchema(path.password, zodVestAccountSchema);
+  requiredFromStandardSchema(path.accountType, zodVestAccountSchema);
+  requiredFromStandardSchema(path.country, zodVestAccountSchema);
+
   validateVest(path, zodVestBusinessSuite, {
     includeWarnings: true,
     resetOnDestroy: true,
@@ -264,7 +277,7 @@ const zodVestValidationSchema: SchemaFn<Readonly<ZodVestValidationModel>> = (
   `,
 })
 export class ZodVestValidationComponent {
-  readonly errorDisplayMode = input<ErrorDisplayStrategy>('on-touch');
+  readonly errorDisplayMode = input<ResolvedErrorDisplayStrategy>('on-touch');
   readonly appearance = input<FormFieldAppearance>('outline');
   readonly orientation = input<FormFieldOrientation>('vertical');
   readonly #onInvalid = createOnInvalidHandler();

@@ -12,6 +12,7 @@ import {
   injectFormContext,
   NgxSignalFormToolkit,
   type ErrorDisplayStrategy,
+  type ResolvedErrorDisplayStrategy,
   showErrors,
   type SubmittedStatus,
 } from '@ngx-signal-forms/toolkit';
@@ -437,7 +438,7 @@ export class ErrorDisplayHelpersComponent {
 })
 export class ErrorDisplayModesFormComponent {
   /** The error display strategy to use for form validation */
-  readonly errorDisplayMode = input.required<ErrorDisplayStrategy>();
+  readonly errorDisplayMode = input.required<ResolvedErrorDisplayStrategy>();
 
   readonly #model = signal({ ...INITIAL_MODEL });
 

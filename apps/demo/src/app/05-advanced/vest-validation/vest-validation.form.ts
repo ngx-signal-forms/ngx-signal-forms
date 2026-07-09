@@ -12,7 +12,7 @@ import {
   type SchemaPathTree,
 } from '@angular/forms/signals';
 import {
-  type ErrorDisplayStrategy,
+  type ResolvedErrorDisplayStrategy,
   type FormFieldAppearance,
   type FormFieldOrientation,
   createOnInvalidHandler,
@@ -252,7 +252,7 @@ const vestValidationSchema: SchemaFn<Readonly<VestValidationModel>> = (
   `,
 })
 export class VestValidationComponent {
-  readonly errorDisplayMode = input<ErrorDisplayStrategy>('on-touch');
+  readonly errorDisplayMode = input<ResolvedErrorDisplayStrategy>('on-touch');
   readonly appearance = input<FormFieldAppearance>('outline');
   readonly orientation = input<FormFieldOrientation>('vertical');
   readonly #onInvalid = createOnInvalidHandler();

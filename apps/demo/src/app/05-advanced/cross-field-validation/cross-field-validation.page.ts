@@ -6,7 +6,7 @@ import {
   viewChild,
 } from '@angular/core';
 import {
-  type ErrorDisplayStrategy,
+  type ResolvedErrorDisplayStrategy,
   type FormFieldAppearance,
 } from '@ngx-signal-forms/toolkit';
 import { NgxSignalFormDebugger } from '@ngx-signal-forms/debugger';
@@ -116,7 +116,7 @@ import { CrossFieldValidationComponent } from './cross-field-validation.form';
 })
 export class CrossFieldValidationPageComponent {
   protected readonly errorDisplayMode =
-    signal<ErrorDisplayStrategy>('on-touch');
+    signal<ResolvedErrorDisplayStrategy>('on-touch');
   protected readonly selectedAppearance =
     signal<FormFieldAppearance>('outline');
   protected readonly selectedOrientation = createOrientationSelection(

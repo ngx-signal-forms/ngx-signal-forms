@@ -4,7 +4,10 @@ import {
   computed,
   signal,
 } from '@angular/core';
-import type { ErrorDisplayStrategy } from '@ngx-signal-forms/toolkit';
+import type {
+  ErrorDisplayStrategy,
+  ResolvedErrorDisplayStrategy,
+} from '@ngx-signal-forms/toolkit';
 import {
   type NgxFormFieldsetAppearance,
   type NgxFormFieldsetFeedbackAppearance,
@@ -266,7 +269,8 @@ export class FieldsetAppearanceFormComponent {
   // Defaults to 'immediate' so the validation sandbox shows its grouped errors
   // on load (keeping the placement comparison meaningful), while switching to
   // 'on-touch' / 'on-submit' visibly demonstrates the error-timing control.
-  protected readonly selectedMode = signal<ErrorDisplayStrategy>('immediate');
+  protected readonly selectedMode =
+    signal<ResolvedErrorDisplayStrategy>('immediate');
   protected readonly selectedFieldsetAppearance =
     signal<NgxFormFieldsetAppearance>('outline');
   protected readonly selectedFeedbackAppearance =

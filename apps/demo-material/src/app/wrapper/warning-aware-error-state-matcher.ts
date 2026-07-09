@@ -40,11 +40,11 @@ export class NgxMatWarningAwareErrorStateMatcher implements ErrorStateMatcher {
       return false;
     }
 
-    const errors = control.errors as Record<string, unknown> | null;
+    const errors = control.errors;
     const hasBlockingError =
       !!errors &&
       Object.keys(errors).some((kind) =>
-        isBlockingError({ kind } as ValidationError),
+        isBlockingError({ kind }),
       );
     if (!hasBlockingError) {
       return false;

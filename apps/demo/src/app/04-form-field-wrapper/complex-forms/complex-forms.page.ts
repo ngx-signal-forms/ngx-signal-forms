@@ -6,7 +6,7 @@ import {
   viewChild,
 } from '@angular/core';
 import type {
-  ErrorDisplayStrategy,
+  ResolvedErrorDisplayStrategy,
   FormFieldAppearance,
 } from '@ngx-signal-forms/toolkit';
 import type { NgxFormFieldErrorPlacement } from '@ngx-signal-forms/toolkit/form-field';
@@ -185,7 +185,7 @@ const FIELDSET_ERROR_PLACEMENT_LABELS: Record<
 })
 export class ComplexFormsPage {
   protected readonly errorDisplayMode =
-    signal<ErrorDisplayStrategy>('on-touch');
+    signal<ResolvedErrorDisplayStrategy>('on-touch');
   protected readonly selectedAppearance =
     signal<FormFieldAppearance>('outline');
   protected readonly fieldsetErrorPlacementLabels =

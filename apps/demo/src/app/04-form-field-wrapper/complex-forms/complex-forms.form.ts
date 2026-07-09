@@ -7,7 +7,7 @@ import {
 } from '@angular/core';
 import { FormField, form } from '@angular/forms/signals';
 import type {
-  ErrorDisplayStrategy,
+  ResolvedErrorDisplayStrategy,
   FormFieldAppearance,
   FormFieldOrientation,
 } from '@ngx-signal-forms/toolkit';
@@ -185,7 +185,7 @@ function createInitialComplexFormModel(): ComplexFormModel {
 })
 export class ComplexFormsComponent {
   /** Error display mode input */
-  readonly errorDisplayMode = input<ErrorDisplayStrategy>('on-touch');
+  readonly errorDisplayMode = input<ResolvedErrorDisplayStrategy>('on-touch');
 
   /** Form field appearance input */
   readonly appearance = input<FormFieldAppearance>('standard');

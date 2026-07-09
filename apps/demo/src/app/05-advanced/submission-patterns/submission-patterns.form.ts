@@ -7,12 +7,13 @@ import {
 } from '@angular/core';
 import { form, FormField } from '@angular/forms/signals';
 import {
-  type ErrorDisplayStrategy,
+  type ResolvedErrorDisplayStrategy,
   type FormFieldAppearance,
   type FormFieldOrientation,
   type SubmittedStatus,
 } from '@ngx-signal-forms/toolkit';
 import {
+  canSubmitWithWarnings,
   createOnInvalidHandler,
   injectFormContext,
   NgxSignalFormToolkit,
@@ -114,7 +115,7 @@ export class SubmissionStateIndicatorComponent {
  *
  * Demonstrates advanced submission patterns:
  * - Automatic submission tracking via declarative submission
- * - Toolkit submission helpers (canSubmit, isSubmitting)
+ * - Toolkit submission helpers (canSubmitWithWarnings, submitting())
  * - Server error handling and display
  * - WCAG 2.2 compliance for error announcements
  * - Visual feedback for submission states
@@ -250,7 +251,7 @@ export class SubmissionStateIndicatorComponent {
           </div>
           <div class="flex gap-2">
             <dt class="font-medium text-gray-700 dark:text-gray-300">
-              canSubmit():
+              canSubmitWithWarnings():
             </dt>
             <dd class="text-gray-600 dark:text-gray-400">
               {{ canSubmitForm() ? 'Yes' : 'No' }}
@@ -258,7 +259,7 @@ export class SubmissionStateIndicatorComponent {
           </div>
           <div class="flex gap-2">
             <dt class="font-medium text-gray-700 dark:text-gray-300">
-              isSubmitting():
+              submitting():
             </dt>
             <dd class="text-gray-600 dark:text-gray-400">
               {{ isFormSubmitting() ? 'Yes' : 'No' }}
@@ -315,7 +316,7 @@ export class SubmissionStateIndicatorComponent {
   `,
 })
 export class SubmissionPatternsComponent {
-  readonly errorDisplayMode = input<ErrorDisplayStrategy>('on-touch');
+  readonly errorDisplayMode = input<ResolvedErrorDisplayStrategy>('on-touch');
   readonly appearance = input<FormFieldAppearance>('outline');
   readonly orientation = input<FormFieldOrientation>('vertical');
 
@@ -359,17 +360,19 @@ export class SubmissionPatternsComponent {
           simulateServerError: false,
         });
         formData().reset();
-        return;
+        return undefined;
       },
       onInvalid: createOnInvalidHandler(),
     },
   });
 
-  /// Inline submission helpers — Angular 21.2 makes these trivial computed signals
-  protected readonly canSubmitForm = computed(
-    () =>
-      this.registrationForm().valid() && !this.registrationForm().submitting(),
+  /// `canSubmitWithWarnings()` is the toolkit helper: it returns false while the
+  /// form is submitting or has pending async validators, and true once no
+  /// blocking errors remain (warnings alone never block submission).
+  protected readonly canSubmitForm = canSubmitWithWarnings(
+    this.registrationForm,
   );
+  /// `submitting()` is the Signal Forms field-state signal for in-flight submits.
   protected readonly isFormSubmitting = computed(() =>
     this.registrationForm().submitting(),
   );

@@ -16,7 +16,7 @@ import {
   provideNgxSignalFormControlPresetsForComponent,
   resolveStrategyFromContext,
   shouldShowErrors,
-  type ErrorDisplayStrategy,
+  type ResolvedErrorDisplayStrategy,
   type FormFieldAppearance,
   type FormFieldOrientation,
 } from '@ngx-signal-forms/toolkit';
@@ -93,7 +93,7 @@ export class CustomControlsFormComponent {
   /**
    * Error display mode input - controls when errors are shown.
    */
-  readonly errorDisplayMode = input<ErrorDisplayStrategy>('on-touch');
+  readonly errorDisplayMode = input<ResolvedErrorDisplayStrategy>('on-touch');
 
   /**
    * Form field appearance input
