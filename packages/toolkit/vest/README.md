@@ -33,7 +33,7 @@ The adapter reads Vest's full `run()` result, mapping blocking errors **and** `w
 
 ## Installation
 
-Vest is an optional peer dependency (`>=6.0.0`). Install it only when using this entry point.
+Vest is an optional peer dependency (`>=6.0.0 <7.0.0`). Install it only when using this entry point.
 
 ```bash
 pnpm add @ngx-signal-forms/toolkit vest
@@ -143,7 +143,7 @@ Blocking errors and warnings are read from the same Vest run — enabling warnin
 | ------------------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `includeWarnings`   | `false` | Surface `warn()` results as toolkit warnings (`kind` prefixed with `warn:vest:`).                                                                                                                                                                                                     |
 | `resetOnDestroy`    | `true`  | Call `suite.reset()` via `DestroyRef.onDestroy()` when the hosting injection context tears down. Enabled by default for module-scope suites; pass `{ resetOnDestroy: false }` only to deliberately persist suite state across mounts (see [Suite lifecycle](#suite-lifecycle) below). |
-| `only`              | _none_  | Selector `(ctx) => string \| string[] \| undefined` that threads a field name into `suite.run(value, fieldName)` (or `suite.only(field).run(value)` where the suite exposes that shorthand).                                                                                          |
+| `only`              | _none_  | Selector `(ctx) => string \| string[] \| undefined` that threads a field name into `suite.only(field).run(value)` when the suite exposes `only` (falling back to `suite.run(value, fieldName)` otherwise).                                                                            |
 | `focusCurrentField` | `false` | Derive the focused Vest field name automatically from the field this validator is bound to (`ctx.pathKeys()`, dotted — e.g. `items.0.sku`). Ignored when `only` is provided; falls back to a whole-suite run when bound to the form root.                                             |
 
 ### Exported constants
@@ -285,28 +285,11 @@ Use Angular Signal Forms validators for simple, field-local rules (`required`, `
 - Async checks like "username already taken"
 - Rules you want to reuse outside an Angular form
 
-For most projects, the cleanest layering is:
-
-1. **Angular validators** for simple local rules
-2. **Zod / OpenAPI Standard Schema** for shared contract validation
-3. **Vest** for business-policy rules and `warn()` guidance
-
-### Combining with Zod / Standard Schema
-
-```typescript
-const checkoutForm = form(model, (path) => {
-  // Angular validators — small UI-local rules
-  required(path.email, { message: 'Email is required' });
-
-  // Zod / OpenAPI — contract and structural validation
-  validateStandardSchema(path, CheckoutSchema);
-
-  // Vest — business rules and warn() guidance
-  validateVest(path, checkoutBusinessSuite, { includeWarnings: true });
-});
-```
-
-Keep each layer focused. Don't duplicate the same rule in multiple layers.
+For the full three-layer decision guide (Angular validators vs. Zod / OpenAPI
+Standard Schema vs. Vest), the recommended layering order, and a worked example
+combining all three, see
+[Choosing a validation strategy](https://github.com/ngx-signal-forms/ngx-signal-forms/blob/main/docs/VALIDATION_STRATEGY.md).
+Keep each layer focused — don't duplicate the same rule in multiple layers.
 
 ## Suite lifecycle
 
@@ -423,8 +406,15 @@ wins — `focusCurrentField` is ignored when `only` is provided.
 Angular treats every `ValidationError` as blocking. For forms that should allow warnings:
 
 1. Set `ignoreValidators: 'all'` in the `submission` config
-2. Inside `action`, check `hasOnlyWarnings(form().errorSummary())` — `errorSummary()` yields only the fields that errored, so it is not a full-tree enumeration (use the tree walker for that)
+2. Inside `action`, check `hasOnlyWarnings(form().errorSummary())` — `errorSummary()` yields only the fields that errored, so it is not a full-tree enumeration of every field
 3. Return early and focus the first invalid field when blocking errors remain
+
+The Quick start example above hand-rolls this exact pattern. The toolkit also ships
+[`submitWithWarnings(form, action)`](../README.md#warning-support), a ready-made
+helper that marks the form touched, waits for validation to settle, and invokes
+`action` only when no blocking errors remain — reach for it directly (e.g. from a
+button click handler) instead of re-implementing the `ignoreValidators` /
+`hasOnlyWarnings` breakdown, unless you need that finer control.
 
 ## Related documentation
 

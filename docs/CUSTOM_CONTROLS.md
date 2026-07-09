@@ -295,7 +295,7 @@ Use whichever import fits your component best:
 
 ## FAQ
 
-### Does RC2 switch alignment support break native switches?
+### Does explicit switch control semantics break existing native switches?
 
 No — not for the normal native switch pattern.
 
@@ -409,8 +409,7 @@ projected control's `id` attribute. For custom and third-party controls,
 **one of these must resolve to a non-empty string** for `aria-describedby`
 linkage to work.
 
-From v1 RC onward, missing identity is handled **gracefully rather than
-fatally**:
+Missing identity is handled **gracefully rather than fatally**:
 
 - `resolvedFieldName()`, `errorId()`, and `warningId()` return `null`.
 - The wrapper, error component, and headless directives skip their

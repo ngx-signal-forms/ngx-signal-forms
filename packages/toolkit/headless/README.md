@@ -153,7 +153,7 @@ Aggregates error state across multiple fields for group validation.
 | --------------------- | ------------------------------ | -------------------------------------------------- |
 | `field`               | `FieldTree` (required)         | Primary field group                                |
 | `fields`              | `readonly FieldTree[] \| null` | Optional explicit field list — see note below      |
-| `fieldsetId`          | `string`                       | For ARIA linking                                   |
+| `fieldsetId`          | `string` (optional)            | For ARIA linking                                   |
 | `strategy`            | `ErrorDisplayStrategy`         | Override blocking-error strategy                   |
 | `warningStrategy`     | `ErrorDisplayStrategy`         | Override warning strategy (default: `'immediate'`) |
 | `submittedStatus`     | `SubmittedStatus`              | Override for `'on-submit'` strategy                |
@@ -189,7 +189,8 @@ Tone-aware grouped validation state for custom notification cards and summary bl
 | ----------- | ------------------------------------ | --------------------------------------- |
 | `errors`    | `Signal<readonly ValidationError[]>` | Grouped validation messages             |
 | `fieldName` | `string \| null`                     | Base id for generated error/warning ids |
-| `tone`      | `'auto' \| 'error' \| 'warning'`     | Resolve role/tone for grouped messaging |
+
+Tone is fully content-driven — there is no `tone` input. Any blocking (non-`warn:`) error resolves the group to `'error'` (`role="alert"`); an all-warning list resolves to `'warning'` (polite `role="status"`).
 
 Signals: `resolvedMessages()`, `resolvedTone()`, `showErrorContainer()`, `showWarningContainer()`, `errorContainerId()` (nullable), `warningContainerId()` (nullable).
 

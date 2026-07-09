@@ -683,7 +683,7 @@ The toolkit resolves the visible error message through a 3-tier priority system:
 
 ```text
 1. Validator message    → error.message (set in schema definition)
-2. Registry message     → NGX_ERROR_MESSAGES provider (app-wide defaults)
+2. Registry message     → registry from provideErrorMessages() (app-wide defaults)
 3. Fallback             → "Invalid" (last resort)
 ```
 
@@ -708,6 +708,23 @@ provideErrorMessages({
   email: 'Please enter a valid email',
   minLength: ({ minLength }) => `At least ${minLength} characters required`,
   maxLength: ({ maxLength }) => `At most ${maxLength} characters allowed`,
+});
+```
+
+For i18n, pass a factory instead of a static object. It runs in an injection
+context, so you can `inject()` a translation service and build the registry
+from it:
+
+```typescript
+provideErrorMessages(() => {
+  const translate = inject(TranslateService);
+
+  return {
+    required: translate.instant('validation.required'),
+    email: translate.instant('validation.email'),
+    minLength: ({ minLength }) =>
+      translate.instant('validation.minLength', { minLength }),
+  };
 });
 ```
 

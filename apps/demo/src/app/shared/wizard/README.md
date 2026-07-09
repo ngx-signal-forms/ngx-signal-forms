@@ -68,21 +68,32 @@ Combine template projection with `@defer` for maximum lazy loading:
 </ngx-wizard>
 ```
 
-### Validation with preventDefault
+### Validation with canNavigate
 
-Use the `stepChange` event to validate before navigation:
+`stepChange`'s `preventDefault()` is only checked _synchronously_, immediately
+after the event is emitted — an `await` inside the handler is always too
+late. For guards that need to validate asynchronously, bind the `canNavigate`
+input instead; it is awaited by `goToStep()` before the step actually
+changes:
+
+```html
+<ngx-wizard [(currentStep)]="currentStep" [canNavigate]="guardStep">
+  ...
+</ngx-wizard>
+```
 
 ```typescript
-protected async onStepChange(event: WizardNavigationEvent): Promise<void> {
-  // Validate current step before allowing navigation forward
+protected guardStep: WizardCanNavigate = async (event) => {
+  // Only validate when moving forward
   if (event.toIndex > event.fromIndex) {
     const isValid = await this.validateStep(event.fromStep);
     if (!isValid) {
-      event.preventDefault();
       this.focusFirstError();
     }
+    return isValid;
   }
-}
+  return true;
+};
 ```
 
 ### Custom Navigation
@@ -108,15 +119,16 @@ Disable built-in navigation and provide your own:
 
 #### WizardComponent Inputs
 
-| Input            | Type       | Default      | Description                                |
-| ---------------- | ---------- | ------------ | ------------------------------------------ |
-| `currentStep`    | `string`   | `''`         | Current active step ID (two-way bindable)  |
-| `completedSteps` | `string[]` | `[]`         | Array of completed step IDs                |
-| `showNavigation` | `boolean`  | `true`       | Show built-in navigation buttons           |
-| `previousLabel`  | `string`   | `'Previous'` | Previous button text                       |
-| `nextLabel`      | `string`   | `'Next'`     | Next button text                           |
-| `submitLabel`    | `string`   | `'Submit'`   | Submit button text                         |
-| `allowStepClick` | `boolean`  | `true`       | Allow clicking step indicators to navigate |
+| Input            | Type                        | Default      | Description                                                                                 |
+| ---------------- | --------------------------- | ------------ | ------------------------------------------------------------------------------------------- |
+| `currentStep`    | `string`                    | `''`         | Current active step ID (two-way bindable)                                                   |
+| `completedSteps` | `string[]`                  | `[]`         | Array of completed step IDs                                                                 |
+| `showNavigation` | `boolean`                   | `true`       | Show built-in navigation buttons                                                            |
+| `previousLabel`  | `string`                    | `'Previous'` | Previous button text                                                                        |
+| `nextLabel`      | `string`                    | `'Next'`     | Next button text                                                                            |
+| `submitLabel`    | `string`                    | `'Submit'`   | Submit button text                                                                          |
+| `allowStepClick` | `boolean`                   | `true`       | Allow clicking step indicators to navigate                                                  |
+| `canNavigate`    | `WizardCanNavigate \| null` | `null`       | Async-aware guard checked before every navigation; return `false`/`Promise<false>` to block |
 
 #### WizardComponent Outputs
 

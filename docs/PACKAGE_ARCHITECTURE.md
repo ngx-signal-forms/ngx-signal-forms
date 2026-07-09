@@ -133,13 +133,15 @@ import { validateVest } from '@ngx-signal-forms/toolkit/vest';
 @angular/core (peer)
 @angular/forms/signals (peer)
 vest ^6 (optional peer for /vest)
+axe-core ^4.5 (optional peer for /testing)
         ↓
 @ngx-signal-forms/toolkit
 ├── root (core public API)
 ├── /assistive
 ├── /form-field
 ├── /headless
-└── /vest
+├── /vest
+└── /testing
 ```
 
 ### Internal-only debugger

@@ -122,9 +122,11 @@ Notes:
 
 In beta and the early RCs, `@ngx-signal-forms/toolkit/core` was
 importable from consumer code, which accidentally exposed a lot of
-`@internal` plumbing (`NGX_SIGNAL_FORM_HINT_REGISTRY`,
-`NGX_SIGNAL_FORM_ARIA_MODE`, `DEFAULT_NGX_SIGNAL_FORMS_CONFIG`, hint
-descriptor types, etc.).
+`@internal` plumbing (`DEFAULT_NGX_SIGNAL_FORMS_CONFIG`, etc.).
+`NGX_SIGNAL_FORM_HINT_REGISTRY`, `NGX_SIGNAL_FORM_ARIA_MODE`, and the hint
+descriptor types were later promoted to the stable root barrel and are
+legitimate public exports today — check `packages/toolkit/index.ts` if
+you're unsure whether a given `/core` symbol is still internal.
 
 Starting in v1, the published `package.json` no longer exposes the
 `./core` export. Modern Node/TypeScript resolvers return
@@ -136,17 +138,12 @@ Starting in v1, the published `package.json` no longer exposes the
 - `packages/toolkit/index.ts` is the authoritative list of the stable
   public surface, enumerated by hand (the exact export count drifts as the
   API grows — check that file directly rather than trusting a number here).
-- CSS custom properties — two prefix families remain stable and split by
-  role: `--ngx-signal-form-*` covers cross-cutting feedback concerns
-  (e.g. `--ngx-signal-form-feedback-font-size`,
-  `--ngx-signal-form-error-color`, `--ngx-signal-form-fieldset-*`) and
-  `--ngx-form-field-*` covers wrapper-level chrome
-  (e.g. `--ngx-form-field-color-primary`, `--ngx-form-field-focus-color`).
-  **Several tokens were renamed or collapsed during the rc cycle** — the
-  full before/after table is in
-  [`MIGRATING_CSS_VARS.md`](./MIGRATING_CSS_VARS.md). See
+- CSS custom properties — the two-prefix (`--ngx-signal-form-*` /
+  `--ngx-form-field-*`) theming convention is unchanged; see
   [`packages/toolkit/form-field/THEMING.md`](../packages/toolkit/form-field/THEMING.md#architecture-semantic-layering)
-  for the full layering.
+  for the full layering. **Several tokens were renamed or collapsed during
+  the rc cycle** — the full before/after table is in
+  [`MIGRATING_CSS_VARS.md`](./MIGRATING_CSS_VARS.md).
 
 If you were reaching into `/core` for something that is **not**
 re-exported from root, it was `@internal` and is not part of the v1
@@ -265,9 +262,9 @@ components.
 | ----------------------------------- | --------------------------------------------------------------------- |
 | `FieldsetErrorPlacement`            | `NgxFormFieldErrorPlacement`                                          |
 | `FormFieldErrorPlacement`           | `NgxFormFieldErrorPlacement`                                          |
-| `FieldsetFeedbackAppearance`        | `NgxFieldsetFeedbackAppearance`                                       |
-| `FieldsetSurfaceTone`               | `NgxFieldsetSurfaceTone`                                              |
-| `FieldsetValidationSurface`         | `NgxFieldsetValidationSurface`                                        |
+| `FieldsetFeedbackAppearance`        | `NgxFormFieldsetFeedbackAppearance`                                   |
+| `FieldsetSurfaceTone`               | `NgxFormFieldsetSurfaceTone`                                          |
+| `FieldsetValidationSurface`         | `NgxFormFieldsetValidationSurface`                                    |
 | `NgxFormFieldNotificationListStyle` | `NgxFormFieldListStyle` _(shared)_                                    |
 | `NgxFormFieldErrorListStyle`        | `NgxFormFieldListStyle` _(shared, old name kept as deprecated alias)_ |
 
@@ -314,8 +311,8 @@ provideNgxSignalFormControlPresets({
 });
 ```
 
-The other kinds (`checkbox`, `switch`, `slider`, `composite`,
-`standalone`) are unchanged.
+The other kinds (`checkbox`, `switch`, `radio-group`, `slider`,
+`composite`) are unchanged.
 
 ### 4d. Orientation is part of the public wrapper contract
 
@@ -736,12 +733,12 @@ case set `warningStrategy="inherit"` (or match `strategy` explicitly).
 
 ### `NgxFormFieldError` — new inputs
 
-| Input             | Type                        | Purpose                                                             |
-| ----------------- | --------------------------- | ------------------------------------------------------------------- |
-| `errors`          | `Signal<ValidationError[]>` | Render pre-aggregated errors (e.g. fieldset-level). Takes priority. |
-| `warningStrategy` | `ErrorDisplayStrategy`      | See above                                                           |
-| `listStyle`       | `'plain' \| 'bullets'`      | Visual rendering of the message list                                |
-| `submittedStatus` | `SubmittedStatus`           | Manual override for `'on-submit'` timing                            |
+| Input             | Type                                           | Purpose                                                                                                                       |
+| ----------------- | ---------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| `errors`          | `ReactiveOrStatic<readonly ValidationError[]>` | Render pre-aggregated errors (e.g. fieldset-level); accepts a plain array or a signal (unwrapped internally). Takes priority. |
+| `warningStrategy` | `ErrorDisplayStrategy`                         | See above                                                                                                                     |
+| `listStyle`       | `'plain' \| 'bullets'`                         | Visual rendering of the message list                                                                                          |
+| `submittedStatus` | `SubmittedStatus`                              | Manual override for `'on-submit'` timing                                                                                      |
 
 ### Fieldset (component + headless directive)
 
@@ -749,10 +746,11 @@ case set `warningStrategy="inherit"` (or match `strategy` explicitly).
   descendant-field errors instead of only direct group-level errors.
 - New `submittedStatus` input on the headless fieldset directive to support
   `'on-submit'` strategy without a form-level `ngxSignalForm`.
-- **Headless output rename (breaking for direct consumers):** the directive's
-  `submittedStatus` output is now `resolvedSubmittedStatus`, and `strategy` is
-  surfaced as `resolvedStrategy`. If you were reading either output from a
-  template reference or through Angular's output API, update the binding name.
+- **Headless signal rename (breaking for direct consumers):** the directive's
+  `submittedStatus` signal is now exposed as `resolvedSubmittedStatus`, and
+  `strategy` is surfaced as `resolvedStrategy`. If you were reading either
+  signal from a template reference variable or via dependency injection,
+  update the property name.
 - **`errorPlacement` default flipped from `'top'` to `'bottom'`** (breaking).
   Grouped summaries now render after the projected field content by default,
   which matches dense review-style layouts. This is a DOM-order change, not
@@ -1054,11 +1052,8 @@ leaf is counted consistently whether it's `null` or populated.
 
 - **Sweep your stylesheets for renamed/removed CSS custom properties**
   if you themed the toolkit — see
-  [`MIGRATING_CSS_VARS.md`](./MIGRATING_CSS_VARS.md). Common renames:
-  `-border` → `-border-color`; `-list-style-type` + `-list-style-position`
-  → `-list-style` shorthand; `-padding-horizontal` shortcuts →
-  `-padding-inline-start` / `-inline-end` pairs; legacy
-  `--ngx-form-field-outline-*` aliases removed.
+  [`MIGRATING_CSS_VARS.md`](./MIGRATING_CSS_VARS.md) for the full
+  before/after tables and a sanity-check grep command.
 
 ---
 

@@ -60,7 +60,7 @@ When your form rules are mostly business policy (tier-specific limits, referral 
 
 ## Migration
 
-If you are coming from `ngx-vest-forms`, see [`docs/MIGRATING_FROM_NGX_VEST_FORMS.md`](../../../../../docs/MIGRATING_FROM_NGX_VEST_FORMS.md) for the API mapping.
+If you are coming from `ngx-vest-forms`, see [`docs/MIGRATING_FROM_NGX_VEST_FORMS.md`](../../../../../../docs/MIGRATING_FROM_NGX_VEST_FORMS.md) for the API mapping.
 
 ## Related
 

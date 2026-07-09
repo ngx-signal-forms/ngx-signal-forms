@@ -35,4 +35,4 @@ A focused showroom for `NgxFormFieldset` that makes the grouped-feedback present
 
 - [Complex Forms](../complex-forms/README.md) — long-form composition with nested sections and arrays.
 - [Fieldset + Utilities](../../03-headless/fieldset-utilities/README.md) — headless equivalent when you want to own the markup.
-- [Toolkit form-field README](../../../../../packages/toolkit/form-field/README.md) — public API reference for wrapper and fieldset inputs.
+- [Toolkit form-field README](../../../../../../packages/toolkit/form-field/README.md) — public API reference for wrapper and fieldset inputs.
