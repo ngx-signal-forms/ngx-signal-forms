@@ -19,6 +19,7 @@ export const DEMO_PATHS = {
   fieldStatePatterns: '/advanced-scenarios/field-state-patterns',
   crossFieldValidation: '/advanced-scenarios/cross-field-validation',
   storeBinding: '/advanced-scenarios/store-binding',
+  serverIntegration: '/advanced-scenarios/server-integration',
 } as const;
 
 export const DEMO_CATEGORIES = [
@@ -160,6 +161,11 @@ export const DEMO_CATEGORIES = [
       {
         path: '/advanced-scenarios/store-binding',
         label: 'Store Binding (@ngrx/signals two-way)',
+      },
+      {
+        path: '/advanced-scenarios/server-integration',
+        label: 'Server Integration',
+        hasControls: true,
       },
     ],
   },

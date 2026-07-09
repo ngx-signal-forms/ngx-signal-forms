@@ -49,6 +49,8 @@ These tests verify **form/toolkit behavior** (validation, submission, debugger i
   - `vest-validation.spec.ts` - Vest validation
   - `zod-validation.spec.ts` - Zod validation
   - `zod-vest-validation.spec.ts` - Combined Zod + Vest validation
+  - (no dedicated spec yet for `server-integration` — covered generically by
+    `ui/navigation.spec.ts` and `accessibility.spec.ts` via `DEMO_PATHS`)
 
 ### 3. Accessibility Tests (`accessibility.spec.ts`)
 

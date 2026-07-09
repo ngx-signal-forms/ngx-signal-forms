@@ -24,6 +24,8 @@ This is the production frontier of the demo app. Each demo here stands on its ow
   - What you'll learn: choosing the right state for conditional workflows · state-driven UX without manual DOM branching.
 - **[cross-field-validation](./cross-field-validation/README.md)** — validators that read sibling values via `ctx.valueOf(path.*)`.
   - What you'll learn: schema-level cross-field rules · reactive re-validation · field-vs-group error placement.
+- **[server-integration](./server-integration/README.md)** — `resource()` prefill + declarative submission + server errors mapped onto `TreeValidationResult`.
+  - What you'll learn: `resource()`-driven prefill · form-level vs. field-level server errors · the auto-clear semantics of submission errors · `reset(value)` after a successful save.
 
 ## 🧠 Core concepts
 
@@ -31,6 +33,7 @@ This is the production frontier of the demo app. Each demo here stands on its ow
 - **Async validators** — `validateHttp(path, { request, onSuccess, onError })` cancels in-flight work on value change; the toolkit reflects `pending()` in its rendering surface.
 - **Global configuration** — `provideNgxSignalFormsConfig()` and `provideNgxSignalFormControlPresets()` apply to every form unless locally overridden.
 - **Warning-tolerant submission** — two supported paths: `submitWithWarnings()` (manual) and declarative `ignoreValidators: 'all'` + `hasOnlyWarnings()` (preferred when using `{ submission }`).
+- **Server error mapping** — `action` can return a native `TreeValidationResult` (a `ValidationError` or array of them); set `fieldTree` to route an error to a specific field, or omit it to attach the error to the submitted field itself (the form root under `[formRoot]`).
 - **Validation strategies** — Standard Schema (Zod/OpenAPI) and Vest now have a dedicated Validation section when you want to compare contract vs. policy layers directly. Full guide: [docs/VALIDATION_STRATEGY.md](../../../../../docs/VALIDATION_STRATEGY.md).
 
 ## 🤔 When to use this section
@@ -39,6 +42,7 @@ This is the production frontier of the demo app. Each demo here stands on its ow
 - Use `global-configuration` + `submission-patterns` together as the foundation of any production form.
 - Visit the dedicated Validation section before this one when you are deciding between Standard Schema baselines, Vest policy rules, or a layered approach.
 - Use `advanced-wizard` as the reference when cross-step validation, draft state, or lazy step loading is on the table.
+- Use `server-integration` as the reference for the full "load, edit, submit, handle server rejection" loop end to end.
 
 ## ➡️ Next steps
 
