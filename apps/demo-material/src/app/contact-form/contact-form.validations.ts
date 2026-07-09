@@ -5,6 +5,7 @@ import {
   schema,
   validate,
 } from '@angular/forms/signals';
+import { warningError } from '@ngx-signal-forms/toolkit';
 import type { ContactFormModel } from './contact-form.model';
 
 /**
@@ -15,9 +16,9 @@ import type { ContactFormModel } from './contact-form.model';
  * - `topic` — select
  * - `agree` — checkbox
  *
- * `name` also exercises the **warnings** branch via a `kind: 'warn:short-name'`
- * custom error so the demo (and the smoke spec) can prove `<mat-hint>` picks
- * up the toolkit's warning slot.
+ * `name` also exercises the **warnings** branch via `warningError('short-name', ...)`
+ * so the demo (and the smoke spec) can prove `<mat-hint>` picks up the
+ * toolkit's warning slot.
  */
 export const contactFormSchema = schema<ContactFormModel>((path) => {
   required(path.name, { message: 'Please enter your name' });
@@ -29,10 +30,10 @@ export const contactFormSchema = schema<ContactFormModel>((path) => {
   validate(path.name, (ctx) => {
     const trimmed = (ctx.value() ?? '').trim();
     if (trimmed.length >= 2 && trimmed.length < 4) {
-      return {
-        kind: 'warn:short-name',
-        message: 'Heads up — short names are easy to mis-type. Are you sure?',
-      };
+      return warningError(
+        'short-name',
+        'Heads up — short names are easy to mis-type. Are you sure?',
+      );
     }
     return null;
   });
