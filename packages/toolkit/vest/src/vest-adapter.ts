@@ -1148,14 +1148,27 @@ export function createVestAdapter(
   }
 
   /**
-   * Records a pre-built per-suite queue tail. Rejections are deliberately
-   * absorbed by callers before reaching this function, so a failed run reports
-   * through its own validation flow without blocking later runs.
+   * Extends the per-suite queue boundary with a pre-built tail. This must retain
+   * an earlier reserved deferred boundary when an immediate focused run starts:
+   * later whole-suite contenders must still wait for that reserved work.
    */
   function recordVestRunTail(suiteKey: object, settled: Promise<void>): void {
-    runQueueBySuite.set(suiteKey, settled);
-    void settled.then(() => {
-      if (runQueueBySuite.get(suiteKey) === settled) {
+    const previousTail = runQueueBySuite.get(suiteKey) ?? Promise.resolve();
+    // Absorb either tail's rejection so a failed run cannot strand later
+    // contenders. `tail` represents the complete serialized boundary, not
+    // merely the most recently started run.
+    const tail = previousTail
+      .then(
+        () => settled,
+        () => settled,
+      )
+      .then(
+        () => undefined,
+        () => undefined,
+      );
+    runQueueBySuite.set(suiteKey, tail);
+    void tail.then(() => {
+      if (runQueueBySuite.get(suiteKey) === tail) {
         runQueueBySuite.delete(suiteKey);
       }
       return undefined;

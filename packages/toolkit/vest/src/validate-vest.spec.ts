@@ -1591,12 +1591,14 @@ describe('validateVest', () => {
     }
   });
 
-  it('does not let a superseded queued run block the next queued run', async () => {
+  it('keeps queued whole-suite runs FIFO across an immediate focused run', async () => {
     type RunValue = { readonly id: string };
     type VestMessages = Readonly<Record<string, readonly string[]>>;
 
     let pending = false;
     const started: string[] = [];
+    const wholeSuiteStarts: string[] = [];
+    let activeWholeSuiteRun: string | undefined;
     const listeners = new Set<() => void>();
     let activeRun:
       | {
@@ -1617,7 +1619,17 @@ describe('validateVest', () => {
       getWarnings: getMessages,
     };
     const suite: VestRunnableSuite<RunValue> = {
-      run(value) {
+      run(value, fieldName) {
+        if (fieldName === undefined) {
+          // A queued whole-suite run may only begin after its predecessor has
+          // settled. Focused runs intentionally remain immediate and supersede
+          // the hand-rolled suite's prior active resolver.
+          expect(activeWholeSuiteRun).toBeUndefined();
+          activeWholeSuiteRun = value.id;
+          wholeSuiteStarts.push(value.id);
+        } else {
+          activeWholeSuiteRun = undefined;
+        }
         started.push(value.id);
         pending = true;
 
@@ -1644,6 +1656,9 @@ describe('validateVest', () => {
     const completeActiveRun = (id: string): void => {
       expect(activeRun?.id).toBe(id);
       pending = false;
+      if (activeWholeSuiteRun === id) {
+        activeWholeSuiteRun = undefined;
+      }
       activeRun?.resolve(settledResult);
       for (const callback of listeners) {
         callback();
@@ -1685,12 +1700,32 @@ describe('validateVest', () => {
       focus: 'email',
     });
     expect(started).toEqual(['first', 'second', 'superseding']);
+
+    // This whole-suite contender arrives after the immediate focused run. It
+    // must remain behind both previously reserved whole-suite contenders rather
+    // than treating the focused run as the queue's only boundary.
+    adapter.runVestSuite({
+      suite,
+      fieldTree: fieldTree({ id: 'fourth' }),
+      value: { id: 'fourth' },
+    });
     completeActiveRun('superseding');
 
     await vi.waitFor(() => {
       expect(started).toEqual(['first', 'second', 'superseding', 'third']);
     });
     completeActiveRun('third');
+    await vi.waitFor(() => {
+      expect(started).toEqual([
+        'first',
+        'second',
+        'superseding',
+        'third',
+        'fourth',
+      ]);
+    });
+    completeActiveRun('fourth');
+    expect(wholeSuiteStarts).toEqual(['first', 'second', 'third', 'fourth']);
   });
 
   it('isolates warnings (not just blocking errors) across two concurrently-pending field trees sharing a suite (#214)', async () => {
