@@ -13,6 +13,7 @@ import type {
   ValidationError,
 } from '@angular/forms/signals';
 import {
+  getBlockingErrors,
   injectFormContext,
   isBlockingError,
   isWarningError,
@@ -75,35 +76,69 @@ const withDebuggerMeta =
     path,
   });
 
-function isFieldStateLike(value: unknown): value is FieldState<unknown> {
+/**
+ * Every method the component unconditionally calls on `rootState()` (see
+ * `model`/`valid`/`invalid`/`dirty`/`pending`/`rootErrors` below, plus
+ * `rootVisible`'s use of `touched()` and `hasBlockingErrors`'s use of
+ * `errorSummary()`) must be present, not just a subset. A stub that
+ * satisfies a partial guard passes the usability check, then throws a
+ * TypeError the first time change detection reaches the missing method.
+ * Shared by both input shapes: `isFieldStateLike` applies it to a direct
+ * `FieldState` input; `isUsableFieldTree` applies it to the state resolved
+ * from a `FieldTree` input (the toolkit's `isFieldTree` only asserts the
+ * narrower value/touched/errors/errorSummary/submitting/markAsTouched
+ * surface).
+ */
+function hasFieldStateMethods(value: unknown): boolean {
   if (value === null || typeof value !== 'object') {
     return false;
   }
 
   const state = value as Record<string, unknown>;
-  const fieldTree = state['fieldTree'];
+  return (
+    typeof state['value'] === 'function' &&
+    typeof state['touched'] === 'function' &&
+    typeof state['invalid'] === 'function' &&
+    typeof state['valid'] === 'function' &&
+    typeof state['dirty'] === 'function' &&
+    typeof state['pending'] === 'function' &&
+    typeof state['errors'] === 'function' &&
+    typeof state['errorSummary'] === 'function'
+  );
+}
 
-  // Every method the component unconditionally calls on `rootState()` (see
-  // `model`/`valid`/`invalid`/`dirty`/`pending`/`rootErrors` below, plus
-  // `rootVisible`'s use of `touched()`) must be present, not just the
-  // subset checked historically. A stub that satisfies a partial guard
-  // passes here, then throws a TypeError the first time change detection
-  // reaches the missing method.
-  if (
-    typeof fieldTree !== 'function' ||
-    typeof state['value'] !== 'function' ||
-    typeof state['touched'] !== 'function' ||
-    typeof state['invalid'] !== 'function' ||
-    typeof state['valid'] !== 'function' ||
-    typeof state['dirty'] !== 'function' ||
-    typeof state['pending'] !== 'function' ||
-    typeof state['errors'] !== 'function'
-  ) {
+function isFieldStateLike(value: unknown): value is FieldState<unknown> {
+  if (!hasFieldStateMethods(value)) {
+    return false;
+  }
+
+  const fieldTree = (value as Record<string, unknown>)['fieldTree'];
+  if (typeof fieldTree !== 'function') {
     return false;
   }
 
   try {
     return untracked(() => fieldTree()) === value;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * `isFieldTree` plus the debugger's own root-state method requirements.
+ * The toolkit contract intentionally stays minimal (it serves traversal and
+ * submission helpers); the debugger additionally calls `valid`/`invalid`/
+ * `dirty`/`pending` on the resolved root state, so a partially-stubbed
+ * `FieldTree` must be rejected here — gracefully, like any other malformed
+ * input — instead of throwing mid change-detection.
+ */
+function isUsableFieldTree(value: unknown): value is FieldTree<unknown> {
+  if (!isFieldTree(value)) {
+    return false;
+  }
+
+  try {
+    return hasFieldStateMethods(untracked(() => (value as () => unknown)()));
   } catch {
     return false;
   }
@@ -290,13 +325,13 @@ export class NgxSignalFormDebugger {
   protected readonly inputUsable = computed(
     () =>
       isFieldStateLike(this.formTree() as unknown) ||
-      isFieldTree(this.formTree() as unknown),
+      isUsableFieldTree(this.formTree() as unknown),
   );
 
   /** Normalize to root `FieldState` regardless of input shape. */
   protected readonly rootState = computed<FieldState<unknown>>(() => {
     const v = this.formTree() as unknown;
-    if (isFieldTree(v)) {
+    if (isUsableFieldTree(v)) {
       return (v as () => FieldState<unknown>)();
     }
 
@@ -332,8 +367,8 @@ export class NgxSignalFormDebugger {
    * `invalid()` signals flip to invalid for ANY error, including warn-only
    * ones, which would report a form whose only errors are `warn:*` as
    * "Invalid" throughout the panel. Mirrors `canSubmitWithWarnings()`'s use
-   * of `getBlockingErrors(errorSummary())` so the debugger agrees with what
-   * `submitWithWarnings()` actually gates on.
+   * of `getBlockingErrors(errorSummary())` (see `hasBlockingErrors`) so the
+   * debugger agrees with what `submitWithWarnings()` actually gates on.
    */
   protected readonly valid = computed(() => !this.hasBlockingErrors());
 
@@ -488,8 +523,18 @@ export class NgxSignalFormDebugger {
     () => this.warningErrors().length,
   );
 
+  /**
+   * `true` when blocking errors exist ANYWHERE in the tree. Reads
+   * `errorSummary()` (root's own errors plus aggregated descendant errors)
+   * rather than the walk-based `blockingErrors()`: the walk is only possible
+   * for `FieldTree` inputs, and the `FieldState` fallback reads `errors()`,
+   * which in Signal Forms is the field's OWN errors only — a `FieldState`
+   * input (e.g. `form()`) whose only blocking errors sit on child fields
+   * would misreport as Valid. `errorSummary()` aggregates descendants for
+   * both input shapes and is exactly what `canSubmitWithWarnings()` gates on.
+   */
   protected readonly hasBlockingErrors = computed(
-    () => this.blockingErrors().length > 0,
+    () => getBlockingErrors(this.rootState().errorSummary()).length > 0,
   );
 
   protected readonly hasWarnings = computed(
