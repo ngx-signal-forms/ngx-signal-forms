@@ -86,12 +86,14 @@ import { PageControlsService } from './ui/page-controls';
         z-index: 70;
         width: min(80vw, 18rem);
         transform: translateX(-100%);
+        visibility: hidden;
         transition: transform 220ms cubic-bezier(0.16, 1, 0.3, 1);
         box-shadow: 12px 0 32px -16px rgba(15, 23, 42, 0.35);
       }
 
       .shell__nav.is-nav-open {
         transform: translateX(0);
+        visibility: visible;
       }
 
       @media (prefers-reduced-motion: reduce) {

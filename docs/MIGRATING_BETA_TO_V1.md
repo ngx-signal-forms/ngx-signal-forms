@@ -1,12 +1,15 @@
 # Migrating from beta → current v1 API
 
 This guide covers every breaking change between the last beta
-(`1.0.0-beta.10`) and the current v1 release-candidate surface. It is
-intentionally written against the **latest state only**.
+(`1.0.0-beta.10`) and the current v1 release-candidate surface, including
+`v1.0.0-rc.11`. It is intentionally written against the **latest state only**.
 
 That means this document does **not** walk through interim RC-to-RC
 waypoints. Every “before → after” example below shows the migration from
-beta-era usage to the API you should use **today**.
+beta-era usage to the API you should use **today**. For an RC-to-RC upgrade,
+read the applicable guide in [`docs/migrations/`](./migrations/README.md);
+for example, [`v1.0.0-rc.11`](./migrations/v1.0.0-rc.11.md) documents the
+upgrade from rc.10.
 
 If a later RC ships without new beta-to-v1 breaking changes, this guide
 remains the correct migration target without needing another RC-number bump.
@@ -1047,8 +1050,23 @@ leaf is counted consistently whether it's `null` or populated.
   explicit `submittedStatus` — otherwise errors will stay hidden (this
   is the fix, not a regression).
 
-- **Run the build** (`pnpm nx run-many -t build`) to catch remaining
-  references at compile time, then run your tests.
+- **Apply the current rc.11 API changes** when upgrading from any earlier
+  release candidate:
+  - replace form-level `errorStrategy="inherit"` with a concrete strategy or
+    remove the binding;
+  - replace `[formField]` with `[formTree]` on `NgxFormMarkingLegend`;
+  - remove notification `tone` bindings and imports of
+    `NgxNotificationTone` / `NgxFormFieldNotificationTone`;
+  - rename `NgxFieldset*` option types to `NgxFormFieldset*`;
+  - rename direct headless `showErrors` / `showWarnings` reads to
+    `shouldShowErrors` / `shouldShowWarnings`;
+  - add `@angular/common` to direct dependencies when strict peer resolution
+    requires it.
+    Read [`docs/migrations/v1.0.0-rc.11.md`](./migrations/v1.0.0-rc.11.md) for
+    the bounded rc.10 → rc.11 upgrade guide and before/after templates.
+
+- **Run your consumer's existing type-check, build, and relevant tests** to
+  catch remaining references and behavior changes.
 
 - **Sweep your stylesheets for renamed/removed CSS custom properties**
   if you themed the toolkit — see
@@ -1064,6 +1082,8 @@ leaf is counted consistently whether it's `null` or populated.
   build-time-only `/core` story.
 - [`docs/MIGRATING_CSS_VARS.md`](./MIGRATING_CSS_VARS.md) — every
   renamed or removed CSS custom property with before/after examples.
+- [`docs/migrations/README.md`](./migrations/README.md) — version-to-version
+  release-candidate and stable upgrade guides.
 - [`docs/CUSTOM_CONTROLS.md`](./CUSTOM_CONTROLS.md) — control semantics,
   manual ARIA ownership, third-party component patterns.
 - [`docs/COMPLEX_NESTED_FORMS.md`](./COMPLEX_NESTED_FORMS.md) — fieldset

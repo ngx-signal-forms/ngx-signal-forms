@@ -475,15 +475,11 @@ function waitForSuiteIdle<TValue>(
 }
 
 /**
- * Runs `suite` for `(value, focus)` only once it is idle, so a run for a
- * field tree that finds this suite instance CONTESTED by another,
- * still-pending field tree (see {@link isSuiteContestedByOtherTree}) never
- * overlaps with that other run. This is the fix for issue #214: rather than
- * letting two concurrently-pending field trees share one suite's canonical
- * accumulated result (which Vest keeps ONE of per suite object, not one per
- * caller), the later-arriving tree's ACTUAL `run()` call is deferred until
- * the suite has nothing else in flight, guaranteeing its result reflects
- * ONLY its own data.
+ * Runs `suite` for `(value, focus)` after the previous queued run has settled
+ * and once the suite is idle. A run for a field tree that finds this suite
+ * instance CONTESTED by another, still-pending field tree (see
+ * {@link isSuiteContestedByOtherTree}) therefore never overlaps with that
+ * other run or another contender queued behind it.
  *
  * This trades a small amount of latency (the deferred tree's validation
  * genuinely waits for the other tree's async work to finish before its own
@@ -496,7 +492,9 @@ async function deferVestRunUntilIdle<TValue>(
   suite: Pick<VestRunnableSuite<TValue>, 'run' | 'only' | 'subscribe' | 'get'>,
   value: TValue,
   focus: string | readonly string[] | undefined,
+  previousRun: PromiseLike<void>,
 ): Promise<VestResultLike> {
+  await previousRun;
   await waitForSuiteIdle(suite);
   return executeVestRun(suite, value, focus);
 }
@@ -987,6 +985,11 @@ export function createVestAdapter(
     object,
     Map<ReadonlyFieldTree<unknown>, VestRunCacheEntry<unknown>>
   >();
+  // The latest queued run for each suite. The first, uncontested run still
+  // executes synchronously; its settlement is recorded here so subsequent
+  // contenders wait for it. Every queued run replaces the tail before it
+  // starts, making B and C serialize even when both were deferred behind A.
+  const runQueueBySuite = new WeakMap<object, Promise<void>>();
 
   /**
    * Retrieves the per-suite validation cache, creating it on first access.
@@ -1096,6 +1099,48 @@ export function createVestAdapter(
   }
 
   /**
+   * Records a run as the per-suite queue tail. Rejections are deliberately
+   * absorbed by the tail so a failed run reports through its own validation
+   * flow without permanently blocking later runs.
+   */
+  function recordVestRun(
+    suiteKey: object,
+    runResult: VestResultLike | PromiseLike<VestResultLike>,
+  ): void {
+    const settled = Promise.resolve(runResult).then(
+      () => undefined,
+      () => undefined,
+    );
+    runQueueBySuite.set(suiteKey, settled);
+    void settled.then(() => {
+      if (runQueueBySuite.get(suiteKey) === settled) {
+        runQueueBySuite.delete(suiteKey);
+      }
+      return undefined;
+    });
+  }
+
+  /**
+   * Adds a contested run to the per-suite exclusive queue. The prior tail is
+   * captured before this run is recorded as the new tail, so multiple callers
+   * deferred behind one pending run start in FIFO order rather than together.
+   */
+  function enqueueVestRun<TValue>(
+    suiteKey: object,
+    suite: Pick<
+      VestRunnableSuite<TValue>,
+      'run' | 'only' | 'subscribe' | 'get'
+    >,
+    value: TValue,
+    focus: string | readonly string[] | undefined,
+  ): Promise<VestResultLike> {
+    const previousRun = runQueueBySuite.get(suiteKey) ?? Promise.resolve();
+    const runResult = deferVestRunUntilIdle(suite, value, focus, previousRun);
+    recordVestRun(suiteKey, runResult);
+    return runResult;
+  }
+
+  /**
    * Reuses an existing Vest run for the same suite, Angular field tree, model
    * reference, and focus key; or executes the suite once and caches the result.
    *
@@ -1148,8 +1193,11 @@ export function createVestAdapter(
     const isContested =
       focus === undefined && isSuiteContestedByOtherTree(suiteKey, fieldTree);
     const runResult = isContested
-      ? deferVestRunUntilIdle(suite, value, focus)
+      ? enqueueVestRun(suiteKey, suite, value, focus)
       : executeVestRun(suite, value, focus);
+    if (!isContested) {
+      recordVestRun(suiteKey, runResult);
+    }
 
     const nextEntry: VestRunCacheEntry<TValue> = {
       value,
@@ -1217,6 +1265,7 @@ export function createVestAdapter(
     // before teardown could permanently (and incorrectly) mark a
     // subsequently-reused suite as contested.
     pendingTreesBySuite.delete(suite);
+    runQueueBySuite.delete(suite);
   }
 
   /**

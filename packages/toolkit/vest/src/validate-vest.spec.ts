@@ -1492,6 +1492,103 @@ describe('validateVest', () => {
     expect(formAErrors).toHaveLength(0);
   });
 
+  it('serializes three concurrently-pending field trees sharing a suite', async () => {
+    let releaseFirst: (() => void) | undefined;
+    const firstGate = new Promise<void>((resolve) => {
+      releaseFirst = resolve;
+    });
+    let releaseSecond: (() => void) | undefined;
+    const secondGate = new Promise<void>((resolve) => {
+      releaseSecond = resolve;
+    });
+    let releaseThird: (() => void) | undefined;
+    const thirdGate = new Promise<void>((resolve) => {
+      releaseThird = resolve;
+    });
+    const gates: Readonly<Record<string, Promise<void>>> = {
+      'first@example.com': firstGate,
+      'second@example.com': secondGate,
+      'third@example.com': thirdGate,
+    };
+    const started: string[] = [];
+
+    const sharedSuite = create((data: { email: string }) => {
+      test('email', 'Email is required', async () => {
+        started.push(data.email);
+        await gates[data.email];
+        enforce(data.email).isNotBlank();
+      });
+    });
+
+    @Component({
+      selector: 'ngx-test-vest-shared-suite-three-trees',
+      imports: [FormField],
+      template: `
+        <input id="email-a" [formField]="formA.email" />
+        <input id="email-b" [formField]="formB.email" />
+        <input id="email-c" [formField]="formC.email" />
+      `,
+    })
+    class TestComponent {
+      readonly modelA = signal({ email: 'first@example.com' });
+      readonly formA = form(this.modelA, (path) => {
+        validateVest(path, sharedSuite);
+      });
+
+      readonly modelB = signal({ email: 'second@example.com' });
+      readonly formB = form(this.modelB, (path) => {
+        validateVest(path, sharedSuite);
+      });
+
+      readonly modelC = signal({ email: 'third@example.com' });
+      readonly formC = form(this.modelC, (path) => {
+        validateVest(path, sharedSuite);
+      });
+    }
+
+    const { fixture } = await render(TestComponent);
+
+    try {
+      await vi.waitFor(() => {
+        expect(started).toEqual(['first@example.com']);
+        expect(fixture.componentInstance.formA.email().pending()).toBe(true);
+        expect(fixture.componentInstance.formB.email().pending()).toBe(true);
+        expect(fixture.componentInstance.formC.email().pending()).toBe(true);
+      });
+
+      releaseFirst?.();
+      await vi.waitFor(() => {
+        expect(started).toContain('second@example.com');
+      });
+      await new Promise<void>((resolve) => {
+        setTimeout(resolve, 0);
+      });
+
+      // Without a queue, both B and C resume from A's idle notification and
+      // call suite.run() together. C must remain queued behind B.
+      expect(started).toEqual(['first@example.com', 'second@example.com']);
+
+      releaseSecond?.();
+      await vi.waitFor(() => {
+        expect(started).toEqual([
+          'first@example.com',
+          'second@example.com',
+          'third@example.com',
+        ]);
+      });
+      releaseThird?.();
+      await TestBed.inject(ApplicationRef).whenStable();
+
+      expect(fixture.componentInstance.formA.email().errors()).toHaveLength(0);
+      expect(fixture.componentInstance.formB.email().errors()).toHaveLength(0);
+      expect(fixture.componentInstance.formC.email().errors()).toHaveLength(0);
+    } finally {
+      releaseFirst?.();
+      releaseSecond?.();
+      releaseThird?.();
+    }
+  });
+
   it('isolates warnings (not just blocking errors) across two concurrently-pending field trees sharing a suite (#214)', async () => {
     // Same shared-suite-two-trees shape as the isolation test above, but
     // exercising the `includeWarnings` path together with an async blocking
