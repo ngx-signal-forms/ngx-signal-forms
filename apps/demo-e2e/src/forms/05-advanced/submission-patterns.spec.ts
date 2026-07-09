@@ -130,6 +130,37 @@ test.describe('Advanced - Submission Patterns', () => {
     });
   });
 
+  // Regression coverage for the "audit #218" consistency fix: this page's
+  // password field carries a genuine warn:weak-password rule, and the
+  // submission action actually honors it (ignoreValidators: 'all' +
+  // hasOnlyWarnings()), unlike a plain [formRoot] whose native submit() would
+  // still block on any ValidationError including warn:* ones.
+  test.describe('Warning-Tolerant Submission', () => {
+    test('should submit successfully while a non-blocking password warning is visible', async () => {
+      await test.step('Fill valid data with a warning-triggering password', async () => {
+        await page.fillField('username', 'valid_user');
+        await page.fillField('password', 'longpassword');
+        await page.fillField('confirmPassword', 'longpassword');
+      });
+
+      await test.step('Verify the non-blocking warning is visible', async () => {
+        const warning = page.page
+          .locator('[role="alert"], [role="status"]')
+          .filter({ hasText: 'Consider adding a number' });
+        await expect(warning).toBeVisible();
+      });
+
+      await test.step('Submit and verify the warning does not block success', async () => {
+        await page.submit();
+
+        const successMessage = page.page.locator('[role="status"]', {
+          hasText: 'Registration Successful',
+        });
+        await expect(successMessage).toBeVisible({ timeout: 5000 });
+      });
+    });
+  });
+
   test.describe('Server Error Simulation', () => {
     test('should show server error when simulated', async () => {
       // Fill form

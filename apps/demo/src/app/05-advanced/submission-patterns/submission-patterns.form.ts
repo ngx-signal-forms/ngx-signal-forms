@@ -15,6 +15,7 @@ import {
 import {
   canSubmitWithWarnings,
   createOnInvalidHandler,
+  hasOnlyWarnings,
   injectFormContext,
   NgxSignalFormToolkit,
 } from '@ngx-signal-forms/toolkit';
@@ -329,9 +330,26 @@ export class SubmissionPatternsComponent {
 
   protected readonly model = this.#model.asReadonly();
 
+  readonly #onInvalid = createOnInvalidHandler();
+
   readonly registrationForm = form(this.#model, submissionSchema, {
     submission: {
+      /// Angular's native submit() treats every ValidationError — including
+      /// warn:* ones — as blocking, so `ignoreValidators: 'all'` hands that
+      /// gate to `action` itself. This mirrors vest-validation.form.ts: the
+      /// action always runs, and the code below decides whether the pending
+      /// warn:weak-password on the password field should block submission
+      /// (it shouldn't — see submission-patterns.validations.ts).
+      ignoreValidators: 'all',
       action: async (formData) => {
+        // Angular submit() does not distinguish warn:* messages from blocking
+        // errors yet, so we gate the action after formRoot has revealed all
+        // validation feedback — warnings alone never block submission.
+        if (!hasOnlyWarnings(this.registrationForm().errorSummary())) {
+          this.#onInvalid(this.registrationForm);
+          return;
+        }
+
         /// Clear previous state
         this.submissionSuccess.set(false);
 
@@ -362,13 +380,16 @@ export class SubmissionPatternsComponent {
         formData().reset();
         return undefined;
       },
-      onInvalid: createOnInvalidHandler(),
     },
   });
 
   /// `canSubmitWithWarnings()` is the toolkit helper: it returns false while the
   /// form is submitting or has pending async validators, and true once no
-  /// blocking errors remain (warnings alone never block submission).
+  /// blocking errors remain (warnings alone never block submission). This is
+  /// a genuine gate here: the schema's warn:weak-password rule can leave the
+  /// form warning-only, and this page's action (above) actually honors that
+  /// via ignoreValidators: 'all' + hasOnlyWarnings(), unlike a plain
+  /// [formRoot] whose native submit() would still block on any ValidationError.
   protected readonly canSubmitForm = canSubmitWithWarnings(
     this.registrationForm,
   );
