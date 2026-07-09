@@ -5,6 +5,12 @@ common-init-steps: &common-init-steps
   - name: Checkout
     uses: 'nrwl/nx-cloud-workflows/v6/workflow-steps/checkout/main.yaml'
 
+  # Reads .nvmrc (kept in sync with .node-version, which the coordinator job
+  # uses via actions/setup-node) so agents never drift from the pinned Node
+  # version - the ubuntu22.04-node24.14-v1 image's bundled Node is older.
+  - name: Install Node
+    uses: 'nrwl/nx-cloud-workflows/v6/workflow-steps/install-node/main.yaml'
+
   - group-name: Restore caches
     steps:
       - name: Restore node modules cache
