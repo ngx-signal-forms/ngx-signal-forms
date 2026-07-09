@@ -2,7 +2,7 @@
 
 ## Intent
 
-Not every field needs a visible `<label>`. This demo shows where the `NgxFormField` wrapper's reserved label space can legitimately collapse — search bars, grouped fields under a shared heading, card-labelled inputs — while still exposing an accessible name via `aria-label`.
+Not every field needs a visible `<label>`. This demo shows where the `NgxFormField` wrapper's reserved label space can legitimately collapse — search bars and card-labelled inputs via `aria-label`, or grouped fields under a shared heading via `role="group"` + `aria-labelledby`.
 
 ## Toolkit features showcased
 

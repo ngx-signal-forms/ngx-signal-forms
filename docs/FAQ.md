@@ -339,16 +339,19 @@ fields; applying it to a whole nested group isn't demoed yet but works identical
 ### For a multi-step wizard, how do I validate only the current step before "Next", with one form model?
 
 Keep one `form()` model spanning all steps, bind each step's template to its slice, and gate
-navigation on that slice's validity. The reusable wizard component fires a `(stepChange)` event
-_before_ the step changes; validate the step being left and call `event.preventDefault()` to cancel:
+navigation on that slice's validity. The reusable wizard component's async-aware guard is the
+`canNavigate` input (`(event) => boolean | Promise<boolean>`) — return `false` to block. Don't use
+`(stepChange)` + `event.preventDefault()` for validation: `preventDefault()` is only respected
+synchronously, so an `await` before it is too late. Validate the slice of the step being _left_:
 
 ```ts
-async onStepChange(event: WizardNavigationEvent) {
-  if (event.toIndex > event.fromIndex) {
-    this.form.step1().markAsTouched();            // surface this step's errors
-    if (this.form.step1().invalid()) event.preventDefault();
-  }
-}
+// <ngx-wizard [canNavigate]="guardStep" …>
+protected readonly guardStep: WizardCanNavigate = (event) => {
+  if (event.toIndex <= event.fromIndex) return true; // always allow going back
+  const step = this.formForStep(event.fromStep);     // step id → form slice (e.g. form.account)
+  step().markAsTouched();                            // surface this step's errors
+  return step().valid();
+};
 ```
 
 Run whole-form validation at the end by touching everything (`submit()` marks all fields touched
