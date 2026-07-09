@@ -185,6 +185,7 @@ jobs:
       matrix:
         shard-index: [1, 2, 3, 4]
     env:
+      NX_NO_CLOUD: 'true'
       NX_DAEMON: 'false'
       SHARD_TOTAL: '4'
       PW_WORKERS: '2'
