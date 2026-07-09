@@ -1,5 +1,6 @@
 import { computed, isDevMode, type Signal } from '@angular/core';
 import type { FieldTree } from '@angular/forms/signals';
+import { isFieldStateInteractive } from '@ngx-signal-forms/toolkit/core';
 
 /**
  * Whether a form tree contains any required and/or any optional leaf field.
@@ -77,10 +78,30 @@ function isContainerNode(
 }
 
 /**
+ * Whether a leaf `FieldTree` is interactive (not `hidden()`, not
+ * `disabled()`) per {@link isFieldStateInteractive}. Guards the nullish /
+ * non-object case defensively — same "default to true" policy as
+ * `isErrorOnInteractiveField` — so a malformed leaf state doesn't crash the
+ * walk; it just isn't filtered out.
+ */
+function isLeafInteractive(leaf: AnyFieldTree): boolean {
+  const state = leaf() as object | null | undefined;
+  if (!state || typeof state !== 'object') return true;
+  return isFieldStateInteractive(state);
+}
+
+/**
  * Yield every leaf (control) `FieldTree` reachable from `node`, depth-first.
  *
  * Container nodes are descended into and never yielded themselves; only leaves
  * carry the `required()` state that marking decisions are based on.
+ *
+ * Non-interactive leaves — `hidden()` or `disabled()` — are skipped entirely,
+ * matching every other interactivity-aware primitive in the toolkit
+ * ({@link isFieldStateInteractive}, `isErrorOnInteractiveField`,
+ * `focusFirstInvalid`). Without this, a `required()` field hidden via
+ * Angular's `hidden()` schema rule would still count toward the
+ * required-field summary even though the user can never see or fill it in.
  *
  * Caveat: an array of primitives (e.g. a `string[]` token field bound to one
  * control) is treated as a container, so its elements — not the array node —
@@ -88,11 +109,13 @@ function isContainerNode(
  * correct; arrays bound as a single control are a known edge that does not
  * contribute its array-level required state.
  *
- * @yields Each leaf (control) `FieldTree` in depth-first order.
+ * @yields Each interactive leaf (control) `FieldTree` in depth-first order.
  */
 function* walkLeaves(node: AnyFieldTree): Generator<AnyFieldTree> {
   if (!isContainerNode(node)) {
-    yield node;
+    if (isLeafInteractive(node)) {
+      yield node;
+    }
     return;
   }
 
