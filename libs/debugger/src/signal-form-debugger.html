@@ -202,7 +202,10 @@
         </svg>
         } Dirty
       </ngx-signal-form-debugger-badge>
-      <ngx-signal-form-debugger-badge variant="outline" appearance="info">
+      <ngx-signal-form-debugger-badge
+        variant="outline"
+        [appearance]="pending() ? 'info' : 'neutral'"
+      >
         @if (pending()) {
         <ng-container *ngTemplateOutlet="iconSpinnerSm" />
         } Pending

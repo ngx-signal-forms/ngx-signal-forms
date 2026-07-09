@@ -13,6 +13,7 @@ import type {
   ValidationError,
 } from '@angular/forms/signals';
 import {
+  getBlockingErrors,
   injectFormContext,
   isBlockingError,
   isWarningError,
@@ -75,26 +76,69 @@ const withDebuggerMeta =
     path,
   });
 
-function isFieldStateLike(value: unknown): value is FieldState<unknown> {
+/**
+ * Every method the component unconditionally calls on `rootState()` (see
+ * `model`/`valid`/`invalid`/`dirty`/`pending`/`rootErrors` below, plus
+ * `rootVisible`'s use of `touched()` and `hasBlockingErrors`'s use of
+ * `errorSummary()`) must be present, not just a subset. A stub that
+ * satisfies a partial guard passes the usability check, then throws a
+ * TypeError the first time change detection reaches the missing method.
+ * Shared by both input shapes: `isFieldStateLike` applies it to a direct
+ * `FieldState` input; `isUsableFieldTree` applies it to the state resolved
+ * from a `FieldTree` input (the toolkit's `isFieldTree` only asserts the
+ * narrower value/touched/errors/errorSummary/submitting/markAsTouched
+ * surface).
+ */
+function hasFieldStateMethods(value: unknown): boolean {
   if (value === null || typeof value !== 'object') {
     return false;
   }
 
   const state = value as Record<string, unknown>;
-  const fieldTree = state['fieldTree'];
+  return (
+    typeof state['value'] === 'function' &&
+    typeof state['touched'] === 'function' &&
+    typeof state['invalid'] === 'function' &&
+    typeof state['valid'] === 'function' &&
+    typeof state['dirty'] === 'function' &&
+    typeof state['pending'] === 'function' &&
+    typeof state['errors'] === 'function' &&
+    typeof state['errorSummary'] === 'function'
+  );
+}
 
-  if (
-    typeof fieldTree !== 'function' ||
-    typeof state['value'] !== 'function' ||
-    typeof state['touched'] !== 'function' ||
-    typeof state['invalid'] !== 'function' ||
-    typeof state['errors'] !== 'function'
-  ) {
+function isFieldStateLike(value: unknown): value is FieldState<unknown> {
+  if (!hasFieldStateMethods(value)) {
+    return false;
+  }
+
+  const fieldTree = (value as Record<string, unknown>)['fieldTree'];
+  if (typeof fieldTree !== 'function') {
     return false;
   }
 
   try {
     return untracked(() => fieldTree()) === value;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * `isFieldTree` plus the debugger's own root-state method requirements.
+ * The toolkit contract intentionally stays minimal (it serves traversal and
+ * submission helpers); the debugger additionally calls `valid`/`invalid`/
+ * `dirty`/`pending` on the resolved root state, so a partially-stubbed
+ * `FieldTree` must be rejected here — gracefully, like any other malformed
+ * input — instead of throwing mid change-detection.
+ */
+function isUsableFieldTree(value: unknown): value is FieldTree<unknown> {
+  if (!isFieldTree(value)) {
+    return false;
+  }
+
+  try {
+    return hasFieldStateMethods(untracked(() => (value as () => unknown)()));
   } catch {
     return false;
   }
@@ -250,10 +294,13 @@ export class NgxSignalFormDebugger {
    * Human-readable label for the current submitted status.
    *
    * If a future `SubmittedStatus` value lands without a matching branch here,
-   * the debugger surfaces an explicit `Unknown (raw)` label and dev-warns
-   * once instead of misreporting `Idle`. The whole point of the debugger is
-   * to surface state — silently mapping an unknown status to a familiar one
-   * defeats the tool.
+   * the debugger surfaces an explicit `Unknown (raw)` label instead of
+   * misreporting `Idle`. The whole point of the debugger is to surface
+   * state — silently mapping an unknown status to a familiar one defeats
+   * the tool. The one-time dev-mode warning for this case is raised by
+   * `#submittedStatusWarningEffect` below, not here — `computed()` callbacks
+   * must stay pure; Angular may re-evaluate them speculatively, which would
+   * double-log (or worse, race) a `console.warn` side effect.
    */
   protected readonly submittedStatusDisplay = computed(() => {
     const status = this.submittedStatus();
@@ -266,14 +313,6 @@ export class NgxSignalFormDebugger {
         return 'Idle';
       default:
         status satisfies never;
-        if (isDevMode() && !this.#warnedUnknownStatus) {
-          this.#warnedUnknownStatus = true;
-          // oxlint-disable-next-line no-console -- dev-mode misconfiguration signal
-          console.warn(
-            `[ngx-signal-forms] NgxSignalFormDebugger: unknown SubmittedStatus "${status as string}". ` +
-              'Update the debugger label switch to cover this value.',
-          );
-        }
         return `Unknown (${status as string})`;
     }
   });
@@ -286,13 +325,13 @@ export class NgxSignalFormDebugger {
   protected readonly inputUsable = computed(
     () =>
       isFieldStateLike(this.formTree() as unknown) ||
-      isFieldTree(this.formTree() as unknown),
+      isUsableFieldTree(this.formTree() as unknown),
   );
 
   /** Normalize to root `FieldState` regardless of input shape. */
   protected readonly rootState = computed<FieldState<unknown>>(() => {
     const v = this.formTree() as unknown;
-    if (isFieldTree(v)) {
+    if (isUsableFieldTree(v)) {
       return (v as () => FieldState<unknown>)();
     }
 
@@ -321,8 +360,21 @@ export class NgxSignalFormDebugger {
   // ============================================================================
 
   protected readonly model = computed(() => this.rootState().value());
-  protected readonly valid = computed(() => this.rootState().valid());
-  protected readonly invalid = computed(() => this.rootState().invalid());
+
+  /**
+   * `true` when the tree has no blocking (non-`warn:`) errors anywhere.
+   * Deliberately NOT `rootState().valid()` — Angular's native `valid()`/
+   * `invalid()` signals flip to invalid for ANY error, including warn-only
+   * ones, which would report a form whose only errors are `warn:*` as
+   * "Invalid" throughout the panel. Mirrors `canSubmitWithWarnings()`'s use
+   * of `getBlockingErrors(errorSummary())` (see `hasBlockingErrors`) so the
+   * debugger agrees with what `submitWithWarnings()` actually gates on.
+   */
+  protected readonly valid = computed(() => !this.hasBlockingErrors());
+
+  /** Inverse of {@link valid}. */
+  protected readonly invalid = computed(() => this.hasBlockingErrors());
+
   protected readonly dirty = computed(() => this.rootState().dirty());
   protected readonly pending = computed(() => this.rootState().pending());
 
@@ -471,8 +523,18 @@ export class NgxSignalFormDebugger {
     () => this.warningErrors().length,
   );
 
+  /**
+   * `true` when blocking errors exist ANYWHERE in the tree. Reads
+   * `errorSummary()` (root's own errors plus aggregated descendant errors)
+   * rather than the walk-based `blockingErrors()`: the walk is only possible
+   * for `FieldTree` inputs, and the `FieldState` fallback reads `errors()`,
+   * which in Signal Forms is the field's OWN errors only — a `FieldState`
+   * input (e.g. `form()`) whose only blocking errors sit on child fields
+   * would misreport as Valid. `errorSummary()` aggregates descendants for
+   * both input shapes and is exactly what `canSubmitWithWarnings()` gates on.
+   */
   protected readonly hasBlockingErrors = computed(
-    () => this.blockingErrors().length > 0 || this.invalid(),
+    () => getBlockingErrors(this.rootState().errorSummary()).length > 0,
   );
 
   protected readonly hasWarnings = computed(
@@ -551,6 +613,34 @@ export class NgxSignalFormDebugger {
    * the console when signals only change internal state.
    */
   readonly #warnedTrees = new WeakSet();
+
+  // Dev-mode warning for an unrecognized `SubmittedStatus` value (see
+  // `submittedStatusDisplay` above). Lives in an `effect()` rather than the
+  // `computed()` because computeds must stay pure — Angular may re-run them
+  // speculatively/more than once per change, which would double-log a
+  // `console.warn` side effect. Skipped in production for the same reason
+  // as `#fieldTreeWarningEffect`.
+  // oxlint-disable-next-line no-unused-private-class-members -- EffectRef retained as a named field to document the side effect.
+  readonly #submittedStatusWarningEffect = isDevMode()
+    ? effect(() => {
+        const status = this.submittedStatus();
+        if (
+          status === 'submitting' ||
+          status === 'submitted' ||
+          status === 'unsubmitted' ||
+          this.#warnedUnknownStatus
+        ) {
+          return;
+        }
+
+        this.#warnedUnknownStatus = true;
+        // oxlint-disable-next-line no-console -- dev-mode misconfiguration signal
+        console.warn(
+          `[ngx-signal-forms] NgxSignalFormDebugger: unknown SubmittedStatus "${status as string}". ` +
+            'Update the debugger label switch to cover this value.',
+        );
+      })
+    : undefined;
 
   // Named Angular effect field is intentionally unread — Angular owns the
   // lifecycle. Keeping the name documents the side-effect. The `effect()`

@@ -322,6 +322,32 @@ describe('NgxSignalFormDebugger', () => {
       );
       expect(warningBadge?.textContent).toMatch(/\d+\/\d+/);
     });
+
+    it('should report Valid (not Invalid) for forms with only warn:* errors', () => {
+      // Angular's native `invalid()` is `true` for ANY error, including
+      // warn-only ones. The debugger must derive Valid/Invalid from
+      // blocking-error counts instead, so a form whose sole error is
+      // `warn:weak-password` reads as Valid throughout the panel.
+      const topBadge = warnEl.querySelector(
+        '.ngx-debugger__header ngx-signal-form-debugger-badge',
+      );
+      expect(topBadge?.textContent).toContain('Valid');
+      expect(topBadge?.textContent).not.toContain('Invalid');
+
+      const statusBadges = Array.from(
+        warnEl.querySelectorAll(
+          '.ngx-debugger__status-badges ngx-signal-form-debugger-badge',
+        ),
+      );
+      // Valid, Invalid, Dirty, Pending, Status
+      expect(statusBadges[0].getAttribute('data-appearance')).toBe('success'); // Valid
+      expect(statusBadges[1].getAttribute('data-appearance')).toBe('neutral'); // Invalid inactive
+
+      const warningBadge = warnEl.querySelector(
+        'ngx-signal-form-debugger-badge[data-appearance="warning"]',
+      );
+      expect(warningBadge?.textContent).toMatch(/\d+\/\d+/);
+    });
   });
 
   describe('Dev-mode diagnostics', () => {
@@ -494,6 +520,124 @@ describe('NgxSignalFormDebugger', () => {
       localFixture.detectChanges();
 
       expect(localEl.querySelector('.ngx-debugger')).toBeNull();
+    });
+
+    it('treats a partially-conforming FieldState stub as unusable and renders nothing', () => {
+      const localFixture = TestBed.createComponent(NgxSignalFormDebugger);
+      const localEl: HTMLElement = localFixture.nativeElement;
+
+      // Satisfies the OLD (narrower) guard — fieldTree/value/touched/
+      // invalid/errors are all functions — but is missing valid/dirty/
+      // pending, which the component calls unconditionally during change
+      // detection. Before the fix this stub passed `isFieldStateLike` and
+      // then threw a TypeError the first time `dirty()` or `pending()` was
+      // invoked. The guard must now reject it up front, the same way it
+      // rejects a fully-malformed input.
+      const partialStub: Record<string, unknown> = {
+        value: () => ({ name: '', email: '' }),
+        touched: () => false,
+        invalid: () => false,
+        errors: () => [],
+      };
+      partialStub['fieldTree'] = () => partialStub;
+      const malformed = partialStub as unknown as ReturnType<
+        typeof form<TestData>
+      >;
+
+      localFixture.componentRef.setInput('formTree', malformed);
+
+      expect(() => {
+        localFixture.detectChanges();
+      }).not.toThrow();
+      expect(localEl.querySelector('.ngx-debugger')).toBeNull();
+    });
+
+    it('treats a partially-stubbed FieldTree as unusable and renders nothing', () => {
+      const localFixture = TestBed.createComponent(NgxSignalFormDebugger);
+      const localEl: HTMLElement = localFixture.nativeElement;
+
+      // Satisfies the toolkit's `isFieldTree` contract (a callable whose
+      // state exposes value/touched/errors/errorSummary/submitting/
+      // markAsTouched with a matching `fieldTree` back-reference) but is
+      // missing valid/invalid/dirty/pending, which the debugger calls
+      // unconditionally on the resolved root state. The component's
+      // supplementary root-state check must reject it gracefully instead
+      // of throwing a TypeError during change detection.
+      const partialState: Record<string, unknown> = {
+        value: () => ({ name: '', email: '' }),
+        touched: () => false,
+        errors: () => [],
+        errorSummary: () => [],
+        submitting: () => false,
+        markAsTouched: () => undefined,
+      };
+      const partialTree = (): Record<string, unknown> => partialState;
+      partialState['fieldTree'] = partialTree;
+      const malformed = partialTree as unknown as ReturnType<
+        typeof form<TestData>
+      >;
+
+      localFixture.componentRef.setInput('formTree', malformed);
+
+      expect(() => {
+        localFixture.detectChanges();
+      }).not.toThrow();
+      expect(localEl.querySelector('.ngx-debugger')).toBeNull();
+    });
+  });
+
+  describe('FieldState input with descendant-only blocking errors', () => {
+    interface NestedData {
+      user: { name: string };
+    }
+
+    let warnSpy: ReturnType<typeof vi.spyOn>;
+
+    beforeEach(() => {
+      // Passing a FieldState (instead of the FieldTree function) triggers
+      // the expected dev-mode traversal warning; silence it so this spec's
+      // output stays focused on the validity assertion.
+      warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    });
+
+    afterEach(() => {
+      warnSpy.mockRestore();
+    });
+
+    it('reports Invalid when the only blocking error sits on a child field', () => {
+      const nestedModel = signal<NestedData>({ user: { name: '' } });
+      const nestedForm = TestBed.runInInjectionContext(() =>
+        form(
+          nestedModel,
+          schema<NestedData>((path) => {
+            required(path.user.name, { message: 'Name is required' });
+          }),
+        ),
+      );
+
+      const localFixture = TestBed.createComponent(NgxSignalFormDebugger);
+      const localEl: HTMLElement = localFixture.nativeElement;
+      // Pass the resolved FieldState — its own `errors()` is empty (the
+      // required error lives on `user.name`), so a validity check based on
+      // root `errors()` would misreport Valid. `errorSummary()` aggregates
+      // descendant errors and must drive the Invalid verdict.
+      localFixture.componentRef.setInput('formTree', nestedForm());
+      localFixture.componentRef.setInput('errorStrategy', 'immediate');
+      localFixture.detectChanges();
+
+      const topBadge = localEl.querySelector(
+        '.ngx-debugger__header ngx-signal-form-debugger-badge',
+      );
+      expect(topBadge?.textContent).toContain('Invalid');
+
+      const statusBadges = Array.from(
+        localEl.querySelectorAll(
+          '.ngx-debugger__status-badges ngx-signal-form-debugger-badge',
+        ),
+      );
+      // Valid, Invalid, Dirty, Pending, Status
+      expect(statusBadges[0].getAttribute('data-appearance')).toBe('neutral'); // Valid inactive
+      expect(statusBadges[1].getAttribute('data-appearance')).toBe('danger'); // Invalid
     });
   });
 });
