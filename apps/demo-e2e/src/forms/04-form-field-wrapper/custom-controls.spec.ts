@@ -357,6 +357,105 @@ test.describe('Custom Signal Forms Controls', () => {
         );
       });
     });
+
+    // Regression test for the "audit #218" consistency fix: every
+    // ngx-rating-control usage owns its own ARIA (aria-invalid, aria-required,
+    // aria-valuenow/valuetext, aria-describedby) via host bindings, so every
+    // usage — not just accessibilityAudit — now runs in manual ARIA mode via
+    // ngxSignalFormControl="slider". This pins down that rating, serviceRating,
+    // and wouldRecommend all resolve the same manual preset and compute their
+    // own hint/error described-by chain the parent form provides.
+    test('should preserve manual ARIA ownership for the rating, service rating, and would-recommend controls', async () => {
+      await test.step('Verify each wrapper opts into the manual slider preset', async () => {
+        for (const controlId of ['rating', 'serviceRating', 'wouldRecommend']) {
+          const wrapper = page.getWrapperByControlId(controlId);
+
+          await expect(wrapper).toHaveAttribute(
+            'data-ngx-signal-form-control-kind',
+            'slider',
+          );
+          await expect(wrapper).toHaveAttribute(
+            'data-ngx-signal-form-control-layout',
+            'custom',
+          );
+          await expect(wrapper).toHaveAttribute(
+            'data-ngx-signal-form-control-aria-mode',
+            'manual',
+          );
+        }
+      });
+
+      await test.step('Verify the rating control starts with its hint-only described-by chain', async () => {
+        await expect(page.ratingControl).toHaveAttribute(
+          'aria-describedby',
+          'rating-hint',
+        );
+        await expect(page.ratingControl).toHaveAttribute(
+          'aria-required',
+          'true',
+        );
+      });
+
+      await test.step('Verify serviceRating has no hint, so its described-by chain starts empty', async () => {
+        await expect(page.serviceRatingControl).not.toHaveAttribute(
+          'aria-describedby',
+        );
+      });
+
+      await test.step('Touch rating and serviceRating without selecting a value', async () => {
+        await page.ratingControl.focus();
+        await page.ratingControl.blur();
+
+        await page.serviceRatingControl.focus();
+        await page.serviceRatingControl.blur();
+      });
+
+      await test.step('Verify each control keeps its own described-by chain when its wrapper error appears', async () => {
+        await expect(page.getErrorById('rating')).toBeVisible();
+        await expect(page.ratingControl).toHaveAttribute(
+          'aria-describedby',
+          'rating-hint rating-error',
+        );
+        await expect(page.ratingControl).toHaveAttribute(
+          'aria-invalid',
+          'true',
+        );
+
+        await expect(page.getErrorById('serviceRating')).toBeVisible();
+        await expect(page.serviceRatingControl).toHaveAttribute(
+          'aria-describedby',
+          'serviceRating-error',
+        );
+        await expect(page.serviceRatingControl).toHaveAttribute(
+          'aria-invalid',
+          'true',
+        );
+      });
+
+      await test.step('Verify selecting a rating restores the hint-only (or empty) described-by chain', async () => {
+        await page.selectStar(page.ratingControl, 4);
+        await page.selectStar(page.serviceRatingControl, 5);
+
+        await expect(page.getErrorById('rating')).toHaveCount(0);
+        await expect(page.ratingControl).toHaveAttribute(
+          'aria-describedby',
+          'rating-hint',
+        );
+        await expect(page.ratingControl).toHaveAttribute(
+          'aria-invalid',
+          'false',
+        );
+
+        await expect(page.getErrorById('serviceRating')).toHaveCount(0);
+        await expect(page.serviceRatingControl).not.toHaveAttribute(
+          'aria-describedby',
+        );
+        await expect(page.serviceRatingControl).toHaveAttribute(
+          'aria-invalid',
+          'false',
+        );
+      });
+    });
   });
 
   test.describe('Form Field Wrapper Integration', () => {

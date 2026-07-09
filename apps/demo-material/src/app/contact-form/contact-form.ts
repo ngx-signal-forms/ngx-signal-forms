@@ -1,4 +1,9 @@
-import { Component, signal, viewChild } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  signal,
+  viewChild,
+} from '@angular/core';
 import { FormField, form } from '@angular/forms/signals';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCheckboxModule } from '@angular/material/checkbox';
@@ -44,6 +49,7 @@ import { contactFormSchema } from './contact-form.validations';
  */
 @Component({
   selector: 'ngx-contact-form',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 
   imports: [
     FormField,

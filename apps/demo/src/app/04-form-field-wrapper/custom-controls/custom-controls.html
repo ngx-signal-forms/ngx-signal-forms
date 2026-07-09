@@ -37,11 +37,12 @@
       <ngx-rating-control
         id="rating"
         [labelledBy]="'rating-label'"
-        [ngxSignalFormControl]="sliderSemantics"
+        ngxSignalFormControl="slider"
+        [describedBy]="ratingDescribedBy()"
         [formField]="reviewForm.rating"
         [maxRating]="5"
       />
-      <ngx-form-field-hint>
+      <ngx-form-field-hint id="rating-hint">
         Use arrow keys or click to rate
       </ngx-form-field-hint>
     </ngx-form-field-wrapper>
@@ -58,7 +59,8 @@
       <ngx-rating-control
         id="serviceRating"
         [labelledBy]="'serviceRating-label'"
-        [ngxSignalFormControl]="sliderSemantics"
+        ngxSignalFormControl="slider"
+        [describedBy]="serviceRatingDescribedBy()"
         [formField]="reviewForm.serviceRating"
         [maxRating]="5"
       />
@@ -76,11 +78,12 @@
       <ngx-rating-control
         id="wouldRecommend"
         [labelledBy]="'wouldRecommend-label'"
-        [ngxSignalFormControl]="sliderSemantics"
+        ngxSignalFormControl="slider"
+        [describedBy]="wouldRecommendDescribedBy()"
         [formField]="reviewForm.wouldRecommend"
         [maxRating]="2"
       />
-      <ngx-form-field-hint>
+      <ngx-form-field-hint id="wouldRecommend-hint">
         ☆ = No, ★ = Maybe, ★★ = Definitely!
       </ngx-form-field-hint>
     </ngx-form-field-wrapper>

@@ -1,4 +1,9 @@
-import { Component, computed, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  signal,
+} from '@angular/core';
 import { type FieldTree, form, FormField } from '@angular/forms/signals';
 import {
   createOnInvalidHandler,
@@ -49,6 +54,7 @@ import { profileFormSchema } from './profile-form.schema';
  */
 @Component({
   selector: 'demo-primeng-profile-form',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 
   imports: [
     FormField,
@@ -196,14 +202,23 @@ export class ProfileFormComponent {
     submission: {
       ignoreValidators: 'all',
       action: () => {
-        if (!hasOnlyWarnings(this.profileForm().errorSummary())) {
+        const formState = this.profileForm();
+
+        // Mirrors the pending() guard `submitWithWarnings()` /
+        // `canSubmitWithWarnings()` apply: async validators may still be
+        // settling when the user submits, so bail out without touching
+        // `lastSubmission` (and without focusing anything — nothing is known
+        // to be invalid yet) until they resolve.
+        if (formState.pending()) {
+          return Promise.resolve(undefined);
+        }
+
+        if (!hasOnlyWarnings(formState.errorSummary())) {
           this.#onInvalid(this.profileForm);
           return Promise.resolve(undefined);
         }
 
-        this.lastSubmission.set(
-          JSON.stringify(this.profileForm().value(), null, 2),
-        );
+        this.lastSubmission.set(JSON.stringify(formState.value(), null, 2));
 
         return Promise.resolve(undefined);
       },

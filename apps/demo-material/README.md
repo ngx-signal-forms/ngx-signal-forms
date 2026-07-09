@@ -334,11 +334,15 @@ whatever happened to be announced live.
 
 Material's `floatLabel` (`'auto' | 'always'`) interacts with Material's
 internal `empty` / `focused` state and is not wired through the
-toolkit. The contact form sets `floatLabel="always"` on every
-`<mat-form-field>` — purely a visual preference for this demo, not a
-toolkit requirement — so labels stay put instead of floating back down
-into the input on blur-with-empty-value. Omit the input (or set
-`floatLabel="auto"`) for Material's default float-on-focus behavior.
+toolkit. The contact form sets `floatLabel: 'always'` (along with
+`appearance: 'outline'` and `subscriptSizing: 'dynamic'`) once, app-wide,
+via `MAT_FORM_FIELD_DEFAULT_OPTIONS` in `main.ts` — purely a visual
+preference for this demo, not a toolkit requirement — so every
+`<mat-form-field>` inherits it instead of repeating the same three
+attributes on each field. Labels stay put instead of floating back down
+into the input on blur-with-empty-value. Override
+`MAT_FORM_FIELD_DEFAULT_OPTIONS` (or set the input directly on a field
+for a one-off exception) for Material's default float-on-focus behavior.
 
 ## Extending the error slot
 
