@@ -70,7 +70,10 @@ export type NgxFormFieldsetValidationSurface = 'never' | 'always';
  * - **Aggregated Errors**: Collects errors from all nested fields via `errorSummary()`
  * - **Group-Only Mode**: Show only group-level errors when nested fields display their own
  * - **Deduplication**: Same error shown only once even if multiple fields have it
- * - **Warning Support**: Non-blocking warnings (with `warn:` prefix) shown when no errors
+ * - **Warning Support**: Non-blocking warnings (with `warn:` prefix), timed independently
+ *   of blocking errors via `warningStrategy` (defaults to `'immediate'`, mirroring
+ *   `NgxFormFieldWrapper`); the rendered message slot still gives errors visual
+ *   priority when both are present at once (single notification/error region)
  * - **Adaptive Feedback UI**: Notification cards by default, with an optional compact text mode
  * - **Configurable Surface Tones**: Neutral, info, success, warning, or danger base surfaces
  * - **WCAG 2.2 Compliant**: Errors use `role="alert"`, warnings use `role="status"`
@@ -115,6 +118,7 @@ export type NgxFormFieldsetValidationSurface = 'never' | 'always';
         'fields',
         'fieldsetId',
         'strategy',
+        'warningStrategy',
         'submittedStatus',
         'includeNestedErrors',
       ],
@@ -130,8 +134,15 @@ export type NgxFormFieldsetValidationSurface = 'never' | 'always';
   // keep working without rewriting their stylesheets.
   host: {
     '[class.ngx-signal-form-fieldset--invalid]': 'fieldset.shouldShowErrors()',
+    // `NgxHeadlessFieldset.shouldShowWarnings()` is independent of blocking
+    // errors (matches `NgxHeadlessErrorSummary` — see the headless directive's
+    // doc comment). This styled component still gives errors visual priority
+    // — a fieldset with both visible would otherwise show the warning border
+    // color on top of the invalid one (CSS declaration order) and the
+    // notification card only ever renders one category at a time (see
+    // `filteredErrorsSignal` below) — so the guard is applied here instead.
     '[class.ngx-signal-form-fieldset--warning]':
-      'fieldset.shouldShowWarnings()',
+      '!fieldset.shouldShowErrors() && fieldset.shouldShowWarnings()',
     '[class.ngx-signal-form-fieldset--surface-invalid]': 'showInvalidSurface()',
     '[class.ngx-signal-form-fieldset--surface-warning]': 'showWarningSurface()',
     '[class.ngx-signal-form-fieldset--messages-top]': 'isTopPlacement()',
@@ -376,12 +387,25 @@ export class NgxFormFieldset {
   /**
    * Filtered errors signal for NgxFormFieldError.
    *
-   * Passes blocking errors OR warnings, never both.
-   * Warnings are suppressed when errors exist (UX best practice).
+   * Passes blocking errors OR warnings, never both — the rendered
+   * error/notification slot is a single region and errors take visual
+   * priority when both are showable at once.
+   *
+   * Gated on {@link NgxHeadlessFieldset.shouldShowErrors} (visibility), NOT
+   * `aggregatedErrors().length > 0` (presence). Those two diverge now that
+   * `NgxHeadlessFieldset.shouldShowWarnings` is timed independently via
+   * `warningStrategy` (default `'immediate'`): a blocking error can be
+   * *present* but not yet *visible* (e.g. gated behind `strategy="on-submit"`
+   * pre-submit) while a warning is already visible. Gating on presence would
+   * render the hidden blocking-error content instead of the visible warning
+   * the moment both exist — gating on `shouldShowErrors()` keeps this in
+   * lockstep with the `--invalid`/`--warning` host classes and
+   * `describedByIds()`, which already check visibility the same way.
    */
   protected readonly filteredErrorsSignal = computed(() => {
-    const blocking = this.fieldset.aggregatedErrors();
-    return blocking.length > 0 ? blocking : this.fieldset.aggregatedWarnings();
+    return this.fieldset.shouldShowErrors()
+      ? this.fieldset.aggregatedErrors()
+      : this.fieldset.aggregatedWarnings();
   });
 
   protected readonly displayedMessagesSignal = computed(() => {

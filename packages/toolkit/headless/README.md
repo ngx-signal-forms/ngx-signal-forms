@@ -149,18 +149,21 @@ Selector: `[ngxHeadlessFieldset]` · Export: `fieldset`
 
 Aggregates error state across multiple fields for group validation.
 
-| Input                 | Type                           | Description                                   |
-| --------------------- | ------------------------------ | --------------------------------------------- |
-| `field`               | `FieldTree` (required)         | Primary field group                           |
-| `fields`              | `readonly FieldTree[] \| null` | Optional explicit field list — see note below |
-| `fieldsetId`          | `string`                       | For ARIA linking                              |
-| `strategy`            | `ErrorDisplayStrategy`         | Override strategy                             |
-| `submittedStatus`     | `SubmittedStatus`              | Override for `'on-submit'` strategy           |
-| `includeNestedErrors` | `boolean`                      | Include child errors (default: `false`)       |
+| Input                 | Type                           | Description                                        |
+| --------------------- | ------------------------------ | -------------------------------------------------- |
+| `field`               | `FieldTree` (required)         | Primary field group                                |
+| `fields`              | `readonly FieldTree[] \| null` | Optional explicit field list — see note below      |
+| `fieldsetId`          | `string`                       | For ARIA linking                                   |
+| `strategy`            | `ErrorDisplayStrategy`         | Override blocking-error strategy                   |
+| `warningStrategy`     | `ErrorDisplayStrategy`         | Override warning strategy (default: `'immediate'`) |
+| `submittedStatus`     | `SubmittedStatus`              | Override for `'on-submit'` strategy                |
+| `includeNestedErrors` | `boolean`                      | Include child errors (default: `false`)            |
 
 > `fields` distinguishes "not provided" from "provided but empty": `null`/unbound (default) aggregates the fieldset's own errors; an explicitly bound `[]` aggregates nothing rather than falling back — useful when a dynamically computed field list legitimately becomes empty.
 
-Signals: `isValid()`, `isInvalid()`, `isTouched()`, `isDirty()`, `isPending()`, `aggregatedErrors()`, `aggregatedWarnings()`, `resolvedErrors()`, `resolvedWarnings()`, `hasErrors()`, `hasWarnings()`, `shouldShowErrors()`, `shouldShowWarnings()`, `resolvedStrategy()`, `resolvedSubmittedStatus()`, `resolvedFieldsetId()`.
+Signals: `isValid()`, `isInvalid()`, `isTouched()`, `isDirty()`, `isPending()`, `aggregatedErrors()`, `aggregatedWarnings()`, `resolvedErrors()`, `resolvedWarnings()`, `hasErrors()`, `hasWarnings()`, `shouldShowErrors()`, `shouldShowWarnings()`, `resolvedStrategy()`, `resolvedWarningStrategy()`, `resolvedSubmittedStatus()`, `resolvedFieldsetId()`.
+
+`warningStrategy` times `shouldShowWarnings()` independently of `strategy`/`shouldShowErrors()` — it defaults straight to `'immediate'` when unset (bypassing the form context and `NGX_SIGNAL_FORMS_CONFIG.defaultErrorStrategy` entirely), matching `NgxFormFieldWrapper.warningStrategy` / `NgxFormFieldError.warningStrategy`'s contract exactly. `shouldShowWarnings()` is also no longer suppressed just because `shouldShowErrors()` is `true` — it matches `NgxHeadlessErrorSummary.shouldShowWarnings()`'s independent error/warning visibility instead (fieldsets aggregate the same way a summary does). Consumers that render errors and warnings in a single slot (like `NgxFormFieldset`) apply "errors take visual priority" themselves on top of these two independent signals.
 
 Render `resolvedErrors()` / `resolvedWarnings()` (not `aggregatedErrors()[i].message`) — `ValidationError.message` is `undefined` for framework-default errors (e.g. `required(path.x)` with no `message` option), so the resolved signals apply the same 3-tier message priority as `NgxHeadlessErrorState.resolvedErrors`:
 
