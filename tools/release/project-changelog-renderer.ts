@@ -1,3 +1,4 @@
+import { existsSync } from 'node:fs';
 import _DefaultChangelogRendererImport, {
   type ChangelogChange,
 } from 'nx/release/changelog-renderer/index.js';
@@ -39,11 +40,17 @@ const AREA_ORDER: Area[] = ['toolkit', 'demo', 'shared', 'other'];
 const PRIMARY_TYPE_ORDER = ['feat', 'fix', 'refactor', 'docs'];
 const MAX_SUMMARY_ITEMS_PER_AREA = 2;
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null;
+}
+
 export default class ProjectChangelogRenderer extends DefaultChangelogRenderer {
   override async render(): Promise<string> {
     if (this.project === null) {
       return super.render();
     }
+
+    this.assertMigrationGuideExists();
 
     const sections: Array<readonly string[]> = [];
 
@@ -115,19 +122,32 @@ export default class ProjectChangelogRenderer extends DefaultChangelogRenderer {
   }
 
   private renderMigrationNotes(): string[] {
-    if (!this.hasBreakingChanges()) {
-      return [];
-    }
-
     const count = new Set(this.breakingChanges).size;
     const suffix = count === 1 ? '' : 's';
+    const guideUrl =
+      `https://github.com/ngx-signal-forms/ngx-signal-forms/blob/main/` +
+      `docs/migrations/v${this.changelogEntryVersion}.md`;
+    const summary =
+      count === 0
+        ? 'Review consumer-visible changes and upgrade steps in the'
+        : `This release includes ${count} breaking change${suffix}.`;
 
     return [
       '',
       '### Migration notes',
       '',
-      `- This release includes ${count} breaking change${suffix}. Review the \`Breaking Changes\` section before upgrading.`,
+      `- ${summary} [versioned migration guide](${guideUrl}).`,
     ];
+  }
+
+  private assertMigrationGuideExists(): void {
+    const guidePath = `docs/migrations/v${this.changelogEntryVersion}.md`;
+    // oxlint-disable-next-line strict-boolean-expressions, no-unsafe-call -- Oxc cannot resolve Node's existsSync type through this ESM renderer.
+    if (!existsSync(guidePath)) {
+      throw new Error(
+        `Missing required migration guide: ${guidePath}. Add it before releasing.`,
+      );
+    }
   }
 
   private renderChangesByAreaThenType(): string[] {
@@ -174,7 +194,25 @@ export default class ProjectChangelogRenderer extends DefaultChangelogRenderer {
   }
 
   private getChangeTypeConfigs(): ChangeTypeConfigs {
-    return this.conventionalCommitsConfig.types ?? {};
+    // oxlint-disable-next-line no-unsafe-assignment -- Nx's CJS renderer type is unresolved through the ESM interop bridge above.
+    const configuredTypes = this.conventionalCommitsConfig.types;
+    if (!isRecord(configuredTypes)) {
+      return {};
+    }
+
+    return Object.fromEntries(
+      Object.entries(configuredTypes).map(([type, configuredType]) => {
+        if (!isRecord(configuredType) || !isRecord(configuredType.changelog)) {
+          return [type, {}];
+        }
+
+        const title = configuredType.changelog.title;
+        return [
+          type,
+          typeof title === 'string' ? { changelog: { title } } : {},
+        ];
+      }),
+    );
   }
 
   private getOrderedChangeTypes(

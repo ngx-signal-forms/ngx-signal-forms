@@ -67,9 +67,11 @@ describe('expectNoA11yViolations', () => {
 
   it('accepts extra RunOptions merged over the WCAG 2.2 AA defaults', async () => {
     // A fixture that would normally fail `label` can be waived per-call via
-    // the `options` parameter, confirming the merge doesn't just ignore
-    // caller-supplied rule overrides.
-    const fixture = mount(`<input type="text" />`);
+    // the `options` parameter. Give it a WCAG 2.2 target-size compliant box
+    // so `label` remains the only intentional violation.
+    const fixture = mount(
+      `<input type="text" style="box-sizing: border-box; width: 24px; height: 24px" />`,
+    );
 
     await expect(
       expectNoA11yViolations(fixture, { rules: { label: { enabled: false } } }),

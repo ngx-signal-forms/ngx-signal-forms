@@ -63,6 +63,7 @@ Horizontal `FormFieldOrientation` is exercised via the shared `ui/orientation-to
 - `docs/WARNINGS_SUPPORT.md` — Non-blocking validation end-to-end
 - `docs/PACKAGE_ARCHITECTURE.md` — Entry point layout and `@internal` policy
 - `docs/ANGULAR_PUBLIC_API_POLICY.md` — How public vs `@internal` exports are managed
+- `docs/migrations/README.md` — Version-to-version toolkit upgrade guides
 - `docs/MIGRATING_BETA_TO_V1.md` — Beta → current v1 API migration
 - `docs/MIGRATING_FROM_NGX_VEST_FORMS.md` — Migration from `ngx-vest-forms`
 - `docs/decisions/` — Architecture Decision Records (ADRs)

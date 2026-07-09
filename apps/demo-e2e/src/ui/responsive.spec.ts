@@ -111,7 +111,9 @@ test.describe('Demo Application UI - Narrow viewport (< 900px)', () => {
   test('left nav becomes a drawer, toggled by a hamburger button', async ({
     page,
   }) => {
-    await expect(page.locator('.shell__nav')).toBeHidden();
+    const nav = page.locator('.shell__nav');
+    await expect(nav).toHaveCSS('visibility', 'hidden');
+    await expect(nav).toHaveAttribute('inert', '');
 
     const toggle = page.getByRole('button', { name: 'Open navigation' });
     await expect(toggle).toBeVisible();
@@ -125,13 +127,16 @@ test.describe('Demo Application UI - Narrow viewport (< 900px)', () => {
         name: 'Close navigation',
       });
       await expect(closeButton).toBeFocused();
-      await expect(page.locator('.shell__nav')).toBeVisible();
+      await expect(nav).toBeVisible();
+      await expect(nav).not.toHaveAttribute('inert');
     });
 
     await test.step('Escape closes the drawer and returns focus to the toggle', async () => {
       await page.keyboard.press('Escape');
       await expect(toggle).toHaveAttribute('aria-expanded', 'false');
       await expect(toggle).toBeFocused();
+      await expect(nav).toHaveAttribute('inert', '');
+      await expect(nav).toHaveCSS('visibility', 'hidden');
     });
   });
 

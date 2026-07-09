@@ -1,6 +1,6 @@
 ---
 name: ngx-signal-forms
-description: Guides use of @ngx-signal-forms/toolkit (now at the v1.0.0 public API, rc.11 in preparation) across the root and secondary entry points for Angular Signal Forms, including form enhancers, control semantics, wrappers, assistive feedback, grouped notifications, headless primitives, Vest integration, the axe-core accessibility test harness, debugger UI, and migration to the current public API. Use when working with @ngx-signal-forms/toolkit, ngxSignalForm, ngxSignalFormControl, wrappers or fieldsets, error summaries or grouped notifications, assistive or headless state directives, Vest validation, accessibility (a11y/WCAG) test assertions, debugger surfaces, or beta/RC-to-current API migrations.
+description: Guides use of @ngx-signal-forms/toolkit across its v1 root and secondary entry points. Use when working with toolkit form context, control semantics, wrappers, assistive or headless feedback, Vest, accessibility testing, debugger UI, or toolkit migrations.
 ---
 
 # ngx-signal-forms Toolkit
@@ -46,6 +46,7 @@ Use this skill when the task involves:
 
 | Task                                                              | Sub-skill to read                          |
 | ----------------------------------------------------------------- | ------------------------------------------ |
+| Upgrade from beta or an earlier release candidate                 | [migrations/SKILL.md](migrations/SKILL.md) |
 | `[formRoot]`, error strategy, ARIA, submission                    | [core/SKILL.md](core/SKILL.md)             |
 | Control semantics directive, preset providers                     | [core/SKILL.md](core/SKILL.md)             |
 | Field wrappers, fieldsets, floating labels, custom control layout | [form-field/SKILL.md](form-field/SKILL.md) |
@@ -63,6 +64,8 @@ Load these reference files when the sub-skill or task requires deeper API detail
 - `references/signal-forms.md` — Angular Signal Forms base API (validators, field state, form())
 - `references/pitfalls.md` — Common mistakes and how to avoid them
 - `references/demo-map.md` — Repository demo paths organized by feature
+- `docs/migrations/README.md` — Version-to-version migration guides; load the
+  applicable guide before changing an existing toolkit integration.
 
 ## Quick Decision: Which Entry Point?
 
