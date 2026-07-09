@@ -176,9 +176,9 @@ export function createErrorVisibility(
     // it is the union of what `opts.strategy` can yield once unwrapped.
     const resolvedStrategy = () => {
       const strategyValue =
-        opts?.strategy !== undefined
-          ? unwrapValue<ErrorDisplayStrategy | undefined>(opts.strategy)
-          : undefined;
+        opts?.strategy === undefined
+          ? undefined
+          : unwrapValue<ErrorDisplayStrategy | undefined>(opts.strategy);
       return resolveStrategyFromContext(
         strategyValue,
         formContext,
@@ -189,9 +189,9 @@ export function createErrorVisibility(
     // Same pattern for submitted status.
     const resolvedSubmittedStatus = () => {
       const statusValue =
-        opts?.submittedStatus !== undefined
-          ? unwrapValue<SubmittedStatus | undefined>(opts.submittedStatus)
-          : undefined;
+        opts?.submittedStatus === undefined
+          ? undefined
+          : unwrapValue<SubmittedStatus | undefined>(opts.submittedStatus);
       return resolveSubmittedStatusFromContext(statusValue, formContext);
     };
 

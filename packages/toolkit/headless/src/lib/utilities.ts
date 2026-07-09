@@ -284,9 +284,9 @@ export function buildHeadlessErrorState(
 ): HeadlessErrorStateCore {
   const split = computed(() => {
     const override = errorsOverride?.();
-    return override !== undefined
-      ? splitByKind(override)
-      : splitByKind(readDirectErrors(fieldState()));
+    return override === undefined
+      ? splitByKind(readDirectErrors(fieldState()))
+      : splitByKind(override);
   });
 
   const ids = createFieldMessageIdSignals(fieldName);
@@ -453,7 +453,7 @@ function createErrorStateInternal<TValue = unknown>(
 
   const resolvedStrategy = computed<ResolvedErrorDisplayStrategy>(() => {
     const strategyValue =
-      strategy !== undefined ? unwrapValue(strategy) : undefined;
+      strategy === undefined ? undefined : unwrapValue(strategy);
     return resolveStrategyFromContext(
       strategyValue,
       formContext,
@@ -463,7 +463,7 @@ function createErrorStateInternal<TValue = unknown>(
 
   const resolvedSubmittedStatus = computed<SubmittedStatus | undefined>(() => {
     const statusValue =
-      submittedStatus !== undefined ? unwrapValue(submittedStatus) : undefined;
+      submittedStatus === undefined ? undefined : unwrapValue(submittedStatus);
     return resolveSubmittedStatusFromContext(statusValue, formContext);
   });
 

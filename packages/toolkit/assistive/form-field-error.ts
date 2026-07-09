@@ -464,9 +464,9 @@ export class NgxFormFieldError {
    */
   readonly #resolvedErrorsStrategy = computed<ErrorDisplayStrategy | undefined>(
     () =>
-      this.headless.errorsOverride() !== undefined
-        ? 'immediate'
-        : this.headless.strategy(),
+      this.headless.errorsOverride() === undefined
+        ? this.headless.strategy()
+        : 'immediate',
   );
 
   /**

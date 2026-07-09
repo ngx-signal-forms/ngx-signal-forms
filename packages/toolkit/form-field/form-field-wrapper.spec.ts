@@ -2377,10 +2377,7 @@ describe('NgxSignalFormWrapperComponent', () => {
         invalid: () => true,
         touched: () => true,
         errors: () => [
-          { message: 'Error without kind' } as {
-            kind?: string;
-            message: string;
-          },
+          { message: 'Error without kind' },
         ],
       });
 
