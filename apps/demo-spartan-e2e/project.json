@@ -16,14 +16,16 @@
       "executor": "@nx/playwright:playwright",
       "outputs": ["{workspaceRoot}/dist/.playwright/apps/demo-spartan-e2e"],
       "options": {
-        "config": "{projectRoot}/playwright.config.ts"
+        "config": "{projectRoot}/playwright.config.ts",
+        "skipInstall": true
       }
     },
     "e2e-ci": {
       "executor": "@nx/playwright:playwright",
       "outputs": ["{workspaceRoot}/dist/.playwright/apps/demo-spartan-e2e"],
       "options": {
-        "config": "{projectRoot}/playwright.config.ts"
+        "config": "{projectRoot}/playwright.config.ts",
+        "skipInstall": true
       }
     },
     "a11y": {
@@ -33,7 +35,8 @@
         "{workspaceRoot}/dist/.a11y/demo-spartan-e2e"
       ],
       "options": {
-        "config": "{projectRoot}/playwright.a11y.config.ts"
+        "config": "{projectRoot}/playwright.a11y.config.ts",
+        "skipInstall": true
       }
     }
   }

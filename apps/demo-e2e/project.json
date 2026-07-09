@@ -16,7 +16,8 @@
       "executor": "@nx/playwright:playwright",
       "outputs": ["{workspaceRoot}/dist/.playwright/apps/demo-e2e"],
       "options": {
-        "config": "{projectRoot}/playwright.config.ts"
+        "config": "{projectRoot}/playwright.config.ts",
+        "skipInstall": true
       }
     },
     "e2e-toolkit": {
@@ -54,7 +55,15 @@
       "executor": "@nx/playwright:playwright",
       "outputs": ["{workspaceRoot}/dist/.playwright/apps/demo-e2e"],
       "options": {
-        "config": "{projectRoot}/playwright.config.ts"
+        "config": "{projectRoot}/playwright.config.ts",
+        "skipInstall": true
+      }
+    },
+    "e2e-ci-shard": {
+      "executor": "nx:run-commands",
+      "outputs": ["{workspaceRoot}/dist/.playwright/apps/demo-e2e"],
+      "options": {
+        "command": "pnpm exec playwright test --config apps/demo-e2e/playwright.config.ts --project=chromium --shard=${SHARD_INDEX:-1}/${SHARD_TOTAL:-4}"
       }
     },
     "a11y": {
@@ -64,7 +73,8 @@
         "{workspaceRoot}/dist/.a11y/demo-e2e"
       ],
       "options": {
-        "config": "{projectRoot}/playwright.a11y.config.ts"
+        "config": "{projectRoot}/playwright.a11y.config.ts",
+        "skipInstall": true
       }
     }
   }
