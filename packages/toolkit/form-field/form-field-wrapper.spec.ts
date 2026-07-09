@@ -2376,9 +2376,7 @@ describe('NgxSignalFormWrapperComponent', () => {
       const edgeCaseField = signal({
         invalid: () => true,
         touched: () => true,
-        errors: () => [
-          { message: 'Error without kind' },
-        ],
+        errors: () => [{ message: 'Error without kind' }],
       });
 
       const { container } = await render(

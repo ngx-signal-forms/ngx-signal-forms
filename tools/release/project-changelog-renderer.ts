@@ -174,8 +174,7 @@ export default class ProjectChangelogRenderer extends DefaultChangelogRenderer {
   }
 
   private getChangeTypeConfigs(): ChangeTypeConfigs {
-    return this.conventionalCommitsConfig.types ??
-      {};
+    return this.conventionalCommitsConfig.types ?? {};
   }
 
   private getOrderedChangeTypes(

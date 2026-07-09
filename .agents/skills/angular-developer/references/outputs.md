@@ -7,7 +7,7 @@ Outputs allow a child component to emit custom events that a parent component ca
 Declare outputs using the `output()` function. This returns an `OutputEmitterRef`.
 
 ```ts
-import {Component, output} from '@angular/core';
+import { Component, output } from '@angular/core';
 
 @Component({
   selector: 'custom-slider',
@@ -31,7 +31,10 @@ export class CustomSlider {
 Bind to the output event using parentheses `()`. If the event emits data, access it using the special `$event` variable.
 
 ```html
-<custom-slider (panelClosed)="savePanelState()" (valueChanged)="logValue($event)" />
+<custom-slider
+  (panelClosed)="savePanelState()"
+  (valueChanged)="logValue($event)"
+/>
 ```
 
 ## Configuration Options

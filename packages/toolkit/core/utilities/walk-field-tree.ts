@@ -145,11 +145,7 @@ function* walkArrayChildren(
       throw invalidChildError(path, String(index));
     }
 
-    yield* walk(
-      child,
-      joinPath(path, String(index)),
-      seen,
-    );
+    yield* walk(child, joinPath(path, String(index)), seen);
   }
 }
 

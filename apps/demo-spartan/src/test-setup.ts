@@ -14,8 +14,7 @@ class ResizeObserverStub {
 }
 
 if (globalThis.ResizeObserver === undefined) {
-  globalThis.ResizeObserver =
-    ResizeObserverStub;
+  globalThis.ResizeObserver = ResizeObserverStub;
 }
 
 setupTestBed();
