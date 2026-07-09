@@ -69,4 +69,4 @@ build.log
 .nx/migrate-runs
 
 # graphify knowledge graph output
-graphify-out/
+graphify-out/.worktrees/

@@ -17,12 +17,23 @@ permissions:
   actions: read
   contents: read
 
+# Cancel superseded runs on the same branch/PR - every other push/PR/tag
+# workflow in this repo already does this (deploy-demo, publish, release,
+# update-snapshots); ci.yml was the one gap. Saves both GH Actions minutes
+# and Nx Cloud credits when a branch is pushed to repeatedly.
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 jobs:
   main:
     runs-on: ubuntu-latest
     # Broad PRs that touch shared libs make nearly every project "affected"
     # (4 demo e2e suites + toolkit browser tests), which can exceed 20 min.
     timeout-minutes: 35
+    env:
+      # https://nx.dev/docs/features/ci-features/distribute-task-execution
+      NX_CLOUD_CONTINUOUS_ASSIGNMENT: 'true'
     steps:
       - uses: actions/checkout@v7
         with:
@@ -101,6 +112,35 @@ jobs:
       - uses: nrwl/nx-set-shas@v5
         continue-on-error: true
 
+      # Nx Agents (DTE): must run before any other `nx`/`nx-cloud` command -
+      # the first command to reach Nx Cloud locks in the CI Pipeline
+      # Execution's distribution settings for the whole run.
+      # https://nx.dev/docs/features/ci-features/distribute-task-execution
+      #
+      # Agent count scales with the affected-project percentage of the PR via
+      # .nx/workflows/distribution-config.yaml (small/medium/large changesets)
+      # so trivial PRs use 2 agents while broad, multi-app PRs scale to 6.
+      # --stop-agents-after lists every target run below so agents don't shut
+      # down while dependent tasks (test-browser/e2e-ci depending on build)
+      # are still in flight.
+      #
+      # Fork PRs never receive NX_CLOUD_ACCESS_TOKEN_* secrets on the
+      # `pull_request` trigger (this repo intentionally never uses
+      # `pull_request_target` for untrusted code), so nx_cloud.enabled is
+      # already 'false' for them. The fork check below is defense-in-depth
+      # only, in case that trigger or secrets policy ever changes.
+      - name: Start Nx Cloud distributed task execution
+        id: nx_agents
+        if: steps.nx_cloud.outputs.enabled == 'true' && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository)
+        # Never hard-block CI on Nx Cloud/agents being unavailable; the
+        # affected-tasks step below falls back to local execution via
+        # nx-safe.sh if Nx Cloud rejects the workspace.
+        continue-on-error: true
+        run: |
+          pnpm exec nx-cloud start-ci-run \
+            --distribute-on=".nx/workflows/distribution-config.yaml" \
+            --stop-agents-after="lint,test,test-browser,build,e2e-ci"
+
       - name: Nx Report
         # nx-safe.sh keeps diagnostics available even if Nx Cloud auth is broken.
         run: bash .github/scripts/nx-safe.sh pnpm exec nx report
@@ -116,11 +156,9 @@ jobs:
         run: pnpm exec oxlint . --format=github
         continue-on-error: true
 
-      # Run tasks locally - no DTE distribution to conserve Nx Cloud credits.
-      # Set skip_cloud=true via workflow_dispatch to force-disable Nx Cloud.
-      # If Nx Cloud is unavailable or rejects the workspace at runtime,
-      # nx-safe.sh automatically retries with NX_NO_CLOUD=true so CI never
-      # hard-blocks on cloud availability.
+      # Distributed via Nx Agents when Nx Cloud is enabled (see "Start Nx
+      # Cloud distributed task execution" above); otherwise nx-safe.sh runs
+      # everything locally, same as when Nx Cloud is unavailable mid-run.
       - name: Run affected tasks
         run: bash .github/scripts/nx-safe.sh pnpm exec nx affected -t lint test test-browser build e2e-ci --parallel=3 --outputStyle=static
 
