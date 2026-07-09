@@ -12,6 +12,7 @@ import {
   schema,
   type ValidationError,
 } from '@angular/forms/signals';
+import { NGX_SIGNAL_FORMS_CONFIG } from '@ngx-signal-forms/toolkit';
 import {
   NGX_ERROR_MESSAGES,
   type ErrorMessageRegistry,
@@ -199,6 +200,31 @@ describe('createErrorMessageSignal — visibility filtering', () => {
       }),
     );
 
+    expect(result().length).toBe(1);
+  });
+
+  it('honors NGX_SIGNAL_FORMS_CONFIG.defaultErrorStrategy when no strategy input or form context is present', () => {
+    const injector = Injector.create({
+      providers: [
+        {
+          provide: NGX_SIGNAL_FORMS_CONFIG,
+          useValue: { defaultErrorStrategy: 'immediate' },
+        },
+      ],
+    });
+    const field = mockFieldState({
+      invalid: true,
+      touched: false,
+      errors: [{ kind: 'required', message: 'Required' }],
+    });
+
+    const result = runInInjectionContext(injector, () =>
+      createErrorMessageSignal(() => field, { fieldName: 'email' }),
+    );
+
+    // No explicit `strategy` and no form context — the global config
+    // default ('immediate') should still surface the message while
+    // untouched, matching NgxHeadlessFieldset.resolvedStrategy's cascade.
     expect(result().length).toBe(1);
   });
 });

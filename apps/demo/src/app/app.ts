@@ -1,4 +1,14 @@
-import { Component, effect, inject } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  afterNextRender,
+  Component,
+  effect,
+  ElementRef,
+  inject,
+  Injector,
+  signal,
+  viewChild,
+} from '@angular/core';
 import {
   NavigationEnd,
   Router,
@@ -16,6 +26,7 @@ import { PageControlsService } from './ui/page-controls';
 
 @Component({
   selector: 'ngx-root',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 
   imports: [
     RouterOutlet,
@@ -29,11 +40,15 @@ import { PageControlsService } from './ui/page-controls';
       display: block;
     }
 
-    /* ── Shell layout ── */
+    /* ── Shell layout ──
+       Below 900px the left nav becomes an off-canvas drawer (see the
+       ".shell__nav" media query below) instead of forcing the shell to
+       stay wide — there is no hard minimum width, so the shell reflows
+       down to 320px CSS px without a horizontal scrollbar (WCAG 2.2 AA
+       1.4.10 Reflow). ≥900px is visually unchanged from before. */
     .shell {
       display: flex;
       height: 100dvh;
-      min-width: 900px;
       overflow: hidden;
       background: rgb(248 250 252);
     }
@@ -60,9 +75,161 @@ import { PageControlsService } from './ui/page-controls';
       border-right-color: rgb(15 23 42);
     }
 
+    /* Below 900px: the nav leaves the flex flow and becomes a fixed
+       off-canvas drawer, closed by default. The is-nav-open class (toggled
+       by the hamburger button in .shell__mobile-bar) slides it in. */
+    @media (width < 900px) {
+      .shell__nav {
+        position: fixed;
+        inset-block: 0;
+        left: 0;
+        z-index: 70;
+        width: min(80vw, 18rem);
+        transform: translateX(-100%);
+        transition: transform 220ms cubic-bezier(0.16, 1, 0.3, 1);
+        box-shadow: 12px 0 32px -16px rgba(15, 23, 42, 0.35);
+      }
+
+      .shell__nav.is-nav-open {
+        transform: translateX(0);
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        .shell__nav {
+          transition: none;
+        }
+      }
+    }
+
+    /* Backdrop behind the open drawer — click closes it, same pattern as
+       the display-controls slide-over. */
+    .shell__nav-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 65;
+      background: rgb(15 23 42 / 0.4);
+      animation: navBackdropIn 160ms ease;
+    }
+
+    @keyframes navBackdropIn {
+      from {
+        opacity: 0;
+      }
+      to {
+        opacity: 1;
+      }
+    }
+
+    /* Mobile top bar with the hamburger toggle — only exists below 900px. */
+    .shell__mobile-bar {
+      display: none;
+    }
+
+    @media (width < 900px) {
+      .shell__mobile-bar {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        flex-shrink: 0;
+        height: 3.25rem;
+        padding-inline: 1rem;
+        background: rgb(255 255 255);
+        border-bottom: 1px solid rgb(226 232 240);
+      }
+
+      :host-context(.dark) .shell__mobile-bar {
+        background: rgb(2 6 23);
+        border-bottom-color: rgb(15 23 42);
+      }
+    }
+
+    .shell__nav-toggle {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 2.25rem;
+      height: 2.25rem;
+      flex-shrink: 0;
+      border: 1px solid rgb(226 232 240);
+      border-radius: 0.5rem;
+      background: none;
+      color: rgb(51 65 85);
+      cursor: pointer;
+    }
+
+    :host-context(.dark) .shell__nav-toggle {
+      border-color: rgb(30 41 59);
+      color: rgb(226 232 240);
+    }
+
+    .shell__nav-toggle:focus-visible {
+      outline: 2px solid rgb(99 102 241);
+      outline-offset: 2px;
+    }
+
+    .shell__nav-toggle svg {
+      width: 1.15rem;
+      height: 1.15rem;
+    }
+
+    .shell__mobile-bar-brand {
+      font-size: 1.1rem;
+      font-weight: 800;
+      letter-spacing: -0.045em;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
     .shell__nav-header {
       padding: 1.4rem 1rem 0.45rem 1.25rem;
       flex-shrink: 0;
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 0.5rem;
+    }
+
+    /* Only meaningful once the nav is a drawer (<900px) — hidden at wide
+       widths where the nav is always visible and there's nothing to close. */
+    .shell__nav-close {
+      display: none;
+    }
+
+    @media (width < 900px) {
+      .shell__nav-close {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 2rem;
+        height: 2rem;
+        flex-shrink: 0;
+        border: none;
+        border-radius: 0.5rem;
+        background: none;
+        color: rgb(100 116 139);
+        cursor: pointer;
+      }
+
+      .shell__nav-close:hover {
+        background: rgb(241 245 249);
+        color: rgb(15 23 42);
+      }
+
+      .shell__nav-close:focus-visible {
+        outline: 2px solid rgb(99 102 241);
+        outline-offset: 2px;
+      }
+
+      .shell__nav-close svg {
+        width: 1rem;
+        height: 1rem;
+      }
+    }
+
+    :host-context(.dark) .shell__nav-close:hover {
+      background: rgb(30 41 59);
+      color: rgb(226 232 240);
     }
 
     .shell__brand {
@@ -292,9 +459,28 @@ import { PageControlsService } from './ui/page-controls';
       Skip to main content
     </a>
 
+    <!-- Below 900px, clicking the backdrop or pressing Escape closes the
+         nav drawer — the .shell__nav-backdrop only renders while it's open,
+         mirroring the display-controls slide-over's backdrop pattern. -->
+    @if (navOpen()) {
+      <div
+        class="shell__nav-backdrop"
+        aria-hidden="true"
+        (click)="closeNav()"
+      ></div>
+    }
+
     <div class="shell text-gray-900 dark:text-gray-100">
       <!-- ── Left nav ── -->
-      <nav class="shell__nav" aria-label="Site navigation">
+      <nav
+        #siteNav
+        id="site-nav"
+        class="shell__nav"
+        aria-label="Site navigation"
+        [class.is-nav-open]="navOpen()"
+        (keydown.escape)="closeNav()"
+        (click)="onNavAreaClick($event)"
+      >
         <div class="shell__nav-header">
           <a
             [routerLink]="'/getting-started/your-first-form'"
@@ -303,6 +489,24 @@ import { PageControlsService } from './ui/page-controls';
           >
             ngx-signal-forms
           </a>
+          <button
+            #navCloseButton
+            type="button"
+            class="shell__nav-close"
+            aria-label="Close navigation"
+            (click)="closeNav()"
+          >
+            <svg
+              viewBox="0 0 14 14"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              aria-hidden="true"
+            >
+              <path d="M1 1l12 12M13 1L1 13" />
+            </svg>
+          </button>
         </div>
 
         <div class="shell__nav-tree">
@@ -365,6 +569,34 @@ import { PageControlsService } from './ui/page-controls';
 
       <!-- ── Main content ── -->
       <main id="maincontent" tabindex="-1" class="shell__main">
+        <!-- Only visible below 900px — opens the nav drawer above. -->
+        <div class="shell__mobile-bar">
+          <button
+            #navToggleButton
+            type="button"
+            class="shell__nav-toggle"
+            aria-label="Open navigation"
+            aria-controls="site-nav"
+            [attr.aria-expanded]="navOpen()"
+            (click)="toggleNav()"
+          >
+            <svg
+              viewBox="0 0 16 16"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.5"
+              stroke-linecap="round"
+              aria-hidden="true"
+            >
+              <line x1="2" y1="4.5" x2="14" y2="4.5" />
+              <line x1="2" y1="8" x2="14" y2="8" />
+              <line x1="2" y1="11.5" x2="14" y2="11.5" />
+            </svg>
+          </button>
+          <span class="shell__mobile-bar-brand brand-gradient">
+            ngx-signal-forms
+          </span>
+        </div>
         <div class="shell__scroll">
           <div class="shell__container">
             <router-outlet />
@@ -386,6 +618,7 @@ import { PageControlsService } from './ui/page-controls';
     <!-- Floating pin — reopens the controls panel (wide: expands the rail,
          narrow: opens the slide-over). Hidden while the panel is visible. -->
     <button
+      #pinButton
       type="button"
       class="shell__pin"
       [class.is-rail-collapsed]="railCollapsed()"
@@ -420,9 +653,17 @@ export class AppComponent {
   readonly #router = inject(Router);
   readonly #title = inject(Title);
   readonly #pageControls = inject(PageControlsService);
+  readonly #injector = inject(Injector);
 
   protected readonly panelOpen = this.#pageControls.panelOpen;
   protected readonly railCollapsed = this.#pageControls.railCollapsed;
+
+  // TS `private` (compile-time only), not a native JS `#` field — see the
+  // matching note on RightRailComponent.slideoverDialog for why: `#` fields
+  // on `viewChild()` queries miscompile under this workspace's dev
+  // toolchain and throw a nonsensical runtime error.
+  private readonly pinButton =
+    viewChild<ElementRef<HTMLButtonElement>>('pinButton');
 
   readonly #currentPath = toSignal(
     this.#router.events.pipe(
@@ -442,6 +683,35 @@ export class AppComponent {
   });
 
   /**
+   * The mobile slide-over's native `<dialog>` already restores focus to
+   * whatever was focused before `showModal()` ran (see
+   * `RightRailComponent`'s dialog-sync effect) — normally the pin button
+   * itself, since clicking it is what opened the panel. That restore step
+   * only succeeds if the pin is actually focusable (rendered, not
+   * `display: none`) at the exact moment the dialog closes, which races
+   * against this same component's own `[class.is-slideover-open]` binding
+   * removal on the same `panelOpen` signal. Explicitly re-focusing the pin
+   * here — once, after the next render following a close — makes the
+   * outcome deterministic instead of depending on CD ordering.
+   */
+  #wasPanelOpen = false;
+  // oxlint-disable-next-line no-unused-private-class-members -- EffectRef is intentionally kept as a named field to document the side effect.
+  readonly #restoreFocusToPinEffect = effect(() => {
+    const isOpen = this.panelOpen();
+    const wasOpen = this.#wasPanelOpen;
+    this.#wasPanelOpen = isOpen;
+
+    if (wasOpen && !isOpen) {
+      afterNextRender(
+        () => {
+          this.pinButton()?.nativeElement.focus();
+        },
+        { injector: this.#injector },
+      );
+    }
+  });
+
+  /**
    * Reopen the controls panel using the affordance that fits the current
    * breakpoint: expand the persistent rail on wide screens, open the
    * slide-over below.
@@ -452,6 +722,61 @@ export class AppComponent {
       this.#pageControls.expandRail();
     } else {
       this.#pageControls.openPanel();
+    }
+  }
+
+  // ══════════════════════════════════════════════════════════════════════
+  // Mobile nav drawer (<900px) — see the ".shell__nav" media query above.
+  // Unlike the display-controls slide-over this isn't a native <dialog>
+  // (it shares markup with the always-visible ≥900px nav, so swapping in a
+  // <dialog> would mean two templates), so focus-in/focus-out and Escape
+  // are wired up by hand below instead of coming for free.
+  // ══════════════════════════════════════════════════════════════════════
+
+  protected readonly navOpen = signal(false);
+
+  private readonly navCloseButton =
+    viewChild<ElementRef<HTMLButtonElement>>('navCloseButton');
+  private readonly navToggleButton =
+    viewChild<ElementRef<HTMLButtonElement>>('navToggleButton');
+
+  #wasNavOpen = false;
+  // oxlint-disable-next-line no-unused-private-class-members -- EffectRef is intentionally kept as a named field to document the side effect.
+  readonly #navFocusEffect = effect(() => {
+    const isOpen = this.navOpen();
+    const wasOpen = this.#wasNavOpen;
+    this.#wasNavOpen = isOpen;
+
+    if (isOpen === wasOpen) return;
+
+    afterNextRender(
+      () => {
+        if (isOpen) {
+          this.navCloseButton()?.nativeElement.focus();
+        } else {
+          this.navToggleButton()?.nativeElement.focus();
+        }
+      },
+      { injector: this.#injector },
+    );
+  });
+
+  protected toggleNav(): void {
+    this.navOpen.update((open) => !open);
+  }
+
+  protected closeNav(): void {
+    this.navOpen.set(false);
+  }
+
+  /** Closing the drawer when a nav link is activated is standard mobile
+   * drawer UX — otherwise the drawer stays open, covering the page the
+   * user just navigated to, until they explicitly dismiss it. */
+  protected onNavAreaClick(event: MouseEvent): void {
+    if (!this.navOpen()) return;
+    const target = event.target;
+    if (target instanceof Element && target.closest('a')) {
+      this.closeNav();
     }
   }
 }

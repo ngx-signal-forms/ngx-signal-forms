@@ -17,6 +17,7 @@ import {
   NgxFormFieldErrorSummary,
   NgxFormFieldHint,
   NgxFormFieldCharacterCount,
+  NgxFormMarkingLegend,
   warningError,
   isWarningError,
   isBlockingError,
@@ -93,14 +94,10 @@ Grouped validation notification with an optional title.
 | `fieldName` | `string`                             | Optional id base for `aria-describedby` linkage |
 | `title`     | `string`                             | Optional title above the grouped messages       |
 | `listStyle` | `'plain' \| 'bullets'`               | Stacked paragraphs or bullet list               |
-| `tone`      | `'auto' \| 'error' \| 'warning'`     | Currently a no-op — see below                   |
 
-- Tone is always **content-driven**, regardless of the `tone` value passed:
-  any blocking (non-`warn:`) error routes the group to `role="alert"`; an
-  all-warning list routes to the polite `role="status"` container.
-- The `tone` input does not currently force either outcome. It is retained
-  as a stable API surface for possible future expansion (e.g. explicit
-  tone forcing) — do not rely on it to change rendering today.
+- Tone is always **content-driven** — there is no `tone` input: any blocking
+  (non-`warn:`) error routes the group to `role="alert"`; an all-warning list
+  routes to the polite `role="status"` container.
 - Intended for grouped fieldset summaries or custom headless summary cards
 
 ### NgxFormFieldErrorSummary
@@ -114,12 +111,13 @@ Form-level error summary with clickable entries that focus the invalid control.
 />
 ```
 
-| Input             | Type                   | Description                        |
-| ----------------- | ---------------------- | ---------------------------------- |
-| `formTree`        | `FieldTree` (required) | Root form to aggregate errors from |
-| `summaryLabel`    | `string`               | Label above the error list         |
-| `strategy`        | `ErrorDisplayStrategy` | When to show errors                |
-| `submittedStatus` | `SubmittedStatus`      | Manual override for `'on-submit'`  |
+| Input             | Type                   | Description                                                                                             |
+| ----------------- | ---------------------- | ------------------------------------------------------------------------------------------------------- |
+| `formTree`        | `FieldTree` (required) | Root form to aggregate errors from                                                                      |
+| `summaryLabel`    | `string`               | Label above the error list                                                                              |
+| `strategy`        | `ErrorDisplayStrategy` | When to show errors                                                                                     |
+| `submittedStatus` | `SubmittedStatus`      | Manual override for `'on-submit'`                                                                       |
+| `autoFocus`       | `boolean`              | Auto-focus the summary on first appearance under `'on-submit'` (default `true`); set `false` to opt out |
 
 Override field names with `provideFieldLabels()` from `@ngx-signal-forms/toolkit`.
 
@@ -145,6 +143,49 @@ Character counter with progressive color states (ok → warning → danger → e
 
 When a matching max-length validator is present, `maxLength` can be omitted and detected automatically. Add `liveAnnounce` for polite screen reader announcements.
 
+The built-in announcement strings ("Approaching limit: N characters remaining.", etc.) are English-only. Bind `[announcementFormatter]` to a `(state, { current, max, remaining, over }) => string` function to localize them:
+
+```typescript
+formatter = (
+  state: 'warning' | 'danger' | 'exceeded',
+  info: { remaining: number; over: number },
+) => {
+  switch (state) {
+    case 'warning':
+    case 'danger':
+      return `Plus que ${info.remaining} caractères.`;
+    case 'exceeded':
+      return `Limite dépassée de ${info.over} caractères.`;
+  }
+};
+```
+
+### NgxFormMarkingLegend
+
+Form-level legend that explains the field marker (e.g. "\* indicates a required field"). Place it once wherever it reads well — there is no automatic injection.
+
+```html
+<form [formRoot]="userForm" ngxSignalForm>
+  <ngx-form-marking-legend />
+  <!-- fields… -->
+</form>
+```
+
+Outside a form host, pass the tree explicitly: `<ngx-form-marking-legend [formTree]="userForm" />`.
+
+| Input            | Type               | Description                                                                             |
+| ---------------- | ------------------ | --------------------------------------------------------------------------------------- |
+| `formTree`       | `FieldTree`        | The form tree to reflect. Falls back to the ambient `ngxSignalForm` context.            |
+| `showMarkerWhen` | `FieldMarkingMode` | Override the marking mode (`'required' \| 'optional' \| 'none'`). Falls back to config. |
+| `text`           | `string`           | Override the legend text. `{marker}` is substituted with the resolved marker.           |
+| `requiredMarker` | `string`           | Override the required marker used for `{marker}`. Falls back to config.                 |
+| `optionalMarker` | `string`           | Override the optional marker used for `{marker}`. Falls back to config.                 |
+
+- In `'required'` mode, shows the required legend and hides when the form has no required fields.
+- In `'optional'` mode, shows the optional legend and hides when the form has no optional fields.
+- In `'none'` mode, renders nothing.
+- Renders visible, non-`aria-hidden` text — it is supplementary explanation, not a live-region status update; each control's `aria-required` already carries the required state to assistive tech.
+
 ## Warning utilities
 
 ```typescript
@@ -165,42 +206,14 @@ while consumers override only the public `--ngx-*` properties.
 :root {
   --ngx-signal-form-error-color: #db1818;
   --ngx-signal-form-warning-color: #a16207;
-  --ngx-signal-form-notification-error-color: #db1818;
-  --ngx-signal-form-notification-error-border-color: color-mix(
-    in srgb,
-    var(--ngx-signal-form-notification-error-color) 50%,
-    transparent
-  );
   --ngx-signal-form-notification-error-bg: #fdebeb;
-  --ngx-signal-form-notification-border-radius: 0.5rem;
-  --ngx-signal-form-notification-padding: 1rem;
-  --ngx-signal-form-feedback-font-size: 0.75rem;
-  --ngx-signal-form-feedback-line-height: 1rem;
-  --ngx-signal-form-feedback-margin-top: 0.125rem;
-  --ngx-form-field-hint-color: rgba(50, 65, 85, 0.75);
-  --ngx-form-field-char-count-color-ok: rgba(50, 65, 85, 0.75);
-  --ngx-form-field-char-count-color-warning: #a16207;
-  --ngx-form-field-char-count-color-danger: #db1818;
 }
 ```
 
-`ngx-form-field-notification` is full-width by default. The card keeps internal
-padding for readability, while fieldset-level horizontal positioning should be
-controlled with the dedicated `--ngx-signal-form-fieldset-notification-inset-*`
-tokens when used inside `ngx-form-fieldset`.
-
-The default light-theme error surface now matches the Figma design token
-directly: `#fdebeb`.
-
-### Dark mode
-
-Built-in dark defaults are driven by the `prefers-color-scheme: dark` media
-query only — they do not detect a `.dark` class on an ancestor element.
-(`:host-context()`, which would be needed for that, is non-standard and
-unsupported in Firefox and Safari.) Apps using a class-based dark-mode
-strategy must override the public `--ngx-signal-form-error-*` /
-`--ngx-signal-form-warning-*` / `--ngx-signal-form-notification-*` custom
-properties themselves, scoped to their `.dark` selector.
+See the [Theming guide](../form-field/THEMING.md) for the complete list of
+`--ngx-*` custom properties (error/warning/notification/hint/char-count
+tokens, dark-mode overrides, and the fieldset-level
+`--ngx-signal-form-fieldset-notification-inset-*` positioning tokens).
 
 ## Related documentation
 

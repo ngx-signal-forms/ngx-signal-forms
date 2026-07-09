@@ -1,15 +1,21 @@
-import { Component, input, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  input,
+  signal,
+} from '@angular/core';
 import { FormField } from '@angular/forms/signals';
 import {
   NgxSignalFormToolkit,
   submitWithWarnings,
-  type ErrorDisplayStrategy,
+  type ResolvedErrorDisplayStrategy,
 } from '@ngx-signal-forms/toolkit';
 import { NgxFormField } from '@ngx-signal-forms/toolkit/form-field';
 import { createPasswordForm } from './warning-support.validations';
 
 @Component({
   selector: 'ngx-warning-support-form',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 
   imports: [FormField, NgxSignalFormToolkit, NgxFormField],
   host: {
@@ -87,7 +93,7 @@ export class WarningsSupportFormComponent {
    * Error display strategy input from parent page.
    * Allows users to switch between immediate, on-touch, and on-submit modes.
    */
-  readonly errorDisplayMode = input<ErrorDisplayStrategy>('on-touch');
+  readonly errorDisplayMode = input<ResolvedErrorDisplayStrategy>('on-touch');
 
   readonly #formModel = signal({
     username: '',

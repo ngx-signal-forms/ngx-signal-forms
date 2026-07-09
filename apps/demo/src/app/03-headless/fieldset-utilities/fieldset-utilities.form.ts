@@ -1,4 +1,10 @@
-import { Component, computed, input, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  input,
+  signal,
+} from '@angular/core';
 import {
   email,
   form,
@@ -12,7 +18,7 @@ import {
 } from '@angular/forms/signals';
 import {
   createOnInvalidHandler,
-  type ErrorDisplayStrategy,
+  type ResolvedErrorDisplayStrategy,
   NgxSignalForm,
 } from '@ngx-signal-forms/toolkit';
 import {
@@ -81,6 +87,7 @@ const deliverySchema = schema<HeadlessDeliveryModel>((path) => {
 
 @Component({
   selector: 'ngx-headless-fieldset-utilities',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 
   imports: [
     FormField,
@@ -100,7 +107,7 @@ export class HeadlessFieldsetUtilitiesComponent {
    * component injector — above the `<form>` context — so it receives the same
    * signal explicitly to stay in sync.
    */
-  readonly errorDisplayMode = input<ErrorDisplayStrategy>('on-touch');
+  readonly errorDisplayMode = input<ResolvedErrorDisplayStrategy>('on-touch');
 
   readonly #initialData: HeadlessDeliveryModel = {
     contactEmail: '',
@@ -124,6 +131,10 @@ export class HeadlessFieldsetUtilitiesComponent {
       onInvalid: createOnInvalidHandler(),
     },
   });
+
+  // Delivery notes is deliberately built from these four utilities instead
+  // of ngxHeadlessErrorState / ngxHeadlessCharacterCount — see the template
+  // for the "plain functions instead of directives" wiring they power.
 
   protected readonly notesCounterId = 'deliveryNotes-counter';
 

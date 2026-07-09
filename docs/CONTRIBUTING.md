@@ -43,47 +43,25 @@ The constraint that bites hardest:
 2. Edit its `project.json` and add the appropriate `scope:*` + `type:*` tags.
 3. Run `pnpm nx run-many -t lint` to confirm boundaries hold.
 
-## Demo app budgets
+## Demo app bundle size
 
-> **The toolkit's own size budget lives in `packages/toolkit/ng-package.json`
-> and `packages/toolkit/tsconfig.lib.prod.json`. Do not change it when adding
-> a demo app.** Each demo app gets its own `budgets` block.
+There is currently no automated bundle-size budget for the toolkit package or
+for any `apps/demo-*` app — `packages/toolkit/ng-package.json` only configures
+the `ng-packagr` output path and entry file, and
+`packages/toolkit/tsconfig.lib.prod.json` only sets compiler options; neither
+enforces a size limit, and no workflow or `project.json` in the repo declares
+a `budgets` block.
 
-When adding a new demo app under `apps/demo-*` (e.g. `apps/demo-material`,
-`apps/demo-primeng`, `apps/demo-spartan` per #40), declare its budgets in the
-app's own configuration so the demo's design-system bundle size doesn't
-distort the toolkit's perf signal. Use this template inside the app's build
-target configuration in `apps/demo-<name>/project.json`:
+`apps/demo-material`, `apps/demo-primeng`, and `apps/demo-spartan` are the
+existing reference demo apps (tracked by #40). Their `build` targets use
+`nx:run-commands` wrapping `vite build --mode production` rather than the
+Angular CLI application builder, so the builder's
+`configurations.production.budgets` option has no effect in this workspace —
+adding one to a demo app's `project.json` would be silently ignored.
 
-```jsonc
-{
-  "targets": {
-    "build": {
-      "configurations": {
-        "production": {
-          // ...other production options...
-          "budgets": [
-            {
-              "type": "initial",
-              "maximumWarning": "1mb",
-              "maximumError": "2mb",
-            },
-            {
-              "type": "anyComponentStyle",
-              "maximumWarning": "8kb",
-              "maximumError": "16kb",
-            },
-          ],
-        },
-      },
-    },
-  },
-}
-```
-
-Tune the thresholds per design system. Material apps will run hotter than
-Spartan apps; that's expected. Set the warning at the steady-state size and
-the error 30-50% higher to leave room for new examples.
+If you want to add bundle-size guardrails for a demo app or for the toolkit
+itself, it needs to be a Vite-based mechanism (e.g. a `rollup-plugin-visualizer`
+report or a custom size-check script), not an Angular CLI budgets block.
 
 ## Toolkit isolation guarantees
 

@@ -7,288 +7,62 @@ applyTo: '**'
 
 ## LLM Output
 
-- Provide code snippets, explanations, and suggestions that align with the project's architecture and best practices.
-- Ensure all code adheres to TypeScript strict mode and Angular 21+ standards.
-- Do not make up code or API's always use real libraries and APIs. And check documentation if unsure. Use context7 if possible.
-- When reporting information to me, be very concise and to the point. But also descriptive enough to be useful.
-- Eliminate: emojis (expect checkmarks, etc), filler, hype, soft asks, conversational transitions, call-to-action appendixes
-- List any unresolved questions or ambiguities at the end of your response. If any.
+- Adhere to TypeScript strict mode and Angular 21+ standards.
+- Do not make up code or APIs — use real libraries and check documentation (context7) if unsure.
+- Be concise and to the point. Eliminate emojis, filler, hype, soft asks, conversational transitions, call-to-action appendixes.
+- List unresolved questions or ambiguities at the end of your response, if any.
+- Provide an implementation plan and request approval before large changes.
 
-## Quick Reference
+## Stack
 
-- **Framework**: Angular 21.1+ with signals, standalone components (see [angular.instructions.md](./instructions/angular.instructions.md))
-- **Forms**: Angular 21.1 Signal Forms (see [angular-signal-forms.instructions.md](./instructions/angular-signal-forms.instructions.md))
-- **Forms Enhancement**: @ngx-signal-forms/toolkit — use the `ngx-signal-forms` skill (nested structure with core, assistive, form-field, headless, vest, debugger sub-skills)
-- **Toolkit Instructions**: [ngx-signal-forms-toolkit.instructions.md](./instructions/ngx-signal-forms-toolkit.instructions.md)
-- **Testing**: Vitest (unit), Playwright (E2E)
-- **Snapshots**: Playwright aria baselines in `apps/demo-e2e/src/__snapshots__`, Playwright image baselines in `apps/demo-e2e/src/__screenshots__`, Vitest browser screenshots in per-package `__screenshots__` folders
-- **Styling**: Tailwind CSS 4.x (see [tailwind.instructions.md](./instructions/tailwind.instructions.md))
-- **TypeScript**: 5.8+ with strict mode
+- **Framework**: Angular 21.1+ — signals, standalone components, zoneless, `OnPush`. Use the `angular-developer` skill for Angular guidance.
+- **Forms**: Angular Signal Forms (`@angular/forms/signals`) — see the `angular-developer` skill's `references/signal-forms.md` for the full API, pitfalls, and build-error recovery.
+- **Forms enhancement**: `@ngx-signal-forms/toolkit` — use the `ngx-signal-forms` skill; rules in [ngx-signal-forms-toolkit.instructions.md](./instructions/ngx-signal-forms-toolkit.instructions.md).
+- **Testing**: Vitest (unit, `vitest` skill), Playwright (E2E).
+- **Styling**: Tailwind CSS 4.x. Prefer `:host{}` over wrapper divs; utility classes over inline styles.
+- **A11y**: WCAG 2.2 AA — see [a11y.instructions.md](./instructions/a11y.instructions.md).
+- **Commits**: Conventional Commits — see [commit.instructions.md](./instructions/commit.instructions.md).
+
+## Repo-Specific Rules
+
+- Use ES `#` private fields instead of TypeScript `private`.
+- Kebab-case filenames, single quotes, no `any` (use `unknown`).
+- No Reactive Forms (`FormBuilder`, `formControlName`) and no `FormsModule` — Signal Forms only.
+- Toolkit forms: `<form [formRoot]="form">`; vanilla Signal Forms: `(submit)` handler with `preventDefault()` + `novalidate`.
+- Style on state attributes (`[aria-invalid="true"]`), not `.ng-invalid` classes.
+- Toolkit manages `aria-invalid`/`aria-required`/`aria-describedby` — never add them manually to managed controls.
 
 ## Project Structure
 
-### Toolkit Entry Points
+| Project                                          | Purpose                                         |
+| ------------------------------------------------ | ----------------------------------------------- |
+| `packages/toolkit`                               | The library (6 entry points, see toolkit rules) |
+| `packages/demo-shared`                           | Shared demo utilities                           |
+| `libs/debugger`, `libs/spartan`                  | Dev-only debugger UI, spartan helpers           |
+| `apps/demo` (+`-e2e`)                            | Main demo app and E2E suite                     |
+| `apps/demo-{material,primeng,spartan}` (+`-e2e`) | CSS-framework integration demos                 |
 
-| Entry Point                            | Description                                        |
-| -------------------------------------- | -------------------------------------------------- |
-| `@ngx-signal-forms/toolkit`            | Core providers, directives, utilities              |
-| `@ngx-signal-forms/toolkit/assistive`  | Standalone error, hint, character count components |
-| `@ngx-signal-forms/toolkit/form-field` | Styled wrapper and fieldset components             |
-| `@ngx-signal-forms/toolkit/headless`   | Renderless state directives and utilities          |
-| `@ngx-signal-forms/toolkit/vest`       | Vest v6+ integration (optional)                    |
-
-### Internal UI Components (Demo/Development Only)
-
-| Entry Point                  | Description                       |
-| ---------------------------- | --------------------------------- |
-| `@ngx-signal-forms/debugger` | Development form inspection tools |
-
-### Developer Commands
+## Developer Commands
 
 | Command                          | Description                         |
 | -------------------------------- | ----------------------------------- |
 | `pnpm nx test toolkit`           | Run toolkit unit tests              |
 | `pnpm nx run toolkit:post-build` | Build publish-ready toolkit library |
-| `pnpm nx lint toolkit`           | Lint toolkit code                   |
 | `pnpm nx serve demo`             | Start demo app (dev server)         |
-| `pnpm nx build demo`             | Build demo app                      |
 | `pnpm nx e2e demo-e2e`           | Run E2E tests                       |
 | `pnpm nx run-many -t test`       | Run all tests                       |
 | `pnpm nx run-many -t lint`       | Lint all projects                   |
 
-## Core Guidelines
+## Testing
 
-### General Approach
-
-- [ ] Provide implementation plan before coding
-- [ ] Request user approval for changes
-- [ ] Use real APIs and libraries (no hallucination)
-- [ ] Optimize for clarity over purity
-- [ ] Make conscious tradeoffs
-
-### Code Quality
-
-Follow [`.github/instructions/security-and-owasp.instructions.md`](./instructions/security-and-owasp.instructions.md) for secure coding practices.
-
-- [ ] TypeScript strict mode enabled
-- [ ] Meaningful variable names
-- [ ] Kebab-case filenames
-- [ ] Single quotes for strings
-- [ ] Avoid `any` type (use `unknown`)
-- [ ] Use ES `#` private fields instead of TypeScript `private` keyword
-
-### Form Implementation Checklist
-
-**Signal Forms Migration Checklist:**
-
-- [ ] Use `signal()` for form data model (source of truth)
-- [ ] Use `form()` with validators, NOT `FormBuilder`
-- [ ] Use `[formField]` directive, NOT `formControlName`
-- [ ] Use `<form [formRoot]="form">` directive (handles novalidate, preventDefault, submit)
-- [ ] Without toolkit: use `(submit)="handler($event)"` with `event.preventDefault()` and `novalidate`
-- [ ] Use `OnPush` change detection
-- [ ] Call signals as functions: `form.field().invalid()` NOT `form.field.invalid()`
-- [ ] Use `!touched()` / `!dirty()` (no `untouched()` / `pristine()` signals)
-- [ ] Use immutable updates: `signal.update()` NOT direct mutation
-- [ ] Reset both form AND model: `form.reset()` + `model.set(initialValue)`
-
-**Common Pitfalls:**
-
-| Issue          | Wrong                      | Correct                                                              |
-| -------------- | -------------------------- | -------------------------------------------------------------------- |
-| Signal calls   | `form.email.invalid()`     | `form.email().invalid()`                                             |
-| Submit event   | `(ngSubmit)="save()"`      | `[formRoot]="form"` (toolkit) or `(submit)="save($event)"` (vanilla) |
-| CSS classes    | `.ng-invalid { }`          | `[aria-invalid="true"] { }`                                          |
-| State negation | `form.email().untouched()` | `!form.email().touched()`                                            |
-| Array mutation | `data.items.push(x)`       | `signal.update(d => ({...d, items: [...d.items, x]}))`               |
-
-### Example Pattern
-
-```typescript
-import { Component, signal, ChangeDetectionStrategy } from '@angular/core';
-import { form, Validators, FormField } from '@angular/forms/signals';
-import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit';
-
-interface UserData {
-  email: string;
-  name: string;
-}
-
-@Component({
-  selector: 'app-user-form',
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormField, NgxSignalFormToolkit],
-  template: `
-    <form [formRoot]="userForm">
-      <input type="email" [formField]="userForm.email" />
-      @if (userForm.email().touched() && userForm.email().invalid()) {
-        <span class="error">Valid email required</span>
-      }
-      <button type="submit" [disabled]="userForm.invalid()">Submit</button>
-    </form>
-  `,
-})
-export class UserFormComponent {
-  readonly #userData = signal<UserData>({ email: '', name: '' });
-  protected readonly userForm = form(
-    this.#userData,
-    {
-      email: [Validators.required, Validators.email],
-      name: [Validators.required],
-    },
-    {
-      submission: {
-        action: () => console.log(this.#userData()),
-      },
-    },
-  );
-}
-```
-
-## Angular 21+ Checklist
-
-Follow [`.github/instructions/angular.instructions.md`](./instructions/angular.instructions.md) for comprehensive Angular coding standards.
-
-### Must Use
-
-- [ ] Angular 21 Signal Forms
-- [ ] Standalone components (default)
-- [ ] Signals for state (`signal()`, `computed()`)
-- [ ] New control flow (`@if`, `@for`, `@defer`)
-- [ ] Signal inputs/outputs (`input()`, `output()`, `model()`)
-- [ ] `inject()` for DI
-- [ ] `OnPush` change detection
-- [ ] Template-driven forms (default)
-
-### Must Avoid
-
-- [ ] `@Injectable({ providedIn: 'root' })`
-- [ ] Traditional `@Input()/@Output()`
-- [ ] `@ViewChild()/@ContentChild()`
-- [ ] Constructor injection
-- [ ] Zone.js dependency
-- [ ] `Reactive FormsModule` - No reactive forms
-- [ ] `FormsModule` - No template driven forms
-
-## Testing Requirements
-
-- Always prefer `#runTests` tools in VSCode over terminal commands
-
-### Unit Tests (Vitest)
-
-- Follow [`.github/instructions/vitest.instructions.md`](./instructions/vitest.instructions.md)
-- Use Testing Library patterns
-- Test behavior, not implementation
-
-### E2E Tests (Playwright)
-
-- Follow [`.github/instructions/playwright.instructions.md`](./instructions/playwright.instructions.md)
-- Use accessible locators
-- use #playwright and #chrome-devtools for debugging
-- Test real user flows
+- Prefer the `#runTests` tool in VS Code over terminal commands.
+- E2E specs live in `apps/*-e2e/src/**` (not `tests/`); run via `pnpm nx e2e <project>-e2e`. Use role-based locators and web-first assertions.
 
 ### Snapshot Baselines
 
-- Treat committed snapshot baselines as part of the test contract for accessibility and visual regressions.
-- Playwright aria snapshots are stored in `apps/demo-e2e/src/__snapshots__/**` as `.aria.yml` files.
-- Playwright screenshot baselines are stored in `apps/demo-e2e/src/__screenshots__/chromium/**` as `.png` files, following `apps/demo-e2e/playwright.config.ts`.
-- Vitest browser screenshot baselines are stored in package-local `__screenshots__` directories, following `packages/toolkit/vitest.browser.config.mts`.
-- Playwright only creates missing snapshots automatically during local runs; existing baselines must be updated intentionally. CI does not update Playwright snapshots.
-- When markup, accessibility tree output, or visual rendering changes intentionally, update the affected snapshots in the same PR and review the generated diffs before accepting them.
-- Prefer focused snapshot updates over broad rewrites. Use [`.github/workflows/update-snapshots.yml`](../.github/workflows/update-snapshots.yml) when baselines need to be refreshed in CI for `playwright`, `vitest`, or `all` scopes.
+Committed snapshots are part of the test contract:
 
-## Accessibility Checklist
+- Playwright aria snapshots: inline `toMatchAriaSnapshot` templates in specs
+- Playwright screenshots: `apps/demo-e2e/src/__screenshots__/chromium/{darwin,linux}/**`
 
-Follow [`.github/instructions/a11y.instructions.md`](./instructions/a11y.instructions.md) for comprehensive accessibility guidance.
-
-- [ ] Semantic HTML elements used
-- [ ] Labels associated with controls
-- [ ] ARIA only when HTML insufficient
-- [ ] Keyboard navigation works
-- [ ] Focus indicators visible
-- [ ] Color contrast ≥4.5:1
-- [ ] Error messages accessible
-
-## Performance Checklist
-
-- [ ] Zoneless compatible
-- [ ] `@defer` for non-critical content
-- [ ] Signals prevent unnecessary renders
-- [ ] Pure pipes for computations
-- [ ] Images optimized (`NgOptimizedImage`)
-
-## Commit Messages
-
-Follow [`.github/instructions/commit.instructions.md`](./instructions/commit.instructions.md):
-
-- Format: `type(scope): description`
-- Types: `feat`, `fix`, `docs`, `test`, `refactor`, `chore`
-- Imperative mood in description
-- Max 80 chars in summary
-- be concise but descriptive
-
-## Documentation Requirements
-
-Follow [`.github/instructions/self-explanatory-code-commenting.instructions.md`](./instructions/self-explanatory-code-commenting.instructions.md) for commenting guidelines.
-
-- [ ] JSDoc for public APIs
-- [ ] Comments explain "why" not "what"
-- [ ] Examples for components/services
-- [ ] README updated for features
-
-## File Templates
-
-### Component Template
-
-```typescript
-import {
-  Component,
-  signal,
-  computed,
-  ChangeDetectionStrategy,
-} from '@angular/core';
-
-@Component({
-  selector: 'ngx-example',
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [], // Add required imports
-  template: ``,
-})
-export class ExampleComponent {
-  // Use ES # private fields for internal state
-  readonly #state = signal({});
-
-  // Use computed for derived state
-  protected readonly derived = computed(() => this.#state());
-}
-```
-
-## Additional Resources
-
-### Instruction Files
-
-**Core Framework & Language:**
-
-- [Angular Standards](./instructions/angular.instructions.md) - Angular 21+ coding standards and best practices
-- [TypeScript & Security](./instructions/security-and-owasp.instructions.md) - Secure coding based on OWASP Top 10
-- [Code Documentation](./instructions/self-explanatory-code-commenting.instructions.md) - Self-explanatory code with minimal comments
-
-**Forms:**
-
-- [Signal Forms](./instructions/angular-signal-forms.instructions.md) - Angular 21+ Signal Forms API and patterns
-- [Signal Forms Toolkit](./instructions/ngx-signal-forms-toolkit.instructions.md) - Enhancement library for accessibility and UX
-
-**UI & Styling:**
-
-- [Tailwind CSS](./instructions/tailwind.instructions.md) - Tailwind CSS 4.x usage and best practices
-- [Accessibility (a11y)](./instructions/a11y.instructions.md) - WCAG 2.2 Level AA compliance guidelines
-- [CSS Framework Integration](../docs/CSS_FRAMEWORK_INTEGRATION.md) - Bootstrap, Tailwind, Angular Material setup
-
-**Testing:**
-
-- [Vitest](./instructions/vitest.instructions.md) - Unit testing with Vitest and Testing Library
-- [Playwright](./instructions/playwright.instructions.md) - E2E testing with Playwright
-
-**Development Workflow:**
-
-- [Commit Messages](./instructions/commit.instructions.md) - Conventional Commits specification
+Update baselines intentionally in the same PR as the change; CI does not update them automatically. Use the `update-snapshots.yml` workflow to refresh baselines in CI (`playwright`, `vitest`, or `all`).

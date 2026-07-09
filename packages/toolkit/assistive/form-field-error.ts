@@ -10,6 +10,7 @@ import type { FieldTree, ValidationError } from '@angular/forms/signals';
 import {
   injectFormContext,
   NGX_SIGNAL_FORM_FIELD_CONTEXT,
+  NGX_SIGNAL_FORMS_CONFIG,
   resolveStrategyFromContext,
   showErrors,
   unwrapValue,
@@ -98,6 +99,17 @@ export type NgxFormFieldErrorListStyle = NgxFormFieldListStyle;
 @Component({
   selector: 'ngx-form-field-error',
 
+  host: {
+    // The role="alert"/role="status" containers stay mounted (see the
+    // template docs), and each collapses visually while empty via its own
+    // `--empty` class — but that leaves `:host`'s own `margin-top`
+    // (form-field-error.css) contributing stray vertical whitespace above
+    // every field with no visible errors *or* warnings. This class lets the
+    // CSS zero that margin too, without touching `[hidden]`/`aria-hidden`
+    // (which stay off the inner containers for the WCAG 4.1.3 reasons
+    // documented on the template).
+    '[class.ngx-form-field-error-host--empty]': 'hostEmpty()',
+  },
   hostDirectives: [
     {
       directive: NgxHeadlessErrorState,
@@ -223,6 +235,15 @@ export class NgxFormFieldError {
    * which is an assistive-layer concern not shared with the headless directive.
    */
   readonly #injectedContext = injectFormContext();
+
+  /**
+   * Global toolkit config, needed for the same reason: the warning-strategy
+   * cascade below must fall back to `NGX_SIGNAL_FORMS_CONFIG.defaultErrorStrategy`
+   * exactly like `NgxHeadlessErrorState.#resolvedStrategy` does for blocking
+   * errors, so a standalone `ngx-form-field-error` (no `[ngxSignalForm]` host)
+   * still honours `provideNgxSignalFormsConfig({ defaultErrorStrategy })`.
+   */
+  readonly #config = inject(NGX_SIGNAL_FORMS_CONFIG, { optional: true });
 
   /**
    * Try to inject field context (optional - provided by form field wrapper).
@@ -367,7 +388,11 @@ export class NgxFormFieldError {
     () => {
       const explicit = this.warningStrategy();
       if (explicit !== undefined) {
-        return resolveStrategyFromContext(explicit, this.#injectedContext);
+        return resolveStrategyFromContext(
+          explicit,
+          this.#injectedContext,
+          this.#config?.defaultErrorStrategy,
+        );
       }
       return 'immediate';
     },
@@ -426,6 +451,17 @@ export class NgxFormFieldError {
       !this.errorContainerVisible(),
   );
 
+  /**
+   * True when neither the alert nor the status container has visible
+   * content. Drives the `ngx-form-field-error-host--empty` host class so
+   * the CSS can zero `:host`'s own `margin-top` — see the `host` binding
+   * above for why that margin needs a separate collapse from the inner
+   * containers' `--empty` class.
+   */
+  protected readonly hostEmpty = computed(
+    () => !this.errorContainerVisible() && !this.warningContainerVisible(),
+  );
+
   // ── Resolved messages (delegate to the public createErrorMessageSignal) ──
   // Keep these field initializers AFTER `#resolvedFieldName` so that the
   // arrow-bodied `fieldName` accessor passed to the primitive can read the
@@ -442,9 +478,9 @@ export class NgxFormFieldError {
    */
   readonly #resolvedErrorsStrategy = computed<ErrorDisplayStrategy | undefined>(
     () =>
-      this.headless.errorsOverride() !== undefined
-        ? 'immediate'
-        : this.headless.strategy(),
+      this.headless.errorsOverride() === undefined
+        ? this.headless.strategy()
+        : 'immediate',
   );
 
   /**

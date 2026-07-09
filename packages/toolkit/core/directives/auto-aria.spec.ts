@@ -336,6 +336,48 @@ describe('NgxSignalFormAutoAria', () => {
       expect(input?.getAttribute('aria-required')).toBe('false');
     });
 
+    it('should clear toolkit-written aria-invalid/aria-required when switching from auto to manual mode', async () => {
+      @Component({
+        template:
+          '<input type="checkbox" role="switch" id="emailUpdates" ngxSignalFormControl="switch" [ngxSignalFormControlAria]="ariaMode()" [formField]="switchControl()" />',
+        imports: [
+          MockFormFieldDirective,
+          NgxSignalFormAutoAria,
+          NgxSignalFormControlSemanticsDirective,
+        ],
+      })
+      class TestComponent {
+        readonly ariaMode = signal<'auto' | 'manual' | null>(null);
+        switchControl = signal(() => ({
+          invalid: signal(true),
+          touched: signal(true),
+          errors: signal([{ kind: 'required', message: 'Switch is required' }]),
+          valid: signal(false),
+          dirty: signal(true),
+          value: signal(''),
+          required: signal(true),
+          focusBoundControl: vi.fn(),
+        }));
+      }
+
+      const { container, fixture } = await render(TestComponent);
+      await TestBed.inject(ApplicationRef).whenStable();
+
+      const input = container.querySelector('input');
+      // Auto mode: toolkit writes aria-invalid/aria-required unconditionally.
+      expect(input?.getAttribute('aria-invalid')).toBe('true');
+      expect(input?.getAttribute('aria-required')).toBe('true');
+
+      fixture.componentInstance.ariaMode.set('manual');
+      fixture.detectChanges();
+      await TestBed.inject(ApplicationRef).whenStable();
+
+      // Ownership transferred to the consumer, who hasn't written anything
+      // yet — the stale toolkit-written values must not linger.
+      expect(input?.hasAttribute('aria-invalid')).toBe(false);
+      expect(input?.hasAttribute('aria-required')).toBe(false);
+    });
+
     it('should apply switch ARIA when both role="switch" and ngxSignalFormControl="switch" are present', async () => {
       @Component({
         template:
@@ -663,6 +705,59 @@ describe('NgxSignalFormAutoAria', () => {
       expect(input?.getAttribute('aria-describedby')).toBe(
         'contactEmail-error',
       );
+    });
+
+    it('omits the warning id when both a blocking error and a warn:* error are present (mutual exclusion)', async () => {
+      // Regression test: `#resolveManagedDescribedByIds` used to compute the
+      // warning id independently of the blocking-error id, diverging from
+      // `createAriaDescribedBySignal`'s DOM-writing mutual exclusion (a
+      // blocking error suppresses the warning id because the default
+      // `NgxFormFieldError` renderer never mounts the `${fieldName}-warning`
+      // live region while a blocking error is also visible).
+      @Component({
+        template:
+          '<input id="email" [formField]="emailControl()" [ngxSignalFormControlAria]="ariaMode()" />',
+        imports: [
+          MockFormFieldDirective,
+          NgxSignalFormAutoAria,
+          NgxSignalFormControlSemanticsDirective,
+        ],
+      })
+      class TestComponent {
+        readonly ariaMode = signal<'auto' | 'manual' | null>(null);
+        emailControl = createMockControl(true, true, [
+          { kind: 'required', message: 'Email is required' },
+          { kind: 'warn:weak-format', message: 'Consider a business email' },
+        ]);
+      }
+
+      const { container, fixture } = await render(TestComponent);
+      await TestBed.inject(ApplicationRef).whenStable();
+
+      const input = container.querySelector('input');
+
+      // Auto mode: only the error id is composed, never the warning id.
+      expect(input?.getAttribute('aria-describedby')).toBe('email-error');
+
+      // Auto → manual: same "clean slate" transition as aria-invalid /
+      // aria-required — the stale toolkit-written managed id is cleared
+      // rather than adopted as the new manual-mode value. The key
+      // regression-relevant assertion is what it does NOT contain: no
+      // `email-warning` id ever leaks in, even transiently.
+      fixture.componentInstance.ariaMode.set('manual');
+      fixture.detectChanges();
+      await TestBed.inject(ApplicationRef).whenStable();
+
+      expect(input?.hasAttribute('aria-describedby')).toBe(false);
+
+      // Manual → auto: ownership returns to the toolkit, which recomputes
+      // from scratch. The result must be identical to the original auto-mode
+      // value — no accumulated duplicates, no stray warning id.
+      fixture.componentInstance.ariaMode.set('auto');
+      fixture.detectChanges();
+      await TestBed.inject(ApplicationRef).whenStable();
+
+      expect(input?.getAttribute('aria-describedby')).toBe('email-error');
     });
   });
 

@@ -125,6 +125,45 @@ describe('NgxHeadlessFieldset', () => {
     expect(screen.queryByText('City required')).toBeNull();
   });
 
+  it('treats an explicitly bound empty `fields` array as "aggregate nothing", not "not provided"', async () => {
+    @Component({
+      selector: 'ngx-test-fieldset-empty-override',
+
+      imports: [NgxHeadlessFieldset],
+      template: `
+        <fieldset
+          ngxHeadlessFieldset
+          #fieldset="fieldset"
+          [field]="addressForm.address"
+          [fields]="fields"
+          includeNestedErrors
+        >
+          <span data-testid="error-count">
+            {{ fieldset.aggregatedErrors().length }}
+          </span>
+        </fieldset>
+      `,
+    })
+    class TestComponent {
+      readonly #model = signal({ address: { street: '', city: '' } });
+      readonly addressForm = form(
+        this.#model,
+        schema((path) => {
+          required(path.address.street, { message: 'Street required' });
+          required(path.address.city, { message: 'City required' });
+        }),
+      );
+      // Explicitly bound empty array — a dynamically computed field list that
+      // legitimately became empty. Must NOT fall back to the fieldset's own
+      // (nested) errors the way an unbound (`null`) `fields` input would.
+      readonly fields: readonly FieldTree<unknown>[] = [];
+    }
+
+    await render(TestComponent);
+
+    expect(screen.getByTestId('error-count')).toHaveTextContent('0');
+  });
+
   it('shows errors only after touch with default on-touch strategy', async () => {
     @Component({
       selector: 'ngx-test-fieldset-show-errors',
@@ -162,6 +201,45 @@ describe('NgxHeadlessFieldset', () => {
     await TestBed.inject(ApplicationRef).whenStable();
 
     expect(screen.getByTestId('show-errors')).toHaveTextContent('true');
+  });
+
+  it('exposes resolvedErrors/resolvedWarnings with resolved messages, even when the validator supplies no message (framework default)', async () => {
+    @Component({
+      selector: 'ngx-test-fieldset-resolved-errors',
+
+      imports: [NgxHeadlessFieldset],
+      template: `
+        <fieldset
+          ngxHeadlessFieldset
+          #fieldset="fieldset"
+          [field]="addressForm.address"
+          includeNestedErrors
+        >
+          @for (error of fieldset.resolvedErrors(); track error.kind) {
+            <span data-testid="resolved-error-message">{{
+              error.message
+            }}</span>
+          }
+        </fieldset>
+      `,
+    })
+    class TestComponent {
+      readonly #model = signal({ address: { street: '', city: '' } });
+      readonly addressForm = form(
+        this.#model,
+        schema((path) => {
+          // No `message` option — Angular's default ValidationError.message
+          // is `undefined` for this case. `error.message` in a template
+          // would render an empty span; `resolvedErrors()` must not.
+          required(path.address.street);
+        }),
+      );
+    }
+
+    await render(TestComponent);
+
+    const message = screen.getByTestId('resolved-error-message');
+    expect(message.textContent?.trim().length).toBeGreaterThan(0);
   });
 
   it('shows warnings when no blocking errors exist', async () => {
@@ -383,5 +461,181 @@ describe('NgxHeadlessFieldset', () => {
 
     const resolved = screen.getByTestId('fieldset-id').textContent ?? '';
     expect(resolved.trim().startsWith('fieldset-')).toBe(true);
+  });
+
+  describe('warningStrategy', () => {
+    it('defaults warnings to "immediate" even when the blocking-error strategy is "on-submit"', async () => {
+      @Component({
+        selector: 'ngx-test-fieldset-warning-default-immediate',
+
+        imports: [FormRoot, NgxSignalForm, NgxHeadlessFieldset],
+        template: `
+          <form
+            [formRoot]="addressForm"
+            ngxSignalForm
+            errorStrategy="on-submit"
+          >
+            <fieldset
+              ngxHeadlessFieldset
+              #fieldset="fieldset"
+              [field]="addressForm.address"
+              includeNestedErrors
+            >
+              <span data-testid="resolved-warning-strategy">
+                {{ fieldset.resolvedWarningStrategy() }}
+              </span>
+              <span data-testid="show-warnings">
+                {{ fieldset.shouldShowWarnings() }}
+              </span>
+              <span data-testid="show-errors">
+                {{ fieldset.shouldShowErrors() }}
+              </span>
+            </fieldset>
+          </form>
+        `,
+      })
+      class TestComponent {
+        readonly #model = signal({ address: { street: '', city: '' } });
+        readonly addressForm = form(
+          this.#model,
+          schema((path) => {
+            required(path.address.street, { message: 'Required' });
+            validate(path.address.street, (ctx) => {
+              const value = ctx.value();
+              if (!value) {
+                return {
+                  kind: 'warn:street-optional',
+                  message: 'Street can be left blank',
+                };
+              }
+              return null;
+            });
+          }),
+        );
+      }
+
+      await render(TestComponent);
+
+      // Blocking-error strategy is 'on-submit' and the form has not been
+      // submitted, so blocking errors stay hidden...
+      expect(screen.getByTestId('show-errors')).toHaveTextContent('false');
+      // ...but the warning defaults to 'immediate' independently, so it
+      // surfaces right away — matching NgxFormFieldWrapper's contract.
+      expect(screen.getByTestId('resolved-warning-strategy')).toHaveTextContent(
+        'immediate',
+      );
+      expect(screen.getByTestId('show-warnings')).toHaveTextContent('true');
+    });
+
+    it('honours an explicit warningStrategy="on-submit" override, delaying warnings until submit', async () => {
+      @Component({
+        selector: 'ngx-test-fieldset-warning-explicit-on-submit',
+
+        imports: [NgxHeadlessFieldset],
+        template: `
+          <fieldset
+            ngxHeadlessFieldset
+            #fieldset="fieldset"
+            [field]="addressForm.address"
+            includeNestedErrors
+            warningStrategy="on-submit"
+            [submittedStatus]="submittedStatus()"
+          >
+            <span data-testid="show-warnings">
+              {{ fieldset.shouldShowWarnings() }}
+            </span>
+          </fieldset>
+        `,
+      })
+      class TestComponent {
+        readonly #model = signal({ address: { street: '', city: '' } });
+        readonly addressForm = form(
+          this.#model,
+          schema((path) => {
+            validate(path.address.street, (ctx) => {
+              const value = ctx.value();
+              if (!value) {
+                return {
+                  kind: 'warn:street-optional',
+                  message: 'Street can be left blank',
+                };
+              }
+              return null;
+            });
+          }),
+        );
+        readonly submittedStatus = signal<'unsubmitted' | 'submitted'>(
+          'unsubmitted',
+        );
+      }
+
+      const { fixture } = await render(TestComponent);
+
+      // Warning stays hidden until the explicit override's own submit gate
+      // is satisfied.
+      expect(screen.getByTestId('show-warnings')).toHaveTextContent('false');
+
+      fixture.componentInstance.submittedStatus.set('submitted');
+      fixture.detectChanges();
+      await TestBed.inject(ApplicationRef).whenStable();
+
+      expect(screen.getByTestId('show-warnings')).toHaveTextContent('true');
+    });
+
+    it('shows warnings and errors independently, even when both are visible at once', async () => {
+      @Component({
+        selector: 'ngx-test-fieldset-warning-error-interplay',
+
+        imports: [NgxHeadlessFieldset],
+        template: `
+          <fieldset
+            ngxHeadlessFieldset
+            #fieldset="fieldset"
+            [field]="addressForm.address"
+            includeNestedErrors
+            strategy="immediate"
+          >
+            <span data-testid="show-errors">
+              {{ fieldset.shouldShowErrors() }}
+            </span>
+            <span data-testid="show-warnings">
+              {{ fieldset.shouldShowWarnings() }}
+            </span>
+            <span data-testid="warning-count">
+              {{ fieldset.aggregatedWarnings().length }}
+            </span>
+          </fieldset>
+        `,
+      })
+      class TestComponent {
+        readonly #model = signal({ address: { street: '', city: '' } });
+        readonly addressForm = form(
+          this.#model,
+          schema((path) => {
+            required(path.address.street, { message: 'Required' });
+            validate(path.address.city, (ctx) => {
+              const value = ctx.value();
+              if (!value) {
+                return {
+                  kind: 'warn:city-optional',
+                  message: 'City can be left blank',
+                };
+              }
+              return null;
+            });
+          }),
+        );
+      }
+
+      await render(TestComponent);
+
+      // Both are gated by 'immediate'-family strategies, so both are
+      // visible at once — shouldShowWarnings is no longer suppressed just
+      // because shouldShowErrors is true (matches
+      // NgxHeadlessErrorSummary.shouldShowWarnings).
+      expect(screen.getByTestId('show-errors')).toHaveTextContent('true');
+      expect(screen.getByTestId('show-warnings')).toHaveTextContent('true');
+      expect(screen.getByTestId('warning-count')).toHaveTextContent('1');
+    });
   });
 });

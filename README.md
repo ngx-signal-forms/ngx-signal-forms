@@ -241,6 +241,7 @@ advanced and specialized cases — pull them in when you hit that specific need.
 | Use with Angular Material           | Custom wrapper on `mat-form-field`                               | [`demo-material`](./apps/demo-material/README.md)                                                                                                          |
 | Use with Spartan Components         | Custom wrapper on `BrnField` + `helm`                            | [`demo-spartan`](./apps/demo-spartan/README.md)                                                                                                            |
 | Use with PrimeNG                    | Projected-control wrapper (`pInputText`, …)                      | [`demo-primeng`](./apps/demo-primeng/README.md)                                                                                                            |
+| Assert WCAG 2.2 AA in my own specs  | [`/testing`](./packages/toolkit/testing/README.md) entry point   | [`form-field-wrapper.a11y.browser.spec.ts`](./packages/toolkit/form-field/form-field-wrapper.a11y.browser.spec.ts)                                         |
 
 ---
 
@@ -278,7 +279,7 @@ Default recommendation: **skip `ngxSignalForm` until you need it**.
 
 The examples above use the default `'on-touch'` strategy: errors appear after the
 user blurs a field or submits the form. This works because Angular's `submit()` calls
-`markAllAsTouched()` internally, so `touched()` becomes true for all fields.
+`markAsTouched()` internally, so `touched()` becomes true for all fields.
 
 When you need more control, add `ngxSignalForm` alongside `[formRoot]`:
 
@@ -427,6 +428,18 @@ npm install @ngx-signal-forms/toolkit vest@6.2.7
 [`zod-vest-validation` (code)](./apps/demo/src/app/05-advanced/zod-vest-validation) · [live](https://ngx-signal-forms.github.io/ngx-signal-forms/validation/zod-vest-validation/) ·
 **[Migrating from `ngx-vest-forms`](./docs/MIGRATING_FROM_NGX_VEST_FORMS.md)**
 
+### `@ngx-signal-forms/toolkit/testing` — assert WCAG 2.2 AA in your specs
+
+A small consumer-facing test harness that wraps `axe-core` for asserting the
+toolkit's accessibility contract in your own specs. Optional — only loaded
+when you import this entry point — and depends on the optional peer
+`axe-core` (`>=4.5.0`).
+
+Most-used exports: `expectNoA11yViolations()`, `WCAG_22_AA_TAGS`.
+
+**[→ Testing docs](./packages/toolkit/testing/README.md)** ·
+**Example:** [`form-field-wrapper.a11y.browser.spec.ts`](./packages/toolkit/form-field/form-field-wrapper.a11y.browser.spec.ts)
+
 ## Validation strategies
 
 Angular validators, Zod/OpenAPI Standard Schema, and Vest are **complementary, not
@@ -550,6 +563,10 @@ The short version — each one is expanded with do/don't examples in the
 
 ## FAQ
 
+The questions below cover what the toolkit _is_. For hands-on "how do I build X?"
+questions — dynamic arrays, server-side errors, wizards, custom datepickers, i18n,
+unit testing, and more — see the **[use-case FAQ](./docs/FAQ.md)**.
+
 <details>
 <summary><strong>Does this replace Angular Signal Forms?</strong></summary>
 
@@ -631,7 +648,7 @@ Yes — three runnable reference wrappers ship in the repo:
 - [`apps/demo-spartan`](./apps/demo-spartan/README.md) — wraps Spartan's `BrnField` host directive and bridges `BrnFieldA11yService` so Brain's `aria-describedby` host binding consumes the toolkit's id composition.
 - [`apps/demo-primeng`](./apps/demo-primeng/README.md) — a projected-control wrapper where direct inputs (`pInputText`, …) use `NgxSignalFormAutoAria` like the canonical wrapper; host components such as `p-select` use a narrow compatibility shim until PrimeNG's own Signal Forms story matures.
 
-All three follow the four contracts in [`docs/CUSTOM_WRAPPERS.md`](./docs/CUSTOM_WRAPPERS.md); the Material and Spartan wrappers also mirror the surface of the future `@ngx-signal-forms/material` and `@ngx-signal-forms/spartan` packages (per [ADR-0002](./docs/decisions/0002-ngx-mat-forms-package-shape.md)).
+All three follow the four contracts in [`docs/CUSTOM_WRAPPERS.md`](./docs/CUSTOM_WRAPPERS.md), which also notes that the Material and Spartan wrappers mirror the surface of the future `@ngx-signal-forms/material` and `@ngx-signal-forms/spartan` packages; the Material package shape itself is decided in [ADR-0002](./docs/decisions/0002-ngx-mat-forms-package-shape.md).
 
 </details>
 
@@ -716,6 +733,7 @@ screen-reader testing) before claiming conformance.
 
 **Guides**
 
+- [Use-case FAQ](./docs/FAQ.md) — "how do I build X?" answers linking the right API, doc, and demo
 - [Best practices](./docs/BEST_PRACTICES.md) — the five practices, with do/don't examples and a review checklist
 - [Angular vs toolkit](./docs/ANGULAR_VS_TOOLKIT.md) — what the toolkit adds, with a before/after example
 - [Validation strategies](./docs/VALIDATION_STRATEGY.md) — when to use Angular validators, Zod, or Vest

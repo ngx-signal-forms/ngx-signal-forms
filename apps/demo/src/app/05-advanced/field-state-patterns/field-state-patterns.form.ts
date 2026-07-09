@@ -1,4 +1,9 @@
-import { Component, input, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  input,
+  signal,
+} from '@angular/core';
 import {
   disabled,
   email,
@@ -10,7 +15,7 @@ import {
   schema,
 } from '@angular/forms/signals';
 import {
-  type ErrorDisplayStrategy,
+  type ResolvedErrorDisplayStrategy,
   type FormFieldAppearance,
   type FormFieldOrientation,
   createOnInvalidHandler,
@@ -66,6 +71,7 @@ const fieldStatePatternsSchema = schema<FieldStatePatternsModel>((path) => {
 
 @Component({
   selector: 'ngx-field-state-patterns',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 
   imports: [FormField, NgxSignalFormToolkit, NgxFormField],
   template: `
@@ -260,7 +266,7 @@ const fieldStatePatternsSchema = schema<FieldStatePatternsModel>((path) => {
   `,
 })
 export class FieldStatePatternsComponent {
-  readonly errorDisplayMode = input<ErrorDisplayStrategy>('on-touch');
+  readonly errorDisplayMode = input<ResolvedErrorDisplayStrategy>('on-touch');
   readonly appearance = input<FormFieldAppearance>('outline');
   readonly orientation = input<FormFieldOrientation>('vertical');
 

@@ -8,11 +8,7 @@ import {
 } from '@angular/core';
 import { FormRoot, type FieldTree } from '@angular/forms/signals';
 import { NGX_SIGNAL_FORM_CONTEXT, NGX_SIGNAL_FORMS_CONFIG } from '../tokens';
-import type {
-  ErrorDisplayStrategy,
-  ResolvedErrorDisplayStrategy,
-  SubmittedStatus,
-} from '../types';
+import type { ResolvedErrorDisplayStrategy, SubmittedStatus } from '../types';
 import { createSubmittedStatusTracker } from '../utilities/submission-helpers';
 
 /**
@@ -143,8 +139,14 @@ export class NgxSignalForm {
   /**
    * Error display strategy for this form.
    * Overrides the global default for all fields in this form.
+   *
+   * Typed as {@link ResolvedErrorDisplayStrategy} (not `ErrorDisplayStrategy`)
+   * because `'inherit'` is a field-level-only value — there is nothing above
+   * the form root to inherit from — so binding it here is a compile-time error.
    */
-  readonly errorStrategy = input<ErrorDisplayStrategy | null | undefined>();
+  readonly errorStrategy = input<
+    ResolvedErrorDisplayStrategy | null | undefined
+  >();
 
   /**
    * Resolved error display strategy (form-level or global default).
@@ -152,11 +154,7 @@ export class NgxSignalForm {
   protected readonly resolvedErrorStrategy =
     computed<ResolvedErrorDisplayStrategy>(() => {
       const formStrategy = this.errorStrategy();
-      if (
-        formStrategy !== undefined &&
-        formStrategy !== null &&
-        formStrategy !== 'inherit'
-      ) {
+      if (formStrategy !== undefined && formStrategy !== null) {
         return formStrategy;
       }
 

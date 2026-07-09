@@ -30,6 +30,35 @@ test.describe('Error Display Modes', () => {
     });
   });
 
+  test('"immediate" mode shows errors while typing, before blur', async () => {
+    await formPage.selectErrorMode('immediate');
+    const helpers = formPage.page.locator('ngx-error-display-helpers');
+
+    // Type an invalid (too-short) name but keep focus — no blur, no submit.
+    await formPage.nameInput.focus();
+    await formPage.nameInput.pressSequentially('a');
+
+    // Immediate strategy surfaces the error as soon as the value is invalid.
+    await expect(helpers).toContainText('Name errors visible: yes');
+    await expect(formPage.nameInput).toHaveAttribute('aria-invalid', 'true');
+  });
+
+  test('"on-touch" mode hides errors until blur, then reveals them', async () => {
+    await formPage.selectErrorMode('onTouch');
+    const helpers = formPage.page.locator('ngx-error-display-helpers');
+
+    // Type an invalid name but keep focus — on-touch stays silent until blur.
+    await formPage.nameInput.focus();
+    await formPage.nameInput.pressSequentially('a');
+    await expect(helpers).toContainText('Name errors visible: no');
+    await expect(formPage.nameInput).toHaveAttribute('aria-invalid', 'false');
+
+    // Blur commits the touch and the error becomes visible.
+    await formPage.nameInput.blur();
+    await expect(helpers).toContainText('Name errors visible: yes');
+    await expect(formPage.nameInput).toHaveAttribute('aria-invalid', 'true');
+  });
+
   test('"on-submit" mode should hide errors until submit', async () => {
     await test.step('Interact with form without errors appearing', async () => {
       // Reload page to ensure clean state before switching mode

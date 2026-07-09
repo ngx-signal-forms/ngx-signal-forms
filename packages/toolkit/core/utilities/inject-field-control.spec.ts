@@ -70,7 +70,7 @@ describe('injectFieldControl', () => {
     const mockForm = { email: emailControl };
     const mockContext: NgxSignalFormContext = {
       form: mockForm,
-      submittedStatus: () => 'unsubmitted' as SubmittedStatus,
+      submittedStatus: () => 'unsubmitted',
       errorStrategy: () => 'on-touch',
     };
     const injector = Injector.create({
@@ -89,7 +89,7 @@ describe('injectFieldControl', () => {
     const mockForm = { address: { city: cityControl } };
     const mockContext: NgxSignalFormContext = {
       form: mockForm,
-      submittedStatus: () => 'unsubmitted' as SubmittedStatus,
+      submittedStatus: () => 'unsubmitted',
       errorStrategy: () => 'on-touch',
     };
 
@@ -126,7 +126,7 @@ describe('injectFieldControl', () => {
     );
     const mockContext: NgxSignalFormContext = {
       form: mockForm,
-      submittedStatus: () => 'unsubmitted' as SubmittedStatus,
+      submittedStatus: () => 'unsubmitted',
       errorStrategy: () => 'on-touch',
     };
 
@@ -146,7 +146,7 @@ describe('injectFieldControl', () => {
     const mockForm = { email: emailControl };
     const mockContext: NgxSignalFormContext = {
       form: mockForm,
-      submittedStatus: () => 'unsubmitted' as SubmittedStatus,
+      submittedStatus: () => 'unsubmitted',
       errorStrategy: () => 'on-touch',
     };
     const injector = Injector.create({
@@ -164,7 +164,7 @@ describe('injectFieldControl', () => {
   it('should throw error when field name cannot be resolved', () => {
     const mockContext: NgxSignalFormContext = {
       form: {},
-      submittedStatus: () => 'unsubmitted' as SubmittedStatus,
+      submittedStatus: () => 'unsubmitted',
       errorStrategy: () => 'on-touch',
     };
 
@@ -184,7 +184,7 @@ describe('injectFieldControl', () => {
     const mockForm = { email: signal({ value: '' }) };
     const mockContext: NgxSignalFormContext = {
       form: mockForm,
-      submittedStatus: () => 'unsubmitted' as SubmittedStatus,
+      submittedStatus: () => 'unsubmitted',
       errorStrategy: () => 'on-touch',
     };
 
@@ -204,7 +204,7 @@ describe('injectFieldControl', () => {
     const mockForm = { address: { street: signal({ value: '' }) } };
     const mockContext: NgxSignalFormContext = {
       form: mockForm,
-      submittedStatus: () => 'unsubmitted' as SubmittedStatus,
+      submittedStatus: () => 'unsubmitted',
       errorStrategy: () => 'on-touch',
     };
 
@@ -231,7 +231,7 @@ describe('injectFieldControl', () => {
                 'NG0950: Input is required but no value is available yet',
               );
             },
-            submittedStatus: () => 'unsubmitted' as SubmittedStatus,
+            submittedStatus: () => 'unsubmitted',
             errorStrategy: () => 'on-touch',
           } satisfies NgxSignalFormContext,
         },
@@ -277,7 +277,7 @@ describe('injectFieldControl', () => {
     const mockForm = { metadata: { note: 'plain data, not a FieldTree' } };
     const mockContext: NgxSignalFormContext = {
       form: mockForm,
-      submittedStatus: () => 'unsubmitted' as SubmittedStatus,
+      submittedStatus: () => 'unsubmitted',
       errorStrategy: () => 'on-touch',
     };
     const injector = Injector.create({
@@ -299,7 +299,7 @@ describe('injectFieldControl', () => {
     const mockForm = { email: () => 'not a FieldState' };
     const mockContext: NgxSignalFormContext = {
       form: mockForm,
-      submittedStatus: () => 'unsubmitted' as SubmittedStatus,
+      submittedStatus: () => 'unsubmitted',
       errorStrategy: () => 'on-touch',
     };
     const injector = Injector.create({

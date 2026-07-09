@@ -18,6 +18,10 @@ This section demonstrates the batteries-included path: one component (`ngx-form-
   - What you'll learn: `feedbackAppearance` · `surfaceTone` · `validationSurface` · `listStyle` · `includeNestedErrors` trade-offs in one place.
 - **[custom-controls](./custom-controls/README.md)** — star rating, native switch, and slider integrated into the wrapper.
   - What you'll learn: `FormValueControl` contract (no `ControlValueAccessor`) · `ngxSignalFormControl="slider"` with `ariaMode: 'manual'` · component-scoped presets.
+- **[field-marking](./field-marking/README.md)** — the toolkit's required/optional marker modes and the form-aware `NgxFormMarkingLegend`.
+  - What you'll learn: `showMarkerWhen` modes (`required`/`optional`/`none`) · configurable marker text · legend auto-hide when no relevant field exists.
+- **[labelless-fields](./labelless-fields/README.md)** — where the wrapper's reserved label row can legitimately collapse.
+  - What you'll learn: `aria-label`-only accessible names · `role="group"` field grouping · keeping the error region at full wrapper width around narrowed inputs.
 
 ## 🧠 Core concepts
 
@@ -34,7 +38,7 @@ This section demonstrates the batteries-included path: one component (`ngx-form-
 
 ## 📦 Consolidated from earlier demos
 
-Older isolated pages (`basic-usage`, `fieldset-grouping`) are no longer routed. Their teaching goals live inside `complex-forms` now. Archived folders remain in the repo for reference.
+Older isolated pages (`basic-usage`, `fieldset-grouping`) were removed. Their teaching goals live inside `complex-forms` now.
 
 ## ➡️ Next steps
 

@@ -1,4 +1,6 @@
+import AxeBuilder from '@axe-core/playwright';
 import { expect, test } from '@playwright/test';
+import { WCAG_22_AA_TAGS } from '@ngx-signal-forms/toolkit/testing';
 
 /**
  * Single Playwright spec for the Material reference demo.
@@ -100,5 +102,152 @@ test.describe('Material reference contact form (E2E)', () => {
     const matError = emailField.locator('mat-error');
     await expect(matError).toBeVisible();
     await expect(matError).not.toHaveText('');
+  });
+
+  // Regression coverage for #194: the smoke spec (contact-form.spec.ts,
+  // jsdom) already exercises the warning/checkbox/select/reset paths, but
+  // nothing ran them through a real Chromium render — exactly the class of
+  // timing/layout bug jsdom can't surface (per this file's own top comment).
+
+  test('renders the warning in mat-hint (not mat-error) for a short-but-valid name', async ({
+    page,
+  }) => {
+    const name = page.getByRole('textbox', { name: /name/i });
+
+    await test.step('type a short name and blur', async () => {
+      await name.click();
+      await name.fill('Bob');
+      await name.blur();
+    });
+
+    await test.step('mat-hint renders the warning, mat-error stays empty', async () => {
+      const nameField = page.locator('mat-form-field', { has: name });
+      const hint = nameField.locator('mat-hint');
+      await expect(hint).toContainText(/short names are easy to mis-type/i);
+
+      const matError = nameField.locator('mat-error');
+      await expect(matError).toBeHidden();
+    });
+
+    await test.step('a warning alone does not mark the field invalid', async () => {
+      await expect(name).toHaveAttribute('aria-invalid', 'false');
+    });
+  });
+
+  test('shows the *ngxMatFeedback error for the consent checkbox and wires its describedby', async ({
+    page,
+  }) => {
+    const checkbox = page.getByRole('checkbox', {
+      name: /i agree to be contacted/i,
+    });
+
+    await test.step('blur the untouched checkbox', async () => {
+      await checkbox.focus();
+      await checkbox.press('Tab');
+    });
+
+    await test.step('the feedback block renders and is wired to the checkbox', async () => {
+      // `.demo-form__feedback` is the `role="alert"`/`[id]` host `<p>`; the
+      // matched text lives one level deeper, inside
+      // `<ngx-mat-feedback-outlet>`'s rendered `<span>`.
+      const feedback = page
+        .locator('.demo-form__feedback')
+        .filter({ hasText: /you need to agree/i });
+      await expect(feedback).toBeVisible();
+      await expect(feedback).toHaveAttribute('role', 'alert');
+
+      const feedbackId = await feedback.getAttribute('id');
+      expect(feedbackId).toBeTruthy();
+      await expect(checkbox).toHaveAttribute(
+        'aria-describedby',
+        feedbackId ?? '',
+      );
+    });
+
+    await test.step('checking the box clears the feedback and the describedby link', async () => {
+      await checkbox.click();
+      await expect(
+        page
+          .locator('.demo-form__feedback')
+          .filter({ hasText: /you need to agree/i }),
+      ).toHaveCount(0);
+      await expect(checkbox).not.toHaveAttribute('aria-describedby');
+    });
+  });
+
+  test('shows mat-error for the topic select when it is left unset', async ({
+    page,
+  }) => {
+    const topic = page.getByRole('combobox', { name: /topic/i });
+
+    await test.step('open and close the select without picking an option', async () => {
+      await topic.click();
+      await page.keyboard.press('Escape');
+      await topic.press('Tab');
+    });
+
+    await test.step('mat-error renders the required-topic message', async () => {
+      const topicField = page.locator('mat-form-field', { has: topic });
+      const matError = topicField.locator('mat-error');
+      await expect(matError).toBeVisible();
+      await expect(matError).toContainText(/pick a topic/i);
+      await expect(topic).toHaveAttribute('aria-invalid', 'true');
+    });
+  });
+
+  test('Reset clears field values, the success banner, and any pending errors', async ({
+    page,
+  }) => {
+    const name = page.getByRole('textbox', { name: /name/i });
+    const email = page.getByRole('textbox', { name: /email/i });
+    const topic = page.getByRole('combobox', { name: /topic/i });
+    const checkbox = page.getByRole('checkbox', {
+      name: /i agree to be contacted/i,
+    });
+
+    await test.step('complete and submit the form successfully', async () => {
+      await name.fill('Alex Doe');
+      await email.fill('alex@example.com');
+      await topic.click();
+      await page.getByRole('option', { name: /sales question/i }).click();
+      await checkbox.click();
+
+      await page.getByRole('button', { name: /send message/i }).click();
+      await expect(
+        page.getByText(/thanks! we received your message/i),
+      ).toBeVisible();
+    });
+
+    await test.step('click Reset', async () => {
+      await page.getByRole('button', { name: /^reset$/i }).click();
+    });
+
+    await test.step('the form returns to a pristine, untouched state', async () => {
+      await expect(name).toHaveValue('');
+      await expect(email).toHaveValue('');
+      await expect(checkbox).not.toBeChecked();
+      await expect(
+        page.getByText(/thanks! we received your message/i),
+      ).toBeHidden();
+      await expect(page.locator('mat-error')).toHaveCount(0);
+    });
+  });
+
+  test('has no WCAG 2.2 AA axe violations while every blocking error is on screen', async ({
+    page,
+  }) => {
+    // Submit the empty form so every blocking error (name, email, topic,
+    // agree) renders simultaneously — the demo's densest error state, and
+    // the one accessibility.spec.ts's pristine-route sweep never reaches.
+    // Unlike that sweep (which only diffs against a baseline), this is a
+    // hard assertion: zero violations, no baseline escape hatch.
+    await page.getByRole('button', { name: /send message/i }).click();
+    await expect(page.locator('mat-error').first()).toBeVisible();
+
+    const results = await new AxeBuilder({ page })
+      .withTags([...WCAG_22_AA_TAGS])
+      .analyze();
+
+    expect(results.violations).toEqual([]);
   });
 });

@@ -5,14 +5,43 @@
     <ng-container [ngTemplateOutlet]="panelBody" />
   </div>
 </div>
-} @else if (panelOpen()) {
-<div class="panel-backdrop" (click)="closePanel()" aria-hidden="true"></div>
-<div
+} @else {
+<!--
+  Native <dialog>, shown modally via showModal()/close() (see the
+  #syncDialogEffect in the component). This buys us, for free, what a
+  hand-rolled role="dialog" overlay had to hand-wire and previously didn't:
+  - Focus moves into the dialog on open (the close button below carries
+    autofocus, so showModal()'s focusing steps land there).
+  - Focus is restored to the triggering element (the app shell's floating
+    pin button) when the dialog closes.
+  - Escape closes the dialog (fires cancel then close; onDialogClosed
+    below syncs that back into PageControlsService so panelOpen doesn't
+    drift out of sync with the DOM).
+  - The rest of the page becomes inert and unreachable by Tab while the
+    dialog is open (native modal-dialog behavior) — a real focus trap
+    instead of none at all.
+  Click-outside-to-close is still hand-wired below since native <dialog>
+  does not auto-close on ::backdrop clicks.
+-->
+<dialog
+  #slideoverDialog
   class="panel panel--slideover"
-  role="dialog"
   aria-label="Display controls"
-  aria-modal="true"
+  (close)="onDialogClosed()"
+  (click)="onDialogBackdropClick($event)"
 >
+  <!--
+    Content is gated on panelOpen() (not just the dialog's own open/closed
+    CSS state) so it exists in the component tree ONLY while the slide-over
+    is actually in use. The page's registered controls (via
+    [ngTemplateOutlet]="template()!"` in panelBody) are model()-bound to
+    page-level state shared with the persistent "rail" variant; leaving
+    this content permanently mounted — as a naive "always render the
+    dialog" conversion would — stands up a SECOND live instance of every
+    control, wired to the same signals, racing the visible one on every
+    interaction.
+  -->
+  @if (panelOpen()) {
   <ng-container
     [ngTemplateOutlet]="panelHeader"
     [ngTemplateOutletContext]="{ closable: true }"
@@ -20,7 +49,8 @@
   <div class="panel__body">
     <ng-container [ngTemplateOutlet]="panelBody" />
   </div>
-</div>
+  }
+</dialog>
 }
 
 <!-- Pinned header — "Display Controls" -->
@@ -70,6 +100,7 @@
         class="panel__close"
         type="button"
         aria-label="Close configuration panel"
+        autofocus
         (click)="closePanel()"
       >
         <svg

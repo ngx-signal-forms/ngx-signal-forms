@@ -1,4 +1,10 @@
-import { Component, input, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  input,
+  signal,
+} from '@angular/core';
 import {
   form,
   FormField,
@@ -7,11 +13,12 @@ import {
   validateStandardSchema,
 } from '@angular/forms/signals';
 import {
-  type ErrorDisplayStrategy,
+  type ResolvedErrorDisplayStrategy,
   type FormFieldAppearance,
   type FormFieldOrientation,
   createOnInvalidHandler,
   NgxSignalFormToolkit,
+  requiredFromStandardSchema,
 } from '@ngx-signal-forms/toolkit';
 import { NgxFormField } from '@ngx-signal-forms/toolkit/form-field';
 import {
@@ -25,11 +32,22 @@ const zodValidationSchema: SchemaFn<Readonly<ZodValidationModel>> = (
   path: Readonly<SchemaPathTree<Readonly<ZodValidationModel>>>,
 ) => {
   validateStandardSchema(path, zodBaselineAccountSchema);
+
+  // `validateStandardSchema` registers tree-level errors only — Zod's shape is
+  // not statically introspectable, so `aria-required` and the wrapper's auto
+  // marker need required-ness wired explicitly per field (issue #118).
+  requiredFromStandardSchema(path.firstName, zodBaselineAccountSchema);
+  requiredFromStandardSchema(path.lastName, zodBaselineAccountSchema);
+  requiredFromStandardSchema(path.email, zodBaselineAccountSchema);
+  requiredFromStandardSchema(path.password, zodBaselineAccountSchema);
+  requiredFromStandardSchema(path.accountType, zodBaselineAccountSchema);
+  requiredFromStandardSchema(path.country, zodBaselineAccountSchema);
 };
 /* oxlint-enable @typescript-eslint/prefer-readonly-parameter-types */
 
 @Component({
   selector: 'ngx-zod-validation',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 
   imports: [FormField, NgxSignalFormToolkit, NgxFormField],
   styles: `
@@ -188,7 +206,7 @@ const zodValidationSchema: SchemaFn<Readonly<ZodValidationModel>> = (
   `,
 })
 export class ZodValidationComponent {
-  readonly errorDisplayMode = input<ErrorDisplayStrategy>('on-touch');
+  readonly errorDisplayMode = input<ResolvedErrorDisplayStrategy>('on-touch');
   readonly appearance = input<FormFieldAppearance>('outline');
   readonly orientation = input<FormFieldOrientation>('vertical');
 
@@ -214,11 +232,10 @@ export class ZodValidationComponent {
   validateStandardSchema(path, zodBaselineAccountSchema);
 });`;
 
-  protected useSingleColumnFieldRows(): boolean {
-    return (
-      this.appearance() === 'standard' && this.orientation() === 'horizontal'
-    );
-  }
+  protected readonly useSingleColumnFieldRows = computed(
+    () =>
+      this.appearance() === 'standard' && this.orientation() === 'horizontal',
+  );
 
   protected resetForm(): void {
     this.accountForm().reset();

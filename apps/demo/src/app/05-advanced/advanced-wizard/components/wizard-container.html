@@ -14,7 +14,7 @@
     [(currentStep)]="currentStep"
     [completedSteps]="completedSteps()"
     [showNavigation]="false"
-    (stepChange)="onStepChange($event)"
+    [canNavigate]="guardStepNavigation"
   >
     <!-- Traveler Step -->
     <ng-template ngxWizardStep="traveler" label="Traveler Info">

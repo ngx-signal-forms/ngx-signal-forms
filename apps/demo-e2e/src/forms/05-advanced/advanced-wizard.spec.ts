@@ -469,4 +469,159 @@ test.describe('Advanced Wizard Demo', () => {
     ).toBeVisible();
     await expect(page.locator('.error-message')).toHaveCount(0);
   });
+
+  test('progress-header step click cannot skip validation on an invalid current step (#166 finding #3)', async ({
+    page,
+  }) => {
+    await test.step('Complete Traveler and Trip steps so both are committed and valid', async () => {
+      await fillTravelerStep(page);
+      await page.getByRole('button', { name: 'Next' }).click();
+      await expect(
+        page.getByRole('heading', { name: 'Trip Details', exact: true }),
+      ).toBeVisible();
+
+      await fillTripStepMinimal(page);
+      // Advancing to Review commits the Trip step's local form data into the
+      // store (WizardContainerComponent#commitCurrentStep), which is what
+      // actually marks `trip` as valid/navigable from the header — merely
+      // being the active step makes the header button non-disabled too, so
+      // this commit is required for a faithful repro of forward navigation
+      // *away* from an invalid current step.
+      await page.getByRole('button', { name: 'Next' }).click();
+      await expect(
+        page.getByRole('heading', { name: 'Review Your Booking' }),
+      ).toBeVisible();
+    });
+
+    await test.step('Navigate back to Traveler via the progress header', async () => {
+      await page
+        .locator('.wizard-step-button')
+        .filter({ hasText: 'Traveler Info' })
+        .click();
+      await expect(
+        page.getByRole('heading', { name: 'Traveler Information' }),
+      ).toBeVisible();
+    });
+
+    await test.step('Invalidate the current (Traveler) step', async () => {
+      await page.getByLabel('First Name').fill('');
+      await page.getByLabel('First Name').blur();
+    });
+
+    await test.step('Click "Trip Details" in the progress header', async () => {
+      await page
+        .locator('.wizard-step-button')
+        .filter({ hasText: 'Trip Details' })
+        .click();
+
+      // The buggy implementation set `currentStep` synchronously (before the
+      // container's `await`-based validation resolved), so the DOM briefly
+      // *still* shows Traveler right after the click and only flips to Trip
+      // Details once the async validation's (too-late) `preventDefault()`
+      // has already been ignored. Give that microtask/render race a moment
+      // to fully settle before asserting the final state below — asserting
+      // immediately after the click can catch the transient pre-flip frame
+      // and produce a false pass.
+      await page.waitForTimeout(300);
+    });
+
+    await test.step('Wizard stays on the invalid Traveler step instead of navigating away', async () => {
+      await expect(
+        page.getByRole('heading', { name: 'Traveler Information' }),
+      ).toBeVisible();
+      await expect(
+        page
+          .locator('.wizard-step-button')
+          .filter({ hasText: 'Traveler Info' }),
+      ).toHaveAttribute('aria-current', 'step');
+      await expect(
+        page.locator('.wizard-step-button').filter({ hasText: 'Trip Details' }),
+      ).not.toHaveAttribute('aria-current', 'step');
+    });
+
+    await test.step('Validation error is visible on the empty required field', async () => {
+      await expect(page.getByLabel('First Name')).toHaveAttribute(
+        'aria-invalid',
+        'true',
+      );
+    });
+  });
+
+  // Regression coverage for #194: the only existing header-click spec proves
+  // navigation is *blocked* from an invalid current step. Nothing asserted
+  // the "happy path" contract in wizard.ts's `canNavigateToStep` — that
+  // unvisited future steps are disabled, and that a click on an already
+  // visited step (forward OR backward) actually jumps there directly,
+  // without going through Next/Previous.
+  test('disables header buttons for unvisited future steps', async ({
+    page,
+  }) => {
+    const tripStep = page
+      .locator('.wizard-step-button')
+      .filter({ hasText: 'Trip Details' });
+    const reviewStep = page
+      .locator('.wizard-step-button')
+      .filter({ hasText: 'Review' });
+
+    await expect(tripStep).toBeDisabled();
+    await expect(reviewStep).toBeDisabled();
+
+    await test.step('Advancing to Trip marks it visited and enables its header button', async () => {
+      await fillTravelerStep(page);
+      await page.getByRole('button', { name: 'Next' }).click();
+      await expect(
+        page.getByRole('heading', { name: 'Trip Details', exact: true }),
+      ).toBeVisible();
+
+      await expect(tripStep).toBeEnabled();
+      // Review has still never been visited.
+      await expect(reviewStep).toBeDisabled();
+    });
+  });
+
+  test('header-click navigates directly between already-visited steps, forward and backward', async ({
+    page,
+  }) => {
+    await test.step('Walk forward to Review via Next so every step is visited', async () => {
+      await fillTravelerStep(page);
+      await page.getByRole('button', { name: 'Next' }).click();
+      await fillTripStepMinimal(page);
+      await page.getByRole('button', { name: 'Next' }).click();
+      await expect(
+        page.getByRole('heading', { name: 'Review Your Booking' }),
+      ).toBeVisible();
+    });
+
+    const travelerStep = page
+      .locator('.wizard-step-button')
+      .filter({ hasText: 'Traveler Info' });
+    const tripStep = page
+      .locator('.wizard-step-button')
+      .filter({ hasText: 'Trip Details' });
+    const reviewStep = page
+      .locator('.wizard-step-button')
+      .filter({ hasText: 'Review' });
+
+    await test.step('Header-click jumps backward two steps, straight to Traveler', async () => {
+      await travelerStep.click();
+      await expect(
+        page.getByRole('heading', { name: 'Traveler Information' }),
+      ).toBeVisible();
+      await expect(travelerStep).toHaveAttribute('aria-current', 'step');
+    });
+
+    await test.step('Header-click jumps forward two steps, straight to Review, skipping Trip', async () => {
+      await reviewStep.click();
+      await expect(
+        page.getByRole('heading', { name: 'Review Your Booking' }),
+      ).toBeVisible();
+      await expect(reviewStep).toHaveAttribute('aria-current', 'step');
+      await expect(tripStep).not.toHaveAttribute('aria-current', 'step');
+    });
+
+    await test.step('Trip stays enabled and marked completed after being skipped over', async () => {
+      await expect(tripStep).toBeEnabled();
+      await expect(tripStep).toHaveClass(/completed/);
+    });
+  });
 });

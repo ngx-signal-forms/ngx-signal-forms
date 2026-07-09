@@ -146,7 +146,7 @@ Provides context or instructions for a field.
 | `--ngx-form-field-hint-color`                | `rgba(50, 65, 85, 0.75)` | Hint text color             |
 | `--ngx-form-field-hint-font-size`            | `var(--...feedback...)`  | Text size                   |
 | `--ngx-form-field-hint-line-height`          | `var(--...feedback...)`  | Line height                 |
-| `--ngx-form-field-hint-align`                | `right`                  | Text alignment (left/right) |
+| `--ngx-form-field-hint-align`                | `left`                   | Text alignment (left/right) |
 | `--ngx-form-field-hint-padding-inline-start` | `var(--...feedback...)`  | Start-edge padding          |
 | `--ngx-form-field-hint-padding-inline-end`   | `var(--...feedback...)`  | End-edge padding            |
 
@@ -283,13 +283,13 @@ fallbacks throughout the stylesheet.
 - `--ngx-signal-form-fieldset-legend-color` — default `var(--...fieldset-color...)`; legend text color in default state
 - `--ngx-signal-form-fieldset-legend-font-size` — default `0.875rem`; legend font size
 - `--ngx-signal-form-fieldset-legend-line-height` — default `1.25rem`; legend line height
-- `--ngx-signal-form-fieldset-legend-font-weight` — default `600`; legend font weight
+- `--ngx-signal-form-fieldset-legend-font-weight` — default `500`; legend font weight
 - `--ngx-signal-form-fieldset-legend-letter-spacing` — default `0`; legend letter spacing
 - `--ngx-signal-form-fieldset-legend-bg` — default `transparent`; legend background that stays separate from the surfaced content
 - `--ngx-signal-form-fieldset-legend-border-radius` — default `0.25rem`; legend background radius
 - `--ngx-signal-form-fieldset-invalid-border-color` — default `#db1818`; border color when errors are shown
 - `--ngx-signal-form-fieldset-warning-border-color` — default `#a16207`; border color when warnings are shown
-- `--ngx-signal-form-fieldset-invalid-surface-bg` — default `var(--...notification-error-bg...)`; error-tinted background below the legend
+- `--ngx-signal-form-fieldset-invalid-surface-bg` — default `var(--...invalid-bg...)`; error-tinted background below the legend
 - `--ngx-signal-form-fieldset-warning-surface-bg` — default `var(--...notification-warning-bg...)`; warning-tinted background below the legend
 - `--ngx-signal-form-fieldset-invalid-legend-color` — default `var(--...invalid-border...)`; legend color in error state
 - `--ngx-signal-form-fieldset-warning-legend-color` — default `var(--...warning-border...)`; legend color in warning state
@@ -315,7 +315,7 @@ fallbacks throughout the stylesheet.
 - `--ngx-signal-form-fieldset-color` — default internal text tone; primary fieldset text color
 - `--ngx-signal-form-fieldset-muted-color` — default internal muted text tone; secondary fieldset text color
 - `--ngx-signal-form-fieldset-legend-padding` — default internal spacing pair; padding applied to the projected `<legend>`
-- `--ngx-signal-form-fieldset-invalid-bg` — default `var(--_fieldset-notification-error-bg)`; error-tinted fill behind grouped content (pairs with `-invalid-surface-bg` when the invalid surface should differ)
+- `--ngx-signal-form-fieldset-invalid-bg` — default `var(--...bg-danger-surface...)` (`#fbdddd`); error-tinted fill behind grouped content (pairs with `-invalid-surface-bg` when the invalid surface should differ)
 - `--ngx-signal-form-fieldset-message-margin-top` — default `var(--_fieldset-gap)`; top margin for the grouped message container
 - `--ngx-signal-form-fieldset-message-margin-bottom` — default `var(--_fieldset-gap)`; bottom margin for the grouped message container
 - `--ngx-signal-form-fieldset-content-offset` — default `0`; horizontal offset applied to the surface/content area relative to the fieldset edge

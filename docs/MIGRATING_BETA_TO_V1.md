@@ -50,7 +50,7 @@ releases will not include any of the renames below.
 - **BREAKING: `@angular/common` is now a declared peer dependency** — it was always required at runtime (form-field wrapper/fieldset use `NgComponentOutlet`/`NgTemplateOutlet`) but was previously undeclared
 - **BREAKING: `canSubmitWithWarnings()` now reads `errorSummary()`** — child-path blocking errors now correctly disable submission (see [§5c](#5c-cansubmitwithwarnings-now-aggregates-descendant-errors))
 - **BREAKING: `injectFieldControl()` validates the resolved value against the runtime `FieldTree` contract** — an id resolving to a non-`FieldTree` property now throws instead of silently returning an unsound cast (see [§5d](#5d-injectfieldcontrol-validates-the-resolved-fieldtree))
-- **BREAKING: `ErrorSummarySignals` gained `shouldShowWarnings`** — implementers of the interface must add this member (see [§9](#9-headless-audit-fixes-v100))
+- **BREAKING: `ErrorSummarySignals` gained `shouldShowWarnings`** — implementers of the interface must add this member (see [§8](#8-headless-audit-fixes-v100))
 - **BREAKING: `CharacterCountResult` members are now typed `Signal<T>`** (was the looser `ReadSignal<T>` alias); a new `hasLimit` member was added — compile-time tightening only, no runtime change
 - **Bug fix** — error summary no longer drops a second field's error when two different fields share the same kind + message-less default; `NgxHeadlessNotification` no longer leaks the internal `warn:` prefix; `createErrorMessageSignal`'s ID fallback strips Angular's internal `{appId}.form{n}.` prefix; required `Date`/`File`/`Map`-valued leaves no longer vanish from field-optionality summaries
 
@@ -78,10 +78,18 @@ by adding the `ngxSignalForm` attribute alongside `[formRoot]`.
 
 Notes:
 
-- `[errorStrategy]`, `[submittedStatus]`, and friends still live on the
-  toolkit directive — you still need `ngxSignalForm` on any form that
-  consumes toolkit features (wrapper, auto-aria, error display, error
-  summary, headless directives).
+- `[errorStrategy]` is the toolkit directive's only input; `submittedStatus`
+  is a derived signal, not a bindable input.
+- **`ngxSignalForm` is not required** to use toolkit features. Every toolkit
+  component (wrapper, auto-ARIA, error display, error summary, headless
+  directives) injects the form context optionally and falls back to
+  `'on-touch'` / `'unsubmitted'` when it is absent — the right default for
+  most forms. Add `ngxSignalForm` when you want a configurable
+  `errorStrategy` (`'on-submit'` / `'immediate'`), submit-lifecycle tracking
+  via `submittedStatus`, or one shared strategy propagated to every
+  descendant via DI instead of passing inputs around. See the root
+  [`README.md`](../README.md#adding-form-level-context-with-ngxsignalform)
+  for the full with/without comparison.
 - The directive's `exportAs` is now `ngxSignalForm` (was `ngxFormRoot`).
 - The `NgxSignalFormToolkit` bundle now also re-exports Angular's
   `FormRoot`, so a single import keeps working:
@@ -114,9 +122,11 @@ Notes:
 
 In beta and the early RCs, `@ngx-signal-forms/toolkit/core` was
 importable from consumer code, which accidentally exposed a lot of
-`@internal` plumbing (`NGX_SIGNAL_FORM_HINT_REGISTRY`,
-`NGX_SIGNAL_FORM_ARIA_MODE`, `DEFAULT_NGX_SIGNAL_FORMS_CONFIG`, hint
-descriptor types, etc.).
+`@internal` plumbing (`DEFAULT_NGX_SIGNAL_FORMS_CONFIG`, etc.).
+`NGX_SIGNAL_FORM_HINT_REGISTRY`, `NGX_SIGNAL_FORM_ARIA_MODE`, and the hint
+descriptor types were later promoted to the stable root barrel and are
+legitimate public exports today — check `packages/toolkit/index.ts` if
+you're unsure whether a given `/core` symbol is still internal.
 
 Starting in v1, the published `package.json` no longer exposes the
 `./core` export. Modern Node/TypeScript resolvers return
@@ -126,18 +136,14 @@ Starting in v1, the published `package.json` no longer exposes the
   `@ngx-signal-forms/toolkit` (the root entry) and only use symbols
   that are re-exported from the root barrel.
 - `packages/toolkit/index.ts` is the authoritative list of the stable
-  public surface (54 values and 26 types, enumerated by hand).
-- CSS custom properties — two prefix families remain stable and split by
-  role: `--ngx-signal-form-*` covers cross-cutting feedback concerns
-  (e.g. `--ngx-signal-form-feedback-font-size`,
-  `--ngx-signal-form-error-color`, `--ngx-signal-form-fieldset-*`) and
-  `--ngx-form-field-*` covers wrapper-level chrome
-  (e.g. `--ngx-form-field-color-primary`, `--ngx-form-field-focus-color`).
-  **Several tokens were renamed or collapsed during the rc cycle** — the
-  full before/after table is in
-  [`MIGRATING_CSS_VARS.md`](./MIGRATING_CSS_VARS.md). See
+  public surface, enumerated by hand (the exact export count drifts as the
+  API grows — check that file directly rather than trusting a number here).
+- CSS custom properties — the two-prefix (`--ngx-signal-form-*` /
+  `--ngx-form-field-*`) theming convention is unchanged; see
   [`packages/toolkit/form-field/THEMING.md`](../packages/toolkit/form-field/THEMING.md#architecture-semantic-layering)
-  for the full layering.
+  for the full layering. **Several tokens were renamed or collapsed during
+  the rc cycle** — the full before/after table is in
+  [`MIGRATING_CSS_VARS.md`](./MIGRATING_CSS_VARS.md).
 
 If you were reaching into `/core` for something that is **not**
 re-exported from root, it was `@internal` and is not part of the v1
@@ -256,9 +262,9 @@ components.
 | ----------------------------------- | --------------------------------------------------------------------- |
 | `FieldsetErrorPlacement`            | `NgxFormFieldErrorPlacement`                                          |
 | `FormFieldErrorPlacement`           | `NgxFormFieldErrorPlacement`                                          |
-| `FieldsetFeedbackAppearance`        | `NgxFieldsetFeedbackAppearance`                                       |
-| `FieldsetSurfaceTone`               | `NgxFieldsetSurfaceTone`                                              |
-| `FieldsetValidationSurface`         | `NgxFieldsetValidationSurface`                                        |
+| `FieldsetFeedbackAppearance`        | `NgxFormFieldsetFeedbackAppearance`                                   |
+| `FieldsetSurfaceTone`               | `NgxFormFieldsetSurfaceTone`                                          |
+| `FieldsetValidationSurface`         | `NgxFormFieldsetValidationSurface`                                    |
 | `NgxFormFieldNotificationListStyle` | `NgxFormFieldListStyle` _(shared)_                                    |
 | `NgxFormFieldErrorListStyle`        | `NgxFormFieldListStyle` _(shared, old name kept as deprecated alias)_ |
 
@@ -294,27 +300,19 @@ layout behavior instead of implementation details:
 ```ts
 // before
 provideNgxSignalFormControlPresets({
-  'text-like': {
-    /* … */
-  },
-  'textarea-select-like': {
-    /* … */
-  },
+  'text-like': {/* … */},
+  'textarea-select-like': {/* … */},
 });
 
 // after
 provideNgxSignalFormControlPresets({
-  'input-like': {
-    /* … */
-  },
-  'standalone-field-like': {
-    /* … */
-  },
+  'input-like': {/* … */},
+  'standalone-field-like': {/* … */},
 });
 ```
 
-The other kinds (`checkbox`, `switch`, `slider`, `composite`,
-`standalone`) are unchanged.
+The other kinds (`checkbox`, `switch`, `radio-group`, `slider`,
+`composite`) are unchanged.
 
 ### 4d. Orientation is part of the public wrapper contract
 
@@ -441,10 +439,9 @@ miswiring loud during development without throwing.
 // before — relied on the accidental fallback
 const show = showErrors(field, 'on-submit');
 
-// after — pass the form's submittedStatus explicitly
-const show = showErrors(field, 'on-submit', {
-  submittedStatus: formDirective.submittedStatus,
-});
+// after — pass the form's submittedStatus value or signal directly
+// (the third parameter, not an options object)
+const show = showErrors(field, 'on-submit', formDirective.submittedStatus);
 ```
 
 ---
@@ -529,96 +526,6 @@ callable and resolve to an object exposing `value`, `touched`, `errors`,
 Resolution also remains a **one-shot, non-reactive** lookup — the form
 instance and the element's `id` are both read once, at call time. This was
 previously undocumented; see the updated `injectFieldControl()` JSDoc.
-
-### Control semantics contract — `ngxSignalFormControl`
-
-A small, directive-first API for telling the toolkit how a control
-should be laid out and wired for ARIA, without brittle DOM heuristics:
-
-```html
-<!-- Treat this checkbox as a switch for layout + auto-ARIA -->
-<input
-  id="emailUpdates"
-  type="checkbox"
-  role="switch"
-  ngxSignalFormControl="switch"
-  [formField]="form.emailUpdates"
-/>
-```
-
-Custom widgets can opt out of toolkit ARIA management entirely with
-`ngxSignalFormControlAria="manual"` or
-`ngxSignalFormAutoAriaDisabled` on the host element, and use
-`buildAriaDescribedBy()` to assemble their own described-by chain. See
-[`docs/CUSTOM_CONTROLS.md`](./CUSTOM_CONTROLS.md).
-
-### Error summary
-
-First-class error-summary feature split across headless and assistive
-entry points:
-
-- `NgxHeadlessErrorSummary` — strategy-aware visibility,
-  deduplicated entries, `focusBoundControl()` support.
-- `NgxFormFieldErrorSummary` — WCAG 2.2-compliant clickable
-  error list with `role="alert"` and themable CSS custom properties.
-
-See [`docs/COMPLEX_NESTED_FORMS.md`](./COMPLEX_NESTED_FORMS.md) for
-usage patterns.
-
-### Field labels and warning/error split utilities
-
-- `provideFieldLabels()` / `NGX_SIGNAL_FORM_FIELD_LABELS` for mapping
-  field paths to human-readable labels (used by error summary).
-- `isBlockingError` / `isWarningError` / `warningError` helpers and
-  the split between blocking errors and warnings, so
-  `canSubmitWithWarnings()` lets a form submit while soft warnings
-  remain visible. See [`docs/WARNINGS_SUPPORT.md`](./WARNINGS_SUPPORT.md).
-
-### Headless error-message resolution — `createErrorMessageSignal()`
-
-`@ngx-signal-forms/toolkit/headless` now exports a `createErrorMessageSignal(field, options?)`
-primitive that returns a `Signal<readonly ResolvedFieldError[]>` combining the visibility
-cascade (`createErrorVisibility`), the 3-tier message cascade (validator `message` →
-`NGX_ERROR_MESSAGES` registry → default), and stable per-error DOM IDs
-(`{fieldName}-error-{kind}` via `generateErrorId`). Each entry is `{ kind, message, id, error }`
-— `kind`/`message`/`id` lifted to the top level for template ergonomics, with the raw
-`ValidationError` retained on `.error` for consumers that need validator params.
-
-Use it when you want the directive's resolution logic without the directive itself — for
-example inside a custom error renderer driven via `*ngComponentOutlet` or any component
-reading errors directly off a `FieldTree`. The in-tree `NgxFormFieldError` now consumes
-this primitive, so external renderers and the wrapper share one resolution path.
-
-```ts
-import { createErrorMessageSignal } from '@ngx-signal-forms/toolkit/headless';
-
-readonly resolvedErrors = createErrorMessageSignal(() => this.field()(), {
-  fieldName: 'email',
-  // includeWarnings: false (default) | true | 'only'
-});
-```
-
-See [`packages/toolkit/headless/README.md`](../packages/toolkit/headless/README.md#createerrormessagesignal)
-for full options and worked examples.
-
-### Internal debugger entry point
-
-The `@ngx-signal-forms/debugger` entry ships a development-only
-component that replaces the old `debug: true` config flag. Gate it with
-`isDevMode()` and drop it anywhere in the form template:
-
-```ts
-import { NgxSignalFormDebugger } from '@ngx-signal-forms/debugger';
-
-@Component({
-  imports: [NgxSignalFormDebugger /* … */],
-  template: `
-    @if (isDev()) {
-      <ngx-signal-form-debugger [formTree]="form" />
-    }
-  `,
-})
-```
 
 ---
 
@@ -721,6 +628,96 @@ The following additions are part of the current public surface. They are
 non-breaking (except where noted) but are worth calling out because they change
 what the defaults cover and what you may want to adopt before going stable.
 
+### Control semantics contract — `ngxSignalFormControl`
+
+A small, directive-first API for telling the toolkit how a control
+should be laid out and wired for ARIA, without brittle DOM heuristics:
+
+```html
+<!-- Treat this checkbox as a switch for layout + auto-ARIA -->
+<input
+  id="emailUpdates"
+  type="checkbox"
+  role="switch"
+  ngxSignalFormControl="switch"
+  [formField]="form.emailUpdates"
+/>
+```
+
+Custom widgets can opt out of toolkit ARIA management entirely with
+`ngxSignalFormControlAria="manual"` or
+`ngxSignalFormAutoAriaDisabled` on the host element, and use
+`buildAriaDescribedBy()` to assemble their own described-by chain. See
+[`docs/CUSTOM_CONTROLS.md`](./CUSTOM_CONTROLS.md).
+
+### Error summary
+
+First-class error-summary feature split across headless and assistive
+entry points:
+
+- `NgxHeadlessErrorSummary` — strategy-aware visibility,
+  deduplicated entries, `focusBoundControl()` support.
+- `NgxFormFieldErrorSummary` — WCAG 2.2-compliant clickable
+  error list with `role="alert"` and themable CSS custom properties.
+
+See [`docs/COMPLEX_NESTED_FORMS.md`](./COMPLEX_NESTED_FORMS.md) for
+usage patterns.
+
+### Field labels and warning/error split utilities
+
+- `provideFieldLabels()` for mapping field paths to human-readable labels
+  (used by error summary).
+- `isBlockingError` / `isWarningError` / `warningError` helpers and
+  the split between blocking errors and warnings, so
+  `canSubmitWithWarnings()` lets a form submit while soft warnings
+  remain visible. See [`docs/WARNINGS_SUPPORT.md`](./WARNINGS_SUPPORT.md).
+
+### Headless error-message resolution — `createErrorMessageSignal()`
+
+`@ngx-signal-forms/toolkit/headless` now exports a `createErrorMessageSignal(field, options?)`
+primitive that returns a `Signal<readonly ResolvedFieldError[]>` combining the visibility
+cascade (`createErrorVisibility`), the 3-tier message cascade (validator `message` →
+`NGX_ERROR_MESSAGES` registry → default), and stable per-error DOM IDs
+(`{fieldName}-error-{kind}` via `generateErrorId`). Each entry is `{ kind, message, id, error }`
+— `kind`/`message`/`id` lifted to the top level for template ergonomics, with the raw
+`ValidationError` retained on `.error` for consumers that need validator params.
+
+Use it when you want the directive's resolution logic without the directive itself — for
+example inside a custom error renderer driven via `*ngComponentOutlet` or any component
+reading errors directly off a `FieldTree`. The in-tree `NgxFormFieldError` now consumes
+this primitive, so external renderers and the wrapper share one resolution path.
+
+```ts
+import { createErrorMessageSignal } from '@ngx-signal-forms/toolkit/headless';
+
+readonly resolvedErrors = createErrorMessageSignal(() => this.field()(), {
+  fieldName: 'email',
+  // includeWarnings: false (default) | true | 'only'
+});
+```
+
+See [`packages/toolkit/headless/README.md`](../packages/toolkit/headless/README.md#createerrormessagesignal)
+for full options and worked examples.
+
+### Internal debugger entry point
+
+The `@ngx-signal-forms/debugger` entry ships a development-only
+component that replaces the old `debug: true` config flag. Gate it with
+`isDevMode()` and drop it anywhere in the form template:
+
+```ts
+import { NgxSignalFormDebugger } from '@ngx-signal-forms/debugger';
+
+@Component({
+  imports: [NgxSignalFormDebugger /* … */],
+  template: `
+    @if (isDev()) {
+      <ngx-signal-form-debugger [formTree]="form" />
+    }
+  `,
+})
+```
+
 ### `warningStrategy` input — independent warning timing
 
 `NgxFormFieldError` (and by extension the wrapper / assistive bundle)
@@ -736,12 +733,12 @@ case set `warningStrategy="inherit"` (or match `strategy` explicitly).
 
 ### `NgxFormFieldError` — new inputs
 
-| Input             | Type                        | Purpose                                                             |
-| ----------------- | --------------------------- | ------------------------------------------------------------------- |
-| `errors`          | `Signal<ValidationError[]>` | Render pre-aggregated errors (e.g. fieldset-level). Takes priority. |
-| `warningStrategy` | `ErrorDisplayStrategy`      | See above                                                           |
-| `listStyle`       | `'plain' \| 'bullets'`      | Visual rendering of the message list                                |
-| `submittedStatus` | `SubmittedStatus`           | Manual override for `'on-submit'` timing                            |
+| Input             | Type                                           | Purpose                                                                                                                       |
+| ----------------- | ---------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| `errors`          | `ReactiveOrStatic<readonly ValidationError[]>` | Render pre-aggregated errors (e.g. fieldset-level); accepts a plain array or a signal (unwrapped internally). Takes priority. |
+| `warningStrategy` | `ErrorDisplayStrategy`                         | See above                                                                                                                     |
+| `listStyle`       | `'plain' \| 'bullets'`                         | Visual rendering of the message list                                                                                          |
+| `submittedStatus` | `SubmittedStatus`                              | Manual override for `'on-submit'` timing                                                                                      |
 
 ### Fieldset (component + headless directive)
 
@@ -749,10 +746,11 @@ case set `warningStrategy="inherit"` (or match `strategy` explicitly).
   descendant-field errors instead of only direct group-level errors.
 - New `submittedStatus` input on the headless fieldset directive to support
   `'on-submit'` strategy without a form-level `ngxSignalForm`.
-- **Headless output rename (breaking for direct consumers):** the directive's
-  `submittedStatus` output is now `resolvedSubmittedStatus`, and `strategy` is
-  surfaced as `resolvedStrategy`. If you were reading either output from a
-  template reference or through Angular's output API, update the binding name.
+- **Headless signal rename (breaking for direct consumers):** the directive's
+  `submittedStatus` signal is now exposed as `resolvedSubmittedStatus`, and
+  `strategy` is surfaced as `resolvedStrategy`. If you were reading either
+  signal from a template reference variable or via dependency injection,
+  update the property name.
 - **`errorPlacement` default flipped from `'top'` to `'bottom'`** (breaking).
   Grouped summaries now render after the projected field content by default,
   which matches dense review-style layouts. This is a DOM-order change, not
@@ -852,6 +850,27 @@ behavior:
   synchronously (without waiting for `whenStable()`/the async result), a
   warning may now appear one tick later than before while async tests are
   in flight.
+- **Fixed (#214): a suite instance shared across two concurrently-mounted,
+  independent field trees could cross-contaminate their results.** Vest
+  suites created via `create()` hold exactly ONE canonical accumulated result
+  per suite _object_. When the SAME suite instance backed two unrelated,
+  simultaneously-live `form()` trees (e.g. a module-scope suite reused by
+  repeated form rows) with overlapping in-flight async validation, one tree
+  could observe the OTHER tree's outcome instead of its own once both runs
+  settled. The adapter now detects this exact overlap — two different field
+  trees with a concurrently pending, unfocused run against the same suite —
+  and defers the later-arriving tree's actual `suite.run()` call until the
+  suite is idle, so the two runs never overlap. This is scoped to unfocused
+  (whole-suite) runs only: the wave-3 pattern of several `focusCurrentField`/
+  `only` registrations for different fields of the SAME form intentionally
+  keeps sharing the suite's retained state and is unaffected. The only
+  observable change is a small added latency for the rare case of two
+  independent, concurrently-validating trees sharing one suite instance — the
+  later one's validation now genuinely waits for the earlier one's async work
+  to finish before its own starts, rather than racing it (and getting
+  intermittently-wrong results). Consumers who give each field tree its own
+  suite instance (or who don't share a suite across concurrently-mounted
+  forms at all) see no behavior change.
 
 ### Vest peer dependency range widened
 
@@ -906,7 +925,7 @@ surface it instead of silently allowing the gap.
 
 ---
 
-## 9. Headless audit fixes (v1.0.0)
+## 8. Headless audit fixes (v1.0.0)
 
 A pre-1.0 audit of `@ngx-signal-forms/toolkit/headless` found a handful of
 correctness and API-surface issues. Fixes shipped together; the API-affecting
@@ -992,7 +1011,7 @@ leaf is counted consistently whether it's `null` or populated.
 
 ---
 
-## 8. Migration checklist
+## 9. Migration checklist
 
 - **Add `ngxSignalForm`** next to every `[formRoot]` that uses toolkit
   features.
@@ -1033,11 +1052,8 @@ leaf is counted consistently whether it's `null` or populated.
 
 - **Sweep your stylesheets for renamed/removed CSS custom properties**
   if you themed the toolkit — see
-  [`MIGRATING_CSS_VARS.md`](./MIGRATING_CSS_VARS.md). Common renames:
-  `-border` → `-border-color`; `-list-style-type` + `-list-style-position`
-  → `-list-style` shorthand; `-padding-horizontal` shortcuts →
-  `-padding-inline-start` / `-inline-end` pairs; legacy
-  `--ngx-form-field-outline-*` aliases removed.
+  [`MIGRATING_CSS_VARS.md`](./MIGRATING_CSS_VARS.md) for the full
+  before/after tables and a sanity-check grep command.
 
 ---
 
@@ -1057,7 +1073,7 @@ leaf is counted consistently whether it's `null` or populated.
 
 ---
 
-## 9. `form-field` v1.0.0 audit blockers
+## 10. `form-field` v1.0.0 audit blockers
 
 The `form-field` entry point (`NgxFormFieldWrapper`, `NgxFormFieldset`) and
 its `NgxFormFieldError` collaborator shipped several defects fixed as part
@@ -1176,7 +1192,7 @@ overriding what the author opted out of. `NgxFormField` now includes
 `NgxSignalFormControlSemanticsDirective`; it's selector-gated and inert for
 consumers who never add the attribute.
 
-## Public API consistency pass (v1.0.0 audit #165)
+## 11. Public API consistency pass (v1.0.0 audit #165)
 
 A pre-freeze sweep of the public surface. Breaking changes are listed first; the last two entries are deliberate design decisions recorded for clarity.
 
@@ -1197,3 +1213,145 @@ Docs fix: removed phantom `@template TForm` / `@template TFieldset` JSDoc tags f
 
 - **`strategy` (field-level) vs `errorStrategy` (form-level).** The form-level `NgxSignalForm` directive sets the workspace default via `[errorStrategy]`; individual field-level components (`NgxFormFieldWrapper`, `NgxFormFieldError`, `NgxFormFieldset`, `NgxHeadlessErrorState`, `NgxHeadlessFieldset`) override it per-field via `[strategy]`, paired with `[warningStrategy]` where warnings are configurable. This split is deliberate and preserved to avoid a churny rename of the most widely-used input. Visibility signals are uniform: `shouldShowErrors()` / `shouldShowWarnings()`.
 - **`provideErrorMessages()` / `provideFieldLabels()` return `Provider` (not `EnvironmentProviders`).** These register level-agnostic registries usable in either environment or component providers — intentionally, so no `…ForComponent` variant is needed.
+
+## Headless surfaces consistency pass (ticket #173)
+
+Four promoted pre-1.0 findings from audit #139 (headless), all additive or
+behavior-only fixes — no renames.
+
+- **`NGX_SIGNAL_FORMS_CONFIG.defaultErrorStrategy` now honored by every
+  standalone headless error surface, not just `NgxHeadlessFieldset`.**
+  `NgxHeadlessErrorState`, `NgxHeadlessErrorSummary`, `createErrorState()`,
+  and `createErrorMessageSignal()` previously hard-fell-back to `'on-touch'`
+  when used outside an `[ngxSignalForm]` host, ignoring
+  `provideNgxSignalFormsConfig({ defaultErrorStrategy: 'immediate' })`.
+  All headless surfaces now apply the same cascade `NgxHeadlessFieldset`
+  already used: explicit `strategy` → form context →
+  `NGX_SIGNAL_FORMS_CONFIG.defaultErrorStrategy` → `'on-touch'`. If your
+  standalone (no form host) headless usage relied on the old hard-coded
+  `'on-touch'` behavior while also configuring a non-default
+  `defaultErrorStrategy` globally, it now picks up that global default —
+  scope the config with `provideNgxSignalFormsConfigForComponent()` if you
+  need per-usage isolation. As a building block, `createErrorVisibility()`
+  (core) gained a new opt-in `configDefault` option to support this; it is
+  not auto-injected there, so existing core consumers (e.g.
+  `NgxSignalFormAutoAria`) are unaffected.
+- **`NgxHeadlessFieldset` gained `resolvedErrors` / `resolvedWarnings`
+  signals.** The directive previously exposed only raw `aggregatedErrors`/
+  `aggregatedWarnings`, whose `ValidationError.message` is `undefined` for
+  framework-default errors (e.g. `required(path.x)` with no `message`
+  option) — the documented usage example rendered empty spans for the most
+  common validator usage. `resolvedErrors()`/`resolvedWarnings()` apply the
+  same 3-tier message priority (validator message → `NGX_ERROR_MESSAGES`
+  registry → default) as `NgxHeadlessErrorState.resolvedErrors`. Purely
+  additive; existing `aggregatedErrors()`/`aggregatedWarnings()` consumers
+  are unaffected.
+- **`NgxHeadlessFieldset.fields` now distinguishes `null` ("not provided")
+  from an explicitly bound `[]` ("provided but empty").** Previously both
+  fell back to aggregating the fieldset's own (nested) errors, so a
+  consumer dynamically computing the field list got surprising fallback
+  errors when that list legitimately became empty. `[]` now aggregates
+  nothing. Also retyped from `FieldTree<unknown>[] | null` to
+  `readonly FieldTree<unknown>[] | null` for consistency with the rest of
+  the toolkit — passing a mutable array still works (arrays are assignable
+  to their readonly form).
+- **`createErrorState()` gained an optional `injector` option**, routed
+  through `assertInjector` like the sibling factories
+  `createErrorVisibility()` and `createErrorMessageSignal()`. Callers no
+  longer must wrap every call in `runInInjectionContext()`. Purely
+  additive.
+
+## 12. `@ngx-signal-forms/toolkit/testing` restored as a real secondary entry point (audit #142/#176)
+
+`packages/toolkit/testing/` previously contained only an internal spec helper
+(`a11y.ts`) with no `ng-package.json`/`package.json` — unlike every other
+secondary entry point, it could not actually be imported as
+`@ngx-signal-forms/toolkit/testing`. This is now a real, published entry
+point:
+
+- **New public API:** `expectNoA11yViolations(context?, options?)` and
+  `WCAG_22_AA_TAGS` (+ `WCAG_22_AA_TAG` type) are importable from
+  `@ngx-signal-forms/toolkit/testing`. See the
+  [Accessibility testing harness](../packages/toolkit/README.md#accessibility-testing-harness)
+  section of the toolkit README.
+- **New optional peer dependency:** `axe-core` is now listed under
+  `peerDependencies`/`peerDependenciesMeta` (optional) on
+  `@ngx-signal-forms/toolkit`. Install it yourself if you use the `/testing`
+  entry point; nothing else in the toolkit requires it.
+- **Docs fix:** the JSDoc on `WCAG_22_AA_TAGS` incorrectly claimed axe-core's
+  `wcag22aa` tag covers the two new WCAG 2.2 Level A criteria (Consistent
+  Help, Redundant Entry). It does not — axe-core has no automated rule for
+  either; there is no `wcag22a` tag because there is nothing for it to
+  contain. Both criteria must be verified manually. The identical wrong claim
+  in `tools/a11y/scan.ts` (the demo apps' Playwright baseline-scan helper) is
+  fixed the same way, and that file now imports `WCAG_22_AA_TAGS` from
+  `@ngx-signal-forms/toolkit/testing` instead of keeping its own
+  comment-only-lockstep copy.
+- **Dead code removed:** `packages/toolkit/test.utilities.ts`
+  (`runInAngular`) had zero importers and a `@example` calling functions that
+  don't exist anywhere in this repo. Deleted rather than published, since
+  promoting it would have required writing a truthful example from scratch.
+
+## Form-level `errorStrategy` no longer accepts `'inherit'` (#178)
+
+`NgxSignalForm`'s `[errorStrategy]` input is now typed `ResolvedErrorDisplayStrategy` (`'immediate' | 'on-touch' | 'on-submit'`) instead of `ErrorDisplayStrategy`. `'inherit'` is a field-level-only value — there is nothing above the form root to inherit from — and was already silently treated as "use the default", so binding `[errorStrategy]="'inherit'"` on a `<form ngxSignalForm>` is now a compile-time error. **Fix:** remove the binding (the default already applies) or pass a concrete strategy. Field-level `[strategy]` still accepts `'inherit'`.
+
+## New API: `requiredFromStandardSchema()` — `aria-required` for Standard Schema (Zod, etc.) fields (#118)
+
+**Root cause:** `validateStandardSchema()` (from `@angular/forms/signals`) only
+registers tree-level validation errors — it never touches Angular's
+`REQUIRED` metadata, because the Standard Schema spec has no runtime way to
+ask "is this key required?" (no shape/keys introspection, only
+`~standard.validate(value)`). Without `REQUIRED` metadata,
+`FieldState.required()` stayed `false` for every Zod/Valibot/ArkType-validated
+field, so `NgxSignalFormAutoAria` never wrote `aria-required`, and
+`ngx-form-field-wrapper`'s `showMarkerWhen: 'required'` auto-marker never
+fired for them — only hand-written `required()` fields got the marker. The
+`advanced-wizard` demo had worked around this with a hardcoded `*` span in
+the label (kept intentionally pending this fix, see #117).
+
+**New public API:** `requiredFromStandardSchema(path, schema)`, exported from
+`@ngx-signal-forms/toolkit` (and `/core`). It closes the gap with the only
+library-agnostic technique available: probing the schema with the field's own
+key set to `undefined` (via `~standard.validate({ [key]: undefined })`) and
+registering the result as `REQUIRED` metadata via Angular's own `metadata()` +
+`REQUIRED` key. `REQUIRED` is an OR-reducing metadata key, so this composes
+safely alongside `required()`/other `metadata(path, REQUIRED, …)`
+registrations on the same field.
+
+Call it once per field, bound directly to that field's own path, next to the
+`validateStandardSchema()` call that validates the object owning it —
+Standard Schema doesn't expose an object's keys at runtime, so there is no
+way to derive every required field from a single root-level call:
+
+```typescript
+import { form, validateStandardSchema } from '@angular/forms/signals';
+import { requiredFromStandardSchema } from '@ngx-signal-forms/toolkit';
+
+const travelerForm = form(model, (path) => {
+  validateStandardSchema(path, TravelerSchema);
+  requiredFromStandardSchema(path.firstName, TravelerSchema);
+  requiredFromStandardSchema(path.lastName, TravelerSchema);
+});
+```
+
+**Known limitations** (documented on the function's JSDoc, not silently
+papered over):
+
+- Async validators (`~standard.validate` returning a `Promise`) can't be
+  resolved synchronously, so the probe reports "not required" rather than
+  block the reactive metadata graph on an async result.
+- A schema that throws while being probed (e.g. a `.refine()` that assumes
+  other fields are present) is treated as "not required" rather than
+  propagating the exception into form compilation.
+- Required-ness that only exists via cross-field refinement (e.g. "email is
+  required only when phone is empty") isn't captured — only the field's
+  unconditional base-schema requiredness is.
+
+**Demo fix:** `apps/demo/src/app/05-advanced/advanced-wizard`'s
+`traveler-step.form.ts` / `trip-step.form.ts` now call
+`requiredFromStandardSchema()` for their Zod-required fields, and the
+hardcoded `<span class="text-red-500">*</span>` markers have been removed
+from `traveler-step.ts` / `trip-step.ts` — the wrapper's auto-marker now
+covers them, consistent with every other demo. Purely additive; no existing
+API changed.

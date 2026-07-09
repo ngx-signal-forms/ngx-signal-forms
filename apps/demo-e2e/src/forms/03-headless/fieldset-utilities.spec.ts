@@ -281,7 +281,7 @@ test.describe('Headless - Fieldset + Utilities', () => {
     });
   });
 
-  test.describe('Delivery Notes - NgxHeadlessCharacterCount', () => {
+  test.describe('Delivery Notes - createCharacterCount()', () => {
     test('should update headless character count and reflect limit state', async ({
       page,
     }) => {
@@ -317,6 +317,39 @@ test.describe('Headless - Fieldset + Utilities', () => {
         await expect(assistiveCounter).toBeVisible();
         // The assistive component renders currentLength/maxLength
         await expect(assistiveCounter).toContainText('195/200');
+      });
+    });
+
+    test('should expose the counter as a real DOM node referenced by aria-describedby', async ({
+      page,
+    }) => {
+      const notesInput = page.getByLabel('Notes');
+      const counter = page.locator('#deliveryNotes-counter');
+
+      await test.step('Counter element exists with the id notesDescribedBy() references', async () => {
+        await expect(counter).toBeVisible();
+      });
+
+      await test.step('Notes textarea describedby includes the counter id', async () => {
+        const describedBy = await notesInput.getAttribute('aria-describedby');
+        expect(describedBy?.split(' ')).toContain('deliveryNotes-counter');
+      });
+    });
+
+    test('should show utility-derived field-state flags', async ({ page }) => {
+      const notesInput = page.getByLabel('Notes');
+      const flags = page.getByTestId('notes-utility-flags');
+
+      await test.step('Initial state: not touched, not dirty', async () => {
+        await expect(flags).toContainText('notes touched = false');
+        await expect(flags).toContainText('notes dirty = false');
+      });
+
+      await test.step('Touch and dirty the field', async () => {
+        await notesInput.fill('Some notes');
+        await notesInput.blur();
+        await expect(flags).toContainText('notes touched = true');
+        await expect(flags).toContainText('notes dirty = true');
       });
     });
   });
@@ -418,10 +451,8 @@ test.describe('Headless - Fieldset + Utilities', () => {
     }) => {
       const emailInput = page.getByLabel('Contact email *');
 
-      await test.step('Field starts with aria-invalid (required)', async () => {
-        // NgxHeadlessErrorState applies aria-invalid based on field state
-        // Required fields may show as invalid immediately
-        await expect(emailInput).toHaveAttribute('aria-invalid', 'true');
+      await test.step('Field does not start with aria-invalid=true before interaction', async () => {
+        await expect(emailInput).not.toHaveAttribute('aria-invalid', 'true');
       });
 
       await test.step('aria-invalid cleared when valid email entered', async () => {

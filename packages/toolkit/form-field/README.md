@@ -212,7 +212,7 @@ aggregation signals without any prebuilt markup, drop down to
 [`/headless`](../headless/README.md).
 
 ```html
-<ngx-form-fieldset [fieldsetField]="form.address" fieldsetId="address">
+<ngx-form-fieldset [field]="form.address" fieldsetId="address">
   <legend>Shipping Address</legend>
 
   <ngx-form-field-wrapper
@@ -230,26 +230,45 @@ aggregation signals without any prebuilt markup, drop down to
 </ngx-form-fieldset>
 ```
 
-| Input                 | Type                                                                     | Default     | Description                                                    |
-| --------------------- | ------------------------------------------------------------------------ | ----------- | -------------------------------------------------------------- |
-| `fieldsetField`       | `FieldTree` (required)                                                   | —           | Field tree to aggregate                                        |
-| `fields`              | `FieldTree[]`                                                            | `null`      | Explicit field list (overrides tree traversal)                 |
-| `fieldsetId`          | `string`                                                                 | Generated   | ID for ARIA linking                                            |
-| `strategy`            | `ErrorDisplayStrategy`                                                   | Inherited   | Error display strategy                                         |
-| `showErrors`          | `boolean`                                                                | `true`      | Toggle error display                                           |
-| `includeNestedErrors` | `boolean`                                                                | `false`     | Include child field errors via `errorSummary()`                |
-| `errorPlacement`      | `'top' \| 'bottom'`                                                      | `'bottom'`  | Render grouped messages before or after content                |
-| `appearance`          | `'outline' \| 'plain'`                                                   | `'outline'` | Border-and-padding shell or semantic-only grouping             |
-| `feedbackAppearance`  | `'auto' \| 'plain' \| 'notification'`                                    | `'auto'`    | Choose compact grouped text or surfaced notification cards     |
-| `notificationTitle`   | `string`                                                                 | —           | Optional title for notification-style grouped feedback         |
-| `listStyle`           | `'plain' \| 'bullets'`                                                   | `'bullets'` | Grouped message layout                                         |
-| `surfaceTone`         | `'default' \| 'neutral' \| 'info' \| 'success' \| 'warning' \| 'danger'` | `'default'` | Base fieldset surface tint below the legend                    |
-| `validationSurface`   | `'never' \| 'always'`                                                    | `'never'`   | Whether invalid/warning state should tint the fieldset surface |
+| Input                 | Type                                                                     | Default       | Description                                                    |
+| --------------------- | ------------------------------------------------------------------------ | ------------- | -------------------------------------------------------------- |
+| `field`               | `FieldTree` (required)                                                   | —             | Field tree to aggregate                                        |
+| `fields`              | `FieldTree[]`                                                            | `null`        | Explicit field list (overrides tree traversal)                 |
+| `fieldsetId`          | `string`                                                                 | Generated     | ID for ARIA linking                                            |
+| `strategy`            | `ErrorDisplayStrategy`                                                   | Inherited     | Blocking-error display strategy                                |
+| `warningStrategy`     | `ErrorDisplayStrategy`                                                   | `'immediate'` | Warning display strategy, independent of `strategy`            |
+| `showErrors`          | `boolean`                                                                | `true`        | Toggle error display                                           |
+| `includeNestedErrors` | `boolean`                                                                | `false`       | Include child field errors via `errorSummary()`                |
+| `errorPlacement`      | `'top' \| 'bottom'`                                                      | `'bottom'`    | Render grouped messages before or after content                |
+| `appearance`          | `'outline' \| 'plain'`                                                   | `'outline'`   | Border-and-padding shell or semantic-only grouping             |
+| `feedbackAppearance`  | `'auto' \| 'plain' \| 'notification'`                                    | `'auto'`      | Choose compact grouped text or surfaced notification cards     |
+| `notificationTitle`   | `string`                                                                 | —             | Optional title for notification-style grouped feedback         |
+| `listStyle`           | `'plain' \| 'bullets'`                                                   | `'bullets'`   | Grouped message layout                                         |
+| `surfaceTone`         | `'default' \| 'neutral' \| 'info' \| 'success' \| 'warning' \| 'danger'` | `'default'`   | Base fieldset surface tint below the legend                    |
+| `validationSurface`   | `'never' \| 'always'`                                                    | `'never'`     | Whether invalid/warning state should tint the fieldset surface |
 
 ### Error display modes
 
 - **Group-only** (default) — shows only group-level errors. Use when nested fields display their own errors via wrappers.
 - **Aggregated** (`includeNestedErrors`) — collects all nested errors. Use when fields don't have individual error display.
+
+### Warning support
+
+Like `ngx-form-field-wrapper`, the fieldset decouples warning **display timing**
+from blocking-error timing: `warningStrategy` defaults to `'immediate'` so
+aggregated warnings stay visible even when `strategy` is `'on-touch'` or
+`'on-submit'`.
+
+The rendered grouped-message slot (compact text or notification card) is a
+single region, so **visual priority still goes to blocking errors** when both
+are showable at the same time — the fieldset shows the error content and the
+`--invalid` styling, not both categories at once. This matches
+`NgxHeadlessErrorSummary`'s independent error/warning visibility contract at
+the state layer (`fieldset.shouldShowWarnings()` is never suppressed just
+because `fieldset.shouldShowErrors()` is `true`); the "one region, errors win"
+behavior is a `NgxFormFieldset`-specific rendering choice on top of that,
+mirroring the projected `NgxFormFieldError`'s own error/warning priority. See
+[`WARNINGS_SUPPORT.md`](https://github.com/ngx-signal-forms/ngx-signal-forms/blob/main/docs/WARNINGS_SUPPORT.md#when-warnings-appear--warningstrategy).
 
 ### Fieldset appearances
 
@@ -264,7 +283,7 @@ aggregation signals without any prebuilt markup, drop down to
   and see the grouped summary after the section.
 
 ```html
-<ngx-form-fieldset [fieldsetField]="form.deliveryMethod" errorPlacement="top">
+<ngx-form-fieldset [field]="form.deliveryMethod" errorPlacement="top">
   <legend>Delivery method</legend>
   <!-- grouped controls -->
 </ngx-form-fieldset>
@@ -340,7 +359,7 @@ setting.
 
 ```html
 <ngx-form-fieldset
-  [fieldsetField]="form.contactMethod"
+  [field]="form.contactMethod"
   surfaceTone="neutral"
   validationSurface="always"
 >
@@ -356,7 +375,7 @@ wrappers keep ownership of leaf validation such as required/min-length, while
 the fieldset is reserved for the shared cross-field message.
 
 ```html
-<ngx-form-fieldset [fieldsetField]="form.passwords" fieldsetId="passwords">
+<ngx-form-fieldset [field]="form.passwords" fieldsetId="passwords">
   <legend>Passwords</legend>
 
   <ngx-form-field-wrapper [formField]="form.passwords.password">
@@ -411,7 +430,7 @@ const signupForm = form(model, (path) => {
 Can also be used as an attribute selector on native `<fieldset>` or `<div>`:
 
 ```html
-<fieldset ngxFormFieldset [fieldsetField]="form.address" fieldsetId="address">
+<fieldset ngxFormFieldset [field]="form.address" fieldsetId="address">
   <legend>Address</legend>
   <!-- ... -->
 </fieldset>

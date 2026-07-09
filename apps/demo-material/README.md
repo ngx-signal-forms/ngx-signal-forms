@@ -2,8 +2,8 @@
 
 A runnable end-to-end example showing how to integrate
 [`@ngx-signal-forms/toolkit`](../../packages/toolkit/README.md) on top of
-**Angular Material 22+**. Pinned to the workspace's Angular 22 catalog,
-currently `@angular/material@22.0.0` and `@angular/cdk@22.0.0`.
+**Angular Material 22+**. Pinned via the workspace's `angular-material`
+pnpm catalog — see `pnpm-workspace.yaml` for the exact versions in use.
 
 ## Why use this on Material?
 
@@ -47,6 +47,7 @@ src/app/
     slot-directives.ts                *ngxMatErrorSlot / *ngxMatHintSlot
     feedback-directive.ts             *ngxMatFeedback for non-form-field controls
     material-error-renderer.ts        renderer with { message, severity } contract
+    warning-aware-error-state-matcher.ts  ErrorStateMatcher that ignores warn:* kinds
     index.ts                          provideNgxMatForms + bundle exports
 ```
 
@@ -162,17 +163,20 @@ the in-tree `NgxFormFieldError`.
 bootstrapApplication(AppComponent, {
   providers: [
     provideZonelessChangeDetection(),
-    provideAnimationsAsync('noop'),
     provideNgxSignalFormsConfig({ defaultErrorStrategy: 'on-touch' }),
-    provideNgxMatForms(), // registers MaterialFeedbackRenderer for both error + hint slots
+    provideNgxMatForms(), // MaterialFeedbackRenderer/MaterialHintRenderer + NgxMatWarningAwareErrorStateMatcher
   ],
 });
 ```
 
 The renderer contract is the lean `{ message, severity }` shape
 (ADR-0002 §7) — the slot directives resolve `formField` → message text
-and the renderer is purely presentational. Override per app or per
-component:
+and the renderer is purely presentational. `provideNgxMatForms()` also
+registers `NgxMatWarningAwareErrorStateMatcher` in place of Material's
+default `ErrorStateMatcher` (see "Warnings and Material's
+`ErrorStateMatcher`" below) — every app wiring the wrapper should call
+it, not just apps that need renderer overrides. Override the renderers
+per app or per component:
 
 ```ts
 provideNgxMatForms({
@@ -215,31 +219,126 @@ Material's ARIA ownership.
 
 ### Warnings under `submission.action`
 
-Angular Signal Forms' `submission.action` rejects fields with **any**
-validation result, including non-blocking `warn:*` results. If a form
-relies on warnings (e.g. `warn:short-name` on the contact form's `name`
-field), submitting via `<form (submit)>` will be blocked by the warning
-unless the consumer routes the submit through `submitWithWarnings()`
-from `@ngx-signal-forms/toolkit`. The demo defaults to `on-touch` and
-documents the choice — adopt `submitWithWarnings()` for any form that
-needs warnings to remain non-blocking after a submit attempt.
+Angular Signal Forms' native `submit()` blocks `submission.action` on
+any validation result on the tree, including the toolkit's non-blocking
+`warn:*` results — see the [toolkit README](../../packages/toolkit/README.md#warning-support)'s
+warning-support table for `hasOnlyWarnings()` / `submitWithWarnings()`
+and why that matters.
+
+The contact form's declarative `{ submission }` therefore sets
+`ignoreValidators: 'all'` and gates the actual submit logic on
+`hasOnlyWarnings(contactForm().errorSummary())` inside `action` itself
+(falling through to the toolkit's `onInvalid` handler when a real
+blocking error remains):
+
+```ts
+readonly contactForm = form(this.model, contactFormSchema, {
+  submission: {
+    ignoreValidators: 'all',
+    action: async () => {
+      if (!hasOnlyWarnings(this.contactForm().errorSummary())) {
+        this.#onInvalid(this.contactForm);
+        return;
+      }
+      await submitToApi(this.contactForm().value());
+    },
+  },
+});
+```
+
+This mirrors `apps/demo-primeng`'s profile form and is the pattern
+[`apps/demo`'s advanced section](../demo/src/app/05-advanced/README.md)
+documents as preferred for warning-tolerant submission when you're
+using declarative `{ submission }` rather than calling `submit()` /
+`submitWithWarnings()` by hand.
+
+### Warnings and Material's `ErrorStateMatcher`
+
+Material's `matInput` / `mat-select` compute `errorState` (and
+`aria-invalid`) from the injected `ErrorStateMatcher`. Signal Forms'
+`InteropNgControl` (the `NgControl` bridge Angular's `FormField`
+directive provides) reports `invalid` as `true` for **any**
+`ValidationError` on the field, warnings included — so Material's
+default matcher (`invalid && (touched || form.submitted)`) would give a
+warning-only field `aria-invalid="true"` and the full
+`mat-form-field-invalid` red-outline treatment, contradicting the
+`<mat-hint>` copy sitting right next to it that calls the same state a
+"gentle warning."
+
+`provideNgxMatForms()` (and `provideNgxMatFormsForComponent()`)
+therefore also registers `NgxMatWarningAwareErrorStateMatcher`
+(`src/app/wrapper/warning-aware-error-state-matcher.ts`) in place of
+Material's default. It reads the `warn:*` / non-`warn:*` split off
+`control.errors`' keys via the toolkit's canonical `isBlockingError()`
+predicate, and only falls through to the normal touched/submitted
+timing check when at least one **blocking** error is present — a
+warning-only field always reports `errorState: false`.
 
 ### `<mat-checkbox>` aria wiring
 
-`<mat-checkbox>` doesn't expose its inner `<input>` via a public API,
-so `aria-describedby` cannot be wired to the feedback block
-automatically. The demo leaves the wiring out because the
-`role="alert"` / `role="status"` live regions inside `*ngxMatFeedback`
-already announce changes to a screen reader. Consumers who need
-belt-and-braces wiring can set the attribute by hand using the IDs the
-directive emits (`{fieldName}-error` / `{fieldName}-warning`).
+`<mat-checkbox>` **does** expose a public `aria-describedby` input
+(`ariaDescribedby`, forwarded straight to the native `<input>`) even
+though it doesn't implement `MatFormFieldControl` — so the checkbox
+control-directives section above still applies, and `*ngxMatFeedback`
+exposes exactly what's needed to wire it by hand: a
+`describedByIds()` signal (via `exportAs: 'ngxMatFeedback'`) that
+resolves to the currently-rendered block's id, or `null` when neither
+an error nor a warning is showing (no dangling IDREFs). The contact
+form grabs the directive with a `viewChild(NgxMatFeedback)` query and
+binds it on the checkbox:
 
-### `floatLabel` is out of scope
+```html
+<div class="demo-form__row demo-form__row--agree">
+  <!-- *ngxMatFeedback is declared BEFORE <mat-checkbox> — Angular
+       evaluates a template's property bindings in source order, so the
+       checkbox's binding below cannot forward-reference an input this
+       directive hasn't been assigned yet. CSS `order` restores the
+       checkbox-first visual layout. -->
+  <ng-container
+    *ngxMatFeedback="
+      form.agree;
+      fieldName: 'contact-agree';
+      let messages;
+      severity as severity;
+      id as id
+    "
+  >
+    <p [id]="id" [attr.role]="severity === 'error' ? 'alert' : 'status'">…</p>
+  </ng-container>
+
+  <mat-checkbox
+    [formField]="form.agree"
+    ngxMatCheckboxControl
+    [aria-describedby]="agreeFeedback()?.describedByIds() ?? null"
+  >
+    I agree to be contacted
+  </mat-checkbox>
+</div>
+```
+
+```ts
+protected readonly agreeFeedback = viewChild(NgxMatFeedback);
+```
+
+The `role="alert"` / `role="status"` live region inside `*ngxMatFeedback`
+still announces changes transiently; the `aria-describedby` wiring adds
+the missing piece — a screen reader that focuses the checkbox **after**
+the error already rendered now hears the description too, not just
+whatever happened to be announced live.
+
+### `floatLabel="always"`
 
 Material's `floatLabel` (`'auto' | 'always'`) interacts with Material's
-internal `empty` / `focused` state and is not wired through the toolkit.
-The demo uses Material's default (`'auto'`); set a different mode on
-`<mat-form-field>` directly when needed.
+internal `empty` / `focused` state and is not wired through the
+toolkit. The contact form sets `floatLabel: 'always'` (along with
+`appearance: 'outline'` and `subscriptSizing: 'dynamic'`) once, app-wide,
+via `MAT_FORM_FIELD_DEFAULT_OPTIONS` in `main.ts` — purely a visual
+preference for this demo, not a toolkit requirement — so every
+`<mat-form-field>` inherits it instead of repeating the same three
+attributes on each field. Labels stay put instead of floating back down
+into the input on blur-with-empty-value. Override
+`MAT_FORM_FIELD_DEFAULT_OPTIONS` (or set the input directly on a field
+for a one-off exception) for Material's default float-on-focus behavior.
 
 ## Extending the error slot
 
@@ -276,7 +375,7 @@ Two automated layers verify the wrapper's ARIA wiring stays correct:
 ### Smoke spec (jsdom)
 
 `src/app/contact-form/contact-form.spec.ts` runs under
-`pnpm nx run demo-material:test`. Three assertions:
+`pnpm nx run demo-material:test`:
 
 1. After typing into the name field and tabbing away, `<mat-error>`
    renders the toolkit-driven validation message and has a non-empty
@@ -286,7 +385,22 @@ Two automated layers verify the wrapper's ARIA wiring stays correct:
    to existing DOM IDs, and at least one of those IDs belongs to a
    `<mat-error>` element.
 3. The `warn:short-name` warning renders inside `<mat-hint>` (not
-   `<mat-error>`), and no `<mat-error>` is visible on that field.
+   `<mat-error>`), no `<mat-error>` is visible on that field, **and**
+   `aria-invalid` is `"false"` / `mat-form-field-invalid` is absent —
+   pinning `NgxMatWarningAwareErrorStateMatcher`.
+4. Leaving the consent checkbox unchecked and blurring renders the
+   `agree-required` error via `*ngxMatFeedback`, and the checkbox's
+   `aria-describedby` resolves to that block's id (dropping back to
+   `null` once checked) — pinning the checkbox aria wiring.
+5. Filling out the whole form with a short-but-valid name (`'Bob'`,
+   trips `warn:short-name`) and submitting reaches the success banner —
+   pinning that a non-blocking warning never blocks `submission.action`.
+
+`src/app/wrapper/warning-aware-error-state-matcher.spec.ts` unit-tests
+`NgxMatWarningAwareErrorStateMatcher.isErrorState()` directly (null
+control, no errors, warning-only, blocking-but-untouched,
+blocking-and-touched, blocking-via-form-submitted, warning+blocking
+mixed).
 
 A wrapper-level spec
 (`src/app/wrapper/mat-form-field-wrapper.spec.ts`) additionally asserts
@@ -312,14 +426,18 @@ pnpm nx run demo-material:test        # smoke spec (jsdom + Vitest)
 pnpm nx run demo-material-e2e:e2e     # Playwright spec
 ```
 
-The smoke spec depends on a publish-ready toolkit build (`pnpm nx run toolkit:post-build`),
-which Nx schedules automatically via the `dependsOn` in
+The smoke spec depends on a built toolkit (`pnpm nx run toolkit:build`),
+which Nx schedules automatically via the `test` target's `dependsOn` in
 `project.json`.
 
 ## Pinned versions
 
+Versions are pinned via the workspace's pnpm catalogs (`pnpm-workspace.yaml`),
+not hard-coded here, so they stay in sync automatically. At the time of
+writing:
+
 | Package               | Version  |
 | --------------------- | -------- |
-| `@angular/material`   | `22.0.0` |
-| `@angular/cdk`        | `22.0.0` |
-| `@angular/animations` | `22.0.0` |
+| `@angular/material`   | `22.0.4` |
+| `@angular/cdk`        | `22.0.4` |
+| `@angular/animations` | `22.0.5` |

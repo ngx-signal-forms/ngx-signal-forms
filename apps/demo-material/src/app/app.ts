@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { ContactFormComponent } from './contact-form/contact-form';
 
 /**
@@ -11,6 +11,7 @@ import { ContactFormComponent } from './contact-form/contact-form';
  */
 @Component({
   selector: 'ngx-root',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 
   imports: [ContactFormComponent],
   template: `

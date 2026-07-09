@@ -92,6 +92,48 @@ Only add ARIA manually for headless usage where you control the markup explicitl
 If you explicitly opt a control into `ngxSignalFormControlAria="manual"`, the
 toolkit preserves your existing ARIA attributes instead of generating them.
 
+## `aria-required` on Standard Schema (Zod) Fields Needs `requiredFromStandardSchema`
+
+```typescript
+// Wrong — validateStandardSchema alone never sets REQUIRED metadata, so
+// FieldState.required() stays false: no aria-required, no required marker.
+form(model, (path) => {
+  validateStandardSchema(path, TravelerSchema);
+});
+
+// Correct — register required-ness per field alongside the schema (#215)
+import { requiredFromStandardSchema } from '@ngx-signal-forms/toolkit';
+
+form(model, (path) => {
+  validateStandardSchema(path, TravelerSchema);
+  requiredFromStandardSchema(path.firstName, TravelerSchema);
+  requiredFromStandardSchema(path.lastName, TravelerSchema);
+});
+```
+
+Standard Schema (Zod, Valibot, ArkType, …) has no runtime way to ask "is this
+key required?", so `validateStandardSchema()` registers tree-level errors only —
+it never touches `REQUIRED` metadata. Call `requiredFromStandardSchema()` once
+per field for auto-ARIA `aria-required` and the `showMarkerWhen: 'required'`
+marker to fire. Native `required()` validators already do this; only
+schema-validated fields need the extra call.
+
+## Notification Tone Is Content-Driven — There Is No `tone` Input
+
+```html
+<!-- Wrong — `tone` is not an input on the notification -->
+<ngx-form-field-notification [errors]="field().errors()" tone="auto" />
+
+<!-- Correct — tone is resolved from the errors themselves -->
+<ngx-form-field-notification [errors]="field().errors()" fieldName="email" />
+```
+
+`NgxFormFieldNotification` (assistive) and `NgxHeadlessNotification` (headless)
+route tone automatically from content: any blocking error raises the error
+container (`role="alert"`); a warning-only list raises the warning container
+(`role="status"`); an empty list hides both. Do not try to set a tone — there is
+no such input.
+
 ## Wrapper Identity — Always Provide `id`
 
 ```html
@@ -297,3 +339,13 @@ pitfall only applies to standalone callers of `showErrors()` or
 `createShowErrorsComputed()` outside that context (custom utilities,
 hand-rolled components, services). Either pass the status, or move the work
 inside the form context so inheritance can do it for you.
+
+## Vest — Sharing One Suite Across Concurrent Forms Is Safe by Default
+
+A module-scope Vest suite mounted in two forms at once (list/detail, wizard step
+beside a summary, two open tabs) is safe: `validateVest()` reference-counts its
+registrations and only calls `suite.reset()` when the **last** surviving mount's
+injection context tears down (`resetOnDestroy: true`, the default). Destroying
+one mount leaves a sibling mount's `only()`-run state and in-flight async runs
+untouched (#201, #214, #216). Pass `{ resetOnDestroy: false }` only when you
+deliberately want suite state to persist across mounts.

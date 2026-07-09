@@ -28,7 +28,7 @@
       >
         Swap registry
       </button>
-      <span class="text-xs text-gray-400 dark:text-gray-500">
+      <span class="text-xs text-gray-600 dark:text-gray-400">
         Messages re-resolve reactively
       </span>
     </div>
@@ -53,7 +53,9 @@
     <div class="demo-section" data-testid="section-blocking">
       <p class="demo-section__title">Mode 1 — blocking errors only (default)</p>
       <p class="mb-2 text-xs text-gray-500 dark:text-gray-400">
-        <code class="rounded bg-gray-100 px-1 py-0.5 text-xs dark:bg-gray-800">
+        <code
+          class="rounded bg-gray-100 px-1 py-0.5 text-xs text-gray-700 dark:bg-gray-800 dark:text-gray-200"
+        >
           createErrorMessageSignal(() =&gt; field())
         </code>
       </p>
@@ -72,7 +74,7 @@
       </ul>
 
       @if (blockingErrors().length === 0) {
-      <p class="text-xs text-gray-400 dark:text-gray-500">
+      <p class="text-xs text-gray-600 dark:text-gray-400">
         No blocking errors to display
       </p>
       }
@@ -83,7 +85,7 @@
       <p class="demo-section__title">
         Mode 2 — blocking + warnings
         <code
-          class="rounded bg-gray-100 px-1 py-0.5 text-xs normal-case dark:bg-gray-800"
+          class="rounded bg-gray-100 px-1 py-0.5 text-xs text-gray-700 normal-case dark:bg-gray-800 dark:text-gray-200"
         >
           includeWarnings: true
         </code>
@@ -104,7 +106,7 @@
       </ul>
 
       @if (allErrors().length === 0) {
-      <p class="text-xs text-gray-400 dark:text-gray-500">
+      <p class="text-xs text-gray-600 dark:text-gray-400">
         No errors or warnings to display
       </p>
       }
@@ -115,7 +117,7 @@
       <p class="demo-section__title">
         Mode 3 — warnings only
         <code
-          class="rounded bg-gray-100 px-1 py-0.5 text-xs normal-case dark:bg-gray-800"
+          class="rounded bg-gray-100 px-1 py-0.5 text-xs text-gray-700 normal-case dark:bg-gray-800 dark:text-gray-200"
         >
           includeWarnings: 'only'
         </code>
@@ -137,7 +139,7 @@
         </ul>
 
         @if (warningsOnly().length === 0) {
-        <p class="text-xs text-gray-400 dark:text-gray-500">
+        <p class="text-xs text-gray-600 dark:text-gray-400">
           No warnings to display
         </p>
         }

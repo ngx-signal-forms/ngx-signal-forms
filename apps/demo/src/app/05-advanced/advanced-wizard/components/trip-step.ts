@@ -1,4 +1,11 @@
-import { Component, ElementRef, inject, input, viewChild } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  ElementRef,
+  inject,
+  input,
+  viewChild,
+} from '@angular/core';
 import { FormField } from '@angular/forms/signals';
 
 import {
@@ -15,6 +22,7 @@ import { WizardStepInterface } from '../wizard-step.interface';
 
 @Component({
   selector: 'ngx-trip-step',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 
   imports: [FormField, NgxSignalFormToolkit, NgxFormField],
   template: `
@@ -67,9 +75,7 @@ import { WizardStepInterface } from '../wizard-step.interface';
               [appearance]="appearance()"
               [orientation]="orientation()"
             >
-              <label [for]="'dest-country-' + destIdx">
-                Country <span class="text-red-500">*</span>
-              </label>
+              <label [for]="'dest-country-' + destIdx">Country</label>
               <input
                 [id]="'dest-country-' + destIdx"
                 type="text"
@@ -83,9 +89,7 @@ import { WizardStepInterface } from '../wizard-step.interface';
               [appearance]="appearance()"
               [orientation]="orientation()"
             >
-              <label [for]="'dest-city-' + destIdx">
-                City <span class="text-red-500">*</span>
-              </label>
+              <label [for]="'dest-city-' + destIdx">City</label>
               <input
                 [id]="'dest-city-' + destIdx"
                 type="text"
@@ -101,9 +105,7 @@ import { WizardStepInterface } from '../wizard-step.interface';
               [appearance]="appearance()"
               [orientation]="orientation()"
             >
-              <label [for]="'dest-arrival-' + destIdx">
-                Arrival Date <span class="text-red-500">*</span>
-              </label>
+              <label [for]="'dest-arrival-' + destIdx">Arrival Date</label>
               <input
                 [id]="'dest-arrival-' + destIdx"
                 type="date"
@@ -118,7 +120,7 @@ import { WizardStepInterface } from '../wizard-step.interface';
               [orientation]="orientation()"
             >
               <label [for]="'dest-departure-' + destIdx">
-                Departure Date <span class="text-red-500">*</span>
+                Departure Date
               </label>
               <input
                 [id]="'dest-departure-' + destIdx"

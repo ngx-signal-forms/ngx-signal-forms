@@ -63,4 +63,4 @@ Swapping `activeRegistry` causes all three signal instances to re-resolve their 
 ## ➡️ Related
 
 - [Headless section README](../README.md) — overview of all headless demos
-- [packages/toolkit/headless/README.md](../../../../../packages/toolkit/headless/README.md) — `createErrorMessageSignal` API reference
+- [packages/toolkit/headless/README.md](../../../../../../packages/toolkit/headless/README.md) — `createErrorMessageSignal` API reference

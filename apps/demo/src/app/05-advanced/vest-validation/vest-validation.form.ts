@@ -1,4 +1,10 @@
-import { Component, input, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  input,
+  signal,
+} from '@angular/core';
 import {
   form,
   FormField,
@@ -6,7 +12,7 @@ import {
   type SchemaPathTree,
 } from '@angular/forms/signals';
 import {
-  type ErrorDisplayStrategy,
+  type ResolvedErrorDisplayStrategy,
   type FormFieldAppearance,
   type FormFieldOrientation,
   createOnInvalidHandler,
@@ -34,6 +40,7 @@ const vestValidationSchema: SchemaFn<Readonly<VestValidationModel>> = (
 
 @Component({
   selector: 'ngx-vest-validation',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 
   imports: [FormField, NgxSignalFormToolkit, NgxFormField],
   styles: `
@@ -245,7 +252,7 @@ const vestValidationSchema: SchemaFn<Readonly<VestValidationModel>> = (
   `,
 })
 export class VestValidationComponent {
-  readonly errorDisplayMode = input<ErrorDisplayStrategy>('on-touch');
+  readonly errorDisplayMode = input<ResolvedErrorDisplayStrategy>('on-touch');
   readonly appearance = input<FormFieldAppearance>('outline');
   readonly orientation = input<FormFieldOrientation>('vertical');
   readonly #onInvalid = createOnInvalidHandler();
@@ -278,11 +285,10 @@ export class VestValidationComponent {
     },
   });
 
-  protected useSingleColumnFieldRows(): boolean {
-    return (
-      this.appearance() === 'standard' && this.orientation() === 'horizontal'
-    );
-  }
+  protected readonly useSingleColumnFieldRows = computed(
+    () =>
+      this.appearance() === 'standard' && this.orientation() === 'horizontal',
+  );
 
   protected resetForm(): void {
     this.accountForm().reset();

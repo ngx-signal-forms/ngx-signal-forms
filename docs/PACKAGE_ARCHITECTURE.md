@@ -53,6 +53,7 @@ documented public entry points only.
 - `@ngx-signal-forms/toolkit/form-field` — prebuilt wrapper + fieldset UI
 - `@ngx-signal-forms/toolkit/headless` — renderless directives and utility functions
 - `@ngx-signal-forms/toolkit/vest` — Vest helper adapters
+- `@ngx-signal-forms/toolkit/testing` — axe-core a11y assertion helpers for consumer test suites
 
 ### Package layout
 
@@ -103,13 +104,15 @@ packages/toolkit/
 ├── scripts/
 │   └── strip-internal-exports.mjs      # post-build: hides /core from the exports map
 ├── testing/
-│   └── a11y.ts                         # internal axe-core test helpers (not published)
+│   ├── a11y.ts                         # axe-core a11y test helpers
+│   ├── index.ts
+│   └── ng-package.json                 # published secondary entry point (/testing)
 ├── index.ts
 ├── README.md
 └── package.json
 ```
 
-Only the five public entry points above ship to npm. `core/` exists in source
+Only the six public entry points above ship to npm. `core/` exists in source
 but is not in the published exports map, and `docs/` (repo root) is not part
 of the package at all — which is why the package READMEs link to GitHub with
 absolute URLs.
@@ -130,13 +133,15 @@ import { validateVest } from '@ngx-signal-forms/toolkit/vest';
 @angular/core (peer)
 @angular/forms/signals (peer)
 vest ^6 (optional peer for /vest)
+axe-core ^4.5 (optional peer for /testing)
         ↓
 @ngx-signal-forms/toolkit
 ├── root (core public API)
 ├── /assistive
 ├── /form-field
 ├── /headless
-└── /vest
+├── /vest
+└── /testing
 ```
 
 ### Internal-only debugger

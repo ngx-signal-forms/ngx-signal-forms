@@ -18,7 +18,13 @@
  * ```
  */
 
-export { NgxFormFieldCharacterCount } from './character-count';
+export {
+  NgxFormFieldCharacterCount,
+  type NgxCharacterCountAnnouncementFormatter,
+  type NgxCharacterCountAnnouncementInfo,
+  type NgxCharacterCountAnnouncementState,
+  type NgxCharacterCountValue,
+} from './character-count';
 export {
   NgxFormFieldError,
   type NgxFormFieldListStyle,

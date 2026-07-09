@@ -1,4 +1,5 @@
 import { minLength, required, schema, validate } from '@angular/forms/signals';
+import { warningError } from '@ngx-signal-forms/toolkit';
 import type { SubmissionModel } from './submission-patterns.model';
 
 /**
@@ -25,6 +26,21 @@ export const submissionSchema = schema<SubmissionModel>((path) => {
   required(path.password, { message: 'Password is required' });
   minLength(path.password, 8, {
     message: 'Password must be at least 8 characters',
+  });
+
+  // Non-blocking password strength nudge — advisory only, never blocks
+  // submission. Only fires once the password is otherwise valid (required +
+  // minLength satisfied), so it demonstrates a genuine warning path rather
+  // than piggybacking on a blocking rule.
+  validate(path.password, (ctx) => {
+    const value = ctx.value();
+    if (value.length >= 8 && !/\d/.test(value)) {
+      return warningError(
+        'weak-password',
+        'Consider adding a number for a stronger password.',
+      );
+    }
+    return null;
   });
 
   // Confirm password - cross-field validation

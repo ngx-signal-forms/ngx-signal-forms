@@ -1,4 +1,9 @@
-import { Component, input, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  input,
+  signal,
+} from '@angular/core';
 import {
   form,
   FormField,
@@ -9,7 +14,7 @@ import {
   validate,
 } from '@angular/forms/signals';
 import {
-  type ErrorDisplayStrategy,
+  type ResolvedErrorDisplayStrategy,
   type FormFieldAppearance,
   type FormFieldOrientation,
   createOnInvalidHandler,
@@ -62,6 +67,7 @@ const bookingSchema = schema<Booking>((path) => {
 
 @Component({
   selector: 'ngx-cross-field-validation',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 
   imports: [FormField, NgxSignalFormToolkit, NgxFormField],
   template: `
@@ -148,7 +154,7 @@ const bookingSchema = schema<Booking>((path) => {
   `,
 })
 export class CrossFieldValidationComponent {
-  readonly errorDisplayMode = input<ErrorDisplayStrategy>('on-touch');
+  readonly errorDisplayMode = input<ResolvedErrorDisplayStrategy>('on-touch');
   readonly appearance = input<FormFieldAppearance>('outline');
   readonly orientation = input<FormFieldOrientation>('vertical');
 

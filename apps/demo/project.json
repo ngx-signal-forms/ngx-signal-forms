@@ -43,6 +43,14 @@
         "command": "oxlint {projectRoot} --type-aware"
       }
     },
+    "test": {
+      "executor": "@nx/vitest:test",
+      "outputs": ["{options.reportsDirectory}"],
+      "options": {
+        "configFile": "apps/demo/vitest.config.mts",
+        "reportsDirectory": "{projectRoot}/../../coverage/apps/demo"
+      }
+    },
     "serve-static": {
       "executor": "@nx/web:file-server",
       "defaultConfiguration": "production",

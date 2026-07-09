@@ -1,4 +1,10 @@
-import { booleanAttribute, Component, input, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  booleanAttribute,
+  Component,
+  input,
+  signal,
+} from '@angular/core';
 import {
   email,
   FormField,
@@ -9,7 +15,7 @@ import {
 import {
   createOnInvalidHandler,
   NgxSignalFormToolkit,
-  type ErrorDisplayStrategy,
+  type ResolvedErrorDisplayStrategy,
   type FormFieldAppearance,
   type FormFieldOrientation,
 } from '@ngx-signal-forms/toolkit';
@@ -100,6 +106,7 @@ const placementDesignPreviewSchema = schema<PlacementDesignPreviewModel>(
  */
 @Component({
   selector: 'ngx-fieldset-form',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 
   imports: [FormField, NgxSignalFormToolkit, NgxFormField],
   templateUrl: './fieldset.form.html',
@@ -109,7 +116,7 @@ export class FieldsetFormComponent {
   /**
    * Error display mode input - controls when errors are shown
    */
-  readonly errorDisplayMode = input<ErrorDisplayStrategy>('on-touch');
+  readonly errorDisplayMode = input<ResolvedErrorDisplayStrategy>('on-touch');
   readonly appearance = input<FormFieldAppearance>('standard');
   readonly orientation = input<FormFieldOrientation>('vertical');
   readonly errorPlacement = input<NgxFormFieldErrorPlacement>('bottom');

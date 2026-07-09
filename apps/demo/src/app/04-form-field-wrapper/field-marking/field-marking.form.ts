@@ -1,4 +1,9 @@
-import { Component, input, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  input,
+  signal,
+} from '@angular/core';
 import {
   email,
   FormField,
@@ -27,6 +32,7 @@ import {
  */
 @Component({
   selector: 'ngx-field-marking-form',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 
   imports: [
     FormField,
@@ -90,4 +96,6 @@ export class FieldMarkingFormComponent {
   /** `[text]` expects `undefined` (not `''`) to fall back to the mode default. */
   protected readonly legendTextOrUndefined = () =>
     this.legendText().length > 0 ? this.legendText() : undefined;
+
+  protected readonly showLegendSlot = () => this.markingMode() !== 'none';
 }

@@ -32,7 +32,7 @@ If you are coming from `ngx-vest-forms` with **Vest 5.x**, the first migration s
 
 You cannot keep Vest 5.x and migrate directly to `@ngx-signal-forms/toolkit/vest`.
 
-- `@ngx-signal-forms/toolkit` declares `vest` as an optional peer dependency at `^6.0.0`
+- `@ngx-signal-forms/toolkit` declares `vest` as an optional peer dependency at `>=6.0.0` (see `packages/toolkit/package.json`)
 - current toolkit docs and demos assume **Vest 6**
 - `@ngx-signal-forms/toolkit/vest` will **not work on Vest 5.x**
 - your existing suite logic will often still look familiar, but you should verify any usage of `only()`, `skip()`, `omitWhen()`, async warnings, and focused updates against Vest 6 docs
@@ -261,46 +261,13 @@ A pragmatic migration path is:
 
 That usually lets you reduce legacy `ngx-vest-forms` surface area faster while preserving the value of your existing Vest suites.
 
-Recommended split:
-
-- **Angular Signal Forms validators**
-  - small UI-local rules
-  - simple required / email / min / max / minLength / maxLength checks
-  - form-state-driven rules such as disabled / readonly / hidden behavior
-- **OpenAPI / Zod / Standard Schema**
-  - required fields
-  - email format
-  - min/max length
-  - number bounds
-  - enums
-  - backend contract shape
-- **Vest**
-  - cross-field business rules
-  - conditional policy rules
-  - async business validations
-  - advisory `warn()` guidance
-
-This is especially useful during migration because it gives you a stable rule boundary:
-
-- Zod handles the **data contract**
-- Vest handles the **business meaning**
-
-In practice, that means you can often migrate like this:
-
-- replace simple template-driven validation with Angular validators and/or generated or hand-written Zod schemas
-- keep the existing Vest logic only for the rules that are still genuinely business-specific
-- gradually shrink the old Vest surface instead of rewriting everything at once
-
-Typical migration layering:
-
-1. keep **small local field rules** in Angular validators
-2. move **shared contract rules** to Zod / OpenAPI Standard Schema when available
-3. keep **complex business policy** in Vest
+That gives you a stable rule boundary during migration: keep small local field rules in Angular validators, move shared contract rules to Zod / OpenAPI Standard Schema when available, and keep complex business policy in Vest — replace simple template-driven validation first, then gradually shrink the old Vest surface instead of rewriting everything at once.
 
 See also:
 
 - [`apps/demo/src/app/05-advanced/zod-vest-validation/README.md`](../apps/demo/src/app/05-advanced/zod-vest-validation/README.md)
-- [`packages/toolkit/vest/README.md`](../packages/toolkit/vest/README.md#using-vest-together-with-zod-or-openapi-generated-schemas)
+- [Choosing a validation strategy](./VALIDATION_STRATEGY.md) — the full three-layer decision guide, recommended layering order, and a worked example
+- [`packages/toolkit/vest/README.md`](../packages/toolkit/vest/README.md#when-to-use-vest)
 
 ### Remove framework-specific `field` plumbing first
 
@@ -320,20 +287,12 @@ Keep the business rules. Remove the adapter-era ceremony.
 
 ### Keep `warn()`, but update submit handling
 
-Vest `warn()` still maps well to the toolkit.
-
-The important difference is Angular Signal Forms currently treats all `ValidationError` objects as blocking during `submit()`, including toolkit-style warnings.
-
-If warning-only forms should still submit:
-
-1. use `<form [formRoot]="myForm">`
-2. configure `submission: { ignoreValidators: 'all', action }`
-3. gate the action with `hasOnlyWarnings(myForm().errorSummary())`
+Vest `warn()` still maps well to the toolkit, but Angular Signal Forms treats all `ValidationError` objects — including toolkit-style warnings — as blocking during `submit()`. Use the toolkit's warning-aware submit helpers so warning-only forms can still submit.
 
 See also:
 
-- [`packages/toolkit/vest/README.md`](../packages/toolkit/vest/README.md)
-- [`docs/WARNINGS_SUPPORT.md`](./WARNINGS_SUPPORT.md)
+- [`packages/toolkit/vest/README.md`](../packages/toolkit/vest/README.md#using-angular-submit-with-warnings)
+- [`docs/WARNINGS_SUPPORT.md`](./WARNINGS_SUPPORT.md#form-submission-behavior)
 
 ## Advanced features that need deliberate review
 

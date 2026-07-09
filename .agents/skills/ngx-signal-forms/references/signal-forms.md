@@ -2,7 +2,7 @@
 
 The toolkit builds on top of Angular Signal Forms. This reference covers the Angular-native layer that toolkit consumers need.
 
-Angular Signal Forms is available in `@angular/core >= 21.1` and imported from `@angular/forms/signals`.
+Angular Signal Forms is **stable** as of Angular 22 (it shipped as a developer preview in v21.1) and is imported from `@angular/forms/signals`. `submit()` returns `Promise<boolean>` and `markAsTouched()` cascades to descendants.
 
 ## Setup
 

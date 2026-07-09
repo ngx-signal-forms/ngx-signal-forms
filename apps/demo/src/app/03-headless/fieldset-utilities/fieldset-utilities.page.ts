@@ -1,5 +1,11 @@
-import { Component, computed, signal, viewChild } from '@angular/core';
-import type { ErrorDisplayStrategy } from '@ngx-signal-forms/toolkit';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  signal,
+  viewChild,
+} from '@angular/core';
+import type { ResolvedErrorDisplayStrategy } from '@ngx-signal-forms/toolkit';
 import { NgxSignalFormDebugger } from '@ngx-signal-forms/debugger';
 import {
   CardComponent,
@@ -18,6 +24,7 @@ import { HeadlessFieldsetUtilitiesComponent } from './fieldset-utilities.form';
 
 @Component({
   selector: 'ngx-headless-fieldset-utilities-page',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 
   styles: `
     :host {
@@ -107,7 +114,8 @@ export class HeadlessFieldsetUtilitiesPageComponent {
   protected readonly content = HEADLESS_FIELDSET_UTILITIES_CONTENT;
   protected readonly formRef = viewChild(HeadlessFieldsetUtilitiesComponent);
 
-  protected readonly selectedMode = signal<ErrorDisplayStrategy>('on-touch');
+  protected readonly selectedMode =
+    signal<ResolvedErrorDisplayStrategy>('on-touch');
   protected readonly currentControlChips = computed(() => [
     {
       label: 'Mode',

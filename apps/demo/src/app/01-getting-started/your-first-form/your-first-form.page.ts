@@ -1,5 +1,11 @@
-import { Component, computed, signal, viewChild } from '@angular/core';
-import type { ErrorDisplayStrategy } from '@ngx-signal-forms/toolkit';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  signal,
+  viewChild,
+} from '@angular/core';
+import type { ResolvedErrorDisplayStrategy } from '@ngx-signal-forms/toolkit';
 import { NgxSignalFormDebugger } from '@ngx-signal-forms/debugger';
 import {
   DisplayControlsCardComponent,
@@ -17,6 +23,7 @@ import { YourFirstFormComponent } from './your-first-form.form';
 
 @Component({
   selector: 'ngx-your-first-form-page',
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     YourFirstFormComponent,
     ExampleCardsComponent,
@@ -74,7 +81,8 @@ export class YourFirstFormPageComponent {
   protected readonly formComponent =
     viewChild.required<YourFirstFormComponent>('formComponent');
 
-  protected readonly selectedMode = signal<ErrorDisplayStrategy>('on-touch');
+  protected readonly selectedMode =
+    signal<ResolvedErrorDisplayStrategy>('on-touch');
   protected readonly currentControlChips = computed(() => [
     {
       label: 'Mode',

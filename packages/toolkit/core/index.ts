@@ -88,6 +88,12 @@ export * from './utilities/on-invalid-handler';
 export * from './utilities/read-direct-errors';
 export * from './utilities/resolve-error-message';
 export {
+  requiredFromStandardSchema,
+  type StandardSchemaLike,
+  type StandardSchemaLikeIssue,
+  type StandardSchemaLikeResult,
+} from './utilities/schema/required-from-standard-schema';
+export {
   resolveErrorDisplayStrategy,
   resolveStrategyFromContext,
   resolveSubmittedStatusFromContext,

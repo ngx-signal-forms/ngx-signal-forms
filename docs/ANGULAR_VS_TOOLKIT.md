@@ -35,45 +35,9 @@ adds nothing you'd miss. Adopting it later requires no rewrites because your
 
 ### Side-by-side: the same field, with and without the toolkit
 
-#### Without the toolkit
-
-```html
-<form [formRoot]="userForm">
-  <label for="email">Email</label>
-  <input
-    id="email"
-    [formField]="userForm.email"
-    [attr.aria-invalid]="userForm.email().invalid() ? 'true' : null"
-    [attr.aria-describedby]="
-      userForm.email().invalid() &&
-      (userForm.email().touched() || userForm().touched())
-        ? 'email-error'
-        : null
-    "
-  />
-  @if ( userForm.email().invalid() && (userForm.email().touched() ||
-  userForm().touched()) ) {
-  <span id="email-error" role="alert">
-    {{ userForm.email().errors()[0].message }}
-  </span>
-  }
-  <button type="submit">Submit</button>
-</form>
-```
-
-#### With the toolkit
-
-```html
-<form [formRoot]="userForm" ngxSignalForm>
-  <ngx-form-field-wrapper [formField]="userForm.email">
-    <label for="email">Email</label>
-    <input id="email" [formField]="userForm.email" type="email" />
-  </ngx-form-field-wrapper>
-  <button type="submit">Send</button>
-</form>
-```
-
-The wrapper handles ARIA wiring, error timing, `role="alert"` vs
+See [the root README's side-by-side comparison](../README.md#see-the-difference)
+for the same email field written with plain Signal Forms versus with the
+toolkit. The wrapper handles ARIA wiring, error timing, `role="alert"` vs
 `role="status"`, and hint/counter projection automatically. Angular still owns
 `form()`, `submit()`, validation, and field state — the toolkit removes the UX
 boilerplate around them.
@@ -96,7 +60,7 @@ add the `ngxSignalForm` attribute. It adds:
 
 `NgxSignalFormToolkit` is a convenience bundle that combines `FormRoot` +
 `NgxSignalForm` + `NgxSignalFormAutoAria` +
-`NgxSignalFormControlSemantics`. Import it instead of `FormRoot` separately.
+`NgxSignalFormControlSemanticsDirective`. Import it instead of `FormRoot` separately.
 
 ```typescript
 imports: [FormField, NgxSignalFormToolkit];

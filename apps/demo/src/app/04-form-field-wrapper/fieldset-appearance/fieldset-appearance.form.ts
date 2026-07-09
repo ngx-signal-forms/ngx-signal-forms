@@ -1,5 +1,13 @@
-import { Component, computed, signal } from '@angular/core';
-import type { ErrorDisplayStrategy } from '@ngx-signal-forms/toolkit';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  signal,
+} from '@angular/core';
+import type {
+  ErrorDisplayStrategy,
+  ResolvedErrorDisplayStrategy,
+} from '@ngx-signal-forms/toolkit';
 import {
   type NgxFormFieldsetAppearance,
   type NgxFormFieldsetFeedbackAppearance,
@@ -98,6 +106,7 @@ const ERROR_PLACEMENT_LABELS: Record<NgxFormFieldErrorPlacement, string> = {
 
 @Component({
   selector: 'ngx-fieldset-appearance-form',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 
   imports: [
     DisplayControlsCardComponent,
@@ -260,7 +269,8 @@ export class FieldsetAppearanceFormComponent {
   // Defaults to 'immediate' so the validation sandbox shows its grouped errors
   // on load (keeping the placement comparison meaningful), while switching to
   // 'on-touch' / 'on-submit' visibly demonstrates the error-timing control.
-  protected readonly selectedMode = signal<ErrorDisplayStrategy>('immediate');
+  protected readonly selectedMode =
+    signal<ResolvedErrorDisplayStrategy>('immediate');
   protected readonly selectedFieldsetAppearance =
     signal<NgxFormFieldsetAppearance>('outline');
   protected readonly selectedFeedbackAppearance =

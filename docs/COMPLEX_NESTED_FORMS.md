@@ -40,7 +40,7 @@ alone is enough — come back here when you hit the first group of related field
 When each field wraps itself, the fieldset only needs to show cross-field errors.
 
 ```html
-<ngx-form-fieldset [fieldsetField]="form.passwords">
+<ngx-form-fieldset [field]="form.passwords">
   <legend>Passwords</legend>
 
   <ngx-form-field-wrapper [formField]="form.passwords.password">
@@ -63,7 +63,10 @@ surfaces it — use [`validateTree()`](https://angular.dev/guide/forms/signals/c
 without a `fieldTree` keeps it at the group level:
 
 ```typescript
-import { required, validateTree } from '@angular/forms/signals';
+import { signal } from '@angular/core';
+import { form, required, validateTree } from '@angular/forms/signals';
+
+const model = signal({ passwords: { password: '', confirm: '' } });
 
 form(model, (path) => {
   required(path.passwords.password, { message: 'Password is required' });
@@ -92,7 +95,7 @@ When you want a compact layout — e.g. a deep address group where individual
 fields stay plain — let the fieldset display every descendant error once.
 
 ```html
-<ngx-form-fieldset [fieldsetField]="form.address" [includeNestedErrors]="true">
+<ngx-form-fieldset [field]="form.address" [includeNestedErrors]="true">
   <legend>Address</legend>
   <input [formField]="form.address.street" />
   <input [formField]="form.address.city" />
@@ -142,12 +145,12 @@ picks up the same strategy via DI:
 
 ```html
 <form [formRoot]="wizardForm" ngxSignalForm errorStrategy="on-submit">
-  <ngx-form-fieldset [fieldsetField]="wizardForm.personalInfo">
+  <ngx-form-fieldset [field]="wizardForm.personalInfo">
     <legend>Personal</legend>
     <!-- wrappers inside inherit 'on-submit' automatically -->
   </ngx-form-fieldset>
 
-  <ngx-form-fieldset [fieldsetField]="wizardForm.billing">
+  <ngx-form-fieldset [field]="wizardForm.billing">
     <legend>Billing</legend>
     <!-- same strategy, no extra wiring -->
   </ngx-form-fieldset>
@@ -164,25 +167,6 @@ root README.
 ---
 
 ## Field labels for deep paths
-
-Error summaries on nested forms default to humanized paths:
-
-```text
-ng.form0.address.postalCode  →  Address / Postal code
-facts.0.offenses.1.article   →  Facts / 0 / Offenses / 1 / Article
-```
-
-For long forms this is usually not what you want. Override globally with `provideFieldLabels()`. The map form does an **exact
-path lookup** — it does not support wildcards, so it's best for flat or
-small-group forms:
-
-```typescript
-provideFieldLabels({
-  'address.postalCode': 'Postcode',
-  'address.street': 'Straat',
-  'credentials.confirmPassword': 'Confirm password',
-});
-```
 
 For deeply nested arrays where paths vary by index (`facts.0.offenses.1.article`),
 pass a **factory** that returns a custom resolver and do the pattern matching
@@ -203,9 +187,9 @@ provideFieldLabels(() => (fieldPath) => {
 });
 ```
 
-For i18n, inject your translation service inside the same factory. See the
-[WARNINGS_SUPPORT advanced section](./WARNINGS_SUPPORT.md#advanced-error-flow-and-message-resolution)
-for the full resolver API.
+See [WARNINGS_SUPPORT's field label resolution](./WARNINGS_SUPPORT.md#field-label-resolution)
+for the default humanized-path format, the exact-match map form, and the
+full resolver API — including how to inject a translation service for i18n.
 
 ---
 
@@ -216,7 +200,7 @@ own fieldset so errors aggregate per row:
 
 ```html
 @for (item of form.lineItems; track $index; let i = $index) {
-<ngx-form-fieldset [fieldsetField]="form.lineItems[i]">
+<ngx-form-fieldset [field]="form.lineItems[i]">
   <legend>Line {{ i + 1 }}</legend>
   <ngx-form-field-wrapper [formField]="form.lineItems[i].description">
     <label [for]="'line-' + i + '-desc'">Description</label>
@@ -237,9 +221,14 @@ own fieldset so errors aggregate per row:
 }
 ```
 
-> `track $index` plus indexed access (`form.lineItems[i]`) matches the pattern
-> used in the [`complex-forms`](../apps/demo/src/app/04-form-field-wrapper/complex-forms)
-> demo — the toolkit's own reference for array fieldsets.
+> `track $index` plus indexed access (`form.lineItems[i]`) keeps each row's
+> fieldset bound to the correct array element as rows are added or removed.
+> The [`complex-forms`](../apps/demo/src/app/04-form-field-wrapper/complex-forms)
+> demo shows a related but different pattern for its `skills` and `contacts`
+> arrays: one fieldset wraps the whole `@for` loop for array-level
+> aggregation, with a `ngx-form-field-wrapper` per item inside. Reach for a
+> per-row fieldset (as above) when each row needs its own aggregated error
+> feedback instead.
 
 A root `ngx-form-field-error-summary` still picks up every row's errors and
 links to the exact field.

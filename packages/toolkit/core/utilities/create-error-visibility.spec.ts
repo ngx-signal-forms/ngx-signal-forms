@@ -281,6 +281,31 @@ describe('createErrorVisibility – DI context cascade', () => {
     // on-touch (default) → hidden when not touched
     expect(result()).toBe(false);
   });
+
+  it('falls back to opts.configDefault when no context and no explicit strategy', () => {
+    const injector = injectorWithoutContext();
+    const fieldState = createMockFieldState(true, false); // invalid, not touched
+
+    const result = runInInjectionContext(injector, () =>
+      createErrorVisibility(fieldState, { configDefault: 'immediate' }),
+    );
+
+    // configDefault 'immediate' → visible even when not touched
+    expect(result()).toBe(true);
+  });
+
+  it('form context strategy wins over opts.configDefault', () => {
+    const context = createMockFormContext({ errorStrategy: 'on-touch' });
+    const injector = injectorWithContext(context);
+    const fieldState = createMockFieldState(true, false); // invalid, not touched
+
+    const result = runInInjectionContext(injector, () =>
+      createErrorVisibility(fieldState, { configDefault: 'immediate' }),
+    );
+
+    // context 'on-touch' wins over configDefault 'immediate'
+    expect(result()).toBe(false);
+  });
 });
 
 // ---------------------------------------------------------------------------

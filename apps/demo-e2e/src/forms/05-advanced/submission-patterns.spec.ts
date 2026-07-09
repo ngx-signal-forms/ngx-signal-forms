@@ -23,6 +23,46 @@ test.describe('Advanced - Submission Patterns', () => {
     });
   });
 
+  test.describe('Submission State Indicator', () => {
+    // Regression test for #166 finding #2: the indicator's badge used to be
+    // permanently stuck on the red "Unhandled submittedStatus: undefined"
+    // fallback because the page injected NGX_SIGNAL_FORM_CONTEXT at the
+    // wrong DI level (host component instead of a child rendered inside the
+    // ngxSignalForm-provided <form>). This asserts the badge actually
+    // reflects the live submission lifecycle instead.
+    test('should cycle through Ready to Submit -> Submitting -> back to Ready without ever showing the unhandled fallback', async () => {
+      await test.step('Initial state reads Ready to Submit', async () => {
+        await expect(page.stateBadge).toContainText('Ready to Submit');
+        await expect(page.stateBadge).not.toContainText(
+          'Unhandled submittedStatus',
+        );
+      });
+
+      await test.step('Fill valid data and submit', async () => {
+        await page.fillField('username', 'valid_user');
+        await page.fillField('password', 'password123');
+        await page.fillField('confirmPassword', 'password123');
+        await page.submitButton.click();
+      });
+
+      await test.step('Badge flips to Submitting while the action is pending', async () => {
+        await expect(page.stateBadge).toContainText('Submitting...');
+        await expect(page.stateBadge).not.toContainText(
+          'Unhandled submittedStatus',
+        );
+      });
+
+      await test.step('Badge settles back to a valid state once the action resolves', async () => {
+        await expect(page.stateBadge).not.toContainText('Submitting...', {
+          timeout: 5000,
+        });
+        await expect(page.stateBadge).not.toContainText(
+          'Unhandled submittedStatus',
+        );
+      });
+    });
+  });
+
   test.describe('Submission Failures', () => {
     test('should show validation errors on submit of empty form', async () => {
       // Trigger validation by trying to submit the empty form
@@ -90,6 +130,37 @@ test.describe('Advanced - Submission Patterns', () => {
     });
   });
 
+  // Regression coverage for the "audit #218" consistency fix: this page's
+  // password field carries a genuine warn:weak-password rule, and the
+  // submission action actually honors it (ignoreValidators: 'all' +
+  // hasOnlyWarnings()), unlike a plain [formRoot] whose native submit() would
+  // still block on any ValidationError including warn:* ones.
+  test.describe('Warning-Tolerant Submission', () => {
+    test('should submit successfully while a non-blocking password warning is visible', async () => {
+      await test.step('Fill valid data with a warning-triggering password', async () => {
+        await page.fillField('username', 'valid_user');
+        await page.fillField('password', 'longpassword');
+        await page.fillField('confirmPassword', 'longpassword');
+      });
+
+      await test.step('Verify the non-blocking warning is visible', async () => {
+        const warning = page.page
+          .locator('[role="alert"], [role="status"]')
+          .filter({ hasText: 'Consider adding a number' });
+        await expect(warning).toBeVisible();
+      });
+
+      await test.step('Submit and verify the warning does not block success', async () => {
+        await page.submit();
+
+        const successMessage = page.page.locator('[role="status"]', {
+          hasText: 'Registration Successful',
+        });
+        await expect(successMessage).toBeVisible({ timeout: 5000 });
+      });
+    });
+  });
+
   test.describe('Server Error Simulation', () => {
     test('should show server error when simulated', async () => {
       // Fill form
@@ -110,6 +181,31 @@ test.describe('Advanced - Submission Patterns', () => {
       // the error summary (no separate banner).
       await expect(page.errorSummary).toBeVisible({ timeout: 5000 });
       await expect(page.errorSummary).toContainText('already taken');
+    });
+
+    // Regression coverage for #194: the submission action's server-error
+    // branch (submission-patterns.form.ts) returns a field-level error
+    // WITHOUT calling `formData().reset()` — unlike the success branch,
+    // which resets immediately and drives `submittedStatus` straight back to
+    // 'unsubmitted'. That means the green "Submitted" badge (the
+    // @case('submitted') branch of the state indicator's @switch) should
+    // stay visible at the same time as the error summary. No existing test
+    // ever asserted the badge for this branch — only `errorSummary` was
+    // checked.
+    test('badge shows the "Submitted" state alongside a simulated server error, not "Ready to Submit"', async () => {
+      await page.fillField('username', 'taken_user');
+      await page.fillField('password', 'password123');
+      await page.fillField('confirmPassword', 'password123');
+      await page.page.getByLabel('Simulate server error').check();
+
+      await page.submit();
+
+      await expect(page.errorSummary).toBeVisible({ timeout: 5000 });
+      await expect(page.stateBadge).toContainText('Submitted');
+      await expect(page.stateBadge).not.toContainText('Ready to Submit');
+      await expect(page.stateBadge).not.toContainText(
+        'Unhandled submittedStatus',
+      );
     });
   });
 

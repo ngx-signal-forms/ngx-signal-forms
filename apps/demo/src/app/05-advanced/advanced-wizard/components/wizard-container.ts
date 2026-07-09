@@ -1,5 +1,6 @@
 import { DatePipe } from '@angular/common';
 import {
+  ChangeDetectionStrategy,
   afterRenderEffect,
   Component,
   computed,
@@ -17,8 +18,8 @@ import {
 import { NgxSignalFormDebugger } from '@ngx-signal-forms/debugger';
 
 import {
+  WizardCanNavigate,
   WizardComponent,
-  WizardNavigationEvent,
   WizardStepDirective,
 } from '../../../shared/wizard';
 import type { WizardStep } from '../stores/wizard.store';
@@ -37,6 +38,7 @@ const MIN_DISPLAY_MS = 500;
 
 @Component({
   selector: 'ngx-wizard-container',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 
   imports: [
     DatePipe,
@@ -133,13 +135,23 @@ export class WizardContainerComponent {
   });
 
   /**
-   * Handle step navigation events from the wizard progress indicator.
-   * Validates before allowing forward navigation.
+   * Async-aware guard for step navigation events from the wizard progress
+   * header. Bound via `[canNavigate]` rather than `(stepChange)` — the
+   * wizard `await`s this before ever writing its `currentStep`, so the
+   * `await this.#validateCurrentStep()` below is guaranteed to run (and be
+   * honored) BEFORE the UI moves, unlike the old `(stepChange)` +
+   * synchronous `event.preventDefault()` combination, which raced: the
+   * wizard checked `defaultPrevented` synchronously, right after emitting,
+   * while this handler was still suspended on its first `await` — so the
+   * step change always went through regardless of validation, and the
+   * store's `currentStep` (only updated below, once truly allowed) could
+   * desync from the wizard's own UI-level `currentStep`. Declared as an
+   * arrow-function field (not a method) so it stays bound to `this` when
+   * the wizard invokes it as a plain function reference.
    */
-  protected async onStepChange(event: WizardNavigationEvent): Promise<void> {
+  protected readonly guardStepNavigation: WizardCanNavigate = async (event) => {
     if (this.store.hasConfirmedBooking()) {
-      event.preventDefault();
-      return;
+      return false;
     }
 
     const isForwardNavigation = event.toIndex > event.fromIndex;
@@ -147,14 +159,14 @@ export class WizardContainerComponent {
     if (isForwardNavigation) {
       const isValid = await this.#validateCurrentStep();
       if (!isValid) {
-        event.preventDefault();
-        return;
+        return false;
       }
       this.#commitCurrentStep();
     }
 
     this.store.goToStep(event.toStep as WizardStep, isForwardNavigation);
-  }
+    return true;
+  };
 
   protected previousStep(): void {
     if (this.store.hasConfirmedBooking()) {

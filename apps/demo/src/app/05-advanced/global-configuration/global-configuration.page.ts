@@ -1,6 +1,12 @@
-import { Component, computed, signal, viewChild } from '@angular/core';
 import {
-  type ErrorDisplayStrategy,
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  signal,
+  viewChild,
+} from '@angular/core';
+import {
+  type ResolvedErrorDisplayStrategy,
   type FormFieldAppearance,
 } from '@ngx-signal-forms/toolkit';
 import { NgxSignalFormDebugger } from '@ngx-signal-forms/debugger';
@@ -28,6 +34,7 @@ import { GlobalConfigurationComponent } from './global-configuration.form';
 
 @Component({
   selector: 'ngx-global-configuration-page',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 
   styles: `
     :host {
@@ -89,27 +96,27 @@ import { GlobalConfigurationComponent } from './global-configuration.form';
     <ngx-example-cards
       [demonstrated]="content.demonstrated"
       [learning]="content.learning"
-    />
+    >
+      <ngx-split-layout>
+        <ngx-global-configuration
+          [errorDisplayMode]="errorDisplayMode()"
+          [appearance]="selectedAppearance()"
+          [orientation]="selectedOrientation()"
+          left
+        />
 
-    <ngx-split-layout>
-      <ngx-global-configuration
-        [errorDisplayMode]="errorDisplayMode()"
-        [appearance]="selectedAppearance()"
-        [orientation]="selectedOrientation()"
-        left
-      />
-
-      @if (formRef(); as form) {
-        <div right>
-          <ngx-signal-form-debugger [formTree]="form.configForm" />
-        </div>
-      }
-    </ngx-split-layout>
+        @if (formRef(); as form) {
+          <div right>
+            <ngx-signal-form-debugger [formTree]="form.configForm" />
+          </div>
+        }
+      </ngx-split-layout>
+    </ngx-example-cards>
   `,
 })
 export class GlobalConfigurationPage {
   protected readonly errorDisplayMode =
-    signal<ErrorDisplayStrategy>('on-touch');
+    signal<ResolvedErrorDisplayStrategy>('on-touch');
   protected readonly selectedAppearance =
     signal<FormFieldAppearance>('outline');
   protected readonly selectedOrientation = createOrientationSelection(

@@ -1,4 +1,4 @@
-import { signal } from '@angular/core';
+import { Injector, signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import {
   form,
@@ -6,6 +6,7 @@ import {
   validate,
   type ValidationError,
 } from '@angular/forms/signals';
+import { provideNgxSignalFormsConfig } from '@ngx-signal-forms/toolkit';
 import { NGX_SIGNAL_FORM_CONTEXT } from '@ngx-signal-forms/toolkit/core';
 import { describe, expect, it } from 'vitest';
 import {
@@ -148,8 +149,8 @@ describe('Headless Utilities', () => {
           valid: 'yes', // Not a function
         };
 
-        expect(readFieldFlag(state, 'invalid' as BooleanStateKey)).toBe(false);
-        expect(readFieldFlag(state, 'valid' as BooleanStateKey)).toBe(false);
+        expect(readFieldFlag(state, 'invalid')).toBe(false);
+        expect(readFieldFlag(state, 'valid')).toBe(false);
       });
     });
   });
@@ -818,6 +819,79 @@ describe('Headless Utilities', () => {
       expect(errorState.shouldShowErrors()).toBe(false);
 
       // After touch: visible (on-touch fallback).
+      emailForm.email().markAsTouched();
+      expect(errorState.hasErrors()).toBe(true);
+      expect(errorState.shouldShowErrors()).toBe(true);
+    });
+  });
+
+  // ============================================================================
+  // createErrorState — global config default cascade (symmetry with
+  // NgxHeadlessFieldset.resolvedStrategy)
+  // ============================================================================
+
+  describe('createErrorState — honors NGX_SIGNAL_FORMS_CONFIG.defaultErrorStrategy', () => {
+    it('uses the global config default when no strategy input or form context is present', () => {
+      TestBed.configureTestingModule({
+        providers: [
+          provideNgxSignalFormsConfig({ defaultErrorStrategy: 'immediate' }),
+        ],
+      });
+
+      const model = signal({ email: '' });
+      const emailForm = TestBed.runInInjectionContext(() =>
+        form(
+          model,
+          schema((path) => {
+            validate(path.email, (ctx) =>
+              ctx.value() ? null : { kind: 'required', message: 'Required' },
+            );
+          }),
+        ),
+      );
+
+      const errorState = TestBed.runInInjectionContext(() =>
+        createErrorState({
+          field: emailForm.email,
+          fieldName: 'email',
+        }),
+      );
+
+      // 'immediate' from the global config: errors show without touch.
+      expect(errorState.hasErrors()).toBe(true);
+      expect(errorState.shouldShowErrors()).toBe(true);
+    });
+  });
+
+  // ============================================================================
+  // createErrorState — injector option (parity with createErrorVisibility /
+  // createErrorMessageSignal)
+  // ============================================================================
+
+  describe('createErrorState — injector option', () => {
+    it('accepts an explicit injector without requiring an ambient injection context', () => {
+      const model = signal({ email: '' });
+      const emailForm = TestBed.runInInjectionContext(() =>
+        form(
+          model,
+          schema((path) => {
+            validate(path.email, (ctx) =>
+              ctx.value() ? null : { kind: 'required', message: 'Required' },
+            );
+          }),
+        ),
+      );
+
+      const injector = TestBed.inject(Injector);
+
+      // Called directly, with no runInInjectionContext wrapper — would throw
+      // NG0203 without the injector option.
+      const errorState = createErrorState({
+        field: emailForm.email,
+        fieldName: 'email',
+        injector,
+      });
+
       emailForm.email().markAsTouched();
       expect(errorState.hasErrors()).toBe(true);
       expect(errorState.shouldShowErrors()).toBe(true);

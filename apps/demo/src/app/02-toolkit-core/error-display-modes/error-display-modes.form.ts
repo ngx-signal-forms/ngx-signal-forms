@@ -1,4 +1,10 @@
-import { Component, computed, input, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  input,
+  signal,
+} from '@angular/core';
 import type { FieldState, FieldTree } from '@angular/forms/signals';
 import { form, FormField } from '@angular/forms/signals';
 import {
@@ -6,6 +12,7 @@ import {
   injectFormContext,
   NgxSignalFormToolkit,
   type ErrorDisplayStrategy,
+  type ResolvedErrorDisplayStrategy,
   showErrors,
   type SubmittedStatus,
 } from '@ngx-signal-forms/toolkit';
@@ -30,6 +37,7 @@ const INITIAL_MODEL: ProductFeedbackModel = {
 
 @Component({
   selector: 'ngx-error-display-helpers',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 
   template: `
     <div
@@ -129,6 +137,7 @@ export class ErrorDisplayHelpersComponent {
  */
 @Component({
   selector: 'ngx-error-display-modes-form',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 
   imports: [
     ErrorDisplayHelpersComponent,
@@ -143,7 +152,7 @@ export class ErrorDisplayHelpersComponent {
       ngxSignalForm
       [errorStrategy]="errorDisplayMode()"
       class="form-container"
-      aria-labelledby="productFeedbackHeading"
+      aria-label="Product feedback"
     >
       <ngx-error-display-helpers
         [nameField]="productForm.name"
@@ -429,7 +438,7 @@ export class ErrorDisplayHelpersComponent {
 })
 export class ErrorDisplayModesFormComponent {
   /** The error display strategy to use for form validation */
-  readonly errorDisplayMode = input.required<ErrorDisplayStrategy>();
+  readonly errorDisplayMode = input.required<ResolvedErrorDisplayStrategy>();
 
   readonly #model = signal({ ...INITIAL_MODEL });
 

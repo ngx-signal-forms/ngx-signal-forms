@@ -1,5 +1,11 @@
 // Custom controls demo form - product review with rating, switch, checkbox controls
-import { Component, computed, input, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  input,
+  signal,
+} from '@angular/core';
 import { FormField, form } from '@angular/forms/signals';
 import {
   buildAriaDescribedBy,
@@ -10,7 +16,7 @@ import {
   provideNgxSignalFormControlPresetsForComponent,
   resolveStrategyFromContext,
   shouldShowErrors,
-  type ErrorDisplayStrategy,
+  type ResolvedErrorDisplayStrategy,
   type FormFieldAppearance,
   type FormFieldOrientation,
 } from '@ngx-signal-forms/toolkit';
@@ -41,6 +47,7 @@ import { customControlsSchema } from './custom-controls.validations';
  */
 @Component({
   selector: 'ngx-custom-controls',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 
   providers: [
     ...provideNgxSignalFormControlPresetsForComponent({
@@ -77,16 +84,10 @@ export class CustomControlsFormComponent {
    */
   readonly #formContext = injectFormContext();
 
-  readonly sliderSemantics = {
-    kind: 'slider',
-    layout: 'stacked',
-    ariaMode: 'auto',
-  } as const;
-
   /**
    * Error display mode input - controls when errors are shown.
    */
-  readonly errorDisplayMode = input<ErrorDisplayStrategy>('on-touch');
+  readonly errorDisplayMode = input<ResolvedErrorDisplayStrategy>('on-touch');
 
   /**
    * Form field appearance input
@@ -121,23 +122,63 @@ export class CustomControlsFormComponent {
     this.#submitAttempted,
   );
 
-  protected readonly accessibilityAuditDescribedBy = computed(() => {
-    const fieldState = this.reviewForm.accessibilityAudit();
-    const resolvedMode = resolveStrategyFromContext(
-      this.errorDisplayMode(),
-      this.#formContext,
-    );
+  /**
+   * All four `ngx-rating-control` usages own their ARIA themselves (see the
+   * host bindings in `RatingControlComponent`), so every one of them runs in
+   * `ngxSignalFormControl="slider"` (manual ARIA, via the component-scoped
+   * preset above) rather than the toolkit's auto-ARIA mode. This helper
+   * builds the same explicit `aria-describedby` chain — hint id, plus the
+   * error id only while the field's errors should be visible — for each of
+   * them, mirroring the pattern once instead of four times.
+   */
+  #buildRatingDescribedBy(
+    field: () => { invalid(): boolean; touched(): boolean },
+    fieldName: string,
+    hintIds: readonly string[],
+  ) {
+    return computed(() => {
+      const fieldState = field();
+      const resolvedMode = resolveStrategyFromContext(
+        this.errorDisplayMode(),
+        this.#formContext,
+      );
 
-    return buildAriaDescribedBy('accessibilityAudit', {
-      baseIds: ['accessibilityAudit-hint'],
-      showErrors: shouldShowErrors(
-        fieldState.invalid(),
-        fieldState.touched(),
-        resolvedMode,
-        this.submittedStatus(),
-      ),
+      return buildAriaDescribedBy(fieldName, {
+        baseIds: [...hintIds],
+        showErrors: shouldShowErrors(
+          fieldState.invalid(),
+          fieldState.touched(),
+          resolvedMode,
+          this.submittedStatus(),
+        ),
+      });
     });
-  });
+  }
+
+  protected readonly ratingDescribedBy = this.#buildRatingDescribedBy(
+    this.reviewForm.rating,
+    'rating',
+    ['rating-hint'],
+  );
+
+  protected readonly serviceRatingDescribedBy = this.#buildRatingDescribedBy(
+    this.reviewForm.serviceRating,
+    'serviceRating',
+    [],
+  );
+
+  protected readonly wouldRecommendDescribedBy = this.#buildRatingDescribedBy(
+    this.reviewForm.wouldRecommend,
+    'wouldRecommend',
+    ['wouldRecommend-hint'],
+  );
+
+  protected readonly accessibilityAuditDescribedBy =
+    this.#buildRatingDescribedBy(
+      this.reviewForm.accessibilityAudit,
+      'accessibilityAudit',
+      ['accessibilityAudit-hint'],
+    );
 
   /**
    * Reset form to initial values.

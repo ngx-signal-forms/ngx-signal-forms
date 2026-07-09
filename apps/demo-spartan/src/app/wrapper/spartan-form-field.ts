@@ -37,13 +37,18 @@ import {
 import { NgxSpartanFormFieldError } from './spartan-form-field-error';
 
 /**
- * Compile-time guard that the inline `BrnFieldA11yService` factory below
- * stays a structural superset of Brain's public contract. If Brain adds a
- * new public member, the `useFactory` return-type annotation fails at
- * typecheck time. We `Pick` the documented members (rather than asserting
- * full structural equivalence) because Brain's class also has `private`
- * fields the bridge intentionally keeps separate — DI matches by token
- * identity at runtime, not by structural compatibility.
+ * The subset of `BrnFieldA11yService`'s public contract this bridge
+ * re-implements. `Pick` alone is NOT a completeness guard — a `Pick` with a
+ * fixed key list still compiles unchanged when the source class gains new
+ * members; it only fails on removal/rename of a *listed* key. So this alias
+ * by itself would stay silently green if Brain 1.1 added e.g.
+ * `registerLabel()` and some helm primitive started calling it on the
+ * injected (bridged) service — that would throw a runtime `TypeError` with
+ * zero compile-time signal.
+ *
+ * The real exhaustiveness guard is `assertBrnFieldA11yPublicSurfaceIsExhaustive`
+ * below, which fails to typecheck if Brain's public surface grows beyond
+ * what's listed here.
  */
 type BrnFieldA11yPublicSurface = Pick<
   BrnFieldA11yService,
@@ -53,6 +58,42 @@ type BrnFieldA11yPublicSurface = Pick<
   | 'registerError'
   | 'unregisterError'
 >;
+
+/**
+ * Private fields on `BrnFieldA11yService` (per Brain 1.0.4's `.d.ts`) that
+ * the bridge intentionally does NOT implement — DI matches by token
+ * identity at runtime, not by structural compatibility, so these never need
+ * a bridged counterpart. Listed explicitly (rather than inferred) so this
+ * assertion fails loudly — not silently passes — if Brain ever makes one of
+ * these public, since a newly-public member would then need a real bridge
+ * implementation and a `BrnFieldA11yPublicSurface` entry above.
+ */
+type BrnFieldA11yKnownPrivateMembers = '_descriptions' | '_errors';
+
+/**
+ * Compile-time exhaustiveness guard: fails to typecheck if
+ * `BrnFieldA11yService` has any member that is neither in
+ * {@link BrnFieldA11yPublicSurface} nor {@link BrnFieldA11yKnownPrivateMembers}.
+ * That is the guard the `useFactory` return-type annotation on its own
+ * cannot provide (see the comment on `BrnFieldA11yPublicSurface`): if Brain
+ * adds a new public member, `keyof BrnFieldA11yService` grows, the
+ * `Exclude` below stops resolving to `never`, and assigning `true` to the
+ * conditional's non-`true` branch fails typecheck — turning an
+ * otherwise-silent structural gap into a build failure.
+ */
+type BrnFieldA11yUncoveredMembers = Exclude<
+  keyof BrnFieldA11yService,
+  BrnFieldA11yKnownPrivateMembers | keyof BrnFieldA11yPublicSurface
+>;
+type AssertBrnFieldA11yPublicSurfaceIsExhaustive =
+  BrnFieldA11yUncoveredMembers extends never
+    ? true
+    : [
+        'BrnFieldA11yService gained new member(s) not covered by BrnFieldA11yPublicSurface or BrnFieldA11yKnownPrivateMembers:',
+        BrnFieldA11yUncoveredMembers,
+      ];
+// eslint-disable-next-line @typescript-eslint/no-unused-vars -- type-only assertion; see comment above
+const assertBrnFieldA11yPublicSurfaceIsExhaustive: AssertBrnFieldA11yPublicSurfaceIsExhaustive = true;
 
 /**
  * Spartan-flavoured form-field wrapper composing `BrnField` (the unstyled
@@ -73,12 +114,62 @@ type BrnFieldA11yPublicSurface = Pick<
  *
  * Spartan-specific composition: the `[brnField]` host directive keeps the
  * wrapper's `data-invalid` / `data-touched` state-attributes in lockstep
- * with Spartan's `helm` styling tokens. Because `BrnFieldControl` is
- * `NgControl`-based (Reactive forms), we compose only `BrnField` here —
- * the toolkit's `[formField]` directive owns control state, and auto-ARIA
- * owns the ARIA writes. Layering both would double-write `aria-describedby`
- * (Spartan's `BrnFieldA11yService` chain plus the toolkit's chain), which
- * is the exact failure mode the renderer-seam is designed to avoid.
+ * with Spartan's `helm` styling tokens.
+ *
+ * **Corrected ownership model (brain 1.0.4 + Angular 22 signal forms):**
+ *
+ * `BrnFieldControl` is *not* Reactive-forms-only. Angular signal forms'
+ * `FormField` directive provides an interop `NgControl` on every bound
+ * control (`@angular/forms/signals`'s `interop_ng_control.ts`), and brain
+ * 1.0.4 detects it via `createStateTracker()` and uses its `SignalStateTracker`
+ * branch instead of the reactive-forms `ReactiveStateTracker`. So
+ * `BrnFieldControl` is fully live on every helm control in this demo — it is
+ * precisely why `data-touched` / `data-dirty` / `data-matches-spartan-invalid`
+ * (and the wrapper's own `data-spartan-invalid` / `data-spartan-required`
+ * mirrors) reflect real field state at all, with no reactive-forms
+ * `FormControl` anywhere in this component.
+ *
+ * Nor does auto-ARIA own every ARIA write. `BrnInput`, `BrnSelectTrigger`,
+ * and `BrnCheckbox` each host-bind their own `aria-invalid` straight off
+ * `BrnFieldControl`'s raw (ungated) `invalid` signal, and
+ * `BrnFieldControlDescribedBy` (a `hostDirectives` entry on `HlmCheckbox`
+ * and mounted directly in `HlmInput`/`HlmSelectTrigger`'s templates)
+ * host-binds `aria-describedby` off this wrapper's `BrnFieldA11yService`
+ * bridge. Whether the toolkit's `NgxSignalFormAutoAria` "wins" depends
+ * entirely on *where* Brain's write lands relative to where `[formField]`
+ * sits:
+ *
+ * - Text input: `[formField]` is on the same `<input>` element `BrnInput`
+ *   host-binds to, so auto-ARIA's `afterEveryRender` write runs after
+ *   Brain's per-change-detection write and simply overwrites it with the
+ *   strategy-gated value. Ownership is effectively shared, with auto-ARIA
+ *   writing last.
+ * - Select: `[formField]` is on `<hlm-select>`, one level above the actual
+ *   `role="combobox"` button rendered inside `<hlm-select-trigger>`'s own
+ *   template — auto-ARIA can only reach the `hlm-select` host, never the
+ *   button an AT reads. `HlmSelectTrigger` (`libs/spartan/ui/select`) now
+ *   corrects this itself: it reads `BrnFieldControl.spartanInvalid()`
+ *   (Brain's own touched-gated invalid signal, the same one driving the
+ *   `data-matches-spartan-invalid` destructive-ring styling) and writes the
+ *   gated `aria-invalid` onto the button in `afterEveryRender`, deterministically
+ *   after Brain's raw write.
+ * - Checkbox: `HlmCheckbox`'s host is `display: contents`, so neither
+ *   Brain's `BrnFieldControlDescribedBy` write nor auto-ARIA's write (both
+ *   land on that host) reach the accessibility tree. `HlmCheckbox` exposes
+ *   `aria-describedby` as a real `@Input` that threads into `<brn-checkbox>`'s
+ *   own binding, which *does* land on the real `role="checkbox"` button —
+ *   so the consumer template feeds this wrapper's `toolkitAriaDescribedBy`
+ *   into that input explicitly (see `#newsletterField="ngxSpartanFormField"`
+ *   in `account-preferences-form.ts`) instead of relying on either
+ *   automatic chain.
+ *
+ * Layering the toolkit's `[formField]` alongside `[brnField]` does not
+ * double-write anything by itself; the failure mode this wrapper actually
+ * guards against is the `aria-describedby` chain being composed twice
+ * (Spartan's `BrnFieldA11yService` default plus the toolkit's own
+ * composition) — which is why the wrapper replaces Brain's
+ * `BrnFieldA11yService` with `createAriaDescribedByBridge` below, rather
+ * than letting the two coexist.
  *
  * **Bound-control discovery:**
  *
@@ -99,6 +190,7 @@ type BrnFieldA11yPublicSurface = Pick<
   // field via the aliased input (`[ngxSpartanFormField]`) instead, so only
   // the inner `<input [formField]>` gets the toolkit's `FormField` directive.
   selector: 'spartan-form-field[ngxSpartanFormField]',
+  exportAs: 'ngxSpartanFormField',
 
   imports: [NgComponentOutlet],
   hostDirectives: [
@@ -131,9 +223,10 @@ type BrnFieldA11yPublicSurface = Pick<
     // The factory delegates to the toolkit's `createAriaDescribedByBridge`
     // primitive — it merges the toolkit composition with any IDs registered
     // through Brain's `register*` API, so other helm primitives that push
-    // descriptions through the service stay compatible. The return-type
-    // annotation (`BrnFieldA11yPublicSurface`) is the typecheck guard that
-    // fires if Brain ever adds a new public member to its contract.
+    // descriptions through the service stay compatible. The exhaustiveness
+    // check above `assertBrnFieldA11yPublicSurfaceIsExhaustive` (not just
+    // the return-type annotation) is what fires if Brain ever adds a new
+    // public member to its contract.
     {
       provide: BrnFieldA11yService,
       useFactory: (): BrnFieldA11yPublicSurface =>

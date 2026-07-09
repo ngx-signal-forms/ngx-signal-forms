@@ -13,7 +13,10 @@ import type {
   ErrorDisplayStrategy,
   SubmittedStatus,
 } from '@ngx-signal-forms/toolkit';
-import { NGX_SIGNAL_FORM_FIELD_CONTEXT } from '@ngx-signal-forms/toolkit';
+import {
+  NGX_SIGNAL_FORM_FIELD_CONTEXT,
+  provideNgxSignalFormsConfig,
+} from '@ngx-signal-forms/toolkit';
 import { render, screen } from '@testing-library/angular';
 import { userEvent } from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
@@ -725,6 +728,55 @@ describe('NgxFormFieldError', () => {
       expect(statusContainer?.hasAttribute('hidden')).toBe(false);
     });
 
+    it('should zero its own :host margin-top when both the alert and status containers are empty', async () => {
+      // Regression test: `:host` unconditionally sets `margin-top:
+      // var(--_error-margin-top)` (form-field-error.css), so even while both
+      // inner containers are content-empty (and visually collapsed via the
+      // `--empty` class) the host element itself still contributed stray
+      // vertical whitespace above every field with no visible errors or
+      // warnings. The host now carries a marker class while both containers
+      // are empty so the CSS can zero its own margin-top too.
+      @Component({
+        selector: 'ngx-test-host-empty-margin',
+        imports: [FormField, NgxFormFieldError],
+
+        template: `
+          <input id="email" [formField]="contactForm.email" />
+          <ngx-form-field-error
+            [formField]="contactForm.email"
+            fieldName="email"
+            strategy="on-touch"
+          />
+        `,
+      })
+      class TestComponent {
+        readonly #model = signal({ email: '' });
+        readonly contactForm = form(
+          this.#model,
+          schema((path) => {
+            required(path.email, { message: 'Email is required' });
+          }),
+        );
+      }
+
+      const { container, fixture } = await render(TestComponent);
+
+      const host = container.querySelector('ngx-form-field-error')!;
+      expect(host.classList.contains('ngx-form-field-error-host--empty')).toBe(
+        true,
+      );
+
+      // Touch + blur to surface the error under the 'on-touch' strategy.
+      const input = container.querySelector<HTMLInputElement>('input#email')!;
+      input.focus();
+      input.blur();
+      fixture.detectChanges();
+
+      expect(host.classList.contains('ngx-form-field-error-host--empty')).toBe(
+        false,
+      );
+    });
+
     it('should rely on role="alert" implicit semantics (no redundant aria-live/aria-atomic)', async () => {
       /**
        * `role="alert"` already implies `aria-live="assertive"` and
@@ -1298,6 +1350,58 @@ describe('NgxFormFieldError', () => {
 
       // Errors still gated by submit.
       expect(screen.queryByRole('alert')?.textContent?.trim() ?? '').toBe('');
+    });
+
+    it('falls back to NGX_SIGNAL_FORMS_CONFIG.defaultErrorStrategy for a standalone field with warningStrategy="inherit"', async () => {
+      // Regression test: with no [ngxSignalForm] host to inherit from, an
+      // explicit [warningStrategy]="'inherit'" used to hard-fall-back to
+      // 'on-touch', ignoring provideNgxSignalFormsConfig({ defaultErrorStrategy }).
+      // NgxHeadlessErrorState's own #resolvedStrategy cascade already honors
+      // the config default — the warning-strategy cascade must match it.
+      @Component({
+        selector: 'ngx-test-warning-strategy-config-fallback',
+        imports: [FormField, NgxFormFieldError],
+
+        template: `
+          <input id="password" [formField]="contactForm.password" />
+          <ngx-form-field-error
+            [formField]="contactForm.password"
+            fieldName="password"
+            warningStrategy="inherit"
+          />
+        `,
+      })
+      class StandaloneConfigFallbackHost {
+        readonly #model = signal({ password: 'weak' });
+        readonly contactForm = form(
+          this.#model,
+          schema((path) => {
+            validate(path.password, (ctx) => {
+              const value = ctx.value();
+              if (value.length > 0 && value.length < 8) {
+                return {
+                  kind: 'warn:weak-password',
+                  message: 'Consider 8+ characters',
+                };
+              }
+              return null;
+            });
+          }),
+        );
+      }
+
+      await render(StandaloneConfigFallbackHost, {
+        providers: [
+          provideNgxSignalFormsConfig({ defaultErrorStrategy: 'immediate' }),
+        ],
+      });
+
+      // No [ngxSignalForm] host and an untouched field: without the config
+      // fallback the warning would stay gated behind the hardcoded 'on-touch'
+      // default. With the fallback wired up, the global 'immediate' config
+      // applies and the warning is visible right away.
+      const status = await screen.findByRole('status');
+      expect(status.textContent).toContain('Consider 8+ characters');
     });
   });
 });

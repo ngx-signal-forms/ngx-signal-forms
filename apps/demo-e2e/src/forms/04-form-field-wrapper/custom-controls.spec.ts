@@ -1,9 +1,32 @@
 import { expect, test } from '@playwright/test';
+import type { Locator } from '@playwright/test';
 
 import { ROLE_ALERT_SELECTOR } from '../../fixtures/aria-selectors';
-import { verifyNoErrorsOnInitialLoad } from '../../fixtures/form-validation.fixture';
+import {
+  collectConsoleErrors,
+  verifyNoErrorsOnInitialLoad,
+} from '../../fixtures/form-validation.fixture';
 import { stabilizeLayoutSnapshotViewport } from '../../fixtures/layout-screenshot.fixture';
 import { CustomControlsPage } from '../../page-objects/custom-controls.page';
+
+/**
+ * Read an element's *visible* border color.
+ *
+ * A border painted with `border-style: none` or `border-width: 0` renders
+ * nothing, so its `border-color` is inert and not observable. Normalizing those
+ * to a sentinel keeps border comparisons focused on what the user actually sees
+ * (the outline chrome) rather than an invisible color value that can differ
+ * without any visual effect.
+ */
+async function readVisibleBorderColor(content: Locator): Promise<string> {
+  return content.evaluate((element) => {
+    const styles = window.getComputedStyle(element);
+    if (styles.borderStyle === 'none' || styles.borderWidth === '0px') {
+      return 'none';
+    }
+    return styles.borderColor;
+  });
+}
 
 /**
  * Tests for Custom Controls demo page.
@@ -29,6 +52,35 @@ test.describe('Custom Signal Forms Controls', () => {
   }) => {
     await verifyNoErrorsOnInitialLoad(playwrightPage);
     await expect(page.form).toBeVisible();
+  });
+
+  // Regression test for #166 finding #1: this page follows the documented,
+  // recommended id-derivation path for every wrapper (explicit fieldName is
+  // never set) and projects ngx-form-field-hint under several of them —
+  // exactly the trigger condition audit #145 identified for a false-positive
+  // "Could not resolve a deterministic field name for ngx-form-field-wrapper"
+  // dev console.error firing on first render, one render before the id
+  // resolves. The toolkit's form-field-wrapper.ts (afterEveryRender write
+  // phase, see #warnedUnresolvedFieldName there) already gates this
+  // diagnostic on the post-render snapshot rather than the pre-render
+  // computed, so this should never fire — this test pins that down.
+  test('should not log the "could not resolve a deterministic field name" dev warning', async ({
+    page: playwrightPage,
+  }) => {
+    const consoleErrors = collectConsoleErrors(playwrightPage);
+    const freshPage = new CustomControlsPage(playwrightPage);
+    await freshPage.goto();
+    await expect(freshPage.form).toBeVisible();
+
+    // Interact with a couple of hint-bearing custom controls to exercise
+    // more than just the very first render pass.
+    await freshPage.ratingControl.focus();
+    await freshPage.ratingControl.blur();
+
+    const fieldNameWarnings = consoleErrors.filter((message) =>
+      message.includes('Could not resolve a deterministic field name'),
+    );
+    expect(fieldNameWarnings).toEqual([]);
   });
 
   test.describe('Rating Control Rendering', () => {
@@ -305,6 +357,105 @@ test.describe('Custom Signal Forms Controls', () => {
         );
       });
     });
+
+    // Regression test for the "audit #218" consistency fix: every
+    // ngx-rating-control usage owns its own ARIA (aria-invalid, aria-required,
+    // aria-valuenow/valuetext, aria-describedby) via host bindings, so every
+    // usage — not just accessibilityAudit — now runs in manual ARIA mode via
+    // ngxSignalFormControl="slider". This pins down that rating, serviceRating,
+    // and wouldRecommend all resolve the same manual preset and compute their
+    // own hint/error described-by chain the parent form provides.
+    test('should preserve manual ARIA ownership for the rating, service rating, and would-recommend controls', async () => {
+      await test.step('Verify each wrapper opts into the manual slider preset', async () => {
+        for (const controlId of ['rating', 'serviceRating', 'wouldRecommend']) {
+          const wrapper = page.getWrapperByControlId(controlId);
+
+          await expect(wrapper).toHaveAttribute(
+            'data-ngx-signal-form-control-kind',
+            'slider',
+          );
+          await expect(wrapper).toHaveAttribute(
+            'data-ngx-signal-form-control-layout',
+            'custom',
+          );
+          await expect(wrapper).toHaveAttribute(
+            'data-ngx-signal-form-control-aria-mode',
+            'manual',
+          );
+        }
+      });
+
+      await test.step('Verify the rating control starts with its hint-only described-by chain', async () => {
+        await expect(page.ratingControl).toHaveAttribute(
+          'aria-describedby',
+          'rating-hint',
+        );
+        await expect(page.ratingControl).toHaveAttribute(
+          'aria-required',
+          'true',
+        );
+      });
+
+      await test.step('Verify serviceRating has no hint, so its described-by chain starts empty', async () => {
+        await expect(page.serviceRatingControl).not.toHaveAttribute(
+          'aria-describedby',
+        );
+      });
+
+      await test.step('Touch rating and serviceRating without selecting a value', async () => {
+        await page.ratingControl.focus();
+        await page.ratingControl.blur();
+
+        await page.serviceRatingControl.focus();
+        await page.serviceRatingControl.blur();
+      });
+
+      await test.step('Verify each control keeps its own described-by chain when its wrapper error appears', async () => {
+        await expect(page.getErrorById('rating')).toBeVisible();
+        await expect(page.ratingControl).toHaveAttribute(
+          'aria-describedby',
+          'rating-hint rating-error',
+        );
+        await expect(page.ratingControl).toHaveAttribute(
+          'aria-invalid',
+          'true',
+        );
+
+        await expect(page.getErrorById('serviceRating')).toBeVisible();
+        await expect(page.serviceRatingControl).toHaveAttribute(
+          'aria-describedby',
+          'serviceRating-error',
+        );
+        await expect(page.serviceRatingControl).toHaveAttribute(
+          'aria-invalid',
+          'true',
+        );
+      });
+
+      await test.step('Verify selecting a rating restores the hint-only (or empty) described-by chain', async () => {
+        await page.selectStar(page.ratingControl, 4);
+        await page.selectStar(page.serviceRatingControl, 5);
+
+        await expect(page.getErrorById('rating')).toHaveCount(0);
+        await expect(page.ratingControl).toHaveAttribute(
+          'aria-describedby',
+          'rating-hint',
+        );
+        await expect(page.ratingControl).toHaveAttribute(
+          'aria-invalid',
+          'false',
+        );
+
+        await expect(page.getErrorById('serviceRating')).toHaveCount(0);
+        await expect(page.serviceRatingControl).not.toHaveAttribute(
+          'aria-describedby',
+        );
+        await expect(page.serviceRatingControl).toHaveAttribute(
+          'aria-invalid',
+          'false',
+        );
+      });
+    });
   });
 
   test.describe('Form Field Wrapper Integration', () => {
@@ -573,6 +724,10 @@ test.describe('Custom Signal Forms Controls', () => {
 
       await test.step('Switch to outline mode and submit the empty form', async () => {
         await page.showOutlineAppearance();
+        await expect(page.outlineAppearanceButton).toHaveAttribute(
+          'aria-pressed',
+          'true',
+        );
 
         for (const controlId of [
           ...outlinedControlIds,
@@ -582,9 +737,7 @@ test.describe('Custom Signal Forms Controls', () => {
           const content = page.getWrapperContentByControlId(controlId);
           initialBorderColors.set(
             controlId,
-            await content.evaluate(
-              (element) => window.getComputedStyle(element).borderColor,
-            ),
+            await readVisibleBorderColor(content),
           );
         }
 
@@ -603,11 +756,7 @@ test.describe('Custom Signal Forms Controls', () => {
           expect(initialBorderColor).toBeDefined();
 
           await expect
-            .poll(() =>
-              content.evaluate(
-                (element) => window.getComputedStyle(element).borderColor,
-              ),
-            )
+            .poll(() => readVisibleBorderColor(content))
             .not.toBe(initialBorderColor);
         }
       });
@@ -626,11 +775,7 @@ test.describe('Custom Signal Forms Controls', () => {
           expect(initialBorderColor).toBeDefined();
 
           await expect
-            .poll(() =>
-              content.evaluate(
-                (element) => window.getComputedStyle(element).borderColor,
-              ),
-            )
+            .poll(() => readVisibleBorderColor(content))
             .toBe(initialBorderColor);
         }
       });
@@ -649,11 +794,7 @@ test.describe('Custom Signal Forms Controls', () => {
           expect(initialBorderColor).toBeDefined();
 
           await expect
-            .poll(() =>
-              content.evaluate(
-                (element) => window.getComputedStyle(element).borderColor,
-              ),
-            )
+            .poll(() => readVisibleBorderColor(content))
             .toBe(initialBorderColor);
         }
       });

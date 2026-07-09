@@ -1,6 +1,6 @@
 import { isDevMode, provideZonelessChangeDetection } from '@angular/core';
+import { MAT_FORM_FIELD_DEFAULT_OPTIONS } from '@angular/material/form-field';
 import { bootstrapApplication } from '@angular/platform-browser';
-import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
 import { provideNgxSignalFormsConfig } from '@ngx-signal-forms/toolkit';
 import { AppComponent } from './app/app';
 import { provideNgxMatForms } from './app/wrapper';
@@ -20,10 +20,9 @@ void (async () => {
   await bootstrapApplication(AppComponent, {
     providers: [
       provideZonelessChangeDetection(),
-      // Material's animation hooks. `noop` keeps the demo zoneless-friendly
-      // (no animations module pulled in) while still satisfying Material's
-      // animation provider contract.
-      provideAnimationsAsync('noop'),
+      // Angular Material 22's animations are CSS-based — no
+      // `@angular/animations` peer dependency and no animation provider
+      // required (unlike Material 21 and earlier).
       provideNgxSignalFormsConfig({
         defaultErrorStrategy: 'on-touch',
         autoAria: true,
@@ -32,6 +31,18 @@ void (async () => {
       // slots once for the entire app — the recommended path per
       // ADR-0002 §5.
       provideNgxMatForms(),
+      // App-wide `<mat-form-field>` defaults, set once instead of repeated
+      // on every field (best-practices.md #1 — "configure at the highest
+      // tier that's true"). Individual fields can still override any of
+      // these per-field when a genuine exception is needed.
+      {
+        provide: MAT_FORM_FIELD_DEFAULT_OPTIONS,
+        useValue: {
+          appearance: 'outline',
+          floatLabel: 'always',
+          subscriptSizing: 'dynamic',
+        },
+      },
     ],
   });
 })();

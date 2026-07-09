@@ -11,11 +11,13 @@ import { ErrorStrategyFormPage } from './base-form.page';
 export class SubmissionPatternsPage extends ErrorStrategyFormPage {
   readonly submitButton: Locator;
   readonly stateIndicator: Locator;
+  readonly stateBadge: Locator;
 
   constructor(page: Page) {
     super(page);
     this.submitButton = this.getSubmitButton(/Create Account/i);
     this.stateIndicator = this.page.locator('text=Submission State').first();
+    this.stateBadge = this.page.getByTestId('submission-state-badge');
   }
 
   async goto(): Promise<void> {

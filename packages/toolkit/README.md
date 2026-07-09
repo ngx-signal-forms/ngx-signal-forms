@@ -23,6 +23,7 @@ You always import the core entry point. The other entry points add UI components
 | `@ngx-signal-forms/toolkit/form-field` | Form field wrapper and fieldset components                         |
 | `@ngx-signal-forms/toolkit/headless`   | Renderless primitives for custom UI                                |
 | `@ngx-signal-forms/toolkit/vest`       | Optional Vest adapter (requires `vest@6`)                          |
+| `@ngx-signal-forms/toolkit/testing`    | WCAG 2.2 AA test harness (requires `axe-core`)                     |
 
 **Which one do I pick?**
 
@@ -30,6 +31,7 @@ You always import the core entry point. The other entry points add UI components
 - **Custom markup, reuse toolkit error/notification/hint/count/summary components** → [`/assistive`](./assistive/README.md)
 - **Signals-only, fully custom markup** → [`/headless`](./headless/README.md)
 - **Vest business rules** → [`/vest`](./vest/README.md)
+- **Assert your own components/fixtures are WCAG 2.2 AA clean** → [`/testing`](#accessibility-testing-harness)
 
 ## Import
 
@@ -180,18 +182,10 @@ field / component input
   ?? built-in default
 ```
 
-The **form context (`ngxSignalForm`)** tier carries only the form-owned settings
-— **error strategy** and **submitted status**. Appearance, orientation, markers,
-control presets, and renderers have no form-context equivalent, so they skip that
-tier and resolve `input ?? provider config ?? default`. A setting only consults a
-tier that can supply it; missing tiers fall through.
-
-Inheritance merges with nullish `??` **per key**: override one key and the rest
-still inherit, and an explicit falsy value is respected (`requiredMarker: ''`
-clears the marker; omitting the key inherits it). Every "you can override this"
-in the sections below is a link in this chain — see the
+See the
 [root README](https://github.com/ngx-signal-forms/ngx-signal-forms#how-settings-resolve-the-cascade)
-for the adopter-level walkthrough.
+for the full walkthrough (per-tier details, nullish-merge semantics). Every
+"you can override this" in the sections below is a link in this chain.
 
 ### Field marking
 
@@ -215,6 +209,8 @@ the relevant kind:
   <!-- fields… -->
 </form>
 ```
+
+`NgxFormMarkingLegend` is available from `@ngx-signal-forms/toolkit/assistive`.
 
 Per-field / per-legend overrides are available via the `showMarkerWhen`,
 `requiredMarker`, and `optionalMarker` inputs on both
@@ -365,7 +361,7 @@ provideFieldLabels(() => {
 | `createErrorVisibility(field, opts?)`                  | One call: `Signal<boolean>` with strategy + submitted status auto-read from the DI context |
 | `showErrors(field, strategy, status?)`                 | `Signal<boolean>` — whether errors should show now                                         |
 | `shouldShowErrors(invalid, touched, strategy, status)` | Pure boolean strategy helper                                                               |
-| `combineShowErrors(...signals)`                        | Combines multiple visibility signals                                                       |
+| `combineShowErrors(signals)`                           | Combines an array of visibility signals, e.g. `combineShowErrors([sigA, sigB])`            |
 | `createShowErrorsComputed(field, strategy, status?)`   | Lower-level extraction for custom UIs                                                      |
 | `readDirectErrors(state)`                              | Direct `errors()` of a field/group only — excludes nested-field errors                     |
 
@@ -374,13 +370,13 @@ provideFieldLabels(() => {
 Building blocks for custom wrappers and headless UIs that want to join the
 [cascade](#how-settings-resolve-the-cascade) exactly like the built-in surfaces:
 
-| Function                                                       | Description                                                              |
-| -------------------------------------------------------------- | ------------------------------------------------------------------------ |
-| `resolveErrorDisplayStrategy(input, context?, configDefault?)` | Pure resolution: input ?? context ?? config default ?? `'on-touch'`      |
-| `resolveStrategyFromContext(input)`                            | `Signal` resolution of a directive's strategy input against form context |
-| `resolveSubmittedStatusFromContext(input)`                     | Same cascade for `SubmittedStatus`                                       |
-| `injectFormContext()`                                          | Get the `ngxSignalForm` context, or `undefined`                          |
-| `injectFieldControl(element, injector?)`                       | Resolve the bound `FieldTree` for an element from the form context       |
+| Function                                                         | Description                                                                |
+| ---------------------------------------------------------------- | -------------------------------------------------------------------------- |
+| `resolveErrorDisplayStrategy(input, context?, configDefault?)`   | Pure resolution: input ?? context ?? config default ?? `'on-touch'`        |
+| `resolveStrategyFromContext(input, formContext, configDefault?)` | Resolved strategy value (call inside your own `computed()` for reactivity) |
+| `resolveSubmittedStatusFromContext(input, formContext)`          | Same cascade for `SubmittedStatus`                                         |
+| `injectFormContext()`                                            | Get the `ngxSignalForm` context, or `undefined`                            |
+| `injectFieldControl(element, injector?)`                         | Resolve the bound `FieldTree` for an element from the form context         |
 
 ### Focus management
 
@@ -413,7 +409,7 @@ Building blocks for custom wrappers and headless UIs that want to join the
 > `warningStrategy` input on `NgxFormFieldError` (default:
 > `'immediate'`). See
 > [`WARNINGS_SUPPORT.md`](https://github.com/ngx-signal-forms/ngx-signal-forms/blob/main/docs/WARNINGS_SUPPORT.md#when-warnings-appear--warningstrategy)
-> and the [assistive README](./assistive/README.md#ngxformfielderrorcomponent)
+> and the [assistive README](./assistive/README.md#ngxformfielderror)
 > for usage.
 
 ### Field interactivity
@@ -532,6 +528,30 @@ warning elements, matching every other toolkit surface.
 | `updateNested(array, index, key, nestedIdx, fn)` | Immutable nested array update                        |
 | `createUniqueId(prefix)`                         | Stable, monotonic DOM id (`prefix-1`, `prefix-2`, …) |
 
+## Accessibility testing harness
+
+`@ngx-signal-forms/toolkit/testing` asserts that a rendered fixture has no
+WCAG 2.2 AA axe-core violations. It's a **hard fail** by design — toolkit
+components are published primitives, so accessibility regressions in them are
+bugs, not baseline drift to track.
+
+```typescript
+import { expectNoA11yViolations } from '@ngx-signal-forms/toolkit/testing';
+
+// Inside a Vitest browser-mode spec, after rendering a fixture:
+await expectNoA11yViolations();
+```
+
+| Export                                       | Description                                                                                                        |
+| -------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| `expectNoA11yViolations(context?, options?)` | Runs axe against `context` (default: `document.body`) and throws on any WCAG 2.2 AA violation                      |
+| `WCAG_22_AA_TAGS`                            | The axe tag set (`wcag2a`, `wcag2aa`, `wcag21a`, `wcag21aa`, `wcag22aa`) that adds up to full WCAG 2.2 AA coverage |
+
+This entry point requires `axe-core` (an optional peer dependency — install it
+yourself, e.g. `npm i -D axe-core`). Note that axe-core has no automated rules
+for the two WCAG 2.2 Level A criteria (Consistent Help, Redundant Entry); like
+the rest of WCAG 2.2 AA automated coverage, those must be verified manually.
+
 ## Advanced: public DI tokens
 
 These tokens are the integration points for custom wrappers and renderers.
@@ -563,6 +583,7 @@ authoritative enumeration of the public surface.
 - [Assistive components](./assistive/README.md) — standalone error, grouped notification, hint, counter, and summary components
 - [Headless primitives](./headless/README.md) — renderless directives for custom UI
 - [Vest integration](./vest/README.md) — Vest adapter
+- [Accessibility testing harness](#accessibility-testing-harness) — WCAG 2.2 AA axe-core assertions
 - [Theming guide](./form-field/THEMING.md) — CSS custom properties
 - [Custom controls](https://github.com/ngx-signal-forms/ngx-signal-forms/blob/main/docs/CUSTOM_CONTROLS.md) — wrapping custom and third-party widgets
 - [Warnings support](https://github.com/ngx-signal-forms/ngx-signal-forms/blob/main/docs/WARNINGS_SUPPORT.md) — warning convention and flow

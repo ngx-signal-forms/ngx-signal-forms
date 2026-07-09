@@ -1,5 +1,10 @@
-import { Component, computed, signal } from '@angular/core';
-import { type ErrorDisplayStrategy } from '@ngx-signal-forms/toolkit';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  signal,
+} from '@angular/core';
+import { type ResolvedErrorDisplayStrategy } from '@ngx-signal-forms/toolkit';
 import { NgxSignalFormDebugger } from '@ngx-signal-forms/debugger';
 import {
   DisplayControlsCardComponent,
@@ -17,6 +22,7 @@ import { ErrorDisplayModesFormComponent } from './error-display-modes.form';
 
 @Component({
   selector: 'ngx-error-display-modes-page',
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     ErrorDisplayModesFormComponent,
     ExampleCardsComponent,
@@ -110,7 +116,8 @@ import { ErrorDisplayModesFormComponent } from './error-display-modes.form';
   `,
 })
 export class ErrorDisplayModesPageComponent {
-  protected readonly selectedMode = signal<ErrorDisplayStrategy>('on-touch');
+  protected readonly selectedMode =
+    signal<ResolvedErrorDisplayStrategy>('on-touch');
   protected readonly currentControlChips = computed(() => [
     {
       label: 'Mode',

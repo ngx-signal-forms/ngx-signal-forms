@@ -188,6 +188,129 @@ describe('NgxFormFieldset', () => {
     expect(warnings[0]?.textContent).toContain('State is optional');
   });
 
+  describe('warningStrategy', () => {
+    it('defaults to "immediate", showing warnings while a blocking "on-submit" strategy still hides errors', async () => {
+      const fieldset = createFieldsetState({
+        errors: () => [
+          { kind: 'required', message: 'City required' },
+          { kind: 'warn:optional', message: 'State is optional' },
+        ],
+        errorSummary: () => [
+          { kind: 'required', message: 'City required' },
+          { kind: 'warn:optional', message: 'State is optional' },
+        ],
+      });
+
+      await render(
+        `<ngx-form-fieldset [field]="fieldset" strategy="on-submit">
+          <div>Content without nested form field</div>
+        </ngx-form-fieldset>`,
+        {
+          imports: [NgxFormFieldset],
+          componentProperties: { fieldset },
+        },
+      );
+
+      // Blocking error is gated behind 'on-submit' and the form has not
+      // been submitted (no submittedStatus bound) — the alert stays empty.
+      const errors = screen.queryAllByRole('alert');
+      expect(errors).not.toHaveLength(0);
+      for (const error of errors) {
+        expect(error.textContent?.trim() ?? '').toBe('');
+      }
+
+      // warningStrategy defaults to 'immediate' independently of `strategy`,
+      // so the warning is visible even though the blocking error is not.
+      const warnings = screen.queryAllByRole('status');
+      expect(warnings).toHaveLength(1);
+      expect(warnings[0]?.textContent).toContain('State is optional');
+    });
+
+    it('forwards an explicit warningStrategy="on-submit" override, delaying warnings until submit', async () => {
+      const fieldset = createFieldsetState({
+        errors: () => [{ kind: 'warn:optional', message: 'State is optional' }],
+        errorSummary: () => [
+          { kind: 'warn:optional', message: 'State is optional' },
+        ],
+      });
+      const submittedStatus = signal<'unsubmitted' | 'submitted'>(
+        'unsubmitted',
+      );
+
+      const { fixture } = await render(
+        `<ngx-form-fieldset
+          [field]="fieldset"
+          warningStrategy="on-submit"
+          [submittedStatus]="submittedStatus()"
+        >
+          <div>Content without nested form field</div>
+        </ngx-form-fieldset>`,
+        {
+          imports: [NgxFormFieldset],
+          componentProperties: { fieldset, submittedStatus },
+        },
+      );
+
+      let warnings = screen.queryAllByRole('status');
+      expect(warnings).not.toHaveLength(0);
+      for (const warning of warnings) {
+        expect(warning.textContent?.trim() ?? '').toBe('');
+      }
+
+      submittedStatus.set('submitted');
+      fixture.detectChanges();
+
+      warnings = screen.queryAllByRole('status');
+      expect(warnings).toHaveLength(1);
+      expect(warnings[0]?.textContent).toContain('State is optional');
+    });
+
+    it('gives the blocking error visual priority (host class + rendered content) when both are visible at once', async () => {
+      const fieldset = createFieldsetState({
+        errors: () => [
+          { kind: 'required', message: 'City required' },
+          { kind: 'warn:optional', message: 'State is optional' },
+        ],
+        errorSummary: () => [
+          { kind: 'required', message: 'City required' },
+          { kind: 'warn:optional', message: 'State is optional' },
+        ],
+      });
+
+      // Default `strategy` ('on-touch') + touched:true shows the blocking
+      // error, and the default `warningStrategy` ('immediate') shows the
+      // warning at the same time — both are independently visible.
+      const { container } = await render(
+        `<ngx-form-fieldset [field]="fieldset">
+          <div>Content without nested form field</div>
+        </ngx-form-fieldset>`,
+        {
+          imports: [NgxFormFieldset],
+          componentProperties: { fieldset },
+        },
+      );
+
+      const host = container.querySelector('ngx-form-fieldset');
+      expect(
+        host?.classList.contains('ngx-signal-form-fieldset--invalid'),
+      ).toBe(true);
+      // Even though shouldShowWarnings() is independently true, the host
+      // class stays off — errors take visual priority (see the host
+      // binding's inline comment in form-fieldset.ts).
+      expect(
+        host?.classList.contains('ngx-signal-form-fieldset--warning'),
+      ).toBe(false);
+
+      const errors = screen.getAllByRole('alert');
+      expect(errors[0]?.textContent).toContain('City required');
+
+      const warnings = screen.queryAllByRole('status');
+      for (const warning of warnings) {
+        expect(warning.textContent?.trim() ?? '').toBe('');
+      }
+    });
+  });
+
   it('prefers fields override for aggregation', async () => {
     const fieldset = createFieldsetState({
       errors: () => [{ kind: 'required', message: 'Group error' }],

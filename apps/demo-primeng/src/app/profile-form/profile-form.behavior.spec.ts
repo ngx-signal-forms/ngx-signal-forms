@@ -89,10 +89,48 @@ describe('ProfileFormComponent', () => {
     // focusable surface (PrimeNG's own [role="combobox"]) is what receives
     // aria-invalid, not just the outer shim host — that's the contract the
     // shim's whole reason-for-existing has to honour.
-    const roleCombobox = screen.getByRole('combobox', {
-      name: /pick a role/i,
-    });
+    //
+    // The combobox's accessible name comes from the visible "Role" <label>
+    // via aria-labelledby (not the transient "Pick a role" placeholder/
+    // selected-value content) — see the aria-labelledby regression test
+    // below for the dedicated assertion.
+    const roleCombobox = screen.getByRole('combobox', { name: /^role$/i });
     expect(roleCombobox.getAttribute('aria-invalid')).toBe('true');
+  });
+
+  it("reflects aria-required on the role combobox via PrimeNG's own [required] passthrough, with no duplicate manual write", async () => {
+    await renderProfileForm();
+
+    // Regression test for audit #147: PrimeSelectControlComponent used to
+    // also copy `aria-required` onto the inner [role="combobox"] span by
+    // hand in its afterEveryRender block, duplicating PrimeNG's own
+    // `[attr.aria-required]="required()"` binding on that same span (fed by
+    // the same `[required]="ariaRequired() === 'true'"` input this shim
+    // sets). The shim now relies solely on that PrimeNG-owned binding — this
+    // asserts the attribute still lands correctly with the manual write gone.
+    const roleCombobox = screen.getByRole('combobox', { name: /^role$/i });
+    expect(roleCombobox.getAttribute('aria-required')).toBe('true');
+  });
+
+  it("wires the visible 'Role' label to the select's inner combobox via aria-labelledby so the accessible name never derives from transient placeholder/selected-value content", async () => {
+    await renderProfileForm();
+
+    // Regression test for the audit #147 blocker: PrimeSelectControlComponent
+    // put `inputId` on a non-labelable inner <span role="combobox">, so
+    // `<label for="profile-role">Role</label>` never established a
+    // programmatic label association — the accessible name was derived from
+    // the placeholder ("Pick a role") or, once selected, the chosen option's
+    // label instead. `getByRole` computing an accessible name of exactly
+    // "Role" (not "Pick a role") is the whole point of this assertion.
+    const roleCombobox = screen.getByRole('combobox', { name: /^role$/i });
+
+    const labelledBy = roleCombobox.getAttribute('aria-labelledby');
+    expect(labelledBy).not.toBeNull();
+
+    const label = document.getElementById(labelledBy ?? '');
+    expect(label).not.toBeNull();
+    expect(label?.tagName).toBe('LABEL');
+    expect(label?.textContent?.trim()).toBe('Role');
   });
 
   it('shows the personal-email warning and still submits once role is selected', async () => {
@@ -108,7 +146,7 @@ describe('ProfileFormComponent', () => {
       await screen.findByText(/personal email domains may complicate/i),
     ).toBeTruthy();
 
-    await user.click(screen.getByRole('combobox', { name: /pick a role/i }));
+    await user.click(screen.getByRole('combobox', { name: /^role$/i }));
     await user.click(await screen.findByText(/^Designer$/));
     await user.click(screen.getByTestId('submit-button'));
     await whenStable();
@@ -116,5 +154,33 @@ describe('ProfileFormComponent', () => {
     const submission = await screen.findByTestId('submission-summary');
     expect(submission.textContent).toContain('"email": "alex@gmail.com"');
     expect(submission.textContent).toContain('"role": "designer"');
+  });
+
+  it('wires aria-describedby/aria-invalid/aria-required onto the real native checkbox input, not the <p-checkbox> host', async () => {
+    const user = userEvent.setup();
+
+    const { whenStable } = await renderProfileForm();
+
+    // Regression test for the audit #147 blocker: NgxSignalFormAutoAria's
+    // selector catch-all wrote aria-describedby/aria-invalid/aria-required
+    // onto the <p-checkbox> host element, but PrimeNG's compiled Checkbox
+    // template renders a separate native <input type="checkbox"> as a child
+    // with no host-to-input ARIA passthrough — the hint text was visible but
+    // never linked to the real focusable checkbox input.
+    const newsletterCheckbox = screen.getByRole('checkbox', {
+      name: /subscribe to the release notes/i,
+    });
+    expect(newsletterCheckbox.tagName).toBe('INPUT');
+
+    // Touch + blur so on-touch strategy lights up (newsletter has no
+    // validators so aria-invalid should stay unset, but aria-describedby
+    // must always carry the hint id regardless of validity).
+    await user.click(newsletterCheckbox);
+    await user.tab();
+    await whenStable();
+
+    const describedBy = newsletterCheckbox.getAttribute('aria-describedby');
+    expect(describedBy).not.toBeNull();
+    expect(describedBy?.split(/\s+/)).toContain('profile-newsletter-hint');
   });
 });

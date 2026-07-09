@@ -1,4 +1,4 @@
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
@@ -34,6 +34,17 @@ describe('packages/toolkit/package.json', () => {
       packageJson.peerDependencies?.['@angular/core'],
     );
   });
+
+  it('caps the vest peer dependency range below vest 7', () => {
+    // The adapter only imports vest types at runtime (`import type { SuiteResult }`),
+    // but an unbounded-above range (e.g. ">=6.0.0") would let a future vest 7.x/8.x
+    // with breaking SuiteResult/typing changes silently satisfy the peer contract,
+    // contradicting the deliberate upper-bound-cap philosophy applied to Angular
+    // (see COMPATIBILITY.md) and the /vest README's "requires vest@6" wording.
+    const vestRange = packageJson.peerDependencies?.vest;
+    expect(vestRange).toBeTruthy();
+    expect(vestRange).toMatch(/<7\.0\.0/);
+  });
 });
 
 describe('packages/toolkit/project.json post-build target', () => {
@@ -43,6 +54,36 @@ describe('packages/toolkit/project.json post-build target', () => {
       /\bcp\b.*\bLICENSE\b.*dist\/packages\/toolkit/.test(command),
     );
     expect(copiesLicense).toBe(true);
+  });
+});
+
+describe('secondary entry point configuration', () => {
+  // ng-packagr discovers secondary entry points purely by globbing for
+  // `ng-package.json` files; a sibling `package.json` is never read for
+  // secondary entries (only for the primary entry point), so a legacy
+  // `package.json` with a `"ngPackage": {}` stub next to `ng-package.json`
+  // is dead configuration that does nothing at build time. Each secondary
+  // entry's ng-package.json should also declare `$schema` for editor
+  // validation, matching the primary entry point's convention.
+  const secondaryEntries = ['assistive', 'form-field', 'headless', 'vest'];
+
+  it.each(secondaryEntries)(
+    '%s/ has no redundant legacy package.json stub',
+    (entry) => {
+      expect(
+        existsSync(resolve(import.meta.dirname, `../${entry}/package.json`)),
+      ).toBe(false);
+    },
+  );
+
+  it.each(secondaryEntries)('%s/ng-package.json declares $schema', (entry) => {
+    const ngPackageJson = JSON.parse(
+      readFileSync(
+        resolve(import.meta.dirname, `../${entry}/ng-package.json`),
+        'utf8',
+      ),
+    ) as { $schema?: string };
+    expect(ngPackageJson.$schema).toBeTruthy();
   });
 });
 

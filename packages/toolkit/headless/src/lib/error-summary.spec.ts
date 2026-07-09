@@ -9,6 +9,7 @@ import {
   schema,
   validate,
 } from '@angular/forms/signals';
+import { provideNgxSignalFormsConfig } from '@ngx-signal-forms/toolkit';
 import { render, screen } from '@testing-library/angular';
 import { userEvent } from '@testing-library/user-event';
 import { describe, expect, it } from 'vitest';
@@ -270,6 +271,51 @@ describe('NgxHeadlessErrorSummary', () => {
       const input = screen.getByTestId('email-input');
       await user.click(input);
       await user.tab();
+
+      expect(screen.getByTestId('visible-summary')).toBeTruthy();
+    });
+
+    it('honors NGX_SIGNAL_FORMS_CONFIG.defaultErrorStrategy outside a form context, matching NgxHeadlessFieldset', async () => {
+      @Component({
+        selector: 'ngx-test-summary-config-default-strategy',
+        imports: [FormField, NgxHeadlessErrorSummary],
+
+        template: `
+          <div>
+            <input id="email" [formField]="contactForm.email" />
+            <div
+              ngxHeadlessErrorSummary
+              #summary="errorSummary"
+              [formTree]="contactForm"
+            >
+              @if (summary.shouldShow()) {
+                <span data-testid="visible-summary">Visible</span>
+              } @else {
+                <span data-testid="hidden-summary">Hidden</span>
+              }
+            </div>
+          </div>
+        `,
+      })
+      class TestComponent {
+        readonly #model = signal({ email: '' });
+        readonly contactForm = form(
+          this.#model,
+          schema((path) => {
+            required(path.email, { message: 'Email is required' });
+          }),
+        );
+      }
+
+      // No [ngxSignalForm] host and no explicit `strategy` input — the
+      // global config default ('immediate') should still surface the
+      // summary without touch, the same way NgxHeadlessFieldset.resolvedStrategy
+      // already does.
+      await render(TestComponent, {
+        providers: [
+          provideNgxSignalFormsConfig({ defaultErrorStrategy: 'immediate' }),
+        ],
+      });
 
       expect(screen.getByTestId('visible-summary')).toBeTruthy();
     });

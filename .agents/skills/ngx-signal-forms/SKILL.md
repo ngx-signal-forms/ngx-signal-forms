@@ -1,6 +1,6 @@
 ---
 name: ngx-signal-forms
-description: Guides use of @ngx-signal-forms/toolkit across the root and secondary entry points for Angular Signal Forms, including form enhancers, control semantics, wrappers, assistive feedback, grouped notifications, headless primitives, Vest integration, debugger UI, and migration to the current public API. Use when working with @ngx-signal-forms/toolkit, ngxSignalForm, ngxSignalFormControl, wrappers or fieldsets, error summaries or grouped notifications, assistive or headless state directives, Vest validation, debugger surfaces, or beta/RC-to-current API migrations.
+description: Guides use of @ngx-signal-forms/toolkit (now at the v1.0.0 public API, rc.11 in preparation) across the root and secondary entry points for Angular Signal Forms, including form enhancers, control semantics, wrappers, assistive feedback, grouped notifications, headless primitives, Vest integration, the axe-core accessibility test harness, debugger UI, and migration to the current public API. Use when working with @ngx-signal-forms/toolkit, ngxSignalForm, ngxSignalFormControl, wrappers or fieldsets, error summaries or grouped notifications, assistive or headless state directives, Vest validation, accessibility (a11y/WCAG) test assertions, debugger surfaces, or beta/RC-to-current API migrations.
 ---
 
 # ngx-signal-forms Toolkit
@@ -19,6 +19,7 @@ Use this skill when the task involves:
 - Displaying validation errors, grouped notifications, hints, or character counts
 - Building custom form controls with full markup control
 - Integrating Vest validation suites
+- Asserting no WCAG 2.2 AA violations in component specs (accessibility test harness)
 - Adding a dev-time debugger panel
 - Configuring global error messages or form appearance
 
@@ -31,6 +32,7 @@ Use this skill when the task involves:
 | `@ngx-signal-forms/toolkit/assistive`  | Standalone errors, grouped notifications, hints, summaries |
 | `@ngx-signal-forms/toolkit/headless`   | Renderless state, notification, and summary directives     |
 | `@ngx-signal-forms/toolkit/vest`       | Vest validation adapter (optional)                         |
+| `@ngx-signal-forms/toolkit/testing`    | axe-core WCAG 2.2 AA test harness for specs (optional)     |
 
 **Internal UI (Demo/Development Only):**
 
@@ -50,6 +52,7 @@ Use this skill when the task involves:
 | Standalone errors, grouped notifications, hints, counters         | [assistive/SKILL.md](assistive/SKILL.md)   |
 | Custom markup with full DOM control                               | [headless/SKILL.md](headless/SKILL.md)     |
 | Vest suite integration                                            | [vest/SKILL.md](vest/SKILL.md)             |
+| Accessibility test assertions, axe-core, WCAG spec checks         | [testing/SKILL.md](testing/SKILL.md)       |
 | Dev-time form inspection                                          | [debugger/SKILL.md](debugger/SKILL.md)     |
 
 ## Shared References
@@ -69,6 +72,7 @@ Need a styled label+input+error shell?                      → form-field
 Need standalone errors, grouped notifications, or hints?    → assistive
 Need full DOM control for custom design systems?            → headless
 Using Vest validation suites?                               → vest
+Asserting no WCAG 2.2 AA violations in a spec?              → testing
 Adding a debug panel during development?                    → debugger
 ```
 

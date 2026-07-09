@@ -1,4 +1,9 @@
-import { Component, computed, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  signal,
+} from '@angular/core';
 import { type FieldTree, form, FormField } from '@angular/forms/signals';
 import {
   createOnInvalidHandler,
@@ -7,10 +12,10 @@ import {
 } from '@ngx-signal-forms/toolkit';
 import { NgxFormFieldHint } from '@ngx-signal-forms/toolkit/assistive';
 import { ButtonModule } from 'primeng/button';
-import { CheckboxModule } from 'primeng/checkbox';
 import { IconFieldModule } from 'primeng/iconfield';
 import { InputIconModule } from 'primeng/inputicon';
 import { InputTextModule } from 'primeng/inputtext';
+import { PrimeCheckboxControlComponent } from '../controls/prime-checkbox-control';
 import { PrimeSelectControlComponent } from '../controls/prime-select-control';
 import { NgxPrimeFormBundle } from '../form-field';
 import {
@@ -32,7 +37,7 @@ import { profileFormSchema } from './profile-form.schema';
  *    errors render as PrimeNG's `<small class="p-error">` idiom.
  * 3. **`NgxSignalFormControlSemanticsDirective`** is declared on each control
  *    (text input via `pInputText`, the `prime-select-control` compatibility
- *    host, and `<p-checkbox>`)
+ *    host, and the `prime-checkbox-control` compatibility host)
  *    so the toolkit knows the control kind without DOM heuristics.
  * 4. **`NgxSignalFormAutoAria`** is in scope via `NgxSignalForm` / direct
  *    import so it can wire `aria-invalid` / `aria-describedby` on each
@@ -49,14 +54,15 @@ import { profileFormSchema } from './profile-form.schema';
  */
 @Component({
   selector: 'demo-primeng-profile-form',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 
   imports: [
     FormField,
     ButtonModule,
-    CheckboxModule,
     IconFieldModule,
     InputIconModule,
     InputTextModule,
+    PrimeCheckboxControlComponent,
     PrimeSelectControlComponent,
     NgxSignalFormToolkit,
     NgxFormFieldHint,
@@ -111,9 +117,10 @@ import { profileFormSchema } from './profile-form.schema';
           fieldName="profile-role"
           showRequiredMarker
         >
-          <label for="profile-role">Role</label>
+          <label id="profile-role-label" for="profile-role">Role</label>
           <prime-select-control
             inputId="profile-role"
+            ariaLabelledBy="profile-role-label"
             [options]="roleOptions"
             placeholder="Pick a role"
             ngxSignalFormControl="standalone-field-like"
@@ -131,9 +138,8 @@ import { profileFormSchema } from './profile-form.schema';
         fieldName="profile-newsletter"
       >
         <label for="profile-newsletter">Subscribe to the release notes</label>
-        <p-checkbox
+        <prime-checkbox-control
           inputId="profile-newsletter"
-          [binary]="true"
           ngxSignalFormControl="checkbox"
           [formField]="newsletterField"
         />
@@ -196,14 +202,23 @@ export class ProfileFormComponent {
     submission: {
       ignoreValidators: 'all',
       action: () => {
-        if (!hasOnlyWarnings(this.profileForm().errorSummary())) {
+        const formState = this.profileForm();
+
+        // Mirrors the pending() guard `submitWithWarnings()` /
+        // `canSubmitWithWarnings()` apply: async validators may still be
+        // settling when the user submits, so bail out without touching
+        // `lastSubmission` (and without focusing anything — nothing is known
+        // to be invalid yet) until they resolve.
+        if (formState.pending()) {
+          return Promise.resolve(undefined);
+        }
+
+        if (!hasOnlyWarnings(formState.errorSummary())) {
           this.#onInvalid(this.profileForm);
           return Promise.resolve(undefined);
         }
 
-        this.lastSubmission.set(
-          JSON.stringify(this.profileForm().value(), null, 2),
-        );
+        this.lastSubmission.set(JSON.stringify(formState.value(), null, 2));
 
         return Promise.resolve(undefined);
       },

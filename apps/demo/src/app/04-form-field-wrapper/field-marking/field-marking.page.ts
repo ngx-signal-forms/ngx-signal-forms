@@ -1,4 +1,9 @@
-import { Component, computed, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  signal,
+} from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import type {
   FieldMarkingMode,
@@ -19,13 +24,14 @@ import { FIELD_MARKING_CONTENT } from './field-marking.content';
 import { FieldMarkingFormComponent } from './field-marking.form';
 
 const MODE_OPTIONS: readonly { value: FieldMarkingMode; label: string }[] = [
-  { value: 'required', label: 'Mark required' },
-  { value: 'optional', label: 'Mark optional' },
-  { value: 'none', label: 'Mark none' },
+  { value: 'required', label: 'Required' },
+  { value: 'optional', label: 'Optional' },
+  { value: 'none', label: 'None' },
 ];
 
 @Component({
   selector: 'ngx-field-marking-page',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 
   imports: [
     FormsModule,
@@ -56,8 +62,13 @@ const MODE_OPTIONS: readonly { value: FieldMarkingMode; label: string }[] = [
             @for (option of modeOptions; track option.value) {
               <button
                 type="button"
-                class="mode-toggle__btn"
-                [class.mode-toggle__btn--active]="mode() === option.value"
+                class="rounded-full px-3 py-1.5 text-sm font-medium text-gray-600 transition-all hover:text-gray-900 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#005fcc] dark:text-gray-300 dark:hover:text-white"
+                [attr.aria-label]="'Mark ' + option.value"
+                [class.bg-[#e8f4fb]]="mode() === option.value"
+                [class.shadow-sm]="mode() === option.value"
+                [class.text-[#005d96]]="mode() === option.value"
+                [class.dark:bg-gray-700]="mode() === option.value"
+                [class.dark:text-blue-300]="mode() === option.value"
                 [attr.aria-pressed]="mode() === option.value"
                 (click)="mode.set(option.value)"
               >
@@ -141,37 +152,21 @@ const MODE_OPTIONS: readonly { value: FieldMarkingMode; label: string }[] = [
   styles: `
     .mode-toggle {
       display: inline-flex;
+      max-width: 100%;
+      flex-wrap: wrap;
+      align-items: center;
       gap: 0.25rem;
+      border: 1px solid rgb(229 231 235 / 0.8);
+      background: rgb(255 255 255 / 0.8);
       padding: 0.25rem;
-      border-radius: 0.5rem;
-      background: rgb(0 0 0 / 0.04);
-    }
-
-    .mode-toggle__btn {
-      border: 0;
-      background: transparent;
-      padding: 0.4rem 0.75rem;
-      border-radius: 0.375rem;
-      font-size: 0.875rem;
-      cursor: pointer;
-      color: rgb(30 41 59 / 0.8);
-    }
-
-    .mode-toggle__btn--active {
-      background: var(--ngx-color-primary, #2563eb);
-      color: #fff;
+      border-radius: 9999px;
+      box-shadow: 0 1px 2px rgb(15 23 42 / 0.08);
+      backdrop-filter: blur(4px);
     }
 
     :host-context(.dark) .mode-toggle {
-      background: rgb(255 255 255 / 0.06);
-    }
-
-    :host-context(.dark) .mode-toggle__btn {
-      color: rgb(203 213 225 / 0.85);
-    }
-
-    :host-context(.dark) .mode-toggle__btn--active {
-      color: #fff;
+      border-color: rgb(55 65 81);
+      background: rgb(31 41 55 / 0.9);
     }
 
     .text-controls {

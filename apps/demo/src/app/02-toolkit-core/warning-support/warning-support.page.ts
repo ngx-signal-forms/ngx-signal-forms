@@ -1,5 +1,11 @@
-import { Component, computed, signal, viewChild } from '@angular/core';
-import { type ErrorDisplayStrategy } from '@ngx-signal-forms/toolkit';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  signal,
+  viewChild,
+} from '@angular/core';
+import { type ResolvedErrorDisplayStrategy } from '@ngx-signal-forms/toolkit';
 import { NgxSignalFormDebugger } from '@ngx-signal-forms/debugger';
 import {
   DisplayControlsCardComponent,
@@ -17,6 +23,7 @@ import { WarningsSupportFormComponent } from './warning-support.form';
 
 @Component({
   selector: 'ngx-warning-support-page',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 
   imports: [
     ExampleCardsComponent,
@@ -72,7 +79,8 @@ import { WarningsSupportFormComponent } from './warning-support.form';
 export class WarningsSupportPageComponent {
   protected readonly content = WARNING_SUPPORT_CONTENT;
   protected readonly supportedModes = ['immediate', 'on-touch'] as const;
-  protected readonly selectedMode = signal<ErrorDisplayStrategy>('on-touch');
+  protected readonly selectedMode =
+    signal<ResolvedErrorDisplayStrategy>('on-touch');
   protected readonly currentControlChips = computed(() => [
     {
       label: 'Mode',

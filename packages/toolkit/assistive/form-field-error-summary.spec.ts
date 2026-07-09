@@ -5,6 +5,7 @@ import {
   FormField,
   required,
   schema,
+  validate,
 } from '@angular/forms/signals';
 import type { SubmittedStatus } from '@ngx-signal-forms/toolkit';
 import { render, screen } from '@testing-library/angular';
@@ -162,6 +163,69 @@ describe('NgxFormFieldErrorSummary', () => {
     expect(buttons.length).toBeGreaterThanOrEqual(2);
     expect(screen.getByText(/Email is required/iu)).toBeTruthy();
     expect(screen.getByText(/Name is required/iu)).toBeTruthy();
+  });
+
+  it('renders both entries without an NG0955 duplicate-track-key warning when the same field has two errors sharing a kind', async () => {
+    // Regression test: `dedupeValidationErrors` (headless/src/lib/utilities.ts)
+    // dedupes by `kind + '::' + message`, so two errors on the same field
+    // with the *same* kind but *different* messages both survive dedup. The
+    // summary's `@for` used to `track entry.kind + entry.fieldName`, which
+    // collapses to an identical string for both entries (same kind, same
+    // field) — Angular's dev-mode duplicate-key check logs a `console.warn`
+    // (NG0955) and degrades `@for`'s diffing during change detection.
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+    @Component({
+      selector: 'ngx-test-error-summary-duplicate-kind',
+      imports: [FormField, NgxFormFieldErrorSummary],
+
+      template: `
+        <input id="server" [formField]="contactForm.server" />
+        <ngx-form-field-error-summary
+          [formTree]="contactForm"
+          strategy="immediate"
+        />
+      `,
+    })
+    class TestComponent {
+      readonly model = signal({ server: 'x' });
+      readonly contactForm = form(
+        this.model,
+        schema((path) => {
+          validate(path.server, () => ({
+            kind: 'server',
+            message: 'Server error A',
+          }));
+          validate(path.server, () => ({
+            kind: 'server',
+            message: 'Server error B',
+          }));
+        }),
+      );
+    }
+
+    const { fixture } = await render(TestComponent);
+
+    // Angular's `@for` duplicate-key detection only fires while
+    // reconciling against a *previously rendered* live collection (a
+    // brand-new list — nothing rendered yet — never hits that code path).
+    // Trigger a second render pass with a freshly computed (but
+    // content-equivalent) `entries()` array so the repeater actually
+    // reconciles two lists that both key by `kind + fieldName`.
+    fixture.componentInstance.model.set({ server: 'y' });
+    fixture.detectChanges();
+
+    const buttons = screen.getAllByRole('button');
+    expect(buttons.length).toBe(2);
+    expect(screen.getByText(/Server error A/iu)).toBeTruthy();
+    expect(screen.getByText(/Server error B/iu)).toBeTruthy();
+
+    const duplicateKeyWarning = warnSpy.mock.calls.find((call) =>
+      String(call[0]).includes('duplicated keys'),
+    );
+    expect(duplicateKeyWarning).toBeUndefined();
+
+    warnSpy.mockRestore();
   });
 
   it('renders nothing when the form is valid', async () => {

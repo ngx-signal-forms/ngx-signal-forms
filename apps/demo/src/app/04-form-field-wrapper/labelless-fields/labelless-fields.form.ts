@@ -1,9 +1,14 @@
-import { Component, input, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  input,
+  signal,
+} from '@angular/core';
 import { FormField, form } from '@angular/forms/signals';
 import {
   createOnInvalidHandler,
   NgxSignalFormToolkit,
-  type ErrorDisplayStrategy,
+  type ResolvedErrorDisplayStrategy,
   type FormFieldAppearance,
   type FormFieldOrientation,
 } from '@ngx-signal-forms/toolkit';
@@ -24,6 +29,7 @@ import { labellessFieldsSchema } from './labelless-fields.validations';
  */
 @Component({
   selector: 'ngx-labelless-fields',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 
   imports: [FormField, NgxSignalFormToolkit, NgxFormField],
   templateUrl: './labelless-fields.html',
@@ -95,7 +101,7 @@ export class LabellessFieldsFormComponent {
 
   readonly #handleInvalidSubmission = createOnInvalidHandler();
 
-  readonly errorDisplayMode = input<ErrorDisplayStrategy>('on-touch');
+  readonly errorDisplayMode = input<ResolvedErrorDisplayStrategy>('on-touch');
   readonly appearance = input<FormFieldAppearance>('standard');
   readonly orientation = input<FormFieldOrientation>('vertical');
 

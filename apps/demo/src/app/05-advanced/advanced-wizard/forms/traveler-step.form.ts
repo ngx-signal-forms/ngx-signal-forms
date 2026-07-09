@@ -5,6 +5,7 @@ import {
   validate,
   validateStandardSchema,
 } from '@angular/forms/signals';
+import { requiredFromStandardSchema } from '@ngx-signal-forms/toolkit';
 
 import { type Traveler, TravelerSchema } from '../schemas/wizard.schemas';
 import type { WizardStore } from '../stores/wizard.store';
@@ -49,6 +50,17 @@ export function createTravelerStepForm(
   // Form with Zod + cross-step passport validation
   const travelerForm = form(model, (path) => {
     validateStandardSchema(path, TravelerSchema);
+
+    // `validateStandardSchema` only registers tree-level validation errors —
+    // Zod's schema shape isn't statically introspectable, so `aria-required`
+    // (and the wrapper's auto marker) need required-ness wired explicitly per
+    // field. See `requiredFromStandardSchema`'s docs and issue #118.
+    requiredFromStandardSchema(path.firstName, TravelerSchema);
+    requiredFromStandardSchema(path.lastName, TravelerSchema);
+    requiredFromStandardSchema(path.email, TravelerSchema);
+    requiredFromStandardSchema(path.nationality, TravelerSchema);
+    requiredFromStandardSchema(path.passportNumber, TravelerSchema);
+    requiredFromStandardSchema(path.passportExpiry, TravelerSchema);
 
     // Cross-step: Passport must be valid 6 months after last departure
     validate(path.passportExpiry, (ctx) => {

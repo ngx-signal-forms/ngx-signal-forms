@@ -1,15 +1,23 @@
-<!-- What You'll See Demonstrated Card -->
+<!-- Form Content Slot — the live example leads so developers land on the task -->
+<ng-content></ng-content>
+
+<!-- What You'll See Demonstrated Card — overview + "Try it" steps sit directly
+     under the form so the example stays self-explanatory without pushing the
+     interactive surface below the fold. -->
 <ngx-card
   variant="primary-outline"
   [labelledBy]="demonstratedHeadingId"
   class="text-left"
 >
-  <div card-header>
-    <h2 [id]="demonstratedHeadingId" class="mb-4 text-lg font-semibold">
+  <div class="example-cards__overview-summary">
+    <h2 [id]="demonstratedHeadingId" class="text-lg font-semibold">
       {{ demonstrated().icon }} {{ demonstrated().title }}
     </h2>
+    <span class="example-cards__overview-hint">
+      What it shows &amp; how to try it
+    </span>
   </div>
-  <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+  <div class="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
     @for (section of demonstrated().sections; track section.title) {
     <div class="example-cards__section">
       <h3 class="mb-2 font-medium text-gray-900 dark:text-gray-100">
@@ -26,9 +34,6 @@
     }
   </div>
 </ngx-card>
-
-<!-- Form Content Slot -->
-<ng-content></ng-content>
 
 <!-- Learning Journey Card -->
 <ngx-card variant="educational">

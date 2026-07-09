@@ -11,7 +11,7 @@ Angular Signal Forms replaces the legacy `ControlValueAccessor` boilerplate with
 - `ngxSignalFormControl="switch"` — native checkbox switch semantics (inline row layout).
 - `ngxSignalFormControl="checkbox"` — opt-in checkbox semantics for a standard checkbox.
 - `ngxSignalFormControl="slider"` — custom slider with `layout: 'custom'` and `ariaMode: 'manual'` so the control owns its own `aria-describedby` chain.
-- Component-scoped control presets inherited via `provideNgxSignalFormControlPresets()`.
+- Component-scoped control presets inherited via `provideNgxSignalFormControlPresetsForComponent()`.
 
 ## Form model
 

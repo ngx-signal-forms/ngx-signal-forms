@@ -145,6 +145,23 @@ export class NgxSignalFormAutoAria {
   });
 
   /**
+   * Whether the previous `afterEveryRender` write tick ran in manual mode —
+   * `null` before the first tick has run. Plain instance state (not a
+   * signal): it is only read/written imperatively inside the write callback
+   * and never needs to trigger reactivity on its own.
+   *
+   * Used solely to detect the auto → manual transition tick (previous tick
+   * was `false`, this tick is manual), so the toolkit-written
+   * `aria-invalid`/`aria-required` values — written unconditionally every
+   * tick in auto mode — can be cleared exactly once when ownership passes to
+   * the consumer, instead of being silently adopted as the new "manual"
+   * snapshot value forever. Starting from `null` (rather than `false`)
+   * avoids misfiring that clear on the very first tick when the control
+   * starts life already in manual mode with consumer-authored attributes.
+   */
+  #previousTickWasManualAriaMode: boolean | null = null;
+
+  /**
    * Shared visibility-timing computed. Centralizes the `shouldShowErrors`
    * decision so `#shouldShowBy` only contributes the per-error-type filter.
    * Keeps auto-aria in lockstep with the wrapper component and the form
@@ -292,11 +309,22 @@ export class NgxSignalFormAutoAria {
 
     const managedIds = [...hintIds];
 
-    if (this.#shouldShowErrors()) {
+    const showsBlockingError = this.#shouldShowErrors();
+
+    if (showsBlockingError) {
       managedIds.push(generateErrorId(snapshot.fieldName));
     }
 
-    if (this.#shouldShowWarnings()) {
+    // Mutually exclusive with the blocking-error id, mirroring
+    // `createAriaDescribedBySignal`'s `!hasBlockingError && ...` guard: the
+    // default `NgxFormFieldError` renderer suppresses its warning live
+    // region whenever a blocking error is also visible, so no
+    // `${fieldName}-warning` element exists in the DOM at that point.
+    // Without this guard, a field with both a blocking error and a `warn:*`
+    // error would have this "which ids does the toolkit own" computation
+    // diverge from the DOM-writing factory — composing a dangling
+    // `${fieldName}-warning` reference (axe `aria-valid-attr-value`).
+    if (!showsBlockingError && this.#shouldShowWarnings()) {
       managedIds.push(generateWarningId(snapshot.fieldName));
     }
 
@@ -427,8 +455,27 @@ export class NgxSignalFormAutoAria {
               this.#managedDescribedByIds.set([]);
             }
 
+            // Auto → manual transition: aria-invalid/aria-required were
+            // toolkit-owned (written unconditionally every tick in auto
+            // mode) up through the previous tick, so the value just read
+            // off the DOM in `earlyRead` is a stale toolkit write, not a
+            // consumer-authored value. Clear both so the consumer starts
+            // from a clean slate instead of inheriting the last
+            // auto-computed values as the new "manual" snapshot. Only fires
+            // on the transition tick itself (`previousTickWasManualAriaMode
+            // === false`) — a control that starts life in manual mode, or
+            // stays in manual mode across ticks, never hits this branch.
+            if (this.#previousTickWasManualAriaMode === false) {
+              this.#writeManagedAttribute('aria-invalid', null);
+              this.#writeManagedAttribute('aria-required', null);
+            }
+
+            this.#previousTickWasManualAriaMode = true;
+
             return;
           }
+
+          this.#previousTickWasManualAriaMode = false;
 
           this.#writeManagedAttribute('aria-invalid', this.ariaInvalid());
           this.#writeManagedAttribute(

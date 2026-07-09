@@ -1,7 +1,13 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { Component, inputBinding, signal } from '@angular/core';
-import { FormField, form, required, schema } from '@angular/forms/signals';
+import {
+  FormField,
+  form,
+  required,
+  schema,
+  validateStandardSchema,
+} from '@angular/forms/signals';
 import { TestBed } from '@angular/core/testing';
 import {
   NGX_SIGNAL_FORMS_CONFIG,
@@ -9,6 +15,7 @@ import {
   NgxSignalFormToolkit,
   provideNgxSignalFormControlPresets,
   provideNgxSignalFormControlPresetsForComponent,
+  requiredFromStandardSchema,
 } from '@ngx-signal-forms/toolkit';
 import { DEFAULT_NGX_SIGNAL_FORMS_CONFIG } from '@ngx-signal-forms/toolkit/core';
 import {
@@ -1068,6 +1075,76 @@ describe('NgxSignalFormWrapperComponent', () => {
       ).toBeNull();
       // …but required state is still exposed programmatically.
       expect(input).toHaveAttribute('aria-required', 'true');
+    });
+
+    it('marks a Standard Schema (Zod-style) required field via requiredFromStandardSchema (regression #118)', async () => {
+      // `validateStandardSchema` alone never surfaces required-ness (Standard
+      // Schema has no runtime shape introspection), so the wrapper's
+      // auto-marker never fired for Zod-validated fields and demos resorted
+      // to a hardcoded `*` in the label. `requiredFromStandardSchema` closes
+      // that gap by probing the schema; this reproduces the wrapper's
+      // acceptance criteria straight from the GitHub issue: aria-required on
+      // the control, a single auto-marker, and a clean accessible name.
+      const fakeZodLikeSchema = {
+        '~standard': {
+          validate: (value: unknown) => {
+            const record = (value ?? {}) as { firstName?: unknown };
+            return record.firstName === undefined
+              ? {
+                  issues: [
+                    { message: 'First name required', path: ['firstName'] },
+                  ],
+                }
+              : { value: record };
+          },
+        },
+      };
+
+      @Component({
+        selector: 'ngx-test-standard-schema-marker',
+        imports: [
+          NgxSignalFormWrapperComponent,
+          NgxSignalFormToolkit,
+          FormField,
+        ],
+        template: `
+          <ngx-form-field-wrapper [formField]="testForm.firstName">
+            <label for="firstName">First Name</label>
+            <input
+              id="firstName"
+              type="text"
+              [formField]="testForm.firstName"
+            />
+          </ngx-form-field-wrapper>
+        `,
+      })
+      class Host {
+        protected readonly testForm = form(
+          signal({ firstName: '' }),
+          schema<{ firstName: string }>((p) => {
+            validateStandardSchema(p, fakeZodLikeSchema);
+            requiredFromStandardSchema(p.firstName, fakeZodLikeSchema);
+          }),
+        );
+      }
+
+      const { container } = await render(Host);
+
+      const input = container.querySelector('#firstName');
+      const formField = container.querySelector('ngx-form-field-wrapper');
+      const markers = formField?.querySelectorAll(
+        '.ngx-signal-form-field-wrapper__marker',
+      );
+
+      expect(input).toHaveAttribute('aria-required', 'true');
+      expect(formField).toHaveAttribute('data-marker', 'required');
+      expect(markers).toHaveLength(1);
+      // The marker text lives outside the label's accessible name (it's
+      // `aria-hidden`), so the control's accessible name stays "First Name",
+      // never "First Name *".
+      expect(container.querySelector('label')?.textContent?.trim()).toBe(
+        'First Name',
+      );
     });
 
     it('honours a global showMarkerWhen config (provider fallback, no input)', async () => {
@@ -2299,12 +2376,7 @@ describe('NgxSignalFormWrapperComponent', () => {
       const edgeCaseField = signal({
         invalid: () => true,
         touched: () => true,
-        errors: () => [
-          { message: 'Error without kind' } as {
-            kind?: string;
-            message: string;
-          },
-        ],
+        errors: () => [{ message: 'Error without kind' }],
       });
 
       const { container } = await render(
@@ -2390,6 +2462,85 @@ describe('NgxSignalFormWrapperComponent', () => {
       expect(
         formField?.classList.contains('ngx-signal-form-field-wrapper--warning'),
       ).toBe(false);
+    });
+
+    describe('strategy="on-submit" without a form context', () => {
+      // Regression: `createShowErrorsComputed` (core/utilities/show-errors.ts)
+      // emits a one-shot dev warning when 'on-submit' is used without an
+      // explicit submittedStatus, since errors will otherwise never surface.
+      // The wrapper used to always supply a status signal that fell back to
+      // 'unsubmitted' when there was no [formRoot]/ngxSignalForm context, so
+      // `resolvedStatus === undefined` was never true through the wrapper
+      // and the diagnostic never fired — silently defeating the strategy
+      // with no signal why. The wrapper must let the primitive's warning
+      // fire (by passing `undefined` through, not a manufactured default)
+      // when it has no form context to source a real status from.
+      let warnSpy: ReturnType<typeof vi.spyOn>;
+
+      beforeEach(() => {
+        warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      });
+
+      afterEach(() => {
+        warnSpy.mockRestore();
+      });
+
+      it('emits the dev-mode miswiring warning', async () => {
+        const invalidField = signal({
+          invalid: () => true,
+          touched: () => true,
+          errors: () => [{ kind: 'required', message: 'Required' }],
+        });
+
+        await render(
+          `<ngx-form-field-wrapper
+            [formField]="field"
+            fieldName="test-field"
+            strategy="on-submit"
+          >
+            <label for="test">Test</label>
+            <input id="test" type="text" />
+          </ngx-form-field-wrapper>`,
+          {
+            imports: [NgxSignalFormWrapperComponent],
+            componentProperties: { field: invalidField },
+          },
+        );
+
+        expect(warnSpy).toHaveBeenCalled();
+        const message = warnSpy.mock.calls
+          .map((call) => String(call[0]))
+          .find((text) => text.includes('on-submit'));
+        expect(message).toBeDefined();
+        expect(message).toContain('submittedStatus');
+      });
+
+      it('still never shows errors, matching the always-unsubmitted fallback behavior', async () => {
+        const invalidField = signal({
+          invalid: () => true,
+          touched: () => true,
+          errors: () => [{ kind: 'required', message: 'Required' }],
+        });
+
+        const { container } = await render(
+          `<ngx-form-field-wrapper
+            [formField]="field"
+            fieldName="test-field"
+            strategy="on-submit"
+          >
+            <label for="test">Test</label>
+            <input id="test" type="text" />
+          </ngx-form-field-wrapper>`,
+          {
+            imports: [NgxSignalFormWrapperComponent],
+            componentProperties: { field: invalidField },
+          },
+        );
+
+        // The strategy still resolves to 'unsubmitted' internally, so
+        // behavior is unchanged — only the dev diagnostic is new.
+        expect(container.querySelector('ngx-form-field-error')).toBeNull();
+      });
     });
   });
 

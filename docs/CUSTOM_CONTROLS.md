@@ -46,19 +46,21 @@ The primary interface for custom controls that read and write a value:
 @Directive({
   selector: '[appCustomInput]',
   host: {
-    '(input)': 'onChange($event.target.value)',
-    '(blur)': 'onTouched()',
+    '[value]': 'value()',
+    '(input)': 'value.set($event.target.value)',
+    '(blur)': 'touch.emit()',
   },
 })
 export class CustomInputDirective implements FormValueControl<string> {
   readonly #el = inject(ElementRef<HTMLInputElement>);
 
-  onChange: (value: string) => void = () => {};
-  onTouched: () => void = () => {};
+  // `value` is the only member the contract requires — Angular keeps it in
+  // sync with the bound field in both directions.
+  readonly value = model('');
 
-  writeValue(value: string): void {
-    this.#el.nativeElement.value = value ?? '';
-  }
+  // `touch` is optional: emit it whenever the control should report
+  // interaction (the `Field` directive marks the field touched in response).
+  readonly touch = output();
 
   focus(): void {
     this.#el.nativeElement.focus();
@@ -78,19 +80,20 @@ For toggle-like inputs with a checked state:
 @Directive({
   selector: '[appCustomToggle]',
   host: {
-    '(change)': 'onChange($event.target.checked)',
-    '(blur)': 'onTouched()',
+    '[checked]': 'checked()',
+    '(change)': 'checked.set($event.target.checked)',
+    '(blur)': 'touch.emit()',
   },
 })
 export class CustomToggleDirective implements FormCheckboxControl {
   readonly #el = inject(ElementRef<HTMLInputElement>);
 
-  onChange: (value: boolean) => void = () => {};
-  onTouched: () => void = () => {};
+  // `checked` is the only member the contract requires. A control that
+  // implements `FormCheckboxControl` must not also define `value`.
+  readonly checked = model(false);
 
-  writeValue(value: boolean): void {
-    this.#el.nativeElement.checked = value;
-  }
+  // Optional: report interaction so strategy-aware error visibility works.
+  readonly touch = output();
 
   focus(): void {
     this.#el.nativeElement.focus();
@@ -292,7 +295,7 @@ Use whichever import fits your component best:
 
 ## FAQ
 
-### Does RC2 switch alignment support break native switches?
+### Does explicit switch control semantics break existing native switches?
 
 No — not for the normal native switch pattern.
 
@@ -388,7 +391,7 @@ Or with headless primitives:
 >
   <app-custom-field [formField]="form.password" />
 
-  @if (errorState.showWarnings() && errorState.hasWarnings()) {
+  @if (errorState.shouldShowWarnings() && errorState.hasWarnings()) {
   <div role="status" aria-live="polite">
     @for (warning of errorState.resolvedWarnings(); track warning.kind) {
     <span>{{ warning.message }}</span>
@@ -406,8 +409,7 @@ projected control's `id` attribute. For custom and third-party controls,
 **one of these must resolve to a non-empty string** for `aria-describedby`
 linkage to work.
 
-From v1 RC onward, missing identity is handled **gracefully rather than
-fatally**:
+Missing identity is handled **gracefully rather than fatally**:
 
 - `resolvedFieldName()`, `errorId()`, and `warningId()` return `null`.
 - The wrapper, error component, and headless directives skip their
@@ -440,9 +442,12 @@ on the wrapper or an `id` on the bound control:
 When building custom controls that work with the toolkit:
 
 - [ ] Implement `FormValueControl<T>`, `FormCheckboxControl`, or `FormUiControl`
+- [ ] Expose the contract's required model — `readonly value = model<T>(...)` for
+      `FormValueControl<T>`, `readonly checked = model(false)` for
+      `FormCheckboxControl` (never define both on the same control)
 - [ ] Implement `focus()` method for `focusBoundControl()` support
-- [ ] Call `onTouched()` on blur for strategy-aware error visibility
-- [ ] Call `onChange()` on value change for reactive model updates
+- [ ] Emit an optional `touch = output()` on blur for strategy-aware error visibility
+- [ ] Update the `value`/`checked` model signal on user interaction so the bound field stays in sync
 - [ ] Accept `disabled` and `invalid` signal inputs for state reflection
 - [ ] Use `[formField]` directive binding (not manual wiring)
 - [ ] Test that `focusFirstInvalid()` reaches your control
@@ -456,6 +461,8 @@ import {
   Component,
   ElementRef,
   input,
+  model,
+  output,
   viewChild,
 } from '@angular/core';
 import type { FormValueControl } from '@angular/forms/signals';
@@ -467,8 +474,9 @@ import type { FormValueControl } from '@angular/forms/signals';
     <select
       #select
       [id]="selectId()"
-      (change)="onChange(select.value)"
-      (blur)="onTouched()"
+      [value]="value()"
+      (change)="value.set(select.value)"
+      (blur)="touch.emit()"
       [disabled]="disabled()"
       [attr.aria-invalid]="invalid() ? 'true' : null"
     >
@@ -488,12 +496,8 @@ export class CustomSelectComponent implements FormValueControl<string> {
   readonly disabled = input<boolean>(false);
   readonly invalid = input<boolean>(false);
 
-  onChange: (value: string) => void = () => {};
-  onTouched: () => void = () => {};
-
-  writeValue(value: string): void {
-    this.#select().nativeElement.value = value ?? '';
-  }
+  readonly value = model('');
+  readonly touch = output();
 
   focus(): void {
     this.#select().nativeElement.focus();

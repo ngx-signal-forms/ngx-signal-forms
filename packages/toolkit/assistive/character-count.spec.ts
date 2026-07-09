@@ -278,8 +278,16 @@ describe('NgxFormFieldCharacterCount', () => {
       expect(screen.getByText('98/100')).toBeInTheDocument();
     });
 
-    it('should clamp custom thresholds to valid range (0-100)', async () => {
-      const { container } = await render(TestWrapperComponent, {
+    it('does NOT clamp out-of-range thresholds — values above 100 are passed straight through', async () => {
+      // Regression/documentation test: `colorThresholds` is entirely
+      // unvalidated (see character-count.ts `#charCountState`). Percentages
+      // are divided by 100 and used as raw ratios with no clamping, so a
+      // `warning`/`danger` above 100 produces a ratio the component can
+      // never reach via the normal 0-100% "ok" range — those thresholds
+      // become unreachable and the state jumps straight from 'ok' to
+      // 'exceeded' once `current > maxLength`. This is the actual current
+      // behavior; a real "clamp to 0-100" feature does not exist.
+      const { rerender, container } = await render(TestWrapperComponent, {
         componentInputs: {
           textModel: 'a'.repeat(50),
           maxLength: 100,
@@ -287,10 +295,54 @@ describe('NgxFormFieldCharacterCount', () => {
         },
       });
 
+      const host = () =>
+        container.querySelector('ngx-form-field-character-count');
+
+      // 50% — nowhere near the (unreachable) 150%/200% thresholds.
+      expect(host()).toHaveAttribute('data-limit-state', 'ok');
+
+      // Even at exactly the limit (ratio === 1), the unreachable thresholds
+      // mean the state is still 'ok' — never 'warning' or 'danger'.
+      await rerender({
+        componentInputs: {
+          textModel: 'a'.repeat(100),
+          maxLength: 100,
+          colorThresholds: { warning: 150, danger: 200 },
+        },
+      });
+      await TestBed.inject(ApplicationRef).whenStable();
+      expect(host()).toHaveAttribute('data-limit-state', 'ok');
+
+      // One character over the limit flips straight to 'exceeded' — the
+      // ratio > 1 branch is checked before the (unreachable) danger/warning
+      // thresholds, so there is no intermediate 'warning'/'danger' state.
+      await rerender({
+        componentInputs: {
+          textModel: 'a'.repeat(101),
+          maxLength: 100,
+          colorThresholds: { warning: 150, danger: 200 },
+        },
+      });
+      await TestBed.inject(ApplicationRef).whenStable();
+      expect(host()).toHaveAttribute('data-limit-state', 'exceeded');
+    });
+
+    it('does NOT validate negative thresholds — a negative warning threshold makes every non-empty value "warning"', async () => {
+      // Further documents the "entirely unvalidated" contract: a negative
+      // percentage divides down to a negative ratio, which `ratio >=
+      // warning` satisfies immediately (any non-negative ratio is >= a
+      // negative number). This is a real gap, not desired behavior — noted
+      // for a future follow-up rather than fixed here (test-hardening pass).
+      const { container } = await render(TestWrapperComponent, {
+        componentInputs: {
+          textModel: 'a',
+          maxLength: 100,
+          colorThresholds: { warning: -10, danger: 95 },
+        },
+      });
+
       const host = container.querySelector('ngx-form-field-character-count');
-      // When thresholds are clamped to 100, 50% is below the warning threshold
-      expect(host).toHaveAttribute('data-limit-state', 'ok');
-      expect(screen.getByText('50/100')).toBeInTheDocument();
+      expect(host).toHaveAttribute('data-limit-state', 'warning');
     });
   });
 
@@ -450,6 +502,45 @@ describe('NgxFormFieldCharacterCount', () => {
 
       expect(liveRegion()).toHaveTextContent(
         'Character limit exceeded by 5 characters.',
+      );
+    });
+
+    it('should route announcements through a custom announcementFormatter for i18n', async () => {
+      // Regression test: the built-in announcement strings ("Approaching
+      // limit: N characters remaining.", etc.) were previously hardcoded
+      // English with no override hook, making them untranslatable without
+      // forking the component. `announcementFormatter` lets consumers
+      // supply localized strings.
+      @Component({
+        selector: 'ngx-test-i18n-announcement',
+        standalone: true,
+        imports: [NgxFormFieldCharacterCount],
+        template: `
+          <ngx-form-field-character-count
+            [formField]="testForm.text"
+            [maxLength]="100"
+            [liveAnnounce]="true"
+            [announcementFormatter]="formatter"
+          />
+        `,
+      })
+      class I18nWrapperComponent {
+        readonly #model = signal({ text: 'a'.repeat(80) });
+        protected readonly testForm = form(this.#model);
+        readonly formatter = (
+          state: 'warning' | 'danger' | 'exceeded',
+          info: { remaining: number; over: number },
+        ): string =>
+          `[${state}] restants: ${info.remaining}, dépassement: ${info.over}`;
+      }
+
+      const { container } = await render(I18nWrapperComponent);
+
+      const liveRegion = container.querySelector(
+        '.ngx-signal-form-field-char-count__sr',
+      );
+      expect(liveRegion).toHaveTextContent(
+        '[warning] restants: 20, dépassement: 0',
       );
     });
   });

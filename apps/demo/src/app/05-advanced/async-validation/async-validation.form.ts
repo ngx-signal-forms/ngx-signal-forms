@@ -1,5 +1,11 @@
 import { JsonPipe } from '@angular/common';
-import { Component, computed, input, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  input,
+  signal,
+} from '@angular/core';
 import {
   debounce,
   form,
@@ -10,7 +16,7 @@ import {
   validateHttp,
 } from '@angular/forms/signals';
 import {
-  type ErrorDisplayStrategy,
+  type ResolvedErrorDisplayStrategy,
   type FormFieldAppearance,
   type FormFieldOrientation,
   createOnInvalidHandler,
@@ -93,6 +99,7 @@ const registrationSchema = schema<Registration>((path) => {
 
 @Component({
   selector: 'ngx-async-validation',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 
   imports: [FormField, NgxSignalFormToolkit, NgxFormField, JsonPipe],
   template: `
@@ -258,7 +265,7 @@ const registrationSchema = schema<Registration>((path) => {
   `,
 })
 export class AsyncValidationComponent {
-  readonly errorDisplayMode = input<ErrorDisplayStrategy>('on-touch');
+  readonly errorDisplayMode = input<ResolvedErrorDisplayStrategy>('on-touch');
   readonly appearance = input<FormFieldAppearance>('outline');
   readonly orientation = input<FormFieldOrientation>('vertical');
 

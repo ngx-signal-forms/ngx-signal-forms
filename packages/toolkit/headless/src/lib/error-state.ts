@@ -9,6 +9,7 @@ import {
 import type { FieldTree, ValidationError } from '@angular/forms/signals';
 import {
   injectFormContext,
+  NGX_SIGNAL_FORMS_CONFIG,
   resolveStrategyFromContext,
   resolveSubmittedStatusFromContext,
   showErrors,
@@ -115,6 +116,7 @@ export class NgxHeadlessErrorState<
   readonly #errorMessagesRegistry = inject(NGX_ERROR_MESSAGES, {
     optional: true,
   });
+  readonly #config = inject(NGX_SIGNAL_FORMS_CONFIG, { optional: true });
 
   /**
    * Bridged field-state signal, set by host components that cannot forward
@@ -202,8 +204,19 @@ export class NgxHeadlessErrorState<
     this.#bridgedFieldState.set(s);
   }
 
+  /**
+   * Resolution order: `strategy` input (when not `'inherit'`) → ambient
+   * form context → the global `NGX_SIGNAL_FORMS_CONFIG.defaultErrorStrategy`
+   * → `'on-touch'`. Mirrors `NgxHeadlessFieldset.resolvedStrategy`'s cascade
+   * so standalone usage (no `[ngxSignalForm]` host) behaves consistently
+   * regardless of which headless surface a consumer reaches for.
+   */
   readonly #resolvedStrategy = computed<ResolvedErrorDisplayStrategy>(() =>
-    resolveStrategyFromContext(this.strategy(), this.#injectedContext),
+    resolveStrategyFromContext(
+      this.strategy(),
+      this.#injectedContext,
+      this.#config?.defaultErrorStrategy,
+    ),
   );
 
   /**

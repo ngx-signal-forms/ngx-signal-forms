@@ -62,6 +62,7 @@ export interface NgxMatFeedbackContext {
  */
 @Directive({
   selector: '[ngxMatFeedback]',
+  exportAs: 'ngxMatFeedback',
 })
 export class NgxMatFeedback<TValue = unknown> {
   /** Field whose errors / warnings populate the feedback blocks. */
@@ -130,6 +131,23 @@ export class NgxMatFeedback<TValue = unknown> {
       ];
     }
     return [];
+  });
+
+  /**
+   * Space-joined id(s) of the block(s) currently rendered by this directive
+   * — `'{fieldName}-error'`, `'{fieldName}-warning'`, or `null` when neither
+   * is showing. Consumers grab the directive instance via a template
+   * reference (`#ref="ngxMatFeedback"`) and bind it to the bound control's
+   * `aria-describedby`-shaped input (e.g. `[aria-describedby]="ref.describedByIds()"`
+   * on `<mat-checkbox>`, which exposes a public `ariaDescribedby` input) so
+   * screen readers get a programmatic association even though the control
+   * lives outside `<mat-form-field>`. Because `#blocks` never renders more
+   * than one entry, `null` is returned whenever nothing is visible — no
+   * dangling IDREFs.
+   */
+  readonly describedByIds = computed<string | null>(() => {
+    const ids = this.#blocks().map((block) => block.id);
+    return ids.length > 0 ? ids.join(' ') : null;
   });
 
   /** @internal — type guard for template language services. */
