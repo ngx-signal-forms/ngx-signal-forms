@@ -499,7 +499,7 @@ form(
       ({ value }) => value() !== 'admin',
       (namePath) => {
         validate(namePath.last /* ... */);
-        disable(namePath.last /* ... */);
+        disabled(namePath.last /* ... */);
       },
     );
   },
@@ -518,7 +518,7 @@ form(
       cat,
       ({ value }) => value().name !== 'admin',
       (catPath) => {
-        require(cat.catPath /* ... */);
+        required(catPath /* ... */);
       },
     );
   },
@@ -539,7 +539,7 @@ form(
 | **Calling Paths**      | `applyWhen(p.foo, () => p.foo() === 'x')`     | `applyWhen(p.foo, ({ valueOf }) => valueOf(p.foo) === 'x')`                      |
 | **applyWhen args**     | `applyWhen(condition, () => {...})`           | `applyWhen(path, condition, schemaFn)` - needs 3 args                            |
 | **Array length**       | `form.items().length`                         | `form.items.length` (structural)                                                 |
-| **Multi-select array** | `<select [formField]="form.tags">` (string[]) | Use checkboxes for array fields                                                  |
+| **Multi-select array** | `<select [formField]="form.tags">` (string[]) | Use `<select multiple [formField]>` for string[] fields                          |
 | **readonly attribute** | `<input readonly [formField]>`                | Use `readonly()` rule in schema                                                  |
 | **min/max attributes** | `<input min="1" max="10">`                    | Use `min()` and `max()` rules in schema                                          |
 | **value binding**      | `<input [value]="val">`                       | Do NOT use `[value]` with `[formField]` (static `value` on radio/checkbox is OK) |
