@@ -21,22 +21,22 @@ catalogs:
     '@axe-core/playwright': '^4.12.1'
     axe-core: '^4.12.1'
   angular:
-    '@angular/animations': '22.0.5'
+    '@angular/animations': '22.0.6'
     '@angular/aria': '22.0.4'
     '@angular/cdk': '22.0.4'
-    '@angular/common': 22.0.5
-    '@angular/compiler': 22.0.5
-    '@angular/core': 22.0.5
-    '@angular/forms': 22.0.5
-    '@angular/platform-browser': 22.0.5
-    '@angular/router': 22.0.5
+    '@angular/common': 22.0.6
+    '@angular/compiler': 22.0.6
+    '@angular/core': 22.0.6
+    '@angular/forms': 22.0.6
+    '@angular/platform-browser': 22.0.6
+    '@angular/router': 22.0.6
   angular-build:
-    '@angular-devkit/core': '22.0.5'
-    '@angular-devkit/schematics': '22.0.5'
-    '@angular/build': '22.0.5'
-    '@angular/cli': '22.0.5'
-    '@angular/compiler-cli': '22.0.5'
-    '@angular/language-service': '22.0.5'
+    '@angular-devkit/core': '22.0.6'
+    '@angular-devkit/schematics': '22.0.6'
+    '@angular/build': '22.0.6'
+    '@angular/cli': '22.0.6'
+    '@angular/compiler-cli': '22.0.6'
+    '@angular/language-service': '22.0.6'
     '@schematics/angular': '22.0.5'
     ng-packagr: '22.0.1'
   angular-eslint:
@@ -49,15 +49,15 @@ catalogs:
     '@angular-architects/ngrx-toolkit': '21.0.1'
     '@ngrx/signals': '21.1.1'
   nx:
-    '@nx/angular': '23.0.1'
-    '@nx/devkit': '23.0.1'
-    '@nx/eslint-plugin': '23.0.1'
-    '@nx/js': '23.0.1'
-    '@nx/playwright': '23.0.1'
-    '@nx/vite': '23.0.1'
-    '@nx/vitest': '23.0.1'
-    '@nx/web': '23.0.1'
-    '@nx/workspace': '23.0.1'
+    '@nx/angular': '23.0.2'
+    '@nx/devkit': '23.0.2'
+    '@nx/eslint-plugin': '23.0.2'
+    '@nx/js': '23.0.2'
+    '@nx/playwright': '23.0.2'
+    '@nx/vite': '23.0.2'
+    '@nx/vitest': '23.0.2'
+    '@nx/web': '23.0.2'
+    '@nx/workspace': '23.0.2'
     nx: '23.0.1'
   playwright:
     '@playwright/test': '^1.61.1'
@@ -73,8 +73,8 @@ catalogs:
   spartan:
     '@ng-icons/core': '^33.4.0'
     '@ng-icons/lucide': '^33.4.0'
-    '@spartan-ng/brain': '1.0.4'
-    '@spartan-ng/cli': '1.0.4'
+    '@spartan-ng/brain': '1.1.0'
+    '@spartan-ng/cli': '1.1.0'
     class-variance-authority: '^0.7.1'
     clsx: '^2.1.1'
     tailwind-merge: '^3.6.0'
@@ -92,7 +92,7 @@ catalogs:
     tailwindcss: '^4.3.2'
   testing:
     jsdom: '~29.1.1'
-    msw: '~2.14.7'
+    msw: '~2.15.0'
   testing-library:
     '@testing-library/angular': '^19.4.1'
     '@testing-library/dom': '^10.4.1'
@@ -100,8 +100,8 @@ catalogs:
     '@testing-library/user-event': '^14.6.1'
   tooling:
     '@oxc-project/runtime': '^0.139.0'
-    '@types/node': '26.1.0'
-    eslint: '^10.6.0'
+    '@types/node': '26.1.1'
+    eslint: '^10.7.0'
     jiti: '2.7.0'
     lint-staged: '^17.0.8'
     oxfmt: '^0.58.0'
@@ -115,7 +115,7 @@ catalogs:
     rxjs: '~7.8.2'
     tslib: '^2.8.1'
   validation:
-    arktype: '^2.2.2'
+    arktype: '^2.2.3'
     vest: '6.3.2'
     zod: '^4.4.3'
   vitest:
