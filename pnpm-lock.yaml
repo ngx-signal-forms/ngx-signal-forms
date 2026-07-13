@@ -153,8 +153,8 @@ catalogs:
       specifier: ^33.4.0
       version: 33.4.0
     '@ng-icons/lucide':
-      specifier: ^33.4.0
-      version: 33.4.0
+      specifier: ^34.0.0
+      version: 34.0.0
     '@spartan-ng/brain':
       specifier: 1.0.4
       version: 1.0.4
@@ -351,7 +351,7 @@ importers:
         version: 33.4.0(@angular-devkit/schematics@22.0.5(chokidar@5.0.0))(@angular/common@22.0.5(@angular/core@22.0.5(@angular/compiler@22.0.5)(rxjs@7.8.2))(rxjs@7.8.2))(@angular/core@22.0.5(@angular/compiler@22.0.5)(rxjs@7.8.2))(@schematics/angular@22.0.5(chokidar@5.0.0))(rxjs@7.8.2)
       '@ng-icons/lucide':
         specifier: catalog:spartan
-        version: 33.4.0
+        version: 34.0.0
       '@ngrx/signals':
         specifier: catalog:ngrx
         version: 21.1.1(@angular/core@22.0.5(@angular/compiler@22.0.5)(rxjs@7.8.2))(rxjs@7.8.2)
@@ -2465,8 +2465,8 @@ packages:
       '@schematics/angular': '>=21.0.0'
       rxjs: ^6.5.3 || ^7.4.0
 
-  '@ng-icons/lucide@33.4.0':
-    resolution: {integrity: sha512-fOztOy5T+Y07fru7nWq27PC96B35Y2DeJY357ZeKBr5R1yUJhxqQXPRcxOf+wrTJes8I20sKBqfWhHH1eiL9JQ==}
+  '@ng-icons/lucide@34.0.0':
+    resolution: {integrity: sha512-cojXLo23MA4l8qqwLkKs/Ym66/eXSzpJ8ZvaQOTOK1sRSEjZiQBc4emyGJpqZLr12FO9xssLMfdnqa2tag+yWw==}
 
   '@ngrx/signals@21.1.1':
     resolution: {integrity: sha512-AXxsvO39cJ4gu2GMvLyUHwx+3qHi35Bn7OUqyIfJW0fffi/Af7ML6h0MPMWDHVROo55FBgxzJrYRswwzdew9VA==}
@@ -11370,7 +11370,7 @@ snapshots:
       rxjs: 7.8.2
       tslib: 2.8.1
 
-  '@ng-icons/lucide@33.4.0':
+  '@ng-icons/lucide@34.0.0':
     dependencies:
       tslib: 2.8.1
 
