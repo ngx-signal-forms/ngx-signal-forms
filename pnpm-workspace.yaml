@@ -58,7 +58,7 @@ catalogs:
     '@nx/vitest': '23.0.1'
     '@nx/web': '23.0.1'
     '@nx/workspace': '23.0.1'
-    nx: '23.0.1'
+    nx: '23.0.2'
   playwright:
     '@playwright/test': '^1.61.1'
     eslint-plugin-playwright: '^2.10.5'
