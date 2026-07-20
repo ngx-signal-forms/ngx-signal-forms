@@ -46,7 +46,7 @@ jobs:
         with:
           run_install: false
 
-      - uses: actions/setup-node@v6
+      - uses: actions/setup-node@v7
         with:
           node-version-file: '.node-version'
           cache: 'pnpm'
@@ -201,7 +201,7 @@ jobs:
         with:
           run_install: false
 
-      - uses: actions/setup-node@v6
+      - uses: actions/setup-node@v7
         with:
           node-version-file: '.node-version'
           cache: 'pnpm'
@@ -264,7 +264,7 @@ jobs:
         with:
           run_install: false
 
-      - uses: actions/setup-node@v6
+      - uses: actions/setup-node@v7
         with:
           node-version-file: '.node-version'
           cache: 'pnpm'
@@ -312,7 +312,7 @@ jobs:
         with:
           run_install: false
 
-      - uses: actions/setup-node@v6
+      - uses: actions/setup-node@v7
         with:
           node-version-file: '.node-version'
           cache: 'pnpm'
