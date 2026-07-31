@@ -242,38 +242,26 @@ Displays progress towards a character limit.
 
 Layout container for hint/error and character count alignment.
 
-| Property                                   | Default   | Description                                                       |
-| :----------------------------------------- | :-------- | :---------------------------------------------------------------- |
-| `--ngx-form-field-assistive-min-height`    | `1.25rem` | Reserved line height for rows that carry content (see note below) |
-| `--ngx-form-field-assistive-gap`           | `0.5rem`  | Gap between left and right content                                |
-| `--ngx-form-field-assistive-margin-top`    | `0.25rem` | Spacing above assistive row                                       |
-| `--ngx-form-field-assistive-margin-bottom` | `0.25rem` | Spacing below assistive row                                       |
-| `--ngx-form-field-assistive-empty-display` | `none`    | `display` used for a content-less assistive row                   |
+| Property                                   | Default                                           | Description                                           |
+| :----------------------------------------- | :------------------------------------------------ | :---------------------------------------------------- |
+| `--ngx-form-field-assistive-min-height`    | `--ngx-signal-form-feedback-line-height` (`1rem`) | Reserved line, prevents layout shift when errors show |
+| `--ngx-form-field-assistive-gap`           | `0.5rem`                                          | Gap between left and right content                    |
+| `--ngx-form-field-assistive-margin-top`    | `0.25rem`                                         | Spacing above assistive row                           |
+| `--ngx-form-field-assistive-margin-bottom` | `0`                                               | Spacing below assistive row                           |
 
-#### Reserved space vs. collapsed rows
+#### Reserved space
 
-The assistive row reserves `--ngx-form-field-assistive-min-height` so a field
-does not jump when its hint is swapped for an error or warning message. That
-reservation only applies to rows that actually carry content: an assistive row
-with no hint, no message and no character count collapses entirely
-(`display: none`), so fields without assistive content add no vertical spacing.
+The assistive row is always reserved so a field does not shift when its hint is
+swapped for an error or warning. The reservation is exactly one caption line
+(`--ngx-signal-form-feedback-line-height`, `1rem`) — enough for a single-line
+hint or message — plus a `0.25rem` separation from the control. Multi-line
+messages grow the row, which is the only accepted shift.
 
-Consumers who prefer a permanently reserved row — zero reflow when the first
-message appears, at the cost of extra space under every field — can opt back in
-from any ancestor scope:
+Scale or drop the reserved line per form scope:
 
 ```css
 .my-form {
-  --ngx-form-field-assistive-empty-display: flex;
-}
-```
-
-To change the size of the reserved line (or drop it altogether for fields that
-_do_ have assistive content), override the min-height instead:
-
-```css
-.my-form {
-  --ngx-form-field-assistive-min-height: 0;
+  --ngx-form-field-assistive-min-height: 1.25rem;
 }
 ```
 

@@ -6,14 +6,10 @@ import { NgxFormFieldHint } from '@ngx-signal-forms/toolkit/assistive';
 import { NgxFormFieldWrapper } from './form-field-wrapper';
 
 /**
- * Regression coverage for #246: the assistive row reserved
- * `--ngx-form-field-assistive-min-height` (plus its margins) on *every*
- * field, even ones that never project a hint, message or character count.
- * The reservation must only apply once the row actually carries content.
- *
- * The collapse is driven by `:has()`, which jsdom does not evaluate, so the
- * rendered heights are asserted here rather than in the jsdom suite (which
- * locks in the CSS source contract instead).
+ * Regression coverage for #246: the assistive row reserved 1.25rem plus
+ * 0.25rem top/bottom margins on every field, which is more space than a
+ * single caption line needs. The row must stay reserved (no layout shift when
+ * an error replaces a hint) but only as tall as one caption line.
  */
 describe('NgxFormFieldWrapper — assistive row reserved space', () => {
   @Component({
@@ -43,38 +39,34 @@ describe('NgxFormFieldWrapper — assistive row reserved space', () => {
       ),
     );
 
-  it('collapses the assistive row when no assistive content is projected', async () => {
+  it('keeps the assistive row reserved even without assistive content', async () => {
     const { container } = await render(Host);
 
-    const [bare, hinted] = assistiveRows(container);
+    const [bare] = assistiveRows(container);
 
-    expect(getComputedStyle(bare).display).toBe('none');
-    expect(bare.getBoundingClientRect().height).toBe(0);
-    expect(getComputedStyle(hinted).display).toBe('flex');
-    expect(hinted.getBoundingClientRect().height).toBeGreaterThan(0);
+    expect(getComputedStyle(bare).display).toBe('flex');
+    expect(bare.getBoundingClientRect().height).toBeCloseTo(16, 1);
   });
 
-  it('reserves the min-height line for rows that do carry content', async () => {
+  it('reserves exactly one caption line plus a small top margin', async () => {
     const { container } = await render(Host);
 
-    const [, hinted] = assistiveRows(container);
+    for (const row of assistiveRows(container)) {
+      const styles = getComputedStyle(row);
 
-    // 1.25rem default reservation, so the row keeps a stable height when the
-    // hint is swapped for an error message.
-    expect(parseFloat(getComputedStyle(hinted).minHeight)).toBeCloseTo(20, 1);
+      expect(parseFloat(styles.minHeight)).toBeCloseTo(16, 1);
+      expect(parseFloat(styles.marginTop)).toBeCloseTo(4, 1);
+      expect(parseFloat(styles.marginBottom)).toBeCloseTo(0, 1);
+    }
   });
 
-  it('restores the reserved row when the opt-in escape hatch is set', async () => {
+  it('follows the shared feedback line-height token', async () => {
     const { container } = await render(Host);
 
     const [bare] = assistiveRows(container);
     const wrapper = bare.closest('ngx-form-field-wrapper') as HTMLElement;
-    wrapper.style.setProperty(
-      '--ngx-form-field-assistive-empty-display',
-      'flex',
-    );
+    wrapper.style.setProperty('--ngx-signal-form-feedback-line-height', '2rem');
 
-    expect(getComputedStyle(bare).display).toBe('flex');
-    expect(bare.getBoundingClientRect().height).toBeGreaterThan(0);
+    expect(parseFloat(getComputedStyle(bare).minHeight)).toBeCloseTo(32, 1);
   });
 });
