@@ -4256,5 +4256,16 @@ describe('NgxSignalFormWrapperComponent', () => {
         /\.ngx-signal-form-field-wrapper__assistive-left:empty,\s*\.ngx-signal-form-field-wrapper__assistive-right:empty\s*\{\s*display:\s*none;/,
       );
     });
+
+    // The reserved line (`--ngx-form-field-assistive-min-height`) must only
+    // apply to rows that actually carry content; a content-less row would
+    // otherwise add dead space under every field (#246). jsdom cannot
+    // evaluate `:has()`, so the source contract is locked in here and the
+    // rendered behaviour is asserted in the browser suite.
+    it('collapses the content-less assistive row in CSS source, with an opt-in escape hatch', () => {
+      expect(wrapperCssSource).toMatch(
+        /\.ngx-signal-form-field-wrapper__assistive:not\(\s*:has\(\s*\.ngx-signal-form-field-wrapper__assistive-left > \*:not\(:empty\),\s*\.ngx-signal-form-field-wrapper__assistive-right > \*\s*\)\s*\)\s*\{\s*display:\s*var\(--ngx-form-field-assistive-empty-display,\s*none\);/,
+      );
+    });
   });
 });

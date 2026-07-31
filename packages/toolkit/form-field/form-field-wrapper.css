@@ -1079,6 +1079,34 @@
 }
 
 /*
+ * Collapse the whole assistive row when it carries no content at all.
+ *
+ * `--ngx-form-field-assistive-min-height` reserves a line so a field does not
+ * jump when its hint is swapped for an error. That reservation is only useful
+ * for fields that actually have assistive content; applied unconditionally it
+ * added min-height + margins of dead space below every field that never shows
+ * a hint, message or character count (#246).
+ *
+ * The row therefore only renders once something lands in it:
+ * - left slot: an error/warning renderer, or a non-empty hint wrapper (the
+ *   wrapper element itself is always in the DOM, so emptiness is checked one
+ *   level down)
+ * - right slot: any projected character-count element
+ *
+ * Consumers who prefer a permanently reserved row (zero reflow when the first
+ * message appears) can opt back in from any ancestor scope:
+ * `--ngx-form-field-assistive-empty-display: flex;`
+ */
+.ngx-signal-form-field-wrapper__assistive:not(
+  :has(
+    .ngx-signal-form-field-wrapper__assistive-left > *:not(:empty),
+    .ngx-signal-form-field-wrapper__assistive-right > *
+  )
+) {
+  display: var(--ngx-form-field-assistive-empty-display, none);
+}
+
+/*
  * When the right slot contains content (e.g. character count),
  * force the hint in the left slot to align left.
  */
