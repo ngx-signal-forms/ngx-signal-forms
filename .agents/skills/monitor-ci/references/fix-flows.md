@@ -34,7 +34,7 @@ Spawn FETCH_HEAVY subagent, then analyze fix content (`suggestedFixDescription`,
 
 - If fix looks correct → apply via MCP
 - If fix needs enhancement → Apply Locally + Enhance Flow
-- If fix is wrong → run `ci-state-update.mjs gate --gate-type local-fix --local-verify-count <local_verify_count> --local-verify-attempts <local_verify_attempts>`. If not allowed, print message and exit. Otherwise update `local_verify_count` from the result → Reject + Fix From Scratch Flow
+- If fix is wrong → Reject + Fix From Scratch Flow
 
 ### fix_failed / no_fix
 
