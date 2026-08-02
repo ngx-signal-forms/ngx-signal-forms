@@ -39,6 +39,22 @@ export abstract class BaseFormPage {
   abstract goto(): Promise<void>;
 
   /**
+   * Navigate to a route and stop waiting once the document is ready.
+   *
+   * The demo app lazy-loads large route chunks. Some environments keep the
+   * page from ever reaching Playwright's default `load` state quickly enough,
+   * even though the DOM is already interactive and the tests only assert after
+   * explicit readiness checks. Waiting for `domcontentloaded` avoids those
+   * false beforeEach timeouts.
+   */
+  protected async gotoRoute(route: string): Promise<void> {
+    await this.page.goto(this.getFullUrl(route), {
+      waitUntil: 'domcontentloaded',
+    });
+    await this.waitForReady();
+  }
+
+  /**
    * Get the main form element
    */
   get form(): Locator {
