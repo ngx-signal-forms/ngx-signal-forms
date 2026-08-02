@@ -21,8 +21,7 @@ export class YourFirstFormPage extends ErrorStrategyFormPage {
   }
 
   async goto(): Promise<void> {
-    await this.page.goto(DEMO_PATHS.yourFirstForm);
-    await this.waitForReady();
+    await this.gotoRoute(DEMO_PATHS.yourFirstForm);
   }
 
   /**

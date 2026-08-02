@@ -8,8 +8,15 @@ import { defineConfig, devices } from '@playwright/test';
 // routed through that proxy (which answers 405) and never sees the dev server.
 process.env['NO_PROXY'] ??= 'localhost,127.0.0.1';
 
-const baseURL = process.env['BASE_URL'] ?? 'http://127.0.0.1:4600';
 const isCI = Boolean(process.env['CI']);
+const ciPort = process.env['PLAYWRIGHT_DEMO_PORT'] ?? '4300';
+const baseURL =
+  process.env['BASE_URL'] ??
+  (isCI ? `http://127.0.0.1:${ciPort}` : 'http://127.0.0.1:4600');
+const shouldStartWebServer = !process.env['BASE_URL'];
+const browserChannel =
+  process.env['PLAYWRIGHT_BROWSER_CHANNEL'] ??
+  (!isCI && process.platform === 'darwin' ? 'chrome' : undefined);
 const parsedCiWorkers = Number.parseInt(process.env['PW_WORKERS'] ?? '', 10);
 const ciWorkers = parsedCiWorkers > 0 ? parsedCiWorkers : 2;
 
@@ -70,18 +77,23 @@ export default defineConfig({
   use: {
     ...preset.use,
     baseURL,
+    channel: browserChannel,
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
   },
   /* Run your local dev server before starting the tests */
-  webServer: {
-    command: 'pnpm nx serve demo',
-    url: 'http://127.0.0.1:4600',
-    reuseExistingServer: !isCI,
-    cwd: workspaceRoot,
-    timeout: 240000,
-  },
+  webServer: shouldStartWebServer
+    ? {
+        command: isCI
+          ? `pnpm exec vite --host 127.0.0.1 --port ${ciPort} --strictPort --config apps/demo/vite.config.mts`
+          : 'pnpm nx serve demo',
+        url: baseURL,
+        reuseExistingServer: !isCI,
+        cwd: workspaceRoot,
+        timeout: 240000,
+      }
+    : undefined,
   projects: [
     {
       name: 'chromium',

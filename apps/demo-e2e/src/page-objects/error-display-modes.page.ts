@@ -38,8 +38,7 @@ export class ErrorDisplayModesPage extends ErrorStrategyFormPage {
   }
 
   async goto(): Promise<void> {
-    await this.page.goto(DEMO_PATHS.errorDisplayModes);
-    await this.waitForReady();
+    await this.gotoRoute(DEMO_PATHS.errorDisplayModes);
   }
 
   override async selectErrorMode(

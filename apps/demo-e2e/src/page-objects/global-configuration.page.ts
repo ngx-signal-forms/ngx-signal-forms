@@ -8,7 +8,6 @@ import { BaseFormPage } from './base-form.page';
  */
 export class GlobalConfigurationPage extends BaseFormPage {
   async goto(): Promise<void> {
-    await this.page.goto(DEMO_PATHS.globalConfiguration);
-    await this.waitForReady();
+    await this.gotoRoute(DEMO_PATHS.globalConfiguration);
   }
 }
