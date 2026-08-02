@@ -2,6 +2,10 @@
 
 ## Status Handling by Code
 
+For each `local-fix` gate, pass the tracked `local_verify_count` and
+`local_verify_attempts`. If allowed, update
+`local_verify_count = gate_result.localVerifyCount` before attempting the fix.
+
 ### fix_auto_apply_skipped
 
 The script returns `autoApplySkipReason` in its output.
@@ -30,15 +34,15 @@ Spawn FETCH_HEAVY subagent, then analyze fix content (`suggestedFixDescription`,
 
 - If fix looks correct → apply via MCP
 - If fix needs enhancement → Apply Locally + Enhance Flow
-- If fix is wrong → run `ci-state-update.mjs gate --gate-type local-fix`. If not allowed, print message and exit. Otherwise → Reject + Fix From Scratch Flow
+- If fix is wrong → run `ci-state-update.mjs gate --gate-type local-fix --local-verify-count <local_verify_count> --local-verify-attempts <local_verify_attempts>`. If not allowed, print message and exit. Otherwise update `local_verify_count` from the result → Reject + Fix From Scratch Flow
 
 ### fix_failed / no_fix
 
-Spawn FETCH_HEAVY subagent for `taskFailureSummaries`. Run `ci-state-update.mjs gate --gate-type local-fix` — if not allowed, print message and exit. Otherwise attempt local fix (counter already incremented by gate). If successful → commit, push, enter wait mode. If not → exit with failure.
+Spawn FETCH_HEAVY subagent for `taskFailureSummaries`. Run `ci-state-update.mjs gate --gate-type local-fix --local-verify-count <local_verify_count> --local-verify-attempts <local_verify_attempts>` — if not allowed, print message and exit. Otherwise update `local_verify_count` from the result and attempt local fix. If successful → commit, push, enter wait mode. If not → exit with failure.
 
 ### environment_issue
 
-1. Run `ci-state-update.mjs gate --gate-type env-rerun`. If not allowed, print message and exit.
+1. Run `ci-state-update.mjs gate --gate-type env-rerun --env-rerun-count <env_rerun_count>`. If not allowed, print message and exit. Otherwise update `env_rerun_count = gate_result.envRerunCount`.
 2. Spawn UPDATE_FIX subagent with `RERUN_ENVIRONMENT_STATE`
 3. Enter wait mode with `last_cipe_url` set
 
@@ -48,7 +52,7 @@ Spawn FETCH_HEAVY subagent for `selfHealingSkipMessage`.
 
 1. **Parse throttle message** for CI Attempt URLs (regex: `/cipes/{id}`)
 2. **Reject previous fixes** — for each URL: spawn FETCH_THROTTLE_INFO to get `shortLink`, then UPDATE_FIX with `REJECT`
-3. **Attempt local fix**: Run `ci-state-update.mjs gate --gate-type local-fix`. If not allowed → skip to step 4. Otherwise use `failedTaskIds` and `taskFailureSummaries` for context.
+3. **Attempt local fix**: Run `ci-state-update.mjs gate --gate-type local-fix --local-verify-count <local_verify_count> --local-verify-attempts <local_verify_attempts>`. If not allowed → skip to step 4. Otherwise update `local_verify_count` from the result and use `failedTaskIds` and `taskFailureSummaries` for context.
 4. **Fallback if local fix not possible or budget exhausted**: push empty commit (`git commit --allow-empty -m "ci: rerun after rejecting throttled fixes"`), enter wait mode
 
 ### no_new_cipe
@@ -74,12 +78,12 @@ Spawn UPDATE_FIX subagent with `APPLY`. New CI Attempt spawns automatically. No 
 1. `nx-cloud apply-locally <shortLink>` (sets state to `APPLIED_LOCALLY`)
 2. Enhance code to fix failing tasks
 3. Run failing tasks to verify
-4. If still failing → run `ci-state-update.mjs gate --gate-type local-fix`. If not allowed, commit current state and push (let CI be final judge). Otherwise loop back to enhance.
+4. If still failing → run `ci-state-update.mjs gate --gate-type local-fix --local-verify-count <local_verify_count> --local-verify-attempts <local_verify_attempts>`. If not allowed, commit current state and push (let CI be final judge). Otherwise update `local_verify_count` from the result and loop back to enhance.
 5. If passing → commit and push, enter wait mode
 
 ### Reject + Fix From Scratch Flow
 
-1. Run `ci-state-update.mjs gate --gate-type local-fix`. If not allowed, print message and exit.
+1. Run `ci-state-update.mjs gate --gate-type local-fix --local-verify-count <local_verify_count> --local-verify-attempts <local_verify_attempts>`. If not allowed, print message and exit. Otherwise update `local_verify_count` from the result.
 2. Spawn UPDATE_FIX subagent with `REJECT`
 3. Fix from scratch locally
 4. Commit and push, enter wait mode
