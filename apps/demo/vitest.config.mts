@@ -1,13 +1,13 @@
 /// <reference types='vitest' />
 
 import angular from '@analogjs/vite-plugin-angular';
-import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
 import { defineConfig } from 'vitest/config';
+import tsconfigPaths from 'vite-tsconfig-paths';
 
 export default defineConfig({
   root: __dirname,
   cacheDir: '../../node_modules/.vite/apps/demo',
-  plugins: [angular({ tsconfig: './tsconfig.spec.json' }), nxViteTsPaths()],
+  plugins: [angular({ tsconfig: './tsconfig.spec.json' }), tsconfigPaths()],
   optimizeDeps: {
     include: [
       '@analogjs/vitest-angular/setup-serializers',

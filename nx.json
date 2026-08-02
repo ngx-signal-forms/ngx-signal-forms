@@ -21,6 +21,11 @@
   },
   "nxCloudId": "6996105d7ca3ad8352dfd299",
   "targetDefaults": {
+    "build": {
+      "cache": true,
+      "dependsOn": ["^build"],
+      "inputs": ["production", "^production"]
+    },
     "@angular/build:application": {
       "cache": true,
       "dependsOn": ["^build"],
@@ -43,11 +48,7 @@
       "dependsOn": ["^build"],
       "inputs": ["production", "^production"]
     },
-    "e2e": {
-      "cache": true,
-      "inputs": ["default", "^production"]
-    },
-    "e2e-ci": {
+    "@nx/playwright:playwright": {
       "cache": true,
       "inputs": ["default", "^production"]
     },
