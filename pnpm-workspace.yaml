@@ -87,7 +87,7 @@ catalogs:
     '@tailwindcss/forms': '^0.5.11'
     '@tailwindcss/postcss': '^4.3.2'
     autoprefixer: '^10.5.2'
-    postcss: '^8.5.16'
+    postcss: '^8.5.18'
     postcss-url: '~10.1.3'
     tailwindcss: '^4.3.2'
   testing:
