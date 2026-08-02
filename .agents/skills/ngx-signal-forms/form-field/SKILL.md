@@ -1,5 +1,5 @@
 ---
-description: Sub-skill of ngx-signal-forms for the @ngx-signal-forms/toolkit/form-field entry point — ngx-form-field-wrapper, floating labels (outline appearance), grouped field summaries (NgxFormFieldset), fallback vs ngxSignalForm form context, and custom-control integration with the wrapper layer. Not independently invocable; the hub SKILL.md routes here.
+description: Form-field toolkit surface. Use when adding wrappers, fieldsets, floating labels, field markers, or custom-control layouts.
 ---
 
 # Toolkit Form Field

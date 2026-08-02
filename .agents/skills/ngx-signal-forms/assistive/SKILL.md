@@ -1,5 +1,5 @@
 ---
-description: Sub-skill of ngx-signal-forms for the @ngx-signal-forms/toolkit/assistive entry point — inline error display, grouped notifications, form-level error summaries, the form-level required/optional marking legend, helper hint text, and character counters used without a full field wrapper. Not independently invocable; the hub SKILL.md routes here.
+description: Assistive toolkit surface. Use when adding standalone errors, grouped notifications, summaries, hints, counters, or marking legends.
 ---
 
 # Toolkit Assistive

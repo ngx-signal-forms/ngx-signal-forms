@@ -60,7 +60,7 @@ catalogs:
     '@nx/workspace': '23.0.1'
     nx: '23.0.1'
   playwright:
-    '@playwright/test': '^1.61.1'
+    '@playwright/test': '^1.62.1'
     eslint-plugin-playwright: '^2.10.5'
   primeng:
     '@primeuix/themes': '2.0.3'

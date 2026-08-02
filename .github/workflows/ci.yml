@@ -188,6 +188,7 @@ jobs:
       NX_NO_CLOUD: 'true'
       NX_DAEMON: 'false'
       SHARD_TOTAL: '4'
+      PLAYWRIGHT_DEMO_PORT: '4300'
       PW_WORKERS: '2'
     steps:
       - uses: actions/checkout@v7

@@ -13,7 +13,7 @@
  * Usage:
  *   node ci-poll-decide.mjs '<ci_info_json>' <poll_count> <verbosity> \
  *     [--wait-mode] [--prev-cipe-url <url>] [--expected-sha <sha>] \
- *     [--prev-status <status>] [--timeout <seconds>] [--new-cipe-timeout <seconds>] \
+ *     [--timeout <seconds>] [--new-cipe-timeout <seconds>] \
  *     [--env-rerun-count <n>] [--no-progress-count <n>] \
  *     [--prev-cipe-status <status>] [--prev-sh-status <status>] \
  *     [--prev-verification-status <status>] [--prev-failure-classification <status>]
@@ -38,7 +38,6 @@ function getArg(name) {
 const waitMode = getFlag('--wait-mode');
 const prevCipeUrl = getArg('--prev-cipe-url');
 const expectedSha = getArg('--expected-sha');
-const prevStatus = getArg('--prev-status');
 const timeoutSeconds = parseInt(getArg('--timeout') || '0', 10);
 const newCipeTimeoutSeconds = parseInt(getArg('--new-cipe-timeout') || '0', 10);
 const envRerunCount = parseInt(getArg('--env-rerun-count') || '0', 10);
@@ -363,8 +362,12 @@ const resetProgressCodes = new Set([
 
 function formatMessage(msg) {
   if (verbosity === 'minimal') {
-    const currentStatus = `${cipeStatus}|${selfHealingStatus}|${verificationStatus}`;
-    if (currentStatus === (prevStatus || '')) return null;
+    const hasPreviousState =
+      prevCipeStatus ||
+      prevShStatus ||
+      prevVerificationStatus ||
+      prevFailureClassification;
+    if (hasPreviousState && !hasStateChanged()) return null;
     return msg;
   }
   if (verbosity === 'verbose') {

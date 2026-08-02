@@ -134,8 +134,7 @@ export class FieldsetAppearancePage extends BaseFormPage {
   }
 
   override async goto(): Promise<void> {
-    await this.page.goto(this.getFullUrl(this.route));
-    await this.waitForReady();
+    await this.gotoRoute(this.route);
   }
 
   getFieldsetSurface(fieldset: Locator): Locator {

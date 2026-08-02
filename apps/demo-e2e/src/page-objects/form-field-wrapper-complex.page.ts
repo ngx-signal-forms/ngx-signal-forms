@@ -60,8 +60,7 @@ export class FormFieldWrapperComplexPage extends BaseFormPage {
   }
 
   async goto(): Promise<void> {
-    await this.page.goto(this.getFullUrl(DEMO_PATHS.complexForms));
-    await this.waitForReady();
+    await this.gotoRoute(DEMO_PATHS.complexForms);
   }
 
   /**

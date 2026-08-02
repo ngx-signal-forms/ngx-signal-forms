@@ -6,9 +6,9 @@ Vite-specific guidance for `nx import`. For generic import issues (pnpm globs, r
 
 ### `@nx/vite/plugin` Typecheck Target
 
-`@nx/vite/plugin` defaults `typecheckTargetName` to `"vite:typecheck"`. If the workspace expects `"typecheck"`, set it explicitly in `nx.json`. If `@nx/js/typescript` is also registered, rename one target to avoid conflicts (e.g. `"tsc-typecheck"` for the JS plugin).
+`@nx/vite/plugin` defaults `typecheckTargetName` to `"typecheck"`. If `@nx/js/typescript` is also registered, reserve it for non-Vite pure TypeScript libraries and rename its target if needed (for example, `"tsc-typecheck"`).
 
-Keep both plugins only if the workspace has non-Vite pure TS libraries — `@nx/js/typescript` handles those while `@nx/vite/plugin` handles Vite projects.
+Keep both plugins only if the workspace has non-Vite pure TS libraries — `@nx/js/typescript` handles those while `@nx/vite/plugin` owns Vite project typechecking.
 
 ### @nx/vite Plugin Install Failure
 
@@ -51,7 +51,7 @@ React Router 7 (`@react-router/dev`) uses Vite under the hood with a `vite.confi
 
 `@nx/vite/plugin` creates `build`, `dev`, `serve` targets. The `build` target invokes the script defined in `package.json` (usually `react-router build`), not `vite build` directly.
 
-**No separate typecheck target from `@nx/vite/plugin`** — React Router 7 typegen is run as part of `typecheck` (e.g. `react-router typegen && tsc`). The `typecheck` target is inferred from the tsconfig. Keep the `typecheck` script in `package.json` if present; it is not rewritten.
+**Custom typecheck command required** — React Router 7 typegen must run before TypeScript (for example, `react-router typegen && tsc`). Keep or configure that command as the project's `typecheck` target rather than replacing it with a generic TypeScript invocation.
 
 ### tsconfig Notes
 
@@ -343,7 +343,7 @@ See SKILL.md for generic multi-import (name collisions, dep refs). Vite-specific
 5. Keep `allowImportingTsExtensions` — compatible with `emitDeclarationOnly: true`
 6. Add `.vinxi`, `.tanstack`, `.nitro`, `.output` to dest root `.gitignore`
 7. Move hardcoded `--port` from `dev` script into `vite.config.ts` (`server: { port: N }`)
-8. Remove redundant npm scripts — `@nx/vite/plugin` infers `build`, `dev`, `preview`, `test` (see "Redundant npm Scripts" above)
+8. Remove redundant build, dev, and preview scripts; `@nx/vite/plugin` infers those targets and `@nx/vitest` infers `test` (see "Redundant npm Scripts" above)
 9. `npm install && nx reset && nx sync --yes`
 
 ### Quick Reference: React vs Vue
@@ -360,14 +360,14 @@ See SKILL.md for generic multi-import (name collisions, dep refs). Vite-specific
 
 ### Quick Reference: Vite-Based React Frameworks
 
-| Aspect             | Vite (standalone) | React Router 7          | TanStack Start           |
-| ------------------ | ----------------- | ----------------------- | ------------------------ |
-| Build config       | `vite.config.ts`  | `vite.config.ts`        | `vite.config.ts`         |
-| Build output       | `dist/`           | `build/`                | `dist/`                  |
-| SSR bundle         | No                | Yes (`build/server/`)   | Yes (`dist/server/`)     |
-| tsconfig layout    | app + node split  | Single tsconfig         | Single tsconfig          |
-| Auto-committed     | Depends on tool   | Usually yes             | **No — commit first**    |
-| `nx import` plugin | `@nx/vite`        | `@nx/vite`, `@nx/react` | `@nx/vite`, `@nx/vitest` |
+| Aspect              | Vite (standalone)        | React Router 7          | TanStack Start           |
+| ------------------- | ------------------------ | ----------------------- | ------------------------ |
+| Build config        | `vite.config.ts`         | `vite.config.ts`        | `vite.config.ts`         |
+| Build output        | `dist/`                  | `build/`                | `dist/`                  |
+| SSR bundle          | No                       | Yes (`build/server/`)   | Yes (`dist/server/`)     |
+| tsconfig layout     | app + node split         | Single tsconfig         | Single tsconfig          |
+| Auto-committed      | Depends on tool          | Usually yes             | **No — commit first**    |
+| `nx import` plugins | `@nx/vite`, `@nx/vitest` | `@nx/vite`, `@nx/react` | `@nx/vite`, `@nx/vitest` |
 
 ---
 

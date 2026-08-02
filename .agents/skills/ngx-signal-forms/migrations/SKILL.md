@@ -1,6 +1,6 @@
 ---
 name: ngx-signal-forms-migrations
-disable-model-invocation: true
+description: Toolkit migration surface. Use when upgrading @ngx-signal-forms/toolkit from beta, a release candidate, or an earlier v1 version.
 ---
 
 # Toolkit migrations
