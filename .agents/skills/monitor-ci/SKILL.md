@@ -152,7 +152,6 @@ expected_commit_sha = null
 agent_triggered = false    # Set true after monitor takes an action that triggers new CI Attempt
 poll_count = 0
 wait_mode = false
-prev_status = null
 prev_cipe_status = null
 prev_sh_status = null
 prev_verification_status = null
@@ -179,7 +178,6 @@ node <skill_dir>/scripts/ci-poll-decide.mjs '<subagent_result_json>' <poll_count
   [--wait-mode] \
   [--prev-cipe-url <last_cipe_url>] \
   [--expected-sha <expected_commit_sha>] \
-  [--prev-status <prev_status>] \
   [--timeout <timeout_seconds>] \
   [--new-cipe-timeout <new_cipe_timeout_seconds>] \
   [--env-rerun-count <env_rerun_count>] \
@@ -202,7 +200,6 @@ Parse the JSON output and update tracking state:
 - `prev_sh_status = subagent_result.selfHealingStatus`
 - `prev_verification_status = subagent_result.verificationStatus`
 - `prev_failure_classification = subagent_result.failureClassification`
-- `prev_status = output.action + ":" + (output.code || subagent_result.cipeStatus)`
 - `poll_count++`
 
 Based on `action`:
