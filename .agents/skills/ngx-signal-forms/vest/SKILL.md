@@ -1,5 +1,5 @@
 ---
-description: Sub-skill of ngx-signal-forms for the @ngx-signal-forms/toolkit/vest entry point — Vest v6+ suite integration for business-logic validation, cross-field rules, conditional checks, async server-backed validation, suite lifecycle management (resetOnDestroy), and focused `only()` runs. Not independently invocable; the hub SKILL.md routes here.
+description: Vest toolkit surface. Use when integrating Vest suites, warning validation, focused runs, or custom Vest adapter flows.
 ---
 
 # Toolkit Vest
@@ -25,9 +25,12 @@ Requires `vest@>=6.0.0`. Vest 5 and earlier are not supported.
 import {
   VEST_ERROR_KIND_PREFIX, // 'vest:'
   VEST_WARNING_KIND_PREFIX, // 'warn:vest:'
+  createVestAdapter,
+  sharedVestAdapter,
   validateVest,
   validateVestWarnings,
   type ValidateVestOptions,
+  type VestSuiteAdapter,
   type VestOnlyFieldSelector,
 } from '@ngx-signal-forms/toolkit/vest';
 ```
@@ -35,6 +38,15 @@ import {
 Use the exported kind prefixes when you need to detect Vest-origin errors in
 custom strategies, debugger filters, or tests — don't re-derive the string
 literals.
+
+Use `validateVest()` for ordinary blocking validation and
+`validateVestWarnings()` for advisory-only suites. Reach for
+`createVestAdapter()` only when a custom integration needs an isolated shared
+run cache or its own `register()` behavior. Use `sharedVestAdapter.runVestSuite()`
+inside a hand-rolled validator only when it must share the exact execution with
+`validateVest()`; pair an async-only custom flow with `validateVest()` or your
+own `validateAsync` phase. Read `../references/api.md` for the adapter's
+options and result contracts.
 
 ### `validateVest(path, suite, options?)`
 

@@ -1,5 +1,5 @@
 ---
-description: Sub-skill of ngx-signal-forms for the @ngx-signal-forms/debugger entry point — the dev-only form-tree panel and standalone badge directives for visualizing validation state, error visibility, warnings, and submission state in development or demo pages, plus production tree-shaking guidance. Not independently invocable; the hub SKILL.md routes here. This is an internal/demo-only component, not part of the published toolkit package.
+description: Debugger toolkit surface. Use when adding dev-only form-tree inspection or debugger badge directives.
 ---
 
 # Toolkit Debugger (Internal/Demo Only)

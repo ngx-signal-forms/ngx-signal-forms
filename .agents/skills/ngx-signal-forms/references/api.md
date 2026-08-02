@@ -712,6 +712,34 @@ interface ErrorSummaryEntryData {
 }
 ```
 
+### Custom-wrapper ARIA composition
+
+The headless entry point re-exports these core factories for custom wrappers
+that own their DOM and ARIA. Use the factories as one composition unit instead
+of reproducing the wrapper's strategy, identity, hint, and renderer rules.
+
+```typescript
+createAriaInvalidSignal(fieldState, visibility): Signal<'true' | null>
+createAriaRequiredSignal(fieldState): Signal<'true' | null>
+createAriaDescribedBySignal(options): Signal<string | null>
+createHintIdsSignal(options): Signal<readonly string[]>
+createAriaDescribedByBridge(options): AriaDescribedByBridge
+createFieldNameResolver(options): Signal<string | null>
+createErrorRendererInputs(options): NgxFormFieldErrorRendererInputs
+toHintDescriptors(hints): readonly NgxSignalFormHintDescriptor[]
+```
+
+- `createFieldNameResolver` resolves explicit input → optional label `for` →
+  bound control `id`.
+- `createAriaDescribedByBridge` coordinates the chain with a third-party host
+  that owns `aria-describedby`; ordinary custom wrappers use
+  `createAriaDescribedBySignal` directly.
+- `createErrorRendererInputs` and `toHintDescriptors` join a custom renderer
+  or projected hints to the same wrapper contracts.
+
+Read `packages/toolkit/headless/README.md` or `docs/CUSTOM_WRAPPERS.md` for the
+full composition examples and the exported option types.
+
 ---
 
 ## Entry Point: `@ngx-signal-forms/toolkit/vest`
@@ -736,7 +764,45 @@ interface ValidateVestOptions<TValue = unknown> {
 type VestOnlyFieldSelector<TValue> = (
   ctx: FieldContext<TValue>,
 ) => string | readonly string[] | undefined;
+
+interface VestAdapterOptions {
+  readonly resetOnDestroy?: boolean; // default: true
+}
+interface VestRegisterOptions<TValue = unknown> {
+  readonly includeErrors?: boolean;
+  readonly includeWarnings?: boolean;
+  readonly resetOnDestroy?: boolean;
+  readonly only?: VestOnlyFieldSelector<TValue>;
+  readonly focusCurrentField?: boolean;
+}
+interface RunVestSuiteParams<TValue> {
+  readonly suite: VestRunnableSuite<TValue>;
+  readonly fieldTree: ReadonlyFieldTree<TValue>;
+  readonly value: TValue;
+  readonly focus?: string | readonly string[];
+}
+interface RunVestSuiteResult<TValue> {
+  readonly value: TValue;
+  readonly focus: string | undefined;
+  readonly runResult: VestResultLike | PromiseLike<VestResultLike>;
+  readonly initialResult: VestResultLike | undefined;
+  readonly fromCache: boolean;
+}
+interface VestSuiteAdapter {
+  register(path, suite, options?): void;
+  runVestSuite(params): RunVestSuiteResult<unknown>;
+  invalidate(suite: object): void;
+}
+
+createVestAdapter(options?): VestSuiteAdapter
+sharedVestAdapter: VestSuiteAdapter
 ```
+
+`validateVest()` and `validateVestWarnings()` delegate to `sharedVestAdapter`.
+Use `createVestAdapter()` for an isolated cache, or
+`sharedVestAdapter.runVestSuite()` when a custom validator must share the same
+run as a built-in registration. `runVestSuite()` is sync-only unless the custom
+flow also owns an async validation phase.
 
 The blocking and warning `kind` prefixes are public so custom error strategies,
 debugger filters, and tests can detect Vest-origin errors without re-deriving

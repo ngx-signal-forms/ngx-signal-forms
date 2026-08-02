@@ -1,60 +1,33 @@
 ---
 name: ngx-signal-forms
-description: Guides use of @ngx-signal-forms/toolkit across its v1 root and secondary entry points. Use when working with toolkit form context, control semantics, wrappers, assistive or headless feedback, Vest, accessibility testing, debugger UI, or toolkit migrations.
+description: Surface router for @ngx-signal-forms/toolkit. Use when the task mentions toolkit imports, entry-point choice, custom wrappers, feedback components, headless primitives, Vest, accessibility testing, debugger, or migrations.
 ---
 
 # ngx-signal-forms Toolkit
 
-An orchestrator skill for `@ngx-signal-forms/toolkit` — the enhancement layer on top of Angular Signal Forms.
+A router skill for `@ngx-signal-forms/toolkit` surfaces.
 
-## When to Use
-
-Use this skill when the task involves:
-
-- Setting up `[formRoot]`, deciding whether to add `ngxSignalForm`, error strategies, or auto-ARIA
-- Upgrading from beta / older RC toolkit usage to the current public API (`standard` vs `stacked`, hidden `/core`, renamed classes, removed helpers)
-- Declaring control semantics with `ngxSignalFormControl` or setting up control preset providers
-- Adding form-level error summaries or field-label resolution
-- Adding form field wrappers or grouped fieldsets
-- Displaying validation errors, grouped notifications, hints, or character counts
-- Building custom form controls with full markup control
-- Integrating Vest validation suites
-- Asserting no WCAG 2.2 AA violations in component specs (accessibility test harness)
-- Adding a dev-time debugger panel
-- Configuring global error messages or form appearance
-
-## Entry Points at a Glance
-
-| Entry point                            | Purpose                                                    |
-| -------------------------------------- | ---------------------------------------------------------- |
-| `@ngx-signal-forms/toolkit`            | Core: `[formRoot]`, auto-ARIA, strategies, utilities       |
-| `@ngx-signal-forms/toolkit/form-field` | Styled wrapper, fieldset grouping, floating label          |
-| `@ngx-signal-forms/toolkit/assistive`  | Standalone errors, grouped notifications, hints, summaries |
-| `@ngx-signal-forms/toolkit/headless`   | Renderless state, notification, and summary directives     |
-| `@ngx-signal-forms/toolkit/vest`       | Vest validation adapter (optional)                         |
-| `@ngx-signal-forms/toolkit/testing`    | axe-core WCAG 2.2 AA test harness for specs (optional)     |
-
-**Internal UI (Demo/Development Only):**
-
-| Entry Point                  | Description                         |
-| ---------------------------- | ----------------------------------- |
-| `@ngx-signal-forms/debugger` | Dev-only form-tree inspection panel |
-
-> `@angular/forms/signals` is always the source of truth for the form model. The toolkit only adds UX, accessibility, and composition value on top.
+Leading word: **surface**. Route by surface first, then apply only that surface's rules.
 
 ## Sub-Skill Routing
 
-| Task                                                              | Sub-skill to read                          |
-| ----------------------------------------------------------------- | ------------------------------------------ |
-| Upgrade from beta or an earlier release candidate                 | [migrations/SKILL.md](migrations/SKILL.md) |
-| `[formRoot]`, error strategy, ARIA, submission                    | [core/SKILL.md](core/SKILL.md)             |
-| Control semantics directive, preset providers                     | [core/SKILL.md](core/SKILL.md)             |
-| Field wrappers, fieldsets, floating labels, custom control layout | [form-field/SKILL.md](form-field/SKILL.md) |
-| Standalone errors, grouped notifications, hints, counters         | [assistive/SKILL.md](assistive/SKILL.md)   |
-| Custom markup with full DOM control                               | [headless/SKILL.md](headless/SKILL.md)     |
-| Vest suite integration                                            | [vest/SKILL.md](vest/SKILL.md)             |
-| Accessibility test assertions, axe-core, WCAG spec checks         | [testing/SKILL.md](testing/SKILL.md)       |
-| Dev-time form inspection                                          | [debugger/SKILL.md](debugger/SKILL.md)     |
+Routing loop:
+
+1. Identify the required **surface** from imports/selectors/symbol names.
+2. Open exactly one sub-skill first.
+3. Open a second sub-skill only if the task truly crosses surfaces.
+4. Keep source of truth in `@angular/forms/signals`; toolkit augments behavior.
+
+| Task                                                                  | Entry point                            | Sub-skill to read                          |
+| --------------------------------------------------------------------- | -------------------------------------- | ------------------------------------------ |
+| Upgrade from beta or an earlier release candidate                     | —                                      | [migrations/SKILL.md](migrations/SKILL.md) |
+| `[formRoot]`, error strategy, ARIA, submission, config, or presets    | `@ngx-signal-forms/toolkit`            | [core/SKILL.md](core/SKILL.md)             |
+| Styled wrappers, fieldsets, floating labels, or custom-control layout | `@ngx-signal-forms/toolkit/form-field` | [form-field/SKILL.md](form-field/SKILL.md) |
+| Standalone errors, notifications, hints, counters, or summaries       | `@ngx-signal-forms/toolkit/assistive`  | [assistive/SKILL.md](assistive/SKILL.md)   |
+| Full DOM control or custom wrapper ARIA/identity composition          | `@ngx-signal-forms/toolkit/headless`   | [headless/SKILL.md](headless/SKILL.md)     |
+| Vest suites or custom Vest validation flows                           | `@ngx-signal-forms/toolkit/vest`       | [vest/SKILL.md](vest/SKILL.md)             |
+| axe-core WCAG assertions                                              | `@ngx-signal-forms/toolkit/testing`    | [testing/SKILL.md](testing/SKILL.md)       |
+| Dev-time form inspection                                              | `@ngx-signal-forms/debugger`           | [debugger/SKILL.md](debugger/SKILL.md)     |
 
 ## Shared References
 
@@ -64,20 +37,12 @@ Load these reference files when the sub-skill or task requires deeper API detail
 - `references/signal-forms.md` — Angular Signal Forms base API (validators, field state, form())
 - `references/pitfalls.md` — Common mistakes and how to avoid them
 - `references/demo-map.md` — Repository demo paths organized by feature
-- `docs/migrations/README.md` — Version-to-version migration guides; load the
-  applicable guide before changing an existing toolkit integration.
+- [`../../../docs/migrations/README.md`](../../../docs/migrations/README.md) —
+  version-to-version migration guides; load the applicable guide before changing
+  an existing toolkit integration.
 
-## Quick Decision: Which Entry Point?
-
-```
-Need form-level setup, ARIA, or submission helpers?         → core
-Need a styled label+input+error shell?                      → form-field
-Need standalone errors, grouped notifications, or hints?    → assistive
-Need full DOM control for custom design systems?            → headless
-Using Vest validation suites?                               → vest
-Asserting no WCAG 2.2 AA violations in a spec?              → testing
-Adding a debug panel during development?                    → debugger
-```
+Completion check for this router skill: the task is mapped to the right surface
+sub-skill(s), and no guidance outside those surfaces is applied.
 
 ## Non-Negotiable Rules
 

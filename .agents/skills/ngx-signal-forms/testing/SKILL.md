@@ -1,5 +1,5 @@
 ---
-description: Sub-skill of ngx-signal-forms for the @ngx-signal-forms/toolkit/testing entry point — an axe-core accessibility test harness (expectNoA11yViolations, WCAG_22_AA_TAGS) for asserting no WCAG 2.2 AA violations in Vitest browser-mode component specs. Not independently invocable; the hub SKILL.md routes here.
+description: Testing toolkit surface. Use when adding axe-core WCAG 2.2 AA assertions to a Vitest browser-mode specification.
 ---
 
 # Toolkit Testing

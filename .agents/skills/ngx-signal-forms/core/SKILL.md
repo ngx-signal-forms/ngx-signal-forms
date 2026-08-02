@@ -1,5 +1,5 @@
 ---
-description: Sub-skill of ngx-signal-forms for the core @ngx-signal-forms/toolkit entry point — form[formRoot] vs ngxSignalForm decision, auto-ARIA, control semantics, preset providers, error visibility strategies, submittedStatus/showErrors wiring, global config, error-message registries, warning helpers, submission helpers, immutable array utilities, required-marker config, Standard Schema (Zod) aria-required, and error/hint renderer overrides. Not independently invocable; the hub SKILL.md routes here.
+description: Core toolkit surface. Use when implementing form context, auto-ARIA, error timing, control semantics, configuration, or submission helpers.
 ---
 
 # Toolkit Core
