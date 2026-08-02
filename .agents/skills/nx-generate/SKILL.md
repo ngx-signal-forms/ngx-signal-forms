@@ -21,14 +21,16 @@ This skill applies when the user wants to:
 3. **Match existing repo patterns** - Study similar artifacts in the repo and follow their conventions
 4. **Verify with lint/test/build/typecheck etc.** - Generated code must pass verification. The listed targets are just an example, use what's appropriate for this workspace.
 
+Use Nx MCP generator discovery first when it is available. For CLI fallback, this workspace uses the locally installed Nx through `pnpm nx`.
+
 ## Steps
 
 ### 1. Discover Available Generators
 
-Use the Nx CLI to discover available generators:
+Use Nx MCP generator discovery when available; otherwise use the Nx CLI:
 
-- List all generators for a plugin: `npx nx list @nx/react`
-- View available plugins: `npx nx list`
+- List all generators for a plugin: `pnpm nx list @nx/react`
+- View available plugins: `pnpm nx list`
 
 This includes plugin generators (e.g., `@nx/react:library`) and local workspace generators.
 
@@ -45,7 +47,7 @@ If no suitable generator exists, you can stop using this skill. However, the bur
 Use the `--help` flag to understand available options:
 
 ```bash
-npx nx g @nx/react:library --help
+pnpm nx g @nx/react:library --help
 ```
 
 Pay attention to required options, defaults that might need overriding, and options relevant to the user's request.
@@ -117,7 +119,7 @@ Before generating, examine the target area of the codebase:
 **Always run with `--dry-run` first** to verify files will be created in the correct location:
 
 ```bash
-npx nx g @nx/react:library --name=my-lib --dry-run --no-interactive
+pnpm nx g @nx/react:library --name=my-lib --dry-run --no-interactive
 ```
 
 Review the output carefully. If files would be created in the wrong location, adjust your options based on what you learned from the generator source code.
@@ -129,7 +131,7 @@ Note: Some generators don't support dry-run (e.g., if they install npm packages)
 Execute the generator:
 
 ```bash
-nx generate <generator-name> <options> --no-interactive
+pnpm nx generate <generator-name> <options> --no-interactive
 ```
 
 > **Tip:** New packages often need workspace dependencies wired up (e.g., importing shared types, being consumed by apps). The `link-workspace-packages` skill can help add these correctly.
@@ -149,7 +151,7 @@ Generators provide a starting point. Modify the output as needed to:
 Format all generated/modified files:
 
 ```bash
-nx format --fix
+pnpm nx format --fix
 ```
 
 This example is for built-in nx formatting with prettier. There might be other formatting tools for this workspace, use these when appropriate.
@@ -158,7 +160,7 @@ Then verify the generated code works. Keep in mind that the changes you make wit
 
 ```bash
 # these targets are just an example!
-nx run-many -t build,lint,test,typecheck
+pnpm nx run-many -t build,lint,test,typecheck
 ```
 
 These targets are common examples used across many workspaces. You should do research into other targets available for this workspace and its projects. CI configuration is usually a good guide for what the critical targets are that have to pass.
