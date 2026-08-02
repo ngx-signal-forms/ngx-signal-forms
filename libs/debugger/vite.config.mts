@@ -4,7 +4,7 @@ import angular from '@analogjs/vite-plugin-angular';
 import { defineConfig } from 'vitest/config';
 import tsconfigPaths from 'vite-tsconfig-paths';
 
-process.env.NX_DAEMON ??= 'false';
+process.env['NX_DAEMON'] ??= 'false';
 
 export default defineConfig({
   root: __dirname,
