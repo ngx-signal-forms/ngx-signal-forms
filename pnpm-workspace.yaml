@@ -71,7 +71,7 @@ catalogs:
     '@shikijs/types': '^4.3.1'
     shiki: '^4.3.1'
   spartan:
-    '@ng-icons/core': '^33.4.0'
+    '@ng-icons/core': '^34.0.0'
     '@ng-icons/lucide': '^33.4.0'
     '@spartan-ng/brain': '1.0.4'
     '@spartan-ng/cli': '1.0.4'
