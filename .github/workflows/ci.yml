@@ -188,7 +188,10 @@ jobs:
       NX_NO_CLOUD: 'true'
       NX_DAEMON: 'false'
       SHARD_TOTAL: '4'
-      PW_WORKERS: '2'
+      # Keep total parallelism at 4 shards, but use 1 worker per shard to
+      # reduce per-runner browser/process pressure and mitigate occasional
+      # Playwright page-initialization timeouts.
+      PW_WORKERS: '1'
     steps:
       - uses: actions/checkout@v7
         with:
