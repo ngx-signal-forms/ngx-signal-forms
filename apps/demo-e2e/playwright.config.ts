@@ -86,7 +86,7 @@ export default defineConfig({
   webServer: shouldStartWebServer
     ? {
         command: isCI
-          ? `pnpm nx build demo --outputStyle=static && ./node_modules/.bin/vite preview --host 127.0.0.1 --port ${ciPort} --strictPort --config apps/demo/vite.config.mts`
+          ? `pnpm exec vite --host 127.0.0.1 --port ${ciPort} --strictPort --config apps/demo/vite.config.mts`
           : 'pnpm nx serve demo',
         url: baseURL,
         reuseExistingServer: !isCI,

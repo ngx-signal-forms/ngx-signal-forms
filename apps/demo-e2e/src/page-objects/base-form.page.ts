@@ -17,22 +17,6 @@ export abstract class BaseFormPage {
   }
 
   /**
-   * Helper to construct absolute URL if baseURL is missing in context
-   */
-  protected getFullUrl(route: string): string {
-    // If validation fails in CI due to missing baseURL, fallback to manual construction
-    // This provides robustness across different runners
-    if (route.startsWith('/')) {
-      const baseUrl = process.env['BASE_URL'] ?? 'http://127.0.0.1:4600';
-      // Remove trailing slash from base and leading from route to avoid double slash
-      const cleanBase = baseUrl.replace(/\/$/, '');
-      const cleanRoute = route.replace(/^\//, '');
-      return `${cleanBase}/${cleanRoute}`;
-    }
-    return route;
-  }
-
-  /**
    * Navigate to the form page
    * Must be implemented by subclasses
    */
@@ -48,7 +32,7 @@ export abstract class BaseFormPage {
    * false beforeEach timeouts.
    */
   protected async gotoRoute(route: string): Promise<void> {
-    await this.page.goto(this.getFullUrl(route), {
+    await this.page.goto(route, {
       waitUntil: 'domcontentloaded',
     });
     await this.waitForReady();
