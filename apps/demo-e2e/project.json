@@ -3,8 +3,8 @@
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "projectType": "application",
   "sourceRoot": "apps/demo-e2e/src",
-  "implicitDependencies": ["demo"],
   "tags": ["scope:demo", "type:app"],
+  "implicitDependencies": ["demo"],
   "targets": {
     "lint": {
       "executor": "nx:run-commands",
@@ -13,12 +13,7 @@
       }
     },
     "e2e": {
-      "executor": "@nx/playwright:playwright",
-      "outputs": ["{workspaceRoot}/dist/.playwright/apps/demo-e2e"],
-      "options": {
-        "config": "{projectRoot}/playwright.config.ts",
-        "skipInstall": true
-      }
+      "outputs": ["{workspaceRoot}/dist/.playwright/apps/demo-e2e"]
     },
     "e2e-toolkit": {
       "executor": "nx:run-commands",
@@ -52,12 +47,7 @@
       }
     },
     "e2e-ci": {
-      "executor": "@nx/playwright:playwright",
-      "outputs": ["{workspaceRoot}/dist/.playwright/apps/demo-e2e"],
-      "options": {
-        "config": "{projectRoot}/playwright.config.ts",
-        "skipInstall": true
-      }
+      "outputs": ["{workspaceRoot}/dist/.playwright/apps/demo-e2e"]
     },
     "e2e-ci-shard": {
       "executor": "nx:run-commands",
@@ -67,14 +57,15 @@
       }
     },
     "a11y": {
-      "executor": "@nx/playwright:playwright",
+      "executor": "nx:run-commands",
+      "cache": true,
+      "inputs": ["default", "^production"],
       "outputs": [
         "{workspaceRoot}/dist/.playwright/apps/demo-e2e-a11y",
         "{workspaceRoot}/dist/.a11y/demo-e2e"
       ],
       "options": {
-        "config": "{projectRoot}/playwright.a11y.config.ts",
-        "skipInstall": true
+        "command": "pnpm exec playwright test --config apps/demo-e2e/playwright.a11y.config.ts"
       }
     }
   }
