@@ -90,6 +90,7 @@
     "@testing-library/dom": "catalog:testing-library",
     "@testing-library/jest-dom": "catalog:testing-library",
     "@testing-library/user-event": "catalog:testing-library",
+    "@typescript/native": "catalog:tooling",
     "@types/node": "catalog:tooling",
     "@vitest/browser-playwright": "catalog:vitest",
     "@vitest/coverage-v8": "catalog:vitest",
@@ -117,6 +118,7 @@
     "verdaccio": "catalog:tooling",
     "vest": "catalog:validation",
     "vite": "catalog:tooling",
+    "vite-tsconfig-paths": "catalog:tooling",
     "vitest": "catalog:vitest"
   },
   "simple-git-hooks": {

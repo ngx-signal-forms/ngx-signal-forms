@@ -1,13 +1,14 @@
 #!/usr/bin/env bash
 # Runs a command, retrying without Nx Cloud if the run hard-fails because
 # Nx Cloud rejects or cannot serve the workspace (auth failure, org disabled,
-# or plan/quota rejection), or if Nx Cloud's downloaded hotfix bootstrap goes
-# missing from the local cache. Nx Cloud stays enabled when it's healthy; CI
-# never blocks when it isn't.
+# or plan/quota rejection), if Nx Cloud's downloaded hotfix bootstrap goes
+# missing from the local cache, or if distributed execution leaves tasks
+# unassigned despite reporting zero failed tasks. Nx Cloud stays enabled when
+# it's healthy; CI never blocks when it isn't.
 #
 # Nx already tolerates transient remote-cache outages during task execution, so
-# this wrapper only handles the failures that abort the command before local
-# execution can continue.
+# this wrapper only handles failures that prevent local execution from
+# completing, including an incomplete distributed run after partial execution.
 #
 # On fallback, persists NX_NO_CLOUD=true and scrubs NX_CLOUD_ACCESS_TOKEN /
 # NX_CLOUD_AUTH_TOKEN in $GITHUB_ENV so every subsequent step in the same job
@@ -22,12 +23,21 @@ set -uo pipefail
 readonly NX_CLOUD_FAILURE_PATTERN='(Exiting run|organization has been disabled|workspace has been disabled|unable to be authorized|status code (401|402|403)|quota|credit(s)? (exceeded|exhausted)|plan limit|free plan|payment required)'
 readonly NX_CLOUD_HOTFIX_MISSING_PATTERN="Cannot find module '.*[.]nx/cache/cloud/"
 readonly NX_CLOUD_UPDATE_MANAGER_PATTERN='nx-cloud/update-manager[.]js'
+readonly NX_CLOUD_INCOMPLETE_DTE_PATTERN='Not all tasks were executed'
 
 is_nx_cloud_hotfix_failure() {
   local file_path=$1
 
   grep -qiE "$NX_CLOUD_HOTFIX_MISSING_PATTERN" "$file_path" &&
     grep -qiE "$NX_CLOUD_UPDATE_MANAGER_PATTERN" "$file_path"
+}
+
+is_nx_cloud_incomplete_dte_failure() {
+  local file_path=$1
+
+  grep -q 'Distributed Execution Started' "$file_path" &&
+    grep -qE '(^|[^[:digit:]])0[^[:digit:]].*Failed Tasks' "$file_path" &&
+    grep -q "$NX_CLOUD_INCOMPLETE_DTE_PATTERN" "$file_path"
 }
 
 is_nx_cloud_hard_failure() {
@@ -38,13 +48,14 @@ is_nx_cloud_hard_failure() {
     return 0
   fi
 
-  is_nx_cloud_hotfix_failure "$file_path"
+  is_nx_cloud_hotfix_failure "$file_path" ||
+    is_nx_cloud_incomplete_dte_failure "$file_path"
 }
 
 first_nx_cloud_failure_line() {
   local file_path=$1
 
-  grep -iE "$NX_CLOUD_FAILURE_PATTERN|$NX_CLOUD_HOTFIX_MISSING_PATTERN|$NX_CLOUD_UPDATE_MANAGER_PATTERN" "$file_path" | head -n 1 || true
+  grep -iE "$NX_CLOUD_FAILURE_PATTERN|$NX_CLOUD_HOTFIX_MISSING_PATTERN|$NX_CLOUD_UPDATE_MANAGER_PATTERN|$NX_CLOUD_INCOMPLETE_DTE_PATTERN" "$file_path" | head -n 1 || true
 }
 
 if [ "$#" -eq 0 ]; then

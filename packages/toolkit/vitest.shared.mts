@@ -2,11 +2,10 @@
 
 import { resolve } from 'node:path';
 import angular from '@analogjs/vite-plugin-angular';
-import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
-import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
 import { type UserWorkspaceConfig } from 'vitest/config';
+import tsconfigPaths from 'vite-tsconfig-paths';
 
-process.env.NX_DAEMON ??= 'false';
+process.env['NX_DAEMON'] ??= 'false';
 
 export const toolkitSpecRoots =
   '{src,core,form-field,headless,assistive,testing,vest,scripts}';
@@ -53,9 +52,9 @@ const sharedProjectTestConfig = {
 export const toolkitSharedConfig = {
   root: __dirname,
   cacheDir: '../../node_modules/.vite/packages/toolkit',
-  plugins: [angular(), nxViteTsPaths(), nxCopyAssetsPlugin(['*.md'])],
+  plugins: [angular(), tsconfigPaths()],
   resolve: {
-    // Nx's ts-paths plugin resolves the package tsconfig first during Vitest runs.
+    // The tsconfig paths plugin resolves the package tsconfig first during Vitest runs.
     // These explicit self-import aliases keep toolkit secondary entrypoints stable.
     alias: toolkitEntryAliases,
   },
@@ -69,8 +68,8 @@ export const toolkitSharedConfig = {
     ],
   },
   test: {
-    maxConcurrency: process.env.CI === 'true' ? 2 : 5,
-    maxWorkers: process.env.CI === 'true' ? 2 : undefined,
+    maxConcurrency: process.env['CI'] === 'true' ? 2 : 5,
+    maxWorkers: process.env['CI'] === 'true' ? 2 : undefined,
     ...sharedProjectTestConfig,
     coverage: {
       provider: 'v8',
