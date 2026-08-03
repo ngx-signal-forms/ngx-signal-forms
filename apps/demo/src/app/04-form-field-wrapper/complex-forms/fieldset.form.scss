@@ -134,6 +134,19 @@ fieldset + fieldset {
   padding: 0.25rem 0;
 }
 
+.choice-target {
+  min-block-size: 2.75rem;
+  padding-block: 0.5rem;
+}
+
+.choice-target input[type='checkbox'],
+.choice-target input[type='radio'] {
+  inline-size: 1.125rem;
+  block-size: 1.125rem;
+  margin: 0;
+  flex: 0 0 auto;
+}
+
 .playground-radio-option span {
   font-size: 0.875rem;
 }

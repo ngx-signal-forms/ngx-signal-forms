@@ -2,8 +2,8 @@
 
 import { resolve } from 'node:path';
 import angular from '@analogjs/vite-plugin-angular';
-import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
 import { defineConfig } from 'vitest/config';
+import tsconfigPaths from 'vite-tsconfig-paths';
 
 const toolkitRoot = resolve(__dirname, '../../packages/toolkit');
 
@@ -43,7 +43,7 @@ export default defineConfig({
     angular({
       tsconfig: resolve(__dirname, 'tsconfig.spec.json'),
     }),
-    nxViteTsPaths(),
+    tsconfigPaths(),
   ],
   resolve: {
     alias: toolkitEntryAliases,

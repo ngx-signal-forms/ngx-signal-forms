@@ -3,8 +3,8 @@
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "projectType": "application",
   "sourceRoot": "apps/demo-spartan-e2e/src",
-  "implicitDependencies": ["demo-spartan"],
   "tags": ["scope:demo", "type:app"],
+  "implicitDependencies": ["demo-spartan"],
   "targets": {
     "lint": {
       "executor": "nx:run-commands",
@@ -12,31 +12,16 @@
         "command": "oxlint {projectRoot} --type-aware"
       }
     },
-    "e2e": {
-      "executor": "@nx/playwright:playwright",
-      "outputs": ["{workspaceRoot}/dist/.playwright/apps/demo-spartan-e2e"],
-      "options": {
-        "config": "{projectRoot}/playwright.config.ts",
-        "skipInstall": true
-      }
-    },
-    "e2e-ci": {
-      "executor": "@nx/playwright:playwright",
-      "outputs": ["{workspaceRoot}/dist/.playwright/apps/demo-spartan-e2e"],
-      "options": {
-        "config": "{projectRoot}/playwright.config.ts",
-        "skipInstall": true
-      }
-    },
     "a11y": {
-      "executor": "@nx/playwright:playwright",
+      "executor": "nx:run-commands",
+      "cache": true,
+      "inputs": ["default", "^production"],
       "outputs": [
         "{workspaceRoot}/dist/.playwright/apps/demo-spartan-e2e-a11y",
         "{workspaceRoot}/dist/.a11y/demo-spartan-e2e"
       ],
       "options": {
-        "config": "{projectRoot}/playwright.a11y.config.ts",
-        "skipInstall": true
+        "command": "pnpm exec playwright test --config apps/demo-spartan-e2e/playwright.a11y.config.ts"
       }
     }
   }

@@ -145,8 +145,12 @@ export class PrimeCheckboxControlComponent implements FormValueControl<boolean> 
     afterEveryRender(
       {
         write: () => {
+          const inputViewChild = this.checkboxControl().inputViewChild;
           const nativeInput =
-            this.checkboxControl().inputViewChild?.nativeElement ?? null;
+            (typeof inputViewChild === 'function'
+              ? inputViewChild()
+              : inputViewChild
+            )?.nativeElement ?? null;
 
           if (!nativeInput) {
             return;
