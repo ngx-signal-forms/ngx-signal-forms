@@ -370,6 +370,28 @@ test.describe('Form Field Wrapper - Complex Forms', () => {
       expect(selectionRecipe.alertColor).toBe('rgb(219, 24, 24)');
       expect(selectionRecipe.alertFontSize).toBe('12px');
       expect(selectionRecipe.alertLineHeight).toBe('16px');
+
+      const [surfaceBox, assistiveBox] = await Promise.all([
+        surface.boundingBox(),
+        messages.boundingBox(),
+      ]);
+
+      const selectionSurfaceBox = requireValue(
+        surfaceBox,
+        'selection group surface bounding box',
+      );
+      const selectionAssistiveBox = requireValue(
+        assistiveBox,
+        'selection group assistive bounding box',
+      );
+
+      expect(
+        Math.abs(
+          selectionAssistiveBox.y -
+            selectionSurfaceBox.y -
+            selectionSurfaceBox.height,
+        ),
+      ).toBeLessThanOrEqual(1);
     });
 
     test('should use the Figma body-2 typography for grouped notification messages', async () => {

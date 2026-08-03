@@ -65,7 +65,29 @@
 }
 
 :host(.ngx-signal-form-field-wrapper--selection-cluster) {
-  --_selection-assistive-gap: var(--_field-space-2xs);
+  /* Keep the heading separated from the group, but attach feedback directly
+     to the selection surface (matching the Figma group-error variant). */
+  --_gap: 0;
+  --_selection-assistive-gap: 0;
+}
+
+:host(.ngx-signal-form-field-wrapper--selection-cluster)
+  .ngx-signal-form-field-wrapper__label {
+  margin-bottom: var(--_field-space-xs);
+}
+
+:host(
+    .ngx-signal-form-field-wrapper--selection-cluster.ngx-signal-form-field-wrapper--messages-top
+  )
+  .ngx-signal-form-field-wrapper__label {
+  margin-bottom: 0;
+}
+
+:host(
+    .ngx-signal-form-field-wrapper--selection-cluster.ngx-signal-form-field-wrapper--messages-top
+  )
+  .ngx-signal-form-field-wrapper__messages {
+  margin-bottom: var(--_field-space-xs);
 }
 
 :host(.ngx-signal-form-field-wrapper--selection-cluster)
