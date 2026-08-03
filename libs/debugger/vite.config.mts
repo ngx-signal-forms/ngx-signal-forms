@@ -27,7 +27,7 @@ export default defineConfig({
     include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
     reporters: ['default'],
     pool: 'forks',
-    maxConcurrency: process.env.CI === 'true' ? 2 : 5,
-    maxWorkers: process.env.CI === 'true' ? 2 : undefined,
+    maxConcurrency: process.env['CI'] === 'true' ? 2 : 5,
+    maxWorkers: process.env['CI'] === 'true' ? 2 : undefined,
   },
 });

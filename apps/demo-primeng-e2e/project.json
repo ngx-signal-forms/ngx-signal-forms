@@ -12,12 +12,6 @@
         "command": "oxlint {projectRoot} --type-aware"
       }
     },
-    "e2e": {
-      "outputs": ["{workspaceRoot}/dist/.playwright/apps/demo-primeng-e2e"]
-    },
-    "e2e-ci": {
-      "outputs": ["{workspaceRoot}/dist/.playwright/apps/demo-primeng-e2e"]
-    },
     "a11y": {
       "executor": "nx:run-commands",
       "cache": true,

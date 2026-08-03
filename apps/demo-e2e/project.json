@@ -12,9 +12,6 @@
         "command": "oxlint {projectRoot} --type-aware"
       }
     },
-    "e2e": {
-      "outputs": ["{workspaceRoot}/dist/.playwright/apps/demo-e2e"]
-    },
     "e2e-toolkit": {
       "executor": "nx:run-commands",
       "options": {
@@ -45,9 +42,6 @@
         ],
         "parallel": false
       }
-    },
-    "e2e-ci": {
-      "outputs": ["{workspaceRoot}/dist/.playwright/apps/demo-e2e"]
     },
     "e2e-ci-shard": {
       "executor": "nx:run-commands",
