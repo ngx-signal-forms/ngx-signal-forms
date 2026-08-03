@@ -43,6 +43,9 @@
       "cache": true,
       "inputs": ["default", "^production"]
     },
+    "serve": {
+      "continuous": true
+    },
     "@nx/angular:package": {
       "cache": true,
       "dependsOn": ["^build"],

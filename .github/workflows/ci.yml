@@ -31,9 +31,6 @@ jobs:
     # Broad PRs that touch shared libs make nearly every project "affected"
     # (4 demo e2e suites + toolkit browser tests), which can exceed 20 min.
     timeout-minutes: 35
-    env:
-      # https://nx.dev/docs/features/ci-features/distribute-task-execution
-      NX_CLOUD_CONTINUOUS_ASSIGNMENT: 'true'
     steps:
       - uses: actions/checkout@v7
         with:
@@ -104,35 +101,6 @@ jobs:
       - uses: nrwl/nx-set-shas@v5
         continue-on-error: true
 
-      # Nx Agents (DTE): must run before any other `nx`/`nx-cloud` command -
-      # the first command to reach Nx Cloud locks in the CI Pipeline
-      # Execution's distribution settings for the whole run.
-      # https://nx.dev/docs/features/ci-features/distribute-task-execution
-      #
-      # Agent count scales with the affected-project percentage of the PR via
-      # .nx/workflows/distribution-config.yaml (small/medium/large changesets)
-      # so trivial PRs use 2 agents while broad, multi-app PRs scale to 6.
-      # --stop-agents-after lists every target run below so agents don't shut
-      # down while dependent tasks (test-browser/e2e-ci depending on build)
-      # are still in flight.
-      #
-      # Fork PRs never receive NX_CLOUD_ACCESS_TOKEN_* secrets on the
-      # `pull_request` trigger (this repo intentionally never uses
-      # `pull_request_target` for untrusted code), so nx_cloud.enabled is
-      # already 'false' for them. The fork check below is defense-in-depth
-      # only, in case that trigger or secrets policy ever changes.
-      - name: Start Nx Cloud distributed task execution
-        id: nx_agents
-        if: steps.nx_cloud.outputs.enabled == 'true' && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository)
-        # Never hard-block CI on Nx Cloud/agents being unavailable; the
-        # affected-tasks step below falls back to local execution via
-        # nx-safe.sh if Nx Cloud rejects the workspace.
-        continue-on-error: true
-        run: |
-          pnpm exec nx-cloud start-ci-run \
-            --distribute-on=".nx/workflows/distribution-config.yaml" \
-            --stop-agents-after="lint,test,test-browser,build,e2e-ci"
-
       - name: Nx Report
         # nx-safe.sh keeps diagnostics available even if Nx Cloud auth is broken.
         run: bash .github/scripts/nx-safe.sh pnpm exec nx report
@@ -150,8 +118,10 @@ jobs:
 
       # Keep the critical path focused on fast checks + smaller e2e suites.
       # The heavy demo-e2e suite is sharded in a separate parallel job.
+      # Run locally because Nx Agents can leave tasks unassigned or stall the
+      # coordinator; use non-atomized e2e targets so cloud-less fallback works.
       - name: Run affected tasks (excluding demo-e2e)
-        run: bash .github/scripts/nx-safe.sh pnpm exec nx affected -t lint test test-browser build e2e-ci --exclude=demo-e2e --parallel=4 --outputStyle=static
+        run: bash .github/scripts/nx-safe.sh pnpm exec nx affected -t lint test test-browser build e2e --exclude=demo-e2e --parallel=4 --outputStyle=static
 
       - name: Generate lint report
         if: ${{ always() }}
