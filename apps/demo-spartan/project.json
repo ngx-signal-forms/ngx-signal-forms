@@ -48,7 +48,7 @@
       "outputs": ["{options.reportsDirectory}"],
       "options": {
         "configFile": "apps/demo-spartan/vitest.config.mts",
-        "reportsDirectory": "../../coverage/apps/demo-spartan"
+        "reportsDirectory": "{workspaceRoot}/coverage/apps/demo-spartan"
       }
     },
     "serve-static": {
