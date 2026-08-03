@@ -4,10 +4,7 @@ import {
   computed,
   signal,
 } from '@angular/core';
-import type {
-  ErrorDisplayStrategy,
-  ResolvedErrorDisplayStrategy,
-} from '@ngx-signal-forms/toolkit';
+import type { ResolvedErrorDisplayStrategy } from '@ngx-signal-forms/toolkit';
 import {
   type NgxFormFieldsetAppearance,
   type NgxFormFieldsetFeedbackAppearance,
@@ -93,7 +90,7 @@ const ERROR_PLACEMENT_OPTIONS: readonly NgxFormFieldErrorPlacement[] = [
   'bottom',
 ];
 
-const ERROR_DISPLAY_MODE_OPTIONS: readonly ErrorDisplayStrategy[] = [
+const ERROR_DISPLAY_MODE_OPTIONS: readonly ResolvedErrorDisplayStrategy[] = [
   'immediate',
   'on-touch',
   'on-submit',
@@ -326,7 +323,6 @@ export class FieldsetAppearanceFormComponent {
     switch (this.selectedMode()) {
       case 'immediate':
         return '1. Start typing invalid data → 2. See feedback update instantly → 3. Notice how errors clear as you type';
-      case 'inherit':
       case 'on-touch':
         return '1. Click a field → 2. Enter invalid data → 3. Tab away → 4. Observe errors appearing after you leave the field';
       case 'on-submit':

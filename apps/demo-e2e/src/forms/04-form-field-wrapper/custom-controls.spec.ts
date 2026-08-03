@@ -6,7 +6,6 @@ import {
   collectConsoleErrors,
   verifyNoErrorsOnInitialLoad,
 } from '../../fixtures/form-validation.fixture';
-import { stabilizeLayoutSnapshotViewport } from '../../fixtures/layout-screenshot.fixture';
 import { CustomControlsPage } from '../../page-objects/custom-controls.page';
 
 /**
@@ -912,16 +911,48 @@ test.describe('Custom Signal Forms Controls', () => {
       });
     });
 
-    test('should match the outline vertical wrapper baseline @layout', async () => {
-      await stabilizeLayoutSnapshotViewport(page.page);
+    test('should keep outline vertical wrapper layout contracts stable', async () => {
       await test.step('Show the outline state', async () => {
         await page.showOutlineAppearance();
       });
 
-      await test.step('Capture the wrapper form baseline', async () => {
-        await expect(page.form).toHaveScreenshot(
-          'custom-controls-outline-vertical.png',
-        );
+      await test.step('Verify outlined textual wrappers and plain custom wrappers keep expected classes', async () => {
+        const outlinedWrapper = page.getWrapperByControlId('productName');
+        await expect(outlinedWrapper).toHaveClass(/ngx-signal-forms-outline/);
+
+        for (const controlId of ['rating', 'serviceRating', 'wouldRecommend']) {
+          const wrapper = page.getWrapperByControlId(controlId);
+          await expect(wrapper).toHaveClass(/ngx-signal-forms-plain/);
+          await expect(wrapper).not.toHaveClass(/ngx-signal-forms-outline/);
+        }
+      });
+
+      await test.step('Verify plain custom wrappers keep horizontal padding parity with outlined textual wrappers', async () => {
+        const outlinedPadding = await page
+          .getWrapperContentByControlId('productName')
+          .evaluate((element) => {
+            const styles = window.getComputedStyle(element);
+
+            return {
+              paddingLeft: styles.paddingLeft,
+              paddingRight: styles.paddingRight,
+            };
+          });
+
+        for (const controlId of ['rating', 'serviceRating', 'wouldRecommend']) {
+          const padding = await page
+            .getWrapperContentByControlId(controlId)
+            .evaluate((element) => {
+              const styles = window.getComputedStyle(element);
+
+              return {
+                paddingLeft: styles.paddingLeft,
+                paddingRight: styles.paddingRight,
+              };
+            });
+
+          expect(padding).toEqual(outlinedPadding);
+        }
       });
     });
 

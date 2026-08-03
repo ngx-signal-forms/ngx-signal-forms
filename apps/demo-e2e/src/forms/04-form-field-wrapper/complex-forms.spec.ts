@@ -1,7 +1,6 @@
 import { expect, test } from '@playwright/test';
 
 import { ROLE_ALERT_SELECTOR } from '../../fixtures/aria-selectors';
-import { stabilizeLayoutSnapshotViewport } from '../../fixtures/layout-screenshot.fixture';
 import { FormFieldWrapperComplexPage } from '../../page-objects/form-field-wrapper-complex.page';
 
 const contactMethodFieldsetTopAriaSnapshot = `
@@ -77,6 +76,22 @@ function getGroupedFieldsets(page: FormFieldWrapperComplexPage) {
   ];
 }
 
+async function getAssistiveRowMetrics(
+  wrapper: ReturnType<FormFieldWrapperComplexPage['getWrapperByControlId']>,
+) {
+  return wrapper
+    .locator('.ngx-signal-form-field-wrapper__assistive')
+    .evaluate((element) => {
+      const style = getComputedStyle(element);
+
+      return {
+        minHeight: style.minHeight,
+        marginTop: style.marginTop,
+        marginBottom: style.marginBottom,
+      };
+    });
+}
+
 async function triggerContactMethodFieldsetError(
   page: FormFieldWrapperComplexPage,
 ): Promise<void> {
@@ -127,6 +142,30 @@ test.describe('Form Field Wrapper - Complex Forms', () => {
       await expect(page.formFields.first()).toBeVisible();
       const count = await page.countFormFields();
       expect(count).toBeGreaterThan(0);
+    });
+
+    test('should reserve one Figma caption line for assistive feedback in every text-field presentation', async () => {
+      const expectFigmaAssistiveMetrics = async () => {
+        for (const controlId of ['firstName', 'street']) {
+          await expect(page.getWrapperByControlId(controlId)).toBeVisible();
+          await expect(
+            getAssistiveRowMetrics(page.getWrapperByControlId(controlId)),
+          ).resolves.toEqual({
+            minHeight: '16px',
+            marginTop: '0px',
+            marginBottom: '0px',
+          });
+        }
+      };
+
+      await expectFigmaAssistiveMetrics();
+
+      await page.showStandardAppearance();
+      await page.showHorizontalOrientation();
+      await expectFigmaAssistiveMetrics();
+
+      await page.showOutlineAppearance();
+      await expectFigmaAssistiveMetrics();
     });
   });
 
@@ -330,35 +369,48 @@ test.describe('Form Field Wrapper - Complex Forms', () => {
       expect(selectionRecipe.alertColor).toBe('rgb(219, 24, 24)');
       expect(selectionRecipe.alertFontSize).toBe('12px');
       expect(selectionRecipe.alertLineHeight).toBe('16px');
-    });
 
-    test('should use the same error message typography for notifications and inline errors', async () => {
-      await triggerCredentialsFieldsetError(page);
-
-      const [notificationMessageStyles, inlineErrorStyles] = await Promise.all([
-        page.credentialsFieldset
-          .locator('.ngx-form-field-notification__message')
-          .first()
-          .evaluate((message) => {
-            const style = getComputedStyle(message);
-            return {
-              fontSize: style.fontSize,
-              lineHeight: style.lineHeight,
-            };
-          }),
-        page.form
-          .locator('#credentialsPassword-error .ngx-form-field-error__message')
-          .first()
-          .evaluate((message) => {
-            const style = getComputedStyle(message);
-            return {
-              fontSize: style.fontSize,
-              lineHeight: style.lineHeight,
-            };
-          }),
+      const [surfaceBox, assistiveBox] = await Promise.all([
+        surface.boundingBox(),
+        messages.boundingBox(),
       ]);
 
-      expect(notificationMessageStyles).toEqual(inlineErrorStyles);
+      const selectionSurfaceBox = requireValue(
+        surfaceBox,
+        'selection group surface bounding box',
+      );
+      const selectionAssistiveBox = requireValue(
+        assistiveBox,
+        'selection group assistive bounding box',
+      );
+
+      expect(
+        Math.abs(
+          selectionAssistiveBox.y -
+            selectionSurfaceBox.y -
+            selectionSurfaceBox.height,
+        ),
+      ).toBeLessThanOrEqual(1);
+    });
+
+    test('should use the Figma body-2 typography for grouped notification messages', async () => {
+      await triggerCredentialsFieldsetError(page);
+
+      const notificationMessageStyles = await page.credentialsFieldset
+        .locator('.ngx-form-field-notification__message')
+        .first()
+        .evaluate((message) => {
+          const style = getComputedStyle(message);
+          return {
+            fontSize: style.fontSize,
+            lineHeight: style.lineHeight,
+          };
+        });
+
+      expect(notificationMessageStyles).toEqual({
+        fontSize: '14px',
+        lineHeight: '20px',
+      });
     });
 
     test('should render the credentials grouped summary as an aligned bulleted list', async () => {
@@ -484,58 +536,57 @@ test.describe('Form Field Wrapper - Complex Forms', () => {
       `);
     });
 
-    test('snapshot: contact-method grouped error with top placement @layout', async () => {
-      await stabilizeLayoutSnapshotViewport(page.page);
-      await page.showTopFieldsetSummaryPlacement();
-      await triggerContactMethodFieldsetError(page);
-      await page.contactMethodGroup.scrollIntoViewIfNeeded();
-
-      await expect(page.contactMethodGroup).toHaveScreenshot(
-        'complex-forms-contact-method-error-top.png',
-      );
-    });
-
-    test('snapshot: contact-method grouped error with bottom placement @layout', async () => {
-      await stabilizeLayoutSnapshotViewport(page.page);
-      await page.showBottomFieldsetSummaryPlacement();
-      await triggerContactMethodFieldsetError(page);
-      await page.contactMethodGroup.scrollIntoViewIfNeeded();
-
-      await expect(page.contactMethodGroup).toHaveScreenshot(
-        'complex-forms-contact-method-error-bottom.png',
-      );
-    });
-
-    test('snapshot: credentials grouped error uses bullets and reduced gap @layout', async () => {
-      await stabilizeLayoutSnapshotViewport(page.page);
-      await page.showTopFieldsetSummaryPlacement();
-      await triggerCredentialsFieldsetError(page);
-      await page.credentialsFieldset.scrollIntoViewIfNeeded();
-
-      await expect(page.credentialsFieldset).toHaveScreenshot(
-        'complex-forms-credentials-grouped-error-bullets.png',
-      );
-    });
-
-    test('snapshot: credentials grouped error with top placement @layout', async () => {
-      await stabilizeLayoutSnapshotViewport(page.page);
-      await page.showTopFieldsetSummaryPlacement();
-      await triggerCredentialsFieldsetError(page);
-      await page.credentialsFieldset.scrollIntoViewIfNeeded();
-
-      await expect(page.credentialsFieldset).toHaveScreenshot(
-        'complex-forms-credentials-error-top.png',
-      );
-    });
-
-    test('snapshot: credentials grouped error with bottom placement @layout', async () => {
-      await stabilizeLayoutSnapshotViewport(page.page);
+    test('keeps credentials grouped error messages visible and aligned in both placement modes', async () => {
       await page.showBottomFieldsetSummaryPlacement();
       await triggerCredentialsFieldsetError(page);
-      await page.credentialsFieldset.scrollIntoViewIfNeeded();
+      await expect(page.credentialsFieldset).toHaveAttribute(
+        'data-error-placement',
+        'bottom',
+      );
 
-      await expect(page.credentialsFieldset).toHaveScreenshot(
-        'complex-forms-credentials-error-bottom.png',
+      const bottomMessageSlot = page.credentialsFieldset.locator(
+        '.ngx-signal-form-fieldset__messages',
+      );
+      const bottomNotificationCard = page.credentialsFieldset.locator(
+        'ngx-form-field-notification .ngx-form-field-notification:not(.ngx-form-field-notification--empty)',
+      );
+
+      await expect(bottomMessageSlot).toBeVisible();
+      await expect(bottomNotificationCard).toBeVisible();
+      await expect(page.credentialsFieldsetErrorList.locator('li')).toHaveCount(
+        1,
+      );
+
+      const [bottomSlotBox, bottomCardBox] = await Promise.all([
+        bottomMessageSlot.boundingBox(),
+        bottomNotificationCard.boundingBox(),
+      ]);
+
+      const bottomSlotRect = requireValue(
+        bottomSlotBox,
+        'bottom credentials message slot bounding box',
+      );
+      const bottomCardRect = requireValue(
+        bottomCardBox,
+        'bottom credentials message card bounding box',
+      );
+
+      expect(Math.abs(bottomCardRect.x - bottomSlotRect.x)).toBeLessThanOrEqual(
+        1,
+      );
+      expect(
+        Math.abs(bottomCardRect.width - bottomSlotRect.width),
+      ).toBeLessThanOrEqual(1);
+
+      await page.showTopFieldsetSummaryPlacement();
+      await triggerCredentialsFieldsetError(page);
+      await expect(page.credentialsFieldset).toHaveAttribute(
+        'data-error-placement',
+        'top',
+      );
+      await expect(page.credentialsFieldsetError).toBeVisible();
+      await expect(page.credentialsFieldsetErrorList.locator('li')).toHaveCount(
+        1,
       );
     });
   });

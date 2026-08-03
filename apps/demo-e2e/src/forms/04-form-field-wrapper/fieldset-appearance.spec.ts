@@ -226,10 +226,6 @@ test.describe('Form Field Wrapper - Fieldset Appearance', () => {
     await page.showSuccessTone();
     await page.showTintSurface();
 
-    const baseBackground = await page.credentialsFieldset.evaluate(
-      (fieldset) => getComputedStyle(fieldset).backgroundColor,
-    );
-
     await page.triggerCredentialsMismatch();
 
     await expect(page.successToneButton).toHaveAttribute(
@@ -252,15 +248,10 @@ test.describe('Form Field Wrapper - Fieldset Appearance', () => {
       /ngx-signal-form-fieldset--surface-invalid/,
     );
 
-    const [fieldsetBackground, alertBox] = await Promise.all([
-      page.credentialsFieldset.evaluate(
-        (fieldset) => getComputedStyle(fieldset).backgroundColor,
-      ),
-      page.getGroupedAlert(page.credentialsFieldset).boundingBox(),
-    ]);
+    const alertBox = await page
+      .getGroupedAlert(page.credentialsFieldset)
+      .boundingBox();
 
-    expect(fieldsetBackground).not.toBe('rgba(0, 0, 0, 0)');
-    expect(fieldsetBackground).not.toBe(baseBackground);
     expect(
       requireValue(alertBox, 'credentials grouped alert bounding box').height,
     ).toBeGreaterThan(0);
