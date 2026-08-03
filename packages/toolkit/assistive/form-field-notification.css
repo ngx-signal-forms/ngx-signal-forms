@@ -19,6 +19,8 @@
 
   --_notification-text-base: 1rem;
   --_notification-line-height-base: 1.5rem;
+  --_notification-text-body: 0.875rem;
+  --_notification-line-height-body: 1.25rem;
   --_notification-weight-medium: 500;
 
   --_notification-border-width-default: 1px;
@@ -69,11 +71,11 @@
   );
   --_notification-font-size: var(
     --ngx-signal-form-notification-font-size,
-    var(--_feedback-font-size)
+    var(--_notification-text-body)
   );
   --_notification-line-height: var(
     --ngx-signal-form-notification-line-height,
-    var(--_feedback-line-height)
+    var(--_notification-line-height-body)
   );
   --_notification-title-color: var(
     --ngx-signal-form-notification-title-color,

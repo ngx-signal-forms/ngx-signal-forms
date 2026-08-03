@@ -77,6 +77,22 @@ function getGroupedFieldsets(page: FormFieldWrapperComplexPage) {
   ];
 }
 
+async function getAssistiveRowMetrics(
+  wrapper: ReturnType<FormFieldWrapperComplexPage['getWrapperByControlId']>,
+) {
+  return wrapper
+    .locator('.ngx-signal-form-field-wrapper__assistive')
+    .evaluate((element) => {
+      const style = getComputedStyle(element);
+
+      return {
+        minHeight: style.minHeight,
+        marginTop: style.marginTop,
+        marginBottom: style.marginBottom,
+      };
+    });
+}
+
 async function triggerContactMethodFieldsetError(
   page: FormFieldWrapperComplexPage,
 ): Promise<void> {
@@ -127,6 +143,30 @@ test.describe('Form Field Wrapper - Complex Forms', () => {
       await expect(page.formFields.first()).toBeVisible();
       const count = await page.countFormFields();
       expect(count).toBeGreaterThan(0);
+    });
+
+    test('should reserve one Figma caption line for assistive feedback in every text-field presentation', async () => {
+      const expectFigmaAssistiveMetrics = async () => {
+        for (const controlId of ['firstName', 'street']) {
+          await expect(page.getWrapperByControlId(controlId)).toBeVisible();
+          await expect(
+            getAssistiveRowMetrics(page.getWrapperByControlId(controlId)),
+          ).resolves.toEqual({
+            minHeight: '16px',
+            marginTop: '0px',
+            marginBottom: '0px',
+          });
+        }
+      };
+
+      await expectFigmaAssistiveMetrics();
+
+      await page.showStandardAppearance();
+      await page.showHorizontalOrientation();
+      await expectFigmaAssistiveMetrics();
+
+      await page.showOutlineAppearance();
+      await expectFigmaAssistiveMetrics();
     });
   });
 
@@ -332,33 +372,24 @@ test.describe('Form Field Wrapper - Complex Forms', () => {
       expect(selectionRecipe.alertLineHeight).toBe('16px');
     });
 
-    test('should use the same error message typography for notifications and inline errors', async () => {
+    test('should use the Figma body-2 typography for grouped notification messages', async () => {
       await triggerCredentialsFieldsetError(page);
 
-      const [notificationMessageStyles, inlineErrorStyles] = await Promise.all([
-        page.credentialsFieldset
-          .locator('.ngx-form-field-notification__message')
-          .first()
-          .evaluate((message) => {
-            const style = getComputedStyle(message);
-            return {
-              fontSize: style.fontSize,
-              lineHeight: style.lineHeight,
-            };
-          }),
-        page.form
-          .locator('#credentialsPassword-error .ngx-form-field-error__message')
-          .first()
-          .evaluate((message) => {
-            const style = getComputedStyle(message);
-            return {
-              fontSize: style.fontSize,
-              lineHeight: style.lineHeight,
-            };
-          }),
-      ]);
+      const notificationMessageStyles = await page.credentialsFieldset
+        .locator('.ngx-form-field-notification__message')
+        .first()
+        .evaluate((message) => {
+          const style = getComputedStyle(message);
+          return {
+            fontSize: style.fontSize,
+            lineHeight: style.lineHeight,
+          };
+        });
 
-      expect(notificationMessageStyles).toEqual(inlineErrorStyles);
+      expect(notificationMessageStyles).toEqual({
+        fontSize: '14px',
+        lineHeight: '20px',
+      });
     });
 
     test('should render the credentials grouped summary as an aligned bulleted list', async () => {

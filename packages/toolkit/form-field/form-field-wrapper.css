@@ -676,6 +676,7 @@
   ) {
   font-size: var(--_input-size);
   font-family: var(--_input-font-family);
+  line-height: var(--_input-line-height);
   color: var(--_input-color);
   padding: 0; /* No padding - container handles it */
   border: none; /* No border - container handles it */
@@ -740,7 +741,7 @@
   grid-template-areas:
     'content'
     'assistive';
-  gap: var(--_field-space-3xs); /* 2px gap between container and assistive */
+  row-gap: 0;
 
   /* Label wrapper positioned inside the content area (caption style) */
   .ngx-signal-form-field-wrapper__label {
@@ -1063,9 +1064,15 @@
     --ngx-form-field-assistive-min-height,
     var(--ngx-signal-form-feedback-line-height, 1rem)
   );
-  /* Small separation from the control; the row itself carries no bottom margin. */
-  margin-top: var(--ngx-form-field-assistive-margin-top, 0.25rem);
+  /* Figma feedback aligns directly below the field border by default. */
+  margin-top: var(--ngx-form-field-assistive-margin-top, 0);
   margin-bottom: var(--ngx-form-field-assistive-margin-bottom, 0);
+  /* A scoped transition lets consumers collapse the reserved space smoothly. */
+  transition: var(
+    --ngx-form-field-assistive-transition,
+    min-height 0.15s ease-out,
+    margin-block 0.15s ease-out
+  );
   width: 100%;
 }
 
@@ -1118,6 +1125,12 @@
   )
 ) {
   --ngx-form-field-hint-display: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ngx-signal-form-field-wrapper__assistive {
+    transition: none;
+  }
 }
 
 /* Windows High Contrast (`forced-colors: active`): color-mix() borders and */

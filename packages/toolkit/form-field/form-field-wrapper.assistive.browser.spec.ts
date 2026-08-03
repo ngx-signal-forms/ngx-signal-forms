@@ -16,9 +16,9 @@ describe('NgxFormFieldWrapper — assistive row reserved space', () => {
     selector: 'ngx-test-assistive-space',
     imports: [NgxFormFieldWrapper, NgxFormFieldHint, FormField],
     template: `
-      <ngx-form-field-wrapper [formField]="testForm.bare">
+      <ngx-form-field-wrapper appearance="outline" [formField]="testForm.bare">
         <label for="bare">Bare</label>
-        <input id="bare" [formField]="testForm.bare" />
+        <input id="bare" [formField]="testForm.bare" placeholder=" " />
       </ngx-form-field-wrapper>
 
       <ngx-form-field-wrapper [formField]="testForm.hinted">
@@ -48,16 +48,36 @@ describe('NgxFormFieldWrapper — assistive row reserved space', () => {
     expect(bare.getBoundingClientRect().height).toBeCloseTo(16, 1);
   });
 
-  it('reserves exactly one caption line plus a small top margin', async () => {
+  it('reserves exactly one caption line without adding feedback spacing', async () => {
     const { container } = await render(Host);
 
     for (const row of assistiveRows(container)) {
       const styles = getComputedStyle(row);
 
       expect(parseFloat(styles.minHeight)).toBeCloseTo(16, 1);
-      expect(parseFloat(styles.marginTop)).toBeCloseTo(4, 1);
+      expect(parseFloat(styles.marginTop)).toBe(0);
       expect(parseFloat(styles.marginBottom)).toBeCloseTo(0, 1);
     }
+  });
+
+  it('does not add an outline grid gap before assistive feedback', async () => {
+    const { container } = await render(Host);
+
+    const [bare] = assistiveRows(container);
+    const wrapper = bare.closest('ngx-form-field-wrapper') as HTMLElement;
+
+    expect(getComputedStyle(wrapper).rowGap).toBe('0px');
+  });
+
+  it('uses the body-2 line-height for standard textual controls', async () => {
+    const { container } = await render(Host);
+
+    const input = container.querySelector<HTMLInputElement>('#hinted');
+    if (input === null) {
+      throw new Error('Expected the standard hinted input to render.');
+    }
+
+    expect(getComputedStyle(input).lineHeight).toBe('20px');
   });
 
   it('follows the shared feedback line-height token', async () => {
@@ -65,8 +85,30 @@ describe('NgxFormFieldWrapper — assistive row reserved space', () => {
 
     const [bare] = assistiveRows(container);
     const wrapper = bare.closest('ngx-form-field-wrapper') as HTMLElement;
+    wrapper.style.setProperty('--ngx-form-field-assistive-transition', 'none');
     wrapper.style.setProperty('--ngx-signal-form-feedback-line-height', '2rem');
 
     expect(parseFloat(getComputedStyle(bare).minHeight)).toBeCloseTo(32, 1);
+  });
+
+  it('lets consumers collapse the reserved row with custom properties', async () => {
+    const { container } = await render(Host);
+
+    const [bare] = assistiveRows(container);
+    const wrapper = bare.closest('ngx-form-field-wrapper') as HTMLElement;
+    wrapper.style.setProperty('--ngx-form-field-assistive-transition', 'none');
+    wrapper.style.setProperty('--ngx-form-field-assistive-min-height', '0');
+    wrapper.style.setProperty('--ngx-form-field-assistive-margin-top', '0');
+
+    const styles = getComputedStyle(bare);
+    expect(parseFloat(styles.minHeight)).toBe(0);
+    expect(parseFloat(styles.marginTop)).toBe(0);
+  });
+
+  it('transitions reservation changes unless reduced motion is requested', async () => {
+    const { container } = await render(Host);
+
+    const [bare] = assistiveRows(container);
+    expect(getComputedStyle(bare).transition).toContain('min-height');
   });
 });

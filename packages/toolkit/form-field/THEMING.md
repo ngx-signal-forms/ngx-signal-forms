@@ -90,7 +90,7 @@ The system works in layers to ensure consistency while allowing deep customizati
 | :---------------------------------------------- | :------------- | :------------------------------------------------------------ |
 | `--ngx-signal-form-feedback-font-size`          | `0.75rem`      | Font size for all feedback text                               |
 | `--ngx-signal-form-feedback-line-height`        | `1rem`         | Line height for feedback text                                 |
-| `--ngx-signal-form-feedback-margin-top`         | `0.125rem`     | Spacing between input and feedback                            |
+| `--ngx-signal-form-feedback-margin-top`         | `0`            | Spacing between input and feedback                            |
 | `--ngx-signal-form-feedback-padding-horizontal` | `0.5rem`       | Horizontal padding for feedback text                          |
 | `--ngx-signal-form-feedback-list-style`         | `disc outside` | `list-style` shorthand for bulleted summaries (type+position) |
 | `--ngx-signal-form-feedback-list-indent`        | `1.25rem`      | Bulleted summary indent (`padding-inline-start`)              |
@@ -174,7 +174,7 @@ shadowing consumer-provided theme variables.
 | `--ngx-signal-form-notification-border-style`         | `solid`                                                           | Border style                             |
 | `--ngx-signal-form-notification-border-radius`        | `0.5rem`                                                          | Card corner radius                       |
 | `--ngx-signal-form-notification-box-shadow`           | `none`                                                            | Card shadow                              |
-| `--ngx-signal-form-notification-font-size`            | `var(--...feedback...)`                                           | Default message font size                |
+| `--ngx-signal-form-notification-font-size`            | `0.875rem`                                                        | Default message font size (Figma body-2) |
 | `--ngx-signal-form-notification-line-height`          | `var(--...feedback...)`                                           | Default message line height              |
 | `--ngx-signal-form-notification-error-color`          | `#db1818`                                                         | Base error text color                    |
 | `--ngx-signal-form-notification-error-border-color`   | `color-mix(in srgb, var(--...error-color...) 50%, transparent)`   | Error border color                       |
@@ -211,12 +211,11 @@ background stays pinned to the Figma light-danger surface. Override
 `--ngx-signal-form-notification-error-bg` when your theme needs a different
 surface color.
 
-Notification message typography cascades through the shared feedback tier
-(`--ngx-signal-form-feedback-font-size` / `-line-height`), so grouped
-notification body text matches normal inline error text by default. Setting
-`--ngx-signal-form-error-font-size` no longer also affects notifications —
-override `--ngx-signal-form-feedback-font-size` to tune both at once, or
-`--ngx-signal-form-notification-font-size` to tune just notifications.
+Notification messages use Figma’s body-2 token by default (`0.875rem` / `1.25rem`),
+while inline errors and hints retain caption sizing (`0.75rem` / `1rem`). Setting
+`--ngx-signal-form-error-font-size` does not affect notifications; override
+`--ngx-signal-form-notification-font-size` and
+`--ngx-signal-form-notification-line-height` to tune grouped cards.
 
 ### Character Count
 
@@ -242,26 +241,34 @@ Displays progress towards a character limit.
 
 Layout container for hint/error and character count alignment.
 
-| Property                                   | Default                                           | Description                                           |
-| :----------------------------------------- | :------------------------------------------------ | :---------------------------------------------------- |
-| `--ngx-form-field-assistive-min-height`    | `--ngx-signal-form-feedback-line-height` (`1rem`) | Reserved line, prevents layout shift when errors show |
-| `--ngx-form-field-assistive-gap`           | `0.5rem`                                          | Gap between left and right content                    |
-| `--ngx-form-field-assistive-margin-top`    | `0.25rem`                                         | Spacing above assistive row                           |
-| `--ngx-form-field-assistive-margin-bottom` | `0`                                               | Spacing below assistive row                           |
+| Property                                   | Default                                                  | Description                                           |
+| :----------------------------------------- | :------------------------------------------------------- | :---------------------------------------------------- |
+| `--ngx-form-field-assistive-min-height`    | `--ngx-signal-form-feedback-line-height` (`1rem`)        | Reserved line, prevents layout shift when errors show |
+| `--ngx-form-field-assistive-gap`           | `0.5rem`                                                 | Gap between left and right content                    |
+| `--ngx-form-field-assistive-margin-top`    | `0`                                                      | Spacing above assistive row                           |
+| `--ngx-form-field-assistive-margin-bottom` | `0`                                                      | Spacing below assistive row                           |
+| `--ngx-form-field-assistive-transition`    | `min-height 150ms ease-out, margin-block 150ms ease-out` | Animation for reservation changes                     |
 
 #### Reserved space
 
-The assistive row is always reserved so a field does not shift when its hint is
-swapped for an error or warning. The reservation is exactly one caption line
-(`--ngx-signal-form-feedback-line-height`, `1rem`) — enough for a single-line
-hint or message — plus a `0.25rem` separation from the control. Multi-line
-messages grow the row, which is the only accepted shift.
+The assistive row is reserved by default so a field does not shift when its hint
+is swapped for an error or warning. The reservation is exactly one caption line
+(`--ngx-signal-form-feedback-line-height`, `1rem`) — 16px by default, matching
+the design. Feedback aligns directly beneath the field border by default; use
+the public margin properties when a product needs extra separation. Multi-line
+messages grow the row, which is the only accepted shift. Reservation changes use
+a short 150ms `ease-out` transition; motion is disabled for
+`prefers-reduced-motion`.
 
-Scale or drop the reserved line per form scope:
+Scale or collapse the reserved space per form scope:
 
 ```css
 .my-form {
   --ngx-form-field-assistive-min-height: 1.25rem;
+}
+
+.my-compact-form {
+  --ngx-form-field-assistive-min-height: 0;
 }
 ```
 

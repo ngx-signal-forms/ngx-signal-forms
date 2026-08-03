@@ -27,7 +27,7 @@
 :host {
   --_feedback-font-size-default: 0.75rem;
   --_feedback-line-height-default: 1rem;
-  --_feedback-margin-top-default: 0.125rem;
+  --_feedback-margin-top-default: 0;
   --_feedback-padding-horizontal-default: 0.5rem;
   --_feedback-list-style-default: disc outside;
   --_feedback-list-indent-default: 1.25rem;
