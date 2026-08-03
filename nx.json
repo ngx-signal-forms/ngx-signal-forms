@@ -21,6 +21,11 @@
   },
   "nxCloudId": "6996105d7ca3ad8352dfd299",
   "targetDefaults": {
+    "build": {
+      "cache": true,
+      "dependsOn": ["^build"],
+      "inputs": ["production", "^production"]
+    },
     "@angular/build:application": {
       "cache": true,
       "dependsOn": ["^build"],
@@ -38,18 +43,13 @@
       "cache": true,
       "inputs": ["default", "^production"]
     },
+    "serve": {
+      "continuous": true
+    },
     "@nx/angular:package": {
       "cache": true,
       "dependsOn": ["^build"],
       "inputs": ["production", "^production"]
-    },
-    "e2e": {
-      "cache": true,
-      "inputs": ["default", "^production"]
-    },
-    "e2e-ci": {
-      "cache": true,
-      "inputs": ["default", "^production"]
     },
     "@nx/js:tsc": {
       "cache": true,
@@ -157,5 +157,14 @@
   "analytics": false,
   "migrate": {
     "agentic": true
-  }
+  },
+  "plugins": [
+    {
+      "plugin": "@nx/playwright/plugin",
+      "options": {
+        "targetName": "e2e",
+        "ciTargetName": "e2e-ci"
+      }
+    }
+  ]
 }

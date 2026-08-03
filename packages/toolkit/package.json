@@ -39,7 +39,6 @@
       "optional": true
     }
   },
-  "dependencies": {},
   "devDependencies": {
     "@angular/common": "catalog:angular",
     "@angular/compiler": "catalog:angular",

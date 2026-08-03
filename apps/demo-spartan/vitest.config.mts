@@ -1,8 +1,8 @@
 /// <reference types='vitest' />
 
-import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
 import angular from '@analogjs/vite-plugin-angular';
 import { defineConfig } from 'vitest/config';
+import tsconfigPaths from 'vite-tsconfig-paths';
 
 export default defineConfig({
   root: __dirname,
@@ -11,7 +11,7 @@ export default defineConfig({
     angular({
       tsconfig: './tsconfig.spec.json',
     }),
-    nxViteTsPaths(),
+    tsconfigPaths(),
   ],
   test: {
     name: 'demo-spartan',
