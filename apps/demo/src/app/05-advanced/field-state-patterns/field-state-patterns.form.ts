@@ -211,23 +211,25 @@ const fieldStatePatternsSchema = schema<FieldStatePatternsModel>((path) => {
           </div>
         </div>
 
-        <ngx-form-field-wrapper
-          [formField]="stateForm.inviteCode"
-          [appearance]="appearance()"
-          [orientation]="orientation()"
-        >
-          <label for="field-state-invite-code">Invite code</label>
-          <input
-            id="field-state-invite-code"
-            type="text"
+        @if (!stateForm.inviteCode().hidden()) {
+          <ngx-form-field-wrapper
             [formField]="stateForm.inviteCode"
-            placeholder="Shown only for invite-only onboarding"
-          />
-          <ngx-form-field-hint>
-            Hidden fields drop out of the rendered wrapper and out of invalid
-            focus flows until they matter.
-          </ngx-form-field-hint>
-        </ngx-form-field-wrapper>
+            [appearance]="appearance()"
+            [orientation]="orientation()"
+          >
+            <label for="field-state-invite-code">Invite code</label>
+            <input
+              id="field-state-invite-code"
+              type="text"
+              [formField]="stateForm.inviteCode"
+              placeholder="Shown only for invite-only onboarding"
+            />
+            <ngx-form-field-hint>
+              Hidden fields drop out of the rendered wrapper and out of invalid
+              focus flows until they matter.
+            </ngx-form-field-hint>
+          </ngx-form-field-wrapper>
+        }
 
         <div
           class="rounded-lg border border-gray-200 bg-gray-50 p-4 font-mono text-xs dark:border-gray-700 dark:bg-gray-900"
