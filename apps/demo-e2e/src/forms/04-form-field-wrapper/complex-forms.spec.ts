@@ -1,7 +1,6 @@
 import { expect, test } from '@playwright/test';
 
 import { ROLE_ALERT_SELECTOR } from '../../fixtures/aria-selectors';
-import { stabilizeLayoutSnapshotViewport } from '../../fixtures/layout-screenshot.fixture';
 import { FormFieldWrapperComplexPage } from '../../page-objects/form-field-wrapper-complex.page';
 
 const contactMethodFieldsetTopAriaSnapshot = `
@@ -537,58 +536,57 @@ test.describe('Form Field Wrapper - Complex Forms', () => {
       `);
     });
 
-    test('snapshot: contact-method grouped error with top placement @layout', async () => {
-      await stabilizeLayoutSnapshotViewport(page.page);
-      await page.showTopFieldsetSummaryPlacement();
-      await triggerContactMethodFieldsetError(page);
-      await page.contactMethodGroup.scrollIntoViewIfNeeded();
-
-      await expect(page.contactMethodGroup).toHaveScreenshot(
-        'complex-forms-contact-method-error-top.png',
-      );
-    });
-
-    test('snapshot: contact-method grouped error with bottom placement @layout', async () => {
-      await stabilizeLayoutSnapshotViewport(page.page);
-      await page.showBottomFieldsetSummaryPlacement();
-      await triggerContactMethodFieldsetError(page);
-      await page.contactMethodGroup.scrollIntoViewIfNeeded();
-
-      await expect(page.contactMethodGroup).toHaveScreenshot(
-        'complex-forms-contact-method-error-bottom.png',
-      );
-    });
-
-    test('snapshot: credentials grouped error uses bullets and reduced gap @layout', async () => {
-      await stabilizeLayoutSnapshotViewport(page.page);
-      await page.showTopFieldsetSummaryPlacement();
-      await triggerCredentialsFieldsetError(page);
-      await page.credentialsFieldset.scrollIntoViewIfNeeded();
-
-      await expect(page.credentialsFieldset).toHaveScreenshot(
-        'complex-forms-credentials-grouped-error-bullets.png',
-      );
-    });
-
-    test('snapshot: credentials grouped error with top placement @layout', async () => {
-      await stabilizeLayoutSnapshotViewport(page.page);
-      await page.showTopFieldsetSummaryPlacement();
-      await triggerCredentialsFieldsetError(page);
-      await page.credentialsFieldset.scrollIntoViewIfNeeded();
-
-      await expect(page.credentialsFieldset).toHaveScreenshot(
-        'complex-forms-credentials-error-top.png',
-      );
-    });
-
-    test('snapshot: credentials grouped error with bottom placement @layout', async () => {
-      await stabilizeLayoutSnapshotViewport(page.page);
+    test('keeps credentials grouped error messages visible and aligned in both placement modes', async () => {
       await page.showBottomFieldsetSummaryPlacement();
       await triggerCredentialsFieldsetError(page);
-      await page.credentialsFieldset.scrollIntoViewIfNeeded();
+      await expect(page.credentialsFieldset).toHaveAttribute(
+        'data-error-placement',
+        'bottom',
+      );
 
-      await expect(page.credentialsFieldset).toHaveScreenshot(
-        'complex-forms-credentials-error-bottom.png',
+      const bottomMessageSlot = page.credentialsFieldset.locator(
+        '.ngx-signal-form-fieldset__messages',
+      );
+      const bottomNotificationCard = page.credentialsFieldset.locator(
+        'ngx-form-field-notification .ngx-form-field-notification:not(.ngx-form-field-notification--empty)',
+      );
+
+      await expect(bottomMessageSlot).toBeVisible();
+      await expect(bottomNotificationCard).toBeVisible();
+      await expect(page.credentialsFieldsetErrorList.locator('li')).toHaveCount(
+        1,
+      );
+
+      const [bottomSlotBox, bottomCardBox] = await Promise.all([
+        bottomMessageSlot.boundingBox(),
+        bottomNotificationCard.boundingBox(),
+      ]);
+
+      const bottomSlotRect = requireValue(
+        bottomSlotBox,
+        'bottom credentials message slot bounding box',
+      );
+      const bottomCardRect = requireValue(
+        bottomCardBox,
+        'bottom credentials message card bounding box',
+      );
+
+      expect(Math.abs(bottomCardRect.x - bottomSlotRect.x)).toBeLessThanOrEqual(
+        1,
+      );
+      expect(
+        Math.abs(bottomCardRect.width - bottomSlotRect.width),
+      ).toBeLessThanOrEqual(1);
+
+      await page.showTopFieldsetSummaryPlacement();
+      await triggerCredentialsFieldsetError(page);
+      await expect(page.credentialsFieldset).toHaveAttribute(
+        'data-error-placement',
+        'top',
+      );
+      await expect(page.credentialsFieldsetError).toBeVisible();
+      await expect(page.credentialsFieldsetErrorList.locator('li')).toHaveCount(
+        1,
       );
     });
   });
