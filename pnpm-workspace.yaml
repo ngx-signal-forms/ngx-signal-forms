@@ -21,7 +21,7 @@ catalogs:
     '@axe-core/playwright': '^4.12.1'
     axe-core: '^4.12.1'
   angular:
-    '@angular/animations': '22.0.5'
+    '@angular/animations': '22.1.0'
     '@angular/aria': '22.1.0'
     '@angular/cdk': '22.1.0'
     '@angular/common': 22.1.0
@@ -44,7 +44,7 @@ catalogs:
     '@angular-eslint/eslint-plugin-template': '22.1.0'
     '@angular-eslint/template-parser': '22.1.0'
   angular-material:
-    '@angular/material': '22.0.4'
+    '@angular/material': '22.1.0'
   ngrx:
     '@angular-architects/ngrx-toolkit': '21.0.1'
     '@ngrx/signals': '21.1.1'
