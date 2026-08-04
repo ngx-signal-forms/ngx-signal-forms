@@ -24,18 +24,38 @@ behaviour. It is a four-step composition:
 exists to be that composition, once. Its own docstring says so: it _"Replaces
 the four-step manual composition … that every consumer used to inline."_
 
-A whole-workspace audit ([#262]) found the sentence is not yet true. Five
-in-tree surfaces still inline all four steps — `createErrorStateInternal`,
-`NgxHeadlessErrorState`, `NgxHeadlessFieldset`, `NgxFormFieldWrapper`,
-`NgxFormFieldError` — each re-injecting `injectFormContext()` and
-`NGX_SIGNAL_FORMS_CONFIG` and re-writing the same two computeds.
+A whole-workspace audit ([#262]) found the sentence is not yet true. Four
+in-tree surfaces inline all four steps of the **error** cascade, each
+re-injecting `injectFormContext()` and `NGX_SIGNAL_FORMS_CONFIG` and
+re-writing the same two computeds:
 
-Three surfaces do call the seam: `core/directives/auto-aria.ts:174`,
+- `headless/src/lib/utilities.ts:457` — `createErrorStateInternal`
+- `headless/src/lib/error-state.ts:215` — `NgxHeadlessErrorState`
+- `headless/src/lib/fieldset.ts:236` — `NgxHeadlessFieldset`
+- `form-field/form-field-wrapper.ts:873` — `NgxFormFieldWrapper` (and it
+  reaches for `resolveErrorDisplayStrategy` rather than
+  `resolveStrategyFromContext`)
+
+Three surfaces call the seam: `core/directives/auto-aria.ts:174`,
 `headless/src/lib/create-error-message-signal.ts:255`, and
 `headless/src/lib/error-summary.ts:158` — the latter two passing
-`configDefault`. That split is the point. The seam is not a hypothetical
-better way; it is what the newer code already does, and the five inlining
-surfaces are the holdouts.
+`configDefault`. The seam is not a hypothetical better way; it is what the
+newer code already does, and the inlining surfaces are the holdouts.
+
+Two corrections to the audit's own framing, recorded because they change how
+the evidence reads:
+
+- The audit counted **five** inliners, including `NgxFormFieldError`. That one
+  is wrong, and instructively so: `assistive/form-field-error.ts:45-46`
+  states that error-visibility logic _"lives exclusively in
+  `NgxHeadlessErrorState`, which is composed via `hostDirectives`"_ — it
+  delegates the error cascade exactly as this ADR asks. Its only copy is of
+  the _warning_ cascade (`:391`).
+- `headless/src/lib/error-summary.ts` appears on both lists. It calls the seam
+  for visibility (`:158`) **and** inlines `resolveStrategyFromContext` at
+  `:149-155` — because it exposes `resolvedStrategy` as public API and the
+  seam returns only a visibility boolean. See "the seam's shape" under
+  Consequences; that is a real gap, not a violation.
 
 That would be ordinary duplication if the copies agreed. They do not.
 
@@ -54,13 +74,30 @@ So `warningStrategy="inherit"` outside an `[ngxSignalForm]` host resolves to
 documented contract, three implementations, two answers. That divergence is
 tracked and resolved as a behavioural defect in [#264].
 
-A fourth, smaller divergence is the more revealing one. `fieldset.ts:248`
-passes `this.#config?.defaultErrorStrategy ?? 'on-touch'` while every other
-copy passes `this.#config?.defaultErrorStrategy`. `resolveErrorDisplayStrategy`
-(`resolve-strategy.ts:29`) already returns `'on-touch'` as its terminal
-fallback, so the extra coalesce is redundant. It exists only because the author
-of that copy could not see the shared terminal. Nothing broke — but the copy
-had already stopped being a copy, and no one could tell.
+Two things about that divergence are easy to misread, so they are stated
+outright:
+
+- **It only bites when `warningStrategy` is explicitly set.** All three copies
+  short-circuit to `'immediate'` when the input is unset, so a reader checking
+  the code sees `return 'immediate'` and may conclude the claim is wrong.
+  `"inherit"` is an explicit value; it reaches `resolveStrategyFromContext`,
+  and that is where the three copies disagree.
+- **`fieldset.ts:244-249` carries a docstring defending its cascade** as
+  _"deliberately narrower than `resolvedStrategy`'s"_. That sentence documents
+  the unset-input → `'immediate'` behaviour, which **all three copies share**.
+  It does not document, and cannot sanction, the missing `configDefault` —
+  which is the part that diverges. A defended difference and an undetected one
+  sit two lines apart in the same docstring.
+
+A separate, smaller divergence is the more revealing one, and it is in the
+**error** cascade rather than the warning one. `fieldset.ts:239` passes
+`this.#config?.defaultErrorStrategy ?? 'on-touch'` while all five other error
+sites — `error-state.ts:218`, `error-summary.ts:152`, `utilities.ts:460`,
+`form-field-wrapper.ts:876`, `create-error-message-signal.ts:247` — pass the
+bare value. `resolveErrorDisplayStrategy` already returns `'on-touch'` as its
+terminal fallback, so the extra coalesce is redundant. It exists only because
+the author of that copy could not see the shared terminal. Nothing broke — but
+the copy had already stopped being a copy, and no one could tell.
 
 The same shape recurs elsewhere in the toolkit. `NgxHeadlessCharacterCount`
 forked `createCharacterCount()` and the fork is where the dev diagnostic went
@@ -118,6 +155,19 @@ not merely sequenced after it.
   tense about a consolidation that has not finished.
 - `configDefault` is now a real parameter with a decided semantic rather than a
   detail each site improvises. It must be documented as part of the contract.
+
+**The seam's shape is currently too narrow, and that is a known gap.**
+`createErrorVisibility()` returns a visibility `Signal<boolean>` and nothing
+else. A surface that must expose the _resolved strategy value_ as public API —
+`NgxHeadlessErrorSummary.resolvedStrategy`, `NgxHeadlessFieldset.resolvedStrategy` —
+cannot get it from the seam, so it resolves the strategy a second time
+alongside the seam call. `error-summary.ts` does exactly this today
+(`:149-155` beside `:158`), and it is not a violation of this ADR: the rule
+says do not re-implement the cascade, and there is presently no way to obtain
+that value without doing so. Either the seam grows to return the resolved
+strategy next to the boolean, or surfaces that need both keep two call sites.
+Deciding that is left to [#280], which is where the migration happens and
+where the requirement will be concrete.
 
 **Explicitly not decided here.**
 
