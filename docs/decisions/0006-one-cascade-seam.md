@@ -126,8 +126,9 @@ Concretely:
 
 This is a constraint on future code, which is why it is an ADR rather than a
 backlog entry. The cleanup that brings existing code into line is filed as
-issues ([#280] for the five bypassing sites, [#276] for the character-count
-fork, [#278] for the union-input and warn-once helpers).
+issues ([#280] for the four inlining sites and the three warning copies,
+[#276] for the character-count fork, [#278] for the union-input and warn-once
+helpers).
 
 **Corollary, stated because it is the part people skip:** consolidating copies
 that currently disagree is a _behaviour_ change, not a refactor. Decide which
@@ -141,7 +142,7 @@ not merely sequenced after it.
 - One place to change visibility timing, and one place for a reviewer to look.
 - The drift class this ADR targets — two copies, two answers, no one aware —
   becomes structurally hard rather than merely discouraged.
-- ≈ −80 to −120 lines across five files from the cascade cleanup alone, and the
+- ≈ −80 to −120 lines across the affected files from the cascade cleanup, and the
   redundant `?? 'on-touch'` disappears with the copy that hosted it.
 
 **Costs.**
