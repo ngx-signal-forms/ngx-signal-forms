@@ -59,9 +59,10 @@ ngx-signal-forms — an Angular toolkit for working with Signal Forms.
 - **One cascade seam** — error-visibility timing is composed once, in
   `createErrorVisibility()`, and consumers call it rather than re-inlining the
   `resolveStrategyFromContext` → `resolveSubmittedStatusFromContext` →
-  `createShowErrorsComputed` chain. Five in-tree surfaces once inlined it and
-  the copies drifted to two different answers for `warningStrategy="inherit"`
-  outside a form host. See [ADR-0006](docs/decisions/0006-one-cascade-seam.md).
+  `createShowErrorsComputed` chain. Five in-tree surfaces **still inline it**
+  and the copies have drifted to two different answers for
+  `warningStrategy="inherit"` outside a form host; bringing them onto the seam
+  is open work. See [ADR-0006](docs/decisions/0006-one-cascade-seam.md).
   The rule is narrow on purpose: it applies to the strategy/visibility cascade,
   where the copies encode _one_ contract. Where duplicated-looking code encodes
   _different_ contracts — direct `errors()` vs aggregated `errorSummary()`

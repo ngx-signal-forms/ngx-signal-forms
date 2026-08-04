@@ -24,12 +24,18 @@ behaviour. It is a four-step composition:
 exists to be that composition, once. Its own docstring says so: it _"Replaces
 the four-step manual composition … that every consumer used to inline."_
 
-A whole-workspace audit ([#262]) found the sentence is not yet true. Five of
-seven in-tree consumers still inline all four steps — `createErrorStateInternal`,
+A whole-workspace audit ([#262]) found the sentence is not yet true. Five
+in-tree surfaces still inline all four steps — `createErrorStateInternal`,
 `NgxHeadlessErrorState`, `NgxHeadlessFieldset`, `NgxFormFieldWrapper`,
 `NgxFormFieldError` — each re-injecting `injectFormContext()` and
-`NGX_SIGNAL_FORMS_CONFIG` and re-writing the same two computeds. Only
-`headless/src/lib/error-summary.ts` uses the seam's `configDefault` option.
+`NGX_SIGNAL_FORMS_CONFIG` and re-writing the same two computeds.
+
+Three surfaces do call the seam: `core/directives/auto-aria.ts:174`,
+`headless/src/lib/create-error-message-signal.ts:255`, and
+`headless/src/lib/error-summary.ts:158` — the latter two passing
+`configDefault`. That split is the point. The seam is not a hypothetical
+better way; it is what the newer code already does, and the five inlining
+surfaces are the holdouts.
 
 That would be ordinary duplication if the copies agreed. They do not.
 
