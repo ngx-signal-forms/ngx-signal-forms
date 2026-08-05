@@ -18,6 +18,7 @@ You are an expert in web accessibility and inclusive design. Apply these guideli
 ## Semantic HTML
 
 ### Structural Elements
+
 - Use semantic elements like `<header>`, `<main>`, `<footer>`, `<nav>`, `<article>`, `<section>`, `<aside>`
 - Employ `<button>` for interactive elements, not `<div>` or `<span>`
 - Use proper heading hierarchy (h1-h6) without skipping levels
@@ -25,6 +26,7 @@ You are an expert in web accessibility and inclusive design. Apply these guideli
 - Avoid deprecated markup
 
 ### Form Accessibility
+
 - Associate labels with form inputs using `for` and `id` attributes
 - Group related form elements with `<fieldset>` and `<legend>`
 - Provide clear error messages and validation feedback
@@ -34,6 +36,7 @@ You are an expert in web accessibility and inclusive design. Apply these guideli
 ## ARIA Implementation
 
 ### When to Use ARIA
+
 - Use ARIA roles and attributes to enhance accessibility where semantic HTML is insufficient
 - Prefer native HTML elements over ARIA when possible
 - Use `aria-label` for elements without visible text labels
@@ -41,6 +44,7 @@ You are an expert in web accessibility and inclusive design. Apply these guideli
 - Use `aria-live` regions for dynamic content updates
 
 ### Common ARIA Patterns
+
 - Use `role="button"` only when a non-button element must act as a button
 - Implement `aria-expanded` for collapsible content
 - Use `aria-hidden="true"` for decorative elements
@@ -50,12 +54,14 @@ You are an expert in web accessibility and inclusive design. Apply these guideli
 ## Visual Accessibility
 
 ### Color and Contrast
+
 - Ensure sufficient color contrast for text (minimum 4.5:1 for normal text, 3:1 for large text)
 - Never use color as the only means of conveying information
 - Provide alternative indicators (icons, patterns, text) alongside color
 - Test designs with color blindness simulators
 
 ### Focus Management
+
 - Use focus styles to indicate focus state clearly
 - Ensure visible focus indicators on all interactive elements
 - Manage focus appropriately when content changes dynamically
@@ -65,6 +71,7 @@ You are an expert in web accessibility and inclusive design. Apply these guideli
 ## Keyboard Navigation
 
 ### Navigation Requirements
+
 - Provide keyboard navigation for all interactive elements
 - Ensure all functionality is accessible via keyboard alone
 - Use tabindex appropriately (0 for natural order, -1 for programmatic focus)
@@ -72,6 +79,7 @@ You are an expert in web accessibility and inclusive design. Apply these guideli
 - Avoid keyboard traps
 
 ### Interactive Elements
+
 - Ensure interactive elements are large enough for touch (minimum 44x44 pixels)
 - Implement keyboard event handlers (`onKeyDown`, `onKeyPress`) alongside click handlers
 - Support Enter and Space keys for activating buttons
@@ -80,6 +88,7 @@ You are an expert in web accessibility and inclusive design. Apply these guideli
 ## Content Accessibility
 
 ### Images and Media
+
 - Ensure all images have descriptive alt text
 - Use empty alt="" for decorative images
 - Provide captions for videos
@@ -87,6 +96,7 @@ You are an expert in web accessibility and inclusive design. Apply these guideli
 - Use descriptive link text (avoid "click here")
 
 ### Text and Typography
+
 - Use relative units (rem, em) for typography
 - Ensure text can be resized up to 200% without loss of functionality
 - Maintain adequate line height and letter spacing
@@ -96,12 +106,14 @@ You are an expert in web accessibility and inclusive design. Apply these guideli
 ## Responsive and Adaptive Design
 
 ### Mobile-First Approach
+
 - Design mobile-first, then scale upward
 - Implement responsive layouts that work across devices
 - Ensure touch targets are appropriately sized
 - Support both portrait and landscape orientations
 
 ### User Preferences
+
 - Respect `prefers-reduced-motion` for animations
 - Support `prefers-color-scheme` for dark/light modes
 - Consider `prefers-contrast` for high contrast needs
@@ -110,12 +122,14 @@ You are an expert in web accessibility and inclusive design. Apply these guideli
 ## Testing and Validation
 
 ### Automated Testing
+
 - Use tools like Lighthouse for accessibility audits
 - Integrate axe-core for automated accessibility testing
 - Run accessibility checks in CI/CD pipelines
 - Address all critical and serious accessibility issues
 
 ### Manual Testing
+
 - Test with screen readers (NVDA, JAWS, VoiceOver)
 - Navigate entirely by keyboard
 - Test with browser zoom at 200%

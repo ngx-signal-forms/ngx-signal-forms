@@ -15,8 +15,8 @@ Template-driven forms rely on the `FormsModule` which provides these key directi
 First, import `FormsModule` into your component or module.
 
 ```ts
-import {Component} from '@angular/core';
-import {FormsModule} from '@angular/forms';
+import { Component } from '@angular/core';
+import { FormsModule } from '@angular/forms';
 
 @Component({
   selector: 'app-user-form',
@@ -24,7 +24,7 @@ import {FormsModule} from '@angular/forms';
   templateUrl: './user-form.component.html',
 })
 export class UserForm {
-  user = {name: '', role: 'Guest'};
+  user = { name: '', role: 'Guest' };
 
   onSubmit() {
     console.log('Form submitted!', this.user);
@@ -43,7 +43,14 @@ Use `[(ngModel)]` on input elements. **Every element using `[(ngModel)]` MUST ha
   <!-- Basic Input -->
   <div>
     <label for="name">Name:</label>
-    <input type="text" id="name" required [(ngModel)]="user.name" name="name" #nameCtrl="ngModel" />
+    <input
+      type="text"
+      id="name"
+      required
+      [(ngModel)]="user.name"
+      name="name"
+      #nameCtrl="ngModel"
+    />
   </div>
 
   <!-- Select Box -->
@@ -88,7 +95,14 @@ You can use these classes to provide visual feedback in your CSS:
 To display error messages conditionally, export the `ngModel` directive to a template reference variable (e.g., `#nameCtrl="ngModel"`).
 
 ```html
-<input type="text" id="name" required [(ngModel)]="user.name" name="name" #nameCtrl="ngModel" />
+<input
+  type="text"
+  id="name"
+  required
+  [(ngModel)]="user.name"
+  name="name"
+  #nameCtrl="ngModel"
+/>
 
 <!-- Show error only if the control is invalid AND (touched OR dirty) -->
 @if (nameCtrl.invalid && (nameCtrl.dirty || nameCtrl.touched)) {

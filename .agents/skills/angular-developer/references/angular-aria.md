@@ -135,8 +135,12 @@ These patterns combine the `ngCombobox` directive (applied directly to the trigg
 **Imports:**
 
 ```ts
-import {Combobox, ComboboxPopup, ComboboxWidget} from '@angular/aria/combobox';
-import {Listbox, Option} from '@angular/aria/listbox';
+import {
+  Combobox,
+  ComboboxPopup,
+  ComboboxWidget,
+} from '@angular/aria/combobox';
+import { Listbox, Option } from '@angular/aria/listbox';
 ```
 
 **Directives:** `ngCombobox`, `ngComboboxPopup`, `ngComboboxWidget`, `ngListbox`, `ngOption`.
@@ -169,7 +173,12 @@ import {Listbox, Option} from '@angular/aria/listbox';
 </div>
 
 <!-- Example 2: Select Component (Applied directly to a div trigger) -->
-<div ngCombobox #select="ngCombobox" [(expanded)]="selectExpanded" class="select-trigger">
+<div
+  ngCombobox
+  #select="ngCombobox"
+  [(expanded)]="selectExpanded"
+  class="select-trigger"
+>
   <span class="select-text">{{ selectedValue() ?? 'Choose an option' }}</span>
   <span class="icon">▼</span>
 </div>
@@ -225,8 +234,12 @@ For actions, commands, and context menus (not for form selection).
 ```html
 <!-- Menubar Example -->
 <div ngMenuBar class="menubar">
-  <div ngMenuItem value="file" [submenu]="fileMenu" class="menubar-item">File</div>
-  <div ngMenuItem value="edit" [submenu]="editMenu" class="menubar-item">Edit</div>
+  <div ngMenuItem value="file" [submenu]="fileMenu" class="menubar-item">
+    File
+  </div>
+  <div ngMenuItem value="edit" [submenu]="editMenu" class="menubar-item">
+    Edit
+  </div>
 </div>
 
 <div ngMenu #fileMenu="ngMenu" class="menu">
@@ -375,9 +388,15 @@ Displays hierarchical data (file systems, nested nav).
   <li ngTreeItem [parent]="tree" value="documents" #docsItem="ngTreeItem">
     <span class="tree-label">Documents</span>
     <ul role="group">
-      <ng-template ngTreeItemGroup [ownedBy]="docsItem" #docsGroup="ngTreeItemGroup">
+      <ng-template
+        ngTreeItemGroup
+        [ownedBy]="docsItem"
+        #docsGroup="ngTreeItemGroup"
+      >
         <li ngTreeItem [parent]="docsGroup" value="resume">Resume.pdf</li>
-        <li ngTreeItem [parent]="docsGroup" value="cover-letter">CoverLetter.pdf</li>
+        <li ngTreeItem [parent]="docsGroup" value="cover-letter">
+          CoverLetter.pdf
+        </li>
       </ng-template>
     </ul>
   </li>
@@ -453,10 +472,16 @@ Angular Aria provides standard Component Harnesses (based on `@angular/cdk/testi
 **Imports:**
 
 ```ts
-import {HarnessLoader} from '@angular/cdk/testing';
-import {TestbedHarnessEnvironment} from '@angular/cdk/testing/testbed';
-import {AccordionGroupHarness, AccordionHarness} from '@angular/aria/accordion/testing';
-import {ListboxHarness, ListboxOptionHarness} from '@angular/aria/listbox/testing';
+import { HarnessLoader } from '@angular/cdk/testing';
+import { TestbedHarnessEnvironment } from '@angular/cdk/testing/testbed';
+import {
+  AccordionGroupHarness,
+  AccordionHarness,
+} from '@angular/aria/accordion/testing';
+import {
+  ListboxHarness,
+  ListboxOptionHarness,
+} from '@angular/aria/listbox/testing';
 ```
 
 ### Example: Testing an Accordion with Harnesses
@@ -474,7 +499,9 @@ describe('MyAccordionComponent', () => {
 
   it('should expand accordion on toggle', async () => {
     // Get the harness by its trigger title
-    const accordion = await loader.getHarness(AccordionHarness.with({title: 'Section 1'}));
+    const accordion = await loader.getHarness(
+      AccordionHarness.with({ title: 'Section 1' }),
+    );
 
     expect(await accordion.isExpanded()).toBeFalse();
 
@@ -495,9 +522,13 @@ The `[formField]` directive automatically detects directives like `ngCombobox` o
 **Imports:**
 
 ```ts
-import {form, schema, required} from '@angular/forms/signals';
-import {Combobox, ComboboxPopup, ComboboxWidget} from '@angular/aria/combobox';
-import {Listbox, Option} from '@angular/aria/listbox';
+import { form, schema, required } from '@angular/forms/signals';
+import {
+  Combobox,
+  ComboboxPopup,
+  ComboboxWidget,
+} from '@angular/aria/combobox';
+import { Listbox, Option } from '@angular/aria/listbox';
 ```
 
 ### Example 1: Autocomplete Combobox inside a Form
@@ -556,7 +587,9 @@ Apply `ngCombobox` directly to a focusable `div` trigger and bind to `[formField
     [(expanded)]="isExpanded"
     class="select-trigger"
   >
-    <span class="select-text">{{ myForm.city.value() || 'Choose your city' }}</span>
+    <span class="select-text"
+      >{{ myForm.city.value() || 'Choose your city' }}</span
+    >
     <span class="icon">▼</span>
   </div>
 
@@ -583,7 +616,12 @@ Apply `ngCombobox` directly to a focusable `div` trigger and bind to `[formField
 You can bind a multi-selectable Listbox directly to a form array:
 
 ```html
-<ul ngListbox [formField]="myForm.interests" [multi]="true" class="interest-list">
+<ul
+  ngListbox
+  [formField]="myForm.interests"
+  [multi]="true"
+  class="interest-list"
+>
   <li ngOption value="sports">Sports</li>
   <li ngOption value="music">Music</li>
   <li ngOption value="tech">Technology</li>
