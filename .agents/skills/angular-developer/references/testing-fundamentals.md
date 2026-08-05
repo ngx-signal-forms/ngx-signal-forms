@@ -6,18 +6,16 @@ This guide covers the fundamental principles and practices for writing unit test
 
 This project follows a modern, zoneless testing approach. State changes schedule updates asynchronously, and tests must account for this.
 
-Prefer **not** to use `fixture.detectChanges()` to propagate signal-driven state changes — signals schedule updates asynchronously and do not need a manual CD trigger. If you do call it (e.g. for an initial render trigger), always follow it immediately with `await TestBed.inject(ApplicationRef).whenStable()`.
-
+**Do NOT** use `fixture.detectChanges()` to manually trigger updates.
 **ALWAYS** use the "Act, Wait, Assert" pattern:
 
 1.  **Act:** Update state or perform an action (e.g., set a component input, click a button).
-2.  **Wait:** Use `await TestBed.inject(ApplicationRef).whenStable()` to allow the zoneless scheduler to flush pending updates and render the changes.
+2.  **Wait:** Use `await fixture.whenStable()` to allow the framework to process the scheduled update and render the changes.
 3.  **Assert:** Verify the outcome.
 
 ### Basic Test Structure Example
 
 ```ts
-import {ApplicationRef} from '@angular/core';
 import {ComponentFixture, TestBed} from '@angular/core/testing';
 import {MyComponent} from './my.component';
 
@@ -38,7 +36,7 @@ describe('MyComponent', () => {
   it('should display the default title', async () => {
     // ACT: (Implicit) Component is created with default state.
     // WAIT for initial data binding.
-    await TestBed.inject(ApplicationRef).whenStable();
+    await fixture.whenStable();
     // ASSERT the initial state.
     expect(h1.textContent).toContain('Default Title');
   });
@@ -48,7 +46,7 @@ describe('MyComponent', () => {
     component.title.set('New Test Title');
 
     // WAIT for the asynchronous update to complete.
-    await TestBed.inject(ApplicationRef).whenStable();
+    await fixture.whenStable();
 
     // ASSERT the DOM has been updated.
     expect(h1.textContent).toContain('New Test Title');
