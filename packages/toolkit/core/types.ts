@@ -230,8 +230,21 @@ export type NgxSignalFormControlPresetRegistry = Record<
 /**
  * Consumer overrides for the preset registry.
  */
+// `Partial<T>` is deliberately NOT used for the inner shape: under
+// `exactOptionalPropertyTypes` it permits omission but not an explicit
+// `undefined`, and the resolver merges overrides onto the base preset with
+// `??` so that `{ slider: { layout: maybeUnset } }` preserves the base
+// invariants rather than clobbering them. The mapped type below declares
+// that contract instead of leaving it to the implementation.
 export type NgxSignalFormControlPresetOverrides = Partial<
-  Record<NgxSignalFormControlKind, Partial<NgxSignalFormControlPreset>>
+  Record<
+    NgxSignalFormControlKind,
+    {
+      [K in keyof NgxSignalFormControlPreset]?:
+        | NgxSignalFormControlPreset[K]
+        | undefined;
+    }
+  >
 >;
 
 /**
@@ -346,24 +359,31 @@ export interface NgxSignalFormsConfig {
  * the inherited marker (for themes that render the required hint entirely
  * via CSS); omitting the key inherits the parent value instead.
  */
+// Every member carries an explicit `| undefined` on purpose. Under
+// `exactOptionalPropertyTypes` a bare `?:` permits omission but NOT an
+// explicit `undefined`, and the merge below is `??`-based precisely so a
+// caller can spread partially-populated config (`{ ...base, showMarkerWhen:
+// maybeUnset }`) and have each undefined member fall through to the parent.
+// Declaring it keeps the type honest about the merge this interface exists
+// to feed.
 export interface NgxSignalFormsUserConfig {
-  autoAria?: boolean;
-  defaultErrorStrategy?: ResolvedErrorDisplayStrategy;
-  defaultFormFieldAppearance?: FormFieldAppearance;
-  defaultFormFieldOrientation?: FormFieldOrientation;
-  showMarkerWhen?: FieldMarkingMode;
+  autoAria?: boolean | undefined;
+  defaultErrorStrategy?: ResolvedErrorDisplayStrategy | undefined;
+  defaultFormFieldAppearance?: FormFieldAppearance | undefined;
+  defaultFormFieldOrientation?: FormFieldOrientation | undefined;
+  showMarkerWhen?: FieldMarkingMode | undefined;
   /**
    * Custom character(s) rendered as the required marker. Pass `''` to
    * clear an inherited marker without changing `showMarkerWhen`.
    */
-  requiredMarker?: string;
+  requiredMarker?: string | undefined;
   /**
    * Custom text rendered as the optional marker. Pass `''` to clear an
    * inherited marker without changing `showMarkerWhen`.
    */
-  optionalMarker?: string;
+  optionalMarker?: string | undefined;
   /** Override the `'required'` legend text. `{marker}` is substituted. */
-  requiredLegendText?: string;
+  requiredLegendText?: string | undefined;
   /** Override the `'optional'` legend text. `{marker}` is substituted. */
-  optionalLegendText?: string;
+  optionalLegendText?: string | undefined;
 }

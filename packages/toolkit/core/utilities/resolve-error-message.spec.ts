@@ -33,7 +33,7 @@ describe('resolveValidationErrorMessage — 3-tier priority', () => {
   });
 
   it('should fall through to registry when message is undefined', () => {
-    const error: ValidationError = { kind: 'required', message: undefined };
+    const error = { kind: 'required', message: undefined };
 
     expect(resolveValidationErrorMessage(error, registry)).toBe(
       'Registry: field is required',

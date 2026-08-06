@@ -25,10 +25,17 @@ type ErrorMessageFactory = (params: any) => string;
  * Each known kind maps to either a static string or a factory that receives the
  * matching `NgValidationError` subtype.
  */
+// The explicit `| undefined` is load-bearing under
+// `exactOptionalPropertyTypes`: without it an optional member may be
+// *omitted* but not *passed as `undefined`*, and consumers routinely build
+// a registry from optional data (`{ required: t('…'), email: maybeMissing }`).
+// `resolveValidationErrorMessage` already falls through to the next tier on
+// an undefined entry — this declares the behaviour the code implements.
 type BuiltInErrorMessages = {
   [TError in NgValidationError as TError['kind']]?:
     | string
-    | BuiltInErrorMessageFactory<TError>;
+    | BuiltInErrorMessageFactory<TError>
+    | undefined;
 };
 
 type ErrorMessageRegistryInput = Readonly<ErrorMessageRegistry>;
