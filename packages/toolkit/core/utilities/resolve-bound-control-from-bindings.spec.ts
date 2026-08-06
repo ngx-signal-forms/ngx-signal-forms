@@ -1,3 +1,4 @@
+import { signal } from '@angular/core';
 import { describe, expect, it } from 'vitest';
 import {
   type FormFieldBindingsState,
@@ -14,10 +15,15 @@ function fieldStateWithBindings(
 ): FormFieldBindingsState {
   const bindings = elements.map((element) => ({ element }));
   return {
-    formFieldBindings: () =>
+    // `formFieldBindings` is a branded `Signal`, not a bare closure — a plain
+    // arrow would compile only because nothing checked it, which is the drift
+    // #286 exists to catch. The cast stays confined to the binding payload,
+    // which is deliberately reduced to the single `element` the resolver reads.
+    formFieldBindings: signal(
       bindings as unknown as ReturnType<
         FormFieldBindingsState['formFieldBindings']
       >,
+    ),
   };
 }
 

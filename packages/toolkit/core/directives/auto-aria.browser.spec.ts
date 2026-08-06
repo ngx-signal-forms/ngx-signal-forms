@@ -20,7 +20,7 @@ import { NgxFormField } from '../../form-field';
 })
 class MockFormFieldDirective {
   readonly field = signalInput<unknown>(undefined, { alias: 'formField' });
-  readonly state = signal<unknown>();
+  readonly state = signal<unknown>(undefined);
 }
 
 function createMockControl(

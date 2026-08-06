@@ -1,16 +1,46 @@
 import { signal, type Signal } from '@angular/core';
-import type { FieldState, ValidationError } from '@angular/forms/signals';
+import type {
+  FieldState,
+  ReadonlyFieldTree,
+  ValidationError,
+} from '@angular/forms/signals';
 import { describe, expect, it } from 'vitest';
 import { warningError } from '../warning-error';
 import { createAriaDescribedBySignal } from './create-aria-described-by-signal';
 
 type FieldStateStub = Pick<FieldState<unknown>, 'errors'>;
 
+/**
+ * `FieldState.errors` is `Signal<ValidationError.WithFieldTree[]>`: every
+ * error Angular emits carries a back-reference to the (callable) node that
+ * produced it. These specs used to hold bare `ValidationError`s, a shape no
+ * real form ever emits. The two assertions are confined to this one factory —
+ * the stub deliberately implements only the `errors` slice that this pure
+ * factory reads, and the node is callable, as every real `FieldTree` is.
+ */
+function createFieldStateStub(initialErrors: readonly ValidationError[] = []): {
+  readonly state: FieldState<unknown>;
+  readonly setErrors: (next: readonly ValidationError[]) => void;
+} {
+  const errors = signal<ValidationError.WithFieldTree[]>([]);
+  const stub: FieldStateStub = { errors };
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- Narrowing a deliberate partial stub to the slice under test.
+  const state = stub as FieldState<unknown>;
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- A FieldTree is callable; this stand-in only serves as the errors' back-reference.
+  const fieldTree = (() => state) as unknown as ReadonlyFieldTree<unknown>;
+  const setErrors = (next: readonly ValidationError[]): void => {
+    errors.set(next.map((error) => ({ ...error, fieldTree })));
+  };
+
+  setErrors(initialErrors);
+
+  return { state, setErrors };
+}
+
 function fieldStateSignal(
   errors: readonly ValidationError[] = [],
 ): Signal<FieldState<unknown> | null> {
-  const stub: FieldStateStub = { errors: signal(errors) };
-  return signal(stub as FieldState<unknown>);
+  return signal(createFieldStateStub(errors).state);
 }
 
 describe('createAriaDescribedBySignal', () => {
@@ -323,10 +353,8 @@ describe('createAriaDescribedBySignal', () => {
   });
 
   it('reacts to errors changing on the bound field state', () => {
-    const errors = signal<readonly ValidationError[]>([]);
-    const stub = signal<FieldState<unknown> | null>({
-      errors,
-    } as FieldState<unknown>);
+    const { state, setErrors } = createFieldStateStub();
+    const stub = signal<FieldState<unknown> | null>(state);
     const hintIds = signal<readonly string[]>([]);
     const visibility = signal(true);
 
@@ -340,10 +368,10 @@ describe('createAriaDescribedBySignal', () => {
 
     expect(ariaDescribedBy()).toBeNull();
 
-    errors.set([{ kind: 'required', message: 'Required' }]);
+    setErrors([{ kind: 'required', message: 'Required' }]);
     expect(ariaDescribedBy()).toBe('email-error');
 
-    errors.set([warningError('weak')]);
+    setErrors([warningError('weak')]);
     expect(ariaDescribedBy()).toBe('email-warning');
   });
 

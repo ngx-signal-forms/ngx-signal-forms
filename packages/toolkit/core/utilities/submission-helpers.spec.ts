@@ -120,8 +120,8 @@ describe('Submission Helpers', () => {
           message: string;
         }
         const submittingState = signal(false);
-        const mockForm: FieldTree<ContactForm> = Object.assign(
-          createMockFormWithSubmitting(() => submittingState()),
+        const mockForm = createMockFormWithSubmitting<ContactForm>(
+          () => submittingState(),
           {
             email: createMockLeafField(''),
             message: createMockLeafField(''),
@@ -296,28 +296,32 @@ function createMockFieldTreeForSubmit(overrides: {
  *
  * @param submitting - Submitting state function
  */
-function createMockFormWithSubmitting(
+function createMockFormWithSubmitting<TValue = unknown>(
   submitting: () => boolean,
-): FieldTree<unknown> {
-  return createMockFieldTree({
-    value: () => ({}),
-    valid: () => true,
-    invalid: () => false,
-    touched: () => true, // Default to touched (forms are touched after interaction)
-    dirty: () => false,
-    errors: () => [],
-    pending: () => false,
-    disabled: () => false,
-    readonly: () => false,
-    hidden: () => false,
-    submitting,
-    submittedStatus: () => 'unsubmitted' as const,
-    reset: createVoidSpy(),
-    markAsTouched: createVoidSpy(),
-    markAsDirty: createVoidSpy(),
-    resetSubmittedStatus: createVoidSpy(),
-    errorSummary: () => [],
-  });
+  children: Readonly<Record<string, unknown>> = {},
+): FieldTree<TValue> {
+  return createMockFieldTree<TValue>(
+    {
+      value: () => ({}),
+      valid: () => true,
+      invalid: () => false,
+      touched: () => true, // Default to touched (forms are touched after interaction)
+      dirty: () => false,
+      errors: () => [],
+      pending: () => false,
+      disabled: () => false,
+      readonly: () => false,
+      hidden: () => false,
+      submitting,
+      submittedStatus: () => 'unsubmitted' as const,
+      reset: createVoidSpy(),
+      markAsTouched: createVoidSpy(),
+      markAsDirty: createVoidSpy(),
+      resetSubmittedStatus: createVoidSpy(),
+      errorSummary: () => [],
+    },
+    children,
+  );
 }
 
 /**
@@ -413,15 +417,22 @@ function createMockLeafField(value: string): FieldTree<string> {
 
 function createMockFieldTree<TValue>(
   state: Readonly<Record<string, unknown>>,
+  children: Readonly<Record<string, unknown>> = {},
 ): FieldTree<TValue> {
   let fieldTree!: FieldTree<TValue>;
 
-  fieldTree = (() => ({
-    ...state,
-    get fieldTree() {
-      return fieldTree;
-    },
-  })) as FieldTree<TValue>;
+  // A real `FieldTree` is a callable carrying its child fields as properties,
+  // so children are assigned onto the function itself rather than merged into
+  // the state object it returns.
+  fieldTree = Object.assign(
+    () => ({
+      ...state,
+      get fieldTree() {
+        return fieldTree;
+      },
+    }),
+    children,
+  ) as unknown as FieldTree<TValue>;
 
   return fieldTree;
 }
