@@ -386,9 +386,8 @@ describe('validateVest', () => {
     const { fixture } = await render(TestComponent);
     await TestBed.inject(ApplicationRef).whenStable();
 
-    const skuErrors = fixture.componentInstance.orderForm.items[0]
-      .sku()
-      .errors();
+    const skuErrors =
+      fixture.componentInstance.orderForm.items[0]?.sku().errors() ?? [];
     expect(skuErrors).toHaveLength(1);
     expect(skuErrors[0]?.message).toBe('SKU is required');
   });
@@ -722,7 +721,7 @@ describe('validateVest', () => {
 
     const suite = {
       ...baseSuite,
-      only(field: string | readonly string[] | false) {
+      only(field: string | string[]) {
         focusedFields.push(field);
         return {
           run: (value: string) => {
@@ -774,7 +773,7 @@ describe('validateVest', () => {
     });
     const suite = {
       ...baseSuite,
-      only(field: string | readonly string[] | false) {
+      only(field: string | string[]) {
         focusedFields.push(field);
         return {
           run: (value: { email: string }) => baseSuite.only(field).run(value),
@@ -831,7 +830,7 @@ describe('validateVest', () => {
     });
     const suite = {
       ...baseSuite,
-      only(field: string | readonly string[] | false) {
+      only(field: string | string[]) {
         focusedFields.push(field);
         return {
           run: (value: string) => baseSuite.only(field).run(value),
@@ -865,7 +864,7 @@ describe('validateVest', () => {
     expect(ranTests).toContain('items.0.sku');
     expect(ranTests).not.toContain('other');
     // And the focused field still surfaces its error.
-    const errors = fixture.componentInstance.f.items[0].sku().errors();
+    const errors = fixture.componentInstance.f.items[0]?.sku().errors() ?? [];
     expect(errors).toHaveLength(1);
     expect(errors[0]?.message).toBe('SKU is required');
   });
@@ -882,7 +881,7 @@ describe('validateVest', () => {
     });
     const suite = {
       ...baseSuite,
-      only(field: string | readonly string[] | false) {
+      only(field: string | string[]) {
         focusedFields.push(field);
         return {
           run: (value: string) => {
@@ -1000,7 +999,7 @@ describe('validateVest', () => {
     let fallbackRunCalls = 0;
     const suite = {
       ...baseSuite,
-      only(field: string | readonly string[] | false) {
+      only(field: string | string[]) {
         onlyCalls += 1;
         return {
           run: (value: { email: string }) => {
