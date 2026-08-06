@@ -157,8 +157,8 @@ describe('submitWithWarnings — Angular submit() drift guard', () => {
     expect(orderForm().touched()).toBe(false);
     expect(orderForm.address.street().touched()).toBe(false);
     expect(orderForm.address.city().touched()).toBe(false);
-    expect(orderForm.items[0]().touched()).toBe(false);
-    expect(orderForm.items[1]().touched()).toBe(false);
+    expect(orderForm.items[0]?.().touched()).toBe(false);
+    expect(orderForm.items[1]?.().touched()).toBe(false);
 
     const action = vi.fn(async () => {});
     await submitWithWarnings(orderForm, action);
@@ -168,8 +168,8 @@ describe('submitWithWarnings — Angular submit() drift guard', () => {
     expect(orderForm.address.city().touched()).toBe(true);
 
     // Array element leaves MUST be touched.
-    expect(orderForm.items[0]().touched()).toBe(true);
-    expect(orderForm.items[1]().touched()).toBe(true);
+    expect(orderForm.items[0]?.().touched()).toBe(true);
+    expect(orderForm.items[1]?.().touched()).toBe(true);
 
     // Root aggregates the touched state.
     expect(orderForm().touched()).toBe(true);

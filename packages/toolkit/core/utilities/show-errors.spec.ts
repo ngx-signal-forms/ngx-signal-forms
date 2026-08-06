@@ -274,10 +274,10 @@ describe('show-errors utilities', () => {
 
       expect(result()).toBe(false);
 
-      signals[50].set(true);
+      signals[50]?.set(true);
       expect(result()).toBe(true);
 
-      signals[50].set(false);
+      signals[50]?.set(false);
       expect(result()).toBe(false);
     });
   });

@@ -23,6 +23,21 @@ type MockState = {
   errorSummary: () => Array<{ kind: string; message?: string }>;
 };
 
+// Both the host lookup and `querySelector` are nullable, so ordering
+// assertions written as `content?.compareDocumentPosition(message)` would
+// silently pass when the template rendered nothing at all. Resolving the node
+// up front keeps `compareDocumentPosition` operating on a real `Node`.
+const requireElement = (
+  root: ParentNode | null | undefined,
+  selector: string,
+): Element => {
+  const element = root?.querySelector(selector);
+  if (!element) {
+    throw new Error(`Expected the fixture to render "${selector}".`);
+  }
+  return element;
+};
+
 const createFieldsetState = (overrides: Partial<MockState> = {}) =>
   signal({
     invalid: () => true,
@@ -450,8 +465,8 @@ describe('NgxFormFieldset', () => {
     );
 
     const host = container.querySelector('ngx-form-fieldset');
-    const message = host?.querySelector('.ngx-signal-form-fieldset__messages');
-    const content = host?.querySelector('.ngx-signal-form-fieldset__content');
+    const message = requireElement(host, '.ngx-signal-form-fieldset__messages');
+    const content = requireElement(host, '.ngx-signal-form-fieldset__content');
 
     expect(
       host?.classList.contains('ngx-signal-form-fieldset--messages-bottom'),
@@ -702,8 +717,8 @@ describe('NgxFormFieldset', () => {
     );
 
     const host = container.querySelector('ngx-form-fieldset');
-    const message = host?.querySelector('.ngx-signal-form-fieldset__messages');
-    const content = host?.querySelector('.ngx-signal-form-fieldset__content');
+    const message = requireElement(host, '.ngx-signal-form-fieldset__messages');
+    const content = requireElement(host, '.ngx-signal-form-fieldset__content');
 
     expect(host).toHaveAttribute('data-error-placement', 'top');
     expect(

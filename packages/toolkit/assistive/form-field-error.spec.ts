@@ -991,8 +991,8 @@ describe('NgxFormFieldError', () => {
         '.ngx-form-field-error__message',
       );
       expect(messages).toHaveLength(1);
-      expect(messages[0].textContent).toContain('From override input');
-      expect(messages[0].textContent).not.toContain('From field validator');
+      expect(messages[0]?.textContent).toContain('From override input');
+      expect(messages[0]?.textContent).not.toContain('From field validator');
     });
 
     // Regression: createErrorMessageSignal pinned the directive's `strategy`
@@ -1028,7 +1028,7 @@ describe('NgxFormFieldError', () => {
         '.ngx-form-field-error__message',
       );
       expect(messages).toHaveLength(1);
-      expect(messages[0].textContent).toContain('Street is required');
+      expect(messages[0]?.textContent).toContain('Street is required');
     });
   });
 
