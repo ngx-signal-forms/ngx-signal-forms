@@ -23,7 +23,15 @@ import {
   NgxFormFieldHint,
 } from '@ngx-signal-forms/toolkit/assistive';
 import { render, screen } from '@testing-library/angular';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import {
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+  type MockInstance,
+} from 'vitest';
 import { NgxFormFieldWrapper as NgxSignalFormWrapperComponent } from './form-field-wrapper';
 
 // jsdom does not compute custom-property values from emulated component
@@ -1087,6 +1095,10 @@ describe('NgxSignalFormWrapperComponent', () => {
       // the control, a single auto-marker, and a clean accessible name.
       const fakeZodLikeSchema = {
         '~standard': {
+          // A real Standard Schema always carries `version` and `vendor`;
+          // omitting them made this fixture something no library emits.
+          version: 1 as const,
+          vendor: 'ngx-signal-forms-test',
           validate: (value: unknown) => {
             const record = (value ?? {}) as { firstName?: unknown };
             return record.firstName === undefined
@@ -2475,7 +2487,7 @@ describe('NgxSignalFormWrapperComponent', () => {
       // with no signal why. The wrapper must let the primitive's warning
       // fire (by passing `undefined` through, not a manufactured default)
       // when it has no form context to source a real status from.
-      let warnSpy: ReturnType<typeof vi.spyOn>;
+      let warnSpy: MockInstance<typeof console.warn>;
 
       beforeEach(() => {
         warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
@@ -2615,7 +2627,9 @@ describe('NgxSignalFormWrapperComponent', () => {
     });
 
     it('gates the warning behind on-touch when an explicit warningStrategy is bound through the wrapper', async () => {
-      const untouchedWarningField = signal({
+      // Annotated, because the test flips `touched` mid-flight: inferring from
+      // the initial literal pinned the type to `() => false`.
+      const untouchedWarningField = signal<MockFieldState>({
         invalid: () => true,
         touched: () => false,
         errors: () => [
@@ -4058,7 +4072,7 @@ describe('NgxSignalFormWrapperComponent', () => {
 
     const classificationWarningMarker = 'could not infer a control kind';
     const getClassificationWarnings = (
-      spy: ReturnType<typeof vi.spyOn>,
+      spy: MockInstance<typeof console.warn>,
     ): readonly string[] => {
       const messages: string[] = [];
       for (const call of spy.mock.calls) {
@@ -4073,7 +4087,7 @@ describe('NgxSignalFormWrapperComponent', () => {
       return messages;
     };
 
-    let warnSpy: ReturnType<typeof vi.spyOn>;
+    let warnSpy: MockInstance<typeof console.warn>;
 
     beforeEach(() => {
       warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});

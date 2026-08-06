@@ -41,7 +41,7 @@ describe('packages/toolkit/package.json', () => {
     // with breaking SuiteResult/typing changes silently satisfy the peer contract,
     // contradicting the deliberate upper-bound-cap philosophy applied to Angular
     // (see COMPATIBILITY.md) and the /vest README's "requires vest@6" wording.
-    const vestRange = packageJson.peerDependencies?.vest;
+    const vestRange = packageJson.peerDependencies?.['vest'];
     expect(vestRange).toBeTruthy();
     expect(vestRange).toMatch(/<7\.0\.0/);
   });

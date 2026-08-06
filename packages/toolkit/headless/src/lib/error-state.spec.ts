@@ -16,6 +16,7 @@ import {
 } from '@angular/forms/signals';
 import {
   provideNgxSignalFormsConfig,
+  type ErrorReadableState,
   type SubmittedStatus,
 } from '@ngx-signal-forms/toolkit';
 import { render, screen } from '@testing-library/angular';
@@ -639,10 +640,10 @@ describe('NgxHeadlessErrorState', () => {
       })
       class BridgedHostComponent {
         protected readonly headless = inject(NgxHeadlessErrorState);
-        readonly hostField = signal<{
-          touched: () => boolean;
-          invalid: () => boolean;
-        } | null>(null);
+        // `Partial<ErrorReadableState>` picks `touched`/`invalid` off Angular's
+        // `FieldState`, so both are branded `Signal`s. Bare closures compiled
+        // only because nothing checked this bridge.
+        readonly hostField = signal<Partial<ErrorReadableState> | null>(null);
 
         constructor() {
           // Mirror what NgxFormFieldError does: bridge a signal of field state
@@ -670,14 +671,14 @@ describe('NgxHeadlessErrorState', () => {
       // Bridge an untouched + invalid field — on-touch strategy should hide.
       fixture.componentInstance
         .host()
-        .hostField.set({ touched: () => false, invalid: () => true });
+        .hostField.set({ touched: signal(false), invalid: signal(true) });
       fixture.detectChanges();
       expect(screen.getByTestId('bridge-hide')).toBeTruthy();
 
       // Touch the bridged field — strategy now permits visibility.
       fixture.componentInstance
         .host()
-        .hostField.set({ touched: () => true, invalid: () => true });
+        .hostField.set({ touched: signal(true), invalid: signal(true) });
       fixture.detectChanges();
       expect(screen.getByTestId('bridge-show')).toBeTruthy();
     });

@@ -10,6 +10,7 @@ import {
   form,
   required,
   schema,
+  type RequiredValidationError,
   type ValidationError,
 } from '@angular/forms/signals';
 import { NGX_SIGNAL_FORMS_CONFIG } from '@ngx-signal-forms/toolkit';
@@ -439,9 +440,16 @@ describe('createErrorMessageSignal — reactive registry', () => {
     expect(result()[0]?.message).toBe('JA: 必須');
 
     // Swapping a factory function in mid-flight also works (i18n pattern).
+    // A built-in `required` factory receives Angular's `RequiredValidationError`,
+    // which carries no `minLength` — hence the 0 fallback below. Typing the
+    // parameter as a bare `Record<string, unknown>` hid that.
     registry.set({
-      required: ({ minLength }: Record<string, unknown>) =>
-        `Need at least ${typeof minLength === 'number' ? minLength : 0}`,
+      required: (error: RequiredValidationError) =>
+        `Need at least ${
+          'minLength' in error && typeof error.minLength === 'number'
+            ? error.minLength
+            : 0
+        }`,
     });
     expect(result()[0]?.message).toBe('Need at least 0');
   });
