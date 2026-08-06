@@ -61,7 +61,7 @@ describe('resolveErrorDisplayStrategy', () => {
   });
 
   it('should return on-touch as ultimate fallback', () => {
-    expect(resolveErrorDisplayStrategy()).toBe('on-touch');
+    expect(resolveErrorDisplayStrategy(undefined)).toBe('on-touch');
     expect(resolveErrorDisplayStrategy(null, null, null)).toBe('on-touch');
   });
 });
@@ -84,7 +84,7 @@ describe('resolveStrategyFromContext', () => {
   });
 
   it('should return on-touch when nothing is provided', () => {
-    expect(resolveStrategyFromContext()).toBe('on-touch');
+    expect(resolveStrategyFromContext(undefined, undefined)).toBe('on-touch');
   });
 
   it('should handle inherit input by falling through to context', () => {
@@ -112,6 +112,8 @@ describe('resolveSubmittedStatusFromContext', () => {
   });
 
   it('should return undefined when no input and no context', () => {
-    expect(resolveSubmittedStatusFromContext()).toBeUndefined();
+    expect(
+      resolveSubmittedStatusFromContext(undefined, undefined),
+    ).toBeUndefined();
   });
 });

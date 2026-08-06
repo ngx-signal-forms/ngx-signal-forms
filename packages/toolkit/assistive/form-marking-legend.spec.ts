@@ -20,7 +20,7 @@ describe('NgxFormMarkingLegend', () => {
       class Host {
         readonly f = form(
           signal({ email: '' }),
-          schema((p) => {
+          schema<{ email: string }>((p) => {
             required(p.email);
           }),
         );
@@ -56,7 +56,7 @@ describe('NgxFormMarkingLegend', () => {
       class Host {
         readonly f = form(
           signal({ email: '' }),
-          schema((p) => {
+          schema<{ email: string }>((p) => {
             required(p.email);
           }),
         );
@@ -81,7 +81,7 @@ describe('NgxFormMarkingLegend', () => {
       class Host {
         readonly f = form(
           signal({ email: '', nickname: '' }),
-          schema((p) => {
+          schema<{ email: string; nickname: string }>((p) => {
             required(p.email);
           }),
         );
@@ -104,7 +104,7 @@ describe('NgxFormMarkingLegend', () => {
       class Host {
         readonly f = form(
           signal({ email: '' }),
-          schema((p) => {
+          schema<{ email: string }>((p) => {
             required(p.email);
           }),
         );
@@ -127,7 +127,7 @@ describe('NgxFormMarkingLegend', () => {
       class Host {
         readonly f = form(
           signal({ email: '' }),
-          schema((p) => {
+          schema<{ email: string }>((p) => {
             required(p.email);
           }),
         );
@@ -152,7 +152,7 @@ describe('NgxFormMarkingLegend', () => {
       class Host {
         readonly f = form(
           signal({ email: '' }),
-          schema((p) => {
+          schema<{ email: string }>((p) => {
             required(p.email);
           }),
         );
@@ -175,7 +175,7 @@ describe('NgxFormMarkingLegend', () => {
       class Host {
         readonly f = form(
           signal({ email: '' }),
-          schema((p) => {
+          schema<{ email: string }>((p) => {
             required(p.email);
           }),
         );
@@ -227,7 +227,7 @@ describe('NgxFormMarkingLegend', () => {
       class Host {
         readonly f = form(
           signal({ email: '' }),
-          schema((p) => {
+          schema<{ email: string }>((p) => {
             required(p.email);
           }),
         );

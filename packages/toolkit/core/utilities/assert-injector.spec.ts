@@ -80,7 +80,7 @@ describe('assertInjector', () => {
   describe('when used inside injection context', () => {
     it('should return the current injector when no runner provided', () => {
       TestBed.runInInjectionContext(() => {
-        const result = assertInjector(testFunction);
+        const result = assertInjector(testFunction, undefined);
         // Angular's runtime injector may not be a direct instance of Injector, but must have .get()
         expect(typeof result.get).toBe('function');
         expect(result).toBe(inject(Injector));
@@ -168,7 +168,7 @@ describe('assertInjector', () => {
     it('should throw error when called outside injection context without injector', () => {
       // This call is NOT in injection context and has no custom injector
       expect(() => {
-        assertInjector(testFunction);
+        assertInjector(testFunction, undefined);
       }).toThrow(/NG0203/);
     });
 
