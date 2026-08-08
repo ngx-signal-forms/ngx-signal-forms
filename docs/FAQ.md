@@ -65,7 +65,7 @@ provider → built-in default. To be explicit or override, set `strategy` on the
 </form>
 ```
 
-Warnings have an independent `warningStrategy` (default `'immediate'`) that this doesn't affect.
+Warnings have an independent `warningStrategy` (default `'immediate'`) with its own cascade that this doesn't affect. See [Warning display timing](#when-warnings-appear--warningstrategy) in WARNINGS_SUPPORT.md for details on the four-tier cascade.
 
 **See:** [docs/BEST_PRACTICES.md](./BEST_PRACTICES.md) ·
 [packages/toolkit/form-field/README.md](../packages/toolkit/form-field/README.md) ·

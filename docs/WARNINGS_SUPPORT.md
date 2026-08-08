@@ -275,26 +275,115 @@ guidance like _"consider 12+ characters"_ or _"disposable email may not receive
 notifications"_ **while** they are typing, not after they've already moved past
 the field.
 
-To reflect that, `NgxFormFieldError` (and the wrapper / assistive bundle
-that projects it) exposes a dedicated `warningStrategy` input. It decouples
-warning visibility from error visibility while keeping both rendered by the same
-component.
+To reflect that, the toolkit provides a **separate, independent cascade for warning
+visibility timing**. This cascade mirrors the error strategy cascade but with
+different defaults, ensuring warnings can be shown immediately while errors remain
+gated.
+
+### Warning Strategy Resolution Cascade
+
+The warning display strategy is resolved through **four tiers**, in order of priority:
+
+```
+1. Explicit input (component-level) → `warningStrategy` input
+2. Form context → `warningStrategy()` from `NGX_SIGNAL_FORM_CONTEXT`
+3. Config default → `NGX_SIGNAL_FORMS_CONFIG.defaultWarningStrategy`
+4. Terminal fallback → `'immediate'`
+```
+
+This cascade is **independent** from the error strategy cascade. Unlike errors
+which default to `'on-touch'`, warnings default to `'immediate'`.
+
+### Configuration
+
+#### Global Default: `defaultWarningStrategy`
+
+Set a global default for all warnings in your application:
+
+```typescript
+import { provideNgxSignalFormsConfig } from '@ngx-signal-forms/toolkit';
+
+// app.config.ts
+export const appConfig: ApplicationConfig = {
+  providers: [
+    provideNgxSignalFormsConfig({
+      defaultWarningStrategy: 'immediate', // default value
+    }),
+  ],
+};
+```
+
+**Default value:** `'immediate'`
+
+Use this when you want all warnings across your application to follow a consistent
+timing policy. Change it to `'on-touch'` or `'on-submit'` if you want warnings to
+follow the same gating as errors by default.
+
+#### Form-Level: `ngxSignalForm.warningStrategy`
+
+Override the global default for a specific form:
+
+```html
+<form
+  [formRoot]="userForm"
+  ngxSignalForm
+  errorStrategy="on-submit"
+  warningStrategy="immediate"
+>
+  <!-- Errors shown on submit, warnings shown immediately -->
+</form>
+```
+
+The form-level `warningStrategy` is typed as `ResolvedWarningDisplayStrategy`
+(i.e., `'immediate' | 'on-touch' | 'on-submit'`) — it does not accept `'inherit'`
+because there is nothing above the form to inherit from.
+
+#### Field-Level: `warningStrategy` input
+
+Override for individual fields or fieldsets:
+
+```html
+<!-- Using the wrapper -->
+<ngx-form-field-wrapper [formField]="form.email" warningStrategy="on-touch">
+  <!-- Warnings for this field shown only after blur -->
+</ngx-form-field-wrapper>
+
+<!-- Using the error component directly -->
+<ngx-form-field-error
+  [formField]="form.email"
+  fieldName="email"
+  warningStrategy="on-submit"
+>
+  <!-- Warnings for this field shown only after form submit -->
+</ngx-form-field-error>
+
+<!-- Using fieldset -->
+<ngx-form-fieldset [field]="form.address" warningStrategy="immediate">
+  <!-- Warnings for aggregated address fields shown immediately -->
+</ngx-form-fieldset>
+```
+
+The field-level `warningStrategy` accepts `'inherit'` to defer to the form context
+or config default.
 
 ### Input reference
 
-| Input             | Type                   | Default       | Purpose                                                      |
-| ----------------- | ---------------------- | ------------- | ------------------------------------------------------------ |
-| `strategy`        | `ErrorDisplayStrategy` | _(inherited)_ | When **errors** may become visible                           |
-| `warningStrategy` | `ErrorDisplayStrategy` | `'immediate'` | When **warnings** may become visible (independent of errors) |
+| Input             | Type                     | Default       | Purpose                                                      |
+| ----------------- | ------------------------ | ------------- | ------------------------------------------------------------ |
+| `strategy`        | `ErrorDisplayStrategy`   | _(inherited)_ | When **errors** may become visible                           |
+| `warningStrategy` | `WarningDisplayStrategy` | `'immediate'` | When **warnings** may become visible (independent of errors) |
 
-Accepted values for `ErrorDisplayStrategy` (both inputs):
+`ErrorDisplayStrategy` and `WarningDisplayStrategy` share the same values:
 
-| Value         | Semantics                                                                                                      |
-| ------------- | -------------------------------------------------------------------------------------------------------------- |
-| `'immediate'` | Show as soon as the validator reports them, regardless of touched / submitted state                            |
-| `'on-touch'`  | Show only after the field (or form) is touched                                                                 |
-| `'on-submit'` | Show only after a submit has been attempted (requires `ngxSignalForm` so `submittedStatus` is tracked)         |
-| `'inherit'`   | Defer to the form-level strategy resolved from `NGX_SIGNAL_FORM_CONTEXT`; falls back to `'on-touch'` otherwise |
+| Value         | Semantics                                                                                                        |
+| ------------- | ---------------------------------------------------------------------------------------------------------------- |
+| `'immediate'` | Show as soon as the validator reports them, regardless of touched / submitted state                              |
+| `'on-touch'`  | Show only after the field (or form) is touched                                                                   |
+| `'on-submit'` | Show only after a submit has been attempted (requires `ngxSignalForm` so `submittedStatus` is tracked)           |
+| `'inherit'`   | Defer to the form-level strategy resolved from `NGX_SIGNAL_FORM_CONTEXT`; falls back to config default otherwise |
+
+> Note: `'inherit'` is only valid at the field level. Form-level inputs must use
+> a resolved strategy value.
 
 ### Why the default is `'immediate'`
 
@@ -306,8 +395,8 @@ would only see guidance after they have already committed a password or picked
 a disposable email provider.
 
 If you explicitly want warnings gated with errors (e.g. to keep the field UI
-quiet until first submit), set `warningStrategy="inherit"` or match the error
-strategy explicitly.
+quiet until first submit), set `warningStrategy="inherit"` at the field level or
+configure `defaultWarningStrategy: 'on-touch'` globally.
 
 ### Example: errors on submit, warnings immediately
 
@@ -348,20 +437,28 @@ match `strategy` explicitly).
 
 `NgxHeadlessFieldset` (and `NgxFormFieldset`, which composes it via
 `hostDirectives`) exposes the same `warningStrategy` input, resolved with the
-same cascade as the wrapper / `NgxFormFieldError`:
+**same four-tier cascade** as other components:
 
-- Explicitly set (including `'inherit'`) → resolved against the ambient form
-  context, falling back to `'on-touch'` if there is none.
-- Left unset → `'immediate'` directly, **without** consulting the form
-  context or `NGX_SIGNAL_FORMS_CONFIG.defaultErrorStrategy`.
+```
+1. Explicit input → resolved against the form context
+2. Form context → `warningStrategy()` from `NGX_SIGNAL_FORM_CONTEXT`
+3. Config default → `NGX_SIGNAL_FORMS_CONFIG.defaultWarningStrategy`
+4. Terminal fallback → `'immediate'`
+```
 
-Before this input existed, `NgxHeadlessFieldset` built a single internal
+Left unset, fieldset warnings default to `'immediate'` directly **without**
+consulting the form context or `NGX_SIGNAL_FORMS_CONFIG.defaultErrorStrategy`
+(this preserves backward compatibility with the original behavior where fieldsets
+showed warnings immediately).
+
+Before this implementation, `NgxHeadlessFieldset` built a single internal
 "show" signal shared by both blocking errors and warnings, so aggregated
 warnings silently inherited whatever `strategy` the fieldset (or its form
 context) used — a fieldset under `errorStrategy="on-submit"` hid its warnings
-until submit too, unlike the wrapper. `warningStrategy` fixes that: fieldset
-warnings now default to `'immediate'`, matching `NgxFormFieldWrapper`'s
-contract, regardless of what blocking-error strategy is in effect.
+until submit too, unlike the wrapper. This inconsistency was the core issue
+identified in [#264](https://github.com/ngx-signal-forms/ngx-signal-forms/issues/264).
+
+With the separate warning cascade, fieldset warnings now follow their own timing:
 
 **Errors-present visibility**: `NgxHeadlessFieldset.shouldShowWarnings()` is
 no longer suppressed just because `shouldShowErrors()` is `true`. It now
