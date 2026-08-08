@@ -8,7 +8,12 @@ import {
 } from '@angular/core';
 import { FormRoot, type FieldTree } from '@angular/forms/signals';
 import { NGX_SIGNAL_FORM_CONTEXT, NGX_SIGNAL_FORMS_CONFIG } from '../tokens';
-import type { ResolvedErrorDisplayStrategy, SubmittedStatus } from '../types';
+import type {
+  ResolvedErrorDisplayStrategy,
+  ResolvedWarningDisplayStrategy,
+  SubmittedStatus,
+  WarningDisplayStrategy,
+} from '../types';
 import { createSubmittedStatusTracker } from '../utilities/submission-helpers';
 
 /**
@@ -41,6 +46,11 @@ export interface NgxSignalFormContext {
    * The error display strategy for this form.
    */
   errorStrategy: Signal<ResolvedErrorDisplayStrategy>;
+
+  /**
+   * The warning display strategy for this form.
+   */
+  warningStrategy: Signal<ResolvedWarningDisplayStrategy>;
 }
 
 /**
@@ -120,6 +130,7 @@ export interface NgxSignalFormContext {
           },
           submittedStatus: directive.submittedStatus,
           errorStrategy: directive.resolvedErrorStrategy,
+          warningStrategy: directive.resolvedWarningStrategy,
         };
       },
     },
@@ -159,6 +170,31 @@ export class NgxSignalForm {
       }
 
       return this.#config.defaultErrorStrategy;
+    });
+
+  /**
+   * Warning display strategy for this form.
+   * Overrides the global default for all fields in this form.
+   *
+   * Typed as {@link ResolvedWarningDisplayStrategy} (not `WarningDisplayStrategy`)
+   * because `'inherit'` is a field-level-only value — there is nothing above
+   * the form root to inherit from — so binding it here is a compile-time error.
+   */
+  readonly warningStrategy = input<
+    ResolvedWarningDisplayStrategy | null | undefined
+  >();
+
+  /**
+   * Resolved warning display strategy (form-level or global default).
+   */
+  protected readonly resolvedWarningStrategy =
+    computed<ResolvedWarningDisplayStrategy>(() => {
+      const formStrategy = this.warningStrategy();
+      if (formStrategy !== undefined && formStrategy !== null) {
+        return formStrategy;
+      }
+
+      return this.#config.defaultWarningStrategy;
     });
 
   /**

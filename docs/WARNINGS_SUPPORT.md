@@ -269,16 +269,14 @@ The form field wrapper automatically handles both:
 
 ## When warnings appear — `warningStrategy`
 
-Warnings are advisory, not blocking. Hiding them behind the same gate as errors
-(`'on-touch'` or `'on-submit'`) defeats their purpose: a user only benefits from
-guidance like _"consider 12+ characters"_ or _"disposable email may not receive
-notifications"_ **while** they are typing, not after they've already moved past
-the field.
+Warnings are advisory, not blocking, so their timing is a separate decision from
+error timing. A form gated to `'on-submit'` for blocking errors should not
+automatically gate its advisory guidance too.
 
 To reflect that, the toolkit provides a **separate, independent cascade for warning
-visibility timing**. This cascade mirrors the error strategy cascade but with
-different defaults, ensuring warnings can be shown immediately while errors remain
-gated.
+visibility timing**. It mirrors the error strategy cascade tier for tier, but no
+tier reaches into the error channel — `defaultErrorStrategy` never influences
+warning timing, and vice versa.
 
 ### Warning Strategy Resolution Cascade
 
@@ -288,11 +286,13 @@ The warning display strategy is resolved through **four tiers**, in order of pri
 1. Explicit input (component-level) → `warningStrategy` input
 2. Form context → `warningStrategy()` from `NGX_SIGNAL_FORM_CONTEXT`
 3. Config default → `NGX_SIGNAL_FORMS_CONFIG.defaultWarningStrategy`
-4. Terminal fallback → `'immediate'`
+4. Terminal fallback → `'on-touch'`
 ```
 
-This cascade is **independent** from the error strategy cascade. Unlike errors
-which default to `'on-touch'`, warnings default to `'immediate'`.
+This cascade is **independent** from the error strategy cascade. Both channels
+default to `'on-touch'`, but they resolve separately: changing
+`defaultErrorStrategy` does not move warnings, and changing
+`defaultWarningStrategy` does not move errors.
 
 ### Configuration
 
@@ -307,17 +307,17 @@ import { provideNgxSignalFormsConfig } from '@ngx-signal-forms/toolkit';
 export const appConfig: ApplicationConfig = {
   providers: [
     provideNgxSignalFormsConfig({
-      defaultWarningStrategy: 'immediate', // default value
+      defaultWarningStrategy: 'on-touch', // default value
     }),
   ],
 };
 ```
 
-**Default value:** `'immediate'`
+**Default value:** `'on-touch'`
 
 Use this when you want all warnings across your application to follow a consistent
-timing policy. Change it to `'on-touch'` or `'on-submit'` if you want warnings to
-follow the same gating as errors by default.
+timing policy. Set `'immediate'` if you want advisory guidance to appear while the
+user types, or `'on-submit'` to hold it until a submit is attempted.
 
 #### Form-Level: `ngxSignalForm.warningStrategy`
 
@@ -371,7 +371,7 @@ or config default.
 | Input             | Type                     | Default       | Purpose                                                      |
 | ----------------- | ------------------------ | ------------- | ------------------------------------------------------------ |
 | `strategy`        | `ErrorDisplayStrategy`   | _(inherited)_ | When **errors** may become visible                           |
-| `warningStrategy` | `WarningDisplayStrategy` | `'immediate'` | When **warnings** may become visible (independent of errors) |
+| `warningStrategy` | `WarningDisplayStrategy` | `'on-touch'`  | When **warnings** may become visible (independent of errors) |
 
 `ErrorDisplayStrategy` and `WarningDisplayStrategy` share the same values:
 
@@ -385,30 +385,38 @@ or config default.
 > Note: `'inherit'` is only valid at the field level. Form-level inputs must use
 > a resolved strategy value.
 
-### Why the default is `'immediate'`
+### Why the default is `'on-touch'`
 
-Defaulting `warningStrategy` to `'immediate'` keeps advisory messaging visible
-from the first keystroke. The alternative — inheriting the error strategy —
-would effectively suppress warnings on forms configured with `'on-touch'` or
-`'on-submit'` error timing, which is the majority of real-world forms. Users
-would only see guidance after they have already committed a password or picked
-a disposable email provider.
+A warning is a quality judgement about a **complete** value. On an incomplete
+value that judgement is meaningless — _"weak password"_ after 3 of 12 characters
+is noise, not guidance. Waiting for the user to commit the value by blur or
+submit is the same reasoning that produced the platform's `:user-invalid`
+pseudo-class.
 
-If you explicitly want warnings gated with errors (e.g. to keep the field UI
-quiet until first submit), set `warningStrategy="inherit"` at the field level or
-configure `defaultWarningStrategy: 'on-touch'` globally.
+There is also a concrete accessibility failure mode with immediate warnings.
+While typing, a field can flip valid → invalid → valid, so the warning appears,
+is suppressed by the blocking error, then reappears. That churn lands in a
+`role="status"` polite live region, which is the worst place for it.
+
+`'immediate'` remains fully reachable as configuration, because it is genuinely
+right for some fields — a live password-strength meter is the canonical case.
+Set it per field, per form, or globally via `defaultWarningStrategy`.
 
 ### Example: errors on submit, warnings immediately
 
 ```html
 <form [formRoot]="passwordForm" ngxSignalForm errorStrategy="on-submit">
-  <ngx-form-field-wrapper [formField]="passwordForm.password">
+  <ngx-form-field-wrapper
+    [formField]="passwordForm.password"
+    warningStrategy="immediate"
+  >
     <label for="password">Password</label>
     <input id="password" type="password" [formField]="passwordForm.password" />
     <!--
       The projected <ngx-form-field-error> inherits errorStrategy='on-submit'
-      from the form, but warnings stay on the default 'immediate' timing, so
-      "Consider 12+ characters" shows while the user is still typing.
+      from the form, while the explicit warningStrategy opts this field into
+      immediate warnings, so "Consider 12+ characters" shows while the user is
+      still typing.
     -->
   </ngx-form-field-wrapper>
 </form>
@@ -428,10 +436,10 @@ pass the inputs explicitly:
 />
 ```
 
-`'immediate'` is already the default, so you only need to spell it out when you
-want to **override** an inherited form-level strategy that would otherwise
-apply. To gate warnings alongside errors, use `warningStrategy="inherit"` (or
-match `strategy` explicitly).
+Here `strategy` and `warningStrategy` are set independently: blocking errors wait
+for submit, while warnings show as the user types. Leave `warningStrategy` off to
+take the `'on-touch'` default, or use `warningStrategy="inherit"` to pick up the
+form's own warning strategy.
 
 ### Fieldsets: `NgxFormFieldset` / `NgxHeadlessFieldset`
 
@@ -443,13 +451,13 @@ match `strategy` explicitly).
 1. Explicit input → resolved against the form context
 2. Form context → `warningStrategy()` from `NGX_SIGNAL_FORM_CONTEXT`
 3. Config default → `NGX_SIGNAL_FORMS_CONFIG.defaultWarningStrategy`
-4. Terminal fallback → `'immediate'`
+4. Terminal fallback → `'on-touch'`
 ```
 
-Left unset, fieldset warnings default to `'immediate'` directly **without**
-consulting the form context or `NGX_SIGNAL_FORMS_CONFIG.defaultErrorStrategy`
-(this preserves backward compatibility with the original behavior where fieldsets
-showed warnings immediately).
+Left unset, fieldset warnings resolve through this cascade like every other
+surface, and never consult `NGX_SIGNAL_FORMS_CONFIG.defaultErrorStrategy`. This
+is what makes a fieldset under `errorStrategy="on-submit"` keep its own warning
+timing.
 
 Before this implementation, `NgxHeadlessFieldset` built a single internal
 "show" signal shared by both blocking errors and warnings, so aggregated
@@ -472,12 +480,16 @@ styled at a time — see `filteredErrorsSignal` and the `--warning` host class
 in `form-fieldset.ts`).
 
 ```html
-<ngx-form-fieldset [field]="form.address" strategy="on-submit">
+<ngx-form-fieldset
+  [field]="form.address"
+  strategy="on-submit"
+  warningStrategy="immediate"
+>
   <!--
     Blocking errors on form.address stay hidden until submit (`strategy`),
-    but aggregated warnings surface immediately (`warningStrategy` defaults
-    to 'immediate') — unless a blocking error is *also* currently visible,
-    in which case the fieldset's single message slot shows the error instead.
+    but aggregated warnings surface immediately (`warningStrategy`) — unless a
+    blocking error is *also* currently visible, in which case the fieldset's
+    single message slot shows the error instead.
   -->
 </ngx-form-fieldset>
 ```
@@ -555,14 +567,14 @@ in `form-fieldset.ts`).
 
 ### WCAG 2.2 Compliance
 
-| Aspect               | Errors                               | Warnings                          |
-| -------------------- | ------------------------------------ | --------------------------------- |
-| **ARIA Role**        | `role="alert"`                       | `role="status"`                   |
-| **Live-region mode** | Implicit assertive (from role)       | Implicit polite (from role)       |
-| **Announcement**     | Immediate (interrupts screen reader) | Polite (waits for pause)          |
-| **Visual Severity**  | High (red color, required action)    | Medium (amber color, advisory)    |
-| **Form Submission**  | Blocks submission                    | Does NOT block submission         |
-| **Default timing**   | `errorStrategy` (`'on-touch'`)       | `warningStrategy` (`'immediate'`) |
+| Aspect               | Errors                               | Warnings                         |
+| -------------------- | ------------------------------------ | -------------------------------- |
+| **ARIA Role**        | `role="alert"`                       | `role="status"`                  |
+| **Live-region mode** | Implicit assertive (from role)       | Implicit polite (from role)      |
+| **Announcement**     | Immediate (interrupts screen reader) | Polite (waits for pause)         |
+| **Visual Severity**  | High (red color, required action)    | Medium (amber color, advisory)   |
+| **Form Submission**  | Blocks submission                    | Does NOT block submission        |
+| **Default timing**   | `errorStrategy` (`'on-touch'`)       | `warningStrategy` (`'on-touch'`) |
 
 > The toolkit intentionally does not stamp `aria-live`/`aria-atomic` on error
 > or warning containers. The ARIA 1.2 specification defines these as implicit

@@ -387,7 +387,7 @@ export class NgxFormFieldWrapper<TValue = unknown> {
    * renderer at all: it renders whenever blocking errors OR warnings
    * should be visible, not just on the blocking-error timing.
    *
-   * @default `'immediate'`
+   * @default `'on-touch'`
    */
   readonly warningStrategy = input<WarningDisplayStrategy | undefined>();
 
@@ -480,7 +480,7 @@ export class NgxFormFieldWrapper<TValue = unknown> {
    * `warningStrategy` and `fieldName` are extras beyond that minimal
    * contract: `warningStrategy` forwards this input's value (`undefined`
    * when unset, which is a no-op for the default `NgxFormFieldError`'s own
-   * `'immediate'` fallback) so consumers can override warning timing
+   * warning cascade) so consumers can override warning timing
    * through the wrapper instead of only through a directly-projected
    * `NgxFormFieldError`. `fieldName` lets a custom renderer satisfy the
    * `${fieldName}-error` / `${fieldName}-warning` id contract (see
@@ -981,29 +981,31 @@ export class NgxFormFieldWrapper<TValue = unknown> {
   });
 
   /**
-   * Effective warning display strategy. Uses the same cascade as errors:
-   * explicit input → form context → config default ('immediate') → 'on-touch'.
-   * Unlike {@link effectiveStrategy} for blocking errors, warnings are
-   * non-blocking and typically shown immediately for better UX.
+   * Effective warning display strategy. Parallels {@link effectiveStrategy}
+   * but stays entirely inside the warning channel:
+   * explicit input → form context `warningStrategy()` → config
+   * `defaultWarningStrategy` → `'on-touch'`.
+   *
+   * No tier consults `defaultErrorStrategy`, so a form gated to
+   * `'on-submit'` for blocking errors does not also gate its warnings.
    */
   protected readonly effectiveWarningStrategy =
-    computed<ResolvedWarningDisplayStrategy>(() => {
-      const explicit = this.warningStrategy();
-      return resolveWarningStrategyFromContext(
-        explicit,
+    computed<ResolvedWarningDisplayStrategy>(() =>
+      resolveWarningStrategyFromContext(
+        this.warningStrategy(),
         this.#formContext,
         this.#config.defaultWarningStrategy,
-      );
-    });
+      ),
+    );
 
   /**
    * Whether the error renderer should mount to show warnings, evaluated
    * independently of {@link shouldShowErrors}. Without this, a warnings-only
    * field would never render `NgxFormFieldError` at all when
-   * {@link effectiveStrategy} (e.g. `'on-touch'`) gates the blocking-error
-   * timing — the renderer's own `warningStrategy` default of `'immediate'`
-   * never gets a chance to run because the `@if` around the outlet in the
-   * template never mounts it. See README "Warning support".
+   * {@link effectiveStrategy} (e.g. `'on-submit'`) gates the blocking-error
+   * timing — the renderer's own warning cascade never gets a chance to run
+   * because the `@if` around the outlet in the template never mounts it.
+   * See README "Warning support".
    */
   protected readonly shouldShowWarnings = computed(() => {
     if (this.isFieldHidden()) return false;

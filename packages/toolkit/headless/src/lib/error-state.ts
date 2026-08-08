@@ -12,15 +12,22 @@ import {
   NGX_SIGNAL_FORMS_CONFIG,
   resolveStrategyFromContext,
   resolveSubmittedStatusFromContext,
+  resolveWarningStrategyFromContext,
   showErrors,
+  shouldShowWarnings,
   unwrapValue,
   type ErrorDisplayStrategy,
   type ErrorReadableState,
   type ReactiveOrStatic,
   type ResolvedErrorDisplayStrategy,
+  type ResolvedWarningDisplayStrategy,
   type SubmittedStatus,
+  type WarningDisplayStrategy,
 } from '@ngx-signal-forms/toolkit';
-import { NGX_ERROR_MESSAGES } from '@ngx-signal-forms/toolkit/core';
+import {
+  DEFAULT_NGX_SIGNAL_FORMS_CONFIG,
+  NGX_ERROR_MESSAGES,
+} from '@ngx-signal-forms/toolkit/core';
 
 import { buildHeadlessErrorState, resolveErrorMessage } from './utilities';
 
@@ -116,7 +123,9 @@ export class NgxHeadlessErrorState<
   readonly #errorMessagesRegistry = inject(NGX_ERROR_MESSAGES, {
     optional: true,
   });
-  readonly #config = inject(NGX_SIGNAL_FORMS_CONFIG, { optional: true });
+  readonly #config =
+    inject(NGX_SIGNAL_FORMS_CONFIG, { optional: true }) ??
+    DEFAULT_NGX_SIGNAL_FORMS_CONFIG;
 
   /**
    * Bridged field-state signal, set by host components that cannot forward
@@ -157,6 +166,15 @@ export class NgxHeadlessErrorState<
    * If undefined, inherits from form context or defaults to 'on-touch'.
    */
   readonly strategy = input<ErrorDisplayStrategy | undefined>();
+
+  /**
+   * Warning display strategy override, independent of {@link strategy}.
+   *
+   * Cascade: this input → form context `warningStrategy()` →
+   * `NGX_SIGNAL_FORMS_CONFIG.defaultWarningStrategy` → `'on-touch'`. No tier
+   * consults `defaultErrorStrategy`.
+   */
+  readonly warningStrategy = input<WarningDisplayStrategy | undefined>();
 
   /**
    * Form submission status (optional).
@@ -215,8 +233,17 @@ export class NgxHeadlessErrorState<
     resolveStrategyFromContext(
       this.strategy(),
       this.#injectedContext,
-      this.#config?.defaultErrorStrategy,
+      this.#config.defaultErrorStrategy,
     ),
+  );
+
+  readonly #resolvedWarningStrategy = computed<ResolvedWarningDisplayStrategy>(
+    () =>
+      resolveWarningStrategyFromContext(
+        this.warningStrategy(),
+        this.#injectedContext,
+        this.#config.defaultWarningStrategy,
+      ),
   );
 
   /**
@@ -262,6 +289,22 @@ export class NgxHeadlessErrorState<
     this.resolvedSubmittedStatus,
   );
 
+  readonly #strategyBasedShowWarnings = computed(() => {
+    // For warnings, we need to check hasWarnings instead of invalid
+    // since warnings are non-blocking and don't affect the field's invalid state
+    const hasWarnings = this.hasWarnings();
+    const isTouched = this.#fieldState()?.touched?.() ?? false;
+    const strategy = this.#resolvedWarningStrategy();
+    const submittedStatus = this.resolvedSubmittedStatus() ?? 'unsubmitted';
+
+    return shouldShowWarnings(
+      hasWarnings,
+      isTouched,
+      strategy,
+      submittedStatus,
+    );
+  });
+
   /**
    * Whether errors should be shown based on strategy.
    *
@@ -288,9 +331,19 @@ export class NgxHeadlessErrorState<
   });
 
   /**
-   * Whether warnings should be shown (same strategy logic as errors).
+   * Whether warnings should be shown, timed by {@link warningStrategy}'s own
+   * cascade rather than the blocking-error one.
+   *
+   * The two unconditional-`true` cases are the same as
+   * {@link shouldShowErrors}, and for the same reasons — direct-errors mode
+   * delegates gating upstream, and with no field state the host owns
+   * visibility. Only the strategy branch differs.
    */
-  readonly shouldShowWarnings = this.shouldShowErrors;
+  readonly shouldShowWarnings = computed(() => {
+    if (this.errorsOverride()) return true;
+    if (!this.field() && this.#bridgedFieldState()?.() == null) return true;
+    return this.#strategyBasedShowWarnings();
+  });
 
   /**
    * Resolved error messages using 3-tier priority.

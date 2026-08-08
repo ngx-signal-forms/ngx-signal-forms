@@ -28,6 +28,7 @@ import {
   createFieldMessageIdSignals,
   humanizeFieldPath,
   stripAngularFormPrefix,
+  DEFAULT_NGX_SIGNAL_FORMS_CONFIG,
   type ErrorMessageRegistry,
   type FieldLabelResolver,
 } from '@ngx-signal-forms/toolkit/core';
@@ -445,7 +446,9 @@ function createErrorStateInternal<TValue = unknown>(
   // `NgxHeadlessFieldset` applies) when neither an explicit `strategy` nor a
   // form context is present, keeping standalone usage consistent regardless
   // of which headless surface a consumer reaches for.
-  const config = inject(NGX_SIGNAL_FORMS_CONFIG, { optional: true });
+  const config =
+    inject(NGX_SIGNAL_FORMS_CONFIG, { optional: true }) ??
+    DEFAULT_NGX_SIGNAL_FORMS_CONFIG;
 
   const fieldState = computed(() => field());
 

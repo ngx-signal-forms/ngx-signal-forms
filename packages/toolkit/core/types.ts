@@ -53,6 +53,26 @@ export type ResolvedErrorDisplayStrategy =
 export type ErrorDisplayStrategy = ResolvedErrorDisplayStrategy | 'inherit';
 
 /**
+ * Resolved warning display strategy used by forms and config defaults.
+ *
+ * This excludes 'inherit', which only makes sense for field-level overrides.
+ */
+export type ResolvedWarningDisplayStrategy =
+  | 'immediate'
+  | 'on-touch'
+  | 'on-submit';
+
+/**
+ * Warning display strategy determines when warnings are shown to the user.
+ *
+ * - `'immediate'` — Show warnings as they occur (real-time)
+ * - `'on-touch'` — Show after blur or submit (default)
+ * - `'on-submit'` — Show only after form submission
+ * - `'inherit'` — Inherit from the form's warning strategy (field-level only)
+ */
+export type WarningDisplayStrategy = ResolvedWarningDisplayStrategy | 'inherit';
+
+/**
  * Form field appearance values accepted from consumers and used internally.
  *
  * - `'standard'`: Label above input (default)
@@ -286,6 +306,17 @@ export interface NgxSignalFormsConfig {
   defaultErrorStrategy: ResolvedErrorDisplayStrategy;
 
   /**
+   * Default warning display strategy.
+   *
+   * A warning judges a *complete* value, so it is gated until the user
+   * commits the value by blur or submit. Set `'immediate'` if you want
+   * advisory messages to appear while the user types.
+   *
+   * @default 'on-touch'
+   */
+  defaultWarningStrategy: ResolvedWarningDisplayStrategy;
+
+  /**
    * Default appearance for form fields.
    * @default 'standard'
    */
@@ -349,6 +380,7 @@ export interface NgxSignalFormsConfig {
 export interface NgxSignalFormsUserConfig {
   autoAria?: boolean;
   defaultErrorStrategy?: ResolvedErrorDisplayStrategy;
+  defaultWarningStrategy?: ResolvedWarningDisplayStrategy;
   defaultFormFieldAppearance?: FormFieldAppearance;
   defaultFormFieldOrientation?: FormFieldOrientation;
   showMarkerWhen?: FieldMarkingMode;

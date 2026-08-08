@@ -12,6 +12,7 @@ import {
 import type {
   ErrorDisplayStrategy,
   SubmittedStatus,
+  WarningDisplayStrategy,
 } from '@ngx-signal-forms/toolkit';
 import {
   NGX_SIGNAL_FORM_FIELD_CONTEXT,
@@ -1281,23 +1282,39 @@ describe('NgxFormFieldError', () => {
         }),
       );
       readonly strategy = signal<ErrorDisplayStrategy | undefined>('on-touch');
-      readonly warningStrategy = signal<ErrorDisplayStrategy | undefined>(
+      readonly warningStrategy = signal<WarningDisplayStrategy | undefined>(
         undefined,
       );
       readonly submittedStatus = signal<SubmittedStatus>('unsubmitted');
     }
 
-    it('surfaces warnings immediately by default even when error strategy gates errors', async () => {
-      // Default warningStrategy is 'immediate'. With strategy='on-touch' and
-      // an untouched field, errors are hidden — but the warning must still
-      // surface. This is the whole point of decoupling.
-      await render(WarningStrategyHost);
+    it('gates warnings behind touch by default', async () => {
+      // The default warningStrategy is 'on-touch': a warning judges a complete
+      // value, so it waits until the user commits the value by blur or submit.
+      const { fixture } = await render(WarningStrategyHost);
 
-      const status = screen.getByRole('status');
-      expect(status).toBeTruthy();
+      // Untouched: neither channel is visible.
+      expect(screen.queryByRole('status')?.textContent?.trim() ?? '').toBe('');
+      expect(screen.queryByRole('alert')?.textContent?.trim() ?? '').toBe('');
+
+      fixture.componentInstance.contactForm.password().markAsTouched();
+      fixture.detectChanges();
+
+      const status = await screen.findByRole('status');
       expect(status.textContent).toContain('Consider 8+ characters');
+    });
 
-      // Errors stay hidden — only the warning is visible.
+    it('shows warnings immediately when warningStrategy is immediate, while errors stay gated', async () => {
+      const { fixture } = await render(WarningStrategyHost);
+      fixture.componentInstance.warningStrategy.set('immediate');
+      fixture.detectChanges();
+
+      // Warning surfaces without touch...
+      expect(screen.queryByRole('status')?.textContent?.trim() ?? '').toContain(
+        'Consider 8+ characters',
+      );
+      // ...while errors stay hidden because strategy='on-touch' and the field
+      // is untouched. The two channels resolve independently.
       expect(screen.queryByRole('alert')?.textContent?.trim() ?? '').toBe('');
     });
 
@@ -1335,13 +1352,13 @@ describe('NgxFormFieldError', () => {
       expect(status.textContent).toContain('Consider 8+ characters');
     });
 
-    it('keeps warnings visible while errors stay hidden under on-submit', async () => {
+    it('can show warnings immediately while errors stay hidden under on-submit when configured', async () => {
       // The practical use case: error strategy is `on-submit` (strict form),
-      // but warnings should still guide the user immediately. With default
-      // `warningStrategy`, this should work transparently.
+      // but warnings should still guide the user immediately. This now requires
+      // explicit warningStrategy='immediate' configuration.
       const { fixture } = await render(WarningStrategyHost);
       fixture.componentInstance.strategy.set('on-submit');
-      fixture.componentInstance.warningStrategy.set(undefined);
+      fixture.componentInstance.warningStrategy.set('immediate');
       fixture.detectChanges();
 
       // Warning visible even before submit.
@@ -1352,12 +1369,11 @@ describe('NgxFormFieldError', () => {
       expect(screen.queryByRole('alert')?.textContent?.trim() ?? '').toBe('');
     });
 
-    it('falls back to NGX_SIGNAL_FORMS_CONFIG.defaultErrorStrategy for a standalone field with warningStrategy="inherit"', async () => {
+    it('falls back to NGX_SIGNAL_FORMS_CONFIG.defaultWarningStrategy for a standalone field with warningStrategy="inherit"', async () => {
       // Regression test: with no [ngxSignalForm] host to inherit from, an
-      // explicit [warningStrategy]="'inherit'" used to hard-fall-back to
-      // 'on-touch', ignoring provideNgxSignalFormsConfig({ defaultErrorStrategy }).
-      // NgxHeadlessErrorState's own #resolvedStrategy cascade already honors
-      // the config default — the warning-strategy cascade must match it.
+      // explicit [warningStrategy]="'inherit'" should fall back to the config's
+      // defaultWarningStrategy, not defaultErrorStrategy. This ensures warnings
+      // and errors follow separate cascades.
       @Component({
         selector: 'ngx-test-warning-strategy-config-fallback',
         imports: [FormField, NgxFormFieldError],
@@ -1392,14 +1408,13 @@ describe('NgxFormFieldError', () => {
 
       await render(StandaloneConfigFallbackHost, {
         providers: [
-          provideNgxSignalFormsConfig({ defaultErrorStrategy: 'immediate' }),
+          provideNgxSignalFormsConfig({ defaultWarningStrategy: 'immediate' }),
         ],
       });
 
-      // No [ngxSignalForm] host and an untouched field: without the config
-      // fallback the warning would stay gated behind the hardcoded 'on-touch'
-      // default. With the fallback wired up, the global 'immediate' config
-      // applies and the warning is visible right away.
+      // No [ngxSignalForm] host and an untouched field: with the warning config
+      // fallback wired up, the global 'immediate' config applies and the warning
+      // is visible right away, independent of the error strategy.
       const status = await screen.findByRole('status');
       expect(status.textContent).toContain('Consider 8+ characters');
     });

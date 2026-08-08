@@ -63,7 +63,7 @@ Displays validation errors and warnings with appropriate ARIA roles.
 | `errors`          | `Signal<ValidationError[]>` | Pre-aggregated error signal (e.g. from fieldsets). Takes priority.          |
 | `fieldName`       | `string`                    | Required when standalone; inherited inside wrapper                          |
 | `strategy`        | `ErrorDisplayStrategy`      | Override error display strategy                                             |
-| `warningStrategy` | `ErrorDisplayStrategy`      | Override warning display strategy (defaults to `'immediate'`)               |
+| `warningStrategy` | `WarningDisplayStrategy`    | Override warning display strategy (defaults to `'on-touch'`)                |
 | `listStyle`       | `'plain' \| 'bullets'`      | Visual layout for rendered messages (`'plain'` by default)                  |
 | `submittedStatus` | `SubmittedStatus`           | Manual override for `'on-submit'` strategy                                  |
 

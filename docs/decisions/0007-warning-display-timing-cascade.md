@@ -10,33 +10,52 @@ Accepted
 
 ## Context
 
-Issue [#264](https://github.com/ngx-signal-forms/ngx-signal-forms/issues/264) identified that warning display timing was not properly decoupled from error display timing. Prior to this change, warnings in some components (notably `NgxHeadlessFieldset`) would inherit the error display strategy, causing them to be hidden behind the same gates as blocking errors (`'on-touch'` or `'on-submit'`). This defeated the purpose of warnings as advisory messages that should typically be visible immediately to guide users while they type.
+Issue [#264](https://github.com/ngx-signal-forms/ngx-signal-forms/issues/264) identified that warning display timing was not properly decoupled from error display timing. `warningStrategy="inherit"` resolved to **two different values** depending on the surface, and neither matched the documented behaviour:
 
-The toolkit already had a `warningStrategy` input on `NgxFormFieldError` and `NgxFormFieldWrapper` with a default of `'immediate'`, but:
+| Site                               | Passed `configDefault`? | Result with no form context |
+| ---------------------------------- | ----------------------- | --------------------------- |
+| `form-field/form-field-wrapper.ts` | ❌                      | `'on-touch'`                |
+| `headless/src/lib/fieldset.ts`     | ❌                      | `'on-touch'`                |
+| `assistive/form-field-error.ts`    | ✅                      | `defaultErrorStrategy`      |
 
-1. The cascade for resolving warning strategy was not consistent across all components
-2. There was no form-level `warningStrategy` input on `NgxSignalForm`
-3. There was no global `defaultWarningStrategy` configuration option
-4. `NgxHeadlessFieldset` used a single internal "show" signal for both errors and warnings, so warnings inherited the error strategy
+All three routed through `resolveErrorDisplayStrategy`, so every tier of the "warning" cascade reached into the **error** channel. `NgxHeadlessFieldset` went further and shared a single internal "show" signal between errors and warnings, so a fieldset under `errorStrategy="on-submit"` hid its warnings until submit.
 
-This meant that in a form with `errorStrategy="on-submit"`, fieldset-level warnings would also be hidden until submit, unlike wrapper-level warnings which defaulted to immediate.
+Fixing this correctly required settling what a warning _is_, because the resolver's terminal value is a semantic choice, not an implementation detail.
+
+### The model
+
+Three channels, three timing rules:
+
+| Channel     | When shown                  | Rationale                                     |
+| ----------- | --------------------------- | --------------------------------------------- |
+| **Hint**    | Always                      | Guidance about what to enter. Never gated.    |
+| **Warning** | `'on-touch'` (configurable) | A quality judgement on an _acceptable_ value. |
+| **Error**   | `'on-touch'` (configurable) | A blocking constraint violation.              |
+
+Errors and warnings are **never visible together** — a blocking error suppresses the warning live region entirely (see `create-aria-described-by-signal.ts`). So a warning only ever appears on a field that is currently acceptable. It is not a weaker error; it is a comment on a value that will submit fine (weak-but-valid password, `.co` where `.com` was meant, a legal-but-deprecated format).
+
+That is why warning timing must be _independent_ of error timing — not why it must be _earlier_.
 
 ## Decision
 
-Introduce a **separate, independent cascade for warning display strategy** that mirrors the error cascade but with different defaults and terminal fallback.
+Introduce a **separate, independent cascade for warning display strategy** that mirrors the error cascade tier for tier, with its own terminal value. No tier of either cascade reaches into the other channel.
 
 ### Warning Strategy Resolution Cascade
-
-The warning display strategy is resolved through **four tiers**, in order of priority:
 
 ```
 1. Explicit input (component-level) → `warningStrategy` input on the component/directive
 2. Form context → `warningStrategy()` from `NGX_SIGNAL_FORM_CONTEXT` (provided by `NgxSignalForm`)
 3. Config default → `NGX_SIGNAL_FORMS_CONFIG.defaultWarningStrategy`
-4. Terminal fallback → `'immediate'`
+4. Terminal fallback → `'on-touch'`
 ```
 
-This cascade is **independent** from the error strategy cascade. Errors default to `'on-touch'`, warnings default to `'immediate'`.
+### Why the terminal is `'on-touch'`
+
+A warning is a judgement about a **complete** value, and on an incomplete value that judgement is meaningless — "weak password" after 3 of 12 characters is noise. This is the same reasoning that produced the platform's `:user-invalid` pseudo-class, which defers invalidity styling until the user commits by blur or submit.
+
+There is also a concrete accessibility failure mode with immediate warnings. While typing, a field flips valid → invalid → valid, so the warning appears, is suppressed by the blocking error, then reappears. That churn lands in a `role="status"` **polite live region**, the worst possible place for it.
+
+`'immediate'` remains fully reachable as _configuration_ at every tier, because it is genuinely right for some fields — a live password-strength meter is the canonical case. Keeping it configurable is about expressiveness; the terminal value is about what is correct when nobody has decided.
 
 ### New Configuration Option
 
@@ -47,51 +66,21 @@ interface NgxSignalFormsConfig {
   // ... existing properties
   /**
    * Default warning display strategy.
-   * @default 'immediate'
+   * @default 'on-touch'
    */
   defaultWarningStrategy: ResolvedWarningDisplayStrategy;
 }
 ```
 
-The default value is `'immediate'` (defined in `DEFAULT_NGX_SIGNAL_FORMS_CONFIG.defaultWarningStrategy`).
+The default is `'on-touch'`, defined in `DEFAULT_NGX_SIGNAL_FORMS_CONFIG.defaultWarningStrategy`.
 
 ### New Form-Level Input
 
-Add `warningStrategy` input to `NgxSignalForm` directive:
-
-```typescript
-@Directive({
-  selector: 'form[formRoot][ngxSignalForm]',
-  // ...
-})
-export class NgxSignalForm {
-  /**
-   * Warning display strategy for this form.
-   * Overrides the global default for all fields in this form.
-   *
-   * Typed as ResolvedWarningDisplayStrategy (not WarningDisplayStrategy)
-   * because 'inherit' is a field-level-only value.
-   */
-  readonly warningStrategy = input<
-    ResolvedWarningDisplayStrategy | null | undefined
-  >();
-
-  /**
-   * Resolved warning display strategy (form-level or global default).
-   */
-  protected readonly resolvedWarningStrategy = computed(() => {
-    const formStrategy = this.warningStrategy();
-    if (formStrategy !== undefined && formStrategy !== null) {
-      return formStrategy;
-    }
-    return this.#config.defaultWarningStrategy;
-  });
-}
-```
+Add a `warningStrategy` input to the `NgxSignalForm` directive, typed `ResolvedWarningDisplayStrategy` (not `WarningDisplayStrategy`) because `'inherit'` is a field-level-only value — there is nothing above the form root to inherit from. It falls back to `NGX_SIGNAL_FORMS_CONFIG.defaultWarningStrategy` when unset, and is exposed on `NgxSignalFormContext` as `warningStrategy()`.
 
 ### New Utility Function
 
-Add `shouldShowWarnings()` function in `error-strategies.ts`:
+Add `shouldShowWarnings()` in `error-strategies.ts`:
 
 ```typescript
 export function shouldShowWarnings(
@@ -115,85 +104,67 @@ export function shouldShowWarnings(
 }
 ```
 
-This mirrors `shouldShowErrors()` but checks for warnings presence instead of invalid state.
+This mirrors `shouldShowErrors()` but gates on warning _presence_ rather than the field's invalid state, since warnings are non-blocking and never make a field invalid.
 
-### New Resolution Function
+### New Resolution Functions
 
-Add `resolveWarningStrategyFromContext()` in `resolve-strategy.ts`:
-
-```typescript
-export function resolveWarningStrategyFromContext(
-  inputStrategy: WarningDisplayStrategy | undefined,
-  formContext: NgxSignalFormContext | undefined,
-  configDefault?: ResolvedWarningDisplayStrategy | null,
-): ResolvedWarningDisplayStrategy {
-  const contextStrategy = formContext?.warningStrategy();
-  return resolveWarningStrategy(inputStrategy, contextStrategy, configDefault);
-}
-```
+Add `resolveWarningStrategy()` and `resolveWarningStrategyFromContext()` in `resolve-strategy.ts`. These deliberately do **not** delegate to `resolveErrorDisplayStrategy` — sharing that implementation is exactly how the terminal value became an accident rather than a decision, even though both currently terminate at `'on-touch'`.
 
 ### Component Updates
 
-#### NgxFormFieldWrapper
+All three surfaces route through the single resolver, so a fourth copy cannot drift (finding **C1** of the [toolkit audit](https://github.com/ngx-signal-forms/ngx-signal-forms/issues/262)):
 
-- Add `effectiveWarningStrategy` computed using `resolveWarningStrategyFromContext()`
-- Add `shouldShowWarnings` computed using the new `shouldShowWarnings()` function
-- Update `shouldRenderErrorSlot` to render when either errors OR warnings should show
-- Pass `warningStrategy` input to the projected error renderer
-
-#### NgxHeadlessFieldset / NgxFormFieldset
-
-- Use `resolveWarningStrategyFromContext()` for warning strategy resolution
-- `shouldShowWarnings()` is no longer suppressed when blocking errors are visible
-- Warning strategy defaults to `'immediate'` directly (not inheriting from error strategy)
+- **`NgxHeadlessErrorState`** owns the resolution and exposes `shouldShowWarnings`, timed independently of `shouldShowErrors`.
+- **`NgxFormFieldError`** drops its private context/config injection and forwards `warningStrategy` to the headless directive via `hostDirectives`.
+- **`NgxFormFieldWrapper`** adds `effectiveWarningStrategy` and a `shouldShowWarnings` computed, and mounts the error renderer when errors **or** warnings should show — otherwise a warnings-only field never renders at all while `strategy` gates the blocking-error timing.
+- **`NgxHeadlessFieldset` / `NgxFormFieldset`** resolve via the warning cascade, and `shouldShowWarnings()` is no longer suppressed merely because `shouldShowErrors()` is true. The redundant `?? 'on-touch'` at the fieldset's error-strategy call site is removed, since the shared resolver already supplies that terminal.
 
 ## Consequences
 
 ### Positive
 
-1. **Consistency**: All components now use the same cascade logic for warnings
-2. **Flexibility**: Developers can configure warning timing at app, form, or field level
-3. **Better UX**: Warnings default to `'immediate'` so users see advisory guidance while typing
-4. **Separation of concerns**: Error timing and warning timing are fully independent
-5. **Backward compatibility**: Existing code continues to work; the new config option has a sensible default
+1. **Consistency**: all surfaces resolve warnings through one cascade
+2. **Flexibility**: warning timing is configurable at app, form, and field level
+3. **Correct default**: warnings judge complete values, so they wait for blur or submit
+4. **No live-region churn**: the polite region no longer flickers while typing
+5. **Separation of concerns**: neither cascade can reach into the other channel
 
 ### Negative
 
-1. **Slight complexity increase**: There are now two parallel cascades to understand (errors and warnings)
-2. **Potential for confusion**: Developers must remember that `defaultWarningStrategy` is separate from `defaultErrorStrategy`
+1. **Behaviour change**: warnings previously documented as defaulting to `'immediate'` now default to `'on-touch'`. Apps relying on immediate warnings must set `defaultWarningStrategy: 'immediate'` or `warningStrategy="immediate"`.
+2. **Slight complexity increase**: two parallel cascades to understand
+3. **Potential for confusion**: `defaultWarningStrategy` is separate from `defaultErrorStrategy`
 
-### Neutral
-
-1. **Migration**: No breaking changes; existing code works without modification
+The workspace is at `1.0.0-rc.11` and v1.0.0 has never shipped — every release to date is a pre-release — so there is no backwards-compatibility obligation. The correct behaviour was chosen over the compatible one.
 
 ## Alternatives Considered
 
-### Alternative 1: Make warnings inherit error strategy by default
+### Alternative 1: Keep the `'immediate'` terminal
 
-**Rejected** because it defeats the purpose of warnings. Users need to see advisory messages like "consider 12+ characters" while typing, not after submit. This was the original problem identified in issue #264.
+**Rejected.** The argument for it — "users need guidance while typing" — does not survive the observation that errors and warnings are never visible together. A warning on an incomplete value is a judgement about a value the user has not finished writing, and its churn in a polite live region is an accessibility regression. Fields that genuinely want it (strength meters) opt in explicitly.
 
-### Alternative 2: Only add form-level warningStrategy, no config default
+### Alternative 2: Make warnings inherit the error strategy
 
-**Rejected** because it would require every app that wants a non-'immediate' default to configure each form individually. The config-level default allows setting a consistent policy across an entire application.
+**Rejected.** This is the defect in issue #264. It couples two independent decisions and means `defaultErrorStrategy: 'on-submit'` silently hides advisory guidance.
 
-### Alternative 3: Use a single strategy input that applies to both errors and warnings
+### Alternative 3: Only add form-level `warningStrategy`, no config default
 
-**Rejected** because it removes the ability to have different timing for errors vs warnings, which is the core value proposition. The whole point is that warnings should typically be immediate while errors are often gated.
+**Rejected.** Every app wanting a non-default policy would configure each form individually.
+
+### Alternative 4: A single strategy input applying to both channels
+
+**Rejected.** It removes the ability to time errors and warnings differently, which is the core value proposition.
 
 ## Related
 
 - Issue [#264](https://github.com/ngx-signal-forms/ngx-signal-forms/issues/264): Warning display timing with separate warning cascade
+- Issue [#262](https://github.com/ngx-signal-forms/ngx-signal-forms/issues/262): toolkit audit — finding C1 (call sites bypassing the visibility seam)
 - PR [#288](https://github.com/ngx-signal-forms/ngx-signal-forms/pull/288): feat(toolkit): implement issue #264
 - ADR-0006: One cascade seam — visibility timing is composed once, never inlined (applies to both errors and warnings)
-- `WARNINGS_SUPPORT.md`: Updated to document the new cascade and configuration options
+- `WARNINGS_SUPPORT.md`: documents the cascade and configuration options
 
 ## Notes
 
-The implementation follows the same patterns established by ADR-0006 for error strategy resolution. The warning cascade uses the same utility functions (`createCascadingResolver`) and follows the same injection pattern.
+The warning cascade is hand-written in `resolve-strategy.ts` alongside the error cascade rather than built on `createCascadingResolver` (used by the field-labels and control-semantics providers). Those resolvers cascade _values_ through injector hierarchies; this one cascades a strategy through input → form context → config, which is a different shape. Aligning them is a candidate follow-up under ADR-0006's "one cascade seam" goal, not a prerequisite here.
 
-The terminal fallback for warnings is `'immediate'`, whereas for errors it is `'on-touch'`. This difference reflects the different semantics:
-
-- Errors are blocking and WCAG recommends not showing them until the user has had a chance to interact (`'on-touch'`)
-- Warnings are advisory and provide the most value when shown immediately as the user types
-
-However, both can be overridden at any tier of the cascade, so applications that want warnings to follow the same timing as errors can set `defaultWarningStrategy: 'on-touch'` or use `warningStrategy="inherit"` at the field level.
+Both cascades currently terminate at `'on-touch'`. That is a coincidence of two independent decisions, not a shared constant — errors terminate there because WCAG discourages flagging invalidity before the user has interacted, warnings because a judgement on an incomplete value is meaningless. The implementations stay separate so that changing one never silently moves the other.

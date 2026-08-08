@@ -1,4 +1,8 @@
-import type { ResolvedErrorDisplayStrategy, SubmittedStatus } from '../types';
+import type {
+  ResolvedErrorDisplayStrategy,
+  ResolvedWarningDisplayStrategy,
+  SubmittedStatus,
+} from '../types';
 
 /**
  * Determines if errors should be shown immediately without creating a reactive signal.
@@ -83,5 +87,33 @@ export function shouldShowErrors(
     default:
       strategy satisfies never;
       return isInvalid && isTouched;
+  }
+}
+
+/**
+ * Determines if warnings should be shown based on warning strategy.
+ * Unlike `shouldShowErrors`, this checks for the presence of warnings rather than
+ * field invalidity, since warnings are non-blocking and don't affect the `invalid` state.
+ */
+export function shouldShowWarnings(
+  hasWarnings: boolean,
+  isTouched: boolean,
+  strategy: ResolvedWarningDisplayStrategy,
+  submittedStatus: SubmittedStatus,
+): boolean {
+  const hasSubmitted = submittedStatus !== 'unsubmitted';
+
+  switch (strategy) {
+    case 'immediate':
+      return hasWarnings;
+
+    case 'on-touch':
+      return hasWarnings && isTouched;
+
+    case 'on-submit':
+      return hasWarnings && hasSubmitted;
+
+    default:
+      return hasWarnings && isTouched;
   }
 }
