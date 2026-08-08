@@ -10,6 +10,10 @@ import {
   normalizeFieldName,
   resolveFieldName,
 } from '../utilities/field-resolution';
+import type {
+  ResolvedErrorDisplayStrategy,
+  ResolvedWarningDisplayStrategy,
+} from '../types';
 
 /**
  * Resolve whether an element is visible from a CSS perspective.
@@ -97,6 +101,11 @@ export class NgxFieldIdentity {
   readonly #controlId = signal<string | null>(null);
   readonly #hintIds = signal<readonly string[]>([]);
   readonly #isControlVisible = signal(true);
+  readonly #resolvedErrorStrategy = signal<ResolvedErrorDisplayStrategy | null>(
+    null,
+  );
+  readonly #resolvedWarningStrategy =
+    signal<ResolvedWarningDisplayStrategy | null>(null);
   #warnedNoId = false;
 
   /**
@@ -130,6 +139,31 @@ export class NgxFieldIdentity {
    * this field. Updated by `NgxFormFieldWrapper` when `hintDescriptors` changes.
    */
   readonly hintIds = this.#hintIds.asReadonly();
+
+  /**
+   * The owning wrapper's fully-resolved blocking-error display strategy, or
+   * `null` when no wrapper has published one (standalone auto-aria usage).
+   *
+   * Exists so `NgxSignalFormAutoAria` can gate `aria-describedby` on the same
+   * decision the wrapper uses to render its message regions. Without it,
+   * auto-aria only sees the form context and global config, so a *field*-level
+   * `strategy` override on the wrapper would make the attribute reference an
+   * element the wrapper never rendered (a dangling id — axe
+   * `aria-valid-attr-value`), or omit one it did.
+   *
+   * Updated by `NgxFormFieldWrapper` via `setResolvedStrategies`.
+   */
+  readonly resolvedErrorStrategy = this.#resolvedErrorStrategy.asReadonly();
+
+  /**
+   * The owning wrapper's fully-resolved warning display strategy, or `null`
+   * when no wrapper has published one.
+   *
+   * Separate from {@link resolvedErrorStrategy} because the two cascades are
+   * independent (ADR-0007): a field can show warnings on `'immediate'` while
+   * its blocking errors wait for `'on-submit'`.
+   */
+  readonly resolvedWarningStrategy = this.#resolvedWarningStrategy.asReadonly();
 
   /**
    * Whether the bound control currently has a CSS layout box that the
@@ -302,5 +336,28 @@ export class NgxFieldIdentity {
       return;
     }
     this.#hintIds.set(ids);
+  }
+
+  /**
+   * Publishes the wrapper's resolved error and warning display strategies so
+   * `NgxSignalFormAutoAria` can keep `aria-describedby` in lockstep with the
+   * regions the wrapper actually renders.
+   *
+   * Both are written together because they are read together; each write is
+   * guarded by an equality check so unchanged strategies do not invalidate
+   * consumers' computeds.
+   *
+   * @internal
+   */
+  setResolvedStrategies(
+    errorStrategy: ResolvedErrorDisplayStrategy | null,
+    warningStrategy: ResolvedWarningDisplayStrategy | null,
+  ): void {
+    if (errorStrategy !== this.#resolvedErrorStrategy()) {
+      this.#resolvedErrorStrategy.set(errorStrategy);
+    }
+    if (warningStrategy !== this.#resolvedWarningStrategy()) {
+      this.#resolvedWarningStrategy.set(warningStrategy);
+    }
   }
 }

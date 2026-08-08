@@ -119,6 +119,20 @@ All three surfaces route through the single resolver, so a fourth copy cannot dr
 - **`NgxFormFieldWrapper`** adds `effectiveWarningStrategy` and a `shouldShowWarnings` computed, and mounts the error renderer when errors **or** warnings should show — otherwise a warnings-only field never renders at all while `strategy` gates the blocking-error timing.
 - **`NgxHeadlessFieldset` / `NgxFormFieldset`** resolve via the warning cascade, and `shouldShowWarnings()` is no longer suppressed merely because `shouldShowErrors()` is true. The redundant `?? 'on-touch'` at the fieldset's error-strategy call site is removed, since the shared resolver already supplies that terminal.
 
+### Keeping `aria-describedby` in lockstep
+
+Splitting the cascades exposed a latent coupling in `NgxSignalFormAutoAria`, which composes the control's `aria-describedby`. It gated **both** the `${fieldName}-error` and `${fieldName}-warning` ids on one `createErrorVisibility()` signal, and read only the ambient form context. That was invisible while the channels shared a strategy. Once they can diverge it breaks in both directions:
+
+- a **missing** reference — `errorStrategy="on-submit"` with `warningStrategy="immediate"` renders a visible warning that nothing points at, so AT never reaches the text (WCAG 1.3.1)
+- a **dangling** reference — a wrapper-level `strategy` override that renders _less_ than the form implies leaves an id pointing at no element (axe `aria-valid-attr-value`)
+
+Two changes close it:
+
+1. `NgxSignalFormAutoAria` resolves warning visibility through the warning cascade, and `createAriaDescribedBySignal` takes an optional `warningVisibility` (defaulting to `visibility`, so pre-existing callers are unaffected).
+2. `NgxFormFieldWrapper` publishes both **fully-resolved** strategies through `NgxFieldIdentity.setResolvedStrategies()`, and auto-aria prefers them over the form context. The identity service is already the wrapper→auto-aria channel for field name, hint ids, and control visibility; field-level strategy is the same kind of fact.
+
+The invariant to preserve in future work: **a rendered region must be referenced, and a suppressed one must not be.** Blocking-error precedence still applies — a visible error suppresses both the warning region and its id.
+
 ## Consequences
 
 ### Positive

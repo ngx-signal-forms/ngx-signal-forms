@@ -154,3 +154,105 @@ describe('auto-aria: divergent error / warning strategies', () => {
     expect(describedBy).not.toContain('password-warning');
   });
 });
+
+/**
+ * Field-level overrides live on the wrapper, which the ambient form context
+ * cannot see. `NgxFormFieldWrapper` therefore publishes both resolved
+ * strategies through `NgxFieldIdentity`, and auto-aria prefers them.
+ *
+ * Without that channel auto-aria falls back to form context + global config,
+ * so a wrapper-level override makes `aria-describedby` disagree with the DOM
+ * in both directions: a dangling id when the wrapper renders less than the
+ * form implies, and a missing one when it renders more.
+ */
+@Component({
+  selector: 'ngx-test-field-level-override',
+  imports: [
+    NgxFormFieldWrapper,
+    NgxFormFieldError,
+    FormField,
+    NgxSignalFormToolkit,
+  ],
+  template: `
+    <form [formRoot]="pwForm" ngxSignalForm [errorStrategy]="errorStrategy()">
+      <ngx-form-field-wrapper
+        [formField]="pwForm.password"
+        fieldName="password"
+        [strategy]="fieldStrategy()"
+        [warningStrategy]="fieldWarningStrategy()"
+      >
+        <label for="password">Password</label>
+        <input id="password" type="password" [formField]="pwForm.password" />
+      </ngx-form-field-wrapper>
+    </form>
+  `,
+})
+class FieldOverrideHost {
+  readonly errorStrategy = input.required<ResolvedErrorDisplayStrategy>();
+  readonly fieldStrategy = input.required<ResolvedErrorDisplayStrategy>();
+  readonly fieldWarningStrategy =
+    input.required<ResolvedWarningDisplayStrategy>();
+
+  readonly #model = signal({ password: 'abc' });
+  readonly pwForm = form(
+    this.#model,
+    schema((path) => {
+      minLength(path.password, 4, { message: 'At least 4 characters' });
+      validate(path.password, (ctx) => {
+        const v = ctx.value();
+        if (v.length > 0 && v.length < 8) {
+          return { kind: 'warn:weak', message: 'Consider 8+ characters' };
+        }
+        return null;
+      });
+    }),
+  );
+}
+
+describe('auto-aria: wrapper field-level strategy overrides', () => {
+  it('does not reference regions the field-level strategies suppress', async () => {
+    // The form says "show errors immediately", but this field overrides both
+    // channels to 'on-submit'. Nothing renders, so nothing may be referenced
+    // — a dangling id here is an axe `aria-valid-attr-value` violation.
+    const { container } = await render(FieldOverrideHost, {
+      inputs: {
+        errorStrategy: 'immediate',
+        fieldStrategy: 'on-submit',
+        fieldWarningStrategy: 'on-submit',
+      },
+    });
+
+    const describedBy =
+      container
+        .querySelector('input#password')
+        ?.getAttribute('aria-describedby') ?? '';
+
+    expect(container.querySelector('[role="alert"]')).toBeNull();
+    expect(container.querySelector('[role="status"]')).toBeNull();
+    expect(describedBy).toBe('');
+  });
+
+  it('references a warning the field-level strategy reveals', async () => {
+    // The mirror case: the form gates everything until submit, but this field
+    // opts its warnings into 'immediate'. The region renders, so it must be
+    // referenced or the advisory text is invisible to AT.
+    const { container } = await render(FieldOverrideHost, {
+      inputs: {
+        errorStrategy: 'on-submit',
+        fieldStrategy: 'on-submit',
+        fieldWarningStrategy: 'immediate',
+      },
+    });
+
+    const describedBy =
+      container
+        .querySelector('input#password')
+        ?.getAttribute('aria-describedby') ?? '';
+
+    expect(container.querySelector('[role="status"]')?.textContent).toContain(
+      'Consider 8+ characters',
+    );
+    expect(describedBy).toContain('password-warning');
+    expect(describedBy).not.toContain('password-error');
+  });
+});

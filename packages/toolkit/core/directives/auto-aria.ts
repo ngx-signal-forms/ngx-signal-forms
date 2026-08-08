@@ -177,9 +177,18 @@ export class NgxSignalFormAutoAria {
    * Uses `createErrorVisibility` to auto-consume the nearest
    * `[ngxSignalForm]` context (strategy + submittedStatus) via DI, matching
    * the same cascade as the form-field wrapper and headless error-state.
+   *
+   * When an owning `NgxFormFieldWrapper` has published its own resolved
+   * strategy, that wins: it already accounts for the wrapper's field-level
+   * `strategy` input, which the ambient form context cannot see.
    */
-  readonly #visibilityByStrategy = createErrorVisibility(() =>
-    this.#resolveFieldState(),
+  readonly #visibilityByStrategy = createErrorVisibility(
+    () => this.#resolveFieldState(),
+    {
+      strategy: computed(
+        () => this.#fieldIdentity?.resolvedErrorStrategy() ?? undefined,
+      ),
+    },
   );
 
   readonly #formContext = injectFormContext();
@@ -206,11 +215,15 @@ export class NgxSignalFormAutoAria {
     return shouldShowWarnings(
       fieldState.errors().some(isWarningError),
       fieldState.touched(),
-      resolveWarningStrategyFromContext(
-        undefined,
-        this.#formContext,
-        this.#config.defaultWarningStrategy,
-      ),
+      // A wrapper's published strategy already resolved its field-level
+      // `warningStrategy` input, so it takes precedence over the ambient
+      // form context.
+      this.#fieldIdentity?.resolvedWarningStrategy() ??
+        resolveWarningStrategyFromContext(
+          undefined,
+          this.#formContext,
+          this.#config.defaultWarningStrategy,
+        ),
       resolveSubmittedStatusFromContext(undefined, this.#formContext) ??
         'unsubmitted',
     );

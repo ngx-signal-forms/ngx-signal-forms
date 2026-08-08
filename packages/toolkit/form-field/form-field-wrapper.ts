@@ -1285,6 +1285,13 @@ export class NgxFormFieldWrapper<TValue = unknown> {
 
         this.#fieldIdentity.setFieldName(resolvedFieldName);
         this.#fieldIdentity.setControlElement(inputEl);
+        // Publish both resolved strategies so `NgxSignalFormAutoAria` gates
+        // `aria-describedby` on this wrapper's field-level overrides rather
+        // than only on the ambient form context.
+        this.#fieldIdentity.setResolvedStrategies(
+          this.effectiveStrategy(),
+          this.effectiveWarningStrategy(),
+        );
         this.#fieldIdentity.setControlVisible(
           inputEl ? isElementCssVisible(inputEl) : true,
         );
