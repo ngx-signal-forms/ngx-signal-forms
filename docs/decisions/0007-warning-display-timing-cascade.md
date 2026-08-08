@@ -42,7 +42,7 @@ Introduce a **separate, independent cascade for warning display strategy** that 
 
 ### Warning Strategy Resolution Cascade
 
-```
+```text
 1. Explicit input (component-level) → `warningStrategy` input on the component/directive
 2. Form context → `warningStrategy()` from `NGX_SIGNAL_FORM_CONTEXT` (provided by `NgxSignalForm`)
 3. Config default → `NGX_SIGNAL_FORMS_CONFIG.defaultWarningStrategy`

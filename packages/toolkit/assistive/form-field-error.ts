@@ -12,7 +12,6 @@ import {
   unwrapValue,
   type ErrorDisplayStrategy,
   type ResolvedErrorDisplayStrategy,
-  type WarningDisplayStrategy,
 } from '@ngx-signal-forms/toolkit';
 import {
   createFieldMessageIdSignals,
@@ -44,8 +43,11 @@ export type NgxFormFieldErrorListStyle = NgxFormFieldListStyle;
  *
  * - Template rendering (live regions, list/paragraph layouts)
  * - `fieldName` resolution from `NGX_SIGNAL_FORM_FIELD_CONTEXT` (parent wrapper)
- * - `warningStrategy` with its configurable default
  * - `listStyle` for visual layout choice
+ *
+ * `strategy` and `warningStrategy` are *forwarded* to the headless directive,
+ * not redeclared here — the two cascades resolve in one place. See
+ * `NgxHeadlessErrorState.warningStrategy` for the warning cascade.
  *
  * ## Bridge pattern for `formField`
  *
@@ -112,6 +114,9 @@ export type NgxFormFieldErrorListStyle = NgxFormFieldListStyle;
       directive: NgxHeadlessErrorState,
       inputs: [
         'strategy',
+        // Warnings resolve on their own cascade: this input → form context
+        // `warningStrategy()` → `defaultWarningStrategy` → `'on-touch'`.
+        // No tier consults `defaultErrorStrategy`.
         'warningStrategy',
         'submittedStatus',
         // `errorsOverride` exposed as `errors` for direct-errors mode
@@ -260,20 +265,6 @@ export class NgxFormFieldError {
    * `ngx-form-field-wrapper` via `NGX_SIGNAL_FORM_FIELD_CONTEXT`.
    */
   readonly fieldName = input<string>();
-
-  /**
-   * Warning display strategy for this specific field.
-   *
-   * Warnings follow their own display strategy cascade, independent of
-   * errors: this input → form context `warningStrategy()` →
-   * `NGX_SIGNAL_FORMS_CONFIG.defaultWarningStrategy` → `'on-touch'`.
-   *
-   * No tier consults `defaultErrorStrategy`, so warnings can be timed
-   * separately from blocking errors.
-   *
-   * @default `'on-touch'`
-   */
-  readonly warningStrategy = input<WarningDisplayStrategy | undefined>();
 
   /**
    * Visual layout for rendered validation messages.

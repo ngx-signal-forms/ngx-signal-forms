@@ -282,7 +282,7 @@ warning timing, and vice versa.
 
 The warning display strategy is resolved through **four tiers**, in order of priority:
 
-```
+```text
 1. Explicit input (component-level) → `warningStrategy` input
 2. Form context → `warningStrategy()` from `NGX_SIGNAL_FORM_CONTEXT`
 3. Config default → `NGX_SIGNAL_FORMS_CONFIG.defaultWarningStrategy`
@@ -447,7 +447,7 @@ form's own warning strategy.
 `hostDirectives`) exposes the same `warningStrategy` input, resolved with the
 **same four-tier cascade** as other components:
 
-```
+```text
 1. Explicit input → resolved against the form context
 2. Form context → `warningStrategy()` from `NGX_SIGNAL_FORM_CONTEXT`
 3. Config default → `NGX_SIGNAL_FORMS_CONFIG.defaultWarningStrategy`
