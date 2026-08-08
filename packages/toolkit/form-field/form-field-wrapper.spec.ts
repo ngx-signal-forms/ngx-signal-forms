@@ -2633,7 +2633,7 @@ describe('NgxSignalFormWrapperComponent', () => {
       expect(status?.textContent?.trim() ?? '').toBe('');
     });
 
-    it('respects an explicit strategy="on-submit" for a warnings-only field with the immediate warningStrategy default', async () => {
+    it('respects an explicit strategy="on-submit" for a touched warnings-only field', async () => {
       const unsubmittedWarningField = signal({
         invalid: () => true,
         touched: () => true,
@@ -2664,9 +2664,9 @@ describe('NgxSignalFormWrapperComponent', () => {
         },
       );
 
-      // Warning is visible immediately even though the field hasn't been
-      // submitted — 'immediate' is the warningStrategy default, and it is
-      // NOT the same signal as the wrapper's own (on-submit) `strategy`.
+      // The field is touched but unsubmitted. The warning shows because the
+      // warningStrategy default ('on-touch') is satisfied; the wrapper's own
+      // `strategy` ('on-submit') is NOT the same signal and does not gate it.
       const status = container.querySelector('[role="status"]');
       expect(status?.getAttribute('id')).toBe('password-warning');
       expect(status?.textContent).toContain('Consider 8+ characters');

@@ -10,9 +10,17 @@ import {
 import { FORM_FIELD, type FieldState } from '@angular/forms/signals';
 import { createAriaRequiredSignal } from '../utilities/aria/create-aria-required-signal';
 import {
+  DEFAULT_NGX_SIGNAL_FORMS_CONFIG,
   NGX_SIGNAL_FORM_ARIA_MODE,
   NGX_SIGNAL_FORM_HINT_REGISTRY,
+  NGX_SIGNAL_FORMS_CONFIG,
 } from '../tokens';
+import { shouldShowWarnings } from '../utilities/error-strategies';
+import { injectFormContext } from '../utilities/inject-form-context';
+import {
+  resolveSubmittedStatusFromContext,
+  resolveWarningStrategyFromContext,
+} from '../utilities/resolve-strategy';
 import { createAriaInvalidSignal } from '../utilities/aria/create-aria-invalid-signal';
 import {
   generateErrorId,
@@ -98,18 +106,17 @@ export class NgxSignalFormAutoAria {
   }
 
   #shouldShowBy(errorType: 'blocking' | 'warning'): boolean {
+    if (errorType === 'warning') {
+      return this.#warningVisibilityByStrategy();
+    }
+
     const fieldState = this.#resolveFieldState();
 
     if (!fieldState) {
       return false;
     }
 
-    const errors = fieldState.errors();
-
-    const hasMatchingErrors = errors.some(
-      errorType === 'blocking' ? isBlockingError : isWarningError,
-    );
-    if (!hasMatchingErrors) return false;
+    if (!fieldState.errors().some(isBlockingError)) return false;
 
     return this.#visibilityByStrategy();
   }
@@ -175,6 +182,40 @@ export class NgxSignalFormAutoAria {
     this.#resolveFieldState(),
   );
 
+  readonly #formContext = injectFormContext();
+  readonly #config =
+    inject(NGX_SIGNAL_FORMS_CONFIG, { optional: true }) ??
+    DEFAULT_NGX_SIGNAL_FORMS_CONFIG;
+
+  /**
+   * Warning-visibility timing, resolved through the **warning** cascade
+   * rather than {@link #visibilityByStrategy}.
+   *
+   * This must not reuse the error gate. `NgxFormFieldError` decides whether
+   * to render its `role="status"` region from the warning cascade, so gating
+   * the `${fieldName}-warning` id on the error strategy makes the two
+   * diverge the moment the strategies differ: a form with
+   * `errorStrategy="on-submit"` and `warningStrategy="immediate"` renders a
+   * visible warning that `aria-describedby` never references, leaving the
+   * advisory text unavailable to assistive technology (WCAG 1.3.1).
+   */
+  readonly #warningVisibilityByStrategy = computed(() => {
+    const fieldState = this.#resolveFieldState();
+    if (!fieldState) return false;
+
+    return shouldShowWarnings(
+      fieldState.errors().some(isWarningError),
+      fieldState.touched(),
+      resolveWarningStrategyFromContext(
+        undefined,
+        this.#formContext,
+        this.#config.defaultWarningStrategy,
+      ),
+      resolveSubmittedStatusFromContext(undefined, this.#formContext) ??
+        'unsubmitted',
+    );
+  });
+
   /**
    * Hint IDs from the identity service when available, falling back to the
    * hint registry snapshot when the identity service is absent. Delegates
@@ -223,6 +264,7 @@ export class NgxSignalFormAutoAria {
     fieldState: this.#fieldStateSignal,
     hintIds: this.#hintIds,
     visibility: this.#visibilityByStrategy,
+    warningVisibility: this.#warningVisibilityByStrategy,
     preservedIds: () => this.#domSnapshot().describedBy,
     fieldName: () => this.#domSnapshot().fieldName,
   });
