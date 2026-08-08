@@ -36,7 +36,7 @@ releases will not include any of the renames below.
 - **New: error summary** — `NgxFormFieldErrorSummary` + headless directive
 - **New: field labels** — `provideFieldLabels()` + warning/error split utilities
 - **Debugger moved internal** — use `@ngx-signal-forms/debugger` in this repo's demos
-- **New: `warningStrategy`** — decouples warning visibility from error timing; default `'immediate'`
+- **New: `warningStrategy`** — decouples warning visibility from error timing; default `'on-touch'`, configurable via `defaultWarningStrategy`
 - **New: `NgxFormField` bundle** — convenience import array of wrapper + assistive parts + auto-ARIA directive
 - **New: fieldset toggle** — `includeNestedErrors` on fieldset; `submittedStatus` override input
 - **New: error component APIs** — `errors`, `listStyle`, `submittedStatus` inputs on `NgxFormFieldError`
@@ -725,9 +725,12 @@ import { NgxSignalFormDebugger } from '@ngx-signal-forms/debugger';
 
 `NgxFormFieldError` (and by extension the wrapper / assistive bundle)
 now accepts a `warningStrategy` input that is independent from the error
-`strategy`. It defaults to `'immediate'` so advisory messages such as
-"consider 12+ characters" appear as the user types, even when errors are gated
-with `'on-touch'` or `'on-submit'`.
+`strategy`. It resolves through its own cascade — input → form context →
+`NGX_SIGNAL_FORMS_CONFIG.defaultWarningStrategy` → `'on-touch'` — which never
+consults `defaultErrorStrategy`, so a form gated with `'on-submit'` for blocking
+errors keeps its own warning timing. Set `warningStrategy="immediate"` (or
+`defaultWarningStrategy: 'immediate'`) for advisory messages such as
+"consider 12+ characters" that should appear as the user types.
 
 See [`WARNINGS_SUPPORT.md`](./WARNINGS_SUPPORT.md#when-warnings-appear--warningstrategy)
 for the full input table and worked example. No migration action is required
@@ -1106,7 +1109,7 @@ The wrapper previously only mounted its projected error/warning renderer
 when the **blocking-error** strategy (`strategy`, default `'on-touch'`)
 said errors should show — so a warnings-only field never rendered anything
 until the field was touched (or submitted), even though `NgxFormFieldError`
-defaults its own warning timing to `'immediate'`. The wrapper now exposes a
+times its warnings on its own independent cascade. The wrapper now exposes a
 `warningStrategy` input (forwarded to the renderer) and mounts the renderer
 whenever errors **or** warnings should be visible, matching the
 already-documented "warning timing is independent of error timing"

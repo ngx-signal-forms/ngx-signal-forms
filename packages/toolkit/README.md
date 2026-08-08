@@ -462,9 +462,16 @@ names:
   an **opt-in** middle step. Omit `labelFor` and the two paths emit the same
   name byte-for-byte.
 
-The `set*` writer methods are package-internal (stripped from the published
-`.d.ts`): the surrounding `ngx-form-field-wrapper` **drives** the identity, and
-consumers **read** the resolved signals — they do not drive them.
+The `set*` writer methods are tagged `@internal`: the surrounding
+`ngx-form-field-wrapper` **drives** the identity, and consumers **read** the
+resolved signals — they do not drive them. The tag is a convention, not a
+compile-time barrier — `stripInternal` is not enabled, so the writers do appear
+in the published `.d.ts`. Treat them as unsupported and subject to change.
+
+Building a wrapper of your own? Don't reach for the writers — compose the pure
+ARIA factories (`createAriaDescribedBySignal`, `createAriaInvalidSignal`, …)
+instead. That is the supported seam, and it is what
+[`CUSTOM_WRAPPERS.md`](../../docs/CUSTOM_WRAPPERS.md) documents.
 
 #### Custom control example
 

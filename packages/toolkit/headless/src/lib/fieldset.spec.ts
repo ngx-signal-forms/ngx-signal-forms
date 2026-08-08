@@ -464,9 +464,9 @@ describe('NgxHeadlessFieldset', () => {
   });
 
   describe('warningStrategy', () => {
-    it('defaults warnings to "immediate" even when the blocking-error strategy is "on-submit"', async () => {
+    it('does not inherit the blocking-error strategy "on-submit" for warnings', async () => {
       @Component({
-        selector: 'ngx-test-fieldset-warning-default-immediate',
+        selector: 'ngx-test-fieldset-warning-default-independent',
 
         imports: [FormRoot, NgxSignalForm, NgxHeadlessFieldset],
         template: `
@@ -519,12 +519,16 @@ describe('NgxHeadlessFieldset', () => {
       // Blocking-error strategy is 'on-submit' and the form has not been
       // submitted, so blocking errors stay hidden...
       expect(screen.getByTestId('show-errors')).toHaveTextContent('false');
-      // ...but the warning defaults to 'immediate' independently, so it
-      // surfaces right away — matching NgxFormFieldWrapper's contract.
+      // ...and the warning channel resolves through its OWN cascade, landing
+      // on the 'on-touch' terminal rather than inheriting 'on-submit'. This
+      // is the defect from issue #264: no tier may reach into the error
+      // channel.
       expect(screen.getByTestId('resolved-warning-strategy')).toHaveTextContent(
-        'immediate',
+        'on-touch',
       );
-      expect(screen.getByTestId('show-warnings')).toHaveTextContent('true');
+      // Untouched, so 'on-touch' correctly keeps the warning hidden — but for
+      // its own reason, not the form's error strategy.
+      expect(screen.getByTestId('show-warnings')).toHaveTextContent('false');
     });
 
     it('honours an explicit warningStrategy="on-submit" override, delaying warnings until submit', async () => {
@@ -594,6 +598,7 @@ describe('NgxHeadlessFieldset', () => {
             [field]="addressForm.address"
             includeNestedErrors
             strategy="immediate"
+            warningStrategy="immediate"
           >
             <span data-testid="show-errors">
               {{ fieldset.shouldShowErrors() }}
@@ -629,9 +634,9 @@ describe('NgxHeadlessFieldset', () => {
 
       await render(TestComponent);
 
-      // Both are gated by 'immediate'-family strategies, so both are
-      // visible at once — shouldShowWarnings is no longer suppressed just
-      // because shouldShowErrors is true (matches
+      // Both channels are explicitly set to 'immediate', so both are visible
+      // at once — shouldShowWarnings is no longer suppressed just because
+      // shouldShowErrors is true (matches
       // NgxHeadlessErrorSummary.shouldShowWarnings).
       expect(screen.getByTestId('show-errors')).toHaveTextContent('true');
       expect(screen.getByTestId('show-warnings')).toHaveTextContent('true');

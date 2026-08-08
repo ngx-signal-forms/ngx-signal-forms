@@ -21,6 +21,8 @@ import type {
   FormFieldOrientationInput,
   NgxFormFieldErrorPlacement,
   ResolvedMarker,
+  ResolvedWarningDisplayStrategy,
+  WarningDisplayStrategy,
 } from '@ngx-signal-forms/toolkit';
 import {
   NGX_FORM_FIELD_ERROR_RENDERER,
@@ -35,9 +37,11 @@ import {
   isFormFieldOrientation,
   isWarningError,
   readDirectErrors,
+  shouldShowWarnings,
   type ResolvedNgxSignalFormControlSemantics,
   resolveErrorDisplayStrategy,
   resolveStrategyFromContext,
+  resolveWarningStrategyFromContext,
 } from '@ngx-signal-forms/toolkit';
 import {
   NGX_SIGNAL_FORM_HINT_REGISTRY,
@@ -177,7 +181,7 @@ import {
 @Component({
   selector: 'ngx-form-field-wrapper',
 
-  imports: [NgComponentOutlet],
+  imports: [NgComponentOutlet, NgxFormFieldError],
   providers: [
     NgxFieldIdentity,
     {
@@ -383,9 +387,9 @@ export class NgxFormFieldWrapper<TValue = unknown> {
    * renderer at all: it renders whenever blocking errors OR warnings
    * should be visible, not just on the blocking-error timing.
    *
-   * @default `'immediate'`
+   * @default `'on-touch'`
    */
-  readonly warningStrategy = input<ErrorDisplayStrategy | undefined>();
+  readonly warningStrategy = input<WarningDisplayStrategy | undefined>();
 
   /**
    * Placement of the automatic error or warning messages.
@@ -476,7 +480,7 @@ export class NgxFormFieldWrapper<TValue = unknown> {
    * `warningStrategy` and `fieldName` are extras beyond that minimal
    * contract: `warningStrategy` forwards this input's value (`undefined`
    * when unset, which is a no-op for the default `NgxFormFieldError`'s own
-   * `'immediate'` fallback) so consumers can override warning timing
+   * warning cascade) so consumers can override warning timing
    * through the wrapper instead of only through a directly-projected
    * `NgxFormFieldError`. `fieldName` lets a custom renderer satisfy the
    * `${fieldName}-error` / `${fieldName}-warning` id contract (see
@@ -977,46 +981,48 @@ export class NgxFormFieldWrapper<TValue = unknown> {
   });
 
   /**
-   * Effective warning display strategy. Defaults to `'immediate'` (mirrors
-   * `NgxFormFieldError`'s own default) so advisory messages stay visible
-   * even when blocking errors are gated by `'on-touch'` / `'on-submit'` —
-   * unlike {@link effectiveStrategy}, an unset {@link warningStrategy} does
-   * NOT fall back to the form context or global config default, matching
-   * the projected error renderer's contract exactly.
+   * Effective warning display strategy. Parallels {@link effectiveStrategy}
+   * but stays entirely inside the warning channel:
+   * explicit input → form context `warningStrategy()` → config
+   * `defaultWarningStrategy` → `'on-touch'`.
+   *
+   * No tier consults `defaultErrorStrategy`, so a form gated to
+   * `'on-submit'` for blocking errors does not also gate its warnings.
    */
-  protected readonly effectiveWarningStrategy = computed<ErrorDisplayStrategy>(
-    () => {
-      const explicit = this.warningStrategy();
-      if (explicit !== undefined) {
-        return resolveStrategyFromContext(explicit, this.#formContext);
-      }
-      return 'immediate';
-    },
-  );
-
-  /**
-   * Visibility-timing computed for warnings, independent of
-   * {@link effectiveStrategy} (which only governs blocking errors).
-   */
-  readonly #showWarningsByStrategy = createShowErrorsComputed(
-    this.#fieldState,
-    this.effectiveWarningStrategy,
-    this.submittedStatus,
-  );
+  protected readonly effectiveWarningStrategy =
+    computed<ResolvedWarningDisplayStrategy>(() =>
+      resolveWarningStrategyFromContext(
+        this.warningStrategy(),
+        this.#formContext,
+        this.#config.defaultWarningStrategy,
+      ),
+    );
 
   /**
    * Whether the error renderer should mount to show warnings, evaluated
    * independently of {@link shouldShowErrors}. Without this, a warnings-only
    * field would never render `NgxFormFieldError` at all when
-   * {@link effectiveStrategy} (e.g. `'on-touch'`) gates the blocking-error
-   * timing — the renderer's own `warningStrategy` default of `'immediate'`
-   * never gets a chance to run because the `@if` around the outlet in the
-   * template never mounts it. See README "Warning support".
+   * {@link effectiveStrategy} (e.g. `'on-submit'`) gates the blocking-error
+   * timing — the renderer's own warning cascade never gets a chance to run
+   * because the `@if` around the outlet in the template never mounts it.
+   * See README "Warning support".
    */
   protected readonly shouldShowWarnings = computed(() => {
     if (this.isFieldHidden()) return false;
-    if (!this.hasWarnings()) return false;
-    return this.#showWarningsByStrategy();
+
+    const hasWarnings = this.hasWarnings();
+    if (!hasWarnings) return false;
+
+    const isTouched = this.#fieldState()?.touched?.() ?? false;
+    const strategy = this.effectiveWarningStrategy();
+    const submittedStatus = this.submittedStatus() ?? 'unsubmitted';
+
+    return shouldShowWarnings(
+      hasWarnings,
+      isTouched,
+      strategy,
+      submittedStatus,
+    );
   });
 
   /**
@@ -1279,6 +1285,13 @@ export class NgxFormFieldWrapper<TValue = unknown> {
 
         this.#fieldIdentity.setFieldName(resolvedFieldName);
         this.#fieldIdentity.setControlElement(inputEl);
+        // Publish both resolved strategies so `NgxSignalFormAutoAria` gates
+        // `aria-describedby` on this wrapper's field-level overrides rather
+        // than only on the ambient form context.
+        this.#fieldIdentity.setResolvedStrategies(
+          this.effectiveStrategy(),
+          this.effectiveWarningStrategy(),
+        );
         this.#fieldIdentity.setControlVisible(
           inputEl ? isElementCssVisible(inputEl) : true,
         );

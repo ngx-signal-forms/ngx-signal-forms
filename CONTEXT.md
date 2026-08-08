@@ -59,10 +59,27 @@ ngx-signal-forms — an Angular toolkit for working with Signal Forms.
 - **One cascade seam** — error-visibility timing is composed once, in
   `createErrorVisibility()`, and consumers call it rather than re-inlining the
   `resolveStrategyFromContext` → `resolveSubmittedStatusFromContext` →
-  `createShowErrorsComputed` chain. Five in-tree surfaces **still inline it**
-  and the copies have drifted to two different answers for
-  `warningStrategy="inherit"` outside a form host; bringing them onto the seam
-  is open work. See [ADR-0006](docs/decisions/0006-one-cascade-seam.md).
+  `createShowErrorsComputed` chain. Several in-tree surfaces **still inline it**
+  for blocking errors; bringing them onto the seam is open work. See
+  [ADR-0006](docs/decisions/0006-one-cascade-seam.md). The **warning** channel
+  is already consolidated: all surfaces resolve through
+  `resolveWarningStrategyFromContext()` (input → form context
+  `warningStrategy()` → `defaultWarningStrategy` → `'on-touch'`), which fixed
+  the drift where `warningStrategy="inherit"` gave two different answers
+  outside a form host. See
+  [ADR-0007](docs/decisions/0007-warning-display-timing-cascade.md).
+
+- **`aria-describedby` tracks what is rendered, not what is validated.**
+  `NgxSignalFormAutoAria` composes the control's `aria-describedby` from the
+  same two visibility decisions the renderer uses — the error cascade for
+  `{name}-error`, the warning cascade for `{name}-warning` — so a rendered
+  region is always referenced and a suppressed one never is. Field-level
+  overrides reach it because `NgxFormFieldWrapper` publishes both resolved
+  strategies via `NgxFieldIdentity.setResolvedStrategies()`; auto-aria on its
+  own sees only the form context. Any new surface that gates a message region
+  must feed its decision through the same channel, or it will produce a
+  dangling id (axe `aria-valid-attr-value`) or an unreferenced one
+  (WCAG 1.3.1).
   The rule is narrow on purpose: it applies to the strategy/visibility cascade,
   where the copies encode _one_ contract. Where duplicated-looking code encodes
   _different_ contracts — direct `errors()` vs aggregated `errorSummary()`

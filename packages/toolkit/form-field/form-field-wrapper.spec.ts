@@ -2550,17 +2550,64 @@ describe('NgxSignalFormWrapperComponent', () => {
     // blocking-error strategy (default 'on-touch') even when the field's
     // only messages are warnings. A warnings-only, UNTOUCHED field would
     // therefore never mount `NgxFormFieldError` at all, so its own
-    // `warningStrategy` default of 'immediate' never got a chance to run —
-    // the README's documented "warning timing is independent of error
-    // timing" was unreachable through the wrapper. `shouldRenderErrorSlot`
-    // now mounts the renderer whenever errors OR warnings should show.
-    it('renders the warning immediately on an untouched field under the default on-touch error strategy', async () => {
+    // `warningStrategy` never got a chance to run — the README's documented
+    // "warning timing is independent of error timing" was unreachable through
+    // the wrapper. `shouldRenderErrorSlot` now mounts the renderer whenever
+    // errors OR warnings should show.
+    //
+    // `warningStrategy="immediate"` is set explicitly here: the default is
+    // 'on-touch', which on an untouched field would hide the warning for the
+    // *right* reason and so could not distinguish a fixed mount from a broken
+    // one. See the sibling test below for the default's own coverage.
+    it('shows warnings on untouched fields when warningStrategy is immediate', async () => {
       const untouchedWarningField = signal({
         invalid: () => true,
         touched: () => false,
         errors: () => [
           { kind: 'warn:weak-password', message: 'Consider 8+ characters' },
         ],
+        hasWarnings: () => true,
+      });
+
+      const { container } = await render(
+        `<ngx-form-field-wrapper
+          [formField]="field"
+          fieldName="password"
+          warningStrategy="immediate"
+        >
+          <label for="password">Password</label>
+          <input id="password" type="password" />
+        </ngx-form-field-wrapper>`,
+        {
+          imports: [NgxSignalFormWrapperComponent],
+          providers: [
+            {
+              provide: NGX_SIGNAL_FORMS_CONFIG,
+              useValue: DEFAULT_NGX_SIGNAL_FORMS_CONFIG,
+            },
+          ],
+          componentProperties: { field: untouchedWarningField },
+        },
+      );
+
+      // The renderer mounted despite the blocking-error strategy ('on-touch')
+      // gating errors on this untouched field.
+      const status = container.querySelector('[role="status"]');
+      expect(status?.getAttribute('id')).toBe('password-warning');
+      expect(status?.textContent).toContain('Consider 8+ characters');
+      // No blocking error, so the alert container stays empty/unlinked.
+      const alert = container.querySelector('[role="alert"]');
+      expect(alert?.getAttribute('id')).not.toBe('password-error');
+    });
+
+    it('gates warnings behind touch under the default warning strategy', async () => {
+      const untouchedWarningField = signal({
+        invalid: () => true,
+        touched: () => false,
+        errors: () => [
+          { kind: 'warn:weak-password', message: 'Consider 8+ characters' },
+        ],
+        hasWarnings: () => true,
       });
 
       const { container } = await render(
@@ -2570,25 +2617,30 @@ describe('NgxSignalFormWrapperComponent', () => {
         </ngx-form-field-wrapper>`,
         {
           imports: [NgxSignalFormWrapperComponent],
+          providers: [
+            {
+              provide: NGX_SIGNAL_FORMS_CONFIG,
+              useValue: DEFAULT_NGX_SIGNAL_FORMS_CONFIG,
+            },
+          ],
           componentProperties: { field: untouchedWarningField },
         },
       );
 
+      // Default `defaultWarningStrategy` is 'on-touch', so an untouched field
+      // shows nothing — a warning judges a value the user has not committed.
       const status = container.querySelector('[role="status"]');
-      expect(status?.getAttribute('id')).toBe('password-warning');
-      expect(status?.textContent).toContain('Consider 8+ characters');
-      // No blocking error, so the alert container stays empty/unlinked.
-      const alert = container.querySelector('[role="alert"]');
-      expect(alert?.getAttribute('id')).not.toBe('password-error');
+      expect(status?.textContent?.trim() ?? '').toBe('');
     });
 
-    it('respects an explicit strategy="on-submit" for a warnings-only field with the immediate warningStrategy default', async () => {
+    it('respects an explicit strategy="on-submit" for a touched warnings-only field', async () => {
       const unsubmittedWarningField = signal({
         invalid: () => true,
         touched: () => true,
         errors: () => [
           { kind: 'warn:weak-password', message: 'Consider 8+ characters' },
         ],
+        hasWarnings: () => true,
       });
 
       const { container } = await render(
@@ -2602,13 +2654,19 @@ describe('NgxSignalFormWrapperComponent', () => {
         </ngx-form-field-wrapper>`,
         {
           imports: [NgxSignalFormWrapperComponent],
+          providers: [
+            {
+              provide: NGX_SIGNAL_FORMS_CONFIG,
+              useValue: DEFAULT_NGX_SIGNAL_FORMS_CONFIG,
+            },
+          ],
           componentProperties: { field: unsubmittedWarningField },
         },
       );
 
-      // Warning is visible immediately even though the field hasn't been
-      // submitted — 'immediate' is the warningStrategy default, and it is
-      // NOT the same signal as the wrapper's own (on-submit) `strategy`.
+      // The field is touched but unsubmitted. The warning shows because the
+      // warningStrategy default ('on-touch') is satisfied; the wrapper's own
+      // `strategy` ('on-submit') is NOT the same signal and does not gate it.
       const status = container.querySelector('[role="status"]');
       expect(status?.getAttribute('id')).toBe('password-warning');
       expect(status?.textContent).toContain('Consider 8+ characters');
@@ -2621,6 +2679,7 @@ describe('NgxSignalFormWrapperComponent', () => {
         errors: () => [
           { kind: 'warn:weak-password', message: 'Consider 8+ characters' },
         ],
+        hasWarnings: () => true,
       });
 
       const { container, fixture } = await render(

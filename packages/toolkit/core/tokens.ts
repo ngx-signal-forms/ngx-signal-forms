@@ -32,6 +32,7 @@ export interface NgxSignalFormFieldContext {
 export const DEFAULT_NGX_SIGNAL_FORMS_CONFIG = {
   autoAria: true,
   defaultErrorStrategy: 'on-touch',
+  defaultWarningStrategy: 'on-touch',
   defaultFormFieldAppearance: 'standard',
   defaultFormFieldOrientation: 'vertical',
   showMarkerWhen: 'required',

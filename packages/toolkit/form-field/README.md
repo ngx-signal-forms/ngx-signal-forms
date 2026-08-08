@@ -190,9 +190,9 @@ Warnings (errors with `kind` starting with `warn:`) display automatically:
   implicit live-region semantics of those roles — no explicit `aria-live`)
 
 Warning **display timing** is independent from error timing. The wrapper
-exposes a `warningStrategy` input (default `'immediate'`, forwarded to the
-projected `NgxFormFieldError`) so advisory messages stay visible even when
-errors are gated by `'on-touch'` or `'on-submit'` — the wrapper mounts its
+exposes a `warningStrategy` input (default `'on-touch'`, forwarded to the
+projected `NgxFormFieldError`) so advisory messages keep their own timing even
+when errors are gated by `'on-submit'` — the wrapper mounts its
 error/warning renderer whenever either should be visible, not just on the
 blocking-error timing. See
 [`WARNINGS_SUPPORT.md`](https://github.com/ngx-signal-forms/ngx-signal-forms/blob/main/docs/WARNINGS_SUPPORT.md#when-warnings-appear--warningstrategy).
@@ -255,9 +255,9 @@ aggregation signals without any prebuilt markup, drop down to
 ### Warning support
 
 Like `ngx-form-field-wrapper`, the fieldset decouples warning **display timing**
-from blocking-error timing: `warningStrategy` defaults to `'immediate'` so
-aggregated warnings stay visible even when `strategy` is `'on-touch'` or
-`'on-submit'`.
+from blocking-error timing: `warningStrategy` defaults to `'on-touch'` and
+resolves through its own cascade, so aggregated warnings keep their own timing
+even when `strategy` is `'on-submit'`.
 
 The rendered grouped-message slot (compact text or notification card) is a
 single region, so **visual priority still goes to blocking errors** when both

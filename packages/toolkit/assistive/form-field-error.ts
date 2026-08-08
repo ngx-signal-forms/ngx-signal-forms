@@ -8,11 +8,7 @@ import {
 } from '@angular/core';
 import type { FieldTree, ValidationError } from '@angular/forms/signals';
 import {
-  injectFormContext,
   NGX_SIGNAL_FORM_FIELD_CONTEXT,
-  NGX_SIGNAL_FORMS_CONFIG,
-  resolveStrategyFromContext,
-  showErrors,
   unwrapValue,
   type ErrorDisplayStrategy,
   type ResolvedErrorDisplayStrategy,
@@ -47,8 +43,11 @@ export type NgxFormFieldErrorListStyle = NgxFormFieldListStyle;
  *
  * - Template rendering (live regions, list/paragraph layouts)
  * - `fieldName` resolution from `NGX_SIGNAL_FORM_FIELD_CONTEXT` (parent wrapper)
- * - `warningStrategy` with its `'immediate'` default
  * - `listStyle` for visual layout choice
+ *
+ * `strategy` and `warningStrategy` are *forwarded* to the headless directive,
+ * not redeclared here — the two cascades resolve in one place. See
+ * `NgxHeadlessErrorState.warningStrategy` for the warning cascade.
  *
  * ## Bridge pattern for `formField`
  *
@@ -91,7 +90,7 @@ export type NgxFormFieldErrorListStyle = NgxFormFieldListStyle;
  * Features:
  * - **Errors**: `role="alert"` (implies `aria-live="assertive"` + `aria-atomic="true"`)
  * - **Warnings**: `role="status"` (implies `aria-live="polite"` + `aria-atomic="true"`)
- * - Strategy-aware error/warning display — warnings default to `'immediate'`
+ * - Strategy-aware error/warning display — warnings follow their own cascade
  *   so informational feedback stays visible; override via `warningStrategy`
  * - Structured rendering from Signal Forms
  * - Auto-generated IDs for aria-describedby linking
@@ -115,6 +114,10 @@ export type NgxFormFieldErrorListStyle = NgxFormFieldListStyle;
       directive: NgxHeadlessErrorState,
       inputs: [
         'strategy',
+        // Warnings resolve on their own cascade: this input → form context
+        // `warningStrategy()` → `defaultWarningStrategy` → `'on-touch'`.
+        // No tier consults `defaultErrorStrategy`.
+        'warningStrategy',
         'submittedStatus',
         // `errorsOverride` exposed as `errors` for direct-errors mode
         // (e.g. NgxFormFieldset.filteredErrorsSignal).
@@ -231,21 +234,6 @@ export class NgxFormFieldError {
   protected readonly headless = inject(NgxHeadlessErrorState);
 
   /**
-   * Form context is needed here for the warning-strategy computation,
-   * which is an assistive-layer concern not shared with the headless directive.
-   */
-  readonly #injectedContext = injectFormContext();
-
-  /**
-   * Global toolkit config, needed for the same reason: the warning-strategy
-   * cascade below must fall back to `NGX_SIGNAL_FORMS_CONFIG.defaultErrorStrategy`
-   * exactly like `NgxHeadlessErrorState.#resolvedStrategy` does for blocking
-   * errors, so a standalone `ngx-form-field-error` (no `[ngxSignalForm]` host)
-   * still honours `provideNgxSignalFormsConfig({ defaultErrorStrategy })`.
-   */
-  readonly #config = inject(NGX_SIGNAL_FORMS_CONFIG, { optional: true });
-
-  /**
    * Try to inject field context (optional - provided by form field wrapper).
    * Used to automatically resolve field name when not explicitly provided.
    */
@@ -277,16 +265,6 @@ export class NgxFormFieldError {
    * `ngx-form-field-wrapper` via `NGX_SIGNAL_FORM_FIELD_CONTEXT`.
    */
   readonly fieldName = input<string>();
-
-  /**
-   * Warning display strategy for this specific field.
-   *
-   * Warnings default to `'immediate'` so non-blocking guidance stays
-   * visible even while errors are gated by `'on-touch'` or `'on-submit'`.
-   *
-   * @default `'immediate'`
-   */
-  readonly warningStrategy = input<ErrorDisplayStrategy | undefined>();
 
   /**
    * Visual layout for rendered validation messages.
@@ -383,38 +361,11 @@ export class NgxFormFieldError {
   protected readonly errorId = this.#fieldMessageIds.errorId;
   protected readonly warningId = this.#fieldMessageIds.warningId;
 
-  // ── Warning strategy ──────────────────────────────────────────────────
-  readonly #resolvedWarningStrategy = computed<ResolvedErrorDisplayStrategy>(
-    () => {
-      const explicit = this.warningStrategy();
-      if (explicit !== undefined) {
-        return resolveStrategyFromContext(
-          explicit,
-          this.#injectedContext,
-          this.#config?.defaultErrorStrategy,
-        );
-      }
-      return 'immediate';
-    },
-  );
-
   /**
-   * Warning visibility uses `formField` directly (the class input) and the
-   * headless's resolved submitted status, so warnings stay independent of
-   * the error strategy while still sharing the same submission state.
+   * Warning visibility now uses the headless directive's shouldShowWarnings
+   * which follows the warning-specific strategy cascade, independent of errors.
    */
-  readonly #warningFieldState = computed(() => this.formField()?.());
-
-  readonly #showWarningsByStrategy = showErrors(
-    this.#warningFieldState,
-    this.#resolvedWarningStrategy,
-    this.headless.resolvedSubmittedStatus,
-  );
-
-  protected readonly showWarnings = computed(() => {
-    if (!this.formField()) return true;
-    return this.#showWarningsByStrategy();
-  });
+  protected readonly showWarnings = this.headless.shouldShowWarnings;
 
   // ── Visibility ────────────────────────────────────────────────────────
   protected readonly usesBulletList = computed(

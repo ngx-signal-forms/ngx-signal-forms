@@ -3,6 +3,7 @@ import type { ValidationError } from '@angular/forms/signals';
 import { NGX_SIGNAL_FORMS_CONFIG } from '@ngx-signal-forms/toolkit';
 import {
   assertInjector,
+  DEFAULT_NGX_SIGNAL_FORMS_CONFIG,
   createErrorVisibility,
   generateErrorId,
   NGX_ERROR_MESSAGES,
@@ -236,7 +237,9 @@ export function createErrorMessageSignal(
     // `NgxHeadlessFieldset` applies) when neither an explicit `strategy` nor
     // a form context is present, keeping standalone usage consistent
     // regardless of which headless surface a consumer reaches for.
-    const config = inject(NGX_SIGNAL_FORMS_CONFIG, { optional: true });
+    const config =
+      inject(NGX_SIGNAL_FORMS_CONFIG, { optional: true }) ??
+      DEFAULT_NGX_SIGNAL_FORMS_CONFIG;
 
     const visibilityOptions: CreateErrorVisibilityOptions = {
       ...(options?.strategy !== undefined && { strategy: options.strategy }),

@@ -11,6 +11,7 @@ import {
   type SubmittedStatus,
 } from '@ngx-signal-forms/toolkit';
 import {
+  DEFAULT_NGX_SIGNAL_FORMS_CONFIG,
   NGX_ERROR_MESSAGES,
   NGX_FIELD_LABEL_RESOLVER,
 } from '@ngx-signal-forms/toolkit/core';
@@ -119,7 +120,9 @@ export class NgxHeadlessErrorSummary implements ErrorSummarySignals {
     optional: true,
   });
   readonly #formContext = injectFormContext();
-  readonly #config = inject(NGX_SIGNAL_FORMS_CONFIG, { optional: true });
+  readonly #config =
+    inject(NGX_SIGNAL_FORMS_CONFIG, { optional: true }) ??
+    DEFAULT_NGX_SIGNAL_FORMS_CONFIG;
 
   /**
    * The root form FieldTree to aggregate errors from.

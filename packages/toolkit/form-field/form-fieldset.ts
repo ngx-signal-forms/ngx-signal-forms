@@ -71,7 +71,7 @@ export type NgxFormFieldsetValidationSurface = 'never' | 'always';
  * - **Group-Only Mode**: Show only group-level errors when nested fields display their own
  * - **Deduplication**: Same error shown only once even if multiple fields have it
  * - **Warning Support**: Non-blocking warnings (with `warn:` prefix), timed independently
- *   of blocking errors via `warningStrategy` (defaults to `'immediate'`, mirroring
+ *   of blocking errors via `warningStrategy` (defaults to `'on-touch'`, mirroring
  *   `NgxFormFieldWrapper`); the rendered message slot still gives errors visual
  *   priority when both are present at once (single notification/error region)
  * - **Adaptive Feedback UI**: Notification cards by default, with an optional compact text mode
@@ -394,7 +394,7 @@ export class NgxFormFieldset {
    * Gated on {@link NgxHeadlessFieldset.shouldShowErrors} (visibility), NOT
    * `aggregatedErrors().length > 0` (presence). Those two diverge now that
    * `NgxHeadlessFieldset.shouldShowWarnings` is timed independently via
-   * `warningStrategy` (default `'immediate'`): a blocking error can be
+   * `warningStrategy` (default `'on-touch'`): a blocking error can be
    * *present* but not yet *visible* (e.g. gated behind `strategy="on-submit"`
    * pre-submit) while a warning is already visible. Gating on presence would
    * render the hidden blocking-error content instead of the visible warning

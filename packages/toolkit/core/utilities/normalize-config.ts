@@ -29,6 +29,9 @@ export function normalizeSignalFormsConfig(
     defaultErrorStrategy:
       config.defaultErrorStrategy ??
       DEFAULT_NGX_SIGNAL_FORMS_CONFIG.defaultErrorStrategy,
+    defaultWarningStrategy:
+      config.defaultWarningStrategy ??
+      DEFAULT_NGX_SIGNAL_FORMS_CONFIG.defaultWarningStrategy,
     defaultFormFieldAppearance:
       config.defaultFormFieldAppearance ??
       DEFAULT_NGX_SIGNAL_FORMS_CONFIG.defaultFormFieldAppearance,

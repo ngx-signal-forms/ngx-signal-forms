@@ -64,7 +64,10 @@ export {
 export * from './utilities/create-unique-id';
 export * from './utilities/control-semantics';
 export * from './utilities/form-field-input';
-export { shouldShowErrors } from './utilities/error-strategies';
+export {
+  shouldShowErrors,
+  shouldShowWarnings,
+} from './utilities/error-strategies';
 export {
   isFieldStateHidden,
   isFieldStateInteractive,
@@ -97,6 +100,8 @@ export {
   resolveErrorDisplayStrategy,
   resolveStrategyFromContext,
   resolveSubmittedStatusFromContext,
+  resolveWarningStrategy,
+  resolveWarningStrategyFromContext,
 } from './utilities/resolve-strategy';
 export {
   combineShowErrors,

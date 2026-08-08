@@ -13,13 +13,19 @@ import {
   readDirectErrors,
   resolveStrategyFromContext,
   resolveSubmittedStatusFromContext,
+  resolveWarningStrategyFromContext,
   showErrors,
   splitByKind,
   type ErrorDisplayStrategy,
   type ResolvedErrorDisplayStrategy,
+  type ResolvedWarningDisplayStrategy,
   type SubmittedStatus,
+  type WarningDisplayStrategy,
 } from '@ngx-signal-forms/toolkit';
-import { NGX_ERROR_MESSAGES } from '@ngx-signal-forms/toolkit/core';
+import {
+  DEFAULT_NGX_SIGNAL_FORMS_CONFIG,
+  NGX_ERROR_MESSAGES,
+} from '@ngx-signal-forms/toolkit/core';
 
 import type { ResolvedError } from './error-state';
 import {
@@ -67,7 +73,7 @@ export interface FieldsetStateSignals {
    * Resolved warning display strategy, independent of {@link resolvedStrategy}
    * (which only governs blocking errors). Always a concrete strategy.
    */
-  readonly resolvedWarningStrategy: Signal<ResolvedErrorDisplayStrategy>;
+  readonly resolvedWarningStrategy: Signal<ResolvedWarningDisplayStrategy>;
   /** Resolved submitted status (from input override, form context, or default) */
   readonly resolvedSubmittedStatus: Signal<SubmittedStatus>;
   /** Fieldset validation state flags */
@@ -91,7 +97,7 @@ export interface FieldsetStateSignals {
  * - **Aggregated Errors**: Collects errors from all nested fields via `errorSummary()`
  * - **Deduplication**: Same error shown only once even if multiple fields have it
  * - **Warning Support**: Non-blocking warnings (with `warn:` prefix), timed independently
- *   of blocking errors via `warningStrategy` (defaults to `'immediate'`)
+ *   of blocking errors via `warningStrategy` (defaults to `'on-touch'`)
  * - **Strategy Aware**: Respects error display strategy from form context
  * - **State Flags**: Exposes invalid, valid, touched, dirty, pending states
  * - **Nested Control**: `includeNestedErrors` toggles between aggregated and direct errors
@@ -138,7 +144,9 @@ export class NgxHeadlessFieldset<
   TFieldset = unknown,
 > implements FieldsetStateSignals {
   readonly #formContext = injectFormContext();
-  readonly #config = inject(NGX_SIGNAL_FORMS_CONFIG, { optional: true });
+  readonly #config =
+    inject(NGX_SIGNAL_FORMS_CONFIG, { optional: true }) ??
+    DEFAULT_NGX_SIGNAL_FORMS_CONFIG;
   readonly #errorMessagesRegistry = inject(NGX_ERROR_MESSAGES, {
     optional: true,
   });
@@ -174,27 +182,24 @@ export class NgxHeadlessFieldset<
 
   /**
    * Warning display strategy override, independent of {@link strategy}
-   * (which only governs blocking errors). Mirrors the contract already
-   * established by `NgxFormFieldWrapper.warningStrategy` /
-   * `NgxFormFieldError.warningStrategy`: non-blocking warnings default to
-   * `'immediate'` so advisory feedback stays visible even while blocking
-   * errors are gated by `'on-touch'` / `'on-submit'`.
+   * (which only governs blocking errors). Mirrors the contract established
+   * by `NgxFormFieldWrapper.warningStrategy` /
+   * `NgxFormFieldError.warningStrategy`.
    *
-   * Resolution order differs from {@link strategy} on purpose:
-   * - Explicitly set (including `'inherit'`) → resolved against the ambient
-   *   form context (`resolveStrategyFromContext`), falling back to
-   *   `'on-touch'` if there is none.
-   * - Left unset (`undefined`) → `'immediate'` directly, WITHOUT consulting
-   *   the form context or `NGX_SIGNAL_FORMS_CONFIG.defaultErrorStrategy`.
+   * Resolves through the warning cascade, which parallels {@link strategy}'s
+   * cascade but never reaches into the error channel:
    *
-   * This asymmetry (vs. {@link strategy}'s context/config cascade) is
-   * intentional and matches the wrapper/error-renderer contract exactly —
-   * an unset `warningStrategy` must not silently inherit an ambient
-   * `'on-submit'` strategy meant for blocking errors.
+   * 1. this input, when set and not `'inherit'`
+   * 2. the ambient form context's `warningStrategy()`
+   * 3. `NGX_SIGNAL_FORMS_CONFIG.defaultWarningStrategy`
+   * 4. `'on-touch'`
    *
-   * @default `'immediate'`
+   * No tier consults `defaultErrorStrategy`, so an ambient `'on-submit'`
+   * meant for blocking errors never silently gates warnings.
+   *
+   * @default `'on-touch'`
    */
-  readonly warningStrategy = input<ErrorDisplayStrategy | undefined>();
+  readonly warningStrategy = input<WarningDisplayStrategy | undefined>();
 
   /**
    * Form submission status override.
@@ -236,25 +241,22 @@ export class NgxHeadlessFieldset<
     resolveStrategyFromContext(
       this.strategy(),
       this.#formContext,
-      this.#config?.defaultErrorStrategy ?? 'on-touch',
+      this.#config.defaultErrorStrategy,
     ),
   );
 
   /**
-   * Resolved warning display strategy. See the {@link warningStrategy} input
-   * doc for the resolution cascade — deliberately narrower than
-   * {@link resolvedStrategy}'s: an unset input defaults straight to
-   * `'immediate'` rather than falling through to the form context or global
-   * config default.
+   * Resolved warning display strategy. Uses the full warning cascade:
+   * explicit input → form context warning strategy → config default →
+   * `'on-touch'`.
    */
-  readonly resolvedWarningStrategy = computed<ResolvedErrorDisplayStrategy>(
-    () => {
-      const explicit = this.warningStrategy();
-      if (explicit !== undefined) {
-        return resolveStrategyFromContext(explicit, this.#formContext);
-      }
-      return 'immediate';
-    },
+  readonly resolvedWarningStrategy = computed<ResolvedWarningDisplayStrategy>(
+    () =>
+      resolveWarningStrategyFromContext(
+        this.warningStrategy(),
+        this.#formContext,
+        this.#config.defaultWarningStrategy,
+      ),
   );
 
   /**
