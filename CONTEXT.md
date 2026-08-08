@@ -42,6 +42,26 @@ ngx-signal-forms — an Angular toolkit for working with Signal Forms.
   records known axe violations. The CI `a11y` job diffs the current run against
   this file; new violations trigger auto-issue creation and a baseline update.
   Synonym to avoid: "known violations list" (ambiguous — use "a11y baseline").
+- **Bound path** — the `SchemaPath` a Vest registration is attached to
+  (`validateVest(path.address, suite)` → the bound path is `path.address`). It
+  fixes two things at once: where the resulting errors attach, and what the
+  suite input is. Synonym to avoid: "field path" (that is the Vest-side name,
+  see **Vest field name**).
+- **Suite input** — the value a Vest suite's callback receives. **The bound
+  path's value _is_ the suite input.** Binding to the form root gives the suite
+  the whole model; binding to a subtree gives it that subtree's value, and is
+  correct only when the suite is authored for that shape. Synonyms to avoid:
+  "model" (misleading once a subtree is bound), "form value".
+- **Vest field name** — the string a Vest `test()` is registered under, e.g.
+  `test('city', …)`. **Relative to the bound path**, never to the form root,
+  because the suite only ever sees the suite input. A name that resolves to no
+  field is either a **virtual Vest field name** or an authoring bug, split by
+  shape: an unresolvable _first_ segment is virtual; a valid prefix with an
+  invalid tail (`address.cityy`) is a typo and fails hard in dev mode.
+- **Virtual Vest field name** — a Vest field name that deliberately matches no
+  field in the suite input, used to carry a form-level error
+  (`test('passwordMatch', 'Passwords must match', …)`). It attaches to the bound
+  field. Legitimate and silent — the toolkit must not treat it as an error.
 
 ## Key concepts
 
@@ -93,3 +113,18 @@ ngx-signal-forms — an Angular toolkit for working with Signal Forms.
   hand-enumerates the public surface rather than re-exporting `/core`
   wholesale, so `@internal` plumbing stays out of the shipped `.d.ts`. A symbol
   tagged `@public` inside `/core` is only public if the root barrel lists it.
+
+- **A Vest registration binds a path and a suite that must agree.** The
+  **bound path**'s value is the **suite input**, and **Vest field names** are
+  relative to that path. There is no second value source: Angular's
+  `FieldContext` exposes no parent or root accessor, so a registration cannot
+  reach past its own path to fetch the model. This is why `focusCurrentField`
+  and field-scoped registration were **deleted** rather than repaired — they
+  bound a suite to a leaf while the suite expected the model, so
+  `suite.run(<the field's string>)` made every `data.x` read `undefined` and
+  produced a blocking error that never cleared, on a valid value. Do not
+  reintroduce a "bind here, read the model from over there" shape: the
+  descendant relation between the two paths is not expressible in TypeScript, so
+  its central invariant cannot be enforced. Automatic per-field focus is a
+  _root-level_ concern instead — see
+  [ADR-0008](docs/decisions/0008-vest-suite-input-is-the-bound-path.md).
