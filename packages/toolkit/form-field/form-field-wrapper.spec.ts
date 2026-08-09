@@ -1502,6 +1502,138 @@ describe('NgxSignalFormWrapperComponent', () => {
       ).toBeTruthy();
     });
 
+    it('relocates required-ness for a required checkbox cluster (role="group") into a visually-hidden aria-describedby hint', async () => {
+      // Regression coverage for
+      // https://github.com/ngx-signal-forms/ngx-signal-forms/issues/300:
+      // `role="group"` does not support `aria-required` (only `radiogroup`
+      // does), so `NgxSignalFormAutoAria` never writes it here. Required-ness
+      // must still be perceivable, though, so the wrapper relocates it into a
+      // visually-hidden node wired into `aria-describedby` — independent of
+      // whether an error is currently visible.
+      const validField = signal({
+        invalid: () => false,
+        touched: () => false,
+        errors: () => [],
+      });
+
+      const { container } = await render(
+        `<ngx-form-field-wrapper [formField]="field" fieldName="consent">
+          <span ngxFormFieldLabel>Consent</span>
+          <div>
+            <label>
+              <input id="consent-read" type="checkbox" required />
+              I have read the terms
+            </label>
+            <label>
+              <input id="consent-agree" type="checkbox" required />
+              I agree to the terms
+            </label>
+          </div>
+        </ngx-form-field-wrapper>`,
+        {
+          imports: [NgxSignalFormWrapperComponent],
+          componentProperties: {
+            field: validField,
+          },
+        },
+      );
+
+      const wrapper = container.querySelector('ngx-form-field-wrapper');
+      expect(wrapper).toHaveAttribute('role', 'group');
+      expect(wrapper).not.toHaveAttribute('aria-required');
+      expect(wrapper).toHaveAttribute(
+        'aria-describedby',
+        'consent-required-hint',
+      );
+
+      const requiredHint = container.querySelector('#consent-required-hint');
+      expect(requiredHint).toBeTruthy();
+      expect(requiredHint).not.toHaveAttribute('aria-hidden');
+      expect(requiredHint?.textContent).toBe('required');
+    });
+
+    it('does NOT relocate a required hint for a non-required checkbox cluster', async () => {
+      const validField = signal({
+        invalid: () => false,
+        touched: () => false,
+        errors: () => [],
+      });
+
+      const { container } = await render(
+        `<ngx-form-field-wrapper [formField]="field" fieldName="consent">
+          <span ngxFormFieldLabel>Consent</span>
+          <div>
+            <label>
+              <input id="consent-read" type="checkbox" />
+              I have read the terms
+            </label>
+            <label>
+              <input id="consent-agree" type="checkbox" />
+              I agree to the terms
+            </label>
+          </div>
+        </ngx-form-field-wrapper>`,
+        {
+          imports: [NgxSignalFormWrapperComponent],
+          componentProperties: {
+            field: validField,
+          },
+        },
+      );
+
+      const wrapper = container.querySelector('ngx-form-field-wrapper');
+      expect(wrapper).toHaveAttribute('role', 'group');
+      expect(wrapper).not.toHaveAttribute('aria-describedby');
+      expect(
+        container.querySelector('#consent-required-hint'),
+      ).not.toBeTruthy();
+    });
+
+    it('renders a config-provided requiredHintText instead of the English default (issue #300 localization)', async () => {
+      // `requiredHintText` must flow from `NGX_SIGNAL_FORMS_CONFIG` — same
+      // seam as `requiredLegendText` — so a non-English app isn't stuck
+      // announcing a hardcoded English word in the cluster's description.
+      const validField = signal({
+        invalid: () => false,
+        touched: () => false,
+        errors: () => [],
+      });
+
+      const { container } = await render(
+        `<ngx-form-field-wrapper [formField]="field" fieldName="consent">
+          <span ngxFormFieldLabel>Consent</span>
+          <div>
+            <label>
+              <input id="consent-read" type="checkbox" required />
+              I have read the terms
+            </label>
+            <label>
+              <input id="consent-agree" type="checkbox" required />
+              I agree to the terms
+            </label>
+          </div>
+        </ngx-form-field-wrapper>`,
+        {
+          imports: [NgxSignalFormWrapperComponent],
+          providers: [
+            {
+              provide: NGX_SIGNAL_FORMS_CONFIG,
+              useValue: {
+                ...DEFAULT_NGX_SIGNAL_FORMS_CONFIG,
+                requiredHintText: 'obligatoire',
+              },
+            },
+          ],
+          componentProperties: {
+            field: validField,
+          },
+        },
+      );
+
+      const requiredHint = container.querySelector('#consent-required-hint');
+      expect(requiredHint?.textContent).toBe('obligatoire');
+    });
+
     it('merges an author-supplied aria-describedby with the cluster-managed error id instead of clobbering it', async () => {
       // Regression guard: `[attr.aria-describedby]` on the host is always
       // active (Angular host bindings can't be conditionally applied at

@@ -8,7 +8,10 @@ import {
   schema,
   validate,
 } from '@angular/forms/signals';
-import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit';
+import {
+  NgxSignalFormToolkit,
+  provideNgxSignalFormsConfig,
+} from '@ngx-signal-forms/toolkit';
 import { render } from '@testing-library/angular';
 import { page, userEvent } from 'vitest/browser';
 import { describe, expect, it } from 'vitest';
@@ -329,20 +332,66 @@ describe('form-field wrapper — WCAG 2.2 AA conformance', () => {
         .element(page.getByRole('alert'))
         .toHaveTextContent('Consent is required');
 
-      // KNOWN VIOLATION, filed as
-      // https://github.com/ngx-signal-forms/ngx-signal-forms/issues/300 (not
-      // fixed here — see the module doc comment above this `describe` block
-      // on the toolkit's scope guard for newly discovered defects): a
-      // required checkbox cluster puts `aria-required="true"` on the wrapper
-      // host alongside `role="group"`. `group` does not support
-      // `aria-required` in the ARIA spec (only `radiogroup` does among the
-      // roles this wrapper emits), so axe's `aria-allowed-attr` rule fires
-      // here — confirmed via the rendered wrapper: `role="group"
-      // aria-required="true"`. Scoped out here so the rest of the WCAG 2.2 AA
-      // gate stays a hard failure; remove this exclusion once #300 lands.
-      await expectNoA11yViolations(container, {
-        rules: { 'aria-allowed-attr': { enabled: false } },
+      // Regression coverage for
+      // https://github.com/ngx-signal-forms/ngx-signal-forms/issues/300: a
+      // required checkbox cluster used to put `aria-required="true"` on the
+      // wrapper host alongside `role="group"`, which axe's
+      // `aria-allowed-attr` rule flags as critical (`group` does not support
+      // `aria-required` — only `radiogroup` does among the roles this
+      // wrapper emits). `NgxSignalFormAutoAria` is now role-aware and drops
+      // `aria-required` whenever the host's resolved role is `group`, so the
+      // full rule set runs here with no exclusions. Required-ness isn't
+      // simply dropped, though — the issue asked for it to be relocated, so
+      // it stays perceivable via a visually-hidden node wired into
+      // `aria-describedby` (see `groupRequiredHintId` in
+      // form-field-wrapper.ts) instead of the disallowed ARIA state.
+      const wrapper = container.querySelector('ngx-form-field-wrapper');
+      expect(wrapper).toHaveAttribute('role', 'group');
+      expect(wrapper).not.toHaveAttribute('aria-required');
+
+      const requiredHintId = 'consent-required-hint';
+      const describedBy = wrapper?.getAttribute('aria-describedby') ?? '';
+      expect(describedBy.split(' ')).toContain(requiredHintId);
+
+      const requiredHint = container.querySelector(`#${requiredHintId}`);
+      expect(requiredHint).toHaveTextContent('required');
+      // The hint must actually be exposed to the accessibility tree — unlike
+      // the visual `*` marker, it is NOT `aria-hidden`.
+      expect(requiredHint).not.toHaveAttribute('aria-hidden');
+
+      await expectNoA11yViolations(container);
+    });
+
+    it('suppresses the required hint entirely when requiredHintText is empty, instead of describedby-ing an empty node', async () => {
+      // Regression guard: `requiredHintText: ''` is documented as
+      // "suppress the hint" (mirrors `requiredMarker`'s empty-string-clears
+      // convention), but the wrapper used to keep rendering the hint span
+      // and referencing its id in `aria-describedby` even when the text was
+      // empty — an empty accessible-description target.
+      const TestComponent = defineFixtureComponent(
+        'ngx-test-a11y-checkbox-cluster-empty-hint-text',
+        CHECKBOX_CLUSTER_TEMPLATE,
+        () =>
+          form(
+            signal({ consentRead: false, consentAgree: false }),
+            schema((path) => {
+              required(path.consentRead, { message: 'Consent is required' });
+              required(path.consentAgree, { message: 'Consent is required' });
+            }),
+          ),
+      );
+
+      const { container } = await render(TestComponent, {
+        providers: [provideNgxSignalFormsConfig({ requiredHintText: '' })],
       });
+      await TestBed.inject(ApplicationRef).whenStable();
+
+      const wrapper = container.querySelector('ngx-form-field-wrapper');
+      expect(wrapper).toHaveAttribute('role', 'group');
+      expect(container.querySelector('#consent-required-hint')).toBeNull();
+      expect(wrapper).not.toHaveAttribute('aria-describedby');
+
+      await expectNoA11yViolations(container);
     });
 
     it('two unnamed clusters skip label wiring instead of colliding on the same fallback id, and still have no violations', async () => {

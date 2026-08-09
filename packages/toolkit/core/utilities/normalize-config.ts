@@ -50,5 +50,8 @@ export function normalizeSignalFormsConfig(
     optionalLegendText:
       config.optionalLegendText ??
       DEFAULT_NGX_SIGNAL_FORMS_CONFIG.optionalLegendText,
+    requiredHintText:
+      config.requiredHintText ??
+      DEFAULT_NGX_SIGNAL_FORMS_CONFIG.requiredHintText,
   };
 }

@@ -46,6 +46,7 @@ import {
 import {
   NGX_SIGNAL_FORM_HINT_REGISTRY,
   NgxFieldIdentity,
+  generateRequiredHintId,
   isElementCssVisible,
   resolveBoundControlFromBindings,
   toHintDescriptors,
@@ -260,6 +261,20 @@ import {
           "
           aria-hidden="true"
           >{{ marker.text }}</span
+        >
+      }
+      @if (groupRequiredHintId(); as requiredHintId) {
+        <!--
+          Relocated required-state announcement for a \`group\`-role selection
+          cluster (see \`groupRequiredHintId\` doc comment): \`aria-required\`
+          isn't valid ARIA on \`group\`, so this visually-hidden (NOT
+          aria-hidden) node carries the text instead, wired into
+          \`aria-describedby\` on the host. WCAG 1.3.1 / 4.1.2.
+        -->
+        <span
+          [id]="requiredHintId"
+          class="ngx-signal-form-field-wrapper__visually-hidden"
+          >{{ resolvedRequiredHintText() }}</span
         >
       }
     </div>
@@ -1062,6 +1077,61 @@ export class NgxFormFieldWrapper<TValue = unknown> {
   });
 
   /**
+   * ID of the visually-hidden required hint for a `group`-role cluster, or
+   * `null` when it doesn't apply.
+   *
+   * `aria-required` is only valid ARIA on `radiogroup` among the roles this
+   * wrapper emits — `group` does not support it, and writing it anyway trips
+   * axe's `aria-allowed-attr` rule (critical impact). Rather than silently
+   * dropping required-ness for a `group` cluster, it is relocated here: a
+   * visually-hidden node (rendered in the template below, not `aria-hidden`)
+   * carries the text and is wired into {@link selectionClusterDescribedBy},
+   * so required-ness stays perceivable to assistive tech via the group's
+   * accessible description instead of an ARIA state.
+   * `radiogroup` is unaffected — it keeps `aria-required` from
+   * `NgxSignalFormAutoAria` exactly as before, so this hint only exists for
+   * `group`.
+   *
+   * Reuses {@link #boundControlIsRequired} — the same DOM-observed
+   * required-ness signal that already drives the visible `*` marker in the
+   * label, so both indicators agree.
+   *
+   * `null` also whenever {@link resolvedRequiredHintText} resolves to `''`
+   * (an explicit `requiredHintText: ''` override, clearing the hint —
+   * mirrors `requiredMarker`'s / `requiredLegendText`'s empty-string-clears
+   * convention). Rendering an empty visually-hidden node would still leave
+   * its id in `aria-describedby`, pointing at a text-less element — an
+   * empty accessible-description target, not a missing one, but pointless
+   * either way, so the id is withheld here rather than in the describedby
+   * composer.
+   *
+   * See https://github.com/ngx-signal-forms/ngx-signal-forms/issues/300.
+   */
+  protected readonly groupRequiredHintId = computed<string | null>(() => {
+    if (
+      this.selectionClusterRole() !== 'group' ||
+      !this.#boundControlIsRequired() ||
+      this.resolvedRequiredHintText() === ''
+    ) {
+      return null;
+    }
+
+    const fieldName = this.resolvedFieldName();
+    return fieldName === null ? null : generateRequiredHintId(fieldName);
+  });
+
+  /**
+   * Resolved text for {@link groupRequiredHintId}'s visually-hidden node.
+   * Sourced from `NgxSignalFormsConfig.requiredHintText` — the same
+   * config-driven text seam as {@link resolvedRequiredMarker} and
+   * `NgxFormMarkingLegend`'s `requiredLegendText` — so a non-English app can
+   * localize it instead of announcing a hardcoded English word.
+   */
+  protected readonly resolvedRequiredHintText = computed(() => {
+    return this.#config.requiredHintText;
+  });
+
+  /**
    * Falls back to (never replaces) `#initialAriaLabelledby` for non-cluster
    * wrappers — see the field doc comment on `#initialAriaLabelledby` for why
    * the host binding can't simply be left unbound instead.
@@ -1078,41 +1148,43 @@ export class NgxFormFieldWrapper<TValue = unknown> {
 
   /**
    * Merges the author-supplied `#initialAriaDescribedby` with the
-   * cluster-managed error/warning id rather than replacing it — same
-   * preservation rule auto-aria already applies to the bound control itself.
+   * cluster-managed required-hint/error/warning ids rather than replacing
+   * it — same preservation rule auto-aria already applies to the bound
+   * control itself. The required hint (see {@link groupRequiredHintId}) is
+   * independent of error/warning visibility, so it can combine with either.
    */
   protected readonly selectionClusterDescribedBy = computed<string | null>(
     () => {
-      const managedId = ((): string | null => {
-        if (!this.isSelectionCluster()) {
-          return null;
+      const managedIds: string[] = [];
+
+      if (this.isSelectionCluster()) {
+        const requiredHintId = this.groupRequiredHintId();
+        if (requiredHintId !== null) {
+          managedIds.push(requiredHintId);
         }
 
         const fieldName = this.resolvedFieldName();
-        if (fieldName === null) {
-          return null;
+        if (fieldName !== null) {
+          if (this.showInvalidState()) {
+            managedIds.push(`${fieldName}-error`);
+          } else if (this.showWarningState() && this.shouldShowWarnings()) {
+            // `shouldShowWarnings()` gates whether the projected error
+            // renderer's warning live region is in the DOM (see
+            // `shouldRenderErrorSlot` /
+            // `NgxFormFieldError.warningContainerVisible`). Guard
+            // `aria-describedby` on the same signal to avoid dangling
+            // references for warning-only clusters gated by a
+            // non-'immediate' `warningStrategy`.
+            managedIds.push(`${fieldName}-warning`);
+          }
         }
+      }
 
-        if (this.showInvalidState()) {
-          return `${fieldName}-error`;
-        }
-
-        // `shouldShowWarnings()` gates whether the projected error renderer's
-        // warning live region is in the DOM (see `shouldRenderErrorSlot` /
-        // `NgxFormFieldError.warningContainerVisible`). Guard
-        // `aria-describedby` on the same signal to avoid dangling references
-        // for warning-only clusters gated by a non-'immediate'
-        // `warningStrategy`.
-        if (this.showWarningState() && this.shouldShowWarnings()) {
-          return `${fieldName}-warning`;
-        }
-
-        return null;
-      })();
-
-      if (managedId === null) {
+      if (managedIds.length === 0) {
         return this.#initialAriaDescribedby;
       }
+
+      const managedId = managedIds.join(' ');
 
       return this.#initialAriaDescribedby
         ? `${this.#initialAriaDescribedby} ${managedId}`

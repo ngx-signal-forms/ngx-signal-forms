@@ -163,6 +163,7 @@ provideNgxSignalFormsConfig({
   optionalMarker: ' (optional)', // marker for optional fields ('optional' mode)
   requiredLegendText: '{marker} indicates a required field',
   optionalLegendText: 'All fields are required unless marked {marker}',
+  requiredHintText: 'required', // visually-hidden required hint for role="group" clusters
 });
 ```
 
