@@ -124,17 +124,35 @@ type ErrorMessageRegistryFactory = () => ErrorMessageRegistryInput;
  * ```
  *
  * @example With ngx-translate (alternative pattern)
+ *
+ * The factory runs once, at injection — so a **string** entry is captured
+ * once and frozen for the injector's lifetime; it never changes, even on a
+ * language switch. A **function** entry is invoked per render, and re-renders
+ * on a language change only if it reads a signal during that call —
+ * `translate.instant()` alone reads nothing reactive. Make every entry a
+ * function that reads a reactive language source, such as
+ * `toSignal(translate.onLangChange)`:
  * ```typescript
+ * import { toSignal } from '@angular/core/rxjs-interop';
  * import { TranslateService } from '@ngx-translate/core';
  *
  * provideErrorMessages(() => {
  *   const translate = inject(TranslateService);
+ *   const lang = toSignal(translate.onLangChange, { initialValue: null });
  *
  *   return {
- *     required: translate.instant('validation.required'),
- *     email: translate.instant('validation.email'),
- *     minLength: ({ minLength }) =>
- *       translate.instant('validation.minLength', { minLength }),
+ *     required: () => {
+ *       lang(); // reactive dependency — re-renders on language switch
+ *       return translate.instant('validation.required');
+ *     },
+ *     email: () => {
+ *       lang();
+ *       return translate.instant('validation.email');
+ *     },
+ *     minLength: ({ minLength }) => {
+ *       lang();
+ *       return translate.instant('validation.minLength', { minLength });
+ *     },
  *   };
  * })
  * ```
@@ -285,18 +303,36 @@ export const NGX_ERROR_MESSAGES = new InjectionToken<ErrorMessageRegistry>(
  * ```
  *
  * @example With ngx-translate
+ *
+ * Every entry must be a function that reads a reactive language signal —
+ * `translate.instant()` alone is not reactive, and a string entry is frozen
+ * at injection and can never change. See the `ErrorMessageRegistry` doc above
+ * for the full string-vs-function contract.
  * ```typescript
+ * import { toSignal } from '@angular/core/rxjs-interop';
+ *
  * provideErrorMessages(() => {
  *   const translate = inject(TranslateService);
+ *   const lang = toSignal(translate.onLangChange, { initialValue: null });
  *
  *   return {
- *     required: translate.instant('validation.required'),
- *     email: translate.instant('validation.email'),
+ *     required: () => {
+ *       lang();
+ *       return translate.instant('validation.required');
+ *     },
+ *     email: () => {
+ *       lang();
+ *       return translate.instant('validation.email');
+ *     },
  *   };
  * })
  * ```
  *
  * @example With @angular/localize
+ *
+ * `$localize` is build-time, not runtime: one build per locale
+ * (`ng build --localize`). It cannot switch language without a page reload,
+ * so use it only with the static (non-factory) form:
  * ```typescript
  * provideErrorMessages({
  *   required: $localize`:@@validation.required:This field is required`,

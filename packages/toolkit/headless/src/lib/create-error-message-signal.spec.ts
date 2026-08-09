@@ -15,6 +15,7 @@ import {
 import { NGX_SIGNAL_FORMS_CONFIG } from '@ngx-signal-forms/toolkit';
 import {
   NGX_ERROR_MESSAGES,
+  provideErrorMessages,
   type ErrorMessageRegistry,
 } from '@ngx-signal-forms/toolkit/core';
 import { describe, expect, it } from 'vitest';
@@ -462,6 +463,58 @@ describe('createErrorMessageSignal — reactive registry', () => {
     field.errors.set([{ kind: 'minLength', minLength: 8 } as ValidationError]);
     expect(result()[0]?.kind).toBe('minLength');
     expect(result()[0]?.message).toBe('Minimum 8 characters required');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// i18n contract — string entries frozen at injection, function entries
+// re-render only when they read a signal (docs/WARNINGS_SUPPORT.md
+// "The i18n contract: string vs. function entries")
+// ---------------------------------------------------------------------------
+
+describe('createErrorMessageSignal — i18n contract (provideErrorMessages)', () => {
+  it('freezes a string entry at injection and re-renders a function entry that reads a signal', () => {
+    const lang = signal<'en' | 'ja'>('en');
+    const translations = {
+      en: { required: 'Required (en)' },
+      ja: { required: 'Required (ja)' },
+    };
+
+    const injector = Injector.create({
+      providers: [
+        provideErrorMessages(() => ({
+          // String entry: evaluated once, right now, while the factory runs
+          // at injection. Never re-evaluated afterward.
+          email: translations[lang()].required,
+          // Function entry: invoked every time the resolving computed
+          // re-runs. Reading `lang()` inside it registers the signal as a
+          // dependency of that computed, so a language flip retriggers it.
+          required: () => translations[lang()].required,
+        })),
+      ],
+    });
+
+    const field = mockFieldState({
+      errors: [{ kind: 'email' }, { kind: 'required' }],
+    });
+
+    const result = runInInjectionContext(injector, () =>
+      createErrorMessageSignal(() => field, { fieldName: 'contact' }),
+    );
+
+    const messageFor = (kind: string) =>
+      result().find((entry) => entry.kind === kind)?.message;
+
+    expect(messageFor('email')).toBe('Required (en)');
+    expect(messageFor('required')).toBe('Required (en)');
+
+    lang.set('ja');
+
+    // Function entry: re-renders because it read the signal.
+    expect(messageFor('required')).toBe('Required (ja)');
+    // String entry: frozen at the value captured when the factory ran once,
+    // at injection — the language flip never touches it.
+    expect(messageFor('email')).toBe('Required (en)');
   });
 });
 

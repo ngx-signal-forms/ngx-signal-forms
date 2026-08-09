@@ -820,22 +820,65 @@ provideErrorMessages({
 });
 ```
 
-For i18n, pass a factory instead of a static object. It runs in an injection
-context, so you can `inject()` a translation service and build the registry
-from it:
+### The i18n contract: string vs. function entries
+
+`NGX_ERROR_MESSAGES` holds a plain object. The factory passed to
+`provideErrorMessages()` runs **once**, at injection — not on every render. So
+the two entry kinds behave differently on a runtime language switch:
+
+- A **string** value is captured once, at injection time, and frozen into the
+  registry for the life of the injector. It can never change afterward — not
+  even if you switch language.
+- A **function** value is invoked each time the toolkit resolves a message.
+  It re-renders with a new string on a language change **only if it reads a
+  signal** during that call. Calling `translate.instant(...)` alone reads
+  nothing reactive, so a function that only calls `instant()` still won't
+  re-render on its own — nothing tells Angular to re-run it.
+
+The fix: make **every** entry a function, and have each one read a reactive
+language signal. The mechanism is library-agnostic — it works the same with
+Transloco, ngx-translate, or a bare `signal<Lang>`:
 
 ```typescript
+import { inject } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { TranslateService } from '@ngx-translate/core';
+import { provideErrorMessages } from '@ngx-signal-forms/toolkit';
+
 provideErrorMessages(() => {
   const translate = inject(TranslateService);
+  // A reactive language source. `onLangChange` fires whenever
+  // `translate.use(...)` switches language; `toSignal` turns that into a
+  // signal each entry below can read.
+  const lang = toSignal(translate.onLangChange, { initialValue: null });
 
   return {
-    required: translate.instant('validation.required'),
-    email: translate.instant('validation.email'),
-    minLength: ({ minLength }) =>
-      translate.instant('validation.minLength', { minLength }),
+    // Reading `lang()` is what matters here — it registers the signal as a
+    // dependency of the caller's render, so a language switch schedules a
+    // re-render. `translate.instant()` itself is not reactive.
+    required: () => {
+      lang();
+      return translate.instant('validation.required');
+    },
+    email: () => {
+      lang();
+      return translate.instant('validation.email');
+    },
+    minLength: ({ minLength }) => {
+      lang();
+      return translate.instant('validation.minLength', { minLength });
+    },
   };
 });
 ```
+
+Angular's own i18n cannot do this at all. `$localize` is build-time: per
+[angular.dev](https://angular.dev/guide/i18n), tagged messages are processed
+once, when the tagged string is first encountered, and do not support dynamic
+language changes without a browser refresh. The supported Angular model is
+one build per locale (`ng build --localize`). Runtime language switching is
+third-party or hand-rolled territory — Transloco, ngx-translate, or your own
+signal — not something `$localize` provides.
 
 ### Field label resolution
 
@@ -859,13 +902,21 @@ provideFieldLabels({
 });
 ```
 
-For dynamic i18n or a fully custom resolver, pass a factory:
+For dynamic i18n or a fully custom resolver, pass a factory. The factory
+returns a resolver function, and the toolkit calls that resolver each time it
+renders a field label — so the same contract as `provideErrorMessages`
+applies: read a reactive language signal inside the resolver, or a language
+switch won't schedule a re-render:
 
 ```typescript
 provideFieldLabels(() => {
   const translate = inject(TranslateService);
-  return (path) =>
-    translate.instant(`fields.${path}`) || humanizeFieldPath(path);
+  const lang = toSignal(translate.onLangChange, { initialValue: null });
+
+  return (path) => {
+    lang(); // registers the language signal as a render dependency
+    return translate.instant(`fields.${path}`) || humanizeFieldPath(path);
+  };
 });
 ```
 
