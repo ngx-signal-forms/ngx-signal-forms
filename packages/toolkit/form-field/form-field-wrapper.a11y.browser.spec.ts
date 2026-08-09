@@ -556,7 +556,7 @@ describe('form-field wrapper — WCAG 2.2 AA conformance', () => {
       // — never a dangling `plan-warning`.
       expect(wrapper).toHaveAttribute('aria-describedby', 'plan-error');
       const statusRegion = container.querySelector('[role="status"]');
-      expect(statusRegion).not.toHaveAttribute('id', 'plan-warning');
+      expect(statusRegion).not.toHaveAttribute('id');
       expect(statusRegion?.textContent?.trim()).toBe('');
       await expectNoA11yViolations(container);
     });
