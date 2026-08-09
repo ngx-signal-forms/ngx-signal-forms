@@ -627,6 +627,8 @@ export class NgxFormFieldWrapper<TValue = unknown> {
     return this.resolvedAppearance() === 'plain';
   });
 
+  #warnedInvalidOrientation = false;
+
   /**
    * Effective orientation for theming hooks (`data-orientation` attribute).
    *
@@ -644,8 +646,6 @@ export class NgxFormFieldWrapper<TValue = unknown> {
    * so this keeps the first frame aligned with the common case rather than
    * guessing either extreme.
    */
-  #warnedInvalidOrientation = false;
-
   protected readonly resolvedOrientation = computed<FormFieldOrientation>(
     () => {
       const orientation = this.orientation();
