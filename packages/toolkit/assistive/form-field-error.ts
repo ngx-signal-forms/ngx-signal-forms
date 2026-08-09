@@ -2,6 +2,7 @@ import {
   afterEveryRender,
   Component,
   computed,
+  effect,
   inject,
   input,
   isDevMode,
@@ -9,6 +10,7 @@ import {
 import type { FieldTree, ValidationError } from '@angular/forms/signals';
 import {
   NGX_SIGNAL_FORM_FIELD_CONTEXT,
+  NGX_SIGNAL_FORM_FIELD_VISIBILITY_REGISTRY,
   unwrapValue,
   type ErrorDisplayStrategy,
   type ResolvedErrorDisplayStrategy,
@@ -242,6 +244,21 @@ export class NgxFormFieldError {
   });
 
   /**
+   * Field-visibility registry contributed by the nearest `[ngxSignalForm]`
+   * host, if any. Lets a standalone (wrapper-less) instance of this
+   * component publish its own resolved `errorContainerVisible()` /
+   * `warningContainerVisible()` so `NgxSignalFormAutoAria` — which has no
+   * other channel to a sibling error component's field-level `strategy`/
+   * `warningStrategy` overrides — can keep `aria-describedby` in lockstep.
+   * `null` when there is no `[ngxSignalForm]` ancestor (registration is a
+   * no-op in that case).
+   */
+  readonly #visibilityRegistry = inject(
+    NGX_SIGNAL_FORM_FIELD_VISIBILITY_REGISTRY,
+    { optional: true },
+  );
+
+  /**
    * One-shot guard so the "missing field name" dev error fires at most once
    * per component instance.
    */
@@ -347,6 +364,36 @@ export class NgxFormFieldError {
           '[ngx-signal-forms] ngx-form-field-error requires an explicit `fieldName` input or a parent ngx-form-field-wrapper context. The component will render without id/aria-describedby linking until one is provided.',
         );
       }
+    });
+
+    // Publishes this instance's resolved visibility into
+    // `NGX_SIGNAL_FORM_FIELD_VISIBILITY_REGISTRY` whenever the resolved
+    // field name changes, and unregisters on the field name changing away
+    // or on destroy. A no-op when no registry is present (no
+    // `[ngxSignalForm]` ancestor) or no field name resolves — mirrors the
+    // dev-mode "missing field name" guard above by simply not registering
+    // rather than registering under a synthetic key.
+    //
+    // Registers `errorContainerVisible`/`warningContainerVisible`
+    // themselves — the exact booleans that gate this component's
+    // `[attr.id]` bindings — rather than a strategy for the registry's
+    // readers to re-resolve, so the published value always matches what is
+    // actually rendered.
+    effect((onCleanup) => {
+      const registry = this.#visibilityRegistry;
+      const fieldName = this.#resolvedFieldName();
+
+      if (!registry || fieldName === null) {
+        return;
+      }
+
+      const unregister = registry.register({
+        fieldName,
+        errorContainerVisible: this.errorContainerVisible,
+        warningContainerVisible: this.warningContainerVisible,
+      });
+
+      onCleanup(unregister);
     });
   }
 
