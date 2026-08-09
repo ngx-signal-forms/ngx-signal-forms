@@ -7,7 +7,6 @@ import {
   ElementRef,
   inject,
   input,
-  isDevMode,
   signal,
   type Type,
 } from '@angular/core';
@@ -23,6 +22,7 @@ import {
   type NgxFormFieldErrorPlacement,
 } from '@ngx-signal-forms/toolkit';
 import {
+  devWarnOnce,
   resolveUnionInput,
   type WarnOnceRef,
 } from '@ngx-signal-forms/toolkit/core';
@@ -349,7 +349,7 @@ export class NgxFormFieldset {
   readonly #warnedInvalidAppearance: WarnOnceRef = { current: false };
   readonly #warnedInvalidSurfaceTone: WarnOnceRef = { current: false };
   readonly #warnedInvalidValidationSurface: WarnOnceRef = { current: false };
-  #warnedTitleIgnoredOnPlain = false;
+  readonly #warnedTitleIgnoredOnPlain: WarnOnceRef = { current: false };
 
   protected readonly resolvedAppearance = computed<NgxFormFieldsetAppearance>(
     () =>
@@ -375,15 +375,10 @@ export class NgxFormFieldset {
       },
     );
 
-    if (
-      appearance === 'plain' &&
-      !this.#warnedTitleIgnoredOnPlain &&
-      this.notificationTitle() &&
-      isDevMode()
-    ) {
-      this.#warnedTitleIgnoredOnPlain = true;
-      // oxlint-disable-next-line no-console -- dev-mode misconfiguration signal
-      console.warn(
+    if (appearance === 'plain' && this.notificationTitle()) {
+      devWarnOnce(
+        this.#warnedTitleIgnoredOnPlain,
+        'warn',
         `[ngx-signal-forms] NgxFormFieldset: notificationTitle is ignored when feedbackAppearance="plain"; ` +
           `the title only renders inside the notification card. Remove the title input or switch to feedbackAppearance="notification".`,
       );
