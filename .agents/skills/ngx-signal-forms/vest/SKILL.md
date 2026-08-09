@@ -91,12 +91,13 @@ const signupForm = form(signupModel, (path) => {
 
 #### Options
 
-| Option              | Default | Purpose                                                                                                                                                                                                                                               |
-| ------------------- | ------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `includeWarnings`   | `false` | Surface `warn()` results as toolkit warnings (`kind` prefixed with `warn:vest:`).                                                                                                                                                                     |
-| `resetOnDestroy`    | `true`  | Call `suite.reset()` via `DestroyRef.onDestroy()` when the hosting injection context tears down. **Enabled by default** for module-scope suites — pass `{ resetOnDestroy: false }` to persist suite state across mounts. See _Suite lifecycle_ below. |
-| `only`              | _none_  | `VestOnlyFieldSelector` — `(ctx) => string \| readonly string[] \| undefined`. Threads a field name into `suite.run(value, fieldName)` for per-field focused runs; default runs the whole suite.                                                      |
-| `focusCurrentField` | `false` | Derive the focused Vest field name from the bound field's `ctx.pathKeys()` (dotted, e.g. `items.0.sku`). Ignored when `only` is set; falls back to a whole-suite run when bound to the form root.                                                     |
+| Option            | Default | Purpose                                                                                                                                                                                                                                                                                                                                                                                         |
+| ----------------- | ------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `includeWarnings` | `false` | Surface `warn()` results as toolkit warnings (`kind` prefixed with `warn:vest:`).                                                                                                                                                                                                                                                                                                               |
+| `resetOnDestroy`  | `true`  | Call `suite.reset()` via `DestroyRef.onDestroy()` when the hosting injection context tears down. **Enabled by default** for module-scope suites — pass `{ resetOnDestroy: false }` to persist suite state across mounts. See _Suite lifecycle_ below.                                                                                                                                           |
+| `only`            | _none_  | `VestOnlyFieldSelector` — `(ctx) => VestFieldExclusion`: a field name, a list of field names, `undefined` for a whole-suite run, or `false` to focus nothing. Prefers `suite.only(field).run(value)`, falling back to `suite.run(value, fieldName)` (single field name only) when the suite exposes no `only`. `false` throws — Vest has no way to express "focus nothing" through either form. |
+
+A Vest registration's bound path value **is** the suite input (ADR-0008): `path` and `suite` must agree on shape. Bind the form root to a model-scoped suite (the common case), or bind a subtree to a suite authored for that subtree's value. Binding a suite to a path of a mismatched shape is a compile error.
 
 ### Suite lifecycle
 
@@ -159,18 +160,10 @@ validateVest(path, suite, {
 Default behavior (no `only` option) re-runs every test body on each change —
 correct but wasteful for large suites.
 
-When you bind `validateVest` to a specific field path, pass
-`{ focusCurrentField: true }` to derive the focused field name automatically
-from `ctx.pathKeys()` — no `only` selector needed:
-
-```typescript
-validateVest(path.email, suite, { focusCurrentField: true });
-```
-
-The derived name is the dotted path (e.g. `items.0.sku` for nested/array
-fields). Bound to the form root, the path is empty and the adapter falls back
-to a whole-suite run. An explicit `only` selector always overrides
-`focusCurrentField`.
+There is no automatic "focus the field this validator is bound to" option:
+`validateVest` binds to the root for a model-scoped suite (ADR-0008), so
+track which field is active yourself (`(focus)`/`(blur)`, or a signal your
+bindings already update) and read it from `only`, as in the example above.
 
 ### `validateVestWarnings(path, suite)`
 

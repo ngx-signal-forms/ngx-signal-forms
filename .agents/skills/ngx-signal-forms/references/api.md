@@ -751,6 +751,7 @@ import {
   validateVest,
   validateVestWarnings,
   type ValidateVestOptions,
+  type VestFieldExclusion,
   type VestOnlyFieldSelector,
 } from '@ngx-signal-forms/toolkit/vest';
 
@@ -758,12 +759,25 @@ interface ValidateVestOptions<TValue = unknown> {
   includeWarnings?: boolean; // default: false — surface warn() as toolkit warnings
   resetOnDestroy?: boolean; // default: true — call suite.reset() on DestroyRef teardown; pass false to persist state across mounts
   only?: VestOnlyFieldSelector<TValue>; // default: undefined — focus the run on a field
-  focusCurrentField?: boolean; // default: false — derive the focused field name from the bound field's ctx.pathKeys() (dotted, e.g. items.0.sku); ignored when `only` is set; root-bound falls back to a whole-suite run
 }
 
 type VestOnlyFieldSelector<TValue> = (
   ctx: FieldContext<TValue>,
-) => string | readonly string[] | undefined;
+) => VestFieldExclusion;
+
+// A field name, a list of field names, `undefined` for a whole-suite run, or
+// `false` to focus nothing. `false` THROWS at run time: Vest's `suite.only()`
+// and `suite.run(value, fieldName)` both treat an empty/falsy selection as
+// "no filter" (run everything), so there is no way to honor "focus nothing".
+type VestFieldExclusion<F extends string = string> =
+  | F
+  | readonly F[]
+  | undefined
+  | false;
+
+// A registration's bound path value IS the suite input (ADR-0008): `path`'s
+// value type and `suite`'s input type (TValue) must match. Binding a suite
+// to a path of a different shape is a compile error, not a runtime footgun.
 
 interface VestAdapterOptions {
   readonly resetOnDestroy?: boolean; // default: true
@@ -773,13 +787,12 @@ interface VestRegisterOptions<TValue = unknown> {
   readonly includeWarnings?: boolean;
   readonly resetOnDestroy?: boolean;
   readonly only?: VestOnlyFieldSelector<TValue>;
-  readonly focusCurrentField?: boolean;
 }
 interface RunVestSuiteParams<TValue> {
   readonly suite: VestRunnableSuite<TValue>;
   readonly fieldTree: ReadonlyFieldTree<TValue>;
   readonly value: TValue;
-  readonly focus?: string | readonly string[];
+  readonly focus?: VestFieldExclusion;
 }
 interface RunVestSuiteResult<TValue> {
   readonly value: TValue;

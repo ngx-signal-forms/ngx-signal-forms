@@ -127,24 +127,24 @@ Blocking Vest errors render as `role="alert"`. Vest `warn()` results render as `
 
 First-class adapter for Vest suites. Reads `suite.run()` results and maps blocking errors directly into Signal Forms validation errors.
 
+**A suite runs on the bound path's value — that value is the suite's input.** `path` and `suite` must agree: bind the form root to a suite authored for the whole model (the common case), or bind a subtree to a suite authored for that subtree's value. Binding a suite to a path whose value type it wasn't written for is a compile error, not a runtime footgun.
+
 ```typescript
 validateVest(path, suite); // blocking errors only
 validateVest(path, suite, { includeWarnings: true }); // + warn() as toolkit warnings
 validateVest(path, suite, { resetOnDestroy: false }); // opt out of teardown reset (true is the default)
 validateVest(path, suite, { only: (ctx) => ctx.value().focusedField });
-validateVest(path.email, suite, { focusCurrentField: true }); // auto-focus the bound field
 ```
 
 Blocking errors and warnings are read from the same Vest run — enabling warnings does not require a second suite pass.
 
 #### Options
 
-| Option              | Default | Description                                                                                                                                                                                                                                                                           |
-| ------------------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `includeWarnings`   | `false` | Surface `warn()` results as toolkit warnings (`kind` prefixed with `warn:vest:`).                                                                                                                                                                                                     |
-| `resetOnDestroy`    | `true`  | Call `suite.reset()` via `DestroyRef.onDestroy()` when the hosting injection context tears down. Enabled by default for module-scope suites; pass `{ resetOnDestroy: false }` only to deliberately persist suite state across mounts (see [Suite lifecycle](#suite-lifecycle) below). |
-| `only`              | _none_  | Selector `(ctx) => string \| string[] \| undefined` that threads a field name into `suite.only(field).run(value)` when the suite exposes `only` (falling back to `suite.run(value, fieldName)` otherwise).                                                                            |
-| `focusCurrentField` | `false` | Derive the focused Vest field name automatically from the field this validator is bound to (`ctx.pathKeys()`, dotted — e.g. `items.0.sku`). Ignored when `only` is provided; falls back to a whole-suite run when bound to the form root.                                             |
+| Option            | Default | Description                                                                                                                                                                                                                                                                                                                                                                            |
+| ----------------- | ------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `includeWarnings` | `false` | Surface `warn()` results as toolkit warnings (`kind` prefixed with `warn:vest:`).                                                                                                                                                                                                                                                                                                      |
+| `resetOnDestroy`  | `true`  | Call `suite.reset()` via `DestroyRef.onDestroy()` when the hosting injection context tears down. Enabled by default for module-scope suites; pass `{ resetOnDestroy: false }` only to deliberately persist suite state across mounts (see [Suite lifecycle](#suite-lifecycle) below).                                                                                                  |
+| `only`            | _none_  | Selector `(ctx) => VestFieldExclusion` — a field name, a list of field names, `undefined` for a whole-suite run, or `false` to focus nothing — threaded into `suite.only(field).run(value)` when the suite exposes `only` (falling back to `suite.run(value, fieldName)`, single field name only, otherwise). `false` throws: Vest cannot express "focus nothing" through either form. |
 
 ### Exported constants
 
@@ -385,21 +385,31 @@ The default behavior (no `only` option) runs the whole suite on every change,
 which stays correct but re-executes every test body. Use `only` for large
 suites where per-field isolation matters.
 
-#### Auto-focus the bound field
+#### Focusing the currently active field
 
-When you bind `validateVest` to a specific field path, pass
-`{ focusCurrentField: true }` to derive the focused Vest field name
-automatically — no hand-written `only` selector required:
+`validateVest` always registers against the value the bound path resolves to
+— for a model-scoped suite, that's the **form root**, not an individual
+field (see [ADR-0008](https://github.com/ngx-signal-forms/ngx-signal-forms/blob/main/docs/decisions/0008-vest-suite-input-is-the-bound-path.md)).
+To focus the suite on whichever field the user is currently working in,
+track that field name yourself — e.g. on `(focus)`/`(blur)`, or from a
+signal your input bindings already update — and read it from the `only`
+selector:
 
 ```typescript
-validateVest(path.email, suite, { focusCurrentField: true });
+readonly #activeField = signal<string | undefined>(undefined);
+
+readonly signupForm = form(this.#model, (path) => {
+  validateVest(path, suite, {
+    only: () => this.#activeField(),
+  });
+});
 ```
 
-The adapter reads the bound field's dotted path from `ctx.pathKeys()` (e.g.
-`items.0.sku` for a nested/array field) and threads it into the focused run.
-When the validator is bound to the **form root** the derived path is empty, so
-the adapter falls back to a whole-suite run. An explicit `only` selector always
-wins — `focusCurrentField` is ignored when `only` is provided.
+This is the same `only` mechanism shown above — a suite whose `only(field)`
+call runs the whole suite when `field` is `undefined`, and just that field's
+tests otherwise. There is no separate auto-focus option: the suite always
+runs on the bound path's value, so the field to focus is information only
+your form knows and must supply.
 
 ## Using Angular `submit()` with warnings
 

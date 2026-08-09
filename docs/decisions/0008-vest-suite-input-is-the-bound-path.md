@@ -2,14 +2,12 @@
 
 ## Status
 
-Accepted — not yet implemented.
-
-The decision below is settled and is what the implementing work must follow, but
-the package still has the old behaviour: `focusCurrentField` and
-`deriveVestFieldNameFromContext` are present until
-[#287](https://github.com/ngx-signal-forms/ngx-signal-forms/issues/287) lands.
-The Decision and Consequences sections are written declaratively because they
-state the ruling, not the current state of the code.
+Accepted — implemented in
+[PR #303](https://github.com/ngx-signal-forms/ngx-signal-forms/pull/303)
+(issue [#287](https://github.com/ngx-signal-forms/ngx-signal-forms/issues/287)).
+`focusCurrentField` and `deriveVestFieldNameFromContext` are deleted; the
+suite contract (`run`, `only`, `getErrors`, `getWarnings`) is declared as
+readonly function properties per decision point 5.
 
 ## Date
 
