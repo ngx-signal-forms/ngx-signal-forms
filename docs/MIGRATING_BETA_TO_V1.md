@@ -41,8 +41,9 @@ releases will not include any of the renames below.
 - **New: fieldset toggle** — `includeNestedErrors` on fieldset; `submittedStatus` override input
 - **New: error component APIs** — `errors`, `listStyle`, `submittedStatus` inputs on `NgxFormFieldError`
 - **New: headless message resolution** — `createErrorMessageSignal()` combines visibility, the 3-tier message cascade, and stable per-error IDs for custom error renderers
-- **New: Vest options** — `only` selector, `focusCurrentField` auto-focus, `VEST_*_KIND_PREFIX` exports
+- **New: Vest options** — `only` selector, `VEST_*_KIND_PREFIX` exports
 - **BREAKING: Vest `resetOnDestroy` now defaults to `true`** — the adapter resets module-scope suite state on teardown by default; pass `{ resetOnDestroy: false }` to keep persisting state across mounts
+- **BREAKING: Vest `focusCurrentField` and field-scoped registration removed (ADR-0008)** — a Vest registration's bound path value is the suite input; track the active field yourself and pass it to `only` instead
 - **BREAKING: `ErrorMessageRegistry` is now strongly typed per built-in kind** — factory params for built-in kinds (`minLength`, `min`, `pattern`, …) are typed; custom kinds stay `any` (see [§5b](#5b-error-message-registry-is-now-strongly-typed))
 - **A11y** — removed explicit `aria-live` / `aria-atomic`; role semantics now authoritative
 - **Behavior** — missing `fieldName` / `id` now logs (dev mode) instead of throwing
@@ -813,12 +814,21 @@ import { NgxFormField } from '@ngx-signal-forms/toolkit/form-field';
 - `only: (ctx) => string | string[] | undefined` — threads a focused field name
   into `suite.run(value, fieldName)` (or `suite.only(field).run(...)`), enabling
   per-field Vest runs for large suites.
-- `focusCurrentField: true` — derives the focused Vest field name automatically
-  from the bound field's `ctx.pathKeys()` (dotted, e.g. `items.0.sku`); ignored
-  when `only` is set and falls back to a whole-suite run when bound to the form
-  root.
 - Exported kind prefixes `VEST_ERROR_KIND_PREFIX` (`'vest:'`) and
   `VEST_WARNING_KIND_PREFIX` (`'warn:vest:'`) for stable consumer checks.
+
+- **BREAKING — `focusCurrentField` and field-scoped registration are removed
+  (ADR-0008).** A Vest registration's bound path value is the suite input: a
+  suite authored for the whole model can only be bound to the form root, not
+  to an individual field's path (`data.email` on a bare `string` was always
+  `undefined`, producing a permanent blocking error on a valid value — see
+  [ADR-0008](decisions/0008-vest-suite-input-is-the-bound-path.md)).
+  **Action:** replace `validateVest(path.email, suite, { focusCurrentField:
+true })` with `validateVest(path, suite, { only: () => activeField })`,
+  where `activeField` is a field name your own code tracks (e.g. on
+  `(focus)`/`(blur)`). Subtree binding is still supported when the suite is
+  authored for that subtree's value (e.g. `validateVest(path.address,
+addressSuite)` where `addressSuite` takes `{ city: string, … }`).
 
 See [`packages/toolkit/vest/README.md`](../packages/toolkit/vest/README.md#suite-lifecycle)
 for the full suite-lifecycle discussion.
@@ -831,19 +841,14 @@ behavior:
 
 - **Fixed: a superseded focused run could leave a field permanently
   `pending()`.** Vest 6 tracks a single resolver per suite instance, so two
-  registrations of the same suite on different fields (e.g. two
-  `focusCurrentField` validators) could steal each other's resolver, leaving
-  the earlier field's async validation stuck pending forever. The adapter now
-  falls back to the suite's `subscribe`/`get` API (when available) to detect
-  settlement independently of the stolen resolver. `VestRunnableSuite` gained
-  two new **optional** members, `subscribe` and `get`, to support this —
-  existing suite shapes that omit them keep working unchanged.
-- **Fixed: cross-field error mis-attribution for subfield-bound validators.**
-  A `focusCurrentField`-bound validator (e.g. bound to `path.email`) could
-  surface an unrelated field's retained Vest failure (e.g. `password`) as if
-  it belonged to its own bound field, because Vest's `only()` mode retains
-  other fields' previous failures in the same result. Validators bound to a
-  specific field now only map entries for that field (or its descendants).
+  `only`-focused registrations of the same suite (e.g. two root-bound
+  validators each focused on a different field) could steal each other's
+  resolver, leaving the earlier one's async validation stuck pending forever.
+  The adapter now falls back to the suite's `subscribe`/`get` API (when
+  available) to detect settlement independently of the stolen resolver.
+  `VestRunnableSuite` gained two new **optional** members, `subscribe` and
+  `get`, to support this — existing suite shapes that omit them keep working
+  unchanged.
 - **Fixed: a sync Vest warning could permanently suppress a blocking async
   Vest error on the same field.** Angular's `validateAsync` only schedules its
   resource when the bound subtree has zero sync errors, and toolkit warnings
@@ -867,9 +872,9 @@ behavior:
   trees with a concurrently pending, unfocused run against the same suite —
   and defers the later-arriving tree's actual `suite.run()` call until the
   suite is idle, so the two runs never overlap. This is scoped to unfocused
-  (whole-suite) runs only: the wave-3 pattern of several `focusCurrentField`/
-  `only` registrations for different fields of the SAME form intentionally
-  keeps sharing the suite's retained state and is unaffected. The only
+  (whole-suite) runs only: the wave-3 pattern of several `only`-focused
+  registrations for different fields of the SAME form intentionally keeps
+  sharing the suite's retained state and is unaffected. The only
   observable change is a small added latency for the rare case of two
   independent, concurrently-validating trees sharing one suite instance — the
   later one's validation now genuinely waits for the earlier one's async work

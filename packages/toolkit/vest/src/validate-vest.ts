@@ -69,26 +69,6 @@ export interface ValidateVestOptions<TValue = unknown> {
    * @default undefined (full-suite run)
    */
   only?: VestOnlyFieldSelector<TValue>;
-
-  /**
-   * Derive the Vest field name to focus automatically from the field this
-   * validator is bound to, giving you Vest's per-field focused run with zero
-   * wiring. When `true` and {@link only} is not provided, the adapter resolves
-   * the current field's dotted Vest name from `ctx.pathKeys()` and passes it to
-   * the focused run (`suite.only(name).run(value)` or
-   * `suite.run(value, name)`).
-   *
-   * Bind `validateVest` to the specific field path you want focused (e.g.
-   * `validateVest(path.email, suite, { focusCurrentField: true })`) so the
-   * derived name targets that field. When the validator is bound to the form
-   * root the derived path is empty and the run falls back to a whole-suite run.
-   *
-   * Ignored when {@link only} is provided — an explicit selector always wins so
-   * existing wiring keeps working unchanged.
-   *
-   * @default false (full-suite run)
-   */
-  focusCurrentField?: boolean;
 }
 
 /**
@@ -104,24 +84,27 @@ export interface ValidateVestOptions<TValue = unknown> {
 export function validateVestWarnings<TValue>(
   path: VestFieldPath<TValue>,
   suite: VestRunnableSuite<TValue>,
-  options: Pick<
-    ValidateVestOptions<TValue>,
-    'resetOnDestroy' | 'only' | 'focusCurrentField'
-  > = {},
+  options: Pick<ValidateVestOptions<TValue>, 'resetOnDestroy' | 'only'> = {},
 ): void {
   sharedVestAdapter.register(path, suite, {
     includeErrors: false,
     includeWarnings: true,
     resetOnDestroy: options.resetOnDestroy ?? true,
     ...(options.only !== undefined && { only: options.only }),
-    ...(options.focusCurrentField !== undefined && {
-      focusCurrentField: options.focusCurrentField,
-    }),
   });
 }
 
 /**
  * Register a Vest suite as a first-class Angular Signal Forms validator.
+ *
+ * **The bound path's value is the suite input.** `path` and `suite` must
+ * agree: binding the form root gives the suite the whole model (the common
+ * case — a suite whose callback takes the model shape); binding a subtree is
+ * equally legal when the suite is authored for that subtree's value (e.g. a
+ * suite over `{ city: string }` bound to an `address` path). Binding a suite
+ * authored for one shape to a path of a different shape is a compile error —
+ * see ADR-0008 for why a second, mismatched value source is not offered as an
+ * alternative.
  *
  * Vest 6 suites remain Standard Schema-compatible, but this adapter consumes the
  * suite through Vest's richer `run()` result so Angular Signal Forms can map
@@ -141,11 +124,6 @@ export function validateVestWarnings<TValue>(
  * adapter then invokes `suite.run(value, fieldName)` (or
  * `suite.only(fieldName).run(value)` where supported) rather than a full-suite
  * run. Works with suite callbacks that use `only(fieldName)` internally.
- *
- * Pass `{ focusCurrentField: true }` (without `only`) to get the same focused
- * run with zero wiring: the adapter derives the Vest field name from the field
- * this validator is bound to. Bind to the specific field path you want focused,
- * e.g. `validateVest(path.email, suite, { focusCurrentField: true })`.
  *
  * Built on the public {@link sharedVestAdapter}; advanced consumers can wire
  * the same machinery manually via `createVestAdapter` /
@@ -184,8 +162,5 @@ export function validateVest<TValue>(
     includeWarnings: options.includeWarnings ?? false,
     resetOnDestroy: options.resetOnDestroy ?? true,
     ...(options.only !== undefined && { only: options.only }),
-    ...(options.focusCurrentField !== undefined && {
-      focusCurrentField: options.focusCurrentField,
-    }),
   });
 }

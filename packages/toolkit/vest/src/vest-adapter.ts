@@ -28,6 +28,25 @@ export const VEST_WARNING_KIND_PREFIX = 'warn:vest:';
 export const VEST_ERROR_KIND_PREFIX = 'vest:';
 
 /**
+ * Vest 6.3.2's real field-exclusion argument, mirrored locally because the
+ * public `vest` package entrypoint exports the `only()` *hook function* but
+ * not the `FieldExclusion<F>` type it (and `Suite.only()`) accept — that type
+ * lives in `vest-utils`, a transitive dependency this package does not
+ * declare directly.
+ *
+ * Matches Vest's real shape: `FieldExclusion<F> = Maybe<OneOrMoreOf<F>>` (a
+ * field name, a list of field names, or `undefined` for "no exclusion —
+ * everything runs"), plus the `false` variant Vest's `only()` hook also
+ * accepts to focus on nothing. `readonly F[]` (rather than `F[]`) admits
+ * readonly arrays without a cast at the call site.
+ */
+export type VestFieldExclusion<F extends string = string> =
+  | F
+  | readonly F[]
+  | undefined
+  | false;
+
+/**
  * Callback supplied via {@link VestRegisterOptions.only} to enable per-field
  * focused runs. Receives the Angular Signal Forms field context and returns
  * the Vest field name (or list of names) to focus on for the current run.
@@ -35,7 +54,7 @@ export const VEST_ERROR_KIND_PREFIX = 'vest:';
  */
 export type VestOnlyFieldSelector<TValue> = (
   ctx: FieldContext<TValue>,
-) => string | readonly string[] | undefined;
+) => VestFieldExclusion;
 
 /**
  * Schema path accepted by the adapter's `register` method and the built-in
@@ -89,10 +108,14 @@ interface VestValidationSnapshot {
  * about whole-suite versus field-scoped result shapes.
  */
 export interface VestResultLike extends Pick<SuiteResult, 'isPending'> {
-  getErrors(): VestFailureMessages;
-  getErrors(fieldName: string): VestFieldMessages;
-  getWarnings(): VestFailureMessages;
-  getWarnings(fieldName: string): VestFieldMessages;
+  readonly getErrors: {
+    (): VestFailureMessages;
+    (fieldName: string): VestFieldMessages;
+  };
+  readonly getWarnings: {
+    (): VestFailureMessages;
+    (fieldName: string): VestFieldMessages;
+  };
 }
 
 /**
@@ -101,12 +124,49 @@ export interface VestResultLike extends Pick<SuiteResult, 'isPending'> {
  * the full generic `Suite` surface in consumers.
  */
 export interface VestRunnableSuite<TValue> {
-  run(
+  /**
+   * Declared as a readonly function property (not method shorthand) so its
+   * parameter is contravariant under `strictFunctionTypes` — method
+   * parameters stay bivariant regardless of that flag, which is what
+   * previously let a suite typed for one value (e.g. the whole model) be
+   * assigned where a suite for a narrower value (e.g. a single field) was
+   * expected. See ADR-0008.
+   *
+   * `fieldName` is deliberately `string` (not `string | string[]`, and not
+   * {@link VestFieldExclusion}): a real Vest suite's own `run()` signature is
+   * derived from its callback's second parameter, which the documented
+   * idiom types as plain `field?: string` (`create((data, field?: string) =>
+   * {...})`). Contravariance means widening this beyond what real suites
+   * declare would make an ordinary `create()` suite fail assignment here —
+   * the same reasoning as {@link only}'s narrower-than-{@link
+   * VestFieldExclusion} parameter type. Multi-field and `false` focus both
+   * go through `only` instead — see {@link executeVestRun}.
+   */
+  readonly run: (
     value: TValue,
-    fieldName?: string | string[],
-  ): VestResultLike | PromiseLike<VestResultLike>;
+    fieldName?: string,
+  ) => VestResultLike | PromiseLike<VestResultLike>;
   reset?: () => void;
-  only?: (field: string | string[]) => Pick<VestRunnableSuite<TValue>, 'run'>;
+  /**
+   * Declared as a readonly function property for the same contravariance
+   * reason as {@link run}.
+   *
+   * Deliberately narrower than {@link VestFieldExclusion} (which the
+   * public-facing {@link VestOnlyFieldSelector} and
+   * {@link RunVestSuiteParams.focus} DO use): Vest 6.3.2's real
+   * `Suite.only()` method itself only accepts `FieldExclusion<F>` (a field
+   * name, a list of field names, or `undefined`) — no `false`, no readonly
+   * arrays. Widening this member's parameter type to match
+   * {@link VestFieldExclusion} would make a real, unwrapped `create()` suite
+   * (whose own `only` is that narrower type) fail structural assignment to
+   * this interface, breaking the common case this whole contract exists to
+   * describe. The adapter narrows a wider `VestFieldExclusion` value down to
+   * this shape before ever calling `suite.only(...)` — see
+   * {@link executeVestRun}.
+   */
+  readonly only?: (
+    field: string | string[],
+  ) => Pick<VestRunnableSuite<TValue>, 'run'>;
   /**
    * Optional Vest bus subscription (`suite.subscribe`). Used alongside {@link
    * get} to recover from a superseded run — see
@@ -163,7 +223,6 @@ interface VestValidationRegistrationOptions<TValue> {
   readonly includeErrors: boolean;
   readonly includeWarnings: boolean;
   readonly only?: VestOnlyFieldSelector<TValue>;
-  readonly focusCurrentField?: boolean;
 }
 
 /**
@@ -219,6 +278,15 @@ const VEST_KEY_SEPARATOR = '\u0000';
  * the validator-bound field instead of resolved to the `root` child field.
  */
 const VEST_ROOT_FIELD_SENTINEL = `${VEST_KEY_SEPARATOR}root${VEST_KEY_SEPARATOR}`;
+
+/**
+ * Internal sentinel run-cache focus key for a `focus === false` ("focus
+ * nothing") run, distinguishing it from a `focus === undefined` ("whole
+ * suite") run in the cache-hit comparison. Composed the same way as
+ * {@link VEST_ROOT_FIELD_SENTINEL} so it can never collide with a real,
+ * string- or array-derived focus key.
+ */
+const VEST_FOCUS_FALSE_SENTINEL = `${VEST_KEY_SEPARATOR}false${VEST_KEY_SEPARATOR}`;
 
 /**
  * Runtime guard for the subset of Vest's public result object that the adapter
@@ -317,35 +385,11 @@ function parseVestFieldPath(fieldPath: string): Array<string | number> {
 }
 
 /**
- * Derives the Vest field name for the field a validator is bound to from the
- * Angular field context's `pathKeys` (the keys leading from the form root to
- * the current field). Produces the dotted notation Vest uses for field
- * targeting (e.g. `['user', 'email'] -> 'user.email'`, `['items', '0', 'sku']
- * -> 'items.0.sku'`), which is the inverse of {@link parseVestFieldPath}.
- *
- * Returns `undefined` for a root-bound validator (empty path) so the caller
- * falls back to a whole-suite run instead of focusing an empty field name.
- *
- * **Limitation:** field keys that themselves contain `.`, `[`, or `]` are not
- * supported — the dot-joined encoding intentionally matches how users register
- * field names in their Vest suite, so these characters cannot be losslessly
- * escaped. In practice, Angular Signal Forms field keys are TypeScript object
- * property names (camelCase strings) and do not contain these characters.
- */
-function deriveVestFieldNameFromContext<TValue>(
-  ctx: FieldContext<TValue>,
-): string | undefined {
-  const pathKeys = ctx.pathKeys();
-  if (pathKeys.length === 0) {
-    return undefined;
-  }
-
-  return pathKeys.join('.');
-}
-
-/**
- * Resolves a Vest warning path to the matching Angular field tree. When the
- * target path is missing, the current field tree is used as a safe fallback.
+ * Resolves a Vest field path to the matching Angular field tree, relative to
+ * the validator's own bound field tree (per ADR-0008, a registration's Vest
+ * field names are relative to the bound path — there is no other base, since
+ * the bound path's value is the suite input). When the target path is
+ * missing, the bound field tree itself is used as a safe fallback.
  *
  * Traversal uses an own-property guard (`Object.hasOwn`) before reading via
  * `Reflect.get` so prototype-chain entries (e.g. `toString`, `constructor`)
@@ -373,11 +417,10 @@ function resolveVestWarningFieldTree(
 
     // Angular Signal Forms field trees are proxies whose traps throw
     // `Reflect.getOwnPropertyDescriptor called on non-object` when probed on a
-    // leaf node (no further children). This happens when a Vest field name is
-    // resolved against a validator bound to that leaf — e.g. the
-    // `focusCurrentField` auto-focus path, where the bound field *is* the
-    // target. Treat any probe failure as "no such child" and fall back to the
-    // bound field tree, which is the correct target in that case.
+    // leaf node (no further children). This happens when a Vest field name
+    // resolves to (or through) a leaf the bound field tree has no further
+    // children under. Treat any probe failure as "no such child" and fall
+    // back to the bound field tree, which is the correct target in that case.
     let next: unknown;
     try {
       if (!Object.hasOwn(container, segmentKey)) {
@@ -409,24 +452,33 @@ function resolveVestWarningFieldTree(
 function executeVestRun<TValue>(
   suite: Pick<VestRunnableSuite<TValue>, 'run' | 'only'>,
   value: TValue,
-  focus: string | readonly string[] | undefined,
+  focus: VestFieldExclusion,
 ): VestResultLike | PromiseLike<VestResultLike> {
   if (focus === undefined) {
     return suite.run(value);
   }
 
-  // Vest's `only`/`run` field selectors require a mutable string[]. We clone
-  // readonly inputs so toolkit consumers can pass `readonly string[]` through
-  // without widening their own types.
-  const focusArg: string | string[] =
-    typeof focus === 'string' ? focus : [...focus];
-
   if (typeof suite.only === 'function') {
+    // `suite.only` (see {@link VestRunnableSuite.only}'s doc comment) only
+    // accepts `string | string[]` — no `false`, no readonly arrays. Narrow
+    // the wider `VestFieldExclusion` down before calling it: `false` ("focus
+    // nothing") becomes an empty field-name list, and a readonly array is
+    // cloned into a mutable one.
+    const focusArg: string | string[] =
+      focus === false ? [] : typeof focus === 'string' ? focus : [...focus];
     const focused = suite.only(focusArg);
     return focused.run(value);
   }
 
-  return suite.run(value, focusArg);
+  // No `only` shorthand: fall back to `suite.run(value, fieldName)`, whose
+  // second argument (see {@link VestRunnableSuite.run}'s doc comment) is a
+  // single `string` — this legacy path predates multi-field/`false` focus,
+  // both of which are expressed through `only` above. Multi-field and
+  // `false` values collapse to the first field name (best effort) or no
+  // focus at all.
+  const fieldNameArg: string | undefined =
+    focus === false ? undefined : typeof focus === 'string' ? focus : focus[0];
+  return suite.run(value, fieldNameArg);
 }
 
 /**
@@ -491,7 +543,7 @@ function waitForSuiteIdle<TValue>(
 async function deferVestRunUntilIdle<TValue>(
   suite: Pick<VestRunnableSuite<TValue>, 'run' | 'only' | 'subscribe' | 'get'>,
   value: TValue,
-  focus: string | readonly string[] | undefined,
+  focus: VestFieldExclusion,
   previousRun: PromiseLike<void>,
   onRunStarted: (
     runResult: VestResultLike | PromiseLike<VestResultLike>,
@@ -511,8 +563,8 @@ async function deferVestRunUntilIdle<TValue>(
  * suite root isolate: `ALL_RUNNING_TESTS_FINISHED` fires `root.data.resolver()`
  * once, and any LATER `suite.run()` call on the SAME suite instance replaces
  * that resolver before the earlier call's promise ever settles. Two
- * registrations of the same suite with different field trees (e.g. two
- * `focusCurrentField` validators on different fields) each call `run()`
+ * registrations of the same suite with different `only` focus (e.g. two
+ * root-bound validators each focused on a different field) each call `run()`
  * independently, so the earlier one's promise can be superseded and never
  * settle — leaving that field `pending()` forever.
  *
@@ -642,35 +694,6 @@ function createVestEntriesForField(
 }
 
 /**
- * Restricts mapped Vest entries to the validator's own bound field when it is
- * NOT root-bound.
- *
- * Vest field paths are root-relative and Vest is stateful: fields excluded by
- * `only()` retain their previous failures, so a focused run's result can
- * still contain OTHER fields' retained messages. For a root-bound validator
- * every field is a legitimate target, so no filtering is needed. For a
- * subfield-bound validator (e.g. `focusCurrentField`), only entries for the
- * bound field itself or one of its descendants belong to this registration —
- * entries for unrelated fields are dropped rather than mis-attributed via
- * {@link resolveVestWarningFieldTree}'s bound-field fallback.
- */
-function filterEntriesForBoundField(
-  entries: readonly VestValidationEntry[],
-  boundFieldPath: string | undefined,
-): readonly VestValidationEntry[] {
-  if (boundFieldPath === undefined) {
-    return entries;
-  }
-
-  const descendantPrefix = `${boundFieldPath}.`;
-  return entries.filter(
-    (entry) =>
-      entry.fieldPath === boundFieldPath ||
-      entry.fieldPath.startsWith(descendantPrefix),
-  );
-}
-
-/**
  * Removes messages already emitted during the initial sync pass so async
  * completion only contributes newly resolved Vest errors or warnings.
  */
@@ -747,25 +770,22 @@ function createVestValidationSnapshot<TValue>(
  * Converts a Vest result into Angular validation errors, optionally subtracting
  * the sync snapshot that was already surfaced on the initial pass.
  *
- * `boundFieldPath` is the validator's own dotted field name from
- * `ctx.pathKeys()` (`undefined` for a root-bound validator). When defined,
- * entries for other fields are dropped — see
- * {@link filterEntriesForBoundField}.
+ * Every entry's `fieldPath` is resolved relative to the validator's own bound
+ * field tree (`fieldTree` — per ADR-0008, the only base there is), so no
+ * separate "which fields belong to this registration" filter is needed: each
+ * entry already routes to its own correct target via
+ * {@link resolveVestWarningFieldTree}.
  */
 function mapVestValidationResult<TValue>(
   result: VestResultLike,
   fieldTree: ReadonlyFieldTree<unknown>,
   options: VestValidationRegistrationOptions<TValue>,
-  boundFieldPath: string | undefined,
   baseline?: VestValidationSnapshot,
 ): readonly ValidationError.WithFieldTree[] {
   const errors = options.includeErrors
     ? toVestValidationErrors(
         filterExistingVestEntries(
-          filterEntriesForBoundField(
-            toVestValidationEntries(result.getErrors()),
-            boundFieldPath,
-          ),
+          toVestValidationEntries(result.getErrors()),
           baseline?.errors ?? [],
         ),
         fieldTree,
@@ -776,10 +796,7 @@ function mapVestValidationResult<TValue>(
   const warnings = options.includeWarnings
     ? toVestValidationErrors(
         filterExistingVestEntries(
-          filterEntriesForBoundField(
-            toVestValidationEntries(result.getWarnings()),
-            boundFieldPath,
-          ),
+          toVestValidationEntries(result.getWarnings()),
           baseline?.warnings ?? [],
         ),
         fieldTree,
@@ -858,14 +875,6 @@ export interface VestRegisterOptions<TValue = unknown> {
    * supplied selector. See {@link VestOnlyFieldSelector}.
    */
   readonly only?: VestOnlyFieldSelector<TValue>;
-
-  /**
-   * Derive the Vest field name to focus automatically from the field this
-   * validator is bound to. Ignored when {@link only} is provided.
-   *
-   * @default false
-   */
-  readonly focusCurrentField?: boolean;
 }
 
 /**
@@ -879,7 +888,7 @@ export interface RunVestSuiteParams<TValue> {
   >;
   readonly fieldTree: ReadonlyFieldTree<TValue>;
   readonly value: TValue;
-  readonly focus?: string | readonly string[] | undefined;
+  readonly focus?: VestFieldExclusion;
 }
 
 /**
@@ -1026,9 +1035,9 @@ export function createVestAdapter(
    *
    * Deliberately scoped to UNFOCUSED runs only (see the `focus === undefined`
    * guards at both call sites, {@link trackPendingVestRun} and this
-   * function's caller): a suite backing several `focusCurrentField`/`only`
-   * registrations for DIFFERENT fields of the SAME overall form (each bound
-   * to its own child `ReadonlyFieldTree`) is the documented, intentional
+   * function's caller): a suite backing several `only`-focused registrations
+   * for DIFFERENT fields of the SAME overall form (each bound to its own
+   * child `ReadonlyFieldTree`) is the documented, intentional
    * wave-3 (#174) pattern -- Vest's `only()` mode is SUPPOSED to retain other
    * fields' state on the one shared suite there, and that pattern already has
    * its own settlement recovery via `awaitVestRunSettlement`'s subscribe/get
@@ -1067,7 +1076,7 @@ export function createVestAdapter(
     suiteKey: object,
     fieldTree: ReadonlyFieldTree<unknown>,
     entry: VestRunCacheEntry<TValue>,
-    focus: string | readonly string[] | undefined,
+    focus: VestFieldExclusion,
   ): void {
     if (focus !== undefined) {
       return;
@@ -1198,7 +1207,7 @@ export function createVestAdapter(
       'run' | 'only' | 'subscribe' | 'get'
     >,
     value: TValue,
-    focus: string | readonly string[] | undefined,
+    focus: VestFieldExclusion,
   ): Promise<VestResultLike> {
     const previousRun = runQueueBySuite.get(suiteKey) ?? Promise.resolve();
     let resolveTail: () => void = resolveQueueTail;
@@ -1256,15 +1265,17 @@ export function createVestAdapter(
     >,
     fieldTree: ReadonlyFieldTree<TValue>,
     value: TValue,
-    focus: string | readonly string[] | undefined,
+    focus: VestFieldExclusion,
   ): VestRunCacheEntry<TValue> & { readonly fromCache: boolean } {
     const suiteKey = suite as object;
     const suiteCache = getVestSuiteRunCache(suiteKey);
     const cachedEntry = suiteCache.get(fieldTree);
     const focusKey =
-      typeof focus === 'string' || focus === undefined
-        ? focus
-        : focus.join(VEST_KEY_SEPARATOR);
+      focus === false
+        ? VEST_FOCUS_FALSE_SENTINEL
+        : typeof focus === 'string' || focus === undefined
+          ? focus
+          : focus.join(VEST_KEY_SEPARATOR);
 
     if (
       cachedEntry &&
@@ -1332,9 +1343,6 @@ export function createVestAdapter(
       includeErrors,
       includeWarnings,
       ...(registerOptions.only !== undefined && { only: registerOptions.only }),
-      ...(registerOptions.focusCurrentField !== undefined && {
-        focusCurrentField: registerOptions.focusCurrentField,
-      }),
     });
   }
 
@@ -1418,20 +1426,8 @@ export function createVestAdapter(
     suite: VestRunnableSuite<TValue>,
     validationOptions: VestValidationRegistrationOptions<TValue>,
   ): void {
-    const resolveFocus = (
-      ctx: FieldContext<TValue>,
-    ): string | readonly string[] | undefined => {
-      // An explicit `only` selector always wins so existing wiring is unchanged.
-      if (validationOptions.only) {
-        return validationOptions.only(ctx);
-      }
-
-      // Opt-in auto-focus: derive the Vest field name from the bound field.
-      if (validationOptions.focusCurrentField === true) {
-        return deriveVestFieldNameFromContext(ctx);
-      }
-
-      return undefined;
+    const resolveFocus = (ctx: FieldContext<TValue>): VestFieldExclusion => {
+      return validationOptions.only ? validationOptions.only(ctx) : undefined;
     };
 
     validateTree(path, (ctx) => {
@@ -1461,7 +1457,6 @@ export function createVestAdapter(
         entry.initialResult,
         fieldTree,
         syncOptions,
-        deriveVestFieldNameFromContext(ctx),
       );
     });
 
@@ -1559,7 +1554,6 @@ export function createVestAdapter(
           pendingResult.result,
           ctx.fieldTree,
           validationOptions,
-          deriveVestFieldNameFromContext(ctx),
           pendingResult.initialSnapshot,
         );
       },

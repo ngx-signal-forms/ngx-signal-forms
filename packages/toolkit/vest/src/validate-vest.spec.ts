@@ -1,5 +1,5 @@
 import { ApplicationRef, Component, signal } from '@angular/core';
-import { applyEach, form, FormField } from '@angular/forms/signals';
+import { form, FormField } from '@angular/forms/signals';
 import { TestBed } from '@angular/core/testing';
 import { render, screen } from '@testing-library/angular';
 import userEvent from '@testing-library/user-event';
@@ -700,221 +700,6 @@ describe('validateVest', () => {
     expect(runCount.focused).toBeGreaterThan(0);
   });
 
-  it('auto-focuses the bound field via focusCurrentField with zero only() wiring', async () => {
-    // `focusCurrentField` derives the Vest field name from the field this
-    // validator is bound to (here `email`, from `ctx.pathKeys()`), so the
-    // focused run executes only that field's test body — no hand-written
-    // `only` selector required.
-    const focusedFields: Array<string | readonly string[] | false> = [];
-    const ranTests: string[] = [];
-
-    const baseSuite = create((email: string, field?: string) => {
-      only(field);
-      test('email', 'Email is required', () => {
-        ranTests.push('email');
-        enforce(email).isNotBlank();
-      });
-      test('other', 'Other is required', () => {
-        ranTests.push('other');
-        enforce(email).isNotBlank();
-      });
-    });
-
-    const suite = {
-      ...baseSuite,
-      only(field: string | readonly string[] | false) {
-        focusedFields.push(field);
-        return {
-          run: (value: string) => {
-            return baseSuite.only(field).run(value);
-          },
-        };
-      },
-    };
-
-    @Component({
-      selector: 'ngx-test-vest-autofocus',
-      imports: [FormField],
-
-      template: `<input [formField]="f.email" />`,
-    })
-    class TestComponent {
-      readonly model = signal({ email: '' });
-      readonly f = form(this.model, (path) => {
-        validateVest(path.email, suite, { focusCurrentField: true });
-      });
-    }
-
-    const { fixture } = await render(TestComponent);
-    await TestBed.inject(ApplicationRef).whenStable();
-
-    // The derived focus targets the bound field name only.
-    expect(focusedFields).toContain('email');
-    expect(focusedFields).not.toContain('other');
-    // Only the focused field's test body executed.
-    expect(ranTests).toContain('email');
-    expect(ranTests).not.toContain('other');
-    // And the focused field still surfaces its error.
-    const errors = fixture.componentInstance.f.email().errors();
-    expect(errors).toHaveLength(1);
-    expect(errors[0]?.message).toBe('Email is required');
-  });
-
-  it('falls back to a whole-suite run when focusCurrentField is bound to the form root', async () => {
-    // A root-bound validator has an empty `ctx.pathKeys()`, so the derived Vest
-    // field name is `undefined` and the adapter must run the whole suite
-    // (`suite.run(value)`) rather than focusing an empty field name.
-    const focusedFields: Array<string | readonly string[] | false> = [];
-    const fullRunValues: Array<{ email: string }> = [];
-    const baseSuite = create((data: { email: string }, field?: string) => {
-      only(field);
-      test('email', 'Email is required', () => {
-        enforce(data.email).isNotBlank();
-      });
-    });
-    const suite = {
-      ...baseSuite,
-      only(field: string | readonly string[] | false) {
-        focusedFields.push(field);
-        return {
-          run: (value: { email: string }) => baseSuite.only(field).run(value),
-        };
-      },
-      run(value: { email: string }) {
-        fullRunValues.push(value);
-        return baseSuite.run(value);
-      },
-    };
-
-    @Component({
-      selector: 'ngx-test-vest-autofocus-root',
-      imports: [FormField],
-
-      template: `<input [formField]="f.email" />`,
-    })
-    class TestComponent {
-      readonly model = signal({ email: '' });
-      // Bound to the form root, not `path.email`.
-      readonly f = form(this.model, (path) => {
-        validateVest(path, suite, { focusCurrentField: true });
-      });
-    }
-
-    const { fixture } = await render(TestComponent);
-    await TestBed.inject(ApplicationRef).whenStable();
-
-    // No focused run was attempted; the whole-suite `run(value)` ran instead.
-    expect(focusedFields).toHaveLength(0);
-    expect(fullRunValues.length).toBeGreaterThan(0);
-    // The whole suite still surfaces the error on the bound field.
-    const errors = fixture.componentInstance.f.email().errors();
-    expect(errors).toHaveLength(1);
-    expect(errors[0]?.message).toBe('Email is required');
-  });
-
-  it('derives the dotted Vest field name from a nested/array path for focusCurrentField', async () => {
-    // For a validator bound to an array element's `sku` field via `applyEach`,
-    // `ctx.pathKeys()` yields `['items', '0', 'sku']`, so the derived Vest
-    // field name must be the dotted path `items.0.sku`.
-    const focusedFields: Array<string | readonly string[] | false> = [];
-    const ranTests: string[] = [];
-    const baseSuite = create((sku: string, field?: string) => {
-      only(field);
-      test('items.0.sku', 'SKU is required', () => {
-        ranTests.push('items.0.sku');
-        enforce(sku).isNotBlank();
-      });
-      test('other', 'Other is required', () => {
-        ranTests.push('other');
-        enforce('').isNotBlank();
-      });
-    });
-    const suite = {
-      ...baseSuite,
-      only(field: string | readonly string[] | false) {
-        focusedFields.push(field);
-        return {
-          run: (value: string) => baseSuite.only(field).run(value),
-        };
-      },
-    };
-
-    @Component({
-      selector: 'ngx-test-vest-autofocus-nested',
-      imports: [FormField],
-
-      template: `<input [formField]="f.items[0].sku" />`,
-    })
-    class TestComponent {
-      readonly model = signal({ items: [{ sku: '' }] });
-      // `applyEach` binds the validator to each array element's `sku` field,
-      // so the bound path is `items.0.sku` for the first element.
-      readonly f = form(this.model, (path) => {
-        applyEach(path.items, (item) => {
-          validateVest(item.sku, suite, { focusCurrentField: true });
-        });
-      });
-    }
-
-    const { fixture } = await render(TestComponent);
-    await TestBed.inject(ApplicationRef).whenStable();
-
-    // The derived focus is the full dotted path for the nested array field.
-    expect(focusedFields).toContain('items.0.sku');
-    // Only the focused field's test body executed.
-    expect(ranTests).toContain('items.0.sku');
-    expect(ranTests).not.toContain('other');
-    // And the focused field still surfaces its error.
-    const errors = fixture.componentInstance.f.items[0].sku().errors();
-    expect(errors).toHaveLength(1);
-    expect(errors[0]?.message).toBe('SKU is required');
-  });
-
-  it('lets an explicit only selector override focusCurrentField', async () => {
-    // When both are supplied the explicit `only` selector wins, keeping
-    // existing hand-wired focus working unchanged.
-    const focusedFields: Array<string | readonly string[] | false> = [];
-    const baseSuite = create((email: string, field?: string) => {
-      only(field);
-      test('email', 'Email is required', () => {
-        enforce(email).isNotBlank();
-      });
-    });
-    const suite = {
-      ...baseSuite,
-      only(field: string | readonly string[] | false) {
-        focusedFields.push(field);
-        return {
-          run: (value: string) => {
-            return baseSuite.only(field).run(value);
-          },
-        };
-      },
-    };
-
-    @Component({
-      selector: 'ngx-test-vest-autofocus-override',
-      imports: [FormField],
-
-      template: `<input [formField]="f.email" />`,
-    })
-    class TestComponent {
-      readonly model = signal({ email: '' });
-      readonly f = form(this.model, (path) => {
-        validateVest(path.email, suite, {
-          focusCurrentField: true,
-          only: () => 'explicit-name',
-        });
-      });
-    }
-
-    await render(TestComponent);
-    await TestBed.inject(ApplicationRef).whenStable();
-
-    expect(focusedFields).toContain('explicit-name');
-    expect(focusedFields).not.toContain('email');
-  });
-
   it('resets suite state on destroy by default (no resetOnDestroy passed)', async () => {
     const baseSuite = create((data: { email: string }) => {
       test('email', 'Email is required', () => {
@@ -1002,10 +787,16 @@ describe('validateVest', () => {
       ...baseSuite,
       only(field: string | readonly string[] | false) {
         onlyCalls += 1;
+        // The real Vest `Suite.only()` shorthand doesn't accept `false` (only
+        // the standalone `only()` hook does) and wants a mutable array, not a
+        // readonly one — narrow/clone before delegating, matching `false` to
+        // "run nothing" via an empty list.
+        const target =
+          field === false ? [] : typeof field === 'string' ? field : [...field];
         return {
           run: (value: { email: string }) => {
             onlyRunCalls += 1;
-            return baseSuite.only(field).run(value);
+            return baseSuite.only(target).run(value);
           },
         };
       },
@@ -1082,15 +873,15 @@ describe('validateVest', () => {
     expect(alphaErrors[0]?.kind).not.toBe(bravoErrors[0]?.kind);
   });
 
-  it('does not leave an earlier focusCurrentField registration permanently pending when a later registration on the same suite supersedes its run', async () => {
+  it('does not leave an earlier focused registration permanently pending when a later registration on the same suite supersedes its run', async () => {
     // Regression: Vest 6 only tracks ONE resolver per suite root isolate, so
     // calling `suite.run()` a second time for the SAME suite instance (here,
-    // via a second `focusCurrentField` registration on a different field)
-    // steals the first run's resolver. The first run's promise then never
-    // settles. Without a settlement fallback that does not depend on the
-    // superseded run's own resolver, `email` (the earlier registration,
-    // whose resolver gets stolen by `password`'s later run) would stay
-    // pending() forever even after its own async test body resolves.
+    // via a second `only`-focused registration for a different field) steals
+    // the first run's resolver. The first run's promise then never settles.
+    // Without a settlement fallback that does not depend on the superseded
+    // run's own resolver, `email` (the earlier registration, whose resolver
+    // gets stolen by `password`'s later run) would stay pending() forever
+    // even after its own async test body resolves.
     const deferred = new Map<string, () => void>();
     const awaitField = (field: string) =>
       new Promise<void>((resolve) => {
@@ -1123,10 +914,10 @@ describe('validateVest', () => {
     class TestComponent {
       readonly model = signal({ email: 'a', password: 'b' });
       readonly f = form(this.model, (path) => {
-        // Two focusCurrentField registrations sharing ONE suite instance —
-        // the documented per-field pattern from the README.
-        validateVest(path.email, suite, { focusCurrentField: true });
-        validateVest(path.password, suite, { focusCurrentField: true });
+        // Two focused registrations sharing ONE suite instance, both bound to
+        // the root (the suite is authored for the whole model — ADR-0008).
+        validateVest(path, suite, { only: () => 'email' });
+        validateVest(path, suite, { only: () => 'password' });
       });
     }
 
@@ -1214,68 +1005,6 @@ describe('validateVest', () => {
     const errors = fixture.componentInstance.signupForm.email().errors();
     expect(errors).toHaveLength(1);
     expect(errors[0]?.message).toBe('Email is required');
-  });
-
-  it('does not cross-attach another field’s retained Vest failure onto a focusCurrentField-bound field', async () => {
-    // Regression: `mapVestValidationResult` used to map the WHOLE
-    // `getErrors()`/`getWarnings()` map regardless of which field the
-    // validator was bound to. Vest is stateful — fields excluded by `only()`
-    // retain their previous failures — so once BOTH fields have failed at
-    // least once, each focusCurrentField-bound validator's fallback
-    // resolution attached the OTHER field's retained message onto its own
-    // bound field.
-    const suite = create(
-      (data: { email: string; password: string }, field?: string) => {
-        only(field);
-        test('email', 'Email is required', () => {
-          enforce(data.email).isNotBlank();
-        });
-        test('password', 'Password is required', () => {
-          enforce(data.password).isNotBlank();
-        });
-      },
-    );
-
-    @Component({
-      selector: 'ngx-test-vest-no-cross-attach',
-      imports: [FormField],
-
-      template: `
-        <input id="email" [formField]="f.email" />
-        <input id="password" [formField]="f.password" />
-      `,
-    })
-    class TestComponent {
-      readonly model = signal({ email: '', password: '' });
-      readonly f = form(this.model, (path) => {
-        validateVest(path.email, suite, { focusCurrentField: true });
-        validateVest(path.password, suite, { focusCurrentField: true });
-      });
-    }
-
-    const { fixture } = await render(TestComponent);
-    await TestBed.inject(ApplicationRef).whenStable();
-
-    // Trigger the password field's focused run too, so both fields now have
-    // a retained failure in the suite's stateful result.
-    fixture.componentInstance.model.set({ email: '', password: '' });
-    await TestBed.inject(ApplicationRef).whenStable();
-
-    const emailErrors = fixture.componentInstance.f.email().errors();
-    const passwordErrors = fixture.componentInstance.f.password().errors();
-
-    expect(emailErrors.some((e) => e.message === 'Password is required')).toBe(
-      false,
-    );
-    expect(passwordErrors.some((e) => e.message === 'Email is required')).toBe(
-      false,
-    );
-    expect(emailErrors.some((e) => e.message === 'Email is required')).toBe(
-      true,
-    );
-    expect(
-      passwordErrors.some((e) => e.message === 'Password is required'),
-    ).toBe(true);
   });
 
   it('does not let a sync Vest warning suppress a blocking async Vest error on the same field', async () => {
@@ -1398,9 +1127,9 @@ describe('validateVest', () => {
   });
 
   it('isolates two concurrently-pending field trees sharing the same suite instance (#214)', async () => {
-    // Multi-registration coverage for a different angle than the
-    // focusCurrentField superseded-run tests above: here ONE suite constant
-    // (the documented module-scope pattern) backs TWO completely separate
+    // Multi-registration coverage for a different angle than the focused
+    // superseded-run test above: here ONE suite constant (the documented
+    // module-scope pattern) backs TWO completely separate
     // `form()` field trees — as if two independent components each imported
     // the same shared suite constant — with both runs in flight at the same
     // time.
@@ -1876,5 +1605,167 @@ describe('validateVest', () => {
     expect(bioErrors).toHaveLength(1);
     expect(bioErrors[0]?.message).toBe('Consider adding more detail');
     expect(bioErrors[0]?.kind).toMatch(/^warn:vest:/);
+  });
+
+  // ADR-0008: a Vest registration's bound path value IS the suite input.
+  // `focusCurrentField` and field-scoped registration are deleted (the shape
+  // that made this bug possible in the first place); the coverage below
+  // proves the replacement contract instead.
+  describe('the bound path value is the suite input (ADR-0008)', () => {
+    it('rejects a model-scoped suite bound to a field path at compile time', () => {
+      // Reproduces the exact shape #287 reported: a suite authored for the
+      // whole model, bound to a single string field. `data.email` on a bare
+      // `string` is always `undefined`, so this pattern is not merely bad
+      // style — it is a runtime footgun the type system must reject.
+      interface SignupModel {
+        email: string;
+        password: string;
+      }
+      const suite = create((data: SignupModel) => {
+        test('email', 'Email is required', () => {
+          enforce(data.email).isNotBlank();
+        });
+      });
+
+      const signupForm = TestBed.runInInjectionContext(() => {
+        return form(
+          signal<SignupModel>({ email: '', password: '' }),
+          (path) => {
+            // @ts-expect-error -- `suite`'s input type is `SignupModel`;
+            // `path.email`'s value type is `string`. A registration's bound
+            // path value must be the suite input (ADR-0008): the mismatch is
+            // now a compile error, not silent wrong behavior at runtime.
+            validateVest(path.email, suite);
+          },
+        );
+      });
+
+      // This test's real assertion is the `@ts-expect-error` above, verified
+      // by the toolkit spec typecheck; this confirms the (suppressed) type
+      // error didn't stop the field tree from being constructed.
+      expect(signupForm).toBeDefined();
+    });
+
+    it('validates correctly when the same model-scoped suite is bound to the root', async () => {
+      interface SignupModel {
+        email: string;
+        password: string;
+      }
+      const suite = create((data: SignupModel) => {
+        test('email', 'Email is required', () => {
+          enforce(data.email).isNotBlank();
+        });
+      });
+
+      @Component({
+        selector: 'ngx-test-vest-root-binding',
+        imports: [FormField],
+
+        template: `<input [formField]="f.email" />`,
+      })
+      class TestComponent {
+        readonly model = signal<SignupModel>({ email: '', password: '' });
+        readonly f = form(this.model, (path) => {
+          // The only shape ADR-0008 supports: the suite's input type matches
+          // the bound path's value type exactly (the whole model, bound to
+          // the root).
+          validateVest(path, suite);
+        });
+      }
+
+      const { fixture } = await render(TestComponent);
+      await TestBed.inject(ApplicationRef).whenStable();
+
+      const errors = fixture.componentInstance.f.email().errors();
+      expect(errors).toHaveLength(1);
+      expect(errors[0]?.message).toBe('Email is required');
+    });
+
+    it('does not carry a permanent blocking error for a valid value (regression for the original #287 bug)', async () => {
+      // The exact reproduction from the issue: a model-scoped suite, a valid
+      // value set after mount. Bound to the field (the old documented
+      // pattern), `data.email` read `undefined` forever and the field never
+      // became valid. Bound to the root (the only supported shape now), a
+      // valid value must clear the error.
+      const suite = create((data: { email: string; password: string }) => {
+        test('email', 'Email is required', () => {
+          enforce(data.email).isNotBlank();
+        });
+      });
+
+      @Component({
+        selector: 'ngx-test-vest-no-permanent-error',
+        imports: [FormField],
+
+        template: `<input [formField]="f.email" />`,
+      })
+      class TestComponent {
+        readonly model = signal({ email: '', password: '' });
+        readonly f = form(this.model, (path) => {
+          validateVest(path, suite);
+        });
+      }
+
+      const { fixture } = await render(TestComponent);
+      await TestBed.inject(ApplicationRef).whenStable();
+      expect(fixture.componentInstance.f.email().errors()).toHaveLength(1);
+
+      fixture.componentInstance.model.set({
+        email: 'ada@example.com',
+        password: 'hunter2hunter2',
+      });
+      await TestBed.inject(ApplicationRef).whenStable();
+
+      // A valid value must not carry a permanent blocking error.
+      expect(fixture.componentInstance.f.email().errors()).toHaveLength(0);
+    });
+
+    it('binds a suite authored for a subtree to that subtree path and attaches errors to the right children', async () => {
+      // Subtree binding stays legal and correct when the suite is authored
+      // for that subtree's value — the capability ADR-0008 keeps. What was
+      // deleted is only the MISMATCH (a model-scoped suite on a narrower
+      // path), not subtree binding itself.
+      interface Address {
+        city: string;
+        zip: string;
+      }
+      const addressSuite = create((addr: Address) => {
+        test('city', 'City is required', () => {
+          enforce(addr.city).isNotBlank();
+        });
+      });
+
+      @Component({
+        selector: 'ngx-test-vest-subtree-binding',
+        imports: [FormField],
+
+        template: `
+          <input id="city" [formField]="f.address.city" />
+          <input id="zip" [formField]="f.address.zip" />
+        `,
+      })
+      class TestComponent {
+        readonly model = signal({ address: { city: '', zip: '' } });
+        readonly f = form(this.model, (path) => {
+          validateVest(path.address, addressSuite);
+        });
+      }
+
+      const { fixture } = await render(TestComponent);
+      await TestBed.inject(ApplicationRef).whenStable();
+
+      // The error attaches to the child field the Vest test named...
+      const cityErrors = fixture.componentInstance.f.address.city().errors();
+      expect(cityErrors).toHaveLength(1);
+      expect(cityErrors[0]?.message).toBe('City is required');
+
+      // ...not to its sibling...
+      expect(fixture.componentInstance.f.address.zip().errors()).toHaveLength(
+        0,
+      );
+
+      // ...and not to the bound `address` group itself.
+      expect(fixture.componentInstance.f.address().errors()).toHaveLength(0);
+    });
   });
 });
