@@ -8,9 +8,28 @@ import {
   validateAsync,
   validateTree,
 } from '@angular/forms/signals';
-import type { SuiteResult } from 'vest';
+import {
+  createVestRunCoordinator,
+  isVestResultLike,
+  VEST_KEY_SEPARATOR,
+  type VestFieldExclusion,
+  type VestResultLike,
+  type VestRunCoordinator,
+  type VestRunHandle,
+  type VestRunnableSuite,
+} from './vest-run-coordinator';
 
 /* oxlint-disable @typescript-eslint/prefer-readonly-parameter-types -- Angular Signal Forms validator callbacks and lightweight path parsing helpers operate on framework/runtime types that are not modeled as readonly. */
+
+// The Vest suite contract and the run coordinator's own types live in
+// `./vest-run-coordinator`, which owns the cache, contention detection, FIFO
+// queue, and settlement machinery. They are re-exported here because
+// `./vest-adapter` is their documented public home (see `./index.ts`).
+export type {
+  VestFieldExclusion,
+  VestResultLike,
+  VestRunnableSuite,
+} from './vest-run-coordinator';
 
 /**
  * Public constant kind prefix used for Vest `warn()` messages surfaced through
@@ -26,25 +45,6 @@ export const VEST_WARNING_KIND_PREFIX = 'warn:vest:';
  * both shapes with a single source of truth.
  */
 export const VEST_ERROR_KIND_PREFIX = 'vest:';
-
-/**
- * Vest 6.3.2's real field-exclusion argument, mirrored locally because the
- * public `vest` package entrypoint exports the `only()` *hook function* but
- * not the `FieldExclusion<F>` type it (and `Suite.only()`) accept — that type
- * lives in `vest-utils`, a transitive dependency this package does not
- * declare directly.
- *
- * Matches Vest's real shape: `FieldExclusion<F> = Maybe<OneOrMoreOf<F>>` (a
- * field name, a list of field names, or `undefined` for "no exclusion —
- * everything runs"), plus the `false` variant Vest's `only()` hook also
- * accepts to focus on nothing. `readonly F[]` (rather than `F[]`) admits
- * readonly arrays without a cast at the call site.
- */
-export type VestFieldExclusion<F extends string = string> =
-  | F
-  | readonly F[]
-  | undefined
-  | false;
 
 /**
  * Callback supplied via {@link VestRegisterOptions.only} to enable per-field
@@ -109,148 +109,6 @@ interface VestValidationSnapshot {
 }
 
 /**
- * Minimal subset of Vest's public result API required by the adapter.
- *
- * The overloads intentionally mirror Vest's selector behavior more precisely
- * than a plain `Pick<SuiteResult, ...>` so internal helpers can stay strict
- * about whole-suite versus field-scoped result shapes.
- *
- * `F` mirrors {@link VestOnlyFieldSelector}'s field-name union and defaults
- * to `string`, so the field-scoped overloads narrow to a typed suite's
- * `fields` union without affecting untyped suites.
- */
-export interface VestResultLike<F extends string = string> extends Pick<
-  SuiteResult,
-  'isPending'
-> {
-  readonly getErrors: {
-    (): VestFailureMessages;
-    (fieldName: F): VestFieldMessages;
-  };
-  readonly getWarnings: {
-    (): VestFailureMessages;
-    (fieldName: F): VestFieldMessages;
-  };
-}
-
-/**
- * Narrow runtime contract used by the adapter. The local type preserves the
- * documented Promise-like behavior of async `run()` results without requiring
- * the full generic `Suite` surface in consumers.
- */
-/**
- * `F` is the suite's own Vest field-name union, defaulting to `string` so an
- * untyped `create(…)` suite (no `create<{ fields: … }>` / schema) keeps
- * accepting any field name unchanged. A typed suite's `F` flows through
- * {@link only} and {@link get}'s `VestResultLike<F>` return, which is what
- * lets {@link VestOnlyFieldSelector}'s return type narrow at the call site
- * without the caller writing an explicit type argument — `F` is inferred
- * from the `suite` value itself. See ADR-0008 and issue #292.
- */
-export interface VestRunnableSuite<TValue, F extends string = string> {
-  /**
-   * Declared as a readonly function property (not method shorthand) so its
-   * parameter is contravariant under `strictFunctionTypes` — method
-   * parameters stay bivariant regardless of that flag, which is what
-   * previously let a suite typed for one value (e.g. the whole model) be
-   * assigned where a suite for a narrower value (e.g. a single field) was
-   * expected. See ADR-0008.
-   *
-   * `fieldName` is deliberately `string` (not `string | string[]`, and not
-   * {@link VestFieldExclusion}): a real Vest suite's own `run()` signature is
-   * derived from its callback's second parameter, which the documented
-   * idiom types as plain `field?: string` (`create((data, field?: string) =>
-   * {...})`). Contravariance means widening this beyond what real suites
-   * declare would make an ordinary `create()` suite fail assignment here —
-   * the same reasoning as {@link only}'s narrower-than-{@link
-   * VestFieldExclusion} parameter type. Multi-field and `false` focus both
-   * go through `only` instead — see {@link executeVestRun}. The returned
-   * result's `getErrors`/`getWarnings` still narrow to `F` — only the focus
-   * argument stays `string` here, not the result shape.
-   */
-  readonly run: (
-    value: TValue,
-    fieldName?: string,
-  ) => VestResultLike<F> | PromiseLike<VestResultLike<F>>;
-  reset?: () => void;
-  /**
-   * Declared as a readonly function property for the same contravariance
-   * reason as {@link run}.
-   *
-   * Deliberately narrower than {@link VestFieldExclusion} (which the
-   * public-facing {@link VestOnlyFieldSelector} and
-   * {@link RunVestSuiteParams.focus} DO use): Vest 6.3.2's real
-   * `Suite.only()` method itself only accepts `FieldExclusion<F>` (a field
-   * name, a list of field names, or `undefined`) — no `false`, no readonly
-   * arrays. Widening this member's parameter type to match
-   * {@link VestFieldExclusion} would make a real, unwrapped `create()` suite
-   * (whose own `only` is that narrower type) fail structural assignment to
-   * this interface, breaking the common case this whole contract exists to
-   * describe. The adapter narrows a wider `VestFieldExclusion` value down to
-   * this shape before ever calling `suite.only(...)` — see
-   * {@link executeVestRun}. `field` narrows from `string | string[]` to
-   * `F | F[]` — matching Vest's real `Suite.only()` — so a mistyped focus
-   * name is a compile error at the point the adapter calls it, not just at
-   * the caller-facing {@link VestOnlyFieldSelector}.
-   */
-  readonly only?: (field: F | F[]) => Pick<VestRunnableSuite<TValue, F>, 'run'>;
-  /**
-   * Optional Vest bus subscription (`suite.subscribe`). Used alongside {@link
-   * get} to recover from a superseded run — see
-   * {@link awaitVestRunSettlement}. Suites created via Vest's `create()`
-   * expose this; hand-rolled suite shapes may omit it.
-   */
-  subscribe?: (
-    event: 'ALL_RUNNING_TESTS_FINISHED',
-    callback: () => void,
-  ) => () => void;
-  /**
-   * Optional synchronous accessor for the suite's current accumulated result
-   * (`suite.get`). Used alongside {@link subscribe} to recover from a
-   * superseded run — see {@link awaitVestRunSettlement}.
-   */
-  get?: () => VestResultLike<F>;
-}
-
-/**
- * Cached Vest run keyed by suite instance and Angular field tree so sync and
- * async validation can share a single suite execution.
- *
- * Deliberately NOT parameterized by the suite's field-name union `F` (see
- * {@link VestRunnableSuite}): the underlying `WeakMap` is shared across every
- * `register()` / `runVestSuite()` call the adapter ever sees, each
- * potentially carrying a different `F`. `runResult`/`initialResult` are
- * widened to the string-keyed `VestResultLike` when an entry is created (see
- * the cast in `getOrCreateVestRun`) — safe because every internal reader
- * calls `getErrors()`/`getWarnings()` with zero arguments only.
- */
-interface VestRunCacheEntry<TValue> {
-  readonly value: TValue;
-  readonly focus: string | undefined;
-  readonly runResult: VestResultLike | PromiseLike<VestResultLike>;
-  readonly initialResult: VestResultLike | undefined;
-  /**
-   * `true` when this run was deferred via `deferVestRunUntilIdle` because
-   * another field tree had a concurrently pending run against the SAME suite
-   * instance when this one was requested — see
-   * {@link isSuiteContestedByOtherTree}.
-   *
-   * This is NOT the same question as "is this run currently pending" —
-   * it marks HOW the run was scheduled, for the lifetime of this cache entry,
-   * so the async completion pipeline knows to await `runResult` directly
-   * rather than racing it against the suite-wide `ALL_RUNNING_TESTS_FINISHED`
-   * bus event (see the call site in `registerVestValidation`'s `factory`).
-   * That race is what {@link awaitVestRunSettlement} uses to recover a
-   * SUPERSEDED run's promise, but `runResult` here is a plain `Promise` that
-   * does not even call `suite.run()` until the suite is idle — racing it
-   * against the CURRENT bus event (fired by whichever OTHER run made the
-   * suite idle) would resolve with `suite.get()`'s state from BEFORE this
-   * run started, not this run's own outcome.
-   */
-  readonly deferred: boolean;
-}
-
-/**
  * Internal registration flags that decide whether blocking errors, warnings, or
  * both should be mapped into Angular Signal Forms.
  */
@@ -264,10 +122,9 @@ interface VestValidationRegistrationOptions<TValue, F extends string = string> {
  * Resource payload for pending Vest async validation.
  */
 interface PendingVestValidationPayload {
-  readonly runResult: VestResultLike | PromiseLike<VestResultLike>;
+  /** The coordinated run's settlement promise -- see {@link VestRunHandle}. */
+  readonly settled: () => PromiseLike<unknown>;
   readonly initialSnapshot: VestValidationSnapshot;
-  /** Mirrors {@link VestRunCacheEntry.deferred}. */
-  readonly deferred: boolean;
 }
 
 /**
@@ -278,29 +135,8 @@ interface ResolvedVestValidationPayload {
   readonly initialSnapshot: VestValidationSnapshot;
 }
 
-/**
- * Strongly typed per-suite cache used to share a single Vest run between the
- * sync and async Angular validation phases.
- */
-type VestRunCache = WeakMap<
-  ReadonlyFieldTree<unknown>,
-  VestRunCacheEntry<unknown>
->;
-
 const VEST_PATH_SEGMENT = /[^.[\]]+/gu;
 const VEST_KIND_SEGMENT_MAX_LEN = 48;
-const resolveQueueTail = (): void => {};
-
-/**
- * Internal composite-key separator. A NUL code point can never appear in a Vest
- * field path, message, or focus name, so it composes collision-free keys for the
- * baseline dedupe map and the focus cache key. Declared with an explicit
- * `\u0000` escape in a named constant (rather than a literal control character
- * embedded in template strings) so the separator stays visible and
- * tooling/formatter/diff-safe.
- */
-const VEST_KEY_SEPARATOR = '\u0000';
-
 /**
  * Internal sentinel `fieldPath` meaning "attach directly to the validator's
  * own bound field tree" rather than resolving a child field by name.
@@ -313,33 +149,6 @@ const VEST_KEY_SEPARATOR = '\u0000';
  * the validator-bound field instead of resolved to the `root` child field.
  */
 const VEST_ROOT_FIELD_SENTINEL = `${VEST_KEY_SEPARATOR}root${VEST_KEY_SEPARATOR}`;
-
-/**
- * Internal sentinel run-cache focus key for a "focus nothing" run —
- * {@link isVestFocusNothing}'s `true` case (the toolkit's own `false`
- * sentinel, or an empty field-name list) — distinguishing it from a `focus
- * === undefined` ("whole suite") run in the cache-hit comparison. Composed
- * the same way as {@link VEST_ROOT_FIELD_SENTINEL} so it can never collide
- * with a real, string- or array-derived focus key. Both `false` and `[]`
- * share this ONE key (rather than each computing their own) because they
- * are the SAME semantic request — see {@link isVestFocusNothing}'s doc
- * comment for why a bare `focus.join(...)` on `[]` is unsafe (it collides
- * with a field literally named `''`).
- */
-const VEST_FOCUS_NOTHING_SENTINEL = `${VEST_KEY_SEPARATOR}nothing${VEST_KEY_SEPARATOR}`;
-
-/**
- * Runtime guard for the subset of Vest's public result object that the adapter
- * consumes.
- */
-function isVestResultLike(value: unknown): value is VestResultLike {
-  return (
-    value !== null &&
-    (typeof value === 'object' || typeof value === 'function') &&
-    typeof Reflect.get(value, 'getErrors') === 'function' &&
-    typeof Reflect.get(value, 'getWarnings') === 'function'
-  );
-}
 
 function isThenable(value: unknown): value is PromiseLike<unknown> {
   return (
@@ -603,236 +412,6 @@ function resolveVestValidationFieldTree(
 }
 
 /**
- * Reports whether `focus` is a deliberate "run nothing" selection — the
- * toolkit's own `false` sentinel, or an empty field-name list.
- *
- * Vest cannot express this through either `suite.only()` or the legacy
- * `suite.run(value, fieldName)` form. Empirically verified against
- * `vest@6.3.2`: `suite.only([])`, `suite.only(false)`, and `suite.only('')`
- * all run the WHOLE suite — Vest treats an empty/falsy exclusion list as "no
- * filter", identically to calling `suite.run(value)` with no focus at all —
- * so there is no reliable, documented way to map "focus nothing" onto
- * `suite.only()`. (The one construction that DOES run zero tests —
- * `suite.only(['a-field-name-that-cannot-exist'])` — depends on the adapter
- * fabricating a name guaranteed never to collide with a real Vest field,
- * which nothing in Vest's public contract promises stays true.) Rather than
- * silently doing the OPPOSITE of what the caller asked for,
- * {@link executeVestRun} throws when this is `true`.
- */
-function isVestFocusNothing(focus: VestFieldExclusion): focus is false {
-  // Declared as `focus is false` (rather than plain `boolean`) purely so
-  // callers get a narrowed `focus` afterward — this function is used both
-  // where that matters (`executeVestRun`, which throws in the `true` branch
-  // without touching `focus` again) and where it doesn't (the cache-key
-  // ternary below). An empty array satisfying this predicate is NOT
-  // literally `false`, but every caller either throws or discards `focus`
-  // in that branch, so the imprecision is harmless.
-  return focus === false || (Array.isArray(focus) && focus.length === 0);
-}
-
-/**
- * Executes `suite.run()` using the appropriate focused-run targeting.
- *
- * Prefers the Vest 6 canonical `suite.only(field).run(value)` form — that
- * matches the upgrade-guide idiom where focus logic is kept out of the suite
- * body. Falls back to the legacy `suite.run(value, fieldName)` form only when
- * the suite does not expose `only` (e.g. consumer-wrapped suites that
- * surface a `run`-only adapter).
- */
-function executeVestRun<TValue, F extends string = string>(
-  suite: Pick<VestRunnableSuite<TValue, F>, 'run' | 'only'>,
-  value: TValue,
-  focus: VestFieldExclusion<F>,
-): VestResultLike<F> | PromiseLike<VestResultLike<F>> {
-  if (focus === undefined) {
-    return suite.run(value);
-  }
-
-  if (isVestFocusNothing(focus)) {
-    throw new Error(
-      '[ngx-signal-forms] A Vest `only` selector returned `false` (or an ' +
-        'empty field-name list), requesting a "focus nothing" run. Vest has ' +
-        'no reliable way to express that through `suite.only()` or ' +
-        '`suite.run(value, fieldName)` — both treat an empty selection as ' +
-        '"run the whole suite", the opposite of what was requested. Return ' +
-        'a field name, a list of field names, or `undefined` for a ' +
-        'whole-suite run.',
-    );
-  }
-
-  if (typeof suite.only === 'function') {
-    // `suite.only` (see {@link VestRunnableSuite.only}'s doc comment) only
-    // accepts `F | F[]` — no readonly arrays. Clone a readonly array into a
-    // mutable one.
-    const focusArg: F | F[] = typeof focus === 'string' ? focus : [...focus];
-    const focused = suite.only(focusArg);
-    return focused.run(value);
-  }
-
-  // No `only` shorthand: fall back to `suite.run(value, fieldName)`, whose
-  // second argument (see {@link VestRunnableSuite.run}'s doc comment) is a
-  // single `string` — this legacy path predates multi-field focus, which is
-  // expressed through `only` above and collapses to the first field name.
-  return suite.run(value, typeof focus === 'string' ? focus : focus[0]);
-}
-
-/**
- * Resolves once `suite` has no test currently in flight.
- *
- * Vest suites created via `create()` are single-flight: calling ANY method
- * that re-executes the suite's callback (`run()`, `only().run()`, and even
- * `runStatic()` — verified empirically, since `runStatic()`'s persisted
- * binding re-enters the ORIGINAL suite's runtime context to invoke its
- * throwaway instance) while a PREVIOUS run on the SAME suite instance is
- * still pending corrupts that previous run's resolver, per
- * {@link awaitVestRunSettlement}'s doc comment. There is no supported way to
- * safely touch a Vest suite instance while it has an in-flight run.
- *
- * When the suite exposes `subscribe`/`get` (true for suites created via
- * Vest's `create()`), this checks `get().isPending()` and, if so, resolves on
- * the next suite-wide `ALL_RUNNING_TESTS_FINISHED` bus event — a pure
- * readiness signal, independent of which specific run's resolver ends up
- * firing it. Suites without `subscribe`/`get` resolve immediately (best
- * effort; contention avoidance is only guaranteed for real Vest suites).
- */
-function waitForSuiteIdle<TValue, F extends string = string>(
-  suite: Pick<VestRunnableSuite<TValue, F>, 'subscribe' | 'get'>,
-): PromiseLike<void> {
-  if (
-    typeof suite.subscribe !== 'function' ||
-    typeof suite.get !== 'function'
-  ) {
-    return Promise.resolve();
-  }
-
-  const subscribe = suite.subscribe;
-  if (!suite.get().isPending()) {
-    return Promise.resolve();
-  }
-
-  return new Promise((resolve) => {
-    // `subscribe`'s callback can fire synchronously; capture `unsubscribe` as
-    // `let` so an immediate callback doesn't read it before assignment (same
-    // TDZ hazard `awaitVestRunSettlement` guards against below).
-    let unsubscribe: (() => void) | undefined;
-    unsubscribe = subscribe('ALL_RUNNING_TESTS_FINISHED', () => {
-      unsubscribe?.();
-      resolve();
-    });
-  });
-}
-
-/**
- * Runs `suite` for `(value, focus)` after the previous queued run has settled
- * and once the suite is idle. Calls `onRunStarted` synchronously after this
- * contender's own `suite.run()` begins, so its queue tail cannot be released
- * by an earlier contender's idle event.
- *
- * This trades a small amount of latency (the deferred tree's validation
- * genuinely waits for the other tree's async work to finish before its own
- * even starts) for full correctness, using only the same `run()` /
- * `subscribe()` / `get()` surface every other code path already relies on —
- * no suite-internal API beyond what {@link awaitVestRunSettlement} already
- * uses.
- */
-async function deferVestRunUntilIdle<TValue, F extends string = string>(
-  suite: Pick<
-    VestRunnableSuite<TValue, F>,
-    'run' | 'only' | 'subscribe' | 'get'
-  >,
-  value: TValue,
-  focus: VestFieldExclusion<F>,
-  previousRun: PromiseLike<void>,
-  onRunStarted: (
-    runResult: VestResultLike<F> | PromiseLike<VestResultLike<F>>,
-  ) => void,
-): Promise<VestResultLike<F>> {
-  await previousRun;
-  await waitForSuiteIdle(suite);
-  const runResult = executeVestRun(suite, value, focus);
-  onRunStarted(runResult);
-  return runResult;
-}
-
-/**
- * Awaits a Vest run's settlement, recovering from a superseded resolver.
- *
- * Vest 6's `suite.run()` promise resolves via a single resolver tracked per
- * suite root isolate: `ALL_RUNNING_TESTS_FINISHED` fires `root.data.resolver()`
- * once, and any LATER `suite.run()` call on the SAME suite instance replaces
- * that resolver before the earlier call's promise ever settles. Two
- * registrations of the same suite with different `only` focus (e.g. two
- * root-bound validators each focused on a different field) each call `run()`
- * independently, so the earlier one's promise can be superseded and never
- * settle — leaving that field `pending()` forever.
- *
- * When the suite exposes `subscribe`/`get` (true for suites created via
- * Vest's `create()`), race the run's own promise against the suite-wide
- * `ALL_RUNNING_TESTS_FINISHED` bus event, which only fires once ALL pending
- * tests — including this run's — have finished, regardless of which `run()`
- * call's resolver ends up firing it. On that event, `suite.get()` returns the
- * suite's current accumulated result, which by then reflects this run's
- * outcome. Suites without `subscribe`/`get` fall back to the original
- * (potentially superseded) promise unchanged.
- */
-function awaitVestRunSettlement<TValue, F extends string = string>(
-  runResult: VestResultLike<F> | PromiseLike<VestResultLike<F>>,
-  suite: Pick<VestRunnableSuite<TValue, F>, 'subscribe' | 'get'>,
-): PromiseLike<unknown> {
-  if (
-    typeof suite.subscribe !== 'function' ||
-    typeof suite.get !== 'function'
-  ) {
-    return Promise.resolve(runResult);
-  }
-  const subscribe = suite.subscribe;
-  const get = suite.get;
-
-  return new Promise((resolve, reject) => {
-    let settled = false;
-    // Declared as `let` (not `const subscribe(...)` return) and guarded with
-    // `?.()`: some suites invoke the `subscribe` callback SYNCHRONOUSLY (e.g.
-    // if all tests already finished before this call), which would otherwise
-    // try to read `unsubscribe` before its initializer has run — a TDZ
-    // `ReferenceError` that would leave this promise unsettled forever.
-    let unsubscribe: (() => void) | undefined;
-
-    const settle = (fn: (value: unknown) => void, value: unknown): void => {
-      if (settled) {
-        return;
-      }
-      settled = true;
-      unsubscribe?.();
-      fn(value);
-    };
-
-    Promise.resolve(runResult).then(
-      (value) => {
-        settle(resolve, value);
-        return undefined;
-      },
-      (error: unknown) => {
-        settle(reject, error);
-        return undefined;
-      },
-    );
-
-    unsubscribe = subscribe('ALL_RUNNING_TESTS_FINISHED', () => {
-      settle(resolve, get());
-    });
-
-    // If the callback above fired synchronously (during the `subscribe()`
-    // call itself), `settle()` ran before `unsubscribe` was assigned, so its
-    // `unsubscribe?.()` was a no-op. Clean up the now-stale subscription here
-    // instead, now that we hold a reference to it.
-    // oxlint-disable-next-line @typescript-eslint/no-unnecessary-condition -- `settled` may be flipped synchronously by the subscribe callback above; static analysis cannot model that closure write.
-    if (settled) {
-      unsubscribe();
-    }
-  });
-}
-
-/**
  * Type guard distinguishing Vest's field-scoped message list (an array) from
  * the whole-suite failure map (a keyed object). Lets callers narrow the union
  * without an unsafe cast — `Array.isArray` alone does not remove the
@@ -962,12 +541,18 @@ type VestValidationFlags = Pick<
   'includeErrors' | 'includeWarnings'
 >;
 
+// Those same three helpers stay generic in `F` for their `result` parameter:
+// each calls `getErrors()`/`getWarnings()` with ZERO arguments only — the
+// whole-suite overload, identical for every field-name union — so accepting
+// `VestResultLike<F>` costs nothing and spares every call site holding a
+// typed suite's narrower result a cast back to `VestResultLike<string>`.
+
 /**
  * Captures the sync snapshot from a Vest result so pending async validation can
  * later calculate only the newly resolved delta.
  */
-function createVestValidationSnapshot(
-  result: VestResultLike,
+function createVestValidationSnapshot<F extends string = string>(
+  result: VestResultLike<F>,
   options: VestValidationFlags,
 ): VestValidationSnapshot {
   return {
@@ -990,8 +575,8 @@ function createVestValidationSnapshot(
  * entry already routes to its own correct target via
  * {@link resolveVestValidationFieldTree}.
  */
-function mapVestValidationResult(
-  result: VestResultLike,
+function mapVestValidationResult<F extends string = string>(
+  result: VestResultLike<F>,
   fieldTree: ReadonlyFieldTree<unknown>,
   options: VestValidationFlags,
   baseline?: VestValidationSnapshot,
@@ -1035,9 +620,9 @@ function mapVestValidationResult(
  * suite settles, {@link mapVestValidationResult}'s async `onSuccess` mapping
  * surfaces them together with the final result.
  */
-function shouldDeferVestWarnings(
+function shouldDeferVestWarnings<F extends string = string>(
   options: VestValidationFlags,
-  initialResult: VestResultLike,
+  initialResult: VestResultLike<F>,
 ): boolean {
   return options.includeWarnings && initialResult.isPending();
 }
@@ -1111,8 +696,8 @@ export interface RunVestSuiteParams<TValue, F extends string = string> {
 /**
  * Result of a shared, cache-aware single Vest run. `initialResult` is the
  * synchronous `SuiteResult` (or `undefined` when the suite's `run()` returns a
- * raw thenable — including a run deferred to avoid contention, see
- * {@link isSuiteContestedByOtherTree}), `runResult` is the underlying
+ * raw thenable — including a run the coordinator deferred to avoid
+ * contention, see {@link VestRunHandle}), `runResult` is the underlying
  * sync-or-async run value, and `fromCache` reports whether this run reused a
  * previously cached execution for the identical `(suite, fieldTree, value,
  * focus)` tuple.
@@ -1199,359 +784,15 @@ export function createVestAdapter(
   options: VestAdapterOptions = {},
 ): VestSuiteAdapter {
   const defaultResetOnDestroy = options.resetOnDestroy ?? true;
-  const runCache = new WeakMap<object, VestRunCache>();
+  // The run coordinator owns the cache, contention detection, FIFO queue and
+  // settlement machinery. Each adapter instance gets its own, so two adapters
+  // never share a run cache. See `./vest-run-coordinator.ts`.
+  const coordinator: VestRunCoordinator = createVestRunCoordinator();
   // Tracks how many live `resetOnDestroy`-enabled registrations currently
   // reference each suite, so a suite shared across concurrently mounted forms
   // (the README-recommended module-scope pattern) is only reset once the
   // LAST registration tears down -- see `maybeRegisterResetOnDestroy`.
   const resetOnDestroyRefCounts = new WeakMap<object, number>();
-  // Tracks, per suite, which field trees currently have a run PENDING against
-  // it -- see `isSuiteContestedByOtherTree`. A plain (non-weak) Map is
-  // required here (unlike `runCache`) because contention detection needs to
-  // enumerate/count entries, which `WeakMap` cannot do. Entries are removed
-  // as soon as their run settles (`trackPendingVestRun`), so this only ever
-  // holds field trees with a run genuinely in flight -- bounded, self-cleaning
-  // bookkeeping, not a suite-lifetime membership list.
-  const pendingTreesBySuite = new Map<
-    object,
-    Map<ReadonlyFieldTree<unknown>, VestRunCacheEntry<unknown>>
-  >();
-  // The latest queued run for each suite. The first, uncontested run still
-  // executes synchronously; its settlement is recorded here so subsequent
-  // contenders wait for it. Every queued run replaces the tail before it
-  // starts, making B and C serialize even when both were deferred behind A.
-  const runQueueBySuite = new WeakMap<object, Promise<void>>();
-
-  /**
-   * Retrieves the per-suite validation cache, creating it on first access.
-   */
-  function getVestSuiteRunCache(suite: object): VestRunCache {
-    const existingCache = runCache.get(suite);
-    if (existingCache) {
-      return existingCache;
-    }
-
-    const nextCache: VestRunCache = new WeakMap();
-    runCache.set(suite, nextCache);
-    return nextCache;
-  }
-
-  /**
-   * Reports whether `suite` currently has a PENDING, UNFOCUSED (whole-suite)
-   * run for some field tree OTHER than `fieldTree`.
-   *
-   * This is the precise condition under which Vest's shared, reconciled
-   * isolate tree is at risk: the reconciler merges/cancels pending test nodes
-   * from an in-flight run when a NEW `run()` call lands on the SAME suite
-   * before the earlier one settles (see {@link awaitVestRunSettlement}'s doc
-   * comment) -- if that overlap involves two DIFFERENT field trees, either
-   * one's final result can end up reflecting a blend of both trees' data
-   * (issue #214). When no OTHER tree is currently pending, the shared path is
-   * safe and preserves full Vest statefulness (memoization, retained `warn()`
-   * state across runs, etc.) for the common single-tree-per-suite case.
-   *
-   * Deliberately scoped to UNFOCUSED runs only (see the `focus === undefined`
-   * guards at both call sites, {@link trackPendingVestRun} and this
-   * function's caller): a suite backing several `only`-focused registrations
-   * for DIFFERENT fields of the SAME overall form (each bound to its own
-   * child `ReadonlyFieldTree`) is the documented, intentional
-   * wave-3 (#174) pattern -- Vest's `only()` mode is SUPPOSED to retain other
-   * fields' state on the one shared suite there, and that pattern already has
-   * its own settlement recovery via `awaitVestRunSettlement`'s subscribe/get
-   * race. It is indistinguishable from the issue #214 shape (same suite
-   * object, different `ReadonlyFieldTree` reference) by field-tree identity
-   * alone; `focus` is the one signal the adapter has that tells them apart --
-   * two unrelated forms sharing a suite have no reason to pass a focus field
-   * name, while the multi-field-single-form pattern always does.
-   */
-  function isSuiteContestedByOtherTree(
-    suiteKey: object,
-    fieldTree: ReadonlyFieldTree<unknown>,
-  ): boolean {
-    const pendingTrees = pendingTreesBySuite.get(suiteKey);
-    if (!pendingTrees || pendingTrees.size === 0) {
-      return false;
-    }
-
-    return pendingTrees.size > 1 || !pendingTrees.has(fieldTree);
-  }
-
-  /**
-   * Records `fieldTree` as having a pending, UNFOCUSED run for `suiteKey`
-   * when `entry`'s run has not yet settled, and removes it once the run
-   * settles. No-op for a focused run -- see
-   * {@link isSuiteContestedByOtherTree}'s doc comment for why focused runs
-   * are excluded from contention tracking entirely.
-   *
-   * The removal is guarded by identity (`pendingTrees.get(fieldTree) ===
-   * entry`) so a LATER run for the same field tree -- which replaces this
-   * entry in the run cache before this one settles -- is never accidentally
-   * un-tracked by this entry's own (possibly superseded, possibly
-   * never-firing) settlement callback.
-   */
-  function trackPendingVestRun<TValue>(
-    suiteKey: object,
-    fieldTree: ReadonlyFieldTree<unknown>,
-    entry: VestRunCacheEntry<TValue>,
-    focus: VestFieldExclusion,
-  ): void {
-    if (focus !== undefined) {
-      return;
-    }
-
-    const isPending = !entry.initialResult || entry.initialResult.isPending();
-    if (!isPending) {
-      return;
-    }
-
-    let pendingTrees = pendingTreesBySuite.get(suiteKey);
-    if (!pendingTrees) {
-      pendingTrees = new Map();
-      pendingTreesBySuite.set(suiteKey, pendingTrees);
-    }
-    pendingTrees.set(fieldTree, entry);
-
-    const untrack = (): void => {
-      const currentPendingTrees = pendingTreesBySuite.get(suiteKey);
-      if (
-        !currentPendingTrees ||
-        currentPendingTrees.get(fieldTree) !== entry
-      ) {
-        return;
-      }
-
-      currentPendingTrees.delete(fieldTree);
-      if (currentPendingTrees.size === 0) {
-        pendingTreesBySuite.delete(suiteKey);
-      }
-    };
-
-    Promise.resolve(entry.runResult).then(untrack, untrack);
-  }
-
-  /**
-   * Waits for a started run to leave the suite idle state. Vest 6's
-   * `SuiteResult` is thenable, but a later run can supersede its resolver and
-   * leave that thenable pending forever. The idle event is tied to the suite
-   * lifecycle instead, so it is the reliable queue boundary for real Vest
-   * suites. Hand-rolled suites retain the thenable-based best-effort fallback.
-   */
-  function waitForStartedVestRunTail<TValue, F extends string = string>(
-    suite: Pick<VestRunnableSuite<TValue, F>, 'subscribe' | 'get'>,
-    runResult: VestResultLike<F> | PromiseLike<VestResultLike<F>>,
-  ): Promise<void> {
-    const settleRunResult = (): Promise<void> => {
-      return Promise.resolve(runResult).then(
-        () => undefined,
-        () => undefined,
-      );
-    };
-
-    if (
-      typeof suite.subscribe !== 'function' ||
-      typeof suite.get !== 'function'
-    ) {
-      return settleRunResult();
-    }
-
-    try {
-      return new Promise((resolve) => {
-        // A rejected run must not hold the queue forever. Successful Vest 6
-        // thenables are intentionally ignored here because they can be
-        // superseded; the suite idle event settles the normal path.
-        void Promise.resolve(runResult).then(
-          () => undefined,
-          () => {
-            resolve();
-            return undefined;
-          },
-        );
-        void Promise.resolve(waitForSuiteIdle(suite)).then(resolve, resolve);
-      });
-    } catch {
-      return settleRunResult();
-    }
-  }
-
-  /**
-   * Extends the per-suite queue boundary with a pre-built tail. This must retain
-   * an earlier reserved deferred boundary when an immediate focused run starts:
-   * later whole-suite contenders must still wait for that reserved work.
-   */
-  function recordVestRunTail(suiteKey: object, settled: Promise<void>): void {
-    const previousTail = runQueueBySuite.get(suiteKey) ?? Promise.resolve();
-    // Absorb either tail's rejection so a failed run cannot strand later
-    // contenders. `tail` represents the complete serialized boundary, not
-    // merely the most recently started run.
-    const tail = previousTail
-      .then(
-        () => settled,
-        () => settled,
-      )
-      .then(
-        () => undefined,
-        () => undefined,
-      );
-    runQueueBySuite.set(suiteKey, tail);
-    void tail.then(() => {
-      if (runQueueBySuite.get(suiteKey) === tail) {
-        runQueueBySuite.delete(suiteKey);
-      }
-      return undefined;
-    });
-  }
-
-  /**
-   * Records an immediately started run as the per-suite queue tail.
-   */
-  function recordVestRun<TValue, F extends string = string>(
-    suiteKey: object,
-    suite: Pick<VestRunnableSuite<TValue, F>, 'subscribe' | 'get'>,
-    runResult: VestResultLike<F> | PromiseLike<VestResultLike<F>>,
-  ): void {
-    recordVestRunTail(suiteKey, waitForStartedVestRunTail(suite, runResult));
-  }
-
-  /**
-   * Adds a contested run to the per-suite exclusive queue. The prior tail is
-   * captured before this run is recorded as the new tail, so multiple callers
-   * deferred behind one pending run start in FIFO order rather than together.
-   */
-  function enqueueVestRun<TValue, F extends string = string>(
-    suiteKey: object,
-    suite: Pick<
-      VestRunnableSuite<TValue, F>,
-      'run' | 'only' | 'subscribe' | 'get'
-    >,
-    value: TValue,
-    focus: VestFieldExclusion<F>,
-  ): Promise<VestResultLike<F>> {
-    const previousRun = runQueueBySuite.get(suiteKey) ?? Promise.resolve();
-    let resolveTail: () => void = resolveQueueTail;
-    const tail = new Promise<void>((resolve) => {
-      resolveTail = resolve;
-    });
-    // Reserve this slot before the contender begins. Its tail remains pending
-    // until this contender has actually started and the suite subsequently
-    // becomes idle, preserving FIFO ordering for every later contender.
-    recordVestRunTail(suiteKey, tail);
-    const runResult = deferVestRunUntilIdle(
-      suite,
-      value,
-      focus,
-      previousRun,
-      (startedRunResult) => {
-        void waitForStartedVestRunTail(suite, startedRunResult).then(
-          resolveTail,
-          resolveTail,
-        );
-      },
-    );
-    void runResult.then(
-      () => undefined,
-      () => {
-        resolveTail();
-        return undefined;
-      },
-    );
-    return runResult;
-  }
-
-  /**
-   * Reuses an existing Vest run for the same suite, Angular field tree, model
-   * reference, and focus key; or executes the suite once and caches the result.
-   *
-   * When `suite.run()` returns a thenable directly (rather than the documented
-   * synchronous `SuiteResult`), we capture `initialResult` as `undefined` and
-   * rely on the async branch to drive completion from the promise. This guards
-   * against consumer-wrapped suites that coerce `run()` into a Promise.
-   *
-   * Before executing a NEW run, checks whether `suite` currently has another
-   * field tree's run pending (`isSuiteContestedByOtherTree`) -- i.e. the same
-   * suite instance backs two concurrently-live field trees with overlapping
-   * in-flight validation (issue #214). When contested, the run is deferred
-   * until the suite is idle (`deferVestRunUntilIdle`) so it can never overlap
-   * with -- and thus never observe or corrupt -- the other tree's in-flight
-   * state; otherwise it runs against the suite's normal shared state
-   * immediately, exactly as before.
-   */
-  function getOrCreateVestRun<TValue, F extends string = string>(
-    suite: Pick<
-      VestRunnableSuite<TValue, F>,
-      'run' | 'only' | 'subscribe' | 'get'
-    >,
-    fieldTree: ReadonlyFieldTree<TValue>,
-    value: TValue,
-    focus: VestFieldExclusion<F>,
-  ): VestRunCacheEntry<TValue> & { readonly fromCache: boolean } {
-    const suiteKey = suite as object;
-    const suiteCache = getVestSuiteRunCache(suiteKey);
-    const cachedEntry = suiteCache.get(fieldTree);
-    const focusKey = isVestFocusNothing(focus)
-      ? VEST_FOCUS_NOTHING_SENTINEL
-      : typeof focus === 'string' || focus === undefined
-        ? focus
-        : focus.join(VEST_KEY_SEPARATOR);
-
-    if (
-      cachedEntry &&
-      Object.is(cachedEntry.value, value) &&
-      cachedEntry.focus === focusKey
-    ) {
-      return {
-        value,
-        focus: focusKey,
-        runResult: cachedEntry.runResult,
-        initialResult: cachedEntry.initialResult,
-        deferred: cachedEntry.deferred,
-        fromCache: true,
-      };
-    }
-
-    const isContested =
-      focus === undefined && isSuiteContestedByOtherTree(suiteKey, fieldTree);
-    const runResult = isContested
-      ? enqueueVestRun(suiteKey, suite, value, focus)
-      : executeVestRun(suite, value, focus);
-    if (!isContested) {
-      recordVestRun(suiteKey, suite, runResult);
-    }
-
-    const nextEntry: VestRunCacheEntry<TValue> = {
-      value,
-      focus: focusKey,
-      // `runResult` is typed `VestResultLike<F>` here (the suite's own
-      // field-name union), but the shared run cache entry is intentionally
-      // NOT parameterized by `F` — one `WeakMap` stores runs for every
-      // suite `register()`/`runVestSuite()` ever sees, each with its own,
-      // potentially different, `F`. Every internal consumer of a cached
-      // `runResult` (this file's `mapVestValidationResult` and friends) only
-      // ever calls `getErrors()`/`getWarnings()` with ZERO arguments — the
-      // whole-suite overload, unaffected by `F` — so widening to the shared,
-      // string-keyed shape here is safe. See {@link VestRunCacheEntry}.
-      runResult: runResult as VestResultLike | PromiseLike<VestResultLike>,
-      // Vest 6's `suite.run(...)` returns a dual-shaped object that is *both*
-      // a synchronous `SuiteResult` (with `getErrors`/`isPending`) and a
-      // thenable. Previously we gated `initialResult` with `!isThenable(...)`,
-      // which would always be false for Vest 6 suites and forced every
-      // validation run through the async pipeline — hiding sync errors until
-      // the next microtask. Check the sync surface directly instead. A
-      // deferred (contested) run's `runResult` is a plain `Promise` (not
-      // Vest-result-like) until it actually starts, so it correctly falls
-      // into the "no sync result yet" branch below regardless.
-      initialResult: isVestResultLike(runResult) ? runResult : undefined,
-      deferred: isContested,
-    };
-
-    suiteCache.set(fieldTree, nextEntry);
-    trackPendingVestRun(
-      suiteKey,
-      fieldTree as ReadonlyFieldTree<unknown>,
-      nextEntry,
-      focus,
-    );
-    return { ...nextEntry, fromCache: false };
-  }
 
   function register<TValue, F extends string = string>(
     path: VestFieldPath<TValue>,
@@ -1574,22 +815,26 @@ export function createVestAdapter(
   function runVestSuite<TValue, F extends string = string>(
     params: RunVestSuiteParams<TValue, F>,
   ): RunVestSuiteResult<TValue, F> {
-    return getOrCreateVestRun(
-      params.suite,
-      params.fieldTree,
-      params.value,
-      params.focus,
-    );
+    const handle = coordinator.request({
+      suite: params.suite,
+      // Per-(suite, field tree) caching: the bound field tree IS the cache
+      // key on the built-in path.
+      cacheKey: params.fieldTree,
+      value: params.value,
+      ...(params.focus !== undefined && { focus: params.focus }),
+    });
+
+    return {
+      value: handle.value,
+      focus: handle.focus,
+      runResult: handle.runResult,
+      initialResult: handle.initialResult,
+      fromCache: handle.fromCache,
+    };
   }
 
   function invalidate(suite: object): void {
-    runCache.delete(suite);
-    // Also drop contention bookkeeping so a reset suite starts from a clean
-    // slate -- otherwise a stale pending marker from a run that never settled
-    // before teardown could permanently (and incorrectly) mark a
-    // subsequently-reused suite as contested.
-    pendingTreesBySuite.delete(suite);
-    runQueueBySuite.delete(suite);
+    coordinator.invalidate(suite);
   }
 
   /**
@@ -1624,7 +869,7 @@ export function createVestAdapter(
       return;
     }
 
-    const suiteKey = suite as object;
+    const suiteKey: object = suite;
     resetOnDestroyRefCounts.set(
       suiteKey,
       (resetOnDestroyRefCounts.get(suiteKey) ?? 0) + 1,
@@ -1660,14 +905,28 @@ export function createVestAdapter(
       return validationOptions.only ? validationOptions.only(ctx) : undefined;
     };
 
-    validateTree(path, (ctx) => {
-      const { fieldTree, value } = ctx;
-      const entry = getOrCreateVestRun(
+    /**
+     * Asks the run coordinator for this pass's run. The validator's bound
+     * field tree doubles as the coordinator's cache key, which is what keeps
+     * the sync (`validateTree`) and async (`validateAsync`) phases of one
+     * registration -- and every other registration bound to the same tuple --
+     * on a single `suite.run()` execution.
+     */
+    const requestRun = (
+      ctx: FieldContext<TValue>,
+    ): VestRunHandle<TValue, F> => {
+      const focus = resolveFocus(ctx);
+      return coordinator.request({
         suite,
-        fieldTree,
-        value(),
-        resolveFocus(ctx),
-      );
+        cacheKey: ctx.fieldTree,
+        value: ctx.value(),
+        ...(focus !== undefined && { focus }),
+      });
+    };
+
+    validateTree(path, (ctx) => {
+      const { fieldTree } = ctx;
+      const entry = requestRun(ctx);
 
       if (!entry.initialResult) {
         return [];
@@ -1692,13 +951,7 @@ export function createVestAdapter(
 
     validateAsync(path, {
       params: (ctx) => {
-        const { fieldTree, value } = ctx;
-        const entry = getOrCreateVestRun(
-          suite,
-          fieldTree,
-          value(),
-          resolveFocus(ctx),
-        );
+        const entry = requestRun(ctx);
 
         // When `run()` returned a raw Promise (no sync SuiteResult), drive the
         // async pipeline directly from the thenable. Otherwise require the sync
@@ -1709,9 +962,8 @@ export function createVestAdapter(
           }
 
           return {
-            runResult: entry.runResult,
+            settled: entry.settled,
             initialSnapshot: { errors: [], warnings: [] },
-            deferred: entry.deferred,
           } satisfies PendingVestValidationPayload;
         }
 
@@ -1735,29 +987,21 @@ export function createVestAdapter(
           : validationOptions;
 
         return {
-          runResult: entry.runResult,
+          settled: entry.settled,
           initialSnapshot: createVestValidationSnapshot(
             entry.initialResult,
             snapshotOptions,
           ),
-          deferred: entry.deferred,
         } satisfies PendingVestValidationPayload;
       },
       factory: (pendingValidation) => {
         return resource({
           params: pendingValidation,
           loader: async ({ params }) => {
-            // A deferred run's `runResult` (see `deferVestRunUntilIdle`) does
-            // not even call `suite.run()` until the suite becomes idle, so
-            // racing it against the suite-wide `ALL_RUNNING_TESTS_FINISHED`
-            // bus event here would resolve with `suite.get()`'s state from
-            // BEFORE this run started (whatever made the suite idle in the
-            // first place), not this run's own outcome. Its plain `Promise`
-            // already resolves correctly on its own once the deferred run
-            // actually completes, so await it directly.
-            const result = params.deferred
-              ? await params.runResult
-              : await awaitVestRunSettlement(params.runResult, suite);
+            // The coordinator owns the settlement strategy (bus-event race
+            // for an immediate run, direct await for a deferred one) -- this
+            // layer only awaits the handle it was given.
+            const result = await params.settled();
             if (!isVestResultLike(result)) {
               // Throw so this lands in the validator's `onError` handler below,
               // which already encodes the right policy: blocking validators
