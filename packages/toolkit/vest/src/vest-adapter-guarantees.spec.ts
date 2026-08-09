@@ -1,5 +1,14 @@
-import { ApplicationRef, Component, signal } from '@angular/core';
-import { form, FormField } from '@angular/forms/signals';
+import {
+  ApplicationRef,
+  Component,
+  signal,
+  type WritableSignal,
+} from '@angular/core';
+import {
+  form,
+  FormField,
+  type ReadonlyFieldTree,
+} from '@angular/forms/signals';
 import { TestBed } from '@angular/core/testing';
 import { render } from '@testing-library/angular';
 import { create, enforce, test as vestTest } from 'vest';
@@ -23,6 +32,17 @@ import { createVestAdapter, sharedVestAdapter } from './vest-adapter';
  * within one test run. The `sharedVestAdapter` test additionally calls
  * `invalidate()` on its own suite once done, as an extra belt-and-braces
  * reset.
+ *
+ * Tests that only need a `ReadonlyFieldTree` identity (not a rendered,
+ * bound-to-the-DOM form) build one via `TestBed.runInInjectionContext(() =>
+ * form(...))` directly in the test body, with no `@Component`/`render()` at
+ * all -- the same pattern `validate-vest.spec.ts` already uses for
+ * field-tree-only setup. Tests that DO need a real validateVest/register
+ * pipeline (and so a rendered component) capture the field tree and model
+ * into spec-local bindings from inside the component's constructor, rather
+ * than reading them back out through `fixture.componentInstance` -- keeping
+ * the assertions against the field tree's own public, observable API
+ * (`errors()`, `pending()`, ...) instead of the test harness's internals.
  */
 describe('VestSuiteAdapter — exported-interface guarantees', () => {
   describe('sharedVestAdapter', () => {
@@ -41,6 +61,9 @@ describe('VestSuiteAdapter — exported-interface guarantees', () => {
         },
       };
 
+      let f!: ReadonlyFieldTree<{ email: string }>;
+      let model!: WritableSignal<{ email: string }>;
+
       @Component({
         selector: 'ngx-test-shared-adapter-singleton',
         imports: [FormField],
@@ -54,9 +77,14 @@ describe('VestSuiteAdapter — exported-interface guarantees', () => {
           // onto sharedVestAdapter -- not a private, factory-built adapter.
           validateVest(path, suite);
         });
+
+        constructor() {
+          f = this.f;
+          model = this.model;
+        }
       }
 
-      const { fixture } = await render(TestComponent);
+      await render(TestComponent);
       await TestBed.inject(ApplicationRef).whenStable();
       expect(runCount).toBe(1);
 
@@ -65,8 +93,8 @@ describe('VestSuiteAdapter — exported-interface guarantees', () => {
       // execution validateVest already triggered -- not a second run.
       const manual = sharedVestAdapter.runVestSuite({
         suite,
-        fieldTree: fixture.componentInstance.f,
-        value: fixture.componentInstance.model(),
+        fieldTree: f,
+        value: model(),
       });
 
       expect(manual.fromCache).toBe(true);
@@ -77,7 +105,7 @@ describe('VestSuiteAdapter — exported-interface guarantees', () => {
   });
 
   describe('invalidate', () => {
-    it('drops the cached run so a subsequent runVestSuite call for the identical tuple re-executes instead of reusing the cache', async () => {
+    it('drops the cached run so a subsequent runVestSuite call for the identical tuple re-executes instead of reusing the cache', () => {
       const adapter = createVestAdapter();
 
       let runCount = 0;
@@ -94,19 +122,12 @@ describe('VestSuiteAdapter — exported-interface guarantees', () => {
         },
       };
 
-      @Component({
-        selector: 'ngx-test-adapter-invalidate',
-        imports: [FormField],
-
-        template: `<input [formField]="f.email" />`,
-      })
-      class TestComponent {
-        readonly model = signal({ email: '' });
-        readonly f = form(this.model);
-      }
-
-      const { fixture } = await render(TestComponent);
-      const fieldTree = fixture.componentInstance.f;
+      // Only the field tree's identity is needed (no rendering, no DOM
+      // binding) -- build it directly in the test body via an injection
+      // context, matching validate-vest.spec.ts's field-tree-only setup.
+      const fieldTree = TestBed.runInInjectionContext(() =>
+        form(signal({ email: '' })),
+      );
       const value = { email: '' };
 
       const first = adapter.runVestSuite({ suite, fieldTree, value });
@@ -223,19 +244,10 @@ describe('VestSuiteAdapter — exported-interface guarantees', () => {
         },
       };
 
-      @Component({
-        selector: 'ngx-test-adapter-multi-focus',
-        imports: [FormField],
-
-        template: `<input [formField]="f.email" />`,
-      })
-      class TestComponent {
-        readonly model = signal({ email: '', username: '' });
-        readonly f = form(this.model);
-      }
-
-      const { fixture } = await render(TestComponent);
-      const fieldTree = fixture.componentInstance.f;
+      // Only the field tree's identity is needed here too.
+      const fieldTree = TestBed.runInInjectionContext(() =>
+        form(signal({ email: '', username: '' })),
+      );
       const value = { email: '', username: '' };
 
       const singleFocus = adapter.runVestSuite({
@@ -277,7 +289,25 @@ describe('VestSuiteAdapter — exported-interface guarantees', () => {
   });
 
   describe('contention detection / FIFO run queue', () => {
-    it('serializes two concurrently-pending unfocused runs on one suite across two field trees, in FIFO order, executing the suite exactly once per tree', async () => {
+    /**
+     * Resolves the async test body's `await` gate at `index`, waiting for it
+     * to be registered first. A bare `gates[index]?.()` silently no-ops when
+     * the gate has not been pushed yet (e.g. because a preceding contender
+     * hasn't actually started its deferred run), which converts a real
+     * scheduling regression into an indefinite hang somewhere later in the
+     * test instead of a fast, attributable failure right here.
+     */
+    async function releaseGate(
+      gates: readonly (() => void)[],
+      index: number,
+    ): Promise<void> {
+      await vi.waitFor(() => {
+        expect(gates[index]).toBeDefined();
+      });
+      gates[index]();
+    }
+
+    it('serializes three concurrently-pending unfocused runs on one suite across three field trees, in strict FIFO order, executing the suite exactly once per tree', async () => {
       const adapter = createVestAdapter();
       const runCallOrder: string[] = [];
       const gates: Array<() => void> = [];
@@ -299,25 +329,18 @@ describe('VestSuiteAdapter — exported-interface guarantees', () => {
         },
       };
 
-      @Component({
-        selector: 'ngx-test-adapter-contention',
-        imports: [FormField],
-
-        template: `
-          <input [formField]="formA.value" />
-          <input [formField]="formB.value" />
-        `,
-      })
-      class TestComponent {
-        readonly modelA = signal({ value: 'a' });
-        readonly modelB = signal({ value: 'b' });
-        readonly formA = form(this.modelA);
-        readonly formB = form(this.modelB);
-      }
-
-      const { fixture } = await render(TestComponent);
-      const fieldTreeA = fixture.componentInstance.formA;
-      const fieldTreeB = fixture.componentInstance.formB;
+      // Three independent field trees on the SAME suite -- only their
+      // identity matters here, so build them directly rather than rendering
+      // a component.
+      const fieldTreeA = TestBed.runInInjectionContext(() =>
+        form(signal({ value: 'a' })),
+      );
+      const fieldTreeB = TestBed.runInInjectionContext(() =>
+        form(signal({ value: 'b' })),
+      );
+      const fieldTreeC = TestBed.runInInjectionContext(() =>
+        form(signal({ value: 'c' })),
+      );
 
       // Tree A: uncontested (nothing else pending on this suite yet) -- runs
       // immediately.
@@ -340,22 +363,43 @@ describe('VestSuiteAdapter — exported-interface guarantees', () => {
       expect(resultB.fromCache).toBe(false);
       expect(runCallOrder).toEqual(['run:a']);
 
+      // Tree C: a THIRD field tree requested while BOTH A and B are still
+      // pending on the same suite -- also contested, and must queue behind
+      // B specifically (FIFO), not race it or skip ahead.
+      const resultC = adapter.runVestSuite({
+        suite,
+        fieldTree: fieldTreeC,
+        value: { value: 'c' },
+      });
+      expect(resultC.fromCache).toBe(false);
+      expect(runCallOrder).toEqual(['run:a']);
+
       // Let A's async test settle -> the suite goes idle -> B's deferred run
-      // starts automatically.
-      gates[0]?.();
+      // starts automatically. C must NOT start yet -- it is queued behind B.
+      await releaseGate(gates, 0);
       await Promise.resolve(resultA.runResult);
 
       await vi.waitFor(() => {
         expect(runCallOrder).toEqual(['run:a', 'run:b']);
       });
 
-      // Clean up B's now-started async test so nothing dangles past the test.
-      gates[1]?.();
+      // Let B's async test settle -> the suite goes idle again -> C's
+      // deferred run starts only now, strictly after B.
+      await releaseGate(gates, 1);
       await Promise.resolve(resultB.runResult);
 
+      await vi.waitFor(() => {
+        expect(runCallOrder).toEqual(['run:a', 'run:b', 'run:c']);
+      });
+
+      // Clean up C's now-started async test so nothing dangles past the test.
+      await releaseGate(gates, 2);
+      await Promise.resolve(resultC.runResult);
+
       // FIFO + single-execution: each tree's suite.run() fired exactly once,
-      // and B's call happened strictly after A's settled -- never together.
-      expect(runCallOrder).toEqual(['run:a', 'run:b']);
+      // strictly in request order -- A, then B (only after A settled), then
+      // C (only after B settled) -- never together, never out of order.
+      expect(runCallOrder).toEqual(['run:a', 'run:b', 'run:c']);
     });
   });
 
@@ -368,6 +412,8 @@ describe('VestSuiteAdapter — exported-interface guarantees', () => {
         });
       });
 
+      let f!: ReadonlyFieldTree<{ email: string }>;
+
       @Component({
         selector: 'ngx-test-adapter-kind-truncation',
         imports: [FormField],
@@ -379,12 +425,19 @@ describe('VestSuiteAdapter — exported-interface guarantees', () => {
         readonly f = form(this.model, (path) => {
           validateVest(path, suite);
         });
+
+        constructor() {
+          f = this.f;
+        }
       }
 
-      const { fixture } = await render(TestComponent);
+      await render(TestComponent);
       await TestBed.inject(ApplicationRef).whenStable();
 
-      const [error] = fixture.componentInstance.f.email().errors();
+      // Assert through the field tree's own observable `errors()` contract
+      // (captured from the component's constructor above), not by reaching
+      // into the test harness's `fixture.componentInstance`.
+      const [error] = f.email().errors();
       expect(error).toBeDefined();
 
       // kind = `vest:${normalizedField}:${normalizedMessage}:${occurrence}`
