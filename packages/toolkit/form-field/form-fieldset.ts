@@ -22,6 +22,10 @@ import {
   NGX_FORM_FIELD_ERROR_RENDERER,
   type NgxFormFieldErrorPlacement,
 } from '@ngx-signal-forms/toolkit';
+import {
+  resolveUnionInput,
+  type WarnOnceRef,
+} from '@ngx-signal-forms/toolkit/core';
 
 export type NgxFormFieldsetFeedbackAppearance =
   | 'auto'
@@ -36,6 +40,31 @@ export type NgxFormFieldsetSurfaceTone =
   | 'warning'
   | 'danger';
 export type NgxFormFieldsetValidationSurface = 'never' | 'always';
+
+const FIELDSET_APPEARANCE_VALUES = [
+  'outline',
+  'plain',
+] as const satisfies readonly NgxFormFieldsetAppearance[];
+
+const FIELDSET_FEEDBACK_APPEARANCE_VALUES = [
+  'auto',
+  'plain',
+  'notification',
+] as const satisfies readonly NgxFormFieldsetFeedbackAppearance[];
+
+const FIELDSET_VALIDATION_SURFACE_VALUES = [
+  'never',
+  'always',
+] as const satisfies readonly NgxFormFieldsetValidationSurface[];
+
+const FIELDSET_SURFACE_TONE_VALUES = [
+  'default',
+  'neutral',
+  'info',
+  'success',
+  'warning',
+  'danger',
+] as const satisfies readonly NgxFormFieldsetSurfaceTone[];
 
 /**
  * Form fieldset component for grouping related form fields with aggregated error/warning display.
@@ -316,68 +345,51 @@ export class NgxFormFieldset {
     );
   });
 
-  #warnedInvalidFeedbackAppearance = false;
-  #warnedInvalidAppearance = false;
-  #warnedInvalidSurfaceTone = false;
-  #warnedInvalidValidationSurface = false;
+  readonly #warnedInvalidFeedbackAppearance: WarnOnceRef = { current: false };
+  readonly #warnedInvalidAppearance: WarnOnceRef = { current: false };
+  readonly #warnedInvalidSurfaceTone: WarnOnceRef = { current: false };
+  readonly #warnedInvalidValidationSurface: WarnOnceRef = { current: false };
   #warnedTitleIgnoredOnPlain = false;
 
   protected readonly resolvedAppearance = computed<NgxFormFieldsetAppearance>(
-    () => {
-      const appearance = this.appearance();
-
-      if (appearance === 'outline' || appearance === 'plain') {
-        return appearance;
-      }
-
-      if (isDevMode() && !this.#warnedInvalidAppearance) {
-        this.#warnedInvalidAppearance = true;
-        // oxlint-disable-next-line no-console -- dev-mode misconfiguration signal
-        console.error(
-          `[ngx-signal-forms] NgxFormFieldset: unknown appearance "${String(appearance)}". ` +
-            `Expected 'outline' | 'plain'. Falling back to 'outline'.`,
-        );
-      }
-
-      return 'outline';
-    },
+    () =>
+      resolveUnionInput(this.appearance(), FIELDSET_APPEARANCE_VALUES, {
+        component: 'NgxFormFieldset',
+        prop: 'appearance',
+        fallback: 'outline',
+        warned: this.#warnedInvalidAppearance,
+      }),
   );
 
   protected readonly resolvedFeedbackAppearance = computed<
     Exclude<NgxFormFieldsetFeedbackAppearance, 'auto'>
   >(() => {
-    const appearance = this.feedbackAppearance();
+    const appearance = resolveUnionInput(
+      this.feedbackAppearance(),
+      FIELDSET_FEEDBACK_APPEARANCE_VALUES,
+      {
+        component: 'NgxFormFieldset',
+        prop: 'feedbackAppearance',
+        fallback: 'notification',
+        warned: this.#warnedInvalidFeedbackAppearance,
+      },
+    );
 
     if (
-      appearance === 'auto' ||
-      appearance === 'plain' ||
-      appearance === 'notification'
+      appearance === 'plain' &&
+      !this.#warnedTitleIgnoredOnPlain &&
+      this.notificationTitle() &&
+      isDevMode()
     ) {
-      if (
-        appearance === 'plain' &&
-        !this.#warnedTitleIgnoredOnPlain &&
-        this.notificationTitle() &&
-        isDevMode()
-      ) {
-        this.#warnedTitleIgnoredOnPlain = true;
-        // oxlint-disable-next-line no-console -- dev-mode misconfiguration signal
-        console.warn(
-          `[ngx-signal-forms] NgxFormFieldset: notificationTitle is ignored when feedbackAppearance="plain"; ` +
-            `the title only renders inside the notification card. Remove the title input or switch to feedbackAppearance="notification".`,
-        );
-      }
-      return appearance === 'plain' ? 'plain' : 'notification';
-    }
-
-    if (isDevMode() && !this.#warnedInvalidFeedbackAppearance) {
-      this.#warnedInvalidFeedbackAppearance = true;
+      this.#warnedTitleIgnoredOnPlain = true;
       // oxlint-disable-next-line no-console -- dev-mode misconfiguration signal
-      console.error(
-        `[ngx-signal-forms] NgxFormFieldset: unknown feedbackAppearance "${String(appearance)}". ` +
-          `Expected 'auto' | 'plain' | 'notification'. Falling back to 'notification'.`,
+      console.warn(
+        `[ngx-signal-forms] NgxFormFieldset: notificationTitle is ignored when feedbackAppearance="plain"; ` +
+          `the title only renders inside the notification card. Remove the title input or switch to feedbackAppearance="notification".`,
       );
     }
-    return 'notification';
+
+    return appearance === 'plain' ? 'plain' : 'notification';
   });
 
   protected readonly usesNotificationFeedback = computed(() => {
@@ -439,45 +451,27 @@ export class NgxFormFieldset {
   );
 
   protected readonly resolvedValidationSurface =
-    computed<NgxFormFieldsetValidationSurface>(() => {
-      const value = this.validationSurface();
-      if (value === 'never' || value === 'always') {
-        return value;
-      }
-      if (isDevMode() && !this.#warnedInvalidValidationSurface) {
-        this.#warnedInvalidValidationSurface = true;
-        // oxlint-disable-next-line no-console -- dev-mode misconfiguration signal
-        console.error(
-          `[ngx-signal-forms] NgxFormFieldset: unknown validationSurface "${String(value)}". ` +
-            `Expected 'never' | 'always'. Falling back to 'never'.`,
-        );
-      }
-      return 'never';
-    });
+    computed<NgxFormFieldsetValidationSurface>(() =>
+      resolveUnionInput(
+        this.validationSurface(),
+        FIELDSET_VALIDATION_SURFACE_VALUES,
+        {
+          component: 'NgxFormFieldset',
+          prop: 'validationSurface',
+          fallback: 'never',
+          warned: this.#warnedInvalidValidationSurface,
+        },
+      ),
+    );
 
   protected readonly resolvedSurfaceTone = computed<NgxFormFieldsetSurfaceTone>(
-    () => {
-      const value = this.surfaceTone();
-      if (
-        value === 'default' ||
-        value === 'neutral' ||
-        value === 'info' ||
-        value === 'success' ||
-        value === 'warning' ||
-        value === 'danger'
-      ) {
-        return value;
-      }
-      if (isDevMode() && !this.#warnedInvalidSurfaceTone) {
-        this.#warnedInvalidSurfaceTone = true;
-        // oxlint-disable-next-line no-console -- dev-mode misconfiguration signal
-        console.error(
-          `[ngx-signal-forms] NgxFormFieldset: unknown surfaceTone "${String(value)}". ` +
-            `Expected 'default' | 'neutral' | 'info' | 'success' | 'warning' | 'danger'. Falling back to 'default'.`,
-        );
-      }
-      return 'default';
-    },
+    () =>
+      resolveUnionInput(this.surfaceTone(), FIELDSET_SURFACE_TONE_VALUES, {
+        component: 'NgxFormFieldset',
+        prop: 'surfaceTone',
+        fallback: 'default',
+        warned: this.#warnedInvalidSurfaceTone,
+      }),
   );
 
   protected readonly showInvalidSurface = computed(() => {
