@@ -44,10 +44,24 @@ const RELATIVE_DTS_SPECIFIER = './ngx-signal-forms-toolkit-core.js';
 const CORE_FESM_BASENAME = 'ngx-signal-forms-toolkit-core.mjs';
 const CORE_DTS_BASENAME = 'ngx-signal-forms-toolkit-core.d.ts';
 
+const escapeRegExp = (/** @type {string} */ value) =>
+  value.replaceAll(/[.*+?^${}()|[\]\\]/gu, '\\$&');
+
+// Matches the package-name specifier under either quote style (`'…'` or
+// `"…"`), including inside inline `import("…").Type` type references that
+// `tsc` emits double-quoted. The backreference (`\1`) ties the closing quote
+// to whichever quote opened the match, so a mismatched pair never matches.
+const QUOTED_SPECIFIER_PATTERN = new RegExp(
+  `(['"])${escapeRegExp(PACKAGE_CORE_SPECIFIER)}\\1`,
+  'gu',
+);
+
 /** @type {string[]} */
 const rewrittenMjs = [];
 /** @type {string[]} */
 const rewrittenDts = [];
+/** @type {string[]} */
+const danglingReferences = [];
 
 const rewriteImportSpecifier = (
   /** @type {string} */ dir,
@@ -63,11 +77,23 @@ const rewriteImportSpecifier = (
     const content = readFileSync(filePath, 'utf8');
     if (!content.includes(PACKAGE_CORE_SPECIFIER)) continue;
     const rewritten = content.replaceAll(
-      `'${PACKAGE_CORE_SPECIFIER}'`,
-      `'${newSpecifier}'`,
+      QUOTED_SPECIFIER_PATTERN,
+      (/** @type {string} */ _match, /** @type {string} */ quote) =>
+        `${quote}${newSpecifier}${quote}`,
     );
-    writeFileSync(filePath, rewritten);
-    bucket.push(name);
+    if (rewritten !== content) {
+      writeFileSync(filePath, rewritten);
+      bucket.push(name);
+    }
+    // The gate above is a cheap substring pre-check; this is the real
+    // post-condition. A file can still contain the raw specifier after the
+    // rewrite if it appears in a form the regex above does not recognize
+    // (e.g. split across a template literal). Publishing with that
+    // reference intact would throw `ERR_PACKAGE_PATH_NOT_EXPORTED` the
+    // moment `"./core"` is stripped from `exports`, so treat it as fatal.
+    if (rewritten.includes(PACKAGE_CORE_SPECIFIER)) {
+      danglingReferences.push(filePath);
+    }
   }
 };
 
@@ -85,6 +111,17 @@ rewriteImportSpecifier(
   RELATIVE_DTS_SPECIFIER,
   rewrittenDts,
 );
+
+if (danglingReferences.length > 0) {
+  console.error(
+    `[toolkit] ERROR: ${danglingReferences.length} file(s) still reference '${PACKAGE_CORE_SPECIFIER}' after the rewrite pass:`,
+  );
+  for (const filePath of danglingReferences) console.error(`  ${filePath}`);
+  console.error(
+    '[toolkit] Aborting before stripping "./core" from the exports map — publishing now would throw ERR_PACKAGE_PATH_NOT_EXPORTED on import.',
+  );
+  process.exit(1);
+}
 
 /** @typedef {{ exports?: Record<string, unknown> }} PackageJsonLike */
 
