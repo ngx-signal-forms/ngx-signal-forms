@@ -86,6 +86,7 @@ describe('NgxSignalFormAutoAria', () => {
     invalid = false,
     touched = false,
     errors: unknown[] = [],
+    required = false,
   ) => {
     const fieldState = {
       invalid: signal(invalid),
@@ -94,7 +95,7 @@ describe('NgxSignalFormAutoAria', () => {
       valid: signal(!invalid),
       dirty: signal(touched),
       value: signal(''),
-      required: signal(false),
+      required: signal(required),
       focusBoundControl: vi.fn(),
     };
     // Control signal returns a function (signal) that returns the field state object
@@ -417,6 +418,80 @@ describe('NgxSignalFormAutoAria', () => {
 
       const input = container.querySelector('input');
       expect(input?.hasAttribute('aria-invalid')).toBe(false);
+    });
+  });
+
+  describe('ARIA Required role gating (issue #300)', () => {
+    /**
+     * `NgxSignalFormAutoAria`'s generic selector also matches
+     * `NgxFormFieldWrapper`'s host when a multi-control cluster binds
+     * `[formField]` directly on the wrapper — the real-world path that
+     * surfaced issue #300. These fixtures use a bare `<div>` instead of the
+     * full wrapper component to keep this a directive-level unit test.
+     */
+    it('does NOT set aria-required on a host with role="group"', async () => {
+      @Component({
+        template:
+          '<div role="group" id="cluster" [formField]="clusterControl()"></div>',
+        imports: [MockFormFieldDirective, NgxSignalFormAutoAria],
+      })
+      class TestComponent {
+        clusterControl = createMockControl(
+          true,
+          true,
+          [{ kind: 'required', message: 'Field is required' }],
+          true,
+        );
+      }
+
+      const { container } = await render(TestComponent);
+      await TestBed.inject(ApplicationRef).whenStable();
+
+      const group = container.querySelector('[role="group"]');
+      expect(group?.hasAttribute('aria-required')).toBe(false);
+    });
+
+    it('still sets aria-required="true" on a host with role="radiogroup"', async () => {
+      @Component({
+        template:
+          '<div role="radiogroup" id="cluster" [formField]="clusterControl()"></div>',
+        imports: [MockFormFieldDirective, NgxSignalFormAutoAria],
+      })
+      class TestComponent {
+        clusterControl = createMockControl(
+          true,
+          true,
+          [{ kind: 'required', message: 'Field is required' }],
+          true,
+        );
+      }
+
+      const { container } = await render(TestComponent);
+      await TestBed.inject(ApplicationRef).whenStable();
+
+      const group = container.querySelector('[role="radiogroup"]');
+      expect(group?.getAttribute('aria-required')).toBe('true');
+    });
+
+    it('still sets aria-required="true" on a host with no role attribute', async () => {
+      @Component({
+        template: '<div id="cluster" [formField]="clusterControl()"></div>',
+        imports: [MockFormFieldDirective, NgxSignalFormAutoAria],
+      })
+      class TestComponent {
+        clusterControl = createMockControl(
+          true,
+          true,
+          [{ kind: 'required', message: 'Field is required' }],
+          true,
+        );
+      }
+
+      const { container } = await render(TestComponent);
+      await TestBed.inject(ApplicationRef).whenStable();
+
+      const group = container.querySelector('#cluster');
+      expect(group?.getAttribute('aria-required')).toBe('true');
     });
   });
 

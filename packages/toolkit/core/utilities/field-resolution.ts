@@ -213,3 +213,24 @@ export function buildAriaDescribedBy(
 export function generateWarningId(fieldName: string): string {
   return `${fieldName}-warning`;
 }
+
+/**
+ * Generates the ID for a selection cluster's visually-hidden required hint.
+ *
+ * `role="group"` does not support `aria-required` (only `radiogroup` does),
+ * so `NgxFormFieldWrapper` relocates required-ness for `group` clusters into
+ * a visually-hidden node referenced by `aria-describedby` instead of an ARIA
+ * state — see
+ * https://github.com/ngx-signal-forms/ngx-signal-forms/issues/300.
+ *
+ * @param fieldName - The field name
+ * @returns The required-hint ID in format: `{fieldName}-required-hint`
+ *
+ * @example
+ * ```typescript
+ * generateRequiredHintId('consent'); // Returns: 'consent-required-hint'
+ * ```
+ */
+export function generateRequiredHintId(fieldName: string): string {
+  return `${fieldName}-required-hint`;
+}

@@ -39,6 +39,7 @@ interface AutoAriaDomSnapshot {
   readonly describedBy: string | null;
   readonly ariaInvalid: string | null;
   readonly ariaRequired: string | null;
+  readonly role: string | null;
 }
 
 const INITIAL_DOM_SNAPSHOT: AutoAriaDomSnapshot = {
@@ -46,6 +47,7 @@ const INITIAL_DOM_SNAPSHOT: AutoAriaDomSnapshot = {
   describedBy: null,
   ariaInvalid: null,
   ariaRequired: null,
+  role: null,
 };
 
 /**
@@ -365,12 +367,30 @@ export class NgxSignalFormAutoAria {
    * Returns 'true' | null based on the field's `required()` signal.
    *
    * Delegates to {@link createAriaRequiredSignal} for the actual resolution.
-   * The directive shell only owns the manual-mode opt-out branch — when
-   * `ngxSignalFormControlAria='manual'`, the consumer's DOM value wins.
+   * The directive shell owns two branches on top of that unconditional
+   * factory:
+   *
+   * - manual-mode opt-out — when `ngxSignalFormControlAria='manual'`, the
+   *   consumer's DOM value wins.
+   * - role-aware suppression — `aria-required` is only valid ARIA on a
+   *   handful of roles (`radiogroup`, `combobox`, `textbox`, …) plus native
+   *   form controls with no explicit role. This directive also matches
+   *   `NgxFormFieldWrapper`'s host when a multi-control cluster binds
+   *   `[formField]` directly on the wrapper, and that host can carry
+   *   `role="group"` for a checkbox cluster — a role ARIA does NOT allow
+   *   `aria-required` on. Rather than enumerate every allowed role, this
+   *   blocks the one role this directive can attach to that forbids it;
+   *   `radiogroup` (the wrapper's other cluster role) and plain controls
+   *   (no `role` attribute) are unaffected. See
+   *   https://github.com/ngx-signal-forms/ngx-signal-forms/issues/300.
    */
   protected readonly ariaRequired = computed(() => {
     if (this.#isManualAriaMode()) {
       return this.#domSnapshot().ariaRequired;
+    }
+
+    if (this.#domSnapshot().role === 'group') {
+      return null;
     }
 
     return this.#ariaRequiredFromFactory();
@@ -487,6 +507,13 @@ export class NgxSignalFormAutoAria {
       describedBy: this.#readPreservedDescribedBy(fieldName),
       ariaInvalid: this.#element.nativeElement.getAttribute('aria-invalid'),
       ariaRequired: this.#element.nativeElement.getAttribute('aria-required'),
+      // Read fresh every tick (rather than cached) so the `group` gate in
+      // `ariaRequired` above reacts the same render cycle a host's `role`
+      // changes — e.g. `NgxFormFieldWrapper` switching cluster kind. Host
+      // `[attr.*]` bindings on the same element are already flushed to the
+      // DOM by the time `afterEveryRender` runs, so this reflects the
+      // current render's role, not a stale one.
+      role: this.#element.nativeElement.getAttribute('role'),
     };
   }
 
@@ -527,7 +554,8 @@ export class NgxSignalFormAutoAria {
             current.fieldName !== snapshot.fieldName ||
             current.describedBy !== snapshot.describedBy ||
             current.ariaInvalid !== snapshot.ariaInvalid ||
-            current.ariaRequired !== snapshot.ariaRequired
+            current.ariaRequired !== snapshot.ariaRequired ||
+            current.role !== snapshot.role
           ) {
             this.#domSnapshot.set(snapshot);
           }

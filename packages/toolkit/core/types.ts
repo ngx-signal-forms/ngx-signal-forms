@@ -365,6 +365,18 @@ export interface NgxSignalFormsConfig {
    * @default 'All fields are required unless marked {marker}'
    */
   optionalLegendText: string;
+
+  /**
+   * Text for the visually-hidden required-state hint on a `role="group"`
+   * multi-control selection cluster (e.g. a required checkbox cluster).
+   *
+   * `group` does not support `aria-required` (only `radiogroup` does), so
+   * `NgxFormFieldWrapper` relocates required-ness into this text, exposed
+   * via `aria-describedby` instead of an ARIA state — see
+   * https://github.com/ngx-signal-forms/ngx-signal-forms/issues/300.
+   * @default 'required'
+   */
+  requiredHintText: string;
 }
 
 /**
@@ -398,4 +410,9 @@ export interface NgxSignalFormsUserConfig {
   requiredLegendText?: string;
   /** Override the `'optional'` legend text. `{marker}` is substituted. */
   optionalLegendText?: string;
+  /**
+   * Override the visually-hidden required-hint text for `role="group"`
+   * selection clusters. Pass `''` to clear an inherited hint.
+   */
+  requiredHintText?: string;
 }

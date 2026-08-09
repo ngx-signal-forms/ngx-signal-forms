@@ -84,6 +84,11 @@ function createConfigFactory(
         configDefault: parentOrNull?.optionalLegendText,
         fallback: DEFAULT_NGX_SIGNAL_FORMS_CONFIG.optionalLegendText,
       }),
+      requiredHintText: createCascadingResolver({
+        input: userConfig.requiredHintText,
+        configDefault: parentOrNull?.requiredHintText,
+        fallback: DEFAULT_NGX_SIGNAL_FORMS_CONFIG.requiredHintText,
+      }),
     };
   };
 }

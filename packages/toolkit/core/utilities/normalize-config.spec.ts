@@ -41,6 +41,7 @@ describe('normalizeSignalFormsConfig', () => {
       optionalMarker: undefined,
       requiredLegendText: undefined,
       optionalLegendText: undefined,
+      requiredHintText: undefined,
     });
 
     expect(result).toEqual(DEFAULT_NGX_SIGNAL_FORMS_CONFIG);

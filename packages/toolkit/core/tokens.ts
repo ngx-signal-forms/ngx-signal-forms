@@ -40,6 +40,7 @@ export const DEFAULT_NGX_SIGNAL_FORMS_CONFIG = {
   optionalMarker: ' (optional)',
   requiredLegendText: '{marker} indicates a required field',
   optionalLegendText: 'All fields are required unless marked {marker}',
+  requiredHintText: 'required',
 } as const satisfies NgxSignalFormsConfig;
 
 /**
