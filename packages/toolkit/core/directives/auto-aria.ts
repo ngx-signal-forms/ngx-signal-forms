@@ -215,13 +215,13 @@ export class NgxSignalFormAutoAria {
    * strategy, that wins: it already accounts for the wrapper's field-level
    * `strategy` input, which the ambient form context cannot see. Absent a
    * wrapper, a registry entry — published by a standalone
-   * `<ngx-form-field-error>` — wins instead: its `showsError` is the exact
-   * boolean already gating that component's own live region, so reusing it
-   * here can't drift from what is actually rendered.
+   * `<ngx-form-field-error>` — wins instead: its `errorContainerVisible` is
+   * the exact boolean already gating that component's own live region, so
+   * reusing it here can't drift from what is actually rendered.
    */
   readonly #visibilityByStrategy = computed(() => {
     const registryEntry = this.#registryVisibilityEntry();
-    if (registryEntry) return registryEntry.showsError();
+    if (registryEntry) return registryEntry.errorContainerVisible();
 
     return this.#ownVisibilityByStrategy();
   });
@@ -253,12 +253,13 @@ export class NgxSignalFormAutoAria {
    * advisory text unavailable to assistive technology (WCAG 1.3.1).
    *
    * Same registry fallback as {@link #visibilityByStrategy}: absent a
-   * wrapper, a standalone error component's published `showsWarning` wins
-   * over recomputing the cascade from the ambient form context.
+   * wrapper, a standalone error component's published
+   * `warningContainerVisible` wins over recomputing the cascade from the
+   * ambient form context.
    */
   readonly #warningVisibilityByStrategy = computed(() => {
     const registryEntry = this.#registryVisibilityEntry();
-    if (registryEntry) return registryEntry.showsWarning();
+    if (registryEntry) return registryEntry.warningContainerVisible();
 
     const fieldState = this.#resolveFieldState();
     if (!fieldState) return false;

@@ -401,6 +401,68 @@ Or with headless primitives:
 </div>
 ```
 
+### Publishing visibility for a custom standalone error surface
+
+Both snippets above render **without** `<ngx-form-field-wrapper>` — the
+bound control and the error/warning surface are siblings, not
+ancestor/descendant. `NgxSignalFormAutoAria` normally learns a field's
+resolved `strategy`/`warningStrategy` from `NgxFieldIdentity`, but that
+service is only provided by `NgxFormFieldWrapper`, so a wrapper-less
+surface has no DI path to publish an override through — and without one,
+`aria-describedby` falls back to the ambient form context, which can
+disagree with whatever the surface actually renders (a dangling id, or a
+rendered-but-unreferenced region).
+
+If your custom surface resolves error/warning visibility independently
+(the way the snippets above do via `ngxHeadlessErrorState` or
+`ngx-form-field-error`), register it with
+`NGX_SIGNAL_FORM_FIELD_VISIBILITY_REGISTRY` so auto-ARIA can read the
+booleans it already computed instead of recomputing — and possibly
+disagreeing with — its own cascade. The registry is provided by
+`NgxSignalForm` at the `[ngxSignalForm]` host, so it is available
+anywhere inside that form:
+
+```ts
+import { effect, inject } from '@angular/core';
+import { NGX_SIGNAL_FORM_FIELD_VISIBILITY_REGISTRY } from '@ngx-signal-forms/toolkit';
+
+@Component({
+  /* ... */
+})
+export class MyStandaloneErrorSurface {
+  readonly #registry = inject(NGX_SIGNAL_FORM_FIELD_VISIBILITY_REGISTRY, {
+    optional: true,
+  });
+
+  // Whatever already gates your rendered live regions — e.g. an
+  // `ngxHeadlessErrorState` view child's `shouldShowErrors`/
+  // `shouldShowWarnings`, or your own computed signals.
+  protected readonly errorVisible = /* ... */;
+  protected readonly warningVisible = /* ... */;
+
+  constructor() {
+    effect((onCleanup) => {
+      const fieldName = this.resolvedFieldName();
+      if (!this.#registry || fieldName === null) return;
+
+      const unregister = this.#registry.register({
+        fieldName,
+        errorContainerVisible: this.errorVisible,
+        warningContainerVisible: this.warningVisible,
+      });
+      onCleanup(unregister);
+    });
+  }
+}
+```
+
+Register the exact booleans you already used to decide whether your
+`${fieldName}-error` / `${fieldName}-warning` elements are in the DOM —
+not a strategy for auto-ARIA to re-resolve — so the published value can
+never drift from what your surface actually renders. `NgxFormFieldError`
+follows this same pattern; see `packages/toolkit/assistive/form-field-error.ts`
+for the reference implementation.
+
 ## Field identity: `id` and `fieldName`
 
 The toolkit's auto-ARIA wiring builds stable `"<field>-error"` and

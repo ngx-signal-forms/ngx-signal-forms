@@ -357,4 +357,33 @@ describe('auto-aria: standalone (wrapper-less) field-level strategy overrides', 
     expect(describedBy).toContain('password-warning');
     expect(describedBy).not.toContain('password-error');
   });
+
+  it('references an error the standalone field-level strategy reveals', async () => {
+    // The mirror image of the previous test, on the *error* channel this
+    // time (analogous to the wrapper suite's `password-error` case above):
+    // the form gates everything until submit, but the standalone error
+    // component opts its blocking-error channel into 'immediate'. The
+    // region renders, so it must be referenced or the error text is
+    // invisible to AT (WCAG 1.3.1). Without the registry fallback, auto-aria
+    // would see only the ambient 'on-submit' form context and never
+    // reference `password-error`.
+    const { container } = await render(StandaloneFieldOverrideHost, {
+      inputs: {
+        errorStrategy: 'on-submit',
+        fieldStrategy: 'immediate',
+        fieldWarningStrategy: 'on-submit',
+      },
+    });
+
+    const describedBy =
+      container
+        .querySelector('input#password')
+        ?.getAttribute('aria-describedby') ?? '';
+
+    expect(container.querySelector('[role="alert"]')?.textContent).toContain(
+      'At least 4 characters',
+    );
+    expect(describedBy).toContain('password-error');
+    expect(describedBy).not.toContain('password-warning');
+  });
 });

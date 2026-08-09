@@ -389,8 +389,8 @@ export class NgxFormFieldError {
 
       const unregister = registry.register({
         fieldName,
-        showsError: this.errorContainerVisible,
-        showsWarning: this.warningContainerVisible,
+        errorContainerVisible: this.errorContainerVisible,
+        warningContainerVisible: this.warningContainerVisible,
       });
 
       onCleanup(unregister);

@@ -192,11 +192,13 @@ export const NGX_SIGNAL_FORM_HINT_REGISTRY =
  * published by a message-rendering surface (e.g. `NgxFormFieldError`) that
  * gates its own live regions independently of the ambient form context.
  *
- * `showsError`/`showsWarning` are the exact booleans the surface used to
- * decide whether its `${fieldName}-error` / `${fieldName}-warning` element is
- * in the DOM — not a strategy to re-resolve — so `NgxSignalFormAutoAria`
- * mirrors what is actually rendered instead of recomputing the cascade a
- * second time.
+ * `errorContainerVisible`/`warningContainerVisible` are the exact booleans
+ * the surface used to decide whether its `${fieldName}-error` /
+ * `${fieldName}-warning` element is in the DOM — not a strategy to
+ * re-resolve — so `NgxSignalFormAutoAria` mirrors what is actually rendered
+ * instead of recomputing the cascade a second time. Named to match
+ * `NgxFormFieldError`'s own `errorContainerVisible`/`warningContainerVisible`
+ * signals verbatim, so the publish/read seam is grep-traceable end to end.
  *
  * Public wire format for the {@link NgxSignalFormFieldVisibilityRegistry}
  * contract.
@@ -205,8 +207,8 @@ export const NGX_SIGNAL_FORM_HINT_REGISTRY =
  */
 export interface NgxSignalFormFieldVisibilityDescriptor {
   readonly fieldName: string;
-  readonly showsError: Signal<boolean>;
-  readonly showsWarning: Signal<boolean>;
+  readonly errorContainerVisible: Signal<boolean>;
+  readonly warningContainerVisible: Signal<boolean>;
 }
 
 /**
@@ -242,8 +244,12 @@ export interface NgxSignalFormFieldVisibilityRegistry {
  *
  * Third-party message-rendering surfaces that gate a live region on their
  * own resolved strategy should register into this token so
- * `NgxSignalFormAutoAria` can keep `aria-describedby` in lockstep. See
- * `docs/CUSTOM_WRAPPERS.md`.
+ * `NgxSignalFormAutoAria` can keep `aria-describedby` in lockstep. This is
+ * the channel for **wrapper-less** surfaces specifically — a wrapped field
+ * publishes through `NgxFieldIdentity` instead (see
+ * `docs/CUSTOM_WRAPPERS.md` for that contract). See
+ * "Publishing visibility for a custom standalone error surface" in
+ * `docs/CUSTOM_CONTROLS.md` for the worked example.
  *
  * @public
  */
