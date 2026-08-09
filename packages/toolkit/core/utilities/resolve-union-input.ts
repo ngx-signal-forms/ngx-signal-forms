@@ -1,16 +1,7 @@
 import { isDevMode } from '@angular/core';
+import type { WarnOnceRef } from './dev-warn-once';
 
-/**
- * Mutable one-shot warning flag, held by the caller so each call site keeps
- * its own scoping (per-instance private field, per-invocation module-scope
- * `let`, …). {@link resolveUnionInput} only ever flips `current` from
- * `false` to `true`; it never resets it.
- *
- * @internal
- */
-export interface WarnOnceRef {
-  current: boolean;
-}
+export type { WarnOnceRef };
 
 /**
  * Options for {@link resolveUnionInput}.

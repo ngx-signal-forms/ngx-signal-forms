@@ -1,10 +1,5 @@
-import {
-  computed,
-  Injectable,
-  isDevMode,
-  signal,
-  type Signal,
-} from '@angular/core';
+import { computed, Injectable, signal, type Signal } from '@angular/core';
+import { devWarnOnce, type WarnOnceRef } from '../utilities/dev-warn-once';
 import {
   createFieldMessageIdSignals,
   normalizeFieldName,
@@ -106,7 +101,7 @@ export class NgxFieldIdentity {
   );
   readonly #resolvedWarningStrategy =
     signal<ResolvedWarningDisplayStrategy | null>(null);
-  #warnedNoId = false;
+  readonly #warnedNoId: WarnOnceRef = { current: false };
 
   /**
    * Resolved field name. Null when no field name can be determined.
@@ -283,16 +278,10 @@ export class NgxFieldIdentity {
       return;
     }
     const isWrapperHosted = el.closest('ngx-form-field-wrapper') !== null;
-    if (
-      isDevMode() &&
-      !el.id &&
-      !this.#fieldName() &&
-      !this.#warnedNoId &&
-      !isWrapperHosted
-    ) {
-      this.#warnedNoId = true;
-      // oxlint-disable-next-line no-console -- dev-only a11y diagnostic
-      console.warn(
+    if (!el.id && !this.#fieldName() && !isWrapperHosted) {
+      devWarnOnce(
+        this.#warnedNoId,
+        'warn',
         '[ngx-signal-forms] NgxFieldIdentity: the bound control has no `id` ' +
           'attribute. `label[for]` and `aria-describedby` linking will not ' +
           'work until an `id` is set on the control element or an explicit ' +

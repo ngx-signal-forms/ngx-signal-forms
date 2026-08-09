@@ -107,8 +107,12 @@ export {
 export {
   resolveUnionInput,
   type ResolveUnionInputOptions,
-  type WarnOnceRef,
 } from './utilities/resolve-union-input';
+export {
+  createDevWarnOnce,
+  devWarnOnce,
+  type WarnOnceRef,
+} from './utilities/dev-warn-once';
 export {
   combineShowErrors,
   createShowErrorsComputed,

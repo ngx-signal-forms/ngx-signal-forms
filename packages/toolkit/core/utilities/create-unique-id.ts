@@ -2,9 +2,9 @@ import {
   assertInInjectionContext,
   inject,
   InjectionToken,
-  isDevMode,
   Service,
 } from '@angular/core';
+import { createDevWarnOnce } from './dev-warn-once';
 
 /**
  * Per-injector counter used by {@link createUniqueId} to mint stable,
@@ -71,7 +71,7 @@ export const NGX_SIGNAL_FORM_ID_STRATEGY = new InjectionToken<
  * @internal
  */
 let fallbackCounter = 0;
-let warnedFallback = false;
+const warnFallback = createDevWarnOnce();
 
 /**
  * Mints a stable, per-injector unique id for ARIA wiring.
@@ -117,15 +117,12 @@ export function createUniqueId(prefix: string): string {
   try {
     assertInInjectionContext(createUniqueId);
   } catch {
-    if (isDevMode() && !warnedFallback) {
-      warnedFallback = true;
-      // oxlint-disable-next-line no-console -- dev-only diagnostic
-      console.warn(
-        '[ngx-signal-forms] createUniqueId() called outside an injection context. ' +
-          'SSR-safe id generation requires calling this from a component/directive/provider ' +
-          'injection context. Falling back to a module-scoped counter.',
-      );
-    }
+    warnFallback(
+      'warn',
+      '[ngx-signal-forms] createUniqueId() called outside an injection context. ' +
+        'SSR-safe id generation requires calling this from a component/directive/provider ' +
+        'injection context. Falling back to a module-scoped counter.',
+    );
     fallbackCounter += 1;
     return `${prefix}-${fallbackCounter}`;
   }

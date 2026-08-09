@@ -4,9 +4,9 @@ import {
   ElementRef,
   inject,
   input,
-  isDevMode,
   untracked,
 } from '@angular/core';
+import { devWarnOnce, type WarnOnceRef } from '@ngx-signal-forms/toolkit/core';
 import { NgxHeadlessErrorSummary } from '@ngx-signal-forms/toolkit/headless';
 
 /**
@@ -205,7 +205,7 @@ export class NgxFormFieldErrorSummary {
    * mirror the `#warnedMissingName` pattern used in
    * `form-field-error.ts` and `NgxHeadlessFieldName`.
    */
-  #warnedFocusFailure = false;
+  readonly #warnedFocusFailure: WarnOnceRef = { current: false };
 
   /**
    * Label displayed above the error list.
@@ -285,14 +285,12 @@ export class NgxFormFieldErrorSummary {
           // the WCAG 2.4.3 + 3.3.1 contract silently breaks. Once-per-
           // instance warning so we don't spam the console.
           if (
-            isDevMode() &&
-            !this.#warnedFocusFailure &&
             typeof document !== 'undefined' &&
             document.activeElement !== host
           ) {
-            this.#warnedFocusFailure = true;
-            // oxlint-disable-next-line no-console -- dev-mode a11y signal
-            console.warn(
+            devWarnOnce(
+              this.#warnedFocusFailure,
+              'warn',
               '[ngx-signal-forms] NgxFormFieldErrorSummary: ' +
                 'host.focus() did not move focus (likely detached, ' +
                 'display:none, covered by a modal, or has tabindex ' +

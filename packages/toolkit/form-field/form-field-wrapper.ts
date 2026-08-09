@@ -7,7 +7,6 @@ import {
   ElementRef,
   inject,
   input,
-  isDevMode,
   signal,
   type Type,
 } from '@angular/core';
@@ -46,6 +45,7 @@ import {
   FORM_FIELD_ORIENTATION_VALUES,
   NGX_SIGNAL_FORM_HINT_REGISTRY,
   NgxFieldIdentity,
+  devWarnOnce,
   generateRequiredHintId,
   isElementCssVisible,
   resolveBoundControlFromBindings,
@@ -573,7 +573,7 @@ export class NgxFormFieldWrapper<TValue = unknown> {
     layout: null,
     ariaMode: null,
   });
-  #warnedUnresolvedKind = false;
+  readonly #warnedUnresolvedKind: WarnOnceRef = { current: false };
 
   readonly #controlKind = computed<FormFieldControlKind>(
     () => this.#controlSemantics().kind,
@@ -795,7 +795,7 @@ export class NgxFormFieldWrapper<TValue = unknown> {
     return this.#controlSemantics().ariaMode;
   });
 
-  #warnedUnresolvedFieldName = false;
+  readonly #warnedUnresolvedFieldName: WarnOnceRef = { current: false };
 
   /**
    * Resolved field name computed from two sources (in priority order):
@@ -1285,14 +1285,10 @@ export class NgxFormFieldWrapper<TValue = unknown> {
         // only when outlined appearance or selection-group layout doesn't
         // apply to their custom control. Fire a one-shot dev warning so the
         // mis-wiring is visible without spamming change detection.
-        if (
-          inputEl &&
-          semantics.kind === null &&
-          !this.#warnedUnresolvedKind &&
-          isDevMode()
-        ) {
-          this.#warnedUnresolvedKind = true;
-          console.warn(
+        if (inputEl && semantics.kind === null) {
+          devWarnOnce(
+            this.#warnedUnresolvedKind,
+            'warn',
             '[ngx-signal-forms] Form-field wrapper could not infer a control ' +
               'kind for its bound control and will render with default textual ' +
               'chrome. Declare semantics via `ngxSignalFormControl="..."` on the ' +
@@ -1336,13 +1332,10 @@ export class NgxFormFieldWrapper<TValue = unknown> {
         // `NgxFormFieldError`) reads `resolvedFieldName()` through
         // `NGX_SIGNAL_FORM_FIELD_CONTEXT` on the first change-detection
         // pass, before this write phase has ever run.
-        if (
-          isDevMode() &&
-          !this.#warnedUnresolvedFieldName &&
-          resolvedFieldName === null
-        ) {
-          this.#warnedUnresolvedFieldName = true;
-          console.error(
+        if (resolvedFieldName === null) {
+          devWarnOnce(
+            this.#warnedUnresolvedFieldName,
+            'error',
             '[ngx-signal-forms] Could not resolve a deterministic field name for ngx-form-field-wrapper. Add an explicit `fieldName` input or an `id` attribute to the bound control. ARIA wiring will be skipped until a name is available.',
           );
         }

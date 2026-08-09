@@ -1,11 +1,6 @@
-import {
-  computed,
-  Directive,
-  input,
-  isDevMode,
-  type Signal,
-} from '@angular/core';
+import { computed, Directive, input, type Signal } from '@angular/core';
 import type { FieldTree } from '@angular/forms/signals';
+import { devWarnOnce, type WarnOnceRef } from '@ngx-signal-forms/toolkit/core';
 import type { CharacterCountValue } from './utilities';
 
 /**
@@ -132,7 +127,7 @@ export class NgxHeadlessCharacterCount implements CharacterCountStateSignals {
   // One-shot guard so the dev warning for an unsupported `value()` type fires
   // at most once per directive instance instead of on every CD cycle.
   // Matches the same pattern used by the `createCharacterCount` factory.
-  #warnedUnsupportedValue = false;
+  readonly #warnedUnsupportedValue: WarnOnceRef = { current: false };
 
   /**
    * Current value length.
@@ -142,21 +137,16 @@ export class NgxHeadlessCharacterCount implements CharacterCountStateSignals {
     const value = state.value();
     if (typeof value === 'string') return value.length;
     if (Array.isArray(value)) return value.length;
-    if (
-      isDevMode() &&
-      !this.#warnedUnsupportedValue &&
-      value !== null &&
-      value !== undefined
-    ) {
-      this.#warnedUnsupportedValue = true;
+    if (value !== null && value !== undefined) {
       // Log a type descriptor only — never the raw value, which may contain
       // user-entered data and end up in dev consoles, CI logs, or screenshots.
       const valueType =
         typeof value === 'object'
           ? (value.constructor?.name ?? 'object')
           : typeof value;
-      // oxlint-disable-next-line no-console -- dev-mode misconfiguration signal
-      console.warn(
+      devWarnOnce(
+        this.#warnedUnsupportedValue,
+        'warn',
         '[ngx-signal-forms] NgxHeadlessCharacterCount: unsupported value type — expected `string` or `readonly string[]`, got',
         valueType,
         '— rendering length as 0.',

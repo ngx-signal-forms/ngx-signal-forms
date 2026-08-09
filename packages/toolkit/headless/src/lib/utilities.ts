@@ -1,10 +1,4 @@
-import {
-  computed,
-  inject,
-  isDevMode,
-  type Injector,
-  type Signal,
-} from '@angular/core';
+import { computed, inject, type Injector, type Signal } from '@angular/core';
 import type { FieldTree, ValidationError } from '@angular/forms/signals';
 import {
   createUniqueId,
@@ -25,6 +19,7 @@ import {
 } from '@ngx-signal-forms/toolkit';
 import {
   assertInjector,
+  createDevWarnOnce,
   createFieldMessageIdSignals,
   humanizeFieldPath,
   stripAngularFormPrefix,
@@ -578,28 +573,22 @@ export function createCharacterCount(
   // One-shot guard so the dev warning for an unsupported `value()` type fires
   // at most once per `createCharacterCount` invocation instead of on every
   // re-computation. `null`/`undefined` are treated as "empty" and do not warn.
-  let warnedUnsupportedValue = false;
+  const warnUnsupportedValue = createDevWarnOnce();
 
   const currentLength = computed(() => {
     const state = fieldState();
     const value = state.value();
     if (typeof value === 'string') return value.length;
     if (Array.isArray(value)) return value.length;
-    if (
-      isDevMode() &&
-      !warnedUnsupportedValue &&
-      value !== null &&
-      value !== undefined
-    ) {
-      warnedUnsupportedValue = true;
+    if (value !== null && value !== undefined) {
       // Log a type descriptor only — never the raw value, which may contain
       // user-entered data and end up in dev consoles, CI logs, or screenshots.
       const valueType =
         typeof value === 'object'
           ? (value.constructor?.name ?? 'object')
           : typeof value;
-      // oxlint-disable-next-line no-console -- dev-mode misconfiguration signal
-      console.warn(
+      warnUnsupportedValue(
+        'warn',
         '[ngx-signal-forms] createCharacterCount: unsupported value type — expected `string` or `readonly string[]`, got',
         valueType,
         '— rendering length as 0.',

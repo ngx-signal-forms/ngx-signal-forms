@@ -12,6 +12,7 @@ import {
   NGX_SIGNAL_FORMS_CONFIG,
   type FieldMarkingMode,
 } from '@ngx-signal-forms/toolkit';
+import { devWarnOnce, type WarnOnceRef } from '@ngx-signal-forms/toolkit/core';
 import { createFieldOptionalitySummary } from '@ngx-signal-forms/toolkit/headless';
 
 /**
@@ -112,20 +113,20 @@ export class NgxFormMarkingLegend {
     // tree appears and later disappears again. Warns at most once per missing
     // span.
     if (isDevMode()) {
-      let warned = false;
+      const warned: WarnOnceRef = { current: false };
       effect(() => {
         const missing = this.#resolvedTree() === undefined;
-        if (missing && !warned) {
-          warned = true;
-          // oxlint-disable-next-line no-console -- dev-mode misconfiguration signal
-          console.error(
+        if (missing) {
+          devWarnOnce(
+            warned,
+            'error',
             '[ngx-signal-forms] NgxFormMarkingLegend: no form tree available. ' +
               'Provide a `[formTree]` input or place the legend inside a ' +
               '`form[formRoot][ngxSignalForm]` host. The legend renders nothing ' +
               'until a form tree is resolvable.',
           );
-        } else if (!missing) {
-          warned = false;
+        } else {
+          warned.current = false;
         }
       });
     }
