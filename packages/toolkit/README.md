@@ -341,13 +341,23 @@ provideFieldLabels({
 });
 ```
 
-Use a factory for dynamic resolvers (ngx-translate, `$localize`, etc.):
+Use a factory for dynamic resolvers (ngx-translate, Transloco, etc.). The
+resolver it returns runs on every render, so a runtime language switch works
+only if the resolver reads a reactive language signal — `$localize` is
+build-time only and can't do this; see
+[`WARNINGS_SUPPORT.md`](https://github.com/ngx-signal-forms/ngx-signal-forms/blob/main/docs/WARNINGS_SUPPORT.md#the-i18n-contract-string-vs-function-entries)
+for the full contract:
 
 ```typescript
 provideFieldLabels(() => {
   const translate = inject(TranslateService);
-  return (fieldPath) =>
-    translate.instant(`fields.${fieldPath}`) || humanizeFieldPath(fieldPath);
+  const lang = toSignal(translate.onLangChange, { initialValue: null });
+  return (fieldPath) => {
+    lang(); // reactive dependency — re-renders on language switch
+    return (
+      translate.instant(`fields.${fieldPath}`) || humanizeFieldPath(fieldPath)
+    );
+  };
 });
 ```
 

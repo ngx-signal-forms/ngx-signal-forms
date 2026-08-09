@@ -482,22 +482,41 @@ toward `invalid()`, submit warning-only forms via `canSubmitWithWarnings`/`submi
 Both go through provider factories that you can wire to your translation service.
 `provideErrorMessages(factory)` registers a message registry (keys are camelCase error kinds, values
 are a string or `(params) => string`); `provideFieldLabels(factory)` does the same for field
-labels/paths. Use the factory form so you can `inject()` your translation service:
+labels/paths. The factory itself runs once, at injection — so the contract for a runtime language
+switch is:
+
+- A **string** entry is captured once, at injection time, and frozen for the injector's lifetime.
+  It never changes afterward.
+- A **function** entry is invoked on every render, and re-renders on a language change only if it
+  reads a reactive signal during that call. Calling `translate.instant(...)` alone reads nothing
+  reactive — you must also read a language signal, e.g. `toSignal(translate.onLangChange)`.
+
+Make every entry a function that reads that signal:
 
 ```ts
+import { inject } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { TranslateService } from '@ngx-translate/core';
+import { provideFieldLabels } from '@ngx-signal-forms/toolkit';
+import { humanizeFieldPath } from '@ngx-signal-forms/toolkit/headless';
+
 provideFieldLabels(() => {
   const t = inject(TranslateService);
-  return (path) => t.instant(`fields.${path}`) || humanizeFieldPath(path);
+  const lang = toSignal(t.onLangChange, { initialValue: null });
+  return (path) => {
+    lang(); // reactive dependency — re-renders on language switch
+    return t.instant(`fields.${path}`) || humanizeFieldPath(path);
+  };
 });
 ```
 
 Validators keep emitting plain `{ kind, message }`; the toolkit resolves display text via a 3-tier
 cascade (validator `message` → registry → built-in fallback), exposed declaratively
 (`ngx-form-field-error`, wrapper) and programmatically (`createErrorMessageSignal`,
-`resolveValidationErrorMessage`). Honest gaps: the worked i18n example in the docs is written for
-`provideFieldLabels` (apply the same shape to `provideErrorMessages`), there is no i18n demo, and
-whether an already-rendered message re-renders on a runtime language switch is not documented as a
-guarantee.
+`resolveValidationErrorMessage`). `$localize` cannot do any of this — it's build-time only (one
+build per locale via `ng build --localize`), with no runtime language switching. Honest gap: there
+is still no end-to-end i18n demo proving a runtime language switch (tracked in
+[#231](https://github.com/ngx-signal-forms/ngx-signal-forms/issues/231)).
 
 **See:** [docs/WARNINGS_SUPPORT.md](./WARNINGS_SUPPORT.md) ·
 [packages/toolkit/README.md](../packages/toolkit/README.md) ·
