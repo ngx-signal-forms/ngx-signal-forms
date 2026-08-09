@@ -1,5 +1,6 @@
 import { ApplicationRef, Component, signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
+import type { ValidatorFn } from '@angular/forms';
 import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { FormField, required } from '@angular/forms/signals';
 import { compatForm, SignalFormControl } from '@angular/forms/signals/compat';
@@ -32,8 +33,18 @@ import { NgxFormFieldWrapper } from './form-field-wrapper';
  * Uses a plain inline `ValidatorFn` instead of `Validators.required` — see
  * the `tsgolint` note in `oxlint.config.ts` for why.
  */
-const requiredValidator = (control: FormControl<string | null>) =>
+const requiredValidator: ValidatorFn = (control) =>
   control.value ? null : { required: true };
+
+/**
+ * A distinctive message a schema-level `required()` on the control-backed
+ * leaf would produce, IF Signal Forms schema validators actually ran against
+ * it. The "shows no error before touch…" spec below registers this on
+ * `nameForm.last` and asserts it never surfaces — proving the divergence,
+ * rather than merely asserting the (unrelated) control-side error appears.
+ */
+const SCHEMA_VALIDATOR_SHOULD_NOT_SURFACE_MESSAGE =
+  'SCHEMA VALIDATOR SHOULD NOT SURFACE — schema validators do not run against a compat leaf backed by an AbstractControl';
 
 async function flushAutoAria(): Promise<void> {
   // `NgxSignalFormAutoAria` writes `aria-describedby`/`aria-required` from an
@@ -76,7 +87,17 @@ describe('NgxFormFieldWrapper + @angular/forms/signals/compat', () => {
         first: '',
         last: this.lastNameControl,
       });
-      readonly nameForm = compatForm(this.nameModel);
+      // Deliberately registers a schema-level `required()` on the
+      // control-backed `last` path too, with a distinctive message — see
+      // `SCHEMA_VALIDATOR_SHOULD_NOT_SURFACE_MESSAGE` above. If Signal Forms
+      // schema validators ever start running against compat leaves, this
+      // message would surface and the "shows no error…" spec below would
+      // fail, catching the divergence changing out from under the guide.
+      readonly nameForm = compatForm(this.nameModel, (name) => {
+        required(name.last, {
+          message: SCHEMA_VALIDATOR_SHOULD_NOT_SURFACE_MESSAGE,
+        });
+      });
     }
 
     it('unwraps the FormControl to its raw value, not the control instance', async () => {
@@ -104,9 +125,25 @@ describe('NgxFormFieldWrapper + @angular/forms/signals/compat', () => {
       fixture.detectChanges();
       await flushAutoAria();
 
+      // The divergence itself, asserted directly on field state: the
+      // schema-level `required()` registered on this exact path in
+      // `HostCompatTopDown` never produces its error — only the control's
+      // own `ValidatorFn`, surfaced as a `CompatValidationError`, does.
+      const errors = host.nameForm.last().errors();
+      expect(
+        errors.some(
+          (error) =>
+            error.message === SCHEMA_VALIDATOR_SHOULD_NOT_SURFACE_MESSAGE,
+        ),
+      ).toBe(false);
+      expect(errors.some((error) => error.kind === 'required')).toBe(true);
+
       // Toolkit's default fallback message for the built-in `required` kind —
       // resolved even though the error is a `CompatValidationError`, because
       // the registry keys purely on `error.kind`.
+      expect(
+        screen.queryByText(SCHEMA_VALIDATOR_SHOULD_NOT_SURFACE_MESSAGE),
+      ).toBeNull();
       expect(screen.getByText('This field is required')).toBeTruthy();
       const describedBy = input.getAttribute('aria-describedby');
       expect(describedBy).toBe('last-name-error');

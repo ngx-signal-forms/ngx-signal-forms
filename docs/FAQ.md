@@ -578,9 +578,9 @@ covers the `compat` API itself. This toolkit's
 **[docs/MIGRATING_FROM_REACTIVE_FORMS.md](./MIGRATING_FROM_REACTIVE_FORMS.md)** covers the layer
 Angular's guide doesn't: how `ngx-form-field-wrapper`, error-message resolution, the error-display
 strategy cascade, and `NG_STATUS_CLASSES` behave when a field is bridged through compat — including
-a documented divergence (compat leaves back their validity by the underlying `AbstractControl`'s
-own Reactive validators, not by Signal Forms schema validators registered on that same path) and a
-worked one-field-at-a-time coexistence example.
+a documented divergence (a compat leaf's validity comes from the underlying `AbstractControl`'s
+own Reactive validators, not from Signal Forms schema validators registered on that same path) and
+a worked one-field-at-a-time coexistence example.
 
 **See:** [../README.md](../README.md) ·
 [docs/MIGRATING_FROM_REACTIVE_FORMS.md](./MIGRATING_FROM_REACTIVE_FORMS.md) ·
