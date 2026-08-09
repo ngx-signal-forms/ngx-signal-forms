@@ -404,7 +404,11 @@ const suite = create<{ fields: 'email' | 'username' }>(
 );
 
 validateVest(path, suite, {
-  only: (ctx) => ctx.value().lastTouched, // must return 'email' | 'username' | undefined
+  // Return type narrows to `VestFieldExclusion<'email' | 'username'>`: a
+  // single field name, a `('email' | 'username')[]` for multi-field focus,
+  // `undefined` for a whole-suite run, or `false` to focus nothing (throws —
+  // Vest has no way to express "run zero tests" through `only()`).
+  only: (ctx) => ctx.value().lastTouched,
 });
 ```
 

@@ -813,8 +813,8 @@ interface RunVestSuiteResult<TValue, F extends string = string> {
 interface VestSuiteAdapter {
   register<TValue, F extends string = string>(path, suite, options?): void;
   runVestSuite<TValue, F extends string = string>(
-    params,
-  ): RunVestSuiteResult<unknown>;
+    params: RunVestSuiteParams<TValue, F>,
+  ): RunVestSuiteResult<TValue, F>;
   invalidate(suite: object): void;
 }
 
