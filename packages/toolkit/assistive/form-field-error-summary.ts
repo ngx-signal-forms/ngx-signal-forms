@@ -155,8 +155,19 @@ import { NgxHeadlessErrorSummary } from '@ngx-signal-forms/toolkit/headless';
 
     .ngx-form-field-error-summary__link {
       all: unset;
+      /* all: unset resets display to its initial value (inline), and
+       * min-block-size has no effect on non-replaced inline elements per
+       * spec -- so the WCAG 2.5.8 24x24px target-size minimum below would
+       * be silently ignored without switching to inline-flex here. */
+      display: inline-flex;
+      align-items: center;
+      min-block-size: var(--ngx-error-summary-link-min-target-size, 1.5rem);
+      padding-inline: var(--ngx-error-summary-link-padding-inline, 0.25rem);
       cursor: pointer;
-      color: var(--ngx-error-summary-link-color, #dc2626);
+      /* #b91c1c (Tailwind red-700) on the #fef2f2 summary background
+       * resolves to ~5.9:1, clearing the WCAG 1.4.3 AA minimum of 4.5:1 for
+       * this 14px text -- the previous #dc2626 default only reached ~4.4:1. */
+      color: var(--ngx-error-summary-link-color, #b91c1c);
       text-decoration: underline;
       font-size: 0.875rem;
 
