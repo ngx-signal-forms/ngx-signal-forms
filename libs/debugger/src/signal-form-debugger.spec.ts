@@ -556,7 +556,7 @@ describe('NgxSignalFormDebugger', () => {
       const localFixture = TestBed.createComponent(NgxSignalFormDebugger);
       const localEl: HTMLElement = localFixture.nativeElement;
 
-      // Satisfies the toolkit's `isFieldTree` contract (a callable whose
+      // Satisfies the toolkit's `isFieldTreeLike` contract (a callable whose
       // state exposes value/touched/errors/errorSummary/submitting/
       // markAsTouched with a matching `fieldTree` back-reference) but is
       // missing valid/invalid/dirty/pending, which the debugger calls
