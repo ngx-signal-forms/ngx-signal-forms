@@ -156,12 +156,19 @@ import { NgxHeadlessErrorSummary } from '@ngx-signal-forms/toolkit/headless';
     .ngx-form-field-error-summary__link {
       all: unset;
       /* all: unset resets display to its initial value (inline), and
-       * min-block-size has no effect on non-replaced inline elements per
-       * spec -- so the WCAG 2.5.8 24x24px target-size minimum below would
-       * be silently ignored without switching to inline-flex here. */
+       * min-block-size/min-inline-size have no effect on non-replaced
+       * inline elements per spec -- so the WCAG 2.5.8 24x24px target-size
+       * minimum below would be silently ignored without switching to
+       * inline-flex here. The minimum is applied in BOTH directions
+       * (block and inline): a short/empty fieldName or message could
+       * otherwise render narrower than 24px even with the block-size
+       * floor in place. justify-content centers short text within the
+       * enforced inline minimum. */
       display: inline-flex;
       align-items: center;
+      justify-content: center;
       min-block-size: var(--ngx-error-summary-link-min-target-size, 1.5rem);
+      min-inline-size: var(--ngx-error-summary-link-min-target-size, 1.5rem);
       padding-inline: var(--ngx-error-summary-link-padding-inline, 0.25rem);
       cursor: pointer;
       /* #b91c1c (Tailwind red-700) on the #fef2f2 summary background
