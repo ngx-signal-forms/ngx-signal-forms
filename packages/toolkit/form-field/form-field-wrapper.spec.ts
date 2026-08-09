@@ -15,6 +15,7 @@ import {
   NgxSignalFormToolkit,
   provideNgxSignalFormControlPresets,
   provideNgxSignalFormControlPresetsForComponent,
+  provideNgxSignalFormsConfig,
   requiredFromStandardSchema,
 } from '@ngx-signal-forms/toolkit';
 import { DEFAULT_NGX_SIGNAL_FORMS_CONFIG } from '@ngx-signal-forms/toolkit/core';
@@ -3702,6 +3703,38 @@ describe('NgxSignalFormWrapperComponent', () => {
       expect(formField).toHaveAttribute('data-orientation', 'vertical');
     });
 
+    it('should force vertical for radio-group control kind even when horizontal is requested', async () => {
+      const { container } = await render(
+        `<ngx-form-field-wrapper
+          [formField]="field"
+          fieldName="delivery-method"
+          orientation="horizontal"
+        >
+          <span ngxFormFieldLabel>Delivery option</span>
+          <div>
+            <label>
+              <input id="delivery-standard" type="radio" value="standard" />
+              Standard
+            </label>
+            <label>
+              <input id="delivery-express" type="radio" value="express" />
+              Express
+            </label>
+          </div>
+        </ngx-form-field-wrapper>`,
+        {
+          imports: [NgxSignalFormWrapperComponent],
+          componentProperties: { field: createMockFieldState() },
+        },
+      );
+
+      const formField = container.querySelector('ngx-form-field-wrapper');
+      expect(formField).not.toHaveClass(
+        'ngx-signal-form-field-wrapper--horizontal',
+      );
+      expect(formField).toHaveAttribute('data-orientation', 'vertical');
+    });
+
     it('should resolve inherit to global default when set to vertical (default)', async () => {
       const { container } = await render(
         `<ngx-form-field-wrapper [formField]="field" orientation="inherit">
@@ -3809,6 +3842,46 @@ describe('NgxSignalFormWrapperComponent', () => {
       );
 
       consoleErrorSpy.mockRestore();
+    });
+
+    describe('pre-resolution state (bound control not yet resolved)', () => {
+      // `resolvedOrientation` now gates its forcing logic on
+      // `#boundControlElement() === null`, the same way its siblings
+      // `isOutline` and `resolvedMarker` do (each returns its own
+      // pre-resolution value). Before the projected control is discovered,
+      // `#controlKind()` has not settled, so — without the gate — a
+      // checkbox/switch/radio-group field requesting 'horizontal' would
+      // report the raw requested orientation instead of the forced
+      // 'vertical': a `data-orientation` flash. Mirroring the sibling
+      // `resolvedMarker` spec above, this exercises the guard with no
+      // control ever projected, so `#boundControlElement()` never resolves
+      // and the pre-resolution branch is the only one that ever runs.
+      //
+      // The configured default ('horizontal', set below) is deliberately
+      // distinct from both the requested orientation ('vertical') and the
+      // forced value ('vertical') that a checkbox/switch/radio-group would
+      // otherwise produce, so this test cannot pass by coincidentally
+      // reading either of those instead of the config.
+
+      it('reports the configured default, never the requested orientation, before a control is projected (no flash)', async () => {
+        const { container } = await render(
+          `<ngx-form-field-wrapper [formField]="field" orientation="vertical">
+            <label for="agree">Agree</label>
+          </ngx-form-field-wrapper>`,
+          {
+            imports: [NgxSignalFormWrapperComponent],
+            providers: [
+              provideNgxSignalFormsConfig({
+                defaultFormFieldOrientation: 'horizontal',
+              }),
+            ],
+            componentProperties: { field: createMockFieldState() },
+          },
+        );
+
+        const formField = container.querySelector('ngx-form-field-wrapper');
+        expect(formField).toHaveAttribute('data-orientation', 'horizontal');
+      });
     });
   });
 

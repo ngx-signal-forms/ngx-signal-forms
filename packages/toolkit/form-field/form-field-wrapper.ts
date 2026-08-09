@@ -631,6 +631,18 @@ export class NgxFormFieldWrapper<TValue = unknown> {
    * Effective orientation for theming hooks (`data-orientation` attribute).
    *
    * Outline appearance and selection-control rows force vertical layout.
+   *
+   * Gated the same way as its siblings `isOutline` and `resolvedMarker`
+   * (each returns its own pre-resolution value): `#controlKind()` has not
+   * settled before the projected control is discovered, so forcing on it
+   * here would report the raw *requested* orientation for a frame before
+   * snapping to the forced `'vertical'` once a checkbox / switch /
+   * radio-group resolves — a visible `data-orientation` flash. This
+   * computed's own pre-resolution value is the *configured default* (not
+   * the requested orientation, and not the forced value): most fields
+   * already resolve to the configured default via `orientation` `'inherit'`,
+   * so this keeps the first frame aligned with the common case rather than
+   * guessing either extreme.
    */
   #warnedInvalidOrientation = false;
 
@@ -638,6 +650,11 @@ export class NgxFormFieldWrapper<TValue = unknown> {
     () => {
       const orientation = this.orientation();
       const requestedOrientation = this.#resolveOrientationInput(orientation);
+
+      if (this.#boundControlElement() === null) {
+        return this.#config.defaultFormFieldOrientation;
+      }
+
       const controlKind = this.#controlKind();
 
       if (
