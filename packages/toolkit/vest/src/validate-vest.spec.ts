@@ -4,8 +4,10 @@ import { TestBed } from '@angular/core/testing';
 import { render, screen } from '@testing-library/angular';
 import userEvent from '@testing-library/user-event';
 import { create, enforce, group, only, test, warn } from 'vest';
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, expectTypeOf, it, vi } from 'vitest';
 import {
+  type VestFieldExclusion,
+  type VestOnlyFieldSelector,
   type VestResultLike,
   type VestRunnableSuite,
   VEST_ERROR_KIND_PREFIX,
@@ -1900,5 +1902,124 @@ describe('an `only` focus resolving to "focus nothing"', () => {
     ).toThrow(/focus nothing/i);
     // Neither throwing call reached `suite.run()`.
     expect(runCount).toBe(1);
+  });
+});
+
+// Issue #292: Vest 6.3.2 propagates a field-name union `F` through a suite
+// declared with `create<{ fields: 'email' | 'password' }>(…)` (or a schema).
+// Before this, the adapter widened every Vest field name crossing its
+// interface to plain `string`, so a mistyped `only` focus name compiled and
+// silently ran zero tests (the field validated clean instead of erroring).
+// `F` defaults to `string` so an untyped suite is unaffected, and is always
+// inferred from the `suite` argument — no call site writes a type argument.
+describe('the typed field-name union narrows `only` (issue #292)', () => {
+  interface SignupModel {
+    email: string;
+    password: string;
+  }
+
+  function typedSignupSuite() {
+    return create<{ fields: 'email' | 'password' }>(
+      (data: SignupModel, field?: string) => {
+        only(field);
+        test('email', 'Email is required', () => {
+          enforce(data.email).isNotBlank();
+        });
+        test('password', 'Password is required', () => {
+          enforce(data.password).isNotBlank();
+        });
+      },
+    );
+  }
+
+  it("accepts a focus name inside a typed suite's own `fields` union", () => {
+    const suite = typedSignupSuite();
+
+    const typedForm = TestBed.runInInjectionContext(() => {
+      return form(signal<SignupModel>({ email: '', password: '' }), (path) => {
+        // Valid per `suite`'s own `'email' | 'password'` union — no
+        // `@ts-expect-error` needed.
+        validateVest(path, suite, { only: () => 'email' });
+      });
+    });
+
+    expect(typedForm).toBeDefined();
+  });
+
+  it("rejects a focus name outside a typed suite's `fields` union at compile time", () => {
+    const suite = typedSignupSuite();
+
+    const typedForm = TestBed.runInInjectionContext(() => {
+      return form(signal<SignupModel>({ email: '', password: '' }), (path) => {
+        validateVest(path, suite, {
+          // @ts-expect-error -- `suite`'s field-name union is
+          // `'email' | 'password'`; `'emial'` is not a member. Previously
+          // this widened to `string` and compiled, letting a focused run
+          // on a name no test is registered under silently run zero tests.
+          only: () => 'emial',
+        });
+      });
+    });
+
+    // This test's real assertion is the `@ts-expect-error` above, verified
+    // by the toolkit spec typecheck; this confirms the (suppressed) type
+    // error didn't stop the field tree from being constructed.
+    expect(typedForm).toBeDefined();
+  });
+
+  it('still accepts any string focus name for an untyped suite (no breakage)', () => {
+    // No `create<{ fields: … }>` and no schema: `F` defaults to `string`.
+    const suite = create((data: SignupModel, field?: string) => {
+      only(field);
+      test('email', 'Email is required', () => {
+        enforce(data.email).isNotBlank();
+      });
+    });
+
+    const untypedForm = TestBed.runInInjectionContext(() => {
+      return form(signal<SignupModel>({ email: '', password: '' }), (path) => {
+        // No compile error: an untyped suite still accepts any string.
+        validateVest(path, suite, { only: () => 'anything-goes' });
+      });
+    });
+
+    expect(untypedForm).toBeDefined();
+  });
+
+  it('infers `F` from the suite argument alone — no explicit type argument at the call site', () => {
+    const suite = typedSignupSuite();
+
+    const inferredForm = TestBed.runInInjectionContext(() => {
+      return form(signal<SignupModel>({ email: '', password: '' }), (path) => {
+        // `validateVest` is called exactly as any other caller would --
+        // `validateVest<SignupModel, 'email' | 'password'>` is never
+        // spelled out. `F` is still checked: swapping the selector below
+        // for one returning `'emial'` would fail to compile, proving
+        // inference (not an implicit `any`/`string` fallback) produced
+        // the narrow type.
+        validateVest(path, suite, { only: () => 'password' });
+      });
+    });
+
+    expect(inferredForm).toBeDefined();
+  });
+
+  // `expectTypeOf` assertions are compile-time documentation of the
+  // {@link VestOnlyFieldSelector} / {@link VestFieldExclusion} contract
+  // itself, independent of any one call site — see
+  // `field-state-types.spec.ts` for the same pattern.
+  it('narrows VestOnlyFieldSelector and VestFieldExclusion at the type level', () => {
+    type TypedSelector = VestOnlyFieldSelector<
+      SignupModel,
+      'email' | 'password'
+    >;
+    expectTypeOf<ReturnType<TypedSelector>>().toEqualTypeOf<
+      VestFieldExclusion<'email' | 'password'>
+    >();
+
+    type UntypedSelector = VestOnlyFieldSelector<SignupModel>;
+    expectTypeOf<
+      ReturnType<UntypedSelector>
+    >().toEqualTypeOf<VestFieldExclusion>();
   });
 });
