@@ -155,12 +155,12 @@ describe('strip-internal-exports.mjs', () => {
     await mkdir(fesmDir, { recursive: true });
     await mkdir(typesDir, { recursive: true });
 
-    // A form the rewrite regex cannot recognize (specifier split across a
-    // template literal) — simulates a dangling reference that survives the
-    // rewrite pass.
+    // A form the rewrite regex cannot recognize (backtick-quoted, not
+    // single- or double-quoted) — simulates a dangling reference that
+    // survives the rewrite pass.
     writeFileSync(
       join(fesmDir, 'ngx-signal-forms-toolkit.mjs'),
-      'export * from `@ngx-signal-forms/toolkit/core`;\n',
+      'const CORE = `@ngx-signal-forms/toolkit/core`;\nexport { CORE };\n',
     );
     writeFileSync(
       join(fesmDir, 'ngx-signal-forms-toolkit-core.mjs'),
@@ -184,12 +184,24 @@ describe('strip-internal-exports.mjs', () => {
       }),
     );
 
-    expect(() =>
+    let failure: { status: number | null; stderr: string } | undefined;
+    try {
       execFileSync(process.execPath, [scriptPath], {
         cwd: workDir,
         stdio: 'pipe',
-      }),
-    ).toThrow('Command failed');
+        encoding: 'utf8',
+      });
+    } catch (error) {
+      const execError = error as { status: number | null; stderr: string };
+      failure = { status: execError.status, stderr: execError.stderr };
+    }
+
+    // Assert on exit status and the script's own stderr report rather than
+    // Node's `execFileSync` error message, which is not stable across
+    // Node versions.
+    expect(failure).toBeDefined();
+    expect(failure?.status).not.toBe(0);
+    expect(failure?.stderr).toContain('dangling');
 
     // The exports map must survive untouched — stripping it while a dangling
     // reference remains would publish a package that breaks on import.

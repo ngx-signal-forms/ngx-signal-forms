@@ -68,7 +68,7 @@ const rewriteImportSpecifier = (
   /** @type {string} */ skipBaseName,
   /** @type {string} */ extension,
   /** @type {string} */ newSpecifier,
-  /** @type {readonly string[]} */ bucket,
+  /** @type {string[]} */ bucket,
 ) => {
   for (const name of readdirSync(dir)) {
     if (!name.endsWith(extension)) continue;
@@ -114,7 +114,7 @@ rewriteImportSpecifier(
 
 if (danglingReferences.length > 0) {
   console.error(
-    `[toolkit] ERROR: ${danglingReferences.length} file(s) still reference '${PACKAGE_CORE_SPECIFIER}' after the rewrite pass:`,
+    `[toolkit] ERROR: ${danglingReferences.length} dangling reference(s) to '${PACKAGE_CORE_SPECIFIER}' survived the rewrite pass:`,
   );
   for (const filePath of danglingReferences) console.error(`  ${filePath}`);
   console.error(
