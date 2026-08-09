@@ -7,7 +7,7 @@ export const STORE_BINDING_CONTENT = {
         title: 'Honest write-through, no draft buffer',
         items: [
           '• <strong>Read seam:</strong> the form model reads the store slice through <code>linkedSignal({ source, computation })</code>, so reads stay reactive to the store.',
-          '• <strong>Write seam:</strong> a demo-local delegated-write helper overrides <code>set</code>/<code>update</code> to call <code>patchState</code> — edits land in the store immediately.',
+          '• <strong>Write seam:</strong> the native <code>set</code> option on <code>linkedSignal</code> calls <code>patchState</code> directly — edits land in the store immediately, with no helper file.',
           '• <strong>No commit step:</strong> there is no <code>draft</code> → <code>commit()</code> buffer. The store is the single source of truth.',
           '• <strong>Two-way:</strong> an out-of-band store mutation (Simulate remote sync) is reflected back into the form inputs.',
         ],
@@ -34,12 +34,11 @@ export const STORE_BINDING_CONTENT = {
         ],
       },
       {
-        title: 'The 22.1 simplification',
+        title: 'The native custom-set overload',
         items: [
-          '• On <code>22.0.0-rc.x</code>, a plain <code>linkedSignal</code> writable handle only updates the <em>local</em> value, so the delegated-write helper is required for true write-back.',
-          '• Angular <strong>PR #68708</strong> (<code>target: minor</code>, ships in 22.1+) adds a native custom-<code>set</code> overload to <code>linkedSignal</code>.',
-          '• Once the workspace moves to ≥ 22.1, the helper can be deleted and replaced with the built-in <code>set</code>.',
-          "• <code>ngxtension</code>'s <code>writableSlice</code> and ngrx's reverted <code>delegatedSignal</code> (ngrx #5157) both converge on that same native overload.",
+          '• <code>linkedSignal({ source, computation, set })</code> — the native <code>set</code> callback receives every write and a <code>rawSet</code> escape hatch for updating the local value.',
+          '• This demo never calls <code>rawSet</code>: writing through <code>patchState</code> alone keeps reads coherent, because <code>source</code> re-reads the store on every access.',
+          "• <code>ngxtension</code>'s <code>writableSlice</code> and ngrx's reverted <code>delegatedSignal</code> (ngrx #5157) both converged on this same native overload.",
         ],
       },
     ],
