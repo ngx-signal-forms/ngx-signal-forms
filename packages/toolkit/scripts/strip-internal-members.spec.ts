@@ -7,17 +7,23 @@ import { afterEach, describe, expect, it } from 'vitest';
 import { stripNestedInternalMembers } from './strip-internal-members.mjs';
 
 // Regression tests for the post-build hardening script that removes
-// `@internal`-tagged class/interface members from the published `.d.ts`
-// bundles — the part of #289 that `stripInternal` cannot safely do (see the
-// script's own header comment for why the compiler flag is not viable here).
+// `@internal`-tagged class/interface/namespace members from the published
+// `.d.ts` bundles — the part of #289 that `stripInternal` cannot safely do
+// (see the script's own header comment for why the compiler flag is not
+// viable here).
 //
 // Deliberately does NOT strip top-level `@internal` declarations: `/core`'s
 // build-time-only plumbing (tokens, factories) is legitimately imported by
 // sibling entries and `libs/debugger` at build time, and is already hidden
 // from external consumers by `strip-internal-exports.mjs` deleting `"./core"`
 // from the published `exports` map. Only members nested inside an otherwise
-// public class/interface — reachable because the *class* is re-exported to
-// real consumers — are an actual enforcement gap.
+// public class/interface/namespace — reachable because the *container* is
+// re-exported to real consumers — are an actual enforcement gap.
+//
+// The scan is TS-AST-based (`ts.getJSDocTags` + real container membership),
+// not a line/regex/bracket-counting scan, so it correctly handles every
+// `@internal` tag form and can't be confused by braces inside string or
+// template-literal types.
 
 const scriptPath = resolve(import.meta.dirname, './strip-internal-members.mjs');
 
@@ -48,7 +54,27 @@ describe('stripNestedInternalMembers (unit)', () => {
     expect(text).toContain('static ɵfac: unknown;');
   });
 
-  it('leaves a top-level (depth 0) @internal declaration untouched', () => {
+  it('recognizes a one-line `/** @internal */` tag, not just the multi-line form', () => {
+    // A regex/line scan anchored on `@internal` standing alone on its own
+    // comment line misses this — `ts.getJSDocTags` (real JSDoc parsing)
+    // handles it natively regardless of comment layout.
+    const input = [
+      'declare class Foo {',
+      '    readonly value: number;',
+      '    /** @internal */',
+      '    setValue(v: number): void;',
+      '}',
+      '',
+    ].join('\n');
+
+    const { text, removedCount } = stripNestedInternalMembers(input);
+
+    expect(removedCount).toBe(1);
+    expect(text).not.toContain('setValue');
+    expect(text).toContain('readonly value: number;');
+  });
+
+  it('leaves a top-level (not-nested) @internal declaration untouched', () => {
     const input = [
       '/**',
       ' * Build-time-only plumbing for sibling entries.',
@@ -84,7 +110,7 @@ describe('stripNestedInternalMembers (unit)', () => {
     expect(text).toBe(input);
   });
 
-  it('removes a multi-line @internal interface nested inside another body', () => {
+  it('removes a multi-line @internal interface nested inside a namespace body', () => {
     const input = [
       'declare namespace Ns {',
       '    /**',
@@ -94,7 +120,7 @@ describe('stripNestedInternalMembers (unit)', () => {
       '        readonly a: string;',
       '        readonly b: number;',
       '    }',
-      '    declare const kept: string;',
+      '    const kept: string;',
       '}',
       '',
     ].join('\n');
@@ -103,27 +129,57 @@ describe('stripNestedInternalMembers (unit)', () => {
 
     expect(removedCount).toBe(1);
     expect(text).not.toContain('interface Options');
-    expect(text).toContain('declare const kept: string;');
+    expect(text).toContain('const kept: string;');
   });
 
-  it('throws instead of silently corrupting output when a declaration never terminates', () => {
+  it('produces a syntactically valid empty class body when the only member is @internal', () => {
+    // Regression guard for the removal-span boundary: it must delete
+    // exactly the member (comment + declaration), never the container's own
+    // opening/closing braces, even when nothing else is left inside.
     const input = [
-      'declare class Foo {',
+      'declare class OnlyInternal {',
       '    /**',
       '     * @internal',
       '     */',
-      '    setValue(v: number)', // no trailing `;` or `}` — malformed on purpose
+      '    setValue(v: number): void;',
       '}',
       '',
     ].join('\n');
 
-    expect(() => stripNestedInternalMembers(input)).toThrow(/never returned/u);
+    const { text, removedCount } = stripNestedInternalMembers(input);
+
+    expect(removedCount).toBe(1);
+    expect(text).toContain('declare class OnlyInternal {\n}');
+  });
+
+  it('does not miscount a brace inside a string-literal type', () => {
+    // `weird(): '{' | void;` contains an unbalanced `{` as far as a naive
+    // character scan is concerned — real AST parsing sees it correctly as
+    // part of a string-literal type, not a body brace, so it can never
+    // mis-bound the declaration above or below it.
+    const input = [
+      'declare class Foo {',
+      '    readonly ok: string;',
+      '    /**',
+      '     * @internal',
+      '     */',
+      "    weird(): '{' | void;",
+      '    static x: number;',
+      '}',
+      '',
+    ].join('\n');
+
+    const { text, removedCount } = stripNestedInternalMembers(input);
+
+    expect(removedCount).toBe(1);
+    expect(text).not.toContain('weird');
+    expect(text).toContain('readonly ok: string;');
+    expect(text).toContain('static x: number;');
+    expect(text).toContain('declare class Foo {');
+    expect(text.trim().endsWith('}')).toBe(true);
   });
 
   it('does not miscount a balanced brace pair from a template-literal type', () => {
-    // `${number}` contributes one balanced `{`/`}` pair. A naive bracket
-    // counter that got this wrong would either mis-bound the @internal
-    // declaration above it or swallow the untagged sibling below it.
     const input = [
       'declare class Foo {',
       '    /**',
@@ -197,57 +253,41 @@ describe('strip-internal-members.mjs (CLI)', () => {
     expect(core).toContain('static ɵprov: unknown;');
   });
 
-  it('fails loudly instead of publishing corrupted output when the structural-integrity guard trips', async () => {
+  it('strips a member whose signature contains a brace inside a string-literal type without tripping the guard', async () => {
+    // Regression test for the bracket-counting bug the AST rewrite fixes:
+    // this exact shape used to make the old character-scanning
+    // implementation swallow the untagged sibling and the class's own
+    // closing brace, which the structural-integrity guard correctly caught
+    // as invalid output. With real AST parsing this now just works —
+    // assert the correct output, not a thrown error.
     workDir = mkdtempSync(join(tmpdir(), 'strip-internal-members-'));
     const typesDir = join(workDir, 'dist/packages/toolkit/types');
     await mkdir(typesDir, { recursive: true });
 
-    // An unbalanced brace inside a string literal (`'{'`) inside the
-    // @internal member's own return type throws off the bracket-depth
-    // counter: it "terminates" one line into the following sibling instead
-    // of at the real declaration boundary, swallowing `static x` and the
-    // class's own closing `}` — the bracket-count parser produces no
-    // leftover `@internal` tag (so the older leftover-tag check would miss
-    // this), but the result is not valid TypeScript. The structural-integrity
-    // guard must catch it and fail the build instead of writing it.
-    const original = [
-      'declare class Foo {',
-      '    readonly ok: string;',
-      '    /**',
-      '     * @internal',
-      '     */',
-      "    weird(): '{' | void;",
-      '    static x: number;',
-      '}',
-      '',
-    ].join('\n');
     writeFileSync(
       join(typesDir, 'ngx-signal-forms-toolkit-core.d.ts'),
-      original,
+      [
+        'declare class Foo {',
+        '    readonly ok: string;',
+        '    /**',
+        '     * @internal',
+        '     */',
+        "    weird(): '{' | void;",
+        '    static x: number;',
+        '}',
+        '',
+      ].join('\n'),
     );
 
-    let failure: { status: number | null; stderr: string } | undefined;
-    try {
-      execFileSync(process.execPath, [scriptPath], {
-        cwd: workDir,
-        stdio: 'pipe',
-        encoding: 'utf8',
-      });
-    } catch (error) {
-      const execError = error as { status: number | null; stderr: string };
-      failure = { status: execError.status, stderr: execError.stderr };
-    }
+    execFileSync(process.execPath, [scriptPath], { cwd: workDir });
 
-    expect(failure).toBeDefined();
-    expect(failure?.status).not.toBe(0);
-    expect(failure?.stderr).toContain('[toolkit] ERROR');
-
-    // The corrupted output must never be written — the source file on disk
-    // is untouched.
-    const onDisk = readFileSync(
+    const core = readFileSync(
       join(typesDir, 'ngx-signal-forms-toolkit-core.d.ts'),
       'utf8',
     );
-    expect(onDisk).toBe(original);
+    expect(core).not.toContain('weird');
+    expect(core).toContain('readonly ok: string;');
+    expect(core).toContain('static x: number;');
+    expect(core.trim().endsWith('}')).toBe(true);
   });
 });

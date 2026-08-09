@@ -22,190 +22,207 @@
 //    cross-entry/cross-project use case (see AGENTS.md note on
 //    `libs/debugger` consuming `/core` internals), so this script leaves
 //    them alone.
-// 2. `@internal`-tagged *members* on an otherwise-public class (e.g.
-//    `NgxFieldIdentity.setFieldName`) — the class itself is re-exported to
-//    real consumers (the root barrel re-exports `NgxFieldIdentity` from
-//    `/core` via a relative specifier that bypasses the `exports` map), so
-//    every member TypeScript considers public — regardless of the
-//    `@internal` tag — ships in the published `.d.ts` and is callable.
-//    This is the actual "advisory, not enforced" gap #289 reports.
+// 2. `@internal`-tagged *members* on an otherwise-public class, interface,
+//    or namespace (e.g. `NgxFieldIdentity.setFieldName`) — the container
+//    itself is re-exported to real consumers (the root barrel re-exports
+//    `NgxFieldIdentity` from `/core` via a relative specifier that bypasses
+//    the `exports` map), so every member TypeScript considers public —
+//    regardless of the `@internal` tag — ships in the published `.d.ts` and
+//    is callable. This is the actual "advisory, not enforced" gap #289
+//    reports.
 //
-// This script removes case (2): any `@internal`-tagged declaration nested
-// inside a class or interface body (bracket depth > 0) is deleted from the
-// published `.d.ts`, verbatim comment and signature. Top-level (depth 0)
-// `@internal` declarations are left untouched.
+// This script removes exactly case (2): declarations whose JSDoc carries a
+// real `@internal` tag AND that are direct members of a class, interface,
+// or namespace (module) body are deleted — comment and signature — from the
+// published `.d.ts`. Top-level statements (depth 0: not nested inside any
+// such body) keep their `@internal` tag untouched, whatever form it takes.
 //
-// Detecting "the real tag" vs. prose that merely *mentions* `@internal`
-// inside a sentence (several doc comments in this codebase read like
-// "...tagged `@internal`...") requires matching the tag on its own line,
-// not just the substring.
+// Uses the TypeScript compiler API (already a repo devDependency, pulled in
+// for the structural-integrity guard below) rather than a line-based/regex
+// scan: `ts.getJSDocTags` is TypeScript's own JSDoc parser, so it correctly
+// recognizes every tag form (`/** @internal */` on one line, prose that only
+// *mentions* `@internal` inside a sentence is never parsed as a tag, etc.)
+// and AST membership — not brace counting — decides what counts as
+// "nested", so a brace inside a string-literal type (e.g. `const x: '{';`)
+// can't miscount a declaration's boundary the way a character scan could.
 
 import { readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import ts from 'typescript';
 
-// A real `@internal` JSDoc tag stands alone on its comment line (optionally
-// followed by trailing whitespace only). Prose that references `@internal`
-// inside a sentence always has more text after it on the same line.
-const INTERNAL_TAG_LINE = /^\s*\*\s*@internal\s*$/u;
-
 /**
- * Net bracket delta for a line of TypeScript declaration source. Counts
- * `{`/`(` as +1 and `}`/`)` as -1. Declaration files in this package don't
- * contain string or template literals with unbalanced brackets, so a naive
- * character scan is sufficient — no tokenizer needed.
- *
- * @param {string} line
- * @returns {number}
+ * @param {ts.Node} node
+ * @returns {boolean}
  */
-function bracketDelta(line) {
-  let delta = 0;
-  for (const ch of line) {
-    if (ch === '{' || ch === '(') delta++;
-    else if (ch === '}' || ch === ')') delta--;
-  }
-  return delta;
+function hasInternalTag(node) {
+  const tags = ts.getJSDocTags(node);
+  return tags.some((tag) => tag.tagName.text === 'internal');
 }
 
 /**
- * Reads a full `/** ... *\/` comment block starting at `lines[start]`.
- * Returns the block's lines, whether it contains a real `@internal` tag, and
- * the index of the first line after the block.
+ * The direct member/statement list of `node`'s body, if `node` is a
+ * class, interface, or namespace (module-with-a-block) declaration —
+ * i.e. exactly the container kinds whose members are "nested" for the
+ * purpose of this script. `undefined` for every other node kind, including
+ * the source file itself (whose top-level statements are `/core`'s
+ * intentionally-untouched build-time plumbing — see the file header).
  *
- * @param {readonly string[]} lines
- * @param {number} start
- * @returns {{ commentLines: string[], sawInternal: boolean, next: number }}
+ * @param {ts.Node} node
+ * @returns {readonly ts.Node[] | undefined}
  */
-function readCommentBlock(lines, start) {
-  /** @type {string[]} */
-  const commentLines = [];
-  let sawInternal = false;
-  let index = start;
-  for (; index < lines.length; index++) {
-    const commentLine = lines[index] ?? '';
-    commentLines.push(commentLine);
-    if (INTERNAL_TAG_LINE.test(commentLine)) sawInternal = true;
-    if (commentLine.trim().endsWith('*/')) {
-      index++;
-      break;
+function containerMembers(node) {
+  if (ts.isClassDeclaration(node) || ts.isInterfaceDeclaration(node)) {
+    return node.members;
+  }
+  if (
+    ts.isModuleDeclaration(node) &&
+    node.body !== undefined &&
+    ts.isModuleBlock(node.body)
+  ) {
+    return node.body.statements;
+  }
+  return undefined;
+}
+
+/**
+ * @typedef {{ start: number, end: number }} RemovalSpan
+ */
+
+/**
+ * Walks `sourceFile`'s AST and collects the character spans of every
+ * `@internal`-tagged declaration that is a direct member of a class,
+ * interface, or namespace body. Each span covers the declaration's leading
+ * JSDoc comment (if any) through its own end, plus one trailing line break
+ * so removal doesn't leave a blank line behind.
+ *
+ * @param {ts.SourceFile} sourceFile
+ * @returns {RemovalSpan[]}
+ */
+function collectInternalMemberSpans(sourceFile) {
+  /** @type {RemovalSpan[]} */
+  const spans = [];
+
+  /**
+   * @param {ts.Node} node
+   * @returns {void}
+   */
+  function visit(node) {
+    const members = containerMembers(node);
+    if (members !== undefined) {
+      for (const member of members) {
+        if (hasInternalTag(member)) spans.push(removalSpanFor(member));
+      }
     }
+    ts.forEachChild(node, visit);
   }
-  return { commentLines, sawInternal, next: index };
+
+  /**
+   * @param {ts.Node} node
+   * @returns {RemovalSpan}
+   */
+  function removalSpanFor(node) {
+    const fullStart = node.getFullStart();
+    const leadingComments =
+      ts.getLeadingCommentRanges(sourceFile.text, fullStart) ?? [];
+    let start =
+      leadingComments.length > 0
+        ? leadingComments[0].pos
+        : node.getStart(sourceFile);
+    // Also remove the declaration's own indentation — walk `start` back
+    // over horizontal whitespace to the start of its line, so the removal
+    // doesn't leave a blank, whitespace-only line behind.
+    while (start > 0 && /[ \t]/u.test(sourceFile.text[start - 1])) start--;
+
+    let end = node.getEnd();
+    // Consume trailing horizontal whitespace and a single line break so the
+    // removal doesn't leave a blank line where the declaration used to be.
+    while (end < sourceFile.text.length && /[ \t]/u.test(sourceFile.text[end]))
+      end++;
+    if (sourceFile.text[end] === '\r') end++;
+    if (sourceFile.text[end] === '\n') end++;
+
+    return { start, end };
+  }
+
+  visit(sourceFile);
+  return spans;
 }
 
 /**
- * Finds the end of the declaration that starts at `lines[start]`, given the
- * bracket depth immediately before it (`baseDepth`). The declaration ends on
- * the first line where the running depth returns to `baseDepth` and the line
- * terminates a statement (`;`) or closes a body (bare `}` or `};`).
+ * Removes `@internal`-tagged declarations that are direct members of a
+ * class, interface, or namespace body from `content`. Returns the
+ * rewritten text and the count of declarations removed.
  *
- * @param {readonly string[]} lines
- * @param {number} start
- * @param {number} baseDepth
- * @returns {number} Index of the first line after the declaration.
- */
-function findDeclarationEnd(lines, start, baseDepth) {
-  let depth = baseDepth;
-  for (let index = start; index < lines.length; index++) {
-    const declLine = lines[index] ?? '';
-    depth += bracketDelta(declLine);
-    const trimmed = declLine.trim();
-    const terminates =
-      trimmed.endsWith(';') || trimmed === '}' || trimmed.endsWith('};');
-    if (depth === baseDepth && terminates) return index + 1;
-  }
-  throw new Error(
-    `Could not find the end of the @internal declaration starting at line ` +
-      `${start + 1} — bracket depth never returned to ${baseDepth}. ` +
-      `Refusing to guess; fix the parser or the declaration shape.`,
-  );
-}
-
-/**
- * Removes `@internal`-tagged declarations that are nested inside a class or
- * interface body (i.e. appear at bracket depth > 0) from `content`. Returns
- * the rewritten text and the count of declarations removed.
- *
- * Top-level (depth 0) `@internal` declarations are left untouched — see the
- * file header for why.
+ * Top-level (not-nested) `@internal` declarations are left untouched — see
+ * the file header for why.
  *
  * @param {string} content
+ * @param {string} [fileName]
  * @returns {{ text: string, removedCount: number }}
  */
-export function stripNestedInternalMembers(content) {
-  const lines = content.split('\n');
-  /** @type {string[]} */
-  const out = [];
-  let depth = 0;
-  let removedCount = 0;
-  let i = 0;
+export function stripNestedInternalMembers(content, fileName = 'input.d.ts') {
+  const sourceFile = ts.createSourceFile(
+    fileName,
+    content,
+    ts.ScriptTarget.Latest,
+    /* setParentNodes */ true,
+    ts.ScriptKind.TS,
+  );
+  const spans = collectInternalMemberSpans(sourceFile).toSorted(
+    (a, b) => a.start - b.start,
+  );
 
-  while (i < lines.length) {
-    const line = lines[i] ?? '';
-    if (!line.trim().startsWith('/**')) {
-      out.push(line);
-      depth += bracketDelta(line);
-      i++;
-      continue;
-    }
-
-    const { commentLines, sawInternal, next } = readCommentBlock(lines, i);
-    if (!sawInternal || depth <= 0) {
-      // Top-level `@internal` (or non-internal) comment — keep verbatim.
-      out.push(...commentLines);
-      i = next;
-      continue;
-    }
-
-    // Nested `@internal` declaration — drop the comment and the declaration
-    // it documents, then resume scanning from what follows.
-    const baseDepth = depth;
-    const declEnd = findDeclarationEnd(lines, next, baseDepth);
-    for (let k = next; k < declEnd; k++) depth += bracketDelta(lines[k] ?? '');
-    removedCount++;
-    i = declEnd;
+  let text = content;
+  // Remove from the end backwards so earlier spans' offsets stay valid.
+  for (let i = spans.length - 1; i >= 0; i--) {
+    const span = spans[i];
+    text = text.slice(0, span.start) + text.slice(span.end);
   }
 
-  return { text: out.join('\n'), removedCount };
+  return { text, removedCount: spans.length };
 }
 
 /**
- * Fails loudly if any `@internal`-tagged declaration remains nested inside a
- * class/interface body after stripping — a silent parser miss would leave
- * an "enforced" symbol reachable, defeating the point of this script.
+ * Belt-and-braces check: re-parses `content` and re-runs the same AST walk
+ * `stripNestedInternalMembers` uses. If it finds any remaining nested
+ * `@internal` declaration, stripping missed it — fail loudly rather than
+ * publish a symbol #289 says must be enforced. Run unconditionally on every
+ * file, not just ones `stripNestedInternalMembers` touched, so a bug that
+ * makes the stripper under-count (`removedCount` wrongly 0) can't hide
+ * behind that early exit.
  *
  * @param {string} content
  * @param {string} filePath
  * @returns {void}
  */
 function assertNoNestedInternalTagsRemain(content, filePath) {
-  const lines = content.split('\n');
-  let depth = 0;
-  for (const [index, line] of lines.entries()) {
-    if (INTERNAL_TAG_LINE.test(line) && depth > 0) {
-      throw new Error(
-        `${filePath}:${index + 1} still has a nested @internal tag at ` +
-          `depth ${depth} after stripping. The parser missed a declaration ` +
-          `shape — fix it before publishing.`,
-      );
-    }
-    depth += bracketDelta(line);
-  }
+  const sourceFile = ts.createSourceFile(
+    filePath,
+    content,
+    ts.ScriptTarget.Latest,
+    /* setParentNodes */ true,
+    ts.ScriptKind.TS,
+  );
+  const leftover = collectInternalMemberSpans(sourceFile);
+  if (leftover.length === 0) return;
+  throw new Error(
+    `${filePath} still has ${leftover.length} nested @internal ` +
+      `declaration(s) after stripping. The stripper missed a declaration ` +
+      `shape — fix it before publishing.`,
+  );
 }
 
 /**
- * Structural-integrity guard: `stripNestedInternalMembers`'s bracket-depth
- * scan is a naive character count, not a real parser. Given the wrong input
- * shape it could mis-bound a declaration — swallowing part of an untagged
- * sibling, or leaving a dangling brace behind — and produce output that
- * *looks* plausible (no leftover `@internal` tag, so
- * `assertNoNestedInternalTagsRemain` would miss it) but is not valid
- * TypeScript.
+ * Structural-integrity guard: even though spans are now derived from a real
+ * parse of the *original* text (not a character-counting heuristic),
+ * splicing those spans out of the raw string is still a textual edit that
+ * could — given a bug in `removalSpanFor`'s boundary math — cut through a
+ * token instead of between declarations.
  *
- * Parses the post-strip text with the real TypeScript parser and fails
- * loudly on any syntax error, so a bracket-counting bug is a hard build
- * failure instead of a silently corrupted published `.d.ts`.
+ * Parses the post-strip text and fails loudly on any syntax error, so such
+ * a bug is a hard build failure instead of a silently corrupted published
+ * `.d.ts`.
  *
  * @param {string} content
  * @param {string} filePath
@@ -239,8 +256,8 @@ function assertValidSyntax(content, filePath) {
   });
   throw new Error(
     `${filePath} is not valid TypeScript after stripping @internal ` +
-      `members — the structural-integrity guard tripped (a bracket-depth ` +
-      `miscount likely swallowed or mis-bounded a declaration):\n` +
+      `members — the structural-integrity guard tripped (a span-removal ` +
+      `bug likely cut through a token):\n` +
       messages.join('\n'),
   );
 }
@@ -257,10 +274,13 @@ function main() {
   for (const name of dtsFiles) {
     const filePath = join(typesDir, name);
     const content = readFileSync(filePath, 'utf8');
-    const { text, removedCount } = stripNestedInternalMembers(content);
+    const { text, removedCount } = stripNestedInternalMembers(content, name);
+
+    // Unconditional: a bug that makes `removedCount` wrongly 0 must not be
+    // able to skip this check by short-circuiting before it runs.
+    assertNoNestedInternalTagsRemain(text, name);
     if (removedCount === 0) continue;
 
-    assertNoNestedInternalTagsRemain(text, name);
     assertValidSyntax(text, name);
     writeFileSync(filePath, text);
     totalRemoved += removedCount;
@@ -269,8 +289,8 @@ function main() {
 
   console.log(
     totalRemoved === 0
-      ? '[toolkit] no nested @internal class/interface members found to strip'
-      : `[toolkit] stripped ${totalRemoved} @internal class/interface member(s): ${touchedFiles.join(', ')}`,
+      ? '[toolkit] no nested @internal class/interface/namespace members found to strip'
+      : `[toolkit] stripped ${totalRemoved} @internal class/interface/namespace member(s): ${touchedFiles.join(', ')}`,
   );
 }
 
