@@ -2,7 +2,14 @@
 
 ## Status
 
-Accepted
+Accepted — not yet implemented.
+
+The decision below is settled and is what the implementing work must follow, but
+the package still has the old behaviour: `focusCurrentField` and
+`deriveVestFieldNameFromContext` are present until
+[#287](https://github.com/ngx-signal-forms/ngx-signal-forms/issues/287) lands.
+The Decision and Consequences sections are written declaratively because they
+state the ruling, not the current state of the code.
 
 ## Date
 
@@ -39,7 +46,7 @@ validateTree(path, (ctx) => {
 });
 ```
 
-So the README-documented per-field pattern (`README.md:135`, `:395`) hands a **string** to a suite authored for the model. Reproduced:
+So the README-documented per-field pattern (`packages/toolkit/vest/README.md:135`, `:395`) hands a **string** to a suite authored for the model. Reproduced:
 
 ```ts
 const suite = create((data: { email: string; password: string }) => {

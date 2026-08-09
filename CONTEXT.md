@@ -119,12 +119,17 @@ ngx-signal-forms — an Angular toolkit for working with Signal Forms.
   relative to that path. There is no second value source: Angular's
   `FieldContext` exposes no parent or root accessor, so a registration cannot
   reach past its own path to fetch the model. This is why `focusCurrentField`
-  and field-scoped registration were **deleted** rather than repaired — they
-  bound a suite to a leaf while the suite expected the model, so
-  `suite.run(<the field's string>)` made every `data.x` read `undefined` and
-  produced a blocking error that never cleared, on a valid value. Do not
+  and field-scoped registration are to be **deleted** rather than repaired —
+  they bind a suite to a leaf while the suite expects the model, so
+  `suite.run(<the field's string>)` makes every `data.x` read `undefined` and
+  produces a blocking error that never clears, on a valid value. Do not
   reintroduce a "bind here, read the model from over there" shape: the
   descendant relation between the two paths is not expressible in TypeScript, so
   its central invariant cannot be enforced. Automatic per-field focus is a
   _root-level_ concern instead — see
   [ADR-0008](docs/decisions/0008-vest-suite-input-is-the-bound-path.md).
+  This rule is **decided but not yet implemented**: the package still ships
+  `focusCurrentField` and derives Vest field names root-relative. Removing both
+  is open work, tracked in
+  [#287](https://github.com/ngx-signal-forms/ngx-signal-forms/issues/287) and
+  [#291](https://github.com/ngx-signal-forms/ngx-signal-forms/issues/291).
