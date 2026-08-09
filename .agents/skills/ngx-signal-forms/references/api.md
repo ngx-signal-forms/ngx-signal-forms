@@ -751,6 +751,7 @@ import {
   validateVest,
   validateVestWarnings,
   type ValidateVestOptions,
+  type VestFieldExclusion,
   type VestOnlyFieldSelector,
 } from '@ngx-signal-forms/toolkit/vest';
 
@@ -763,6 +764,16 @@ interface ValidateVestOptions<TValue = unknown> {
 type VestOnlyFieldSelector<TValue> = (
   ctx: FieldContext<TValue>,
 ) => VestFieldExclusion;
+
+// A field name, a list of field names, `undefined` for a whole-suite run, or
+// `false` to focus nothing. `false` THROWS at run time: Vest's `suite.only()`
+// and `suite.run(value, fieldName)` both treat an empty/falsy selection as
+// "no filter" (run everything), so there is no way to honor "focus nothing".
+type VestFieldExclusion<F extends string = string> =
+  | F
+  | readonly F[]
+  | undefined
+  | false;
 
 // A registration's bound path value IS the suite input (ADR-0008): `path`'s
 // value type and `suite`'s input type (TValue) must match. Binding a suite

@@ -3,7 +3,8 @@
 ## Status
 
 Accepted — implemented in
-[#287](https://github.com/ngx-signal-forms/ngx-signal-forms/issues/287).
+[PR #303](https://github.com/ngx-signal-forms/ngx-signal-forms/pull/303)
+(issue [#287](https://github.com/ngx-signal-forms/ngx-signal-forms/issues/287)).
 `focusCurrentField` and `deriveVestFieldNameFromContext` are deleted; the
 suite contract (`run`, `only`, `getErrors`, `getWarnings`) is declared as
 readonly function properties per decision point 5.

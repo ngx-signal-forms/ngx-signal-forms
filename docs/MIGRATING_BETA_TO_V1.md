@@ -811,9 +811,12 @@ import { NgxFormField } from '@ngx-signal-forms/toolkit/form-field';
   validateVest(path, suite, { resetOnDestroy: false }); // persists across mounts
   ```
 
-- `only: (ctx) => string | string[] | undefined` — threads a focused field name
-  into `suite.run(value, fieldName)` (or `suite.only(field).run(...)`), enabling
-  per-field Vest runs for large suites.
+- `only: (ctx) => VestFieldExclusion` — a field name, a list of field names,
+  `undefined` for a whole-suite run, or `false` to focus nothing — threaded
+  into `suite.only(field).run(...)` (falling back to `suite.run(value,
+fieldName)`, single field name only, when the suite exposes no `only`),
+  enabling per-field Vest runs for large suites. `false` throws: Vest has no
+  way to express "focus nothing" through either form.
 - Exported kind prefixes `VEST_ERROR_KIND_PREFIX` (`'vest:'`) and
   `VEST_WARNING_KIND_PREFIX` (`'warn:vest:'`) for stable consumer checks.
 

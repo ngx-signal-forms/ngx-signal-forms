@@ -1769,3 +1769,136 @@ describe('validateVest', () => {
     });
   });
 });
+
+describe('an `only` focus resolving to "focus nothing"', () => {
+  // Empirically verified against vest@6.3.2: `suite.only(false)` and
+  // `suite.only([])` both run the WHOLE suite — Vest treats an empty/falsy
+  // exclusion list as "no filter", identically to an unfocused run. Mapping
+  // `false` (the toolkit's own "focus nothing" sentinel) to either of those
+  // would silently do the OPPOSITE of what an `only` selector asked for, so
+  // the adapter throws instead of guessing. `[]` (an empty field-name list
+  // from a selector) is the same request and must fail identically — see
+  // the PR #303 review that introduced this coverage.
+  const fieldTreeFor = (value: { email: string }) =>
+    TestBed.runInInjectionContext(() => form(signal(value), () => {}));
+
+  it('throws a descriptive error when `focus` is `false`, via the suite.only() path', () => {
+    const adapter = createVestAdapter();
+    const suite = create((data: { email: string }) => {
+      test('email', 'Email is required', () => {
+        enforce(data.email).isNotBlank();
+      });
+    });
+
+    expect(() =>
+      adapter.runVestSuite({
+        suite,
+        fieldTree: fieldTreeFor({ email: '' }),
+        value: { email: '' },
+        focus: false,
+      }),
+    ).toThrow(/focus nothing/i);
+  });
+
+  it('throws the same descriptive error when `focus` resolves to an empty field-name list', () => {
+    const adapter = createVestAdapter();
+    const suite = create((data: { email: string }) => {
+      test('email', 'Email is required', () => {
+        enforce(data.email).isNotBlank();
+      });
+    });
+
+    expect(() =>
+      adapter.runVestSuite({
+        suite,
+        fieldTree: fieldTreeFor({ email: '' }),
+        value: { email: '' },
+        focus: [],
+      }),
+    ).toThrow(/focus nothing/i);
+  });
+
+  it('throws for a `false` focus on the legacy suite.run(value, fieldName) fallback (no suite.only exposed)', () => {
+    const adapter = createVestAdapter();
+    const runCalls: Array<string | undefined> = [];
+    const runOnlySuite = {
+      run: (value: { email: string }, fieldName?: string) => {
+        runCalls.push(fieldName);
+        return {
+          isPending: () => false,
+          getErrors: (() => ({})) as VestResultLike['getErrors'],
+          getWarnings: (() => ({})) as VestResultLike['getWarnings'],
+        };
+      },
+    };
+
+    expect(() =>
+      adapter.runVestSuite({
+        suite: runOnlySuite,
+        fieldTree: fieldTreeFor({ email: '' }),
+        value: { email: '' },
+        focus: false,
+      }),
+    ).toThrow(/focus nothing/i);
+    // The throw happens before the fallback ever calls `run()`.
+    expect(runCalls).toHaveLength(0);
+  });
+
+  it('caches an empty field-name list and `false` under the SAME canonical "focus nothing" key, distinct from a field literally named \'\'', () => {
+    // Regression guard for the run-cache key bug: `focus.join(...)` on `[]`
+    // used to yield `''`, indistinguishable from the literal string focus
+    // `''`. Both `false` and `[]` now throw before a cache entry is ever
+    // written, so the only way to observe the key collision is indirectly:
+    // a literal `''` focus must NOT throw (it's a normal, if unusual, field
+    // name) and must be cached separately from the "focus nothing" cases.
+    const adapter = createVestAdapter();
+    let runCount = 0;
+    const baseSuite = create((data: { email: string }) => {
+      test('email', 'Email is required', () => {
+        enforce(data.email).isNotBlank();
+      });
+    });
+    // Deliberately exposes only `run` (no `only`), so a string/array focus
+    // routes through the legacy `run(value, fieldName)` fallback — the focus
+    // value itself (not how it reaches Vest) is what this test cares about.
+    const suite = {
+      run(value: { email: string }, _fieldName?: string) {
+        runCount += 1;
+        return baseSuite.run(value);
+      },
+    };
+
+    // A literal `''` focus is a normal (if unusual) field-name focus and
+    // must NOT throw.
+    expect(() =>
+      adapter.runVestSuite({
+        suite,
+        fieldTree: fieldTreeFor({ email: '' }),
+        value: { email: '' },
+        focus: '',
+      }),
+    ).not.toThrow();
+    expect(runCount).toBe(1);
+
+    // `false` and `[]` both throw and are never cached, so this in no way
+    // reuses the `''`-focused run cached above.
+    expect(() =>
+      adapter.runVestSuite({
+        suite,
+        fieldTree: fieldTreeFor({ email: '' }),
+        value: { email: '' },
+        focus: false,
+      }),
+    ).toThrow(/focus nothing/i);
+    expect(() =>
+      adapter.runVestSuite({
+        suite,
+        fieldTree: fieldTreeFor({ email: '' }),
+        value: { email: '' },
+        focus: [],
+      }),
+    ).toThrow(/focus nothing/i);
+    // Neither throwing call reached `suite.run()`.
+    expect(runCount).toBe(1);
+  });
+});

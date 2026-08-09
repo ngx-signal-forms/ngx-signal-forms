@@ -280,13 +280,18 @@ const VEST_KEY_SEPARATOR = '\u0000';
 const VEST_ROOT_FIELD_SENTINEL = `${VEST_KEY_SEPARATOR}root${VEST_KEY_SEPARATOR}`;
 
 /**
- * Internal sentinel run-cache focus key for a `focus === false` ("focus
- * nothing") run, distinguishing it from a `focus === undefined` ("whole
- * suite") run in the cache-hit comparison. Composed the same way as
- * {@link VEST_ROOT_FIELD_SENTINEL} so it can never collide with a real,
- * string- or array-derived focus key.
+ * Internal sentinel run-cache focus key for a "focus nothing" run —
+ * {@link isVestFocusNothing}'s `true` case (the toolkit's own `false`
+ * sentinel, or an empty field-name list) — distinguishing it from a `focus
+ * === undefined` ("whole suite") run in the cache-hit comparison. Composed
+ * the same way as {@link VEST_ROOT_FIELD_SENTINEL} so it can never collide
+ * with a real, string- or array-derived focus key. Both `false` and `[]`
+ * share this ONE key (rather than each computing their own) because they
+ * are the SAME semantic request — see {@link isVestFocusNothing}'s doc
+ * comment for why a bare `focus.join(...)` on `[]` is unsafe (it collides
+ * with a field literally named `''`).
  */
-const VEST_FOCUS_FALSE_SENTINEL = `${VEST_KEY_SEPARATOR}false${VEST_KEY_SEPARATOR}`;
+const VEST_FOCUS_NOTHING_SENTINEL = `${VEST_KEY_SEPARATOR}nothing${VEST_KEY_SEPARATOR}`;
 
 /**
  * Runtime guard for the subset of Vest's public result object that the adapter
@@ -441,6 +446,34 @@ function resolveVestWarningFieldTree(
 }
 
 /**
+ * Reports whether `focus` is a deliberate "run nothing" selection — the
+ * toolkit's own `false` sentinel, or an empty field-name list.
+ *
+ * Vest cannot express this through either `suite.only()` or the legacy
+ * `suite.run(value, fieldName)` form. Empirically verified against
+ * `vest@6.3.2`: `suite.only([])`, `suite.only(false)`, and `suite.only('')`
+ * all run the WHOLE suite — Vest treats an empty/falsy exclusion list as "no
+ * filter", identically to calling `suite.run(value)` with no focus at all —
+ * so there is no reliable, documented way to map "focus nothing" onto
+ * `suite.only()`. (The one construction that DOES run zero tests —
+ * `suite.only(['a-field-name-that-cannot-exist'])` — depends on the adapter
+ * fabricating a name guaranteed never to collide with a real Vest field,
+ * which nothing in Vest's public contract promises stays true.) Rather than
+ * silently doing the OPPOSITE of what the caller asked for,
+ * {@link executeVestRun} throws when this is `true`.
+ */
+function isVestFocusNothing(focus: VestFieldExclusion): focus is false {
+  // Declared as `focus is false` (rather than plain `boolean`) purely so
+  // callers get a narrowed `focus` afterward — this function is used both
+  // where that matters (`executeVestRun`, which throws in the `true` branch
+  // without touching `focus` again) and where it doesn't (the cache-key
+  // ternary below). An empty array satisfying this predicate is NOT
+  // literally `false`, but every caller either throws or discards `focus`
+  // in that branch, so the imprecision is harmless.
+  return focus === false || (Array.isArray(focus) && focus.length === 0);
+}
+
+/**
  * Executes `suite.run()` using the appropriate focused-run targeting.
  *
  * Prefers the Vest 6 canonical `suite.only(field).run(value)` form — that
@@ -458,27 +491,33 @@ function executeVestRun<TValue>(
     return suite.run(value);
   }
 
+  if (isVestFocusNothing(focus)) {
+    throw new Error(
+      '[ngx-signal-forms] A Vest `only` selector returned `false` (or an ' +
+        'empty field-name list), requesting a "focus nothing" run. Vest has ' +
+        'no reliable way to express that through `suite.only()` or ' +
+        '`suite.run(value, fieldName)` — both treat an empty selection as ' +
+        '"run the whole suite", the opposite of what was requested. Return ' +
+        'a field name, a list of field names, or `undefined` for a ' +
+        'whole-suite run.',
+    );
+  }
+
   if (typeof suite.only === 'function') {
     // `suite.only` (see {@link VestRunnableSuite.only}'s doc comment) only
-    // accepts `string | string[]` — no `false`, no readonly arrays. Narrow
-    // the wider `VestFieldExclusion` down before calling it: `false` ("focus
-    // nothing") becomes an empty field-name list, and a readonly array is
-    // cloned into a mutable one.
+    // accepts `string | string[]` — no readonly arrays. Clone a readonly
+    // array into a mutable one.
     const focusArg: string | string[] =
-      focus === false ? [] : typeof focus === 'string' ? focus : [...focus];
+      typeof focus === 'string' ? focus : [...focus];
     const focused = suite.only(focusArg);
     return focused.run(value);
   }
 
   // No `only` shorthand: fall back to `suite.run(value, fieldName)`, whose
   // second argument (see {@link VestRunnableSuite.run}'s doc comment) is a
-  // single `string` — this legacy path predates multi-field/`false` focus,
-  // both of which are expressed through `only` above. Multi-field and
-  // `false` values collapse to the first field name (best effort) or no
-  // focus at all.
-  const fieldNameArg: string | undefined =
-    focus === false ? undefined : typeof focus === 'string' ? focus : focus[0];
-  return suite.run(value, fieldNameArg);
+  // single `string` — this legacy path predates multi-field focus, which is
+  // expressed through `only` above and collapses to the first field name.
+  return suite.run(value, typeof focus === 'string' ? focus : focus[0]);
 }
 
 /**
@@ -1270,12 +1309,11 @@ export function createVestAdapter(
     const suiteKey = suite as object;
     const suiteCache = getVestSuiteRunCache(suiteKey);
     const cachedEntry = suiteCache.get(fieldTree);
-    const focusKey =
-      focus === false
-        ? VEST_FOCUS_FALSE_SENTINEL
-        : typeof focus === 'string' || focus === undefined
-          ? focus
-          : focus.join(VEST_KEY_SEPARATOR);
+    const focusKey = isVestFocusNothing(focus)
+      ? VEST_FOCUS_NOTHING_SENTINEL
+      : typeof focus === 'string' || focus === undefined
+        ? focus
+        : focus.join(VEST_KEY_SEPARATOR);
 
     if (
       cachedEntry &&

@@ -1,5 +1,6 @@
 import {
   sharedVestAdapter,
+  type VestFieldExclusion,
   type VestFieldPath,
   type VestOnlyFieldSelector,
   type VestRunnableSuite,
@@ -11,6 +12,7 @@ import {
 export {
   VEST_ERROR_KIND_PREFIX,
   VEST_WARNING_KIND_PREFIX,
+  type VestFieldExclusion,
   type VestOnlyFieldSelector,
   type VestResultLike,
   type VestRunnableSuite,
@@ -56,15 +58,19 @@ export interface ValidateVestOptions<TValue = unknown> {
   resetOnDestroy?: boolean;
 
   /**
-   * Enable per-field focused runs by passing a field name as the second
-   * argument to `suite.run(value, fieldName)`. When provided as a function,
-   * the callback receives the field context for the current validation pass
-   * and should return the Vest field name(s) to focus, or `undefined` for a
-   * whole-suite run.
+   * Enable per-field focused runs. The callback receives the field context
+   * for the current validation pass and returns a {@link VestFieldExclusion}:
+   * a single field name, a list of field names, `undefined` for a
+   * whole-suite run, or `false` to focus nothing.
    *
-   * Works with suite callbacks that use `only(fieldName)` or with the
-   * `suite.only(field).run(...)` shorthand. Default behavior remains a full
-   * suite run for backward compatibility.
+   * The adapter prefers the canonical `suite.only(field).run(value)` form.
+   * When the suite does not expose `only`, it falls back to the legacy
+   * `suite.run(value, fieldName)` form, which supports a single field name
+   * only — a returned array collapses to its first element. Vest has no way
+   * to express "focus nothing" through either form (an empty selection runs
+   * the WHOLE suite, not zero tests — verified against vest@6.3.2), so a
+   * `false` return throws a descriptive error instead of silently doing the
+   * opposite of what was asked.
    *
    * @default undefined (full-suite run)
    */
