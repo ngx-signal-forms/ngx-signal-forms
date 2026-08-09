@@ -217,6 +217,41 @@ while inline errors and hints retain caption sizing (`0.75rem` / `1rem`). Settin
 `--ngx-signal-form-notification-font-size` and
 `--ngx-signal-form-notification-line-height` to tune grouped cards.
 
+### Error Summary
+
+**Component:** `ngx-form-field-error-summary`
+
+Renders a form-level, clickable list of aggregated validation errors (GOV.UK
+/ WAI error-summary pattern). Each entry is a `<button>` that focuses its
+associated control on click.
+
+| Property                                   | Default   | Description                                                                                                                    |
+| :----------------------------------------- | :-------- | :----------------------------------------------------------------------------------------------------------------------------- |
+| `--ngx-error-summary-border-color`         | `#dc2626` | Card border color                                                                                                              |
+| `--ngx-error-summary-bg`                   | `#fef2f2` | Card background color                                                                                                          |
+| `--ngx-error-summary-label-color`          | `#991b1b` | Optional summary label text color                                                                                              |
+| `--ngx-error-summary-link-color`           | `#b91c1c` | Entry link text color                                                                                                          |
+| `--ngx-error-summary-link-hover-color`     | `#991b1b` | Entry link hover color                                                                                                         |
+| `--ngx-error-summary-link-min-target-size` | `1.5rem`  | Minimum block-size AND inline-size of each entry link — enforces the 24x24px WCAG 2.5.8 target-size minimum in both directions |
+| `--ngx-error-summary-link-padding-inline`  | `0.25rem` | Horizontal padding on each entry link                                                                                          |
+| `--ngx-error-summary-focus-color`          | `#2563eb` | `:focus-visible` outline color on entry links                                                                                  |
+
+`--ngx-error-summary-link-color` defaults to `#b91c1c` (Tailwind red-700)
+rather than the `#dc2626` used for the card border: on the summary's
+`#fef2f2` background, `#dc2626` text resolves to ~4.41:1, just under the
+4.5:1 minimum for 14px text (WCAG 1.4.3 AA); `#b91c1c` resolves to ~5.9:1.
+
+Each entry link keeps `all: unset` for the rest of its reset but sets an
+explicit `display: inline-flex` plus `min-block-size` and `min-inline-size`
+— `all: unset` resets `display` to its initial value (`inline`), and
+`min-height`/`min-block-size`/`min-inline-size` have no effect on
+non-replaced inline elements per spec, so the resulting target would
+silently stay below the WCAG 2.5.8 24x24px minimum without the explicit
+`inline-flex`. Both dimensions are floored (not just block-size) because a
+short or empty `fieldName`/message could otherwise render narrower than
+24px; `justify-content: center` keeps short text centered within the
+enforced minimum width.
+
 ### Character Count
 
 **Component:** `ngx-form-field-character-count`
