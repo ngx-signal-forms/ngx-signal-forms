@@ -10,7 +10,7 @@ import {
 import { type FieldTree, type ValidationError } from '@angular/forms/signals';
 import type { SubmittedStatus } from '../types';
 import { isBlockingError } from './warning-error';
-import { isFieldTree } from './walk-field-tree';
+import { isFieldTreeLike } from './walk-field-tree';
 
 /**
  * Tracks completed-once submission history on top of native
@@ -277,7 +277,7 @@ export async function submitWithWarnings<TModel>(
 }
 
 function assertFieldTree(value: unknown): asserts value is FieldTree<unknown> {
-  if (!isFieldTree(value)) {
+  if (!isFieldTreeLike(value)) {
     throw new TypeError(
       'createSubmittedStatusTracker requires a FieldTree or Signal<FieldTree>.',
     );

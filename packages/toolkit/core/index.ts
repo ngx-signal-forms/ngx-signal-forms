@@ -120,7 +120,7 @@ export {
 } from './utilities/wrapper-helpers';
 export {
   InvalidFieldTreeError,
-  isFieldTree,
+  isFieldTreeLike,
   walkFieldTreeEntries,
 } from './utilities/walk-field-tree';
 export {
