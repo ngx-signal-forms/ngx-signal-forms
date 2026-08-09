@@ -7,6 +7,21 @@ import { create, enforce, test as vestTest, warn } from 'vest';
 import { describe, expect, it, vi } from 'vitest';
 import { createVestAdapter } from './vest-adapter';
 
+// Vitest hoists `vi.mock` above every import in this file (including its own
+// `@angular/core` import elsewhere), registering the mock before any other
+// module can observe the real `isDevMode`. Only `isDevMode` is overridden --
+// everything else passes through the real module untouched. `value` starts
+// `true`, matching how these unit tests actually run (see the dev-mode-only
+// `it.skipIf` pattern elsewhere in this package), so every OTHER test in this
+// file is unaffected; only the tests below that explicitly flip it exercise
+// the production-mode branch of ADR-0008 decision point 4.
+const vestFieldResolutionDevMode = vi.hoisted(() => ({ value: true }));
+
+vi.mock('@angular/core', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@angular/core')>();
+  return { ...actual, isDevMode: () => vestFieldResolutionDevMode.value };
+});
+
 describe('createVestAdapter', () => {
   it('shares one suite run across two register calls on the same path/value', async () => {
     const adapter = createVestAdapter();
@@ -318,6 +333,321 @@ describe('createVestAdapter', () => {
     // because the Vest field name happens to be the literal string "root".
     expect(
       formRootErrors.some((error) => error.message === 'Root is required'),
+    ).toBe(false);
+  });
+
+  it('attaches a virtual Vest field name (unresolvable first segment) to the bound field, silently', async () => {
+    // `passwordMatch` names no model field at all -- a deliberate,
+    // form-level Vest error (ADR-0008 decision point 4's motivating example).
+    // An unresolvable FIRST path segment is indistinguishable from a
+    // deliberate virtual name, so it must attach to the bound field with NO
+    // diagnostic: no throw (even though these tests run in dev mode, where
+    // an 'invalid'-shaped miss WOULD throw), and no console.error.
+    const adapter = createVestAdapter();
+    const consoleErrorSpy = vi
+      .spyOn(console, 'error')
+      .mockImplementation(() => {});
+
+    const suite = create((data: { password: string; confirm: string }) => {
+      vestTest('passwordMatch', 'Passwords must match', () => {
+        enforce(data.confirm).equals(data.password);
+      });
+    });
+
+    @Component({
+      selector: 'ngx-test-adapter-virtual-field',
+      imports: [FormField],
+
+      template: `
+        <input id="password" [formField]="f.password" />
+        <input id="confirm" [formField]="f.confirm" />
+      `,
+    })
+    class TestComponent {
+      readonly model = signal({ password: 'a', confirm: 'b' });
+      readonly f = form(this.model, (path) => {
+        adapter.register(path, suite);
+      });
+    }
+
+    const { fixture } = await render(TestComponent);
+    await TestBed.inject(ApplicationRef).whenStable();
+
+    const rootErrors = fixture.componentInstance.f().errors();
+    expect(
+      rootErrors.some((error) => error.message === 'Passwords must match'),
+    ).toBe(true);
+    expect(consoleErrorSpy).not.toHaveBeenCalled();
+
+    consoleErrorSpy.mockRestore();
+  });
+
+  it('resolves a Vest field name past a valid prefix with an invalid tail: throws in dev mode', async () => {
+    // `address.cityy` -- a typo one letter off from the real child `city`.
+    // The first segment (`address`) DOES resolve, so this is not a virtual
+    // name; nothing but an authoring mistake explains it. Per ADR-0008
+    // decision point 4, dev mode hard-errors rather than silently
+    // mis-attaching (or silently dropping) the failure.
+    const adapter = createVestAdapter();
+
+    interface Model {
+      address: { city: string };
+    }
+    const suite = create((data: Model) => {
+      vestTest('address.cityy', 'City is required', () => {
+        enforce(data.address.city).isNotBlank();
+      });
+    });
+
+    @Component({
+      selector: 'ngx-test-adapter-invalid-tail-dev',
+      imports: [FormField],
+
+      template: `<input id="city" [formField]="f.address.city" />`,
+    })
+    class TestComponent {
+      readonly model = signal<Model>({ address: { city: '' } });
+      readonly f = form(this.model, (path) => {
+        adapter.register(path, suite);
+      });
+    }
+
+    await expect(async () => {
+      const { fixture } = await render(TestComponent);
+      // The sync `validateTree` pass reads the mis-resolved entry eagerly, so
+      // the throw can surface either during initial render or the first
+      // stability wait -- await both so either timing is caught.
+      await TestBed.inject(ApplicationRef).whenStable();
+      void fixture;
+    }).rejects.toThrow(
+      /does not resolve against the validator's bound field tree/,
+    );
+  });
+
+  it('resolves a Vest field name past a valid prefix with an invalid tail: logs via console.error and attaches to the bound field in production mode', async () => {
+    // Same authoring typo as the dev-mode spec above, but with `isDevMode()`
+    // forced `false` (see the `vi.mock('@angular/core', …)` at the top of
+    // this file). Per ADR-0008 decision point 4, production must not throw --
+    // it logs via `console.error` and still attaches the failure to the
+    // validator's bound field, so it is not silently lost.
+    vestFieldResolutionDevMode.value = false;
+    // Declared outside `try` (and restored in `finally`, not at the tail of
+    // `try`) so a failing assertion above it cannot leak the spy into later
+    // tests.
+    let consoleErrorSpy: { mockRestore: () => void } | undefined;
+    try {
+      const adapter = createVestAdapter();
+      consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+      interface Model {
+        address: { city: string };
+      }
+      const suite = create((data: Model) => {
+        vestTest('address.cityy', 'City is required', () => {
+          enforce(data.address.city).isNotBlank();
+        });
+      });
+
+      @Component({
+        selector: 'ngx-test-adapter-invalid-tail-prod',
+        imports: [FormField],
+
+        template: `<input id="city" [formField]="f.address.city" />`,
+      })
+      class TestComponent {
+        readonly model = signal<Model>({ address: { city: '' } });
+        readonly f = form(this.model, (path) => {
+          adapter.register(path, suite);
+        });
+      }
+
+      const { fixture } = await render(TestComponent);
+      await TestBed.inject(ApplicationRef).whenStable();
+
+      // No throw reached here -- production logs and continues.
+      expect(consoleErrorSpy).toHaveBeenCalledWith(
+        expect.stringContaining(
+          "does not resolve against the validator's bound field tree",
+        ),
+      );
+
+      // The mis-resolved entry attaches to the validator's bound field
+      // (the form root here) rather than being silently dropped.
+      const rootErrors = fixture.componentInstance.f().errors();
+      expect(
+        rootErrors.some((error) => error.message === 'City is required'),
+      ).toBe(true);
+    } finally {
+      consoleErrorSpy?.mockRestore();
+      vestFieldResolutionDevMode.value = true;
+    }
+  });
+
+  it('resolves a Vest field name whose probe throws: dev mode throws with the underlying error message included', async () => {
+    // `address` is a LEAF string field (not an object), but the Vest field
+    // name names a further child (`address.street`) past it. The first
+    // segment DOES resolve, so probing the second segment against Angular
+    // Signal Forms' leaf field-tree proxy throws (its `getOwnPropertyDescriptor`
+    // trap rejects a non-object target) rather than merely reporting "no such
+    // child". Per the PR #307 review finding, the caught error's own detail
+    // must be propagated into the dev-mode throw / production `console.error`
+    // -- previously it was dropped, leaving the diagnostic unactionable.
+    const adapter = createVestAdapter();
+
+    interface Model {
+      address: string;
+    }
+    const suite = create((data: Model) => {
+      vestTest('address.street', 'Street is required', () => {
+        enforce(data.address).isNotBlank();
+      });
+    });
+
+    @Component({
+      selector: 'ngx-test-adapter-probe-throw-dev',
+      imports: [FormField],
+
+      template: `<input id="address" [formField]="f.address" />`,
+    })
+    class TestComponent {
+      readonly model = signal<Model>({ address: '' });
+      readonly f = form(this.model, (path) => {
+        adapter.register(path, suite);
+      });
+    }
+
+    await expect(async () => {
+      const { fixture } = await render(TestComponent);
+      await TestBed.inject(ApplicationRef).whenStable();
+      void fixture;
+    }).rejects.toThrow(/probing segment "street" threw: .+/);
+  });
+
+  it('resolves a Vest field name whose probe throws: production mode logs with the underlying error message included', async () => {
+    vestFieldResolutionDevMode.value = false;
+    let consoleErrorSpy: { mockRestore: () => void } | undefined;
+    try {
+      const adapter = createVestAdapter();
+      consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+      interface Model {
+        address: string;
+      }
+      const suite = create((data: Model) => {
+        vestTest('address.street', 'Street is required', () => {
+          enforce(data.address).isNotBlank();
+        });
+      });
+
+      @Component({
+        selector: 'ngx-test-adapter-probe-throw-prod',
+        imports: [FormField],
+
+        template: `<input id="address" [formField]="f.address" />`,
+      })
+      class TestComponent {
+        readonly model = signal<Model>({ address: '' });
+        readonly f = form(this.model, (path) => {
+          adapter.register(path, suite);
+        });
+      }
+
+      const { fixture } = await render(TestComponent);
+      await TestBed.inject(ApplicationRef).whenStable();
+
+      // The propagated detail (not just the generic wrapper message) must be
+      // present in the logged diagnostic.
+      expect(consoleErrorSpy).toHaveBeenCalledWith(
+        expect.stringMatching(/probing segment "street" threw: .+/),
+      );
+
+      // Still attaches to the bound field rather than being dropped.
+      const rootErrors = fixture.componentInstance.f().errors();
+      expect(
+        rootErrors.some((error) => error.message === 'Street is required'),
+      ).toBe(true);
+    } finally {
+      consoleErrorSpy?.mockRestore();
+      vestFieldResolutionDevMode.value = true;
+    }
+  });
+
+  it('resolves a bracket-indexed Vest field name (items[0].sku) to the matching array item field', async () => {
+    interface Model {
+      items: { sku: string }[];
+    }
+    const suite = create((data: Model) => {
+      vestTest('items[0].sku', 'SKU is required', () => {
+        enforce(data.items[0]?.sku).isNotBlank();
+      });
+    });
+
+    @Component({
+      selector: 'ngx-test-adapter-bracket-index',
+      imports: [FormField],
+
+      template: `<input id="sku" [formField]="f.items[0].sku" />`,
+    })
+    class TestComponent {
+      readonly model = signal<Model>({ items: [{ sku: '' }] });
+      readonly f = form(this.model, (path) => {
+        adapter.register(path, suite);
+      });
+    }
+
+    const adapter = createVestAdapter();
+    const { fixture } = await render(TestComponent);
+    await TestBed.inject(ApplicationRef).whenStable();
+
+    const skuErrors = fixture.componentInstance.f.items[0].sku().errors();
+    expect(skuErrors.some((error) => error.message === 'SKU is required')).toBe(
+      true,
+    );
+    // Must not fall back to the bound (root) field.
+    expect(
+      fixture.componentInstance
+        .f()
+        .errors()
+        .some((error) => error.message === 'SKU is required'),
+    ).toBe(false);
+  });
+
+  it('resolves a dot-numeric Vest field name (items.0.sku) to the matching array item field', async () => {
+    interface Model {
+      items: { sku: string }[];
+    }
+    const suite = create((data: Model) => {
+      vestTest('items.0.sku', 'SKU is required', () => {
+        enforce(data.items[0]?.sku).isNotBlank();
+      });
+    });
+
+    @Component({
+      selector: 'ngx-test-adapter-dot-numeric-index',
+      imports: [FormField],
+
+      template: `<input id="sku" [formField]="f.items[0].sku" />`,
+    })
+    class TestComponent {
+      readonly model = signal<Model>({ items: [{ sku: '' }] });
+      readonly f = form(this.model, (path) => {
+        adapter.register(path, suite);
+      });
+    }
+
+    const adapter = createVestAdapter();
+    const { fixture } = await render(TestComponent);
+    await TestBed.inject(ApplicationRef).whenStable();
+
+    const skuErrors = fixture.componentInstance.f.items[0].sku().errors();
+    expect(skuErrors.some((error) => error.message === 'SKU is required')).toBe(
+      true,
+    );
+    expect(
+      fixture.componentInstance
+        .f()
+        .errors()
+        .some((error) => error.message === 'SKU is required'),
     ).toBe(false);
   });
 
