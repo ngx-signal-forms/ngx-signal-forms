@@ -285,17 +285,20 @@ Scale or collapse the reserved space per form scope:
 
 #### Collapsing content-less rows
 
-`--ngx-form-field-assistive-min-height` always reserves space, whether or not
-the row carries a hint, error, warning or character count. For most consumers
-that is the right default and the simplest override.
+Whether `--ngx-form-field-assistive-min-height` reserves space unconditionally
+depends on `--ngx-form-field-assistive-empty-behavior`. Under the default,
+`reserve`, `--ngx-form-field-assistive-min-height` always reserves space,
+whether or not the row carries a hint, error, warning or character count —
+for most consumers that is the right default and the simplest override.
 
-`--ngx-form-field-assistive-empty-behavior` controls the narrower case: whether
-a row with **no assistive content at all** keeps its reserved height
-(`reserve`, the default — today's rendering, unchanged) or shrinks to zero
-(`collapse`). Reach for `--ngx-form-field-assistive-min-height: 0` first; reach
-for this token only when some fields in a form need the reservation and others
-do not, or when the reservation should disappear only in the fully-empty case
-rather than shrinking every row's baseline height.
+Under `collapse`, that changes for the narrower case of a row with **no
+assistive content at all**: it drops to zero height regardless of what
+`--ngx-form-field-assistive-min-height` is set to, while a row that does
+carry content still reserves normally. Reach for
+`--ngx-form-field-assistive-min-height: 0` first; reach for this token only
+when some fields in a form need the reservation and others do not, or when
+the reservation should disappear only in the fully-empty case rather than
+shrinking every row's baseline height.
 
 ```css
 .my-compact-form {
