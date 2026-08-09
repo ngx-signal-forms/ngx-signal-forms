@@ -1096,12 +1096,22 @@ export class NgxFormFieldWrapper<TValue = unknown> {
    * required-ness signal that already drives the visible `*` marker in the
    * label, so both indicators agree.
    *
+   * `null` also whenever {@link resolvedRequiredHintText} resolves to `''`
+   * (an explicit `requiredHintText: ''` override, clearing the hint —
+   * mirrors `requiredMarker`'s / `requiredLegendText`'s empty-string-clears
+   * convention). Rendering an empty visually-hidden node would still leave
+   * its id in `aria-describedby`, pointing at a text-less element — an
+   * empty accessible-description target, not a missing one, but pointless
+   * either way, so the id is withheld here rather than in the describedby
+   * composer.
+   *
    * See https://github.com/ngx-signal-forms/ngx-signal-forms/issues/300.
    */
   protected readonly groupRequiredHintId = computed<string | null>(() => {
     if (
       this.selectionClusterRole() !== 'group' ||
-      !this.#boundControlIsRequired()
+      !this.#boundControlIsRequired() ||
+      this.resolvedRequiredHintText() === ''
     ) {
       return null;
     }

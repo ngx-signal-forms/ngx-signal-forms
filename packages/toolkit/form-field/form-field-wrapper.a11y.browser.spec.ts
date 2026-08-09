@@ -8,7 +8,10 @@ import {
   schema,
   validate,
 } from '@angular/forms/signals';
-import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit';
+import {
+  NgxSignalFormToolkit,
+  provideNgxSignalFormsConfig,
+} from '@ngx-signal-forms/toolkit';
 import { render } from '@testing-library/angular';
 import { page, userEvent } from 'vitest/browser';
 import { describe, expect, it } from 'vitest';
@@ -355,6 +358,38 @@ describe('form-field wrapper — WCAG 2.2 AA conformance', () => {
       // The hint must actually be exposed to the accessibility tree — unlike
       // the visual `*` marker, it is NOT `aria-hidden`.
       expect(requiredHint).not.toHaveAttribute('aria-hidden');
+
+      await expectNoA11yViolations(container);
+    });
+
+    it('suppresses the required hint entirely when requiredHintText is empty, instead of describedby-ing an empty node', async () => {
+      // Regression guard: `requiredHintText: ''` is documented as
+      // "suppress the hint" (mirrors `requiredMarker`'s empty-string-clears
+      // convention), but the wrapper used to keep rendering the hint span
+      // and referencing its id in `aria-describedby` even when the text was
+      // empty — an empty accessible-description target.
+      const TestComponent = defineFixtureComponent(
+        'ngx-test-a11y-checkbox-cluster-empty-hint-text',
+        CHECKBOX_CLUSTER_TEMPLATE,
+        () =>
+          form(
+            signal({ consentRead: false, consentAgree: false }),
+            schema((path) => {
+              required(path.consentRead, { message: 'Consent is required' });
+              required(path.consentAgree, { message: 'Consent is required' });
+            }),
+          ),
+      );
+
+      const { container } = await render(TestComponent, {
+        providers: [provideNgxSignalFormsConfig({ requiredHintText: '' })],
+      });
+      await TestBed.inject(ApplicationRef).whenStable();
+
+      const wrapper = container.querySelector('ngx-form-field-wrapper');
+      expect(wrapper).toHaveAttribute('role', 'group');
+      expect(container.querySelector('#consent-required-hint')).toBeNull();
+      expect(wrapper).not.toHaveAttribute('aria-describedby');
 
       await expectNoA11yViolations(container);
     });

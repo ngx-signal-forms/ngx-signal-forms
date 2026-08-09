@@ -412,7 +412,9 @@ export interface NgxSignalFormsUserConfig {
   optionalLegendText?: string;
   /**
    * Override the visually-hidden required-hint text for `role="group"`
-   * selection clusters. Pass `''` to clear an inherited hint.
+   * selection clusters. Pass `''` to suppress the hint entirely — the
+   * wrapper renders no hint node and omits its id from `aria-describedby`,
+   * rather than pointing the description at an empty element.
    */
   requiredHintText?: string;
 }
