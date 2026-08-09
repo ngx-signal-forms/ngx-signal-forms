@@ -108,7 +108,10 @@
 
   /* Icon/touch targets */
   --_field-icon-size: 1.25rem; /* 20px */
-  --_field-touch-target: 2rem; /* 32px */
+  /* WCAG 2.2 AA target-size contract (32px, deliberate headroom over the
+   * 24px minimum) — public override, rationale, and ownership boundary are
+   * documented in THEMING.md's "Selection target size" section (#253). */
+  --_field-touch-target: var(--ngx-form-field-touch-target, 2rem); /* 32px */
 
   /* Legacy aliases (for backward compatibility) */
   --_field-text-xs: var(--_field-text-caption);

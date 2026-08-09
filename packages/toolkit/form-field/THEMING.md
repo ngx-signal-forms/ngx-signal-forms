@@ -693,14 +693,15 @@ Grouped radios and grouped checkboxes that live inside
 These wrappers keep normal inline feedback placement, but swap the usual border
 state for a surfaced background when invalid or warning.
 
-| Property                                      | Default                                                      | Description                                  |
-| :-------------------------------------------- | :----------------------------------------------------------- | :------------------------------------------- |
-| `--ngx-form-field-selection-group-gap`        | `0.75rem`                                                    | Vertical gap between grouped options         |
-| `--ngx-form-field-selection-group-padding`    | `1rem`                                                       | Inner padding of the grouped control surface |
-| `--ngx-form-field-selection-group-radius`     | `0.25rem`                                                    | Border radius of the grouped control surface |
-| `--ngx-form-field-selection-group-bg`         | `transparent`                                                | Base surface background                      |
-| `--ngx-form-field-selection-group-invalid-bg` | `color-mix(in srgb, var(--_invalid-color) 12%, transparent)` | Invalid surface background                   |
-| `--ngx-form-field-selection-group-warning-bg` | `color-mix(in srgb, var(--_warning-color) 12%, transparent)` | Warning surface background                   |
+| Property                                      | Default                                                      | Description                                                                                   |
+| :-------------------------------------------- | :----------------------------------------------------------- | :-------------------------------------------------------------------------------------------- |
+| `--ngx-form-field-selection-group-gap`        | `0.75rem`                                                    | Vertical gap between grouped options                                                          |
+| `--ngx-form-field-selection-group-padding`    | `1rem`                                                       | Inner padding of the grouped control surface                                                  |
+| `--ngx-form-field-selection-group-radius`     | `0.25rem`                                                    | Border radius of the grouped control surface                                                  |
+| `--ngx-form-field-selection-group-bg`         | `transparent`                                                | Base surface background                                                                       |
+| `--ngx-form-field-selection-group-invalid-bg` | `color-mix(in srgb, var(--_invalid-color) 12%, transparent)` | Invalid surface background                                                                    |
+| `--ngx-form-field-selection-group-warning-bg` | `color-mix(in srgb, var(--_warning-color) 12%, transparent)` | Warning surface background                                                                    |
+| `--ngx-form-field-touch-target`               | `2rem`                                                       | Row hit-target size for checkbox, switch, and padded rows — see "Selection target size" below |
 
 Example:
 
@@ -708,6 +709,64 @@ Example:
 .delivery-method-wrapper {
   --ngx-form-field-selection-group-padding: 1rem;
   --ngx-form-field-selection-group-invalid-bg: #fce2e2;
+}
+```
+
+### Selection target size
+
+Checkbox rows, switch rows, and padded custom controls all size their
+interaction area from one shared token: `--_field-touch-target`, default
+`2rem` (32px). It now resolves through a public custom property so a
+consumer can retune density from any ancestor scope:
+
+```css
+--_field-touch-target: var(--ngx-form-field-touch-target, 2rem);
+```
+
+See `--ngx-form-field-touch-target` in the property table above.
+
+**Why 32px, not 24px.** WCAG 2.2 SC 2.5.8 Target Size (Minimum), Level AA,
+requires **24×24 CSS px**. SC 2.5.5 Target Size (Enhanced), Level AAA,
+requires **44×44**. 32px is not a WCAG figure at either level — it is the
+24px AA floor plus deliberate headroom, so a border or a sub-pixel rounding
+error cannot drop the rendered box under the AA minimum. It stays below the
+44px AAA bar; a consumer that wants AAA-level targets sets
+`--ngx-form-field-touch-target: 2.75rem` (44px) explicitly.
+
+**Overriding below 24px forfeits SC 2.5.8.** The token has no built-in
+floor — setting it under `1.5rem` (24px) renders a control that fails the
+WCAG 2.2 AA target-size criterion. That is a valid choice for a density
+mode a product accepts responsibility for, not a toolkit default.
+
+**One shared token, not a selection-only sibling.** The switch row renders
+through the same `--_selection-row-min-block-size` derivation as checkbox
+and selection-group rows and therefore keeps a WCAG-2.2-AA-compliant
+height by default too — a padded custom control has the same touch-target
+problem as a checkbox, so it intentionally is not split into a separate
+token.
+
+**Ownership boundary.** The wrapper guarantees the interaction area of its
+own rows (checkbox, switch, selection-group). Projected group containers,
+`<legend>` elements, and `<fieldset>` markup sit outside the wrapper's
+style encapsulation and are consumer-owned — the consumer applies its own
+sizing and spacing at the app level, the same way it owns
+`--ngx-form-field-selection-group-gap` layout above. `--ngx-form-field-touch-target`
+does not reach into that projected composition.
+
+**Radio rows are consumer-owned too, including a lone radio.** Every
+`<input type="radio">` resolves to the `radio-group` control kind, which
+always renders through the wrapper's selection-cluster layout — the same
+projected, consumer-owned composition described above — regardless of
+whether the radio is actually grouped with siblings. `--ngx-form-field-touch-target`
+does not drive a radio row's height. Where a lone radio's row still measures
+above the 24px AA floor by default, that comes from the selection-cluster's
+own padding token, not from this touch-target contract; a consumer building
+a custom radio-group layout owns its row sizing directly, the same way the
+demo's own grouped-radio composition does.
+
+```css
+.compact-form {
+  --ngx-form-field-touch-target: 1.5rem; /* 24px — AA floor, no headroom */
 }
 ```
 
