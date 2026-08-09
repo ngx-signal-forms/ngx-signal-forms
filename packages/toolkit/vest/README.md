@@ -140,11 +140,11 @@ Blocking errors and warnings are read from the same Vest run — enabling warnin
 
 #### Options
 
-| Option            | Default | Description                                                                                                                                                                                                                                                                                                                                                                            |
-| ----------------- | ------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `includeWarnings` | `false` | Surface `warn()` results as toolkit warnings (`kind` prefixed with `warn:vest:`).                                                                                                                                                                                                                                                                                                      |
-| `resetOnDestroy`  | `true`  | Call `suite.reset()` via `DestroyRef.onDestroy()` when the hosting injection context tears down. Enabled by default for module-scope suites; pass `{ resetOnDestroy: false }` only to deliberately persist suite state across mounts (see [Suite lifecycle](#suite-lifecycle) below).                                                                                                  |
-| `only`            | _none_  | Selector `(ctx) => VestFieldExclusion` — a field name, a list of field names, `undefined` for a whole-suite run, or `false` to focus nothing — threaded into `suite.only(field).run(value)` when the suite exposes `only` (falling back to `suite.run(value, fieldName)`, single field name only, otherwise). `false` throws: Vest cannot express "focus nothing" through either form. |
+| Option            | Default | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| ----------------- | ------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `includeWarnings` | `false` | Surface `warn()` results as toolkit warnings (`kind` prefixed with `warn:vest:`).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| `resetOnDestroy`  | `true`  | Call `suite.reset()` via `DestroyRef.onDestroy()` when the hosting injection context tears down. Enabled by default for module-scope suites; pass `{ resetOnDestroy: false }` only to deliberately persist suite state across mounts (see [Suite lifecycle](#suite-lifecycle) below).                                                                                                                                                                                                                                                                                                                                               |
+| `only`            | _none_  | Selector `(ctx) => VestFieldExclusion` — a field name, a list of field names, `undefined` for a whole-suite run, or `false` to focus nothing — threaded into `suite.only(field).run(value)` when the suite exposes `only` (falling back to `suite.run(value, fieldName)`, single field name only, otherwise). `false` throws: Vest cannot express "focus nothing" through either form. When `suite` is declared with `create<{ fields: … }>(…)` (or a schema), the returned field-name union narrows this selector's accepted return value — a mistyped focus name is a compile error. See [Typed focus names](#typed-focus-names). |
 
 ### Exported constants
 
@@ -384,6 +384,40 @@ validateVest(path, suite, {
 The default behavior (no `only` option) runs the whole suite on every change,
 which stays correct but re-executes every test body. Use `only` for large
 suites where per-field isolation matters.
+
+#### Typed focus names
+
+Declare the suite with `create<{ fields: … }>(…)` (Vest ≥6.3.2) to get a
+field-name union instead of a bare `string`:
+
+```typescript
+const suite = create<{ fields: 'email' | 'username' }>(
+  (data: Model, field?: string) => {
+    only(field);
+    test('email', 'Email is required', () => {
+      enforce(data.email).isNotBlank();
+    });
+    test('username', 'Username is required', () => {
+      enforce(data.username).isNotBlank();
+    });
+  },
+);
+
+validateVest(path, suite, {
+  // Return type narrows to `VestFieldExclusion<'email' | 'username'>`: a
+  // single field name, a `('email' | 'username')[]` for multi-field focus,
+  // `undefined` for a whole-suite run, or `false` to focus nothing (throws —
+  // Vest has no way to express "run zero tests" through `only()`).
+  only: (ctx) => ctx.value().lastTouched,
+});
+```
+
+`validateVest`, `validateVestWarnings`, and `VestSuiteAdapter.register` infer
+this union straight from `suite` — no type argument to write. With the union
+in place, `only: () => 'emial'` (a typo) is a **compile error** instead of a
+focused run that silently executes zero tests and reports the field valid. A
+suite declared with plain `create(…)` (no `fields`, no schema) keeps
+accepting any `string`, so existing suites are unaffected.
 
 #### Focusing the currently active field
 

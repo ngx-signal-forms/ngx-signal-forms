@@ -74,6 +74,17 @@ absence is a stated part of the coordinator's contract (best-effort
 settlement, no idle signal), so it must be reachable by a hand-rolled suite
 in a spec.
 
+Because those three types carry the suite's field-name union `F`
+([#292](https://github.com/ngx-signal-forms/ngx-signal-forms/issues/292),
+PR #308), `F` threads through the coordinator too — `VestCoordinatedSuite`,
+`VestRunRequest`, `VestRunHandle` and `VestRunCoordinator.request`. The
+coordinator stays minimally generic in it: `VestRunCacheEntry` is NOT
+parameterized by `F`, because one `WeakMap` holds runs for every suite the
+coordinator ever sees. Widening a run to the string-keyed shape on the way
+into the cache is the one documented cast in the module; reading it back out
+at a narrower `F` needs none, since a `string`-keyed selector already accepts
+an `F`-keyed call.
+
 ### 3. Settlement is the coordinator's, exposed as a lazy promise
 
 `VestRunHandle.settled()` encapsulates the choice the resource loader used to

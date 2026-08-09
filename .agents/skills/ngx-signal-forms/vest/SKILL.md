@@ -160,6 +160,15 @@ validateVest(path, suite, {
 Default behavior (no `only` option) re-runs every test body on each change —
 correct but wasteful for large suites.
 
+Declare the suite with `create<{ fields: 'email' | 'username' }>(…)` (Vest
+≥6.3.2, or a schema-typed suite) to get a field-name union instead of a bare
+`string`. `validateVest` infers that union from `suite` — no type argument to
+write — and narrows the `only` selector's accepted return value to it, so
+`only: () => 'emial'` (a typo) is a compile error instead of a focused run
+that silently executes zero tests and reports the field valid. A suite
+declared with plain `create(…)` (no `fields`, no schema) is unaffected and
+keeps accepting any `string`.
+
 There is no automatic "focus the field this validator is bound to" option:
 `validateVest` binds to the root for a model-scoped suite (ADR-0008), so
 track which field is active yourself (`(focus)`/`(blur)`, or a signal your

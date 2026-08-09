@@ -39,15 +39,22 @@ type VestFieldMessages = readonly string[];
  * The overloads intentionally mirror Vest's selector behavior more precisely
  * than a plain `Pick<SuiteResult, ...>` so internal helpers can stay strict
  * about whole-suite versus field-scoped result shapes.
+ *
+ * `F` mirrors {@link VestOnlyFieldSelector}'s field-name union and defaults
+ * to `string`, so the field-scoped overloads narrow to a typed suite's
+ * `fields` union without affecting untyped suites.
  */
-export interface VestResultLike extends Pick<SuiteResult, 'isPending'> {
+export interface VestResultLike<F extends string = string> extends Pick<
+  SuiteResult,
+  'isPending'
+> {
   readonly getErrors: {
     (): VestFailureMessages;
-    (fieldName: string): VestFieldMessages;
+    (fieldName: F): VestFieldMessages;
   };
   readonly getWarnings: {
     (): VestFailureMessages;
-    (fieldName: string): VestFieldMessages;
+    (fieldName: F): VestFieldMessages;
   };
 }
 
@@ -55,8 +62,16 @@ export interface VestResultLike extends Pick<SuiteResult, 'isPending'> {
  * Narrow runtime contract used by the adapter. The local type preserves the
  * documented Promise-like behavior of async `run()` results without requiring
  * the full generic `Suite` surface in consumers.
+ *
+ * `F` is the suite's own Vest field-name union, defaulting to `string` so an
+ * untyped `create(…)` suite (no `create<{ fields: … }>` / schema) keeps
+ * accepting any field name unchanged. A typed suite's `F` flows through
+ * {@link only} and {@link get}'s `VestResultLike<F>` return, which is what
+ * lets `VestOnlyFieldSelector`'s return type narrow at the call site without
+ * the caller writing an explicit type argument — `F` is inferred from the
+ * `suite` value itself. See ADR-0008 and issue #292.
  */
-export interface VestRunnableSuite<TValue> {
+export interface VestRunnableSuite<TValue, F extends string = string> {
   /**
    * Declared as a readonly function property (not method shorthand) so its
    * parameter is contravariant under `strictFunctionTypes` — method
@@ -73,12 +88,14 @@ export interface VestRunnableSuite<TValue> {
    * declare would make an ordinary `create()` suite fail assignment here —
    * the same reasoning as {@link only}'s narrower-than-{@link
    * VestFieldExclusion} parameter type. Multi-field and `false` focus both
-   * go through `only` instead — see {@link executeVestRun}.
+   * go through `only` instead — see {@link executeVestRun}. The returned
+   * result's `getErrors`/`getWarnings` still narrow to `F` — only the focus
+   * argument stays `string` here, not the result shape.
    */
   readonly run: (
     value: TValue,
     fieldName?: string,
-  ) => VestResultLike | PromiseLike<VestResultLike>;
+  ) => VestResultLike<F> | PromiseLike<VestResultLike<F>>;
   reset?: () => void;
   /**
    * Declared as a readonly function property for the same contravariance
@@ -94,11 +111,12 @@ export interface VestRunnableSuite<TValue> {
    * structural assignment to this interface, breaking the common case this
    * whole contract exists to describe. The coordinator narrows a wider
    * `VestFieldExclusion` value down to this shape before ever calling
-   * `suite.only(...)` — see {@link executeVestRun}.
+   * `suite.only(...)` — see {@link executeVestRun}. `field` narrows from
+   * `string | string[]` to `F | F[]` — matching Vest's real `Suite.only()` —
+   * so a mistyped focus name is a compile error at the point the coordinator
+   * calls it, not just at the caller-facing `VestOnlyFieldSelector`.
    */
-  readonly only?: (
-    field: string | string[],
-  ) => Pick<VestRunnableSuite<TValue>, 'run'>;
+  readonly only?: (field: F | F[]) => Pick<VestRunnableSuite<TValue, F>, 'run'>;
   /**
    * Optional Vest bus subscription (`suite.subscribe`). Used alongside {@link
    * get} to recover from a superseded run — see
@@ -114,7 +132,7 @@ export interface VestRunnableSuite<TValue> {
    * (`suite.get`). Used alongside {@link subscribe} to recover from a
    * superseded run — see {@link awaitVestRunSettlement}.
    */
-  get?: () => VestResultLike;
+  get?: () => VestResultLike<F>;
 }
 
 /**
@@ -130,8 +148,8 @@ export interface VestRunnableSuite<TValue> {
  * `run()` returns — see {@link waitForSuiteIdle} and
  * {@link awaitVestRunSettlement}.
  */
-export type VestCoordinatedSuite<TValue> = Pick<
-  VestRunnableSuite<TValue>,
+export type VestCoordinatedSuite<TValue, F extends string = string> = Pick<
+  VestRunnableSuite<TValue, F>,
   'run' | 'only' | 'subscribe' | 'get'
 >;
 
@@ -155,18 +173,18 @@ export type VestRunCacheKey = object;
  * One request for a coordinated Vest run — the `(suite, cache key, value,
  * focus)` tuple the cache is keyed and gated on.
  */
-export interface VestRunRequest<TValue> {
-  readonly suite: VestCoordinatedSuite<TValue>;
+export interface VestRunRequest<TValue, F extends string = string> {
+  readonly suite: VestCoordinatedSuite<TValue, F>;
   readonly cacheKey: VestRunCacheKey;
   readonly value: TValue;
-  readonly focus?: VestFieldExclusion;
+  readonly focus?: VestFieldExclusion<F>;
 }
 
 /**
  * Handle on a coordinated Vest run, returned by
  * {@link VestRunCoordinator.request}.
  */
-export interface VestRunHandle<TValue> {
+export interface VestRunHandle<TValue, F extends string = string> {
   readonly value: TValue;
   /**
    * The canonical cache key derived from the requested `focus` — a field
@@ -174,13 +192,13 @@ export interface VestRunHandle<TValue> {
    */
   readonly focus: string | undefined;
   /** The raw value `suite.run(...)` returned (or the deferred run's promise). */
-  readonly runResult: VestResultLike | PromiseLike<VestResultLike>;
+  readonly runResult: VestResultLike<F> | PromiseLike<VestResultLike<F>>;
   /**
    * The synchronous `SuiteResult`, when this run produced one. `undefined`
    * when `run()` returned a bare thenable, and always `undefined` for a
    * {@link deferred} run (which has not called `suite.run()` yet).
    */
-  readonly initialResult: VestResultLike | undefined;
+  readonly initialResult: VestResultLike<F> | undefined;
   /**
    * `true` when this run was queued behind another field tree's pending run
    * on the SAME suite instead of starting immediately — see
@@ -218,7 +236,9 @@ export interface VestRunCoordinator {
    * cached run when that exact tuple is already held, and otherwise starts
    * (or, when the suite is contested, queues) a fresh one.
    */
-  request<TValue>(request: VestRunRequest<TValue>): VestRunHandle<TValue>;
+  request<TValue, F extends string = string>(
+    request: VestRunRequest<TValue, F>,
+  ): VestRunHandle<TValue, F>;
 
   /**
    * Drop everything held for a suite: its run cache, its contention
@@ -230,6 +250,16 @@ export interface VestRunCoordinator {
 /**
  * Cached Vest run keyed by suite instance and {@link VestRunCacheKey} so sync
  * and async validation can share a single suite execution.
+ *
+ * Deliberately NOT parameterized by the suite's field-name union `F` (see
+ * {@link VestRunnableSuite}): the underlying `WeakMap` is shared across every
+ * run the coordinator ever sees, each potentially carrying a different `F`.
+ * `runResult` is widened to the string-keyed {@link VestResultLike} when an
+ * entry is created (see the cast in {@link createVestRunCoordinator}'s
+ * `request`) — safe because every internal reader calls
+ * `getErrors()`/`getWarnings()` with zero arguments only, and reading the
+ * entry back out at a narrower `F` is free (a `string`-keyed selector
+ * accepts an `F`-keyed call).
  */
 interface VestRunCacheEntry<TValue> {
   readonly value: TValue;
@@ -353,11 +383,11 @@ function toVestFocusKey(focus: VestFieldExclusion): string | undefined {
  * the suite does not expose `only` (e.g. consumer-wrapped suites that
  * surface a `run`-only adapter).
  */
-function executeVestRun<TValue>(
-  suite: Pick<VestCoordinatedSuite<TValue>, 'run' | 'only'>,
+function executeVestRun<TValue, F extends string = string>(
+  suite: Pick<VestCoordinatedSuite<TValue, F>, 'run' | 'only'>,
   value: TValue,
-  focus: VestFieldExclusion,
-): VestResultLike | PromiseLike<VestResultLike> {
+  focus: VestFieldExclusion<F>,
+): VestResultLike<F> | PromiseLike<VestResultLike<F>> {
   if (focus === undefined) {
     return suite.run(value);
   }
@@ -376,10 +406,9 @@ function executeVestRun<TValue>(
 
   if (typeof suite.only === 'function') {
     // `suite.only` (see {@link VestRunnableSuite.only}'s doc comment) only
-    // accepts `string | string[]` — no readonly arrays. Clone a readonly
-    // array into a mutable one.
-    const focusArg: string | string[] =
-      typeof focus === 'string' ? focus : [...focus];
+    // accepts `F | F[]` — no readonly arrays. Clone a readonly array into a
+    // mutable one.
+    const focusArg: F | F[] = typeof focus === 'string' ? focus : [...focus];
     const focused = suite.only(focusArg);
     return focused.run(value);
   }
@@ -410,8 +439,8 @@ function executeVestRun<TValue>(
  * firing it. Suites without `subscribe`/`get` resolve immediately (best
  * effort; contention avoidance is only guaranteed for real Vest suites).
  */
-function waitForSuiteIdle<TValue>(
-  suite: Pick<VestCoordinatedSuite<TValue>, 'subscribe' | 'get'>,
+function waitForSuiteIdle<TValue, F extends string = string>(
+  suite: Pick<VestCoordinatedSuite<TValue, F>, 'subscribe' | 'get'>,
 ): PromiseLike<void> {
   if (
     typeof suite.subscribe !== 'function' ||
@@ -449,15 +478,15 @@ function waitForSuiteIdle<TValue>(
  * surface every other code path already relies on — no suite-internal API
  * beyond what {@link awaitVestRunSettlement} already uses.
  */
-async function deferVestRunUntilIdle<TValue>(
-  suite: VestCoordinatedSuite<TValue>,
+async function deferVestRunUntilIdle<TValue, F extends string = string>(
+  suite: VestCoordinatedSuite<TValue, F>,
   value: TValue,
-  focus: VestFieldExclusion,
+  focus: VestFieldExclusion<F>,
   previousRun: PromiseLike<void>,
   onRunStarted: (
-    runResult: VestResultLike | PromiseLike<VestResultLike>,
+    runResult: VestResultLike<F> | PromiseLike<VestResultLike<F>>,
   ) => void,
-): Promise<VestResultLike> {
+): Promise<VestResultLike<F>> {
   await previousRun;
   await waitForSuiteIdle(suite);
   const runResult = executeVestRun(suite, value, focus);
@@ -486,9 +515,9 @@ async function deferVestRunUntilIdle<TValue>(
  * outcome. Suites without `subscribe`/`get` fall back to the original
  * (potentially superseded) promise unchanged.
  */
-function awaitVestRunSettlement<TValue>(
-  runResult: VestResultLike | PromiseLike<VestResultLike>,
-  suite: Pick<VestCoordinatedSuite<TValue>, 'subscribe' | 'get'>,
+function awaitVestRunSettlement<TValue, F extends string = string>(
+  runResult: VestResultLike<F> | PromiseLike<VestResultLike<F>>,
+  suite: Pick<VestCoordinatedSuite<TValue, F>, 'subscribe' | 'get'>,
 ): PromiseLike<unknown> {
   if (
     typeof suite.subscribe !== 'function' ||
@@ -680,9 +709,9 @@ export function createVestRunCoordinator(): VestRunCoordinator {
    * lifecycle instead, so it is the reliable queue boundary for real Vest
    * suites. Hand-rolled suites retain the thenable-based best-effort fallback.
    */
-  function waitForStartedVestRunTail<TValue>(
-    suite: Pick<VestCoordinatedSuite<TValue>, 'subscribe' | 'get'>,
-    runResult: VestResultLike | PromiseLike<VestResultLike>,
+  function waitForStartedVestRunTail<TValue, F extends string = string>(
+    suite: Pick<VestCoordinatedSuite<TValue, F>, 'subscribe' | 'get'>,
+    runResult: VestResultLike<F> | PromiseLike<VestResultLike<F>>,
   ): Promise<void> {
     const settleRunResult = (): Promise<void> => {
       return Promise.resolve(runResult).then(
@@ -748,10 +777,10 @@ export function createVestRunCoordinator(): VestRunCoordinator {
   /**
    * Records an immediately started run as the per-suite queue tail.
    */
-  function recordVestRun<TValue>(
+  function recordVestRun<TValue, F extends string = string>(
     suiteKey: object,
-    suite: Pick<VestCoordinatedSuite<TValue>, 'subscribe' | 'get'>,
-    runResult: VestResultLike | PromiseLike<VestResultLike>,
+    suite: Pick<VestCoordinatedSuite<TValue, F>, 'subscribe' | 'get'>,
+    runResult: VestResultLike<F> | PromiseLike<VestResultLike<F>>,
   ): void {
     recordVestRunTail(suiteKey, waitForStartedVestRunTail(suite, runResult));
   }
@@ -761,12 +790,12 @@ export function createVestRunCoordinator(): VestRunCoordinator {
    * captured before this run is recorded as the new tail, so multiple callers
    * deferred behind one pending run start in FIFO order rather than together.
    */
-  function enqueueVestRun<TValue>(
+  function enqueueVestRun<TValue, F extends string = string>(
     suiteKey: object,
-    suite: VestCoordinatedSuite<TValue>,
+    suite: VestCoordinatedSuite<TValue, F>,
     value: TValue,
-    focus: VestFieldExclusion,
-  ): Promise<VestResultLike> {
+    focus: VestFieldExclusion<F>,
+  ): Promise<VestResultLike<F>> {
     const previousRun = runQueueBySuite.get(suiteKey) ?? Promise.resolve();
     let resolveTail: () => void = resolveQueueTail;
     const tail = new Promise<void>((resolve) => {
@@ -802,11 +831,11 @@ export function createVestRunCoordinator(): VestRunCoordinator {
    * Builds the caller-facing handle for a cache entry, binding the lazy
    * settlement strategy to the suite that produced the run.
    */
-  function createVestRunHandle<TValue>(
-    suite: VestCoordinatedSuite<TValue>,
+  function createVestRunHandle<TValue, F extends string = string>(
+    suite: VestCoordinatedSuite<TValue, F>,
     entry: VestRunCacheEntry<TValue>,
     fromCache: boolean,
-  ): VestRunHandle<TValue> {
+  ): VestRunHandle<TValue, F> {
     return {
       value: entry.value,
       focus: entry.focus,
@@ -847,9 +876,9 @@ export function createVestRunCoordinator(): VestRunCoordinator {
    * state; otherwise it runs against the suite's normal shared state
    * immediately, exactly as before.
    */
-  function request<TValue>(
-    runRequest: VestRunRequest<TValue>,
-  ): VestRunHandle<TValue> {
+  function request<TValue, F extends string = string>(
+    runRequest: VestRunRequest<TValue, F>,
+  ): VestRunHandle<TValue, F> {
     const { suite, cacheKey, value, focus } = runRequest;
     const suiteKey: object = suite;
     const suiteCache = getVestSuiteRunCache(suiteKey);
@@ -886,7 +915,17 @@ export function createVestRunCoordinator(): VestRunCoordinator {
     const nextEntry: VestRunCacheEntry<TValue> = {
       value,
       focus: focusKey,
-      runResult,
+      // `runResult` is typed `VestResultLike<F>` here (the suite's own
+      // field-name union), but the shared run cache entry is intentionally
+      // NOT parameterized by `F` — one `WeakMap` stores runs for every suite
+      // this coordinator ever sees, each with its own, potentially
+      // different, `F`. Every internal consumer of a cached `runResult` only
+      // ever calls `getErrors()`/`getWarnings()` with ZERO arguments — the
+      // whole-suite overload, unaffected by `F` — so widening to the shared,
+      // string-keyed shape here is safe. Reading it back out at a narrower
+      // `F` needs no cast, because a `string`-keyed selector already accepts
+      // an `F`-keyed call. See {@link VestRunCacheEntry}.
+      runResult: runResult as VestResultLike | PromiseLike<VestResultLike>,
       // Vest 6's `suite.run(...)` returns a dual-shaped object that is *both*
       // a synchronous `SuiteResult` (with `getErrors`/`isPending`) and a
       // thenable. Previously we gated `initialResult` with `!isThenable(...)`,

@@ -24,7 +24,10 @@ export {
  * {@link validateVestWarnings}). Controls warning surfacing, suite-state reset
  * on destroy, and per-field focused runs.
  */
-export interface ValidateVestOptions<TValue = unknown> {
+export interface ValidateVestOptions<
+  TValue = unknown,
+  F extends string = string,
+> {
   /**
    * Include Vest warn-only tests as toolkit warnings.
    *
@@ -74,7 +77,7 @@ export interface ValidateVestOptions<TValue = unknown> {
    *
    * @default undefined (full-suite run)
    */
-  only?: VestOnlyFieldSelector<TValue>;
+  only?: VestOnlyFieldSelector<TValue, F>;
 }
 
 /**
@@ -87,10 +90,10 @@ export interface ValidateVestOptions<TValue = unknown> {
  * same suite to a blocking `validateVest` (or to
  * `sharedVestAdapter.runVestSuite(...)`) reuses a single suite execution.
  */
-export function validateVestWarnings<TValue>(
+export function validateVestWarnings<TValue, F extends string = string>(
   path: VestFieldPath<TValue>,
-  suite: VestRunnableSuite<TValue>,
-  options: Pick<ValidateVestOptions<TValue>, 'resetOnDestroy' | 'only'> = {},
+  suite: VestRunnableSuite<TValue, F>,
+  options: Pick<ValidateVestOptions<TValue, F>, 'resetOnDestroy' | 'only'> = {},
 ): void {
   sharedVestAdapter.register(path, suite, {
     includeErrors: false,
@@ -158,10 +161,10 @@ export function validateVestWarnings<TValue>(
  * });
  * ```
  */
-export function validateVest<TValue>(
+export function validateVest<TValue, F extends string = string>(
   path: VestFieldPath<TValue>,
-  suite: VestRunnableSuite<TValue>,
-  options: ValidateVestOptions<TValue> = {},
+  suite: VestRunnableSuite<TValue, F>,
+  options: ValidateVestOptions<TValue, F> = {},
 ): void {
   sharedVestAdapter.register(path, suite, {
     includeErrors: true,
