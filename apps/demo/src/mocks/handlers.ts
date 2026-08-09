@@ -65,6 +65,34 @@ export const asyncValidationHandlers = [
 ];
 
 // ══════════════════════════════════════════════════════════════════════════════
+// AUTOSAVE DEMO HANDLERS
+// ══════════════════════════════════════════════════════════════════════════════
+
+interface AutosaveProfilePatch {
+  displayName?: string;
+  bio?: string;
+}
+
+export const autosaveHandlers = [
+  http.patch('/api/autosave/profile', async ({ request }) => {
+    await delay(400);
+
+    const patch = (await request.json()) as AutosaveProfilePatch;
+
+    // Demo-only failure trigger: a bio containing FAIL_SAVE always rejects,
+    // so the failure + retry path is reachable without waiting on a real error.
+    if (patch.bio?.includes('FAIL_SAVE')) {
+      return HttpResponse.json(
+        { error: 'Could not persist this change.' },
+        { status: 500 },
+      );
+    }
+
+    return HttpResponse.json({ savedAt: new Date().toISOString() });
+  }),
+];
+
+// ══════════════════════════════════════════════════════════════════════════════
 // WIZARD API HANDLERS
 // ══════════════════════════════════════════════════════════════════════════════
 
@@ -228,4 +256,8 @@ export const wizardHandlers = [
 // EXPORT ALL HANDLERS
 // ══════════════════════════════════════════════════════════════════════════════
 
-export const handlers = [...asyncValidationHandlers, ...wizardHandlers];
+export const handlers = [
+  ...asyncValidationHandlers,
+  ...autosaveHandlers,
+  ...wizardHandlers,
+];

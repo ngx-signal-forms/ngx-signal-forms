@@ -20,6 +20,7 @@ export const DEMO_PATHS = {
   crossFieldValidation: '/advanced-scenarios/cross-field-validation',
   storeBinding: '/advanced-scenarios/store-binding',
   serverIntegration: '/advanced-scenarios/server-integration',
+  autosave: '/advanced-scenarios/autosave',
 } as const;
 
 export const DEMO_CATEGORIES = [
@@ -165,6 +166,11 @@ export const DEMO_CATEGORIES = [
       {
         path: '/advanced-scenarios/server-integration',
         label: 'Server Integration',
+        hasControls: true,
+      },
+      {
+        path: '/advanced-scenarios/autosave',
+        label: 'Autosave',
         hasControls: true,
       },
     ],

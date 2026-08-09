@@ -244,6 +244,14 @@ export const appRoutes: Routes = [
           ),
         title: getRouteTitle('/advanced-scenarios/server-integration'),
       },
+      {
+        path: 'autosave',
+        loadComponent: () =>
+          import('./05-advanced/autosave/autosave.page').then(
+            (m) => m.AutosavePage,
+          ),
+        title: getRouteTitle('/advanced-scenarios/autosave'),
+      },
     ],
   },
 
