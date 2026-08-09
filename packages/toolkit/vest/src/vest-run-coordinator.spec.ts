@@ -329,6 +329,57 @@ describe('createVestRunCoordinator', () => {
     });
   });
 
+  describe('suite bus subscriptions', () => {
+    it('unsubscribes an idle listener whose callback fires synchronously during subscribe()', () => {
+      // Regression guard for the PR #312 review finding: a `subscribe`
+      // implementation that invokes its callback DURING the `subscribe()`
+      // call reaches the callback's `unsubscribe?.()` before `unsubscribe`
+      // has been assigned, so that cleanup was a no-op and the listener
+      // stayed registered for the suite's lifetime -- re-firing on every
+      // later idle event.
+      const coordinator = createVestRunCoordinator();
+      const listeners = new Set<() => void>();
+      let invocations = 0;
+      // Always pending, so `waitForSuiteIdle` never takes its early-return
+      // path and always reaches `subscribe()`.
+      const pendingResult: VestResultLike = {
+        isPending: () => true,
+        getErrors: noMessages,
+        getWarnings: noMessages,
+      };
+      const suite: VestRunnableSuite<string> = {
+        run: () => pendingResult,
+        subscribe: (_event, callback) => {
+          const listener = (): void => {
+            invocations += 1;
+            callback();
+          };
+          listeners.add(listener);
+          // Fire DURING `subscribe()`, before the caller can store the
+          // unsubscribe function this call is about to return.
+          listener();
+          return () => {
+            listeners.delete(listener);
+          };
+        },
+        get: () => pendingResult,
+      };
+
+      coordinator.request({ suite, cacheKey: {}, value: 'a' });
+
+      // The synchronous callback ran once, and the subscription was torn
+      // down afterwards rather than leaked.
+      expect(invocations).toBe(1);
+      expect(listeners.size).toBe(0);
+
+      // A later idle event must therefore reach nobody.
+      for (const listener of listeners) {
+        listener();
+      }
+      expect(invocations).toBe(1);
+    });
+  });
+
   describe('settlement', () => {
     it('recovers a superseded run via the suite bus event', async () => {
       const coordinator = createVestRunCoordinator();

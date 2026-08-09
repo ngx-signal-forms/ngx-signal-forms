@@ -458,11 +458,24 @@ function waitForSuiteIdle<TValue, F extends string = string>(
     // `subscribe`'s callback can fire synchronously; capture `unsubscribe` as
     // `let` so an immediate callback doesn't read it before assignment (same
     // TDZ hazard `awaitVestRunSettlement` guards against below).
+    let fired = false;
     let unsubscribe: (() => void) | undefined;
     unsubscribe = subscribe('ALL_RUNNING_TESTS_FINISHED', () => {
+      fired = true;
       unsubscribe?.();
       resolve();
     });
+
+    // If the callback above fired synchronously (during the `subscribe()`
+    // call itself), its own `unsubscribe?.()` ran before `unsubscribe` had
+    // been assigned and was therefore a no-op — leaving this listener
+    // subscribed for the suite's lifetime and re-firing on every LATER idle
+    // event. Clean up here instead, now that we hold a reference to it. Same
+    // fired-synchronously guard `awaitVestRunSettlement` uses below.
+    // oxlint-disable-next-line @typescript-eslint/no-unnecessary-condition -- `fired` may be flipped synchronously by the subscribe callback above; static analysis cannot model that closure write.
+    if (fired) {
+      unsubscribe();
+    }
   });
 }
 
