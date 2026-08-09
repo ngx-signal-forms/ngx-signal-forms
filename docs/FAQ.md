@@ -494,7 +494,11 @@ switch is:
 Make every entry a function that reads that signal:
 
 ```ts
+import { inject } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
+import { TranslateService } from '@ngx-translate/core';
+import { provideFieldLabels } from '@ngx-signal-forms/toolkit';
+import { humanizeFieldPath } from '@ngx-signal-forms/toolkit/headless';
 
 provideFieldLabels(() => {
   const t = inject(TranslateService);

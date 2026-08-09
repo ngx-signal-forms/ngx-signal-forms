@@ -476,8 +476,8 @@ describe('createErrorMessageSignal — i18n contract (provideErrorMessages)', ()
   it('freezes a string entry at injection and re-renders a function entry that reads a signal', () => {
     const lang = signal<'en' | 'ja'>('en');
     const translations = {
-      en: { required: 'Required (en)' },
-      ja: { required: 'Required (ja)' },
+      en: { email: 'Invalid email (en)', required: 'Required (en)' },
+      ja: { email: 'Invalid email (ja)', required: 'Required (ja)' },
     };
 
     const injector = Injector.create({
@@ -485,7 +485,7 @@ describe('createErrorMessageSignal — i18n contract (provideErrorMessages)', ()
         provideErrorMessages(() => ({
           // String entry: evaluated once, right now, while the factory runs
           // at injection. Never re-evaluated afterward.
-          email: translations[lang()].required,
+          email: translations[lang()].email,
           // Function entry: invoked every time the resolving computed
           // re-runs. Reading `lang()` inside it registers the signal as a
           // dependency of that computed, so a language flip retriggers it.
@@ -505,7 +505,7 @@ describe('createErrorMessageSignal — i18n contract (provideErrorMessages)', ()
     const messageFor = (kind: string) =>
       result().find((entry) => entry.kind === kind)?.message;
 
-    expect(messageFor('email')).toBe('Required (en)');
+    expect(messageFor('email')).toBe('Invalid email (en)');
     expect(messageFor('required')).toBe('Required (en)');
 
     lang.set('ja');
@@ -514,7 +514,7 @@ describe('createErrorMessageSignal — i18n contract (provideErrorMessages)', ()
     expect(messageFor('required')).toBe('Required (ja)');
     // String entry: frozen at the value captured when the factory ran once,
     // at injection — the language flip never touches it.
-    expect(messageFor('email')).toBe('Required (en)');
+    expect(messageFor('email')).toBe('Invalid email (en)');
   });
 });
 

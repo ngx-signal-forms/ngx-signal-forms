@@ -909,6 +909,12 @@ applies: read a reactive language signal inside the resolver, or a language
 switch won't schedule a re-render:
 
 ```typescript
+import { inject } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { TranslateService } from '@ngx-translate/core';
+import { provideFieldLabels } from '@ngx-signal-forms/toolkit';
+import { humanizeFieldPath } from '@ngx-signal-forms/toolkit/headless';
+
 provideFieldLabels(() => {
   const translate = inject(TranslateService);
   const lang = toSignal(translate.onLangChange, { initialValue: null });
