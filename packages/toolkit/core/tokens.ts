@@ -188,6 +188,71 @@ export const NGX_SIGNAL_FORM_HINT_REGISTRY =
   );
 
 /**
+ * A single field's resolved, already-rendered error/warning visibility,
+ * published by a message-rendering surface (e.g. `NgxFormFieldError`) that
+ * gates its own live regions independently of the ambient form context.
+ *
+ * `showsError`/`showsWarning` are the exact booleans the surface used to
+ * decide whether its `${fieldName}-error` / `${fieldName}-warning` element is
+ * in the DOM — not a strategy to re-resolve — so `NgxSignalFormAutoAria`
+ * mirrors what is actually rendered instead of recomputing the cascade a
+ * second time.
+ *
+ * Public wire format for the {@link NgxSignalFormFieldVisibilityRegistry}
+ * contract.
+ *
+ * @public
+ */
+export interface NgxSignalFormFieldVisibilityDescriptor {
+  readonly fieldName: string;
+  readonly showsError: Signal<boolean>;
+  readonly showsWarning: Signal<boolean>;
+}
+
+/**
+ * Registry of field-level error/warning visibility, keyed by field name.
+ * Fills the gap `NgxFieldIdentity` cannot: `NgxFieldIdentity` is an
+ * element-scoped service provided only by `NgxFormFieldWrapper`, so it has
+ * no channel for a standalone `<ngx-form-field-error>` that is a *sibling*
+ * of the control it describes rather than an ancestor.
+ *
+ * `NgxSignalFormAutoAria` prefers `NgxFieldIdentity` when present (the
+ * wrapper fast-path) and falls back to this registry so `aria-describedby`
+ * still agrees with a wrapper-less error component's own resolved
+ * `strategy`/`warningStrategy` overrides.
+ *
+ * @public
+ */
+export interface NgxSignalFormFieldVisibilityRegistry {
+  /**
+   * Publishes (or replaces) the descriptor for `descriptor.fieldName`.
+   * Returns an unregister function that removes the entry — call it when the
+   * publishing surface is destroyed or stops resolving that field name.
+   */
+  register(descriptor: NgxSignalFormFieldVisibilityDescriptor): () => void;
+
+  /** Reads the current descriptor for `fieldName`, if one is registered. */
+  get(fieldName: string): NgxSignalFormFieldVisibilityDescriptor | undefined;
+}
+
+/**
+ * Injection token for the field-visibility registry contributed by
+ * `NgxSignalForm`. Provided at the `[ngxSignalForm]` host so every field
+ * inside the same form — wrapped or standalone — shares one registry.
+ *
+ * Third-party message-rendering surfaces that gate a live region on their
+ * own resolved strategy should register into this token so
+ * `NgxSignalFormAutoAria` can keep `aria-describedby` in lockstep. See
+ * `docs/CUSTOM_WRAPPERS.md`.
+ *
+ * @public
+ */
+export const NGX_SIGNAL_FORM_FIELD_VISIBILITY_REGISTRY =
+  new InjectionToken<NgxSignalFormFieldVisibilityRegistry>(
+    'NGX_SIGNAL_FORM_FIELD_VISIBILITY_REGISTRY',
+  );
+
+/**
  * Renderer contract for the form-field error slot. Two consumers bind this
  * renderer:
  *
