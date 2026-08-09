@@ -76,7 +76,16 @@ describe('NgxFormFieldErrorSummary — WCAG 2.2 AA conformance', () => {
     const { container } = await render(TestComponent);
     await TestBed.inject(ApplicationRef).whenStable();
 
-    expect(container.querySelector('[role="alert"]')).toBeTruthy();
+    // Scope to the summary's own live region, not a bare `[role="alert"]`
+    // query — the wrapped field mounts its own always-present alert region
+    // too (see the class doc's WCAG 4.1.3 note), so an unscoped query would
+    // still pass even if `NgxFormFieldErrorSummary` stopped rendering its
+    // live region entirely.
+    const summaryAlert = container.querySelector(
+      'ngx-form-field-error-summary [role="alert"]',
+    );
+    expect(summaryAlert).toBeTruthy();
+    expect(summaryAlert?.textContent?.trim()).toBe('');
     await expectNoA11yViolations(container);
   });
 
