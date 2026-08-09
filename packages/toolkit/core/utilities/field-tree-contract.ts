@@ -18,7 +18,7 @@ export const REQUIRED_FIELD_STATE_METHODS = [
  * calling `fieldTree`. The check confirms the back-pointer (`state.fieldTree
  * === fieldTree`) plus the presence of every method in
  * {@link REQUIRED_FIELD_STATE_METHODS}, which is enough for the toolkit's
- * runtime contract checks (`isFieldTree`, `walkFieldTreeEntries`).
+ * runtime contract checks (`isFieldTreeLike`, `walkFieldTreeEntries`).
  *
  * @param value - Candidate state object to validate.
  * @param fieldTree - The `FieldTree` callable that should own `value`.

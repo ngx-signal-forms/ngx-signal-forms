@@ -22,7 +22,7 @@ import {
   type ErrorDisplayStrategy,
 } from '@ngx-signal-forms/toolkit';
 import {
-  isFieldTree,
+  isFieldTreeLike,
   walkFieldTreeEntries,
 } from '@ngx-signal-forms/toolkit/core';
 import {
@@ -85,7 +85,7 @@ const withDebuggerMeta =
  * TypeError the first time change detection reaches the missing method.
  * Shared by both input shapes: `isFieldStateLike` applies it to a direct
  * `FieldState` input; `isUsableFieldTree` applies it to the state resolved
- * from a `FieldTree` input (the toolkit's `isFieldTree` only asserts the
+ * from a `FieldTree` input (the toolkit's `isFieldTreeLike` only asserts the
  * narrower value/touched/errors/errorSummary/submitting/markAsTouched
  * surface).
  */
@@ -125,7 +125,7 @@ function isFieldStateLike(value: unknown): value is FieldState<unknown> {
 }
 
 /**
- * `isFieldTree` plus the debugger's own root-state method requirements.
+ * `isFieldTreeLike` plus the debugger's own root-state method requirements.
  * The toolkit contract intentionally stays minimal (it serves traversal and
  * submission helpers); the debugger additionally calls `valid`/`invalid`/
  * `dirty`/`pending` on the resolved root state, so a partially-stubbed
@@ -133,7 +133,7 @@ function isFieldStateLike(value: unknown): value is FieldState<unknown> {
  * input — instead of throwing mid change-detection.
  */
 function isUsableFieldTree(value: unknown): value is FieldTree<unknown> {
-  if (!isFieldTree(value)) {
+  if (!isFieldTreeLike(value)) {
     return false;
   }
 
@@ -392,7 +392,7 @@ export class NgxSignalFormDebugger {
    */
   readonly #treeSnapshot = computed<TreeSnapshot>(() => {
     const tree = this.formTree();
-    if (!isFieldTree(tree)) {
+    if (!isFieldTreeLike(tree)) {
       return EMPTY_SNAPSHOT;
     }
 
@@ -460,7 +460,7 @@ export class NgxSignalFormDebugger {
    */
   protected readonly allErrors = computed<readonly DebuggerError[]>(() => {
     const tree = this.formTree();
-    if (isFieldTree(tree)) {
+    if (isFieldTreeLike(tree)) {
       return this.#treeSnapshot().fieldErrors;
     }
 
@@ -651,7 +651,7 @@ export class NgxSignalFormDebugger {
   readonly #fieldTreeWarningEffect = isDevMode()
     ? effect(() => {
         const value = this.formTree() as unknown;
-        if (!value || typeof value !== 'object' || isFieldTree(value)) {
+        if (!value || typeof value !== 'object' || isFieldTreeLike(value)) {
           return;
         }
         if (this.#warnedTrees.has(value)) return;
