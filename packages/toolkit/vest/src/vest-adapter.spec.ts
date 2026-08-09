@@ -431,11 +431,13 @@ describe('createVestAdapter', () => {
     // it logs via `console.error` and still attaches the failure to the
     // validator's bound field, so it is not silently lost.
     vestFieldResolutionDevMode.value = false;
+    // Declared outside `try` (and restored in `finally`, not at the tail of
+    // `try`) so a failing assertion above it cannot leak the spy into later
+    // tests.
+    let consoleErrorSpy: { mockRestore: () => void } | undefined;
     try {
       const adapter = createVestAdapter();
-      const consoleErrorSpy = vi
-        .spyOn(console, 'error')
-        .mockImplementation(() => {});
+      consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 
       interface Model {
         address: { city: string };
@@ -475,9 +477,97 @@ describe('createVestAdapter', () => {
       expect(
         rootErrors.some((error) => error.message === 'City is required'),
       ).toBe(true);
-
-      consoleErrorSpy.mockRestore();
     } finally {
+      consoleErrorSpy?.mockRestore();
+      vestFieldResolutionDevMode.value = true;
+    }
+  });
+
+  it('resolves a Vest field name whose probe throws: dev mode throws with the underlying error message included', async () => {
+    // `address` is a LEAF string field (not an object), but the Vest field
+    // name names a further child (`address.street`) past it. The first
+    // segment DOES resolve, so probing the second segment against Angular
+    // Signal Forms' leaf field-tree proxy throws (its `getOwnPropertyDescriptor`
+    // trap rejects a non-object target) rather than merely reporting "no such
+    // child". Per the PR #307 review finding, the caught error's own detail
+    // must be propagated into the dev-mode throw / production `console.error`
+    // -- previously it was dropped, leaving the diagnostic unactionable.
+    const adapter = createVestAdapter();
+
+    interface Model {
+      address: string;
+    }
+    const suite = create((data: Model) => {
+      vestTest('address.street', 'Street is required', () => {
+        enforce(data.address).isNotBlank();
+      });
+    });
+
+    @Component({
+      selector: 'ngx-test-adapter-probe-throw-dev',
+      imports: [FormField],
+
+      template: `<input id="address" [formField]="f.address" />`,
+    })
+    class TestComponent {
+      readonly model = signal<Model>({ address: '' });
+      readonly f = form(this.model, (path) => {
+        adapter.register(path, suite);
+      });
+    }
+
+    await expect(async () => {
+      const { fixture } = await render(TestComponent);
+      await TestBed.inject(ApplicationRef).whenStable();
+      void fixture;
+    }).rejects.toThrow(/probing segment "street" threw: .+/);
+  });
+
+  it('resolves a Vest field name whose probe throws: production mode logs with the underlying error message included', async () => {
+    vestFieldResolutionDevMode.value = false;
+    let consoleErrorSpy: { mockRestore: () => void } | undefined;
+    try {
+      const adapter = createVestAdapter();
+      consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+      interface Model {
+        address: string;
+      }
+      const suite = create((data: Model) => {
+        vestTest('address.street', 'Street is required', () => {
+          enforce(data.address).isNotBlank();
+        });
+      });
+
+      @Component({
+        selector: 'ngx-test-adapter-probe-throw-prod',
+        imports: [FormField],
+
+        template: `<input id="address" [formField]="f.address" />`,
+      })
+      class TestComponent {
+        readonly model = signal<Model>({ address: '' });
+        readonly f = form(this.model, (path) => {
+          adapter.register(path, suite);
+        });
+      }
+
+      const { fixture } = await render(TestComponent);
+      await TestBed.inject(ApplicationRef).whenStable();
+
+      // The propagated detail (not just the generic wrapper message) must be
+      // present in the logged diagnostic.
+      expect(consoleErrorSpy).toHaveBeenCalledWith(
+        expect.stringMatching(/probing segment "street" threw: .+/),
+      );
+
+      // Still attaches to the bound field rather than being dropped.
+      const rootErrors = fixture.componentInstance.f().errors();
+      expect(
+        rootErrors.some((error) => error.message === 'Street is required'),
+      ).toBe(true);
+    } finally {
+      consoleErrorSpy?.mockRestore();
       vestFieldResolutionDevMode.value = true;
     }
   });

@@ -413,6 +413,18 @@ type VestFieldResolution =
     };
 
 /**
+ * Normalizes a caught probe-failure value into a human-readable string for
+ * {@link VestFieldResolution}'s `'invalid'` `reason` — `Error.message` for a
+ * real `Error`, `String(value)` otherwise (a probe trap can throw a
+ * non-`Error` value). Without this, the caught value was previously dropped
+ * entirely, leaving the dev-mode throw / production `console.error`
+ * unactionable.
+ */
+function normalizeVestProbeError(error: unknown): string {
+  return error instanceof Error ? error.message : String(error);
+}
+
+/**
  * Resolves a Vest field path to the matching Angular field tree, relative to
  * the validator's own bound field tree (per ADR-0008, a registration's Vest
  * field names are relative to the bound path — there is no other base, since
@@ -467,11 +479,11 @@ function resolveVestFieldName(
     try {
       hasSegment = Object.hasOwn(container, segmentKey);
       next = hasSegment ? Reflect.get(container, segmentKey) : undefined;
-    } catch {
+    } catch (probeError) {
       return {
         resolved: false,
         shape: 'invalid',
-        reason: `probing segment "${segment}" threw.`,
+        reason: `probing segment "${segment}" threw: ${normalizeVestProbeError(probeError)}`,
       };
     }
 
