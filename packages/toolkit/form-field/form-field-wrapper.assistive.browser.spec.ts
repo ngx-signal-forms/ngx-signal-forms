@@ -6,6 +6,13 @@ import { NgxFormFieldHint } from '@ngx-signal-forms/toolkit/assistive';
 import { NgxFormFieldWrapper } from './form-field-wrapper';
 
 /**
+ * Resolves the owning `<ngx-form-field-wrapper>` host for a row element, so
+ * tests can set the wrapper-scoped CSS custom properties that control it.
+ */
+const wrapperOf = (row: Element): HTMLElement =>
+  row.closest('ngx-form-field-wrapper') as HTMLElement;
+
+/**
  * Regression coverage for #246: the assistive row reserved 1.25rem plus
  * 0.25rem top/bottom margins on every field, which is more space than a
  * single caption line needs. The row must stay reserved (no layout shift when
@@ -110,5 +117,165 @@ describe('NgxFormFieldWrapper — assistive row reserved space', () => {
 
     const [bare] = assistiveRows(container);
     expect(getComputedStyle(bare).transition).toContain('min-height');
+  });
+});
+
+/**
+ * Regression coverage for #297: PR #248's description advertised
+ * `--ngx-form-field-assistive-empty-display`, a token that was never
+ * shipped. This locks in the token that actually ships,
+ * `--ngx-form-field-assistive-empty-behavior`, defaulting to `reserve`
+ * (today's rendering, unchanged) with an opt-in `collapse` value.
+ */
+describe('NgxFormFieldWrapper — assistive empty-row behavior (#297)', () => {
+  @Component({
+    selector: 'ngx-test-assistive-empty-behavior',
+    imports: [NgxFormFieldWrapper, NgxFormFieldHint, FormField],
+    template: `
+      <ngx-form-field-wrapper [formField]="testForm.bare">
+        <label for="bare">Bare</label>
+        <input id="bare" [formField]="testForm.bare" />
+      </ngx-form-field-wrapper>
+
+      <ngx-form-field-wrapper [formField]="testForm.hinted">
+        <label for="hinted">Hinted</label>
+        <input id="hinted" [formField]="testForm.hinted" />
+        <ngx-form-field-hint>Some guidance</ngx-form-field-hint>
+      </ngx-form-field-wrapper>
+    `,
+  })
+  class Host {
+    protected readonly testForm = form(signal({ bare: '', hinted: '' }));
+  }
+
+  const assistiveRows = (container: Element) =>
+    Array.from(
+      container.querySelectorAll<HTMLElement>(
+        '.ngx-signal-form-field-wrapper__assistive',
+      ),
+    );
+
+  it('defaults to reserving a content-less row at its full height', async () => {
+    const { container } = await render(Host);
+
+    const [bare] = assistiveRows(container);
+
+    expect(bare.getBoundingClientRect().height).toBeCloseTo(16, 1);
+  });
+
+  it('collapses a content-less row to zero when opted in, without affecting a hinted row', async () => {
+    const { container } = await render(Host);
+
+    const [bare, hinted] = assistiveRows(container);
+    const wrapper = wrapperOf(bare);
+    // Disable the reservation transition (as the other override tests in
+    // this file do) so the height change applies synchronously instead of
+    // animating over 150ms.
+    wrapper.style.setProperty('--ngx-form-field-assistive-transition', 'none');
+    wrapper.style.setProperty(
+      '--ngx-form-field-assistive-empty-behavior',
+      'collapse',
+    );
+
+    expect(bare.getBoundingClientRect().height).toBe(0);
+    expect(hinted.getBoundingClientRect().height).toBeGreaterThan(0);
+  });
+
+  it('reverts to the reserved height once content-less collapse is switched back to reserve', async () => {
+    const { container } = await render(Host);
+
+    const [bare] = assistiveRows(container);
+    const wrapper = wrapperOf(bare);
+    wrapper.style.setProperty('--ngx-form-field-assistive-transition', 'none');
+    wrapper.style.setProperty(
+      '--ngx-form-field-assistive-empty-behavior',
+      'collapse',
+    );
+    wrapper.style.setProperty(
+      '--ngx-form-field-assistive-empty-behavior',
+      'reserve',
+    );
+
+    expect(bare.getBoundingClientRect().height).toBeCloseTo(16, 1);
+  });
+
+  /**
+   * The invariant `collapse` exists to protect: a row opted into collapsing
+   * when content-less must NOT collapse once an error or warning actually
+   * renders into it. The CSS `:has()` guard checks the hint slot *and* the
+   * absence of any other left-slot child (the error/warning renderer), so a
+   * rendered error/warning keeps the row reserved even under `collapse`.
+   * Without this test, a regression that collapsed the row out from under a
+   * live announced error/warning would go undetected.
+   */
+  it('does not collapse a row opted into collapse while it shows a blocking error', async () => {
+    const invalidField = signal({
+      invalid: () => true,
+      touched: () => true,
+      errors: () => [{ kind: 'required', message: 'This field is required' }],
+    });
+
+    const { container } = await render(
+      `<ngx-form-field-wrapper [formField]="field" fieldName="agree">
+        <label for="agree">Agree</label>
+        <input id="agree" type="text" />
+      </ngx-form-field-wrapper>`,
+      {
+        imports: [NgxFormFieldWrapper],
+        componentProperties: { field: invalidField },
+      },
+    );
+
+    const row = container.querySelector<HTMLElement>(
+      '.ngx-signal-form-field-wrapper__assistive',
+    )!;
+    const wrapper = wrapperOf(row);
+    wrapper.style.setProperty('--ngx-form-field-assistive-transition', 'none');
+    wrapper.style.setProperty(
+      '--ngx-form-field-assistive-empty-behavior',
+      'collapse',
+    );
+
+    expect(container.querySelector('[id="agree-error"]')).toBeTruthy();
+    expect(row.getBoundingClientRect().height).toBeGreaterThan(0);
+  });
+
+  it('does not collapse a row opted into collapse while it shows a warning', async () => {
+    const warningField = signal({
+      invalid: () => true,
+      touched: () => true,
+      errors: () => [
+        { kind: 'warn:weak-value', message: 'Consider a stronger value' },
+      ],
+    });
+
+    const { container } = await render(
+      `<ngx-form-field-wrapper [formField]="field" fieldName="value">
+        <label for="value">Value</label>
+        <input id="value" type="text" />
+      </ngx-form-field-wrapper>`,
+      {
+        imports: [NgxFormFieldWrapper],
+        componentProperties: { field: warningField },
+      },
+    );
+
+    const wrapper = container.querySelector('ngx-form-field-wrapper');
+    const row = container.querySelector<HTMLElement>(
+      '.ngx-signal-form-field-wrapper__assistive',
+    )!;
+    wrapperOf(row).style.setProperty(
+      '--ngx-form-field-assistive-transition',
+      'none',
+    );
+    wrapperOf(row).style.setProperty(
+      '--ngx-form-field-assistive-empty-behavior',
+      'collapse',
+    );
+
+    expect(
+      wrapper?.classList.contains('ngx-signal-form-field-wrapper--warning'),
+    ).toBe(true);
+    expect(row.getBoundingClientRect().height).toBeGreaterThan(0);
   });
 });

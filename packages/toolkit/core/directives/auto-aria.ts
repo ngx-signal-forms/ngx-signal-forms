@@ -12,6 +12,7 @@ import { createAriaRequiredSignal } from '../utilities/aria/create-aria-required
 import {
   DEFAULT_NGX_SIGNAL_FORMS_CONFIG,
   NGX_SIGNAL_FORM_ARIA_MODE,
+  NGX_SIGNAL_FORM_FIELD_VISIBILITY_REGISTRY,
   NGX_SIGNAL_FORM_HINT_REGISTRY,
   NGX_SIGNAL_FORMS_CONFIG,
 } from '../tokens';
@@ -132,6 +133,20 @@ export class NgxSignalFormAutoAria {
   });
 
   /**
+   * Field-visibility registry contributed by the nearest `[ngxSignalForm]`
+   * host, if any. The fallback channel for field-level `strategy`/
+   * `warningStrategy` overrides that {@link #fieldIdentity} cannot see — a
+   * standalone (wrapper-less) `<ngx-form-field-error>` is a sibling of the
+   * bound control, not an ancestor, so there is no shared element injector
+   * for it to publish an identity through. See
+   * `#registryVisibilityEntry`.
+   */
+  readonly #visibilityRegistry = inject(
+    NGX_SIGNAL_FORM_FIELD_VISIBILITY_REGISTRY,
+    { optional: true },
+  );
+
+  /**
    * Shared field-identity service, provided by the nearest `NgxFormFieldWrapper`.
    * When present, field-name resolution and ID generation are delegated to the
    * identity service so the wrapper and auto-aria share the same source of
@@ -169,6 +184,24 @@ export class NgxSignalFormAutoAria {
   #previousTickWasManualAriaMode: boolean | null = null;
 
   /**
+   * The wrapper-less fallback channel's entry for the currently bound
+   * control's field name, or `undefined` when there is none to fall back
+   * to. Deliberately skipped whenever {@link #fieldIdentity} is present —
+   * the wrapper fast-path already accounts for the wrapper's own
+   * field-level overrides, and preferring it keeps existing wrapped-field
+   * behavior unchanged. Only consulted for the wrapper-less case, where a
+   * sibling `<ngx-form-field-error>` has no other way to reach auto-aria.
+   */
+  readonly #registryVisibilityEntry = computed(() => {
+    if (this.#fieldIdentity) return undefined;
+
+    const fieldName = this.#domSnapshot().fieldName;
+    if (!fieldName) return undefined;
+
+    return this.#visibilityRegistry?.get(fieldName);
+  });
+
+  /**
    * Shared visibility-timing computed. Centralizes the `shouldShowErrors`
    * decision so `#shouldShowBy` only contributes the per-error-type filter.
    * Keeps auto-aria in lockstep with the wrapper component and the form
@@ -180,9 +213,20 @@ export class NgxSignalFormAutoAria {
    *
    * When an owning `NgxFormFieldWrapper` has published its own resolved
    * strategy, that wins: it already accounts for the wrapper's field-level
-   * `strategy` input, which the ambient form context cannot see.
+   * `strategy` input, which the ambient form context cannot see. Absent a
+   * wrapper, a registry entry — published by a standalone
+   * `<ngx-form-field-error>` — wins instead: its `errorContainerVisible` is
+   * the exact boolean already gating that component's own live region, so
+   * reusing it here can't drift from what is actually rendered.
    */
-  readonly #visibilityByStrategy = createErrorVisibility(
+  readonly #visibilityByStrategy = computed(() => {
+    const registryEntry = this.#registryVisibilityEntry();
+    if (registryEntry) return registryEntry.errorContainerVisible();
+
+    return this.#ownVisibilityByStrategy();
+  });
+
+  readonly #ownVisibilityByStrategy = createErrorVisibility(
     () => this.#resolveFieldState(),
     {
       strategy: computed(
@@ -207,8 +251,16 @@ export class NgxSignalFormAutoAria {
    * `errorStrategy="on-submit"` and `warningStrategy="immediate"` renders a
    * visible warning that `aria-describedby` never references, leaving the
    * advisory text unavailable to assistive technology (WCAG 1.3.1).
+   *
+   * Same registry fallback as {@link #visibilityByStrategy}: absent a
+   * wrapper, a standalone error component's published
+   * `warningContainerVisible` wins over recomputing the cascade from the
+   * ambient form context.
    */
   readonly #warningVisibilityByStrategy = computed(() => {
+    const registryEntry = this.#registryVisibilityEntry();
+    if (registryEntry) return registryEntry.warningContainerVisible();
+
     const fieldState = this.#resolveFieldState();
     if (!fieldState) return false;
 

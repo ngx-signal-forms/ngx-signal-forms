@@ -4,5 +4,9 @@
 // contract. `axe-core` is an optional peer dependency of the toolkit — it is
 // only required if you import from this entry point.
 
-export { expectNoA11yViolations, WCAG_22_AA_TAGS } from './a11y';
+export {
+  expectNoA11yViolations,
+  findAlertContaining,
+  WCAG_22_AA_TAGS,
+} from './a11y';
 export type { WCAG_22_AA_TAG } from './a11y';

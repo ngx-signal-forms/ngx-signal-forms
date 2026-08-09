@@ -93,11 +93,19 @@ ngx-signal-forms — an Angular toolkit for working with Signal Forms.
   `NgxSignalFormAutoAria` composes the control's `aria-describedby` from the
   same two visibility decisions the renderer uses — the error cascade for
   `{name}-error`, the warning cascade for `{name}-warning` — so a rendered
-  region is always referenced and a suppressed one never is. Field-level
-  overrides reach it because `NgxFormFieldWrapper` publishes both resolved
-  strategies via `NgxFieldIdentity.setResolvedStrategies()`; auto-aria on its
-  own sees only the form context. Any new surface that gates a message region
-  must feed its decision through the same channel, or it will produce a
+  region is always referenced and a suppressed one never is. There are two
+  channels field-level overrides reach it through, depending on composition:
+  a **wrapped** field's `NgxFormFieldWrapper` publishes both resolved
+  strategies via `NgxFieldIdentity.setResolvedStrategies()`; a **standalone**
+  `<ngx-form-field-error>` — a sibling of the control it describes, not an
+  ancestor, so it has no shared element injector to publish an identity
+  through — instead registers its already-rendered
+  `errorContainerVisible()`/`warningContainerVisible()` booleans into
+  `NGX_SIGNAL_FORM_FIELD_VISIBILITY_REGISTRY`, keyed by field name and
+  provided per-form by `NgxSignalForm`. Auto-aria prefers `NgxFieldIdentity`
+  when present and falls back to the registry; without either, it sees only
+  the ambient form context. Any new surface that gates a message region must
+  feed its decision through one of these two channels, or it will produce a
   dangling id (axe `aria-valid-attr-value`) or an unreferenced one
   (WCAG 1.3.1).
   The rule is narrow on purpose: it applies to the strategy/visibility cascade,

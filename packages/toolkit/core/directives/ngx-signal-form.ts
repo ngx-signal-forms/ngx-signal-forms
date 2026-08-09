@@ -7,7 +7,12 @@ import {
   type Signal,
 } from '@angular/core';
 import { FormRoot, type FieldTree } from '@angular/forms/signals';
-import { NGX_SIGNAL_FORM_CONTEXT, NGX_SIGNAL_FORMS_CONFIG } from '../tokens';
+import {
+  NGX_SIGNAL_FORM_CONTEXT,
+  NGX_SIGNAL_FORM_FIELD_VISIBILITY_REGISTRY,
+  NGX_SIGNAL_FORMS_CONFIG,
+} from '../tokens';
+import { NgxFieldVisibilityRegistry } from '../services/field-visibility-registry';
 import type {
   ResolvedErrorDisplayStrategy,
   ResolvedWarningDisplayStrategy,
@@ -133,6 +138,16 @@ export interface NgxSignalFormContext {
           warningStrategy: directive.resolvedWarningStrategy,
         };
       },
+    },
+    // One field-visibility registry per form, so a standalone
+    // `<ngx-form-field-error>` — a sibling of the control it describes, not
+    // an ancestor — has a channel to publish its resolved visibility on,
+    // and `NgxSignalFormAutoAria` can keep `aria-describedby` in lockstep
+    // with it the same way it already does for wrapped fields via
+    // `NgxFieldIdentity`. See `NgxSignalFormFieldVisibilityRegistry`.
+    {
+      provide: NGX_SIGNAL_FORM_FIELD_VISIBILITY_REGISTRY,
+      useClass: NgxFieldVisibilityRegistry,
     },
   ],
 })
