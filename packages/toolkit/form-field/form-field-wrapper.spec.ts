@@ -4332,5 +4332,16 @@ describe('NgxSignalFormWrapperComponent', () => {
         /@container style\(--_assistive-empty-behavior:\s*collapse\)\s*\{[\s\S]*?\.ngx-signal-form-field-wrapper__assistive:not\(\s*:has\(\s*\.ngx-signal-form-field-wrapper__assistive-left\s*>\s*:not\(\.ngx-signal-form-field-wrapper__hint-slot\),\s*\.ngx-signal-form-field-wrapper__hint-slot:not\(:empty\),\s*\.ngx-signal-form-field-wrapper__assistive-right:not\(:empty\)\s*\)\s*\)\s*\{\s*min-height:\s*0;\s*margin-top:\s*0;\s*margin-bottom:\s*0;/,
       );
     });
+
+    // jsdom does not compute the resulting rendered geometry from emulated
+    // component stylesheets, so the runtime override is asserted in the
+    // browser-mode suite (#253). Here we lock in the CSS *source* so the
+    // token contract cannot silently regress in refactors of this
+    // stylesheet.
+    it('resolves --_field-touch-target through a public custom property defaulting to 32px', () => {
+      expect(wrapperCssSource).toMatch(
+        /--_field-touch-target:\s*var\(\s*--ngx-form-field-touch-target,\s*2rem\s*\);/,
+      );
+    });
   });
 });
