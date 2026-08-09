@@ -256,3 +256,134 @@ describe('auto-aria: wrapper field-level strategy overrides', () => {
     expect(describedBy).not.toContain('password-error');
   });
 });
+
+/**
+ * A standalone `<ngx-form-field-error>` — not wrapped in
+ * `<ngx-form-field-wrapper>` — is a *sibling* of the control it describes,
+ * not an ancestor. `NgxFieldIdentity` (the wrapper's channel) is never
+ * provided in this shape, so field-level `strategy`/`warningStrategy`
+ * overrides bound directly on the error component reach auto-aria through
+ * `NGX_SIGNAL_FORM_FIELD_VISIBILITY_REGISTRY` instead (issue #290).
+ */
+@Component({
+  selector: 'ngx-test-standalone-field-level-override',
+  imports: [NgxFormFieldError, FormField, NgxSignalFormToolkit],
+  template: `
+    <form [formRoot]="pwForm" ngxSignalForm [errorStrategy]="errorStrategy()">
+      <label for="password">Password</label>
+      <input id="password" type="password" [formField]="pwForm.password" />
+      <ngx-form-field-error
+        [formField]="pwForm.password"
+        fieldName="password"
+        [strategy]="fieldStrategy()"
+        [warningStrategy]="fieldWarningStrategy()"
+      />
+    </form>
+  `,
+})
+class StandaloneFieldOverrideHost {
+  readonly errorStrategy = input.required<ResolvedErrorDisplayStrategy>();
+  readonly fieldStrategy = input.required<ResolvedErrorDisplayStrategy>();
+  readonly fieldWarningStrategy =
+    input.required<ResolvedWarningDisplayStrategy>();
+
+  readonly #model = signal({ password: 'abc' });
+  readonly pwForm = form(
+    this.#model,
+    schema((path) => {
+      minLength(path.password, 4, { message: 'At least 4 characters' });
+      validate(path.password, (ctx) => {
+        const v = ctx.value();
+        if (v.length > 0 && v.length < 8) {
+          return { kind: 'warn:weak', message: 'Consider 8+ characters' };
+        }
+        return null;
+      });
+    }),
+  );
+}
+
+describe('auto-aria: standalone (wrapper-less) field-level strategy overrides', () => {
+  it('does not reference regions the standalone field-level strategies suppress', async () => {
+    // The form says "show errors immediately", but the standalone error
+    // component overrides both channels to 'on-submit'. Nothing renders, so
+    // nothing may be referenced — a dangling id here is an axe
+    // `aria-valid-attr-value` violation.
+    const { container } = await render(StandaloneFieldOverrideHost, {
+      inputs: {
+        errorStrategy: 'immediate',
+        fieldStrategy: 'on-submit',
+        fieldWarningStrategy: 'on-submit',
+      },
+    });
+
+    const describedBy =
+      container
+        .querySelector('input#password')
+        ?.getAttribute('aria-describedby') ?? '';
+
+    expect(
+      container.querySelector('[role="alert"]')?.textContent?.trim() ?? '',
+    ).toBe('');
+    expect(
+      container.querySelector('[role="status"]')?.textContent?.trim() ?? '',
+    ).toBe('');
+    expect(describedBy).not.toContain('password-error');
+    expect(describedBy).not.toContain('password-warning');
+  });
+
+  it('references a warning the standalone field-level strategy reveals', async () => {
+    // The mirror case reported in issue #290: the form gates everything
+    // until submit (global default `on-touch` behaves the same for an
+    // untouched field), but the standalone error component opts its
+    // warnings into 'immediate'. The region renders, so it must be
+    // referenced or the advisory text is invisible to AT (WCAG 1.3.1).
+    const { container } = await render(StandaloneFieldOverrideHost, {
+      inputs: {
+        errorStrategy: 'on-submit',
+        fieldStrategy: 'on-submit',
+        fieldWarningStrategy: 'immediate',
+      },
+    });
+
+    const describedBy =
+      container
+        .querySelector('input#password')
+        ?.getAttribute('aria-describedby') ?? '';
+
+    expect(container.querySelector('[role="status"]')?.textContent).toContain(
+      'Consider 8+ characters',
+    );
+    expect(describedBy).toContain('password-warning');
+    expect(describedBy).not.toContain('password-error');
+  });
+
+  it('references an error the standalone field-level strategy reveals', async () => {
+    // The mirror image of the previous test, on the *error* channel this
+    // time (analogous to the wrapper suite's `password-error` case above):
+    // the form gates everything until submit, but the standalone error
+    // component opts its blocking-error channel into 'immediate'. The
+    // region renders, so it must be referenced or the error text is
+    // invisible to AT (WCAG 1.3.1). Without the registry fallback, auto-aria
+    // would see only the ambient 'on-submit' form context and never
+    // reference `password-error`.
+    const { container } = await render(StandaloneFieldOverrideHost, {
+      inputs: {
+        errorStrategy: 'on-submit',
+        fieldStrategy: 'immediate',
+        fieldWarningStrategy: 'on-submit',
+      },
+    });
+
+    const describedBy =
+      container
+        .querySelector('input#password')
+        ?.getAttribute('aria-describedby') ?? '';
+
+    expect(container.querySelector('[role="alert"]')?.textContent).toContain(
+      'At least 4 characters',
+    );
+    expect(describedBy).toContain('password-error');
+    expect(describedBy).not.toContain('password-warning');
+  });
+});
