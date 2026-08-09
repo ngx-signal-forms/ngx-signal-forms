@@ -755,15 +755,15 @@ import {
   type VestOnlyFieldSelector,
 } from '@ngx-signal-forms/toolkit/vest';
 
-interface ValidateVestOptions<TValue = unknown> {
+interface ValidateVestOptions<TValue = unknown, F extends string = string> {
   includeWarnings?: boolean; // default: false — surface warn() as toolkit warnings
   resetOnDestroy?: boolean; // default: true — call suite.reset() on DestroyRef teardown; pass false to persist state across mounts
-  only?: VestOnlyFieldSelector<TValue>; // default: undefined — focus the run on a field
+  only?: VestOnlyFieldSelector<TValue, F>; // default: undefined — focus the run on a field
 }
 
-type VestOnlyFieldSelector<TValue> = (
+type VestOnlyFieldSelector<TValue, F extends string = string> = (
   ctx: FieldContext<TValue>,
-) => VestFieldExclusion;
+) => VestFieldExclusion<F>;
 
 // A field name, a list of field names, `undefined` for a whole-suite run, or
 // `false` to focus nothing. `false` THROWS at run time: Vest's `suite.only()`
@@ -779,31 +779,42 @@ type VestFieldExclusion<F extends string = string> =
 // value type and `suite`'s input type (TValue) must match. Binding a suite
 // to a path of a different shape is a compile error, not a runtime footgun.
 
+// `F` is the suite's own Vest field-name union — Vest ≥6.3.2 propagates one
+// through `create<{ fields: 'email' | 'password' }>(…)` or a schema-typed
+// suite. It defaults to `string`, so a plain `create(…)` suite (no `fields`,
+// no schema) is unaffected, and it is always inferred from the `suite`
+// argument itself: no call site writes an explicit type argument. When `F`
+// narrows, `only`'s accepted return value narrows with it, so a mistyped
+// focus name (`only: () => 'emial'`) is a compile error instead of a
+// focused run that silently executes zero tests. See issue #292.
+
 interface VestAdapterOptions {
   readonly resetOnDestroy?: boolean; // default: true
 }
-interface VestRegisterOptions<TValue = unknown> {
+interface VestRegisterOptions<TValue = unknown, F extends string = string> {
   readonly includeErrors?: boolean;
   readonly includeWarnings?: boolean;
   readonly resetOnDestroy?: boolean;
-  readonly only?: VestOnlyFieldSelector<TValue>;
+  readonly only?: VestOnlyFieldSelector<TValue, F>;
 }
-interface RunVestSuiteParams<TValue> {
-  readonly suite: VestRunnableSuite<TValue>;
+interface RunVestSuiteParams<TValue, F extends string = string> {
+  readonly suite: VestRunnableSuite<TValue, F>;
   readonly fieldTree: ReadonlyFieldTree<TValue>;
   readonly value: TValue;
-  readonly focus?: VestFieldExclusion;
+  readonly focus?: VestFieldExclusion<F>;
 }
-interface RunVestSuiteResult<TValue> {
+interface RunVestSuiteResult<TValue, F extends string = string> {
   readonly value: TValue;
   readonly focus: string | undefined;
-  readonly runResult: VestResultLike | PromiseLike<VestResultLike>;
-  readonly initialResult: VestResultLike | undefined;
+  readonly runResult: VestResultLike<F> | PromiseLike<VestResultLike<F>>;
+  readonly initialResult: VestResultLike<F> | undefined;
   readonly fromCache: boolean;
 }
 interface VestSuiteAdapter {
-  register(path, suite, options?): void;
-  runVestSuite(params): RunVestSuiteResult<unknown>;
+  register<TValue, F extends string = string>(path, suite, options?): void;
+  runVestSuite<TValue, F extends string = string>(
+    params,
+  ): RunVestSuiteResult<unknown>;
   invalidate(suite: object): void;
 }
 
