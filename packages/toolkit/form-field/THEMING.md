@@ -241,13 +241,14 @@ Displays progress towards a character limit.
 
 Layout container for hint/error and character count alignment.
 
-| Property                                   | Default                                                  | Description                                           |
-| :----------------------------------------- | :------------------------------------------------------- | :---------------------------------------------------- |
-| `--ngx-form-field-assistive-min-height`    | `--ngx-signal-form-feedback-line-height` (`1rem`)        | Reserved line, prevents layout shift when errors show |
-| `--ngx-form-field-assistive-gap`           | `0.5rem`                                                 | Gap between left and right content                    |
-| `--ngx-form-field-assistive-margin-top`    | `0`                                                      | Spacing above assistive row                           |
-| `--ngx-form-field-assistive-margin-bottom` | `0`                                                      | Spacing below assistive row                           |
-| `--ngx-form-field-assistive-transition`    | `min-height 150ms ease-out, margin-block 150ms ease-out` | Animation for reservation changes                     |
+| Property                                    | Default                                                  | Description                                           |
+| :------------------------------------------ | :------------------------------------------------------- | :---------------------------------------------------- |
+| `--ngx-form-field-assistive-min-height`     | `--ngx-signal-form-feedback-line-height` (`1rem`)        | Reserved line, prevents layout shift when errors show |
+| `--ngx-form-field-assistive-gap`            | `0.5rem`                                                 | Gap between left and right content                    |
+| `--ngx-form-field-assistive-margin-top`     | `0`                                                      | Spacing above assistive row                           |
+| `--ngx-form-field-assistive-margin-bottom`  | `0`                                                      | Spacing below assistive row                           |
+| `--ngx-form-field-assistive-transition`     | `min-height 150ms ease-out, margin-block 150ms ease-out` | Animation for reservation changes                     |
+| `--ngx-form-field-assistive-empty-behavior` | `reserve`                                                | `reserve` (default) or `collapse` — see below         |
 
 #### Reserved space
 
@@ -260,6 +261,16 @@ messages grow the row, which is the only accepted shift. Reservation changes use
 a short 150ms `ease-out` transition; motion is disabled for
 `prefers-reduced-motion`.
 
+The reservation is deliberate, not an oversight: a row that collapses when
+empty shifts the field's layout the instant an error or warning appears,
+which is worse for users tracking focus than a permanently reserved line. An
+earlier PR (#248) advertised a `--ngx-form-field-assistive-empty-display`
+token in its description as the opt-out for this behavior; that token was
+never implemented — the PR reversed the change mid-review and merged with a
+stale description. It does not exist in this package. The supported opt-out
+is `--ngx-form-field-assistive-empty-behavior` (below) or, for most cases,
+setting `--ngx-form-field-assistive-min-height: 0` directly.
+
 Scale or collapse the reserved space per form scope:
 
 ```css
@@ -271,6 +282,33 @@ Scale or collapse the reserved space per form scope:
   --ngx-form-field-assistive-min-height: 0;
 }
 ```
+
+#### Collapsing content-less rows
+
+Whether `--ngx-form-field-assistive-min-height` reserves space unconditionally
+depends on `--ngx-form-field-assistive-empty-behavior`. Under the default,
+`reserve`, `--ngx-form-field-assistive-min-height` always reserves space,
+whether or not the row carries a hint, error, warning or character count —
+for most consumers that is the right default and the simplest override.
+
+Under `collapse`, that changes for the narrower case of a row with **no
+assistive content at all**: it drops to zero height regardless of what
+`--ngx-form-field-assistive-min-height` is set to, while a row that does
+carry content still reserves normally. Reach for
+`--ngx-form-field-assistive-min-height: 0` first; reach for this token only
+when some fields in a form need the reservation and others do not, or when
+the reservation should disappear only in the fully-empty case rather than
+shrinking every row's baseline height.
+
+```css
+.my-compact-form {
+  --ngx-form-field-assistive-empty-behavior: collapse;
+}
+```
+
+Implemented as a CSS container style query (`@container style(...)`), so
+browsers without support simply keep the reserved default — the same
+behavior they already had, not a regression.
 
 ### Fieldset
 

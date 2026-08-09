@@ -1089,10 +1089,64 @@
   flex-shrink: 0;
 }
 
+/*
+ * `.ngx-signal-form-field-wrapper__hint-slot` (see form-field-wrapper.ts) is
+ * a documented structural hook, not an accidental one: it wraps the
+ * projected `ngx-form-field-hint` content inside `.assistive-left` so the
+ * `collapse` empty-row query below can detect "no hint projected" via
+ * `:empty` without being defeated by that wrapper's own always-present
+ * element node.
+ */
+
 /* Hide empty slots to prevent unnecessary spacing */
 .ngx-signal-form-field-wrapper__assistive-left:empty,
 .ngx-signal-form-field-wrapper__assistive-right:empty {
   display: none;
+}
+
+/*
+ * Opt-in: collapse the reserved row instead of keeping it at
+ * `--ngx-form-field-assistive-min-height` when it carries no hint, error,
+ * warning or character count. `reserve` (the default) reproduces today's
+ * rendering exactly — nothing moves unless a consumer opts in (#297).
+ *
+ * A behavioural token, not a `-display` one: the row stays a flex container
+ * either way, so consumers never need to know that detail to use this.
+ *
+ * Implemented as a container style query so unsupported browsers simply
+ * keep the reserved default — a safe fallback, since it is the behaviour
+ * they already had. Baseline "Newly available"; every element is
+ * implicitly a style-query container, so no `container-type` is needed.
+ * https://developer.mozilla.org/en-US/docs/Web/CSS/@container#container_style_queries
+ */
+:host {
+  --_assistive-empty-behavior: var(
+    --ngx-form-field-assistive-empty-behavior,
+    reserve
+  );
+}
+
+@container style(--_assistive-empty-behavior: collapse) {
+  /*
+   * "Content-less" cannot be read off `.assistive-left:empty` directly: its
+   * hint slot is an unconditional wrapper div (toggled via inline
+   * `display`, not structurally removed), so `.assistive-left` always has
+   * at least that one child even when no hint is projected. Check the hint
+   * slot's own emptiness plus the absence of any other left-slot child
+   * (the error/warning renderer, when present) instead.
+   */
+  .ngx-signal-form-field-wrapper__assistive:not(
+    :has(
+      .ngx-signal-form-field-wrapper__assistive-left
+        > :not(.ngx-signal-form-field-wrapper__hint-slot),
+      .ngx-signal-form-field-wrapper__hint-slot:not(:empty),
+      .ngx-signal-form-field-wrapper__assistive-right:not(:empty)
+    )
+  ) {
+    min-height: 0;
+    margin-top: 0;
+    margin-bottom: 0;
+  }
 }
 
 /*

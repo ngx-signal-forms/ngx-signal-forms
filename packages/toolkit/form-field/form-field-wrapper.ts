@@ -304,7 +304,10 @@ import {
             "
           />
         }
-        <div [style.display]="shouldRenderErrorSlot() ? 'none' : 'contents'">
+        <div
+          class="ngx-signal-form-field-wrapper__hint-slot"
+          [style.display]="shouldRenderErrorSlot() ? 'none' : 'contents'"
+        >
           <ng-content select="ngx-form-field-hint" />
         </div>
       </div>

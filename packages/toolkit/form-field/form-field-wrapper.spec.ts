@@ -4315,5 +4315,22 @@ describe('NgxSignalFormWrapperComponent', () => {
         /\.ngx-signal-form-field-wrapper__assistive-left:empty,\s*\.ngx-signal-form-field-wrapper__assistive-right:empty\s*\{\s*display:\s*none;/,
       );
     });
+
+    // jsdom does not evaluate `@container style()` queries from emulated
+    // component stylesheets, so the runtime collapse/reserve behavior is
+    // asserted in the browser-mode suite (#297). Here we lock in the CSS
+    // *source* so the token contract cannot silently regress in refactors
+    // of this stylesheet.
+    it('resolves --ngx-form-field-assistive-empty-behavior through a public custom property defaulting to reserve', () => {
+      expect(wrapperCssSource).toMatch(
+        /--_assistive-empty-behavior:\s*var\(\s*--ngx-form-field-assistive-empty-behavior,\s*reserve\s*\);/,
+      );
+    });
+
+    it('declares the collapse opt-in for a content-less assistive row in CSS source', () => {
+      expect(wrapperCssSource).toMatch(
+        /@container style\(--_assistive-empty-behavior:\s*collapse\)\s*\{[\s\S]*?\.ngx-signal-form-field-wrapper__assistive:not\(\s*:has\(\s*\.ngx-signal-form-field-wrapper__assistive-left\s*>\s*:not\(\.ngx-signal-form-field-wrapper__hint-slot\),\s*\.ngx-signal-form-field-wrapper__hint-slot:not\(:empty\),\s*\.ngx-signal-form-field-wrapper__assistive-right:not\(:empty\)\s*\)\s*\)\s*\{\s*min-height:\s*0;\s*margin-top:\s*0;\s*margin-bottom:\s*0;/,
+      );
+    });
   });
 });
