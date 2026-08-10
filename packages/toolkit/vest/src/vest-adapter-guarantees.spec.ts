@@ -24,14 +24,15 @@ import { createVestAdapter, sharedVestAdapter } from './vest-adapter';
  * contention/FIFO run queue, and the `kind` sanitiser's truncation-plus-hash
  * branch. See issue #294.
  *
- * Every test builds its own Vest suite instance. The adapter's internal
- * caches (`runCache`, `pendingTreesBySuite`, `runQueueBySuite`) are all keyed
- * by suite object identity, so a fresh suite per test -- including the tests
- * that exercise the module-scope {@link sharedVestAdapter} singleton --
- * cannot leak state into another spec file sharing that same singleton
- * within one test run. The `sharedVestAdapter` test additionally calls
- * `invalidate()` on its own suite once done, as an extra belt-and-braces
- * reset.
+ * Every test builds its own Vest suite instance. The run coordinator's
+ * internal caches (`runCache`, `pendingKeysBySuite`, `runQueueBySuite` -- see
+ * `./vest-run-coordinator.ts`, not the adapter itself, which only owns
+ * `resetOnDestroyRefCounts`) are all keyed by suite object identity, so a
+ * fresh suite per test -- including the tests that exercise the module-scope
+ * {@link sharedVestAdapter} singleton -- cannot leak state into another spec
+ * file sharing that same singleton within one test run. The
+ * `sharedVestAdapter` test additionally calls `invalidate()` on its own suite
+ * once done, as an extra belt-and-braces reset.
  *
  * Tests that only need a `ReadonlyFieldTree` identity (not a rendered,
  * bound-to-the-DOM form) build one via `TestBed.runInInjectionContext(() =>
@@ -272,7 +273,8 @@ describe('VestSuiteAdapter — exported-interface guarantees', () => {
 
       // A different array INSTANCE with the same names hits the cache: the
       // focus cache key is content-derived (the joined names), not the array
-      // reference -- see the `focusKey` computation in `getOrCreateVestRun`.
+      // reference -- see `toVestFocusKey` and its use in the run
+      // coordinator's `request` (`./vest-run-coordinator.ts`).
       const repeat = adapter.runVestSuite({
         suite,
         fieldTree,

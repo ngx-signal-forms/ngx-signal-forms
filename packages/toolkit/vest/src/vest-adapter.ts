@@ -12,6 +12,8 @@ import {
   createVestRunCoordinator,
   isVestResultLike,
   VEST_KEY_SEPARATOR,
+  type VestCoordinatedSuite,
+  type VestFailureMessages,
   type VestFieldExclusion,
   type VestResultLike,
   type VestRunCoordinator,
@@ -26,6 +28,7 @@ import {
 // queue, and settlement machinery. They are re-exported here because
 // `./vest-adapter` is their documented public home (see `./index.ts`).
 export type {
+  VestCoordinatedSuite,
   VestFieldExclusion,
   VestResultLike,
   VestRunnableSuite,
@@ -69,18 +72,6 @@ export type VestOnlyFieldSelector<TValue, F extends string = string> = (
  * `validateVest`/`validateVestWarnings` entry points.
  */
 export type VestFieldPath<TValue> = SchemaPath<TValue> & SchemaPathTree<TValue>;
-
-/**
- * Whole-suite failure map returned by Vest selector APIs such as
- * `result.getErrors()` and `result.getWarnings()`.
- */
-type VestFailureMessages = Readonly<Record<string, readonly string[]>>;
-
-/**
- * Field-scoped failure list returned by Vest selector APIs such as
- * `result.getErrors('fieldName')`.
- */
-type VestFieldMessages = readonly string[];
 
 /**
  * Adapter-local severity mapping used to generate Angular validation error
@@ -137,18 +128,6 @@ interface ResolvedVestValidationPayload {
 
 const VEST_PATH_SEGMENT = /[^.[\]]+/gu;
 const VEST_KIND_SEGMENT_MAX_LEN = 48;
-/**
- * Internal sentinel `fieldPath` meaning "attach directly to the validator's
- * own bound field tree" rather than resolving a child field by name.
- *
- * Composed from the same NUL-based separator as {@link VEST_KEY_SEPARATOR} so
- * it can never collide with a REAL Vest field name -- including a field
- * literally named `root`. Using the bare string `'root'` as this sentinel
- * previously meant that a suite with a test registered against a field named
- * `root` (e.g. model shape `{ root: ... }`) had its failures mis-attached to
- * the validator-bound field instead of resolved to the `root` child field.
- */
-const VEST_ROOT_FIELD_SENTINEL = `${VEST_KEY_SEPARATOR}root${VEST_KEY_SEPARATOR}`;
 
 function isThenable(value: unknown): value is PromiseLike<unknown> {
   return (
@@ -158,11 +137,18 @@ function isThenable(value: unknown): value is PromiseLike<unknown> {
   );
 }
 
-// Field tree nodes are callable proxies, so callability is a necessary (not
-// sufficient) proxy for "is a tree node". The sole caller
-// (`resolveVestFieldName`) only uses this to decide whether a fully walked
-// path landed on a tree-shaped node, so a false positive still yields a
-// tree-shaped value — the loose predicate is intentional and contained.
+/**
+ * Runtime guard used to confirm that a walked field-tree path landed on a
+ * field tree node rather than a plain data leaf.
+ *
+ * Deliberately loose: it accepts ANY callable value, not just a genuine
+ * `ReadonlyFieldTree`. Field tree nodes are callable proxies, so callability
+ * is a necessary (not sufficient) condition for "is a tree node" — but the
+ * sole caller ({@link resolveVestFieldName}) only uses this to decide whether
+ * a fully walked path landed on a tree-shaped node, so a false positive still
+ * yields a tree-shaped value. Tightening this further would need a
+ * `ReadonlyFieldTree`-specific brand Angular Signal Forms does not expose.
+ */
 function isFieldTree(value: unknown): value is ReadonlyFieldTree<unknown> {
   return typeof value === 'function';
 }
@@ -186,6 +172,13 @@ function fnv1a4Hex(value: string): string {
  * Sanitizes arbitrary Vest field/message fragments so generated validation
  * kinds remain stable and CSS/DOM-friendly.
  *
+ * Despite the name, this is mode-agnostic: {@link createVestValidationKind}
+ * calls it for BOTH blocking-error and warning kinds, not just warnings — the
+ * name predates the toolkit surfacing Vest `test()` failures as `vest:*`
+ * kinds alongside `warn()` results as `warn:vest:*`. Kept as-is (see the
+ * caller's fallback-literal note below) rather than renamed, to avoid
+ * unrelated churn across every call site.
+ *
  * When the sanitized value exceeds {@link VEST_KIND_SEGMENT_MAX_LEN}, a short
  * FNV-1a hash suffix of the *original* value is appended to guarantee that
  * two long, otherwise-identical prefixes do not collide.
@@ -206,6 +199,17 @@ function normalizeWarningKindSegment(value: string): string {
 /**
  * Creates a deterministic Angular validation error kind for a mapped Vest
  * error or warning.
+ *
+ * The `'field'`/`'warning'` fallback literals below are generic placeholders
+ * for "the sanitized segment came out empty" (e.g. a message that is only
+ * punctuation) — they are NOT a mode indicator. In particular, the
+ * `'warning'` fallback also applies when `mode === 'error'`, so a blocking
+ * error whose message sanitizes to empty can produce a kind that literally
+ * contains the substring `warning` (e.g. `vest:field:warning:0`). This is a
+ * cosmetic quirk of the placeholder text, not a mode misclassification: the
+ * kind's PREFIX (`vest:` vs `warn:vest:`, from {@link VEST_ERROR_KIND_PREFIX}
+ * / {@link VEST_WARNING_KIND_PREFIX}) is what callers actually match on to
+ * tell errors and warnings apart.
  */
 function createVestValidationKind(
   mode: VestValidationMode,
@@ -412,35 +416,23 @@ function resolveVestValidationFieldTree(
 }
 
 /**
- * Type guard distinguishing Vest's field-scoped message list (an array) from
- * the whole-suite failure map (a keyed object). Lets callers narrow the union
- * without an unsafe cast — `Array.isArray` alone does not remove the
- * `readonly string[]` branch.
- */
-function isVestFieldMessages(
-  messages: VestFailureMessages | VestFieldMessages,
-): messages is VestFieldMessages {
-  return Array.isArray(messages);
-}
-
-/**
  * Normalizes Vest selector output into a flat list of field-targeted messages.
+ *
+ * Only takes the whole-suite {@link VestFailureMessages} map, not Vest's
+ * field-scoped `getErrors('fieldName')`/`getWarnings('fieldName')` array
+ * shape: every internal call site (`createVestValidationSnapshot`,
+ * `mapVestValidationResult`) calls `getErrors()`/`getWarnings()` with zero
+ * arguments only, so the array shape never reaches this function — verified
+ * against vest@6.3.2. A prior version of this helper also accepted and
+ * branched on the array shape; that branch was dead code and has been
+ * removed. See {@link VestResultLike}'s doc comment for why the array-typed
+ * overload still exists on the result type itself.
  */
 function toVestValidationEntries(
-  messages: VestFailureMessages,
-): readonly VestValidationEntry[];
-function toVestValidationEntries(
-  messages: VestFieldMessages,
-): readonly VestValidationEntry[];
-function toVestValidationEntries(
-  messages: VestFailureMessages | VestFieldMessages | undefined,
+  messages: VestFailureMessages | undefined,
 ): readonly VestValidationEntry[] {
   if (!messages) {
     return [];
-  }
-
-  if (isVestFieldMessages(messages)) {
-    return createVestEntriesForField(VEST_ROOT_FIELD_SENTINEL, messages);
   }
 
   return Object.entries(messages).flatMap(([fieldPath, fieldMessages]) =>
@@ -532,10 +524,10 @@ function toVestValidationErrors(
   mode: VestValidationMode,
 ): readonly ValidationError.WithFieldTree[] {
   return entries.map(({ fieldPath, message, occurrence }) => {
-    const targetFieldTree =
-      fieldPath === VEST_ROOT_FIELD_SENTINEL
-        ? fieldTree
-        : resolveVestValidationFieldTree(fieldTree, fieldPath);
+    const targetFieldTree = resolveVestValidationFieldTree(
+      fieldTree,
+      fieldPath,
+    );
 
     return {
       kind: createVestValidationKind(mode, fieldPath, message, occurrence),
@@ -720,10 +712,14 @@ export interface VestRegisterOptions<
  * {@link VestSuiteAdapter.runVestSuite}.
  */
 export interface RunVestSuiteParams<TValue, F extends string = string> {
-  readonly suite: Pick<
-    VestRunnableSuite<TValue, F>,
-    'run' | 'only' | 'subscribe' | 'get'
-  >;
+  /**
+   * The exact slice of {@link VestRunnableSuite} the run coordinator drives —
+   * see {@link VestCoordinatedSuite}'s doc comment. Using that one named type
+   * here (rather than re-spelling the identical `Pick` inline) keeps this
+   * public parameter and the coordinator's own internal request shape
+   * structurally and nominally the same type.
+   */
+  readonly suite: VestCoordinatedSuite<TValue, F>;
   readonly fieldTree: ReadonlyFieldTree<TValue>;
   readonly value: TValue;
   readonly focus?: VestFieldExclusion<F>;

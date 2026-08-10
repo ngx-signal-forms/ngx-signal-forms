@@ -24,21 +24,33 @@ export type VestFieldExclusion<F extends string = string> =
 /**
  * Whole-suite failure map returned by Vest selector APIs such as
  * `result.getErrors()` and `result.getWarnings()`.
+ *
+ * Exported so `./vest-adapter` — the other module that talks about Vest
+ * selector shapes — imports this one definition instead of re-declaring an
+ * identical local copy.
  */
-type VestFailureMessages = Readonly<Record<string, readonly string[]>>;
+export type VestFailureMessages = Readonly<Record<string, readonly string[]>>;
 
 /**
  * Field-scoped failure list returned by Vest selector APIs such as
  * `result.getErrors('fieldName')`.
+ *
+ * Exported for the same reason as {@link VestFailureMessages}.
  */
-type VestFieldMessages = readonly string[];
+export type VestFieldMessages = readonly string[];
 
 /**
  * Minimal subset of Vest's public result API required by the adapter.
  *
- * The overloads intentionally mirror Vest's selector behavior more precisely
- * than a plain `Pick<SuiteResult, ...>` so internal helpers can stay strict
- * about whole-suite versus field-scoped result shapes.
+ * The overloads intentionally mirror Vest's real `getErrors`/`getWarnings`
+ * selector signatures more precisely than a plain `Pick<SuiteResult, ...>`.
+ * The adapter's OWN internal helpers only ever call the zero-argument,
+ * whole-suite overload — every internal call site passes no field name (see
+ * `toVestValidationEntries` in `./vest-adapter`, verified against
+ * vest@6.3.2). The field-scoped `(fieldName: F)` overload exists so that
+ * `RunVestSuiteResult.runResult`/`initialResult`, which this type also backs,
+ * stay a faithful, typed mirror of Vest's public result object for consumers
+ * calling `runVestSuite(...)` directly.
  *
  * `F` mirrors {@link VestOnlyFieldSelector}'s field-name union and defaults
  * to `string`, so the field-scoped overloads narrow to a typed suite's
@@ -300,8 +312,6 @@ interface VestRunCacheEntry<TValue> {
  */
 type VestRunCache = WeakMap<VestRunCacheKey, VestRunCacheEntry<unknown>>;
 
-const resolveQueueTail = (): void => {};
-
 /**
  * Internal composite-key separator. A NUL code point can never appear in a Vest
  * field path, message, or focus name, so it composes collision-free keys for the
@@ -462,9 +472,12 @@ function waitForSuiteIdle<TValue, F extends string = string>(
   }
 
   return new Promise((resolve) => {
-    // `subscribe`'s callback can fire synchronously; capture `unsubscribe` as
-    // `let` so an immediate callback doesn't read it before assignment (same
-    // TDZ hazard `awaitVestRunSettlement` guards against below).
+    // Defensive only: real Vest 6.3.2 suites never invoke the `subscribe`
+    // callback synchronously (empirically verified), so this branch does not
+    // protect against documented Vest behavior. It guards a hand-rolled
+    // suite shape that DOES fire synchronously — capture `unsubscribe` as
+    // `let` so such a callback doesn't read it before assignment (same TDZ
+    // hazard `awaitVestRunSettlement` guards against below).
     let fired = false;
     let unsubscribe: (() => void) | undefined;
     unsubscribe = subscribe('ALL_RUNNING_TESTS_FINISHED', () => {
@@ -474,8 +487,9 @@ function waitForSuiteIdle<TValue, F extends string = string>(
     });
 
     // If the callback above fired synchronously (during the `subscribe()`
-    // call itself), its own `unsubscribe?.()` ran before `unsubscribe` had
-    // been assigned and was therefore a no-op — leaving this listener
+    // call itself — not possible with a real Vest 6.3.2 suite, only with a
+    // hand-rolled one), its own `unsubscribe?.()` ran before `unsubscribe`
+    // had been assigned and was therefore a no-op — leaving this listener
     // subscribed for the suite's lifetime and re-firing on every LATER idle
     // event. Clean up here instead, now that we hold a reference to it. Same
     // fired-synchronously guard `awaitVestRunSettlement` uses below.
@@ -551,10 +565,12 @@ function awaitVestRunSettlement<TValue, F extends string = string>(
   return new Promise((resolve, reject) => {
     let settled = false;
     // Declared as `let` (not `const subscribe(...)` return) and guarded with
-    // `?.()`: some suites invoke the `subscribe` callback SYNCHRONOUSLY (e.g.
-    // if all tests already finished before this call), which would otherwise
-    // try to read `unsubscribe` before its initializer has run — a TDZ
-    // `ReferenceError` that would leave this promise unsettled forever.
+    // `?.()`: defensive only, since real Vest 6.3.2 suites never invoke the
+    // `subscribe` callback synchronously (empirically verified) — but a
+    // hand-rolled suite that DOES (e.g. because it reports all tests already
+    // finished before this call) would otherwise try to read `unsubscribe`
+    // before its initializer has run — a TDZ `ReferenceError` that would
+    // leave this promise unsettled forever.
     let unsubscribe: (() => void) | undefined;
 
     const settle = (fn: (value: unknown) => void, value: unknown): void => {
@@ -582,9 +598,10 @@ function awaitVestRunSettlement<TValue, F extends string = string>(
     });
 
     // If the callback above fired synchronously (during the `subscribe()`
-    // call itself), `settle()` ran before `unsubscribe` was assigned, so its
-    // `unsubscribe?.()` was a no-op. Clean up the now-stale subscription here
-    // instead, now that we hold a reference to it.
+    // call itself — not possible with a real Vest 6.3.2 suite, only with a
+    // hand-rolled one), `settle()` ran before `unsubscribe` was assigned, so
+    // its `unsubscribe?.()` was a no-op. Clean up the now-stale subscription
+    // here instead, now that we hold a reference to it.
     // oxlint-disable-next-line @typescript-eslint/no-unnecessary-condition -- `settled` may be flipped synchronously by the subscribe callback above; static analysis cannot model that closure write.
     if (settled) {
       unsubscribe();
@@ -788,23 +805,19 @@ export function createVestRunCoordinator(): VestRunCoordinator {
       return settleRunResult();
     }
 
-    try {
-      return new Promise((resolve) => {
-        // A rejected run must not hold the queue forever. Successful Vest 6
-        // thenables are intentionally ignored here because they can be
-        // superseded; the suite idle event settles the normal path.
-        void Promise.resolve(runResult).then(
-          () => undefined,
-          () => {
-            resolve();
-            return undefined;
-          },
-        );
-        void Promise.resolve(waitForSuiteIdle(suite)).then(resolve, resolve);
-      });
-    } catch {
-      return settleRunResult();
-    }
+    return new Promise((resolve) => {
+      // A rejected run must not hold the queue forever. Successful Vest 6
+      // thenables are intentionally ignored here because they can be
+      // superseded; the suite idle event settles the normal path.
+      void Promise.resolve(runResult).then(
+        () => undefined,
+        () => {
+          resolve();
+          return undefined;
+        },
+      );
+      void Promise.resolve(waitForSuiteIdle(suite)).then(resolve, resolve);
+    });
   }
 
   /**
@@ -858,7 +871,10 @@ export function createVestRunCoordinator(): VestRunCoordinator {
     focus: VestFieldExclusion<F>,
   ): Promise<VestResultLike<F>> {
     const previousRun = runQueueBySuite.get(suiteKey) ?? Promise.resolve();
-    let resolveTail: () => void = resolveQueueTail;
+    // The `Promise` executor below runs synchronously, so `resolveTail` is
+    // always assigned before this function returns — the definite-assignment
+    // assertion documents that rather than working around a real gap.
+    let resolveTail!: () => void;
     const tail = new Promise<void>((resolve) => {
       resolveTail = resolve;
     });
