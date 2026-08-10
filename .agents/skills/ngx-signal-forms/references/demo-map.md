@@ -36,7 +36,7 @@ Horizontal `FormFieldOrientation` is exercised via the shared `ui/orientation-to
 - `05-advanced/async-validation/` — Remote/pending validation flows
 - `05-advanced/cross-field-validation/` — Dependent sibling validation rules
 - `05-advanced/field-state-patterns/` — Choosing between `dirty`/`touched`/`pristine` and other field-state signals
-- `05-advanced/store-binding/` — Binding a form to an NgRx SignalStore (`delegatedStoreField`)
+- `05-advanced/store-binding/` — Binding a form to an NgRx SignalStore (`linkedSignal({ source, computation, set })`)
 - `05-advanced/zod-validation/` — Zod-only baseline validation via `validateStandardSchema(path, schema)` (Standard Schema)
 - `05-advanced/vest-validation/` — Vest-only business validation
 - `05-advanced/zod-vest-validation/` — Structural validation plus business rules

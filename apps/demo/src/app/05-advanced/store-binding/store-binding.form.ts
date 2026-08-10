@@ -3,6 +3,7 @@ import {
   Component,
   inject,
   input,
+  linkedSignal,
   type WritableSignal,
 } from '@angular/core';
 import { form, FormField } from '@angular/forms/signals';
@@ -13,7 +14,6 @@ import {
 } from '@ngx-signal-forms/toolkit';
 import { NgxFormField } from '@ngx-signal-forms/toolkit/form-field';
 
-import { delegatedStoreField } from './delegated-store-field';
 import { type Settings, SettingsStore } from './settings.store';
 
 @Component({
@@ -24,12 +24,11 @@ import { type Settings, SettingsStore } from './settings.store';
     <div class="px-6 pt-0 pb-6">
       <h2 class="mb-4 text-2xl font-bold">Live Store Binding Demo</h2>
       <p class="mb-6 text-gray-600 dark:text-gray-400">
-        This form's model is a delegated-write <code>WritableSignal</code> built
-        from a
-        <code>linkedSignal({{ '{' }} source, computation {{ '}' }})</code> read
-        seam over an <code>@ngrx/signals</code> store. Every edit flows straight
-        back into the store via <code>patchState</code> — there is no draft
-        buffer and no commit button.
+        This form's model is a native
+        <code>linkedSignal({{ '{' }} source, computation, set {{ '}' }})</code>
+        handle over an <code>@ngrx/signals</code> store. Every edit flows
+        straight back into the store via <code>patchState</code> — there is no
+        draft buffer and no commit button.
       </p>
 
       <div
@@ -139,19 +138,30 @@ export class StoreBindingFormComponent {
   protected readonly store = inject(SettingsStore);
 
   /**
-   * The form model is the delegated-write helper: reads come from the store
-   * through a `linkedSignal` seam, writes go straight back through
-   * `updateSettings` (which calls `patchState`). No draft/commit buffer.
+   * The form model is a native `linkedSignal({ source, computation, set })`
+   * handle: reads stay reactive to the store slice through `source` /
+   * `computation`, and writes go straight back through `updateSettings`
+   * (which calls `patchState`) via the native `set` callback. No draft/commit
+   * buffer, and no custom delegated-write helper.
+   *
+   * The `set` callback intentionally does not call `rawSet`: the local linked
+   * value only needs to reflect the store, and it already does because
+   * `source` reactively re-reads the store's own signals. Once
+   * `store.updateSettings` writes through `patchState`, the store's state
+   * signal changes, so the next read of this linked signal re-runs
+   * `computation` against the fresh `source` value — no local mirror is
+   * needed to stay coherent.
    */
-  readonly #model: WritableSignal<Settings> = delegatedStoreField<Settings>({
+  readonly #model: WritableSignal<Settings> = linkedSignal<Settings, Settings>({
     source: () => ({
       displayName: this.store.displayName(),
       email: this.store.email(),
       theme: this.store.theme(),
       newsletter: this.store.newsletter(),
     }),
-    write: (next) => {
-      this.store.updateSettings(next);
+    computation: (slice) => slice,
+    set: (value) => {
+      this.store.updateSettings(value);
     },
   });
 

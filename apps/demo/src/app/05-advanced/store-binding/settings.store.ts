@@ -35,8 +35,8 @@ export const SettingsStore = signalStore(
   withMethods((store) => ({
     /**
      * Patch one or more settings fields. This is the only write path the
-     * delegated-write helper calls — edits in the form land here immediately,
-     * with no commit step.
+     * form model's `linkedSignal` `set` callback calls — edits in the form
+     * land here immediately, with no commit step.
      */
     updateSettings(changes: Partial<Settings>): void {
       patchState(store, changes);
