@@ -133,8 +133,24 @@ reference-counted, so mounting a module-scope suite in two forms at once (a
 list/detail view, a wizard step beside a summary, two open tabs) does not reset
 one mount out from under the other — the suite only resets when the **last**
 surviving registration tears down. Concurrently-pending field trees that share
-one suite are isolated per run, so an in-flight async run or retained `only()`
-state on a sibling mount stays untouched.
+one suite are isolated per run **for unfocused (whole-suite) runs only** — the
+coordinator detects two different field trees with an overlapping pending run
+against the same suite and defers the later one until the suite is idle. A
+**focused** (`only`) registration is never deferred: several `only`-focused
+registrations for different fields of the SAME form are the documented,
+intentional shared-suite pattern, but a focused registration racing an
+UNRELATED form's concurrently-mounted registration on the SAME suite is
+**unsupported** — give each independently-mounted form its own suite instance
+in that case.
+
+**SSR: do not share a suite (or `sharedVestAdapter`) across requests.** A
+Node SSR process serves several concurrent requests from ONE process, so a
+module-scope suite and the module-scope `sharedVestAdapter` singleton become
+one suite instance / one run cache shared across those requests — a
+per-request `resetOnDestroy` teardown then resets a suite another request is
+still mid-render on. Under SSR, create the suite (and, for isolation, an
+adapter via `createVestAdapter()`) per request instead, e.g. from a
+request-scoped provider.
 
 ### Focused runs with `only`
 
@@ -143,6 +159,15 @@ pass a selector so the adapter threads the changed field through:
 
 ```typescript
 import { create, enforce, only, test } from 'vest';
+
+interface Model {
+  email: string;
+  username: string;
+  // Declared as the exact field-name union so `ctx.value().lastTouched`
+  // below already returns `'email' | 'username' | undefined` — proving the
+  // `only` selector's narrowing, not just its shape.
+  lastTouched?: 'email' | 'username';
+}
 
 const suite = create((data: Model, field?: string) => {
   only(field);
@@ -162,8 +187,27 @@ correct but wasteful for large suites.
 
 Declare the suite with `create<{ fields: 'email' | 'username' }>(…)` (Vest
 ≥6.3.2, or a schema-typed suite) to get a field-name union instead of a bare
-`string`. `validateVest` infers that union from `suite` — no type argument to
-write — and narrows the `only` selector's accepted return value to it, so
+`string`:
+
+```typescript
+const typedSuite = create<{ fields: 'email' | 'username' }>(
+  (data: Model, field?: string) => {
+    only(field);
+    test('email', 'Email is required', () => enforce(data.email).isNotBlank());
+    test('username', 'Username is required', () =>
+      enforce(data.username).isNotBlank(),
+    );
+  },
+);
+
+validateVest(path, typedSuite, {
+  // Return type narrows to `VestFieldExclusion<'email' | 'username'>`.
+  only: (ctx) => ctx.value().lastTouched,
+});
+```
+
+`validateVest` infers that union from `suite` — no type argument to write —
+and narrows the `only` selector's accepted return value to it, so
 `only: () => 'emial'` (a typo) is a compile error instead of a focused run
 that silently executes zero tests and reports the field valid. A suite
 declared with plain `create(…)` (no `fields`, no schema) is unaffected and
@@ -223,7 +267,7 @@ await submitWithWarnings(signupForm, async () => {
 });
 ```
 
-For Angular 21.2 `submit()` with Vest warnings, pass `{ ignoreValidators: 'all' }` and gate with `hasOnlyWarnings(form().errorSummary())`.
+For Angular's `submit()` with Vest warnings, pass `{ ignoreValidators: 'all' }` and gate with `hasOnlyWarnings(form().errorSummary())`.
 
 ## Error Handling
 
@@ -232,3 +276,4 @@ For Angular 21.2 `submit()` with Vest warnings, pass `{ ignoreValidators: 'all' 
 - If Vest v5 is installed: upgrade to `vest@^6.0.0` — v6+ implements the Standard Schema interface required by this adapter.
 - If stale errors appear on a second mount of a form using a module-scope suite: the adapter clears suite state on teardown by default — confirm `resetOnDestroy` has not been set to `false`. (Conversely, if you _want_ suite state to persist across mounts, pass `{ resetOnDestroy: false }`.)
 - If detecting Vest-origin errors in a custom strategy or test: import `VEST_ERROR_KIND_PREFIX` / `VEST_WARNING_KIND_PREFIX` and match against `error.kind` instead of hard-coding the string.
+- If a form throws in dev mode ("Vest field name ... does not resolve"): a Vest `test`/`warn` field name has a valid prefix but an invalid tail (e.g. `test('address.cityy', …)` when the bound path only has `address.city`) — fix the field name so it names a real child of the bound path. A field name whose FIRST segment doesn't resolve (e.g. `test('passwordMatch', …)`) is a legitimate **virtual** Vest field name and does not throw. See [Vest field-name resolution](../../../../packages/toolkit/vest/README.md#vest-field-name-resolution) and [`references/pitfalls.md`](../references/pitfalls.md).

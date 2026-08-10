@@ -340,6 +340,34 @@ pitfall only applies to standalone callers of `showErrors()` or
 hand-rolled components, services). Either pass the status, or move the work
 inside the form context so inheritance can do it for you.
 
+## Vest — An Invalid Field Name Throws in Dev Mode
+
+```typescript
+// Wrong — `address.cityy` is a typo: `address` resolves on the bound field
+// tree, but `cityy` does not. Throws synchronously in dev mode.
+const suite = create((data: { address: { city: string } }) => {
+  test('address.cityy', 'City is required', () => {
+    /* ... */
+  });
+});
+
+// Correct — name a real child of the bound path
+const suite = create((data: { address: { city: string } }) => {
+  test('address.city', 'City is required', () => {
+    /* ... */
+  });
+});
+```
+
+A Vest field name whose FIRST segment does not resolve (e.g.
+`test('passwordMatch', …)` on a model with no `passwordMatch` field) is a
+legitimate **virtual** field name — a deliberate, form-level error — and
+never throws. Only a valid prefix followed by an unresolvable tail, or a
+resolution probe that throws, is treated as an authoring bug: a hard throw in
+dev mode, `console.error()` in production (still attaching the failure to
+the bound field either way). See [Vest field-name resolution](https://github.com/ngx-signal-forms/ngx-signal-forms/blob/main/packages/toolkit/vest/README.md#vest-field-name-resolution)
+and [ADR-0008](https://github.com/ngx-signal-forms/ngx-signal-forms/blob/main/docs/decisions/0008-vest-suite-input-is-the-bound-path.md).
+
 ## Vest — Sharing One Suite Across Concurrent Forms Is Safe by Default
 
 A module-scope Vest suite mounted in two forms at once (list/detail, wizard step

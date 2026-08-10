@@ -138,5 +138,6 @@ ngx-signal-forms — an Angular toolkit for working with Signal Forms.
   [ADR-0008](docs/decisions/0008-vest-suite-input-is-the-bound-path.md).
   Implemented in
   [#287](https://github.com/ngx-signal-forms/ngx-signal-forms/issues/287);
-  the unresolvable-Vest-field-name rule remains open, tracked in
-  [#291](https://github.com/ngx-signal-forms/ngx-signal-forms/issues/291).
+  the unresolvable-Vest-field-name rule
+  ([#291](https://github.com/ngx-signal-forms/ngx-signal-forms/issues/291))
+  shipped in [#307](https://github.com/ngx-signal-forms/ngx-signal-forms/pull/307).

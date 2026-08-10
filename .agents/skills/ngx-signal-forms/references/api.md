@@ -748,11 +748,20 @@ full composition examples and the exported option types.
 import {
   VEST_ERROR_KIND_PREFIX, // 'vest:'
   VEST_WARNING_KIND_PREFIX, // 'warn:vest:'
+  createVestAdapter,
+  sharedVestAdapter,
   validateVest,
   validateVestWarnings,
+  type RunVestSuiteParams,
+  type RunVestSuiteResult,
   type ValidateVestOptions,
+  type VestAdapterOptions,
+  type VestCoordinatedSuite,
   type VestFieldExclusion,
   type VestOnlyFieldSelector,
+  type VestRegisterOptions,
+  type VestRunnableSuite,
+  type VestSuiteAdapter,
 } from '@ngx-signal-forms/toolkit/vest';
 
 interface ValidateVestOptions<TValue = unknown, F extends string = string> {
@@ -797,18 +806,35 @@ interface VestRegisterOptions<TValue = unknown, F extends string = string> {
   readonly resetOnDestroy?: boolean;
   readonly only?: VestOnlyFieldSelector<TValue, F>;
 }
+// The exact slice of `VestRunnableSuite` the run coordinator drives (`run`,
+// `only`, `subscribe`, `get`) — NOT the full suite contract. `reset` is
+// registration-layer-only (`resetOnDestroy`), never passed to a run.
+type VestCoordinatedSuite<TValue, F extends string = string> = Pick<
+  VestRunnableSuite<TValue, F>,
+  'run' | 'only' | 'subscribe' | 'get'
+>;
+
 interface RunVestSuiteParams<TValue, F extends string = string> {
-  readonly suite: VestRunnableSuite<TValue, F>;
+  readonly suite: VestCoordinatedSuite<TValue, F>;
   readonly fieldTree: ReadonlyFieldTree<TValue>;
   readonly value: TValue;
   readonly focus?: VestFieldExclusion<F>;
 }
 interface RunVestSuiteResult<TValue, F extends string = string> {
   readonly value: TValue;
-  readonly focus: string | undefined;
+  // The `focus` exactly as requested — a field name, a list of field names,
+  // `false`, or `undefined` — NOT the coordinator's internal cache key.
+  readonly focus: VestFieldExclusion<F>;
   readonly runResult: VestResultLike<F> | PromiseLike<VestResultLike<F>>;
   readonly initialResult: VestResultLike<F> | undefined;
   readonly fromCache: boolean;
+  // `true` when this run was queued behind another field tree's pending run
+  // on the SAME suite instead of starting immediately.
+  readonly deferred: boolean;
+  // Resolves once this run's outcome is observable, recovering from a
+  // superseded Vest resolver. Await THIS, not `runResult` — see
+  // "Awaiting a manual run's outcome" in the vest package README.
+  readonly settled: () => PromiseLike<unknown>;
 }
 interface VestSuiteAdapter {
   register<TValue, F extends string = string>(path, suite, options?): void;

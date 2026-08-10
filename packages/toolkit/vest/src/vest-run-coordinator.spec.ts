@@ -281,6 +281,31 @@ describe('createVestRunCoordinator', () => {
       expect(async.initialResult).toBe(sync.initialResult);
     });
 
+    it('is idempotent for a repeated tuple across many redundant calls', () => {
+      // Regression guard for the invariant `request()`'s doc comment states:
+      // a reactive computed re-running for a reason unrelated to this
+      // request (see `registerVestValidation`'s `validateTree`/
+      // `validateAsync` callbacks, which call `request()` on every
+      // re-evaluation) must never start a second `suite.run()` for the same
+      // tuple. Five calls stand in for "however many times change detection
+      // happens to re-run the computed".
+      const coordinator = createVestRunCoordinator();
+      const { suite, started } = createControllableSuite();
+      const cacheKey = {};
+
+      const results = Array.from({ length: 5 }, () =>
+        coordinator.request({ suite, cacheKey, value: 'a' }),
+      );
+
+      expect(started).toEqual(['a']);
+      expect(results[0]?.fromCache).toBe(false);
+      expect(results.slice(1).every((result) => result.fromCache)).toBe(true);
+      for (const result of results.slice(1)) {
+        expect(result.runResult).toBe(results[0]?.runResult);
+        expect(result.initialResult).toBe(results[0]?.initialResult);
+      }
+    });
+
     it('re-runs when the value reference, the focus, or the cache key changes', () => {
       const coordinator = createVestRunCoordinator();
       const { suite, started, focused } = createInstantSuite();
