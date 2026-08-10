@@ -82,6 +82,7 @@ root README for what the toolkit's own automation does and does not cover.
 
 ## Related documentation
 
+- [Unit-testing a form component](../../../docs/TESTING.md) — TestBed/Vitest setup for the rest of a form component's behavior: rendered errors, `aria-invalid`/`aria-describedby`, and submit handling. This entry point covers only the WCAG conformance scan.
 - [Toolkit core](../README.md) — error strategies, ARIA, configuration
 - [Root README — Accessibility](../../../README.md#accessibility) — what the toolkit verifies in CI and what remains your responsibility
 

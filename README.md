@@ -734,6 +734,7 @@ screen-reader testing) before claiming conformance.
 **Guides**
 
 - [Use-case FAQ](./docs/FAQ.md) — "how do I build X?" answers linking the right API, doc, and demo
+- [Unit-testing a form component](./docs/TESTING.md) — TestBed/Vitest setup, native-event driving, and asserting rendered errors/ARIA, with a runnable example spec
 - [Best practices](./docs/BEST_PRACTICES.md) — the five practices, with do/don't examples and a review checklist
 - [Angular vs toolkit](./docs/ANGULAR_VS_TOOLKIT.md) — what the toolkit adds, with a before/after example
 - [Validation strategies](./docs/VALIDATION_STRATEGY.md) — when to use Angular validators, Zod, or Vest

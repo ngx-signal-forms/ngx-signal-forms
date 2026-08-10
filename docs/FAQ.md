@@ -539,35 +539,40 @@ the summary.
 
 ### How do I unit-test a form component (set value, touch, assert rendered error + `aria-invalid`) in Vitest/TestBed?
 
-Render the component with TestBed, drive state through the model signal and the field's own methods,
-then assert on the toolkit's documented, stable id/attribute contract: error containers use
+Render the component and drive it through native DOM events — type into the control, then tab or
+click away — rather than writing the model signal or calling a field's `markAsTouched()` directly.
+A direct signal write changes the value but never marks the field touched, so an `'on-touch'` (the
+toolkit default) or `'on-submit'` strategy would never reveal the error you're asserting on. Then
+assert on the toolkit's documented, stable id/attribute contract: error containers use
 `{fieldName}-error`, and the bound input carries `aria-invalid="true"` and an `aria-describedby`
 that chains to that id. Blocking errors render inside a `role="alert"` element.
 
 ```ts
-const fixture = TestBed.createComponent(LoginForm);
-const cmp = fixture.componentInstance;
+const user = userEvent.setup();
+const { container } = await render(LoginForm);
 
-cmp.model.update((m) => ({ ...m, email: 'not-an-email' })); // set value
-cmp.form.email().markAsTouched(); // trigger 'on-touch' visibility
-fixture.detectChanges();
-await fixture.whenStable();
+const emailInput = screen.getByLabelText(/email/i) as HTMLInputElement;
+await user.type(emailInput, 'not-an-email'); // set value
+await user.tab(); // blur → marks the field touched, triggering 'on-touch' visibility
 
-const input = fixture.nativeElement.querySelector('#email');
-expect(input.getAttribute('aria-invalid')).toBe('true');
-expect(fixture.nativeElement.querySelector('#email-error')).toHaveTextContent(
-  /valid email/i,
-);
+expect(await screen.findByText(/valid email/i)).toBeInTheDocument();
+await waitFor(() => {
+  expect(emailInput.getAttribute('aria-invalid')).toBe('true');
+});
+expect(container.querySelector('#email-error')).not.toBeNull();
 ```
 
-To assert a submit-time path, call Angular's `submit(cmp.form, { action })` (it marks every field
-touched). For accessibility, the toolkit ships `expectNoA11yViolations()` from
+To assert a submit-time path, click the submit button through `userEvent` — Angular's own
+`submit()`, invoked internally by the form's `submission` config, marks every field touched. For
+accessibility, the toolkit ships `expectNoA11yViolations()` from
 `@ngx-signal-forms/toolkit/testing` (axe-core WCAG 2.2 AA) for use in a Vitest browser-mode spec
-after rendering a fixture. Honest gap: no dedicated component-testing guide or example spec exists
-yet — the mechanics above are assembled from the id/ARIA contract plus Angular's own testing
-conventions.
+after rendering a fixture.
 
-**See:** [packages/toolkit/README.md](../packages/toolkit/README.md) ·
+**See:** [docs/TESTING.md](./TESTING.md) — the full walkthrough, including driving controls
+through native events with `@testing-library/angular` and flushing effects before asserting ·
+[apps/demo/.../your-first-form.spec.ts](../apps/demo/src/app/01-getting-started/your-first-form/your-first-form.spec.ts) —
+the runnable example this FAQ entry and the guide are both backed by ·
+[packages/toolkit/README.md](../packages/toolkit/README.md) ·
 [packages/toolkit/headless/README.md](../packages/toolkit/headless/README.md) ·
 [docs/decisions/0004-wcag22-testing-strategy.md](./decisions/0004-wcag22-testing-strategy.md)
 
