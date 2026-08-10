@@ -201,11 +201,11 @@ const adapter: VestSuiteAdapter = createVestAdapter();
 const shared = sharedVestAdapter;
 ```
 
-| Member                 | Description                                                                                                                                                            |
-| ---------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `register(path, …)`    | Wire the suite into Signal Forms (the `validateTree` + `validateAsync` pipeline). `validateVest`/`validateVestWarnings` delegate here.                                 |
-| `runVestSuite(params)` | Run the suite once through the shared cache. Returns the cached run for an identical `(suite, fieldTree, value, focus)` tuple, or a fresh run when any of them change. |
-| `invalidate(suite)`    | Drop the shared run cache for a suite (the `resetOnDestroy` teardown hook calls this).                                                                                 |
+| Member                 | Description                                                                                                                                                                                                                                                |
+| ---------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `register(path, …)`    | Wire the suite into Signal Forms (the `validateTree` + `validateAsync` pipeline). `validateVest`/`validateVestWarnings` delegate here.                                                                                                                     |
+| `runVestSuite(params)` | Run the suite once through the shared cache. Returns the cached run for an identical `(suite, fieldTree, value, focus)` tuple, or a fresh run when any of them change. The result's `settled()` — not `runResult` — is the safe thing to await; see below. |
+| `invalidate(suite)`    | Drop the shared run cache for a suite (the `resetOnDestroy` teardown hook calls this).                                                                                                                                                                     |
 
 The companion option/shape types are also exported for typing your own
 integrations: `VestAdapterOptions` (for `createVestAdapter()`),
@@ -275,6 +275,32 @@ Because `runVestSuite` reads the shared cache keyed on
 `(suite, fieldTree, value, focus)`, a custom validator and a regular
 `validateVest(path, checkoutSuite)` on the same path execute `checkoutSuite.run()`
 exactly once per value.
+
+#### Awaiting a manual run's outcome
+
+Outside a `validateTree`/`validateAsync` pair — a one-off manual check, a test,
+a script — await `run.settled()`, not `run.runResult`:
+
+```typescript
+const run = sharedVestAdapter.runVestSuite({ suite, fieldTree, value });
+const result = await run.settled(); // correct
+```
+
+`run.runResult` is the raw value `suite.run()` returned. Vest 6 tracks a
+single resolver per suite instance, so a LATER `suite.run()` call on the SAME
+suite — a second `runVestSuite` call, or a second focused `validateVest`
+registration — replaces that resolver before an earlier, still-pending call's
+`runResult` promise ever settles (empirically verified against `vest@6.3.2`).
+Awaiting `runResult` directly then hangs forever:
+
+```typescript
+// UNSAFE: hangs forever if another run lands on the same suite first.
+const result = await Promise.resolve(run.runResult);
+```
+
+`run.settled()` recovers from that supersession by racing the run against the
+suite's own `ALL_RUNNING_TESTS_FINISHED` bus event — the same mechanism the
+built-in `validateVest`/`validateVestWarnings` pipeline relies on internally.
 
 ## When to use Vest
 
@@ -351,12 +377,17 @@ a sibling mount is still using the same suite leaves that sibling's retained
 - **Warnings vs. pending async tests.** Angular's `validateAsync` only
   schedules its resource when the bound subtree has zero sync errors, and a
   toolkit `warn:vest:*` result is an ordinary `ValidationError`. To avoid a
-  sync warning silently suppressing a blocking async check on the same field,
-  the adapter defers surfacing a warning while the suite still has pending
-  async tests, and re-surfaces it together with the settled result once they
-  finish. In practice this means a warning can appear one tick later than a
-  blocking sync error while async validation is in flight — it does not
-  change what surfaces once the field settles.
+  sync warning silently suppressing a blocking async check from the SAME
+  registration, the adapter defers surfacing a warning while the suite still
+  has pending async tests and this registration also maps errors
+  (`includeErrors: true`), re-surfacing the warning together with the settled
+  result once they finish. In practice this means a warning can appear one
+  tick later than a blocking sync error while async validation is in flight —
+  it does not change what surfaces once the field settles. A warning-only
+  registration (`validateVestWarnings`, or `includeErrors: false`) has no
+  blocking error of its own to protect, so it never defers: its warnings
+  surface immediately, even while the suite is pending or a separate
+  validator on the same subtree is blocking.
 
 ### Focused `only()` runs
 

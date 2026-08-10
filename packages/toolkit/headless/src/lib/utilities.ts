@@ -34,13 +34,18 @@ import {
   type FieldLabelResolver,
 } from '@ngx-signal-forms/toolkit/core';
 
-import type { CharacterCountLimitState } from './character-count';
-
 export { humanizeFieldPath };
 import {
   DEFAULT_DANGER_THRESHOLD,
   DEFAULT_WARNING_THRESHOLD,
-} from './character-count';
+  type CharacterCountLimitState,
+  type CharacterCountValue,
+} from './character-count-types';
+
+// Re-exported so the public barrel's `export { type CharacterCountValue }
+// from './lib/utilities'` keeps resolving after the type moved to the
+// shared character-count-types module (see that file's docblock for why).
+export type { CharacterCountValue };
 
 type ReadSignal<T> = () => T;
 type ReactiveOrStatic<T> = T | ReadSignal<T>;
@@ -488,18 +493,6 @@ function createErrorStateInternal<TValue = unknown>(
 }
 
 /**
- * Value types supported by the character-count utilities.
- *
- * - `string` — character length
- * - `readonly string[]` — array length (e.g. token inputs where each entry is
- *   one token; reported as "X of N tokens" rather than combined string length)
- * - `null` / `undefined` — treated as length `0`
- *
- * Any other value type is treated as length `0`.
- */
-export type CharacterCountValue = string | readonly string[] | null | undefined;
-
-/**
  * Options for creating character count signals.
  */
 export interface CreateCharacterCountOptions {
@@ -511,6 +504,16 @@ export interface CreateCharacterCountOptions {
   readonly warningThreshold?: ReactiveOrStatic<number>;
   /** Danger threshold (0-1), default 0.95 */
   readonly dangerThreshold?: ReactiveOrStatic<number>;
+  /**
+   * Name reported in the unsupported-value-type dev warning, e.g.
+   * `[ngx-signal-forms] <component>: unsupported value type — …`. Lets a
+   * delegating caller (`NgxHeadlessCharacterCount`) report its own name
+   * instead of `'createCharacterCount'`, since the message text is asserted
+   * in specs on both sides.
+   *
+   * @default 'createCharacterCount'
+   */
+  readonly component?: string;
 }
 
 /**
@@ -572,6 +575,7 @@ export function createCharacterCount(
     maxLength,
     warningThreshold = DEFAULT_WARNING_THRESHOLD,
     dangerThreshold = DEFAULT_DANGER_THRESHOLD,
+    component = 'createCharacterCount',
   } = options;
 
   const fieldState = computed(() => field());
@@ -599,7 +603,7 @@ export function createCharacterCount(
           : typeof value;
       warnUnsupportedValue(
         'warn',
-        '[ngx-signal-forms] createCharacterCount: unsupported value type — expected `string` or `readonly string[]`, got',
+        `[ngx-signal-forms] ${component}: unsupported value type — expected \`string\` or \`readonly string[]\`, got`,
         valueType,
         '— rendering length as 0.',
       );

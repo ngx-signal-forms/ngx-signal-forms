@@ -5,7 +5,7 @@ import { render, screen } from '@testing-library/angular';
 import userEvent from '@testing-library/user-event';
 import { create, enforce, test as vestTest, warn } from 'vest';
 import { describe, expect, it, vi } from 'vitest';
-import { createVestAdapter } from './vest-adapter';
+import { createVestAdapter, type VestFieldPath } from './vest-adapter';
 
 // Vitest hoists `vi.mock` above every import in this file (including its own
 // `@angular/core` import elsewhere), registering the mock before any other
@@ -691,6 +691,56 @@ describe('createVestAdapter', () => {
 
     second.destroy();
     // Only the LAST surviving registration's teardown actually resets.
+    expect(resetCount).toBe(1);
+  });
+
+  it('leaves the resetOnDestroy ref count unchanged when inject(DestroyRef) throws outside an injection context', () => {
+    // Issue #325: `maybeRegisterResetOnDestroy` used to increment the
+    // per-suite ref count and only THEN call `inject(DestroyRef)`. If that
+    // injection throws -- e.g. `register` called outside an injection
+    // context -- the count stayed permanently one too high, so no surviving
+    // registration's teardown could ever bring it back to zero and the suite
+    // was never reset. The fix injects first, increments second.
+    const adapter = createVestAdapter();
+
+    let resetCount = 0;
+    const baseSuite = create((data: { email: string }) => {
+      vestTest('email', 'Email is required', () => {
+        enforce(data.email).isNotBlank();
+      });
+    });
+    const suite = {
+      ...baseSuite,
+      reset: () => {
+        resetCount += 1;
+        baseSuite.reset();
+      },
+    };
+
+    // `register`'s path argument is never dereferenced before the throw:
+    // `maybeRegisterResetOnDestroy` runs before any path-dependent work, so a
+    // placeholder is safe here. Called straight from the test body -- no
+    // `TestBed.runInInjectionContext`, no component construction -- so
+    // `inject(DestroyRef)` throws NG0203.
+    const placeholderPath = {} as VestFieldPath<{ email: string }>;
+    expect(() => {
+      adapter.register(placeholderPath, suite, { resetOnDestroy: true });
+    }).toThrow(/injection context/iu);
+
+    // A later, properly-scoped registration on the SAME suite must still
+    // reset on destroy -- proving the failed attempt above left the
+    // per-suite ref count at zero, not stuck at one.
+    @Component({ template: '' })
+    class TestComponent {
+      readonly model = signal({ email: '' });
+      readonly f = form(this.model, (path) => {
+        adapter.register(path, suite, { resetOnDestroy: true });
+      });
+    }
+
+    const fixture = TestBed.createComponent(TestComponent);
+    fixture.destroy();
+
     expect(resetCount).toBe(1);
   });
 });

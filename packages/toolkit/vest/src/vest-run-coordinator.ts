@@ -241,8 +241,15 @@ export interface VestRunCoordinator {
   ): VestRunHandle<TValue, F>;
 
   /**
-   * Drop everything held for a suite: its run cache, its contention
-   * bookkeeping, and its queue tail.
+   * Drop the run cache held for a suite, so the next identical
+   * `(suite, cache key, value, focus)` tuple executes a fresh run.
+   *
+   * Deliberately leaves the contention bookkeeping and the queue tail alone.
+   * A pending marker is not garbage the caller can identify as stale: the run
+   * behind it can still be in flight, and dropping the marker would let the
+   * next request overlap that run — the exact hazard the bookkeeping exists to
+   * prevent. Markers retire on their own when their run settles (see
+   * `trackPendingVestRun`), and the queue tail deletes itself once it drains.
    */
   invalidate(suite: object): void;
 }
@@ -586,6 +593,35 @@ function awaitVestRunSettlement<TValue, F extends string = string>(
 }
 
 /**
+ * Resolves once a cached run's outcome is observable — the ONE settlement
+ * strategy both the caller-facing handle and the internal pending-marker
+ * bookkeeping use.
+ *
+ * A run that has already started gets {@link awaitVestRunSettlement}, which
+ * races the run's own promise against the suite bus and therefore survives a
+ * superseded resolver. Awaiting the raw promise instead is unsafe: a LATER
+ * `run()` on the same suite — a focused run, for example, which is never
+ * deferred — replaces the resolver, and the earlier promise then stays pending
+ * forever.
+ *
+ * A DEFERRED run (see {@link deferVestRunUntilIdle}) is the one exception. It
+ * has not called `suite.run()` yet, so racing it against the suite-wide
+ * `ALL_RUNNING_TESTS_FINISHED` event would resolve with `suite.get()`'s state
+ * from BEFORE this run started (whatever made the suite idle in the first
+ * place), not this run's own outcome. Its plain `Promise` already resolves
+ * correctly on its own once the deferred run completes, so await it directly.
+ */
+function awaitVestRunOutcome<TValue, F extends string = string>(
+  suite: Pick<VestCoordinatedSuite<TValue, F>, 'subscribe' | 'get'>,
+  runResult: VestResultLike<F> | PromiseLike<VestResultLike<F>>,
+  deferred: boolean,
+): PromiseLike<unknown> {
+  return deferred
+    ? Promise.resolve(runResult)
+    : awaitVestRunSettlement(runResult, suite);
+}
+
+/**
  * Create a {@link VestRunCoordinator} backed by its own caches and queues.
  *
  * Every adapter instance owns exactly one coordinator, so two adapters never
@@ -675,11 +711,20 @@ export function createVestRunCoordinator(): VestRunCoordinator {
    * The removal is guarded by identity (`pendingKeys.get(cacheKey) ===
    * entry`) so a LATER run for the same cache key -- which replaces this
    * entry in the run cache before this one settles -- is never accidentally
-   * un-tracked by this entry's own (possibly superseded, possibly
-   * never-firing) settlement callback.
+   * un-tracked by this entry's own settlement callback.
+   *
+   * The removal hangs off {@link awaitVestRunOutcome}, NOT off the raw
+   * `entry.runResult`. That raw promise is precisely the one a later
+   * `suite.run()` can supersede so that it never settles at all -- and a
+   * focused run is never deferred, so it can start (and supersede) while an
+   * unfocused run is pending on the same suite. Untracking off it therefore
+   * leaked the marker, the cache key and the cached result for the lifetime of
+   * the suite, and pinned the suite as permanently contested for every other
+   * cache key.
    */
-  function trackPendingVestRun(
+  function trackPendingVestRun<TValue, F extends string = string>(
     suiteKey: object,
+    suite: Pick<VestCoordinatedSuite<TValue, F>, 'subscribe' | 'get'>,
     cacheKey: VestRunCacheKey,
     entry: VestRunCacheEntry<unknown>,
     focus: VestFieldExclusion,
@@ -712,7 +757,10 @@ export function createVestRunCoordinator(): VestRunCoordinator {
       }
     };
 
-    Promise.resolve(entry.runResult).then(untrack, untrack);
+    void awaitVestRunOutcome(suite, entry.runResult, entry.deferred).then(
+      untrack,
+      untrack,
+    );
   }
 
   /**
@@ -857,17 +905,7 @@ export function createVestRunCoordinator(): VestRunCoordinator {
       deferred: entry.deferred,
       fromCache,
       settled: () =>
-        entry.deferred
-          ? // A deferred run's `runResult` (see `deferVestRunUntilIdle`) does
-            // not even call `suite.run()` until the suite becomes idle, so
-            // racing it against the suite-wide `ALL_RUNNING_TESTS_FINISHED`
-            // bus event here would resolve with `suite.get()`'s state from
-            // BEFORE this run started (whatever made the suite idle in the
-            // first place), not this run's own outcome. Its plain `Promise`
-            // already resolves correctly on its own once the deferred run
-            // actually completes, so await it directly.
-            Promise.resolve(entry.runResult)
-          : awaitVestRunSettlement(entry.runResult, suite),
+        awaitVestRunOutcome(suite, entry.runResult, entry.deferred),
     };
   }
 
@@ -953,18 +991,18 @@ export function createVestRunCoordinator(): VestRunCoordinator {
     };
 
     suiteCache.set(cacheKey, nextEntry);
-    trackPendingVestRun(suiteKey, cacheKey, nextEntry, focus);
+    trackPendingVestRun(suiteKey, suite, cacheKey, nextEntry, focus);
     return createVestRunHandle(suite, nextEntry, false);
   }
 
   function invalidate(suite: object): void {
+    // The run cache only. Contention bookkeeping and the queue tail stay:
+    // `invalidate` cannot tell a stale marker from a live one, and dropping a
+    // LIVE marker would let the next request overlap a run that is genuinely
+    // still in flight. Markers now retire on their own once their run settles
+    // (see `trackPendingVestRun`), so there is no stale marker left to clean
+    // up here.
     runCache.delete(suite);
-    // Also drop contention bookkeeping so a reset suite starts from a clean
-    // slate -- otherwise a stale pending marker from a run that never settled
-    // before teardown could permanently (and incorrectly) mark a
-    // subsequently-reused suite as contested.
-    pendingKeysBySuite.delete(suite);
-    runQueueBySuite.delete(suite);
   }
 
   return { request, invalidate };

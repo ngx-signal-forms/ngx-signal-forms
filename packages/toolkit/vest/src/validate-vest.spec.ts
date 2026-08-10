@@ -1,5 +1,5 @@
 import { ApplicationRef, Component, signal } from '@angular/core';
-import { form, FormField } from '@angular/forms/signals';
+import { form, FormField, required } from '@angular/forms/signals';
 import { TestBed } from '@angular/core/testing';
 import { render, screen } from '@testing-library/angular';
 import userEvent from '@testing-library/user-event';
@@ -1603,6 +1603,60 @@ describe('validateVest', () => {
     expect(emailErrors).toHaveLength(1);
     expect(emailErrors[0]?.message).toBe('Email availability check failed');
 
+    const bioErrors = fixture.componentInstance.f.bio().errors();
+    expect(bioErrors).toHaveLength(1);
+    expect(bioErrors[0]?.message).toBe('Consider adding more detail');
+    expect(bioErrors[0]?.kind).toMatch(/^warn:vest:/);
+  });
+
+  it('surfaces a warn-only Vest warning even when a sibling blocking Angular validator keeps async from ever scheduling', async () => {
+    // Issue #325: `shouldDeferVestWarnings` used to gate purely on
+    // `initialResult.isPending()`. That protects a registration's OWN
+    // blocking async Vest error from being masked by its OWN sync warning --
+    // but `validateVestWarnings` maps no errors at all (`includeErrors:
+    // false`), so it has nothing to protect. Deferring anyway is unsafe:
+    // Angular's `validateAsync` only schedules once the WHOLE bound subtree
+    // is sync-valid, so a completely unrelated blocking validator on a
+    // sibling field (here, `required()` on `username`) can keep async from
+    // ever running -- starving a deferred warning forever. Gating deferral on
+    // `includeErrors` means a warning-only registration never defers in the
+    // first place, so it cannot be starved this way.
+    const suite = create((data: { email: string; bio: string }) => {
+      test('email', 'Email availability check failed', async () => {
+        // Never resolves: keeps the suite's own `isPending()` true for the
+        // lifetime of the test, so a pre-fix adapter would defer forever.
+        await new Promise<void>(() => {});
+      });
+      test('bio', 'Consider adding more detail', () => {
+        warn();
+        enforce(data.bio.length >= 20).isTruthy();
+      });
+    });
+
+    @Component({
+      selector: 'ngx-test-vest-warning-only-not-starved',
+      imports: [FormField],
+
+      template: `
+        <input id="username" [formField]="f.username" />
+        <input id="bio" [formField]="f.bio" />
+      `,
+    })
+    class TestComponent {
+      // `username` is blank, so `required()` keeps the WHOLE bound subtree
+      // (the form root) sync-invalid forever -- `validateAsync` for the Vest
+      // registration below never schedules.
+      readonly model = signal({ username: '', email: '', bio: 'short' });
+      readonly f = form(this.model, (path) => {
+        required(path.username);
+        validateVestWarnings(path, suite);
+      });
+    }
+
+    const { fixture } = await render(TestComponent);
+    await TestBed.inject(ApplicationRef).whenStable();
+
+    expect(fixture.componentInstance.f().valid()).toBe(false);
     const bioErrors = fixture.componentInstance.f.bio().errors();
     expect(bioErrors).toHaveLength(1);
     expect(bioErrors[0]?.message).toBe('Consider adding more detail');
