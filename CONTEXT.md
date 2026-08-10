@@ -79,8 +79,16 @@ ngx-signal-forms — an Angular toolkit for working with Signal Forms.
 - **One cascade seam** — error-visibility timing is composed once, in
   `createErrorVisibility()`, and consumers call it rather than re-inlining the
   `resolveStrategyFromContext` → `resolveSubmittedStatusFromContext` →
-  `createShowErrorsComputed` chain. Several in-tree surfaces **still inline it**
-  for blocking errors; bringing them onto the seam is open work. See
+  `createShowErrorsComputed` chain. All in-tree surfaces now route through it
+  for blocking errors (`NgxHeadlessErrorState`, `NgxHeadlessFieldset`,
+  `createErrorState()`, `NgxFormFieldWrapper`, plus the pre-existing
+  `NgxSignalFormAutoAria` / `createAriaInvalidSignal` /
+  `createErrorMessageSignal()` / `NgxHeadlessErrorSummary` callers). Surfaces
+  that also expose a resolved strategy as public API (e.g.
+  `NgxFormFieldWrapper.effectiveStrategy`, `NgxHeadlessFieldset.resolvedStrategy`)
+  keep that computed separately — the seam only returns a visibility boolean —
+  and feed it into the seam alongside the raw input rather than
+  re-implementing the cascade. See
   [ADR-0006](docs/decisions/0006-one-cascade-seam.md). The **warning** channel
   is already consolidated: all surfaces resolve through
   `resolveWarningStrategyFromContext()` (input → form context

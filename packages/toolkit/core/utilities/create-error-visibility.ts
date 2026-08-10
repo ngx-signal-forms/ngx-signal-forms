@@ -35,7 +35,8 @@ export interface CreateErrorVisibilityOptions {
    */
   readonly strategy?:
     | ErrorDisplayStrategy
-    | Signal<ErrorDisplayStrategy | undefined>;
+    | Signal<ErrorDisplayStrategy | undefined>
+    | undefined;
 
   /**
    * Explicit submission status.
@@ -46,7 +47,8 @@ export interface CreateErrorVisibilityOptions {
    */
   readonly submittedStatus?:
     | SubmittedStatus
-    | Signal<SubmittedStatus | undefined>;
+    | Signal<SubmittedStatus | undefined>
+    | undefined;
 
   /**
    * Fallback strategy consulted when both `strategy` and the ambient form
@@ -79,7 +81,11 @@ export interface CreateErrorVisibilityOptions {
  *
  * Replaces the four-step manual composition of
  * `resolveStrategyFromContext` → `resolveSubmittedStatusFromContext` →
- * `createShowErrorsComputed` that every consumer used to inline.
+ * `createShowErrorsComputed` that every in-tree consumer now routes through
+ * this seam instead of inlining (ADR-0006) — `NgxHeadlessErrorState`,
+ * `NgxHeadlessFieldset`, `createErrorState()`, `NgxFormFieldWrapper`,
+ * `NgxSignalFormAutoAria`, `createAriaInvalidSignal`,
+ * `createErrorMessageSignal()`, and `NgxHeadlessErrorSummary`.
  *
  * ## What it does
  *
