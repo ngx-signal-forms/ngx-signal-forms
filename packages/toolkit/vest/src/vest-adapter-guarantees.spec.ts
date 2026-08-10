@@ -513,5 +513,59 @@ describe('VestSuiteAdapter — exported-interface guarantees', () => {
         new Set(['warn:vest:email:too-long:0', 'warn:vest:email:too-long:1']),
       );
     });
+
+    it('assigns distinct occurrence indices when one message normalizes to empty and falls back to the literal "warning" segment, colliding with an actual "warning" message', async () => {
+      // '!!!' has no alphanumeric characters, so normalizeWarningKindSegment
+      // returns '' and createVestValidationKind falls back to the literal
+      // segment 'warning'. A second message that IS literally 'warning'
+      // normalizes to that same segment directly. Both must render the
+      // 'warning' segment, so occurrence counting must key on the same
+      // fallback-applied segment kind generation uses -- keying on the raw
+      // message, or on the normalized segment WITHOUT the fallback, would
+      // give both occurrence 0. See issue #323 (Copilot review follow-up).
+      const suite = create((data: { email: string }) => {
+        vestTest('email', '!!!', () => {
+          warn();
+          enforce(data.email).longerThan(10);
+        });
+        vestTest('email', 'warning', () => {
+          warn();
+          enforce(data.email).longerThan(10);
+        });
+      });
+
+      let f!: ReadonlyFieldTree<{ email: string }>;
+
+      @Component({
+        selector: 'ngx-test-adapter-kind-collision-fallback',
+        imports: [FormField],
+
+        template: `<input [formField]="f.email" />`,
+      })
+      class TestComponent {
+        readonly model = signal({ email: '' });
+        readonly f = form(this.model, (path) => {
+          validateVest(path, suite, { includeWarnings: true });
+        });
+
+        constructor() {
+          f = this.f;
+        }
+      }
+
+      await render(TestComponent);
+      await TestBed.inject(ApplicationRef).whenStable();
+
+      const errors = f.email().errors();
+      expect(errors).toHaveLength(2);
+
+      const kinds = errors.map((error) => error.kind);
+      for (const kind of kinds) {
+        expect(kind).toMatch(/^warn:vest:email:warning:\d$/u);
+      }
+      expect(new Set(kinds)).toEqual(
+        new Set(['warn:vest:email:warning:0', 'warn:vest:email:warning:1']),
+      );
+    });
   });
 });
