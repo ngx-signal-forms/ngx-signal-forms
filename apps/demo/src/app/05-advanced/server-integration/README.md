@@ -105,3 +105,4 @@ Try step 5 in "Try This" below to see this asymmetry directly.
 - [Submission Patterns](../submission-patterns/README.md) — declarative submission and the GOV.UK-style error summary; contrast its checkbox-triggered server error with this demo's real `TreeValidationResult` mapping.
 - [Field State Patterns](../field-state-patterns/README.md) — the `reset()` semantics used here also drive its Reset button.
 - [Async Validation](../async-validation/README.md) — the one demo in this section that _does_ route through MSW/real HTTP, for contrast with this demo's in-memory fake API.
+- [Autosave](../autosave/README.md) — reuses this demo's `reset(value)`-after-success pattern, but with no submit button and a real MSW-backed `httpResource` PATCH.

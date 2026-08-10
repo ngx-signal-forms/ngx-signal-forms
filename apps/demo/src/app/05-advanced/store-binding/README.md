@@ -76,3 +76,5 @@ Demo only. The `@ngx-signal-forms/toolkit` source is **not** touched, and the
 
 - [Advanced Wizard](../advanced-wizard/README.md) — the contrasting draft/commit
   buffer pattern.
+- [Autosave](../autosave/README.md) — the contrasting "persist valid, dirty
+  changes as the user types" pattern, with no submit button.

@@ -1,5 +1,9 @@
 import { delay, http, HttpResponse } from 'msw';
 
+import {
+  AUTOSAVE_ENDPOINT,
+  AUTOSAVE_FAILURE_MARKER,
+} from '../app/05-advanced/autosave/autosave.api';
 import type {
   Destination,
   Traveler,
@@ -61,6 +65,35 @@ export const asyncValidationHandlers = [
       username,
       available: username.toLowerCase() !== 'admin',
     });
+  }),
+];
+
+// ══════════════════════════════════════════════════════════════════════════════
+// AUTOSAVE DEMO HANDLERS
+// ══════════════════════════════════════════════════════════════════════════════
+
+interface AutosaveProfilePatch {
+  displayName?: string;
+  bio?: string;
+}
+
+export const autosaveHandlers = [
+  http.patch(AUTOSAVE_ENDPOINT, async ({ request }) => {
+    await delay(400);
+
+    const patch = (await request.json()) as AutosaveProfilePatch;
+
+    // Demo-only failure trigger: a bio containing the failure marker always
+    // rejects, so the failure + retry path is reachable without waiting on a
+    // real error.
+    if (patch.bio?.includes(AUTOSAVE_FAILURE_MARKER)) {
+      return HttpResponse.json(
+        { error: 'Could not persist this change.' },
+        { status: 500 },
+      );
+    }
+
+    return HttpResponse.json({ savedAt: new Date().toISOString() });
   }),
 ];
 
@@ -228,4 +261,8 @@ export const wizardHandlers = [
 // EXPORT ALL HANDLERS
 // ══════════════════════════════════════════════════════════════════════════════
 
-export const handlers = [...asyncValidationHandlers, ...wizardHandlers];
+export const handlers = [
+  ...asyncValidationHandlers,
+  ...autosaveHandlers,
+  ...wizardHandlers,
+];

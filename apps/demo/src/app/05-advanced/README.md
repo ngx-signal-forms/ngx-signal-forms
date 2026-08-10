@@ -28,6 +28,8 @@ This is the production frontier of the demo app. Each demo here stands on its ow
   - What you'll learn: `resource()`-driven prefill · form-level vs. field-level server errors · the auto-clear semantics of submission errors · `reset(value)` after a successful save.
 - **[store-binding](./store-binding/README.md)** — honest two-way binding between a Signal Form and an `@ngrx/signals` store via `linkedSignal`, contrasted with the wizard's draft/commit buffer.
   - What you'll learn: `linkedSignal({ source, computation })` read seam · overriding `set`/`update` to write straight through to `patchState` · when live binding beats draft/commit.
+- **[autosave](./autosave/README.md)** — debounced, field-level save via `debounce(path, 500)` + `httpResource`, with no submit button.
+  - What you'll learn: the native `debounce()` schema rule · gating a save on `dirty()` **and** `valid()` · pausing `httpResource` with an `undefined` request · accessible save-status live regions.
 
 ## 🧠 Core concepts
 
