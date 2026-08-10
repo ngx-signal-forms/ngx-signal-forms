@@ -342,16 +342,17 @@ describe('VestSuiteAdapter — exported-interface guarantees', () => {
       });
       expect(second.deferred).toBe(false);
 
+      // `.finally()` (not `.then()`) so a REJECTED runResult still marks
+      // itself settled -- the point being tested is whether the promise
+      // settles at all, not whether it resolves successfully.
       let firstRunResultSettled = false;
-      void Promise.resolve(first.runResult).then(() => {
+      void Promise.resolve(first.runResult).finally(() => {
         firstRunResultSettled = true;
-        return undefined;
       });
 
       let firstSettled = false;
-      void Promise.resolve(first.settled()).then(() => {
+      void Promise.resolve(first.settled()).finally(() => {
         firstSettled = true;
-        return undefined;
       });
 
       await vi.waitFor(() => {
