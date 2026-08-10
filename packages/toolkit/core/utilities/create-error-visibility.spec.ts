@@ -8,7 +8,7 @@ import type {
   SubmittedStatus,
 } from '../types';
 import { createErrorVisibility } from './create-error-visibility';
-import { createShowErrorsComputed, showErrors } from './show-errors';
+import { createShowErrorsComputed } from './show-errors';
 import {
   resolveStrategyFromContext,
   resolveSubmittedStatusFromContext,
@@ -185,7 +185,7 @@ describe('createErrorVisibility – behavioral parity matrix', () => {
       const statusSignal = signal<SubmittedStatus>(row.submittedStatus);
 
       const manualResult = runInInjectionContext(injector, () =>
-        showErrors(fieldState, row.strategy, statusSignal),
+        createShowErrorsComputed(fieldState, row.strategy, statusSignal),
       );
 
       const factoryResult = runInInjectionContext(injector, () =>

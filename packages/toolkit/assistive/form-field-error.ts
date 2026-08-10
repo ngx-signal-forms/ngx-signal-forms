@@ -64,7 +64,7 @@ export type NgxFormFieldErrorListStyle = NgxFormFieldListStyle;
  * `FormField`'s pass-through check) and bridge it to `NgxHeadlessErrorState`
  * by calling `headless.connectFieldState(computed(() => formField()?.()))`
  * in the constructor. The headless directive uses this bridged signal for
- * strategy-based `showErrors` and error-split computation.
+ * strategy-based `shouldShowErrors` and error-split computation.
  *
  * ## Signal Forms Limitation: No Native Warning Support
  *
@@ -298,15 +298,15 @@ export class NgxFormFieldError {
    * `createErrorMessageSignal()` calls below so the in-tree wrapper and any
    * external headless consumer share one resolution code path.
    *
-   * Override precedence matches `NgxHeadlessErrorState.showErrors`: when the
-   * host binds `[errors]`/`errorsOverride`, synthesise a minimal field-state
-   * shape from the override signal so the primitive's `createErrorVisibility`
-   * cascade short-circuits to "visible" and `readDirectErrors` finds the
-   * override entries. Only when no override is supplied do we fall through
-   * to the `[formField]` input. Reversing this order would let the alert
-   * container go visible (driven by `headless.showErrors`, which checks
-   * `errorsOverride` first) while `resolvedErrors()` read messages from
-   * `formField` instead.
+   * Override precedence matches `NgxHeadlessErrorState.shouldShowErrors`:
+   * when the host binds `[errors]`/`errorsOverride`, synthesise a minimal
+   * field-state shape from the override signal so the primitive's
+   * `createErrorVisibility` cascade short-circuits to "visible" and
+   * `readDirectErrors` finds the override entries. Only when no override is
+   * supplied do we fall through to the `[formField]` input. Reversing this
+   * order would let the alert container go visible (driven by
+   * `headless.shouldShowErrors`, which checks `errorsOverride` first) while
+   * `resolvedErrors()` read messages from `formField` instead.
    */
   readonly #fieldStateAccessor = computed(() => {
     const rawOverride = this.headless.errorsOverride();
@@ -347,7 +347,7 @@ export class NgxFormFieldError {
 
   constructor() {
     // Bridge the `formField` class input to the headless directive so it can
-    // compute strategy-based showErrors and split errors/warnings.
+    // compute strategy-based shouldShowErrors and split errors/warnings.
     // Cannot use `hostDirectives` input forwarding for `formField` because
     // Angular's FormField directive has selector `[formField]` and would try
     // to apply to this component, losing the `passThroughInput` guard.
@@ -481,7 +481,7 @@ export class NgxFormFieldError {
   /**
    * Blocking errors, resolved through the public {@link createErrorMessageSignal}
    * primitive. The strategy and submitted-status inputs are forwarded so the
-   * primitive's visibility cascade matches the directive's `showErrors` —
+   * primitive's visibility cascade matches the directive's `shouldShowErrors` —
    * `errorContainerVisible` still gates rendering, so an empty list during
    * hidden states is a no-op.
    */

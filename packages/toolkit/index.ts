@@ -83,7 +83,6 @@ export {
   resolveWarningStrategyFromContext,
   shouldShowErrors,
   shouldShowWarnings,
-  showErrors,
   splitByKind,
   submitWithWarnings,
   unwrapValue,

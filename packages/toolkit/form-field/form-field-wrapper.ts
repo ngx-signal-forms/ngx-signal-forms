@@ -964,9 +964,10 @@ export class NgxFormFieldWrapper<TValue = unknown> {
   });
 
   /**
-   * Visibility-timing computed shared with `showErrors()`, auto-aria, and
-   * the error component. Reads `invalid()` / `touched()` off the field state
-   * and runs the same strategy logic — keeping every surface in lockstep.
+   * Visibility-timing computed shared with `createShowErrorsComputed()`,
+   * auto-aria, and the error component. Reads `invalid()` / `touched()` off
+   * the field state and runs the same strategy logic — keeping every
+   * surface in lockstep.
    */
   readonly #showErrorsByStrategy = createShowErrorsComputed(
     this.#fieldState,
