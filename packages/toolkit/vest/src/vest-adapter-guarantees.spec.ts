@@ -281,10 +281,95 @@ describe('VestSuiteAdapter — exported-interface guarantees', () => {
       });
       expect(repeat.fromCache).toBe(true);
 
+      // `settled()` is the safe thing to await for a manual flow (see
+      // `RunVestSuiteResult`'s doc comment), but it returns `PromiseLike<unknown>`
+      // -- deliberately decoupled from the suite's own result type, see
+      // `VestRunHandle.settled`. Await it for the safety guarantee, then read
+      // through `runResult` (already known Vest-result-shaped here -- this
+      // suite is synchronous, so there is no supersession risk) for a typed
+      // result.
+      await multiFocus.settled();
       const result = await Promise.resolve(multiFocus.runResult);
       expect(Object.keys(result.getErrors())).toEqual(
         expect.arrayContaining(['email', 'username']),
       );
+    });
+  });
+
+  describe('settled()', () => {
+    it('resolves even when a later focused run on the same suite supersedes the earlier run’s own runResult promise', async () => {
+      const adapter = createVestAdapter();
+      const gates: Array<() => void> = [];
+
+      // A focused run bypasses contention/FIFO gating entirely (see
+      // `isSuiteContestedByOtherKey`'s doc comment) -- two focused
+      // `runVestSuite` calls on the SAME suite both call `suite.only(...).run()`
+      // immediately, back to back. Per Vest 6.3.2's single-resolver-per-suite
+      // behaviour (documented on `awaitVestRunSettlement`), the SECOND call
+      // replaces the suite's resolver before the FIRST call's own promise ever
+      // settles -- so `first.runResult` is permanently pending, and only
+      // `first.settled()` (which races the run against the suite-wide
+      // `ALL_RUNNING_TESTS_FINISHED` bus event) recovers its outcome.
+      const suite = create((data: { email: string; username: string }) => {
+        vestTest('email', 'Email is required', async () => {
+          await new Promise<void>((resolve) => gates.push(resolve));
+          enforce(data.email).isNotBlank();
+        });
+        vestTest('username', 'Username is required', async () => {
+          await new Promise<void>((resolve) => gates.push(resolve));
+          enforce(data.username).isNotBlank();
+        });
+      });
+
+      const fieldTree = TestBed.runInInjectionContext(() =>
+        form(signal({ email: '', username: '' })),
+      );
+      const value = { email: '', username: '' };
+
+      const first = adapter.runVestSuite({
+        suite,
+        fieldTree,
+        value,
+        focus: 'email',
+      });
+      expect(first.deferred).toBe(false);
+
+      const second = adapter.runVestSuite({
+        suite,
+        fieldTree,
+        value,
+        focus: 'username',
+      });
+      expect(second.deferred).toBe(false);
+
+      // `.finally()` (not `.then()`) so a REJECTED runResult still marks
+      // itself settled -- the point being tested is whether the promise
+      // settles at all, not whether it resolves successfully.
+      let firstRunResultSettled = false;
+      void Promise.resolve(first.runResult).finally(() => {
+        firstRunResultSettled = true;
+      });
+
+      let firstSettled = false;
+      void Promise.resolve(first.settled()).finally(() => {
+        firstSettled = true;
+      });
+
+      await vi.waitFor(() => {
+        expect(gates.length).toBe(2);
+      });
+      gates[0]();
+      gates[1]();
+
+      await vi.waitFor(() => {
+        expect(firstSettled).toBe(true);
+      });
+
+      // Give the microtask/macrotask queue a real chance to flush before
+      // asserting the negative -- this is what distinguishes "genuinely never
+      // settles" from "just hasn't settled yet".
+      await new Promise((resolve) => setTimeout(resolve, 20));
+      expect(firstRunResultSettled).toBe(false);
     });
   });
 
@@ -377,7 +462,7 @@ describe('VestSuiteAdapter — exported-interface guarantees', () => {
       // Let A's async test settle -> the suite goes idle -> B's deferred run
       // starts automatically. C must NOT start yet -- it is queued behind B.
       await releaseGate(gates, 0);
-      await Promise.resolve(resultA.runResult);
+      await resultA.settled();
 
       await vi.waitFor(() => {
         expect(runCallOrder).toEqual(['run:a', 'run:b']);
@@ -386,7 +471,7 @@ describe('VestSuiteAdapter — exported-interface guarantees', () => {
       // Let B's async test settle -> the suite goes idle again -> C's
       // deferred run starts only now, strictly after B.
       await releaseGate(gates, 1);
-      await Promise.resolve(resultB.runResult);
+      await resultB.settled();
 
       await vi.waitFor(() => {
         expect(runCallOrder).toEqual(['run:a', 'run:b', 'run:c']);
@@ -394,7 +479,7 @@ describe('VestSuiteAdapter — exported-interface guarantees', () => {
 
       // Clean up C's now-started async test so nothing dangles past the test.
       await releaseGate(gates, 2);
-      await Promise.resolve(resultC.runResult);
+      await resultC.settled();
 
       // FIFO + single-execution: each tree's suite.run() fired exactly once,
       // strictly in request order -- A, then B (only after A settled), then

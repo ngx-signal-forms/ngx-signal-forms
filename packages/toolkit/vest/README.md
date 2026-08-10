@@ -201,11 +201,11 @@ const adapter: VestSuiteAdapter = createVestAdapter();
 const shared = sharedVestAdapter;
 ```
 
-| Member                 | Description                                                                                                                                                            |
-| ---------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `register(path, …)`    | Wire the suite into Signal Forms (the `validateTree` + `validateAsync` pipeline). `validateVest`/`validateVestWarnings` delegate here.                                 |
-| `runVestSuite(params)` | Run the suite once through the shared cache. Returns the cached run for an identical `(suite, fieldTree, value, focus)` tuple, or a fresh run when any of them change. |
-| `invalidate(suite)`    | Drop the shared run cache for a suite (the `resetOnDestroy` teardown hook calls this).                                                                                 |
+| Member                 | Description                                                                                                                                                                                                                                                |
+| ---------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `register(path, …)`    | Wire the suite into Signal Forms (the `validateTree` + `validateAsync` pipeline). `validateVest`/`validateVestWarnings` delegate here.                                                                                                                     |
+| `runVestSuite(params)` | Run the suite once through the shared cache. Returns the cached run for an identical `(suite, fieldTree, value, focus)` tuple, or a fresh run when any of them change. The result's `settled()` — not `runResult` — is the safe thing to await; see below. |
+| `invalidate(suite)`    | Drop the shared run cache for a suite (the `resetOnDestroy` teardown hook calls this).                                                                                                                                                                     |
 
 The companion option/shape types are also exported for typing your own
 integrations: `VestAdapterOptions` (for `createVestAdapter()`),
@@ -275,6 +275,32 @@ Because `runVestSuite` reads the shared cache keyed on
 `(suite, fieldTree, value, focus)`, a custom validator and a regular
 `validateVest(path, checkoutSuite)` on the same path execute `checkoutSuite.run()`
 exactly once per value.
+
+#### Awaiting a manual run's outcome
+
+Outside a `validateTree`/`validateAsync` pair — a one-off manual check, a test,
+a script — await `run.settled()`, not `run.runResult`:
+
+```typescript
+const run = sharedVestAdapter.runVestSuite({ suite, fieldTree, value });
+const result = await run.settled(); // correct
+```
+
+`run.runResult` is the raw value `suite.run()` returned. Vest 6 tracks a
+single resolver per suite instance, so a LATER `suite.run()` call on the SAME
+suite — a second `runVestSuite` call, or a second focused `validateVest`
+registration — replaces that resolver before an earlier, still-pending call's
+`runResult` promise ever settles (empirically verified against `vest@6.3.2`).
+Awaiting `runResult` directly then hangs forever:
+
+```typescript
+// UNSAFE: hangs forever if another run lands on the same suite first.
+const result = await Promise.resolve(run.runResult);
+```
+
+`run.settled()` recovers from that supersession by racing the run against the
+suite's own `ALL_RUNNING_TESTS_FINISHED` bus event — the same mechanism the
+built-in `validateVest`/`validateVestWarnings` pipeline relies on internally.
 
 ## When to use Vest
 
