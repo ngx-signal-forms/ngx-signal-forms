@@ -37,4 +37,3 @@ export {
 export { NgxFormFieldErrorSummary } from './form-field-error-summary';
 export { NgxFormMarkingLegend } from './form-marking-legend';
 export { NgxFormFieldHint } from './hint';
-export { isBlockingError, isWarningError, warningError } from './warning-error';

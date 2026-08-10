@@ -1,9 +1,4 @@
-import {
-  assertInInjectionContext,
-  inject,
-  InjectionToken,
-  Service,
-} from '@angular/core';
+import { assertInInjectionContext, inject, Service } from '@angular/core';
 import { createDevWarnOnce } from './dev-warn-once';
 
 /**
@@ -49,19 +44,6 @@ export class NgxSignalFormIdCounter {
     return `${prefix}-${this.#counter}`;
   }
 }
-
-/**
- * Optional override token that lets tests (and niche composition roots)
- * inject a custom id strategy without subclassing {@link NgxSignalFormIdCounter}.
- *
- * When provided, {@link createUniqueId} delegates to this function instead of
- * the service. Consumers typically have no reason to override this.
- *
- * @internal
- */
-export const NGX_SIGNAL_FORM_ID_STRATEGY = new InjectionToken<
-  (prefix: string) => string
->('NGX_SIGNAL_FORM_ID_STRATEGY');
 
 /**
  * Module-scoped fallback counter, used only when {@link createUniqueId} is
@@ -111,9 +93,9 @@ const warnFallback = createDevWarnOnce();
 export function createUniqueId(prefix: string): string {
   // Probe the injection context *before* calling `inject()`. This isolates
   // the "not in injection context" branch (the intended fallback trigger)
-  // from every other throw path: a DI-graph misconfiguration or a broken
-  // `NGX_SIGNAL_FORM_ID_STRATEGY` factory now surfaces to the caller
-  // instead of being silently folded into the module-scoped counter.
+  // from every other throw path: a DI-graph misconfiguration now surfaces to
+  // the caller instead of being silently folded into the module-scoped
+  // counter.
   try {
     assertInInjectionContext(createUniqueId);
   } catch {
@@ -127,9 +109,5 @@ export function createUniqueId(prefix: string): string {
     return `${prefix}-${fallbackCounter}`;
   }
 
-  const override = inject(NGX_SIGNAL_FORM_ID_STRATEGY, { optional: true });
-  if (override) {
-    return override(prefix);
-  }
   return inject(NgxSignalFormIdCounter).next(prefix);
 }

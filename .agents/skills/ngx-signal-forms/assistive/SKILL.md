@@ -128,14 +128,14 @@ export class BioFieldComponent {
 
 ## Warning Semantics
 
-`warningError()` and friends are also available from `@ngx-signal-forms/toolkit/assistive` (they are also exported from the root entry point — use whichever import location is already in the file):
+`warningError()` and friends are exported from the root entry point:
 
 ```typescript
 import {
   warningError,
   isWarningError,
   isBlockingError,
-} from '@ngx-signal-forms/toolkit/assistive';
+} from '@ngx-signal-forms/toolkit';
 ```
 
 `NgxFormFieldError` automatically renders warnings with `role="status"` — no manual ARIA needed.
