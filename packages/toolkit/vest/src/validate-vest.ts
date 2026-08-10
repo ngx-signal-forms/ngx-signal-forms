@@ -35,9 +35,13 @@ export interface ValidateVestOptions<
    * objects with a `kind` prefixed by `warn:` so existing toolkit components
    * render them as non-blocking guidance.
    *
-   * While the suite has pending async tests, a sync warning is deferred (not
-   * yet surfaced) and re-emitted together with the settled result once they
-   * finish — see the vest README's "Async caveats" section for why.
+   * While the suite has pending async tests AND this registration also maps
+   * blocking errors (`includeErrors: true`, `validateVest`'s default), a sync
+   * warning is deferred (not yet surfaced) and re-emitted together with the
+   * settled result once they finish — see the vest README's "Async caveats"
+   * section for why. A warning-only registration (`validateVestWarnings`, or
+   * `includeErrors: false`) has no blocking error of its own to protect and
+   * never defers: its warnings surface immediately.
    *
    * @default false
    */
