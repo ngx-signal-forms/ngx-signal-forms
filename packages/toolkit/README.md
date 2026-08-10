@@ -475,9 +475,13 @@ names:
 
 The `set*` writer methods are tagged `@internal`: the surrounding
 `ngx-form-field-wrapper` **drives** the identity, and consumers **read** the
-resolved signals — they do not drive them. The tag is a convention, not a
-compile-time barrier — `stripInternal` is not enabled, so the writers do appear
-in the published `.d.ts`. Treat them as unsupported and subject to change.
+resolved signals — they do not drive them. A post-build step
+(`scripts/strip-internal-members.mjs`) removes `@internal`-tagged class
+members from the published `.d.ts`, so the writers do not appear there — this
+is a compile-time barrier, not just a naming convention. (`tsconfig.lib.json`
+does not enable TypeScript's own `stripInternal`: that flag breaks
+ng-packagr's multi-entry-point `.d.ts` bundling for this package, dropping
+unrelated public symbols along with the tagged ones — see #289.)
 
 Building a wrapper of your own? Don't reach for the writers — compose the pure
 ARIA factories (`createAriaDescribedBySignal`, `createAriaInvalidSignal`, …)
