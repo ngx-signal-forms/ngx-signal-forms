@@ -7,6 +7,7 @@ import {
   ElementRef,
   inject,
   input,
+  isDevMode,
   signal,
   type Type,
 } from '@angular/core';
@@ -375,7 +376,12 @@ export class NgxFormFieldset {
       },
     );
 
-    if (appearance === 'plain' && this.notificationTitle()) {
+    // `notificationTitle()` is read here only to decide whether to warn — an
+    // extra reactive dependency this computed shouldn't carry in production,
+    // where the read is dead weight (this whole branch is a dev-only
+    // diagnostic). Gate on `isDevMode()` first so the read, and the
+    // dependency it registers, never happen outside dev mode.
+    if (isDevMode() && appearance === 'plain' && this.notificationTitle()) {
       devWarnOnce(
         this.#warnedTitleIgnoredOnPlain,
         'warn',

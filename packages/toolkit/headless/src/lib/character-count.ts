@@ -1,4 +1,10 @@
-import { computed, Directive, input, type Signal } from '@angular/core';
+import {
+  computed,
+  Directive,
+  input,
+  isDevMode,
+  type Signal,
+} from '@angular/core';
 import type { FieldTree } from '@angular/forms/signals';
 import { devWarnOnce, type WarnOnceRef } from '@ngx-signal-forms/toolkit/core';
 import type { CharacterCountValue } from './utilities';
@@ -137,7 +143,11 @@ export class NgxHeadlessCharacterCount implements CharacterCountStateSignals {
     const value = state.value();
     if (typeof value === 'string') return value.length;
     if (Array.isArray(value)) return value.length;
-    if (value !== null && value !== undefined) {
+    // The type descriptor (including `constructor?.name`) is dev-diagnostic
+    // work only — gate the whole branch on `isDevMode()` so production never
+    // computes it, even though `devWarnOnce` itself would no-op the console
+    // call.
+    if (isDevMode() && value !== null && value !== undefined) {
       // Log a type descriptor only — never the raw value, which may contain
       // user-entered data and end up in dev consoles, CI logs, or screenshots.
       const valueType =
