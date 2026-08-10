@@ -7,7 +7,6 @@ import {
   ElementRef,
   inject,
   input,
-  isDevMode,
   signal,
   type Type,
 } from '@angular/core';
@@ -33,8 +32,6 @@ import {
   injectFormContext,
   isBlockingError,
   isFieldStateHidden,
-  isFormFieldAppearance,
-  isFormFieldOrientation,
   isWarningError,
   readDirectErrors,
   shouldShowWarnings,
@@ -44,12 +41,17 @@ import {
   resolveWarningStrategyFromContext,
 } from '@ngx-signal-forms/toolkit';
 import {
+  FORM_FIELD_APPEARANCE_VALUES,
+  FORM_FIELD_ORIENTATION_VALUES,
   NGX_SIGNAL_FORM_HINT_REGISTRY,
   NgxFieldIdentity,
+  devWarnOnce,
   generateRequiredHintId,
   isElementCssVisible,
   resolveBoundControlFromBindings,
+  resolveUnionInput,
   toHintDescriptors,
+  type WarnOnceRef,
 } from '@ngx-signal-forms/toolkit/core';
 import {
   NgxFormFieldError,
@@ -571,13 +573,13 @@ export class NgxFormFieldWrapper<TValue = unknown> {
     layout: null,
     ariaMode: null,
   });
-  #warnedUnresolvedKind = false;
+  readonly #warnedUnresolvedKind: WarnOnceRef = { current: false };
 
   readonly #controlKind = computed<FormFieldControlKind>(
     () => this.#controlSemantics().kind,
   );
 
-  #warnedInvalidAppearance = false;
+  readonly #warnedInvalidAppearance: WarnOnceRef = { current: false };
 
   protected readonly resolvedAppearance = computed<FormFieldAppearance>(() => {
     const appearance = this.appearance();
@@ -586,39 +588,23 @@ export class NgxFormFieldWrapper<TValue = unknown> {
       return this.#config.defaultFormFieldAppearance;
     }
 
-    if (isFormFieldAppearance(appearance)) {
-      // Exhaustiveness pin: switch on the resolved literal so any future
-      // `FormFieldAppearance` value forces a TypeScript error here until the
-      // matching wrapper branch (chrome, ARIA hooks) is added.
-      switch (appearance) {
-        case 'standard':
-        case 'outline':
-        case 'plain':
-          return appearance;
-        default:
-          appearance satisfies never;
-          return this.#config.defaultFormFieldAppearance;
-      }
-    }
+    const raw = appearance as string;
+    const hint =
+      raw === 'stacked'
+        ? " The legacy 'stacked' appearance alias resolves to 'standard'."
+        : raw === 'bare'
+          ? " The 'bare' appearance was renamed to 'plain' in v1 rc.1."
+          : undefined;
 
-    if (isDevMode() && !this.#warnedInvalidAppearance) {
-      this.#warnedInvalidAppearance = true;
-      const raw = appearance as string;
-      const hint =
-        raw === 'stacked'
-          ? " The legacy 'stacked' appearance alias resolves to 'standard'."
-          : raw === 'bare'
-            ? " The 'bare' appearance was renamed to 'plain' in v1 rc.1."
-            : '';
-      // oxlint-disable-next-line no-console -- dev-mode misconfiguration signal
-      console.error(
-        `[ngx-signal-forms] NgxFormFieldWrapper: unknown appearance "${raw}". ` +
-          `Expected 'standard' | 'outline' | 'plain' | 'inherit'. ` +
-          `Falling back to the global default.${hint}`,
-      );
-    }
-
-    return this.#config.defaultFormFieldAppearance;
+    return resolveUnionInput(raw, FORM_FIELD_APPEARANCE_VALUES, {
+      component: 'NgxFormFieldWrapper',
+      prop: 'appearance',
+      fallback: this.#config.defaultFormFieldAppearance,
+      fallbackLabel: 'the global default',
+      expectedLabel: "'standard' | 'outline' | 'plain' | 'inherit'",
+      hint,
+      warned: this.#warnedInvalidAppearance,
+    });
   });
 
   /**
@@ -642,7 +628,7 @@ export class NgxFormFieldWrapper<TValue = unknown> {
     return this.resolvedAppearance() === 'plain';
   });
 
-  #warnedInvalidOrientation = false;
+  readonly #warnedInvalidOrientation: WarnOnceRef = { current: false };
 
   /**
    * Effective orientation for theming hooks (`data-orientation` attribute).
@@ -692,28 +678,14 @@ export class NgxFormFieldWrapper<TValue = unknown> {
       return this.#config.defaultFormFieldOrientation;
     }
 
-    if (isFormFieldOrientation(orientation)) {
-      switch (orientation) {
-        case 'vertical':
-        case 'horizontal':
-          return orientation;
-        default:
-          orientation satisfies never;
-          return this.#config.defaultFormFieldOrientation;
-      }
-    }
-
-    if (isDevMode() && !this.#warnedInvalidOrientation) {
-      this.#warnedInvalidOrientation = true;
-      // oxlint-disable-next-line no-console -- dev-mode misconfiguration signal
-      console.error(
-        `[ngx-signal-forms] NgxFormFieldWrapper: unknown orientation ` +
-          `"${orientation as string}". Expected 'vertical' | 'horizontal' | ` +
-          `'inherit'. Falling back to the global default.`,
-      );
-    }
-
-    return this.#config.defaultFormFieldOrientation;
+    return resolveUnionInput(orientation, FORM_FIELD_ORIENTATION_VALUES, {
+      component: 'NgxFormFieldWrapper',
+      prop: 'orientation',
+      fallback: this.#config.defaultFormFieldOrientation,
+      fallbackLabel: 'the global default',
+      expectedLabel: "'vertical' | 'horizontal' | 'inherit'",
+      warned: this.#warnedInvalidOrientation,
+    });
   }
 
   /**
@@ -823,7 +795,7 @@ export class NgxFormFieldWrapper<TValue = unknown> {
     return this.#controlSemantics().ariaMode;
   });
 
-  #warnedUnresolvedFieldName = false;
+  readonly #warnedUnresolvedFieldName: WarnOnceRef = { current: false };
 
   /**
    * Resolved field name computed from two sources (in priority order):
@@ -1313,14 +1285,10 @@ export class NgxFormFieldWrapper<TValue = unknown> {
         // only when outlined appearance or selection-group layout doesn't
         // apply to their custom control. Fire a one-shot dev warning so the
         // mis-wiring is visible without spamming change detection.
-        if (
-          inputEl &&
-          semantics.kind === null &&
-          !this.#warnedUnresolvedKind &&
-          isDevMode()
-        ) {
-          this.#warnedUnresolvedKind = true;
-          console.warn(
+        if (inputEl && semantics.kind === null) {
+          devWarnOnce(
+            this.#warnedUnresolvedKind,
+            'warn',
             '[ngx-signal-forms] Form-field wrapper could not infer a control ' +
               'kind for its bound control and will render with default textual ' +
               'chrome. Declare semantics via `ngxSignalFormControl="..."` on the ' +
@@ -1364,13 +1332,10 @@ export class NgxFormFieldWrapper<TValue = unknown> {
         // `NgxFormFieldError`) reads `resolvedFieldName()` through
         // `NGX_SIGNAL_FORM_FIELD_CONTEXT` on the first change-detection
         // pass, before this write phase has ever run.
-        if (
-          isDevMode() &&
-          !this.#warnedUnresolvedFieldName &&
-          resolvedFieldName === null
-        ) {
-          this.#warnedUnresolvedFieldName = true;
-          console.error(
+        if (resolvedFieldName === null) {
+          devWarnOnce(
+            this.#warnedUnresolvedFieldName,
+            'error',
             '[ngx-signal-forms] Could not resolve a deterministic field name for ngx-form-field-wrapper. Add an explicit `fieldName` input or an `id` attribute to the bound control. ARIA wiring will be skipped until a name is available.',
           );
         }

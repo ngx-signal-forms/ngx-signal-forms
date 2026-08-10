@@ -5,7 +5,6 @@ import {
   effect,
   inject,
   input,
-  isDevMode,
 } from '@angular/core';
 import type { FieldTree, ValidationError } from '@angular/forms/signals';
 import {
@@ -17,7 +16,9 @@ import {
 } from '@ngx-signal-forms/toolkit';
 import {
   createFieldMessageIdSignals,
+  devWarnOnce,
   resolveFieldNameFromCandidates,
+  type WarnOnceRef,
 } from '@ngx-signal-forms/toolkit/core';
 import {
   createErrorMessageSignal,
@@ -262,7 +263,7 @@ export class NgxFormFieldError {
    * One-shot guard so the "missing field name" dev error fires at most once
    * per component instance.
    */
-  #warnedMissingName = false;
+  readonly #warnedMissingName: WarnOnceRef = { current: false };
 
   /**
    * The Signal Forms field to observe for errors and strategy-based visibility.
@@ -353,14 +354,10 @@ export class NgxFormFieldError {
     this.headless.connectFieldState(computed(() => this.formField()?.()));
 
     afterEveryRender(() => {
-      if (
-        isDevMode() &&
-        !this.#warnedMissingName &&
-        this.#resolvedFieldName() === null
-      ) {
-        this.#warnedMissingName = true;
-        // oxlint-disable-next-line no-console -- dev-mode misconfiguration signal
-        console.error(
+      if (this.#resolvedFieldName() === null) {
+        devWarnOnce(
+          this.#warnedMissingName,
+          'error',
           '[ngx-signal-forms] ngx-form-field-error requires an explicit `fieldName` input or a parent ngx-form-field-wrapper context. The component will render without id/aria-describedby linking until one is provided.',
         );
       }

@@ -105,6 +105,15 @@ export {
   resolveWarningStrategyFromContext,
 } from './utilities/resolve-strategy';
 export {
+  resolveUnionInput,
+  type ResolveUnionInputOptions,
+} from './utilities/resolve-union-input';
+export {
+  createDevWarnOnce,
+  devWarnOnce,
+  type WarnOnceRef,
+} from './utilities/dev-warn-once';
+export {
   combineShowErrors,
   createShowErrorsComputed,
   showErrors,

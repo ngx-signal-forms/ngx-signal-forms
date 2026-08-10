@@ -1,10 +1,11 @@
-import { computed, isDevMode, type Signal } from '@angular/core';
+import { computed, type Signal } from '@angular/core';
 import type {
   ErrorDisplayStrategy,
   ReactiveOrStatic,
   ResolvedErrorDisplayStrategy,
   SubmittedStatus,
 } from '../types';
+import { createDevWarnOnce } from './dev-warn-once';
 import { shouldShowErrors } from './error-strategies';
 import type { ErrorVisibilityState } from './field-state-types';
 import { unwrapValue } from './unwrap-signal-or-value';
@@ -227,7 +228,7 @@ function computeShowErrorsInternal(
   strategy: ReactiveOrStatic<ErrorDisplayStrategy>,
   submittedStatus?: ReactiveOrStatic<SubmittedStatus | undefined>,
 ): Signal<boolean> {
-  let warnedMissingStatus = false;
+  const warnOnce = createDevWarnOnce();
 
   return computed(() => {
     const fieldState = unwrapValue(field);
@@ -260,15 +261,9 @@ function computeShowErrorsInternal(
     // `'unsubmitted'` instead — errors won't surface until a real status is
     // supplied, and in dev mode we emit a one-shot console warning to make
     // the miswiring obvious.
-    if (
-      isDevMode() &&
-      resolvedStrategy === 'on-submit' &&
-      resolvedStatus === undefined &&
-      !warnedMissingStatus
-    ) {
-      warnedMissingStatus = true;
-      // oxlint-disable-next-line no-console -- dev-only diagnostic
-      console.warn(
+    if (resolvedStrategy === 'on-submit' && resolvedStatus === undefined) {
+      warnOnce(
+        'warn',
         "[ngx-signal-forms] showErrors(): 'on-submit' strategy requires an explicit submittedStatus signal. " +
           "Without it, errors will never surface. Wire the status from NgxSignalForm ('ngxSignalForm') or pass submittedStatus explicitly.",
       );
