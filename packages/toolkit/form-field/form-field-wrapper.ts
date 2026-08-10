@@ -877,10 +877,11 @@ export class NgxFormFieldWrapper<TValue = unknown> {
   /**
    * Effective error display strategy combining component input and form context defaults.
    *
-   * Routes through the shared `resolveStrategyFromContext` seam (ADR-0006)
-   * rather than reading `formContext.errorStrategy()` and calling
-   * `resolveErrorDisplayStrategy` directly — same cascade, one fewer
-   * hand-rolled copy of the null-context guard.
+   * Routes through the shared `resolveStrategyFromContext` helper (the
+   * strategy-resolution half of the ADR-0006 seam; `createErrorVisibility()`
+   * is the seam itself) rather than reading `formContext.errorStrategy()`
+   * and calling `resolveErrorDisplayStrategy` directly — same cascade, one
+   * fewer hand-rolled copy of the null-context guard.
    */
   protected readonly effectiveStrategy = computed(() =>
     resolveStrategyFromContext(
