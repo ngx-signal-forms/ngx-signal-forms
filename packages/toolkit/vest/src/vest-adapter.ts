@@ -449,8 +449,27 @@ function toVestValidationEntries(
 }
 
 /**
- * Annotates repeated messages with an occurrence index so duplicate kinds remain
- * deterministic and unique.
+ * Annotates repeated messages with an occurrence index so duplicate kinds
+ * remain deterministic and unique.
+ *
+ * The occurrence count is keyed on the EXACT message segment
+ * {@link createVestValidationKind} renders into the `kind` string — the
+ * normalized segment (see {@link normalizeWarningKindSegment}), falling
+ * back to the literal `'warning'` when normalization empties it out (a
+ * message like `'!!!'` has no alphanumeric characters to keep). Two
+ * distinct raw messages can render the same segment two different ways:
+ *
+ * - Both normalize to the same non-empty segment (e.g. `'Too long!'` and
+ *   `'Too long?'` both normalize to `too-long`).
+ * - One normalizes to empty and falls back to `'warning'`, while another
+ *   message is literally `'warning'` (e.g. `'!!!'` and `'warning'` both
+ *   render the `warning` segment).
+ *
+ * Keying on anything other than the rendered segment — the raw message, or
+ * the normalized segment without the fallback — would give two such
+ * messages the same `occurrence: 0` and let
+ * {@link createVestValidationKind} emit the same `kind` for two different
+ * `ValidationError`s.
  */
 function createVestEntriesForField(
   fieldPath: string,
@@ -459,8 +478,9 @@ function createVestEntriesForField(
   const occurrences = new Map<string, number>();
 
   return messages.map((message) => {
-    const occurrence = occurrences.get(message) ?? 0;
-    occurrences.set(message, occurrence + 1);
+    const renderedSegment = normalizeWarningKindSegment(message) || 'warning';
+    const occurrence = occurrences.get(renderedSegment) ?? 0;
+    occurrences.set(renderedSegment, occurrence + 1);
 
     return {
       fieldPath,
