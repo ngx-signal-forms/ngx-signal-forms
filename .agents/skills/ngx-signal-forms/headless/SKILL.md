@@ -33,10 +33,11 @@ For ready-to-render components with built-in markup, use `assistive/SKILL.md` or
 
 4. **Compose ARIA from toolkit primitives.** Headless directives expose signal IDs (`errorId`, `warningId`) for direct template bindings:
 
-   ```html
-   [attr.aria-describedby]="errorState.shouldShowErrors() ? errorState.errorId :
-   null"
-   ```
+```html
+<input
+  [attr.aria-describedby]="errorState.shouldShowErrors() ? errorState.errorId : null"
+/>
+```
 
 For a reusable custom wrapper that owns its ARIA, use the re-exported
 factories instead of recreating toolkit resolution rules: `createAriaInvalidSignal`,

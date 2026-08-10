@@ -327,7 +327,10 @@ IDs and described-by wiring deterministic.
 
 ```typescript
 // Wrong — silently never shows errors. Dev mode logs a one-shot
-// console.warn('[ngx-signal-forms] createShowErrorsComputed(...) called with strategy "on-submit"...').
+// console.warn("[ngx-signal-forms] createShowErrorsComputed(): 'on-submit' strategy
+// requires an explicit submittedStatus signal. Without it, errors will never
+// surface. Wire the status from NgxSignalForm ('ngxSignalForm') or pass
+// submittedStatus explicitly.").
 const visible = createShowErrorsComputed(form.email, 'on-submit');
 
 // Correct — pass the submitted-status signal explicitly

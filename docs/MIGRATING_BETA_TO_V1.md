@@ -167,7 +167,7 @@ removed. Replace them with the v1 equivalents.
 | ------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `computeShowErrors()`                       | `createShowErrorsComputed()`                                                                                                                                                                                                                                                                                                                                           |
 | `createShowErrorsSignal()`                  | `createShowErrorsComputed()`                                                                                                                                                                                                                                                                                                                                           |
-| `showErrors()`                              | `createShowErrorsComputed()` — same signature, no behavior change; `showErrors` was a one-line alias and is gone, not deprecated                                                                                                                                                                                                                                       |
+| `showErrors()`                              | `createShowErrorsComputed()` — same signature; the rename itself introduces no behavior change (`showErrors` was a one-line alias and is gone, not deprecated). Separately, the underlying `on-submit`-without-`submittedStatus` fallback did change — see [§5](#5-behavior-fix-on-submit-requires-an-explicit-submittedstatus).                                       |
 | `canSubmit()`                               | `canSubmitWithWarnings()`                                                                                                                                                                                                                                                                                                                                              |
 | `isSubmitting()`                            | `submittedStatus()` from the `ngxSignalForm` directive                                                                                                                                                                                                                                                                                                                 |
 | `'manual'` error strategy                   | `createShowErrorsComputed()` + a manual `WritableSignal<boolean>`                                                                                                                                                                                                                                                                                                      |
@@ -1081,9 +1081,14 @@ leaf is counted consistently whether it's `null` or populated.
   `inject(NGX_SIGNAL_FORMS_CONFIG)`.
 
 - **Grep for the other removed APIs** (`computeShowErrors`,
-  `createShowErrorsSignal`, `showErrors`, `canSubmit`, `isSubmitting`,
-  `'manual'` strategy, `fieldNameResolver`, `strictFieldResolution`,
-  `debug` config) and swap for the replacements in §3.
+  `createShowErrorsSignal`, `canSubmit`, `isSubmitting`, `'manual'`
+  strategy, `fieldNameResolver`, `strictFieldResolution`, `debug` config)
+  and swap for the replacements in §3. For `showErrors` specifically, a
+  bare-name search also matches unrelated symbols that legitimately keep
+  that name (`NgxFormFieldset`'s `showErrors` input,
+  `AriaDescribedByChainOptions`'s `showErrors` property) — search for the
+  imported factory call instead, e.g. `showErrors(` or
+  `import { showErrors }`, to isolate real hits.
 
 - **If you call `createShowErrorsComputed(field, 'on-submit')` directly**,
   pass an explicit `submittedStatus` — otherwise errors will stay hidden
