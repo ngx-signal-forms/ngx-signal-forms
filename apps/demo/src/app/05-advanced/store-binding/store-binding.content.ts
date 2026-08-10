@@ -7,7 +7,7 @@ export const STORE_BINDING_CONTENT = {
         title: 'Honest write-through, no draft buffer',
         items: [
           '• <strong>Read seam:</strong> the form model reads the store slice through <code>linkedSignal({ source, computation })</code>, so reads stay reactive to the store.',
-          '• <strong>Write seam:</strong> the native <code>set</code> option on <code>linkedSignal</code> calls <code>patchState</code> directly — edits land in the store immediately, with no helper file.',
+          "• <strong>Write seam:</strong> the native <code>set</code> option on <code>linkedSignal</code> delegates to the store's <code>updateSettings</code> method, which calls <code>patchState</code> — edits land in the store immediately, with no helper file.",
           '• <strong>No commit step:</strong> there is no <code>draft</code> → <code>commit()</code> buffer. The store is the single source of truth.',
           '• <strong>Two-way:</strong> an out-of-band store mutation (Simulate remote sync) is reflected back into the form inputs.',
         ],
@@ -37,7 +37,7 @@ export const STORE_BINDING_CONTENT = {
         title: 'The native custom-set overload',
         items: [
           '• <code>linkedSignal({ source, computation, set })</code> — the native <code>set</code> callback receives every write and a <code>rawSet</code> escape hatch for updating the local value.',
-          '• This demo never calls <code>rawSet</code>: writing through <code>patchState</code> alone keeps reads coherent, because <code>source</code> re-reads the store on every access.',
+          "• This demo never calls <code>rawSet</code>: delegating to the store's <code>updateSettings</code> (which calls <code>patchState</code>) alone keeps reads coherent, because <code>source</code> re-reads the store on every access.",
           "• <code>ngxtension</code>'s <code>writableSlice</code> and ngrx's reverted <code>delegatedSignal</code> (ngrx #5157) both converged on this same native overload.",
         ],
       },
