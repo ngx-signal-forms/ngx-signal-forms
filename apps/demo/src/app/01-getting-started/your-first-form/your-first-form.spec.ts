@@ -69,9 +69,12 @@ describe('YourFirstFormComponent (unit-testing guide example)', () => {
     await waitFor(() => {
       expect(nameInput.getAttribute('aria-invalid')).toBe('true');
     });
-    expect(nameInput.getAttribute('aria-describedby')).toBe(
-      'contact-name-error',
-    );
+    // aria-describedby is a space-separated id list — the toolkit may
+    // compose it from preserved ids, hints, and the error/warning ids
+    // together, so assert membership rather than an exact string match.
+    const describedBy = nameInput.getAttribute('aria-describedby');
+    expect(describedBy).not.toBeNull();
+    expect(describedBy?.split(/\s+/)).toContain('contact-name-error');
 
     // The message renders inside the toolkit's role="alert" live region.
     const errorContainer = document.querySelector('#contact-name-error');

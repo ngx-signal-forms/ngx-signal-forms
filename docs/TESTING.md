@@ -124,14 +124,18 @@ stable, documented contract:
   `{fieldName}-warning`).
 - The bound control carries `aria-invalid="true"` and an `aria-describedby`
   that includes that id, once the error should be visible under the active
-  strategy.
+  strategy. `aria-describedby` is a space-separated id list — the toolkit may
+  compose it from preserved ids, hints, and the error/warning ids together —
+  so assert membership rather than an exact string match.
 - Blocking errors render inside a `role="alert"` element (see
   [`NgxFormFieldError`](../packages/toolkit/assistive/form-field-error.ts)) —
   an implicit assertive live region, so no error is missed even on its first
   appearance.
 
 ```typescript
-expect(nameInput.getAttribute('aria-describedby')).toBe('contact-name-error');
+const describedBy = nameInput.getAttribute('aria-describedby');
+expect(describedBy).not.toBeNull();
+expect(describedBy?.split(/\s+/)).toContain('contact-name-error');
 
 const errorContainer = document.querySelector('#contact-name-error');
 expect(errorContainer).toHaveAttribute('role', 'alert');
