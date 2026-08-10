@@ -11,7 +11,7 @@ import {
 } from '@angular/forms/signals';
 import { TestBed } from '@angular/core/testing';
 import { render } from '@testing-library/angular';
-import { create, enforce, test as vestTest } from 'vest';
+import { create, enforce, test as vestTest, warn } from 'vest';
 import { describe, expect, it, vi } from 'vitest';
 import { validateVest } from './validate-vest';
 import { createVestAdapter, sharedVestAdapter } from './vest-adapter';
@@ -449,6 +449,69 @@ describe('VestSuiteAdapter — exported-interface guarantees', () => {
       // `normalizeWarningKindSegment` / `VEST_KIND_SEGMENT_MAX_LEN`.
       expect(parts[2]).toMatch(/^a{48}-[0-9a-f]{4}$/u);
       expect(parts[3]).toBe('0');
+    });
+  });
+
+  describe('kind sanitiser: same-segment message collision', () => {
+    it('assigns distinct occurrence indices to two distinct short messages that normalize to the same kind segment', async () => {
+      // 'Too long!' and 'Too long?' both strip their trailing punctuation
+      // down to the same normalized segment ('too-long'). Neither exceeds
+      // VEST_KIND_SEGMENT_MAX_LEN, so the hash-suffix branch never engages --
+      // the occurrence index is the only thing that can keep their kinds
+      // apart. See issue #323.
+      //
+      // Both `vestTest`s use `warn()`: Vest's default (blocking) error mode
+      // only surfaces the FIRST failing test per field, so two colliding
+      // blocking messages on one field can never both appear at once --
+      // there would be nothing to collide. `warn()` mode accumulates every
+      // failing test's message per field, which is what actually exercises
+      // `createVestEntriesForField`'s occurrence counting for more than one
+      // entry.
+      const suite = create((data: { email: string }) => {
+        vestTest('email', 'Too long!', () => {
+          warn();
+          enforce(data.email).longerThan(10);
+        });
+        vestTest('email', 'Too long?', () => {
+          warn();
+          enforce(data.email).longerThan(10);
+        });
+      });
+
+      let f!: ReadonlyFieldTree<{ email: string }>;
+
+      @Component({
+        selector: 'ngx-test-adapter-kind-collision',
+        imports: [FormField],
+
+        template: `<input [formField]="f.email" />`,
+      })
+      class TestComponent {
+        readonly model = signal({ email: '' });
+        readonly f = form(this.model, (path) => {
+          validateVest(path, suite, { includeWarnings: true });
+        });
+
+        constructor() {
+          f = this.f;
+        }
+      }
+
+      await render(TestComponent);
+      await TestBed.inject(ApplicationRef).whenStable();
+
+      const errors = f.email().errors();
+      expect(errors).toHaveLength(2);
+
+      const kinds = errors.map((error) => error.kind);
+      // Both share the same field + normalized-message prefix ...
+      for (const kind of kinds) {
+        expect(kind).toMatch(/^warn:vest:email:too-long:\d$/u);
+      }
+      // ... but the occurrence suffix keeps them distinct.
+      expect(new Set(kinds)).toEqual(
+        new Set(['warn:vest:email:too-long:0', 'warn:vest:email:too-long:1']),
+      );
     });
   });
 });

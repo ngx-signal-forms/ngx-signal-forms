@@ -449,8 +449,16 @@ function toVestValidationEntries(
 }
 
 /**
- * Annotates repeated messages with an occurrence index so duplicate kinds remain
- * deterministic and unique.
+ * Annotates repeated messages with an occurrence index so duplicate kinds
+ * remain deterministic and unique.
+ *
+ * The occurrence count is keyed on the message's normalized kind segment
+ * (see {@link normalizeWarningKindSegment}), not the raw message. Two
+ * distinct raw messages can normalize to the same segment (e.g. `'Too
+ * long!'` and `'Too long?'` both normalize to `too-long`) — keying on the
+ * raw message would give both `occurrence: 0` and let
+ * {@link createVestValidationKind} emit the same `kind` for two different
+ * `ValidationError`s.
  */
 function createVestEntriesForField(
   fieldPath: string,
@@ -459,8 +467,9 @@ function createVestEntriesForField(
   const occurrences = new Map<string, number>();
 
   return messages.map((message) => {
-    const occurrence = occurrences.get(message) ?? 0;
-    occurrences.set(message, occurrence + 1);
+    const normalizedMessage = normalizeWarningKindSegment(message);
+    const occurrence = occurrences.get(normalizedMessage) ?? 0;
+    occurrences.set(normalizedMessage, occurrence + 1);
 
     return {
       fieldPath,
