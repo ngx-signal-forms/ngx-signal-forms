@@ -619,12 +619,28 @@ function mapVestValidationResult<F extends string = string>(
  * errors — from ever running. Defer warnings only while pending; once the
  * suite settles, {@link mapVestValidationResult}'s async `onSuccess` mapping
  * surfaces them together with the final result.
+ *
+ * Deferral is gated on `includeErrors`: it exists solely to protect THIS
+ * registration's own blocking async Vest errors from being masked by its own
+ * sync warning. A warning-only registration (`includeErrors: false`, e.g.
+ * `validateVestWarnings`) has no blocking error of its own to protect, so
+ * deferring buys nothing — and costs a real risk. `validateAsync` needs the
+ * WHOLE bound subtree sync-valid before it schedules, so a separate,
+ * unrelated blocking validator on the same subtree (an Angular `required()`,
+ * a Zod issue) can keep the async phase from ever running. A warning deferred
+ * on the strength of `isPending()` alone would then never resurface. Skipping
+ * deferral when there are no errors to protect keeps the warning-only path
+ * safe from that starvation.
  */
 function shouldDeferVestWarnings<F extends string = string>(
   options: VestValidationFlags,
   initialResult: VestResultLike<F>,
 ): boolean {
-  return options.includeWarnings && initialResult.isPending();
+  return (
+    options.includeErrors &&
+    options.includeWarnings &&
+    initialResult.isPending()
+  );
 }
 
 /**
@@ -902,12 +918,18 @@ export function createVestAdapter(
     }
 
     const suiteKey: object = suite;
+    // `inject(DestroyRef)` first, ref count second: if the injection throws
+    // (this `register` call happened outside an injection context), the
+    // count must stay untouched -- otherwise it is permanently one too high
+    // and no surviving registration's teardown ever brings it back to zero,
+    // so the suite is never reset.
+    const destroyRef = inject(DestroyRef);
     resetOnDestroyRefCounts.set(
       suiteKey,
       (resetOnDestroyRefCounts.get(suiteKey) ?? 0) + 1,
     );
 
-    inject(DestroyRef).onDestroy(() => {
+    destroyRef.onDestroy(() => {
       const remaining = (resetOnDestroyRefCounts.get(suiteKey) ?? 1) - 1;
       if (remaining > 0) {
         // Another registration is still relying on this suite -- leave its

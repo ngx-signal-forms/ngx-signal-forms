@@ -1,18 +1,22 @@
-import {
-  computed,
-  Directive,
-  input,
-  isDevMode,
-  type Signal,
-} from '@angular/core';
+import { Directive, input, type Signal } from '@angular/core';
 import type { FieldTree } from '@angular/forms/signals';
-import { devWarnOnce, type WarnOnceRef } from '@ngx-signal-forms/toolkit/core';
-import type { CharacterCountValue } from './utilities';
+import {
+  DEFAULT_DANGER_THRESHOLD,
+  DEFAULT_WARNING_THRESHOLD,
+  type CharacterCountLimitState,
+  type CharacterCountValue,
+} from './character-count-types';
+import { createCharacterCount } from './utilities';
 
-/**
- * Character count limit state.
- */
-export type CharacterCountLimitState = 'ok' | 'warning' | 'danger' | 'exceeded';
+// Re-exported so the public barrel's `export { DEFAULT_DANGER_THRESHOLD,
+// DEFAULT_WARNING_THRESHOLD, type CharacterCountLimitState } from
+// './lib/character-count'` keeps resolving after these moved to the shared
+// character-count-types module (see that file's docblock for why).
+export {
+  DEFAULT_DANGER_THRESHOLD,
+  DEFAULT_WARNING_THRESHOLD,
+  type CharacterCountLimitState,
+};
 
 /**
  * Character count state signals exposed by the headless directive.
@@ -37,16 +41,6 @@ export interface CharacterCountStateSignals {
   /** Percentage of limit used (0-100+) */
   readonly percentUsed: Signal<number>;
 }
-
-/**
- * Default warning threshold percentage.
- */
-export const DEFAULT_WARNING_THRESHOLD = 0.8;
-
-/**
- * Default danger threshold percentage.
- */
-export const DEFAULT_DANGER_THRESHOLD = 0.95;
 
 /**
  * Headless character count directive for form field length tracking.
@@ -126,49 +120,37 @@ export class NgxHeadlessCharacterCount implements CharacterCountStateSignals {
   readonly dangerThreshold = input(DEFAULT_DANGER_THRESHOLD);
 
   /**
-   * The current field state.
+   * Delegates all state computation to {@link createCharacterCount} — see
+   * that function for the shared algorithm (thresholds, the non-positive
+   * `maxLength` edge case, the unsupported-value-type dev warning).
+   *
+   * `field` can't be passed as `this.field` directly: `createCharacterCount`
+   * invokes its `field` option once per recomputation to get the current
+   * `FieldState` (`field()`), so the option is typed as a plain `FieldTree`,
+   * not a `Signal<FieldTree>`. A trampoline closure — created once, so
+   * `createCharacterCount` (and its per-instance warn-once guard) is also
+   * created exactly once for this directive's lifetime — forwards each call
+   * to the *current* `this.field()`, which keeps the delegate reactive to a
+   * rebound `field` input without re-running the factory (and resetting the
+   * one-shot warning) on every recomputation.
    */
-  readonly #fieldState = computed(() => this.field()());
-
-  // One-shot guard so the dev warning for an unsupported `value()` type fires
-  // at most once per directive instance instead of on every CD cycle.
-  // Matches the same pattern used by the `createCharacterCount` factory.
-  readonly #warnedUnsupportedValue: WarnOnceRef = { current: false };
+  readonly #result = createCharacterCount({
+    field: () => this.field()(),
+    maxLength: this.maxLength,
+    warningThreshold: this.warningThreshold,
+    dangerThreshold: this.dangerThreshold,
+    component: 'NgxHeadlessCharacterCount',
+  });
 
   /**
    * Current value length.
    */
-  readonly currentLength = computed(() => {
-    const state = this.#fieldState();
-    const value = state.value();
-    if (typeof value === 'string') return value.length;
-    if (Array.isArray(value)) return value.length;
-    // The type descriptor (including `constructor?.name`) is dev-diagnostic
-    // work only — gate the whole branch on `isDevMode()` so production never
-    // computes it, even though `devWarnOnce` itself would no-op the console
-    // call.
-    if (isDevMode() && value !== null && value !== undefined) {
-      // Log a type descriptor only — never the raw value, which may contain
-      // user-entered data and end up in dev consoles, CI logs, or screenshots.
-      const valueType =
-        typeof value === 'object'
-          ? (value.constructor?.name ?? 'object')
-          : typeof value;
-      devWarnOnce(
-        this.#warnedUnsupportedValue,
-        'warn',
-        '[ngx-signal-forms] NgxHeadlessCharacterCount: unsupported value type — expected `string` or `readonly string[]`, got',
-        valueType,
-        '— rendering length as 0.',
-      );
-    }
-    return 0;
-  });
+  readonly currentLength = this.#result.currentLength;
 
   /**
    * Resolved maximum length.
    */
-  readonly resolvedMaxLength = computed<number>(() => this.maxLength());
+  readonly resolvedMaxLength = this.#result.resolvedMaxLength;
 
   /**
    * Whether a limit is configured.
@@ -177,66 +159,31 @@ export class NgxHeadlessCharacterCount implements CharacterCountStateSignals {
    * Retained as a signal for API symmetry with `createCharacterCount()` and
    * for consumer templates that may swap directive/factory wiring.
    */
-  readonly hasLimit = computed(() => true);
+  readonly hasLimit = this.#result.hasLimit;
 
   /**
    * Remaining characters until limit.
    */
-  readonly remaining = computed(
-    () => this.resolvedMaxLength() - this.currentLength(),
-  );
+  readonly remaining = this.#result.remaining;
 
   /**
    * Percentage of limit used (0-100+).
    *
-   * When `maxLength` is `0` (or negative), returns `100` if any content is
-   * present and `0` otherwise. This keeps the signal non-negative and aligned
-   * with `limitState` / `isExceeded` (which both treat a non-positive limit as
-   * "no characters allowed"), so consumer templates binding to
-   * `aria-valuenow` / progress bars never see nonsensical values.
+   * @see {@link createCharacterCount} for the non-positive `maxLength`
+   *   edge-case handling.
    */
-  readonly percentUsed = computed(() => {
-    const max = this.resolvedMaxLength();
-    if (max <= 0) return this.currentLength() > 0 ? 100 : 0;
-    return (this.currentLength() / max) * 100;
-  });
+  readonly percentUsed = this.#result.percentUsed;
 
   /**
    * Whether the limit has been exceeded.
    */
-  readonly isExceeded = computed(() => this.remaining() < 0);
+  readonly isExceeded = this.#result.isExceeded;
 
   /**
-   * Current limit state based on thresholds.
+   * Current limit state based on thresholds (ok → warning → danger →
+   * exceeded).
    *
-   * States:
-   * - `ok`: Below warning threshold (default < 80%)
-   * - `warning`: At/above warning, below danger (default 80-94%)
-   * - `danger`: At/above danger, up to 100% (default 95-100%)
-   * - `exceeded`: Over 100% of limit
-   *
-   * When `maxLength` is `0` (or negative), any content counts as exceeded
-   * to stay consistent with `isExceeded` and `remaining`, which both treat
-   * a 0 limit as "no characters allowed".
+   * @see {@link createCharacterCount} for the threshold/edge-case algorithm.
    */
-  readonly limitState = computed<CharacterCountLimitState>(() => {
-    const max = this.resolvedMaxLength();
-    const current = this.currentLength();
-
-    if (max <= 0) {
-      return current > 0 ? 'exceeded' : 'ok';
-    }
-
-    const ratio = current / max;
-
-    if (ratio > 1) return 'exceeded';
-
-    const danger = this.dangerThreshold();
-    if (ratio >= danger) return 'danger';
-
-    const warning = this.warningThreshold();
-    if (ratio >= warning) return 'warning';
-
-    return 'ok';
-  });
+  readonly limitState = this.#result.limitState;
 }
