@@ -351,12 +351,17 @@ a sibling mount is still using the same suite leaves that sibling's retained
 - **Warnings vs. pending async tests.** Angular's `validateAsync` only
   schedules its resource when the bound subtree has zero sync errors, and a
   toolkit `warn:vest:*` result is an ordinary `ValidationError`. To avoid a
-  sync warning silently suppressing a blocking async check on the same field,
-  the adapter defers surfacing a warning while the suite still has pending
-  async tests, and re-surfaces it together with the settled result once they
-  finish. In practice this means a warning can appear one tick later than a
-  blocking sync error while async validation is in flight — it does not
-  change what surfaces once the field settles.
+  sync warning silently suppressing a blocking async check from the SAME
+  registration, the adapter defers surfacing a warning while the suite still
+  has pending async tests and this registration also maps errors
+  (`includeErrors: true`), re-surfacing the warning together with the settled
+  result once they finish. In practice this means a warning can appear one
+  tick later than a blocking sync error while async validation is in flight —
+  it does not change what surfaces once the field settles. A warning-only
+  registration (`validateVestWarnings`, or `includeErrors: false`) has no
+  blocking error of its own to protect, so it never defers: its warnings
+  surface immediately, even while the suite is pending or a separate
+  validator on the same subtree is blocking.
 
 ### Focused `only()` runs
 
