@@ -1,5 +1,9 @@
 import {
   sharedVestAdapter,
+  // `VestFieldExclusion` has no real type-position use in this file — it is
+  // imported so the local binding exists for `{@link VestFieldExclusion}` in
+  // `ValidateVestOptions.only`'s doc comment below to resolve. Kept
+  // deliberately, not dead: removing it would silently break that doc link.
   type VestFieldExclusion,
   type VestFieldPath,
   type VestOnlyFieldSelector,
