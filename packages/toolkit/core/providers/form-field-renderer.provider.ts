@@ -8,6 +8,8 @@ import { inject, makeEnvironmentProviders } from '@angular/core';
 import {
   NGX_FORM_FIELD_ERROR_RENDERER,
   NGX_FORM_FIELD_HINT_RENDERER,
+  type NgxFormFieldErrorRenderer,
+  type NgxFormFieldHintRenderer,
 } from '../tokens';
 
 // Deliberately not an alias of `RendererOverride` — aliasing changes the
@@ -48,20 +50,26 @@ interface RendererOverride {
 
 /**
  * Builds the `useFactory` for a renderer token: return the override's
- * component when set, otherwise defer to a parent scope's provider (or
- * `null` if none is registered).
+ * component (run through `buildRenderer`) when set, otherwise defer to a
+ * parent scope's provider (or `null` if none is registered).
+ *
+ * `buildRenderer` — rather than a generic `{ component } as TRenderer`
+ * assertion — is what lets the compiler catch a future renderer interface
+ * growing a second required field: the object literal each caller writes in
+ * `buildRenderer` is checked structurally against the concrete
+ * `NgxFormField*Renderer` type, not merely against the loose
+ * `RendererOverride` constraint every renderer shape satisfies today.
  *
  * @internal
  */
-function createRendererFactory<
-  TRenderer extends { readonly component: Type<unknown> },
->(
+function createRendererFactory<TRenderer extends RendererOverride>(
   token: InjectionToken<TRenderer | null>,
   override: RendererOverride,
+  buildRenderer: (component: Type<unknown>) => TRenderer,
 ): () => TRenderer | null {
   return () => {
     if (override.component !== undefined) {
-      return { component: override.component } as TRenderer;
+      return buildRenderer(override.component);
     }
 
     // `skipSelf: true` is what lets a component-scoped override (registered
@@ -81,10 +89,9 @@ function createRendererFactory<
  *
  * @internal
  */
-function createRendererProviders<
-  TRenderer extends { readonly component: Type<unknown> },
->(
+function createRendererProviders<TRenderer extends RendererOverride>(
   token: InjectionToken<TRenderer | null>,
+  buildRenderer: (component: Type<unknown>) => TRenderer,
 ): {
   readonly provide: (override: RendererOverride) => EnvironmentProviders;
   readonly provideForComponent: (override: RendererOverride) => Provider[];
@@ -92,19 +99,27 @@ function createRendererProviders<
   return {
     provide: (override) =>
       makeEnvironmentProviders([
-        { provide: token, useFactory: createRendererFactory(token, override) },
+        {
+          provide: token,
+          useFactory: createRendererFactory(token, override, buildRenderer),
+        },
       ]),
     provideForComponent: (override) => [
-      { provide: token, useFactory: createRendererFactory(token, override) },
+      {
+        provide: token,
+        useFactory: createRendererFactory(token, override, buildRenderer),
+      },
     ],
   };
 }
 
 const errorRendererProviders = createRendererProviders(
   NGX_FORM_FIELD_ERROR_RENDERER,
+  (component): NgxFormFieldErrorRenderer => ({ component }),
 );
 const hintRendererProviders = createRendererProviders(
   NGX_FORM_FIELD_HINT_RENDERER,
+  (component): NgxFormFieldHintRenderer => ({ component }),
 );
 
 /**
