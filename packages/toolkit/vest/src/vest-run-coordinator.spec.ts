@@ -177,6 +177,90 @@ function createControllableSuite(
   };
 }
 
+/**
+ * A suite that reproduces Vest 6's SUPERSEDED-RESOLVER behaviour.
+ *
+ * Vest tracks one resolver per suite root isolate, so every `run()` replaces
+ * the previous call's resolver: the earlier call's returned thenable then
+ * stays pending forever. Only the suite-wide `ALL_RUNNING_TESTS_FINISHED`
+ * event still reports that the earlier run finished.
+ */
+function createSupersedingSuite(): {
+  readonly suite: VestRunnableSuite<string>;
+  readonly started: readonly string[];
+  /** Finish every in-flight run and fire the suite bus once. */
+  readonly finishAll: () => void;
+} {
+  const started: string[] = [];
+  const listeners = new Set<() => void>();
+  let pendingCount = 0;
+  // The single resolver Vest keeps per suite. A new run overwrites it, which
+  // is what strands the previous run's promise.
+  let resolveLatest: ((result: VestResultLike) => void) | undefined;
+
+  const isPending = (): boolean => pendingCount > 0;
+  const settledResult: VestResultLike = {
+    isPending: () => false,
+    getErrors: noMessages,
+    getWarnings: noMessages,
+  };
+
+  const run = (value: string): FakeRunResult => {
+    started.push(value);
+    pendingCount += 1;
+    let resolveRun: (result: VestResultLike) => void = () => {};
+    const settlement = new Promise<VestResultLike>((resolve) => {
+      resolveRun = resolve;
+    });
+    resolveLatest = resolveRun;
+    return {
+      isPending,
+      getErrors: noMessages,
+      getWarnings: noMessages,
+      // oxlint-disable-next-line unicorn/no-thenable -- see `createControllableSuite`: this fakes Vest's dual sync-result/thenable `run()` return value.
+      then: (onFulfilled, onRejected) =>
+        settlement.then(onFulfilled, onRejected),
+    };
+  };
+
+  return {
+    suite: {
+      run,
+      only: (_field: string | string[]) => ({ run }),
+      subscribe: (
+        _event: 'ALL_RUNNING_TESTS_FINISHED',
+        callback: () => void,
+      ) => {
+        listeners.add(callback);
+        return () => {
+          listeners.delete(callback);
+        };
+      },
+      get: (): VestResultLike => ({
+        isPending,
+        getErrors: noMessages,
+        getWarnings: noMessages,
+      }),
+    },
+    started,
+    finishAll: (): void => {
+      pendingCount = 0;
+      resolveLatest?.(settledResult);
+      resolveLatest = undefined;
+      for (const listener of listeners) {
+        listener();
+      }
+    },
+  };
+}
+
+/** Drains every pending microtask, including the coordinator's own callbacks. */
+function drainMicrotasks(): Promise<void> {
+  return new Promise((resolve) => {
+    setTimeout(resolve, 0);
+  });
+}
+
 describe('createVestRunCoordinator', () => {
   describe('single execution', () => {
     it('runs the suite once for repeated requests on the same (suite, cacheKey, value, focus) tuple', () => {
@@ -318,14 +402,42 @@ describe('createVestRunCoordinator', () => {
       finish('a');
       // A macrotask boundary drains every pending microtask, including the
       // coordinator's own "this run settled, stop tracking it" callback.
-      await new Promise((resolve) => {
-        setTimeout(resolve, 0);
-      });
+      await drainMicrotasks();
 
       // A settled, so a request from another cache key is uncontested.
       const next = coordinator.request({ suite, cacheKey: {}, value: 'b' });
       expect(next.deferred).toBe(false);
       expect(started).toEqual(['a', 'b']);
+    });
+
+    it('stops tracking an unfocused run a focused run superseded, once the suite settles', async () => {
+      // Regression guard for issue #322. A focused run is never deferred, so
+      // it starts while an unfocused run is still pending on the same suite
+      // and replaces that suite's single resolver -- the unfocused run's own
+      // thenable can then never settle. Untracking off that thenable leaked
+      // the pending marker (and the strongly held cache key and result) for
+      // the suite's lifetime, and pinned the suite as contested for every
+      // other cache key.
+      const coordinator = createVestRunCoordinator();
+      const { suite, started, finishAll } = createSupersedingSuite();
+
+      const unfocused = coordinator.request({
+        suite,
+        cacheKey: {},
+        value: 'a',
+      });
+      expect(unfocused.deferred).toBe(false);
+
+      coordinator.request({ suite, cacheKey: {}, value: 'b', focus: 'email' });
+      expect(started).toEqual(['a', 'b']);
+
+      // The bus event is the ONLY signal that the superseded run finished.
+      finishAll();
+      await drainMicrotasks();
+
+      const next = coordinator.request({ suite, cacheKey: {}, value: 'c' });
+      expect(next.deferred).toBe(false);
+      expect(started).toEqual(['a', 'b', 'c']);
     });
   });
 
@@ -367,16 +479,20 @@ describe('createVestRunCoordinator', () => {
 
       coordinator.request({ suite, cacheKey: {}, value: 'a' });
 
-      // The synchronous callback ran once, and the subscription was torn
-      // down afterwards rather than leaked.
-      expect(invocations).toBe(1);
+      // One request makes more than one subscription (the queue tail waits for
+      // the suite to go idle, and the pending marker waits for the run to
+      // settle), so assert the property that matters rather than a count: each
+      // callback fired, and every subscription was torn down rather than
+      // leaked.
+      const synchronousInvocations = invocations;
+      expect(synchronousInvocations).toBeGreaterThan(0);
       expect(listeners.size).toBe(0);
 
       // A later idle event must therefore reach nobody.
       for (const listener of listeners) {
         listener();
       }
-      expect(invocations).toBe(1);
+      expect(invocations).toBe(synchronousInvocations);
     });
   });
 
@@ -567,14 +683,31 @@ describe('createVestRunCoordinator', () => {
       expect(started).toEqual(['a', 'a']);
     });
 
-    it('drops contention bookkeeping so a reused suite is not stuck "contested"', () => {
+    it('does not un-defer a run that is genuinely still in flight', () => {
+      // Regression guard for issue #322. `invalidate` used to drop the
+      // contention bookkeeping as well, which it cannot do safely: it has no
+      // way to tell a stale marker from a live one, so it un-deferred runs
+      // that were still executing and let the next request overlap them.
       const coordinator = createVestRunCoordinator();
       const { suite, started } = createControllableSuite();
 
-      // A pending run that never settles would otherwise mark the suite
-      // contested forever.
       coordinator.request({ suite, cacheKey: {}, value: 'a' });
       coordinator.invalidate(suite);
+
+      const next = coordinator.request({ suite, cacheKey: {}, value: 'b' });
+      expect(next.deferred).toBe(true);
+      expect(started).toEqual(['a']);
+    });
+
+    it('lets a pending run retire on its own, so a reused suite is not stuck "contested"', async () => {
+      const coordinator = createVestRunCoordinator();
+      const { suite, started, finish } = createControllableSuite();
+
+      coordinator.request({ suite, cacheKey: {}, value: 'a' });
+      coordinator.invalidate(suite);
+
+      finish('a');
+      await drainMicrotasks();
 
       const next = coordinator.request({ suite, cacheKey: {}, value: 'b' });
       expect(next.deferred).toBe(false);
