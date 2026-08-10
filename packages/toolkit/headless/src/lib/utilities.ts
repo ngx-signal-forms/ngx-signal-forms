@@ -7,20 +7,16 @@ import {
 } from '@angular/core';
 import type { FieldTree, ValidationError } from '@angular/forms/signals';
 import {
+  createErrorVisibility,
   createUniqueId,
-  injectFormContext,
   isFieldStateInteractive,
   NGX_SIGNAL_FORMS_CONFIG,
   readDirectErrors,
-  resolveStrategyFromContext,
-  resolveSubmittedStatusFromContext,
   resolveValidationErrorMessage,
-  createShowErrorsComputed,
   splitByKind,
   unwrapValue,
   type ErrorDisplayStrategy,
   type ErrorReadableState,
-  type ResolvedErrorDisplayStrategy,
   type SubmittedStatus,
 } from '@ngx-signal-forms/toolkit';
 import {
@@ -442,12 +438,6 @@ function createErrorStateInternal<TValue = unknown>(
 ): ErrorStateResult {
   const { field, fieldName, strategy, submittedStatus } = options;
 
-  // Capture form context at factory call time (inside injection context).
-  // Optional: callers outside a form boundary (tests, standalone components)
-  // get undefined and fall through to the config default, matching the
-  // directive surfaces.
-  const formContext = injectFormContext();
-
   // Falls back to the global `defaultErrorStrategy` config (same cascade
   // `NgxHeadlessFieldset` applies) when neither an explicit `strategy` nor a
   // form context is present, keeping standalone usage consistent regardless
@@ -460,27 +450,27 @@ function createErrorStateInternal<TValue = unknown>(
 
   const resolvedFieldName = computed(() => unwrapValue(fieldName));
 
-  const resolvedStrategy = computed<ResolvedErrorDisplayStrategy>(() => {
-    const strategyValue =
-      strategy === undefined ? undefined : unwrapValue(strategy);
-    return resolveStrategyFromContext(
-      strategyValue,
-      formContext,
-      config?.defaultErrorStrategy,
-    );
+  // Routes strategy + submitted-status resolution and the visibility
+  // computed itself through the shared `createErrorVisibility` seam
+  // (ADR-0006) instead of re-inlining `resolveStrategyFromContext` →
+  // `resolveSubmittedStatusFromContext` → `createShowErrorsComputed`.
+  //
+  // `strategy`/`submittedStatus` are `ReactiveOrStatic<T>` (this file's own
+  // signal-or-plain-function-or-value union), which also accepts a bare
+  // `() => T` reader — a shape `createErrorVisibility`'s `Signal<T>`-typed
+  // options don't structurally accept. Normalize through `computed()` so
+  // both a real Signal and a plain reader unwrap the same way.
+  const showErrorsSignal = createErrorVisibility(fieldState, {
+    strategy:
+      strategy === undefined
+        ? undefined
+        : computed(() => unwrapValue(strategy)),
+    submittedStatus:
+      submittedStatus === undefined
+        ? undefined
+        : computed(() => unwrapValue(submittedStatus)),
+    configDefault: config?.defaultErrorStrategy,
   });
-
-  const resolvedSubmittedStatus = computed<SubmittedStatus | undefined>(() => {
-    const statusValue =
-      submittedStatus === undefined ? undefined : unwrapValue(submittedStatus);
-    return resolveSubmittedStatusFromContext(statusValue, formContext);
-  });
-
-  const showErrorsSignal = createShowErrorsComputed(
-    fieldState,
-    resolvedStrategy,
-    resolvedSubmittedStatus,
-  );
 
   const core = buildHeadlessErrorState(fieldState, resolvedFieldName);
 
