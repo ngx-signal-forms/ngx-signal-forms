@@ -380,10 +380,12 @@ import {
   NgxFormFieldHint, // <ngx-form-field-hint>
   NgxFormFieldCharacterCount, // <ngx-form-field-character-count>
   NgxFormMarkingLegend, // <ngx-form-marking-legend>
+} from '@ngx-signal-forms/toolkit/assistive';
+import {
   warningError,
   isWarningError,
   isBlockingError,
-} from '@ngx-signal-forms/toolkit/assistive';
+} from '@ngx-signal-forms/toolkit';
 ```
 
 ### NgxFormFieldError inputs

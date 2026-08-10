@@ -651,7 +651,7 @@ export class NgxSignalFormDebugger {
   readonly #fieldTreeWarningEffect = isDevMode()
     ? effect(() => {
         const value = this.formTree() as unknown;
-        if (!value || typeof value !== 'object' || isFieldTreeLike(value)) {
+        if (!value || typeof value !== 'object') {
           return;
         }
         if (this.#warnedTrees.has(value)) return;

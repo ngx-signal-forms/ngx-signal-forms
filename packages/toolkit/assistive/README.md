@@ -18,10 +18,12 @@ import {
   NgxFormFieldHint,
   NgxFormFieldCharacterCount,
   NgxFormMarkingLegend,
+} from '@ngx-signal-forms/toolkit/assistive';
+import {
   warningError,
   isWarningError,
   isBlockingError,
-} from '@ngx-signal-forms/toolkit/assistive';
+} from '@ngx-signal-forms/toolkit';
 ```
 
 ## Quick start

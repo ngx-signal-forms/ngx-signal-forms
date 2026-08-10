@@ -1,10 +1,6 @@
 import { computed, signal, type Signal } from '@angular/core';
 import { describe, expect, expectTypeOf, it } from 'vitest';
-import {
-  CASCADING_SOURCE,
-  createCascadingResolver,
-  type CascadingTier,
-} from './cascading-resolver';
+import { createCascadingResolver } from './cascading-resolver';
 
 describe('createCascadingResolver', () => {
   // ─── Tier-precedence matrix ──────────────────────────────────────────────
@@ -245,60 +241,6 @@ describe('createCascadingResolver', () => {
         fallback: 'always-present',
       });
       expect(result).not.toBeUndefined();
-    });
-  });
-
-  // ─── Dev-mode __source introspection ────────────────────────────────────
-  // Unit tests run in Angular dev mode (isDevMode() === true), so these
-  // assertions execute unconditionally.
-
-  describe('Dev-mode __source introspection', () => {
-    it('attaches CASCADING_SOURCE to resolved object in dev mode', () => {
-      const value = { autoAria: true };
-      const result = createCascadingResolver({
-        input: null as typeof value | null,
-        configDefault: value,
-        fallback: { autoAria: false },
-      });
-      // In dev mode, the winning object carries the source tier
-      const source = (result as Record<symbol, CascadingTier>)[
-        CASCADING_SOURCE
-      ];
-      expect(source).toBe('configDefault');
-    });
-
-    it('reports "input" tier when input wins', () => {
-      const value = { key: 'val' };
-      const result = createCascadingResolver({
-        input: value,
-        fallback: { key: 'fallback' },
-      });
-      const source = (result as Record<symbol, CascadingTier>)[
-        CASCADING_SOURCE
-      ];
-      expect(source).toBe('input');
-    });
-
-    it('reports "fallback" tier when all upstream tiers are nullish', () => {
-      const fallback = { key: 'fallback' };
-      const result = createCascadingResolver({
-        input: null as typeof fallback | null,
-        fallback,
-      });
-      const source = (result as Record<symbol, CascadingTier>)[
-        CASCADING_SOURCE
-      ];
-      expect(source).toBe('fallback');
-    });
-
-    it('does not attach CASCADING_SOURCE to primitives', () => {
-      // Symbol-keyed properties are not possible on primitives; no error thrown.
-      const result = createCascadingResolver({
-        input: null as string | null,
-        fallback: 'primitive',
-      });
-      // Just confirm no error and value is correct
-      expect(result).toBe('primitive');
     });
   });
 });

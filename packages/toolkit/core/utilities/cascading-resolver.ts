@@ -1,26 +1,4 @@
-import { computed, isDevMode, isSignal, type Signal } from '@angular/core';
-
-/**
- * The tier that produced the resolved value in a cascading resolver.
- *
- * Attached to the resolved object in dev mode via {@link CASCADING_SOURCE}.
- *
- * @internal
- */
-export type CascadingTier = 'input' | 'context' | 'configDefault' | 'fallback';
-
-/**
- * Symbol used to attach the winning tier to resolved objects in dev mode.
- *
- * Only present when `isDevMode()` returns true and the resolved value is a
- * non-null object. Attach point is enumerable-false so it remains invisible
- * to serializers and `Object.keys()`.
- *
- * @internal
- */
-export const CASCADING_SOURCE: unique symbol = Symbol(
-  'ngxSignalForms.cascadingSource',
-);
+import { computed, isSignal, type Signal } from '@angular/core';
 
 type Nullable<T> = T | null | undefined;
 type MaybeSignal<T> = Signal<T> | T;
@@ -77,49 +55,24 @@ function readRequired<T>(tier: MaybeSignal<T>): T {
 function resolveTiers<T>(
   // oxlint-disable-next-line @typescript-eslint/prefer-readonly-parameter-types -- all properties are already readonly; Readonly<ReactiveCascadingResolverOptions<T>> is redundant
   opts: ReactiveCascadingResolverOptions<T>,
-): { value: T; source: CascadingTier } {
+): T {
   const input = readNullable(opts.input);
   // eslint-disable-next-line eqeqeq -- intentional: single check accepts both null and undefined
-  if (input != null) return { value: input, source: 'input' };
+  if (input != null) return input;
 
   if (opts.context !== undefined) {
     const context = readNullable(opts.context);
     // eslint-disable-next-line eqeqeq -- intentional: single check accepts both null and undefined
-    if (context != null) return { value: context, source: 'context' };
+    if (context != null) return context;
   }
 
   if (opts.configDefault !== undefined) {
     const configDefault = readNullable(opts.configDefault);
     // eslint-disable-next-line eqeqeq -- intentional: single check accepts both null and undefined
-    if (configDefault != null)
-      return { value: configDefault, source: 'configDefault' };
+    if (configDefault != null) return configDefault;
   }
 
-  return { value: readRequired(opts.fallback), source: 'fallback' };
-}
-
-function attachSource<T>(value: T, source: CascadingTier): T {
-  // Dev-mode source tagging is diagnostic-only and must never break resolution:
-  // skip non-extensible (frozen/sealed) values, and swallow any defineProperty
-  // failure (e.g. host-defined objects with unconfigurable symbol slots).
-  if (
-    isDevMode() &&
-    value !== null &&
-    typeof value === 'object' &&
-    Object.isExtensible(value)
-  ) {
-    try {
-      Object.defineProperty(value, CASCADING_SOURCE, {
-        configurable: true,
-        enumerable: false,
-        value: source,
-        writable: true,
-      });
-    } catch {
-      // intentionally empty — diagnostic-only
-    }
-  }
-  return value;
+  return readRequired(opts.fallback);
 }
 
 /**
@@ -137,12 +90,6 @@ function attachSource<T>(value: T, source: CascadingTier): T {
  * - **All tiers static** (`T | null | undefined`) → returns `T` directly.
  * - **At least one tier is a `Signal`** → returns `Signal<T>` wrapping a
  *   `computed()` that re-evaluates whenever reactive tiers change.
- *
- * ## Dev-mode introspection
- * When `isDevMode()` is true and the resolved value is a non-null object, a
- * non-enumerable {@link CASCADING_SOURCE} symbol property is attached reporting
- * the winning tier name. Zero overhead in production (tree-shaken via
- * `isDevMode()` guard).
  *
  * @example Static cascade
  * ```typescript
@@ -183,17 +130,11 @@ export function createCascadingResolver<T>(
     isSignal(opts.fallback);
 
   if (hasReactive) {
-    return computed(() => {
-      const { value, source } = resolveTiers(
-        opts as ReactiveCascadingResolverOptions<T>,
-      );
-      return attachSource(value, source);
-    });
+    return computed(() =>
+      resolveTiers(opts as ReactiveCascadingResolverOptions<T>),
+    );
   }
 
-  const { value, source } = resolveTiers(
-    opts as ReactiveCascadingResolverOptions<T>,
-  );
-  return attachSource(value, source);
+  return resolveTiers(opts as ReactiveCascadingResolverOptions<T>);
 }
 // oxlint-enable @typescript-eslint/prefer-readonly-parameter-types
