@@ -15,7 +15,7 @@ import {
   resolveStrategyFromContext,
   resolveSubmittedStatusFromContext,
   resolveValidationErrorMessage,
-  showErrors,
+  createShowErrorsComputed,
   splitByKind,
   unwrapValue,
   type ErrorDisplayStrategy,
@@ -414,7 +414,7 @@ export interface ErrorStateResult {
  * `createErrorVisibility()` / `createErrorMessageSignal()`.
  *
  * @remarks
- * **Why `showWarnings` aliases `showErrors`:** toolkit warnings are
+ * **Why `showWarnings` aliases `createShowErrorsComputed`'s result:** toolkit warnings are
  * `ValidationError`s with `kind: 'warn:*'` produced by the same validator
  * pipeline as blocking errors. Angular Signal Forms sees them as regular
  * errors and marks `field.invalid() === true` regardless of the `warn:`
@@ -476,7 +476,7 @@ function createErrorStateInternal<TValue = unknown>(
     return resolveSubmittedStatusFromContext(statusValue, formContext);
   });
 
-  const showErrorsSignal = showErrors(
+  const showErrorsSignal = createShowErrorsComputed(
     fieldState,
     resolvedStrategy,
     resolvedSubmittedStatus,

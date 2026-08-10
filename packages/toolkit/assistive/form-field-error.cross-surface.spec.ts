@@ -160,7 +160,7 @@ describe('cross-surface: NgxFormFieldError vs NgxHeadlessErrorState', () => {
 
   // Regression for PR #30: when `NgxFormFieldset` (or any host) binds
   // `[errors]` without `[formField]`, the headless directive must short-circuit
-  // showErrors to true so the caller's pre-aggregated error list renders.
+  // shouldShowErrors to true so the caller's pre-aggregated error list renders.
   // Previously, the bridge slot set unconditionally in the constructor caused
   // the guard `!field() && !#bridgedFieldState()` to fall through to the
   // strategy-based path and hide the errors.

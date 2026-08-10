@@ -47,7 +47,7 @@ import {
   NgxSignalFormControlSemanticsDirective,
   provideNgxSignalFormsConfig,
   provideErrorMessages,
-  showErrors,
+  createShowErrorsComputed,
   focusFirstInvalid,
   createOnInvalidHandler,
   warningError,
@@ -370,10 +370,9 @@ provideFieldLabels(() => {
 | Function                                               | Description                                                                                |
 | ------------------------------------------------------ | ------------------------------------------------------------------------------------------ |
 | `createErrorVisibility(field, opts?)`                  | One call: `Signal<boolean>` with strategy + submitted status auto-read from the DI context |
-| `showErrors(field, strategy, status?)`                 | `Signal<boolean>` — whether errors should show now                                         |
-| `shouldShowErrors(invalid, touched, strategy, status)` | Pure boolean strategy helper                                                               |
+| `createShowErrorsComputed(field, strategy, status?)`   | `Signal<boolean>` — whether errors should show now                                         |
+| `shouldShowErrors(invalid, touched, strategy, status)` | Pure boolean strategy helper — not reactive; use `createShowErrorsComputed` for a signal   |
 | `combineShowErrors(signals)`                           | Combines an array of visibility signals, e.g. `combineShowErrors([sigA, sigB])`            |
-| `createShowErrorsComputed(field, strategy, status?)`   | Lower-level extraction for custom UIs                                                      |
 | `readDirectErrors(state)`                              | Direct `errors()` of a field/group only — excludes nested-field errors                     |
 
 ### Strategy & context resolution

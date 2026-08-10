@@ -14,7 +14,7 @@ import {
   resolveStrategyFromContext,
   resolveSubmittedStatusFromContext,
   resolveWarningStrategyFromContext,
-  showErrors,
+  createShowErrorsComputed,
   splitByKind,
   type ErrorDisplayStrategy,
   type ResolvedErrorDisplayStrategy,
@@ -281,7 +281,7 @@ export class NgxHeadlessFieldset<
   /**
    * Show errors signal based on strategy.
    */
-  readonly #showErrorsSignal = showErrors(
+  readonly #showErrorsSignal = createShowErrorsComputed(
     this.#fieldsetState,
     this.resolvedStrategy,
     this.resolvedSubmittedStatus,
@@ -293,7 +293,7 @@ export class NgxHeadlessFieldset<
    * be stuck behind whatever timing the blocking-error strategy uses (e.g.
    * `'on-submit'`), the exact asymmetry `warningStrategy` exists to fix.
    */
-  readonly #showWarningsSignal = showErrors(
+  readonly #showWarningsSignal = createShowErrorsComputed(
     this.#fieldsetState,
     this.resolvedWarningStrategy,
     this.resolvedSubmittedStatus,

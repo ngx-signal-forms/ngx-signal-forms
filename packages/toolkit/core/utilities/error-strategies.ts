@@ -19,7 +19,7 @@ import type {
  * - Implement custom logic that doesn't need automatic updates
  * - Reduce memory overhead when reactivity isn't needed
  *
- * **Use {@link showErrors} instead when you need reactive updates.**
+ * **Use {@link createShowErrorsComputed} instead when you need reactive updates.**
  *
  * ## Strategy contract
  * This helper accepts a {@link ResolvedErrorDisplayStrategy} — the `'inherit'`
@@ -27,9 +27,9 @@ import type {
  * resolved to a concrete strategy (`'immediate' | 'on-touch' | 'on-submit'`)
  * before calling this function. Route user input through
  * {@link resolveErrorDisplayStrategy} or {@link resolveStrategyFromContext}
- * first. Reactive surfaces should use {@link showErrors} /
- * {@link createShowErrorsComputed}, which accept the wider
- * `ErrorDisplayStrategy` and resolve `'inherit'` internally.
+ * first. Reactive surfaces should use {@link createShowErrorsComputed},
+ * which accepts the wider `ErrorDisplayStrategy` and resolves `'inherit'`
+ * internally.
  *
  * ## How does it work?
  * 1. Accepts unwrapped (static) field state, strategy, and submission status
@@ -60,7 +60,7 @@ import type {
  * }
  * ```
  *
- * @see {@link showErrors} For reactive version that creates a computed signal
+ * @see {@link createShowErrorsComputed} For reactive version that creates a computed signal
  * @see {@link ResolvedErrorDisplayStrategy} For the resolved strategy union
  * @see {@link resolveErrorDisplayStrategy} To resolve `'inherit'` before calling this
  *

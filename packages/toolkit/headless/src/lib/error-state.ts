@@ -13,7 +13,7 @@ import {
   resolveStrategyFromContext,
   resolveSubmittedStatusFromContext,
   resolveWarningStrategyFromContext,
-  showErrors,
+  createShowErrorsComputed,
   shouldShowWarnings,
   unwrapValue,
   type ErrorDisplayStrategy,
@@ -283,7 +283,7 @@ export class NgxHeadlessErrorState<
   readonly hasErrors = this.#core.hasErrors;
   readonly hasWarnings = this.#core.hasWarnings;
 
-  readonly #strategyBasedShowErrors = showErrors(
+  readonly #strategyBasedShowErrors = createShowErrorsComputed(
     this.#fieldState,
     this.#resolvedStrategy,
     this.resolvedSubmittedStatus,

@@ -165,11 +165,12 @@ removed. Replace them with the v1 equivalents.
 
 | Removed API                                 | Current replacement                                                                                                                                                                                                                                                                                                                                                    |
 | ------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `computeShowErrors()`                       | `showErrors()`                                                                                                                                                                                                                                                                                                                                                         |
-| `createShowErrorsSignal()`                  | `showErrors()`                                                                                                                                                                                                                                                                                                                                                         |
+| `computeShowErrors()`                       | `createShowErrorsComputed()`                                                                                                                                                                                                                                                                                                                                           |
+| `createShowErrorsSignal()`                  | `createShowErrorsComputed()`                                                                                                                                                                                                                                                                                                                                           |
+| `showErrors()`                              | `createShowErrorsComputed()` — same signature, no behavior change; `showErrors` was a one-line alias and is gone, not deprecated                                                                                                                                                                                                                                       |
 | `canSubmit()`                               | `canSubmitWithWarnings()`                                                                                                                                                                                                                                                                                                                                              |
 | `isSubmitting()`                            | `submittedStatus()` from the `ngxSignalForm` directive                                                                                                                                                                                                                                                                                                                 |
-| `'manual'` error strategy                   | `showErrors()` + a manual `WritableSignal<boolean>`                                                                                                                                                                                                                                                                                                                    |
+| `'manual'` error strategy                   | `createShowErrorsComputed()` + a manual `WritableSignal<boolean>`                                                                                                                                                                                                                                                                                                      |
 | `fieldNameResolver` config                  | Put an `id` on the bound control element                                                                                                                                                                                                                                                                                                                               |
 | `strictFieldResolution` config              | Removed — strict by default                                                                                                                                                                                                                                                                                                                                            |
 | `debug` config field                        | Removed — use the `/debugger` entry point instead                                                                                                                                                                                                                                                                                                                      |
@@ -421,8 +422,8 @@ above (template surface). The Angular compiler will surface any miss.
 
 In betas, `computeShowErrorsInternal` silently fell back to
 `touched ? 'submitted' : 'unsubmitted'` when no `submittedStatus` was
-wired. A consumer calling `showErrors()` / `createErrorState()` with
-the `'on-submit'` strategy but without a status would see errors
+wired. A consumer calling `createShowErrorsComputed()` / `createErrorState()`
+with the `'on-submit'` strategy but without a status would see errors
 surface after blur, defeating the whole point of `on-submit`.
 
 The fallback is now `'unsubmitted'`, so errors stay hidden until a real
@@ -434,18 +435,22 @@ miswiring loud during development without throwing.
   error-state / error-summary / fieldset directives) all already
   resolve `submittedStatus` through the `ngxSignalForm` directive, so
   they are **unaffected**.
-- **Only direct consumers** of `showErrors(field, 'on-submit')`
+- **Only direct consumers** of `createShowErrorsComputed(field, 'on-submit')`
   without a status see a behavior change — which is the intended fix.
 
 ### Migration
 
 ```ts
 // before — relied on the accidental fallback
-const show = showErrors(field, 'on-submit');
+const show = createShowErrorsComputed(field, 'on-submit');
 
 // after — pass the form's submittedStatus value or signal directly
 // (the third parameter, not an options object)
-const show = showErrors(field, 'on-submit', formDirective.submittedStatus);
+const show = createShowErrorsComputed(
+  field,
+  'on-submit',
+  formDirective.submittedStatus,
+);
 ```
 
 ---
@@ -1076,13 +1081,13 @@ leaf is counted consistently whether it's `null` or populated.
   `inject(NGX_SIGNAL_FORMS_CONFIG)`.
 
 - **Grep for the other removed APIs** (`computeShowErrors`,
-  `createShowErrorsSignal`, `canSubmit`, `isSubmitting`, `'manual'`
-  strategy, `fieldNameResolver`, `strictFieldResolution`, `debug`
-  config) and swap for the replacements in §3.
+  `createShowErrorsSignal`, `showErrors`, `canSubmit`, `isSubmitting`,
+  `'manual'` strategy, `fieldNameResolver`, `strictFieldResolution`,
+  `debug` config) and swap for the replacements in §3.
 
-- **If you call `showErrors(field, 'on-submit')` directly**, pass an
-  explicit `submittedStatus` — otherwise errors will stay hidden (this
-  is the fix, not a regression).
+- **If you call `createShowErrorsComputed(field, 'on-submit')` directly**,
+  pass an explicit `submittedStatus` — otherwise errors will stay hidden
+  (this is the fix, not a regression).
 
 - **Apply the current rc.11 API changes** when upgrading from any earlier
   release candidate:
