@@ -23,6 +23,7 @@ import {
   createInitialAutosaveProfile,
   type AutosaveProfileModel,
 } from './autosave.model';
+import { fieldsSafeToMarkSaved } from './autosave.save-reconciliation';
 import { autosaveProfileSchema } from './autosave.validations';
 
 /**
@@ -82,13 +83,11 @@ interface AutosavePatchResponse {
             request while nothing qualifies.
           </li>
           <li>
-            On a successful save, <code>reset(value)</code> re-baselines the
-            form: <code>dirty()</code> clears without touching what the user
-            typed, matching <a
-              href="/advanced-scenarios/server-integration"
-              class="underline"
-              >Server Integration</a
-            >'s post-submit reset.
+            On a successful save, only the fields that are still unchanged
+            since the request was sent are marked pristine, via each field's
+            own no-argument <code>reset()</code> — a field edited again while
+            the request was in flight stays dirty, so the next debounce
+            cycle saves it instead of silently dropping it.
           </li>
         </ul>
       </div>
@@ -111,7 +110,7 @@ interface AutosavePatchResponse {
             [formField]="profileForm.displayName"
           />
           <ngx-form-field-hint>
-            Saved automatically 500ms after you stop typing.
+            Valid changes save automatically 500ms after you stop typing.
           </ngx-form-field-hint>
         </ngx-form-field-wrapper>
 
@@ -235,6 +234,17 @@ export class AutosaveComponent {
   });
 
   /**
+   * The patch actually included in the most recently issued PATCH — a plain
+   * field, not a signal, written synchronously inside the `httpResource`
+   * request builder below. It can never drift from what was truly sent,
+   * unlike re-reading `dirtyValidPatch()` later from an effect (which could
+   * already reflect a newer edit by the time that effect runs). Read back in
+   * `#reconcileAfterSave()` to decide which fields a resolved save may mark
+   * pristine.
+   */
+  #lastRequestedPatch: Partial<AutosaveProfileModel> | undefined;
+
+  /**
    * PATCHes `dirtyValidPatch()` whenever it holds a value. Returning
    * `undefined` from the request function pauses `httpResource` — there is
    * no request while nothing dirty+valid is waiting to be saved, and no
@@ -242,9 +252,10 @@ export class AutosaveComponent {
    */
   protected readonly saveResource = httpResource<AutosavePatchResponse>(() => {
     const patch = this.dirtyValidPatch();
-    return patch
-      ? { url: AUTOSAVE_ENDPOINT, method: 'PATCH', body: patch }
-      : undefined;
+    if (!patch) return undefined;
+
+    this.#lastRequestedPatch = patch;
+    return { url: AUTOSAVE_ENDPOINT, method: 'PATCH', body: patch };
   });
 
   /**
@@ -268,17 +279,37 @@ export class AutosaveComponent {
   });
 
   constructor() {
-    /// Re-baseline on a successful save: `reset(value)` clears dirty/touched
-    /// without changing what the user typed — see the same call in
-    /// server-integration.form.ts. `untracked` keeps the reset's own value
-    /// write from re-triggering this effect.
+    /// Re-baseline on a successful save, but only for fields the save
+    /// actually covered: `httpResource` is last-write-wins for *requests*
+    /// (a new patch cancels an in-flight one), but a field can still change
+    /// again *after* its request was already dispatched and before it
+    /// resolves. Blindly resetting the whole form at that point would mark
+    /// that field pristine even though the server never saw the newer
+    /// value — a lost update. `fieldsSafeToMarkSaved` excludes exactly that
+    /// field, leaving it dirty so the next debounce cycle saves it for real.
+    /// `untracked` keeps each field's own `reset()` from re-triggering this
+    /// effect.
     effect(() => {
       if (this.saveResource.status() === 'resolved') {
         untracked(() => {
-          this.profileForm().reset(this.profileForm().value());
+          this.#reconcileAfterSave();
         });
       }
     });
+  }
+
+  #reconcileAfterSave(): void {
+    const safeFields = fieldsSafeToMarkSaved(
+      this.#lastRequestedPatch,
+      this.profileForm().value(),
+    );
+
+    for (const key of safeFields) {
+      // No-argument `reset()` clears touched/dirty for this field alone,
+      // without touching its value or any sibling field — see
+      // `FieldState.reset()` in `@angular/forms/signals`.
+      this.profileForm[key]().reset();
+    }
   }
 
   /** Re-issues the last PATCH after a failure — the fields stay dirty until it succeeds. */

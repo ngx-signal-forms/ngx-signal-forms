@@ -24,8 +24,8 @@ export const AUTOSAVE_CONTENT = {
           '• <strong><code>httpResource</code>:</strong> the request function returns <code>undefined</code> whenever nothing dirty+valid is waiting, which pauses the resource — no polling flag to keep in sync',
           "• <strong>Real MSW handler:</strong> the PATCH hits <code>/api/autosave/profile</code> in <code>apps/demo/src/mocks/handlers.ts</code>, not an in-memory fake — <code>httpResource</code>'s loading/error states are the real thing",
           "• <strong>Status surfaced:</strong> idle / saving / saved / failed, mapped from the resource's own <code>status()</code> signal",
-          '• <strong>Retry:</strong> a failed save leaves its field(s) dirty; <code>resource.reload()</code> re-issues the same patch',
-          '• <strong>Re-baseline on success:</strong> <code>reset(value)</code> clears <code>dirty()</code> without touching what the user typed — the same call <a href="/advanced-scenarios/server-integration">Server Integration</a> makes after a successful submit',
+          '• <strong>Retry:</strong> a failed save leaves its field(s) dirty; <code>resource.reload()</code> re-issues the current patch',
+          "• <strong>Lost-update guard on success:</strong> only fields whose value still matches what was actually sent get marked saved, via each field's own no-argument <code>reset()</code> — a field edited again while the request was in flight stays dirty, so nothing silently drops",
         ],
       },
       {
@@ -45,7 +45,7 @@ export const AUTOSAVE_CONTENT = {
         title: '🧪 Try This',
         items: [
           '1. Edit <strong>Display name</strong> and stop typing — after ~500ms the status region reads <em>Saving…</em>, then <em>All changes saved.</em> after the fake ~400ms PATCH resolves.',
-          '2. Watch the state panel: <code>dirty()</code> flips back to <code>false</code> the instant the save resolves, via <code>reset(value)</code>.',
+          "2. Watch the state panel: <code>dirty()</code> flips back to <code>false</code> the instant the save resolves, via that field's own <code>reset()</code>.",
           '3. Type <code>FAIL_SAVE</code> anywhere in <strong>Bio</strong> and stop typing → the assertive region announces a failure and shows a <strong>Retry save</strong> button; the field stays dirty until a save actually succeeds.',
           '4. Remove <code>FAIL_SAVE</code> from Bio and stop typing again → the corrected value autosaves normally.',
           '5. Clear <strong>Display name</strong> entirely → it becomes invalid (required), so the debounce still settles the value but the patch omits it — nothing is PATCHed for an invalid field.',
@@ -62,7 +62,7 @@ export const AUTOSAVE_CONTENT = {
       {
         title: 'Dirty + Valid Gate',
         items: [
-          "• <strong>Both conditions, not one:</strong> <code>dirty()</code> alone would resend an already-saved value after every unrelated re-render trigger; <code>valid()</code> alone would happily PATCH a value the user hasn't finished editing.",
+          "• <strong>Both conditions, not one:</strong> without <code>dirty()</code>, <code>valid()</code> alone would keep re-including an already-saved value, since validity doesn't change just because a request resolved; without <code>valid()</code>, <code>dirty()</code> alone would happily PATCH a value that currently fails validation.",
           '• <strong>Per field, not per form:</strong> gating each field independently means one invalid field never blocks the other from autosaving.',
         ],
       },

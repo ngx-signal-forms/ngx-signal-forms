@@ -23,10 +23,10 @@ Prompted by [Auto-Saving Signal Forms](https://tech.trellis.org/blog/2026-07-08-
 - `httpResource` (`@angular/common/http`, `@publicApi 22.0`) — the request
   function returns `undefined` whenever nothing dirty+valid is waiting,
   pausing the resource. No separate "should I save?" flag.
-- `reset(value)` on a successful save — the same call
-  [Server Integration](../server-integration/README.md) makes after a
-  successful submit — re-baselines `dirty()`/`touched()` without touching
-  what the user typed.
+- Per-field, no-argument `reset()` on a successful save — clears
+  `dirty()`/`touched()` for exactly the fields the resolved request covered,
+  leaving any field edited again mid-flight dirty so it autosaves for real
+  on the next debounce cycle (see "Lost-update guard" below).
 - `NgxFormField` wrapper for the two fields; no other toolkit-specific
   save-status API — the status region is hand-rolled (see below).
 
@@ -69,12 +69,17 @@ protected readonly dirtyValidPatch = computed(() => {
 
 Both conditions matter independently:
 
-- `dirty()` alone would resend an already-saved value on any unrelated
-  re-render.
-- `valid()` alone would happily PATCH a value the user hasn't finished
-  typing (e.g. a required field mid-edit, before `debounce` even lets the
-  invalid intermediate value settle — though in practice `debounce` means
-  validators only ever see the settled value).
+- `dirty()` excludes a pristine value — one that hasn't changed since the
+  field's last reset baseline, including immediately after this demo's own
+  post-save `reset()` (see "Lost-update guard" below). Without it, `valid()`
+  alone would keep re-including an already-saved value forever, since
+  validity doesn't change just because a request resolved.
+- `valid()` excludes a settled invalid value. Without it, `dirty()` alone
+  would happily PATCH a value that currently fails validation. Neither
+  signal is affected by unrelated re-renders, and — because `debounce()`
+  delays what `dirty()`/`valid()` ever observe until the value has
+  settled — there is no "still typing" intermediate value to worry about
+  either; the gate only ever sees settled values.
 
 Each field is gated independently, so one invalid field never blocks the
 other from autosaving.
@@ -97,6 +102,48 @@ reasons:
 If a real form had a dozen+ autosaved fields, `extractValue` would very
 likely be the better trade — this demo's teaching point is the gate, not
 "never use extractValue."
+
+## Lost-update guard
+
+`httpResource` is last-write-wins **for requests**: if the computed patch
+changes while a PATCH is in flight, the resource cancels it and issues a new
+one with the current patch — so an edit that lands _before_ the request is
+dispatched is never lost, it just gets folded into the request that actually
+goes out.
+
+What is not automatically safe is an edit that lands _after_ a request is
+already dispatched and _before_ it resolves. A naive "reset the whole form on
+success" (`this.profileForm().reset(this.profileForm().value())`, this
+demo's first draft) would mark that concurrently-edited field pristine too,
+even though the server never saw the newer value — a **lost update**, not
+"last write wins" (nothing was ever un-sent; the fact it changed after being
+sent was just forgotten).
+
+The fix, in `autosave.form.ts`:
+
+1. The `httpResource` request builder captures the exact patch it sends into
+   a plain instance field, `#lastRequestedPatch` — not a signal, so reading
+   it back later can't itself trigger reactivity, and it can never drift
+   from what was truly sent (unlike re-reading `dirtyValidPatch()` from an
+   effect, which could already reflect a newer edit by the time that effect
+   runs).
+2. On a resolved save, `fieldsSafeToMarkSaved()` (`autosave.save-reconciliation.ts`,
+   a pure function with its own spec) compares `#lastRequestedPatch` against
+   each field's **current** value. A field is safe to mark saved only if it
+   was part of the request that resolved **and** its value hasn't moved on
+   since.
+3. Each safe field gets its own no-argument `reset()` —
+   `this.profileForm[key]().reset()` — which clears that field's
+   `dirty()`/`touched()` alone, without touching its value or any sibling
+   field. A field that fails either check in step 2 is left dirty, so the
+   next debounce cycle autosaves it for real instead of silently dropping
+   it.
+
+This works because Signal Forms' `FieldState.reset()` takes an optional
+value but doesn't require one: called on a single field with no argument, it
+resets only that field's touched/dirty state, "per-field markAsPristine" —
+there is no separately-named method for it, but the no-argument form of
+`reset()` on a leaf field _is_ that mechanism.
 
 ## Accessible save status
 
@@ -128,10 +175,13 @@ demo should adopt it.
 ## Retry and reset
 
 - **Retry:** a failed save leaves its field(s) `dirty()`; **Retry save**
-  calls `saveResource.reload()`, which re-issues the same patch.
+  calls `saveResource.reload()`, which re-issues the current patch (picking
+  up any edits made since the failure).
 - **Reset demo:** `profileForm().reset(createInitialAutosaveProfile())` — one
   call sets the model back to its initial value _and_ clears
-  `dirty()`/`touched()`.
+  `dirty()`/`touched()` for the whole form. This one is a deliberate
+  whole-form reset (there is nothing to preserve — the demo is starting
+  over), unlike the per-field reconciliation after a successful save.
 
 ## What this demo deliberately does not do
 
@@ -155,15 +205,26 @@ form.
 
 ## Out of scope
 
-- **Conflict resolution / optimistic concurrency.** A successful save calls
-  `reset(this.profileForm().value())` — the form's _current_ value at
-  resolve time, not a snapshot of exactly what was sent. If the user edits a
-  different field while a PATCH is in flight, that edit gets marked clean
-  too once the in-flight request resolves, even though the server hasn't
-  seen it yet (it will be picked up by the next debounce/valid cycle,
-  because `httpResource` re-issues on any change to the computed patch).
-  Last-write-wins is fine for this demo; a production autosave with real
-  conflict risk needs more than this.
+- **Conflict resolution / optimistic concurrency.** The client-side
+  lost-update guard above (only marking a field saved if it still matches
+  what was sent) is not the same thing as server-side conflict detection —
+  there's no ETag/version check, and two different clients autosaving the
+  same record concurrently can still silently overwrite each other on the
+  server. Last-write-wins at the server is fine for this demo; a production
+  autosave with real multi-client conflict risk needs more than this
+  (optimistic concurrency tokens, CRDTs, or similar).
+- **`httpResource`'s request-level cancellation is coarser than the
+  save.** `httpResource` cancels the entire in-flight HTTP request when its
+  computed request changes — it has no concept of "this PATCH's body
+  changed, but keep the connection." That's the right trade for this demo
+  (it's exactly what folds a pre-dispatch edit into the next request, see
+  "Lost-update guard" above) but it does mean a request that was almost
+  done can still be aborted and re-sent from scratch. A production autosave
+  with stricter delivery guarantees (e.g. "never re-send a request that's
+  already X% through," or serialized-queue semantics) would need to drop to
+  `HttpClient` directly and manage that queue explicitly — out of scope for
+  what is meant to stay an idiomatic `httpResource` example matching this
+  repo's other `resource()`/`httpResource` demos.
 - **Offline queueing / `localStorage` persistence.** Not implemented.
 
 ## Key files
@@ -172,8 +233,11 @@ form.
 - [autosave.validations.ts](autosave.validations.ts) — `debounce()` +
   validators.
 - [autosave.api.ts](autosave.api.ts) — endpoint + failure-marker constants.
+- [autosave.save-reconciliation.ts](autosave.save-reconciliation.ts) — the
+  pure lost-update guard (`fieldsSafeToMarkSaved()`), with its own
+  [spec](autosave.save-reconciliation.spec.ts).
 - [autosave.form.ts](autosave.form.ts) — the dirty+valid gate, `httpResource`,
-  save-status live regions.
+  the post-save reconciliation, save-status live regions.
 - [autosave.page.ts](autosave.page.ts) — page wrapper and debugger.
 - `apps/demo/src/mocks/handlers.ts` — the `PATCH /api/autosave/profile` MSW
   handler.
@@ -196,6 +260,14 @@ form.
    are never sent).
 7. Click **Reset demo** — confirm both fields return to their initial values
    and `dirty()` is `false` for both.
+8. **Lost-update guard**, covered automatically by
+   `autosave.save-reconciliation.spec.ts` at the unit level; to see it live:
+   edit **Display name** and, within the ~400ms the mocked PATCH is in
+   flight (right after the 500ms debounce fires — watch for _Saving…_), also
+   edit **Bio**. Confirm both eventually read _All changes saved._ and both
+   `dirty()` flags return to `false` — no edit is ever lost, regardless of
+   which request happens to be in flight when the other field's debounce
+   fires.
 
 ## Related
 
