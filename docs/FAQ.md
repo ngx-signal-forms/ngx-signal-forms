@@ -587,15 +587,22 @@ Mappings (Signal Forms + this toolkit):
   `submit()` also marks everything touched internally.
 - **custom `ValidatorFn`** → schema functions: `validate()`/`validateAsync()` for sync/async field
   rules, `validateStandardSchema()` for Zod/contract schemas, `validateVest()` for business policy.
-- **coexistence** → `compatForm()` (from `@angular/forms/signals/compat`) lets a Signal Form model
-  embed existing Reactive `FormControl` instances as leaf values, so you can absorb Reactive
-  controls incrementally rather than rewrite a whole form at once.
+- **coexistence** → `compatForm()` (top-down) or `SignalFormControl` (bottom-up), both from
+  `@angular/forms/signals/compat`, let a Signal Form model absorb existing Reactive controls, or
+  let a Reactive `FormGroup` absorb one Signal-Forms-backed field, so you can migrate one field or
+  one form at a time rather than rewrite everything at once.
 
-Honest gap: there is **no dedicated Reactive Forms migration guide or demo** yet (the existing
-migration docs cover ngx-vest-forms and the toolkit beta→v1), and `compatForm()` has no worked
-example in this repo — the mappings above are the pattern, verified against the Angular 22 types.
+Angular's own **[framework-level migration guide](https://angular.dev/guide/forms/signals/migration)**
+covers the `compat` API itself. This toolkit's
+**[docs/MIGRATING_FROM_REACTIVE_FORMS.md](./MIGRATING_FROM_REACTIVE_FORMS.md)** covers the layer
+Angular's guide doesn't: how `ngx-form-field-wrapper`, error-message resolution, the error-display
+strategy cascade, and `NG_STATUS_CLASSES` behave when a field is bridged through compat — including
+a documented divergence (a compat leaf's validity comes from the underlying `AbstractControl`'s
+own Reactive validators, not from Signal Forms schema validators registered on that same path) and
+a worked one-field-at-a-time coexistence example.
 
 **See:** [../README.md](../README.md) ·
+[docs/MIGRATING_FROM_REACTIVE_FORMS.md](./MIGRATING_FROM_REACTIVE_FORMS.md) ·
 [docs/ANGULAR_VS_TOOLKIT.md](./ANGULAR_VS_TOOLKIT.md) ·
 [docs/VALIDATION_STRATEGY.md](./VALIDATION_STRATEGY.md) ·
 [docs/ANGULAR_PUBLIC_API_POLICY.md](./ANGULAR_PUBLIC_API_POLICY.md)
