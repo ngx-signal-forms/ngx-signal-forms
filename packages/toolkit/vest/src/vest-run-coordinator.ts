@@ -255,7 +255,7 @@ export interface VestRunCoordinator {
    * calls `request()` from INSIDE the reactive computeds `validateTree` and
    * `validateAsync` register, which Angular's change-detection machinery can
    * re-run for reasons unrelated to this request (an unrelated signal read in
-   * the same computed changing, a `markCheck`/re-evaluation pass, …) without
+   * the same computed changing, a `markForCheck()`/re-evaluation pass, …) without
    * the tuple itself changing. A non-idempotent `request()` would re-execute
    * `suite.run()` — and the coordinator's other side effects (contention
    * bookkeeping, the FIFO queue) — on every such re-run, not just on a real

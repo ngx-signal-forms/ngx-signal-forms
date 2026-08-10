@@ -293,16 +293,21 @@ describe('createVestRunCoordinator', () => {
       const { suite, started } = createControllableSuite();
       const cacheKey = {};
 
-      const results = Array.from({ length: 5 }, () =>
+      const [first, ...rest] = Array.from({ length: 5 }, () =>
         coordinator.request({ suite, cacheKey, value: 'a' }),
       );
+      // Fail loudly (not via an untyped `undefined`) if `Array.from({ length: 5 }, ...)`
+      // ever stopped producing at least one result.
+      if (first === undefined) {
+        throw new Error('expected at least one coordinator.request() result');
+      }
 
       expect(started).toEqual(['a']);
-      expect(results[0]?.fromCache).toBe(false);
-      expect(results.slice(1).every((result) => result.fromCache)).toBe(true);
-      for (const result of results.slice(1)) {
-        expect(result.runResult).toBe(results[0]?.runResult);
-        expect(result.initialResult).toBe(results[0]?.initialResult);
+      expect(first.fromCache).toBe(false);
+      expect(rest.every((result) => result.fromCache)).toBe(true);
+      for (const result of rest) {
+        expect(result.runResult).toBe(first.runResult);
+        expect(result.initialResult).toBe(first.initialResult);
       }
     });
 
