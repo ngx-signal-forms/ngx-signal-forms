@@ -98,7 +98,8 @@ packages/toolkit/
 │   ├── src/
 │   │   ├── index.ts
 │   │   ├── validate-vest.ts
-│   │   └── vest-adapter.ts             # createVestAdapter() + VestSuiteAdapter contract
+│   │   ├── vest-adapter.ts             # createVestAdapter() + VestSuiteAdapter contract
+│   │   └── vest-run-coordinator.ts     # cache, contention detection, FIFO queue, settlement (ADR-0009)
 │   ├── ng-package.json
 │   └── README.md
 ├── scripts/

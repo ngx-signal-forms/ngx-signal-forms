@@ -833,6 +833,29 @@ true })` with `validateVest(path, suite, { only: () => activeField })`,
   authored for that subtree's value (e.g. `validateVest(path.address,
 addressSuite)` where `addressSuite` takes `{ city: string, … }`).
 
+- **BREAKING — a typed suite's field-name union now flows through `only`
+  (#292, PR #308).** Vest ≥6.3.2 propagates a field-name union `F` through
+  `only`, `getErrors`, and `getWarnings` for a suite declared with
+  `create<{ fields: 'email' | 'password' }>(…)` (or a schema-typed suite).
+  `VestRunnableSuite`, `VestOnlyFieldSelector`, `VestResultLike`,
+  `VestRegisterOptions`, `RunVestSuiteParams`/`RunVestSuiteResult`,
+  `ValidateVestOptions`, `validateVest`, `validateVestWarnings`, and
+  `VestSuiteAdapter.register`/`runVestSuite` all gained a field-name type
+  parameter `F extends string = string`, inferred from the `suite` argument —
+  no call site writes it explicitly. Previously, every `only` selector's
+  return type was erased to plain `string`, so a mistyped focus name
+  (`only: () => 'emial'`) compiled, ran zero tests, and reported the field
+  valid.
+
+  **Action:** an `only` selector for a `create<{ fields: … }>(…)` suite that
+  previously returned a wider `string` (including via a helper function typed
+  `() => string`, or a value read from an untyped source) can now fail to
+  typecheck — narrow the selector's return type (or the helper's) to the
+  suite's field-name union, or to `string` explicitly if the selector
+  genuinely needs to accept any field name. A suite declared with plain
+  `create(…)` (no `fields`, no schema) is unaffected: `F` defaults to
+  `string`, exactly as before.
+
 See [`packages/toolkit/vest/README.md`](../packages/toolkit/vest/README.md#suite-lifecycle)
 for the full suite-lifecycle discussion.
 
