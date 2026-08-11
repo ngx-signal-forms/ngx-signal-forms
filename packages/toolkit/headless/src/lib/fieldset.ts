@@ -305,8 +305,8 @@ export class NgxHeadlessFieldset<
 
   /**
    * Error/warning aggregation, delegated to {@link createFieldsetAggregation}
-   * — this directive is a pure projection over its result. Pass the already
-   * -resolved {@link #showErrorsSignal} / {@link #showWarningsSignal} rather
+   * — this directive is a pure projection over its result. Pass the
+   * already-resolved {@link #showErrorsSignal} / {@link #showWarningsSignal} rather
    * than raw strategy inputs: the factory itself never calls `inject()`
    * (ADR-0005), so visibility timing stays owned by this directive's single
    * `createErrorVisibility()` / `createShowErrorsComputed()` seam call
