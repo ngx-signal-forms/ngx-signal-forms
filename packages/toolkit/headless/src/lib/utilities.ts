@@ -469,7 +469,7 @@ function createErrorStateInternal<TValue = unknown>(
       submittedStatus === undefined
         ? undefined
         : computed(() => unwrapValue(submittedStatus)),
-    configDefault: config?.defaultErrorStrategy,
+    configDefault: config.defaultErrorStrategy,
   });
 
   const core = buildHeadlessErrorState(fieldState, resolvedFieldName);

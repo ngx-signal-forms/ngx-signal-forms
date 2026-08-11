@@ -19,7 +19,8 @@ import { unwrapValue } from './unwrap-signal-or-value';
  * Options for {@link createErrorVisibility}.
  *
  * Both `strategy` and `submittedStatus` are optional:
- * - Omit to inherit from form context (via DI) or fall back to `'on-touch'`.
+ * - Omit `strategy` to inherit from form context (via DI), then
+ *   `opts.configDefault` (when supplied), then fall back to `'on-touch'`.
  * - Pass a static value to hard-code the behaviour at the call site.
  * - Pass a signal to allow the behaviour to change reactively.
  */
@@ -31,7 +32,7 @@ export interface CreateErrorVisibilityOptions {
    *   evaluation but is stable, so the result does not change.
    * - `Signal<ErrorDisplayStrategy | undefined>` — tracked reactively.
    * - `undefined` / omitted — inherits from form context, then falls back to
-   *   `'on-touch'`.
+   *   `opts.configDefault` (when supplied), then `'on-touch'`.
    */
   readonly strategy?:
     | ErrorDisplayStrategy
