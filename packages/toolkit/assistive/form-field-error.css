@@ -261,12 +261,28 @@
   --_error-font-size: var(--ngx-signal-form-error-panel-font-size, 0.875rem);
   --_error-line-height: var(--ngx-signal-form-error-panel-line-height, 1.25rem);
   --_error-animation: none;
+
+  /* Panel text needs its own, darker tone colors: the inline defaults
+     (#db1818 / #a16207) meet WCAG 1.4.3 on the page background but land
+     just under 4.5:1 on the panel's tinted soft backgrounds. */
+  --_error-panel-clr-danger-strong: #b91c1c;
+  --_error-panel-clr-warning-strong: #92400e;
+  --_error-color: var(
+    --ngx-signal-form-error-panel-color,
+    var(--_error-panel-clr-danger-strong)
+  );
+  --_warning-color: var(
+    --ngx-signal-form-warning-panel-color,
+    var(--_error-panel-clr-warning-strong)
+  );
 }
 
 @media (prefers-color-scheme: dark) {
   :host([data-presentation='panel']) {
     --_error-panel-clr-danger-soft: var(--_error-panel-clr-danger-soft-dark);
     --_error-panel-clr-warning-soft: var(--_error-panel-clr-warning-soft-dark);
+    --_error-panel-clr-danger-strong: var(--_error-clr-danger-dark);
+    --_error-panel-clr-warning-strong: var(--_error-clr-warning-dark);
   }
 }
 

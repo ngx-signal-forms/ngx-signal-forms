@@ -49,7 +49,7 @@ documented public entry points only.
 ### Public entry points
 
 - `@ngx-signal-forms/toolkit` — core directives, providers, utilities
-- `@ngx-signal-forms/toolkit/assistive` — styled error/notification/hint/counter/summary UI
+- `@ngx-signal-forms/toolkit/assistive` — styled error/hint/counter/summary UI
 - `@ngx-signal-forms/toolkit/form-field` — prebuilt wrapper + fieldset UI
 - `@ngx-signal-forms/toolkit/headless` — renderless directives and utility functions
 - `@ngx-signal-forms/toolkit/vest` — Vest helper adapters

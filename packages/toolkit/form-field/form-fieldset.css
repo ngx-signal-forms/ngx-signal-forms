@@ -512,6 +512,9 @@
 :host([data-feedback-appearance='notification'])
   .ngx-signal-form-fieldset__messages {
   --ngx-signal-form-error-message-spacing: var(--_fieldset-message-spacing);
+  --ngx-signal-form-error-panel-message-spacing: var(
+    --_fieldset-message-spacing
+  );
   --ngx-signal-form-error-list-style: var(--_fieldset-notification-list-style);
   --ngx-signal-form-error-list-padding-inline-start: var(
     --_fieldset-notification-list-padding-inline-start

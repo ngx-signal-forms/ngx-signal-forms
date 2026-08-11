@@ -18,7 +18,7 @@ The assistive entry point provides accessible feedback rendering that sits betwe
 
 2. **`NgxFormFieldError`** — displays validation errors (and optionally warnings) for a single field or a pre-aggregated, grouped error list. Two presentations:
    - `presentation="inline"` (default) — bare messages under a single control. Always provide `[formField]` for this usage.
-   - `presentation="panel"` — a bordered, padded notification card for grouped fieldset summaries or custom summary blocks. Provide `[errors]` (a reactive source of aggregated `ValidationError[]`) instead of `[formField]`; optional `title` renders above the messages. Tone routing is automatic and content-driven — there is no `tone` input: any blocking error surfaces the `role="alert"` container; a warning-only list surfaces the `role="status"` container; an empty list hides both.
+   - `presentation="panel"` — a bordered, padded notification card for grouped fieldset summaries or custom summary blocks. Provide `[errors]` (a reactive or static source of aggregated `ValidationError[]`) instead of `[formField]`; optional `title` renders above the messages. Tone routing is automatic and content-driven — there is no `tone` input: any blocking error surfaces the `role="alert"` container; a warning-only list surfaces the `role="status"` container; an empty list hides both.
    - Always provide `fieldName` when used standalone (not inside `ngx-form-field-wrapper`).
    - Inside a wrapper, `fieldName` is inherited automatically.
    - Use `listStyle="bullets"` for grouped summaries; default `'plain'` for inline single-field output.
@@ -32,7 +32,7 @@ The assistive entry point provides accessible feedback rendering that sits betwe
 
 5. Grouped validation notification for fieldsets, summary cards, or custom sections is `NgxFormFieldError` with `presentation="panel"` (see step 2 above) — there is no separate notification component:
 
-- Provide `[errors]` as a reactive source of aggregated `ValidationError[]` and `presentation="panel"`.
+- Provide `[errors]` as a reactive or static source of aggregated `ValidationError[]` and `presentation="panel"`.
 - Provide `fieldName` when the grouped block needs deterministic `aria-describedby` IDs.
 - Optional `title` renders above the messages; `listStyle` (`'plain' | 'bullets'`) controls stacked paragraphs vs a bullet list.
 - Prefer this over `NgxFormFieldErrorSummary` when you already own the grouping logic and want both warning and blocking surfaces.

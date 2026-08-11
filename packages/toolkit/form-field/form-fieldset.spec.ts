@@ -488,7 +488,9 @@ describe('NgxFormFieldset', () => {
       },
     );
 
-    const errorList = container.querySelector('.ngx-form-field-error__list');
+    const errorList = container.querySelector(
+      'ngx-form-field-error[data-presentation="panel"] .ngx-form-field-error__list',
+    );
     expect(errorList?.tagName).toBe('UL');
     expect(errorList?.querySelectorAll('li')).toHaveLength(2);
   });
@@ -871,7 +873,11 @@ describe('NgxFormFieldset', () => {
       },
     );
 
-    expect(container.querySelector('.ngx-form-field-error__list')).toBeNull();
+    expect(
+      container.querySelector(
+        'ngx-form-field-error[data-presentation="panel"] .ngx-form-field-error__list',
+      ),
+    ).toBeNull();
     expect(
       container.querySelectorAll(
         'ngx-form-field-error[data-presentation="panel"] .ngx-form-field-error__message',
