@@ -8,6 +8,12 @@ The form-field wrapper (`/form-field`) gives you layout, errors, and ARIA automa
 
 Headless primitives handle error timing, message resolution, character counting, fieldset aggregation, and ID generation. You write the template and styling.
 
+### When to use directives vs utility functions
+
+- Use **directives** (`NgxHeadlessErrorState`, `NgxHeadlessFieldset`, etc.) when your state naturally lives in templates.
+- Use **utility functions** (`createErrorState`, `createCharacterCount`, etc.) when composing behavior in services, host directives, or custom renderers.
+- Mix both only when it keeps ownership boundaries clear (one source of truth per field state).
+
 ## Import
 
 ```typescript
@@ -124,7 +130,9 @@ Aggregates all errors from a form tree. Each entry has a `focus()` method that c
 | `strategy`        | `ErrorDisplayStrategy` | Override (inherits from context)    |
 | `submittedStatus` | `SubmittedStatus`      | Override for `'on-submit'` strategy |
 
-Signals: `entries()`, `warningEntries()`, `hasErrors()`, `hasWarnings()`, `shouldShow()`, `shouldShowWarnings()`, `focusFirst()`.
+Signals: `entries()`, `warningEntries()`, `hasErrors()`, `hasWarnings()`, `shouldShow()`, `shouldShowWarnings()`.
+
+Method: `focusFirst()` — focuses the first error entry.
 
 `shouldShow()` gates `entries()` (strategy && `hasErrors()`); `shouldShowWarnings()` gates `warningEntries()` (strategy && `hasWarnings()`) — a warnings-only form has no blocking errors, so `shouldShow()` alone can never reveal warnings.
 
@@ -310,7 +318,3 @@ teaches for hosts that own their own ARIA instead of using
 - [Form field wrapper](../form-field/README.md) — pre-styled wrapper component
 - [Assistive components](../assistive/README.md) — styled error, grouped notification, hint, counter, and summary components
 - [Theming guide](../form-field/THEMING.md) — CSS custom properties for styled components
-
-## License
-
-MIT © [ngx-signal-forms](https://github.com/ngx-signal-forms/ngx-signal-forms)

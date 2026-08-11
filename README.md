@@ -22,14 +22,7 @@ themable field wrapper. It is an **enhancement**, not a replacement — your `fo
 
 ## See the difference
 
-<table border="1" frame="void" rules="cols" cellspacing="0" cellpadding="0">
-<tr>
-  <th align="left">With the toolkit</th>
-  <th align="left">Plain Angular Signal Forms</th>
-</tr>
-<tr>
-
-<td valign="top">
+With toolkit wrapper:
 
 ```html
 <form [formRoot]="userForm">
@@ -40,40 +33,12 @@ themable field wrapper. It is an **enhancement**, not a replacement — your `fo
 </form>
 ```
 
-The wrapper handles ARIA, error timing, `role="alert"` vs `role="status"`, hint projection, and character counts automatically.
+What this replaces in plain Angular: manual `aria-invalid`, `aria-describedby`,
+error visibility timing, `role="alert"` / `role="status"`, hint projection,
+and character-count wiring.
 
-</td>
-<td valign="top">
-
-```html
-<form [formRoot]="userForm">
-  <label for="email">Email</label>
-  <input
-    id="email"
-    [formField]="userForm.email"
-    [attr.aria-invalid]="
-      userForm.email().invalid() ? 'true' : null
-    "
-    [attr.aria-describedby]="
-      userForm.email().invalid() &&
-      (userForm.email().touched() ||
-        userForm().touched())
-        ? 'email-error'
-        : null
-    "
-  />
-  @if ( userForm.email().invalid() && (userForm.email().touched() ||
-  userForm().touched()) ) {
-  <span id="email-error" role="alert">
-    {{ userForm.email().errors()[0].message }}
-  </span>
-  }
-</form>
-```
-
-</td>
-</tr>
-</table>
+> Want the full side-by-side comparison? See the field-wrapper examples in
+> [`/form-field`](./packages/toolkit/form-field/README.md).
 
 ---
 
@@ -90,6 +55,21 @@ No separate stylesheet import is required for the built-in wrapper and assistive
 **Supported browsers:** Last 2 major versions of Chrome, Edge, Firefox, and Safari (see [`.browserslistrc`](./.browserslistrc)). Accessibility behaviour is verified cross-engine (Chromium + Firefox) by automated axe-core scans in CI. The toolkit's styles ship as native CSS (no Sass) and use CSS nesting, `color-mix()`, and `:has()` for the outline appearance. The runtime floor for full visual fidelity is Chrome/Edge 112+, Firefox 121+, Safari 16.5+ — see the [theming guide](./packages/toolkit/form-field/THEMING.md#browser-support) for the per-feature breakdown.
 
 > Angular Signal Forms is **stable** as of Angular 22 (`@publicApi 22.0`). The toolkit's own public API also aims to stay stable; because each new Angular **major** can still reshape Signal Forms, the peer range is capped at `<23.0.0` until each major is validated — see [`COMPATIBILITY.md`](./COMPATIBILITY.md).
+
+## First 60 seconds
+
+Fastest path:
+
+1. Install (see [Install](#install)).
+2. Copy the single canonical starter from [30-second quick start](#30-second-quick-start).
+3. Pick your UI surface from `/form-field`, `/assistive`, or `/headless` below.
+
+Then continue here:
+
+1. [`/form-field` quick start](./packages/toolkit/form-field/README.md)
+2. [Error strategies](#error-strategies-in-plain-english)
+3. [Warnings](#warnings-that-dont-block-submit)
+4. [Testing](./packages/toolkit/testing/README.md)
 
 ---
 
@@ -242,6 +222,22 @@ advanced and specialized cases — pull them in when you hit that specific need.
 | Use with Spartan Components         | Custom wrapper on `BrnField` + `helm`                            | [`demo-spartan`](./apps/demo-spartan/README.md)                                                                                                            |
 | Use with PrimeNG                    | Projected-control wrapper (`pInputText`, …)                      | [`demo-primeng`](./apps/demo-primeng/README.md)                                                                                                            |
 | Assert WCAG 2.2 AA in my own specs  | [`/testing`](./packages/toolkit/testing/README.md) entry point   | [`form-field-wrapper.a11y.browser.spec.ts`](./packages/toolkit/form-field/form-field-wrapper.a11y.browser.spec.ts)                                         |
+
+---
+
+## Suggested learning path
+
+If you're adopting Angular v22 Signal Forms for the first time, follow this order:
+
+1. Start with [`/form-field`](./packages/toolkit/form-field/README.md) and ship one working field wrapper.
+2. Add form-level context only when needed with [`ngxSignalForm`](#adding-form-level-context-with-ngxsignalform).
+3. Tune error and warning timing with [error strategies](#error-strategies-in-plain-english).
+4. Add custom-control semantics only when native inference is not enough ([custom controls](./docs/CUSTOM_CONTROLS.md)).
+5. Lock in behavior with accessibility checks via [`/testing`](./packages/toolkit/testing/README.md).
+
+> [!TIP]
+> Most teams can ship production forms with `NgxSignalFormToolkit + NgxFormField` and app-level config.
+> Reach for `/headless`, `/assistive`, or `/vest` only for specific advanced needs.
 
 ---
 
@@ -561,6 +557,16 @@ The short version — each one is expanded with do/don't examples in the
 
 ---
 
+## Troubleshooting quick checks
+
+- **No ARIA linkage?** Ensure the control has a stable `id` (or set `fieldName`).
+- **Errors show too early?** Check your strategy (`'on-touch'`, `'on-submit'`, `'immediate'`).
+- **`on-submit` not behaving as expected?** Use `ngxSignalForm` on the same host as `[formRoot]`.
+- **Warnings blocking submit?** Use warning helpers (`warningError`, `submitWithWarnings`, `canSubmitWithWarnings`).
+- **Character count missing max limit?** Pass `[maxLength]` explicitly when no max-length validator is present.
+
+---
+
 ## FAQ
 
 The questions below cover what the toolkit _is_. For hands-on "how do I build X?"
@@ -696,7 +702,7 @@ The toolkit is designed around the WCAG 2.2 AA form patterns it can automate:
 
 - automatic `aria-invalid`, `aria-required`, and `aria-describedby` on supported controls
 - `role="alert"` for blocking errors and `role="status"` for warnings, relying on the roles' implicit live-region semantics (no redundant `aria-live`/`aria-atomic` that some AT + browser combinations double-announce)
-- `on-touch` error timing by default to avoid premature noise; warnings default to `'immediate'` and can be tuned independently via `warningStrategy` — see [warnings support](./docs/WARNINGS_SUPPORT.md)
+- `on-touch` error timing by default to avoid premature noise; warnings also default to `'on-touch'` and can be tuned independently via `warningStrategy` — see [warnings support](./docs/WARNINGS_SUPPORT.md)
 - focus helpers (`focusFirstInvalid`, `createOnInvalidHandler`) for invalid submissions
 
 **Verified in CI.** The toolkit's automated output — the ARIA wiring, live-region
@@ -758,9 +764,3 @@ npx skills add https://github.com/ngx-signal-forms/ngx-signal-forms --skill ngx-
 ```
 
 Covers the full toolkit — entry points, patterns, ARIA automation, and demo references.
-
----
-
-## License
-
-MIT © [ngx-signal-forms](https://github.com/ngx-signal-forms/ngx-signal-forms)

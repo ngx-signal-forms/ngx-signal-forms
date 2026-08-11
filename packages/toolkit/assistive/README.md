@@ -8,6 +8,12 @@ The form-field wrapper (`/form-field`) renders error and hint components for you
 
 It sits between `/headless` (signals only, no UI) and `/form-field` (complete wrapper) in the toolkit hierarchy.
 
+### When to use this entry point
+
+- Use `/assistive` when you already own the field layout and only need feedback UI pieces.
+- Use `/form-field` when you want the fastest default path with wrapper-managed projection and ARIA wiring.
+- Use `/headless` when you want zero styled markup and signals only.
+
 ## Import
 
 ```typescript
@@ -90,12 +96,12 @@ Grouped validation notification with an optional title.
 
 `errors` must be a signal, for example `signal<readonly ValidationError[]>([])`.
 
-| Input       | Type                                 | Description                                     |
-| ----------- | ------------------------------------ | ----------------------------------------------- |
-| `errors`    | `Signal<readonly ValidationError[]>` | Grouped validation messages to present          |
-| `fieldName` | `string`                             | Optional id base for `aria-describedby` linkage |
-| `title`     | `string`                             | Optional title above the grouped messages       |
-| `listStyle` | `'plain' \| 'bullets'`               | Stacked paragraphs or bullet list               |
+| Input       | Type                                 | Description                                                |
+| ----------- | ------------------------------------ | ---------------------------------------------------------- |
+| `errors`    | `Signal<readonly ValidationError[]>` | Grouped validation messages to present                     |
+| `fieldName` | `string`                             | Optional id base for `aria-describedby` linkage            |
+| `title`     | `string`                             | Optional title above the grouped messages                  |
+| `listStyle` | `'plain' \| 'bullets'`               | Stacked paragraphs or bullet list (`'bullets'` by default) |
 
 - Tone is always **content-driven** — there is no `tone` input: any blocking
   (non-`warn:`) error routes the group to `role="alert"`; an all-warning list
@@ -131,8 +137,8 @@ Helper text below inputs. Automatically linked to the input via `aria-describedb
 <ngx-form-field-hint>Format: 123-456-7890</ngx-form-field-hint>
 ```
 
-Optional `position` input (`'left' | 'right'`): alignment within the assistive
-row. When omitted, hints left-align by default; pass `position="right"` to
+Optional `position` input (`'left' | 'right' | null`, default `null`): alignment within the assistive
+row. When omitted or `null`, hints left-align by default; pass `position="right"` to
 opt into end alignment.
 
 ### NgxFormFieldCharacterCount
@@ -142,6 +148,16 @@ Character counter with progressive color states (ok → warning → danger → e
 ```html
 <ngx-form-field-character-count [formField]="form.bio" [maxLength]="500" />
 ```
+
+| Input                   | Type                                           | Default                       | Description                                                              |
+| ----------------------- | ---------------------------------------------- | ----------------------------- | ------------------------------------------------------------------------ |
+| `formField`             | `FieldTree<NgxCharacterCountValue>` (required) | —                             | Field to track the character count for                                   |
+| `maxLength`             | `number \| undefined`                          | Auto-detected from validator  | Character limit; auto-detected from a `maxLength` validator when omitted |
+| `position`              | `'left' \| 'right'`                            | `'right'`                     | Text alignment within the assistive row                                  |
+| `showLimitColors`       | `boolean`                                      | `true`                        | Progressive color states as the count nears the limit                    |
+| `liveAnnounce`          | `boolean`                                      | `false`                       | Polite live announcements when the limit state changes                   |
+| `announcementFormatter` | `NgxCharacterCountAnnouncementFormatter`       | Built-in English strings      | Custom formatter for localizing announcements                            |
+| `colorThresholds`       | `{ warning: number; danger: number }`          | `{ warning: 80, danger: 95 }` | Percentage thresholds for the warning and danger color states            |
 
 When a matching max-length validator is present, `maxLength` can be omitted and detected automatically. Add `liveAnnounce` for polite screen reader announcements.
 
@@ -223,7 +239,3 @@ tokens, dark-mode overrides, and the fieldset-level
 - [Form field wrapper](../form-field/README.md) — pre-styled wrapper that uses these components
 - [Headless primitives](../headless/README.md) — renderless directives for full custom UI
 - [Theming guide](../form-field/THEMING.md) — complete CSS custom properties reference
-
-## License
-
-MIT © [ngx-signal-forms](https://github.com/ngx-signal-forms/ngx-signal-forms)

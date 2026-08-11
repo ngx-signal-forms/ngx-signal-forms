@@ -34,6 +34,11 @@ import {
 
 `NgxFormField` bundles the wrapper, fieldset, and wrapper-used assistive components (`NgxFormFieldError`, `NgxFormFieldHint`, `NgxFormFieldCharacterCount`) for convenience. `NgxFormFieldNotification` and `NgxFormFieldErrorSummary` remain available via `@ngx-signal-forms/toolkit/assistive`.
 
+### What `NgxFormField` includes vs excludes
+
+- **Included:** `NgxFormFieldWrapper`, `NgxFormFieldset`, `NgxFormFieldError`, `NgxFormFieldHint`, `NgxFormFieldCharacterCount`, plus ARIA/semantics directives used by the wrapper path.
+- **Not included:** grouped standalone assistive surfaces (`NgxFormFieldNotification`, `NgxFormFieldErrorSummary`). Import those from `@ngx-signal-forms/toolkit/assistive` when needed.
+
 ## Quick start
 
 ```typescript
@@ -104,17 +109,18 @@ export class ContactFormComponent {
 
 `ngx-form-field-wrapper` — wraps a form field with automatic error display, labels, hints, prefix/suffix slots, and ARIA.
 
-| Input            | Type                                              | Default     | Description                                      |
-| ---------------- | ------------------------------------------------- | ----------- | ------------------------------------------------ |
-| `formField`      | `FieldTree` (required)                            | —           | The form field to wrap                           |
-| `fieldName`      | `string`                                          | From `id`   | Explicit field name; derived from control `id`   |
-| `appearance`     | `'standard' \| 'outline' \| 'plain' \| 'inherit'` | `'inherit'` | Visual style variant                             |
-| `orientation`    | `'vertical' \| 'horizontal' \| 'inherit'`         | `'inherit'` | Label position (see [Orientation](#orientation)) |
-| `strategy`       | `ErrorDisplayStrategy`                            | Inherited   | Override error display strategy                  |
-| `errorPlacement` | `'top' \| 'bottom'`                               | `'bottom'`  | Render errors above or below the control         |
-| `showMarkerWhen` | `'required' \| 'optional' \| 'none'`              | Config      | Which fields carry a visual marker               |
-| `requiredMarker` | `string`                                          | Config      | Marker text for required fields                  |
-| `optionalMarker` | `string`                                          | Config      | Marker text for optional fields                  |
+| Input             | Type                                              | Default     | Description                                                  |
+| ----------------- | ------------------------------------------------- | ----------- | ------------------------------------------------------------ |
+| `formField`       | `FieldTree` (required)                            | —           | The form field to wrap                                       |
+| `fieldName`       | `string`                                          | From `id`   | Explicit field name; derived from control `id`               |
+| `appearance`      | `'standard' \| 'outline' \| 'plain' \| 'inherit'` | `'inherit'` | Visual style variant                                         |
+| `orientation`     | `'vertical' \| 'horizontal' \| 'inherit'`         | `'inherit'` | Label position (see [Orientation](#orientation))             |
+| `strategy`        | `ErrorDisplayStrategy`                            | Inherited   | Override error display strategy                              |
+| `warningStrategy` | `WarningDisplayStrategy`                          | Inherited   | Override warning display strategy, independent of `strategy` |
+| `errorPlacement`  | `'top' \| 'bottom'`                               | `'bottom'`  | Render errors above or below the control                     |
+| `showMarkerWhen`  | `'required' \| 'optional' \| 'none'`              | Config      | Which fields carry a visual marker                           |
+| `requiredMarker`  | `string`                                          | Config      | Marker text for required fields                              |
+| `optionalMarker`  | `string`                                          | Config      | Marker text for optional fields                              |
 
 Only `formField` is required. Every "Inherited" / "Config" default resolves
 through the toolkit's settings cascade (field input → form context →
@@ -143,6 +149,16 @@ layouts even when `orientation="horizontal"` is requested.
 Orientation changes a single wrapper, not the parent form grid. If you want one
 field row per line in `standard + horizontal`, collapse the surrounding layout
 in the page or feature container.
+
+### Appearance/orientation compatibility
+
+| Appearance | `orientation="vertical"` | `orientation="horizontal"` |
+| ---------- | ------------------------ | -------------------------- |
+| `standard` | ✅ Supported             | ✅ Supported               |
+| `plain`    | ✅ Supported             | ✅ Supported               |
+| `outline`  | ✅ Supported             | ↩️ Resolves to vertical    |
+
+`outline` keeps a vertical layout because floating-label behavior depends on that structure.
 
 ### Prefix and suffix slots
 
@@ -230,22 +246,22 @@ aggregation signals without any prebuilt markup, drop down to
 </ngx-form-fieldset>
 ```
 
-| Input                 | Type                                                                     | Default       | Description                                                    |
-| --------------------- | ------------------------------------------------------------------------ | ------------- | -------------------------------------------------------------- |
-| `field`               | `FieldTree` (required)                                                   | —             | Field tree to aggregate                                        |
-| `fields`              | `FieldTree[]`                                                            | `null`        | Explicit field list (overrides tree traversal)                 |
-| `fieldsetId`          | `string`                                                                 | Generated     | ID for ARIA linking                                            |
-| `strategy`            | `ErrorDisplayStrategy`                                                   | Inherited     | Blocking-error display strategy                                |
-| `warningStrategy`     | `ErrorDisplayStrategy`                                                   | `'immediate'` | Warning display strategy, independent of `strategy`            |
-| `showErrors`          | `boolean`                                                                | `true`        | Toggle error display                                           |
-| `includeNestedErrors` | `boolean`                                                                | `false`       | Include child field errors via `errorSummary()`                |
-| `errorPlacement`      | `'top' \| 'bottom'`                                                      | `'bottom'`    | Render grouped messages before or after content                |
-| `appearance`          | `'outline' \| 'plain'`                                                   | `'outline'`   | Border-and-padding shell or semantic-only grouping             |
-| `feedbackAppearance`  | `'auto' \| 'plain' \| 'notification'`                                    | `'auto'`      | Choose compact grouped text or surfaced notification cards     |
-| `notificationTitle`   | `string`                                                                 | —             | Optional title for notification-style grouped feedback         |
-| `listStyle`           | `'plain' \| 'bullets'`                                                   | `'bullets'`   | Grouped message layout                                         |
-| `surfaceTone`         | `'default' \| 'neutral' \| 'info' \| 'success' \| 'warning' \| 'danger'` | `'default'`   | Base fieldset surface tint below the legend                    |
-| `validationSurface`   | `'never' \| 'always'`                                                    | `'never'`     | Whether invalid/warning state should tint the fieldset surface |
+| Input                 | Type                                                                     | Default     | Description                                                    |
+| --------------------- | ------------------------------------------------------------------------ | ----------- | -------------------------------------------------------------- |
+| `field`               | `FieldTree` (required)                                                   | —           | Field tree to aggregate                                        |
+| `fields`              | `FieldTree[]`                                                            | `null`      | Explicit field list (overrides tree traversal)                 |
+| `fieldsetId`          | `string`                                                                 | Generated   | ID for ARIA linking                                            |
+| `strategy`            | `ErrorDisplayStrategy`                                                   | Inherited   | Blocking-error display strategy                                |
+| `warningStrategy`     | `WarningDisplayStrategy`                                                 | Inherited   | Warning display strategy, independent of `strategy`            |
+| `showErrors`          | `boolean`                                                                | `true`      | Toggle error display                                           |
+| `includeNestedErrors` | `boolean`                                                                | `false`     | Include child field errors via `errorSummary()`                |
+| `errorPlacement`      | `'top' \| 'bottom'`                                                      | `'bottom'`  | Render grouped messages before or after content                |
+| `appearance`          | `'outline' \| 'plain'`                                                   | `'outline'` | Border-and-padding shell or semantic-only grouping             |
+| `feedbackAppearance`  | `'auto' \| 'plain' \| 'notification'`                                    | `'auto'`    | Choose compact grouped text or surfaced notification cards     |
+| `notificationTitle`   | `string`                                                                 | —           | Optional title for notification-style grouped feedback         |
+| `listStyle`           | `'plain' \| 'bullets'`                                                   | `'bullets'` | Grouped message layout                                         |
+| `surfaceTone`         | `'default' \| 'neutral' \| 'info' \| 'success' \| 'warning' \| 'danger'` | `'default'` | Base fieldset surface tint below the legend                    |
+| `validationSurface`   | `'never' \| 'always'`                                                    | `'never'`   | Whether invalid/warning state should tint the fieldset surface |
 
 ### Error display modes
 
@@ -459,7 +475,3 @@ Quick example:
 - [Headless primitives](../headless/README.md) — renderless directives for full custom UI
 - [Custom controls](https://github.com/ngx-signal-forms/ngx-signal-forms/blob/main/docs/CUSTOM_CONTROLS.md) — wrapping sliders, date pickers, and third-party widgets
 - [CSS framework integration](https://github.com/ngx-signal-forms/ngx-signal-forms/blob/main/docs/CSS_FRAMEWORK_INTEGRATION.md) — Tailwind, Bootstrap, Material
-
-## License
-
-MIT © [ngx-signal-forms](https://github.com/ngx-signal-forms/ngx-signal-forms)
