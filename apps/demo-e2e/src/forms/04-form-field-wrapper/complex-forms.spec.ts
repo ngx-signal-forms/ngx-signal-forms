@@ -397,7 +397,9 @@ test.describe('Form Field Wrapper - Complex Forms', () => {
       await triggerCredentialsFieldsetError(page);
 
       const notificationMessageStyles = await page.credentialsFieldset
-        .locator('.ngx-form-field-error__message')
+        .locator(
+          'ngx-form-field-error[data-presentation="panel"] .ngx-form-field-error__message',
+        )
         .first()
         .evaluate((message) => {
           const style = getComputedStyle(message);
