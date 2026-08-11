@@ -179,9 +179,17 @@ function fnv1a4Hex(value: string): string {
  * caller's fallback-literal note below) rather than renamed, to avoid
  * unrelated churn across every call site.
  *
- * When the sanitized value exceeds {@link VEST_KIND_SEGMENT_MAX_LEN}, a short
- * FNV-1a hash suffix of the *original* value is appended to guarantee that
- * two long, otherwise-identical prefixes do not collide.
+ * The sanitize step is LOSSY -- case folding and collapsing every run of
+ * non `[a-z0-9]` characters to a single `-` can map distinct inputs onto the
+ * same segment (e.g. `'user.email'` and `'user_email'` both normalize to
+ * `'user-email'`; so do `'Email'` and `'email'`). Whenever normalization was
+ * lossy -- i.e. the normalized string differs from the original `value` --
+ * or the normalized value exceeds {@link VEST_KIND_SEGMENT_MAX_LEN}, a short
+ * FNV-1a hash suffix of the *original* value is appended so that two inputs
+ * which fold or truncate to the same segment do not collide. A `value` that
+ * survives normalization unchanged (already lowercase, already
+ * alnum-and-hyphen-only, within the length limit) is by definition
+ * collision-free and returned as-is, with no hash suffix.
  */
 function normalizeWarningKindSegment(value: string): string {
   const normalized = value
@@ -189,11 +197,19 @@ function normalizeWarningKindSegment(value: string): string {
     .replaceAll(/[^a-z0-9]+/gu, '-')
     .replaceAll(/^-+|-+$/gu, '');
 
-  if (normalized.length <= VEST_KIND_SEGMENT_MAX_LEN) {
+  const lossy =
+    normalized !== value || normalized.length > VEST_KIND_SEGMENT_MAX_LEN;
+
+  if (!lossy) {
     return normalized;
   }
 
-  return `${normalized.slice(0, VEST_KIND_SEGMENT_MAX_LEN)}-${fnv1a4Hex(value)}`;
+  const truncated =
+    normalized.length > VEST_KIND_SEGMENT_MAX_LEN
+      ? normalized.slice(0, VEST_KIND_SEGMENT_MAX_LEN)
+      : normalized;
+
+  return `${truncated}-${fnv1a4Hex(value)}`;
 }
 
 /**
@@ -201,8 +217,13 @@ function normalizeWarningKindSegment(value: string): string {
  * error or warning.
  *
  * The `'field'`/`'warning'` fallback literals below are generic placeholders
- * for "the sanitized segment came out empty" (e.g. a message that is only
- * punctuation) — they are NOT a mode indicator. In particular, the
+ * for "the sanitized segment came out empty" -- which, since
+ * {@link normalizeWarningKindSegment} now appends a hash suffix to any
+ * lossily-normalized input (including one that folds to nothing, e.g. a
+ * message that is only punctuation), can only happen for a literal empty
+ * `''` fieldPath/message: normalizing `''` is non-lossy (it stays `''`), so
+ * no hash is appended and the fallback literal applies. They are NOT a mode
+ * indicator. In particular, the
  * `'warning'` fallback also applies when `mode === 'error'`, so a blocking
  * error whose message sanitizes to empty can produce a kind that literally
  * contains the substring `warning` (e.g. `vest:field:warning:0`). This is a

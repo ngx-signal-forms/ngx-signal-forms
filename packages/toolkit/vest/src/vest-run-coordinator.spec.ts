@@ -1,6 +1,8 @@
+import { create, enforce, test as vestTest } from 'vest';
 import { describe, expect, it, vi } from 'vitest';
 import {
   createVestRunCoordinator,
+  isVestResultLike,
   type VestResultLike,
   type VestRunnableSuite,
 } from './vest-run-coordinator';
@@ -764,5 +766,47 @@ describe('createVestRunCoordinator', () => {
           .fromCache,
       ).toBe(true);
     });
+  });
+});
+
+describe('isVestResultLike', () => {
+  it('accepts a genuine Vest SuiteResult', () => {
+    const suite = create((data: { email: string }) => {
+      vestTest('email', 'is required', () => {
+        enforce(data.email).isNotBlank();
+      });
+    });
+
+    suite.run({ email: '' });
+    const result: unknown = suite.get();
+
+    expect(isVestResultLike(result)).toBe(true);
+  });
+
+  it('rejects an object with callable getErrors/getWarnings but no isPending method', () => {
+    // `VestResultLike` also requires `isPending` (`Pick<SuiteResult, 'isPending'>`),
+    // which both `suite.get().isPending()` and
+    // `entry.initialResult.isPending()` invoke as a METHOD later. A
+    // consumer-supplied object missing it must fail the guard rather than
+    // pass and crash downstream.
+    const missingIsPending: unknown = {
+      getErrors: () => [],
+      getWarnings: () => [],
+    };
+
+    expect(isVestResultLike(missingIsPending)).toBe(false);
+  });
+
+  it('rejects an object whose isPending is a boolean field rather than a method', () => {
+    // Guards against the incorrect fix once proposed for this guard --
+    // `typeof isPending === 'boolean'` -- which would accept this shape even
+    // though Vest's real `isPending` is a zero-arg method, not a field.
+    const booleanIsPending: unknown = {
+      getErrors: () => [],
+      getWarnings: () => [],
+      isPending: false,
+    };
+
+    expect(isVestResultLike(booleanIsPending)).toBe(false);
   });
 });
