@@ -635,18 +635,12 @@ should alias.
 
 ### Use the toolkit's wrapper helpers instead of reinventing them
 
-The `@ngx-signal-forms/toolkit/headless` entry point exposes four
-helpers for the boilerplate every form-field wrapper otherwise
-reimplements:
+The `@ngx-signal-forms/toolkit/headless` entry point exposes helpers for
+the boilerplate every form-field wrapper otherwise reimplements:
 
 - `createFieldNameResolver({ explicit, labelFor?, boundControl, wrapperName })` —
   the priority cascade `explicit → labelFor → boundControl.id → null +
 dev warning`.
-- `toHintDescriptors(hints)` — maps `Signal<readonly NgxFormFieldHint[]>`
-  to the registry wire format.
-- `createErrorRendererInputs({ formField, strategy, submittedStatus })` —
-  builds the `*ngComponentOutlet` `inputs:` map with a typed
-  `NgxFormFieldErrorRendererInputs<TValue>` payload.
 - `createAriaDescribedByBridge({ toolkit })` — for design systems that
   own `aria-describedby` via an injectable a11y service (Spartan brain's
   `BrnFieldA11yService`, or any equivalent), exposes a structurally
@@ -658,3 +652,24 @@ These keep every reference wrapper on a single canonical primitive so a
 behaviour change in one place takes effect everywhere — and they give
 new wrappers a consistent look so consumers reading any reference
 recognise the shape.
+
+Two smaller pieces of boilerplate are trivial enough that each reference
+wrapper (`NgxFormFieldWrapper` included) now inlines them directly rather
+than importing a shared helper — each is a single `computed()`:
+
+```ts
+// Hint descriptors for NGX_SIGNAL_FORM_HINT_REGISTRY
+readonly hintDescriptors = computed(() =>
+  this.hintChildren().map((hint) => ({
+    id: hint.resolvedId(),
+    fieldName: hint.resolvedFieldName(),
+  })),
+);
+
+// *ngComponentOutlet inputs for the error renderer
+readonly errorRendererInputs = computed<Record<string, unknown>>(() => ({
+  formField: this.formField(),
+  strategy: this.effectiveStrategy(),
+  submittedStatus: this.submittedStatus(),
+}));
+```

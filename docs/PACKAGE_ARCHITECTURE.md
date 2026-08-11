@@ -69,7 +69,6 @@ packages/toolkit/
 │   ├── character-count.ts
 │   ├── form-field-error.ts
 │   ├── form-field-error-summary.ts
-│   ├── form-field-notification.ts
 │   ├── form-marking-legend.ts
 │   ├── hint.ts
 │   ├── warning-error.ts
@@ -123,7 +122,7 @@ absolute URLs.
 ```typescript
 import { provideNgxSignalFormsConfig } from '@ngx-signal-forms/toolkit';
 import { NgxFormField } from '@ngx-signal-forms/toolkit/form-field';
-import { NgxFormFieldNotification } from '@ngx-signal-forms/toolkit/assistive';
+import { NgxFormFieldError } from '@ngx-signal-forms/toolkit/assistive';
 import { NgxHeadlessNotification } from '@ngx-signal-forms/toolkit/headless';
 import { validateVest } from '@ngx-signal-forms/toolkit/vest';
 ```

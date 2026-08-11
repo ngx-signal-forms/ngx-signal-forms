@@ -155,7 +155,7 @@ test.describe('Form Field Wrapper - Fieldset Appearance', () => {
     await expect(
       page
         .getGroupedMessages(page.shippingAddressFieldset)
-        .locator('.ngx-form-field-notification__list li'),
+        .locator('.ngx-form-field-error__list li'),
     ).toHaveCount(4);
   });
 
@@ -172,7 +172,9 @@ test.describe('Form Field Wrapper - Fieldset Appearance', () => {
       groupedMessages.locator('ngx-form-field-error').first(),
     ).toBeVisible();
     await expect(
-      groupedMessages.locator('ngx-form-field-notification'),
+      groupedMessages.locator(
+        'ngx-form-field-error[data-presentation="panel"]',
+      ),
     ).toHaveCount(0);
 
     await page.showNotificationFeedback();
@@ -182,7 +184,9 @@ test.describe('Form Field Wrapper - Fieldset Appearance', () => {
       'notification',
     );
     await expect(
-      groupedMessages.locator('ngx-form-field-notification'),
+      groupedMessages.locator(
+        'ngx-form-field-error[data-presentation="panel"]',
+      ),
     ).toBeVisible();
     await expect(
       page.getNotificationTitle(page.credentialsFieldset),

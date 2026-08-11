@@ -16,8 +16,9 @@ The assistive entry point provides accessible feedback rendering that sits betwe
 
 1. Import from `@ngx-signal-forms/toolkit/assistive` — these components are also re-exported by `NgxFormField` for convenience when a form-field wrapper is present.
 
-2. **`NgxFormFieldError`** — displays validation errors (and optionally warnings) for a single field or a pre-aggregated error list:
-   - Always provide `[formField]` for single-field usage.
+2. **`NgxFormFieldError`** — displays validation errors (and optionally warnings) for a single field or a pre-aggregated, grouped error list. Two presentations:
+   - `presentation="inline"` (default) — bare messages under a single control. Always provide `[formField]` for this usage.
+   - `presentation="panel"` — a bordered, padded notification card for grouped fieldset summaries or custom summary blocks. Provide `[errors]` (a reactive source of aggregated `ValidationError[]`) instead of `[formField]`; optional `title` renders above the messages. Tone routing is automatic and content-driven — there is no `tone` input: any blocking error surfaces the `role="alert"` container; a warning-only list surfaces the `role="status"` container; an empty list hides both.
    - Always provide `fieldName` when used standalone (not inside `ngx-form-field-wrapper`).
    - Inside a wrapper, `fieldName` is inherited automatically.
    - Use `listStyle="bullets"` for grouped summaries; default `'plain'` for inline single-field output.
@@ -29,12 +30,11 @@ The assistive entry point provides accessible feedback rendering that sits betwe
    - Omit `maxLength` when a `maxLength` validator on the field provides it.
    - Use `colorThresholds` to customize warning/danger thresholds (default: 80% warning, 95% danger).
 
-5. **`NgxFormFieldNotification`** — grouped validation notification for fieldsets, summary cards, or custom sections:
+5. Grouped validation notification for fieldsets, summary cards, or custom sections is `NgxFormFieldError` with `presentation="panel"` (see step 2 above) — there is no separate notification component:
 
-- Provide `[errors]` as a signal of aggregated `ValidationError[]`.
+- Provide `[errors]` as a reactive source of aggregated `ValidationError[]` and `presentation="panel"`.
 - Provide `fieldName` when the grouped block needs deterministic `aria-describedby` IDs.
-- Tone routing is automatic and content-driven — there is no `tone` input: any blocking error surfaces the `role="alert"` container; a warning-only list surfaces the `role="status"` container; an empty list hides both.
-- Optional `title` renders above the messages; `listStyle` (`'plain' | 'bullets'`, default `'bullets'`) controls stacked paragraphs vs a bullet list.
+- Optional `title` renders above the messages; `listStyle` (`'plain' | 'bullets'`) controls stacked paragraphs vs a bullet list.
 - Prefer this over `NgxFormFieldErrorSummary` when you already own the grouping logic and want both warning and blocking surfaces.
 
 6. **`NgxFormFieldErrorSummary`** — form-level error summary (GOV.UK pattern):
@@ -140,7 +140,7 @@ import {
 
 `NgxFormFieldError` automatically renders warnings with `role="status"` — no manual ARIA needed.
 
-`NgxFormFieldNotification` follows the same separation at the grouped level, automatically and content-driven (no `tone` input): any blocking error routes to the assertive `role="alert"` container, a warning-only list to the polite `role="status"` container, and an empty list hides both. This prevents accidentally downgrading real errors or over-announcing non-blocking guidance.
+`NgxFormFieldError`'s `presentation="panel"` mode follows the same separation at the grouped level, automatically and content-driven (no `tone` input): any blocking error routes to the assertive `role="alert"` container, a warning-only list to the polite `role="status"` container, and an empty list hides both. This prevents accidentally downgrading real errors or over-announcing non-blocking guidance.
 
 ## Error Handling
 
@@ -151,4 +151,4 @@ import {
 - For grouped summaries or fieldset-level output, switch to `form-field/SKILL.md` (`NgxFormFieldset`).
 - If error summary does not show: verify `ngxSignalForm` is applied to the `<form>` element so context is active, or provide `strategy` and `submittedStatus` explicitly.
 - If error summary entries don't focus controls on click: ensure the bound `<input>` / `<textarea>` / `<select>` has a stable `id` attribute — `focusBoundControl()` requires it.
-- For warning entries in the summary, use `NgxHeadlessErrorSummary` from `@ngx-signal-forms/toolkit/headless`, or use `NgxFormFieldNotification` when you already have aggregated `ValidationError[]`.
+- For warning entries in the summary, use `NgxHeadlessErrorSummary` from `@ngx-signal-forms/toolkit/headless`, or use `NgxFormFieldError` with `presentation="panel"` when you already have aggregated `ValidationError[]`.

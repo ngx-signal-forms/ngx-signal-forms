@@ -150,57 +150,60 @@ Provides context or instructions for a field.
 | `--ngx-form-field-hint-padding-inline-start` | `var(--...feedback...)`  | Start-edge padding          |
 | `--ngx-form-field-hint-padding-inline-end`   | `var(--...feedback...)`  | End-edge padding            |
 
-### Grouped Notifications
+### Grouped Notifications (panel presentation)
 
-**Component:** `ngx-form-field-notification`
+**Component:** `ngx-form-field-error` with `presentation="panel"`
 
-Use this surfaced card for grouped validation messages such as fieldset-level
-errors or custom summary blocks.
+There is no separate notification component — `ngx-form-field-error` renders
+this surfaced card for grouped validation messages (fieldset-level errors,
+custom summary blocks) when `presentation="panel"`; the default
+`presentation="inline"` renders bare per-field messages instead (see the
+[Error & Warning Messages](#error--warning-messages) table above for the
+tokens shared by both presentations: color, list style, message spacing,
+etc.). `--ngx-signal-form-error-panel-*` / `--ngx-signal-form-warning-panel-*`
+below only apply while `presentation="panel"`.
 
-Notification styling now follows the same pattern as the rest of the toolkit:
+Panel styling follows the same pattern as the rest of the toolkit:
 
-- internal defaults live on `--_notification-*` tokens
-- public overrides come from `--ngx-signal-form-notification-*`
+- internal defaults live on `--_error-panel-*` tokens
+- public overrides come from `--ngx-signal-form-error-panel-*` /
+  `--ngx-signal-form-warning-panel-*`
 - implementation consumes the resolved pseudo-private variables only
 
 That keeps dark-mode defaults and Figma-aligned surfaces centralized without
 shadowing consumer-provided theme variables.
 
-| Property                                              | Default                                                           | Description                              |
-| :---------------------------------------------------- | :---------------------------------------------------------------- | :--------------------------------------- |
-| `--ngx-signal-form-notification-gap`                  | `0.25rem`                                                         | Vertical gap between title and body/list |
-| `--ngx-signal-form-notification-padding`              | `1rem`                                                            | Inner padding of the notification card   |
-| `--ngx-signal-form-notification-border-width`         | `1px`                                                             | Border width                             |
-| `--ngx-signal-form-notification-border-style`         | `solid`                                                           | Border style                             |
-| `--ngx-signal-form-notification-border-radius`        | `0.5rem`                                                          | Card corner radius                       |
-| `--ngx-signal-form-notification-box-shadow`           | `none`                                                            | Card shadow                              |
-| `--ngx-signal-form-notification-font-size`            | `0.875rem`                                                        | Default message font size (Figma body-2) |
-| `--ngx-signal-form-notification-line-height`          | `var(--...feedback...)`                                           | Default message line height              |
-| `--ngx-signal-form-notification-error-color`          | `#db1818`                                                         | Base error text color                    |
-| `--ngx-signal-form-notification-error-border-color`   | `color-mix(in srgb, var(--...error-color...) 50%, transparent)`   | Error border color                       |
-| `--ngx-signal-form-notification-error-bg`             | `#fdebeb`                                                         | Error background color                   |
-| `--ngx-signal-form-notification-warning-color`        | `#a16207`                                                         | Base warning text color                  |
-| `--ngx-signal-form-notification-warning-border-color` | `color-mix(in srgb, var(--...warning-color...) 50%, transparent)` | Warning border color                     |
-| `--ngx-signal-form-notification-warning-bg`           | `color-mix(in srgb, var(--...warning-color...) 10%, white)`       | Warning background color                 |
-| `--ngx-signal-form-notification-title-color`          | `currentColor`                                                    | Optional title color                     |
-| `--ngx-signal-form-notification-title-font-size`      | `1rem`                                                            | Optional title font size                 |
-| `--ngx-signal-form-notification-title-line-height`    | `1.5rem`                                                          | Optional title line height               |
-| `--ngx-signal-form-notification-title-font-weight`    | `500`                                                             | Optional title font weight               |
-| `--ngx-signal-form-notification-title-letter-spacing` | `0`                                                               | Optional title letter spacing            |
-| `--ngx-signal-form-notification-message-color`        | `currentColor`                                                    | Grouped message text color               |
-| `--ngx-signal-form-notification-message-spacing`      | `0.25rem`                                                         | Spacing between grouped messages         |
-| `--ngx-signal-form-notification-message-line-height`  | `var(--ngx-signal-form-notification-line-height)`                 | Grouped message line height              |
-| `--ngx-signal-form-notification-list-style`           | `var(--...feedback...)`                                           | `list-style` shorthand (type + position) |
+| Property                                        | Default                                                                     | Description                                     |
+| :---------------------------------------------- | :-------------------------------------------------------------------------- | :---------------------------------------------- |
+| `--ngx-signal-form-error-panel-padding`         | `1rem`                                                                      | Inner padding of the card                       |
+| `--ngx-signal-form-error-panel-border-width`    | `1px`                                                                       | Border width                                    |
+| `--ngx-signal-form-error-panel-border-radius`   | `0.5rem`                                                                    | Card corner radius                              |
+| `--ngx-signal-form-error-panel-font-size`       | `0.875rem`                                                                  | Message font size (Figma body-2)                |
+| `--ngx-signal-form-error-panel-line-height`     | `1.25rem`                                                                   | Message line height                             |
+| `--ngx-signal-form-error-panel-bg`              | `#fdebeb`                                                                   | Error card background                           |
+| `--ngx-signal-form-error-panel-border-color`    | `color-mix(in srgb, var(--ngx-signal-form-error-color) 50%, transparent)`   | Error card border color                         |
+| `--ngx-signal-form-warning-panel-bg`            | `color-mix(in srgb, var(--ngx-signal-form-warning-color) 10%, white)`       | Warning card background                         |
+| `--ngx-signal-form-warning-panel-border-color`  | `color-mix(in srgb, var(--ngx-signal-form-warning-color) 50%, transparent)` | Warning card border color                       |
+| `--ngx-signal-form-error-panel-message-spacing` | `0.25rem`                                                                   | Spacing between grouped messages                |
+| `--ngx-signal-form-error-title-color`           | `currentColor`                                                              | Optional title color (both presentations)       |
+| `--ngx-signal-form-error-title-font-size`       | `1rem`                                                                      | Optional title font size (both presentations)   |
+| `--ngx-signal-form-error-title-line-height`     | `1.5rem`                                                                    | Optional title line height (both presentations) |
+| `--ngx-signal-form-error-title-font-weight`     | `500`                                                                       | Optional title font weight (both presentations) |
+
+Text color, list style/indent, and message spacing come from the shared
+`--ngx-signal-form-error-*` / `--ngx-signal-form-warning-*` tokens in the
+[Error & Warning Messages](#error--warning-messages) table — the panel
+presentation no longer has an independent color/list-style knob from the
+inline presentation (a deliberate simplification made when the two were
+merged; see `docs/migrations/v1.0.0-rc.12.md`).
 
 The light-theme danger defaults follow the current Figma card recipe:
-
-- `--ngx-signal-form-notification-list-padding-inline-start` — default `1.25rem`; bullet/list indent
 
 - text: `#db1818`
 - border: same semantic danger hue at `50%` alpha
 - background: `#fdebeb`
 
-Grouped notifications now animate as a progressive enhancement:
+The panel presentation animates as a progressive enhancement:
 
 - baseline-safe fade/slide/color transitions always apply
 - browsers with `interpolate-size: allow-keywords` also animate the card's block-size between `0` and `auto`
@@ -208,14 +211,14 @@ Grouped notifications now animate as a progressive enhancement:
 
 The border still derives from the semantic danger color by default, while the
 background stays pinned to the Figma light-danger surface. Override
-`--ngx-signal-form-notification-error-bg` when your theme needs a different
+`--ngx-signal-form-error-panel-bg` when your theme needs a different
 surface color.
 
-Notification messages use Figma’s body-2 token by default (`0.875rem` / `1.25rem`),
-while inline errors and hints retain caption sizing (`0.75rem` / `1rem`). Setting
-`--ngx-signal-form-error-font-size` does not affect notifications; override
-`--ngx-signal-form-notification-font-size` and
-`--ngx-signal-form-notification-line-height` to tune grouped cards.
+Panel messages use Figma's body-2 token by default (`0.875rem` / `1.25rem`),
+while inline errors and hints retain caption sizing (`0.75rem` / `1rem`).
+Setting `--ngx-signal-form-error-font-size` does not affect the panel
+presentation; override `--ngx-signal-form-error-panel-font-size` and
+`--ngx-signal-form-error-panel-line-height` to tune grouped cards.
 
 ### Error Summary
 
@@ -418,11 +421,11 @@ fallbacks throughout the stylesheet.
 - `--ngx-signal-form-fieldset-notification-list-padding-inline-start` — default `var(--_feedback-list-indent)`; notification card list indent
 - `--ngx-signal-form-fieldset-notification-error-bg` — grouped notification card background for errors
 - `--ngx-signal-form-fieldset-notification-error-border-color` — grouped notification card border color for errors
-- `--ngx-signal-form-fieldset-notification-error-color` — grouped notification card text color for errors
 - `--ngx-signal-form-fieldset-notification-list-style` — grouped notification card `list-style` shorthand
 - `--ngx-signal-form-fieldset-notification-warning-bg` — grouped notification card background for warnings
 - `--ngx-signal-form-fieldset-notification-warning-border-color` — grouped notification card border color for warnings
-- `--ngx-signal-form-fieldset-notification-warning-color` — grouped notification card text color for warnings
+
+Message text color is not independently overridable per feedback-appearance branch: the notification card shares `--ngx-signal-form-fieldset-error-color` / `--ngx-signal-form-fieldset-warning-color` with the plain branch (both branches render the same `ngx-form-field-error` component — see [Grouped Notifications](#grouped-notifications-panel-presentation)). `--ngx-signal-form-fieldset-notification-error-color` / `-warning-color` were removed along with that split.
 
 The fieldset uses two visual layers by design:
 

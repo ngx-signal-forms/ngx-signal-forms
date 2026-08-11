@@ -121,17 +121,26 @@ schema-validated fields need the extra call.
 ## Notification Tone Is Content-Driven — There Is No `tone` Input
 
 ```html
-<!-- Wrong — `tone` is not an input on the notification -->
-<ngx-form-field-notification [errors]="field().errors()" tone="auto" />
+<!-- Wrong — `tone` is not an input on the grouped panel -->
+<ngx-form-field-error
+  [errors]="field().errors()"
+  presentation="panel"
+  tone="auto"
+/>
 
 <!-- Correct — tone is resolved from the errors themselves -->
-<ngx-form-field-notification [errors]="field().errors()" fieldName="email" />
+<ngx-form-field-error
+  [errors]="field().errors()"
+  fieldName="email"
+  presentation="panel"
+/>
 ```
 
-`NgxFormFieldNotification` (assistive) and `NgxHeadlessNotification` (headless)
-route tone automatically from content: any blocking error raises the error
-container (`role="alert"`); a warning-only list raises the warning container
-(`role="status"`); an empty list hides both. Do not try to set a tone — there is
+`NgxFormFieldError`'s `presentation="panel"` mode (assistive) and
+`NgxHeadlessNotification` (headless) route tone automatically from content:
+any blocking error raises the error container (`role="alert"`); a
+warning-only list raises the warning container (`role="status"`); an empty
+list hides both. Do not try to set a tone — there is
 no such input.
 
 ## Wrapper Identity — Always Provide `id`

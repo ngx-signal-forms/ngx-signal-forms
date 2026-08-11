@@ -33,6 +33,19 @@ export type NgxFormFieldListStyle = 'plain' | 'bullets';
 export type NgxFormFieldErrorListStyle = NgxFormFieldListStyle;
 
 /**
+ * Visual treatment for the rendered live regions.
+ *
+ * - `'inline'` (default) — bare messages under a single control, no card
+ *   chrome. The shape `NgxFormFieldWrapper` and per-field usage render.
+ * - `'panel'` — a bordered, padded card with its own theme tokens
+ *   (`--ngx-signal-form-error-panel-*`). For grouped fieldset feedback and
+ *   custom summary blocks — what `NgxFormFieldNotification` used to render
+ *   as a standalone component, folded here as a presentation mode instead
+ *   (pre-1.0, no alias kept — see `docs/migrations/`).
+ */
+export type NgxFormFieldErrorPresentation = 'inline' | 'panel';
+
+/**
  * Reusable error and warning display component with WCAG 2.2 compliance.
  *
  * Accepts a FieldTree from Angular Signal Forms.
@@ -111,6 +124,7 @@ export type NgxFormFieldErrorListStyle = NgxFormFieldListStyle;
     // (which stay off the inner containers for the WCAG 4.1.3 reasons
     // documented on the template).
     '[class.ngx-form-field-error-host--empty]': 'hostEmpty()',
+    '[attr.data-presentation]': 'presentation()',
   },
   hostDirectives: [
     {
@@ -157,6 +171,10 @@ export type NgxFormFieldErrorListStyle = NgxFormFieldListStyle;
       role="alert"
     >
       @if (errorContainerVisible()) {
+        @if (title()) {
+          <p class="ngx-form-field-error__title">{{ title() }}</p>
+        }
+
         @if (usesBulletList()) {
           <ul class="ngx-form-field-error__list" role="list">
             @for (
@@ -198,6 +216,10 @@ export type NgxFormFieldErrorListStyle = NgxFormFieldListStyle;
       role="status"
     >
       @if (warningContainerVisible()) {
+        @if (title()) {
+          <p class="ngx-form-field-error__title">{{ title() }}</p>
+        }
+
         @if (usesBulletList()) {
           <ul class="ngx-form-field-error__list" role="list">
             @for (
@@ -291,6 +313,20 @@ export class NgxFormFieldError {
    * - `bullets`: unordered list for grouped summaries such as fieldsets
    */
   readonly listStyle = input<NgxFormFieldListStyle>('plain');
+
+  /**
+   * Optional title rendered above the message list when a container is
+   * visible. Additive to both presentation modes; most useful in
+   * `presentation="panel"`, where the folded-in `NgxFormFieldNotification`
+   * used it for grouped fieldset feedback and custom summary cards.
+   */
+  readonly title = input<string | null | undefined>();
+
+  /**
+   * Visual treatment for the rendered live regions — see
+   * {@link NgxFormFieldErrorPresentation}.
+   */
+  readonly presentation = input<NgxFormFieldErrorPresentation>('inline');
 
   /**
    * Reactive accessor to the underlying field state, derived from the same

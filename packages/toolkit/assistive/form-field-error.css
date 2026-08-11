@@ -176,6 +176,14 @@
   margin: 0;
 }
 
+.ngx-form-field-error__title {
+  margin: 0;
+  color: var(--_error-title-color);
+  font-size: var(--_error-title-font-size);
+  line-height: var(--_error-title-line-height);
+  font-weight: var(--_error-title-font-weight);
+}
+
 .ngx-form-field-error__list {
   margin: var(--_error-space-0);
   padding-inline-start: var(--_error-list-padding-inline-start);
@@ -183,6 +191,153 @@
   flex-direction: column;
   gap: var(--_error-spacing);
   list-style: var(--_error-list-style);
+}
+
+/* ============================================================================ */
+/* PANEL PRESENTATION — folded in from the former NgxFormFieldNotification.    */
+/* Card chrome (padding/border/background/box-shadow) is opt-in via           */
+/* `presentation="panel"`, driven here by the `[data-presentation]` host      */
+/* attribute so `presentation="inline"` (the default, and every existing      */
+/* per-field usage) keeps rendering bare messages with zero visual footprint. */
+/* ============================================================================ */
+
+:host {
+  --_error-title-color: var(--ngx-signal-form-error-title-color, currentcolor);
+  --_error-title-font-size: var(--ngx-signal-form-error-title-font-size, 1rem);
+  --_error-title-line-height: var(
+    --ngx-signal-form-error-title-line-height,
+    1.5rem
+  );
+  --_error-title-font-weight: var(
+    --ngx-signal-form-error-title-font-weight,
+    500
+  );
+}
+
+:host([data-presentation='panel']) {
+  --_error-panel-space-2xs: 0.25rem;
+  --_error-panel-space-lg: 1rem;
+  --_error-panel-clr-danger-soft: #fdebeb;
+  --_error-panel-clr-danger-soft-dark: rgb(127 29 29 / 0.32);
+  --_error-panel-clr-warning-soft: color-mix(
+    in srgb,
+    var(--_error-clr-warning) 10%,
+    white
+  );
+  --_error-panel-clr-warning-soft-dark: rgb(120 53 15 / 0.28);
+  --_error-panel-motion-duration: 180ms;
+  --_error-panel-motion-easing: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --_error-panel-motion-distance: 0.25rem;
+
+  --_error-padding: var(
+    --ngx-signal-form-error-panel-padding,
+    var(--_error-panel-space-lg)
+  );
+  --_error-spacing: var(
+    --ngx-signal-form-error-panel-message-spacing,
+    var(--_error-panel-space-2xs)
+  );
+  --_error-border-width: var(--ngx-signal-form-error-panel-border-width, 1px);
+  --_error-border-radius: var(
+    --ngx-signal-form-error-panel-border-radius,
+    0.5rem
+  );
+  --_error-bg: var(
+    --ngx-signal-form-error-panel-bg,
+    var(--_error-panel-clr-danger-soft)
+  );
+  --_error-border-color: var(
+    --ngx-signal-form-error-panel-border-color,
+    color-mix(in srgb, var(--_error-color) 50%, transparent)
+  );
+  --_warning-bg: var(
+    --ngx-signal-form-warning-panel-bg,
+    var(--_error-panel-clr-warning-soft)
+  );
+  --_warning-border-color: var(
+    --ngx-signal-form-warning-panel-border-color,
+    color-mix(in srgb, var(--_warning-color) 50%, transparent)
+  );
+  --_error-font-size: var(--ngx-signal-form-error-panel-font-size, 0.875rem);
+  --_error-line-height: var(--ngx-signal-form-error-panel-line-height, 1.25rem);
+  --_error-animation: none;
+}
+
+@media (prefers-color-scheme: dark) {
+  :host([data-presentation='panel']) {
+    --_error-panel-clr-danger-soft: var(--_error-panel-clr-danger-soft-dark);
+    --_error-panel-clr-warning-soft: var(--_error-panel-clr-warning-soft-dark);
+  }
+}
+
+:host([data-presentation='panel']) .ngx-form-field-error {
+  box-shadow: none;
+  opacity: 1;
+  transform: translateY(0);
+  transform-origin: top center;
+  transition:
+    opacity var(--_error-panel-motion-duration)
+      var(--_error-panel-motion-easing),
+    transform var(--_error-panel-motion-duration)
+      var(--_error-panel-motion-easing),
+    padding var(--_error-panel-motion-duration)
+      var(--_error-panel-motion-easing),
+    border-color 0.15s ease-in-out,
+    background-color 0.15s ease-in-out,
+    color 0.15s ease-in-out;
+}
+
+:host([data-presentation='panel']) .ngx-form-field-error--empty {
+  opacity: 0;
+  transform: translateY(calc(var(--_error-panel-motion-distance) * -1));
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :host([data-presentation='panel']) .ngx-form-field-error {
+    transition: none;
+    transform: none;
+  }
+}
+
+/* Panel high-contrast: soft background + color-mix border can drop below
+ * the WCAG contrast threshold — solidify the border like inline mode does. */
+@media (prefers-contrast: more) {
+  :host([data-presentation='panel']) .ngx-form-field-error--error {
+    border-color: var(--_error-color);
+    border-width: 2px;
+  }
+
+  :host([data-presentation='panel']) .ngx-form-field-error--warning {
+    border-color: var(--_warning-color);
+    border-width: 2px;
+  }
+}
+
+@media (forced-colors: active) {
+  :host([data-presentation='panel']) .ngx-form-field-error {
+    forced-color-adjust: none;
+    background: Canvas;
+    color: CanvasText;
+    border: 2px solid CanvasText;
+  }
+
+  :host([data-presentation='panel']) .ngx-form-field-error--error {
+    border-color: Mark;
+    color: MarkText;
+    background: Mark;
+  }
+
+  :host([data-presentation='panel']) .ngx-form-field-error--warning {
+    border-color: CanvasText;
+    color: CanvasText;
+    background: Canvas;
+  }
+
+  :host([data-presentation='panel']) .ngx-form-field-error--empty {
+    border-width: 0;
+    background: transparent;
+  }
 }
 
 /* Reduced Motion Support */

@@ -79,10 +79,8 @@ export {
   createAriaDescribedBySignal,
   createAriaInvalidSignal,
   createAriaRequiredSignal,
-  createErrorRendererInputs,
   createFieldNameResolver,
   createHintIdsSignal,
-  toHintDescriptors,
   type AriaDescribedByBridge,
   type AriaDescribedByFieldNameReader,
   type AriaDescribedByPreservedIdsReader,
@@ -90,16 +88,13 @@ export {
   type BoundControlElementReader,
   type CreateAriaDescribedByBridgeOptions,
   type CreateAriaDescribedBySignalOptions,
-  type CreateErrorRendererInputsOptions,
   type CreateFieldNameResolverOptions,
   type CreateHintIdsSignalOptions,
   type HintIdsFieldNameReader,
   type HintIdsIdentityLike,
   type HintIdsRegistryLike,
   type HintIdsSignal,
-  type HintLike,
   type LabelForReader,
-  type NgxFormFieldErrorRendererInputs,
 } from '@ngx-signal-forms/toolkit/core';
 
 // Utility functions
