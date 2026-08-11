@@ -227,16 +227,14 @@ type NgxFormFieldErrorPlacement = 'top' | 'bottom';
 
 ```typescript
 // Error visibility
-showErrors(field, strategy, submittedStatus?): Signal<boolean>
+createShowErrorsComputed(field, strategy, submittedStatus?): Signal<boolean>
 // `submittedStatus` is optional for 'immediate' and 'on-touch'; REQUIRED for
 // 'on-submit' — without it the helper stays at 'unsubmitted' and errors never
 // surface (dev mode logs a one-shot console.warn). Inside [formRoot][ngxSignalForm]
 // the wrapper, auto-ARIA, and headless directives inherit it automatically.
-createShowErrorsComputed(field, strategy, submittedStatus?): Signal<boolean>
-// Lower-level extraction used internally by showErrors(), the wrapper,
-// NgxFormFieldError, and NgxHeadlessErrorState. Reach for it
-// when you already own a FieldState signal and want the same visibility-timing
-// rules without routing through showErrors()'s ErrorVisibilityState parameter.
+// This is the shared visibility-timing primitive behind the wrapper,
+// NgxFormFieldError, and NgxHeadlessErrorState. Not the same as
+// shouldShowErrors() below — that's a pure boolean predicate, not a signal.
 combineShowErrors(signals: readonly Signal<boolean>[]): Signal<boolean>
 shouldShowErrors(isInvalid, isTouched, strategy, submittedStatus): boolean
 
@@ -380,10 +378,12 @@ import {
   NgxFormFieldHint, // <ngx-form-field-hint>
   NgxFormFieldCharacterCount, // <ngx-form-field-character-count>
   NgxFormMarkingLegend, // <ngx-form-marking-legend>
+} from '@ngx-signal-forms/toolkit/assistive';
+import {
   warningError,
   isWarningError,
   isBlockingError,
-} from '@ngx-signal-forms/toolkit/assistive';
+} from '@ngx-signal-forms/toolkit';
 ```
 
 ### NgxFormFieldError inputs
@@ -541,7 +541,7 @@ Inputs: `field` (required), `fieldName` (required), `strategy`
 
 Signals:
 
-- `showErrors()` — whether to display errors now
+- `shouldShowErrors()` — whether to display errors now
 - `hasErrors()` / `hasWarnings()`
 - `resolvedErrors()` / `resolvedWarnings()` — `ResolvedError[]` with `.message`, `.kind`
 - `errorId` / `warningId` — stable IDs for `aria-describedby`
@@ -681,7 +681,7 @@ interface CreateErrorStateOptions<TValue = unknown> {
 }
 
 interface ErrorStateResult {
-  readonly showErrors: Signal<boolean>;
+  readonly shouldShowErrors: Signal<boolean>;
   readonly hasErrors: Signal<boolean>;
   readonly hasWarnings: Signal<boolean>;
   readonly resolvedErrors: Signal<readonly ResolvedError[]>;
@@ -748,11 +748,20 @@ full composition examples and the exported option types.
 import {
   VEST_ERROR_KIND_PREFIX, // 'vest:'
   VEST_WARNING_KIND_PREFIX, // 'warn:vest:'
+  createVestAdapter,
+  sharedVestAdapter,
   validateVest,
   validateVestWarnings,
+  type RunVestSuiteParams,
+  type RunVestSuiteResult,
   type ValidateVestOptions,
+  type VestAdapterOptions,
+  type VestCoordinatedSuite,
   type VestFieldExclusion,
   type VestOnlyFieldSelector,
+  type VestRegisterOptions,
+  type VestRunnableSuite,
+  type VestSuiteAdapter,
 } from '@ngx-signal-forms/toolkit/vest';
 
 interface ValidateVestOptions<TValue = unknown, F extends string = string> {
@@ -797,18 +806,35 @@ interface VestRegisterOptions<TValue = unknown, F extends string = string> {
   readonly resetOnDestroy?: boolean;
   readonly only?: VestOnlyFieldSelector<TValue, F>;
 }
+// The exact slice of `VestRunnableSuite` the run coordinator drives (`run`,
+// `only`, `subscribe`, `get`) — NOT the full suite contract. `reset` is
+// registration-layer-only (`resetOnDestroy`), never passed to a run.
+type VestCoordinatedSuite<TValue, F extends string = string> = Pick<
+  VestRunnableSuite<TValue, F>,
+  'run' | 'only' | 'subscribe' | 'get'
+>;
+
 interface RunVestSuiteParams<TValue, F extends string = string> {
-  readonly suite: VestRunnableSuite<TValue, F>;
+  readonly suite: VestCoordinatedSuite<TValue, F>;
   readonly fieldTree: ReadonlyFieldTree<TValue>;
   readonly value: TValue;
   readonly focus?: VestFieldExclusion<F>;
 }
 interface RunVestSuiteResult<TValue, F extends string = string> {
   readonly value: TValue;
-  readonly focus: string | undefined;
+  // The `focus` exactly as requested — a field name, a list of field names,
+  // `false`, or `undefined` — NOT the coordinator's internal cache key.
+  readonly focus: VestFieldExclusion<F>;
   readonly runResult: VestResultLike<F> | PromiseLike<VestResultLike<F>>;
   readonly initialResult: VestResultLike<F> | undefined;
   readonly fromCache: boolean;
+  // `true` when this run was queued behind another field tree's pending run
+  // on the SAME suite instead of starting immediately.
+  readonly deferred: boolean;
+  // Resolves once this run's outcome is observable, recovering from a
+  // superseded Vest resolver. Await THIS, not `runResult` — see
+  // "Awaiting a manual run's outcome" in the vest package README.
+  readonly settled: () => PromiseLike<unknown>;
 }
 interface VestSuiteAdapter {
   register<TValue, F extends string = string>(path, suite, options?): void;

@@ -362,6 +362,27 @@ injection context tears down, not the first one. Destroying one mount while
 a sibling mount is still using the same suite leaves that sibling's retained
 `only()`-run state and any in-flight async run untouched.
 
+Two concurrently-mounted field trees sharing one suite are also isolated
+against each other's **unfocused** (whole-suite) runs: the adapter defers the
+later-arriving tree's run until the suite is idle, so the two never overlap
+(#214). This does not cover **focused** (`only`) registrations: several
+`only`-focused registrations for different fields of the SAME form are the
+documented, intentional shared-suite pattern and are never deferred, but a
+focused registration racing an unrelated, concurrently-mounted form's
+registration on the same suite is unsupported — give each independently
+mounted form its own suite instance in that case.
+
+### Server-side rendering (SSR)
+
+Do not share a suite — or the module-scope `sharedVestAdapter` — across
+concurrent SSR requests. A Node SSR process serves several requests from ONE
+process, so a module-scope suite instance and `sharedVestAdapter`'s run cache
+are shared across those requests: a per-request `resetOnDestroy` teardown
+resets a suite (and drops the run cache) that another request is still
+mid-render on. Create the suite, and ideally an adapter via
+`createVestAdapter()`, **per request** instead — for example, provided by a
+request-scoped provider — rather than at module scope.
+
 ### Async caveats
 
 - `suite.run(data)` returns a synchronous `SuiteResult` that is _also_ a
@@ -397,6 +418,15 @@ pass an `only` selector so the adapter threads the changed field through:
 ```typescript
 import { create, enforce, only, test } from 'vest';
 
+interface Model {
+  email: string;
+  username: string;
+  // Declared as the exact field-name union so `ctx.value().lastTouched`
+  // below already returns `'email' | 'username' | undefined` — proving the
+  // `only` selector's narrowing, not just its shape.
+  lastTouched?: 'email' | 'username';
+}
+
 const suite = create((data: Model, field?: string) => {
   only(field);
   test('email', 'Email is required', () => {
@@ -419,10 +449,12 @@ suites where per-field isolation matters.
 #### Typed focus names
 
 Declare the suite with `create<{ fields: … }>(…)` (Vest ≥6.3.2) to get a
-field-name union instead of a bare `string`:
+field-name union instead of a bare `string`. Reusing the same `Model` from
+above (whose `lastTouched` is already typed as `'email' | 'username'`) shows
+the union propagating end to end:
 
 ```typescript
-const suite = create<{ fields: 'email' | 'username' }>(
+const typedSuite = create<{ fields: 'email' | 'username' }>(
   (data: Model, field?: string) => {
     only(field);
     test('email', 'Email is required', () => {
@@ -434,7 +466,7 @@ const suite = create<{ fields: 'email' | 'username' }>(
   },
 );
 
-validateVest(path, suite, {
+validateVest(path, typedSuite, {
   // Return type narrows to `VestFieldExclusion<'email' | 'username'>`: a
   // single field name, a `('email' | 'username')[]` for multi-field focus,
   // `undefined` for a whole-suite run, or `false` to focus nothing (throws —
@@ -475,6 +507,52 @@ call runs the whole suite when `field` is `undefined`, and just that field's
 tests otherwise. There is no separate auto-focus option: the suite always
 runs on the bound path's value, so the field to focus is information only
 your form knows and must supply.
+
+## Vest field-name resolution
+
+Per [ADR-0008](https://github.com/ngx-signal-forms/ngx-signal-forms/blob/main/docs/decisions/0008-vest-suite-input-is-the-bound-path.md), a Vest field name (the string a `test()`/`warn()` is
+registered under) is resolved **relative to the bound path** by walking the
+Angular field tree the validator is attached to. A name that does not resolve
+is classified by shape:
+
+- **Virtual Vest field name** — the name's FIRST segment does not resolve
+  against the bound field tree, e.g. `test('passwordMatch', 'Passwords must
+match', …)` on a model with no `passwordMatch` field. This is a deliberate,
+  form-level error and is indistinguishable from an authoring mistake at that
+  point, so it is treated as legitimate: the failure attaches to the bound
+  field silently, with no warning or error logged.
+- **Invalid Vest field name** — a valid prefix resolves but a LATER segment
+  does not (`test('address.cityy', …)` when the bound field tree has
+  `address.city` but no `address.cityy`), or the resolution probe itself
+  throws. Nothing but a typo or a field-tree/suite shape mismatch explains
+  this shape, so it is treated as an authoring bug:
+  - **Development mode:** the adapter **throws** synchronously, inside the
+    validator's computed — the form's render fails loudly rather than
+    silently misattaching the error.
+  - **Production builds:** the adapter logs a `console.error()` instead of
+    throwing, and still attaches the failure to the bound field so it is
+    never silently lost.
+
+```typescript
+const suite = create((data: SignupModel) => {
+  // Virtual: `passwordMatch` names no field on `SignupModel` — legitimate,
+  // attaches to the bound field silently.
+  test('passwordMatch', 'Passwords must match', () => {
+    /* ... */
+  });
+
+  // Invalid, IF the bound field tree has `address.city` but not
+  // `address.cityy` — a valid prefix (`address`) followed by a typo'd tail.
+  // Throws in dev mode; logs and attaches to the bound field in production.
+  test('address.cityy', 'City is required', () => {
+    /* ... */
+  });
+});
+```
+
+This only applies to a Vest field name's own shape — it is unrelated to
+`validateVest`'s `only` selector, which focuses which Vest tests RUN, not how
+a result's field name is resolved.
 
 ## Using Angular `submit()` with warnings
 

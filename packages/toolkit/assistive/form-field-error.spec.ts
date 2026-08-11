@@ -953,7 +953,7 @@ describe('NgxFormFieldError', () => {
     });
 
     // Regression: when both `[formField]` and `[errors]` are bound, the
-    // headless directive's `showErrors` short-circuits to override mode, but
+    // headless directive's `shouldShowErrors` short-circuits to override mode, but
     // the resolved-errors accessor used to read `formField` first — so the
     // alert container could go visible while `resolvedErrors()` resolved
     // messages from the field's own errors instead of the override list.
@@ -998,7 +998,7 @@ describe('NgxFormFieldError', () => {
 
     // Regression: createErrorMessageSignal pinned the directive's `strategy`
     // input even in `errorsOverride` mode. With `strategy="on-submit"` and no
-    // submitted status, the headless directive's own `showErrors()` would
+    // submitted status, the headless directive's own `shouldShowErrors` would
     // bypass the strategy gate (override-mode short-circuit) and the
     // error container would become visible — but the primitive's visibility
     // cascade would still suppress message resolution, leaving an empty live

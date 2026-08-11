@@ -118,15 +118,16 @@ Automatic per-field focus — the capability `focusCurrentField` was reaching fo
 
 ### Neutral
 
-- The run coordinator (cache, contention detection, FIFO queue, settlement — roughly 500 of `vest-adapter.ts`'s 1614 lines) is **not** retired by this decision. Contention is a two-mount concern: one module-scope suite, two field trees. Giving it its own interface is tracked in #295.
+- The run coordinator (cache, contention detection, FIFO queue, settlement — roughly 500 of `vest-adapter.ts`'s 1614 lines) is **not** retired by this decision. Contention is a two-mount concern: one module-scope suite, two field trees. Giving it its own interface was tracked in #295 — see [ADR-0009](0009-vest-run-coordination-is-its-own-seam.md), which implements it.
 
 ## Related
 
 - [ADR-0006](0006-one-cascade-seam.md) — the same "one contract, one place" reasoning applied to error-visibility timing.
+- [ADR-0009](0009-vest-run-coordination-is-its-own-seam.md) — gives the run coordinator noted under "Neutral" above its own interface, implementing #295.
 - [#287](https://github.com/ngx-signal-forms/ngx-signal-forms/issues/287) — re-scoped around this decision: suite input rule, `focusCurrentField` deletion, enforceable suite contract.
 - [#291](https://github.com/ngx-signal-forms/ngx-signal-forms/issues/291) — the unresolvable-name rule from decision point 4.
 - [#292](https://github.com/ngx-signal-forms/ngx-signal-forms/issues/292) — threading Vest's typed field-name union through the focus selector.
 - [#293](https://github.com/ngx-signal-forms/ngx-signal-forms/issues/293) — research: automatic per-field focus at the root, the deliberate replacement for `focusCurrentField`.
 - [#294](https://github.com/ngx-signal-forms/ngx-signal-forms/issues/294) — coverage of the exported interface, including the untested shared adapter singleton.
-- [#295](https://github.com/ngx-signal-forms/ngx-signal-forms/issues/295) — giving the run coordinator its own interface.
+- [#295](https://github.com/ngx-signal-forms/ngx-signal-forms/issues/295) — giving the run coordinator its own interface, implemented by ADR-0009.
 - [#286](https://github.com/ngx-signal-forms/ngx-signal-forms/issues/286) — spec typecheck target; nine of its errors are resolved by #287.

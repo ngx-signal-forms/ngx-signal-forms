@@ -10,13 +10,19 @@ import {
   form,
   required,
   schema,
+  validate,
   type ValidationError,
 } from '@angular/forms/signals';
 import {
   generateErrorId,
   NgxSignalFormToolkit,
+  provideNgxSignalFormsConfig,
 } from '@ngx-signal-forms/toolkit';
 import { NgxHeadlessErrorState } from '@ngx-signal-forms/toolkit/headless';
+import {
+  NgxFormFieldWrapper,
+  NgxFormFieldset,
+} from '@ngx-signal-forms/toolkit/form-field';
 import { render, screen } from '@testing-library/angular';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it } from 'vitest';
@@ -160,7 +166,7 @@ describe('cross-surface: NgxFormFieldError vs NgxHeadlessErrorState', () => {
 
   // Regression for PR #30: when `NgxFormFieldset` (or any host) binds
   // `[errors]` without `[formField]`, the headless directive must short-circuit
-  // showErrors to true so the caller's pre-aggregated error list renders.
+  // shouldShowErrors to true so the caller's pre-aggregated error list renders.
   // Previously, the bridge slot set unconditionally in the constructor caused
   // the guard `!field() && !#bridgedFieldState()` to fall through to the
   // strategy-based path and hide the errors.
@@ -245,5 +251,172 @@ describe('cross-surface: NgxFormFieldError vs NgxHeadlessErrorState', () => {
     const alertEl = container.querySelector('[role="alert"]');
     // ID must be deterministic and equal to generateErrorId('email').
     expect(alertEl?.getAttribute('id')).toBe(generateErrorId('email'));
+  });
+});
+
+/**
+ * Cross-surface anti-drift guard for issue #264: `NgxFormFieldWrapper`,
+ * `NgxFormFieldset`, and `NgxFormFieldError` each used to resolve
+ * `warningStrategy="inherit"` through their own copy of the cascade. With no
+ * `[ngxSignalForm]` host to inherit from, that produced THREE different
+ * answers (`'on-touch'` from the wrapper and fieldset, which never consulted
+ * `NGX_SIGNAL_FORMS_CONFIG`, vs the configured `defaultErrorStrategy` from
+ * `NgxFormFieldError`, which read the wrong config key). All three now route
+ * through the shared `resolveWarningStrategyFromContext()`, so this renders
+ * the SAME warned-but-valid field through all three surfaces at once and
+ * asserts they agree — the regression test the issue calls out as the one
+ * that would have caught the original defect.
+ */
+describe('cross-surface: warningStrategy="inherit" with no form context (issue #264)', () => {
+  it('NgxFormFieldWrapper, NgxFormFieldset, and NgxFormFieldError all resolve the same defaultWarningStrategy', async () => {
+    @Component({
+      selector: 'test-warning-cascade-parity',
+      imports: [
+        FormField,
+        NgxFormFieldWrapper,
+        NgxFormFieldset,
+        NgxFormFieldError,
+      ],
+      template: `
+        <!-- No [ngxSignalForm] host anywhere in this tree: 'inherit' has
+             nothing to inherit from and must fall through to
+             NGX_SIGNAL_FORMS_CONFIG.defaultWarningStrategy on every surface. -->
+        <ngx-form-field-wrapper
+          [formField]="contactForm.password"
+          fieldName="wrapper-password"
+          warningStrategy="inherit"
+        >
+          <label for="wrapper-password">Password (wrapper)</label>
+          <input id="wrapper-password" [formField]="contactForm.password" />
+        </ngx-form-field-wrapper>
+
+        <fieldset
+          ngxFormFieldset
+          [field]="contactForm"
+          fieldsetId="fieldset-password"
+          warningStrategy="inherit"
+          includeNestedErrors
+        >
+          <legend>Password (fieldset)</legend>
+        </fieldset>
+
+        <ngx-form-field-error
+          [formField]="contactForm.password"
+          fieldName="standalone-password"
+          warningStrategy="inherit"
+        />
+      `,
+    })
+    class WarningCascadeParityHost {
+      readonly #model = signal({ password: 'weak' });
+      readonly contactForm = form(
+        this.#model,
+        schema((path) => {
+          validate(path.password, (ctx) => {
+            const value = ctx.value();
+            if (value.length > 0 && value.length < 8) {
+              return {
+                kind: 'warn:weak-password',
+                message: 'Consider 8+ characters',
+              };
+            }
+            return null;
+          });
+        }),
+      );
+    }
+
+    await render(WarningCascadeParityHost, {
+      providers: [
+        provideNgxSignalFormsConfig({ defaultWarningStrategy: 'immediate' }),
+      ],
+    });
+
+    // All three surfaces resolved 'inherit' -> no context -> the configured
+    // 'immediate' defaultWarningStrategy, so all three show the warning right
+    // away, on an untouched field, with no form context anywhere in the tree.
+    const statuses = await screen.findAllByRole('status');
+    const withText = statuses.filter((el) =>
+      el.textContent?.includes('Consider 8+ characters'),
+    );
+    expect(withText).toHaveLength(3);
+  });
+
+  it("falls back to the same terminal ('on-touch') by default, with no defaultWarningStrategy configured", async () => {
+    @Component({
+      selector: 'test-warning-cascade-parity-default',
+      imports: [
+        FormField,
+        NgxFormFieldWrapper,
+        NgxFormFieldset,
+        NgxFormFieldError,
+      ],
+      template: `
+        <ngx-form-field-wrapper
+          [formField]="contactForm.password"
+          fieldName="wrapper-password"
+          warningStrategy="inherit"
+        >
+          <label for="wrapper-password">Password (wrapper)</label>
+          <input id="wrapper-password" [formField]="contactForm.password" />
+        </ngx-form-field-wrapper>
+
+        <fieldset
+          ngxFormFieldset
+          [field]="contactForm"
+          fieldsetId="fieldset-password"
+          warningStrategy="inherit"
+          includeNestedErrors
+        >
+          <legend>Password (fieldset)</legend>
+        </fieldset>
+
+        <ngx-form-field-error
+          [formField]="contactForm.password"
+          fieldName="standalone-password"
+          warningStrategy="inherit"
+        />
+      `,
+    })
+    class WarningCascadeParityDefaultHost {
+      readonly #model = signal({ password: 'weak' });
+      readonly contactForm = form(
+        this.#model,
+        schema((path) => {
+          validate(path.password, (ctx) => {
+            const value = ctx.value();
+            if (value.length > 0 && value.length < 8) {
+              return {
+                kind: 'warn:weak-password',
+                message: 'Consider 8+ characters',
+              };
+            }
+            return null;
+          });
+        }),
+      );
+    }
+
+    await render(WarningCascadeParityDefaultHost);
+
+    // Untouched: the shared 'on-touch' terminal keeps every surface quiet.
+    // Live regions may stay mounted empty (WCAG 4.1.3) rather than being
+    // absent from the DOM, so assert on content, not element count.
+    for (const status of screen.queryAllByRole('status')) {
+      expect(status.textContent?.trim() ?? '').toBe('');
+    }
+
+    // Touch the wrapper's control -- Angular's FieldState is shared across
+    // all three projections of the same field, so touching it once flips
+    // `touched()` for every surface simultaneously.
+    const input = screen.getByRole('textbox');
+    await userEvent.click(input);
+    await userEvent.tab();
+
+    const statuses = await screen.findAllByRole('status');
+    const withText = statuses.filter((el) =>
+      el.textContent?.includes('Consider 8+ characters'),
+    );
+    expect(withText).toHaveLength(3);
   });
 });

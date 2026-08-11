@@ -247,6 +247,19 @@ export interface VestRunCoordinator {
    * Request a run for a `(suite, cache key, value, focus)` tuple. Returns the
    * cached run when that exact tuple is already held, and otherwise starts
    * (or, when the suite is contested, queues) a fresh one.
+   *
+   * **Must be idempotent for a repeated tuple** — calling `request()` twice
+   * with the identical `(suite, cache key, value, focus)` tuple must never
+   * start a second `suite.run()`. This is not just a caching nicety: the
+   * built-in registration path (`vest-adapter.ts`'s `registerVestValidation`)
+   * calls `request()` from INSIDE the reactive computeds `validateTree` and
+   * `validateAsync` register, which Angular's change-detection machinery can
+   * re-run for reasons unrelated to this request (an unrelated signal read in
+   * the same computed changing, a `markForCheck()`/re-evaluation pass, …) without
+   * the tuple itself changing. A non-idempotent `request()` would re-execute
+   * `suite.run()` — and the coordinator's other side effects (contention
+   * bookkeeping, the FIFO queue) — on every such re-run, not just on a real
+   * value/focus change.
    */
   request<TValue, F extends string = string>(
     request: VestRunRequest<TValue, F>,

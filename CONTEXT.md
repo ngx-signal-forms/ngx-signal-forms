@@ -79,8 +79,22 @@ ngx-signal-forms — an Angular toolkit for working with Signal Forms.
 - **One cascade seam** — error-visibility timing is composed once, in
   `createErrorVisibility()`, and consumers call it rather than re-inlining the
   `resolveStrategyFromContext` → `resolveSubmittedStatusFromContext` →
-  `createShowErrorsComputed` chain. Several in-tree surfaces **still inline it**
-  for blocking errors; bringing them onto the seam is open work. See
+  `createShowErrorsComputed` chain. All in-tree surfaces now route through it
+  for blocking errors (`NgxHeadlessErrorState`, `NgxHeadlessFieldset`,
+  `createErrorState()`, `NgxFormFieldWrapper`, plus the pre-existing
+  `NgxSignalFormAutoAria` / `createAriaInvalidSignal` /
+  `createErrorMessageSignal()` / `NgxHeadlessErrorSummary` callers). Surfaces
+  that also expose a resolved strategy as public API keep that computed
+  separately — the seam only returns a visibility boolean — rather than
+  re-implementing the cascade a second time. How the two feed back into the
+  seam differs: `NgxFormFieldWrapper.effectiveStrategy` /
+  `submittedStatus` are already fully resolved, so the wrapper's _resolved_
+  values feed the seam directly (no `configDefault`, since resolution
+  already happened); `NgxHeadlessFieldset.resolvedStrategy` is a parallel
+  computation kept only for its public API — `NgxHeadlessFieldset` feeds the
+  seam its _raw_ `strategy` / `submittedStatus` inputs plus `configDefault`,
+  so the seam re-runs the identical cascade independently rather than
+  reusing `resolvedStrategy`. See
   [ADR-0006](docs/decisions/0006-one-cascade-seam.md). The **warning** channel
   is already consolidated: all surfaces resolve through
   `resolveWarningStrategyFromContext()` (input → form context
@@ -138,5 +152,6 @@ ngx-signal-forms — an Angular toolkit for working with Signal Forms.
   [ADR-0008](docs/decisions/0008-vest-suite-input-is-the-bound-path.md).
   Implemented in
   [#287](https://github.com/ngx-signal-forms/ngx-signal-forms/issues/287);
-  the unresolvable-Vest-field-name rule remains open, tracked in
-  [#291](https://github.com/ngx-signal-forms/ngx-signal-forms/issues/291).
+  the unresolvable-Vest-field-name rule
+  ([#291](https://github.com/ngx-signal-forms/ngx-signal-forms/issues/291))
+  shipped in [#307](https://github.com/ngx-signal-forms/ngx-signal-forms/pull/307).

@@ -165,11 +165,12 @@ removed. Replace them with the v1 equivalents.
 
 | Removed API                                 | Current replacement                                                                                                                                                                                                                                                                                                                                                    |
 | ------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `computeShowErrors()`                       | `showErrors()`                                                                                                                                                                                                                                                                                                                                                         |
-| `createShowErrorsSignal()`                  | `showErrors()`                                                                                                                                                                                                                                                                                                                                                         |
+| `computeShowErrors()`                       | `createShowErrorsComputed()`                                                                                                                                                                                                                                                                                                                                           |
+| `createShowErrorsSignal()`                  | `createShowErrorsComputed()`                                                                                                                                                                                                                                                                                                                                           |
+| `showErrors()`                              | `createShowErrorsComputed()` — same signature; the rename itself introduces no behavior change (`showErrors` was a one-line alias and is gone, not deprecated). Separately, the underlying `on-submit`-without-`submittedStatus` fallback did change — see [§5](#5-behavior-fix-on-submit-requires-an-explicit-submittedstatus).                                       |
 | `canSubmit()`                               | `canSubmitWithWarnings()`                                                                                                                                                                                                                                                                                                                                              |
 | `isSubmitting()`                            | `submittedStatus()` from the `ngxSignalForm` directive                                                                                                                                                                                                                                                                                                                 |
-| `'manual'` error strategy                   | `showErrors()` + a manual `WritableSignal<boolean>`                                                                                                                                                                                                                                                                                                                    |
+| `'manual'` error strategy                   | `createShowErrorsComputed()` + a manual `WritableSignal<boolean>`                                                                                                                                                                                                                                                                                                      |
 | `fieldNameResolver` config                  | Put an `id` on the bound control element                                                                                                                                                                                                                                                                                                                               |
 | `strictFieldResolution` config              | Removed — strict by default                                                                                                                                                                                                                                                                                                                                            |
 | `debug` config field                        | Removed — use the `/debugger` entry point instead                                                                                                                                                                                                                                                                                                                      |
@@ -421,8 +422,8 @@ above (template surface). The Angular compiler will surface any miss.
 
 In betas, `computeShowErrorsInternal` silently fell back to
 `touched ? 'submitted' : 'unsubmitted'` when no `submittedStatus` was
-wired. A consumer calling `showErrors()` / `createErrorState()` with
-the `'on-submit'` strategy but without a status would see errors
+wired. A consumer calling `createShowErrorsComputed()` / `createErrorState()`
+with the `'on-submit'` strategy but without a status would see errors
 surface after blur, defeating the whole point of `on-submit`.
 
 The fallback is now `'unsubmitted'`, so errors stay hidden until a real
@@ -434,18 +435,22 @@ miswiring loud during development without throwing.
   error-state / error-summary / fieldset directives) all already
   resolve `submittedStatus` through the `ngxSignalForm` directive, so
   they are **unaffected**.
-- **Only direct consumers** of `showErrors(field, 'on-submit')`
+- **Only direct consumers** of `createShowErrorsComputed(field, 'on-submit')`
   without a status see a behavior change — which is the intended fix.
 
 ### Migration
 
 ```ts
 // before — relied on the accidental fallback
-const show = showErrors(field, 'on-submit');
+const show = createShowErrorsComputed(field, 'on-submit');
 
 // after — pass the form's submittedStatus value or signal directly
 // (the third parameter, not an options object)
-const show = showErrors(field, 'on-submit', formDirective.submittedStatus);
+const show = createShowErrorsComputed(
+  field,
+  'on-submit',
+  formDirective.submittedStatus,
+);
 ```
 
 ---
@@ -833,6 +838,29 @@ true })` with `validateVest(path, suite, { only: () => activeField })`,
   authored for that subtree's value (e.g. `validateVest(path.address,
 addressSuite)` where `addressSuite` takes `{ city: string, … }`).
 
+- **BREAKING — a typed suite's field-name union now flows through `only`
+  (#292, PR #308).** Vest ≥6.3.2 propagates a field-name union `F` through
+  `only`, `getErrors`, and `getWarnings` for a suite declared with
+  `create<{ fields: 'email' | 'password' }>(…)` (or a schema-typed suite).
+  `VestRunnableSuite`, `VestOnlyFieldSelector`, `VestResultLike`,
+  `VestRegisterOptions`, `RunVestSuiteParams`/`RunVestSuiteResult`,
+  `ValidateVestOptions`, `validateVest`, `validateVestWarnings`, and
+  `VestSuiteAdapter.register`/`runVestSuite` all gained a field-name type
+  parameter `F extends string = string`, inferred from the `suite` argument —
+  no call site writes it explicitly. Previously, every `only` selector's
+  return type was erased to plain `string`, so a mistyped focus name
+  (`only: () => 'emial'`) compiled, ran zero tests, and reported the field
+  valid.
+
+  **Action:** an `only` selector for a `create<{ fields: … }>(…)` suite that
+  previously returned a wider `string` (including via a helper function typed
+  `() => string`, or a value read from an untyped source) can now fail to
+  typecheck — narrow the selector's return type (or the helper's) to the
+  suite's field-name union, or to `string` explicitly if the selector
+  genuinely needs to accept any field name. A suite declared with plain
+  `create(…)` (no `fields`, no schema) is unaffected: `F` defaults to
+  `string`, exactly as before.
+
 See [`packages/toolkit/vest/README.md`](../packages/toolkit/vest/README.md#suite-lifecycle)
 for the full suite-lifecycle discussion.
 
@@ -1054,12 +1082,17 @@ leaf is counted consistently whether it's `null` or populated.
 
 - **Grep for the other removed APIs** (`computeShowErrors`,
   `createShowErrorsSignal`, `canSubmit`, `isSubmitting`, `'manual'`
-  strategy, `fieldNameResolver`, `strictFieldResolution`, `debug`
-  config) and swap for the replacements in §3.
+  strategy, `fieldNameResolver`, `strictFieldResolution`, `debug` config)
+  and swap for the replacements in §3. For `showErrors` specifically, a
+  bare-name search also matches unrelated symbols that legitimately keep
+  that name (`NgxFormFieldset`'s `showErrors` input,
+  `AriaDescribedByChainOptions`'s `showErrors` property) — search for the
+  imported factory call instead, e.g. `showErrors(` or
+  `import { showErrors }`, to isolate real hits.
 
-- **If you call `showErrors(field, 'on-submit')` directly**, pass an
-  explicit `submittedStatus` — otherwise errors will stay hidden (this
-  is the fix, not a regression).
+- **If you call `createShowErrorsComputed(field, 'on-submit')` directly**,
+  pass an explicit `submittedStatus` — otherwise errors will stay hidden
+  (this is the fix, not a regression).
 
 - **Apply the current rc.11 API changes** when upgrading from any earlier
   release candidate:

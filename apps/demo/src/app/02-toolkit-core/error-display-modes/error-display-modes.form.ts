@@ -13,7 +13,7 @@ import {
   NgxSignalFormToolkit,
   type ErrorDisplayStrategy,
   type ResolvedErrorDisplayStrategy,
-  showErrors,
+  createShowErrorsComputed,
   type SubmittedStatus,
 } from '@ngx-signal-forms/toolkit';
 import { NgxFormFieldError } from '@ngx-signal-forms/toolkit/assistive';
@@ -58,7 +58,7 @@ const INITIAL_MODEL: ProductFeedbackModel = {
           </span>
         </div>
         <span class="text-xs text-indigo-700 dark:text-indigo-300">
-          Powered by injectFormContext + showErrors
+          Powered by injectFormContext + createShowErrorsComputed
         </span>
       </div>
 
@@ -109,13 +109,13 @@ export class ErrorDisplayHelpersComponent {
     () => this.#formContext?.submittedStatus() ?? 'unsubmitted',
   );
 
-  protected readonly showNameErrors = showErrors(
+  protected readonly showNameErrors = createShowErrorsComputed(
     this.#nameFieldState,
     this.resolvedStrategy,
     this.submittedStatus,
   );
 
-  protected readonly showEmailErrors = showErrors(
+  protected readonly showEmailErrors = createShowErrorsComputed(
     this.#emailFieldState,
     this.resolvedStrategy,
     this.submittedStatus,
