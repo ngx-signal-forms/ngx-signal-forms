@@ -162,6 +162,17 @@ export class NgxFormFieldHint {
   readonly position = input<'left' | 'right' | null>(null);
 
   /**
+   * Explicit id, accepted as either a static `id="…"` attribute or a
+   * property-bound `[id]="expr"`. Angular maps both forms onto this input
+   * (static attributes matching a declared input are read as the input's
+   * initial value), so a parent-computed id is picked up reactively instead
+   * of being missed the way a one-shot constructor `getAttribute('id')` read
+   * misses it. Falls through to {@link resolvedId}'s other sources when
+   * `null` or empty.
+   */
+  readonly id = input<string | null>(null);
+
+  /**
    * Resolved field name from the wrapper's `NGX_SIGNAL_FORM_FIELD_CONTEXT`,
    * or `null` when the hint is rendered outside a wrapper. Public so wrappers
    * can expose it through `NGX_SIGNAL_FORM_HINT_REGISTRY` for auto-ARIA.
@@ -186,6 +197,10 @@ export class NgxFormFieldHint {
   readonly #generatedId = createUniqueId('hint');
 
   readonly resolvedId = computed(() => {
+    const bound = this.id();
+    // oxlint-disable-next-line @typescript-eslint/strict-boolean-expressions -- empty-string id/fieldName is intentionally treated as "not set"; freezing semantic for v1
+    if (bound) return bound;
+
     const explicit = this.#explicitId();
     // oxlint-disable-next-line @typescript-eslint/strict-boolean-expressions -- empty-string id/fieldName is intentionally treated as "not set"; freezing semantic for v1
     if (explicit) return explicit;
@@ -198,13 +213,17 @@ export class NgxFormFieldHint {
   });
 
   constructor() {
-    // Read the host `id` attribute at construction time so downstream
-    // consumers (auto-aria directive, hint registry) see the explicit
-    // id synchronously during their own initialisation. Runs on both
-    // platforms: Angular's server DOM supports `getAttribute`, and we
-    // want the server-rendered `id` to match what the client picks up
-    // on hydration (otherwise author-supplied ids would hydrate as a
-    // different generated value and the DOM would mismatch).
+    // Belt-and-braces: read the host `id` attribute at construction time too
+    // (`resolvedId` checks the `id` input first — see above). Angular maps a
+    // static `id="…"` attribute onto a declared `id` input as its initial
+    // value, so the input alone already covers both the static and the
+    // property-bound (`[id]="expr"`) cases reactively. This constructor read
+    // stays as a fallback for any consumer that inspects `resolvedId()`
+    // before inputs are set (e.g. a service constructed ahead of this
+    // directive) and to keep SSR/hydration parity for the static-attribute
+    // case belt-and-braces with the input path. Runs on both platforms:
+    // Angular's server DOM supports `getAttribute`, and the server-rendered
+    // `id` matches what the client resolves on hydration either way.
     const existingId = this.#elementRef.nativeElement.getAttribute('id');
     if (existingId !== null && existingId.length > 0) {
       this.#explicitId.set(existingId);

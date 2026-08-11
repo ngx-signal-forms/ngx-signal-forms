@@ -311,6 +311,89 @@ describe('NgxFormFieldHint', () => {
       expect(hint).toHaveAttribute('data-ngx-signal-form-hint', 'true');
     });
 
+    it('should reflect a property-bound [id] on the resolved id', async () => {
+      const { container } = await render(
+        `<ngx-form-field-hint [id]="hintId">Hint</ngx-form-field-hint>`,
+        {
+          imports: [NgxFormFieldHint],
+          componentProperties: {
+            hintId: 'bound-hint-id',
+          },
+        },
+      );
+
+      const hint = container.querySelector('ngx-form-field-hint');
+      expect(hint).toHaveAttribute('id', 'bound-hint-id');
+      expect(hint).toHaveAttribute('data-ngx-signal-form-hint', 'true');
+    });
+
+    it('should update the resolved id when the bound [id] input changes', async () => {
+      const { container, rerender } = await render(
+        `<ngx-form-field-hint [id]="hintId">Hint</ngx-form-field-hint>`,
+        {
+          imports: [NgxFormFieldHint],
+          componentProperties: {
+            hintId: 'first-id',
+          },
+        },
+      );
+
+      const hint = container.querySelector('ngx-form-field-hint');
+      expect(hint).toHaveAttribute('id', 'first-id');
+
+      await rerender({ componentProperties: { hintId: 'second-id' } });
+
+      expect(hint).toHaveAttribute('id', 'second-id');
+    });
+
+    it('should fall back to the generated id when the bound [id] is null', async () => {
+      const { container } = await render(
+        `<ngx-form-field-hint [id]="hintId">Hint</ngx-form-field-hint>`,
+        {
+          imports: [NgxFormFieldHint],
+          componentProperties: {
+            hintId: null,
+          },
+        },
+      );
+
+      const hint = container.querySelector('ngx-form-field-hint');
+      expect(hint?.getAttribute('id')).toMatch(/^hint-/);
+    });
+
+    it('should fall back to the generated id when neither a static nor a bound id is present', async () => {
+      const { container } = await render(
+        `<ngx-form-field-hint>Hint</ngx-form-field-hint>`,
+        {
+          imports: [NgxFormFieldHint],
+        },
+      );
+
+      const hint = container.querySelector('ngx-form-field-hint');
+      expect(hint?.getAttribute('id')).toMatch(/^hint-/);
+    });
+
+    it('should prefer the bound [id] over a field-context-derived id', async () => {
+      const { container } = await render(
+        `<ngx-form-field-hint [id]="hintId">Hint</ngx-form-field-hint>`,
+        {
+          imports: [NgxFormFieldHint],
+          componentProperties: {
+            hintId: 'bound-over-field',
+          },
+          providers: [
+            {
+              provide: NGX_SIGNAL_FORM_FIELD_CONTEXT,
+              useValue: { fieldName: signal('email') },
+            },
+          ],
+        },
+      );
+
+      const hint = container.querySelector('ngx-form-field-hint');
+      expect(hint).toHaveAttribute('id', 'bound-over-field');
+    });
+
     it('should derive id from field context when provided', async () => {
       const { container } = await render(
         `<ngx-form-field-hint>Hint</ngx-form-field-hint>`,
@@ -328,6 +411,66 @@ describe('NgxFormFieldHint', () => {
       const hint = container.querySelector('ngx-form-field-hint');
       expect(hint).toHaveAttribute('id', 'email-hint');
       expect(hint).toHaveAttribute('data-signal-field', 'email');
+    });
+  });
+
+  describe('SSR/hydration parity (approximation)', () => {
+    /**
+     * This repo has no `renderApplication`/`platform-server` SSR harness for
+     * the toolkit yet, so these specs approximate hydration parity: they
+     * assert the id resolved at first render is already the final, stable
+     * id — i.e. a later change-detection pass (standing in for the client
+     * picking up server-rendered markup during hydration) never produces a
+     * *different* id for the same inputs. A module-scoped `createUniqueId`
+     * counter or a value that only "settles" after the first render would
+     * fail this and would also mismatch across the server/client boundary.
+     */
+    it('keeps a static id attribute stable across change-detection passes', async () => {
+      const { container, detectChanges } = await render(
+        `<ngx-form-field-hint id="ssr-static-id">Hint</ngx-form-field-hint>`,
+        { imports: [NgxFormFieldHint] },
+      );
+
+      const hint = container.querySelector('ngx-form-field-hint');
+      const firstId = hint?.getAttribute('id');
+      expect(firstId).toBe('ssr-static-id');
+
+      detectChanges();
+
+      expect(hint?.getAttribute('id')).toBe(firstId);
+    });
+
+    it('keeps a property-bound [id] stable across change-detection passes', async () => {
+      const { container, detectChanges } = await render(
+        `<ngx-form-field-hint [id]="hintId">Hint</ngx-form-field-hint>`,
+        {
+          imports: [NgxFormFieldHint],
+          componentProperties: { hintId: 'ssr-bound-id' },
+        },
+      );
+
+      const hint = container.querySelector('ngx-form-field-hint');
+      const firstId = hint?.getAttribute('id');
+      expect(firstId).toBe('ssr-bound-id');
+
+      detectChanges();
+
+      expect(hint?.getAttribute('id')).toBe(firstId);
+    });
+
+    it('keeps a generated fallback id stable across change-detection passes', async () => {
+      const { container, detectChanges } = await render(
+        `<ngx-form-field-hint>Hint</ngx-form-field-hint>`,
+        { imports: [NgxFormFieldHint] },
+      );
+
+      const hint = container.querySelector('ngx-form-field-hint');
+      const firstId = hint?.getAttribute('id');
+      expect(firstId).toMatch(/^hint-/);
+
+      detectChanges();
+
+      expect(hint?.getAttribute('id')).toBe(firstId);
     });
   });
 
