@@ -5,6 +5,7 @@ import { render, screen } from '@testing-library/angular';
 import userEvent from '@testing-library/user-event';
 import { create, enforce, group, only, test, warn } from 'vest';
 import { describe, expect, expectTypeOf, it, vi } from 'vitest';
+import { validateVest, validateVestWarnings } from './validate-vest';
 import {
   type VestFieldExclusion,
   type VestOnlyFieldSelector,
@@ -12,10 +13,8 @@ import {
   type VestRunnableSuite,
   VEST_ERROR_KIND_PREFIX,
   VEST_WARNING_KIND_PREFIX,
-  validateVest,
-  validateVestWarnings,
-} from './validate-vest';
-import { createVestAdapter } from './vest-adapter';
+  createVestAdapter,
+} from './vest-adapter';
 
 describe('validateVest', () => {
   it('maps blocking Vest failures onto a signal form field after blur', async () => {

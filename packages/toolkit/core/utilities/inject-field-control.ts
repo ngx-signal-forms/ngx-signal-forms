@@ -80,9 +80,12 @@ export function injectFieldControl<TValue = unknown>(
     const fieldName = resolveFieldName(htmlElement);
 
     if (!fieldName) {
+      // SECURITY: Include only safe element properties in error message to avoid
+      // leaking potentially sensitive DOM information in error logs
+      const elementInfo = `${htmlElement.tagName.toLowerCase()}${htmlElement.id ? '#' + htmlElement.id : ''}`;
       throw new Error(
         '[ngx-signal-forms] injectFieldControl() could not resolve field name from element. ' +
-          `Element: ${htmlElement.outerHTML}`,
+          `Element: <${elementInfo}>`,
       );
     }
 
