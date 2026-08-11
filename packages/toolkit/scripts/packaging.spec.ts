@@ -73,14 +73,23 @@ function readEntryFile(entryDir: string): string {
  *
  * Only used to check *name* existence across barrels, so type-only vs.
  * value exports are treated identically.
+ *
+ * Results are memoized per file, and `inProgress` guards against re-export
+ * cycles: a file re-entered while its own walk is still running contributes
+ * an empty set (for `export *`) or fails the stale-name check (for a named
+ * re-export) instead of recursing forever.
  */
+const exportedNamesCache = new Map<string, Set<string>>();
+
 function collectExportedNames(
   filePath: string,
-  visited = new Set<string>(),
+  inProgress = new Set<string>(),
 ): Set<string> {
+  const cached = exportedNamesCache.get(filePath);
+  if (cached) return cached;
   const names = new Set<string>();
-  if (visited.has(filePath)) return names;
-  visited.add(filePath);
+  if (inProgress.has(filePath)) return names;
+  inProgress.add(filePath);
 
   const source = ts.createSourceFile(
     filePath,
@@ -112,12 +121,8 @@ function collectExportedNames(
           ts.isStringLiteral(statement.moduleSpecifier)
             ? statement.moduleSpecifier.text
             : undefined;
-        // A fresh visited set on purpose: the shared one exists to keep the
-        // surrounding `export *` walk from double-counting, but here we need
-        // the target's complete name set even when another chain already
-        // visited it.
         const targetNames = specifier?.startsWith('.')
-          ? collectExportedNames(resolveRelativeModule(specifier))
+          ? collectExportedNames(resolveRelativeModule(specifier), inProgress)
           : undefined;
         for (const element of statement.exportClause.elements) {
           const importedName = (element.propertyName ?? element.name).text;
@@ -134,7 +139,7 @@ function collectExportedNames(
         ts.isStringLiteral(statement.moduleSpecifier)
       ) {
         const resolved = resolveRelativeModule(statement.moduleSpecifier.text);
-        for (const name of collectExportedNames(resolved, visited)) {
+        for (const name of collectExportedNames(resolved, inProgress)) {
           names.add(name);
         }
       }
@@ -165,6 +170,8 @@ function collectExportedNames(
     }
   }
 
+  inProgress.delete(filePath);
+  exportedNamesCache.set(filePath, names);
   return names;
 }
 
