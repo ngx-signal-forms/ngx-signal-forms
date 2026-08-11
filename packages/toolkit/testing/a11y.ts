@@ -37,16 +37,28 @@ export type WCAG_22_AA_TAG = (typeof WCAG_22_AA_TAGS)[number];
  *   document body so a bare `await expectNoA11yViolations()` covers the render.
  * @param options Extra axe `RunOptions` merged over the WCAG 2.2 AA defaults —
  *   e.g. `{ rules: { 'color-contrast': { enabled: false } } }` for fixtures
- *   that intentionally render unstyled controls.
+ *   that intentionally render unstyled controls. The WCAG 2.2 AA `runOnly`
+ *   tag set is the hard-fail baseline and is not overridable: `runOnly` is
+ *   omitted from this parameter's type, so passing a literal with `runOnly`
+ *   is a compile error, and the baseline always wins at runtime even for an
+ *   `axe.RunOptions`-typed value carrying a `runOnly` (see implementation).
  */
 export async function expectNoA11yViolations(
   context: axe.ElementContext = document.body,
-  options: axe.RunOptions = {},
+  options: Omit<axe.RunOptions, 'runOnly'> = {},
 ): Promise<void> {
   const results = await axe.run(context, {
-    runOnly: { type: 'tag', values: [...WCAG_22_AA_TAGS] },
+    // `resultTypes` before `...options` so callers can still override it.
     resultTypes: ['violations'],
     ...options,
+    // `runOnly` last: TypeScript's excess-property check only rejects
+    // `runOnly` on fresh object literals, so a caller could still widen a
+    // value to `axe.RunOptions` and smuggle `runOnly` through `options`
+    // (e.g. `const opts: axe.RunOptions = { runOnly: {...} }`). Applying
+    // the WCAG 2.2 AA baseline after the spread makes it win at runtime
+    // regardless, so the guarantee holds even when the type-level guard
+    // (the `Omit` above) is bypassed this way.
+    runOnly: { type: 'tag', values: [...WCAG_22_AA_TAGS] },
   });
 
   if (results.violations.length === 0) {
