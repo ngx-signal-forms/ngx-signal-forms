@@ -10,19 +10,6 @@ import {
   type VestRunnableSuite,
 } from './vest-adapter';
 
-// Re-export the moved public contracts and constants so existing import sites
-// that targeted `./validate-vest` keep resolving unchanged. The canonical home
-// for these symbols is now `./vest-adapter`.
-export {
-  VEST_ERROR_KIND_PREFIX,
-  VEST_WARNING_KIND_PREFIX,
-  type VestFieldExclusion,
-  type VestOnlyFieldSelector,
-  type VestResultLike,
-  type VestRunnableSuite,
-  type VestFieldPath,
-} from './vest-adapter';
-
 /**
  * Options accepted by {@link validateVest} (and the focus/reset subset by
  * {@link validateVestWarnings}). Controls warning surfacing, suite-state reset
