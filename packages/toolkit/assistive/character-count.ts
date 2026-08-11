@@ -7,9 +7,9 @@ import {
   untracked,
 } from '@angular/core';
 import type { FieldTree } from '@angular/forms/signals';
+import { createCharacterCountLengthSignal } from '@ngx-signal-forms/toolkit/core';
 import {
   createCharacterCount,
-  createCharacterCountLength,
   type CharacterCountLimitState,
   type CharacterCountValue,
 } from '@ngx-signal-forms/toolkit/headless';
@@ -402,6 +402,12 @@ export class NgxFormFieldCharacterCount {
       maxLength: max,
       warningThreshold: thresholds.warning / 100,
       dangerThreshold: thresholds.danger / 100,
+      // Without this, the unsupported-value dev warning would report the
+      // factory's own default name ('createCharacterCount') instead of the
+      // component the misconfigured `formField` binding actually lives on —
+      // diverging from the `#fallbackLength` warning below for the exact
+      // same misconfiguration.
+      component: 'NgxFormFieldCharacterCount',
     });
   });
 
@@ -414,10 +420,11 @@ export class NgxFormFieldCharacterCount {
    * `#charCountState()` recomputation.
    *
    * Shares its length logic (and dev warning) with `createCharacterCount`
-   * via {@link createCharacterCountLength} so an unsupported `formField`
-   * value warns identically whether or not `maxLength` happens to be set.
+   * via {@link createCharacterCountLengthSignal} so an unsupported
+   * `formField` value warns identically whether or not `maxLength` happens
+   * to be set.
    */
-  readonly #fallbackLength = createCharacterCountLength(
+  readonly #fallbackLength = createCharacterCountLengthSignal(
     () => this.formField()().value(),
     'NgxFormFieldCharacterCount',
   );

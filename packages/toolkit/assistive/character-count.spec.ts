@@ -662,14 +662,22 @@ describe('NgxFormFieldCharacterCount', () => {
 
       expect(console.warn).toHaveBeenCalledOnce();
       const loggedArgs = vi.mocked(console.warn).mock.calls[0] ?? [];
-      const serializedArgs = loggedArgs.map(String).join(' ');
+
+      // Every logged argument must itself be a string — not the raw object.
+      // Mapping through `String()` before asserting would collapse a leaked
+      // object argument to the harmless-looking `'[object Object]'`, so this
+      // checks the *raw* mock-call arguments' types instead.
+      for (const arg of loggedArgs) {
+        expect(typeof arg).toBe('string');
+      }
 
       // The raw object's data (`{ nested: 'value' }`) must never reach the
       // console — only the type descriptor (e.g. `'Object'`). `'value'` is
       // not checked directly since the diagnostic message text legitimately
       // contains the word "value" (e.g. "unsupported value type").
-      expect(serializedArgs).not.toContain('nested');
-      expect(serializedArgs).not.toMatch(/\{.*nested.*\}/u);
+      const joinedArgs = loggedArgs.join(' ');
+      expect(joinedArgs).not.toContain('nested');
+      expect(joinedArgs).not.toMatch(/\{.*nested.*\}/u);
     });
   });
 });

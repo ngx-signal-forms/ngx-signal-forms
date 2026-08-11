@@ -55,6 +55,7 @@ export {
 } from './utilities/aria/create-hint-ids-signal';
 export { assertInjector } from './utilities/assert-injector';
 export * from './utilities/cascading-resolver';
+export { createCharacterCountLengthSignal } from './utilities/character-count-length';
 export * from './utilities/create-error-visibility';
 export {
   createFieldNameResolver,
