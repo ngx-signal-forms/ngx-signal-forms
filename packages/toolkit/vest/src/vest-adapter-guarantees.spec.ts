@@ -542,11 +542,11 @@ describe('VestSuiteAdapter — exported-interface guarantees', () => {
   describe('kind sanitiser: same-segment message collision', () => {
     it('gives two distinct messages that fold to the same normalized segment distinct kinds via the lossy-normalization hash suffix', async () => {
       // 'Too long!' and 'Too long?' both strip their case/punctuation down to
-      // the same normalized segment ('too-long') -- but normalization is
+      // the same normalized segment ('too-long') — but normalization is
       // LOSSY for both (the sanitized string differs from the original), so
       // `normalizeWarningKindSegment` now appends an `fnv1a4Hex` suffix of
       // each ORIGINAL message. The two originals differ, so their hashes
-      // differ, so the two kinds are already distinct at occurrence 0 --
+      // differ, so the two kinds are already distinct at occurrence 0 —
       // no fold-collision reaches the occurrence counter at all. See issue
       // #219 / #260 (character-folding collision hardening).
       //
@@ -598,7 +598,7 @@ describe('VestSuiteAdapter — exported-interface guarantees', () => {
         expect(kind).toMatch(/^warn:vest:email:too-long-[0-9a-f]{4}:\d$/u);
       }
       // ... and both land at occurrence 0, because the hash suffix alone
-      // already keeps the two kinds apart -- no fold-collision reaches the
+      // already keeps the two kinds apart — no fold-collision reaches the
       // occurrence counter.
       expect(new Set(kinds).size).toBe(2);
       expect(kinds[0]).toMatch(/:0$/u);
@@ -661,19 +661,64 @@ describe('VestSuiteAdapter — exported-interface guarantees', () => {
     // literal message `'warning'` to exercise `createVestValidationKind`'s
     // `|| 'warning'` fallback colliding with a genuine `'warning'` message.
     // That scenario no longer applies: `normalizeWarningKindSegment` now
-    // hashes ANY lossily-normalized input -- including one that folds to
-    // nothing -- so `'!!!'` now gets its own hash-suffixed segment instead of
-    // falling back to the bare `'warning'` literal (see the fold-collision
-    // test above/below for the replacement coverage of that code path). The
-    // `'field'`/`'warning'` fallback literals in `createVestValidationKind`
-    // are only reachable by a truly empty (`''`) raw fieldPath/message now,
-    // and Vest itself silently drops a `test(fieldName, '', ...)` call (it
-    // registers no error/warning at all -- verified empirically against
-    // vest@6.3.2), so that fallback is defensive-only and not exercisable
-    // through the public `validateVest` surface. It remains covered
-    // structurally: `normalizeWarningKindSegment('')` returns `''` unchanged
-    // (non-lossy, since `''` sanitizes to itself), which is exactly the
-    // input the `|| 'field'`/`|| 'warning'` fallback exists to catch.
+    // hashes ANY lossily-normalized input — including one that folds to
+    // nothing — so `'!!!'` now gets its own hash-suffixed segment instead of
+    // falling back to the bare `'warning'` literal (see the fold-to-empty
+    // test right below, and the fold-collision test further down, for the
+    // replacement coverage of that code path). The `'field'`/`'warning'`
+    // fallback literals in `createVestValidationKind` are only reachable by
+    // a truly empty (`''`) raw fieldPath/message now, and Vest itself
+    // silently drops a `test(fieldName, '', ...)` call (it registers no
+    // error/warning at all — verified empirically against vest@6.3.2), so
+    // that fallback is defensive-only and not exercisable through the
+    // public `validateVest` surface. It remains covered structurally:
+    // `normalizeWarningKindSegment('')` returns `''` unchanged (non-lossy,
+    // since `''` sanitizes to itself), which is exactly the input the
+    // `|| 'field'`/`|| 'warning'` fallback exists to catch.
+
+    it('gives a punctuation-only message a bare hash segment, with no leading hyphen', async () => {
+      // '!!!' folds to '' (every character is stripped by the sanitize
+      // regex), which is lossy (`'' !== '!!!'`), so `normalizeWarningKindSegment`
+      // appends a hash suffix. The folded segment being EMPTY is the edge
+      // case a naive `${truncated}-${hash}` join gets wrong: it would
+      // reintroduce a leading hyphen (`-a1b2`) that the trim step earlier in
+      // the same function just stripped, producing an invalid CSS-identifier
+      // start and an ugly kind (`warn:vest:email:-a1b2:0`). The fix returns
+      // the bare hash instead, so the segment is exactly 4 hex digits with
+      // no leading hyphen.
+      const suite = create((data: { email: string }) => {
+        vestTest('email', '!!!', () => {
+          warn();
+          enforce(data.email).longerThan(10);
+        });
+      });
+
+      let f!: ReadonlyFieldTree<{ email: string }>;
+
+      @Component({
+        selector: 'ngx-test-adapter-kind-fold-to-empty',
+        imports: [FormField],
+
+        template: `<input [formField]="f.email" />`,
+      })
+      class TestComponent {
+        readonly model = signal({ email: '' });
+        readonly f = form(this.model, (path) => {
+          validateVest(path, suite, { includeWarnings: true });
+        });
+
+        constructor() {
+          f = this.f;
+        }
+      }
+
+      await render(TestComponent);
+      await TestBed.inject(ApplicationRef).whenStable();
+
+      const [error] = f.email().errors();
+      expect(error).toBeDefined();
+      expect(error?.kind).toMatch(/^warn:vest:email:[0-9a-f]{4}:0$/u);
+    });
 
     it('gives two messages that fold to the same normalized segment ("user.email" vs "user_email") distinct kinds', async () => {
       // Both 'user.email' and 'user_email' fold '.' / '_' to '-', producing

@@ -352,8 +352,8 @@ const VEST_FOCUS_NOTHING_SENTINEL = `${VEST_KEY_SEPARATOR}nothing${VEST_KEY_SEPA
  * Runtime guard for the subset of Vest's public result object that the adapter
  * consumes.
  *
- * Checks all three members {@link VestResultLike} requires -- `getErrors`,
- * `getWarnings`, AND `isPending` -- are present and callable. `isPending` is
+ * Checks all three members {@link VestResultLike} requires — `getErrors`,
+ * `getWarnings`, AND `isPending` — are present and callable. `isPending` is
  * a METHOD on Vest's `SuiteResult` (not a boolean field), so it is checked
  * the same way as the other two. Omitting this check let a consumer-supplied
  * object with only `getErrors`/`getWarnings` pass the guard and then crash

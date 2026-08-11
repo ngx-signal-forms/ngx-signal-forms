@@ -798,8 +798,8 @@ describe('isVestResultLike', () => {
   });
 
   it('rejects an object whose isPending is a boolean field rather than a method', () => {
-    // Guards against the incorrect fix once proposed for this guard --
-    // `typeof isPending === 'boolean'` -- which would accept this shape even
+    // Guards against the incorrect fix once proposed for this guard —
+    // `typeof isPending === 'boolean'` — which would accept this shape even
     // though Vest's real `isPending` is a zero-arg method, not a field.
     const booleanIsPending: unknown = {
       getErrors: () => [],
