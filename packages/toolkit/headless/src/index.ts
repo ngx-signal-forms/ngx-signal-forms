@@ -106,6 +106,8 @@ export {
 export {
   createCharacterCount,
   createErrorState,
+  createErrorSummaryEntries,
+  createFieldsetAggregation,
   createFieldStateFlags,
   createUniqueId,
   dedupeValidationErrors,
@@ -121,8 +123,12 @@ export {
   type CharacterCountValue,
   type CreateCharacterCountOptions,
   type CreateErrorStateOptions,
+  type CreateErrorSummaryEntriesOptions,
+  type CreateFieldsetAggregationOptions,
   type ErrorStateResult,
+  type ErrorSummaryEntriesResult,
   type ErrorSummaryEntryData,
+  type FieldsetAggregationResult,
   type FieldStateLike,
   type FieldStateFlags,
 } from './lib/utilities';

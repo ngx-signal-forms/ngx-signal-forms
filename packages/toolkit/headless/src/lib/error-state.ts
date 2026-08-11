@@ -27,15 +27,17 @@ import {
   NGX_ERROR_MESSAGES,
 } from '@ngx-signal-forms/toolkit/core';
 
-import { buildHeadlessErrorState, resolveErrorMessage } from './utilities';
+import {
+  buildHeadlessErrorState,
+  resolveErrorMessage,
+  type ResolvedError,
+} from './utilities';
 
-/**
- * Resolved error with kind and message.
- */
-export interface ResolvedError {
-  readonly kind: string;
-  readonly message: string;
-}
+// Re-exported so the public barrel's `export { type ResolvedError } from
+// './lib/error-state'` keeps resolving after the type moved to the shared
+// `utilities.ts` module (see that file's docblock for why — it now also
+// backs `createFieldsetAggregation()`'s return shape).
+export type { ResolvedError };
 
 /**
  * Error state signals exposed by the headless directive.
