@@ -130,6 +130,8 @@ jobs:
           fi
 
           git commit -m "test(snapshots): update ${INPUT_SCOPE} baselines"
+
+          git remote set-url origin "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git"
           git push origin "${TARGET_BRANCH}"
           echo "changed=true" >> "$GITHUB_OUTPUT"
 
