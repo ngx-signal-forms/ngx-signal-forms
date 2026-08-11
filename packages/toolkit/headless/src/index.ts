@@ -105,6 +105,7 @@ export {
 // Utility functions
 export {
   createCharacterCount,
+  createCharacterCountLength,
   createErrorState,
   createFieldStateFlags,
   createUniqueId,

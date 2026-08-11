@@ -529,6 +529,61 @@ export interface CharacterCountResult {
 }
 
 /**
+ * Creates a `computed()` signal counting a character-count value's length:
+ * `string.length` for strings, `array.length` for arrays, `0` for
+ * `null`/`undefined` (treated as "empty"), and `0` — plus a one-shot dev-mode
+ * warning — for anything else.
+ *
+ * Extracted out of {@link createCharacterCount} so callers that count length
+ * without going through the full factory (e.g. `NgxFormFieldCharacterCount`'s
+ * no-`maxLength` fallback, which has no limit to hand `createCharacterCount`)
+ * still get the same unsupported-value diagnostic instead of silently
+ * re-deriving the length logic without it.
+ *
+ * @param value Reader for the field's raw value. Called reactively on every
+ *   recomputation — pass a tracked signal read (e.g. `() =>
+ *   field()().value()`).
+ * @param component Name reported in the dev warning, e.g.
+ *   `[ngx-signal-forms] <component>: unsupported value type — …`. See
+ *   {@link CreateCharacterCountOptions.component}.
+ * @default component 'createCharacterCount'
+ */
+export function createCharacterCountLength(
+  value: () => unknown,
+  component = 'createCharacterCount',
+): Signal<number> {
+  // One-shot guard so the dev warning for an unsupported value type fires at
+  // most once per returned signal (i.e. once per caller) instead of on every
+  // re-computation.
+  const warnUnsupportedValue = createDevWarnOnce();
+
+  return computed(() => {
+    const currentValue = value();
+    if (typeof currentValue === 'string') return currentValue.length;
+    if (Array.isArray(currentValue)) return currentValue.length;
+    // The type descriptor (including `constructor?.name`) is dev-diagnostic
+    // work only — gate the whole branch on `isDevMode()` so production never
+    // computes it, even though `devWarnOnce` itself would no-op the console
+    // call.
+    if (isDevMode() && currentValue !== null && currentValue !== undefined) {
+      // Log a type descriptor only — never the raw value, which may contain
+      // user-entered data and end up in dev consoles, CI logs, or screenshots.
+      const valueType =
+        typeof currentValue === 'object'
+          ? (currentValue.constructor?.name ?? 'object')
+          : typeof currentValue;
+      warnUnsupportedValue(
+        'warn',
+        `[ngx-signal-forms] ${component}: unsupported value type — expected \`string\` or \`readonly string[]\`, got`,
+        valueType,
+        '— rendering length as 0.',
+      );
+    }
+    return 0;
+  });
+}
+
+/**
  * Creates character count signals for a form field.
  *
  * This utility provides the same state management as NgxHeadlessCharacterCount
@@ -570,36 +625,10 @@ export function createCharacterCount(
 
   const fieldState = computed(() => field());
 
-  // One-shot guard so the dev warning for an unsupported `value()` type fires
-  // at most once per `createCharacterCount` invocation instead of on every
-  // re-computation. `null`/`undefined` are treated as "empty" and do not warn.
-  const warnUnsupportedValue = createDevWarnOnce();
-
-  const currentLength = computed(() => {
-    const state = fieldState();
-    const value = state.value();
-    if (typeof value === 'string') return value.length;
-    if (Array.isArray(value)) return value.length;
-    // The type descriptor (including `constructor?.name`) is dev-diagnostic
-    // work only — gate the whole branch on `isDevMode()` so production never
-    // computes it, even though `devWarnOnce` itself would no-op the console
-    // call.
-    if (isDevMode() && value !== null && value !== undefined) {
-      // Log a type descriptor only — never the raw value, which may contain
-      // user-entered data and end up in dev consoles, CI logs, or screenshots.
-      const valueType =
-        typeof value === 'object'
-          ? (value.constructor?.name ?? 'object')
-          : typeof value;
-      warnUnsupportedValue(
-        'warn',
-        `[ngx-signal-forms] ${component}: unsupported value type — expected \`string\` or \`readonly string[]\`, got`,
-        valueType,
-        '— rendering length as 0.',
-      );
-    }
-    return 0;
-  });
+  const currentLength = createCharacterCountLength(
+    () => fieldState().value(),
+    component,
+  );
 
   const resolvedMaxLength = computed(() => unwrapValue(maxLength));
 

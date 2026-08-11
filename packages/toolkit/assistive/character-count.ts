@@ -9,6 +9,7 @@ import {
 import type { FieldTree } from '@angular/forms/signals';
 import {
   createCharacterCount,
+  createCharacterCountLength,
   type CharacterCountLimitState,
   type CharacterCountValue,
 } from '@ngx-signal-forms/toolkit/headless';
@@ -404,14 +405,28 @@ export class NgxFormFieldCharacterCount {
     });
   });
 
+  /**
+   * Length signal used when `#charCountState` is `null` (no `maxLength`
+   * configured or auto-detected), so `createCharacterCount` is never
+   * invoked. Created once as an instance field — not inline inside
+   * `currentLength` — so its one-shot unsupported-value dev warning fires at
+   * most once per directive instance rather than once per
+   * `#charCountState()` recomputation.
+   *
+   * Shares its length logic (and dev warning) with `createCharacterCount`
+   * via {@link createCharacterCountLength} so an unsupported `formField`
+   * value warns identically whether or not `maxLength` happens to be set.
+   */
+  readonly #fallbackLength = createCharacterCountLength(
+    () => this.formField()().value(),
+    'NgxFormFieldCharacterCount',
+  );
+
   protected readonly currentLength = computed(() => {
     const state = this.#charCountState();
     if (state) return state.currentLength();
 
-    const value = this.formField()().value() as unknown;
-    if (typeof value === 'string') return value.length;
-    if (Array.isArray(value)) return value.length;
-    return 0;
+    return this.#fallbackLength();
   });
 
   /**
