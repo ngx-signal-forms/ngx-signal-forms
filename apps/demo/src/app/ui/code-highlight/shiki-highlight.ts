@@ -8,6 +8,7 @@ import {
   onIdle,
   signal,
 } from '@angular/core';
+import { DomSanitizer } from '@angular/platform-browser';
 import { SupportedLanguage, SupportedTheme } from './shiki-highlight.service';
 
 /**
@@ -43,6 +44,7 @@ export class ShikiHighlightDirective {
   readonly theme = input<SupportedTheme>('tokyo-night');
 
   readonly #element = inject(ElementRef<HTMLElement>);
+  readonly #sanitizer = inject(DomSanitizer);
   readonly #getShikiService = injectAsync(
     () =>
       import('./shiki-highlight.service').then(
@@ -76,7 +78,15 @@ export class ShikiHighlightDirective {
         this.theme(),
       );
 
-      this.#element.nativeElement.innerHTML = highlightedHtml;
+      // SECURITY: Shiki properly escapes code content in its HTML output.
+      // The highlightedHtml contains only Shiki-generated markup (spans, divs
+      // with class names) and escaped user code. Using bypassSecurityTrustHtml
+      // is safe here because:
+      // 1. Shiki is a trusted library that escapes all code content
+      // 2. The HTML structure is controlled by Shiki, not user input
+      // 3. We trust the Shiki library to produce safe HTML
+      this.#element.nativeElement.innerHTML =
+        this.#sanitizer.bypassSecurityTrustHtml(highlightedHtml);
       this.#isHighlighted.set(true);
     } catch (error) {
       console.warn('Failed to highlight code:', error);
