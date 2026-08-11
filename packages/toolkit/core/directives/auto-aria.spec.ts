@@ -638,6 +638,44 @@ describe('NgxSignalFormAutoAria', () => {
       expect(input?.getAttribute('aria-describedby')).toBe('email-hint');
     });
 
+    it('should include a property-bound hint id, and follow it when it changes', async () => {
+      @Component({
+        template: `
+          <ngx-form-field-wrapper>
+            <input id="email" [formField]="emailControl()" />
+            <ngx-form-field-hint [id]="hintId()">
+              Help text
+            </ngx-form-field-hint>
+          </ngx-form-field-wrapper>
+        `,
+        imports: [
+          MockFormFieldDirective,
+          NgxSignalFormAutoAria,
+          NgxFormFieldHint,
+          TestHintRegistryHostComponent,
+        ],
+      })
+      class TestComponent {
+        emailControl = createMockControl(false, true); // valid, touched
+        hintId = signal('email-hint-bound');
+      }
+
+      const { container, fixture } = await render(TestComponent);
+
+      await TestBed.inject(ApplicationRef).whenStable();
+
+      const input = container.querySelector('input');
+      expect(input?.getAttribute('aria-describedby')).toBe('email-hint-bound');
+
+      fixture.componentInstance.hintId.set('email-hint-changed');
+      fixture.detectChanges();
+      await TestBed.inject(ApplicationRef).whenStable();
+
+      expect(input?.getAttribute('aria-describedby')).toBe(
+        'email-hint-changed',
+      );
+    });
+
     it('should combine hint and error IDs when invalid', async () => {
       @Component({
         template: `

@@ -198,7 +198,7 @@ export class NgxFormFieldHint {
 
   readonly resolvedId = computed(() => {
     const bound = this.id();
-    // oxlint-disable-next-line @typescript-eslint/strict-boolean-expressions -- empty-string id/fieldName is intentionally treated as "not set"; freezing semantic for v1
+    // oxlint-disable-next-line @typescript-eslint/strict-boolean-expressions -- empty-string is "not set", same as below
     if (bound) return bound;
 
     const explicit = this.#explicitId();
@@ -213,17 +213,17 @@ export class NgxFormFieldHint {
   });
 
   constructor() {
-    // Belt-and-braces: read the host `id` attribute at construction time too
-    // (`resolvedId` checks the `id` input first — see above). Angular maps a
-    // static `id="…"` attribute onto a declared `id` input as its initial
-    // value, so the input alone already covers both the static and the
-    // property-bound (`[id]="expr"`) cases reactively. This constructor read
-    // stays as a fallback for any consumer that inspects `resolvedId()`
-    // before inputs are set (e.g. a service constructed ahead of this
-    // directive) and to keep SSR/hydration parity for the static-attribute
-    // case belt-and-braces with the input path. Runs on both platforms:
-    // Angular's server DOM supports `getAttribute`, and the server-rendered
-    // `id` matches what the client resolves on hydration either way.
+    // Also read the host `id` attribute at construction time. `resolvedId`
+    // checks the `id` input first — see above. Angular maps a static
+    // `id="…"` attribute onto a declared `id` input. So the input already
+    // covers the static and the property-bound (`[id]="expr"`) cases.
+    // This read still matters for one case: `viewContainerRef.createComponent`
+    // with a `hostElement` that already has an `id` attribute. That path
+    // sets the DOM attribute directly. It does not go through template input
+    // mapping, so the `id` input stays `null` and this attribute read is the
+    // only way to pick up the id. This runs on both platforms. The server
+    // DOM supports `getAttribute`. The server-rendered `id` matches what the
+    // client resolves on hydration.
     const existingId = this.#elementRef.nativeElement.getAttribute('id');
     if (existingId !== null && existingId.length > 0) {
       this.#explicitId.set(existingId);

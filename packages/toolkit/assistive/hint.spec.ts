@@ -394,6 +394,36 @@ describe('NgxFormFieldHint', () => {
       expect(hint).toHaveAttribute('id', 'bound-over-field');
     });
 
+    it('should prefer a bound [id] over a static id attribute on the same host', async () => {
+      const { container } = await render(
+        `<ngx-form-field-hint id="static-id" [id]="hintId">Hint</ngx-form-field-hint>`,
+        {
+          imports: [NgxFormFieldHint],
+          componentProperties: {
+            hintId: 'bound-id',
+          },
+        },
+      );
+
+      const hint = container.querySelector('ngx-form-field-hint');
+      expect(hint).toHaveAttribute('id', 'bound-id');
+    });
+
+    it('should fall back to the static id attribute when the [id] binding is null', async () => {
+      const { container } = await render(
+        `<ngx-form-field-hint id="static-fallback-id" [id]="hintId">Hint</ngx-form-field-hint>`,
+        {
+          imports: [NgxFormFieldHint],
+          componentProperties: {
+            hintId: null,
+          },
+        },
+      );
+
+      const hint = container.querySelector('ngx-form-field-hint');
+      expect(hint).toHaveAttribute('id', 'static-fallback-id');
+    });
+
     it('should derive id from field context when provided', async () => {
       const { container } = await render(
         `<ngx-form-field-hint>Hint</ngx-form-field-hint>`,
