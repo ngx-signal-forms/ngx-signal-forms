@@ -29,7 +29,6 @@ import {
   createAriaRequiredSignal,
   createFieldNameResolver,
   createHintIdsSignal,
-  toHintDescriptors,
 } from '@ngx-signal-forms/toolkit/headless';
 import {
   NgxMatBoundControl,
@@ -285,11 +284,16 @@ export class MatFormFieldWrapper<TValue = unknown> {
 
   /**
    * Hint descriptors in the public wire format consumed by
-   * `NGX_SIGNAL_FORM_HINT_REGISTRY`. Built via the toolkit's
-   * {@link toHintDescriptors} helper so the registry-wire shape stays in
-   * lockstep with the canonical wrapper.
+   * `NGX_SIGNAL_FORM_HINT_REGISTRY`. Mirrors the shape the canonical
+   * wrapper builds from its own projected hints, so the registry-wire
+   * shape stays in lockstep.
    */
-  readonly hintDescriptors = toHintDescriptors(this.hintChildren);
+  readonly hintDescriptors = computed(() =>
+    this.hintChildren().map((hint) => ({
+      id: hint.resolvedId(),
+      fieldName: hint.resolvedFieldName(),
+    })),
+  );
 
   // ── ARIA primitive factories ──────────────────────────────────────────
   // The four factories from `@ngx-signal-forms/toolkit/headless` drive

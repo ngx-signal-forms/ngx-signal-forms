@@ -397,7 +397,9 @@ test.describe('Form Field Wrapper - Complex Forms', () => {
       await triggerCredentialsFieldsetError(page);
 
       const notificationMessageStyles = await page.credentialsFieldset
-        .locator('.ngx-form-field-notification__message')
+        .locator(
+          'ngx-form-field-error[data-presentation="panel"] .ngx-form-field-error__message',
+        )
         .first()
         .evaluate((message) => {
           const style = getComputedStyle(message);
@@ -425,7 +427,7 @@ test.describe('Form Field Wrapper - Complex Forms', () => {
         '.ngx-signal-form-fieldset__messages',
       );
       const notificationCard = page.credentialsFieldset.locator(
-        'ngx-form-field-notification .ngx-form-field-notification:not(.ngx-form-field-notification--empty)',
+        'ngx-form-field-error[data-presentation="panel"] .ngx-form-field-error:not(.ngx-form-field-error--empty)',
       );
 
       const recipe = await page.credentialsFieldset.evaluate((host) => {
@@ -548,7 +550,7 @@ test.describe('Form Field Wrapper - Complex Forms', () => {
         '.ngx-signal-form-fieldset__messages',
       );
       const bottomNotificationCard = page.credentialsFieldset.locator(
-        'ngx-form-field-notification .ngx-form-field-notification:not(.ngx-form-field-notification--empty)',
+        'ngx-form-field-error[data-presentation="panel"] .ngx-form-field-error:not(.ngx-form-field-error--empty)',
       );
 
       await expect(bottomMessageSlot).toBeVisible();

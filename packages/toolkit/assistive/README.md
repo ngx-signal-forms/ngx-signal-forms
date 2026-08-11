@@ -1,6 +1,6 @@
 # @ngx-signal-forms/toolkit/assistive
 
-> Styled error, grouped notification, hint, character count, and error summary components for Angular Signal Forms.
+> Styled error/notification, hint, character count, and error summary components for Angular Signal Forms.
 
 ## Why this entry point exists
 
@@ -13,7 +13,6 @@ It sits between `/headless` (signals only, no UI) and `/form-field` (complete wr
 ```typescript
 import {
   NgxFormFieldError,
-  NgxFormFieldNotification,
   NgxFormFieldErrorSummary,
   NgxFormFieldHint,
   NgxFormFieldCharacterCount,
@@ -53,54 +52,53 @@ next to a bare control as shown above, they remain visual-only.
 
 ### NgxFormFieldError
 
-Displays validation errors and warnings with appropriate ARIA roles.
+Displays validation errors and warnings with appropriate ARIA roles. Two
+presentations share this one component:
+
+- `presentation="inline"` (default) — bare messages under a single control.
+- `presentation="panel"` — a bordered, padded notification card, for grouped
+  fieldset summaries or custom summary blocks. This is what
+  `NgxFormFieldNotification` used to render as a separate component (folded
+  in pre-1.0; see `docs/migrations/v1.0.0-rc.12.md`).
 
 ```html
+<!-- Per-field, inline -->
 <ngx-form-field-error [formField]="form.email" fieldName="email" />
-```
 
-| Input             | Type                        | Description                                                                 |
-| ----------------- | --------------------------- | --------------------------------------------------------------------------- |
-| `formField`       | `FieldTree`                 | The field to show errors for. One of `formField` or `errors` must be given. |
-| `errors`          | `Signal<ValidationError[]>` | Pre-aggregated error signal (e.g. from fieldsets). Takes priority.          |
-| `fieldName`       | `string`                    | Required when standalone; inherited inside wrapper                          |
-| `strategy`        | `ErrorDisplayStrategy`      | Override error display strategy                                             |
-| `warningStrategy` | `WarningDisplayStrategy`    | Override warning display strategy (defaults to `'on-touch'`)                |
-| `listStyle`       | `'plain' \| 'bullets'`      | Visual layout for rendered messages (`'plain'` by default)                  |
-| `submittedStatus` | `SubmittedStatus`           | Manual override for `'on-submit'` strategy                                  |
-
-- Blocking errors render with `role="alert"` (assertive)
-- Warnings render with `role="status"` (polite)
-- 3-tier message resolution: validator `error.message` → registry → defaults
-
-Use `ngxSignalForm` alongside `[formRoot]` when relying on the `'on-submit'` strategy so assistive components can inherit submission state automatically.
-
-### NgxFormFieldNotification
-
-Grouped validation notification with an optional title.
-
-```html
-<ngx-form-field-notification
+<!-- Grouped, panel -->
+<ngx-form-field-error
   [errors]="groupedErrors"
   fieldName="shipping-address"
   title="Validation errors"
   listStyle="bullets"
+  presentation="panel"
 />
 ```
 
-`errors` must be a signal, for example `signal<readonly ValidationError[]>([])`.
+`errors` accepts a plain array or a reactive source (`Signal<…>` / `() =>
+…`), for example `signal<readonly ValidationError[]>([])`.
 
-| Input       | Type                                 | Description                                     |
-| ----------- | ------------------------------------ | ----------------------------------------------- |
-| `errors`    | `Signal<readonly ValidationError[]>` | Grouped validation messages to present          |
-| `fieldName` | `string`                             | Optional id base for `aria-describedby` linkage |
-| `title`     | `string`                             | Optional title above the grouped messages       |
-| `listStyle` | `'plain' \| 'bullets'`               | Stacked paragraphs or bullet list               |
+| Input             | Type                                           | Description                                                                 |
+| ----------------- | ---------------------------------------------- | --------------------------------------------------------------------------- |
+| `formField`       | `FieldTree`                                    | The field to show errors for. One of `formField` or `errors` must be given. |
+| `errors`          | `ReactiveOrStatic<readonly ValidationError[]>` | Pre-aggregated error source (e.g. from fieldsets). Takes priority.          |
+| `fieldName`       | `string`                                       | Required when standalone; inherited inside wrapper                          |
+| `strategy`        | `ErrorDisplayStrategy`                         | Override error display strategy (ignored when `errors` is bound)            |
+| `warningStrategy` | `WarningDisplayStrategy`                       | Override warning display strategy (defaults to `'on-touch'`)                |
+| `listStyle`       | `'plain' \| 'bullets'`                         | Visual layout for rendered messages (`'plain'` by default)                  |
+| `submittedStatus` | `SubmittedStatus`                              | Manual override for `'on-submit'` strategy                                  |
+| `title`           | `string`                                       | Optional title rendered above a visible container's message list            |
+| `presentation`    | `'inline' \| 'panel'`                          | Visual treatment — bare messages vs. a bordered card (`'inline'` default)   |
 
-- Tone is always **content-driven** — there is no `tone` input: any blocking
-  (non-`warn:`) error routes the group to `role="alert"`; an all-warning list
-  routes to the polite `role="status"` container.
-- Intended for grouped fieldset summaries or custom headless summary cards
+- Blocking errors render with `role="alert"` (assertive)
+- Warnings render with `role="status"` (polite)
+- 3-tier message resolution: validator `error.message` → registry → defaults
+- Tone in `errors`-bound (grouped) usage is **content-driven** — there is no
+  `tone` input: any blocking (non-`warn:`) error routes the group to
+  `role="alert"`; an all-warning list routes to the polite `role="status"`
+  container.
+
+Use `ngxSignalForm` alongside `[formRoot]` when relying on the `'on-submit'` strategy so assistive components can inherit submission state automatically.
 
 ### NgxFormFieldErrorSummary
 
@@ -208,12 +206,12 @@ while consumers override only the public `--ngx-*` properties.
 :root {
   --ngx-signal-form-error-color: #db1818;
   --ngx-signal-form-warning-color: #a16207;
-  --ngx-signal-form-notification-error-bg: #fdebeb;
+  --ngx-signal-form-error-panel-bg: #fdebeb;
 }
 ```
 
 See the [Theming guide](../form-field/THEMING.md) for the complete list of
-`--ngx-*` custom properties (error/warning/notification/hint/char-count
+`--ngx-*` custom properties (error/warning/error-panel/hint/char-count
 tokens, dark-mode overrides, and the fieldset-level
 `--ngx-signal-form-fieldset-notification-inset-*` positioning tokens).
 

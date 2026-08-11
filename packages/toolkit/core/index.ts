@@ -106,10 +106,6 @@ export {
   resolveWarningStrategyFromContext,
 } from './utilities/resolve-strategy';
 export {
-  resolveUnionInput,
-  type ResolveUnionInputOptions,
-} from './utilities/resolve-union-input';
-export {
   createDevWarnOnce,
   devWarnOnce,
   type WarnOnceRef,
@@ -120,13 +116,6 @@ export {
 } from './utilities/show-errors';
 export * from './utilities/submission-helpers';
 export { unwrapValue } from './utilities/unwrap-signal-or-value';
-export {
-  createErrorRendererInputs,
-  toHintDescriptors,
-  type CreateErrorRendererInputsOptions,
-  type HintLike,
-  type NgxFormFieldErrorRendererInputs,
-} from './utilities/wrapper-helpers';
 export {
   InvalidFieldTreeError,
   isFieldTreeLike,

@@ -79,8 +79,8 @@ export interface ErrorSummarySignals {
  *
  * The `role="alert"` container should be rendered UNCONDITIONALLY (even
  * while empty) rather than inserted together with its content — the same
- * always-mounted live-region pattern `NgxFormFieldError` and
- * `NgxFormFieldNotification` use. `role="alert"` only reliably fires on
+ * always-mounted live-region pattern `NgxFormFieldError` uses (both its
+ * inline and panel presentations). `role="alert"` only reliably fires on
  * content insertion into a *pre-existing* live region; mounting the
  * container and its content in the same tick risks the NVDA + Chrome
  * missed-first-announcement bug. Gate only the inner content on

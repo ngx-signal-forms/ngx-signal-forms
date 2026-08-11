@@ -29,9 +29,7 @@ import {
 import {
   createAriaInvalidSignal,
   createAriaRequiredSignal,
-  createErrorRendererInputs,
   createFieldNameResolver,
-  toHintDescriptors,
 } from '@ngx-signal-forms/toolkit/headless';
 
 /**
@@ -277,10 +275,15 @@ export class PrimeFormFieldComponent<TValue = unknown> {
 
   /**
    * Hint descriptors in the public wire format consumed by
-   * `NGX_SIGNAL_FORM_HINT_REGISTRY`. Built via {@link toHintDescriptors}
-   * so the registry shape stays in lockstep with the canonical wrapper.
+   * `NGX_SIGNAL_FORM_HINT_REGISTRY`. Mirrors the shape the canonical
+   * `NgxFormFieldWrapper` builds from its own projected hints.
    */
-  readonly hintDescriptors = toHintDescriptors(this.hintChildren);
+  readonly hintDescriptors = computed(() =>
+    this.hintChildren().map((hint) => ({
+      id: hint.resolvedId(),
+      fieldName: hint.resolvedFieldName(),
+    })),
+  );
 
   // ── Strategy / submission state plumbing ──────────────────────────────
 
@@ -315,11 +318,13 @@ export class PrimeFormFieldComponent<TValue = unknown> {
     () => this.#errorRenderer?.component ?? NgxFormFieldError,
   );
 
-  protected readonly errorRendererInputs = createErrorRendererInputs({
-    formField: this.formField,
-    strategy: this.effectiveStrategy,
-    submittedStatus: this.submittedStatus,
-  });
+  protected readonly errorRendererInputs = computed<Record<string, unknown>>(
+    () => ({
+      formField: this.formField(),
+      strategy: this.effectiveStrategy(),
+      submittedStatus: this.submittedStatus(),
+    }),
+  );
 
   // ── ARIA primitive factories ──────────────────────────────────────────
   // Drive wrapper-side state (host attributes / debug overlays / smoke

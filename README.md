@@ -394,7 +394,7 @@ Use this when you want standalone error, grouped-notification, hint, counter, an
 components _without_ adopting the full field wrapper — e.g. you already have a layout system but want the toolkit's error
 timing and ARIA.
 
-Most-used exports: `NgxFormFieldError`, `NgxFormFieldNotification`, `NgxFormFieldErrorSummary`, `NgxFormFieldHint`, `NgxFormFieldCharacterCount`.
+Most-used exports: `NgxFormFieldError` (grouped notification cards use its `presentation="panel"` mode), `NgxFormFieldErrorSummary`, `NgxFormFieldHint`, `NgxFormFieldCharacterCount`.
 
 **[→ Assistive docs](./packages/toolkit/assistive/README.md)** ·
 **Demo:** [`your-first-form` (code)](./apps/demo/src/app/01-getting-started/your-first-form) · [live](https://ngx-signal-forms.github.io/ngx-signal-forms/getting-started/your-first-form/)

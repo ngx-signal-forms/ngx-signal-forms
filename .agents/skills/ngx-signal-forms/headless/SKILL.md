@@ -45,9 +45,12 @@ factories instead of recreating toolkit resolution rules: `createAriaInvalidSign
 `createHintIdsSignal`. Use `createFieldNameResolver` for the canonical
 explicit → optional label `for` → control `id` identity cascade.
 `createAriaDescribedByBridge` is only for a host whose `aria-describedby`
-is owned by another library. Custom wrapper renderers use
-`createErrorRendererInputs` and `toHintDescriptors`. Read
-`../references/api.md` for the contracts before composing these factories.
+is owned by another library. A custom wrapper's error-renderer inputs
+(`{ formField, strategy, submittedStatus }`) and hint descriptors (for
+`NGX_SIGNAL_FORM_HINT_REGISTRY`) are each a single inline `computed()` —
+too small to warrant a shared factory; see `docs/CUSTOM_WRAPPERS.md` for
+the shape. Read `../references/api.md` for the remaining factories'
+contracts before composing them.
 
 5. **Use `NgxHeadlessFieldset`** for aggregated group state — validity, errors, and warnings across a field tree without rebuilding the traversal.
 

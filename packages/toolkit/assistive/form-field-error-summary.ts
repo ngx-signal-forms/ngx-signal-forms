@@ -76,7 +76,7 @@ import { NgxHeadlessErrorSummary } from '@ngx-signal-forms/toolkit/headless';
     <!--
       The role="alert" container is rendered UNCONDITIONALLY (even when
       empty), the same always-mounted live-region pattern NgxFormFieldError
-      and NgxFormFieldNotification use: role="alert" only fires reliably on
+      uses (both its inline and panel presentations): role="alert" only fires reliably on
       content insertion into a pre-existing live region, so inserting the
       container and its content in the same tick risks the NVDA + Chrome
       missed-first-announcement bug. aria-hidden/[hidden] are intentionally
@@ -131,7 +131,7 @@ import { NgxHeadlessErrorSummary } from '@ngx-signal-forms/toolkit/headless';
     /* Empty live-region shell: the @if in the template guarantees zero
      * content while empty, so we additionally zero the box model to
      * collapse it visually — mirrors the --empty pattern in
-     * NgxFormFieldError / NgxFormFieldNotification. */
+     * NgxFormFieldError's own --empty presentation. */
     .ngx-form-field-error-summary--empty {
       border-width: 0;
       padding: 0;

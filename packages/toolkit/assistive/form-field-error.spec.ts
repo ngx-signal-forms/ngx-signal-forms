@@ -1419,4 +1419,120 @@ describe('NgxFormFieldError', () => {
       expect(status.textContent).toContain('Consider 8+ characters');
     });
   });
+
+  // Folded in from the deleted `NgxFormFieldNotification` (see
+  // docs/migrations/v1.0.0-rc.12.md). Tone routing, id generation, and
+  // message resolution for `[errors]`-bound usage are already covered by
+  // the `error rendering` describe block above (`presentation` doesn't
+  // change any of that — it only swaps the CSS treatment and adds the
+  // `title` slot), so this block only covers what's new: `title` and the
+  // `presentation` input itself.
+  describe('presentation="panel" (grouped notification card)', () => {
+    it('renders an optional title and bulleted grouped errors', async () => {
+      const errors = signal([
+        { kind: 'required', message: 'First name is required' },
+        { kind: 'email', message: 'Email is required' },
+      ]);
+
+      const { container } = await render(
+        `<ngx-form-field-error
+          [errors]="errors"
+          fieldName="personal-info"
+          title="Validation errors"
+          listStyle="bullets"
+          presentation="panel"
+        />`,
+        {
+          imports: [NgxFormFieldError],
+          componentProperties: { errors },
+        },
+      );
+
+      expect(screen.getByRole('alert')).toHaveTextContent('Validation errors');
+      expect(container.querySelector('#personal-info-error')).toBeTruthy();
+      expect(
+        container.querySelectorAll('.ngx-form-field-error__list li'),
+      ).toHaveLength(2);
+    });
+
+    it('does not render a title element when title is unset', async () => {
+      const errors = signal([{ kind: 'required', message: 'Required' }]);
+
+      const { container } = await render(
+        `<ngx-form-field-error
+          [errors]="errors"
+          fieldName="untitled"
+          presentation="panel"
+        />`,
+        {
+          imports: [NgxFormFieldError],
+          componentProperties: { errors },
+        },
+      );
+
+      expect(
+        container.querySelector('.ngx-form-field-error__title'),
+      ).toBeNull();
+    });
+
+    it('renders the title above warnings too, in the status container', async () => {
+      const warnings = signal([
+        { kind: 'warn:optional', message: 'Phone number is optional' },
+      ]);
+
+      const { container } = await render(
+        `<ngx-form-field-error
+          [errors]="warnings"
+          fieldName="contact-method"
+          title="Heads up"
+          presentation="panel"
+        />`,
+        {
+          imports: [NgxFormFieldError],
+          componentProperties: { warnings },
+        },
+      );
+
+      const status = screen.getByRole('status');
+      expect(status).toHaveTextContent('Heads up');
+      expect(status).toHaveTextContent('Phone number is optional');
+      expect(
+        container.querySelector('[role="alert"] .ngx-form-field-error__title'),
+      ).toBeNull();
+    });
+
+    it('exposes "inline" as a data attribute for CSS gating by default', async () => {
+      const { container } = await render(
+        `<ngx-form-field-error fieldName="a" />`,
+        { imports: [NgxFormFieldError] },
+      );
+      expect(container.querySelector('ngx-form-field-error')).toHaveAttribute(
+        'data-presentation',
+        'inline',
+      );
+    });
+
+    it('exposes "panel" as a data attribute for CSS gating', async () => {
+      const { container } = await render(
+        `<ngx-form-field-error fieldName="b" presentation="panel" />`,
+        { imports: [NgxFormFieldError] },
+      );
+      expect(container.querySelector('ngx-form-field-error')).toHaveAttribute(
+        'data-presentation',
+        'panel',
+      );
+    });
+
+    it('defaults the panel error background to the Figma soft-danger token', () => {
+      // Runtime resolution is covered by the *.browser.spec.ts suite and
+      // e2e snapshots; jsdom can't compute custom properties from emulated
+      // component stylesheets.
+      expect(errorCssSource).toMatch(
+        /--_error-panel-clr-danger-soft:\s*#fdebeb\b/,
+      );
+      expect(errorCssSource).toMatch(
+        /--_error-bg:[^;]*--ngx-signal-form-error-panel-bg[^;]*--_error-panel-clr-danger-soft/,
+      );
+    });
+  });
 });

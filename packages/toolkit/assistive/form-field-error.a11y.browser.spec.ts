@@ -7,6 +7,7 @@ import {
   schema,
   validate,
 } from '@angular/forms/signals';
+import type { ValidationError } from '@angular/forms/signals';
 import { render } from '@testing-library/angular';
 import { userEvent } from 'vitest/browser';
 import { describe, expect, it } from 'vitest';
@@ -137,6 +138,97 @@ describe('NgxFormFieldError (standalone) — WCAG 2.2 AA conformance', () => {
     expect(container.querySelector('[role="status"]')?.textContent).toContain(
       'Consider 8 or more characters',
     );
+    await expectNoA11yViolations(container);
+  });
+});
+
+/**
+ * WCAG 2.2 AA conformance gate for `NgxFormFieldError` used in its grouped
+ * `presentation="panel"` mode — rendered the way a custom summary block or
+ * `NgxFormFieldset`'s notification-appearance branch composes it: an
+ * `[errors]`-bound card outside a wrapper. Formerly covered by the deleted
+ * `NgxFormFieldNotification`'s own a11y spec (folded into this component;
+ * see `docs/migrations/v1.0.0-rc.12.md`). Scanned empty (both live regions
+ * must already exist per WCAG 4.1.3), with blocking errors (role="alert"),
+ * and, separately, with only warnings (role="status").
+ */
+describe('NgxFormFieldError (presentation="panel") — WCAG 2.2 AA conformance', () => {
+  it('the empty panel has no violations', async () => {
+    @Component({
+      selector: 'ngx-test-a11y-panel-empty',
+      imports: [NgxFormFieldError],
+      template: `
+        <ngx-form-field-error
+          [errors]="errors"
+          fieldName="shipping"
+          presentation="panel"
+        />
+      `,
+    })
+    class TestComponent {
+      readonly errors = signal<readonly ValidationError[]>([]);
+    }
+
+    const { container } = await render(TestComponent);
+    await TestBed.inject(ApplicationRef).whenStable();
+
+    expect(container.querySelector('[role="alert"]')).toBeTruthy();
+    expect(container.querySelector('[role="status"]')).toBeTruthy();
+    await expectNoA11yViolations(container);
+  });
+
+  it('a populated error panel with a title has no violations', async () => {
+    @Component({
+      selector: 'ngx-test-a11y-panel-error',
+      imports: [NgxFormFieldError],
+      template: `
+        <ngx-form-field-error
+          [errors]="errors"
+          fieldName="shipping"
+          title="Shipping address errors"
+          presentation="panel"
+        />
+      `,
+    })
+    class TestComponent {
+      readonly errors = signal<readonly ValidationError[]>([
+        { kind: 'required', message: 'Street is required' },
+        { kind: 'required', message: 'City is required' },
+      ]);
+    }
+
+    const { container } = await render(TestComponent);
+    await TestBed.inject(ApplicationRef).whenStable();
+
+    const alert = container.querySelector('[role="alert"]');
+    expect(alert?.textContent).toContain('Street is required');
+    expect(alert?.textContent).toContain('Shipping address errors');
+    await expectNoA11yViolations(container);
+  });
+
+  it('a populated warning panel has no violations', async () => {
+    @Component({
+      selector: 'ngx-test-a11y-panel-warning',
+      imports: [NgxFormFieldError],
+      template: `
+        <ngx-form-field-error
+          [errors]="warnings"
+          fieldName="shipping"
+          presentation="panel"
+        />
+      `,
+    })
+    class TestComponent {
+      readonly warnings = signal<readonly ValidationError[]>([
+        { kind: 'warn:po-box', message: 'PO boxes may delay delivery' },
+      ]);
+    }
+
+    const { container } = await render(TestComponent);
+    await TestBed.inject(ApplicationRef).whenStable();
+
+    const status = container.querySelector('[role="status"]');
+    expect(status?.textContent).toContain('PO boxes may delay delivery');
     await expectNoA11yViolations(container);
   });
 });
