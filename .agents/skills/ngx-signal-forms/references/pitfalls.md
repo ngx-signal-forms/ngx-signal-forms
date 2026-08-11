@@ -154,15 +154,16 @@ no such input.
 
 These were removed or are not public:
 
-| Removed                        | Use Instead                           |
-| ------------------------------ | ------------------------------------- |
-| `'manual'` strategy            | `showErrors()` + manual signal        |
-| `computeShowErrors()`          | `showErrors()`                        |
-| `createShowErrorsSignal()`     | `showErrors()`                        |
-| `canSubmit()`                  | `canSubmitWithWarnings()`             |
-| `isSubmitting()`               | `submittedStatus()` from `[formRoot]` |
-| `fieldNameResolver` config     | Provide `id` on bound control         |
-| `strictFieldResolution` config | Removed — strict by default           |
+| Removed                        | Use Instead                                                          |
+| ------------------------------ | -------------------------------------------------------------------- |
+| `'manual'` strategy            | `createShowErrorsComputed()` + manual signal                         |
+| `computeShowErrors()`          | `createShowErrorsComputed()`                                         |
+| `createShowErrorsSignal()`     | `createShowErrorsComputed()`                                         |
+| `showErrors()`                 | `createShowErrorsComputed()` — same signature, gone (not deprecated) |
+| `canSubmit()`                  | `canSubmitWithWarnings()`                                            |
+| `isSubmitting()`               | `submittedStatus()` from `[formRoot]`                                |
+| `fieldNameResolver` config     | Provide `id` on bound control                                        |
+| `strictFieldResolution` config | Removed — strict by default                                          |
 
 ## Renamed — Update the Name, Same Behavior
 
@@ -322,22 +323,27 @@ IDs and described-by wiring deterministic.
 <form [formRoot]="form" ngxSignalForm errorStrategy="on-submit">...</form>
 ```
 
-## Standalone `showErrors('on-submit')` Without `submittedStatus`
+## Standalone `createShowErrorsComputed('on-submit')` Without `submittedStatus`
 
 ```typescript
 // Wrong — silently never shows errors. Dev mode logs a one-shot
-// console.warn('[ngx-signal-forms] showErrors(...) called with strategy "on-submit"...').
-const visible = showErrors(form.email, 'on-submit');
+// console.warn("[ngx-signal-forms] createShowErrorsComputed(): 'on-submit' strategy
+// requires an explicit submittedStatus signal. Without it, errors will never
+// surface. Wire the status from NgxSignalForm ('ngxSignalForm') or pass
+// submittedStatus explicitly.").
+const visible = createShowErrorsComputed(form.email, 'on-submit');
 
 // Correct — pass the submitted-status signal explicitly
-const visible = showErrors(form.email, 'on-submit', () => submittedStatus());
+const visible = createShowErrorsComputed(form.email, 'on-submit', () =>
+  submittedStatus(),
+);
 ```
 
 Inside `form[formRoot][ngxSignalForm]` the wrapper, auto-ARIA, and headless
 directives inherit `submittedStatus` from the form context automatically — this
-pitfall only applies to standalone callers of `showErrors()` or
-`createShowErrorsComputed()` outside that context (custom utilities,
-hand-rolled components, services). Either pass the status, or move the work
+pitfall only applies to standalone callers of `createShowErrorsComputed()`
+outside that context (custom utilities, hand-rolled components, services).
+Either pass the status, or move the work
 inside the form context so inheritance can do it for you.
 
 ## Vest — An Invalid Field Name Throws in Dev Mode

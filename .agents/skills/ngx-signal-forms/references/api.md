@@ -227,16 +227,14 @@ type NgxFormFieldErrorPlacement = 'top' | 'bottom';
 
 ```typescript
 // Error visibility
-showErrors(field, strategy, submittedStatus?): Signal<boolean>
+createShowErrorsComputed(field, strategy, submittedStatus?): Signal<boolean>
 // `submittedStatus` is optional for 'immediate' and 'on-touch'; REQUIRED for
 // 'on-submit' — without it the helper stays at 'unsubmitted' and errors never
 // surface (dev mode logs a one-shot console.warn). Inside [formRoot][ngxSignalForm]
 // the wrapper, auto-ARIA, and headless directives inherit it automatically.
-createShowErrorsComputed(field, strategy, submittedStatus?): Signal<boolean>
-// Lower-level extraction used internally by showErrors(), the wrapper,
-// NgxFormFieldError, and NgxHeadlessErrorState. Reach for it
-// when you already own a FieldState signal and want the same visibility-timing
-// rules without routing through showErrors()'s ErrorVisibilityState parameter.
+// This is the shared visibility-timing primitive behind the wrapper,
+// NgxFormFieldError, and NgxHeadlessErrorState. Not the same as
+// shouldShowErrors() below — that's a pure boolean predicate, not a signal.
 combineShowErrors(signals: readonly Signal<boolean>[]): Signal<boolean>
 shouldShowErrors(isInvalid, isTouched, strategy, submittedStatus): boolean
 
@@ -543,7 +541,7 @@ Inputs: `field` (required), `fieldName` (required), `strategy`
 
 Signals:
 
-- `showErrors()` — whether to display errors now
+- `shouldShowErrors()` — whether to display errors now
 - `hasErrors()` / `hasWarnings()`
 - `resolvedErrors()` / `resolvedWarnings()` — `ResolvedError[]` with `.message`, `.kind`
 - `errorId` / `warningId` — stable IDs for `aria-describedby`
@@ -683,7 +681,7 @@ interface CreateErrorStateOptions<TValue = unknown> {
 }
 
 interface ErrorStateResult {
-  readonly showErrors: Signal<boolean>;
+  readonly shouldShowErrors: Signal<boolean>;
   readonly hasErrors: Signal<boolean>;
   readonly hasWarnings: Signal<boolean>;
   readonly resolvedErrors: Signal<readonly ResolvedError[]>;

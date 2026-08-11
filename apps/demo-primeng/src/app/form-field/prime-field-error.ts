@@ -5,7 +5,7 @@ import {
   generateWarningId,
   NGX_SIGNAL_FORM_FIELD_CONTEXT,
   resolveFieldNameFromCandidates,
-  showErrors,
+  createShowErrorsComputed,
 } from '@ngx-signal-forms/toolkit';
 import { NgxHeadlessErrorState } from '@ngx-signal-forms/toolkit/headless';
 
@@ -179,7 +179,7 @@ export class PrimeFieldErrorComponent {
    * (see `packages/toolkit/assistive/form-field-error.ts`) and the Spartan
    * reference (`firstWarning = #firstWarning`, no strategy gate).
    */
-  protected readonly showWarnings = showErrors(
+  protected readonly showWarnings = createShowErrorsComputed(
     this.#fieldState,
     computed(() => 'immediate' as const),
     this.headless.resolvedSubmittedStatus,

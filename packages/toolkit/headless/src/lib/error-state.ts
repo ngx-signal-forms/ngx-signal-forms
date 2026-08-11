@@ -8,18 +8,16 @@ import {
 } from '@angular/core';
 import type { FieldTree, ValidationError } from '@angular/forms/signals';
 import {
+  createErrorVisibility,
   injectFormContext,
   NGX_SIGNAL_FORMS_CONFIG,
-  resolveStrategyFromContext,
   resolveSubmittedStatusFromContext,
   resolveWarningStrategyFromContext,
-  showErrors,
   shouldShowWarnings,
   unwrapValue,
   type ErrorDisplayStrategy,
   type ErrorReadableState,
   type ReactiveOrStatic,
-  type ResolvedErrorDisplayStrategy,
   type ResolvedWarningDisplayStrategy,
   type SubmittedStatus,
   type WarningDisplayStrategy,
@@ -222,21 +220,6 @@ export class NgxHeadlessErrorState<
     this.#bridgedFieldState.set(s);
   }
 
-  /**
-   * Resolution order: `strategy` input (when not `'inherit'`) → ambient
-   * form context → the global `NGX_SIGNAL_FORMS_CONFIG.defaultErrorStrategy`
-   * → `'on-touch'`. Mirrors `NgxHeadlessFieldset.resolvedStrategy`'s cascade
-   * so standalone usage (no `[ngxSignalForm]` host) behaves consistently
-   * regardless of which headless surface a consumer reaches for.
-   */
-  readonly #resolvedStrategy = computed<ResolvedErrorDisplayStrategy>(() =>
-    resolveStrategyFromContext(
-      this.strategy(),
-      this.#injectedContext,
-      this.#config.defaultErrorStrategy,
-    ),
-  );
-
   readonly #resolvedWarningStrategy = computed<ResolvedWarningDisplayStrategy>(
     () =>
       resolveWarningStrategyFromContext(
@@ -283,11 +266,18 @@ export class NgxHeadlessErrorState<
   readonly hasErrors = this.#core.hasErrors;
   readonly hasWarnings = this.#core.hasWarnings;
 
-  readonly #strategyBasedShowErrors = showErrors(
-    this.#fieldState,
-    this.#resolvedStrategy,
-    this.resolvedSubmittedStatus,
-  );
+  /**
+   * Resolution order: `strategy` input (when not `'inherit'`) → ambient
+   * form context → the global `NGX_SIGNAL_FORMS_CONFIG.defaultErrorStrategy`
+   * → `'on-touch'`. Mirrors `NgxHeadlessFieldset.resolvedStrategy`'s cascade
+   * so standalone usage (no `[ngxSignalForm]` host) behaves consistently
+   * regardless of which headless surface a consumer reaches for.
+   */
+  readonly #strategyBasedShowErrors = createErrorVisibility(this.#fieldState, {
+    strategy: this.strategy,
+    submittedStatus: this.submittedStatus,
+    configDefault: this.#config.defaultErrorStrategy,
+  });
 
   readonly #strategyBasedShowWarnings = computed(() => {
     // For warnings, we need to check hasWarnings instead of invalid

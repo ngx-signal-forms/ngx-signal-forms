@@ -116,7 +116,6 @@ export {
 export {
   combineShowErrors,
   createShowErrorsComputed,
-  showErrors,
 } from './utilities/show-errors';
 export * from './utilities/submission-helpers';
 export { unwrapValue } from './utilities/unwrap-signal-or-value';

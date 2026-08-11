@@ -33,9 +33,11 @@ For ready-to-render components with built-in markup, use `assistive/SKILL.md` or
 
 4. **Compose ARIA from toolkit primitives.** Headless directives expose signal IDs (`errorId`, `warningId`) for direct template bindings:
 
-   ```html
-   [attr.aria-describedby]="errorState.showErrors() ? errorState.errorId : null"
-   ```
+```html
+<input
+  [attr.aria-describedby]="errorState.shouldShowErrors() ? errorState.errorId : null"
+/>
+```
 
 For a reusable custom wrapper that owns its ARIA, use the re-exported
 factories instead of recreating toolkit resolution rules: `createAriaInvalidSignal`,
@@ -129,10 +131,10 @@ Tone is fully content-driven — there is no input to set. `resolvedTone()` retu
     id="email"
     type="email"
     [formField]="form.email"
-    [attr.aria-describedby]="errorState.showErrors() && errorState.hasErrors() ? errorState.errorId : null"
+    [attr.aria-describedby]="errorState.shouldShowErrors() && errorState.hasErrors() ? errorState.errorId : null"
     [attr.aria-invalid]="errorState.hasErrors() || null"
   />
-  @if (errorState.showErrors() && errorState.hasErrors()) {
+  @if (errorState.shouldShowErrors() && errorState.hasErrors()) {
   <ul [id]="errorState.errorId" role="alert">
     @for (error of errorState.resolvedErrors(); track error.kind) {
     <li>{{ error.message }}</li>
@@ -159,7 +161,7 @@ import { NgxHeadlessErrorState } from '@ngx-signal-forms/toolkit/headless';
   template: `
     <ng-content select="label" />
     <ng-content />
-    @if (errorState.showErrors() && errorState.hasErrors()) {
+    @if (errorState.shouldShowErrors() && errorState.hasErrors()) {
       <span [id]="errorState.errorId" role="alert" class="ds-error">
         {{ errorState.resolvedErrors()[0].message }}
       </span>
@@ -178,7 +180,7 @@ export class DsFormFieldComponent {
 for it when a custom component owns its own error rendering but still needs
 the toolkit's ID conventions (so `aria-describedby` chains stay consistent
 with `NgxFormFieldError`, the wrapper, and other toolkit consumers). Prefer
-`NgxHeadlessErrorState` when you also want `showErrors()`/`hasErrors()`.
+`NgxHeadlessErrorState` when you also want `shouldShowErrors()`/`hasErrors()`.
 
 ```html
 <div ngxHeadlessFieldName #fieldName="fieldName" [field]="form.email">
