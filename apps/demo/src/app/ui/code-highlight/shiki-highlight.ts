@@ -1,7 +1,6 @@
 import {
   afterNextRender,
   Directive,
-  DomSanitizer,
   ElementRef,
   inject,
   injectAsync,
@@ -9,6 +8,7 @@ import {
   onIdle,
   signal,
 } from '@angular/core';
+import { DomSanitizer } from '@angular/platform-browser';
 import { SupportedLanguage, SupportedTheme } from './shiki-highlight.service';
 
 /**
