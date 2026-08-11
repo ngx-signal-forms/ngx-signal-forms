@@ -98,6 +98,68 @@ describe('expectNoA11yViolations', () => {
   });
 });
 
+describe('expectNoA11yViolations default context', () => {
+  // The `context` parameter documents (a11y.ts) that a bare, zero-argument
+  // call scans the whole `document.body`. Every other spec in the workspace
+  // passes a fixture or container explicitly, so that default path had no
+  // coverage of its own — pin both directions directly against
+  // `document.body`, cleaning up whatever each test appends to it.
+  let appended: HTMLElement | undefined;
+
+  afterEach(() => {
+    appended?.remove();
+    appended = undefined;
+  });
+
+  it('resolves without throwing when called with no arguments against an accessible document.body', async () => {
+    appended = document.createElement('div');
+    appended.innerHTML = `
+      <label for="ngx-a11y-default-context-name">Full name</label>
+      <input id="ngx-a11y-default-context-name" type="text" />
+    `;
+    document.body.append(appended);
+
+    await expect(expectNoA11yViolations()).resolves.toBeUndefined();
+  });
+
+  it('throws when called with no arguments against a document.body with a violation', async () => {
+    appended = document.createElement('img');
+    appended.setAttribute('src', 'data:,');
+    document.body.append(appended);
+
+    await expect(expectNoA11yViolations()).rejects.toThrow(
+      /accessibility violation/u,
+    );
+  });
+});
+
+describe('expectNoA11yViolations WCAG 2.2 AA baseline', () => {
+  let host: HTMLElement | undefined;
+
+  afterEach(() => {
+    host?.remove();
+    host = undefined;
+  });
+
+  it('is not overridable via the options argument (runOnly is not a valid key)', async () => {
+    // `options` used to spread AFTER the WCAG 2.2 AA `runOnly` tag set, so a
+    // caller who (mis)guessed `runOnly` was accepted could silently narrow or
+    // replace the baseline. `expectNoA11yViolations`'s `options` parameter is
+    // now typed `Omit<axe.RunOptions, 'runOnly'>`, so that key does not
+    // type-check — this spec instead pins the behavioural guarantee: passing
+    // an unrelated `options` key (here, `resultTypes`) must not weaken the
+    // baseline. The fixture violates `image-alt`, which `options` does not
+    // touch, so the scan must still fail.
+    host = document.createElement('div');
+    host.innerHTML = `<img src="data:," />`;
+    document.body.append(host);
+
+    await expect(
+      expectNoA11yViolations(host, { resultTypes: ['violations'] }),
+    ).rejects.toThrow(/image-alt/u);
+  });
+});
+
 describe('WCAG_22_AA_TAGS', () => {
   it('covers every Level A/AA axe tag needed for WCAG 2.2 AA (additive across versions)', () => {
     expect(WCAG_22_AA_TAGS).toEqual([

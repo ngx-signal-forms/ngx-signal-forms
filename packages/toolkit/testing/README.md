@@ -50,7 +50,9 @@ it('has no accessibility violations', async () => {
 
 Pass extra axe `RunOptions` as a second argument to merge over the WCAG 2.2
 AA defaults, e.g. to waive a rule for a fixture that intentionally renders
-unstyled controls:
+unstyled controls. The WCAG 2.2 AA `runOnly` tag set is the hard-fail
+baseline and is not overridable — `runOnly` is omitted from this
+parameter's type, so passing it is a compile error:
 
 ```typescript
 await expectNoA11yViolations(container, {

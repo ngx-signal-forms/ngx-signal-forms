@@ -37,11 +37,13 @@ export type WCAG_22_AA_TAG = (typeof WCAG_22_AA_TAGS)[number];
  *   document body so a bare `await expectNoA11yViolations()` covers the render.
  * @param options Extra axe `RunOptions` merged over the WCAG 2.2 AA defaults —
  *   e.g. `{ rules: { 'color-contrast': { enabled: false } } }` for fixtures
- *   that intentionally render unstyled controls.
+ *   that intentionally render unstyled controls. The WCAG 2.2 AA `runOnly`
+ *   tag set is the hard-fail baseline and is not overridable: `runOnly` is
+ *   omitted from this parameter's type, so passing it is a compile error.
  */
 export async function expectNoA11yViolations(
   context: axe.ElementContext = document.body,
-  options: axe.RunOptions = {},
+  options: Omit<axe.RunOptions, 'runOnly'> = {},
 ): Promise<void> {
   const results = await axe.run(context, {
     runOnly: { type: 'tag', values: [...WCAG_22_AA_TAGS] },
