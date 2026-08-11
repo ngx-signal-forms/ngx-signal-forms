@@ -23,12 +23,13 @@ const projectJson = JSON.parse(
 
 const toolkitDir = resolve(import.meta.dirname, '..');
 
-// The full set of entry points ng-packagr discovers when it builds the
-// package — the primary entry (`packages/toolkit/`) plus every directory
-// holding an `ng-package.json` (ng-packagr globs for the file itself; it
-// never reads a directory name allowlist). This mirrors
-// `findSecondaryPackagesPaths` in ng-packagr's `discover-packages.ts`
-// closely enough to catch drift without needing an actual build.
+// Every *secondary* entry point ng-packagr discovers when it builds the
+// package: each toolkit sub-directory holding an `ng-package.json`
+// (ng-packagr globs for the file itself; it never reads a directory name
+// allowlist). The primary entry (`packages/toolkit/` itself) is deliberately
+// not in this list. This mirrors `findSecondaryPackagesPaths` in ng-packagr's
+// `discover-packages.ts` closely enough to catch drift without needing an
+// actual build.
 const secondaryEntries = readdirSync(toolkitDir, { withFileTypes: true })
   .filter(
     (entry) =>
@@ -61,10 +62,14 @@ function readEntryFile(entryDir: string): string {
 /**
  * Collects the names a TypeScript barrel file exports, following local
  * (relative-path) `export * from '...'` re-export chains recursively.
- * Named re-exports (`export { a, b } from '...'`, including from a
- * package-name specifier like `@ngx-signal-forms/toolkit/core`) contribute
- * their listed names directly without needing to resolve the target file —
- * this codebase never uses a bare `export *` against a package specifier.
+ * Named re-exports from a relative specifier (`export { a, b } from './...'`)
+ * are verified against the target file — a name the target no longer exports
+ * throws instead of silently counting as exported, so a stale named re-export
+ * fails here without needing a typecheck. Named re-exports from a
+ * package-name specifier (e.g. `@ngx-signal-forms/toolkit/core`) contribute
+ * their listed names directly without resolving the target — those names are
+ * cross-checked against the entry barrels by the root-barrel test instead —
+ * and this codebase never uses a bare `export *` against a package specifier.
  *
  * Only used to check *name* existence across barrels, so type-only vs.
  * value exports are treated identically.
@@ -102,7 +107,26 @@ function collectExportedNames(
   for (const statement of source.statements) {
     if (ts.isExportDeclaration(statement)) {
       if (statement.exportClause && ts.isNamedExports(statement.exportClause)) {
+        const specifier =
+          statement.moduleSpecifier &&
+          ts.isStringLiteral(statement.moduleSpecifier)
+            ? statement.moduleSpecifier.text
+            : undefined;
+        // A fresh visited set on purpose: the shared one exists to keep the
+        // surrounding `export *` walk from double-counting, but here we need
+        // the target's complete name set even when another chain already
+        // visited it.
+        const targetNames = specifier?.startsWith('.')
+          ? collectExportedNames(resolveRelativeModule(specifier))
+          : undefined;
         for (const element of statement.exportClause.elements) {
+          const importedName = (element.propertyName ?? element.name).text;
+          if (targetNames && !targetNames.has(importedName)) {
+            throw new Error(
+              `${filePath}: re-exports '${importedName}' from ` +
+                `'${specifier}', but the target no longer exports that name.`,
+            );
+          }
           names.add(element.name.text);
         }
       } else if (
