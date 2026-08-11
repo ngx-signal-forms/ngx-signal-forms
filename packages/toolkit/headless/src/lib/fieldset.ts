@@ -8,6 +8,7 @@ import {
 } from '@angular/core';
 import type { FieldTree, ValidationError } from '@angular/forms/signals';
 import {
+  createErrorVisibility,
   injectFormContext,
   NGX_SIGNAL_FORMS_CONFIG,
   readDirectErrors,
@@ -279,13 +280,20 @@ export class NgxHeadlessFieldset<
   );
 
   /**
-   * Show errors signal based on strategy.
+   * Show errors signal based on strategy. Routes through the shared
+   * `createErrorVisibility` seam (ADR-0006) rather than re-inlining
+   * `createShowErrorsComputed` — {@link resolvedStrategy} /
+   * {@link resolvedSubmittedStatus} stay separately computed above because
+   * they are part of this directive's public surface, but the raw
+   * `strategy`/`submittedStatus` inputs feed the seam directly so it applies
+   * the identical cascade (same function, same `configDefault`) rather than
+   * a parallel reimplementation.
    */
-  readonly #showErrorsSignal = createShowErrorsComputed(
-    this.#fieldsetState,
-    this.resolvedStrategy,
-    this.resolvedSubmittedStatus,
-  );
+  readonly #showErrorsSignal = createErrorVisibility(this.#fieldsetState, {
+    strategy: this.strategy,
+    submittedStatus: this.submittedStatus,
+    configDefault: this.#config.defaultErrorStrategy,
+  });
 
   /**
    * Show warnings signal based on {@link resolvedWarningStrategy}, timed

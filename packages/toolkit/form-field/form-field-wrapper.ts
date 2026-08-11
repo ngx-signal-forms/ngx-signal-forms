@@ -28,7 +28,7 @@ import {
   NGX_SIGNAL_FORM_CONTROL_PRESETS,
   NGX_SIGNAL_FORM_FIELD_CONTEXT,
   NGX_SIGNAL_FORMS_CONFIG,
-  createShowErrorsComputed,
+  createErrorVisibility,
   injectFormContext,
   isBlockingError,
   isFieldStateHidden,
@@ -36,7 +36,6 @@ import {
   readDirectErrors,
   shouldShowWarnings,
   type ResolvedNgxSignalFormControlSemantics,
-  resolveErrorDisplayStrategy,
   resolveStrategyFromContext,
   resolveWarningStrategyFromContext,
 } from '@ngx-signal-forms/toolkit';
@@ -877,16 +876,20 @@ export class NgxFormFieldWrapper<TValue = unknown> {
 
   /**
    * Effective error display strategy combining component input and form context defaults.
+   *
+   * Routes through the shared `resolveStrategyFromContext` helper (the
+   * strategy-resolution half of the ADR-0006 seam; `createErrorVisibility()`
+   * is the seam itself) rather than reading `formContext.errorStrategy()`
+   * and calling `resolveErrorDisplayStrategy` directly — same cascade, one
+   * fewer hand-rolled copy of the null-context guard.
    */
-  protected readonly effectiveStrategy = computed(() => {
-    const formContext = this.#formContext;
-
-    return resolveErrorDisplayStrategy(
-      this.strategy(),
-      formContext ? formContext.errorStrategy() : undefined,
+  protected readonly effectiveStrategy = computed(() =>
+    resolveStrategyFromContext(
+      this.strategy() ?? undefined,
+      this.#formContext,
       this.#config.defaultErrorStrategy,
-    );
-  });
+    ),
+  );
 
   /**
    * Computed signal for submission status.
@@ -964,16 +967,21 @@ export class NgxFormFieldWrapper<TValue = unknown> {
   });
 
   /**
-   * Visibility-timing computed shared with `createShowErrorsComputed()`,
+   * Visibility-timing computed shared with `createErrorVisibility()`,
    * auto-aria, and the error component. Reads `invalid()` / `touched()` off
    * the field state and runs the same strategy logic — keeping every
    * surface in lockstep.
+   *
+   * `effectiveStrategy` / `submittedStatus` are already fully resolved (no
+   * `'inherit'`, no missing context) by the time they reach here, so
+   * `createErrorVisibility`'s own cascade is a no-op pass-through — this
+   * routes through the shared seam (ADR-0006) for consistency with the
+   * other four surfaces rather than for any behavior difference.
    */
-  readonly #showErrorsByStrategy = createShowErrorsComputed(
-    this.#fieldState,
-    this.effectiveStrategy,
-    this.submittedStatus,
-  );
+  readonly #showErrorsByStrategy = createErrorVisibility(this.#fieldState, {
+    strategy: this.effectiveStrategy,
+    submittedStatus: this.submittedStatus,
+  });
 
   /**
    * Whether to actually display errors based on current strategy and field state.
