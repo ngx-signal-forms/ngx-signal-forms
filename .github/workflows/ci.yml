@@ -32,18 +32,18 @@ jobs:
     # (4 demo e2e suites + toolkit browser tests), which can exceed 20 min.
     timeout-minutes: 35
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           filter: tree:0
           fetch-depth: 0
           persist-credentials: false
 
-      - uses: pnpm/action-setup@v6
+      - uses: pnpm/action-setup@0977fd99725f1db4007ccb2928dbb4e90d06cc86
         name: Install pnpm
         with:
           run_install: false
 
-      - uses: actions/setup-node@v6
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38
         with:
           node-version-file: '.node-version'
           cache: 'pnpm'
@@ -52,7 +52,7 @@ jobs:
 
       - name: Cache Playwright browsers
         id: playwright-cache
-        uses: actions/cache@v6
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
         with:
           path: ~/.cache/ms-playwright
           key: playwright-all-${{ runner.os }}-${{ hashFiles('**/pnpm-lock.yaml') }}
@@ -98,7 +98,7 @@ jobs:
           fi
 
       # Set BASE/HEAD for affected commands; continue if the helper cannot resolve SHAs
-      - uses: nrwl/nx-set-shas@v5
+      - uses: nrwl/nx-set-shas@afb73a62d26e41464e9254689e1fd6122ee683c1
         continue-on-error: true
 
       - name: Nx Report
@@ -129,7 +129,7 @@ jobs:
 
       - name: Upload test and lint artifacts
         if: ${{ always() && !cancelled() }}
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         with:
           name: test-artifacts-${{ github.run_id }}-${{ github.run_attempt }}
           path: |
@@ -161,18 +161,18 @@ jobs:
       PLAYWRIGHT_DEMO_PORT: '4300'
       PW_WORKERS: '2'
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           filter: tree:0
           fetch-depth: 0
           persist-credentials: false
 
-      - uses: pnpm/action-setup@v6
+      - uses: pnpm/action-setup@0977fd99725f1db4007ccb2928dbb4e90d06cc86
         name: Install pnpm
         with:
           run_install: false
 
-      - uses: actions/setup-node@v6
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38
         with:
           node-version-file: '.node-version'
           cache: 'pnpm'
@@ -181,7 +181,7 @@ jobs:
 
       - name: Cache Playwright browsers
         id: playwright-cache
-        uses: actions/cache@v6
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
         with:
           path: ~/.cache/ms-playwright
           key: playwright-chromium-${{ runner.os }}-${{ hashFiles('**/pnpm-lock.yaml') }}
@@ -201,7 +201,7 @@ jobs:
 
       - name: Upload demo-e2e shard artifacts
         if: ${{ always() && !cancelled() }}
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         with:
           name: demo-e2e-shard-${{ matrix.shard-index }}-${{ github.run_id }}-${{ github.run_attempt }}
           path: |
@@ -224,18 +224,18 @@ jobs:
     env:
       NX_NO_CLOUD: 'true'
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           filter: tree:0
           fetch-depth: 1
           persist-credentials: false
 
-      - uses: pnpm/action-setup@v6
+      - uses: pnpm/action-setup@0977fd99725f1db4007ccb2928dbb4e90d06cc86
         name: Install pnpm
         with:
           run_install: false
 
-      - uses: actions/setup-node@v6
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38
         with:
           node-version-file: '.node-version'
           cache: 'pnpm'
@@ -272,18 +272,18 @@ jobs:
       NX_NO_CLOUD: 'true'
       NX_DAEMON: 'false'
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           filter: tree:0
           fetch-depth: 0
           persist-credentials: false
 
-      - uses: pnpm/action-setup@v6
+      - uses: pnpm/action-setup@0977fd99725f1db4007ccb2928dbb4e90d06cc86
         name: Install pnpm
         with:
           run_install: false
 
-      - uses: actions/setup-node@v6
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38
         with:
           node-version-file: '.node-version'
           cache: 'pnpm'
@@ -294,7 +294,7 @@ jobs:
       # accessibility coverage of the last-2-versions browser policy.
       - name: Cache Playwright browsers
         id: playwright-cache
-        uses: actions/cache@v6
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
         with:
           path: ~/.cache/ms-playwright
           key: playwright-chromium-firefox-${{ runner.os }}-${{ hashFiles('**/pnpm-lock.yaml') }}
@@ -307,7 +307,7 @@ jobs:
         run: pnpm exec playwright install-deps chromium firefox
         if: steps.playwright-cache.outputs.cache-hit == 'true'
 
-      - uses: nrwl/nx-set-shas@v5
+      - uses: nrwl/nx-set-shas@afb73a62d26e41464e9254689e1fd6122ee683c1
         continue-on-error: true
 
       # PRs: only the affected demo apps, for fast feedback.
@@ -337,7 +337,7 @@ jobs:
 
       - name: Upload a11y artifacts
         if: ${{ always() && !cancelled() }}
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         with:
           name: a11y-artifacts-${{ github.run_id }}-${{ github.run_attempt }}
           path: |
