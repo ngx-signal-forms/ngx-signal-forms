@@ -34,6 +34,7 @@ The form-field entry point provides a pre-styled field shell (label + control + 
    - Pass the **parent field tree** to `[fieldsetField]`.
    - Default: child wrapper errors + group-level errors each show separately. Set `includeNestedErrors` to show all child errors in the group summary.
    - Use `fields` input to restrict which fields count toward the group summary.
+   - Style the group shell with `appearance="plain"` (semantic-only grouping, no border/padding), `surfaceTone`, and `validationSurface="always"` (tint invalid/warning groups). Control the grouped feedback with `feedbackAppearance` (`'auto' | 'plain' | 'notification'`), `notificationTitle`, and `listStyle`. See `../references/api.md` for the full input table.
 
 6. **Use `form[formRoot]` for the baseline wrapper path; add `ngxSignalForm` when the form needs shared context.** Wrapper and fieldset components can render with the default `'on-touch'` fallback even without `ngxSignalForm`. Add `ngxSignalForm` when grouped sections, summaries, or custom wrapper integrations need inherited `'on-submit'`, `submittedStatus`, or injected form context.
 

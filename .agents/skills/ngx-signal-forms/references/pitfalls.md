@@ -134,6 +134,29 @@ container (`role="alert"`); a warning-only list raises the warning container
 (`role="status"`); an empty list hides both. Do not try to set a tone — there is
 no such input.
 
+## Warnings Have Their Own Timing — `warningStrategy`, Not `strategy`
+
+```html
+<!-- Wrong — expects warnings to follow the error strategy -->
+<ngx-form-field-wrapper strategy="on-submit" [formField]="form.bio">
+  ...
+</ngx-form-field-wrapper>
+
+<!-- Correct — warnings time through their own cascade -->
+<ngx-form-field-wrapper
+  strategy="on-submit"
+  warningStrategy="on-submit"
+  [formField]="form.bio"
+>
+  ...
+</ngx-form-field-wrapper>
+```
+
+Warnings never affect `invalid`, so they do not follow `errorStrategy`. The
+warning cascade is `warningStrategy` input → `defaultWarningStrategy` config →
+`'on-touch'`. Set `warningStrategy` on the wrapper or `ngxSignalForm` when
+warnings should surface on the same schedule as errors.
+
 ## Wrapper Identity — Always Provide `id`
 
 ```html

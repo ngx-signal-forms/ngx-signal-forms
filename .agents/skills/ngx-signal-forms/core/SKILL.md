@@ -54,7 +54,7 @@ The toolkit is an enhancement layer, not a replacement. Angular Signal Forms own
 
 7. **Use `provideErrorMessages()` for centralized validation copy.** Message priority: validator-provided `error.message` → registry → toolkit default.
 
-8. **Use warning helpers for non-blocking guidance.** Warnings use `kind: 'warn:*'` convention and render with polite ARIA (`role="status"`). Blocking errors render with assertive ARIA (`role="alert"`).
+8. **Use warning helpers for non-blocking guidance.** Warnings use `kind: 'warn:*'` convention and render with polite ARIA (`role="status"`). Blocking errors render with assertive ARIA (`role="alert"`). Warnings time independently of errors through their own cascade: `warningStrategy` input on the wrapper or `ngxSignalForm` → `defaultWarningStrategy` config → terminal `'on-touch'` (see `resolveWarningStrategy` in `../references/api.md`). Setting `errorStrategy` alone does not move warnings.
 
 9. **Use submission helpers over manual state tracking:**
    - `focusFirstInvalid(form)` — focus on invalid target after failed submit. Skips errors whose bound field is `hidden()` or `disabled()` — focusing a non-interactive control would either throw or strand focus on something the user cannot operate. Also skips orphan errors with no field tree (nothing to focus is better than stealing focus to an unrelated control).
@@ -112,6 +112,7 @@ export const appConfig = {
   providers: [
     provideNgxSignalFormsConfig({
       defaultErrorStrategy: 'on-submit', // 'immediate' | 'on-touch' | 'on-submit'
+      defaultWarningStrategy: 'on-submit', // warnings time independently; default: 'on-touch'
       defaultFormFieldAppearance: 'outline', // 'standard' | 'outline' | 'plain'
       autoAria: true, // default: true
     }),

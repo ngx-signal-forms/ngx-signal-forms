@@ -25,6 +25,7 @@ fixture. One call per fixture scans the whole DOM subtree.
 ```typescript
 import {
   expectNoA11yViolations,
+  findAlertContaining,
   WCAG_22_AA_TAGS, // ['wcag2a','wcag2aa','wcag21a','wcag21aa','wcag22aa']
   type WCAG_22_AA_TAG,
 } from '@ngx-signal-forms/toolkit/testing';
@@ -38,6 +39,11 @@ import {
 - `WCAG_22_AA_TAGS` — the axe tag set the harness runs. There is no `wcag22a`
   tag: the two new 2.2 Level A criteria are non-automatable, so automated
   scanning covers only a subset of full 2.2 AA conformance.
+- `findAlertContaining(container, text)` — finds the `[role="alert"]` element
+  whose text includes `text`. Toolkit surfaces mount several live regions at
+  once (some mounted-but-empty per the WCAG 4.1.3 first-insertion pattern), so
+  a bare `getByRole('alert')` is ambiguous — narrow to the region carrying the
+  expected message before asserting on it or scanning.
 
 ## Workflow
 

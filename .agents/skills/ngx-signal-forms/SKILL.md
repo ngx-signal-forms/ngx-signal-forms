@@ -16,7 +16,6 @@ Routing loop:
 1. Identify the required **surface** from imports/selectors/symbol names.
 2. Open exactly one sub-skill first.
 3. Open a second sub-skill only if the task truly crosses surfaces.
-4. Keep source of truth in `@angular/forms/signals`; toolkit augments behavior.
 
 | Task                                                                  | Entry point                            | Sub-skill to read                          |
 | --------------------------------------------------------------------- | -------------------------------------- | ------------------------------------------ |
