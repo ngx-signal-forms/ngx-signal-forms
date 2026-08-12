@@ -7,6 +7,7 @@ immediately preceding version to that release.
 | From           | To             | Guide                              |
 | -------------- | -------------- | ---------------------------------- |
 | `v1.0.0-rc.10` | `v1.0.0-rc.11` | [Upgrade guide](./v1.0.0-rc.11.md) |
+| `v1.0.0-rc.11` | `v1.0.0-rc.12` | [Upgrade guide](./v1.0.0-rc.12.md) |
 
 Each guide starts with an `Upgrade from v<previous-version>` section:
 

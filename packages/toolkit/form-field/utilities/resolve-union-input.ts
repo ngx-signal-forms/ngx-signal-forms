@@ -1,14 +1,13 @@
 import { isDevMode } from '@angular/core';
-import type { WarnOnceRef } from './dev-warn-once';
-
-export type { WarnOnceRef };
+import type { WarnOnceRef } from '@ngx-signal-forms/toolkit/core';
 
 /**
  * Options for {@link resolveUnionInput}.
  *
- * @internal
+ * Private to `/form-field` — its only two adapters, `NgxFormFieldWrapper`
+ * and `NgxFormFieldset`, live in this package.
  */
-export interface ResolveUnionInputOptions<T extends string> {
+interface ResolveUnionInputOptions<T extends string> {
   /** Component name prefixed to the dev-mode diagnostic, e.g. `'NgxFormFieldset'`. */
   readonly component: string;
   /** Input name reported in the diagnostic, e.g. `'appearance'`. */
@@ -47,16 +46,14 @@ export interface ResolveUnionInputOptions<T extends string> {
  * attribute strings, JIT-compiled templates, config passed through from
  * untyped call sites) can feed an unknown literal past the compile-time
  * union type. Collapses the repeated "membership test → one-shot
- * `console.error` → fallback" shape used across the form-field components'
- * string-union inputs (`appearance`, `orientation`, `feedbackAppearance`,
- * `validationSurface`, `surfaceTone`, …).
+ * `console.error` → fallback" shape shared by `NgxFormFieldWrapper` and
+ * `NgxFormFieldset`'s string-union inputs (`appearance`, `orientation`,
+ * `feedbackAppearance`, `validationSurface`, `surfaceTone`, …).
  *
  * @param value Raw input value to validate.
  * @param allowed The literals `value` must match to pass through unchanged.
  * @param options See {@link ResolveUnionInputOptions}.
  * @returns `value` unchanged when it matches `allowed`, otherwise `options.fallback`.
- *
- * @internal
  */
 export function resolveUnionInput<T extends string>(
   value: unknown,

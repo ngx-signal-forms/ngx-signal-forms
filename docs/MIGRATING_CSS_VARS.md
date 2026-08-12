@@ -10,6 +10,13 @@ If you are upgrading a theme that was built against `1.0.0-rc.6` or earlier,
 grep your stylesheets for the old names below and apply the corresponding
 rename or drop.
 
+> **`v1.0.0-rc.12`**: `ngx-form-field-notification` was folded into
+> `ngx-form-field-error` as a `presentation="panel"` mode, and its
+> `--ngx-signal-form-notification-*` custom properties were renamed to
+> `--ngx-signal-form-error-panel-*` / `--ngx-signal-form-warning-panel-*`.
+> See [`docs/migrations/v1.0.0-rc.12.md`](./migrations/v1.0.0-rc.12.md) — the
+> table below still describes the earlier rc.6 → v1 rename and is unaffected.
+
 The toolkit's theming system is documented in full in
 [`packages/toolkit/form-field/THEMING.md`](../packages/toolkit/form-field/THEMING.md).
 That page also explains the two-prefix convention:

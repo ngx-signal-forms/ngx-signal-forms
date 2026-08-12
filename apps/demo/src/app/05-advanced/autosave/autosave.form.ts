@@ -135,8 +135,8 @@ interface AutosavePatchResponse {
           Save status: two fixed-role live regions, always present in the DOM.
           Only the content inside each is toggled via @if — the role itself
           never flips, which is what keeps NVDA + Chrome from missing the
-          first announcement (same workaround NgxFormFieldNotification
-          documents in packages/toolkit/assistive/form-field-notification.ts).
+          first announcement (same workaround NgxFormFieldError
+          documents in packages/toolkit/assistive/form-field-error.ts).
           Polite ("Saving…"/"All changes saved") vs assertive (failure) is a
           deliberate split, not an accident: a save failure must interrupt,
           a save succeeding must not.

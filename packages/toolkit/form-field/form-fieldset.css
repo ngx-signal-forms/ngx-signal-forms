@@ -310,41 +310,24 @@
   );
   --_fieldset-notification-error-bg: var(
     --ngx-signal-form-fieldset-notification-error-bg,
-    var(
-      --ngx-signal-form-notification-error-bg,
-      var(--_fieldset-bg-danger-soft)
-    )
+    var(--ngx-signal-form-error-panel-bg, var(--_fieldset-bg-danger-soft))
   );
   --_fieldset-notification-error-border: var(
     --ngx-signal-form-fieldset-notification-error-border-color,
     var(
-      --ngx-signal-form-notification-error-border-color,
+      --ngx-signal-form-error-panel-border-color,
       var(--_fieldset-border-danger-soft)
     )
   );
-  --_fieldset-notification-error-color: var(
-    --ngx-signal-form-fieldset-notification-error-color,
-    var(--ngx-signal-form-notification-error-color, var(--_fieldset-clr-danger))
-  );
   --_fieldset-notification-warning-bg: var(
     --ngx-signal-form-fieldset-notification-warning-bg,
-    var(
-      --ngx-signal-form-notification-warning-bg,
-      var(--_fieldset-bg-warning-soft)
-    )
+    var(--ngx-signal-form-warning-panel-bg, var(--_fieldset-bg-warning-soft))
   );
   --_fieldset-notification-warning-border: var(
     --ngx-signal-form-fieldset-notification-warning-border-color,
     var(
-      --ngx-signal-form-notification-warning-border-color,
+      --ngx-signal-form-warning-panel-border-color,
       var(--_fieldset-border-warning-soft)
-    )
-  );
-  --_fieldset-notification-warning-color: var(
-    --ngx-signal-form-fieldset-notification-warning-color,
-    var(
-      --ngx-signal-form-notification-warning-color,
-      var(--_fieldset-clr-warning-strong)
     )
   );
   --_fieldset-direction: var(--ngx-signal-form-fieldset-direction, column);
@@ -504,33 +487,37 @@
     --_fieldset-message-warning-border
   );
 
-  /* Theme the nested notification component with the fieldset's notification tier. */
-  --ngx-signal-form-notification-error-color: var(
-    --_fieldset-notification-error-color
-  );
-  --ngx-signal-form-notification-message-spacing: var(
-    --_fieldset-message-spacing
-  );
-  --ngx-signal-form-notification-list-style: var(
-    --_fieldset-notification-list-style
-  );
-  --ngx-signal-form-notification-list-padding-inline-start: var(
-    --_fieldset-notification-list-padding-inline-start
-  );
-  --ngx-signal-form-notification-error-bg: var(
-    --_fieldset-notification-error-bg
-  );
-  --ngx-signal-form-notification-error-border-color: var(
+  --ngx-signal-form-error-panel-bg: var(--_fieldset-notification-error-bg);
+  --ngx-signal-form-error-panel-border-color: var(
     --_fieldset-notification-error-border
   );
-  --ngx-signal-form-notification-warning-color: var(
-    --_fieldset-notification-warning-color
-  );
-  --ngx-signal-form-notification-warning-bg: var(
-    --_fieldset-notification-warning-bg
-  );
-  --ngx-signal-form-notification-warning-border-color: var(
+  --ngx-signal-form-warning-panel-bg: var(--_fieldset-notification-warning-bg);
+  --ngx-signal-form-warning-panel-border-color: var(
     --_fieldset-notification-warning-border
+  );
+}
+
+/* The plain/inline and notification/panel branches both render
+ * `ngx-form-field-error` and share its CSS variable namespace (there is
+ * only one component now — see form-field-error.css). The block above
+ * pushes the fieldset's *message* tier (`--_fieldset-message-*`,
+ * fieldset-message-* public API) unconditionally; this block re-pushes the
+ * subset of those same variable names that the fieldset's *notification*
+ * tier (`--_fieldset-notification-*`, fieldset-notification-* public API)
+ * customizes independently, scoped to the notification branch only via
+ * `[data-feedback-appearance='notification']` so it never leaks into the
+ * plain branch's rendering (only one branch is ever mounted per fieldset
+ * instance, but the two branches' theming inputs must stay independently
+ * overridable). */
+:host([data-feedback-appearance='notification'])
+  .ngx-signal-form-fieldset__messages {
+  --ngx-signal-form-error-message-spacing: var(--_fieldset-message-spacing);
+  --ngx-signal-form-error-panel-message-spacing: var(
+    --_fieldset-message-spacing
+  );
+  --ngx-signal-form-error-list-style: var(--_fieldset-notification-list-style);
+  --ngx-signal-form-error-list-padding-inline-start: var(
+    --_fieldset-notification-list-padding-inline-start
   );
 }
 

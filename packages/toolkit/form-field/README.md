@@ -32,7 +32,7 @@ import {
 // import { NgxFormFieldError } from '@ngx-signal-forms/toolkit/assistive';
 ```
 
-`NgxFormField` bundles the wrapper, fieldset, and wrapper-used assistive components (`NgxFormFieldError`, `NgxFormFieldHint`, `NgxFormFieldCharacterCount`) for convenience. `NgxFormFieldNotification` and `NgxFormFieldErrorSummary` remain available via `@ngx-signal-forms/toolkit/assistive`.
+`NgxFormField` bundles the wrapper, fieldset, and wrapper-used assistive components (`NgxFormFieldError`, `NgxFormFieldHint`, `NgxFormFieldCharacterCount`) for convenience. `NgxFormFieldErrorSummary` remains available via `@ngx-signal-forms/toolkit/assistive`; grouped notification-card feedback is `NgxFormFieldError` with `presentation="panel"`.
 
 ### What `NgxFormField` includes vs excludes
 
@@ -309,8 +309,8 @@ mirroring the projected `NgxFormFieldError`'s own error/warning priority. See
 
 - **`feedbackAppearance="auto"`** (default) uses a surfaced notification card
   for grouped sections.
-- **`plain`** always uses the compact `ngx-form-field-error` presentation.
-- **`notification`** always uses `ngx-form-field-notification`.
+- **`plain`** always uses `ngx-form-field-error presentation="inline"`.
+- **`notification`** always uses `ngx-form-field-error presentation="panel"`.
 
 This keeps the fieldset focused on grouped summaries and surfaced sections.
 Radio groups and checkbox groups that should show inline errors and invalid

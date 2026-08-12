@@ -1,11 +1,10 @@
 import { computed, Directive, inject, input, type Signal } from '@angular/core';
-import type { FieldTree, ValidationError } from '@angular/forms/signals';
+import type { FieldTree } from '@angular/forms/signals';
 import {
   createErrorVisibility,
   injectFormContext,
   NGX_SIGNAL_FORMS_CONFIG,
   resolveStrategyFromContext,
-  splitByKind,
   type ErrorDisplayStrategy,
   type ResolvedErrorDisplayStrategy,
   type SubmittedStatus,
@@ -17,14 +16,9 @@ import {
 } from '@ngx-signal-forms/toolkit/core';
 
 import {
-  dedupeValidationErrorsByField,
-  isErrorOnInteractiveField,
-  readErrors,
-  toErrorSummaryEntry,
+  createErrorSummaryEntries,
   type ErrorSummaryEntryData,
 } from './utilities';
-
-const STRIP_WARNING_PREFIX = { stripWarningPrefix: true } as const;
 
 /**
  * A resolved error-summary entry with kind, message, and focus capability.
@@ -85,8 +79,8 @@ export interface ErrorSummarySignals {
  *
  * The `role="alert"` container should be rendered UNCONDITIONALLY (even
  * while empty) rather than inserted together with its content — the same
- * always-mounted live-region pattern `NgxFormFieldError` and
- * `NgxFormFieldNotification` use. `role="alert"` only reliably fires on
+ * always-mounted live-region pattern `NgxFormFieldError` uses (both its
+ * inline and panel presentations). `role="alert"` only reliably fires on
  * content insertion into a *pre-existing* live region; mounting the
  * container and its content in the same tick risks the NVDA + Chrome
  * missed-first-announcement bug. Gate only the inner content on
@@ -170,60 +164,32 @@ export class NgxHeadlessErrorSummary implements ErrorSummarySignals {
   });
 
   /**
-   * Errors with `errorSummary()` traversal, then filtered to drop entries
-   * whose underlying field is `hidden()` or `disabled()`. Angular's docs say
-   * hidden/disabled fields do not contribute to form validation state, but
-   * they may still appear in `errorSummary()`. A summary entry for such a
-   * field has no actionable target — `focus()` would either throw or strand
-   * focus on a non-interactive control — so we exclude them before dedupe.
-   *
-   * `readonly()` is intentionally **not** filtered: the field is visible and
-   * focusable, and its error is usually still meaningful to the user.
-   *
-   * Deduplication is per-field (see {@link dedupeValidationErrorsByField}):
-   * unlike `NgxHeadlessFieldset`'s grouped-message dedupe, two different
-   * fields sharing the same kind/message (e.g. two `required()` fields with
-   * no custom message) must both keep their own summary entry.
+   * Entry-mapping pipeline, delegated to {@link createErrorSummaryEntries} —
+   * this directive is a pure projection over its result. The pipeline reads
+   * `errorSummary()`, drops entries whose underlying field is `hidden()` or
+   * `disabled()` (a summary entry for such a field has no actionable
+   * target — `focus()` would either throw or strand focus on a
+   * non-interactive control), dedupes **per field** (unlike
+   * `NgxHeadlessFieldset`'s grouped-message dedupe, two different fields
+   * sharing the same kind/message — e.g. two `required()` fields with no
+   * custom message — must both keep their own summary entry), and maps to
+   * focusable entries. `readonly()` fields are intentionally **not**
+   * filtered: the field is visible and focusable, and its error is usually
+   * still meaningful to the user.
    */
-  readonly #split = computed(() => {
-    const visibleErrors = readErrors(this.#fieldState()).filter(
-      (error: ValidationError) => isErrorOnInteractiveField(error),
-    );
-    return splitByKind(dedupeValidationErrorsByField(visibleErrors));
+  readonly #entries = createErrorSummaryEntries({
+    fieldState: this.#fieldState,
+    showErrors: this.#showErrorsSignal,
+    errorMessages: this.#errorMessagesRegistry,
+    labelResolver: this.#labelResolver,
   });
 
-  readonly entries = computed(() =>
-    this.#split().blocking.map((error) =>
-      toErrorSummaryEntry(
-        error,
-        this.#errorMessagesRegistry,
-        undefined,
-        this.#labelResolver,
-      ),
-    ),
-  );
-
-  readonly warningEntries = computed(() =>
-    this.#split().warnings.map((error) =>
-      toErrorSummaryEntry(
-        error,
-        this.#errorMessagesRegistry,
-        STRIP_WARNING_PREFIX,
-        this.#labelResolver,
-      ),
-    ),
-  );
-
-  readonly hasErrors = computed(() => this.#split().blocking.length > 0);
-  readonly hasWarnings = computed(() => this.#split().warnings.length > 0);
-
-  readonly shouldShow = computed(
-    () => this.#showErrorsSignal() && this.hasErrors(),
-  );
-
-  readonly shouldShowWarnings = computed(
-    () => this.#showErrorsSignal() && this.hasWarnings(),
-  );
+  readonly entries = this.#entries.entries;
+  readonly warningEntries = this.#entries.warningEntries;
+  readonly hasErrors = this.#entries.hasErrors;
+  readonly hasWarnings = this.#entries.hasWarnings;
+  readonly shouldShow = this.#entries.shouldShow;
+  readonly shouldShowWarnings = this.#entries.shouldShowWarnings;
 
   readonly focusFirst = (): void => {
     const first = this.entries()[0];

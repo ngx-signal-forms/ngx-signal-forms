@@ -13,7 +13,6 @@ import {
 } from '@angular/core';
 import {
   NgxFormFieldError,
-  NgxFormFieldNotification,
   type NgxFormFieldListStyle,
 } from '@ngx-signal-forms/toolkit/assistive';
 import { NgxHeadlessFieldset } from '@ngx-signal-forms/toolkit/headless';
@@ -22,11 +21,8 @@ import {
   NGX_FORM_FIELD_ERROR_RENDERER,
   type NgxFormFieldErrorPlacement,
 } from '@ngx-signal-forms/toolkit';
-import {
-  devWarnOnce,
-  resolveUnionInput,
-  type WarnOnceRef,
-} from '@ngx-signal-forms/toolkit/core';
+import { devWarnOnce, type WarnOnceRef } from '@ngx-signal-forms/toolkit/core';
+import { resolveUnionInput } from './utilities/resolve-union-input';
 
 export type NgxFormFieldsetFeedbackAppearance =
   | 'auto'
@@ -154,7 +150,7 @@ const FIELDSET_SURFACE_TONE_VALUES = [
       ],
     },
   ],
-  imports: [NgComponentOutlet, NgTemplateOutlet, NgxFormFieldNotification],
+  imports: [NgComponentOutlet, NgTemplateOutlet, NgxFormFieldError],
   styleUrls: ['./feedback-tokens.css', './form-fieldset.css'],
   exportAs: 'ngxFormFieldset',
   // BEM classnames keep the legacy `ngx-signal-form-fieldset--*` prefix for
@@ -208,11 +204,12 @@ const FIELDSET_SURFACE_TONE_VALUES = [
     <ng-template #messages>
       <div class="ngx-signal-form-fieldset__messages">
         @if (usesNotificationFeedback()) {
-          <ngx-form-field-notification
+          <ngx-form-field-error
             [errors]="displayedMessagesSignal"
             [fieldName]="fieldset.resolvedFieldsetId()"
             [title]="notificationTitle()"
             [listStyle]="listStyle()"
+            presentation="panel"
           />
         } @else {
           <ng-container
@@ -240,8 +237,9 @@ export class NgxFormFieldset {
    * when no provider is registered the resolved component below is
    * `NgxFormFieldError`, preserving zero-config behaviour.
    *
-   * The notification slot keeps its static `NgxFormFieldNotification`
-   * binding — notification customisation is out of scope for v1.
+   * The notification slot keeps its static `ngx-form-field-error
+   * presentation="panel"` binding — notification customisation via
+   * `NGX_FORM_FIELD_ERROR_RENDERER` is out of scope for v1.
    */
   readonly #errorRenderer = inject(NGX_FORM_FIELD_ERROR_RENDERER, {
     optional: true,
@@ -439,7 +437,8 @@ export class NgxFormFieldset {
    * `listStyle` — a superset of the wrapper's contract (`errors`, `fieldName`,
    * and `listStyle` are fieldset-only). Custom renderers must accept these
    * input names; extras declared on a custom renderer are unaffected. The
-   * notification branch keeps `NgxFormFieldNotification` as a static element.
+   * notification branch keeps a static `ngx-form-field-error
+   * presentation="panel"` element, not this outlet.
    */
   protected readonly errorRendererInputs = computed<Record<string, unknown>>(
     () => ({

@@ -404,7 +404,6 @@ interface NgxSignalFormFieldVisibilityRegistry {
 import {
   NgxFormFieldError, // <ngx-form-field-error>
   NgxFormFieldErrorSummary, // <ngx-form-field-error-summary>
-  NgxFormFieldNotification, // <ngx-form-field-notification>
   NgxFormFieldHint, // <ngx-form-field-hint>
   NgxFormFieldCharacterCount, // <ngx-form-field-character-count>
   NgxFormMarkingLegend, // <ngx-form-marking-legend>
@@ -418,19 +417,34 @@ import {
 
 ### NgxFormFieldError inputs
 
-| Input             | Type                        | Notes                                                |
-| ----------------- | --------------------------- | ---------------------------------------------------- |
-| `formField`       | field                       | Single-field usage                                   |
-| `errors`          | `Signal<ValidationError[]>` | Pre-aggregated list (alternative to `formField`)     |
-| `fieldName`       | string                      | Required standalone; inherited inside wrapper        |
-| `strategy`        | ErrorDisplayStrategy        | Override                                             |
-| `submittedStatus` | `SubmittedStatus`           | For `on-submit` without form context                 |
-| `listStyle`       | `plain` or `bullets`        | `'plain'` default; `'bullets'` for grouped summaries |
+Selector: `ngx-form-field-error`. Two presentations share this one component
+— there is no separate notification component (folded in pre-1.0; see
+`docs/migrations/v1.0.0-rc.12.md`).
+
+| Input             | Type                                           | Notes                                                                                                       |
+| ----------------- | ---------------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| `formField`       | field                                          | Single-field usage (`presentation="inline"`)                                                                |
+| `errors`          | `ReactiveOrStatic<readonly ValidationError[]>` | Pre-aggregated, grouped source (alternative to `formField`); takes priority — strategy is bypassed          |
+| `fieldName`       | string                                         | Required standalone; inherited inside wrapper                                                               |
+| `strategy`        | ErrorDisplayStrategy                           | Override; ignored when `errors` is bound                                                                    |
+| `warningStrategy` | WarningDisplayStrategy                         | Override warning display strategy (defaults to `'on-touch'`)                                                |
+| `submittedStatus` | `SubmittedStatus`                              | For `on-submit` without form context                                                                        |
+| `listStyle`       | `plain` or `bullets`                           | `'plain'` default; `'bullets'` for grouped summaries                                                        |
+| `title`           | string                                         | Optional heading rendered above a visible container's messages                                              |
+| `presentation`    | `'inline' \| 'panel'`                          | `'inline'` (default) = bare per-field messages; `'panel'` = bordered notification card for grouped feedback |
+
+`errors` and `title` are the two inputs to reach for when building a grouped
+notification: `presentation="panel"` with `[errors]` bound is content-driven
+tone routing (no `tone` input) — any blocking error renders the `role="alert"`
+container, a warning-only list renders the `role="status"` container, and an
+empty list keeps both hidden. Uses dual stable live regions so the role is
+never re-assigned at the same tick content is inserted.
 
 ### Other assistive exports
 
 - `NgxFormFieldHint` — static descriptive hint content
-- `NgxFormFieldListStyle` (`'plain' | 'bullets'`) — shared list-style union. `NgxFormFieldErrorListStyle` and `NgxFormFieldNotificationListStyle` are `@deprecated` aliases of it.
+- `NgxFormFieldListStyle` (`'plain' | 'bullets'`) — shared list-style union. `NgxFormFieldErrorListStyle` is a `@deprecated` alias of it.
+- `NgxFormFieldErrorPresentation` (`'inline' | 'panel'`) — the `presentation` input's type.
 - `NgxCharacterCountValue` + `NgxCharacterCountAnnouncement*` types — character-count announcement formatting hooks.
 
 ### NgxFormMarkingLegend inputs
@@ -446,19 +460,6 @@ Selector: `ngx-form-marking-legend`
 | `optionalMarker` | string               | Override the optional marker used for `{marker}`; falls back to config |
 
 Renders the form-level legend explaining what the required/optional markers mean. Mode-aware: hides when the form has no field of the relevant kind, and renders nothing in `'none'` mode. Plain visible text — no `role` or live region (required state still reaches AT via each control's `aria-required`).
-
-### NgxFormFieldNotification inputs
-
-Selector: `ngx-form-field-notification`
-
-| Input       | Type                                           | Default     | Notes                                                                                |
-| ----------- | ---------------------------------------------- | ----------- | ------------------------------------------------------------------------------------ |
-| `errors`    | `ReactiveOrStatic<readonly ValidationError[]>` | required    | Grouped validation messages (plain array or signal/getter); bound via host directive |
-| `fieldName` | string                                         | optional    | Generates deterministic error/warning container ids when provided                    |
-| `title`     | string                                         | optional    | Optional heading rendered above the messages                                         |
-| `listStyle` | `NgxFormFieldListStyle` (`plain`/`bullets`)    | `'bullets'` | Bullet list or stacked paragraph rendering                                           |
-
-`errors` and `fieldName` are forwarded to the composed `NgxHeadlessNotification` host directive. There is **no `tone` input** — the routing is content-driven: any blocking error renders the `role="alert"` container, a warning-only list renders the `role="status"` container, and an empty list keeps both hidden. Uses dual stable live regions so the role is never re-assigned at the same tick content is inserted.
 
 ### NgxFormFieldErrorSummary inputs
 
@@ -767,8 +768,6 @@ createAriaDescribedBySignal(options): Signal<string | null>
 createHintIdsSignal(options): Signal<readonly string[]>
 createAriaDescribedByBridge(options): AriaDescribedByBridge
 createFieldNameResolver(options): Signal<string | null>
-createErrorRendererInputs(options): NgxFormFieldErrorRendererInputs
-toHintDescriptors(hints): readonly NgxSignalFormHintDescriptor[]
 ```
 
 - `createFieldNameResolver` resolves explicit input → optional label `for` →
@@ -776,8 +775,11 @@ toHintDescriptors(hints): readonly NgxSignalFormHintDescriptor[]
 - `createAriaDescribedByBridge` coordinates the chain with a third-party host
   that owns `aria-describedby`; ordinary custom wrappers use
   `createAriaDescribedBySignal` directly.
-- `createErrorRendererInputs` and `toHintDescriptors` join a custom renderer
-  or projected hints to the same wrapper contracts.
+- Joining a custom error renderer to `{ formField, strategy, submittedStatus }`,
+  or projected hints to `NGX_SIGNAL_FORM_HINT_REGISTRY`'s wire format, is a
+  single inline `computed()` in the wrapper — no shared helper for either
+  (each has too few call sites to earn one). See `docs/CUSTOM_WRAPPERS.md`
+  for the inlined shape.
 
 Read `packages/toolkit/headless/README.md` or `docs/CUSTOM_WRAPPERS.md` for the
 full composition examples and the exported option types.
