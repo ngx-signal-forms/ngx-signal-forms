@@ -685,10 +685,11 @@ CSS custom properties are renamed:
 `--ngx-signal-form-warning-panel-*` (see
 [`docs/migrations/v1.0.0-rc.12.md`](./migrations/v1.0.0-rc.12.md) for the
 full before/after table). The panel presentation's message **text color**
-is no longer independently themeable from the inline presentation — both
-now share `--ngx-signal-form-error-color` / `--ngx-signal-form-warning-color`;
-only the panel's background/border/padding/font-size stay independently
-overridable via the `-panel-*` properties.
+has its own darker defaults than the inline presentation (the inline tone
+colors do not meet WCAG 1.4.3 on the panel's tinted backgrounds) and stays
+independently themeable via `--ngx-signal-form-error-panel-color` /
+`--ngx-signal-form-warning-panel-color`, alongside the panel's
+background/border/padding/font-size `-panel-*` properties.
 
 `NgxHeadlessNotification` (`@ngx-signal-forms/toolkit/headless`) is
 **unaffected** — it remains available standalone for custom
