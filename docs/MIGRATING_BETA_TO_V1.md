@@ -25,7 +25,7 @@ releases will not include any of the renames below.
 - **Removed helpers** — `computeShowErrors`, `canSubmit`, `injectFormConfig`, `walkFieldTree(visitor)`, `walkFieldTreeIterable`, … (the field-tree walker stays as an internal `/core` primitive; for error traversal reach for `errorSummary()` instead)
 - **Removed component** — `NgxFormFieldAssistiveRow` (inlined into `NgxFormFieldWrapper`)
 - **Removed component** — `NgxFormFieldNotification` (folded into `NgxFormFieldError`'s `presentation="panel"` mode; see [§6b](#6b-ngxformfieldnotification-folded-into-ngxformfielderror))
-- **Removed headless helpers** — `toHintDescriptors`, `createErrorRendererInputs` (`/headless`); `resolveUnionInput` (never-published, internal to `/core`) — see [§6b](#6b-ngxformfieldnotification-folded-into-ngxformfielderror)
+- **Removed headless helpers** — `toHintDescriptors`, `createErrorRendererInputs` (`/headless`); `resolveUnionInput` (never part of a published entry point; moved package-private into `/form-field`) — see [§6b](#6b-ngxformfieldnotification-folded-into-ngxformfielderror)
 - **Removed directive** — `NgxFloatingLabelDirective` (use `appearance="outline"`)
 - **Renamed components** — `NgxSignalFormError*` → `NgxFormFieldError*`
 - **Renamed appearances** — final appearance set is `standard` / `outline` / `plain`
@@ -262,7 +262,7 @@ keep working.
 
 Several list-style and placement unions used to be exported under
 component-specific names. V1 consolidates them so bindings compose without
-casts when passing values between the wrapper, fieldset, and notification
+casts when passing values between the wrapper, fieldset, and error
 components.
 
 | Before (rc)                  | After (v1)                                                            |
@@ -544,8 +544,8 @@ previously undocumented; see the updated `injectFieldControl()` JSDoc.
 
 ## 6. v1.0.0 audit blockers: live-region, focus, and dark-mode fixes
 
-The `assistive` entry point (`NgxFormFieldError`, `NgxFormFieldNotification`,
-`NgxFormFieldErrorSummary`) shipped a handful of accessibility defects that
+The `assistive` entry point (`NgxFormFieldError`, `NgxFormFieldErrorSummary`,
+and the since-folded `NgxFormFieldNotification`) shipped a handful of accessibility defects that
 were fixed as part of the v1.0.0 release audit. None of these rename or
 remove an input/output, but they change runtime DOM/behavior in ways some
 consumers (especially tests) may depend on.
