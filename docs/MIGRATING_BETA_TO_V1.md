@@ -694,8 +694,9 @@ background/border/padding/font-size `-panel-*` properties.
 `NgxHeadlessNotification` (`@ngx-signal-forms/toolkit/headless`) is
 **unaffected** — it remains available standalone for custom
 grouped-notification UIs. `NgxFormFieldError`'s `presentation="panel"` mode
-does not use it; it composes `NgxHeadlessErrorState`'s existing
-errors-override mode instead.
+does not delegate to it; the component composes `NgxHeadlessErrorState` in
+both presentations, and binding `[errors]` — the usual grouped-panel
+usage — switches that headless state into its errors-override mode.
 
 Two other headless helpers were removed in the same change:
 `toHintDescriptors` and `createErrorRendererInputs`
