@@ -24,6 +24,8 @@ releases will not include any of the renames below.
 - **CSS custom properties** — several theming tokens were renamed or collapsed during the rc cycle (see [`MIGRATING_CSS_VARS.md`](./MIGRATING_CSS_VARS.md))
 - **Removed helpers** — `computeShowErrors`, `canSubmit`, `injectFormConfig`, `walkFieldTree(visitor)`, `walkFieldTreeIterable`, … (the field-tree walker stays as an internal `/core` primitive; for error traversal reach for `errorSummary()` instead)
 - **Removed component** — `NgxFormFieldAssistiveRow` (inlined into `NgxFormFieldWrapper`)
+- **Removed component** — `NgxFormFieldNotification` (folded into `NgxFormFieldError`'s `presentation="panel"` mode; see [§6b](#6b-ngxformfieldnotification-folded-into-ngxformfielderror))
+- **Removed headless helpers** — `toHintDescriptors`, `createErrorRendererInputs` (`/headless`); `resolveUnionInput` (never-published, internal to `/core`) — see [§6b](#6b-ngxformfieldnotification-folded-into-ngxformfielderror)
 - **Removed directive** — `NgxFloatingLabelDirective` (use `appearance="outline"`)
 - **Renamed components** — `NgxSignalFormError*` → `NgxFormFieldError*`
 - **Renamed appearances** — final appearance set is `standard` / `outline` / `plain`
@@ -263,19 +265,21 @@ component-specific names. V1 consolidates them so bindings compose without
 casts when passing values between the wrapper, fieldset, and notification
 components.
 
-| Before (rc)                         | After (v1)                                                            |
-| ----------------------------------- | --------------------------------------------------------------------- |
-| `FieldsetErrorPlacement`            | `NgxFormFieldErrorPlacement`                                          |
-| `FormFieldErrorPlacement`           | `NgxFormFieldErrorPlacement`                                          |
-| `FieldsetFeedbackAppearance`        | `NgxFormFieldsetFeedbackAppearance`                                   |
-| `FieldsetSurfaceTone`               | `NgxFormFieldsetSurfaceTone`                                          |
-| `FieldsetValidationSurface`         | `NgxFormFieldsetValidationSurface`                                    |
-| `NgxFormFieldNotificationListStyle` | `NgxFormFieldListStyle` _(shared)_                                    |
-| `NgxFormFieldErrorListStyle`        | `NgxFormFieldListStyle` _(shared, old name kept as deprecated alias)_ |
+| Before (rc)                  | After (v1)                                                            |
+| ---------------------------- | --------------------------------------------------------------------- |
+| `FieldsetErrorPlacement`     | `NgxFormFieldErrorPlacement`                                          |
+| `FormFieldErrorPlacement`    | `NgxFormFieldErrorPlacement`                                          |
+| `FieldsetFeedbackAppearance` | `NgxFormFieldsetFeedbackAppearance`                                   |
+| `FieldsetSurfaceTone`        | `NgxFormFieldsetSurfaceTone`                                          |
+| `FieldsetValidationSurface`  | `NgxFormFieldsetValidationSurface`                                    |
+| `NgxFormFieldErrorListStyle` | `NgxFormFieldListStyle` _(shared, old name kept as deprecated alias)_ |
 
-The two deprecated list-style aliases still resolve to the same union, so
-existing imports keep compiling; switch to `NgxFormFieldListStyle` at your
-convenience.
+`NgxFormFieldErrorListStyle` still resolves to the same union, so existing
+imports keep compiling; switch to `NgxFormFieldListStyle` at your
+convenience. `NgxFormFieldNotificationListStyle` is a different story — it
+was removed outright (not kept as an alias) when `NgxFormFieldNotification`
+itself was folded into `NgxFormFieldError`; see
+[§6b](#6b-ngxformfieldnotification-folded-into-ngxformfielderror).
 
 ### 4b. Appearances renamed
 
@@ -546,6 +550,12 @@ were fixed as part of the v1.0.0 release audit. None of these rename or
 remove an input/output, but they change runtime DOM/behavior in ways some
 consumers (especially tests) may depend on.
 
+`NgxFormFieldNotification` below is the **former** component name — it was
+later folded into `NgxFormFieldError`'s `presentation="panel"` mode (see
+[§6b](#6b-ngxformfieldnotification-folded-into-ngxformfielderror)). The
+fixes described here shipped before that fold and applied to it under its
+old name; they carry over unchanged to `presentation="panel"` today.
+
 ### `id` binding no longer emits the literal string `"null"`
 
 `NgxFormFieldError`'s error/warning containers used a **property** binding
@@ -626,8 +636,92 @@ driven by `prefers-color-scheme` only, consistently across all engines.
   `.dark` class instead of relying on the OS color scheme, the built-in
   dark tokens will no longer activate. Override the public
   `--ngx-signal-form-error-*` / `--ngx-signal-form-warning-*` /
-  `--ngx-signal-form-notification-*` custom properties yourself, scoped to
-  your `.dark` selector — see the [assistive README](../packages/toolkit/assistive/README.md#dark-mode).
+  `--ngx-signal-form-error-panel-*` / `--ngx-signal-form-warning-panel-*`
+  custom properties yourself, scoped to your `.dark` selector — see the
+  [assistive README](../packages/toolkit/assistive/README.md#dark-mode).
+
+---
+
+## 6b. NgxFormFieldNotification folded into NgxFormFieldError
+
+`NgxFormFieldNotification` (`<ngx-form-field-notification>`) and
+`NgxFormFieldNotificationListStyle` are **removed**. `NgxFormFieldError`
+gained a `presentation: 'inline' | 'panel'` input instead:
+
+- `presentation="inline"` (default) — the existing per-field live-region
+  shape; every existing `<ngx-form-field-error [formField]="…">` usage is
+  unaffected.
+- `presentation="panel"` — the former notification component's bordered
+  card, for grouped fieldset feedback or custom summary blocks. Bind
+  `[errors]` (a plain array or reactive source of `ValidationError[]`) the
+  same way you bound it on `NgxFormFieldNotification`; `fieldName`, `title`,
+  and `listStyle` all carry over unchanged.
+
+```html
+<!-- Before -->
+<ngx-form-field-notification
+  [errors]="groupedErrors"
+  fieldName="address"
+  title="Please review the following"
+  listStyle="bullets"
+/>
+
+<!-- After -->
+<ngx-form-field-error
+  [errors]="groupedErrors"
+  fieldName="address"
+  title="Please review the following"
+  listStyle="bullets"
+  presentation="panel"
+/>
+```
+
+`NgxFormFieldset`'s own `feedbackAppearance`/`notificationTitle` inputs are
+unaffected — it now renders `ngx-form-field-error presentation="panel"`
+internally instead of the deleted component.
+
+CSS custom properties are renamed:
+`--ngx-signal-form-notification-*` → `--ngx-signal-form-error-panel-*` /
+`--ngx-signal-form-warning-panel-*` (see
+[`docs/migrations/v1.0.0-rc.12.md`](./migrations/v1.0.0-rc.12.md) for the
+full before/after table). The panel presentation's message **text color**
+is no longer independently themeable from the inline presentation — both
+now share `--ngx-signal-form-error-color` / `--ngx-signal-form-warning-color`;
+only the panel's background/border/padding/font-size stay independently
+overridable via the `-panel-*` properties.
+
+`NgxHeadlessNotification` (`@ngx-signal-forms/toolkit/headless`) is
+**unaffected** — it remains available standalone for custom
+grouped-notification UIs. `NgxFormFieldError`'s `presentation="panel"` mode
+does not use it; it composes `NgxHeadlessErrorState`'s existing
+errors-override mode instead.
+
+Two other headless helpers were removed in the same change:
+`toHintDescriptors` and `createErrorRendererInputs`
+(`@ngx-signal-forms/toolkit/headless`), plus the internal (never-published)
+`resolveUnionInput` from `/core`. All three were two-line wrappers with too
+few call sites to earn a shared export — if you used them in a custom
+wrapper, inline the shape directly:
+
+```ts
+// Hint descriptors for NGX_SIGNAL_FORM_HINT_REGISTRY
+readonly hintDescriptors = computed(() =>
+  this.hintChildren().map((hint) => ({
+    id: hint.resolvedId(),
+    fieldName: hint.resolvedFieldName(),
+  })),
+);
+
+// *ngComponentOutlet inputs for a custom error renderer
+readonly errorRendererInputs = computed<Record<string, unknown>>(() => ({
+  formField: this.formField(),
+  strategy: this.effectiveStrategy(),
+  submittedStatus: this.submittedStatus(),
+}));
+```
+
+See [`docs/migrations/v1.0.0-rc.12.md`](./migrations/v1.0.0-rc.12.md) for
+the RC-to-RC delta (#353).
 
 ---
 
