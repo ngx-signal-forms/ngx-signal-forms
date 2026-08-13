@@ -53,6 +53,7 @@ import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit';
     <form [formRoot]="form" ngxSignalForm errorStrategy="on-submit">
       <label for="email">Email</label>
       <input id="email" [formField]="form.email" />
+      <button type="submit">Submit</button>
     </form>
   `,
 })
