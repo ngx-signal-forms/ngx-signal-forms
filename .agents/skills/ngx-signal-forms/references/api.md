@@ -531,21 +531,22 @@ import {
 
 ### NgxFormFieldset inputs
 
-| Input                 | Type                                                                     | Default                   |
-| --------------------- | ------------------------------------------------------------------------ | ------------------------- |
-| `fieldsetField`       | field tree                                                               | Required                  |
-| `fields`              | field[]                                                                  | Auto-traversed if omitted |
-| `fieldsetId`          | string                                                                   | Auto-generated            |
-| `strategy`            | ErrorDisplayStrategy                                                     | Inherited                 |
-| `showErrors`          | boolean                                                                  | `true`                    |
-| `includeNestedErrors` | boolean                                                                  | `false`                   |
-| `errorPlacement`      | `'top' \| 'bottom'`                                                      | `'bottom'`                |
-| `appearance`          | `'outline' \| 'plain'`                                                   | `'outline'`               |
-| `feedbackAppearance`  | `'auto' \| 'plain' \| 'notification'`                                    | `'auto'`                  |
-| `notificationTitle`   | string                                                                   | none                      |
-| `listStyle`           | `NgxFormFieldListStyle`                                                  | `'bullets'`               |
-| `surfaceTone`         | `'default' \| 'neutral' \| 'info' \| 'success' \| 'warning' \| 'danger'` | `'default'`               |
-| `validationSurface`   | `'never' \| 'always'`                                                    | `'never'`                 |
+| Input                 | Type                                                                     | Default                                           |
+| --------------------- | ------------------------------------------------------------------------ | ------------------------------------------------- |
+| `field`               | field tree                                                               | Required                                          |
+| `fields`              | field[]                                                                  | Auto-traversed if omitted                         |
+| `fieldsetId`          | string                                                                   | Auto-generated                                    |
+| `strategy`            | ErrorDisplayStrategy                                                     | Inherited                                         |
+| `warningStrategy`     | WarningDisplayStrategy                                                   | Inherited — warnings time independently of errors |
+| `showErrors`          | boolean                                                                  | `true`                                            |
+| `includeNestedErrors` | boolean                                                                  | `false`                                           |
+| `errorPlacement`      | `'top' \| 'bottom'`                                                      | `'bottom'`                                        |
+| `appearance`          | `'outline' \| 'plain'`                                                   | `'outline'`                                       |
+| `feedbackAppearance`  | `'auto' \| 'plain' \| 'notification'`                                    | `'auto'`                                          |
+| `notificationTitle`   | string                                                                   | none                                              |
+| `listStyle`           | `NgxFormFieldListStyle`                                                  | `'bullets'`                                       |
+| `surfaceTone`         | `'default' \| 'neutral' \| 'info' \| 'success' \| 'warning' \| 'danger'` | `'default'`                                       |
+| `validationSurface`   | `'never' \| 'always'`                                                    | `'never'`                                         |
 
 Exported types: `NgxFormFieldsetAppearance`, `NgxFormFieldsetFeedbackAppearance`,
 `NgxFormFieldsetSurfaceTone`, `NgxFormFieldsetValidationSurface`. `appearance="plain"`
@@ -628,7 +629,7 @@ Signals: `currentLength()`, `resolvedMaxLength()`, `remaining()`, `limitState()`
 
 Selector: `[ngxHeadlessFieldset]` | Export: `#fieldset="fieldset"`
 
-Inputs: `fieldsetField` (required), `fields`, `strategy`, `includeNestedErrors`
+Inputs: `field` (required), `fields`, `strategy`, `warningStrategy`, `includeNestedErrors`
 
 Signals: `isValid()`, `isInvalid()`, `isTouched()`, `isDirty()`, `aggregatedErrors()`, `aggregatedWarnings()`, `shouldShowErrors()`, `shouldShowWarnings()`
 
