@@ -15,10 +15,10 @@ autoInstallPeers: true
 catalogMode: 'prefer'
 catalogs:
   analogjs:
-    '@analogjs/vite-plugin-angular': '2.6.4'
-    '@analogjs/vitest-angular': '2.6.4'
+    '@analogjs/vite-plugin-angular': '2.7.0'
+    '@analogjs/vitest-angular': '2.7.0'
   axe:
-    '@axe-core/playwright': '^4.12.1'
+    '@axe-core/playwright': '^4.13.0'
     axe-core: '^4.13.0'
   angular:
     '@angular/animations': '22.1.1'
@@ -71,8 +71,8 @@ catalogs:
     '@shikijs/types': '^4.4.3'
     shiki: '^4.4.3'
   spartan:
-    '@ng-icons/core': '^34.0.0'
-    '@ng-icons/lucide': '^34.0.0'
+    '@ng-icons/core': '35.0.1'
+    '@ng-icons/lucide': '35.0.1'
     '@spartan-ng/brain': '1.3.1'
     '@spartan-ng/cli': '1.3.1'
     class-variance-authority: '^0.7.1'
@@ -97,15 +97,15 @@ catalogs:
     '@testing-library/angular': '^19.4.2'
     '@testing-library/dom': '^10.4.1'
     '@testing-library/jest-dom': '^7.0.1'
-    '@testing-library/user-event': '^14.6.3'
+    '@testing-library/user-event': '^14.6.4'
   tooling:
-    '@oxc-project/runtime': '^0.143.0'
+    '@oxc-project/runtime': '^0.144.0'
     '@typescript/native': 'npm:typescript@~7.0.2'
     '@types/node': '26.2.0'
     eslint: '^10.8.1'
     jiti: '2.7.0'
     lint-staged: '^17.3.0'
-    oxfmt: '^0.62.0'
+    oxfmt: '^0.63.0'
     oxlint: '^1.78.0'
     oxlint-tsgolint: '^7.0.2001'
     simple-git-hooks: '^2.13.1'
