@@ -145,7 +145,8 @@ import {
 ## Error Handling
 
 - If errors don't display: check that `fieldName` is provided when the component is used standalone.
-- If character count doesn't update: verify the field value is a string and `[formField]` is bound.
+- If character count doesn't update or silently renders 0: verify the field value is a string and `[formField]` is bound. With no `maxLength` configured or auto-detected, an unsupported value type logs a one-shot dev-mode `console.warn` naming `NgxFormFieldCharacterCount` — watch the console.
+- If a property-bound hint id (`[id]="expr"`) doesn't reach `aria-describedby`: update the toolkit — older versions read the id once at construction and missed property bindings; current versions map both static `id` and `[id]` onto the hint's `id` input.
 - If hints don't appear in `aria-describedby`: confirm the component is inside a `ngx-form-field-wrapper` or use `NgxHeadlessFieldName` to wire it manually.
 - If a grouped notification announces with the wrong urgency: check the `[errors]` list you pass in — routing is content-driven, so a stray blocking error will force the assertive `role="alert"` container. There is no `tone` input to override it.
 - For grouped summaries or fieldset-level output, switch to `form-field/SKILL.md` (`NgxFormFieldset`).

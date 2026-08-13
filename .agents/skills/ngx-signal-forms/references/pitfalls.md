@@ -196,6 +196,13 @@ These were removed or are not public:
 | `isSubmitting()`               | `submittedStatus()` from `[formRoot]`                                |
 | `fieldNameResolver` config     | Provide `id` on bound control                                        |
 | `strictFieldResolution` config | Removed — strict by default                                          |
+| `NgxFormFieldNotification`     | `NgxFormFieldError` with `presentation="panel"` + `[errors]`         |
+| `toHintDescriptors()`          | Inline the two-line `computed()` — see `docs/CUSTOM_WRAPPERS.md`     |
+| `createErrorRendererInputs()`  | Inline the two-line `computed()` — see `docs/CUSTOM_WRAPPERS.md`     |
+| `resolveUnionInput()`          | Inline the union unwrap at the call site                             |
+
+The notification fold also renamed the CSS hooks: `--ngx-signal-form-notification-*`
+became `--ngx-signal-form-error-panel-*` / `--ngx-signal-form-warning-panel-*`.
 
 ## Renamed — Update the Name, Same Behavior
 

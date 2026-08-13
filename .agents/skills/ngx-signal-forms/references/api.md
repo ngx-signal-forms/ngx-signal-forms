@@ -442,7 +442,9 @@ never re-assigned at the same tick content is inserted.
 
 ### Other assistive exports
 
-- `NgxFormFieldHint` — static descriptive hint content
+- `NgxFormFieldHint` — static descriptive hint content. Accepts an `id` input:
+  a static `id="…"` attribute or a property-bound `[id]="expr"` both feed the
+  `aria-describedby` wiring; when omitted, a stable id is generated.
 - `NgxFormFieldListStyle` (`'plain' | 'bullets'`) — shared list-style union. `NgxFormFieldErrorListStyle` is a `@deprecated` alias of it.
 - `NgxFormFieldErrorPresentation` (`'inline' | 'panel'`) — the `presentation` input's type.
 - `NgxCharacterCountValue` + `NgxCharacterCountAnnouncement*` types — character-count announcement formatting hooks.
@@ -679,6 +681,29 @@ humanizeFieldPath(fieldName: string): string
 resolveFieldNameFromError(error, resolver?): string
 focusBoundControlFromError(error): void
 toErrorSummaryEntry(error, registry?, options?, labelResolver?): ErrorSummaryEntryData
+
+// Aggregation factories — the pipelines behind NgxHeadlessFieldset and
+// NgxHeadlessErrorSummary, extracted for custom grouped surfaces. Pure: no
+// inject(), no injection context required (ADR-0005), testable with plain
+// signal() mocks. Visibility timing is NOT resolved inside — pass pre-resolved
+// showErrors/showWarnings signals from your own createErrorVisibility() /
+// createShowErrorsComputed() seam call (ADR-0006).
+createFieldsetAggregation(options: CreateFieldsetAggregationOptions): FieldsetAggregationResult
+// Options: { fieldState: () => unknown;              // reader for field()()
+//            fields?; includeNestedErrors?;          // same contract as the directive inputs
+//            showErrors; showWarnings;               // pre-resolved visibility signals
+//            errorMessages? }
+// Result: { aggregatedErrors, aggregatedWarnings, resolvedErrors,
+//           resolvedWarnings, hasErrors, hasWarnings,
+//           shouldShowErrors, shouldShowWarnings } — all Signal<...>
+createErrorSummaryEntries(options: CreateErrorSummaryEntriesOptions): ErrorSummaryEntriesResult
+// Options: { fieldState: () => unknown;              // reader for formTree()()
+//            showErrors;                             // pre-resolved visibility, shared by both channels
+//            errorMessages?; labelResolver? }        // labelResolver falls back to humanizeFieldPath
+// Reads errorSummary(), filters out hidden/disabled fields, dedupes per field,
+// splits by kind, maps to focusable entries.
+// Result: { entries, warningEntries, hasErrors, hasWarnings,
+//           shouldShow, shouldShowWarnings } — all Signal<...>
 
 // Field optionality — does a form tree have any required / any optional leaf?
 summarizeFieldOptionality(tree): FieldOptionality // synchronous; reactive when read inside a computed()
@@ -931,9 +956,14 @@ import {
 // Runs an axe-core audit and HARD-FAILS (throws) on any WCAG 2.2 AA violation.
 // One call per rendered fixture scans the whole subtree.
 expectNoA11yViolations(
-  context?: axe.ElementContext,   // default: document.body
-  options?: axe.RunOptions,       // merged over the WCAG 2.2 AA defaults
+  context?: axe.ElementContext,              // default: document.body
+  options?: Omit<axe.RunOptions, 'runOnly'>, // merged over the defaults
 ): Promise<void>
+// The WCAG 2.2 AA `runOnly` tag set is the hard-fail baseline and is NOT
+// overridable: a fresh literal carrying `runOnly` is a compile error, and the
+// baseline is applied after the options spread, so it wins at runtime even for
+// an axe.RunOptions-typed value smuggling one through. `resultTypes` stays
+// caller-overridable.
 
 // axe-core tag set mapping to WCAG 2.2 AA (additive across versions):
 WCAG_22_AA_TAGS = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'] as const

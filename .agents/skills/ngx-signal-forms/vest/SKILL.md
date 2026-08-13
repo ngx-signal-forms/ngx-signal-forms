@@ -45,8 +45,10 @@ Use `validateVest()` for ordinary blocking validation and
 run cache or its own `register()` behavior. Use `sharedVestAdapter.runVestSuite()`
 inside a hand-rolled validator only when it must share the exact execution with
 `validateVest()`; pair an async-only custom flow with `validateVest()` or your
-own `validateAsync` phase. Read `../references/api.md` for the adapter's
-options and result contracts.
+own `validateAsync` phase. When awaiting a manual run's outcome, await the
+result's `settled()` — never `runResult`, which a later run on the same suite
+can supersede and leave pending forever. Read `../references/api.md` for the
+adapter's options and result contracts.
 
 ### `validateVest(path, suite, options?)`
 

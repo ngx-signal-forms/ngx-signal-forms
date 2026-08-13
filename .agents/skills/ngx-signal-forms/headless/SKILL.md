@@ -52,7 +52,7 @@ too small to warrant a shared factory; see `docs/CUSTOM_WRAPPERS.md` for
 the shape. Read `../references/api.md` for the remaining factories'
 contracts before composing them.
 
-5. **Use `NgxHeadlessFieldset`** for aggregated group state — validity, errors, and warnings across a field tree without rebuilding the traversal.
+5. **Use `NgxHeadlessFieldset`** for aggregated group state — validity, errors, and warnings across a field tree without rebuilding the traversal. Building a custom grouped surface instead? The same pipelines are exported as the pure factories `createFieldsetAggregation()` and `createErrorSummaryEntries()` — no injection context required, but you supply pre-resolved `showErrors`/`showWarnings` signals from your own visibility seam call. See `../references/api.md` for the option/result contracts.
 
 6. **Use `NgxHeadlessNotification`** when you already have aggregated `ValidationError[]` and need a grouped live-region surface. Tone is content-driven (no `tone` input): any blocking error raises the assertive `role="alert"` container, a warning-only list raises the polite `role="status"` container — you keep full DOM control.
 

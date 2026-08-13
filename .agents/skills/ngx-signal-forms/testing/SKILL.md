@@ -33,9 +33,13 @@ import {
 
 - `expectNoA11yViolations(context?, options?)` — `context` defaults to
   `document.body`, so a bare `await expectNoA11yViolations()` covers the whole
-  render. `options` is an axe `RunOptions` object **merged over** the WCAG 2.2 AA
+  render. `options` is `Omit<axe.RunOptions, 'runOnly'>` merged over the
   defaults — use it to disable rules that don't apply to a fixture (e.g.
-  `color-contrast` for intentionally unstyled controls).
+  `color-contrast` for intentionally unstyled controls). The WCAG 2.2 AA
+  `runOnly` tag set is the hard-fail baseline and is **not overridable**:
+  passing `runOnly` in a fresh literal is a compile error, and the baseline
+  wins at runtime even when a pre-typed `axe.RunOptions` value smuggles one
+  through. `resultTypes` stays caller-overridable.
 - `WCAG_22_AA_TAGS` — the axe tag set the harness runs. There is no `wcag22a`
   tag: the two new 2.2 Level A criteria are non-automatable, so automated
   scanning covers only a subset of full 2.2 AA conformance.
@@ -78,6 +82,9 @@ it('has no WCAG 2.2 AA violations when showing an error', async () => {
   it is an optional peer dep, not bundled.
 - If a scan flags `color-contrast` on a bare test host: disable that rule via
   `options` rather than styling the fixture.
+- If passing `runOnly` in `options` fails to compile: that is the guard working
+  — the WCAG 2.2 AA tag set is a fixed baseline. Narrow the `context` or
+  disable individual `rules` instead.
 - If the assertion passes but you expected coverage of a 2.2 Level A criterion
   (Consistent Help, Redundant Entry): those are non-automatable — verify them
   manually.
