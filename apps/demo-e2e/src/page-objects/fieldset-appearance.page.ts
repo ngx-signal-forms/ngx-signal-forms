@@ -158,7 +158,7 @@ export class FieldsetAppearancePage extends BaseFormPage {
   }
 
   getNotificationTitle(fieldset: Locator): Locator {
-    return fieldset.locator('.ngx-form-field-notification__title').first();
+    return fieldset.locator('.ngx-form-field-error__title').first();
   }
 
   async showSemanticOnlyShell(): Promise<void> {

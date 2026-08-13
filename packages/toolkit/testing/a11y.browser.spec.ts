@@ -1,4 +1,5 @@
-import { afterEach, describe, expect, it } from 'vitest';
+import type axe from 'axe-core';
+import { afterEach, describe, expect, expectTypeOf, it } from 'vitest';
 import { expectNoA11yViolations, WCAG_22_AA_TAGS } from './a11y';
 
 /**
@@ -16,21 +17,28 @@ import { expectNoA11yViolations, WCAG_22_AA_TAGS } from './a11y';
  * (e.g. color-contrast) need real rendering — matching every other
  * `expectNoA11yViolations` call site in this package.
  */
+
+// Shared mount/cleanup helper for every describe block below: creates a
+// `<div>` fixture with the given inner HTML, appends it to `document.body`,
+// and removes it after the test so specs stay isolated from one another.
+let mounted: HTMLElement[] = [];
+
+afterEach(() => {
+  for (const el of mounted) {
+    el.remove();
+  }
+  mounted = [];
+});
+
+const mount = (innerHtml: string): HTMLElement => {
+  const host = document.createElement('div');
+  host.innerHTML = innerHtml;
+  document.body.append(host);
+  mounted.push(host);
+  return host;
+};
+
 describe('expectNoA11yViolations', () => {
-  let host: HTMLElement | undefined;
-
-  afterEach(() => {
-    host?.remove();
-    host = undefined;
-  });
-
-  const mount = (innerHtml: string): HTMLElement => {
-    host = document.createElement('div');
-    host.innerHTML = innerHtml;
-    document.body.append(host);
-    return host;
-  };
-
   it('resolves without throwing for a fixture with no accessibility violations', async () => {
     const fixture = mount(`
       <label for="ngx-a11y-self-test-name">Full name</label>
@@ -95,6 +103,78 @@ describe('expectNoA11yViolations', () => {
     } finally {
       distractor.remove();
     }
+  });
+});
+
+describe('expectNoA11yViolations default context', () => {
+  // The `context` parameter documents (a11y.ts) that a bare, zero-argument
+  // call scans the whole `document.body`. Every other spec in the workspace
+  // passes a fixture or container explicitly, so that default path had no
+  // coverage of its own — pin both directions directly against
+  // `document.body` (via the shared `mount` helper, which appends into it).
+  it('resolves without throwing when called with no arguments against an accessible document.body', async () => {
+    mount(`
+      <label for="ngx-a11y-default-context-name">Full name</label>
+      <input id="ngx-a11y-default-context-name" type="text" />
+    `);
+
+    await expect(expectNoA11yViolations()).resolves.toBeUndefined();
+  });
+
+  it('throws when called with no arguments against a document.body with a violation', async () => {
+    mount(`<img src="data:," />`);
+
+    await expect(expectNoA11yViolations()).rejects.toThrow(
+      /accessibility violation/u,
+    );
+  });
+});
+
+describe('expectNoA11yViolations WCAG 2.2 AA baseline', () => {
+  it('an unrelated options key does not weaken the baseline', async () => {
+    // `options` is typed `Omit<axe.RunOptions, 'runOnly'>`, so passing
+    // `runOnly` as a literal here would not compile (see the `expectTypeOf`
+    // spec below). This spec instead pins the behavioural guarantee for
+    // ordinary options: passing an unrelated key (here, `resultTypes`) must
+    // not weaken the WCAG 2.2 AA baseline. The fixture violates `image-alt`,
+    // which `resultTypes` does not touch, so the scan must still fail.
+    const fixture = mount(`<img src="data:," />`);
+
+    await expect(
+      expectNoA11yViolations(fixture, { resultTypes: ['violations'] }),
+    ).rejects.toThrow(/image-alt/u);
+  });
+
+  it('a runOnly smuggled in through an axe.RunOptions-typed value is still overridden at runtime', async () => {
+    // The `Omit<axe.RunOptions, 'runOnly'>` parameter type only rejects
+    // fresh object literals carrying `runOnly` — TypeScript's excess-property
+    // check is literal-only. A value already typed as the wider
+    // `axe.RunOptions` (no cast needed — this is a legitimate, structurally
+    // assignable value) can still carry a `runOnly` and pass the type
+    // checker. `expectNoA11yViolations` guards against that at runtime by
+    // applying its own `runOnly` after spreading `options`, so the WCAG
+    // 2.2 AA baseline wins regardless. Prove it: point a laundered
+    // `runOnly` at a tag ('best-practice') that does not include
+    // `image-alt` (a wcag2a rule), and confirm the scan still catches the
+    // violation.
+    const laundered: axe.RunOptions = {
+      runOnly: { type: 'tag', values: ['best-practice'] },
+    };
+    const fixture = mount(`<img src="data:," />`);
+
+    await expect(expectNoA11yViolations(fixture, laundered)).rejects.toThrow(
+      /image-alt/u,
+    );
+  });
+
+  // Compile-time documentation of the `options` contract, independent of any
+  // one call site: the second parameter must never widen back to accepting
+  // `runOnly` directly, or a future refactor could silently reopen the
+  // override this file's other specs guard against at runtime.
+  it('excludes runOnly from the options parameter type', () => {
+    expectTypeOf<
+      Parameters<typeof expectNoA11yViolations>[1]
+    >().not.toHaveProperty('runOnly');
   });
 });
 

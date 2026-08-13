@@ -4,6 +4,7 @@ import {
   form,
   schema,
   validate,
+  type FieldTree,
   type ValidationError,
 } from '@angular/forms/signals';
 import { provideNgxSignalFormsConfig } from '@ngx-signal-forms/toolkit';
@@ -11,6 +12,8 @@ import { NGX_SIGNAL_FORM_CONTEXT } from '@ngx-signal-forms/toolkit/core';
 import { describe, expect, it } from 'vitest';
 import {
   createErrorState,
+  createErrorSummaryEntries,
+  createFieldsetAggregation,
   createUniqueId,
   dedupeValidationErrors,
   humanizeFieldPath,
@@ -913,6 +916,305 @@ describe('Headless Utilities', () => {
       emailForm.email().markAsTouched();
       expect(errorState.hasErrors()).toBe(true);
       expect(errorState.shouldShowErrors()).toBe(true);
+    });
+  });
+
+  // ============================================================================
+  // createFieldsetAggregation — extracted from NgxHeadlessFieldset (#351)
+  // ============================================================================
+
+  describe('createFieldsetAggregation', () => {
+    // Pure function: no `inject()` calls, so plain signal mocks exercise the
+    // full contract without TestBed/injection context (ADR-0005).
+
+    it('aggregates direct errors by default and resolves display messages', () => {
+      const fieldState = signal({
+        errors: () => [{ kind: 'required', message: 'Required' }],
+      });
+      const showErrors = signal(true);
+      const showWarnings = signal(true);
+
+      const result = createFieldsetAggregation({
+        fieldState,
+        showErrors,
+        showWarnings,
+      });
+
+      expect(result.aggregatedErrors()).toEqual([
+        { kind: 'required', message: 'Required' },
+      ]);
+      expect(result.resolvedErrors()).toEqual([
+        { kind: 'required', message: 'Required' },
+      ]);
+      expect(result.hasErrors()).toBe(true);
+      expect(result.shouldShowErrors()).toBe(true);
+    });
+
+    it('aggregates nested errors via errorSummary() when includeNestedErrors is true', () => {
+      const fieldState = signal({
+        errors: () => [],
+        errorSummary: () => [
+          { kind: 'required', message: 'Street required' },
+          { kind: 'required', message: 'City required' },
+        ],
+      });
+
+      const result = createFieldsetAggregation({
+        fieldState,
+        includeNestedErrors: true,
+        showErrors: signal(true),
+        showWarnings: signal(true),
+      });
+
+      expect(result.aggregatedErrors()).toHaveLength(2);
+    });
+
+    it('dedupes aggregated messages by kind + message', () => {
+      const fieldState = signal({
+        errorSummary: () => [
+          { kind: 'required', message: 'Required' },
+          { kind: 'required', message: 'Required' },
+        ],
+      });
+
+      const result = createFieldsetAggregation({
+        fieldState,
+        includeNestedErrors: true,
+        showErrors: signal(true),
+        showWarnings: signal(true),
+      });
+
+      expect(result.aggregatedErrors()).toHaveLength(1);
+    });
+
+    it('splits blocking errors from warn:-prefixed warnings', () => {
+      const fieldState = signal({
+        errors: () => [
+          { kind: 'required', message: 'Required' },
+          { kind: 'warn:optional', message: 'Consider filling this in' },
+        ],
+      });
+
+      const result = createFieldsetAggregation({
+        fieldState,
+        showErrors: signal(true),
+        showWarnings: signal(true),
+      });
+
+      expect(result.aggregatedErrors()).toEqual([
+        { kind: 'required', message: 'Required' },
+      ]);
+      expect(result.aggregatedWarnings()).toEqual([
+        { kind: 'warn:optional', message: 'Consider filling this in' },
+      ]);
+      expect(result.hasWarnings()).toBe(true);
+    });
+
+    it('treats an explicitly bound empty `fields` override as "aggregate nothing", not "not provided"', () => {
+      const fieldState = signal({
+        errors: () => [{ kind: 'required', message: 'Own error' }],
+      });
+
+      const result = createFieldsetAggregation({
+        fieldState,
+        fields: signal([]),
+        showErrors: signal(true),
+        showWarnings: signal(true),
+      });
+
+      expect(result.aggregatedErrors()).toEqual([]);
+    });
+
+    it('aggregates from an explicit `fields` override when provided', () => {
+      const fieldState = signal({ errors: () => [] });
+      const overrideField = (() => ({
+        errors: () => [{ kind: 'required', message: 'Field required' }],
+      })) as unknown as FieldTree<unknown>;
+
+      const result = createFieldsetAggregation({
+        fieldState,
+        fields: signal([overrideField]),
+        showErrors: signal(true),
+        showWarnings: signal(true),
+      });
+
+      expect(result.aggregatedErrors()).toEqual([
+        { kind: 'required', message: 'Field required' },
+      ]);
+    });
+
+    it('gates shouldShowErrors/shouldShowWarnings on the caller-supplied visibility signals', () => {
+      const fieldState = signal({
+        errors: () => [{ kind: 'required', message: 'Required' }],
+      });
+
+      const result = createFieldsetAggregation({
+        fieldState,
+        showErrors: signal(false),
+        showWarnings: signal(false),
+      });
+
+      expect(result.hasErrors()).toBe(true);
+      expect(result.shouldShowErrors()).toBe(false);
+    });
+  });
+
+  // ============================================================================
+  // createErrorSummaryEntries — extracted from NgxHeadlessErrorSummary (#351)
+  // ============================================================================
+
+  describe('createErrorSummaryEntries', () => {
+    // Pure function: no `inject()` calls, so plain signal mocks exercise the
+    // full contract without TestBed/injection context (ADR-0005).
+
+    function fieldTreeFor(
+      name: string,
+      overrides: Readonly<{ hidden?: boolean; disabled?: boolean }> = {},
+    ) {
+      return () => ({
+        name: () => name,
+        hidden: () => overrides.hidden ?? false,
+        disabled: () => overrides.disabled ?? false,
+        focusBoundControl: () => {
+          /* no-op for spec */
+        },
+      });
+    }
+
+    it('maps blocking errors to focusable entries with resolved messages and field names', () => {
+      const error: ValidationError = {
+        kind: 'required',
+        message: 'Required',
+        fieldTree: fieldTreeFor('email'),
+      } as ValidationError;
+
+      const fieldState = signal({ errorSummary: () => [error] });
+
+      const result = createErrorSummaryEntries({
+        fieldState,
+        showErrors: signal(true),
+      });
+
+      expect(result.entries()).toHaveLength(1);
+      expect(result.entries()[0]?.kind).toBe('required');
+      expect(result.entries()[0]?.message).toBe('Required');
+      expect(result.hasErrors()).toBe(true);
+    });
+
+    it('separates warn:-prefixed entries into warningEntries', () => {
+      const warning: ValidationError = {
+        kind: 'warn:street-optional',
+        message: 'Street can be left blank',
+        fieldTree: fieldTreeFor('street'),
+      } as ValidationError;
+
+      const fieldState = signal({ errorSummary: () => [warning] });
+
+      const result = createErrorSummaryEntries({
+        fieldState,
+        showErrors: signal(true),
+      });
+
+      expect(result.entries()).toHaveLength(0);
+      expect(result.warningEntries()).toHaveLength(1);
+      expect(result.hasWarnings()).toBe(true);
+    });
+
+    it('omits entries for hidden or disabled fields', () => {
+      const hiddenError: ValidationError = {
+        kind: 'required',
+        message: 'Secret required',
+        fieldTree: fieldTreeFor('secret', { hidden: true }),
+      } as ValidationError;
+      const disabledError: ValidationError = {
+        kind: 'required',
+        message: 'Token required',
+        fieldTree: fieldTreeFor('token', { disabled: true }),
+      } as ValidationError;
+      const visibleError: ValidationError = {
+        kind: 'required',
+        message: 'Email required',
+        fieldTree: fieldTreeFor('email'),
+      } as ValidationError;
+
+      const fieldState = signal({
+        errorSummary: () => [hiddenError, disabledError, visibleError],
+      });
+
+      const result = createErrorSummaryEntries({
+        fieldState,
+        showErrors: signal(true),
+      });
+
+      expect(result.entries().map((entry) => entry.fieldName)).toEqual([
+        'Email',
+      ]);
+    });
+
+    it('keeps a separate entry per field when two fields share kind and a message-less error', () => {
+      const first: ValidationError = {
+        kind: 'required',
+        fieldTree: fieldTreeFor('email'),
+      } as ValidationError;
+      const second: ValidationError = {
+        kind: 'required',
+        fieldTree: fieldTreeFor('name'),
+      } as ValidationError;
+
+      const fieldState = signal({ errorSummary: () => [first, second] });
+
+      const result = createErrorSummaryEntries({
+        fieldState,
+        showErrors: signal(true),
+      });
+
+      expect(result.entries()).toHaveLength(2);
+    });
+
+    it('gates shouldShow/shouldShowWarnings on the caller-supplied showErrors signal', () => {
+      const error: ValidationError = {
+        kind: 'required',
+        message: 'Required',
+        fieldTree: fieldTreeFor('email'),
+      } as ValidationError;
+
+      const fieldState = signal({ errorSummary: () => [error] });
+      const showErrors = signal(false);
+
+      const result = createErrorSummaryEntries({ fieldState, showErrors });
+
+      expect(result.hasErrors()).toBe(true);
+      expect(result.shouldShow()).toBe(false);
+
+      showErrors.set(true);
+
+      expect(result.shouldShow()).toBe(true);
+    });
+
+    it("focus() on an entry calls the field's focusBoundControl()", () => {
+      let focused = false;
+      const error: ValidationError = {
+        kind: 'required',
+        message: 'Required',
+        fieldTree: () => ({
+          name: () => 'email',
+          hidden: () => false,
+          disabled: () => false,
+          focusBoundControl: () => {
+            focused = true;
+          },
+        }),
+      } as ValidationError;
+
+      const fieldState = signal({ errorSummary: () => [error] });
+
+      const result = createErrorSummaryEntries({
+        fieldState,
+        showErrors: signal(true),
+      });
+
+      result.entries()[0]?.focus();
+      expect(focused).toBe(true);
     });
   });
 });

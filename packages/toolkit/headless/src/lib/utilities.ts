@@ -1,44 +1,56 @@
-import {
-  computed,
-  inject,
-  isDevMode,
-  type Injector,
-  type Signal,
-} from '@angular/core';
+import { computed, inject, type Injector, type Signal } from '@angular/core';
 import type { FieldTree, ValidationError } from '@angular/forms/signals';
 import {
+  createErrorVisibility,
   createUniqueId,
-  injectFormContext,
   isFieldStateInteractive,
   NGX_SIGNAL_FORMS_CONFIG,
   readDirectErrors,
-  resolveStrategyFromContext,
-  resolveSubmittedStatusFromContext,
   resolveValidationErrorMessage,
-  showErrors,
   splitByKind,
   unwrapValue,
   type ErrorDisplayStrategy,
   type ErrorReadableState,
-  type ResolvedErrorDisplayStrategy,
   type SubmittedStatus,
 } from '@ngx-signal-forms/toolkit';
 import {
   assertInjector,
+  createCharacterCountLengthSignal,
   createFieldMessageIdSignals,
   humanizeFieldPath,
   stripAngularFormPrefix,
+  DEFAULT_NGX_SIGNAL_FORMS_CONFIG,
   type ErrorMessageRegistry,
   type FieldLabelResolver,
 } from '@ngx-signal-forms/toolkit/core';
-
-import type { CharacterCountLimitState } from './character-count';
 
 export { humanizeFieldPath };
 import {
   DEFAULT_DANGER_THRESHOLD,
   DEFAULT_WARNING_THRESHOLD,
-} from './character-count';
+  type CharacterCountLimitState,
+  type CharacterCountValue,
+} from './character-count-types';
+
+/**
+ * A resolved error with kind and message.
+ *
+ * Canonical home for this type — `error-state.ts` re-exports it (the public
+ * barrel resolves `ResolvedError` from `./lib/error-state` and stays
+ * unchanged) so both `createFieldsetAggregation()` here and
+ * `NgxHeadlessErrorState` share one definition. Mirrors the
+ * `CharacterCountValue` re-export above for the same reason: the type moved,
+ * the public export path did not.
+ */
+export interface ResolvedError {
+  readonly kind: string;
+  readonly message: string;
+}
+
+// Re-exported so the public barrel's `export { type CharacterCountValue }
+// from './lib/utilities'` keeps resolving after the type moved to the
+// shared character-count-types module (see that file's docblock for why).
+export type { CharacterCountValue };
 
 type ReadSignal<T> = () => T;
 type ReactiveOrStatic<T> = T | ReadSignal<T>;
@@ -407,7 +419,7 @@ export interface ErrorStateResult {
  * `createErrorVisibility()` / `createErrorMessageSignal()`.
  *
  * @remarks
- * **Why `showWarnings` aliases `showErrors`:** toolkit warnings are
+ * **Why `showWarnings` aliases `createShowErrorsComputed`'s result:** toolkit warnings are
  * `ValidationError`s with `kind: 'warn:*'` produced by the same validator
  * pipeline as blocking errors. Angular Signal Forms sees them as regular
  * errors and marks `field.invalid() === true` regardless of the `warn:`
@@ -435,43 +447,39 @@ function createErrorStateInternal<TValue = unknown>(
 ): ErrorStateResult {
   const { field, fieldName, strategy, submittedStatus } = options;
 
-  // Capture form context at factory call time (inside injection context).
-  // Optional: callers outside a form boundary (tests, standalone components)
-  // get undefined and fall through to the config default, matching the
-  // directive surfaces.
-  const formContext = injectFormContext();
-
   // Falls back to the global `defaultErrorStrategy` config (same cascade
   // `NgxHeadlessFieldset` applies) when neither an explicit `strategy` nor a
   // form context is present, keeping standalone usage consistent regardless
   // of which headless surface a consumer reaches for.
-  const config = inject(NGX_SIGNAL_FORMS_CONFIG, { optional: true });
+  const config =
+    inject(NGX_SIGNAL_FORMS_CONFIG, { optional: true }) ??
+    DEFAULT_NGX_SIGNAL_FORMS_CONFIG;
 
   const fieldState = computed(() => field());
 
   const resolvedFieldName = computed(() => unwrapValue(fieldName));
 
-  const resolvedStrategy = computed<ResolvedErrorDisplayStrategy>(() => {
-    const strategyValue =
-      strategy === undefined ? undefined : unwrapValue(strategy);
-    return resolveStrategyFromContext(
-      strategyValue,
-      formContext,
-      config?.defaultErrorStrategy,
-    );
+  // Routes strategy + submitted-status resolution and the visibility
+  // computed itself through the shared `createErrorVisibility` seam
+  // (ADR-0006) instead of re-inlining `resolveStrategyFromContext` →
+  // `resolveSubmittedStatusFromContext` → `createShowErrorsComputed`.
+  //
+  // `strategy`/`submittedStatus` are `ReactiveOrStatic<T>` (this file's own
+  // signal-or-plain-function-or-value union), which also accepts a bare
+  // `() => T` reader — a shape `createErrorVisibility`'s `Signal<T>`-typed
+  // options don't structurally accept. Normalize through `computed()` so
+  // both a real Signal and a plain reader unwrap the same way.
+  const showErrorsSignal = createErrorVisibility(fieldState, {
+    strategy:
+      strategy === undefined
+        ? undefined
+        : computed(() => unwrapValue(strategy)),
+    submittedStatus:
+      submittedStatus === undefined
+        ? undefined
+        : computed(() => unwrapValue(submittedStatus)),
+    configDefault: config.defaultErrorStrategy,
   });
-
-  const resolvedSubmittedStatus = computed<SubmittedStatus | undefined>(() => {
-    const statusValue =
-      submittedStatus === undefined ? undefined : unwrapValue(submittedStatus);
-    return resolveSubmittedStatusFromContext(statusValue, formContext);
-  });
-
-  const showErrorsSignal = showErrors(
-    fieldState,
-    resolvedStrategy,
-    resolvedSubmittedStatus,
-  );
 
   const core = buildHeadlessErrorState(fieldState, resolvedFieldName);
 
@@ -482,18 +490,6 @@ function createErrorStateInternal<TValue = unknown>(
     fieldName: resolvedFieldName,
   };
 }
-
-/**
- * Value types supported by the character-count utilities.
- *
- * - `string` — character length
- * - `readonly string[]` — array length (e.g. token inputs where each entry is
- *   one token; reported as "X of N tokens" rather than combined string length)
- * - `null` / `undefined` — treated as length `0`
- *
- * Any other value type is treated as length `0`.
- */
-export type CharacterCountValue = string | readonly string[] | null | undefined;
 
 /**
  * Options for creating character count signals.
@@ -507,6 +503,16 @@ export interface CreateCharacterCountOptions {
   readonly warningThreshold?: ReactiveOrStatic<number>;
   /** Danger threshold (0-1), default 0.95 */
   readonly dangerThreshold?: ReactiveOrStatic<number>;
+  /**
+   * Name reported in the unsupported-value-type dev warning, e.g.
+   * `[ngx-signal-forms] <component>: unsupported value type — …`. Lets a
+   * delegating caller (`NgxHeadlessCharacterCount`) report its own name
+   * instead of `'createCharacterCount'`, since the message text is asserted
+   * in specs on both sides.
+   *
+   * @default 'createCharacterCount'
+   */
+  readonly component?: string;
 }
 
 /**
@@ -568,42 +574,15 @@ export function createCharacterCount(
     maxLength,
     warningThreshold = DEFAULT_WARNING_THRESHOLD,
     dangerThreshold = DEFAULT_DANGER_THRESHOLD,
+    component = 'createCharacterCount',
   } = options;
 
   const fieldState = computed(() => field());
 
-  // One-shot guard so the dev warning for an unsupported `value()` type fires
-  // at most once per `createCharacterCount` invocation instead of on every
-  // re-computation. `null`/`undefined` are treated as "empty" and do not warn.
-  let warnedUnsupportedValue = false;
-
-  const currentLength = computed(() => {
-    const state = fieldState();
-    const value = state.value();
-    if (typeof value === 'string') return value.length;
-    if (Array.isArray(value)) return value.length;
-    if (
-      isDevMode() &&
-      !warnedUnsupportedValue &&
-      value !== null &&
-      value !== undefined
-    ) {
-      warnedUnsupportedValue = true;
-      // Log a type descriptor only — never the raw value, which may contain
-      // user-entered data and end up in dev consoles, CI logs, or screenshots.
-      const valueType =
-        typeof value === 'object'
-          ? (value.constructor?.name ?? 'object')
-          : typeof value;
-      // oxlint-disable-next-line no-console -- dev-mode misconfiguration signal
-      console.warn(
-        '[ngx-signal-forms] createCharacterCount: unsupported value type — expected `string` or `readonly string[]`, got',
-        valueType,
-        '— rendering length as 0.',
-      );
-    }
-    return 0;
-  });
+  const currentLength = createCharacterCountLengthSignal(
+    () => fieldState().value(),
+    component,
+  );
 
   const resolvedMaxLength = computed(() => unwrapValue(maxLength));
 
@@ -655,6 +634,133 @@ export function createCharacterCount(
     hasLimit,
     isExceeded,
     percentUsed,
+  };
+}
+
+// ============================================================================
+// Fieldset Aggregation
+// ============================================================================
+
+/**
+ * Options for {@link createFieldsetAggregation}.
+ *
+ * `showErrors`/`showWarnings` are pre-resolved visibility signals, not raw
+ * strategy inputs — per ADR-0005 (factories take DI-resolved values as
+ * inputs and never call `inject()` themselves). `NgxHeadlessFieldset` keeps
+ * owning the single `createErrorVisibility()`/`createShowErrorsComputed()`
+ * seam call (ADR-0006) and threads the results in here; this factory only
+ * combines them with the (visibility-independent) presence check.
+ */
+export interface CreateFieldsetAggregationOptions {
+  /** Reactive reader for the fieldset's own field state (from `field()()`). */
+  readonly fieldState: ReadSignal<unknown>;
+  /**
+   * Explicit field-list override. `null`/omitted means "not provided" —
+   * aggregate `fieldState`'s own errors. See `NgxHeadlessFieldset.fields`
+   * for the "not provided" vs "explicitly empty" distinction this preserves.
+   */
+  readonly fields?: ReactiveOrStatic<readonly FieldTree<unknown>[] | null>;
+  /** Whether to aggregate nested field errors (`errorSummary()`) instead of direct ones (`errors()`). */
+  readonly includeNestedErrors?: ReactiveOrStatic<boolean>;
+  /** Pre-resolved blocking-error visibility (from the caller's own visibility seam call). */
+  readonly showErrors: ReadSignal<boolean>;
+  /** Pre-resolved warning visibility, timed independently of {@link showErrors}. */
+  readonly showWarnings: ReadSignal<boolean>;
+  /** Error message registry for 3-tier message resolution. */
+  readonly errorMessages?: Readonly<ErrorMessageRegistry> | null;
+}
+
+/**
+ * Fieldset error/warning aggregation result.
+ */
+export interface FieldsetAggregationResult {
+  /** Aggregated and deduplicated blocking errors. */
+  readonly aggregatedErrors: Signal<readonly ValidationError[]>;
+  /** Aggregated and deduplicated warnings. */
+  readonly aggregatedWarnings: Signal<readonly ValidationError[]>;
+  /** {@link aggregatedErrors}, resolved to display messages. */
+  readonly resolvedErrors: Signal<readonly ResolvedError[]>;
+  /** {@link aggregatedWarnings}, resolved to display messages. */
+  readonly resolvedWarnings: Signal<readonly ResolvedError[]>;
+  /** Whether there are blocking errors. */
+  readonly hasErrors: Signal<boolean>;
+  /** Whether there are warnings. */
+  readonly hasWarnings: Signal<boolean>;
+  /** `showErrors() && hasErrors()`. */
+  readonly shouldShowErrors: Signal<boolean>;
+  /** `showWarnings() && hasWarnings()`. */
+  readonly shouldShowWarnings: Signal<boolean>;
+}
+
+/**
+ * Aggregates, deduplicates, and resolves field/warning errors for a
+ * fieldset-shaped surface.
+ *
+ * Extracted from `NgxHeadlessFieldset`, which used to inline this pipeline
+ * (issue #351). Deliberately pure — no `inject()` calls — so it is testable
+ * with plain signal mocks and no `TestBed`, matching the other headless
+ * factories (`createFieldStateFlags`, `createCharacterCount`). Visibility
+ * timing is NOT resolved here; callers pass already-resolved `showErrors`/
+ * `showWarnings` signals from their own `createErrorVisibility()` /
+ * `createShowErrorsComputed()` call (ADR-0006's single seam).
+ *
+ * @remarks Does not require an injection context.
+ */
+export function createFieldsetAggregation(
+  options: Readonly<CreateFieldsetAggregationOptions>,
+): FieldsetAggregationResult {
+  const {
+    fieldState,
+    fields,
+    includeNestedErrors,
+    showErrors,
+    showWarnings,
+    errorMessages,
+  } = options;
+
+  const allMessages = computed(() => {
+    const override = fields === undefined ? null : unwrapValue(fields);
+    const readFn = unwrapValue(includeNestedErrors ?? false)
+      ? readErrors
+      : readDirectErrors;
+
+    // `null` means "not provided" → aggregate `fieldState`'s own errors. An
+    // explicitly bound `[]` means "provided but empty" → aggregate nothing.
+    if (override !== null) {
+      const messages = override.flatMap((field) => readFn(field()));
+      return dedupeValidationErrors(messages);
+    }
+
+    return dedupeValidationErrors(readFn(fieldState()));
+  });
+
+  const split = computed(() => splitByKind(allMessages()));
+
+  const aggregatedErrors = computed(() => split().blocking);
+  const aggregatedWarnings = computed(() => split().warnings);
+  const hasErrors = computed(() => split().blocking.length > 0);
+  const hasWarnings = computed(() => split().warnings.length > 0);
+
+  const toResolved = (error: ValidationError): ResolvedError => ({
+    kind: error.kind,
+    message: resolveErrorMessage(error, errorMessages),
+  });
+
+  const resolvedErrors = computed(() => aggregatedErrors().map(toResolved));
+  const resolvedWarnings = computed(() => aggregatedWarnings().map(toResolved));
+
+  const shouldShowErrors = computed(() => showErrors() && hasErrors());
+  const shouldShowWarnings = computed(() => showWarnings() && hasWarnings());
+
+  return {
+    aggregatedErrors,
+    aggregatedWarnings,
+    resolvedErrors,
+    resolvedWarnings,
+    hasErrors,
+    hasWarnings,
+    shouldShowErrors,
+    shouldShowWarnings,
   };
 }
 
@@ -840,4 +946,101 @@ export function resolveErrorMessage(
   stripWarningPrefix = true,
 ): string {
   return resolveValidationErrorMessage(error, registry, { stripWarningPrefix });
+}
+
+const STRIP_WARNING_PREFIX_OPTION = { stripWarningPrefix: true } as const;
+
+/**
+ * Options for {@link createErrorSummaryEntries}.
+ *
+ * `showErrors` is a pre-resolved visibility signal, not a raw strategy
+ * input — mirrors {@link CreateFieldsetAggregationOptions}'s contract
+ * (ADR-0005: factories take DI-resolved values as inputs, never `inject()`
+ * themselves).
+ */
+export interface CreateErrorSummaryEntriesOptions {
+  /** Reactive reader for the root field state (from `formTree()()`). */
+  readonly fieldState: ReadSignal<unknown>;
+  /** Pre-resolved visibility, shared by both the error and warning channel. */
+  readonly showErrors: ReadSignal<boolean>;
+  /** Error message registry for 3-tier message resolution. */
+  readonly errorMessages?: Readonly<ErrorMessageRegistry> | null;
+  /** Optional field-label resolver; falls back to `humanizeFieldPath`. */
+  readonly labelResolver?: FieldLabelResolver | null;
+}
+
+/**
+ * Error-summary entry-mapping result.
+ */
+export interface ErrorSummaryEntriesResult {
+  /** Resolved blocking error entries ready for rendering. */
+  readonly entries: Signal<readonly ErrorSummaryEntryData[]>;
+  /** Resolved warning entries. */
+  readonly warningEntries: Signal<readonly ErrorSummaryEntryData[]>;
+  /** Whether there are any blocking errors. */
+  readonly hasErrors: Signal<boolean>;
+  /** Whether there are any warnings. */
+  readonly hasWarnings: Signal<boolean>;
+  /** `showErrors() && hasErrors()`. */
+  readonly shouldShow: Signal<boolean>;
+  /** `showErrors() && hasWarnings()`. */
+  readonly shouldShowWarnings: Signal<boolean>;
+}
+
+/**
+ * Builds the `errorSummary()` entry-mapping pipeline: read → filter out
+ * non-interactive (hidden/disabled) fields → dedupe per field → split by
+ * kind → map to focusable {@link ErrorSummaryEntryData} entries.
+ *
+ * Extracted from `NgxHeadlessErrorSummary`, which used to inline this
+ * pipeline (issue #351). Deliberately pure — no `inject()` calls — so it is
+ * testable with plain signal mocks and no `TestBed`, matching the other
+ * headless factories (`createFieldStateFlags`, `createCharacterCount`,
+ * `createFieldsetAggregation`).
+ *
+ * @remarks Does not require an injection context.
+ */
+export function createErrorSummaryEntries(
+  options: Readonly<CreateErrorSummaryEntriesOptions>,
+): ErrorSummaryEntriesResult {
+  const { fieldState, showErrors, errorMessages, labelResolver } = options;
+
+  const split = computed(() => {
+    const visibleErrors = readErrors(fieldState()).filter(
+      (error: ValidationError) => isErrorOnInteractiveField(error),
+    );
+    return splitByKind(dedupeValidationErrorsByField(visibleErrors));
+  });
+
+  const entries = computed(() =>
+    split().blocking.map((error) =>
+      toErrorSummaryEntry(error, errorMessages, undefined, labelResolver),
+    ),
+  );
+
+  const warningEntries = computed(() =>
+    split().warnings.map((error) =>
+      toErrorSummaryEntry(
+        error,
+        errorMessages,
+        STRIP_WARNING_PREFIX_OPTION,
+        labelResolver,
+      ),
+    ),
+  );
+
+  const hasErrors = computed(() => split().blocking.length > 0);
+  const hasWarnings = computed(() => split().warnings.length > 0);
+
+  const shouldShow = computed(() => showErrors() && hasErrors());
+  const shouldShowWarnings = computed(() => showErrors() && hasWarnings());
+
+  return {
+    entries,
+    warningEntries,
+    hasErrors,
+    hasWarnings,
+    shouldShow,
+    shouldShowWarnings,
+  };
 }

@@ -40,13 +40,17 @@ export class InvalidFieldTreeError extends Error {
 }
 
 /**
- * Type predicate for an externally-supplied value claiming to be a `FieldTree`.
+ * Type predicate for an externally-supplied value that is *usable as* a `FieldTree`.
  *
- * Verifies that `value` is callable and produces a `FieldState` whose required
- * methods (`value`, `touched`, `errors`, `errorSummary`, `submitting`,
- * `markAsTouched`) are functions and whose `.fieldTree` back-reference points
- * to `value` itself. Returns `false` for any value that fails this contract,
- * including ones that throw when invoked.
+ * This is a **structural** check, deliberately not Angular's `isFieldTree()`
+ * provenance brand (`@angular/forms/signals`), which tests a module-private
+ * `Symbol` no hand-built test double can ever satisfy. Toolkit boundaries must
+ * accept such doubles, so this predicate instead verifies that `value` is
+ * callable and produces a `FieldState` whose required methods (`value`,
+ * `touched`, `errors`, `errorSummary`, `submitting`, `markAsTouched`) are
+ * functions and whose `.fieldTree` back-reference points to `value` itself.
+ * Returns `false` for any value that fails this contract, including ones that
+ * throw when invoked.
  *
  * Use this at toolkit boundaries that accept `unknown` (debugger probes,
  * submission tracker entry points, third-party wrapper integration code) so
@@ -54,7 +58,7 @@ export class InvalidFieldTreeError extends Error {
  *
  * @public
  */
-export function isFieldTree(value: unknown): value is FieldTree<unknown> {
+export function isFieldTreeLike(value: unknown): value is FieldTree<unknown> {
   if (typeof value !== 'function') {
     return false;
   }

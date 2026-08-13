@@ -8,7 +8,7 @@ import { injectFieldControl } from './inject-field-control';
 
 /**
  * Minimal `FieldTree`-shaped mock satisfying the runtime contract enforced by
- * `isFieldTree()` (callable, backing `FieldState` with the required methods
+ * `isFieldTreeLike()` (callable, backing `FieldState` with the required methods
  * and a `.fieldTree` back-reference to itself).
  */
 function createMockFieldTree<TValue>(value: TValue): FieldTree<TValue> {
@@ -34,7 +34,7 @@ function createMockFieldTree<TValue>(value: TValue): FieldTree<TValue> {
  * `createMockFieldTree`'s plain-object test-fixture parents: in a real form
  * *every* node — the form root and every intermediate group, not just
  * leaves — is itself callable (`typeof node === 'function'`) and satisfies
- * `isFieldTree()`. Child fields are exposed as properties directly on the
+ * `isFieldTreeLike()`. Child fields are exposed as properties directly on the
  * callable function object (mirroring `formInstance.address.city`).
  *
  * This is the shape that exposed the pre-fix bug: `injectFieldControl`'s

@@ -1,6 +1,6 @@
 # General Guidelines for the LLM
 
-- Always talk in ASD-STE100 Simplified Technical English. Always read CONTEXT.md files, and use their ubiquitous language.
+- **Write in Simplified Technical English** -- use short sentences, active voice, one meaning per word, cut clutter, keep it warm and human.
 
 <!-- nx configuration start-->
 <!-- Leave the start & end comments to automatically receive updates. -->

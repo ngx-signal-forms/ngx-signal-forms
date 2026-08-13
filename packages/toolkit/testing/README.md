@@ -27,6 +27,7 @@ npm install --save-dev axe-core@^4.5.0
 ```typescript
 import {
   expectNoA11yViolations,
+  findAlertContaining,
   WCAG_22_AA_TAGS,
 } from '@ngx-signal-forms/toolkit/testing';
 ```
@@ -50,13 +51,42 @@ it('has no accessibility violations', async () => {
 
 Pass extra axe `RunOptions` as a second argument to merge over the WCAG 2.2
 AA defaults, e.g. to waive a rule for a fixture that intentionally renders
-unstyled controls:
+unstyled controls. All keys are honored (`rules`, `resultTypes`, …) except
+`runOnly`: the WCAG 2.2 AA tag set is the hard-fail baseline and is not
+overridable. `runOnly` is omitted from this parameter's type, so passing it
+in an object literal is a compile error — and because TypeScript only
+enforces that omission on fresh literals, a `runOnly` smuggled in through a
+value widened to `axe.RunOptions` is overridden at runtime as well; the
+baseline always wins:
 
 ```typescript
 await expectNoA11yViolations(container, {
   rules: { 'color-contrast': { enabled: false } },
 });
 ```
+
+> [!WARNING]
+> Keep waivers narrow and fixture-specific. If you disable a rule broadly,
+> you can accidentally hide regressions in production-facing components.
+
+## Utilities
+
+### `findAlertContaining(container, text)`
+
+Finds the first `[role="alert"]` element whose text contains the given
+string. Useful for asserting that the expected error message is on screen
+_before_ running the a11y scan, so a missing error fails with a clear
+assertion instead of a silent pass:
+
+```typescript
+const errorAlert = findAlertContaining(container, 'Email is required');
+expect(errorAlert).toBeTruthy();
+
+await expectNoA11yViolations(container);
+```
+
+Returns the matching `HTMLElement`, or `undefined` when no alert contains
+the text.
 
 ## `WCAG_22_AA_TAGS`
 
@@ -82,9 +112,6 @@ root README for what the toolkit's own automation does and does not cover.
 
 ## Related documentation
 
+- [Unit-testing a form component](../../../docs/TESTING.md) — TestBed/Vitest setup for the rest of a form component's behavior: rendered errors, `aria-invalid`/`aria-describedby`, and submit handling. This entry point covers only the WCAG conformance scan.
 - [Toolkit core](../README.md) — error strategies, ARIA, configuration
 - [Root README — Accessibility](../../../README.md#accessibility) — what the toolkit verifies in CI and what remains your responsibility
-
-## License
-
-MIT © [ngx-signal-forms](https://github.com/ngx-signal-forms/ngx-signal-forms)

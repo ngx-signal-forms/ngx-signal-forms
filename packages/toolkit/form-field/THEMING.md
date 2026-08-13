@@ -2,6 +2,23 @@
 
 A comprehensive guide to styling `@ngx-signal-forms/toolkit` components using standard CSS Custom Properties.
 
+## Contents
+
+- [Browser support](#browser-support)
+- [Control-aware styling hooks](#control-aware-styling-hooks)
+- [1. Shared Feedback (base layer)](#1-shared-feedback-base-layer)
+- [2. Headless & standalone components](#2-headless--standalone-components) —
+  [Error & warning messages](#error--warning-messages) · [Hints](#hints) ·
+  [Grouped panel feedback](#grouped-panel-feedback-panel-presentation) · [Error summary](#error-summary) ·
+  [Character count](#character-count) · [Assistive row](#assistive-row) · [Fieldset](#fieldset)
+- [3. Form field component](#3-form-field-component) —
+  [Layout modes](#layout-modes-standard-outline-and-plain) · [Semantic color scale](#semantic-color-scale-the-knobs) ·
+  [Specific overrides](#specific-overrides) · [States & focus](#states--focus) ·
+  [Horizontal layout](#horizontal-layout) · [Selection groups](#wrapper-selection-groups) ·
+  [Selection target size](#selection-target-size)
+- [4. Recipes & common scenarios](#4-recipes--common-scenarios)
+- [Rendering without a label](#rendering-without-a-label)
+
 ## Overview
 
 ### What is this?
@@ -147,60 +164,71 @@ Provides context or instructions for a field.
 | `--ngx-form-field-hint-font-size`            | `var(--...feedback...)`  | Text size                   |
 | `--ngx-form-field-hint-line-height`          | `var(--...feedback...)`  | Line height                 |
 | `--ngx-form-field-hint-align`                | `left`                   | Text alignment (left/right) |
-| `--ngx-form-field-hint-padding-inline-start` | `var(--...feedback...)`  | Start-edge padding          |
-| `--ngx-form-field-hint-padding-inline-end`   | `var(--...feedback...)`  | End-edge padding            |
+| `--ngx-form-field-hint-padding-inline-start` | `0`                      | Start-edge padding          |
+| `--ngx-form-field-hint-padding-inline-end`   | `0`                      | End-edge padding            |
 
-### Grouped Notifications
+Checkbox and switch wrapper rows override both padding tokens so the hint
+aligns with the row's control padding. The wrapper also sets the contextual
+`--ngx-form-field-hint-display: none` while the field is invalid or carries a
+warning, so a hint never competes with blocking feedback — treat that variable
+as an internal coordination hook, not a theming knob.
 
-**Component:** `ngx-form-field-notification`
+### Grouped Panel Feedback (panel presentation)
 
-Use this surfaced card for grouped validation messages such as fieldset-level
-errors or custom summary blocks.
+**Component:** `ngx-form-field-error` with `presentation="panel"`
 
-Notification styling now follows the same pattern as the rest of the toolkit:
+There is no separate notification component — `ngx-form-field-error` renders
+this surfaced card for grouped validation messages (fieldset-level errors,
+custom summary blocks) when `presentation="panel"`; the default
+`presentation="inline"` renders bare per-field messages instead (see the
+[Error & Warning Messages](#error--warning-messages) table above for the
+tokens shared by both presentations: color, list style, message spacing,
+etc.). `--ngx-signal-form-error-panel-*` / `--ngx-signal-form-warning-panel-*`
+below only apply while `presentation="panel"`.
 
-- internal defaults live on `--_notification-*` tokens
-- public overrides come from `--ngx-signal-form-notification-*`
+Panel styling follows the same pattern as the rest of the toolkit:
+
+- internal defaults live on `--_error-panel-*` tokens
+- public overrides come from `--ngx-signal-form-error-panel-*` /
+  `--ngx-signal-form-warning-panel-*`
 - implementation consumes the resolved pseudo-private variables only
 
 That keeps dark-mode defaults and Figma-aligned surfaces centralized without
 shadowing consumer-provided theme variables.
 
-| Property                                              | Default                                                           | Description                              |
-| :---------------------------------------------------- | :---------------------------------------------------------------- | :--------------------------------------- |
-| `--ngx-signal-form-notification-gap`                  | `0.25rem`                                                         | Vertical gap between title and body/list |
-| `--ngx-signal-form-notification-padding`              | `1rem`                                                            | Inner padding of the notification card   |
-| `--ngx-signal-form-notification-border-width`         | `1px`                                                             | Border width                             |
-| `--ngx-signal-form-notification-border-style`         | `solid`                                                           | Border style                             |
-| `--ngx-signal-form-notification-border-radius`        | `0.5rem`                                                          | Card corner radius                       |
-| `--ngx-signal-form-notification-box-shadow`           | `none`                                                            | Card shadow                              |
-| `--ngx-signal-form-notification-font-size`            | `0.875rem`                                                        | Default message font size (Figma body-2) |
-| `--ngx-signal-form-notification-line-height`          | `var(--...feedback...)`                                           | Default message line height              |
-| `--ngx-signal-form-notification-error-color`          | `#db1818`                                                         | Base error text color                    |
-| `--ngx-signal-form-notification-error-border-color`   | `color-mix(in srgb, var(--...error-color...) 50%, transparent)`   | Error border color                       |
-| `--ngx-signal-form-notification-error-bg`             | `#fdebeb`                                                         | Error background color                   |
-| `--ngx-signal-form-notification-warning-color`        | `#a16207`                                                         | Base warning text color                  |
-| `--ngx-signal-form-notification-warning-border-color` | `color-mix(in srgb, var(--...warning-color...) 50%, transparent)` | Warning border color                     |
-| `--ngx-signal-form-notification-warning-bg`           | `color-mix(in srgb, var(--...warning-color...) 10%, white)`       | Warning background color                 |
-| `--ngx-signal-form-notification-title-color`          | `currentColor`                                                    | Optional title color                     |
-| `--ngx-signal-form-notification-title-font-size`      | `1rem`                                                            | Optional title font size                 |
-| `--ngx-signal-form-notification-title-line-height`    | `1.5rem`                                                          | Optional title line height               |
-| `--ngx-signal-form-notification-title-font-weight`    | `500`                                                             | Optional title font weight               |
-| `--ngx-signal-form-notification-title-letter-spacing` | `0`                                                               | Optional title letter spacing            |
-| `--ngx-signal-form-notification-message-color`        | `currentColor`                                                    | Grouped message text color               |
-| `--ngx-signal-form-notification-message-spacing`      | `0.25rem`                                                         | Spacing between grouped messages         |
-| `--ngx-signal-form-notification-message-line-height`  | `var(--ngx-signal-form-notification-line-height)`                 | Grouped message line height              |
-| `--ngx-signal-form-notification-list-style`           | `var(--...feedback...)`                                           | `list-style` shorthand (type + position) |
+| Property                                        | Default                                                                     | Description                                     |
+| :---------------------------------------------- | :-------------------------------------------------------------------------- | :---------------------------------------------- |
+| `--ngx-signal-form-error-panel-padding`         | `1rem`                                                                      | Inner padding of the card                       |
+| `--ngx-signal-form-error-panel-border-width`    | `1px`                                                                       | Border width                                    |
+| `--ngx-signal-form-error-panel-border-radius`   | `0.5rem`                                                                    | Card corner radius                              |
+| `--ngx-signal-form-error-panel-font-size`       | `0.875rem`                                                                  | Message font size (Figma body-2)                |
+| `--ngx-signal-form-error-panel-line-height`     | `1.25rem`                                                                   | Message line height                             |
+| `--ngx-signal-form-error-panel-bg`              | `#fdebeb`                                                                   | Error card background                           |
+| `--ngx-signal-form-error-panel-color`           | `#b91c1c`                                                                   | Error card text color                           |
+| `--ngx-signal-form-error-panel-border-color`    | `color-mix(in srgb, var(--ngx-signal-form-error-color) 50%, transparent)`   | Error card border color                         |
+| `--ngx-signal-form-warning-panel-bg`            | `color-mix(in srgb, var(--ngx-signal-form-warning-color) 10%, white)`       | Warning card background                         |
+| `--ngx-signal-form-warning-panel-color`         | `#92400e`                                                                   | Warning card text color                         |
+| `--ngx-signal-form-warning-panel-border-color`  | `color-mix(in srgb, var(--ngx-signal-form-warning-color) 50%, transparent)` | Warning card border color                       |
+| `--ngx-signal-form-error-panel-message-spacing` | `0.25rem`                                                                   | Spacing between grouped messages                |
+| `--ngx-signal-form-error-title-color`           | `currentColor`                                                              | Optional title color (both presentations)       |
+| `--ngx-signal-form-error-title-font-size`       | `1rem`                                                                      | Optional title font size (both presentations)   |
+| `--ngx-signal-form-error-title-line-height`     | `1.5rem`                                                                    | Optional title line height (both presentations) |
+| `--ngx-signal-form-error-title-font-weight`     | `500`                                                                       | Optional title font weight (both presentations) |
+
+List style/indent and message spacing come from the shared
+`--ngx-signal-form-error-*` / `--ngx-signal-form-warning-*` tokens in the
+[Error & Warning Messages](#error--warning-messages) table. Panel text has its
+own `--ngx-signal-form-error-panel-color` and
+`--ngx-signal-form-warning-panel-color` overrides so it remains readable on
+the tinted card surfaces.
 
 The light-theme danger defaults follow the current Figma card recipe:
-
-- `--ngx-signal-form-notification-list-padding-inline-start` — default `1.25rem`; bullet/list indent
 
 - text: `#db1818`
 - border: same semantic danger hue at `50%` alpha
 - background: `#fdebeb`
 
-Grouped notifications now animate as a progressive enhancement:
+The panel presentation animates as a progressive enhancement:
 
 - baseline-safe fade/slide/color transitions always apply
 - browsers with `interpolate-size: allow-keywords` also animate the card's block-size between `0` and `auto`
@@ -208,14 +236,49 @@ Grouped notifications now animate as a progressive enhancement:
 
 The border still derives from the semantic danger color by default, while the
 background stays pinned to the Figma light-danger surface. Override
-`--ngx-signal-form-notification-error-bg` when your theme needs a different
+`--ngx-signal-form-error-panel-bg` when your theme needs a different
 surface color.
 
-Notification messages use Figma’s body-2 token by default (`0.875rem` / `1.25rem`),
-while inline errors and hints retain caption sizing (`0.75rem` / `1rem`). Setting
-`--ngx-signal-form-error-font-size` does not affect notifications; override
-`--ngx-signal-form-notification-font-size` and
-`--ngx-signal-form-notification-line-height` to tune grouped cards.
+Panel messages use Figma's body-2 token by default (`0.875rem` / `1.25rem`),
+while inline errors and hints retain caption sizing (`0.75rem` / `1rem`).
+Setting `--ngx-signal-form-error-font-size` does not affect the panel
+presentation; override `--ngx-signal-form-error-panel-font-size` and
+`--ngx-signal-form-error-panel-line-height` to tune grouped cards.
+
+### Error Summary
+
+**Component:** `ngx-form-field-error-summary`
+
+Renders a form-level, clickable list of aggregated validation errors (GOV.UK
+/ WAI error-summary pattern). Each entry is a `<button>` that focuses its
+associated control on click.
+
+| Property                                   | Default   | Description                                                                                                                    |
+| :----------------------------------------- | :-------- | :----------------------------------------------------------------------------------------------------------------------------- |
+| `--ngx-error-summary-border-color`         | `#dc2626` | Card border color                                                                                                              |
+| `--ngx-error-summary-bg`                   | `#fef2f2` | Card background color                                                                                                          |
+| `--ngx-error-summary-label-color`          | `#991b1b` | Optional summary label text color                                                                                              |
+| `--ngx-error-summary-link-color`           | `#b91c1c` | Entry link text color                                                                                                          |
+| `--ngx-error-summary-link-hover-color`     | `#991b1b` | Entry link hover color                                                                                                         |
+| `--ngx-error-summary-link-min-target-size` | `1.5rem`  | Minimum block-size AND inline-size of each entry link — enforces the 24x24px WCAG 2.5.8 target-size minimum in both directions |
+| `--ngx-error-summary-link-padding-inline`  | `0.25rem` | Horizontal padding on each entry link                                                                                          |
+| `--ngx-error-summary-focus-color`          | `#2563eb` | `:focus-visible` outline color on entry links                                                                                  |
+
+`--ngx-error-summary-link-color` defaults to `#b91c1c` (Tailwind red-700)
+rather than the `#dc2626` used for the card border: on the summary's
+`#fef2f2` background, `#dc2626` text resolves to ~4.41:1, just under the
+4.5:1 minimum for 14px text (WCAG 1.4.3 AA); `#b91c1c` resolves to ~5.9:1.
+
+Each entry link keeps `all: unset` for the rest of its reset but sets an
+explicit `display: inline-flex` plus `min-block-size` and `min-inline-size`
+— `all: unset` resets `display` to its initial value (`inline`), and
+`min-height`/`min-block-size`/`min-inline-size` have no effect on
+non-replaced inline elements per spec, so the resulting target would
+silently stay below the WCAG 2.5.8 24x24px minimum without the explicit
+`inline-flex`. Both dimensions are floored (not just block-size) because a
+short or empty `fieldName`/message could otherwise render narrower than
+24px; `justify-content: center` keeps short text centered within the
+enforced minimum width.
 
 ### Character Count
 
@@ -223,17 +286,22 @@ while inline errors and hints retain caption sizing (`0.75rem` / `1rem`). Settin
 
 Displays progress towards a character limit.
 
-| Property                                           | Default                  | Description                                                                         |
-| :------------------------------------------------- | :----------------------- | :---------------------------------------------------------------------------------- |
-| `--ngx-form-field-char-count-font-size`            | `var(--...feedback...)`  | Text size                                                                           |
-| `--ngx-form-field-char-count-line-height`          | `1.25`                   | Line height (char-count uses tighter line-height than the other feedback surfaces)  |
-| `--ngx-form-field-char-count-color-ok`             | `rgba(50, 65, 85, 0.75)` | Neutral state color                                                                 |
-| `--ngx-form-field-char-count-color-warning`        | `#a16207`                | Warning threshold color                                                             |
-| `--ngx-form-field-char-count-color-danger`         | `#db1818`                | Critical threshold color                                                            |
-| `--ngx-form-field-char-count-color-exceeded`       | `#991b1b`                | Limit exceeded color                                                                |
-| `--ngx-form-field-char-count-weight-exceeded`      | `600`                    | Font weight when exceeded                                                           |
-| `--ngx-form-field-char-count-padding-inline-start` | `0`                      | Start-edge padding (asymmetric default keeps the count flush-left under input text) |
-| `--ngx-form-field-char-count-padding-inline-end`   | `0.5rem`                 | End-edge padding (aligns with the wrapper's standard horizontal padding)            |
+| Property                                           | Default                                    | Description                                                                        |
+| :------------------------------------------------- | :----------------------------------------- | :--------------------------------------------------------------------------------- |
+| `--ngx-form-field-char-count-font-size`            | `var(--...feedback...)`                    | Text size                                                                          |
+| `--ngx-form-field-char-count-line-height`          | `1.25`                                     | Line height (char-count uses tighter line-height than the other feedback surfaces) |
+| `--ngx-form-field-char-count-color-ok`             | `rgba(50, 65, 85, 0.75)`                   | Neutral state color                                                                |
+| `--ngx-form-field-char-count-color-warning`        | `#a16207`                                  | Warning threshold color                                                            |
+| `--ngx-form-field-char-count-color-danger`         | `#db1818`                                  | Critical threshold color                                                           |
+| `--ngx-form-field-char-count-color-exceeded`       | `#991b1b`                                  | Limit exceeded color                                                               |
+| `--ngx-form-field-char-count-weight-exceeded`      | `600`                                      | Font weight when exceeded                                                          |
+| `--ngx-form-field-char-count-padding-inline-start` | `var(--...feedback-padding-horizontal...)` | Start-edge padding                                                                 |
+| `--ngx-form-field-char-count-padding-inline-end`   | `var(--...feedback-padding-horizontal...)` | End-edge padding                                                                   |
+
+Both padding tokens fall back to the shared
+`--ngx-signal-form-feedback-padding-horizontal` first — `0.5rem` inside the
+wrapper, where it aligns the count with the input text. Used fully standalone,
+the last-resort fallbacks are `0` (start) and `0.5rem` (end).
 
 ### Assistive Row
 
@@ -241,13 +309,14 @@ Displays progress towards a character limit.
 
 Layout container for hint/error and character count alignment.
 
-| Property                                   | Default                                                  | Description                                           |
-| :----------------------------------------- | :------------------------------------------------------- | :---------------------------------------------------- |
-| `--ngx-form-field-assistive-min-height`    | `--ngx-signal-form-feedback-line-height` (`1rem`)        | Reserved line, prevents layout shift when errors show |
-| `--ngx-form-field-assistive-gap`           | `0.5rem`                                                 | Gap between left and right content                    |
-| `--ngx-form-field-assistive-margin-top`    | `0`                                                      | Spacing above assistive row                           |
-| `--ngx-form-field-assistive-margin-bottom` | `0`                                                      | Spacing below assistive row                           |
-| `--ngx-form-field-assistive-transition`    | `min-height 150ms ease-out, margin-block 150ms ease-out` | Animation for reservation changes                     |
+| Property                                    | Default                                                  | Description                                           |
+| :------------------------------------------ | :------------------------------------------------------- | :---------------------------------------------------- |
+| `--ngx-form-field-assistive-min-height`     | `--ngx-signal-form-feedback-line-height` (`1rem`)        | Reserved line, prevents layout shift when errors show |
+| `--ngx-form-field-assistive-gap`            | `0.5rem`                                                 | Gap between left and right content                    |
+| `--ngx-form-field-assistive-margin-top`     | `0`                                                      | Spacing above assistive row                           |
+| `--ngx-form-field-assistive-margin-bottom`  | `0`                                                      | Spacing below assistive row                           |
+| `--ngx-form-field-assistive-transition`     | `min-height 150ms ease-out, margin-block 150ms ease-out` | Animation for reservation changes                     |
+| `--ngx-form-field-assistive-empty-behavior` | `reserve`                                                | `reserve` (default) or `collapse` — see below         |
 
 #### Reserved space
 
@@ -260,6 +329,16 @@ messages grow the row, which is the only accepted shift. Reservation changes use
 a short 150ms `ease-out` transition; motion is disabled for
 `prefers-reduced-motion`.
 
+The reservation is deliberate, not an oversight: a row that collapses when
+empty shifts the field's layout the instant an error or warning appears,
+which is worse for users tracking focus than a permanently reserved line. An
+earlier PR (#248) advertised a `--ngx-form-field-assistive-empty-display`
+token in its description as the opt-out for this behavior; that token was
+never implemented — the PR reversed the change mid-review and merged with a
+stale description. It does not exist in this package. The supported opt-out
+is `--ngx-form-field-assistive-empty-behavior` (below) or, for most cases,
+setting `--ngx-form-field-assistive-min-height: 0` directly.
+
 Scale or collapse the reserved space per form scope:
 
 ```css
@@ -271,6 +350,33 @@ Scale or collapse the reserved space per form scope:
   --ngx-form-field-assistive-min-height: 0;
 }
 ```
+
+#### Collapsing content-less rows
+
+Whether `--ngx-form-field-assistive-min-height` reserves space unconditionally
+depends on `--ngx-form-field-assistive-empty-behavior`. Under the default,
+`reserve`, `--ngx-form-field-assistive-min-height` always reserves space,
+whether or not the row carries a hint, error, warning or character count —
+for most consumers that is the right default and the simplest override.
+
+Under `collapse`, that changes for the narrower case of a row with **no
+assistive content at all**: it drops to zero height regardless of what
+`--ngx-form-field-assistive-min-height` is set to, while a row that does
+carry content still reserves normally. Reach for
+`--ngx-form-field-assistive-min-height: 0` first; reach for this token only
+when some fields in a form need the reservation and others do not, or when
+the reservation should disappear only in the fully-empty case rather than
+shrinking every row's baseline height.
+
+```css
+.my-compact-form {
+  --ngx-form-field-assistive-empty-behavior: collapse;
+}
+```
+
+Implemented as a CSS container style query (`@container style(...)`), so
+browsers without support simply keep the reserved default — the same
+behavior they already had, not a regression.
 
 ### Fieldset
 
@@ -287,6 +393,8 @@ through an internal token layer plus pseudo-private aliases. In other words:
 
 That keeps default values defined in one place and avoids repeating literal
 fallbacks throughout the stylesheet.
+
+#### Layout & spacing
 
 - `--ngx-signal-form-fieldset-gap` — default `1rem`; spacing between grouped controls
 - `--ngx-signal-form-fieldset-padding` — default `1rem`; inner padding around the surfaced fieldset content
@@ -305,11 +413,13 @@ fallbacks throughout the stylesheet.
 - `--ngx-signal-form-fieldset-danger-surface-bg` — default `var(--ngx-signal-form-fieldset-notification-error-bg)`; base fill for `surfaceTone="danger"`
 - `--ngx-signal-form-fieldset-legend-color` — default `var(--...fieldset-color...)`; legend text color in default state
 - `--ngx-signal-form-fieldset-legend-font-size` — default `0.875rem`; legend font size
+- `--ngx-signal-form-fieldset-legend-font-family` — default `var(--typography-font-family, inherit)`; legend font family
 - `--ngx-signal-form-fieldset-legend-line-height` — default `1.25rem`; legend line height
 - `--ngx-signal-form-fieldset-legend-font-weight` — default `500`; legend font weight
 - `--ngx-signal-form-fieldset-legend-letter-spacing` — default `0`; legend letter spacing
 - `--ngx-signal-form-fieldset-legend-bg` — default `transparent`; legend background that stays separate from the surfaced content
 - `--ngx-signal-form-fieldset-legend-border-radius` — default `0.25rem`; legend background radius
+- `--ngx-signal-form-fieldset-legend-inset-inline-start` — default `0.5rem`; start-edge inset for the projected legend
 - `--ngx-signal-form-fieldset-invalid-border-color` — default `#db1818`; border color when errors are shown
 - `--ngx-signal-form-fieldset-warning-border-color` — default `#a16207`; border color when warnings are shown
 - `--ngx-signal-form-fieldset-invalid-surface-bg` — default `var(--...invalid-bg...)`; error-tinted background below the legend
@@ -345,11 +455,20 @@ fallbacks throughout the stylesheet.
 - `--ngx-signal-form-fieldset-notification-list-padding-inline-start` — default `var(--_feedback-list-indent)`; notification card list indent
 - `--ngx-signal-form-fieldset-notification-error-bg` — grouped notification card background for errors
 - `--ngx-signal-form-fieldset-notification-error-border-color` — grouped notification card border color for errors
-- `--ngx-signal-form-fieldset-notification-error-color` — grouped notification card text color for errors
 - `--ngx-signal-form-fieldset-notification-list-style` — grouped notification card `list-style` shorthand
 - `--ngx-signal-form-fieldset-notification-warning-bg` — grouped notification card background for warnings
 - `--ngx-signal-form-fieldset-notification-warning-border-color` — grouped notification card border color for warnings
-- `--ngx-signal-form-fieldset-notification-warning-color` — grouped notification card text color for warnings
+
+Grouped panel cards use the fieldset notification background, border, and list
+tokens above. Their text color follows the panel-specific
+`--ngx-signal-form-error-panel-color` /
+`--ngx-signal-form-warning-panel-color` tokens; the former
+`--ngx-signal-form-fieldset-notification-error-color` /
+`-warning-color` overrides were removed along with the old split.
+
+The fieldset host also exposes `data-appearance`, `data-feedback-appearance`,
+`data-surface-tone`, `data-validation-surface`, and `data-has-messages`
+attributes for custom CSS hooks.
 
 The fieldset uses two visual layers by design:
 
@@ -385,7 +504,7 @@ flush start alignment** within the fieldset message slot. If you want to indent
 only notification cards, use the dedicated `--ngx-signal-form-fieldset-notification-inset-*`
 tokens instead of the generic grouped-message inset tokens.
 
-### Align a radio-group summary with option labels
+#### Align a radio-group summary with option labels
 
 ```css
 .shipping-method-fieldset {
@@ -398,7 +517,7 @@ That pattern is useful when text-input groups should keep the default inset,
 but radio or checkbox groups need the summary to line up with option labels
 instead of the fieldset edge.
 
-### Distinguish grouped summaries from leaf-level errors
+#### Distinguish grouped summaries from leaf-level errors
 
 ```css
 .credentials-fieldset {
@@ -431,14 +550,14 @@ This component wraps your `label` and `input` to provide layout, borders, and st
 
 The form field wrapper supports three appearance modes via the `appearance` input:
 
-### Standard layout (`appearance="standard"` or default)
+#### Standard layout (`appearance="standard"` or default)
 
 - Label positioned above the input
 - Traditional label-above-field form field design
 - Uses `--ngx-form-field-label-*` properties
 - Uses `--ngx-form-field-input-*` properties
 
-**Outline Layout** (`appearance="outline"`)
+#### Outline layout (`appearance="outline"`)
 
 - Material Design inspired floating label inside border
 - Label sits inside the input container
@@ -446,7 +565,7 @@ The form field wrapper supports three appearance modes via the `appearance` inpu
 - Uses `--ngx-form-field-outline-input-*` properties
 - Requires CSS `:has()` selector (Chrome 105+, Firefox 121+, Safari 15.4+)
 
-**Plain Layout** (`appearance="plain"`)
+#### Plain layout (`appearance="plain"`)
 
 - Keeps wrapper semantics, labels, hints, and errors
 - Removes border and background chrome from the field container
@@ -489,20 +608,22 @@ The form field wrapper supports three appearance modes via the `appearance` inpu
 If the semantic colors aren't enough, you can override specific parts of the component.
 
 > **Layout-Specific Properties:** Properties prefixed with `--ngx-form-field-outline-*` only apply when `appearance="outline"`. Standard layout uses the non-prefixed variants (e.g., `--ngx-form-field-label-*` vs `--ngx-form-field-outline-label-*`).
+>
+> The older `--ngx-form-field-outline-label-font-size` and `--ngx-form-field-outline-input-font-size` names still resolve as legacy aliases for the corresponding `-size` tokens. Prefer the `-size` names in new code.
 
 #### Layout & Spacing
 
 **Applies to both standard and outline layouts.**
 
-| Property                              | Default                                                                           | Description                                                                               |
-| :------------------------------------ | :-------------------------------------------------------------------------------- | :---------------------------------------------------------------------------------------- |
-| `--ngx-form-field-padding-vertical`   | `0.25rem`                                                                         | Vertical padding inside the border                                                        |
-| `--ngx-form-field-padding-horizontal` | `0.5rem`                                                                          | Horizontal padding inside the border                                                      |
-| `--ngx-form-field-input-padding`      | `var(--ngx-form-field-padding-vertical) var(--ngx-form-field-padding-horizontal)` | Combined input padding                                                                    |
-| `--ngx-form-field-radius`             | `0.25rem`                                                                         | Border radius                                                                             |
-| `--ngx-form-field-min-height`         | `3.5rem`                                                                          | Height for outlined variant                                                               |
-| `--ngx-form-field-gap`                | `0.125rem`                                                                        | Gap between label and input                                                               |
-| `--ngx-form-field-margin`             | `1rem`                                                                            | Bottom margin for field wrapper (set to `0` when a grid/flex `gap` already spaces fields) |
+| Property                              | Default                                                                           | Description                                                                                                    |
+| :------------------------------------ | :-------------------------------------------------------------------------------- | :------------------------------------------------------------------------------------------------------------- |
+| `--ngx-form-field-padding-vertical`   | `0.25rem`                                                                         | Vertical padding inside the border                                                                             |
+| `--ngx-form-field-padding-horizontal` | `0.5rem`                                                                          | Horizontal padding inside the border                                                                           |
+| `--ngx-form-field-input-padding`      | `var(--ngx-form-field-padding-vertical) var(--ngx-form-field-padding-horizontal)` | Combined input padding                                                                                         |
+| `--ngx-form-field-radius`             | `0.25rem`                                                                         | Border radius                                                                                                  |
+| `--ngx-form-field-min-height`         | derived (`2.75rem` by default)                                                    | Minimum height of the outlined container: label line-height + label gap + input line-height + vertical padding |
+| `--ngx-form-field-gap`                | `0.125rem`                                                                        | Gap between label and input                                                                                    |
+| `--ngx-form-field-margin`             | `1rem`                                                                            | Bottom margin for field wrapper (set to `0` when a grid/flex `gap` already spaces fields)                      |
 
 #### Prefix & Suffix
 
@@ -587,16 +708,19 @@ attribute (`"required"` / `"optional"` / absent) for additional styling hooks.
 
 **Applies to both standard and outline layouts.**
 
-| Property                              | Default                                                               | Description          |
-| :------------------------------------ | :-------------------------------------------------------------------- | :------------------- |
-| `--ngx-form-field-focus-color`        | `var(--ngx-form-field-color-primary)`                                 | Focus border color   |
-| `--ngx-form-field-focus-box-shadow`   | `0 0 0 4px color-mix(in srgb, var(--focus-color) 25%, transparent)`   | Focus ring           |
-| `--ngx-form-field-hover-border-color` | `var(--ngx-form-field-color-border-hover)`                            | Hover border color   |
-| `--ngx-form-field-invalid-color`      | `var(--ngx-form-field-color-error)`                                   | Invalid border color |
-| `--ngx-form-field-warning-color`      | `var(--ngx-form-field-color-warning)`                                 | Warning border color |
-| `--ngx-form-field-warning-box-shadow` | `0 0 0 4px color-mix(in srgb, var(--warning-color) 25%, transparent)` | Warning ring         |
-| `--ngx-form-field-disabled-bg`        | `var(--ngx-form-field-color-disabled)`                                | Disabled background  |
-| `--ngx-form-field-disabled-opacity`   | `0.6`                                                                 | Disabled opacity     |
+| Property                                | Default                                                               | Description                                                                           |
+| :-------------------------------------- | :-------------------------------------------------------------------- | :------------------------------------------------------------------------------------ |
+| `--ngx-form-field-focus-color`          | `var(--ngx-form-field-color-primary)`                                 | Focus border color                                                                    |
+| `--ngx-form-field-focus-box-shadow`     | `0 0 0 4px color-mix(in srgb, var(--focus-color) 25%, transparent)`   | Focus ring                                                                            |
+| `--ngx-form-field-hover-border-color`   | `var(--ngx-form-field-color-border-hover)`                            | Hover border color                                                                    |
+| `--ngx-form-field-invalid-color`        | `var(--ngx-form-field-color-error)`                                   | Invalid border color                                                                  |
+| `--ngx-form-field-warning-color`        | `var(--ngx-form-field-color-warning)`                                 | Warning border color                                                                  |
+| `--ngx-form-field-warning-box-shadow`   | `0 0 0 4px color-mix(in srgb, var(--warning-color) 25%, transparent)` | Warning ring                                                                          |
+| `--ngx-form-field-disabled-bg`          | `var(--ngx-form-field-color-disabled)`                                | Disabled background                                                                   |
+| `--ngx-form-field-disabled-opacity`     | `0.6`                                                                 | Disabled opacity                                                                      |
+| `--ngx-form-field-state-ring-opacity`   | `25%`                                                                 | Opacity of the color-mix focus/invalid/warning ring (registered via `@property`)      |
+| `--ngx-form-field-hover-state-opacity`  | `6%`                                                                  | Hover tint on interactive prefix/suffix buttons (registered via `@property`)          |
+| `--ngx-form-field-active-state-opacity` | `10%`                                                                 | Active/pressed tint on interactive prefix/suffix buttons (registered via `@property`) |
 
 ### Horizontal Layout
 
@@ -627,7 +751,7 @@ Orientation changes a single field wrapper only. Parent form layouts stay under
 consumer control, so multi-column grids can stay as-is or collapse to one field
 row per line when a page wants the extra horizontal breathing room.
 
-### Wider aligned label column example
+#### Wider aligned label column example
 
 ```css
 ngx-form-field-wrapper {
@@ -655,14 +779,15 @@ Grouped radios and grouped checkboxes that live inside
 These wrappers keep normal inline feedback placement, but swap the usual border
 state for a surfaced background when invalid or warning.
 
-| Property                                      | Default                                                      | Description                                  |
-| :-------------------------------------------- | :----------------------------------------------------------- | :------------------------------------------- |
-| `--ngx-form-field-selection-group-gap`        | `0.75rem`                                                    | Vertical gap between grouped options         |
-| `--ngx-form-field-selection-group-padding`    | `1rem`                                                       | Inner padding of the grouped control surface |
-| `--ngx-form-field-selection-group-radius`     | `0.25rem`                                                    | Border radius of the grouped control surface |
-| `--ngx-form-field-selection-group-bg`         | `transparent`                                                | Base surface background                      |
-| `--ngx-form-field-selection-group-invalid-bg` | `color-mix(in srgb, var(--_invalid-color) 12%, transparent)` | Invalid surface background                   |
-| `--ngx-form-field-selection-group-warning-bg` | `color-mix(in srgb, var(--_warning-color) 12%, transparent)` | Warning surface background                   |
+| Property                                      | Default                                                      | Description                                                                                   |
+| :-------------------------------------------- | :----------------------------------------------------------- | :-------------------------------------------------------------------------------------------- |
+| `--ngx-form-field-selection-group-gap`        | `0.75rem`                                                    | Vertical gap between grouped options                                                          |
+| `--ngx-form-field-selection-group-padding`    | `0.75rem`                                                    | Inner padding of the grouped control surface                                                  |
+| `--ngx-form-field-selection-group-radius`     | `0.25rem`                                                    | Border radius of the grouped control surface                                                  |
+| `--ngx-form-field-selection-group-bg`         | `transparent`                                                | Base surface background                                                                       |
+| `--ngx-form-field-selection-group-invalid-bg` | `color-mix(in srgb, var(--_invalid-color) 12%, transparent)` | Invalid surface background                                                                    |
+| `--ngx-form-field-selection-group-warning-bg` | `color-mix(in srgb, var(--_warning-color) 12%, transparent)` | Warning surface background                                                                    |
+| `--ngx-form-field-touch-target`               | `2rem`                                                       | Row hit-target size for checkbox, switch, and padded rows — see "Selection target size" below |
 
 Example:
 
@@ -670,6 +795,64 @@ Example:
 .delivery-method-wrapper {
   --ngx-form-field-selection-group-padding: 1rem;
   --ngx-form-field-selection-group-invalid-bg: #fce2e2;
+}
+```
+
+### Selection target size
+
+Checkbox rows, switch rows, and padded custom controls all size their
+interaction area from one shared token: `--_field-touch-target`, default
+`2rem` (32px). It now resolves through a public custom property so a
+consumer can retune density from any ancestor scope:
+
+```css
+--_field-touch-target: var(--ngx-form-field-touch-target, 2rem);
+```
+
+See `--ngx-form-field-touch-target` in the property table above.
+
+**Why 32px, not 24px.** WCAG 2.2 SC 2.5.8 Target Size (Minimum), Level AA,
+requires **24×24 CSS px**. SC 2.5.5 Target Size (Enhanced), Level AAA,
+requires **44×44**. 32px is not a WCAG figure at either level — it is the
+24px AA floor plus deliberate headroom, so a border or a sub-pixel rounding
+error cannot drop the rendered box under the AA minimum. It stays below the
+44px AAA bar; a consumer that wants AAA-level targets sets
+`--ngx-form-field-touch-target: 2.75rem` (44px) explicitly.
+
+**Overriding below 24px forfeits SC 2.5.8.** The token has no built-in
+floor — setting it under `1.5rem` (24px) renders a control that fails the
+WCAG 2.2 AA target-size criterion. That is a valid choice for a density
+mode a product accepts responsibility for, not a toolkit default.
+
+**One shared token, not a selection-only sibling.** The switch row renders
+through the same `--_selection-row-min-block-size` derivation as checkbox
+and selection-group rows and therefore keeps a WCAG-2.2-AA-compliant
+height by default too — a padded custom control has the same touch-target
+problem as a checkbox, so it intentionally is not split into a separate
+token.
+
+**Ownership boundary.** The wrapper guarantees the interaction area of its
+own rows (checkbox, switch, selection-group). Projected group containers,
+`<legend>` elements, and `<fieldset>` markup sit outside the wrapper's
+style encapsulation and are consumer-owned — the consumer applies its own
+sizing and spacing at the app level, the same way it owns
+`--ngx-form-field-selection-group-gap` layout above. `--ngx-form-field-touch-target`
+does not reach into that projected composition.
+
+**Radio rows are consumer-owned too, including a lone radio.** Every
+`<input type="radio">` resolves to the `radio-group` control kind, which
+always renders through the wrapper's selection-cluster layout — the same
+projected, consumer-owned composition described above — regardless of
+whether the radio is actually grouped with siblings. `--ngx-form-field-touch-target`
+does not drive a radio row's height. Where a lone radio's row still measures
+above the 24px AA floor by default, that comes from the selection-cluster's
+own padding token, not from this touch-target contract; a consumer building
+a custom radio-group layout owns its row sizing directly, the same way the
+demo's own grouped-radio composition does.
+
+```css
+.compact-form {
+  --ngx-form-field-touch-target: 1.5rem; /* 24px — AA floor, no headroom */
 }
 ```
 
@@ -710,11 +893,21 @@ ngx-form-field-wrapper {
 
 ### Scenario C: Dark Mode
 
-The components use `prefers-color-scheme` as the default signal, and also
-support explicit class-based theming such as `html.dark` / `html.light`.
+The wrapper and fieldset use `prefers-color-scheme` as the default signal, and
+also support explicit class-based theming such as `html.dark` / `html.light`.
 Manual app theme selection should win over OS/browser preference, but only
 when the user has actively chosen one — an absent class should defer back
 to `prefers-color-scheme`.
+
+> [!NOTE]
+> The standalone feedback components (`ngx-form-field-error` in either inline
+> or panel presentation, hints, character count) follow
+> `prefers-color-scheme` only. Class-based ancestor theming is not detectable
+> reliably across browsers from plain component CSS, so a class-driven dark
+> mode should also map its dark tokens onto the public
+> `--ngx-signal-form-error-*`, `--ngx-signal-form-warning-*`,
+> `--ngx-signal-form-error-panel-*`,
+> `--ngx-signal-form-warning-panel-*`, hint, and character-count variables.
 
 If your app has a manual toggle, use this pattern:
 

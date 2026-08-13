@@ -22,11 +22,12 @@ jobs:
       contents: read
     steps:
       - name: Checkout code
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           fetch-depth: 1
+          persist-credentials: false
       - name: Run agent
-        uses: pullfrog/pullfrog@f0a91ff48ac74ee1ecd46fb02774fef9a10e4024 # v0.1.32
+        uses: pullfrog/pullfrog@9397c1a891ef1fb961807498e12d2891bcd934a7 # v0.1.53
         with:
           prompt: ${{ inputs.prompt }}
         # Provider keys live in the Pullfrog dashboard (encrypted).

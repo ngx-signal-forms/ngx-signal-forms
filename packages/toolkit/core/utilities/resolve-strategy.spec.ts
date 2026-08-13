@@ -1,24 +1,32 @@
 import { signal } from '@angular/core';
 import { describe, expect, it } from 'vitest';
-import type { ResolvedErrorDisplayStrategy, SubmittedStatus } from '../types';
+import type {
+  ResolvedErrorDisplayStrategy,
+  ResolvedWarningDisplayStrategy,
+  SubmittedStatus,
+} from '../types';
 import type { NgxSignalFormContext } from '../directives/ngx-signal-form';
 import {
   resolveErrorDisplayStrategy,
   resolveStrategyFromContext,
   resolveSubmittedStatusFromContext,
+  resolveWarningStrategy,
+  resolveWarningStrategyFromContext,
 } from './resolve-strategy';
 
 function createMockFormContext(
   overrides: Partial<{
-    errorStrategy: ResolvedErrorDisplayStrategy;
-    submittedStatus: SubmittedStatus;
+    errorStrategy: ResolvedErrorDisplayStrategy | undefined;
+    warningStrategy: ResolvedWarningDisplayStrategy | undefined;
+    submittedStatus: SubmittedStatus | undefined;
   }> = {},
 ): NgxSignalFormContext {
   return {
     form: (() => ({})) as NgxSignalFormContext['form'],
-    errorStrategy: signal(overrides.errorStrategy ?? 'on-touch'),
-    submittedStatus: signal(overrides.submittedStatus ?? 'unsubmitted'),
-  };
+    errorStrategy: signal(overrides.errorStrategy),
+    warningStrategy: signal(overrides.warningStrategy),
+    submittedStatus: signal(overrides.submittedStatus),
+  } as unknown as NgxSignalFormContext;
 }
 
 describe('resolveErrorDisplayStrategy', () => {
@@ -115,5 +123,88 @@ describe('resolveSubmittedStatusFromContext', () => {
     expect(
       resolveSubmittedStatusFromContext(undefined, undefined),
     ).toBeUndefined();
+  });
+});
+
+describe('resolveWarningStrategy', () => {
+  it('should return input strategy when explicitly set', () => {
+    expect(resolveWarningStrategy('immediate', 'on-touch', 'on-submit')).toBe(
+      'immediate',
+    );
+    expect(resolveWarningStrategy('on-submit', 'on-touch')).toBe('on-submit');
+    expect(resolveWarningStrategy('on-touch')).toBe('on-touch');
+  });
+
+  it('should skip inherit and fall through to context', () => {
+    expect(resolveWarningStrategy('inherit', 'on-submit')).toBe('on-submit');
+  });
+
+  it('should skip null and fall through to context', () => {
+    expect(resolveWarningStrategy(null, 'immediate')).toBe('immediate');
+  });
+
+  it('should skip undefined and fall through to context', () => {
+    expect(resolveWarningStrategy(undefined, 'on-submit')).toBe('on-submit');
+  });
+
+  it('should fall through to config default when context is null', () => {
+    expect(resolveWarningStrategy(null, null, 'on-submit')).toBe('on-submit');
+  });
+
+  it('should fall through to config default when context is undefined', () => {
+    expect(resolveWarningStrategy(undefined, undefined, 'immediate')).toBe(
+      'immediate',
+    );
+  });
+
+  it('should return on-touch as ultimate fallback', () => {
+    expect(resolveWarningStrategy()).toBe('on-touch');
+    expect(resolveWarningStrategy(null, null, null)).toBe('on-touch');
+  });
+
+  it('should have independent terminal from error strategy', () => {
+    // This ensures that changing the error terminal does not affect warnings
+    // Even if error strategy fallback changed, warning should stay 'on-touch'
+    expect(resolveWarningStrategy()).toBe('on-touch');
+  });
+});
+
+describe('resolveWarningStrategyFromContext', () => {
+  it('should prefer explicit input strategy', () => {
+    const context = createMockFormContext({ warningStrategy: 'on-submit' });
+    expect(resolveWarningStrategyFromContext('immediate', context)).toBe(
+      'immediate',
+    );
+  });
+
+  it('should fall back to form context warning strategy', () => {
+    const context = createMockFormContext({ warningStrategy: 'on-submit' });
+    expect(resolveWarningStrategyFromContext(undefined, context)).toBe(
+      'on-submit',
+    );
+  });
+
+  it('should fall back to config default when no context', () => {
+    expect(
+      resolveWarningStrategyFromContext(undefined, undefined, 'immediate'),
+    ).toBe('immediate');
+  });
+
+  it('should return on-touch when nothing is provided', () => {
+    expect(resolveWarningStrategyFromContext()).toBe('on-touch');
+  });
+
+  it('should handle inherit input by falling through to context', () => {
+    const context = createMockFormContext({ warningStrategy: 'on-submit' });
+    expect(resolveWarningStrategyFromContext('inherit', context)).toBe(
+      'on-submit',
+    );
+  });
+
+  it('should fall through to config default when context has no warning strategy', () => {
+    const context = createMockFormContext({ warningStrategy: undefined });
+    expect(
+      resolveWarningStrategyFromContext(undefined, context, 'on-submit'),
+    ).toBe('on-submit');
   });
 });

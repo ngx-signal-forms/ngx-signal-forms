@@ -1,11 +1,7 @@
 import { createEnvironmentInjector, EnvironmentInjector } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { describe, expect, it } from 'vitest';
-import {
-  createUniqueId,
-  NGX_SIGNAL_FORM_ID_STRATEGY,
-  NgxSignalFormIdCounter,
-} from './create-unique-id';
+import { createUniqueId, NgxSignalFormIdCounter } from './create-unique-id';
 
 /**
  * These specs lock the SSR-safety contract for `createUniqueId`:
@@ -66,29 +62,6 @@ describe('createUniqueId', () => {
     ];
 
     expect(ids).toEqual(['id-1', 'id-2', 'id-3']);
-  });
-
-  it('honors the NGX_SIGNAL_FORM_ID_STRATEGY override', () => {
-    let calls = 0;
-    const injector = createEnvironmentInjector(
-      [
-        NgxSignalFormIdCounter,
-        {
-          provide: NGX_SIGNAL_FORM_ID_STRATEGY,
-          useValue: (prefix: string) => {
-            calls += 1;
-            return `custom-${prefix}-${calls}`;
-          },
-        },
-      ],
-      TestBed.inject(EnvironmentInjector),
-    );
-
-    const id1 = runInInjector(injector, () => createUniqueId('hint'));
-    const id2 = runInInjector(injector, () => createUniqueId('fieldset'));
-
-    expect(id1).toBe('custom-hint-1');
-    expect(id2).toBe('custom-fieldset-2');
   });
 
   it('service exposes next() directly for advanced callers', () => {

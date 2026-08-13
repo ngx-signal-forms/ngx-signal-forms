@@ -71,3 +71,7 @@ build.log
 
 # graphify knowledge graph output
 graphify-out/
+
+# Vitest browser-mode failure artifacts (regenerated on every failing run)
+**/__screenshots__/
+**/.vitest-attachments/

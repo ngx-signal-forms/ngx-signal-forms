@@ -2,24 +2,23 @@ import {
   afterEveryRender,
   Component,
   computed,
+  effect,
   inject,
   input,
-  isDevMode,
 } from '@angular/core';
 import type { FieldTree, ValidationError } from '@angular/forms/signals';
 import {
-  injectFormContext,
   NGX_SIGNAL_FORM_FIELD_CONTEXT,
-  NGX_SIGNAL_FORMS_CONFIG,
-  resolveStrategyFromContext,
-  showErrors,
+  NGX_SIGNAL_FORM_FIELD_VISIBILITY_REGISTRY,
   unwrapValue,
   type ErrorDisplayStrategy,
   type ResolvedErrorDisplayStrategy,
 } from '@ngx-signal-forms/toolkit';
 import {
   createFieldMessageIdSignals,
+  devWarnOnce,
   resolveFieldNameFromCandidates,
+  type WarnOnceRef,
 } from '@ngx-signal-forms/toolkit/core';
 import {
   createErrorMessageSignal,
@@ -32,6 +31,19 @@ export type NgxFormFieldListStyle = 'plain' | 'bullets';
  * @deprecated Use {@link NgxFormFieldListStyle} instead.
  */
 export type NgxFormFieldErrorListStyle = NgxFormFieldListStyle;
+
+/**
+ * Visual treatment for the rendered live regions.
+ *
+ * - `'inline'` (default) — bare messages under a single control, no card
+ *   chrome. The shape `NgxFormFieldWrapper` and per-field usage render.
+ * - `'panel'` — a bordered, padded card with its own theme tokens
+ *   (`--ngx-signal-form-error-panel-*`). For grouped fieldset feedback and
+ *   custom summary blocks — what `NgxFormFieldNotification` used to render
+ *   as a standalone component, folded here as a presentation mode instead
+ *   (pre-1.0, no alias kept — see `docs/migrations/`).
+ */
+export type NgxFormFieldErrorPresentation = 'inline' | 'panel';
 
 /**
  * Reusable error and warning display component with WCAG 2.2 compliance.
@@ -47,8 +59,11 @@ export type NgxFormFieldErrorListStyle = NgxFormFieldListStyle;
  *
  * - Template rendering (live regions, list/paragraph layouts)
  * - `fieldName` resolution from `NGX_SIGNAL_FORM_FIELD_CONTEXT` (parent wrapper)
- * - `warningStrategy` with its `'immediate'` default
  * - `listStyle` for visual layout choice
+ *
+ * `strategy` and `warningStrategy` are *forwarded* to the headless directive,
+ * not redeclared here — the two cascades resolve in one place. See
+ * `NgxHeadlessErrorState.warningStrategy` for the warning cascade.
  *
  * ## Bridge pattern for `formField`
  *
@@ -62,7 +77,7 @@ export type NgxFormFieldErrorListStyle = NgxFormFieldListStyle;
  * `FormField`'s pass-through check) and bridge it to `NgxHeadlessErrorState`
  * by calling `headless.connectFieldState(computed(() => formField()?.()))`
  * in the constructor. The headless directive uses this bridged signal for
- * strategy-based `showErrors` and error-split computation.
+ * strategy-based `shouldShowErrors` and error-split computation.
  *
  * ## Signal Forms Limitation: No Native Warning Support
  *
@@ -91,7 +106,7 @@ export type NgxFormFieldErrorListStyle = NgxFormFieldListStyle;
  * Features:
  * - **Errors**: `role="alert"` (implies `aria-live="assertive"` + `aria-atomic="true"`)
  * - **Warnings**: `role="status"` (implies `aria-live="polite"` + `aria-atomic="true"`)
- * - Strategy-aware error/warning display — warnings default to `'immediate'`
+ * - Strategy-aware error/warning display — warnings follow their own cascade
  *   so informational feedback stays visible; override via `warningStrategy`
  * - Structured rendering from Signal Forms
  * - Auto-generated IDs for aria-describedby linking
@@ -109,12 +124,17 @@ export type NgxFormFieldErrorListStyle = NgxFormFieldListStyle;
     // (which stay off the inner containers for the WCAG 4.1.3 reasons
     // documented on the template).
     '[class.ngx-form-field-error-host--empty]': 'hostEmpty()',
+    '[attr.data-presentation]': 'presentation()',
   },
   hostDirectives: [
     {
       directive: NgxHeadlessErrorState,
       inputs: [
         'strategy',
+        // Warnings resolve on their own cascade: this input → form context
+        // `warningStrategy()` → `defaultWarningStrategy` → `'on-touch'`.
+        // No tier consults `defaultErrorStrategy`.
+        'warningStrategy',
         'submittedStatus',
         // `errorsOverride` exposed as `errors` for direct-errors mode
         // (e.g. NgxFormFieldset.filteredErrorsSignal).
@@ -151,6 +171,10 @@ export type NgxFormFieldErrorListStyle = NgxFormFieldListStyle;
       role="alert"
     >
       @if (errorContainerVisible()) {
+        @if (title()) {
+          <p class="ngx-form-field-error__title">{{ title() }}</p>
+        }
+
         @if (usesBulletList()) {
           <ul class="ngx-form-field-error__list" role="list">
             @for (
@@ -192,6 +216,10 @@ export type NgxFormFieldErrorListStyle = NgxFormFieldListStyle;
       role="status"
     >
       @if (warningContainerVisible()) {
+        @if (title()) {
+          <p class="ngx-form-field-error__title">{{ title() }}</p>
+        }
+
         @if (usesBulletList()) {
           <ul class="ngx-form-field-error__list" role="list">
             @for (
@@ -231,21 +259,6 @@ export class NgxFormFieldError {
   protected readonly headless = inject(NgxHeadlessErrorState);
 
   /**
-   * Form context is needed here for the warning-strategy computation,
-   * which is an assistive-layer concern not shared with the headless directive.
-   */
-  readonly #injectedContext = injectFormContext();
-
-  /**
-   * Global toolkit config, needed for the same reason: the warning-strategy
-   * cascade below must fall back to `NGX_SIGNAL_FORMS_CONFIG.defaultErrorStrategy`
-   * exactly like `NgxHeadlessErrorState.#resolvedStrategy` does for blocking
-   * errors, so a standalone `ngx-form-field-error` (no `[ngxSignalForm]` host)
-   * still honours `provideNgxSignalFormsConfig({ defaultErrorStrategy })`.
-   */
-  readonly #config = inject(NGX_SIGNAL_FORMS_CONFIG, { optional: true });
-
-  /**
    * Try to inject field context (optional - provided by form field wrapper).
    * Used to automatically resolve field name when not explicitly provided.
    */
@@ -254,10 +267,25 @@ export class NgxFormFieldError {
   });
 
   /**
+   * Field-visibility registry contributed by the nearest `[ngxSignalForm]`
+   * host, if any. Lets a standalone (wrapper-less) instance of this
+   * component publish its own resolved `errorContainerVisible()` /
+   * `warningContainerVisible()` so `NgxSignalFormAutoAria` — which has no
+   * other channel to a sibling error component's field-level `strategy`/
+   * `warningStrategy` overrides — can keep `aria-describedby` in lockstep.
+   * `null` when there is no `[ngxSignalForm]` ancestor (registration is a
+   * no-op in that case).
+   */
+  readonly #visibilityRegistry = inject(
+    NGX_SIGNAL_FORM_FIELD_VISIBILITY_REGISTRY,
+    { optional: true },
+  );
+
+  /**
    * One-shot guard so the "missing field name" dev error fires at most once
    * per component instance.
    */
-  #warnedMissingName = false;
+  readonly #warnedMissingName: WarnOnceRef = { current: false };
 
   /**
    * The Signal Forms field to observe for errors and strategy-based visibility.
@@ -279,16 +307,6 @@ export class NgxFormFieldError {
   readonly fieldName = input<string>();
 
   /**
-   * Warning display strategy for this specific field.
-   *
-   * Warnings default to `'immediate'` so non-blocking guidance stays
-   * visible even while errors are gated by `'on-touch'` or `'on-submit'`.
-   *
-   * @default `'immediate'`
-   */
-  readonly warningStrategy = input<ErrorDisplayStrategy | undefined>();
-
-  /**
    * Visual layout for rendered validation messages.
    *
    * - `plain` (default): stacked paragraph messages for inline field feedback
@@ -297,20 +315,34 @@ export class NgxFormFieldError {
   readonly listStyle = input<NgxFormFieldListStyle>('plain');
 
   /**
+   * Optional title rendered above the message list when a container is
+   * visible. Additive to both presentation modes; most useful in
+   * `presentation="panel"`, where the folded-in `NgxFormFieldNotification`
+   * used it for grouped fieldset feedback and custom summary cards.
+   */
+  readonly title = input<string | null | undefined>();
+
+  /**
+   * Visual treatment for the rendered live regions — see
+   * {@link NgxFormFieldErrorPresentation}.
+   */
+  readonly presentation = input<NgxFormFieldErrorPresentation>('inline');
+
+  /**
    * Reactive accessor to the underlying field state, derived from the same
    * `[formField]` input the headless directive consumes. Used to drive the
    * `createErrorMessageSignal()` calls below so the in-tree wrapper and any
    * external headless consumer share one resolution code path.
    *
-   * Override precedence matches `NgxHeadlessErrorState.showErrors`: when the
-   * host binds `[errors]`/`errorsOverride`, synthesise a minimal field-state
-   * shape from the override signal so the primitive's `createErrorVisibility`
-   * cascade short-circuits to "visible" and `readDirectErrors` finds the
-   * override entries. Only when no override is supplied do we fall through
-   * to the `[formField]` input. Reversing this order would let the alert
-   * container go visible (driven by `headless.showErrors`, which checks
-   * `errorsOverride` first) while `resolvedErrors()` read messages from
-   * `formField` instead.
+   * Override precedence matches `NgxHeadlessErrorState.shouldShowErrors`:
+   * when the host binds `[errors]`/`errorsOverride`, synthesise a minimal
+   * field-state shape from the override signal so the primitive's
+   * `createErrorVisibility` cascade short-circuits to "visible" and
+   * `readDirectErrors` finds the override entries. Only when no override is
+   * supplied do we fall through to the `[formField]` input. Reversing this
+   * order would let the alert container go visible (driven by
+   * `headless.shouldShowErrors`, which checks `errorsOverride` first) while
+   * `resolvedErrors()` read messages from `formField` instead.
    */
   readonly #fieldStateAccessor = computed(() => {
     const rawOverride = this.headless.errorsOverride();
@@ -351,24 +383,50 @@ export class NgxFormFieldError {
 
   constructor() {
     // Bridge the `formField` class input to the headless directive so it can
-    // compute strategy-based showErrors and split errors/warnings.
+    // compute strategy-based shouldShowErrors and split errors/warnings.
     // Cannot use `hostDirectives` input forwarding for `formField` because
     // Angular's FormField directive has selector `[formField]` and would try
     // to apply to this component, losing the `passThroughInput` guard.
     this.headless.connectFieldState(computed(() => this.formField()?.()));
 
     afterEveryRender(() => {
-      if (
-        isDevMode() &&
-        !this.#warnedMissingName &&
-        this.#resolvedFieldName() === null
-      ) {
-        this.#warnedMissingName = true;
-        // oxlint-disable-next-line no-console -- dev-mode misconfiguration signal
-        console.error(
+      if (this.#resolvedFieldName() === null) {
+        devWarnOnce(
+          this.#warnedMissingName,
+          'error',
           '[ngx-signal-forms] ngx-form-field-error requires an explicit `fieldName` input or a parent ngx-form-field-wrapper context. The component will render without id/aria-describedby linking until one is provided.',
         );
       }
+    });
+
+    // Publishes this instance's resolved visibility into
+    // `NGX_SIGNAL_FORM_FIELD_VISIBILITY_REGISTRY` whenever the resolved
+    // field name changes, and unregisters on the field name changing away
+    // or on destroy. A no-op when no registry is present (no
+    // `[ngxSignalForm]` ancestor) or no field name resolves — mirrors the
+    // dev-mode "missing field name" guard above by simply not registering
+    // rather than registering under a synthetic key.
+    //
+    // Registers `errorContainerVisible`/`warningContainerVisible`
+    // themselves — the exact booleans that gate this component's
+    // `[attr.id]` bindings — rather than a strategy for the registry's
+    // readers to re-resolve, so the published value always matches what is
+    // actually rendered.
+    effect((onCleanup) => {
+      const registry = this.#visibilityRegistry;
+      const fieldName = this.#resolvedFieldName();
+
+      if (!registry || fieldName === null) {
+        return;
+      }
+
+      const unregister = registry.register({
+        fieldName,
+        errorContainerVisible: this.errorContainerVisible,
+        warningContainerVisible: this.warningContainerVisible,
+      });
+
+      onCleanup(unregister);
     });
   }
 
@@ -383,38 +441,11 @@ export class NgxFormFieldError {
   protected readonly errorId = this.#fieldMessageIds.errorId;
   protected readonly warningId = this.#fieldMessageIds.warningId;
 
-  // ── Warning strategy ──────────────────────────────────────────────────
-  readonly #resolvedWarningStrategy = computed<ResolvedErrorDisplayStrategy>(
-    () => {
-      const explicit = this.warningStrategy();
-      if (explicit !== undefined) {
-        return resolveStrategyFromContext(
-          explicit,
-          this.#injectedContext,
-          this.#config?.defaultErrorStrategy,
-        );
-      }
-      return 'immediate';
-    },
-  );
-
   /**
-   * Warning visibility uses `formField` directly (the class input) and the
-   * headless's resolved submitted status, so warnings stay independent of
-   * the error strategy while still sharing the same submission state.
+   * Warning visibility now uses the headless directive's shouldShowWarnings
+   * which follows the warning-specific strategy cascade, independent of errors.
    */
-  readonly #warningFieldState = computed(() => this.formField()?.());
-
-  readonly #showWarningsByStrategy = showErrors(
-    this.#warningFieldState,
-    this.#resolvedWarningStrategy,
-    this.headless.resolvedSubmittedStatus,
-  );
-
-  protected readonly showWarnings = computed(() => {
-    if (!this.formField()) return true;
-    return this.#showWarningsByStrategy();
-  });
+  protected readonly showWarnings = this.headless.shouldShowWarnings;
 
   // ── Visibility ────────────────────────────────────────────────────────
   protected readonly usesBulletList = computed(
@@ -486,7 +517,7 @@ export class NgxFormFieldError {
   /**
    * Blocking errors, resolved through the public {@link createErrorMessageSignal}
    * primitive. The strategy and submitted-status inputs are forwarded so the
-   * primitive's visibility cascade matches the directive's `showErrors` —
+   * primitive's visibility cascade matches the directive's `shouldShowErrors` —
    * `errorContainerVisible` still gates rendering, so an empty list during
    * hidden states is a no-op.
    */

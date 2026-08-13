@@ -66,16 +66,30 @@ export const NGX_FIELD_LABEL_RESOLVER = new InjectionToken<FieldLabelResolver>(
  *
  * For dynamic resolution (i18n libraries, locale-aware logic), pass a
  * factory function. The factory runs in an injection context so you can
- * call `inject()`.
+ * call `inject()`. The factory itself runs once, at injection — but the
+ * *resolver it returns* is called on every render, so a runtime language
+ * switch works only if the resolver reads a reactive language signal.
+ * Calling `translate.instant()` alone reads nothing reactive:
  *
  * ```typescript
+ * import { toSignal } from '@angular/core/rxjs-interop';
+ *
  * provideFieldLabels(() => {
  *   const translate = inject(TranslateService);
- *   return (fieldPath) => translate.instant(`fields.${fieldPath}`) || humanizeFieldPath(fieldPath);
+ *   const lang = toSignal(translate.onLangChange, { initialValue: null });
+ *
+ *   return (fieldPath) => {
+ *     lang(); // reactive dependency — re-renders on language switch
+ *     return translate.instant(`fields.${fieldPath}`) || humanizeFieldPath(fieldPath);
+ *   };
  * })
  * ```
  *
  * ### With `@angular/localize`
+ *
+ * `$localize` is build-time, not runtime — one build per locale
+ * (`ng build --localize`), no in-page language switching. Use it only with
+ * the static (non-factory) form:
  *
  * ```typescript
  * provideFieldLabels({

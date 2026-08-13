@@ -3,10 +3,10 @@ import type { FieldTree } from '@angular/forms/signals';
 import { assertInjector } from './assert-injector';
 import { resolveFieldName } from './field-resolution';
 import { injectFormContext } from './inject-form-context';
-import { isFieldTree } from './walk-field-tree';
+import { isFieldTreeLike } from './walk-field-tree';
 
 // Real `FieldTree` nodes are callable (`typeof` is `'function'`, not
-// `'object'`) — see `isFieldTree` in `walk-field-tree.ts`, which requires
+// `'object'`) — see `isFieldTreeLike` in `walk-field-tree.ts`, which requires
 // every node to be invokable in order to read its `FieldState`. A guard that
 // only accepted `'object'` would reject `formInstance` itself on the very
 // first path segment for any real form, since the form root is a
@@ -26,7 +26,7 @@ const isNavigable = (value: unknown): value is Record<string, unknown> =>
  * @param injector - Optional injector for use outside injection context
  * @returns The resolved `FieldTree<TValue>` from the form
  * @throws Error if field cannot be resolved, the resolved value does not
- *   satisfy the runtime `FieldTree` contract (see `isFieldTree`), or form
+ *   satisfy the runtime `FieldTree` contract (see `isFieldTreeLike`), or form
  *   context is not found
  *
  * @remarks
@@ -80,9 +80,12 @@ export function injectFieldControl<TValue = unknown>(
     const fieldName = resolveFieldName(htmlElement);
 
     if (!fieldName) {
+      // SECURITY: Include only safe element properties in error message to avoid
+      // leaking potentially sensitive DOM information in error logs
+      const elementInfo = `${htmlElement.tagName.toLowerCase()}${htmlElement.id ? '#' + htmlElement.id : ''}`;
       throw new Error(
         '[ngx-signal-forms] injectFieldControl() could not resolve field name from element. ' +
-          `Element: ${htmlElement.outerHTML}`,
+          `Element: <${elementInfo}>`,
       );
     }
 
@@ -102,7 +105,7 @@ export function injectFieldControl<TValue = unknown>(
       control = control[part];
     }
 
-    if (!isFieldTree(control)) {
+    if (!isFieldTreeLike(control)) {
       throw new Error(
         `[ngx-signal-forms] Field "${fieldName}" not found in form. ` +
           `Resolved value does not satisfy the FieldTree contract.`,

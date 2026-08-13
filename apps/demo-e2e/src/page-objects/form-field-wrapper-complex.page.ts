@@ -137,9 +137,7 @@ export class FormFieldWrapperComplexPage extends BaseFormPage {
   get credentialsFieldsetErrorList(): Locator {
     return this.credentialsFieldset
       .locator('.ngx-signal-form-fieldset__messages')
-      .locator(
-        '.ngx-form-field-notification__list, .ngx-form-field-error__list',
-      )
+      .locator('.ngx-form-field-error__list')
       .first();
   }
 

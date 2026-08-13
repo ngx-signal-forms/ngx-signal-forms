@@ -33,9 +33,11 @@ For ready-to-render components with built-in markup, use `assistive/SKILL.md` or
 
 4. **Compose ARIA from toolkit primitives.** Headless directives expose signal IDs (`errorId`, `warningId`) for direct template bindings:
 
-   ```html
-   [attr.aria-describedby]="errorState.showErrors() ? errorState.errorId : null"
-   ```
+```html
+<input
+  [attr.aria-describedby]="errorState.shouldShowErrors() ? errorState.errorId : null"
+/>
+```
 
 For a reusable custom wrapper that owns its ARIA, use the re-exported
 factories instead of recreating toolkit resolution rules: `createAriaInvalidSignal`,
@@ -43,11 +45,14 @@ factories instead of recreating toolkit resolution rules: `createAriaInvalidSign
 `createHintIdsSignal`. Use `createFieldNameResolver` for the canonical
 explicit → optional label `for` → control `id` identity cascade.
 `createAriaDescribedByBridge` is only for a host whose `aria-describedby`
-is owned by another library. Custom wrapper renderers use
-`createErrorRendererInputs` and `toHintDescriptors`. Read
-`../references/api.md` for the contracts before composing these factories.
+is owned by another library. A custom wrapper's error-renderer inputs
+(`{ formField, strategy, submittedStatus }`) and hint descriptors (for
+`NGX_SIGNAL_FORM_HINT_REGISTRY`) are each a single inline `computed()` —
+too small to warrant a shared factory; see `docs/CUSTOM_WRAPPERS.md` for
+the shape. Read `../references/api.md` for the remaining factories'
+contracts before composing them.
 
-5. **Use `NgxHeadlessFieldset`** for aggregated group state — validity, errors, and warnings across a field tree without rebuilding the traversal.
+5. **Use `NgxHeadlessFieldset`** for aggregated group state — validity, errors, and warnings across a field tree without rebuilding the traversal. Building a custom grouped surface instead? The same pipelines are exported as the pure factories `createFieldsetAggregation()` and `createErrorSummaryEntries()` — no injection context required, but you supply pre-resolved `showErrors`/`showWarnings` signals from your own visibility seam call. See `../references/api.md` for the option/result contracts.
 
 6. **Use `NgxHeadlessNotification`** when you already have aggregated `ValidationError[]` and need a grouped live-region surface. Tone is content-driven (no `tone` input): any blocking error raises the assertive `role="alert"` container, a warning-only list raises the polite `role="status"` container — you keep full DOM control.
 
@@ -129,10 +134,10 @@ Tone is fully content-driven — there is no input to set. `resolvedTone()` retu
     id="email"
     type="email"
     [formField]="form.email"
-    [attr.aria-describedby]="errorState.showErrors() && errorState.hasErrors() ? errorState.errorId : null"
+    [attr.aria-describedby]="errorState.shouldShowErrors() && errorState.hasErrors() ? errorState.errorId : null"
     [attr.aria-invalid]="errorState.hasErrors() || null"
   />
-  @if (errorState.showErrors() && errorState.hasErrors()) {
+  @if (errorState.shouldShowErrors() && errorState.hasErrors()) {
   <ul [id]="errorState.errorId" role="alert">
     @for (error of errorState.resolvedErrors(); track error.kind) {
     <li>{{ error.message }}</li>
@@ -159,7 +164,7 @@ import { NgxHeadlessErrorState } from '@ngx-signal-forms/toolkit/headless';
   template: `
     <ng-content select="label" />
     <ng-content />
-    @if (errorState.showErrors() && errorState.hasErrors()) {
+    @if (errorState.shouldShowErrors() && errorState.hasErrors()) {
       <span [id]="errorState.errorId" role="alert" class="ds-error">
         {{ errorState.resolvedErrors()[0].message }}
       </span>
@@ -178,7 +183,7 @@ export class DsFormFieldComponent {
 for it when a custom component owns its own error rendering but still needs
 the toolkit's ID conventions (so `aria-describedby` chains stay consistent
 with `NgxFormFieldError`, the wrapper, and other toolkit consumers). Prefer
-`NgxHeadlessErrorState` when you also want `showErrors()`/`hasErrors()`.
+`NgxHeadlessErrorState` when you also want `shouldShowErrors()`/`hasErrors()`.
 
 ```html
 <div ngxHeadlessFieldName #fieldName="fieldName" [field]="form.email">

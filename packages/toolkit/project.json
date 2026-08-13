@@ -35,6 +35,7 @@
           "mkdir -p dist/packages/toolkit",
           "cp README.md dist/packages/toolkit/README.md",
           "cp LICENSE dist/packages/toolkit/LICENSE",
+          "node packages/toolkit/scripts/strip-internal-members.mjs",
           "node packages/toolkit/scripts/strip-internal-exports.mjs"
         ],
         "parallel": false,

@@ -18,6 +18,7 @@ export * from './providers/form-field-renderer.provider';
 // Services
 export * from './services/control-preset-registry';
 export * from './services/field-identity';
+export * from './services/field-visibility-registry';
 
 // Directives
 export * from './directives/auto-aria';
@@ -54,6 +55,7 @@ export {
 } from './utilities/aria/create-hint-ids-signal';
 export { assertInjector } from './utilities/assert-injector';
 export * from './utilities/cascading-resolver';
+export { createCharacterCountLengthSignal } from './utilities/character-count-length';
 export * from './utilities/create-error-visibility';
 export {
   createFieldNameResolver,
@@ -64,7 +66,10 @@ export {
 export * from './utilities/create-unique-id';
 export * from './utilities/control-semantics';
 export * from './utilities/form-field-input';
-export { shouldShowErrors } from './utilities/error-strategies';
+export {
+  shouldShowErrors,
+  shouldShowWarnings,
+} from './utilities/error-strategies';
 export {
   isFieldStateHidden,
   isFieldStateInteractive,
@@ -97,24 +102,23 @@ export {
   resolveErrorDisplayStrategy,
   resolveStrategyFromContext,
   resolveSubmittedStatusFromContext,
+  resolveWarningStrategy,
+  resolveWarningStrategyFromContext,
 } from './utilities/resolve-strategy';
+export {
+  createDevWarnOnce,
+  devWarnOnce,
+  type WarnOnceRef,
+} from './utilities/dev-warn-once';
 export {
   combineShowErrors,
   createShowErrorsComputed,
-  showErrors,
 } from './utilities/show-errors';
 export * from './utilities/submission-helpers';
 export { unwrapValue } from './utilities/unwrap-signal-or-value';
 export {
-  createErrorRendererInputs,
-  toHintDescriptors,
-  type CreateErrorRendererInputsOptions,
-  type HintLike,
-  type NgxFormFieldErrorRendererInputs,
-} from './utilities/wrapper-helpers';
-export {
   InvalidFieldTreeError,
-  isFieldTree,
+  isFieldTreeLike,
   walkFieldTreeEntries,
 } from './utilities/walk-field-tree';
 export {

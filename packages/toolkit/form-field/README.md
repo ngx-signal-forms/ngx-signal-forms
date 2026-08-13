@@ -32,7 +32,12 @@ import {
 // import { NgxFormFieldError } from '@ngx-signal-forms/toolkit/assistive';
 ```
 
-`NgxFormField` bundles the wrapper, fieldset, and wrapper-used assistive components (`NgxFormFieldError`, `NgxFormFieldHint`, `NgxFormFieldCharacterCount`) for convenience. `NgxFormFieldNotification` and `NgxFormFieldErrorSummary` remain available via `@ngx-signal-forms/toolkit/assistive`.
+`NgxFormField` bundles the wrapper, fieldset, and wrapper-used assistive components (`NgxFormFieldError`, `NgxFormFieldHint`, `NgxFormFieldCharacterCount`) for convenience. `NgxFormFieldErrorSummary` remains available via `@ngx-signal-forms/toolkit/assistive`; grouped notification-card feedback is `NgxFormFieldError` with `presentation="panel"`.
+
+### What `NgxFormField` includes vs excludes
+
+- **Included:** `NgxFormFieldWrapper`, `NgxFormFieldset`, `NgxFormFieldError`, `NgxFormFieldHint`, `NgxFormFieldCharacterCount`, plus ARIA/semantics directives used by the wrapper path.
+- **Not included:** standalone grouped summaries such as `NgxFormFieldErrorSummary`. Import those from `@ngx-signal-forms/toolkit/assistive` when needed. Panel feedback uses `NgxFormFieldError` with `presentation="panel"`.
 
 ## Quick start
 
@@ -104,17 +109,18 @@ export class ContactFormComponent {
 
 `ngx-form-field-wrapper` — wraps a form field with automatic error display, labels, hints, prefix/suffix slots, and ARIA.
 
-| Input            | Type                                              | Default     | Description                                      |
-| ---------------- | ------------------------------------------------- | ----------- | ------------------------------------------------ |
-| `formField`      | `FieldTree` (required)                            | —           | The form field to wrap                           |
-| `fieldName`      | `string`                                          | From `id`   | Explicit field name; derived from control `id`   |
-| `appearance`     | `'standard' \| 'outline' \| 'plain' \| 'inherit'` | `'inherit'` | Visual style variant                             |
-| `orientation`    | `'vertical' \| 'horizontal' \| 'inherit'`         | `'inherit'` | Label position (see [Orientation](#orientation)) |
-| `strategy`       | `ErrorDisplayStrategy`                            | Inherited   | Override error display strategy                  |
-| `errorPlacement` | `'top' \| 'bottom'`                               | `'bottom'`  | Render errors above or below the control         |
-| `showMarkerWhen` | `'required' \| 'optional' \| 'none'`              | Config      | Which fields carry a visual marker               |
-| `requiredMarker` | `string`                                          | Config      | Marker text for required fields                  |
-| `optionalMarker` | `string`                                          | Config      | Marker text for optional fields                  |
+| Input             | Type                                              | Default     | Description                                                  |
+| ----------------- | ------------------------------------------------- | ----------- | ------------------------------------------------------------ |
+| `formField`       | `FieldTree` (required)                            | —           | The form field to wrap                                       |
+| `fieldName`       | `string`                                          | From `id`   | Explicit field name; derived from control `id`               |
+| `appearance`      | `'standard' \| 'outline' \| 'plain' \| 'inherit'` | `'inherit'` | Visual style variant                                         |
+| `orientation`     | `'vertical' \| 'horizontal' \| 'inherit'`         | `'inherit'` | Label position (see [Orientation](#orientation))             |
+| `strategy`        | `ErrorDisplayStrategy`                            | Inherited   | Override error display strategy                              |
+| `warningStrategy` | `WarningDisplayStrategy`                          | Inherited   | Override warning display strategy, independent of `strategy` |
+| `errorPlacement`  | `'top' \| 'bottom'`                               | `'bottom'`  | Render errors above or below the control                     |
+| `showMarkerWhen`  | `'required' \| 'optional' \| 'none'`              | Config      | Which fields carry a visual marker                           |
+| `requiredMarker`  | `string`                                          | Config      | Marker text for required fields                              |
+| `optionalMarker`  | `string`                                          | Config      | Marker text for optional fields                              |
 
 Only `formField` is required. Every "Inherited" / "Config" default resolves
 through the toolkit's settings cascade (field input → form context →
@@ -143,6 +149,16 @@ layouts even when `orientation="horizontal"` is requested.
 Orientation changes a single wrapper, not the parent form grid. If you want one
 field row per line in `standard + horizontal`, collapse the surrounding layout
 in the page or feature container.
+
+### Appearance/orientation compatibility
+
+| Appearance | `orientation="vertical"` | `orientation="horizontal"` |
+| ---------- | ------------------------ | -------------------------- |
+| `standard` | ✅ Supported             | ✅ Supported               |
+| `plain`    | ✅ Supported             | ✅ Supported               |
+| `outline`  | ✅ Supported             | ↩️ Resolves to vertical    |
+
+`outline` keeps a vertical layout because floating-label behavior depends on that structure.
 
 ### Prefix and suffix slots
 
@@ -190,9 +206,9 @@ Warnings (errors with `kind` starting with `warn:`) display automatically:
   implicit live-region semantics of those roles — no explicit `aria-live`)
 
 Warning **display timing** is independent from error timing. The wrapper
-exposes a `warningStrategy` input (default `'immediate'`, forwarded to the
-projected `NgxFormFieldError`) so advisory messages stay visible even when
-errors are gated by `'on-touch'` or `'on-submit'` — the wrapper mounts its
+exposes a `warningStrategy` input (default `'on-touch'`, forwarded to the
+projected `NgxFormFieldError`) so advisory messages keep their own timing even
+when errors are gated by `'on-submit'` — the wrapper mounts its
 error/warning renderer whenever either should be visible, not just on the
 blocking-error timing. See
 [`WARNINGS_SUPPORT.md`](https://github.com/ngx-signal-forms/ngx-signal-forms/blob/main/docs/WARNINGS_SUPPORT.md#when-warnings-appear--warningstrategy).
@@ -230,22 +246,22 @@ aggregation signals without any prebuilt markup, drop down to
 </ngx-form-fieldset>
 ```
 
-| Input                 | Type                                                                     | Default       | Description                                                    |
-| --------------------- | ------------------------------------------------------------------------ | ------------- | -------------------------------------------------------------- |
-| `field`               | `FieldTree` (required)                                                   | —             | Field tree to aggregate                                        |
-| `fields`              | `FieldTree[]`                                                            | `null`        | Explicit field list (overrides tree traversal)                 |
-| `fieldsetId`          | `string`                                                                 | Generated     | ID for ARIA linking                                            |
-| `strategy`            | `ErrorDisplayStrategy`                                                   | Inherited     | Blocking-error display strategy                                |
-| `warningStrategy`     | `ErrorDisplayStrategy`                                                   | `'immediate'` | Warning display strategy, independent of `strategy`            |
-| `showErrors`          | `boolean`                                                                | `true`        | Toggle error display                                           |
-| `includeNestedErrors` | `boolean`                                                                | `false`       | Include child field errors via `errorSummary()`                |
-| `errorPlacement`      | `'top' \| 'bottom'`                                                      | `'bottom'`    | Render grouped messages before or after content                |
-| `appearance`          | `'outline' \| 'plain'`                                                   | `'outline'`   | Border-and-padding shell or semantic-only grouping             |
-| `feedbackAppearance`  | `'auto' \| 'plain' \| 'notification'`                                    | `'auto'`      | Choose compact grouped text or surfaced notification cards     |
-| `notificationTitle`   | `string`                                                                 | —             | Optional title for notification-style grouped feedback         |
-| `listStyle`           | `'plain' \| 'bullets'`                                                   | `'bullets'`   | Grouped message layout                                         |
-| `surfaceTone`         | `'default' \| 'neutral' \| 'info' \| 'success' \| 'warning' \| 'danger'` | `'default'`   | Base fieldset surface tint below the legend                    |
-| `validationSurface`   | `'never' \| 'always'`                                                    | `'never'`     | Whether invalid/warning state should tint the fieldset surface |
+| Input                 | Type                                                                     | Default     | Description                                                    |
+| --------------------- | ------------------------------------------------------------------------ | ----------- | -------------------------------------------------------------- |
+| `field`               | `FieldTree` (required)                                                   | —           | Field tree to aggregate                                        |
+| `fields`              | `FieldTree[]`                                                            | `null`      | Explicit field list (overrides tree traversal)                 |
+| `fieldsetId`          | `string`                                                                 | Generated   | ID for ARIA linking                                            |
+| `strategy`            | `ErrorDisplayStrategy`                                                   | Inherited   | Blocking-error display strategy                                |
+| `warningStrategy`     | `WarningDisplayStrategy`                                                 | Inherited   | Warning display strategy, independent of `strategy`            |
+| `showErrors`          | `boolean`                                                                | `true`      | Toggle error display                                           |
+| `includeNestedErrors` | `boolean`                                                                | `false`     | Include child field errors via `errorSummary()`                |
+| `errorPlacement`      | `'top' \| 'bottom'`                                                      | `'bottom'`  | Render grouped messages before or after content                |
+| `appearance`          | `'outline' \| 'plain'`                                                   | `'outline'` | Border-and-padding shell or semantic-only grouping             |
+| `feedbackAppearance`  | `'auto' \| 'plain' \| 'notification'`                                    | `'auto'`    | Choose compact grouped text or surfaced notification cards     |
+| `notificationTitle`   | `string`                                                                 | —           | Optional title for notification-style grouped feedback         |
+| `listStyle`           | `'plain' \| 'bullets'`                                                   | `'bullets'` | Grouped message layout                                         |
+| `surfaceTone`         | `'default' \| 'neutral' \| 'info' \| 'success' \| 'warning' \| 'danger'` | `'default'` | Base fieldset surface tint below the legend                    |
+| `validationSurface`   | `'never' \| 'always'`                                                    | `'never'`   | Whether invalid/warning state should tint the fieldset surface |
 
 ### Error display modes
 
@@ -255,9 +271,9 @@ aggregation signals without any prebuilt markup, drop down to
 ### Warning support
 
 Like `ngx-form-field-wrapper`, the fieldset decouples warning **display timing**
-from blocking-error timing: `warningStrategy` defaults to `'immediate'` so
-aggregated warnings stay visible even when `strategy` is `'on-touch'` or
-`'on-submit'`.
+from blocking-error timing: `warningStrategy` defaults to `'on-touch'` and
+resolves through its own cascade, so aggregated warnings keep their own timing
+even when `strategy` is `'on-submit'`.
 
 The rendered grouped-message slot (compact text or notification card) is a
 single region, so **visual priority still goes to blocking errors** when both
@@ -293,8 +309,8 @@ mirroring the projected `NgxFormFieldError`'s own error/warning priority. See
 
 - **`feedbackAppearance="auto"`** (default) uses a surfaced notification card
   for grouped sections.
-- **`plain`** always uses the compact `ngx-form-field-error` presentation.
-- **`notification`** always uses `ngx-form-field-notification`.
+- **`plain`** always uses `ngx-form-field-error presentation="inline"`.
+- **`notification`** always uses `ngx-form-field-error presentation="panel"`.
 
 This keeps the fieldset focused on grouped summaries and surfaced sections.
 Radio groups and checkbox groups that should show inline errors and invalid
@@ -455,11 +471,7 @@ Quick example:
 
 - [Theming guide](./THEMING.md) — complete CSS custom properties reference
 - [Toolkit core](../README.md) — error strategies, ARIA, configuration
-- [Assistive components](../assistive/README.md) — standalone error, grouped notification, hint, counter, and summary components
+- [Assistive components](../assistive/README.md) — standalone error, grouped panel feedback, hint, counter, and summary components
 - [Headless primitives](../headless/README.md) — renderless directives for full custom UI
 - [Custom controls](https://github.com/ngx-signal-forms/ngx-signal-forms/blob/main/docs/CUSTOM_CONTROLS.md) — wrapping sliders, date pickers, and third-party widgets
 - [CSS framework integration](https://github.com/ngx-signal-forms/ngx-signal-forms/blob/main/docs/CSS_FRAMEWORK_INTEGRATION.md) — Tailwind, Bootstrap, Material
-
-## License
-
-MIT © [ngx-signal-forms](https://github.com/ngx-signal-forms/ngx-signal-forms)

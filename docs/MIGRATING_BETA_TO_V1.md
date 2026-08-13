@@ -24,6 +24,8 @@ releases will not include any of the renames below.
 - **CSS custom properties** — several theming tokens were renamed or collapsed during the rc cycle (see [`MIGRATING_CSS_VARS.md`](./MIGRATING_CSS_VARS.md))
 - **Removed helpers** — `computeShowErrors`, `canSubmit`, `injectFormConfig`, `walkFieldTree(visitor)`, `walkFieldTreeIterable`, … (the field-tree walker stays as an internal `/core` primitive; for error traversal reach for `errorSummary()` instead)
 - **Removed component** — `NgxFormFieldAssistiveRow` (inlined into `NgxFormFieldWrapper`)
+- **Removed component** — `NgxFormFieldNotification` (folded into `NgxFormFieldError`'s `presentation="panel"` mode; see [§6b](#6b-ngxformfieldnotification-folded-into-ngxformfielderror))
+- **Removed headless helpers** — `toHintDescriptors`, `createErrorRendererInputs` (`/headless`); `resolveUnionInput` (never part of a published entry point; moved package-private into `/form-field`) — see [§6b](#6b-ngxformfieldnotification-folded-into-ngxformfielderror)
 - **Removed directive** — `NgxFloatingLabelDirective` (use `appearance="outline"`)
 - **Renamed components** — `NgxSignalFormError*` → `NgxFormFieldError*`
 - **Renamed appearances** — final appearance set is `standard` / `outline` / `plain`
@@ -36,13 +38,14 @@ releases will not include any of the renames below.
 - **New: error summary** — `NgxFormFieldErrorSummary` + headless directive
 - **New: field labels** — `provideFieldLabels()` + warning/error split utilities
 - **Debugger moved internal** — use `@ngx-signal-forms/debugger` in this repo's demos
-- **New: `warningStrategy`** — decouples warning visibility from error timing; default `'immediate'`
+- **New: `warningStrategy`** — decouples warning visibility from error timing; default `'on-touch'`, configurable via `defaultWarningStrategy`
 - **New: `NgxFormField` bundle** — convenience import array of wrapper + assistive parts + auto-ARIA directive
 - **New: fieldset toggle** — `includeNestedErrors` on fieldset; `submittedStatus` override input
 - **New: error component APIs** — `errors`, `listStyle`, `submittedStatus` inputs on `NgxFormFieldError`
 - **New: headless message resolution** — `createErrorMessageSignal()` combines visibility, the 3-tier message cascade, and stable per-error IDs for custom error renderers
-- **New: Vest options** — `only` selector, `focusCurrentField` auto-focus, `VEST_*_KIND_PREFIX` exports
+- **New: Vest options** — `only` selector, `VEST_*_KIND_PREFIX` exports
 - **BREAKING: Vest `resetOnDestroy` now defaults to `true`** — the adapter resets module-scope suite state on teardown by default; pass `{ resetOnDestroy: false }` to keep persisting state across mounts
+- **BREAKING: Vest `focusCurrentField` and field-scoped registration removed (ADR-0008)** — a Vest registration's bound path value is the suite input; track the active field yourself and pass it to `only` instead
 - **BREAKING: `ErrorMessageRegistry` is now strongly typed per built-in kind** — factory params for built-in kinds (`minLength`, `min`, `pattern`, …) are typed; custom kinds stay `any` (see [§5b](#5b-error-message-registry-is-now-strongly-typed))
 - **A11y** — removed explicit `aria-live` / `aria-atomic`; role semantics now authoritative
 - **Behavior** — missing `fieldName` / `id` now logs (dev mode) instead of throwing
@@ -162,22 +165,23 @@ for the full policy.
 The following symbols existed in betas or early RCs and have been
 removed. Replace them with the v1 equivalents.
 
-| Removed API                                 | Current replacement                                                                                                                                                                                                                                                                                                                                                |
-| ------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `computeShowErrors()`                       | `showErrors()`                                                                                                                                                                                                                                                                                                                                                     |
-| `createShowErrorsSignal()`                  | `showErrors()`                                                                                                                                                                                                                                                                                                                                                     |
-| `canSubmit()`                               | `canSubmitWithWarnings()`                                                                                                                                                                                                                                                                                                                                          |
-| `isSubmitting()`                            | `submittedStatus()` from the `ngxSignalForm` directive                                                                                                                                                                                                                                                                                                             |
-| `'manual'` error strategy                   | `showErrors()` + a manual `WritableSignal<boolean>`                                                                                                                                                                                                                                                                                                                |
-| `fieldNameResolver` config                  | Put an `id` on the bound control element                                                                                                                                                                                                                                                                                                                           |
-| `strictFieldResolution` config              | Removed — strict by default                                                                                                                                                                                                                                                                                                                                        |
-| `debug` config field                        | Removed — use the `/debugger` entry point instead                                                                                                                                                                                                                                                                                                                  |
-| `injectFormConfig()`                        | `inject(NGX_SIGNAL_FORMS_CONFIG)`                                                                                                                                                                                                                                                                                                                                  |
-| `NgxFloatingLabelDirective`                 | `<ngx-form-field-wrapper appearance="outline">`                                                                                                                                                                                                                                                                                                                    |
-| `NgxSignalFormsUserConfig` as `DeepPartial` | `Partial<NgxSignalFormsConfig>` (top-level only)                                                                                                                                                                                                                                                                                                                   |
-| `walkFieldTree(form, visitor)`              | Read `form().errorSummary()` (each entry carries a `fieldTree` back-reference) for error traversal — the walker is no longer part of the **public** API                                                                                                                                                                                                            |
-| `walkFieldTreeIterable(form)`               | `form().errorSummary()` covers error traversal only. `walkFieldTreeEntries` / `isFieldTree` / `InvalidFieldTreeError` are no longer exported from the root entry — they remain an **internal `/core` primitive** because `errorSummary()` lacks stable dotted paths and per-field `touched()` / `errors()` state (the `/debugger` lib still depends on the walker) |
-| `NgxFormFieldAssistiveRow`                  | Removed; markup + styles inlined into `NgxFormFieldWrapper`. CSS custom-property contract preserved.                                                                                                                                                                                                                                                               |
+| Removed API                                 | Current replacement                                                                                                                                                                                                                                                                                                                                                    |
+| ------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `computeShowErrors()`                       | `createShowErrorsComputed()`                                                                                                                                                                                                                                                                                                                                           |
+| `createShowErrorsSignal()`                  | `createShowErrorsComputed()`                                                                                                                                                                                                                                                                                                                                           |
+| `showErrors()`                              | `createShowErrorsComputed()` — same signature; the rename itself introduces no behavior change (`showErrors` was a one-line alias and is gone, not deprecated). Separately, the underlying `on-submit`-without-`submittedStatus` fallback did change — see [§5](#5-behavior-fix-on-submit-requires-an-explicit-submittedstatus).                                       |
+| `canSubmit()`                               | `canSubmitWithWarnings()`                                                                                                                                                                                                                                                                                                                                              |
+| `isSubmitting()`                            | `submittedStatus()` from the `ngxSignalForm` directive                                                                                                                                                                                                                                                                                                                 |
+| `'manual'` error strategy                   | `createShowErrorsComputed()` + a manual `WritableSignal<boolean>`                                                                                                                                                                                                                                                                                                      |
+| `fieldNameResolver` config                  | Put an `id` on the bound control element                                                                                                                                                                                                                                                                                                                               |
+| `strictFieldResolution` config              | Removed — strict by default                                                                                                                                                                                                                                                                                                                                            |
+| `debug` config field                        | Removed — use the `/debugger` entry point instead                                                                                                                                                                                                                                                                                                                      |
+| `injectFormConfig()`                        | `inject(NGX_SIGNAL_FORMS_CONFIG)`                                                                                                                                                                                                                                                                                                                                      |
+| `NgxFloatingLabelDirective`                 | `<ngx-form-field-wrapper appearance="outline">`                                                                                                                                                                                                                                                                                                                        |
+| `NgxSignalFormsUserConfig` as `DeepPartial` | `Partial<NgxSignalFormsConfig>` (top-level only)                                                                                                                                                                                                                                                                                                                       |
+| `walkFieldTree(form, visitor)`              | Read `form().errorSummary()` (each entry carries a `fieldTree` back-reference) for error traversal — the walker is no longer part of the **public** API                                                                                                                                                                                                                |
+| `walkFieldTreeIterable(form)`               | `form().errorSummary()` covers error traversal only. `walkFieldTreeEntries` / `isFieldTreeLike` / `InvalidFieldTreeError` are no longer exported from the root entry — they remain an **internal `/core` primitive** because `errorSummary()` lacks stable dotted paths and per-field `touched()` / `errors()` state (the `/debugger` lib still depends on the walker) |
+| `NgxFormFieldAssistiveRow`                  | Removed; markup + styles inlined into `NgxFormFieldWrapper`. CSS custom-property contract preserved.                                                                                                                                                                                                                                                                   |
 
 ### `NgxFloatingLabelDirective` → `appearance="outline"`
 
@@ -258,22 +262,24 @@ keep working.
 
 Several list-style and placement unions used to be exported under
 component-specific names. V1 consolidates them so bindings compose without
-casts when passing values between the wrapper, fieldset, and notification
+casts when passing values between the wrapper, fieldset, and error
 components.
 
-| Before (rc)                         | After (v1)                                                            |
-| ----------------------------------- | --------------------------------------------------------------------- |
-| `FieldsetErrorPlacement`            | `NgxFormFieldErrorPlacement`                                          |
-| `FormFieldErrorPlacement`           | `NgxFormFieldErrorPlacement`                                          |
-| `FieldsetFeedbackAppearance`        | `NgxFormFieldsetFeedbackAppearance`                                   |
-| `FieldsetSurfaceTone`               | `NgxFormFieldsetSurfaceTone`                                          |
-| `FieldsetValidationSurface`         | `NgxFormFieldsetValidationSurface`                                    |
-| `NgxFormFieldNotificationListStyle` | `NgxFormFieldListStyle` _(shared)_                                    |
-| `NgxFormFieldErrorListStyle`        | `NgxFormFieldListStyle` _(shared, old name kept as deprecated alias)_ |
+| Before (rc)                  | After (v1)                                                            |
+| ---------------------------- | --------------------------------------------------------------------- |
+| `FieldsetErrorPlacement`     | `NgxFormFieldErrorPlacement`                                          |
+| `FormFieldErrorPlacement`    | `NgxFormFieldErrorPlacement`                                          |
+| `FieldsetFeedbackAppearance` | `NgxFormFieldsetFeedbackAppearance`                                   |
+| `FieldsetSurfaceTone`        | `NgxFormFieldsetSurfaceTone`                                          |
+| `FieldsetValidationSurface`  | `NgxFormFieldsetValidationSurface`                                    |
+| `NgxFormFieldErrorListStyle` | `NgxFormFieldListStyle` _(shared, old name kept as deprecated alias)_ |
 
-The two deprecated list-style aliases still resolve to the same union, so
-existing imports keep compiling; switch to `NgxFormFieldListStyle` at your
-convenience.
+`NgxFormFieldErrorListStyle` still resolves to the same union, so existing
+imports keep compiling; switch to `NgxFormFieldListStyle` at your
+convenience. `NgxFormFieldNotificationListStyle` is a different story — it
+was removed outright (not kept as an alias) when `NgxFormFieldNotification`
+itself was folded into `NgxFormFieldError`; see
+[§6b](#6b-ngxformfieldnotification-folded-into-ngxformfielderror).
 
 ### 4b. Appearances renamed
 
@@ -420,8 +426,8 @@ above (template surface). The Angular compiler will surface any miss.
 
 In betas, `computeShowErrorsInternal` silently fell back to
 `touched ? 'submitted' : 'unsubmitted'` when no `submittedStatus` was
-wired. A consumer calling `showErrors()` / `createErrorState()` with
-the `'on-submit'` strategy but without a status would see errors
+wired. A consumer calling `createShowErrorsComputed()` / `createErrorState()`
+with the `'on-submit'` strategy but without a status would see errors
 surface after blur, defeating the whole point of `on-submit`.
 
 The fallback is now `'unsubmitted'`, so errors stay hidden until a real
@@ -433,18 +439,22 @@ miswiring loud during development without throwing.
   error-state / error-summary / fieldset directives) all already
   resolve `submittedStatus` through the `ngxSignalForm` directive, so
   they are **unaffected**.
-- **Only direct consumers** of `showErrors(field, 'on-submit')`
+- **Only direct consumers** of `createShowErrorsComputed(field, 'on-submit')`
   without a status see a behavior change — which is the intended fix.
 
 ### Migration
 
 ```ts
 // before — relied on the accidental fallback
-const show = showErrors(field, 'on-submit');
+const show = createShowErrorsComputed(field, 'on-submit');
 
 // after — pass the form's submittedStatus value or signal directly
 // (the third parameter, not an options object)
-const show = showErrors(field, 'on-submit', formDirective.submittedStatus);
+const show = createShowErrorsComputed(
+  field,
+  'on-submit',
+  formDirective.submittedStatus,
+);
 ```
 
 ---
@@ -515,7 +525,7 @@ object — passed silently and was returned as though it were a real
 downstream call site.
 
 `injectFieldControl()` now validates the resolved value with the existing
-`isFieldTree()` runtime guard and throws the same descriptive
+`isFieldTreeLike()` runtime guard and throws the same descriptive
 `"Field "…" not found in form"` error immediately when it fails the check.
 
 **Action:** No change needed for real Angular `form()` trees — they always
@@ -534,11 +544,17 @@ previously undocumented; see the updated `injectFieldControl()` JSDoc.
 
 ## 6. v1.0.0 audit blockers: live-region, focus, and dark-mode fixes
 
-The `assistive` entry point (`NgxFormFieldError`, `NgxFormFieldNotification`,
-`NgxFormFieldErrorSummary`) shipped a handful of accessibility defects that
+The `assistive` entry point (`NgxFormFieldError`, `NgxFormFieldErrorSummary`,
+and the since-folded `NgxFormFieldNotification`) shipped a handful of accessibility defects that
 were fixed as part of the v1.0.0 release audit. None of these rename or
 remove an input/output, but they change runtime DOM/behavior in ways some
 consumers (especially tests) may depend on.
+
+`NgxFormFieldNotification` below is the **former** component name — it was
+later folded into `NgxFormFieldError`'s `presentation="panel"` mode (see
+[§6b](#6b-ngxformfieldnotification-folded-into-ngxformfielderror)). The
+fixes described here shipped before that fold and applied to it under its
+old name; they carry over unchanged to `presentation="panel"` today.
 
 ### `id` binding no longer emits the literal string `"null"`
 
@@ -620,8 +636,94 @@ driven by `prefers-color-scheme` only, consistently across all engines.
   `.dark` class instead of relying on the OS color scheme, the built-in
   dark tokens will no longer activate. Override the public
   `--ngx-signal-form-error-*` / `--ngx-signal-form-warning-*` /
-  `--ngx-signal-form-notification-*` custom properties yourself, scoped to
-  your `.dark` selector — see the [assistive README](../packages/toolkit/assistive/README.md#dark-mode).
+  `--ngx-signal-form-error-panel-*` / `--ngx-signal-form-warning-panel-*`
+  custom properties yourself, scoped to your `.dark` selector — see the
+  [assistive README](../packages/toolkit/assistive/README.md#dark-mode).
+
+---
+
+## 6b. NgxFormFieldNotification folded into NgxFormFieldError
+
+`NgxFormFieldNotification` (`<ngx-form-field-notification>`) and
+`NgxFormFieldNotificationListStyle` are **removed**. `NgxFormFieldError`
+gained a `presentation: 'inline' | 'panel'` input instead:
+
+- `presentation="inline"` (default) — the existing per-field live-region
+  shape; every existing `<ngx-form-field-error [formField]="…">` usage is
+  unaffected.
+- `presentation="panel"` — the former notification component's bordered
+  card, for grouped fieldset feedback or custom summary blocks. Bind
+  `[errors]` (a plain array or reactive source of `ValidationError[]`) the
+  same way you bound it on `NgxFormFieldNotification`; `fieldName`, `title`,
+  and `listStyle` all carry over unchanged.
+
+```html
+<!-- Before -->
+<ngx-form-field-notification
+  [errors]="groupedErrors"
+  fieldName="address"
+  title="Please review the following"
+  listStyle="bullets"
+/>
+
+<!-- After -->
+<ngx-form-field-error
+  [errors]="groupedErrors"
+  fieldName="address"
+  title="Please review the following"
+  listStyle="bullets"
+  presentation="panel"
+/>
+```
+
+`NgxFormFieldset`'s own `feedbackAppearance`/`notificationTitle` inputs are
+unaffected — it now renders `ngx-form-field-error presentation="panel"`
+internally instead of the deleted component.
+
+CSS custom properties are renamed:
+`--ngx-signal-form-notification-*` → `--ngx-signal-form-error-panel-*` /
+`--ngx-signal-form-warning-panel-*` (see
+[`docs/migrations/v1.0.0-rc.12.md`](./migrations/v1.0.0-rc.12.md) for the
+full before/after table). The panel presentation's message **text color**
+has its own darker defaults than the inline presentation (the inline tone
+colors do not meet WCAG 1.4.3 on the panel's tinted backgrounds) and stays
+independently themeable via `--ngx-signal-form-error-panel-color` /
+`--ngx-signal-form-warning-panel-color`, alongside the panel's
+background/border/padding/font-size `-panel-*` properties.
+
+`NgxHeadlessNotification` (`@ngx-signal-forms/toolkit/headless`) is
+**unaffected** — it remains available standalone for custom
+grouped-notification UIs. `NgxFormFieldError`'s `presentation="panel"` mode
+does not delegate to it; the component composes `NgxHeadlessErrorState` in
+both presentations, and binding `[errors]` — the usual grouped-panel
+usage — switches that headless state into its errors-override mode.
+
+Two other headless helpers were removed in the same change:
+`toHintDescriptors` and `createErrorRendererInputs`
+(`@ngx-signal-forms/toolkit/headless`), plus the internal (never-published)
+`resolveUnionInput` from `/core`. All three were two-line wrappers with too
+few call sites to earn a shared export — if you used them in a custom
+wrapper, inline the shape directly:
+
+```ts
+// Hint descriptors for NGX_SIGNAL_FORM_HINT_REGISTRY
+readonly hintDescriptors = computed(() =>
+  this.hintChildren().map((hint) => ({
+    id: hint.resolvedId(),
+    fieldName: hint.resolvedFieldName(),
+  })),
+);
+
+// *ngComponentOutlet inputs for a custom error renderer
+readonly errorRendererInputs = computed<Record<string, unknown>>(() => ({
+  formField: this.formField(),
+  strategy: this.effectiveStrategy(),
+  submittedStatus: this.submittedStatus(),
+}));
+```
+
+See [`docs/migrations/v1.0.0-rc.12.md`](./migrations/v1.0.0-rc.12.md) for
+the RC-to-RC delta (#353).
 
 ---
 
@@ -725,9 +827,12 @@ import { NgxSignalFormDebugger } from '@ngx-signal-forms/debugger';
 
 `NgxFormFieldError` (and by extension the wrapper / assistive bundle)
 now accepts a `warningStrategy` input that is independent from the error
-`strategy`. It defaults to `'immediate'` so advisory messages such as
-"consider 12+ characters" appear as the user types, even when errors are gated
-with `'on-touch'` or `'on-submit'`.
+`strategy`. It resolves through its own cascade — input → form context →
+`NGX_SIGNAL_FORMS_CONFIG.defaultWarningStrategy` → `'on-touch'` — which never
+consults `defaultErrorStrategy`, so a form gated with `'on-submit'` for blocking
+errors keeps its own warning timing. Set `warningStrategy="immediate"` (or
+`defaultWarningStrategy: 'immediate'`) for advisory messages such as
+"consider 12+ characters" that should appear as the user types.
 
 See [`WARNINGS_SUPPORT.md`](./WARNINGS_SUPPORT.md#when-warnings-appear--warningstrategy)
 for the full input table and worked example. No migration action is required
@@ -807,15 +912,50 @@ import { NgxFormField } from '@ngx-signal-forms/toolkit/form-field';
   validateVest(path, suite, { resetOnDestroy: false }); // persists across mounts
   ```
 
-- `only: (ctx) => string | string[] | undefined` — threads a focused field name
-  into `suite.run(value, fieldName)` (or `suite.only(field).run(...)`), enabling
-  per-field Vest runs for large suites.
-- `focusCurrentField: true` — derives the focused Vest field name automatically
-  from the bound field's `ctx.pathKeys()` (dotted, e.g. `items.0.sku`); ignored
-  when `only` is set and falls back to a whole-suite run when bound to the form
-  root.
+- `only: (ctx) => VestFieldExclusion` — a field name, a list of field names,
+  `undefined` for a whole-suite run, or `false` to focus nothing — threaded
+  into `suite.only(field).run(...)` (falling back to `suite.run(value,
+fieldName)`, single field name only, when the suite exposes no `only`),
+  enabling per-field Vest runs for large suites. `false` throws: Vest has no
+  way to express "focus nothing" through either form.
 - Exported kind prefixes `VEST_ERROR_KIND_PREFIX` (`'vest:'`) and
   `VEST_WARNING_KIND_PREFIX` (`'warn:vest:'`) for stable consumer checks.
+
+- **BREAKING — `focusCurrentField` and field-scoped registration are removed
+  (ADR-0008).** A Vest registration's bound path value is the suite input: a
+  suite authored for the whole model can only be bound to the form root, not
+  to an individual field's path (`data.email` on a bare `string` was always
+  `undefined`, producing a permanent blocking error on a valid value — see
+  [ADR-0008](decisions/0008-vest-suite-input-is-the-bound-path.md)).
+  **Action:** replace `validateVest(path.email, suite, { focusCurrentField:
+true })` with `validateVest(path, suite, { only: () => activeField })`,
+  where `activeField` is a field name your own code tracks (e.g. on
+  `(focus)`/`(blur)`). Subtree binding is still supported when the suite is
+  authored for that subtree's value (e.g. `validateVest(path.address,
+addressSuite)` where `addressSuite` takes `{ city: string, … }`).
+
+- **BREAKING — a typed suite's field-name union now flows through `only`
+  (#292, PR #308).** Vest ≥6.3.2 propagates a field-name union `F` through
+  `only`, `getErrors`, and `getWarnings` for a suite declared with
+  `create<{ fields: 'email' | 'password' }>(…)` (or a schema-typed suite).
+  `VestRunnableSuite`, `VestOnlyFieldSelector`, `VestResultLike`,
+  `VestRegisterOptions`, `RunVestSuiteParams`/`RunVestSuiteResult`,
+  `ValidateVestOptions`, `validateVest`, `validateVestWarnings`, and
+  `VestSuiteAdapter.register`/`runVestSuite` all gained a field-name type
+  parameter `F extends string = string`, inferred from the `suite` argument —
+  no call site writes it explicitly. Previously, every `only` selector's
+  return type was erased to plain `string`, so a mistyped focus name
+  (`only: () => 'emial'`) compiled, ran zero tests, and reported the field
+  valid.
+
+  **Action:** an `only` selector for a `create<{ fields: … }>(…)` suite that
+  previously returned a wider `string` (including via a helper function typed
+  `() => string`, or a value read from an untyped source) can now fail to
+  typecheck — narrow the selector's return type (or the helper's) to the
+  suite's field-name union, or to `string` explicitly if the selector
+  genuinely needs to accept any field name. A suite declared with plain
+  `create(…)` (no `fields`, no schema) is unaffected: `F` defaults to
+  `string`, exactly as before.
 
 See [`packages/toolkit/vest/README.md`](../packages/toolkit/vest/README.md#suite-lifecycle)
 for the full suite-lifecycle discussion.
@@ -828,19 +968,14 @@ behavior:
 
 - **Fixed: a superseded focused run could leave a field permanently
   `pending()`.** Vest 6 tracks a single resolver per suite instance, so two
-  registrations of the same suite on different fields (e.g. two
-  `focusCurrentField` validators) could steal each other's resolver, leaving
-  the earlier field's async validation stuck pending forever. The adapter now
-  falls back to the suite's `subscribe`/`get` API (when available) to detect
-  settlement independently of the stolen resolver. `VestRunnableSuite` gained
-  two new **optional** members, `subscribe` and `get`, to support this —
-  existing suite shapes that omit them keep working unchanged.
-- **Fixed: cross-field error mis-attribution for subfield-bound validators.**
-  A `focusCurrentField`-bound validator (e.g. bound to `path.email`) could
-  surface an unrelated field's retained Vest failure (e.g. `password`) as if
-  it belonged to its own bound field, because Vest's `only()` mode retains
-  other fields' previous failures in the same result. Validators bound to a
-  specific field now only map entries for that field (or its descendants).
+  `only`-focused registrations of the same suite (e.g. two root-bound
+  validators each focused on a different field) could steal each other's
+  resolver, leaving the earlier one's async validation stuck pending forever.
+  The adapter now falls back to the suite's `subscribe`/`get` API (when
+  available) to detect settlement independently of the stolen resolver.
+  `VestRunnableSuite` gained two new **optional** members, `subscribe` and
+  `get`, to support this — existing suite shapes that omit them keep working
+  unchanged.
 - **Fixed: a sync Vest warning could permanently suppress a blocking async
   Vest error on the same field.** Angular's `validateAsync` only schedules its
   resource when the bound subtree has zero sync errors, and toolkit warnings
@@ -864,9 +999,9 @@ behavior:
   trees with a concurrently pending, unfocused run against the same suite —
   and defers the later-arriving tree's actual `suite.run()` call until the
   suite is idle, so the two runs never overlap. This is scoped to unfocused
-  (whole-suite) runs only: the wave-3 pattern of several `focusCurrentField`/
-  `only` registrations for different fields of the SAME form intentionally
-  keeps sharing the suite's retained state and is unaffected. The only
+  (whole-suite) runs only: the wave-3 pattern of several `only`-focused
+  registrations for different fields of the SAME form intentionally keeps
+  sharing the suite's retained state and is unaffected. The only
   observable change is a small added latency for the rare case of two
   independent, concurrently-validating trees sharing one suite instance — the
   later one's validation now genuinely waits for the earlier one's async work
@@ -1043,12 +1178,17 @@ leaf is counted consistently whether it's `null` or populated.
 
 - **Grep for the other removed APIs** (`computeShowErrors`,
   `createShowErrorsSignal`, `canSubmit`, `isSubmitting`, `'manual'`
-  strategy, `fieldNameResolver`, `strictFieldResolution`, `debug`
-  config) and swap for the replacements in §3.
+  strategy, `fieldNameResolver`, `strictFieldResolution`, `debug` config)
+  and swap for the replacements in §3. For `showErrors` specifically, a
+  bare-name search also matches unrelated symbols that legitimately keep
+  that name (`NgxFormFieldset`'s `showErrors` input,
+  `AriaDescribedByChainOptions`'s `showErrors` property) — search for the
+  imported factory call instead, e.g. `showErrors(` or
+  `import { showErrors }`, to isolate real hits.
 
-- **If you call `showErrors(field, 'on-submit')` directly**, pass an
-  explicit `submittedStatus` — otherwise errors will stay hidden (this
-  is the fix, not a regression).
+- **If you call `createShowErrorsComputed(field, 'on-submit')` directly**,
+  pass an explicit `submittedStatus` — otherwise errors will stay hidden
+  (this is the fix, not a regression).
 
 - **Apply the current rc.11 API changes** when upgrading from any earlier
   release candidate:
@@ -1106,7 +1246,7 @@ The wrapper previously only mounted its projected error/warning renderer
 when the **blocking-error** strategy (`strategy`, default `'on-touch'`)
 said errors should show — so a warnings-only field never rendered anything
 until the field was touched (or submitted), even though `NgxFormFieldError`
-defaults its own warning timing to `'immediate'`. The wrapper now exposes a
+times its warnings on its own independent cascade. The wrapper now exposes a
 `warningStrategy` input (forwarded to the renderer) and mounts the renderer
 whenever errors **or** warnings should be visible, matching the
 already-documented "warning timing is independent of error timing"

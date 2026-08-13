@@ -4,13 +4,14 @@ import {
   ElementRef,
   inject,
   input,
-  isDevMode,
   type Signal,
 } from '@angular/core';
 import {
   createFieldMessageIdSignals,
+  devWarnOnce,
   resolveFieldName,
   resolveFieldNameFromCandidates,
+  type WarnOnceRef,
 } from '@ngx-signal-forms/toolkit/core';
 
 /**
@@ -90,7 +91,7 @@ export interface FieldNameStateSignals {
 })
 export class NgxHeadlessFieldName implements FieldNameStateSignals {
   readonly #elementRef = inject<ElementRef<HTMLElement>>(ElementRef);
-  #warnedMissingName = false;
+  readonly #warnedMissingName: WarnOnceRef = { current: false };
 
   /**
    * The field name to use for ID generation.
@@ -116,12 +117,11 @@ export class NgxHeadlessFieldName implements FieldNameStateSignals {
       return resolvedFieldName;
     }
 
-    if (isDevMode() && !this.#warnedMissingName) {
-      this.#warnedMissingName = true;
-      console.error(
-        '[ngx-signal-forms] ngxHeadlessFieldName requires either a non-empty `fieldName` input or a host element `id`. ARIA wiring will be skipped.',
-      );
-    }
+    devWarnOnce(
+      this.#warnedMissingName,
+      'error',
+      '[ngx-signal-forms] ngxHeadlessFieldName requires either a non-empty `fieldName` input or a host element `id`. ARIA wiring will be skipped.',
+    );
 
     return null;
   });

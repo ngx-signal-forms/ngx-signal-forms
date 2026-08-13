@@ -138,7 +138,11 @@ describe('NgxFormFieldset', () => {
     const errors = screen.getAllByRole('alert');
     expect(errors).toHaveLength(1);
     expect(errors[0]?.textContent).toContain('Street required');
-    expect(container.querySelector('ngx-form-field-notification')).toBeTruthy();
+    expect(
+      container.querySelector(
+        'ngx-form-field-error[data-presentation="panel"]',
+      ),
+    ).toBeTruthy();
     expect(errors[0]?.querySelector('ul')).toBeTruthy();
     expect(errors[0]?.querySelectorAll('li')).toHaveLength(1);
   });
@@ -500,7 +504,7 @@ describe('NgxFormFieldset', () => {
     );
 
     const errorList = container.querySelector(
-      '.ngx-form-field-notification__list',
+      'ngx-form-field-error[data-presentation="panel"] .ngx-form-field-error__list',
     );
     expect(errorList?.tagName).toBe('UL');
     expect(errorList?.querySelectorAll('li')).toHaveLength(2);
@@ -528,17 +532,27 @@ describe('NgxFormFieldset', () => {
     expect(
       host?.classList.contains('ngx-signal-form-fieldset--surface-invalid'),
     ).toBe(false);
-    expect(container.querySelector('ngx-form-field-notification')).toBeTruthy();
-    expect(container.querySelector('ngx-form-field-error')).toBeNull();
+    expect(
+      container.querySelector(
+        'ngx-form-field-error[data-presentation="panel"]',
+      ),
+    ).toBeTruthy();
+    expect(
+      container.querySelector(
+        'ngx-form-field-error[data-presentation="inline"]',
+      ),
+    ).toBeNull();
 
-    // Verify the danger token default and that the notification error color
-    // resolves through it. Asserting against the source keeps the contrast
-    // contract documented; runtime resolution is covered in browser-mode
-    // and e2e specs (jsdom can't compute custom properties from emulated
-    // component stylesheets).
+    // Verify the danger token default and that the notification card's
+    // background (its one remaining independently-themeable color token —
+    // text color is now shared with the plain/inline presentation, see
+    // form-field-error.css) resolves through it. Asserting against the
+    // source keeps the contrast contract documented; runtime resolution is
+    // covered in browser-mode and e2e specs (jsdom can't compute custom
+    // properties from emulated component stylesheets).
     expect(fieldsetCssSource).toMatch(/--_fieldset-clr-danger:\s*#db1818\b/);
     expect(fieldsetCssSource).toMatch(
-      /--_fieldset-notification-error-color:[^;]*--_fieldset-clr-danger/,
+      /--_fieldset-notification-error-bg:[^;]*--ngx-signal-form-error-panel-bg/,
     );
   });
 
@@ -604,8 +618,16 @@ describe('NgxFormFieldset', () => {
     expect(
       host?.classList.contains('ngx-signal-form-fieldset--surface-invalid'),
     ).toBe(false);
-    expect(container.querySelector('ngx-form-field-notification')).toBeTruthy();
-    expect(container.querySelector('ngx-form-field-error')).toBeNull();
+    expect(
+      container.querySelector(
+        'ngx-form-field-error[data-presentation="panel"]',
+      ),
+    ).toBeTruthy();
+    expect(
+      container.querySelector(
+        'ngx-form-field-error[data-presentation="inline"]',
+      ),
+    ).toBeNull();
   });
 
   it('marks the host aria-busy while the composed headless directive is pending', async () => {
@@ -773,8 +795,16 @@ describe('NgxFormFieldset', () => {
 
     const host = container.querySelector('ngx-form-fieldset');
     expect(host).toHaveAttribute('data-feedback-appearance', 'plain');
-    expect(container.querySelector('ngx-form-field-error')).toBeTruthy();
-    expect(container.querySelector('ngx-form-field-notification')).toBeNull();
+    expect(
+      container.querySelector(
+        'ngx-form-field-error[data-presentation="inline"]',
+      ),
+    ).toBeTruthy();
+    expect(
+      container.querySelector(
+        'ngx-form-field-error[data-presentation="panel"]',
+      ),
+    ).toBeNull();
   });
 
   it('forces the notification card when feedbackAppearance="notification"', async () => {
@@ -798,8 +828,16 @@ describe('NgxFormFieldset', () => {
 
     const host = container.querySelector('ngx-form-fieldset');
     expect(host).toHaveAttribute('data-feedback-appearance', 'notification');
-    expect(container.querySelector('ngx-form-field-notification')).toBeTruthy();
-    expect(container.querySelector('ngx-form-field-error')).toBeNull();
+    expect(
+      container.querySelector(
+        'ngx-form-field-error[data-presentation="panel"]',
+      ),
+    ).toBeTruthy();
+    expect(
+      container.querySelector(
+        'ngx-form-field-error[data-presentation="inline"]',
+      ),
+    ).toBeNull();
   });
 
   it('forwards notificationTitle to the grouped notification card', async () => {
@@ -821,9 +859,7 @@ describe('NgxFormFieldset', () => {
       },
     );
 
-    const title = container.querySelector(
-      '.ngx-form-field-notification__title',
-    );
+    const title = container.querySelector('.ngx-form-field-error__title');
     expect(title?.textContent).toContain('Please review the following');
   });
 
@@ -853,10 +889,14 @@ describe('NgxFormFieldset', () => {
     );
 
     expect(
-      container.querySelector('.ngx-form-field-notification__list'),
+      container.querySelector(
+        'ngx-form-field-error[data-presentation="panel"] .ngx-form-field-error__list',
+      ),
     ).toBeNull();
     expect(
-      container.querySelectorAll('.ngx-form-field-notification__stack p'),
+      container.querySelectorAll(
+        'ngx-form-field-error[data-presentation="panel"] .ngx-form-field-error__message',
+      ),
     ).toHaveLength(2);
   });
 

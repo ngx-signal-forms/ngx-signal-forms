@@ -8,7 +8,7 @@ import {
 import { TestBed } from '@angular/core/testing';
 import { form, maxLength as signalMaxLength } from '@angular/forms/signals';
 import { render, screen } from '@testing-library/angular';
-import { describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { NgxFormFieldCharacterCount } from './character-count';
 
 /**
@@ -99,6 +99,26 @@ class AutoDetectMaxLengthWrapperComponent {
       this.#model.set({ text: this.textModel() });
     });
   }
+}
+
+/**
+ * Wrapper with no `maxLength` input and no `maxLength` validator, bound to a
+ * field whose value is an unsupported type (an object). This exercises the
+ * `#charCountState() === null` fallback path in `currentLength` — no
+ * `createCharacterCount()` factory is ever created, since there is no
+ * resolved limit.
+ */
+@Component({
+  selector: 'ngx-test-unsupported-value-no-maxlength',
+  standalone: true,
+  imports: [NgxFormFieldCharacterCount],
+  template: ` <ngx-form-field-character-count [formField]="objectField" /> `,
+})
+class UnsupportedValueNoMaxLengthWrapperComponent {
+  // An object value is unsupported by the character count component.
+  readonly #model = signal({ data: { nested: 'value' } });
+  readonly objectForm = form(this.#model);
+  readonly objectField = this.objectForm.data;
 }
 
 describe('NgxFormFieldCharacterCount', () => {
@@ -597,6 +617,67 @@ describe('NgxFormFieldCharacterCount', () => {
       const host = container.querySelector('ngx-form-field-character-count');
       expect(host).toBeTruthy();
       expect(host?.textContent).toContain('0/100');
+    });
+  });
+
+  describe('unsupported value type dev warning without maxLength (regression for #269)', () => {
+    // The `currentLength` fallback used when no `maxLength` is configured
+    // (or auto-detected) duplicated the factory's string/array length logic
+    // but silently dropped its one-shot dev warning. This suite pins the
+    // warning for that fallback path specifically.
+
+    beforeEach(() => {
+      vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+    });
+
+    afterEach(() => {
+      vi.restoreAllMocks();
+    });
+
+    it('emits a console.warn once when the field value is an unsupported type and no maxLength is configured', async () => {
+      const { fixture } = await render(
+        UnsupportedValueNoMaxLengthWrapperComponent,
+      );
+      await fixture.whenStable();
+
+      // The displayed count still falls back to 0 (no crash), matching the
+      // maxLength-configured path's behavior.
+      expect(screen.getByText('0')).toBeInTheDocument();
+
+      expect(console.warn).toHaveBeenCalledOnce();
+      expect(console.warn).toHaveBeenCalledWith(
+        expect.stringContaining('NgxFormFieldCharacterCount'),
+        expect.anything(),
+        expect.stringContaining('0'),
+      );
+
+      // Trigger another change-detection cycle; warn must NOT fire again.
+      fixture.detectChanges();
+      await fixture.whenStable();
+      expect(console.warn).toHaveBeenCalledOnce();
+    });
+
+    it('logs a type descriptor only, never the raw value', async () => {
+      await render(UnsupportedValueNoMaxLengthWrapperComponent);
+
+      expect(console.warn).toHaveBeenCalledOnce();
+      const loggedArgs = vi.mocked(console.warn).mock.calls[0] ?? [];
+
+      // Every logged argument must itself be a string — not the raw object.
+      // Mapping through `String()` before asserting would collapse a leaked
+      // object argument to the harmless-looking `'[object Object]'`, so this
+      // checks the *raw* mock-call arguments' types instead.
+      for (const arg of loggedArgs) {
+        expect(typeof arg).toBe('string');
+      }
+
+      // The raw object's data (`{ nested: 'value' }`) must never reach the
+      // console — only the type descriptor (e.g. `'Object'`). `'value'` is
+      // not checked directly since the diagnostic message text legitimately
+      // contains the word "value" (e.g. "unsupported value type").
+      const joinedArgs = loggedArgs.join(' ');
+      expect(joinedArgs).not.toContain('nested');
+      expect(joinedArgs).not.toMatch(/\{.*nested.*\}/u);
     });
   });
 });

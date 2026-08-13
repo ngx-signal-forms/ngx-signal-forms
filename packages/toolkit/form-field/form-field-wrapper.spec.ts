@@ -15,6 +15,7 @@ import {
   NgxSignalFormToolkit,
   provideNgxSignalFormControlPresets,
   provideNgxSignalFormControlPresetsForComponent,
+  provideNgxSignalFormsConfig,
   requiredFromStandardSchema,
 } from '@ngx-signal-forms/toolkit';
 import { DEFAULT_NGX_SIGNAL_FORMS_CONFIG } from '@ngx-signal-forms/toolkit/core';
@@ -1514,6 +1515,138 @@ describe('NgxSignalFormWrapperComponent', () => {
       ).toBeTruthy();
     });
 
+    it('relocates required-ness for a required checkbox cluster (role="group") into a visually-hidden aria-describedby hint', async () => {
+      // Regression coverage for
+      // https://github.com/ngx-signal-forms/ngx-signal-forms/issues/300:
+      // `role="group"` does not support `aria-required` (only `radiogroup`
+      // does), so `NgxSignalFormAutoAria` never writes it here. Required-ness
+      // must still be perceivable, though, so the wrapper relocates it into a
+      // visually-hidden node wired into `aria-describedby` — independent of
+      // whether an error is currently visible.
+      const validField = signal({
+        invalid: () => false,
+        touched: () => false,
+        errors: () => [],
+      });
+
+      const { container } = await render(
+        `<ngx-form-field-wrapper [formField]="field" fieldName="consent">
+          <span ngxFormFieldLabel>Consent</span>
+          <div>
+            <label>
+              <input id="consent-read" type="checkbox" required />
+              I have read the terms
+            </label>
+            <label>
+              <input id="consent-agree" type="checkbox" required />
+              I agree to the terms
+            </label>
+          </div>
+        </ngx-form-field-wrapper>`,
+        {
+          imports: [NgxSignalFormWrapperComponent],
+          componentProperties: {
+            field: validField,
+          },
+        },
+      );
+
+      const wrapper = container.querySelector('ngx-form-field-wrapper');
+      expect(wrapper).toHaveAttribute('role', 'group');
+      expect(wrapper).not.toHaveAttribute('aria-required');
+      expect(wrapper).toHaveAttribute(
+        'aria-describedby',
+        'consent-required-hint',
+      );
+
+      const requiredHint = container.querySelector('#consent-required-hint');
+      expect(requiredHint).toBeTruthy();
+      expect(requiredHint).not.toHaveAttribute('aria-hidden');
+      expect(requiredHint?.textContent).toBe('required');
+    });
+
+    it('does NOT relocate a required hint for a non-required checkbox cluster', async () => {
+      const validField = signal({
+        invalid: () => false,
+        touched: () => false,
+        errors: () => [],
+      });
+
+      const { container } = await render(
+        `<ngx-form-field-wrapper [formField]="field" fieldName="consent">
+          <span ngxFormFieldLabel>Consent</span>
+          <div>
+            <label>
+              <input id="consent-read" type="checkbox" />
+              I have read the terms
+            </label>
+            <label>
+              <input id="consent-agree" type="checkbox" />
+              I agree to the terms
+            </label>
+          </div>
+        </ngx-form-field-wrapper>`,
+        {
+          imports: [NgxSignalFormWrapperComponent],
+          componentProperties: {
+            field: validField,
+          },
+        },
+      );
+
+      const wrapper = container.querySelector('ngx-form-field-wrapper');
+      expect(wrapper).toHaveAttribute('role', 'group');
+      expect(wrapper).not.toHaveAttribute('aria-describedby');
+      expect(
+        container.querySelector('#consent-required-hint'),
+      ).not.toBeTruthy();
+    });
+
+    it('renders a config-provided requiredHintText instead of the English default (issue #300 localization)', async () => {
+      // `requiredHintText` must flow from `NGX_SIGNAL_FORMS_CONFIG` — same
+      // seam as `requiredLegendText` — so a non-English app isn't stuck
+      // announcing a hardcoded English word in the cluster's description.
+      const validField = signal({
+        invalid: () => false,
+        touched: () => false,
+        errors: () => [],
+      });
+
+      const { container } = await render(
+        `<ngx-form-field-wrapper [formField]="field" fieldName="consent">
+          <span ngxFormFieldLabel>Consent</span>
+          <div>
+            <label>
+              <input id="consent-read" type="checkbox" required />
+              I have read the terms
+            </label>
+            <label>
+              <input id="consent-agree" type="checkbox" required />
+              I agree to the terms
+            </label>
+          </div>
+        </ngx-form-field-wrapper>`,
+        {
+          imports: [NgxSignalFormWrapperComponent],
+          providers: [
+            {
+              provide: NGX_SIGNAL_FORMS_CONFIG,
+              useValue: {
+                ...DEFAULT_NGX_SIGNAL_FORMS_CONFIG,
+                requiredHintText: 'obligatoire',
+              },
+            },
+          ],
+          componentProperties: {
+            field: validField,
+          },
+        },
+      );
+
+      const requiredHint = container.querySelector('#consent-required-hint');
+      expect(requiredHint?.textContent).toBe('obligatoire');
+    });
+
     it('merges an author-supplied aria-describedby with the cluster-managed error id instead of clobbering it', async () => {
       // Regression guard: `[attr.aria-describedby]` on the host is always
       // active (Angular host bindings can't be conditionally applied at
@@ -2562,17 +2695,64 @@ describe('NgxSignalFormWrapperComponent', () => {
     // blocking-error strategy (default 'on-touch') even when the field's
     // only messages are warnings. A warnings-only, UNTOUCHED field would
     // therefore never mount `NgxFormFieldError` at all, so its own
-    // `warningStrategy` default of 'immediate' never got a chance to run —
-    // the README's documented "warning timing is independent of error
-    // timing" was unreachable through the wrapper. `shouldRenderErrorSlot`
-    // now mounts the renderer whenever errors OR warnings should show.
-    it('renders the warning immediately on an untouched field under the default on-touch error strategy', async () => {
+    // `warningStrategy` never got a chance to run — the README's documented
+    // "warning timing is independent of error timing" was unreachable through
+    // the wrapper. `shouldRenderErrorSlot` now mounts the renderer whenever
+    // errors OR warnings should show.
+    //
+    // `warningStrategy="immediate"` is set explicitly here: the default is
+    // 'on-touch', which on an untouched field would hide the warning for the
+    // *right* reason and so could not distinguish a fixed mount from a broken
+    // one. See the sibling test below for the default's own coverage.
+    it('shows warnings on untouched fields when warningStrategy is immediate', async () => {
       const untouchedWarningField = signal({
         invalid: () => true,
         touched: () => false,
         errors: () => [
           { kind: 'warn:weak-password', message: 'Consider 8+ characters' },
         ],
+        hasWarnings: () => true,
+      });
+
+      const { container } = await render(
+        `<ngx-form-field-wrapper
+          [formField]="field"
+          fieldName="password"
+          warningStrategy="immediate"
+        >
+          <label for="password">Password</label>
+          <input id="password" type="password" />
+        </ngx-form-field-wrapper>`,
+        {
+          imports: [NgxSignalFormWrapperComponent],
+          providers: [
+            {
+              provide: NGX_SIGNAL_FORMS_CONFIG,
+              useValue: DEFAULT_NGX_SIGNAL_FORMS_CONFIG,
+            },
+          ],
+          componentProperties: { field: untouchedWarningField },
+        },
+      );
+
+      // The renderer mounted despite the blocking-error strategy ('on-touch')
+      // gating errors on this untouched field.
+      const status = container.querySelector('[role="status"]');
+      expect(status?.getAttribute('id')).toBe('password-warning');
+      expect(status?.textContent).toContain('Consider 8+ characters');
+      // No blocking error, so the alert container stays empty/unlinked.
+      const alert = container.querySelector('[role="alert"]');
+      expect(alert?.getAttribute('id')).not.toBe('password-error');
+    });
+
+    it('gates warnings behind touch under the default warning strategy', async () => {
+      const untouchedWarningField = signal({
+        invalid: () => true,
+        touched: () => false,
+        errors: () => [
+          { kind: 'warn:weak-password', message: 'Consider 8+ characters' },
+        ],
+        hasWarnings: () => true,
       });
 
       const { container } = await render(
@@ -2582,25 +2762,30 @@ describe('NgxSignalFormWrapperComponent', () => {
         </ngx-form-field-wrapper>`,
         {
           imports: [NgxSignalFormWrapperComponent],
+          providers: [
+            {
+              provide: NGX_SIGNAL_FORMS_CONFIG,
+              useValue: DEFAULT_NGX_SIGNAL_FORMS_CONFIG,
+            },
+          ],
           componentProperties: { field: untouchedWarningField },
         },
       );
 
+      // Default `defaultWarningStrategy` is 'on-touch', so an untouched field
+      // shows nothing — a warning judges a value the user has not committed.
       const status = container.querySelector('[role="status"]');
-      expect(status?.getAttribute('id')).toBe('password-warning');
-      expect(status?.textContent).toContain('Consider 8+ characters');
-      // No blocking error, so the alert container stays empty/unlinked.
-      const alert = container.querySelector('[role="alert"]');
-      expect(alert?.getAttribute('id')).not.toBe('password-error');
+      expect(status?.textContent?.trim() ?? '').toBe('');
     });
 
-    it('respects an explicit strategy="on-submit" for a warnings-only field with the immediate warningStrategy default', async () => {
+    it('respects an explicit strategy="on-submit" for a touched warnings-only field', async () => {
       const unsubmittedWarningField = signal({
         invalid: () => true,
         touched: () => true,
         errors: () => [
           { kind: 'warn:weak-password', message: 'Consider 8+ characters' },
         ],
+        hasWarnings: () => true,
       });
 
       const { container } = await render(
@@ -2614,13 +2799,19 @@ describe('NgxSignalFormWrapperComponent', () => {
         </ngx-form-field-wrapper>`,
         {
           imports: [NgxSignalFormWrapperComponent],
+          providers: [
+            {
+              provide: NGX_SIGNAL_FORMS_CONFIG,
+              useValue: DEFAULT_NGX_SIGNAL_FORMS_CONFIG,
+            },
+          ],
           componentProperties: { field: unsubmittedWarningField },
         },
       );
 
-      // Warning is visible immediately even though the field hasn't been
-      // submitted — 'immediate' is the warningStrategy default, and it is
-      // NOT the same signal as the wrapper's own (on-submit) `strategy`.
+      // The field is touched but unsubmitted. The warning shows because the
+      // warningStrategy default ('on-touch') is satisfied; the wrapper's own
+      // `strategy` ('on-submit') is NOT the same signal and does not gate it.
       const status = container.querySelector('[role="status"]');
       expect(status?.getAttribute('id')).toBe('password-warning');
       expect(status?.textContent).toContain('Consider 8+ characters');
@@ -2635,6 +2826,7 @@ describe('NgxSignalFormWrapperComponent', () => {
         errors: () => [
           { kind: 'warn:weak-password', message: 'Consider 8+ characters' },
         ],
+        hasWarnings: () => true,
       });
 
       const { container, fixture } = await render(
@@ -3657,6 +3849,38 @@ describe('NgxSignalFormWrapperComponent', () => {
       expect(formField).toHaveAttribute('data-orientation', 'vertical');
     });
 
+    it('should force vertical for radio-group control kind even when horizontal is requested', async () => {
+      const { container } = await render(
+        `<ngx-form-field-wrapper
+          [formField]="field"
+          fieldName="delivery-method"
+          orientation="horizontal"
+        >
+          <span ngxFormFieldLabel>Delivery option</span>
+          <div>
+            <label>
+              <input id="delivery-standard" type="radio" value="standard" />
+              Standard
+            </label>
+            <label>
+              <input id="delivery-express" type="radio" value="express" />
+              Express
+            </label>
+          </div>
+        </ngx-form-field-wrapper>`,
+        {
+          imports: [NgxSignalFormWrapperComponent],
+          componentProperties: { field: createMockFieldState() },
+        },
+      );
+
+      const formField = container.querySelector('ngx-form-field-wrapper');
+      expect(formField).not.toHaveClass(
+        'ngx-signal-form-field-wrapper--horizontal',
+      );
+      expect(formField).toHaveAttribute('data-orientation', 'vertical');
+    });
+
     it('should resolve inherit to global default when set to vertical (default)', async () => {
       const { container } = await render(
         `<ngx-form-field-wrapper [formField]="field" orientation="inherit">
@@ -3764,6 +3988,46 @@ describe('NgxSignalFormWrapperComponent', () => {
       );
 
       consoleErrorSpy.mockRestore();
+    });
+
+    describe('pre-resolution state (bound control not yet resolved)', () => {
+      // `resolvedOrientation` now gates its forcing logic on
+      // `#boundControlElement() === null`, the same way its siblings
+      // `isOutline` and `resolvedMarker` do (each returns its own
+      // pre-resolution value). Before the projected control is discovered,
+      // `#controlKind()` has not settled, so — without the gate — a
+      // checkbox/switch/radio-group field requesting 'horizontal' would
+      // report the raw requested orientation instead of the forced
+      // 'vertical': a `data-orientation` flash. Mirroring the sibling
+      // `resolvedMarker` spec above, this exercises the guard with no
+      // control ever projected, so `#boundControlElement()` never resolves
+      // and the pre-resolution branch is the only one that ever runs.
+      //
+      // The configured default ('horizontal', set below) is deliberately
+      // distinct from both the requested orientation ('vertical') and the
+      // forced value ('vertical') that a checkbox/switch/radio-group would
+      // otherwise produce, so this test cannot pass by coincidentally
+      // reading either of those instead of the config.
+
+      it('reports the configured default, never the requested orientation, before a control is projected (no flash)', async () => {
+        const { container } = await render(
+          `<ngx-form-field-wrapper [formField]="field" orientation="vertical">
+            <label for="agree">Agree</label>
+          </ngx-form-field-wrapper>`,
+          {
+            imports: [NgxSignalFormWrapperComponent],
+            providers: [
+              provideNgxSignalFormsConfig({
+                defaultFormFieldOrientation: 'horizontal',
+              }),
+            ],
+            componentProperties: { field: createMockFieldState() },
+          },
+        );
+
+        const formField = container.querySelector('ngx-form-field-wrapper');
+        expect(formField).toHaveAttribute('data-orientation', 'horizontal');
+      });
     });
   });
 
@@ -4268,6 +4532,34 @@ describe('NgxSignalFormWrapperComponent', () => {
     it('declares display:none for empty assistive-row slots in CSS source', () => {
       expect(wrapperCssSource).toMatch(
         /\.ngx-signal-form-field-wrapper__assistive-left:empty,\s*\.ngx-signal-form-field-wrapper__assistive-right:empty\s*\{\s*display:\s*none;/,
+      );
+    });
+
+    // jsdom does not evaluate `@container style()` queries from emulated
+    // component stylesheets, so the runtime collapse/reserve behavior is
+    // asserted in the browser-mode suite (#297). Here we lock in the CSS
+    // *source* so the token contract cannot silently regress in refactors
+    // of this stylesheet.
+    it('resolves --ngx-form-field-assistive-empty-behavior through a public custom property defaulting to reserve', () => {
+      expect(wrapperCssSource).toMatch(
+        /--_assistive-empty-behavior:\s*var\(\s*--ngx-form-field-assistive-empty-behavior,\s*reserve\s*\);/,
+      );
+    });
+
+    it('declares the collapse opt-in for a content-less assistive row in CSS source', () => {
+      expect(wrapperCssSource).toMatch(
+        /@container style\(--_assistive-empty-behavior:\s*collapse\)\s*\{[\s\S]*?\.ngx-signal-form-field-wrapper__assistive:not\(\s*:has\(\s*\.ngx-signal-form-field-wrapper__assistive-left\s*>\s*:not\(\.ngx-signal-form-field-wrapper__hint-slot\),\s*\.ngx-signal-form-field-wrapper__hint-slot:not\(:empty\),\s*\.ngx-signal-form-field-wrapper__assistive-right:not\(:empty\)\s*\)\s*\)\s*\{\s*min-height:\s*0;\s*margin-top:\s*0;\s*margin-bottom:\s*0;/,
+      );
+    });
+
+    // jsdom does not compute the resulting rendered geometry from emulated
+    // component stylesheets, so the runtime override is asserted in the
+    // browser-mode suite (#253). Here we lock in the CSS *source* so the
+    // token contract cannot silently regress in refactors of this
+    // stylesheet.
+    it('resolves --_field-touch-target through a public custom property defaulting to 32px', () => {
+      expect(wrapperCssSource).toMatch(
+        /--_field-touch-target:\s*var\(\s*--ngx-form-field-touch-target,\s*2rem\s*\);/,
       );
     });
   });
