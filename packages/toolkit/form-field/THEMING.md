@@ -9,7 +9,7 @@ A comprehensive guide to styling `@ngx-signal-forms/toolkit` components using st
 - [1. Shared Feedback (base layer)](#1-shared-feedback-base-layer)
 - [2. Headless & standalone components](#2-headless--standalone-components) —
   [Error & warning messages](#error--warning-messages) · [Hints](#hints) ·
-  [Grouped notifications](#grouped-notifications) · [Error summary](#error-summary) ·
+  [Grouped panel feedback](#grouped-panel-feedback-panel-presentation) · [Error summary](#error-summary) ·
   [Character count](#character-count) · [Assistive row](#assistive-row) · [Fieldset](#fieldset)
 - [3. Form field component](#3-form-field-component) —
   [Layout modes](#layout-modes-standard-outline-and-plain) · [Semantic color scale](#semantic-color-scale-the-knobs) ·
@@ -173,7 +173,7 @@ aligns with the row's control padding. The wrapper also sets the contextual
 warning, so a hint never competes with blocking feedback — treat that variable
 as an internal coordination hook, not a theming knob.
 
-### Grouped Notifications (panel presentation)
+### Grouped Panel Feedback (panel presentation)
 
 **Component:** `ngx-form-field-error` with `presentation="panel"`
 
@@ -204,8 +204,10 @@ shadowing consumer-provided theme variables.
 | `--ngx-signal-form-error-panel-font-size`       | `0.875rem`                                                                  | Message font size (Figma body-2)                |
 | `--ngx-signal-form-error-panel-line-height`     | `1.25rem`                                                                   | Message line height                             |
 | `--ngx-signal-form-error-panel-bg`              | `#fdebeb`                                                                   | Error card background                           |
+| `--ngx-signal-form-error-panel-color`           | `#b91c1c`                                                                   | Error card text color                           |
 | `--ngx-signal-form-error-panel-border-color`    | `color-mix(in srgb, var(--ngx-signal-form-error-color) 50%, transparent)`   | Error card border color                         |
 | `--ngx-signal-form-warning-panel-bg`            | `color-mix(in srgb, var(--ngx-signal-form-warning-color) 10%, white)`       | Warning card background                         |
+| `--ngx-signal-form-warning-panel-color`         | `#92400e`                                                                   | Warning card text color                         |
 | `--ngx-signal-form-warning-panel-border-color`  | `color-mix(in srgb, var(--ngx-signal-form-warning-color) 50%, transparent)` | Warning card border color                       |
 | `--ngx-signal-form-error-panel-message-spacing` | `0.25rem`                                                                   | Spacing between grouped messages                |
 | `--ngx-signal-form-error-title-color`           | `currentColor`                                                              | Optional title color (both presentations)       |
@@ -213,12 +215,12 @@ shadowing consumer-provided theme variables.
 | `--ngx-signal-form-error-title-line-height`     | `1.5rem`                                                                    | Optional title line height (both presentations) |
 | `--ngx-signal-form-error-title-font-weight`     | `500`                                                                       | Optional title font weight (both presentations) |
 
-Text color, list style/indent, and message spacing come from the shared
+List style/indent and message spacing come from the shared
 `--ngx-signal-form-error-*` / `--ngx-signal-form-warning-*` tokens in the
-[Error & Warning Messages](#error--warning-messages) table — the panel
-presentation no longer has an independent color/list-style knob from the
-inline presentation (a deliberate simplification made when the two were
-merged; see `docs/migrations/v1.0.0-rc.12.md`).
+[Error & Warning Messages](#error--warning-messages) table. Panel text has its
+own `--ngx-signal-form-error-panel-color` and
+`--ngx-signal-form-warning-panel-color` overrides so it remains readable on
+the tinted card surfaces.
 
 The light-theme danger defaults follow the current Figma card recipe:
 
@@ -411,11 +413,13 @@ fallbacks throughout the stylesheet.
 - `--ngx-signal-form-fieldset-danger-surface-bg` — default `var(--ngx-signal-form-fieldset-notification-error-bg)`; base fill for `surfaceTone="danger"`
 - `--ngx-signal-form-fieldset-legend-color` — default `var(--...fieldset-color...)`; legend text color in default state
 - `--ngx-signal-form-fieldset-legend-font-size` — default `0.875rem`; legend font size
+- `--ngx-signal-form-fieldset-legend-font-family` — default `var(--typography-font-family, inherit)`; legend font family
 - `--ngx-signal-form-fieldset-legend-line-height` — default `1.25rem`; legend line height
 - `--ngx-signal-form-fieldset-legend-font-weight` — default `500`; legend font weight
 - `--ngx-signal-form-fieldset-legend-letter-spacing` — default `0`; legend letter spacing
 - `--ngx-signal-form-fieldset-legend-bg` — default `transparent`; legend background that stays separate from the surfaced content
 - `--ngx-signal-form-fieldset-legend-border-radius` — default `0.25rem`; legend background radius
+- `--ngx-signal-form-fieldset-legend-inset-inline-start` — default `0.5rem`; start-edge inset for the projected legend
 - `--ngx-signal-form-fieldset-invalid-border-color` — default `#db1818`; border color when errors are shown
 - `--ngx-signal-form-fieldset-warning-border-color` — default `#a16207`; border color when warnings are shown
 - `--ngx-signal-form-fieldset-invalid-surface-bg` — default `var(--...invalid-bg...)`; error-tinted background below the legend
@@ -455,74 +459,16 @@ fallbacks throughout the stylesheet.
 - `--ngx-signal-form-fieldset-notification-warning-bg` — grouped notification card background for warnings
 - `--ngx-signal-form-fieldset-notification-warning-border-color` — grouped notification card border color for warnings
 
-Message text color is not independently overridable per feedback-appearance branch: the notification card shares `--ngx-signal-form-fieldset-error-color` / `--ngx-signal-form-fieldset-warning-color` with the plain branch (both branches render the same `ngx-form-field-error` component — see [Grouped Notifications](#grouped-notifications-panel-presentation)). `--ngx-signal-form-fieldset-notification-error-color` / `-warning-color` were removed along with that split.
+Grouped panel cards use the fieldset notification background, border, and list
+tokens above. Their text color follows the panel-specific
+`--ngx-signal-form-error-panel-color` /
+`--ngx-signal-form-warning-panel-color` tokens; the former
+`--ngx-signal-form-fieldset-notification-error-color` /
+`-warning-color` overrides were removed along with the old split.
 
 The fieldset host also exposes `data-appearance`, `data-feedback-appearance`,
 `data-surface-tone`, `data-validation-surface`, and `data-has-messages`
 attributes for custom CSS hooks.
-
-- `--ngx-signal-form-fieldset-gap` — default `1rem`; spacing between grouped controls
-- `--ngx-signal-form-fieldset-padding` — default `1rem`; inner padding around the surfaced fieldset content
-- `--ngx-signal-form-fieldset-message-inset-inline-start` — default `0`; moves the grouped summary horizontally from the start edge
-- `--ngx-signal-form-fieldset-message-inset-inline-end` — default `0`; moves the grouped summary horizontally from the end edge
-- `--ngx-signal-form-fieldset-notification-inset-inline-start` — default `0`; start inset specifically for notification-style grouped summaries
-- `--ngx-signal-form-fieldset-notification-inset-inline-end` — default `0`; end inset specifically for notification-style grouped summaries
-- `--ngx-signal-form-fieldset-border-radius` — default `0.75rem`; outer fieldset border radius
-- `--ngx-signal-form-fieldset-surface-border-radius` — default `var(--...fieldset-radius...)`; optional override for the inner surfaced content radius
-- `--ngx-signal-form-fieldset-bg` — default `transparent`; base fieldset background token
-- `--ngx-signal-form-fieldset-surface-bg` — default `var(--...fieldset-bg...)`; background behind grouped controls, below the legend
-- `--ngx-signal-form-fieldset-neutral-surface-bg` — default subtle neutral tint; base fill for `surfaceTone="neutral"`
-- `--ngx-signal-form-fieldset-info-surface-bg` — default subtle info tint; base fill for `surfaceTone="info"`
-- `--ngx-signal-form-fieldset-success-surface-bg` — default subtle success tint; base fill for `surfaceTone="success"`
-- `--ngx-signal-form-fieldset-warning-surface-base-bg` — default `var(--ngx-signal-form-fieldset-notification-warning-bg)`; base fill for `surfaceTone="warning"`
-- `--ngx-signal-form-fieldset-danger-surface-bg` — default `var(--ngx-signal-form-fieldset-notification-error-bg)`; base fill for `surfaceTone="danger"`
-- `--ngx-signal-form-fieldset-legend-color` — default `var(--...fieldset-color...)`; legend text color in default state
-- `--ngx-signal-form-fieldset-legend-font-size` — default `0.875rem`; legend font size
-- `--ngx-signal-form-fieldset-legend-line-height` — default `1.25rem`; legend line height
-- `--ngx-signal-form-fieldset-legend-font-weight` — default `500`; legend font weight
-- `--ngx-signal-form-fieldset-legend-letter-spacing` — default `0`; legend letter spacing
-- `--ngx-signal-form-fieldset-legend-bg` — default `transparent`; legend background that stays separate from the surfaced content
-- `--ngx-signal-form-fieldset-legend-border-radius` — default `0.25rem`; legend background radius
-- `--ngx-signal-form-fieldset-invalid-border-color` — default `#db1818`; border color when errors are shown
-- `--ngx-signal-form-fieldset-warning-border-color` — default `#a16207`; border color when warnings are shown
-- `--ngx-signal-form-fieldset-invalid-surface-bg` — default `var(--...invalid-bg...)`; error-tinted background below the legend
-- `--ngx-signal-form-fieldset-warning-surface-bg` — default `var(--...notification-warning-bg...)`; warning-tinted background below the legend
-- `--ngx-signal-form-fieldset-invalid-legend-color` — default `var(--...invalid-border...)`; legend color in error state
-- `--ngx-signal-form-fieldset-warning-legend-color` — default `var(--...warning-border...)`; legend color in warning state
-- `--ngx-signal-form-fieldset-invalid-legend-bg` — default `var(--...legend-bg...)`; optional legend background in error state
-- `--ngx-signal-form-fieldset-warning-legend-bg` — default `var(--...legend-bg...)`; optional legend background in warning state
-- `--ngx-signal-form-fieldset-message-padding` — default `0`; grouped summary container padding
-- `--ngx-signal-form-fieldset-message-padding-inline-start` — default `var(--...feedback-padding-horizontal...)`; grouped summary start padding
-- `--ngx-signal-form-fieldset-message-padding-inline-end` — default `var(--...feedback-padding-horizontal...)`; grouped summary end padding
-- `--ngx-signal-form-fieldset-message-border-width` — default `0`; grouped summary border width
-- `--ngx-signal-form-fieldset-message-border-radius` — default `0`; grouped summary border radius
-- `--ngx-signal-form-fieldset-message-spacing` — default `0.25rem`; spacing between grouped summary messages
-- `--ngx-signal-form-fieldset-message-list-style` — default `var(--...feedback-list-style...)`; grouped summary `list-style` shorthand (type + position)
-- `--ngx-signal-form-fieldset-message-list-padding-inline-start` — default `var(--...feedback-list-indent...)`; grouped summary list indent
-- `--ngx-signal-form-fieldset-message-animation` — default `ngx-status-slide-in 300ms cubic-bezier(0.2, 0.8, 0.2, 1) forwards`; grouped summary entry animation
-- `--ngx-signal-form-fieldset-error-color` — default cascades through `--ngx-signal-form-error-color` before falling back to the internal danger tone; grouped error text color
-- `--ngx-signal-form-fieldset-error-bg` — default cascades through `--ngx-signal-form-error-bg` before falling back to `transparent`; grouped error background
-- `--ngx-signal-form-fieldset-error-border-color` — default cascades through `--ngx-signal-form-error-border-color` before falling back to `transparent`; grouped error border color
-- `--ngx-signal-form-fieldset-warning-color` — default cascades through `--ngx-signal-form-warning-color` before falling back to the internal warning tone; grouped warning text color
-- `--ngx-signal-form-fieldset-warning-bg` — when set, overrides both the host warning surface background and the grouped warning message background; otherwise each layer falls back to its own internal default
-- `--ngx-signal-form-fieldset-warning-border-color` — default cascades through `--ngx-signal-form-warning-border-color` before falling back to `transparent`; grouped warning border color
-- `--ngx-signal-form-fieldset-border-color` — default internal border tone; fieldset host border color
-- `--ngx-signal-form-fieldset-border-width` — default internal border width; fieldset host border width
-- `--ngx-signal-form-fieldset-color` — default internal text tone; primary fieldset text color
-- `--ngx-signal-form-fieldset-muted-color` — default internal muted text tone; secondary fieldset text color
-- `--ngx-signal-form-fieldset-legend-padding` — default internal spacing pair; padding applied to the projected `<legend>`
-- `--ngx-signal-form-fieldset-invalid-bg` — default `var(--...bg-danger-surface...)` (`#fbdddd`); error-tinted fill behind grouped content (pairs with `-invalid-surface-bg` when the invalid surface should differ)
-- `--ngx-signal-form-fieldset-message-margin-top` — default `var(--_fieldset-gap)`; top margin for the grouped message container
-- `--ngx-signal-form-fieldset-message-margin-bottom` — default `var(--_fieldset-gap)`; bottom margin for the grouped message container
-- `--ngx-signal-form-fieldset-content-offset` — default `0`; horizontal offset applied to the surface/content area relative to the fieldset edge
-- `--ngx-signal-form-fieldset-notification-list-padding-inline-start` — default `var(--_feedback-list-indent)`; notification card list indent
-- `--ngx-signal-form-fieldset-notification-error-bg` — grouped notification card background for errors
-- `--ngx-signal-form-fieldset-notification-error-border-color` — grouped notification card border color for errors
-- `--ngx-signal-form-fieldset-notification-list-style` — grouped notification card `list-style` shorthand
-- `--ngx-signal-form-fieldset-notification-warning-bg` — grouped notification card background for warnings
-- `--ngx-signal-form-fieldset-notification-warning-border-color` — grouped notification card border color for warnings
-
-Message text color is not independently overridable per feedback-appearance branch: the notification card shares `--ngx-signal-form-fieldset-error-color` / `--ngx-signal-form-fieldset-warning-color` with the plain branch (both branches render the same `ngx-form-field-error` component — see [Grouped Notifications](#grouped-notifications-panel-presentation)). `--ngx-signal-form-fieldset-notification-error-color` / `-warning-color` were removed along with that split.
 
 The fieldset uses two visual layers by design:
 
@@ -954,13 +900,14 @@ when the user has actively chosen one — an absent class should defer back
 to `prefers-color-scheme`.
 
 > [!NOTE]
-> The standalone feedback components (`ngx-form-field-error`,
-> `ngx-form-field-notification`, hints, character count) follow
+> The standalone feedback components (`ngx-form-field-error` in either inline
+> or panel presentation, hints, character count) follow
 > `prefers-color-scheme` only. Class-based ancestor theming is not detectable
 > reliably across browsers from plain component CSS, so a class-driven dark
 > mode should also map its dark tokens onto the public
 > `--ngx-signal-form-error-*`, `--ngx-signal-form-warning-*`,
-> `--ngx-signal-form-notification-*`, hint, and character-count variables.
+> `--ngx-signal-form-error-panel-*`,
+> `--ngx-signal-form-warning-panel-*`, hint, and character-count variables.
 
 If your app has a manual toggle, use this pattern:
 

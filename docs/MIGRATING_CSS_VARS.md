@@ -29,7 +29,7 @@ That page also explains the two-prefix convention:
 ## What changed, at a glance
 
 - **New Tier 2 ("shared feedback") tokens** — a small token family that all
-  feedback components (`ngx-form-field-error`, `ngx-form-field-notification`,
+  feedback components (`ngx-form-field-error` in inline or panel presentation,
   `ngx-form-field-hint`, `ngx-form-field-character-count`) now cascade through.
   Override one token to retune every feedback surface at once.
 - **`*-border` → `*-border-color`** across error, warning, notification, and
@@ -66,16 +66,16 @@ That page also explains the two-prefix convention:
 ```
 
 Any of these overrides affects **every** feedback surface — error messages,
-warning messages, notification cards, hints, character counts, and fieldset
-grouped summaries — unless a component-level override is set closer to the
-element (component-specific overrides still win).
+warning messages, panel feedback, hints, character counts, and fieldset grouped
+summaries — unless a component-level override is set closer to the element
+(component-specific overrides still win).
 
-Notification message typography used to cascade through
+Panel message typography used to cascade through
 `--ngx-signal-form-error-font-size`. It no longer does — setting
 `--ngx-signal-form-error-font-size` only affects inline error messages now.
-Override `--ngx-signal-form-feedback-font-size` to tune both, or the
-component-specific `--ngx-signal-form-notification-font-size` for just
-notifications.
+Override `--ngx-signal-form-feedback-font-size` to tune all feedback, or
+`--ngx-signal-form-error-panel-font-size` /
+`--ngx-signal-form-warning-panel-font-size` for panel-specific typography.
 
 ## 2. Renames (same behavior, new names)
 
@@ -87,13 +87,13 @@ notifications.
 | `--ngx-signal-form-warning-border`                      | `--ngx-signal-form-warning-border-color`         |
 | `--ngx-signal-form-error-list-style-type` + `-position` | `--ngx-signal-form-error-list-style` (shorthand) |
 
-### Notification component (`ngx-form-field-notification`)
+### Former notification component tokens (historical rc.6 names)
 
 | Before (rc.6)                                                  | After (v1)                                              |
 | -------------------------------------------------------------- | ------------------------------------------------------- |
-| `--ngx-signal-form-notification-error-border`                  | `--ngx-signal-form-notification-error-border-color`     |
-| `--ngx-signal-form-notification-warning-border`                | `--ngx-signal-form-notification-warning-border-color`   |
-| `--ngx-signal-form-notification-list-style-type` + `-position` | `--ngx-signal-form-notification-list-style` (shorthand) |
+| `--ngx-signal-form-notification-error-border`                  | `--ngx-signal-form-error-panel-border-color`            |
+| `--ngx-signal-form-notification-warning-border`                | `--ngx-signal-form-warning-panel-border-color`          |
+| `--ngx-signal-form-notification-list-style-type` + `-position` | `--ngx-signal-form-error-list-style` (shared shorthand) |
 
 ### Fieldset component (`ngx-form-fieldset`)
 

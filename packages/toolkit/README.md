@@ -21,14 +21,14 @@ You always import the core entry point. The other entry points add UI components
 
 ## Entry points
 
-| Entry point                            | Purpose                                                            |
-| -------------------------------------- | ------------------------------------------------------------------ |
-| `@ngx-signal-forms/toolkit`            | Core directives, providers, and utilities                          |
-| `@ngx-signal-forms/toolkit/assistive`  | Error, grouped notification, hint, counter, and summary components |
-| `@ngx-signal-forms/toolkit/form-field` | Form field wrapper and fieldset components                         |
-| `@ngx-signal-forms/toolkit/headless`   | Renderless primitives for custom UI                                |
-| `@ngx-signal-forms/toolkit/vest`       | Optional Vest adapter (requires `vest@6`)                          |
-| `@ngx-signal-forms/toolkit/testing`    | WCAG 2.2 AA test harness (requires `axe-core`)                     |
+| Entry point                            | Purpose                                                              |
+| -------------------------------------- | -------------------------------------------------------------------- |
+| `@ngx-signal-forms/toolkit`            | Core directives, providers, and utilities                            |
+| `@ngx-signal-forms/toolkit/assistive`  | Error, grouped panel feedback, hint, counter, and summary components |
+| `@ngx-signal-forms/toolkit/form-field` | Form field wrapper and fieldset components                           |
+| `@ngx-signal-forms/toolkit/headless`   | Renderless primitives for custom UI                                  |
+| `@ngx-signal-forms/toolkit/vest`       | Optional Vest adapter (requires `vest@6`)                            |
+| `@ngx-signal-forms/toolkit/testing`    | WCAG 2.2 AA test harness (requires `axe-core`)                       |
 
 ### Picking the right surface quickly
 
@@ -643,7 +643,7 @@ authoritative enumeration of the public surface.
 
 - [Root README](https://github.com/ngx-signal-forms/ngx-signal-forms#readme) — overview, installation, quick start
 - [Form field wrapper](./form-field/README.md) — pre-styled wrapper component
-- [Assistive components](./assistive/README.md) — standalone error, grouped notification, hint, counter, and summary components
+- [Assistive components](./assistive/README.md) — standalone error, grouped panel feedback, hint, counter, and summary components
 - [Headless primitives](./headless/README.md) — renderless directives for custom UI
 - [Vest integration](./vest/README.md) — Vest adapter
 - [Accessibility testing harness](#accessibility-testing-harness) — WCAG 2.2 AA axe-core assertions

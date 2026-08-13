@@ -1,6 +1,6 @@
 # @ngx-signal-forms/toolkit/assistive
 
-> Styled error/notification, hint, character count, and error summary components for Angular Signal Forms.
+> Styled feedback, hint, character count, and error summary components for Angular Signal Forms.
 
 ## Why this entry point exists
 
@@ -139,6 +139,21 @@ Optional `position` input (`'left' | 'right' | null`, default `null`): alignment
 row. When omitted or `null`, hints left-align by default; pass `position="right"` to
 opt into end alignment.
 
+| Input      | Type                        | Default | Description                                                                                                                       |
+| ---------- | --------------------------- | ------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| `id`       | `string \| null`            | `null`  | Explicit hint ID. Supports static `id` and reactive `[id]` bindings; empty values fall back to the generated or field-derived ID. |
+| `position` | `'left' \| 'right' \| null` | `null`  | Alignment within the assistive row.                                                                                               |
+
+When the hint is inside `ngx-form-field-wrapper`, its resolved ID is registered
+for automatic `aria-describedby` composition. Use an explicit `id` when a
+custom wrapper or design system needs to control the hint's stable DOM identity:
+
+```html
+<ngx-form-field-hint [id]="hintId"
+  >Use at least 8 characters</ngx-form-field-hint
+>
+```
+
 ### NgxFormFieldCharacterCount
 
 Character counter with progressive color states (ok → warning → danger → exceeded).
@@ -158,6 +173,11 @@ Character counter with progressive color states (ok → warning → danger → e
 | `colorThresholds`       | `{ warning: number; danger: number }`          | `{ warning: 80, danger: 95 }` | Percentage thresholds for the warning and danger color states            |
 
 When a matching max-length validator is present, `maxLength` can be omitted and detected automatically. Add `liveAnnounce` for polite screen reader announcements.
+
+The component accepts `string`, `readonly string[]`, `null`, and `undefined`
+field values. Strings are counted by character length; arrays are counted by
+item count. Unsupported values render `0` and emit a one-time development
+warning rather than being coerced or exposed in the diagnostic.
 
 The built-in announcement strings ("Approaching limit: N characters remaining.", etc.) are English-only. Bind `[announcementFormatter]` to a `(state, { current, max, remaining, over }) => string` function to localize them:
 

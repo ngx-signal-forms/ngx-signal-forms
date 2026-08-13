@@ -316,5 +316,5 @@ teaches for hosts that own their own ARIA instead of using
 
 - [Toolkit core](../README.md) — error strategies, ARIA, configuration
 - [Form field wrapper](../form-field/README.md) — pre-styled wrapper component
-- [Assistive components](../assistive/README.md) — styled error, grouped notification, hint, counter, and summary components
+- [Assistive components](../assistive/README.md) — styled error, grouped panel feedback, hint, counter, and summary components
 - [Theming guide](../form-field/THEMING.md) — CSS custom properties for styled components

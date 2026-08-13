@@ -37,7 +37,7 @@ import {
 ### What `NgxFormField` includes vs excludes
 
 - **Included:** `NgxFormFieldWrapper`, `NgxFormFieldset`, `NgxFormFieldError`, `NgxFormFieldHint`, `NgxFormFieldCharacterCount`, plus ARIA/semantics directives used by the wrapper path.
-- **Not included:** grouped standalone assistive surfaces (`NgxFormFieldNotification`, `NgxFormFieldErrorSummary`). Import those from `@ngx-signal-forms/toolkit/assistive` when needed.
+- **Not included:** standalone grouped summaries such as `NgxFormFieldErrorSummary`. Import those from `@ngx-signal-forms/toolkit/assistive` when needed. Panel feedback uses `NgxFormFieldError` with `presentation="panel"`.
 
 ## Quick start
 
@@ -471,7 +471,7 @@ Quick example:
 
 - [Theming guide](./THEMING.md) — complete CSS custom properties reference
 - [Toolkit core](../README.md) — error strategies, ARIA, configuration
-- [Assistive components](../assistive/README.md) — standalone error, grouped notification, hint, counter, and summary components
+- [Assistive components](../assistive/README.md) — standalone error, grouped panel feedback, hint, counter, and summary components
 - [Headless primitives](../headless/README.md) — renderless directives for full custom UI
 - [Custom controls](https://github.com/ngx-signal-forms/ngx-signal-forms/blob/main/docs/CUSTOM_CONTROLS.md) — wrapping sliders, date pickers, and third-party widgets
 - [CSS framework integration](https://github.com/ngx-signal-forms/ngx-signal-forms/blob/main/docs/CSS_FRAMEWORK_INTEGRATION.md) — Tailwind, Bootstrap, Material
