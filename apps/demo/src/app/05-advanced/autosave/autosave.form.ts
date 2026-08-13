@@ -77,17 +77,19 @@ interface AutosavePatchResponse {
             never an untouched or invalid value.
           </li>
           <li>
-            <code>httpResource(() =&gt; patch ? &#123; url, method:
-            'PATCH', body: patch &#125; : undefined)</code> — returning
-            <code>undefined</code> pauses the resource, so there is no
-            request while nothing qualifies.
+            <code
+              >httpResource(() =&gt; patch ? &#123; url, method: 'PATCH', body:
+              patch &#125; : undefined)</code
+            >
+            — returning <code>undefined</code> pauses the resource, so there is
+            no request while nothing qualifies.
           </li>
           <li>
-            On a successful save, only the fields that are still unchanged
-            since the request was sent are marked pristine, via each field's
-            own no-argument <code>reset()</code> — a field edited again while
-            the request was in flight stays dirty, so the next debounce
-            cycle saves it instead of silently dropping it.
+            On a successful save, only the fields that are still unchanged since
+            the request was sent are marked pristine, via each field's own
+            no-argument <code>reset()</code> — a field edited again while the
+            request was in flight stays dirty, so the next debounce cycle saves
+            it instead of silently dropping it.
           </li>
         </ul>
       </div>
@@ -126,8 +128,8 @@ interface AutosavePatchResponse {
             [formField]="profileForm.bio"
           ></textarea>
           <ngx-form-field-hint>
-            Type <code>{{ failureMarker }}</code> anywhere in this field to
-            see the failure + retry path.
+            Type <code>{{ failureMarker }}</code> anywhere in this field to see
+            the failure + retry path.
           </ngx-form-field-hint>
         </ngx-form-field-wrapper>
 
@@ -160,11 +162,7 @@ interface AutosavePatchResponse {
               class="flex flex-wrap items-center gap-3 rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-900 dark:border-red-800 dark:bg-red-950 dark:text-red-100"
             >
               <span>Could not save your changes.</span>
-              <button
-                type="button"
-                class="btn-secondary"
-                (click)="retrySave()"
-              >
+              <button type="button" class="btn-secondary" (click)="retrySave()">
                 Retry save
               </button>
             </div>
@@ -181,7 +179,9 @@ interface AutosavePatchResponse {
           class="rounded-lg border border-gray-200 bg-gray-50 p-4 font-mono text-xs dark:border-gray-700 dark:bg-gray-900"
         >
           <div>
-            displayName: dirty()={{ profileForm.displayName().dirty() }}
+            displayName: dirty()={{
+              profileForm.displayName().dirty()
+            }}
             valid()={{ profileForm.displayName().valid() }}
           </div>
           <div>

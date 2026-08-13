@@ -133,10 +133,10 @@ const registrationSchema = schema<Registration>((path) => {
             manually searching the error array.
           </li>
           <li>
-            <code>onError</code> returns a
-            <code>warningError()</code> instead of <code>null</code> — a
-            network failure surfaces as a non-blocking advisory (prefixed
-            <code>warn:</code>) so submission is never silently unblocked.
+            <code>onError</code> returns a <code>warningError()</code> instead
+            of <code>null</code> — a network failure surfaces as a non-blocking
+            advisory (prefixed <code>warn:</code>) so submission is never
+            silently unblocked.
           </li>
         </ul>
       </div>
@@ -253,9 +253,14 @@ const registrationSchema = schema<Registration>((path) => {
           <div>
             Blur-debounce pending: {{ regForm.usernameOnBlur().pending() }}
           </div>
-          <div>Typing debounce: <code>validateHttp(..., &#123; debounce: 350 &#125;)</code></div>
+          <div>
+            Typing debounce:
+            <code>validateHttp(..., &#123; debounce: 350 &#125;)</code>
+          </div>
           <div>Blur debounce: <code>debounce(field, 'blur')</code></div>
-          <div>Typing-debounce errors: {{ regForm.username().errors() | json }}</div>
+          <div>
+            Typing-debounce errors: {{ regForm.username().errors() | json }}
+          </div>
           <div>
             Blur-debounce errors: {{ regForm.usernameOnBlur().errors() | json }}
           </div>
