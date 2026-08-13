@@ -14,24 +14,62 @@ Angular Signal Forms provides the form model, validation, and field state. The c
 
 You always import the core entry point. The other entry points add UI components and adapters on top.
 
+> [!IMPORTANT]
+> `@ngx-signal-forms/toolkit` is the behavioral foundation.
+> Use this entry point for form context, ARIA ownership, strategy resolution, and shared utilities.
+> Add `/form-field`, `/assistive`, `/headless`, `/vest`, or `/testing` only for the specific surface you need.
+
 ## Entry points
 
-| Entry point                            | Purpose                                                            |
-| -------------------------------------- | ------------------------------------------------------------------ |
-| `@ngx-signal-forms/toolkit`            | Core directives, providers, and utilities                          |
-| `@ngx-signal-forms/toolkit/assistive`  | Error, grouped notification, hint, counter, and summary components |
-| `@ngx-signal-forms/toolkit/form-field` | Form field wrapper and fieldset components                         |
-| `@ngx-signal-forms/toolkit/headless`   | Renderless primitives for custom UI                                |
-| `@ngx-signal-forms/toolkit/vest`       | Optional Vest adapter (requires `vest@6`)                          |
-| `@ngx-signal-forms/toolkit/testing`    | WCAG 2.2 AA test harness (requires `axe-core`)                     |
+| Entry point                            | Purpose                                                              |
+| -------------------------------------- | -------------------------------------------------------------------- |
+| `@ngx-signal-forms/toolkit`            | Core directives, providers, and utilities                            |
+| `@ngx-signal-forms/toolkit/assistive`  | Error, grouped panel feedback, hint, counter, and summary components |
+| `@ngx-signal-forms/toolkit/form-field` | Form field wrapper and fieldset components                           |
+| `@ngx-signal-forms/toolkit/headless`   | Renderless primitives for custom UI                                  |
+| `@ngx-signal-forms/toolkit/vest`       | Optional Vest adapter (requires `vest@6`)                            |
+| `@ngx-signal-forms/toolkit/testing`    | WCAG 2.2 AA test harness (requires `axe-core`)                       |
 
-**Which one do I pick?**
+### Picking the right surface quickly
 
-- **Ready-to-use styled fields** → [`/form-field`](./form-field/README.md)
-- **Custom markup, reuse toolkit error/notification/hint/count/summary components** → [`/assistive`](./assistive/README.md)
-- **Signals-only, fully custom markup** → [`/headless`](./headless/README.md)
-- **Vest business rules** → [`/vest`](./vest/README.md)
-- **Assert your own components/fixtures are WCAG 2.2 AA clean** → [`/testing`](#accessibility-testing-harness)
+- Need a ready-to-use form UI? Use [`/form-field`](./form-field/README.md).
+- Need standalone feedback widgets in your own layout? Use [`/assistive`](./assistive/README.md).
+- Need full custom markup with toolkit state only? Use [`/headless`](./headless/README.md).
+- Need Vest policy validation and warning mapping? Use [`/vest`](./vest/README.md).
+- Need WCAG assertions in tests? Use [`/testing`](./testing/README.md).
+
+## First 60 seconds (core)
+
+If you only need the core behavior layer first, copy/paste this:
+
+```typescript
+import { Component, signal } from '@angular/core';
+import { FormField, form, required } from '@angular/forms/signals';
+import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit';
+
+@Component({
+  imports: [FormField, NgxSignalFormToolkit],
+  template: `
+    <form [formRoot]="form" ngxSignalForm errorStrategy="on-submit">
+      <label for="email">Email</label>
+      <input id="email" [formField]="form.email" />
+      <button type="submit">Submit</button>
+    </form>
+  `,
+})
+export class ExampleComponent {
+  protected readonly model = signal({ email: '' });
+  protected readonly form = form(this.model, (path) => {
+    required(path.email, { message: 'Email is required' });
+  });
+}
+```
+
+Next step by need:
+
+- Ready-made field UI → [`/form-field`](./form-field/README.md)
+- Standalone feedback UI → [`/assistive`](./assistive/README.md)
+- Full custom markup → [`/headless`](./headless/README.md)
 
 ## Import
 
@@ -39,7 +77,12 @@ You always import the core entry point. The other entry points add UI components
 // Bundle import (recommended) — includes FormRoot, NgxSignalForm,
 // NgxSignalFormAutoAria, NgxSignalFormControlSemanticsDirective
 import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit';
+```
 
+<details>
+<summary>Individual imports (advanced / selective usage)</summary>
+
+```typescript
 // Individual imports when needed
 import {
   NgxSignalForm,
@@ -55,46 +98,41 @@ import {
 } from '@ngx-signal-forms/toolkit';
 ```
 
+</details>
+
 > The directive class is `NgxSignalFormControlSemanticsDirective` — the only
 > public class in v1 that keeps its `Directive` suffix, because the
 > `NgxSignalFormControlSemantics` interface (in `core/types.ts`) already
 > occupies the suffix-less name.
 
-## Quick start
+## Next step: submission + invalid-focus handling
+
+After the [First 60 seconds (core)](#first-60-seconds-core) snippet works,
+add submit handling and first-invalid focus:
 
 ```typescript
-import { Component, signal } from '@angular/core';
-import { form, required, FormField } from '@angular/forms/signals';
-import {
-  NgxSignalFormToolkit,
-  createOnInvalidHandler,
-} from '@ngx-signal-forms/toolkit';
+import { createOnInvalidHandler } from '@ngx-signal-forms/toolkit';
 
-@Component({
-  imports: [FormField, NgxSignalFormToolkit],
-  template: `
-    <form [formRoot]="contactForm" ngxSignalForm errorStrategy="on-submit">
-      <label for="email">Email</label>
-      <input id="email" type="email" [formField]="contactForm.email" />
-      <button type="submit">Send</button>
-    </form>
-  `,
-})
-export class ContactComponent {
-  readonly #model = signal({ email: '' });
-  protected readonly contactForm = form(
-    this.#model,
-    (path) => {
-      required(path.email, { message: 'Email is required' });
+protected readonly form = form(
+  this.model,
+  (path) => {
+    required(path.email, { message: 'Email is required' });
+  },
+  {
+    submission: {
+      action: async () => console.log('Submit:', this.model()),
+      onInvalid: createOnInvalidHandler(),
     },
-    {
-      submission: {
-        action: async () => console.log('Submit:', this.#model()),
-        onInvalid: createOnInvalidHandler(),
-      },
-    },
-  );
-}
+  },
+);
+```
+
+```html
+<form [formRoot]="form" ngxSignalForm errorStrategy="on-submit">
+  <label for="email">Email</label>
+  <input id="email" type="email" [formField]="form.email" />
+  <button type="submit">Send</button>
+</form>
 ```
 
 ## Core directives
@@ -156,6 +194,7 @@ See [Custom Controls](https://github.com/ngx-signal-forms/ngx-signal-forms/blob/
 provideNgxSignalFormsConfig({
   autoAria: true, // default
   defaultErrorStrategy: 'on-touch', // 'immediate' | 'on-touch' | 'on-submit'
+  defaultWarningStrategy: 'on-touch', // 'immediate' | 'on-touch' | 'on-submit'
   defaultFormFieldAppearance: 'standard', // 'standard' | 'outline' | 'plain'
   defaultFormFieldOrientation: 'vertical', // 'vertical' | 'horizontal'
   showMarkerWhen: 'required', // 'required' | 'optional' | 'none'
@@ -367,26 +406,29 @@ provideFieldLabels(() => {
 
 ### Error visibility
 
-| Function                                               | Description                                                                                |
-| ------------------------------------------------------ | ------------------------------------------------------------------------------------------ |
-| `createErrorVisibility(field, opts?)`                  | One call: `Signal<boolean>` with strategy + submitted status auto-read from the DI context |
-| `createShowErrorsComputed(field, strategy, status?)`   | `Signal<boolean>` — whether errors should show now                                         |
-| `shouldShowErrors(invalid, touched, strategy, status)` | Pure boolean strategy helper — not reactive; use `createShowErrorsComputed` for a signal   |
-| `combineShowErrors(signals)`                           | Combines an array of visibility signals, e.g. `combineShowErrors([sigA, sigB])`            |
-| `readDirectErrors(state)`                              | Direct `errors()` of a field/group only — excludes nested-field errors                     |
+| Function                                                     | Description                                                                                |
+| ------------------------------------------------------------ | ------------------------------------------------------------------------------------------ |
+| `createErrorVisibility(field, opts?)`                        | One call: `Signal<boolean>` with strategy + submitted status auto-read from the DI context |
+| `createShowErrorsComputed(field, strategy, status?)`         | `Signal<boolean>` — whether errors should show now                                         |
+| `shouldShowErrors(invalid, touched, strategy, status)`       | Pure boolean strategy helper — not reactive; use `createShowErrorsComputed` for a signal   |
+| `shouldShowWarnings(hasWarnings, touched, strategy, status)` | Pure boolean warning-timing counterpart to `shouldShowErrors`                              |
+| `combineShowErrors(signals)`                                 | Combines an array of visibility signals, e.g. `combineShowErrors([sigA, sigB])`            |
+| `readDirectErrors(state)`                                    | Direct `errors()` of a field/group only — excludes nested-field errors                     |
 
 ### Strategy & context resolution
 
 Building blocks for custom wrappers and headless UIs that want to join the
 [cascade](#how-settings-resolve-the-cascade) exactly like the built-in surfaces:
 
-| Function                                                         | Description                                                                |
-| ---------------------------------------------------------------- | -------------------------------------------------------------------------- |
-| `resolveErrorDisplayStrategy(input, context?, configDefault?)`   | Pure resolution: input ?? context ?? config default ?? `'on-touch'`        |
-| `resolveStrategyFromContext(input, formContext, configDefault?)` | Resolved strategy value (call inside your own `computed()` for reactivity) |
-| `resolveSubmittedStatusFromContext(input, formContext)`          | Same cascade for `SubmittedStatus`                                         |
-| `injectFormContext()`                                            | Get the `ngxSignalForm` context, or `undefined`                            |
-| `injectFieldControl(element, injector?)`                         | Resolve the bound `FieldTree` for an element from the form context         |
+| Function                                                                | Description                                                                                                                              |
+| ----------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| `resolveErrorDisplayStrategy(input, context?, configDefault?)`          | Pure resolution: input ?? context ?? config default ?? `'on-touch'`                                                                      |
+| `resolveStrategyFromContext(input, formContext, configDefault?)`        | Resolved strategy value (call inside your own `computed()` for reactivity)                                                               |
+| `resolveWarningStrategy(input, context?, configDefault?)`               | Warning-strategy counterpart to `resolveErrorDisplayStrategy` — warnings resolve through their own cascade, never `defaultErrorStrategy` |
+| `resolveWarningStrategyFromContext(input, formContext, configDefault?)` | Reactive warning-strategy resolver (call inside your own `computed()`)                                                                   |
+| `resolveSubmittedStatusFromContext(input, formContext)`                 | Same cascade for `SubmittedStatus`                                                                                                       |
+| `injectFormContext()`                                                   | Get the `ngxSignalForm` context, or `undefined`                                                                                          |
+| `injectFieldControl(element, injector?)`                                | Resolve the bound `FieldTree` for an element from the form context                                                                       |
 
 ### Focus management
 
@@ -417,7 +459,7 @@ Building blocks for custom wrappers and headless UIs that want to join the
 
 > Warning **display timing** is controlled separately from error timing via the
 > `warningStrategy` input on `NgxFormFieldError` (default:
-> `'immediate'`). See
+> `'on-touch'`). See
 > [`WARNINGS_SUPPORT.md`](https://github.com/ngx-signal-forms/ngx-signal-forms/blob/main/docs/WARNINGS_SUPPORT.md#when-warnings-appear--warningstrategy)
 > and the [assistive README](./assistive/README.md#ngxformfielderror)
 > for usage.
@@ -601,14 +643,10 @@ authoritative enumeration of the public surface.
 
 - [Root README](https://github.com/ngx-signal-forms/ngx-signal-forms#readme) — overview, installation, quick start
 - [Form field wrapper](./form-field/README.md) — pre-styled wrapper component
-- [Assistive components](./assistive/README.md) — standalone error, grouped notification, hint, counter, and summary components
+- [Assistive components](./assistive/README.md) — standalone error, grouped panel feedback, hint, counter, and summary components
 - [Headless primitives](./headless/README.md) — renderless directives for custom UI
 - [Vest integration](./vest/README.md) — Vest adapter
 - [Accessibility testing harness](#accessibility-testing-harness) — WCAG 2.2 AA axe-core assertions
 - [Theming guide](./form-field/THEMING.md) — CSS custom properties
 - [Custom controls](https://github.com/ngx-signal-forms/ngx-signal-forms/blob/main/docs/CUSTOM_CONTROLS.md) — wrapping custom and third-party widgets
 - [Warnings support](https://github.com/ngx-signal-forms/ngx-signal-forms/blob/main/docs/WARNINGS_SUPPORT.md) — warning convention and flow
-
-## License
-
-MIT © [ngx-signal-forms](https://github.com/ngx-signal-forms/ngx-signal-forms)

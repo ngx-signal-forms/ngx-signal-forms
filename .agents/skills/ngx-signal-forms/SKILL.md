@@ -16,7 +16,6 @@ Routing loop:
 1. Identify the required **surface** from imports/selectors/symbol names.
 2. Open exactly one sub-skill first.
 3. Open a second sub-skill only if the task truly crosses surfaces.
-4. Keep source of truth in `@angular/forms/signals`; toolkit augments behavior.
 
 | Task                                                                  | Entry point                            | Sub-skill to read                          |
 | --------------------------------------------------------------------- | -------------------------------------- | ------------------------------------------ |
@@ -53,4 +52,4 @@ sub-skill(s), and no guidance outside those surfaces is applied.
 5. Bound controls inside `ngx-form-field-wrapper` need a stable `id` unless the wrapper gets an explicit `fieldName`.
 6. Declare control semantics explicitly with `ngxSignalFormControl` for controls outside the default native field families (switches, checkboxes, sliders, composites) — the wrapper and auto-ARIA use this to avoid brittle DOM heuristics. For switch controls also add `role="switch"` on the actual interactive element.
 7. Angular standalone imports are template-local — if a child custom control renders the real `[formField]` element, import toolkit auto-ARIA in that child component too.
-8. Do not use removed APIs: `manual` strategy, `computeShowErrors`, `createShowErrorsSignal`, `canSubmit`, `isSubmitting`, `fieldNameResolver`, `strictFieldResolution`, `injectFormConfig`. Use `standard` not `stacked` and `plain` not `bare`. Drop the `Component`/`Directive` suffix from public class imports — `NgxSignalFormControlSemanticsDirective` is the only intentional exception (kept to avoid colliding with the `NgxSignalFormControlSemantics` interface).
+8. Do not use removed APIs: `manual` strategy, `computeShowErrors`, `createShowErrorsSignal`, `canSubmit`, `isSubmitting`, `fieldNameResolver`, `strictFieldResolution`, `injectFormConfig`, `NgxFormFieldNotification` (use `NgxFormFieldError` with `presentation="panel"`), `toHintDescriptors`, `createErrorRendererInputs`, `resolveUnionInput`. Use `standard` not `stacked` and `plain` not `bare`. Drop the `Component`/`Directive` suffix from public class imports — `NgxSignalFormControlSemanticsDirective` is the only intentional exception (kept to avoid colliding with the `NgxSignalFormControlSemantics` interface).

@@ -143,6 +143,29 @@ warning-only list raises the warning container (`role="status"`); an empty
 list hides both. Do not try to set a tone — there is
 no such input.
 
+## Warnings Have Their Own Timing — `warningStrategy`, Not `strategy`
+
+```html
+<!-- Wrong — expects warnings to follow the error strategy -->
+<ngx-form-field-wrapper strategy="on-submit" [formField]="form.bio">
+  ...
+</ngx-form-field-wrapper>
+
+<!-- Correct — warnings time through their own cascade -->
+<ngx-form-field-wrapper
+  strategy="on-submit"
+  warningStrategy="on-submit"
+  [formField]="form.bio"
+>
+  ...
+</ngx-form-field-wrapper>
+```
+
+Warnings never affect `invalid`, so they do not follow `errorStrategy`. The
+warning cascade is `warningStrategy` input → `defaultWarningStrategy` config →
+`'on-touch'`. Set `warningStrategy` on the wrapper or `ngxSignalForm` when
+warnings should surface on the same schedule as errors.
+
 ## Wrapper Identity — Always Provide `id`
 
 ```html
@@ -173,6 +196,13 @@ These were removed or are not public:
 | `isSubmitting()`               | `submittedStatus()` from `[formRoot]`                                |
 | `fieldNameResolver` config     | Provide `id` on bound control                                        |
 | `strictFieldResolution` config | Removed — strict by default                                          |
+| `NgxFormFieldNotification`     | `NgxFormFieldError` with `presentation="panel"` + `[errors]`         |
+| `toHintDescriptors()`          | Inline the two-line `computed()` — see `docs/CUSTOM_WRAPPERS.md`     |
+| `createErrorRendererInputs()`  | Inline the two-line `computed()` — see `docs/CUSTOM_WRAPPERS.md`     |
+| `resolveUnionInput()`          | Inline the union unwrap at the call site                             |
+
+The notification fold also renamed the CSS hooks: `--ngx-signal-form-notification-*`
+became `--ngx-signal-form-error-panel-*` / `--ngx-signal-form-warning-panel-*`.
 
 ## Renamed — Update the Name, Same Behavior
 

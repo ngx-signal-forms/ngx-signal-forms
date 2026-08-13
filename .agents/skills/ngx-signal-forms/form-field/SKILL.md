@@ -31,9 +31,10 @@ The form-field entry point provides a pre-styled field shell (label + control + 
 4. **Field marking:** Use `showMarkerWhen` (`'required' | 'optional' | 'none'`), plus optional `requiredMarker` / `optionalMarker`, on the wrapper or globally via `provideNgxSignalFormsConfig({ showMarkerWhen: 'required' })`. Markers render in every appearance and don't affect `aria-required`. Add the form-level `<ngx-form-marking-legend>` (from `@ngx-signal-forms/toolkit/assistive`) once per form to explain what the marker means.
 
 5. **Use `NgxFormFieldset` for grouped sections:**
-   - Pass the **parent field tree** to `[fieldsetField]`.
+   - Pass the **parent field tree** to `[field]`.
    - Default: child wrapper errors + group-level errors each show separately. Set `includeNestedErrors` to show all child errors in the group summary.
    - Use `fields` input to restrict which fields count toward the group summary.
+   - Style the group shell with `appearance="plain"` (semantic-only grouping, no border/padding), `surfaceTone`, and `validationSurface="always"` (tint invalid/warning groups). Control the grouped feedback with `feedbackAppearance` (`'auto' | 'plain' | 'notification'`), `notificationTitle`, and `listStyle`. See `../references/api.md` for the full input table.
 
 6. **Use `form[formRoot]` for the baseline wrapper path; add `ngxSignalForm` when the form needs shared context.** Wrapper and fieldset components can render with the default `'on-touch'` fallback even without `ngxSignalForm`. Add `ngxSignalForm` when grouped sections, summaries, or custom wrapper integrations need inherited `'on-submit'`, `submittedStatus`, or injected form context.
 
@@ -152,7 +153,7 @@ export class ProfileFormComponent {
 
 ```html
 <!-- Group-level error summary (add errorPlacement="top" to move it above the fields) -->
-<ngx-form-fieldset [fieldsetField]="form.address" fieldsetId="address">
+<ngx-form-fieldset [field]="form.address" fieldsetId="address">
   <legend>Address</legend>
 
   <ngx-form-field-wrapper

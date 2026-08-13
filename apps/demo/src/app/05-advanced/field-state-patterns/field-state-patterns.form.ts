@@ -79,9 +79,9 @@ const fieldStatePatternsSchema = schema<FieldStatePatternsModel>((path) => {
       <h2 class="mb-4 text-2xl font-bold">Field State Patterns Demo</h2>
       <p class="mb-6 text-gray-600 dark:text-gray-400">
         Angular 22 made <code>&#123; when &#125;</code> the consistent way to
-        drive
-        dynamic field state. This demo shows when to hide, disable, or lock a
-        field while keeping the toolkit wrappers and assistive UI unchanged.
+        drive dynamic field state. This demo shows when to hide, disable, or
+        lock a field while keeping the toolkit wrappers and assistive UI
+        unchanged.
       </p>
 
       <div class="mb-6 grid gap-4">
@@ -200,7 +200,9 @@ const fieldStatePatternsSchema = schema<FieldStatePatternsModel>((path) => {
               [appearance]="appearance()"
               [orientation]="orientation()"
             >
-              <label for="field-state-invite-only">Invite-only onboarding</label>
+              <label for="field-state-invite-only"
+                >Invite-only onboarding</label
+              >
               <input
                 id="field-state-invite-only"
                 type="checkbox"
@@ -234,7 +236,9 @@ const fieldStatePatternsSchema = schema<FieldStatePatternsModel>((path) => {
         <div
           class="rounded-lg border border-gray-200 bg-gray-50 p-4 font-mono text-xs dark:border-gray-700 dark:bg-gray-900"
         >
-          <div>workEmail.readonly(): {{ stateForm.workEmail().readonly() }}</div>
+          <div>
+            workEmail.readonly(): {{ stateForm.workEmail().readonly() }}
+          </div>
           <div>
             mobileNumber.disabled(): {{ stateForm.mobileNumber().disabled() }}
           </div>

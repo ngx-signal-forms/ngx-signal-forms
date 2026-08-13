@@ -20,11 +20,14 @@ import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit';
 | `NgxSignalFormAutoAria`                  | auto                                        | Applies `aria-invalid`, `aria-required`, `aria-describedby` |
 | `NgxSignalFormControlSemanticsDirective` | `[ngxSignalFormControl]` and related inputs | Declares stable wrapper/ARIA semantics for a control        |
 
-**NgxSignalForm input:**
+**NgxSignalForm inputs:**
 
-| Input           | Type                   | Default      |
-| --------------- | ---------------------- | ------------ |
-| `errorStrategy` | `ErrorDisplayStrategy` | `'on-touch'` |
+| Input             | Type                             | Default      |
+| ----------------- | -------------------------------- | ------------ |
+| `errorStrategy`   | `ResolvedErrorDisplayStrategy`   | `'on-touch'` |
+| `warningStrategy` | `ResolvedWarningDisplayStrategy` | `'on-touch'` |
+
+`'inherit'` is excluded at form level (there is nothing above the form root to inherit from), so binding it here is a compile error.
 
 **NgxSignalForm exposed signals:**
 
@@ -98,6 +101,7 @@ interface ErrorMessageRegistry {
 }
 
 type FieldLabelMap = Record<string, string>;
+type FieldLabelResolver = (rawFieldPath: string) => string;
 interface NgxSignalFormFieldContext {
   readonly fieldName: Signal<string | null>;
 }
@@ -133,6 +137,7 @@ interface NgxSignalFormsUserConfig {
   defaultErrorStrategy?: 'immediate' | 'on-touch' | 'on-submit'; // default: 'on-touch'
   defaultFormFieldAppearance?: 'standard' | 'outline' | 'plain'; // default: 'standard'
   defaultFormFieldOrientation?: 'vertical' | 'horizontal'; // default: 'vertical'
+  defaultWarningStrategy?: ResolvedWarningDisplayStrategy; // default: 'on-touch' — warnings follow their own cascade, independent of errorStrategy
   // Migration: legacy `stacked` → `standard`, legacy `bare` → `plain`.
   showMarkerWhen?: 'required' | 'optional' | 'none'; // default: 'required'
   requiredMarker?: string; // default: ' *'
@@ -155,6 +160,8 @@ type SignalLike<T> = Signal<T> | (() => T);
 type ReactiveOrStatic<T> = SignalLike<T> | T; // a plain value or a reactive source
 type ResolvedErrorDisplayStrategy = 'immediate' | 'on-touch' | 'on-submit';
 type ErrorDisplayStrategy = ResolvedErrorDisplayStrategy | 'inherit';
+type ResolvedWarningDisplayStrategy = 'immediate' | 'on-touch' | 'on-submit';
+type WarningDisplayStrategy = ResolvedWarningDisplayStrategy | 'inherit';
 type FormFieldAppearance = 'standard' | 'outline' | 'plain';
 type FormFieldAppearanceInput = FormFieldAppearance | 'inherit';
 type FormFieldOrientation = 'vertical' | 'horizontal';
@@ -237,6 +244,9 @@ createShowErrorsComputed(field, strategy, submittedStatus?): Signal<boolean>
 // shouldShowErrors() below — that's a pure boolean predicate, not a signal.
 combineShowErrors(signals: readonly Signal<boolean>[]): Signal<boolean>
 shouldShowErrors(isInvalid, isTouched, strategy, submittedStatus): boolean
+shouldShowWarnings(hasWarnings, isTouched, strategy, submittedStatus): boolean
+// Warning-specific counterpart to shouldShowErrors: checks warning presence,
+// not invalidity — warnings never affect the `invalid` state.
 
 // Field interactivity (drives focus management, wrapper rendering, summary filtering)
 isFieldStateInteractive(fieldState): boolean // false when hidden() or disabled(); readonly() counts as interactive
@@ -304,6 +314,10 @@ getDefaultValidationMessage(error, options?): string
 // Strategy/context helpers
 resolveErrorDisplayStrategy(inputStrategy, contextStrategy?, configDefault?): ResolvedErrorDisplayStrategy
 resolveStrategyFromContext(inputStrategy, formContext, configDefault?): ResolvedErrorDisplayStrategy
+resolveWarningStrategy(inputStrategy, contextStrategy?, configDefault?): ResolvedWarningDisplayStrategy
+resolveWarningStrategyFromContext(inputStrategy, formContext, configDefault?): ResolvedWarningDisplayStrategy
+// Warning cascade (input → form context → config default → 'on-touch') is
+// independent of the error cascade.
 resolveSubmittedStatusFromContext(inputStatus, formContext): SubmittedStatus | undefined
 
 // Error grouping
@@ -364,6 +378,22 @@ NgxControlPresetRegistry // resolves control-semantics preset defaults
 const NGX_SIGNAL_FORM_HINT_REGISTRY: InjectionToken<NgxSignalFormHintRegistry>;
 interface NgxSignalFormHintDescriptor { readonly id: string; readonly fieldName: string | null }
 interface NgxSignalFormHintRegistry { readonly hints: Signal<readonly NgxSignalFormHintDescriptor[]> }
+
+// Wrapper-less standalone error surfaces (e.g. a sibling <ngx-form-field-error>
+// with its own strategy/warningStrategy overrides) publish their resolved
+// visibility here so auto-ARIA's aria-describedby mirrors what is actually
+// rendered. Wrapped fields publish through NgxFieldIdentity instead. See
+// docs/CUSTOM_CONTROLS.md for the worked example.
+const NGX_SIGNAL_FORM_FIELD_VISIBILITY_REGISTRY: InjectionToken<NgxSignalFormFieldVisibilityRegistry>;
+interface NgxSignalFormFieldVisibilityDescriptor {
+  readonly fieldName: string;
+  readonly errorContainerVisible: Signal<boolean>;
+  readonly warningContainerVisible: Signal<boolean>;
+}
+interface NgxSignalFormFieldVisibilityRegistry {
+  register(descriptor: NgxSignalFormFieldVisibilityDescriptor): () => void; // returns unregister
+  get(fieldName: string): NgxSignalFormFieldVisibilityDescriptor | undefined;
+}
 ```
 
 ---
@@ -412,7 +442,9 @@ never re-assigned at the same tick content is inserted.
 
 ### Other assistive exports
 
-- `NgxFormFieldHint` — static descriptive hint content
+- `NgxFormFieldHint` — static descriptive hint content. Accepts an `id` input:
+  a static `id="…"` attribute or a property-bound `[id]="expr"` both feed the
+  `aria-describedby` wiring; when omitted, a stable id is generated.
 - `NgxFormFieldListStyle` (`'plain' | 'bullets'`) — shared list-style union. `NgxFormFieldErrorListStyle` is a `@deprecated` alias of it.
 - `NgxFormFieldErrorPresentation` (`'inline' | 'panel'`) — the `presentation` input's type.
 - `NgxCharacterCountValue` + `NgxCharacterCountAnnouncement*` types — character-count announcement formatting hooks.
@@ -486,29 +518,42 @@ import {
 
 ### NgxFormFieldWrapper inputs
 
-| Input            | Type                                              | Default                                                                                         |
-| ---------------- | ------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
-| `formField`      | field                                             | Required                                                                                        |
-| `fieldName`      | string                                            | Derived from bound control `id`; pass explicitly for nested custom controls or dynamic identity |
-| `strategy`       | ErrorDisplayStrategy                              | Inherited                                                                                       |
-| `appearance`     | `'standard' \| 'outline' \| 'plain' \| 'inherit'` | `'inherit'`                                                                                     |
-| `orientation`    | `'vertical' \| 'horizontal' \| 'inherit'`         | `'inherit'`                                                                                     |
-| `errorPlacement` | `'top' \| 'bottom'`                               | `'bottom'`                                                                                      |
-| `showMarkerWhen` | `'required' \| 'optional' \| 'none'`              | From config                                                                                     |
-| `requiredMarker` | string                                            | `' *'`                                                                                          |
-| `optionalMarker` | string                                            | `' (optional)'`                                                                                 |
+| Input             | Type                                              | Default                                                                                         |
+| ----------------- | ------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
+| `formField`       | field                                             | Required                                                                                        |
+| `fieldName`       | string                                            | Derived from bound control `id`; pass explicitly for nested custom controls or dynamic identity |
+| `strategy`        | ErrorDisplayStrategy                              | Inherited                                                                                       |
+| `warningStrategy` | WarningDisplayStrategy                            | Inherited — warnings time independently of errors                                               |
+| `appearance`      | `'standard' \| 'outline' \| 'plain' \| 'inherit'` | `'inherit'`                                                                                     |
+| `orientation`     | `'vertical' \| 'horizontal' \| 'inherit'`         | `'inherit'`                                                                                     |
+| `errorPlacement`  | `'top' \| 'bottom'`                               | `'bottom'`                                                                                      |
+| `showMarkerWhen`  | `'required' \| 'optional' \| 'none'`              | From config                                                                                     |
+| `requiredMarker`  | string                                            | `' *'`                                                                                          |
+| `optionalMarker`  | string                                            | `' (optional)'`                                                                                 |
 
 ### NgxFormFieldset inputs
 
-| Input                 | Type                 | Default                   |
-| --------------------- | -------------------- | ------------------------- |
-| `fieldsetField`       | field tree           | Required                  |
-| `fields`              | field[]              | Auto-traversed if omitted |
-| `fieldsetId`          | string               | Auto-generated            |
-| `strategy`            | ErrorDisplayStrategy | Inherited                 |
-| `showErrors`          | boolean              | `true`                    |
-| `includeNestedErrors` | boolean              | `false`                   |
-| `errorPlacement`      | `'top' \| 'bottom'`  | `'bottom'`                |
+| Input                 | Type                                                                     | Default                                           |
+| --------------------- | ------------------------------------------------------------------------ | ------------------------------------------------- |
+| `field`               | field tree                                                               | Required                                          |
+| `fields`              | field[]                                                                  | Auto-traversed if omitted                         |
+| `fieldsetId`          | string                                                                   | Auto-generated                                    |
+| `strategy`            | ErrorDisplayStrategy                                                     | Inherited                                         |
+| `warningStrategy`     | WarningDisplayStrategy                                                   | Inherited — warnings time independently of errors |
+| `showErrors`          | boolean                                                                  | `true`                                            |
+| `includeNestedErrors` | boolean                                                                  | `false`                                           |
+| `errorPlacement`      | `'top' \| 'bottom'`                                                      | `'bottom'`                                        |
+| `appearance`          | `'outline' \| 'plain'`                                                   | `'outline'`                                       |
+| `feedbackAppearance`  | `'auto' \| 'plain' \| 'notification'`                                    | `'auto'`                                          |
+| `notificationTitle`   | string                                                                   | none                                              |
+| `listStyle`           | `NgxFormFieldListStyle`                                                  | `'bullets'`                                       |
+| `surfaceTone`         | `'default' \| 'neutral' \| 'info' \| 'success' \| 'warning' \| 'danger'` | `'default'`                                       |
+| `validationSurface`   | `'never' \| 'always'`                                                    | `'never'`                                         |
+
+Exported types: `NgxFormFieldsetAppearance`, `NgxFormFieldsetFeedbackAppearance`,
+`NgxFormFieldsetSurfaceTone`, `NgxFormFieldsetValidationSurface`. `appearance="plain"`
+is semantic-only grouping (no border/padding/surface); `validationSurface="always"`
+tints the surface on invalid/warning state.
 
 ---
 
@@ -586,7 +631,7 @@ Signals: `currentLength()`, `resolvedMaxLength()`, `remaining()`, `limitState()`
 
 Selector: `[ngxHeadlessFieldset]` | Export: `#fieldset="fieldset"`
 
-Inputs: `fieldsetField` (required), `fields`, `strategy`, `includeNestedErrors`
+Inputs: `field` (required), `fields`, `strategy`, `warningStrategy`, `includeNestedErrors`
 
 Signals: `isValid()`, `isInvalid()`, `isTouched()`, `isDirty()`, `aggregatedErrors()`, `aggregatedWarnings()`, `shouldShowErrors()`, `shouldShowWarnings()`
 
@@ -636,6 +681,29 @@ humanizeFieldPath(fieldName: string): string
 resolveFieldNameFromError(error, resolver?): string
 focusBoundControlFromError(error): void
 toErrorSummaryEntry(error, registry?, options?, labelResolver?): ErrorSummaryEntryData
+
+// Aggregation factories — the pipelines behind NgxHeadlessFieldset and
+// NgxHeadlessErrorSummary, extracted for custom grouped surfaces. Pure: no
+// inject(), no injection context required (ADR-0005), testable with plain
+// signal() mocks. Visibility timing is NOT resolved inside — pass pre-resolved
+// showErrors/showWarnings signals from your own createErrorVisibility() /
+// createShowErrorsComputed() seam call (ADR-0006).
+createFieldsetAggregation(options: CreateFieldsetAggregationOptions): FieldsetAggregationResult
+// Options: { fieldState: () => unknown;              // reader for field()()
+//            fields?; includeNestedErrors?;          // same contract as the directive inputs
+//            showErrors; showWarnings;               // pre-resolved visibility signals
+//            errorMessages? }
+// Result: { aggregatedErrors, aggregatedWarnings, resolvedErrors,
+//           resolvedWarnings, hasErrors, hasWarnings,
+//           shouldShowErrors, shouldShowWarnings } — all Signal<...>
+createErrorSummaryEntries(options: CreateErrorSummaryEntriesOptions): ErrorSummaryEntriesResult
+// Options: { fieldState: () => unknown;              // reader for formTree()()
+//            showErrors;                             // pre-resolved visibility, shared by both channels
+//            errorMessages?; labelResolver? }        // labelResolver falls back to humanizeFieldPath
+// Reads errorSummary(), filters out hidden/disabled fields, dedupes per field,
+// splits by kind, maps to focusable entries.
+// Result: { entries, warningEntries, hasErrors, hasWarnings,
+//           shouldShow, shouldShowWarnings } — all Signal<...>
 
 // Field optionality — does a form tree have any required / any optional leaf?
 summarizeFieldOptionality(tree): FieldOptionality // synchronous; reactive when read inside a computed()
@@ -878,6 +946,7 @@ A small consumer-facing accessibility test harness. `axe-core` is an **optional 
 ```typescript
 import {
   expectNoA11yViolations,
+  findAlertContaining,
   WCAG_22_AA_TAGS,
   type WCAG_22_AA_TAG,
 } from '@ngx-signal-forms/toolkit/testing';
@@ -887,9 +956,14 @@ import {
 // Runs an axe-core audit and HARD-FAILS (throws) on any WCAG 2.2 AA violation.
 // One call per rendered fixture scans the whole subtree.
 expectNoA11yViolations(
-  context?: axe.ElementContext,   // default: document.body
-  options?: axe.RunOptions,       // merged over the WCAG 2.2 AA defaults
+  context?: axe.ElementContext,              // default: document.body
+  options?: Omit<axe.RunOptions, 'runOnly'>, // merged over the defaults
 ): Promise<void>
+// The WCAG 2.2 AA `runOnly` tag set is the hard-fail baseline and is NOT
+// overridable: a fresh literal carrying `runOnly` is a compile error, and the
+// baseline is applied after the options spread, so it wins at runtime even for
+// an axe.RunOptions-typed value smuggling one through. `resultTypes` stays
+// caller-overridable.
 
 // axe-core tag set mapping to WCAG 2.2 AA (additive across versions):
 WCAG_22_AA_TAGS = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'] as const
@@ -897,6 +971,12 @@ WCAG_22_AA_TAGS = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'] as co
 // Entry) are non-automatable, so automated scans cover only a subset of full
 // 2.2 AA conformance.
 type WCAG_22_AA_TAG = (typeof WCAG_22_AA_TAGS)[number]
+
+// Finds the [role="alert"] element in `container` whose text includes `text`.
+// Toolkit surfaces mount several live regions at once (some mounted-but-empty
+// per the WCAG 4.1.3 first-insertion pattern), so a bare getByRole('alert') is
+// ambiguous — narrow to the region carrying the expected message first.
+findAlertContaining(container: ParentNode, text: string): HTMLElement | undefined
 ```
 
 ```typescript

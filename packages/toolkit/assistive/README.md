@@ -1,12 +1,18 @@
 # @ngx-signal-forms/toolkit/assistive
 
-> Styled error/notification, hint, character count, and error summary components for Angular Signal Forms.
+> Styled feedback, hint, character count, and error summary components for Angular Signal Forms.
 
 ## Why this entry point exists
 
 The form-field wrapper (`/form-field`) renders error and hint components for you automatically. This entry point exposes those same components individually — use it when you already have your own layout but want the toolkit's error timing, message resolution, and ARIA roles.
 
 It sits between `/headless` (signals only, no UI) and `/form-field` (complete wrapper) in the toolkit hierarchy.
+
+### When to use this entry point
+
+- Use `/assistive` when you already own the field layout and only need feedback UI pieces.
+- Use `/form-field` when you want the fastest default path with wrapper-managed projection and ARIA wiring.
+- Use `/headless` when you want zero styled markup and signals only.
 
 ## Import
 
@@ -129,9 +135,24 @@ Helper text below inputs. Automatically linked to the input via `aria-describedb
 <ngx-form-field-hint>Format: 123-456-7890</ngx-form-field-hint>
 ```
 
-Optional `position` input (`'left' | 'right'`): alignment within the assistive
-row. When omitted, hints left-align by default; pass `position="right"` to
+Optional `position` input (`'left' | 'right' | null`, default `null`): alignment within the assistive
+row. When omitted or `null`, hints left-align by default; pass `position="right"` to
 opt into end alignment.
+
+| Input      | Type                        | Default | Description                                                                                                                       |
+| ---------- | --------------------------- | ------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| `id`       | `string \| null`            | `null`  | Explicit hint ID. Supports static `id` and reactive `[id]` bindings; empty values fall back to the generated or field-derived ID. |
+| `position` | `'left' \| 'right' \| null` | `null`  | Alignment within the assistive row.                                                                                               |
+
+When the hint is inside `ngx-form-field-wrapper`, its resolved ID is registered
+for automatic `aria-describedby` composition. Use an explicit `id` when a
+custom wrapper or design system needs to control the hint's stable DOM identity:
+
+```html
+<ngx-form-field-hint [id]="hintId"
+  >Use at least 8 characters</ngx-form-field-hint
+>
+```
 
 ### NgxFormFieldCharacterCount
 
@@ -141,7 +162,22 @@ Character counter with progressive color states (ok → warning → danger → e
 <ngx-form-field-character-count [formField]="form.bio" [maxLength]="500" />
 ```
 
+| Input                   | Type                                           | Default                       | Description                                                              |
+| ----------------------- | ---------------------------------------------- | ----------------------------- | ------------------------------------------------------------------------ |
+| `formField`             | `FieldTree<NgxCharacterCountValue>` (required) | —                             | Field to track the character count for                                   |
+| `maxLength`             | `number \| undefined`                          | Auto-detected from validator  | Character limit; auto-detected from a `maxLength` validator when omitted |
+| `position`              | `'left' \| 'right'`                            | `'right'`                     | Text alignment within the assistive row                                  |
+| `showLimitColors`       | `boolean`                                      | `true`                        | Progressive color states as the count nears the limit                    |
+| `liveAnnounce`          | `boolean`                                      | `false`                       | Polite live announcements when the limit state changes                   |
+| `announcementFormatter` | `NgxCharacterCountAnnouncementFormatter`       | Built-in English strings      | Custom formatter for localizing announcements                            |
+| `colorThresholds`       | `{ warning: number; danger: number }`          | `{ warning: 80, danger: 95 }` | Percentage thresholds for the warning and danger color states            |
+
 When a matching max-length validator is present, `maxLength` can be omitted and detected automatically. Add `liveAnnounce` for polite screen reader announcements.
+
+The component accepts `string`, `readonly string[]`, `null`, and `undefined`
+field values. Strings are counted by character length; arrays are counted by
+item count. Unsupported values render `0` and emit a one-time development
+warning rather than being coerced or exposed in the diagnostic.
 
 The built-in announcement strings ("Approaching limit: N characters remaining.", etc.) are English-only. Bind `[announcementFormatter]` to a `(state, { current, max, remaining, over }) => string` function to localize them:
 
@@ -221,7 +257,3 @@ tokens, dark-mode overrides, and the fieldset-level
 - [Form field wrapper](../form-field/README.md) — pre-styled wrapper that uses these components
 - [Headless primitives](../headless/README.md) — renderless directives for full custom UI
 - [Theming guide](../form-field/THEMING.md) — complete CSS custom properties reference
-
-## License
-
-MIT © [ngx-signal-forms](https://github.com/ngx-signal-forms/ngx-signal-forms)

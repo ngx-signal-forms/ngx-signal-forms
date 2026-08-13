@@ -146,7 +146,7 @@ export type NgxCharacterCountAnnouncementFormatter = (
  * ```css
  * :root {
  *   --ngx-form-field-char-count-font-size: 0.75rem;
- *   --ngx-form-field-char-count-line-height: 1rem;
+ *   --ngx-form-field-char-count-line-height: 1.25;
  *   --ngx-form-field-char-count-color-ok: rgba(50, 65, 85, 0.75);
  *   --ngx-form-field-char-count-color-warning: #a16207;
  *   --ngx-form-field-char-count-color-danger: #db1818;
