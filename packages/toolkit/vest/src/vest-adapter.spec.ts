@@ -5,7 +5,11 @@ import { render, screen } from '@testing-library/angular';
 import userEvent from '@testing-library/user-event';
 import { create, enforce, test as vestTest, warn } from 'vest';
 import { describe, expect, it, vi } from 'vitest';
-import { createVestAdapter, type VestFieldPath } from './vest-adapter';
+import {
+  createVestAdapter,
+  sharedVestAdapter,
+  type VestFieldPath,
+} from './vest-adapter';
 
 // Vitest hoists `vi.mock` above every import in this file (including its own
 // `@angular/core` import elsewhere), registering the mock before any other
@@ -742,5 +746,175 @@ describe('createVestAdapter', () => {
     fixture.destroy();
 
     expect(resetCount).toBe(1);
+  });
+});
+
+describe('sharedVestAdapter', () => {
+  // Direct assertions against the public `sharedVestAdapter` singleton --
+  // the instance the built-in `validateVest`/`validateVestWarnings` entry
+  // points are wired onto (see `./validate-vest.ts`). Previously this
+  // singleton's guarantees were only asserted INDIRECTLY, through
+  // `validateVest`; see issue #358.
+  //
+  // Every test below builds its own Vest suite instance. The run
+  // coordinator's caches are keyed by suite object identity (ADR-0009), so a
+  // fresh suite per test cannot leak state into another spec file sharing
+  // this same module-scope singleton within one test run. Each test also
+  // calls `sharedVestAdapter.invalidate(suite)` in a `finally` block once
+  // done, as an extra belt-and-braces reset.
+
+  it('shares one suite execution across two direct sharedVestAdapter.register calls on the same field tree and value (cross-consumer cache reuse within one form)', async () => {
+    let runCount = 0;
+    const baseSuite = create((data: { email: string }) => {
+      vestTest('email', 'Email is required', () => {
+        enforce(data.email).isNotBlank();
+      });
+      vestTest('email', 'Consider a longer email', () => {
+        warn();
+        enforce(data.email.length >= 12).isTruthy();
+      });
+    });
+    const suite = {
+      ...baseSuite,
+      run(value: { email: string }) {
+        runCount += 1;
+        return baseSuite.run(value);
+      },
+    };
+
+    @Component({
+      selector: 'ngx-test-shared-adapter-cache-reuse',
+      imports: [FormField],
+
+      template: `<input [formField]="f.email" />`,
+    })
+    class TestComponent {
+      readonly model = signal({ email: '' });
+      readonly f = form(this.model, (path) => {
+        // Two direct registrations on the SINGLETON (not a private,
+        // factory-built adapter), on the same path -- two independent
+        // consumers of the SAME form (e.g. an errors surface and a warnings
+        // surface) wiring the same suite/value. The run cache is keyed by
+        // field tree, so reuse is scoped to consumers sharing one form --
+        // a second component with its own form() gets its own run.
+        sharedVestAdapter.register(path, suite, { includeErrors: true });
+        sharedVestAdapter.register(path, suite, {
+          includeErrors: false,
+          includeWarnings: true,
+        });
+      });
+    }
+
+    try {
+      await render(TestComponent);
+      await TestBed.inject(ApplicationRef).whenStable();
+
+      // Both register calls must resolve to a single shared suite execution.
+      expect(runCount).toBe(1);
+    } finally {
+      sharedVestAdapter.invalidate(suite);
+    }
+  });
+
+  it('reference-counts resetOnDestroy on the singleton: one of two consumers tearing down leaves the suite intact, the last resets it', () => {
+    let resetCount = 0;
+    const baseSuite = create((data: { email: string }) => {
+      vestTest('email', 'Email is required', () => {
+        enforce(data.email).isNotBlank();
+      });
+    });
+    const suite = {
+      ...baseSuite,
+      reset: () => {
+        resetCount += 1;
+        baseSuite.reset();
+      },
+    };
+
+    // No template/inputs needed: `form()` (and the singleton registration it
+    // triggers) runs during construction, before any change detection pass.
+    @Component({ template: '' })
+    class TestComponent {
+      readonly model = signal({ email: '' });
+      readonly f = form(this.model, (path) => {
+        sharedVestAdapter.register(path, suite, { resetOnDestroy: true });
+      });
+    }
+
+    // Two independently mounted consumers registering the SAME suite
+    // directly on the singleton -- the README-recommended module-scope
+    // pattern, exercised against `sharedVestAdapter` itself.
+    const first = TestBed.createComponent(TestComponent);
+    const second = TestBed.createComponent(TestComponent);
+
+    try {
+      first.destroy();
+      // The second consumer is still mounted and relying on this suite --
+      // resetting now would wipe its retained state out from under it.
+      expect(resetCount).toBe(0);
+
+      second.destroy();
+      // Only the LAST surviving registration's teardown actually resets.
+      expect(resetCount).toBe(1);
+    } finally {
+      sharedVestAdapter.invalidate(suite);
+    }
+  });
+
+  it('invalidate drops the singleton run cache so a subsequent runVestSuite call for the identical tuple re-executes instead of reusing the cache', () => {
+    let runCount = 0;
+    const baseSuite = create((data: { email: string }) => {
+      vestTest('email', 'Email is required', () => {
+        enforce(data.email).isNotBlank();
+      });
+    });
+    const suite = {
+      ...baseSuite,
+      run(value: { email: string }) {
+        runCount += 1;
+        return baseSuite.run(value);
+      },
+    };
+
+    // Only the field tree's identity is needed (no rendering, no DOM
+    // binding) -- build it directly via an injection context, matching
+    // `validate-vest.spec.ts`'s field-tree-only setup.
+    const fieldTree = TestBed.runInInjectionContext(() =>
+      form(signal({ email: '' })),
+    );
+    const value = { email: '' };
+
+    try {
+      const first = sharedVestAdapter.runVestSuite({
+        suite,
+        fieldTree,
+        value,
+      });
+      expect(first.fromCache).toBe(false);
+      expect(runCount).toBe(1);
+
+      // Identical tuple -> cached, no extra run.
+      const second = sharedVestAdapter.runVestSuite({
+        suite,
+        fieldTree,
+        value,
+      });
+      expect(second.fromCache).toBe(true);
+      expect(runCount).toBe(1);
+
+      sharedVestAdapter.invalidate(suite);
+
+      // Same (suite, fieldTree, value) tuple as `second` -- without
+      // `invalidate`, this would be a cache hit. It must re-execute.
+      const third = sharedVestAdapter.runVestSuite({
+        suite,
+        fieldTree,
+        value,
+      });
+      expect(third.fromCache).toBe(false);
+      expect(runCount).toBe(2);
+    } finally {
+      sharedVestAdapter.invalidate(suite);
+    }
   });
 });
