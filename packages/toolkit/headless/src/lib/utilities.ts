@@ -64,6 +64,8 @@ export {
  * `NgxHeadlessErrorState` share one definition. Mirrors the
  * `CharacterCountValue` re-export above for the same reason: the type moved,
  * the public export path did not.
+ *
+ * @group Directives
  */
 export interface ResolvedError {
   readonly kind: string;
@@ -97,6 +99,8 @@ type ReactiveOrStatic<T> = T | ReadSignal<T>;
  * const unique = dedupeValidationErrors(errors);
  * // [{ kind: 'required', message: 'Required' }, { kind: 'email', message: 'Invalid email' }]
  * ```
+ *
+ * @group Utility Functions
  */
 export function dedupeValidationErrors(
   errors: readonly ValidationError[],
@@ -178,6 +182,8 @@ export function buildHeadlessErrorState(
 
 /**
  * Options for creating error state signals.
+ *
+ * @group Reactive Primitives
  */
 export interface CreateErrorStateOptions<TValue = unknown> {
   /** Form field FieldTree */
@@ -216,6 +222,8 @@ export interface CreateErrorStateOptions<TValue = unknown> {
 
 /**
  * Error state signals returned by createErrorState.
+ *
+ * @group Reactive Primitives
  */
 export interface ErrorStateResult {
   /** Whether to show errors */
@@ -296,6 +304,8 @@ export interface ErrorStateResult {
  *
  * @see {@link splitByKind} and {@link isWarningError} for the warning
  *   convention.
+ *
+ * @group Reactive Primitives
  */
 export function createErrorState<TValue = unknown>(
   options: Readonly<CreateErrorStateOptions<TValue>>,
@@ -354,6 +364,8 @@ function createErrorStateInternal<TValue = unknown>(
 
 /**
  * Options for creating character count signals.
+ *
+ * @group Reactive Primitives
  */
 export interface CreateCharacterCountOptions {
   /** Form field producing a {@link CharacterCountValue}. */
@@ -378,6 +390,8 @@ export interface CreateCharacterCountOptions {
 
 /**
  * Character count signals returned by createCharacterCount.
+ *
+ * @group Reactive Primitives
  */
 export interface CharacterCountResult {
   /** Current value length */
@@ -426,6 +440,8 @@ export interface CharacterCountResult {
  *   console.log(`State: ${charCount.limitState()}`);
  * });
  * ```
+ *
+ * @group Reactive Primitives
  */
 export function createCharacterCount(
   options: Readonly<CreateCharacterCountOptions>,
@@ -511,6 +527,8 @@ export function createCharacterCount(
  * owning the single `createErrorVisibility()`/`createShowErrorsComputed()`
  * seam call (ADR-0006) and threads the results in here; this factory only
  * combines them with the (visibility-independent) presence check.
+ *
+ * @group Reactive Primitives
  */
 export interface CreateFieldsetAggregationOptions {
   /** Reactive reader for the fieldset's own field state (from `field()()`). */
@@ -533,6 +551,8 @@ export interface CreateFieldsetAggregationOptions {
 
 /**
  * Fieldset error/warning aggregation result.
+ *
+ * @group Reactive Primitives
  */
 export interface FieldsetAggregationResult {
   /** Aggregated and deduplicated blocking errors. */
@@ -566,6 +586,8 @@ export interface FieldsetAggregationResult {
  * `createShowErrorsComputed()` call (ADR-0006's single seam).
  *
  * @remarks Does not require an injection context.
+ *
+ * @group Reactive Primitives
  */
 export function createFieldsetAggregation(
   options: Readonly<CreateFieldsetAggregationOptions>,
@@ -664,6 +686,8 @@ const STRIP_WARNING_PREFIX_OPTION = { stripWarningPrefix: true } as const;
  * input — mirrors {@link CreateFieldsetAggregationOptions}'s contract
  * (ADR-0005: factories take DI-resolved values as inputs, never `inject()`
  * themselves).
+ *
+ * @group Reactive Primitives
  */
 export interface CreateErrorSummaryEntriesOptions {
   /** Reactive reader for the root field state (from `formTree()()`). */
@@ -678,6 +702,8 @@ export interface CreateErrorSummaryEntriesOptions {
 
 /**
  * Error-summary entry-mapping result.
+ *
+ * @group Reactive Primitives
  */
 export interface ErrorSummaryEntriesResult {
   /** Resolved blocking error entries ready for rendering. */
@@ -706,6 +732,8 @@ export interface ErrorSummaryEntriesResult {
  * `createFieldsetAggregation`).
  *
  * @remarks Does not require an injection context.
+ *
+ * @group Reactive Primitives
  */
 export function createErrorSummaryEntries(
   options: Readonly<CreateErrorSummaryEntriesOptions>,

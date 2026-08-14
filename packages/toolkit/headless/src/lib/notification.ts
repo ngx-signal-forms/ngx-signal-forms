@@ -15,6 +15,8 @@ import { resolveErrorMessage } from './utilities';
 
 /**
  * Resolved notification message with kind and human-facing message.
+ *
+ * @group Directives
  */
 export interface ResolvedNotificationMessage {
   readonly kind: string;
@@ -26,6 +28,8 @@ export interface ResolvedNotificationMessage {
  * styled component can render a complete grouped notification surface
  * (alert + status live regions, IDs, messages) using only these signals —
  * see the usage example below.
+ *
+ * @group Directives
  */
 export interface NotificationStateSignals {
   /** Whether any messages are present. */
@@ -85,6 +89,8 @@ export interface NotificationStateSignals {
  *   }
  * </div>
  * ```
+ *
+ * @group Directives
  */
 @Directive({
   selector: '[ngxHeadlessNotification]',

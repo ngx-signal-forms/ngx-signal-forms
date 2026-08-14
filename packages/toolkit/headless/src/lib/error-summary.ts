@@ -16,11 +16,15 @@ import {
 
 /**
  * A resolved error-summary entry with kind, message, and focus capability.
+ *
+ * @group Directives
  */
 export type ErrorSummaryEntry = ErrorSummaryEntryData;
 
 /**
  * Error summary signals exposed by the headless directive.
+ *
+ * @group Directives
  */
 export interface ErrorSummarySignals {
   /** Resolved blocking error entries ready for rendering */
@@ -95,6 +99,8 @@ export interface ErrorSummarySignals {
  *   </ul>
  * </div>
  * ```
+ *
+ * @group Directives
  */
 @Directive({
   selector: '[ngxHeadlessErrorSummary]',

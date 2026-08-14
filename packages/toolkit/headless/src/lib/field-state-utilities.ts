@@ -24,6 +24,8 @@ import {
  *
  * Angular Signal Forms exposes these as `Signal<boolean>` properties.
  * We define it locally for type-safe access via duck-typing.
+ *
+ * @group Utility Functions
  */
 export type BooleanStateKey =
   | 'invalid'
@@ -35,6 +37,8 @@ export type BooleanStateKey =
 /**
  * Type representing the shape of FieldState for reading errors.
  * Used for duck-typing access to error properties.
+ *
+ * @group Utility Functions
  */
 export type FieldStateLike = {
   invalid?: ErrorReadableState['invalid'];
@@ -67,6 +71,8 @@ function normalizeValidationErrors(errors: unknown): ValidationError[] {
  * const isInvalid = readFieldFlag(fieldState, 'invalid');
  * const isTouched = readFieldFlag(fieldState, 'touched');
  * ```
+ *
+ * @group Utility Functions
  */
 export function readFieldFlag(state: unknown, key: BooleanStateKey): boolean {
   if (!state || typeof state !== 'object') {
@@ -79,6 +85,8 @@ export function readFieldFlag(state: unknown, key: BooleanStateKey): boolean {
 
 /**
  * Computed boolean state flags from a reactive field state signal.
+ *
+ * @group Reactive Primitives
  */
 export interface FieldStateFlags {
   readonly isInvalid: Signal<boolean>;
@@ -98,6 +106,8 @@ export interface FieldStateFlags {
  *
  * @param fieldState - A signal/computed that returns the field state object
  * @returns Object with computed signals for each boolean flag
+ *
+ * @group Reactive Primitives
  */
 export function createFieldStateFlags(
   fieldState: () => unknown,
@@ -125,6 +135,8 @@ export function createFieldStateFlags(
  * const fieldState = addressField();
  * const allErrors = readErrors(fieldState); // Includes nested field errors
  * ```
+ *
+ * @group Utility Functions
  */
 export function readErrors(state: unknown): ValidationError[] {
   if (!state || typeof state !== 'object') {

@@ -24,6 +24,8 @@ import type { ValidationErrorWithFieldTree } from './field-state-utilities';
 
 /**
  * A resolved error-summary entry ready for rendering.
+ *
+ * @group Utility Functions
  */
 export interface ErrorSummaryEntryData {
   readonly kind: string;
@@ -97,6 +99,7 @@ function fieldIdentityKey(error: ValidationError): string {
  *   `humanizeFieldPath` when `undefined`.
  *
  * @public
+ * @group Utility Functions
  */
 export function resolveFieldNameFromError(
   error: ValidationError,
@@ -122,6 +125,7 @@ export function resolveFieldNameFromError(
  * Uses duck-typed access to `error.fieldTree().focusBoundControl()`.
  *
  * @public
+ * @group Utility Functions
  */
 export function focusBoundControlFromError(error: ValidationError): void {
   const e = error as ValidationErrorWithFieldTree;
@@ -144,6 +148,7 @@ export function focusBoundControlFromError(error: ValidationError): void {
  *   `humanizeFieldPath` when `undefined`
  *
  * @public
+ * @group Utility Functions
  */
 export function toErrorSummaryEntry(
   error: ValidationError,

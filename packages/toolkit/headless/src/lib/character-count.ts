@@ -24,6 +24,8 @@ export {
  * The directive requires a `maxLength` input, so the resolved numeric
  * signals are always non-nullable. `hasLimit` is retained for template
  * ergonomics and future extensibility.
+ *
+ * @group Directives
  */
 export interface CharacterCountStateSignals {
   /** Current value length */
@@ -93,6 +95,8 @@ export interface CharacterCountStateSignals {
  *   <!-- Display with 70%/90% thresholds -->
  * </div>
  * ```
+ *
+ * @group Directives
  */
 @Directive({
   selector: '[ngxHeadlessCharacterCount]',

@@ -165,6 +165,14 @@ type ErrorMessageRegistryFactory = () => ErrorMessageRegistryInput;
  * ```
  *
  * @see {@link provideErrorMessages} Provider factory function
+ *
+ * `/headless`'s README documents this type only as the `errorMessages`
+ * option on `createErrorMessageSignal` (the Reactive Primitives section) —
+ * grouped there rather than under Utility Functions, which that README
+ * reserves for dependency-free helper *functions*, not provider-level
+ * configuration interfaces.
+ *
+ * @group Reactive Primitives
  */
 export interface ErrorMessageRegistry extends BuiltInErrorMessages {
   /**

@@ -31,6 +31,8 @@ export type { ResolvedError };
  * Error state signals exposed by the headless directive.
  *
  * These signals provide all the state needed for custom error display implementations.
+ *
+ * @group Directives
  */
 export interface ErrorStateSignals {
   /** Whether to show errors based on the current strategy */
@@ -99,6 +101,8 @@ export interface ErrorStateSignals {
  * ```
  *
  * @template TValue The type of the field value
+ *
+ * @group Directives
  */
 @Directive({
   selector: '[ngxHeadlessErrorState]',

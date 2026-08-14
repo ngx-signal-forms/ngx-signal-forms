@@ -141,6 +141,8 @@ export {
  * })
  * export class MyComponent {}
  * ```
+ *
+ * @group Directives
  */
 export const NgxHeadlessToolkit = [
   NgxHeadlessErrorState,

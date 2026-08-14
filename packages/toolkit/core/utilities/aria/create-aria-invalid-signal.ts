@@ -40,6 +40,7 @@ import { isBlockingError } from '../warning-error';
  * ```
  *
  * @public
+ * @group ARIA Composition
  */
 export function createAriaInvalidSignal(
   fieldState: Signal<FieldState<unknown> | null>,

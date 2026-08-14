@@ -16,6 +16,8 @@ import {
 
 /**
  * Field name state signals exposed by the headless directive.
+ *
+ * @group Directives
  */
 export interface FieldNameStateSignals {
   /** Resolved field name from input or override; `null` when no name is resolvable. */
@@ -84,6 +86,8 @@ export interface FieldNameStateSignals {
  *   <label [for]="fieldName.resolvedFieldName()">Email</label>
  * </div>
  * ```
+ *
+ * @group Directives
  */
 @Directive({
   selector: '[ngxHeadlessFieldName]',
