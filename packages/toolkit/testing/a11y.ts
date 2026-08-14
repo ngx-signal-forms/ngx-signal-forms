@@ -47,6 +47,90 @@ export async function expectNoA11yViolations(
   context: axe.ElementContext = document.body,
   options: Omit<axe.RunOptions, 'runOnly'> = {},
 ): Promise<void> {
+  return runA11yCheck(
+    WCAG_22_AA_TAGS,
+    context,
+    options,
+    (count) => `Found ${count} WCAG 2.2 AA accessibility violation(s):`,
+  );
+}
+
+/**
+ * Shape shared by {@link expectNoA11yViolations} and the validator returned
+ * by {@link createA11yValidator} — a `context`/`options` pair (mirroring
+ * `axe.run`'s own signature) that resolves on a clean scan and throws a
+ * formatted report otherwise.
+ */
+export type A11yValidator = (
+  context?: axe.ElementContext,
+  options?: Omit<axe.RunOptions, 'runOnly'>,
+) => Promise<void>;
+
+/**
+ * Builds a scoped {@link A11yValidator} — same call shape as
+ * {@link expectNoA11yViolations}, but audited against a caller-chosen subset
+ * of the WCAG 2.2 AA tag set instead of the full baseline.
+ *
+ * `expectNoA11yViolations` is deliberately a hard-coded, non-overridable
+ * baseline (see its own doc) because toolkit components are published
+ * primitives — any WCAG 2.2 AA violation in them is a bug. Consumers writing
+ * a custom wrapper don't have that same all-or-nothing constraint: a fixture
+ * might legitimately only need a rule subset checked at a given call site
+ * (e.g. contrast already gated elsewhere). Getting that today means widening
+ * to a raw `axe.RunOptions` to smuggle `runOnly` past the `Omit` guard —
+ * which silently drops the baseline altogether, with no compile-time signal
+ * of what is (and isn't) still covered.
+ *
+ * `tags` is typed as `readonly WCAG_22_AA_TAG[]` — the same union
+ * {@link WCAG_22_AA_TAGS} is drawn from — not an arbitrary `string[]`, so a
+ * typo'd or invented tag is a compile error rather than a silently-empty
+ * scan. There is no escape hatch back to `string[]` here: the validator this
+ * returns keeps the same `Omit<axe.RunOptions, 'runOnly'>` shape as
+ * `expectNoA11yViolations`, so `runOnly` still can't be smuggled back in
+ * through its own per-call `options` argument either.
+ *
+ * @param options `tags` — the axe tag subset to scan with; defaults to the
+ *   full {@link WCAG_22_AA_TAGS} baseline when omitted. Omitting `tags`
+ *   makes the returned validator behave exactly like
+ *   `expectNoA11yViolations`, including its failure message; passing a
+ *   narrower `tags` list labels the failure message with that scoped tag
+ *   set instead, so a failure report never overclaims WCAG 2.2 AA coverage
+ *   it didn't actually run.
+ * @throws {Error} Synchronously, at creation time, if `tags` is provided but
+ *   empty. An empty array is accepted by the type (`readonly
+ *   WCAG_22_AA_TAG[]` has no minimum length), but would compile down to
+ *   `runOnly: { type: 'tag', values: [] }`, which axe-core runs as "no
+ *   tagged rules" — every scan would silently pass regardless of real
+ *   violations. Failing fast here, before a validator is ever handed back to
+ *   a caller, turns that silent gate-disable into an immediate, loud error
+ *   instead of a validator that always resolves.
+ */
+export function createA11yValidator(
+  options: { tags?: readonly WCAG_22_AA_TAG[] } = {},
+): A11yValidator {
+  if (options.tags?.length === 0) {
+    throw new Error(
+      '[ngx-signal-forms] createA11yValidator: tags must not be empty — omit the option to use the full WCAG 2.2 AA baseline.',
+    );
+  }
+
+  const tags = options.tags ?? WCAG_22_AA_TAGS;
+  const describeViolations =
+    options.tags === undefined
+      ? (count: number) =>
+          `Found ${count} WCAG 2.2 AA accessibility violation(s):`
+      : (count: number) =>
+          `Found ${count} accessibility violation(s) for scoped tags ${tags.join(', ')}:`;
+  return (context = document.body, runOptions = {}) =>
+    runA11yCheck(tags, context, runOptions, describeViolations);
+}
+
+async function runA11yCheck(
+  tags: readonly WCAG_22_AA_TAG[],
+  context: axe.ElementContext,
+  options: Omit<axe.RunOptions, 'runOnly'>,
+  describeViolations: (count: number) => string,
+): Promise<void> {
   const results = await axe.run(context, {
     // `resultTypes` before `...options` so callers can still override it.
     resultTypes: ['violations'],
@@ -55,10 +139,10 @@ export async function expectNoA11yViolations(
     // `runOnly` on fresh object literals, so a caller could still widen a
     // value to `axe.RunOptions` and smuggle `runOnly` through `options`
     // (e.g. `const opts: axe.RunOptions = { runOnly: {...} }`). Applying
-    // the WCAG 2.2 AA baseline after the spread makes it win at runtime
-    // regardless, so the guarantee holds even when the type-level guard
-    // (the `Omit` above) is bypassed this way.
-    runOnly: { type: 'tag', values: [...WCAG_22_AA_TAGS] },
+    // the tag baseline after the spread makes it win at runtime regardless,
+    // so the guarantee holds even when the type-level guard (the `Omit`
+    // above) is bypassed this way.
+    runOnly: { type: 'tag', values: [...tags] },
   });
 
   if (results.violations.length === 0) {
@@ -79,7 +163,7 @@ export async function expectNoA11yViolations(
     .join('\n');
 
   throw new Error(
-    `Found ${results.violations.length} WCAG 2.2 AA accessibility violation(s):\n${report}`,
+    `${describeViolations(results.violations.length)}\n${report}`,
   );
 }
 

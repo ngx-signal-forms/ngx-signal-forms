@@ -26,6 +26,7 @@ npm install --save-dev axe-core@^4.5.0
 
 ```typescript
 import {
+  createA11yValidator,
   expectNoA11yViolations,
   findAlertContaining,
   WCAG_22_AA_TAGS,
@@ -68,6 +69,44 @@ await expectNoA11yViolations(container, {
 > [!WARNING]
 > Keep waivers narrow and fixture-specific. If you disable a rule broadly,
 > you can accidentally hide regressions in production-facing components.
+
+## Scoping the tag baseline: `createA11yValidator(options?)`
+
+`expectNoA11yViolations` is deliberately locked to the full WCAG 2.2 AA tag
+set — that's the right call for the toolkit's own components, which are
+published primitives where any violation is a bug. A custom wrapper you're
+building doesn't always have that same all-or-nothing constraint: a fixture
+might only need a narrower rule subset checked at a given call site. Use
+`createA11yValidator` to build a validator scoped to your own tag subset,
+without giving up the same non-overridable `runOnly` guarantee:
+
+```typescript
+import { createA11yValidator } from '@ngx-signal-forms/toolkit/testing';
+
+// Scoped to Level A only — narrower than the toolkit's own baseline.
+const expectNoLevelAViolations = createA11yValidator({
+  tags: ['wcag2a', 'wcag21a'],
+});
+
+it('has no WCAG 2.2 Level A violations', async () => {
+  const { container } = await render(MyCustomWrapper);
+
+  await expectNoLevelAViolations(container);
+});
+```
+
+The validator `createA11yValidator` returns has the exact same call shape as
+`expectNoA11yViolations` — `(context?, options?)` — so it's a drop-in
+replacement anywhere you'd use the default helper. `tags` accepts only
+`WCAG_22_AA_TAG` values (the same union `WCAG_22_AA_TAGS` is drawn from), so
+a typo'd or invented tag is a compile error rather than a silently-empty
+scan; there's no escape hatch to widen it to an arbitrary `string[]`. An
+empty array (`tags: []`) does type-check — the type has no minimum length —
+but `createA11yValidator` throws synchronously at creation time instead of
+handing back a validator that would silently pass every scan. Omit `tags`
+(or call `createA11yValidator()` with no arguments) to get a validator that
+behaves exactly like `expectNoA11yViolations` — the full baseline is the
+default, not a special case.
 
 ## Utilities
 

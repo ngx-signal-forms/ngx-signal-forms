@@ -945,9 +945,11 @@ A small consumer-facing accessibility test harness. `axe-core` is an **optional 
 
 ```typescript
 import {
+  createA11yValidator,
   expectNoA11yViolations,
   findAlertContaining,
   WCAG_22_AA_TAGS,
+  type A11yValidator,
   type WCAG_22_AA_TAG,
 } from '@ngx-signal-forms/toolkit/testing';
 ```
@@ -964,6 +966,21 @@ expectNoA11yViolations(
 // baseline is applied after the options spread, so it wins at runtime even for
 // an axe.RunOptions-typed value smuggling one through. `resultTypes` stays
 // caller-overridable.
+
+// Builds a same-shaped validator scoped to a caller-chosen WCAG 2.2 AA tag
+// subset, instead of the full expectNoA11yViolations baseline — for custom
+// wrappers that only need part of the tag set checked at a given call site.
+// The toolkit's own specs keep the hard-coded baseline. `tags` is typed to
+// WCAG_22_AA_TAG (not string[]), so an invented tag is a compile error;
+// omitted, it defaults to the full WCAG_22_AA_TAGS baseline. `tags: []`
+// type-checks but throws synchronously at creation time (not a silently
+// always-passing validator). The returned validator keeps the same
+// non-overridable `runOnly` guarantee.
+createA11yValidator(options?: { tags?: readonly WCAG_22_AA_TAG[] }): A11yValidator
+type A11yValidator = (
+  context?: axe.ElementContext,
+  options?: Omit<axe.RunOptions, 'runOnly'>,
+) => Promise<void>
 
 // axe-core tag set mapping to WCAG 2.2 AA (additive across versions):
 WCAG_22_AA_TAGS = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'] as const
