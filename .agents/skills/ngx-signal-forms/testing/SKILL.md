@@ -24,9 +24,11 @@ fixture. One call per fixture scans the whole DOM subtree.
 
 ```typescript
 import {
+  createA11yValidator,
   expectNoA11yViolations,
   findAlertContaining,
   WCAG_22_AA_TAGS, // ['wcag2a','wcag2aa','wcag21a','wcag21aa','wcag22aa']
+  type A11yValidator,
   type WCAG_22_AA_TAG,
 } from '@ngx-signal-forms/toolkit/testing';
 ```
@@ -40,6 +42,19 @@ import {
   passing `runOnly` in a fresh literal is a compile error, and the baseline
   wins at runtime even when a pre-typed `axe.RunOptions` value smuggles one
   through. `resultTypes` stays caller-overridable.
+- `createA11yValidator(options?: { tags?: readonly WCAG_22_AA_TAG[] })` —
+  returns an `A11yValidator` (same `(context?, options?) => Promise<void>`
+  shape as `expectNoA11yViolations`) scoped to a caller-chosen tag subset.
+  Reach for this in a custom wrapper that legitimately only needs part of
+  the WCAG 2.2 AA tag set checked at a given call site — the toolkit's own
+  specs keep using `expectNoA11yViolations`'s hard-coded baseline. `tags` is
+  typed to `WCAG_22_AA_TAG`, so an invented or typo'd tag is a compile
+  error, not a silently-empty scan; omitted, it defaults to the full
+  `WCAG_22_AA_TAGS` baseline. `tags: []` type-checks (the type has no
+  minimum length) but throws synchronously at creation time instead of
+  returning a validator that would silently pass every scan. The returned
+  validator keeps the same non-overridable `runOnly` guarantee as
+  `expectNoA11yViolations`.
 - `WCAG_22_AA_TAGS` — the axe tag set the harness runs. There is no `wcag22a`
   tag: the two new 2.2 Level A criteria are non-automatable, so automated
   scanning covers only a subset of full 2.2 AA conformance.

@@ -26,7 +26,12 @@ This guide does not cover:
   This guide's specs run in jsdom instead — assertions target specific
   attributes and text, not a full accessibility tree scan. See
   [ADR-0004](./decisions/0004-wcag22-testing-strategy.md) for why the two run
-  in different modes.
+  in different modes. A custom wrapper that only needs part of the WCAG 2.2
+  AA tag set checked at a given call site should use
+  `createA11yValidator({ tags })` from the same entry point instead. It
+  builds a scoped validator without bypassing `expectNoA11yViolations`'s
+  baseline through a raw `axe.RunOptions`. See the testing package's README
+  for the scoped-validator example.
 - **End-to-end tests.** Playwright specs (`*.e2e.spec.ts`) drive a real
   browser and are out of scope here.
 
