@@ -21,6 +21,7 @@ export const DEMO_PATHS = {
   storeBinding: '/advanced-scenarios/store-binding',
   serverIntegration: '/advanced-scenarios/server-integration',
   autosave: '/advanced-scenarios/autosave',
+  i18n: '/advanced-scenarios/i18n',
 } as const;
 
 export const DEMO_CATEGORIES = [
@@ -171,6 +172,11 @@ export const DEMO_CATEGORIES = [
       {
         path: '/advanced-scenarios/autosave',
         label: 'Autosave',
+        hasControls: true,
+      },
+      {
+        path: '/advanced-scenarios/i18n',
+        label: 'i18n: Runtime Language Switch',
         hasControls: true,
       },
     ],

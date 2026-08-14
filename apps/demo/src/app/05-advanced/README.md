@@ -30,6 +30,8 @@ This is the production frontier of the demo app. Each demo here stands on its ow
   - What you'll learn: `linkedSignal({ source, computation })` read seam · overriding `set`/`update` to write straight through to `patchState` · when live binding beats draft/commit.
 - **[autosave](./autosave/README.md)** — debounced, field-level save via `debounce(path, 500)` + `httpResource`, with no submit button.
   - What you'll learn: the native `debounce()` schema rule · gating a save on `dirty()` **and** `valid()` · pausing `httpResource` with an `undefined` request · accessible save-status live regions.
+- **[i18n](./i18n/README.md)** — `provideErrorMessages()`/`provideFieldLabels()` factories reacting to a runtime language signal.
+  - What you'll learn: the string-vs-function registry contract · why `$localize` can't do a runtime switch · a parameterised, translated `minLength` message.
 
 ## 🧠 Core concepts
 
