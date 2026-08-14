@@ -63,6 +63,59 @@ describe('field-resolution', () => {
     it('should return null when all candidates are empty', () => {
       expect(resolveFieldNameFromCandidates(undefined, '', '   ')).toBeNull();
     });
+
+    /**
+     * Pins the toolkit-wide field-name cascade documented on this
+     * function's JSDoc: explicit input (tier 1) > bound-control id
+     * (tier 2) > inherited context (tier 3). `NgxFormFieldError` and
+     * `NgxHeadlessFieldName` call this primitive with their candidates
+     * in this order; `NgxFormFieldWrapper.resolvedFieldName` and
+     * `createFieldNameResolver` implement the same cascade semantics
+     * inline rather than calling it.
+     */
+    describe('canonical field-name cascade (explicit > bound-control id > context)', () => {
+      it('tier 1 (explicit) wins even when tiers 2 and 3 also resolve', () => {
+        expect(
+          resolveFieldNameFromCandidates(
+            'explicit-name',
+            'id-derived-name',
+            'context-name',
+          ),
+        ).toBe('explicit-name');
+      });
+
+      it('falls through to tier 2 (bound-control id) when explicit is absent', () => {
+        expect(
+          resolveFieldNameFromCandidates(
+            undefined,
+            'id-derived-name',
+            'context-name',
+          ),
+        ).toBe('id-derived-name');
+      });
+
+      it('falls through to tier 3 (context) when tiers 1 and 2 are both absent', () => {
+        expect(
+          resolveFieldNameFromCandidates(undefined, null, 'context-name'),
+        ).toBe('context-name');
+      });
+
+      it('resolves to null when no tier resolves', () => {
+        expect(
+          resolveFieldNameFromCandidates(undefined, null, undefined),
+        ).toBeNull();
+      });
+
+      it('treats a whitespace-only explicit input as absent, falling through to tier 2', () => {
+        expect(
+          resolveFieldNameFromCandidates(
+            '   ',
+            'id-derived-name',
+            'context-name',
+          ),
+        ).toBe('id-derived-name');
+      });
+    });
   });
 
   describe('generateErrorId', () => {

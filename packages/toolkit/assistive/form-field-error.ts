@@ -374,6 +374,12 @@ export class NgxFormFieldError {
   // correctly configured field. The diagnostic is emitted from
   // `afterEveryRender` below instead, once the wrapper (if any) has had a
   // chance to settle.
+  /**
+   * Tier 1 (explicit input) → tier 3 (inherited context) of the toolkit's
+   * canonical field-name cascade — this component has no bound control of
+   * its own, so it never participates in tier 2 (bound-control id). See
+   * {@link resolveFieldNameFromCandidates} for the full cascade.
+   */
   readonly #resolvedFieldName = computed<string | null>(() => {
     return resolveFieldNameFromCandidates(
       this.fieldName(),

@@ -798,6 +798,14 @@ export class NgxFormFieldWrapper<TValue = unknown> {
    * 1. Explicit `fieldName` input (highest priority)
    * 2. Input element's `id` attribute (automatic, recommended)
    *
+   * Tier 1 → tier 2 of the toolkit's canonical field-name cascade — the
+   * wrapper owns the projected control, so it resolves both tiers itself
+   * and never needs tier 3 (inherited context). This resolved value is
+   * what the wrapper then publishes as context for children (e.g. a
+   * projected `<ngx-form-field-error>`) that have no control of their own.
+   * See `resolveFieldNameFromCandidates` (`core/utilities/field-resolution.ts`)
+   * for the full cascade.
+   *
    * Returns `null` when neither source is available. Downstream consumers
    * (auto-ARIA, hint registry, projected error component) handle `null` by
    * skipping the `aria-describedby` wiring.
