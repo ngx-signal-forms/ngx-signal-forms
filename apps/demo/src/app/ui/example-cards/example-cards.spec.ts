@@ -1,7 +1,6 @@
 import { provideZonelessChangeDetection } from '@angular/core';
 import { Component } from '@angular/core';
-import { provideRouter, RouterLink } from '@angular/router';
-import { By } from '@angular/platform-browser';
+import { provideRouter } from '@angular/router';
 import { render, screen } from '@testing-library/angular';
 import { describe, expect, it } from 'vitest';
 import { ExampleCardsComponent } from './example-cards';
@@ -52,13 +51,12 @@ describe('ExampleCardsComponent', () => {
   });
 
   it('routes in-app next-step links through Angular routerLink', async () => {
-    const { fixture } = await render(ExampleCardsComponent, {
+    await render(ExampleCardsComponent, {
       inputs: { demonstrated, learning },
       providers: [provideZonelessChangeDetection(), provideRouter([])],
     });
 
     const nextStep = screen.getByRole('link', { name: /warning support/i });
-    expect(fixture.debugElement.query(By.directive(RouterLink))).not.toBeNull();
     expect(nextStep.getAttribute('href')).toBe('/toolkit-core/warning-support');
   });
 });

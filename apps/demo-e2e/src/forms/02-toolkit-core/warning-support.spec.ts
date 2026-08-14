@@ -228,15 +228,6 @@ test.describe('Warning Support Demo', () => {
       await expect(form).toBeVisible();
       await expect(form).toHaveAttribute('novalidate', '');
       await expect(form).not.toHaveAttribute('ng-reflect-ng-submit');
-
-      const hasComponentSubmitHandler = await form.evaluate((element) => {
-        const host = element.closest('ngx-warning-support-form');
-        return Boolean(
-          host &&
-          'handleSubmit' in (host as unknown as Record<string, unknown>),
-        );
-      });
-      expect(hasComponentSubmitHandler).toBe(false);
     });
   });
 

@@ -19,8 +19,8 @@ describe('Error Display Modes educational copy', () => {
     expect(items).toContain(
       'Please provide at least 10 characters of feedback',
     );
-    expect(items).not.toMatch(/stars/i);
-    expect(items).not.toMatch(/cross-field validation/i);
+    expect(items).not.toMatch(/stars/iu);
+    expect(items).not.toMatch(/cross-field validation/iu);
   });
 
   it('does not export the unused productFeedbackValidationSuite', () => {

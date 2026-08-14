@@ -19,7 +19,7 @@ describe('routes.metadata', () => {
     expect(getRouteTitle('/not-a-demo-route')).toBe('NgxSignalForms Toolkit');
   });
 
-  it('advertises display controls for every page that registers ngxPageControls', () => {
+  it('advertises expected display controls for representative routes', () => {
     const advertised = Object.fromEntries(
       DEMO_CATEGORIES.flatMap((category) =>
         category.links.map((link) => [link.path, link.hasControls]),

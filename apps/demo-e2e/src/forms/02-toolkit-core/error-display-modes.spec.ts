@@ -137,6 +137,14 @@ test.describe('Error Display Modes', () => {
     await expect(formPage.page.locator('#name-hint')).toBeVisible();
     await expect(formPage.page.locator('#detailed-hint')).toBeVisible();
     await expect(formPage.page.locator('#detailed-counter')).toBeVisible();
+
+    await formPage.ratingInput.fill('2');
+    await formPage.ratingInput.blur();
+    const improvement = formPage.page.locator('#improvementSuggestions');
+    await expect(improvement).toBeVisible();
+    await expect(improvement).not.toHaveAttribute('aria-describedby');
+    await expect(formPage.page.locator('#improvement-hint')).toBeVisible();
+    await expect(formPage.page.locator('#improvement-counter')).toBeVisible();
   });
 
   test('shows an in-page status message on valid submit and does not call window.alert', async () => {
