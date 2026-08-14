@@ -1,6 +1,5 @@
 export { ErrorDisplayModesFormComponent } from './error-display-modes.form';
 export { ErrorDisplayModesPageComponent } from './error-display-modes.page';
-export { productFeedbackValidationSuite } from './error-display-modes.validations';
 export type { ProductFeedbackModel } from './error-display-modes.validations';
 
 // Re-export the reusable UI component for convenience

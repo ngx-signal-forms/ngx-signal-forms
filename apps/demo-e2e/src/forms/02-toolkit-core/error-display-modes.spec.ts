@@ -118,6 +118,45 @@ test.describe('Error Display Modes', () => {
     });
   });
 
+  test('does not set author-owned aria-describedby on toolkit-managed native inputs', async () => {
+    const controlIds = [
+      'name',
+      'email',
+      'company',
+      'productUsed',
+      'overallRating',
+      'detailedFeedback',
+    ];
+
+    for (const id of controlIds) {
+      await expect(formPage.page.locator(`#${id}`)).not.toHaveAttribute(
+        'aria-describedby',
+      );
+    }
+
+    await expect(formPage.page.locator('#name-hint')).toBeVisible();
+    await expect(formPage.page.locator('#detailed-hint')).toBeVisible();
+    await expect(formPage.page.locator('#detailed-counter')).toBeVisible();
+  });
+
+  test('shows an in-page status message on valid submit and does not call window.alert', async () => {
+    const dialogs: string[] = [];
+    formPage.page.on('dialog', (dialog) => {
+      dialogs.push(dialog.message());
+      void dialog.dismiss();
+    });
+
+    await formPage.fillValidData();
+    await formPage.submit();
+
+    await expect(
+      formPage.page.getByRole('status').filter({
+        hasText: /thank you for your feedback/i,
+      }),
+    ).toBeVisible();
+    expect(dialogs).toEqual([]);
+  });
+
   test('valid data should not show errors in any mode', async () => {
     await test.step('Fill with valid data across all modes', async () => {
       const modes = ['immediate', 'onTouch', 'onSubmit'] as const;

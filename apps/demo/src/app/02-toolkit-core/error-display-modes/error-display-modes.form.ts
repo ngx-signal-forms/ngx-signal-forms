@@ -176,7 +176,6 @@ export class ErrorDisplayHelpersComponent {
             type="text"
             autocomplete="name"
             [formField]="productForm.name"
-            aria-describedby="name-hint"
             placeholder="Your full name"
           />
           <div class="form-hint" id="name-hint">
@@ -198,7 +197,6 @@ export class ErrorDisplayHelpersComponent {
             autocomplete="email"
             [formField]="productForm.email"
             placeholder="your.email@company.com"
-            aria-describedby="email-hint"
           />
           <div class="form-hint" id="email-hint">
             For follow-up questions (we respect your privacy)
@@ -219,7 +217,6 @@ export class ErrorDisplayHelpersComponent {
             autocomplete="organization"
             [formField]="productForm.company"
             placeholder="Your company (optional)"
-            aria-describedby="company-hint"
           />
           <div class="form-hint" id="company-hint">
             Helps us understand your use case
@@ -248,7 +245,6 @@ export class ErrorDisplayHelpersComponent {
             class="form-input"
             id="productUsed"
             [formField]="productForm.productUsed"
-            aria-describedby="product-hint"
           >
             <option value="">Select a product...</option>
             <option value="Web App">Web Application</option>
@@ -274,8 +270,7 @@ export class ErrorDisplayHelpersComponent {
             id="overallRating"
             type="number"
             [formField]="productForm.overallRating"
-            placeholder="Rate 1-5 stars"
-            aria-describedby="rating-hint"
+            placeholder="Rate 1-5"
           />
           <div class="form-hint" id="rating-hint">1 = Poor, 5 = Excellent</div>
           <ngx-form-field-error
@@ -296,7 +291,6 @@ export class ErrorDisplayHelpersComponent {
               rows="4"
               [formField]="productForm.improvementSuggestions"
               placeholder="Please help us understand what went wrong..."
-              aria-describedby="improvement-hint improvement-counter"
             ></textarea>
             <div class="mt-1 flex items-center justify-between">
               <div class="form-hint" id="improvement-hint">
@@ -329,7 +323,6 @@ export class ErrorDisplayHelpersComponent {
             rows="4"
             [formField]="productForm.detailedFeedback"
             placeholder="Share your detailed experience..."
-            aria-describedby="detailed-hint detailed-counter"
           ></textarea>
           <div class="mt-1 flex items-center justify-between">
             <div class="form-hint" id="detailed-hint">
@@ -392,6 +385,16 @@ export class ErrorDisplayHelpersComponent {
         </div>
       </fieldset>
 
+      @if (successMessage()) {
+        <div
+          class="mb-4 rounded-lg bg-green-50 p-4 text-green-800 dark:bg-green-900/20 dark:text-green-200"
+          role="status"
+          aria-live="polite"
+        >
+          {{ successMessage() }}
+        </div>
+      }
+
       <!-- Submit Section -->
       <div class="form-actions">
         @if (showSubmissionError()) {
@@ -441,13 +444,14 @@ export class ErrorDisplayModesFormComponent {
   readonly errorDisplayMode = input.required<ResolvedErrorDisplayStrategy>();
 
   readonly #model = signal({ ...INITIAL_MODEL });
+  protected readonly successMessage = signal('');
 
   /** Form instance using Signal Forms */
   readonly productForm = form(this.#model, productFeedbackSchema, {
     submission: {
       action: async () => {
         this.#submissionAttempted.set(true);
-        alert('Thank you for your feedback!');
+        this.successMessage.set('Thank you for your feedback!');
       },
       onInvalid: createOnInvalidHandler({
         afterInvalid: () => {

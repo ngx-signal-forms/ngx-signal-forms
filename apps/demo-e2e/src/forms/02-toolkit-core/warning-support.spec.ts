@@ -220,6 +220,26 @@ test.describe('Warning Support Demo', () => {
     });
   });
 
+  test.describe('Form host contract', () => {
+    test('uses formRoot without a host submit handler', async ({
+      page: playwrightPage,
+    }) => {
+      const form = playwrightPage.locator('ngx-warning-support-form form');
+      await expect(form).toBeVisible();
+      await expect(form).toHaveAttribute('novalidate', '');
+      await expect(form).not.toHaveAttribute('ng-reflect-ng-submit');
+
+      const hasComponentSubmitHandler = await form.evaluate((element) => {
+        const host = element.closest('ngx-warning-support-form');
+        return Boolean(
+          host &&
+          'handleSubmit' in (host as unknown as Record<string, unknown>),
+        );
+      });
+      expect(hasComponentSubmitHandler).toBe(false);
+    });
+  });
+
   test.describe('Form Submission', () => {
     test('should show success message after valid submission (no warnings)', async () => {
       await page.usernameInput.fill('testuser123');

@@ -86,7 +86,7 @@ export const DEMO_CATEGORIES = [
       {
         path: '/form-field-wrapper/fieldset-appearance',
         label: 'Fieldset Appearance',
-        hasControls: false,
+        hasControls: true,
       },
       {
         path: '/form-field-wrapper/custom-controls',
@@ -175,6 +175,7 @@ export const DEMO_CATEGORIES = [
       {
         path: '/advanced-scenarios/store-binding',
         label: 'Store Binding (@ngrx/signals two-way)',
+        hasControls: true,
       },
       {
         path: '/advanced-scenarios/server-integration',

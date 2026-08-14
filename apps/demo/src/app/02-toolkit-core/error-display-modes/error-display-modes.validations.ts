@@ -83,18 +83,3 @@ export const productFeedbackSchema = schema<ProductFeedbackModel>((path) => {
     message: 'Detailed feedback cannot exceed 1000 characters',
   });
 });
-
-export const productFeedbackValidationSuite = schema<ProductFeedbackModel>(
-  (path) => {
-    required(path.name, { message: 'Name is required' });
-    minLength(path.name, 2, { message: 'Name must be at least 2 characters' });
-
-    required(path.email, { message: 'Email is required' });
-    email(path.email, { message: 'Please enter a valid email address' });
-
-    required(path.detailedFeedback, { message: 'Feedback is required' });
-    minLength(path.detailedFeedback, 10, {
-      message: 'Feedback must be at least 10 characters',
-    });
-  },
-);

@@ -26,7 +26,7 @@ import { WizardStepInterface } from '../wizard-step.interface';
 
   imports: [FormField, NgxSignalFormToolkit, NgxFormField],
   template: `
-    <div class="trip-step">
+    <form [formRoot]="tripForm" class="trip-step">
       <h2 #stepHeading class="mb-4 text-xl font-semibold" tabindex="-1">
         Trip Details
       </h2>
@@ -373,7 +373,7 @@ import { WizardStepInterface } from '../wizard-step.interface';
           + Add Another Destination
         </button>
       }
-    </div>
+    </form>
   `,
   styles: `
     .trip-step {

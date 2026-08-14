@@ -44,9 +44,9 @@ export const WARNING_SUPPORT_CONTENT = {
         title: '🧪 Try This',
         items: [
           '1. Leave fields empty → Submit → See blocking errors prevent submission',
-          '2. Enter username "abc" (3 chars) → Warning appears: "Consider 6+ characters"',
-          '3. Enter password "Short123" (8 chars) → Warning: "Consider 12+ characters"',
-          '4. Enter password "alllowercase" → Warning: "Mix uppercase, numbers, special chars"',
+          '2. Enter username "abc" (3 chars) → Warning appears: "Consider using 6+ characters for better security"',
+          '3. Enter password "Short123" (8 chars) → Warning: "Consider using 12+ characters for better security"',
+          '4. Enter password "alllowercase" → Warning: "Consider mixing uppercase, lowercase, numbers, and special characters"',
           "5. Submit with warnings present → Submission succeeds! Warnings don't block.",
         ],
       },
