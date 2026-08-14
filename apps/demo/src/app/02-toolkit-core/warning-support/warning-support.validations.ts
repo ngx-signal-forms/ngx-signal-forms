@@ -21,8 +21,8 @@ import type { PasswordFormModel } from './warning-support.model';
  * non-blocking warning (see the `validate()` blocks below). The toolkit's error
  * components automatically:
  * - Separate warnings from blocking errors in the UI
- * - Display warnings with ARIA role="status" aria-live="polite" (non-intrusive)
- * - Display errors with ARIA role="alert" aria-live="assertive" (immediate)
+ * - Display warnings with ARIA role="status" (implicitly polite; non-intrusive)
+ * - Display errors with ARIA role="alert" (implicitly assertive; immediate)
  * - Style warnings differently (amber vs red)
  * - Allow form submission even with warnings present
  *
