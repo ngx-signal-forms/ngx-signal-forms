@@ -252,6 +252,12 @@ export const appRoutes: Routes = [
           ),
         title: getRouteTitle('/advanced-scenarios/autosave'),
       },
+      {
+        path: 'i18n',
+        loadComponent: () =>
+          import('./05-advanced/i18n/i18n.page').then((m) => m.I18nDemoPage),
+        title: getRouteTitle('/advanced-scenarios/i18n'),
+      },
     ],
   },
 
