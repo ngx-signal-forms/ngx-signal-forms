@@ -48,7 +48,6 @@ import { NgxFieldIdentity } from '@ngx-signal-forms/toolkit';
   changeDetection: ChangeDetectionStrategy.OnPush,
 
   host: {
-    'data-ngx-signal-form-control': '',
     role: 'slider',
     '[attr.tabindex]': 'disabled() ? -1 : 0',
     '[attr.aria-labelledby]': 'resolvedLabelledBy()',

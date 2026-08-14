@@ -384,6 +384,16 @@ test.describe('Custom Signal Forms Controls', () => {
         }
       });
 
+      // The component no longer hand-authors this marker in its host
+      // metadata (#369); it reaches the DOM only via the
+      // ngxSignalFormControl directive applied at the call sites.
+      await test.step('Verify the rating control host carries the semantics marker', async () => {
+        await expect(page.ratingControl).toHaveAttribute(
+          'data-ngx-signal-form-control',
+          '',
+        );
+      });
+
       await test.step('Verify the rating control starts with its hint-only described-by chain', async () => {
         await expect(page.ratingControl).toHaveAttribute(
           'aria-describedby',
