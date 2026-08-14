@@ -490,13 +490,14 @@ For full DOM control over the error summary (incl. warning entries), use `NgxHea
 
 ### NgxFormFieldCharacterCount inputs
 
-| Input             | Type                                  | Notes                                   |
-| ----------------- | ------------------------------------- | --------------------------------------- |
-| `formField`       | field                                 | Required                                |
-| `maxLength`       | number                                | Auto-detected from validator if omitted |
-| `showLimitColors` | boolean                               | Default: `true`                         |
-| `colorThresholds` | `{ warning: number, danger: number }` | Default: `{ warning: 80, danger: 95 }`  |
-| `liveAnnounce`    | boolean                               | SR live announcement                    |
+| Input             | Type    | Notes                                   |
+| ----------------- | ------- | --------------------------------------- |
+| `formField`       | field   | Required                                |
+| `maxLength`       | number  | Auto-detected from validator if omitted |
+| `showLimitColors` | boolean | Default: `true`                         |
+| `liveAnnounce`    | boolean | SR live announcement                    |
+
+Warning/danger color thresholds are CSS-only — no `colorThresholds` input. Override `--ngx-form-field-char-count-warning-threshold` / `--ngx-form-field-char-count-danger-threshold` (default `80`/`95`).
 
 ---
 
