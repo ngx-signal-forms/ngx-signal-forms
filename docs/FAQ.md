@@ -264,18 +264,22 @@ canonical rather than re-deriving tokens.
 
 Write a thin adapter that implements `FormValueControl<Date | null>` on your datepicker host:
 expose `value = model<Date | null>(null)` and sync it to/from the third-party widget's own
-value/change events, add a `focus()` method (needed for `focusFirstInvalid()` and error-summary
+value/change events (Angular's `transformedValue()` is the built-in tool for that parse/format
+boundary — see below), add a `focus()` method (needed for `focusFirstInvalid()` and error-summary
 navigation), and optional `touch`/`disabled`/`invalid`. Bind it with the standard
 `[formField]="form.birthDate"`. Because the widget owns its own visuals and ARIA, pair it with
 `ngxSignalFormControlAria="manual"` and `appearance="plain"` so the toolkit supplies label/hint/
 error content and field-identity IDs without clashing. Handle any type mismatch (e.g. `Date` vs
-ISO string) inside the adapter's read/write path. There is no runnable datepicker demo yet — the
-adapter pattern generalizes from the `FormValueControl` examples in custom-controls; the Material
-app's README also notes date-picker ARIA gotchas.
+ISO string) inside the adapter's read/write path, and surface unparseable input as a
+`kind: 'parse'` error. Widgets with internal popups or multiple focusable pieces (a calendar grid,
+segmented input) need a composite-aware touched hook — `(focusout)` with a `relatedTarget`
+containment check — instead of a plain `(blur)`.
 
-**See:** [docs/CUSTOM_CONTROLS.md](./CUSTOM_CONTROLS.md) ·
-[demo: custom-controls](../apps/demo/src/app/04-form-field-wrapper/custom-controls/README.md) ·
-[demo-material README](../apps/demo-material/README.md)
+**See:** [docs/CUSTOM_CONTROLS.md § Adapting an Existing Third-Party Widget](./CUSTOM_CONTROLS.md#adapting-an-existing-third-party-widget) ·
+runnable demo: the "Date of Birth" field in
+[demo: custom-controls](../apps/demo/src/app/04-form-field-wrapper/custom-controls/README.md)
+(`apps/demo/src/app/shared/controls/legacy-datepicker-adapter.ts`) · the Material app's README also
+notes date-picker ARIA gotchas.
 
 ---
 

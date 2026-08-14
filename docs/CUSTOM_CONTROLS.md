@@ -582,6 +582,127 @@ Usage with toolkit:
 </form>
 ```
 
+## Adapting an Existing Third-Party Widget
+
+Everything above builds a control **from scratch**. This section is the
+other case: you already have a widget — a datepicker, a rich-text editor, a
+combobox — with its own value/change API, and you need a thin
+`FormValueControl<T>` adapter around it rather than a new control.
+
+**Runnable reference:** the custom-controls demo's "Date of Birth" field —
+`apps/demo/src/app/shared/controls/legacy-datepicker-adapter.ts`, wrapping a
+self-contained fake "legacy" datepicker widget
+(`legacy-datepicker-widget.ts`) that has no Signal Forms awareness at all.
+See that adapter's class-level doc comment for the full design writeup; this
+section summarizes the four decisions it makes.
+
+### 1. Value round-trip and type mismatch
+
+The widget almost never speaks your model's type. Ours exposes a raw string
+(`YYYY-MM-DD`, or garbage while the user is mid-typo); the field needs
+`Date | null`. Use Angular Signal Forms' `transformedValue()` to own that
+boundary in one place:
+
+```typescript
+protected readonly rawValue = transformedValue(this.value, {
+  parse: (raw: string): ParseResult<Date | null> => {
+    /* raw text -> Date | null, or { error: { kind: 'parse', message } } */
+  },
+  format: (value: Date | null): string => {
+    /* Date | null -> raw text */
+  },
+});
+```
+
+`parse` runs on every widget change event; `format` runs whenever `value`
+changes from outside — including a programmatic `form().reset()` — so the
+widget always redisplays what the model actually holds.
+
+### 2. Touched propagation without a single native blur
+
+Third-party widgets are often composites: a text input plus a trigger
+button plus a popup with its own focusable elements (segments, calendar
+days, list options). A plain `(blur)` on the widget's internal input fires
+every time focus hops between those pieces — long before the user is done
+with the widget as a whole.
+
+Listen for `(focusout)` on the **adapter's own host** instead, and only
+treat it as "the user left the control" when the newly focused element
+(`event.relatedTarget`) is not contained anywhere inside that host:
+
+```typescript
+protected onHostFocusOut(event: FocusEvent): void {
+  const related = event.relatedTarget;
+  const relatedNode = related instanceof Node ? related : null;
+  if (relatedNode === null || !this.#host.nativeElement.contains(relatedNode)) {
+    this.touch.emit();
+  }
+}
+```
+
+This fires exactly once, whichever internal element focus was on when it
+finally left — including out of a native `<dialog>` popup, which stays in
+the same DOM subtree (so `contains()` still sees it) even while promoted to
+the browser's top layer.
+
+### 3. Where ARIA lands
+
+If the widget renders its own internal `<input>`, that input — not the
+adapter's host element — is the thing screen readers care about. Pair the
+adapter with `ngxSignalFormControlAria="manual"` and `appearance="plain"` so
+the wrapper still supplies the label, hint, and error content, and forward
+`aria-describedby` / `aria-invalid` / `aria-required` down onto the widget's
+real input through whatever passthrough inputs the widget exposes:
+
+```html
+<ngx-form-field-wrapper
+  appearance="plain"
+  [formField]="form.birthDate"
+  fieldName="birthDate"
+>
+  <label id="birthDate-label" for="birthDate">Date of birth</label>
+  <ngx-legacy-datepicker-adapter
+    [controlId]="'birthDate'"
+    [labelledBy]="'birthDate-label'"
+    ngxSignalFormControlAria="manual"
+    [describedBy]="birthDateDescribedBy()"
+    [formField]="form.birthDate"
+  />
+</ngx-form-field-wrapper>
+```
+
+Because the adapter's host is not the focusable element, `id` cannot live on
+that host — use `fieldName` on the wrapper (as above) instead of an `id`
+attribute, and forward the same identifier into the widget as its internal
+input's real `id`. This is the same "control can't expose an id" pattern
+from [Field identity: `id` and `fieldName`](#field-identity-id-and-fieldname)
+above, applied to a composite host. If the real widget you're wrapping
+doesn't expose an ARIA passthrough at all, you don't get this choice — fall
+back to whatever ARIA surface it does own, or treat the gap as a defect to
+raise with the widget's maintainers.
+
+### 4. Parse/invalid-input path
+
+Report unparseable or partial input as a `kind: 'parse'` validation error —
+the same built-in kind `transformedValue`'s own reference example uses, and
+one the toolkit's `resolveErrorMessage` already renders through the normal
+error surface with no extra wiring:
+
+```typescript
+if (!isRealCalendarDate) {
+  return {
+    error: {
+      kind: 'parse',
+      message: `"${trimmed}" is not a real calendar date`,
+    },
+  };
+}
+```
+
+Because `transformedValue` is called inside the component bound via
+`[formField]`, that error is reported to the nearest field automatically —
+no manual `errors` input wiring required.
+
 ## Related
 
 - [Angular Signal Forms API](https://angular.dev/api/forms/signals)
