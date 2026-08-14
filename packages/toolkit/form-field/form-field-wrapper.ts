@@ -45,24 +45,22 @@ import {
   NGX_SIGNAL_FORM_HINT_REGISTRY,
   NgxFieldIdentity,
   devWarnOnce,
-  generateRequiredHintId,
   isElementCssVisible,
-  resolveBoundControlFromBindings,
   type WarnOnceRef,
 } from '@ngx-signal-forms/toolkit/core';
 import {
   NgxFormFieldError,
   NgxFormFieldHint,
 } from '@ngx-signal-forms/toolkit/assistive';
+import { captureFormFieldWrapperDomSnapshot } from './form-field-dom-snapshot';
 import {
   hasPaddedControlContent,
   isSelectionGroupKind,
   isTextualControlKind,
-  readFormFieldWrapperDomSnapshot,
-  requireHostElement,
   supportsOutlinedAppearance,
   type FormFieldControlKind,
 } from './form-field.utils';
+import { resolveClusterAriaAttrs } from './form-field-cluster-aria';
 import { resolveUnionInput } from './utilities/resolve-union-input';
 
 /**
@@ -1066,60 +1064,6 @@ export class NgxFormFieldWrapper<TValue = unknown> {
     return this.errorPlacement() === 'top';
   });
 
-  protected readonly selectionClusterRole = computed<
-    'group' | 'radiogroup' | null
-  >(() => {
-    if (!this.isSelectionCluster()) {
-      return null;
-    }
-
-    return this.#controlKind() === 'radio-group' ? 'radiogroup' : 'group';
-  });
-
-  /**
-   * ID of the visually-hidden required hint for a `group`-role cluster, or
-   * `null` when it doesn't apply.
-   *
-   * `aria-required` is only valid ARIA on `radiogroup` among the roles this
-   * wrapper emits — `group` does not support it, and writing it anyway trips
-   * axe's `aria-allowed-attr` rule (critical impact). Rather than silently
-   * dropping required-ness for a `group` cluster, it is relocated here: a
-   * visually-hidden node (rendered in the template below, not `aria-hidden`)
-   * carries the text and is wired into {@link selectionClusterDescribedBy},
-   * so required-ness stays perceivable to assistive tech via the group's
-   * accessible description instead of an ARIA state.
-   * `radiogroup` is unaffected — it keeps `aria-required` from
-   * `NgxSignalFormAutoAria` exactly as before, so this hint only exists for
-   * `group`.
-   *
-   * Reuses {@link #boundControlIsRequired} — the same DOM-observed
-   * required-ness signal that already drives the visible `*` marker in the
-   * label, so both indicators agree.
-   *
-   * `null` also whenever {@link resolvedRequiredHintText} resolves to `''`
-   * (an explicit `requiredHintText: ''` override, clearing the hint —
-   * mirrors `requiredMarker`'s / `requiredLegendText`'s empty-string-clears
-   * convention). Rendering an empty visually-hidden node would still leave
-   * its id in `aria-describedby`, pointing at a text-less element — an
-   * empty accessible-description target, not a missing one, but pointless
-   * either way, so the id is withheld here rather than in the describedby
-   * composer.
-   *
-   * See https://github.com/ngx-signal-forms/ngx-signal-forms/issues/300.
-   */
-  protected readonly groupRequiredHintId = computed<string | null>(() => {
-    if (
-      this.selectionClusterRole() !== 'group' ||
-      !this.#boundControlIsRequired() ||
-      this.resolvedRequiredHintText() === ''
-    ) {
-      return null;
-    }
-
-    const fieldName = this.resolvedFieldName();
-    return fieldName === null ? null : generateRequiredHintId(fieldName);
-  });
-
   /**
    * Resolved text for {@link groupRequiredHintId}'s visually-hidden node.
    * Sourced from `NgxSignalFormsConfig.requiredHintText` — the same
@@ -1132,64 +1076,62 @@ export class NgxFormFieldWrapper<TValue = unknown> {
   });
 
   /**
+   * The whole selection-cluster ARIA contract (`role`, the visually-hidden
+   * required-hint id, `aria-labelledby`, `aria-describedby`), resolved
+   * together by the pure {@link resolveClusterAriaAttrs} — see that
+   * function's doc comment for the accessibility rationale (WCAG 1.3.1 /
+   * 4.1.2, https://github.com/ngx-signal-forms/ngx-signal-forms/issues/300)
+   * and for why these four outputs are computed as one unit instead of four
+   * separately-guarded computeds that used to re-derive `isSelectionCluster`
+   * checks and quietly depend on read order.
+   */
+  readonly #clusterAria = computed(() =>
+    resolveClusterAriaAttrs({
+      isSelectionCluster: this.isSelectionCluster(),
+      controlKind: this.#controlKind(),
+      boundControlIsRequired: this.#boundControlIsRequired(),
+      requiredHintText: this.resolvedRequiredHintText(),
+      fieldName: this.resolvedFieldName(),
+      selectionClusterLabelId: this.#selectionClusterLabelId(),
+      initialAriaLabelledby: this.#initialAriaLabelledby,
+      initialAriaDescribedby: this.#initialAriaDescribedby,
+      showInvalidState: this.showInvalidState(),
+      showWarningState: this.showWarningState(),
+      shouldShowWarnings: this.shouldShowWarnings(),
+    }),
+  );
+
+  protected readonly selectionClusterRole = computed(
+    () => this.#clusterAria().role,
+  );
+
+  /**
+   * ID of the visually-hidden required hint for a `group`-role cluster, or
+   * `null` when it doesn't apply. See {@link resolveClusterAriaAttrs} for
+   * the full accessibility rationale.
+   */
+  protected readonly groupRequiredHintId = computed(
+    () => this.#clusterAria().groupRequiredHintId,
+  );
+
+  /**
    * Falls back to (never replaces) `#initialAriaLabelledby` for non-cluster
    * wrappers — see the field doc comment on `#initialAriaLabelledby` for why
    * the host binding can't simply be left unbound instead.
    */
-  protected readonly selectionClusterLabelledBy = computed<string | null>(
-    () => {
-      if (!this.isSelectionCluster()) {
-        return this.#initialAriaLabelledby;
-      }
-
-      return this.#selectionClusterLabelId() ?? this.#initialAriaLabelledby;
-    },
+  protected readonly selectionClusterLabelledBy = computed(
+    () => this.#clusterAria().labelledBy,
   );
 
   /**
    * Merges the author-supplied `#initialAriaDescribedby` with the
    * cluster-managed required-hint/error/warning ids rather than replacing
    * it — same preservation rule auto-aria already applies to the bound
-   * control itself. The required hint (see {@link groupRequiredHintId}) is
-   * independent of error/warning visibility, so it can combine with either.
+   * control itself. See {@link resolveClusterAriaAttrs} for the merge order
+   * and the `shouldShowWarnings` dangling-reference guard.
    */
-  protected readonly selectionClusterDescribedBy = computed<string | null>(
-    () => {
-      const managedIds: string[] = [];
-
-      if (this.isSelectionCluster()) {
-        const requiredHintId = this.groupRequiredHintId();
-        if (requiredHintId !== null) {
-          managedIds.push(requiredHintId);
-        }
-
-        const fieldName = this.resolvedFieldName();
-        if (fieldName !== null) {
-          if (this.showInvalidState()) {
-            managedIds.push(`${fieldName}-error`);
-          } else if (this.showWarningState() && this.shouldShowWarnings()) {
-            // `shouldShowWarnings()` gates whether the projected error
-            // renderer's warning live region is in the DOM (see
-            // `shouldRenderErrorSlot` /
-            // `NgxFormFieldError.warningContainerVisible`). Guard
-            // `aria-describedby` on the same signal to avoid dangling
-            // references for warning-only clusters gated by a
-            // non-'immediate' `warningStrategy`.
-            managedIds.push(`${fieldName}-warning`);
-          }
-        }
-      }
-
-      if (managedIds.length === 0) {
-        return this.#initialAriaDescribedby;
-      }
-
-      const managedId = managedIds.join(' ');
-
-      return this.#initialAriaDescribedby
-        ? `${this.#initialAriaDescribedby} ${managedId}`
-        : managedId;
-    },
+  protected readonly selectionClusterDescribedBy = computed(
+    () => this.#clusterAria().describedBy,
   );
 
   constructor() {
@@ -1205,22 +1147,15 @@ export class NgxFormFieldWrapper<TValue = unknown> {
     // changed; only a real swap falls through to `findBoundControl`.
     afterEveryRender({
       earlyRead: () => {
-        const hostEl = requireHostElement(this.#elementRef);
-
-        // Resolve the bound control from Angular's native binding registry
-        // first; `readFormFieldWrapperDomSnapshot` falls back to DOM probing
-        // when the registry is empty (plain `<input id>` controls, the
-        // pre-init render window, or mock field states in unit tests).
-        const nativeControl = resolveBoundControlFromBindings(
-          this.#fieldState(),
-          hostEl,
-        );
-
-        return readFormFieldWrapperDomSnapshot(
-          hostEl,
+        // Resolves the host element, the bound control (native binding
+        // registry first, DOM-probe fallback second — see
+        // `captureFormFieldWrapperDomSnapshot`'s doc comment), and the rest
+        // of the DOM snapshot in one call.
+        return captureFormFieldWrapperDomSnapshot(
+          this.#elementRef,
           this.#boundControlElement(),
           this.#controlPresets,
-          nativeControl,
+          this.#fieldState(),
         );
       },
       // oxlint-disable-next-line @typescript-eslint/prefer-readonly-parameter-types -- afterEveryRender passes DOM-backed render state with mutable HTMLElement references.
