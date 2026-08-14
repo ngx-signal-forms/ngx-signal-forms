@@ -9,6 +9,7 @@ export const DEMO_PATHS = {
   customControls: '/form-field-wrapper/custom-controls',
   labellessFields: '/form-field-wrapper/labelless-fields',
   fieldMarking: '/form-field-wrapper/field-marking',
+  brandTheming: '/form-field-wrapper/brand-theming',
   zodValidation: '/validation/zod-validation',
   vestValidation: '/validation/vest-validation',
   zodVestValidation: '/validation/zod-vest-validation',
@@ -100,6 +101,11 @@ export const DEMO_CATEGORIES = [
       {
         path: '/form-field-wrapper/field-marking',
         label: 'Required / Optional Marking',
+        hasControls: true,
+      },
+      {
+        path: '/form-field-wrapper/brand-theming',
+        label: 'Brand Theming',
         hasControls: true,
       },
     ],

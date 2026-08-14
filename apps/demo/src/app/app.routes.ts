@@ -138,6 +138,14 @@ export const appRoutes: Routes = [
           ),
         title: getRouteTitle('/form-field-wrapper/field-marking'),
       },
+      {
+        path: 'brand-theming',
+        loadComponent: () =>
+          import('./04-form-field-wrapper/brand-theming/brand-theming.page').then(
+            (m) => m.BrandThemingPage,
+          ),
+        title: getRouteTitle('/form-field-wrapper/brand-theming'),
+      },
     ],
   },
 

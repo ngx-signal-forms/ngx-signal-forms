@@ -903,6 +903,20 @@ ngx-form-field-wrapper {
 }
 ```
 
+**Runnable example:** the demo's
+[Brand Theming](../../../apps/demo/src/app/04-form-field-wrapper/brand-theming/README.md)
+page (`/form-field-wrapper/brand-theming`) re-themes every semantic color —
+including the error, warning, disabled, and focus states this snippet leaves
+on the stock palette — for both light and dark, with computed contrast
+ratios in its README. It overrides only the public tokens documented on this
+page (`--ngx-form-field-color-*` plus the cross-cutting
+`--ngx-signal-form-error-color` / `--ngx-signal-form-warning-color` /
+`--ngx-form-field-hint-color` tokens from the sections above); the internal `--_field-*` / `--_*`
+pseudo-private tokens are never touched. A partial override like the
+two-line snippet above is a fine starting point, but skips exactly the
+stateful colors that are easiest to leave inconsistent — see that page for
+the full-coverage version.
+
 ### Scenario B: Framework Integration (Bootstrap/Tailwind)
 
 Map your framework's variables to the toolkit's semantic layer.
