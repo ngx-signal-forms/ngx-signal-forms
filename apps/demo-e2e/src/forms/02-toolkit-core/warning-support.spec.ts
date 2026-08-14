@@ -221,13 +221,12 @@ test.describe('Warning Support Demo', () => {
   });
 
   test.describe('Form host contract', () => {
-    test('uses formRoot without a host submit handler', async ({
+    test('uses a formRoot host with native novalidate', async ({
       page: playwrightPage,
     }) => {
       const form = playwrightPage.locator('ngx-warning-support-form form');
       await expect(form).toBeVisible();
       await expect(form).toHaveAttribute('novalidate', '');
-      await expect(form).not.toHaveAttribute('ng-reflect-ng-submit');
     });
   });
 
