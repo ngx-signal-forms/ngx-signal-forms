@@ -489,6 +489,107 @@ Each factory is independently usable. Common partial compositions:
 The contract each factory advertises is `fieldState in → ARIA out`. Pick the
 ones you need.
 
+## Element-scoped identity vs. form-scoped visibility registration
+
+Two DI-visible mechanisms feed `NgxSignalFormAutoAria` a field's resolved
+strategy/visibility state so it doesn't have to recompute — and possibly
+disagree with — the cascade already resolved elsewhere. They are **not**
+two equally-available options for a wrapper author to pick between: one is
+an internal implementation detail of the toolkit's own built-in wrapper,
+the other is the actual public integration path for third-party wrappers
+and standalone surfaces.
+
+| Surface                                                      | Mechanism                                                         | Who drives it                                                                     |
+| ------------------------------------------------------------ | ----------------------------------------------------------------- | --------------------------------------------------------------------------------- |
+| `NgxFormFieldWrapper` (the toolkit's own built-in wrapper)   | `NgxFieldIdentity` — element-scoped, internal write API           | The toolkit itself, from `form-field-wrapper.ts`'s `afterEveryRender` write phase |
+| Your custom wrapper, or any standalone error/warning surface | `NGX_SIGNAL_FORM_FIELD_VISIBILITY_REGISTRY` — form-scoped, public | You — this is the supported integration seam                                      |
+
+`NgxSignalFormAutoAria` prefers a present `NgxFieldIdentity` (confirmed in
+`auto-aria.ts`: the registry lookup is skipped whenever `NgxFieldIdentity`
+is injected) and falls back to the visibility registry otherwise — so the
+two are mutually exclusive per field, not layered, but that fallback is
+what makes the registry path work for anyone who isn't `NgxFormFieldWrapper`
+itself.
+
+### `NgxFieldIdentity` — the built-in wrapper's internal mechanism
+
+`NgxFieldIdentity` (`providedIn: null`, exported from
+`@ngx-signal-forms/toolkit`) is the centralized, per-wrapper-instance
+service `NgxFormFieldWrapper` provides at its own component level and
+drives from its `afterEveryRender` write phase — field-name resolution
+output, the bound control's element/visibility, and the wrapper's resolved
+error/warning display strategies all flow through it.
+
+Its **resolved read signals** (`fieldName`, `controlId`, `errorId`,
+`warningId`, `hintIds`, `describedBy`, `isControlVisible`,
+`resolvedErrorStrategy`, `resolvedWarningStrategy`,
+`resolveControlElement()`) are public — read them if you've injected an
+ancestor-provided `NgxFieldIdentity` and want the same resolved state
+`NgxSignalFormAutoAria` sees. Its **writer methods**
+(`setFieldName`, `setControlElement`, `setControlVisible`, `setHintIds`,
+`setResolvedStrategies`) are explicitly tagged `@internal` in
+`field-identity.ts` — _"must not be called from outside this package —
+consumers read the resolved signals, they do not drive them."_ A custom
+wrapper must **not** provide its own `NgxFieldIdentity` instance and call
+those setters; that is not a supported contract today.
+
+> **Open design question (pre-v1):** promoting `NgxFieldIdentity`'s writers
+> into a supported surface third-party wrappers can drive themselves —
+> instead of routing through the registry below — is a real possibility
+> under consideration before the API freezes at 1.0. No commitment either
+> way yet; this document describes the contract as it exists today, not a
+> roadmap promise.
+
+### `NGX_SIGNAL_FORM_FIELD_VISIBILITY_REGISTRY` — the public integration path
+
+This is the seam to use for your own wrapper or any standalone error/warning
+surface. It's provided by `NgxSignalForm` at the `[ngxSignalForm]` host, so
+it's reachable from anywhere inside that form, and `NgxSignalFormAutoAria`
+falls back to reading it whenever no `NgxFieldIdentity` is present in the
+injector chain — which is always true for a custom wrapper unless it
+happens to sit _inside_ the toolkit's own `NgxFormFieldWrapper`:
+
+```typescript
+import { effect, inject } from '@angular/core';
+import { NGX_SIGNAL_FORM_FIELD_VISIBILITY_REGISTRY } from '@ngx-signal-forms/toolkit';
+
+@Component({
+  /* ... */
+})
+export class MyStandaloneErrorSurface {
+  readonly #registry = inject(NGX_SIGNAL_FORM_FIELD_VISIBILITY_REGISTRY, {
+    optional: true,
+  });
+
+  // Whatever already gates your rendered live regions.
+  protected readonly errorVisible = /* ... */;
+  protected readonly warningVisible = /* ... */;
+
+  constructor() {
+    effect((onCleanup) => {
+      const fieldName = this.resolvedFieldName();
+      if (!this.#registry || fieldName === null) return;
+
+      const unregister = this.#registry.register({
+        fieldName,
+        errorContainerVisible: this.errorVisible,
+        warningContainerVisible: this.warningVisible,
+      });
+      onCleanup(unregister);
+    });
+  }
+}
+```
+
+Register the exact booleans you already used to decide whether your
+`${fieldName}-error` / `${fieldName}-warning` elements are in the DOM — not
+a strategy for auto-ARIA to re-resolve — so the published value can never
+drift from what your surface actually renders. See ["Publishing visibility
+for a custom standalone error
+surface"](./CUSTOM_CONTROLS.md#publishing-visibility-for-a-custom-standalone-error-surface)
+in `CUSTOM_CONTROLS.md` for the full worked example this pattern is drawn
+from, including the `NgxFormFieldError` reference implementation.
+
 ## Customising the renderer
 
 Consumers of your wrapper override the error and hint renderers via the

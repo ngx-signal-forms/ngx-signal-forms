@@ -106,6 +106,11 @@ export class NgxHeadlessFieldName implements FieldNameStateSignals {
   /**
    * Resolved field name.
    *
+   * Tier 1 (explicit input) → tier 2 (bound-control id) of the toolkit's
+   * canonical field-name cascade — this directive is attached directly to
+   * the control, so it never needs tier 3 (inherited context). See
+   * {@link resolveFieldNameFromCandidates} for the full cascade.
+   *
    * Returns `null` when neither a non-empty `fieldName` input nor a
    * non-empty host `id` is available. A `console.error` is emitted in
    * dev mode (once) to flag the misconfiguration — consumers should

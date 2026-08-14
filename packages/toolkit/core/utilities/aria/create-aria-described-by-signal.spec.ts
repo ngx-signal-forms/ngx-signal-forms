@@ -171,6 +171,85 @@ describe('createAriaDescribedBySignal', () => {
     expect(ariaDescribedBy()).toBe('password-error');
   });
 
+  /**
+   * The `warningVisibility` option is optional "for backwards compatibility
+   * with callers written before the two channels could diverge" (see the
+   * option's JSDoc). When omitted, the factory falls back to `visibility`
+   * (the **error** channel) for the warning decision too — which is only
+   * correct while both display strategies agree. These specs pin the edge
+   * case explicitly: a caller that omits `warningVisibility` on a form
+   * where the error and warning strategies actually diverge (e.g.
+   * `errorStrategy="on-submit"` + `warningStrategy="immediate"`) gets the
+   * *error* channel's timing applied to the warning, not the warning
+   * channel's own timing — silently suppressing (or prematurely showing)
+   * warnings until the caller threads `warningVisibility` through.
+   */
+  describe('two-channel visibility: warningVisibility omitted while the channels diverge', () => {
+    it('suppresses a warning-only field when the fallback (error) visibility is false, even though a real warning-strategy would show it', () => {
+      // Simulates errorStrategy="on-submit" (visibility=false pre-submit)
+      // with warningStrategy="immediate" (should be visible pre-submit).
+      // Without warningVisibility, the warning incorrectly inherits the
+      // error channel's "not yet visible" timing.
+      const fieldState = fieldStateSignal([warningError('weak-password')]);
+      const hintIds = signal<readonly string[]>([]);
+      const errorChannelVisibility = signal(false);
+
+      const ariaDescribedBy = createAriaDescribedBySignal({
+        fieldState,
+        hintIds,
+        visibility: errorChannelVisibility,
+        // warningVisibility intentionally omitted.
+        preservedIds: () => null,
+        fieldName: () => 'password',
+      });
+
+      expect(ariaDescribedBy()).toBeNull();
+    });
+
+    it('passing the real warning-strategy visibility as warningVisibility surfaces the warning that the fallback would have suppressed', () => {
+      // Same divergent scenario as above, but now the caller threads the
+      // warning channel's own resolved visibility through — the documented
+      // fix for the omitted-parameter edge case.
+      const fieldState = fieldStateSignal([warningError('weak-password')]);
+      const hintIds = signal<readonly string[]>([]);
+      const errorChannelVisibility = signal(false);
+      const warningChannelVisibility = signal(true);
+
+      const ariaDescribedBy = createAriaDescribedBySignal({
+        fieldState,
+        hintIds,
+        visibility: errorChannelVisibility,
+        warningVisibility: warningChannelVisibility,
+        preservedIds: () => null,
+        fieldName: () => 'password',
+      });
+
+      expect(ariaDescribedBy()).toBe('password-warning');
+    });
+
+    it('the omitted-parameter fallback can also over-show: a true error-channel visibility surfaces a warning even when the real warning strategy would still be hiding it', () => {
+      // Mirror case: errorStrategy="immediate" (visibility=true) with
+      // warningStrategy="on-submit" (should still be hidden pre-submit).
+      // Without warningVisibility, the warning incorrectly inherits the
+      // error channel's "already visible" timing.
+      const fieldState = fieldStateSignal([warningError('weak-password')]);
+      const hintIds = signal<readonly string[]>([]);
+      const errorChannelVisibility = signal(true);
+
+      const ariaDescribedBy = createAriaDescribedBySignal({
+        fieldState,
+        hintIds,
+        visibility: errorChannelVisibility,
+        // warningVisibility intentionally omitted — the real warning
+        // strategy (on-submit, not yet submitted) would resolve to false.
+        preservedIds: () => null,
+        fieldName: () => 'password',
+      });
+
+      expect(ariaDescribedBy()).toBe('password-warning');
+    });
+  });
+
   it('composes preserved + hint + error IDs (warning omitted) when a blocking error is also present', () => {
     const fieldState = fieldStateSignal([
       { kind: 'required', message: 'Required' },
