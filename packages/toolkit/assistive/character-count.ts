@@ -125,13 +125,12 @@ export type NgxCharacterCountAnnouncementFormatter = (
  * />
  * ```
  *
- * @example Custom thresholds
- * ```html
- * <ngx-form-field-character-count
- *   [formField]="form.description"
- *   [maxLength]="500"
- *   [colorThresholds]="{ warning: 90, danger: 98 }"
- * />
+ * @example Custom thresholds (CSS-only — no component input)
+ * ```css
+ * ngx-form-field-character-count {
+ *   --ngx-form-field-char-count-warning-threshold: 90;
+ *   --ngx-form-field-char-count-danger-threshold: 98;
+ * }
  * ```
  *
  * Color States (aligned with Figma design tokens):
@@ -139,6 +138,12 @@ export type NgxCharacterCountAnnouncementFormatter = (
  * - **warning**: 80-95% of limit (amber)
  * - **danger**: 95-100% of limit (interaction/danger)
  * - **exceeded**: >100% of limit (darker red, bold)
+ *
+ * The 80%/95% warning/danger split is a *presentation* detail, not a
+ * component input — see `--ngx-form-field-char-count-warning-threshold` /
+ * `--ngx-form-field-char-count-danger-threshold` below. The "exceeded" state
+ * (>100%) is not configurable — it is tied to the field's actual
+ * `maxLength`, not a percentage.
  *
  * Customization:
  * Use CSS custom properties to theme character count appearance:
@@ -152,12 +157,32 @@ export type NgxCharacterCountAnnouncementFormatter = (
  *   --ngx-form-field-char-count-color-danger: #db1818;
  *   --ngx-form-field-char-count-color-exceeded: #991b1b;
  *   --ngx-form-field-char-count-weight-exceeded: 600;
+ *   --ngx-form-field-char-count-warning-threshold: 80;
+ *   --ngx-form-field-char-count-danger-threshold: 95;
  * }
  * ```
+ *
+ * `-warning-threshold` / `-danger-threshold` are the two public, CSS-only
+ * configuration knobs — plain numbers (percent of `maxLength`, no `%`
+ * unit). The component publishes the live
+ * `--ngx-form-field-char-count-percent-used` custom property (an internal
+ * coordination hook, not a theming knob — same status as
+ * `--ngx-form-field-hint-display`, see THEMING.md — set by the component,
+ * not meant to be overridden), and a pure-CSS `color-mix()`/`clamp()`
+ * expression compares it against the two threshold knobs to pick the
+ * rendered color. No component input, no JS re-render on override — restyle
+ * a wrapper (Material, PrimeNG, …) purely in CSS.
  *
  * Accessibility:
  * - Ensure color is not the only indicator (text content also changes)
  * - Color contrast meets WCAG 2.2 Level AA (4.5:1 minimum)
+ * - `[liveAnnounce]` announcements ("Approaching limit…", "Almost at
+ *   limit…", "Character limit exceeded…") always fire at the toolkit's
+ *   fixed 80%/95% defaults, independent of any CSS threshold override.
+ *   Announcement wording is accessible *behavior* and must stay predictable
+ *   for screen reader users; restyling `-warning-threshold` /
+ *   `-danger-threshold` only shifts when the *color* changes, never when the
+ *   announcement fires.
  *
  * @see {@link createCharacterCount} for the underlying headless utility
  */
@@ -187,7 +212,6 @@ export type NgxCharacterCountAnnouncementFormatter = (
         var(--ngx-signal-form-feedback-font-size, 0.75rem)
       );
       line-height: var(--ngx-form-field-char-count-line-height, 1.25);
-      color: var(--ngx-form-field-char-count-color-ok, rgba(50, 65, 85, 0.75));
       transition:
         color 0.2s ease,
         font-weight 0.2s ease;
@@ -200,6 +224,78 @@ export type NgxCharacterCountAnnouncementFormatter = (
         --ngx-form-field-char-count-padding-inline-end,
         var(--ngx-signal-form-feedback-padding-horizontal, 0.5rem)
       );
+
+      /*
+       * Warning/danger thresholds: --ngx-form-field-char-count-*-threshold
+       * are the two PUBLIC, CSS-only configuration knobs — plain numbers
+       * (percent of maxLength, no unit). Restyle a wrapper (Material,
+       * PrimeNG, …) by overriding these two custom properties; no component
+       * input exists for them (see class docblock).
+       *
+       * --_char-count-*-threshold below are the resolved, pseudo-private
+       * copies the implementation actually consumes — same pattern as
+       * --_error-panel-* resolving --ngx-signal-form-error-panel-* (see
+       * THEMING.md). Keeps the public/internal split explicit instead of
+       * scattering var(--ngx-form-field-char-count-*-threshold, …) calls
+       * through every downstream expression.
+       *
+       * Default: Tailwind amber-700 (#a16207) for warning — ~5.17:1 on
+       * white meets WCAG 1.4.3 AA for normal text (#f59e0b previously used
+       * was 2.16:1). Kept consistent with the warning color in
+       * form-field-error.css.
+       */
+      --_char-count-warning-threshold: var(
+        --ngx-form-field-char-count-warning-threshold,
+        80
+      );
+      --_char-count-danger-threshold: var(
+        --ngx-form-field-char-count-danger-threshold,
+        95
+      );
+
+      /*
+       * Discrete 0/1 toggles for "percent used has crossed this threshold" —
+       * internal intermediates, never a theming knob, hence the _ prefix.
+       * Built from clamp()/calc() only (no @property, no container style
+       * queries — both are less broadly supported than this baseline-safe
+       * technique). The '+ 0.0001' before the large multiplier makes the
+       * comparison inclusive (percent === threshold counts as "crossed",
+       * matching the pre-CSS ratio >= threshold semantics), while the
+       * multiplier collapses any positive difference straight to the 1
+       * clamp() ceiling instead of a fractional (partially blended) value.
+       */
+      --_char-count-is-warning: clamp(
+        0,
+        (var(--ngx-form-field-char-count-percent-used, 0) -
+            var(--_char-count-warning-threshold) + 0.0001) *
+          1000000,
+        1
+      );
+      --_char-count-is-danger: clamp(
+        0,
+        (var(--ngx-form-field-char-count-percent-used, 0) -
+            var(--_char-count-danger-threshold) + 0.0001) *
+          1000000,
+        1
+      );
+
+      /*
+       * ok -> warning -> danger as a two-stage color-mix() blend driven by
+       * the toggles above. Each toggle is a plain 0/1 number; multiplying it
+       * by 100% turns it into the <percentage> color-mix() expects, so the
+       * blend always lands fully on one color, never a partial mix.
+       */
+      color: color-mix(
+        in srgb,
+        var(--ngx-form-field-char-count-color-danger, #db1818)
+          calc(var(--_char-count-is-danger) * 100%),
+        color-mix(
+          in srgb,
+          var(--ngx-form-field-char-count-color-warning, #a16207)
+            calc(var(--_char-count-is-warning) * 100%),
+          var(--ngx-form-field-char-count-color-ok, rgba(50, 65, 85, 0.75))
+        )
+      );
     }
 
     :host([position='left']) {
@@ -210,28 +306,18 @@ export type NgxCharacterCountAnnouncementFormatter = (
       text-align: right;
     }
 
-    /* Color progression states */
-    :host([data-limit-state='ok']) {
-      color: var(--ngx-form-field-char-count-color-ok, rgba(50, 65, 85, 0.75));
-    }
-
-    :host([data-limit-state='warning']) {
-      /* Default: Tailwind amber-700 (#a16207) — ~5.17:1 on white meets
-       * WCAG 1.4.3 AA for normal text (#f59e0b previously used was 2.16:1).
-       * Kept consistent with the warning color in form-field-error.css. */
-      color: var(--ngx-form-field-char-count-color-warning, #a16207);
-    }
-
-    :host([data-limit-state='danger']) {
-      color: var(--ngx-form-field-char-count-color-danger, #db1818);
-    }
-
+    /*
+     * 'exceeded' and 'disabled' stay attribute-selector overrides — both are
+     * fixed states outside the configurable warning/danger CSS thresholds
+     * above: 'exceeded' is tied to the field's actual maxLength (> 100% used,
+     * not a percent threshold), and 'disabled' unconditionally forces the
+     * neutral color regardless of percent-used.
+     */
     :host([data-limit-state='exceeded']) {
       color: var(--ngx-form-field-char-count-color-exceeded, #991b1b);
       font-weight: var(--ngx-form-field-char-count-weight-exceeded, 600);
     }
 
-    /* Disabled color progression */
     :host([data-limit-state='disabled']) {
       color: var(--ngx-form-field-char-count-color-ok, rgba(50, 65, 85, 0.75));
     }
@@ -252,6 +338,7 @@ export type NgxCharacterCountAnnouncementFormatter = (
   host: {
     '[attr.position]': 'position()',
     '[attr.data-limit-state]': 'displayLimitState()',
+    '[style.--ngx-form-field-char-count-percent-used]': 'percentUsed()',
   },
 })
 export class NgxFormFieldCharacterCount {
@@ -340,19 +427,6 @@ export class NgxFormFieldCharacterCount {
     input<NgxCharacterCountAnnouncementFormatter>();
 
   /**
-   * Percentage thresholds for color state changes.
-   *
-   * - `warning`: Percentage at which color changes to warning (default: 80%)
-   * - `danger`: Percentage at which color changes to danger (default: 95%)
-   *
-   * @default { warning: 80, danger: 95 }
-   */
-  readonly colorThresholds = input({
-    warning: 80,
-    danger: 95,
-  });
-
-  /**
    * Resolved maximum length.
    *
    * Priority:
@@ -390,18 +464,24 @@ export class NgxFormFieldCharacterCount {
 
   /**
    * Headless character count state from the toolkit.
-   * Re-created when maxLength or thresholds change (rare).
+   * Re-created when `maxLength` changes (rare).
+   *
+   * Uses `createCharacterCount()`'s own default thresholds (80%/95%) — the
+   * component no longer accepts a `colorThresholds` input (removed pre-v1,
+   * #355). Those defaults drive `displayLimitState` (the `data-limit-state`
+   * attribute) and, in turn, the `[liveAnnounce]` announcement wording,
+   * which must stay fixed and predictable for screen reader users. The
+   * *visible color* is independently, continuously reconfigurable via the
+   * `--ngx-form-field-char-count-warning-threshold` /
+   * `-danger-threshold` CSS custom properties — see the class docblock.
    */
   readonly #charCountState = computed(() => {
     const max = this.#resolvedMaxLength();
     if (max === null) return null;
 
-    const thresholds = this.colorThresholds();
     return createCharacterCount({
       field: this.formField(),
       maxLength: max,
-      warningThreshold: thresholds.warning / 100,
-      dangerThreshold: thresholds.danger / 100,
       // Without this, the unsupported-value dev warning would report the
       // factory's own default name ('createCharacterCount') instead of the
       // component the misconfigured `formField` binding actually lives on —
@@ -434,6 +514,20 @@ export class NgxFormFieldCharacterCount {
     if (state) return state.currentLength();
 
     return this.#fallbackLength();
+  });
+
+  /**
+   * Percentage of `maxLength` used (0-100+), published as the
+   * `--ngx-form-field-char-count-percent-used` custom property (see the
+   * `host` binding) so the pure-CSS threshold comparison in `styles` above
+   * can pick a color. `0` when no limit is resolved — the `disabled`
+   * `data-limit-state` attribute selector takes over the color in that
+   * case, so this value never actually feeds the color-mix() expression
+   * for "no limit configured" fields.
+   */
+  protected readonly percentUsed = computed(() => {
+    const state = this.#charCountState();
+    return state ? state.percentUsed() : 0;
   });
 
   /**

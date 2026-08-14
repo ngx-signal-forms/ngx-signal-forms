@@ -286,22 +286,53 @@ enforced minimum width.
 
 Displays progress towards a character limit.
 
-| Property                                           | Default                                    | Description                                                                        |
-| :------------------------------------------------- | :----------------------------------------- | :--------------------------------------------------------------------------------- |
-| `--ngx-form-field-char-count-font-size`            | `var(--...feedback...)`                    | Text size                                                                          |
-| `--ngx-form-field-char-count-line-height`          | `1.25`                                     | Line height (char-count uses tighter line-height than the other feedback surfaces) |
-| `--ngx-form-field-char-count-color-ok`             | `rgba(50, 65, 85, 0.75)`                   | Neutral state color                                                                |
-| `--ngx-form-field-char-count-color-warning`        | `#a16207`                                  | Warning threshold color                                                            |
-| `--ngx-form-field-char-count-color-danger`         | `#db1818`                                  | Critical threshold color                                                           |
-| `--ngx-form-field-char-count-color-exceeded`       | `#991b1b`                                  | Limit exceeded color                                                               |
-| `--ngx-form-field-char-count-weight-exceeded`      | `600`                                      | Font weight when exceeded                                                          |
-| `--ngx-form-field-char-count-padding-inline-start` | `var(--...feedback-padding-horizontal...)` | Start-edge padding                                                                 |
-| `--ngx-form-field-char-count-padding-inline-end`   | `var(--...feedback-padding-horizontal...)` | End-edge padding                                                                   |
+| Property                                           | Default                                    | Description                                                                          |
+| :------------------------------------------------- | :----------------------------------------- | :----------------------------------------------------------------------------------- |
+| `--ngx-form-field-char-count-font-size`            | `var(--...feedback...)`                    | Text size                                                                            |
+| `--ngx-form-field-char-count-line-height`          | `1.25`                                     | Line height (char-count uses tighter line-height than the other feedback surfaces)   |
+| `--ngx-form-field-char-count-color-ok`             | `rgba(50, 65, 85, 0.75)`                   | Neutral state color                                                                  |
+| `--ngx-form-field-char-count-color-warning`        | `#a16207`                                  | Warning threshold color                                                              |
+| `--ngx-form-field-char-count-color-danger`         | `#db1818`                                  | Critical threshold color                                                             |
+| `--ngx-form-field-char-count-color-exceeded`       | `#991b1b`                                  | Limit exceeded color                                                                 |
+| `--ngx-form-field-char-count-weight-exceeded`      | `600`                                      | Font weight when exceeded                                                            |
+| `--ngx-form-field-char-count-padding-inline-start` | `var(--...feedback-padding-horizontal...)` | Start-edge padding                                                                   |
+| `--ngx-form-field-char-count-padding-inline-end`   | `var(--...feedback-padding-horizontal...)` | End-edge padding                                                                     |
+| `--ngx-form-field-char-count-warning-threshold`    | `80`                                       | Percent of `maxLength` at which the color switches to warning (plain number, no `%`) |
+| `--ngx-form-field-char-count-danger-threshold`     | `95`                                       | Percent of `maxLength` at which the color switches to danger (plain number, no `%`)  |
 
 Both padding tokens fall back to the shared
 `--ngx-signal-form-feedback-padding-horizontal` first — `0.5rem` inside the
 wrapper, where it aligns the count with the input text. Used fully standalone,
 the last-resort fallbacks are `0` (start) and `0.5rem` (end).
+
+**Threshold tokens (pre-v1 breaking change, #355):** there is no
+`colorThresholds` component input anymore. The warning/danger breakpoints
+are CSS-only, resolved by the component's own `color-mix()`/`clamp()`
+expression against the two public threshold tokens above. A wrapper
+restyling `ngx-form-field-character-count` overrides the thresholds purely
+in CSS — no template change, no new input to thread through. The `exceeded`
+state (>100% used) is not configurable: it is tied to the field's actual
+`maxLength`, not a percentage. `[liveAnnounce]` announcement wording always
+uses the fixed 80/95 defaults, regardless of any threshold-token override —
+see [Migrating: beta to v1](../../../docs/MIGRATING_BETA_TO_V1.md) for the
+accessibility rationale.
+
+Following the same pattern as the rest of the toolkit, the implementation
+resolves the two public threshold tokens into pseudo-private
+`--_char-count-warning-threshold` / `--_char-count-danger-threshold`
+copies, then derives two more `--_char-count-is-warning` /
+`--_char-count-is-danger` intermediates (the 0/1 "threshold crossed"
+toggles the `color-mix()` blend consumes). All four are internal-only —
+never override them; they are not part of the public contract and can
+change shape without notice.
+
+`--ngx-form-field-char-count-percent-used` is different from the four
+`--_char-count-*` internals above: it is set by the component itself and
+consumed by its own `color-mix()` expression, but it stays in the public
+`--ngx-form-field-*` namespace — same status as
+[`--ngx-form-field-hint-display`](#hints): an **internal coordination
+hook, not a theming knob**. It is documented here for transparency (e.g.
+debugging computed styles), not as something to set.
 
 ### Assistive Row
 

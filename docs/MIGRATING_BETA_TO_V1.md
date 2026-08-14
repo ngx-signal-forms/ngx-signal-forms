@@ -59,6 +59,7 @@ releases will not include any of the renames below.
 - **BREAKING: `ErrorSummarySignals` gained `shouldShowWarnings`** — implementers of the interface must add this member (see [§8](#8-headless-audit-fixes-v100))
 - **BREAKING: `CharacterCountResult` members are now typed `Signal<T>`** (was the looser `ReadSignal<T>` alias); a new `hasLimit` member was added — compile-time tightening only, no runtime change
 - **Bug fix** — error summary no longer drops a second field's error when two different fields share the same kind + message-less default; `NgxHeadlessNotification` no longer leaks the internal `warn:` prefix; `createErrorMessageSignal`'s ID fallback strips Angular's internal `{appId}.form{n}.` prefix; required `Date`/`File`/`Map`-valued leaves no longer vanish from field-optionality summaries
+- **BREAKING: `NgxFormFieldCharacterCount`'s `colorThresholds` input removed** — warning/danger color breakpoints are now CSS-only via `--ngx-form-field-char-count-warning-threshold` / `-danger-threshold` (default `80`/`95`); `[liveAnnounce]` wording stays fixed at those defaults regardless of a CSS override (see [§13](#13-ngxformfieldcharactercount-colorthresholds-removed--thresholds-are-css-only-355))
 
 ---
 
@@ -1515,3 +1516,76 @@ hardcoded `<span class="text-red-500">*</span>` markers have been removed
 from `traveler-step.ts` / `trip-step.ts` — the wrapper's auto-marker now
 covers them, consistent with every other demo. Purely additive; no existing
 API changed.
+
+## 13. NgxFormFieldCharacterCount colorThresholds removed — thresholds are CSS-only (#355)
+
+**Root cause:** `colorThresholds: { warning: 80, danger: 95 }` exposed a
+Tailwind-relative presentation detail — the warning/danger color
+breakpoints — as a public component input. That leaked a design-system
+detail across the code/CSS seam and constrained any consumer restyling the
+component (Material, PrimeNG, a custom design system) to also thread a
+TypeScript binding through their wrapper just to change where a color kicks
+in.
+
+**Breaking change:** the `colorThresholds` input is gone. Warning/danger
+thresholds are now two CSS custom properties on
+`ngx-form-field-character-count`:
+
+| Custom property                                 | Default | Meaning                                                 |
+| ----------------------------------------------- | ------- | ------------------------------------------------------- |
+| `--ngx-form-field-char-count-warning-threshold` | `80`    | Percent of `maxLength` at which the color turns warning |
+| `--ngx-form-field-char-count-danger-threshold`  | `95`    | Percent of `maxLength` at which the color turns danger  |
+
+```html
+<!-- before -->
+<ngx-form-field-character-count
+  [formField]="form.bio"
+  [maxLength]="500"
+  [colorThresholds]="{ warning: 90, danger: 98 }"
+/>
+
+<!-- after -->
+<ngx-form-field-character-count [formField]="form.bio" [maxLength]="500" />
+```
+
+```css
+/* after — CSS-only, scoped however you like (element, class, :root) */
+ngx-form-field-character-count {
+  --ngx-form-field-char-count-warning-threshold: 90;
+  --ngx-form-field-char-count-danger-threshold: 98;
+}
+```
+
+Values are plain numbers (percent of `maxLength`, no `%` unit), matching the
+old input's percentages 1:1 — a direct find/replace from
+`colorThresholds.warning` / `.danger` to the two custom properties covers
+every existing caller. If you never set `colorThresholds`, there is nothing
+to change — the CSS defaults (`80`/`95`) reproduce the exact prior behavior.
+
+**How it works:** the component publishes a
+`--ngx-form-field-char-count-percent-used` custom property — an internal
+coordination hook, not a theming knob (same status as
+`--ngx-form-field-hint-display`; set by the component, never meant to be
+overridden) — and a pure-CSS `color-mix()` + `clamp()` expression compares
+it against the two threshold tokens (via pseudo-private
+`--_char-count-warning-threshold` / `-danger-threshold` /
+`-is-warning` / `-is-danger` intermediates — internal-only, not part of the
+public contract, see `packages/toolkit/form-field/THEMING.md`) to pick
+ok/warning/danger, entirely in the stylesheet. No `@property`, no
+container style queries — both are less broadly supported than the
+`calc()`/`clamp()` technique used here. The `exceeded` state (>100% used)
+is **not** configurable via these tokens: it is tied to the field's actual
+`maxLength`, not a percentage, matching the prior behavior.
+
+**Accessibility (why announcements did not move to CSS too):**
+`[liveAnnounce]`'s polite announcements ("Approaching limit…", "Almost at
+limit…", "Character limit exceeded…") continue to fire at the fixed
+80%/95% defaults, **independent of any CSS threshold override**. A
+CSS-driven visual restyle must not silently retime what screen reader users
+hear — announcement wording is accessible behavior, not presentation, and
+there is no reliable, SSR-safe way for the component to read back a
+consumer's CSS custom property value at runtime to keep the two in sync.
+Restyling the color threshold is a pure presentation change; the
+announcement timing stays exactly where it was.
+
+**Files:** `packages/toolkit/assistive/character-count.ts`.

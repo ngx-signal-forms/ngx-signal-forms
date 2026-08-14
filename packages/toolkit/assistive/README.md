@@ -162,17 +162,24 @@ Character counter with progressive color states (ok → warning → danger → e
 <ngx-form-field-character-count [formField]="form.bio" [maxLength]="500" />
 ```
 
-| Input                   | Type                                           | Default                       | Description                                                              |
-| ----------------------- | ---------------------------------------------- | ----------------------------- | ------------------------------------------------------------------------ |
-| `formField`             | `FieldTree<NgxCharacterCountValue>` (required) | —                             | Field to track the character count for                                   |
-| `maxLength`             | `number \| undefined`                          | Auto-detected from validator  | Character limit; auto-detected from a `maxLength` validator when omitted |
-| `position`              | `'left' \| 'right'`                            | `'right'`                     | Text alignment within the assistive row                                  |
-| `showLimitColors`       | `boolean`                                      | `true`                        | Progressive color states as the count nears the limit                    |
-| `liveAnnounce`          | `boolean`                                      | `false`                       | Polite live announcements when the limit state changes                   |
-| `announcementFormatter` | `NgxCharacterCountAnnouncementFormatter`       | Built-in English strings      | Custom formatter for localizing announcements                            |
-| `colorThresholds`       | `{ warning: number; danger: number }`          | `{ warning: 80, danger: 95 }` | Percentage thresholds for the warning and danger color states            |
+| Input                   | Type                                           | Default                      | Description                                                              |
+| ----------------------- | ---------------------------------------------- | ---------------------------- | ------------------------------------------------------------------------ |
+| `formField`             | `FieldTree<NgxCharacterCountValue>` (required) | —                            | Field to track the character count for                                   |
+| `maxLength`             | `number \| undefined`                          | Auto-detected from validator | Character limit; auto-detected from a `maxLength` validator when omitted |
+| `position`              | `'left' \| 'right'`                            | `'right'`                    | Text alignment within the assistive row                                  |
+| `showLimitColors`       | `boolean`                                      | `true`                       | Progressive color states as the count nears the limit                    |
+| `liveAnnounce`          | `boolean`                                      | `false`                      | Polite live announcements when the limit state changes                   |
+| `announcementFormatter` | `NgxCharacterCountAnnouncementFormatter`       | Built-in English strings     | Custom formatter for localizing announcements                            |
 
 When a matching max-length validator is present, `maxLength` can be omitted and detected automatically. Add `liveAnnounce` for polite screen reader announcements.
+
+Warning/danger color thresholds are CSS-only — there is no `colorThresholds`
+input. Override `--ngx-form-field-char-count-warning-threshold` /
+`--ngx-form-field-char-count-danger-threshold` (plain numbers, percent of
+`maxLength`, default `80` / `95`) to retune where the color changes; see the
+[Theming guide](../form-field/THEMING.md#character-count). `[liveAnnounce]`
+wording always uses the fixed 80%/95% defaults, independent of any CSS
+override — see [Migrating: beta to v1](../../../docs/MIGRATING_BETA_TO_V1.md).
 
 The component accepts `string`, `readonly string[]`, `null`, and `undefined`
 field values. Strings are counted by character length; arrays are counted by
