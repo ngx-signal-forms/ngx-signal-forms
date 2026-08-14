@@ -143,6 +143,33 @@
       </ngx-form-field-hint>
     </ngx-form-field-wrapper>
 
+    <!-- Date of Birth - FormValueControl adapter around a self-contained
+         fake "legacy" third-party datepicker widget. The widget owns its
+         internal <input>, so ARIA stays manual and the wrapper stays
+         plain — see LegacyDatepickerAdapterComponent for the full adapter
+         boundary writeup (value round-trip, touched hook, ARIA forwarding,
+         parse errors). -->
+    <ngx-form-field-wrapper
+      appearance="plain"
+      [orientation]="orientation()"
+      [formField]="reviewForm.birthDate"
+      fieldName="birthDate"
+    >
+      <label id="birthDate-label" for="birthDate">
+        Date of Birth (legacy widget, optional)
+      </label>
+      <ngx-legacy-datepicker-adapter
+        [controlId]="'birthDate'"
+        [labelledBy]="'birthDate-label'"
+        ngxSignalFormControlAria="manual"
+        [describedBy]="birthDateDescribedBy()"
+        [formField]="reviewForm.birthDate"
+      />
+      <ngx-form-field-hint id="birthDate-hint">
+        Type a date as YYYY-MM-DD, or use the 📅 button to pick one.
+      </ngx-form-field-hint>
+    </ngx-form-field-wrapper>
+
     <!-- Feedback - Stacked textarea for comparison -->
     <ngx-form-field-wrapper
       [appearance]="appearance()"

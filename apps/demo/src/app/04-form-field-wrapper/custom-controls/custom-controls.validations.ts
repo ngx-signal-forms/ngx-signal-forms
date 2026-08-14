@@ -46,4 +46,9 @@ export const customControlsSchema = schema<CustomControlsModel>((path) => {
   min(path.accessibilityAudit, 1, {
     message: 'Accessibility audit must be at least 1 star',
   });
+
+  // Date of birth is optional and has no schema-level rule here — its only
+  // validation is the `parse` error the LegacyDatepickerAdapterComponent
+  // reports automatically (via `transformedValue`) when the underlying
+  // legacy widget's typed text isn't a real YYYY-MM-DD date.
 });

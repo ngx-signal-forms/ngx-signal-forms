@@ -26,6 +26,14 @@ export interface CustomControlsModel {
 
   /** Optional feedback text */
   feedback: string;
+
+  /**
+   * Date of birth, edited through a `FormValueControl<Date | null>` adapter
+   * wrapped around a self-contained fake "legacy" datepicker widget (its
+   * own value/change API, not a native input). Optional — see
+   * `LegacyDatepickerAdapterComponent` for the adapter boundary itself.
+   */
+  birthDate: Date | null;
 }
 
 /**
@@ -40,4 +48,5 @@ export const initialCustomControlsModel: CustomControlsModel = {
   shareReviewPublicly: false,
   accessibilityAudit: 0,
   feedback: '',
+  birthDate: null,
 };
