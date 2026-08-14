@@ -205,6 +205,14 @@ export const appRoutes: Routes = [
         title: getRouteTitle('/advanced-scenarios/advanced-wizard'),
       },
       {
+        path: 'single-model-wizard',
+        loadComponent: () =>
+          import('./05-advanced/single-model-wizard/single-model-wizard.page').then(
+            (m) => m.SingleModelWizardPageComponent,
+          ),
+        title: getRouteTitle('/advanced-scenarios/single-model-wizard'),
+      },
+      {
         path: 'async-validation',
         loadComponent: () =>
           import('./05-advanced/async-validation/async-validation.page').then(

@@ -15,6 +15,7 @@ export const DEMO_PATHS = {
   globalConfiguration: '/advanced-scenarios/global-configuration',
   submissionPatterns: '/advanced-scenarios/submission-patterns',
   advancedWizard: '/advanced-scenarios/advanced-wizard',
+  singleModelWizard: '/advanced-scenarios/single-model-wizard',
   asyncValidation: '/advanced-scenarios/async-validation',
   fieldStatePatterns: '/advanced-scenarios/field-state-patterns',
   crossFieldValidation: '/advanced-scenarios/cross-field-validation',
@@ -144,6 +145,11 @@ export const DEMO_CATEGORIES = [
         path: '/advanced-scenarios/advanced-wizard',
         label: 'Advanced Wizard (@ngrx/signals + Zod)',
         hasControls: true,
+      },
+      {
+        path: '/advanced-scenarios/single-model-wizard',
+        label: 'Single-Model Wizard',
+        hasControls: false,
       },
       {
         path: '/advanced-scenarios/async-validation',
