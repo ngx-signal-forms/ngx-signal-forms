@@ -258,7 +258,8 @@ canonical rather than re-deriving tokens.
 
 **See:** [packages/toolkit/form-field/THEMING.md](../packages/toolkit/form-field/THEMING.md) ·
 [docs/MIGRATING_CSS_VARS.md](./MIGRATING_CSS_VARS.md) ·
-[docs/CSS_FRAMEWORK_INTEGRATION.md](./CSS_FRAMEWORK_INTEGRATION.md)
+[docs/CSS_FRAMEWORK_INTEGRATION.md](./CSS_FRAMEWORK_INTEGRATION.md) ·
+[demo: brand-theming](../apps/demo/src/app/04-form-field-wrapper/brand-theming/README.md)
 
 ### How do I integrate a third-party datepicker (value/change API, not a native input)?
 
