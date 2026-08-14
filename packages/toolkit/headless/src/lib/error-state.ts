@@ -1,16 +1,7 @@
-import {
-  computed,
-  Directive,
-  inject,
-  input,
-  signal,
-  type Signal,
-} from '@angular/core';
+import { computed, Directive, input, signal, type Signal } from '@angular/core';
 import type { FieldTree, ValidationError } from '@angular/forms/signals';
 import {
   createErrorVisibility,
-  injectFormContext,
-  NGX_SIGNAL_FORMS_CONFIG,
   resolveSubmittedStatusFromContext,
   resolveWarningStrategyFromContext,
   shouldShowWarnings,
@@ -22,11 +13,8 @@ import {
   type SubmittedStatus,
   type WarningDisplayStrategy,
 } from '@ngx-signal-forms/toolkit';
-import {
-  DEFAULT_NGX_SIGNAL_FORMS_CONFIG,
-  NGX_ERROR_MESSAGES,
-} from '@ngx-signal-forms/toolkit/core';
 
+import { buildHeadlessContext } from './build-headless-context';
 import {
   buildHeadlessErrorState,
   resolveErrorMessage,
@@ -119,13 +107,10 @@ export interface ErrorStateSignals {
 export class NgxHeadlessErrorState<
   TValue = unknown,
 > implements ErrorStateSignals {
-  readonly #injectedContext = injectFormContext();
-  readonly #errorMessagesRegistry = inject(NGX_ERROR_MESSAGES, {
-    optional: true,
-  });
-  readonly #config =
-    inject(NGX_SIGNAL_FORMS_CONFIG, { optional: true }) ??
-    DEFAULT_NGX_SIGNAL_FORMS_CONFIG;
+  readonly #context = buildHeadlessContext();
+  readonly #injectedContext = this.#context.formContext;
+  readonly #errorMessagesRegistry = this.#context.errorMessagesRegistry;
+  readonly #config = this.#context.config;
 
   /**
    * Bridged field-state signal, set by host components that cannot forward

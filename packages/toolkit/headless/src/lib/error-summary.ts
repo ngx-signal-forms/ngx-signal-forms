@@ -1,20 +1,14 @@
-import { computed, Directive, inject, input, type Signal } from '@angular/core';
+import { computed, Directive, input, type Signal } from '@angular/core';
 import type { FieldTree } from '@angular/forms/signals';
 import {
   createErrorVisibility,
-  injectFormContext,
-  NGX_SIGNAL_FORMS_CONFIG,
   resolveStrategyFromContext,
   type ErrorDisplayStrategy,
   type ResolvedErrorDisplayStrategy,
   type SubmittedStatus,
 } from '@ngx-signal-forms/toolkit';
-import {
-  DEFAULT_NGX_SIGNAL_FORMS_CONFIG,
-  NGX_ERROR_MESSAGES,
-  NGX_FIELD_LABEL_RESOLVER,
-} from '@ngx-signal-forms/toolkit/core';
 
+import { buildHeadlessContext } from './build-headless-context';
 import {
   createErrorSummaryEntries,
   type ErrorSummaryEntryData,
@@ -107,16 +101,11 @@ export interface ErrorSummarySignals {
   exportAs: 'errorSummary',
 })
 export class NgxHeadlessErrorSummary implements ErrorSummarySignals {
-  readonly #errorMessagesRegistry = inject(NGX_ERROR_MESSAGES, {
-    optional: true,
-  });
-  readonly #labelResolver = inject(NGX_FIELD_LABEL_RESOLVER, {
-    optional: true,
-  });
-  readonly #formContext = injectFormContext();
-  readonly #config =
-    inject(NGX_SIGNAL_FORMS_CONFIG, { optional: true }) ??
-    DEFAULT_NGX_SIGNAL_FORMS_CONFIG;
+  readonly #context = buildHeadlessContext();
+  readonly #errorMessagesRegistry = this.#context.errorMessagesRegistry;
+  readonly #labelResolver = this.#context.labelResolver;
+  readonly #formContext = this.#context.formContext;
+  readonly #config = this.#context.config;
 
   /**
    * The root form FieldTree to aggregate errors from.

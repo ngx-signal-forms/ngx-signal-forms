@@ -2,15 +2,12 @@ import {
   booleanAttribute,
   computed,
   Directive,
-  inject,
   input,
   type Signal,
 } from '@angular/core';
 import type { FieldTree, ValidationError } from '@angular/forms/signals';
 import {
   createErrorVisibility,
-  injectFormContext,
-  NGX_SIGNAL_FORMS_CONFIG,
   resolveStrategyFromContext,
   resolveSubmittedStatusFromContext,
   resolveWarningStrategyFromContext,
@@ -21,11 +18,8 @@ import {
   type SubmittedStatus,
   type WarningDisplayStrategy,
 } from '@ngx-signal-forms/toolkit';
-import {
-  DEFAULT_NGX_SIGNAL_FORMS_CONFIG,
-  NGX_ERROR_MESSAGES,
-} from '@ngx-signal-forms/toolkit/core';
 
+import { buildHeadlessContext } from './build-headless-context';
 import {
   createFieldsetAggregation,
   createFieldStateFlags,
@@ -140,13 +134,10 @@ export interface FieldsetStateSignals {
 export class NgxHeadlessFieldset<
   TFieldset = unknown,
 > implements FieldsetStateSignals {
-  readonly #formContext = injectFormContext();
-  readonly #config =
-    inject(NGX_SIGNAL_FORMS_CONFIG, { optional: true }) ??
-    DEFAULT_NGX_SIGNAL_FORMS_CONFIG;
-  readonly #errorMessagesRegistry = inject(NGX_ERROR_MESSAGES, {
-    optional: true,
-  });
+  readonly #context = buildHeadlessContext();
+  readonly #formContext = this.#context.formContext;
+  readonly #config = this.#context.config;
+  readonly #errorMessagesRegistry = this.#context.errorMessagesRegistry;
   readonly #generatedFieldsetId = createUniqueId('fieldset');
 
   /**
