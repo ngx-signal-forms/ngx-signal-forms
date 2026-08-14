@@ -4,14 +4,15 @@ import {
   input,
   signal,
 } from '@angular/core';
-import { FormField } from '@angular/forms/signals';
+import { form, FormField } from '@angular/forms/signals';
 import {
+  createOnInvalidHandler,
+  hasOnlyWarnings,
   NgxSignalFormToolkit,
-  submitWithWarnings,
   type ResolvedErrorDisplayStrategy,
 } from '@ngx-signal-forms/toolkit';
 import { NgxFormField } from '@ngx-signal-forms/toolkit/form-field';
-import { createPasswordForm } from './warning-support.validations';
+import { passwordFormSchema } from './warning-support.validations';
 
 @Component({
   selector: 'ngx-warning-support-form',
@@ -32,7 +33,12 @@ import { createPasswordForm } from './warning-support.validations';
       </div>
     }
 
-    <form class="form-container" novalidate (submit)="handleSubmit($event)">
+    <form
+      [formRoot]="passwordForm"
+      ngxSignalForm
+      [errorStrategy]="errorDisplayMode()"
+      class="form-container"
+    >
       <ngx-form-field-wrapper
         [formField]="passwordForm.username"
         [strategy]="errorDisplayMode()"
@@ -77,8 +83,12 @@ import { createPasswordForm } from './warning-support.validations';
 
       <div class="form-actions">
         <button type="button" (click)="reset()">Reset</button>
-        <button type="submit" class="btn-primary" [disabled]="isSubmitting()">
-          @if (isSubmitting()) {
+        <button
+          type="submit"
+          class="btn-primary"
+          [disabled]="passwordForm().submitting()"
+        >
+          @if (passwordForm().submitting()) {
             Creating Account...
           } @else {
             Create Account
@@ -101,46 +111,42 @@ export class WarningsSupportFormComponent {
     password: '',
   });
 
-  readonly passwordForm = createPasswordForm(this.#formModel);
-  protected readonly isSubmitting = signal(false);
-  protected readonly successMessage = signal('');
+  readonly #onInvalid = createOnInvalidHandler();
+
   /**
-   * Form submission using submitWithWarnings() from the toolkit.
-   *
-   * **WCAG Compliant Behavior:**
-   * - Warnings do NOT block submission (only blocking errors do)
-   * - All fields are marked as touched to show feedback
-   * - Blocking errors prevent submission
+   * Native `[formRoot]` submit treats every ValidationError as blocking, so
+   * `ignoreValidators: 'all'` plus `hasOnlyWarnings()` preserve the warning
+   * bypass. Calling `submitWithWarnings()` from `submission.action` would
+   * no-op while `submitting()` is true.
    */
-  protected handleSubmit(event: SubmitEvent): void {
-    event.preventDefault();
+  readonly passwordForm = form(this.#formModel, passwordFormSchema, {
+    submission: {
+      ignoreValidators: 'all',
+      action: async () => {
+        if (!hasOnlyWarnings(this.passwordForm().errorSummary())) {
+          this.#onInvalid(this.passwordForm);
+          return;
+        }
 
-    if (this.isSubmitting()) {
-      return;
-    }
+        await new Promise<void>((resolve) => {
+          setTimeout(resolve, 1000);
+        });
 
-    this.isSubmitting.set(true);
+        this.successMessage.set(
+          '✓ Account created successfully! Notice how warnings did not block submission.',
+        );
 
-    void submitWithWarnings(this.passwordForm, async () => {
-      await new Promise<void>((resolve) => {
-        setTimeout(resolve, 1000);
-      });
+        setTimeout(() => {
+          this.successMessage.set('');
+        }, 5000);
+      },
+    },
+  });
 
-      this.successMessage.set(
-        '✓ Account created successfully! Notice how warnings did not block submission.',
-      );
-
-      setTimeout(() => {
-        this.successMessage.set('');
-      }, 5000);
-    }).finally(() => {
-      this.isSubmitting.set(false);
-    });
-  }
+  protected readonly successMessage = signal('');
 
   protected reset(): void {
     this.passwordForm().reset();
-    this.isSubmitting.set(false);
     this.#formModel.set({
       username: '',
       email: '',

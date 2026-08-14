@@ -3,11 +3,13 @@ import {
   Component,
   computed,
   signal,
+  viewChild,
 } from '@angular/core';
 import {
   type ResolvedErrorDisplayStrategy,
   type FormFieldAppearance,
 } from '@ngx-signal-forms/toolkit';
+import { NgxSignalFormDebugger } from '@ngx-signal-forms/debugger';
 import {
   AppearanceToggleComponent,
   DisplayControlsCardComponent,
@@ -16,6 +18,7 @@ import {
   NgxPageControlsDirective,
   OrientationToggleComponent,
   PageHeaderComponent,
+  SplitLayoutComponent,
 } from '../../ui';
 import { APPEARANCE_LABELS } from '../../ui/appearance-toggle';
 import {
@@ -50,6 +53,8 @@ import { I18nDemoComponent } from './i18n.form';
     DisplayControlsSectionComponent,
     NgxPageControlsDirective,
     PageHeaderComponent,
+    SplitLayoutComponent,
+    NgxSignalFormDebugger,
   ],
   template: `
     <ng-template ngxPageControls>
@@ -92,11 +97,20 @@ import { I18nDemoComponent } from './i18n.form';
       [demonstrated]="content.demonstrated"
       [learning]="content.learning"
     >
-      <ngx-i18n-demo
-        [errorDisplayMode]="errorDisplayMode()"
-        [appearance]="selectedAppearance()"
-        [orientation]="selectedOrientation()"
-      />
+      <ngx-split-layout>
+        <ngx-i18n-demo
+          [errorDisplayMode]="errorDisplayMode()"
+          [appearance]="selectedAppearance()"
+          [orientation]="selectedOrientation()"
+          left
+        />
+
+        @if (formRef(); as form) {
+          <div right>
+            <ngx-signal-form-debugger [formTree]="form.demoForm" />
+          </div>
+        }
+      </ngx-split-layout>
     </ngx-example-cards>
   `,
 })
@@ -124,4 +138,5 @@ export class I18nDemoPage {
     },
   ]);
   protected readonly content = I18N_DEMO_CONTENT;
+  protected readonly formRef = viewChild(I18nDemoComponent);
 }

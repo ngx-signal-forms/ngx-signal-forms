@@ -91,6 +91,12 @@ test.describe('Advanced Wizard Demo', () => {
       await expect(
         page.getByRole('heading', { name: 'Trip Details', exact: true }),
       ).toBeFocused();
+
+      const countryInput = page.locator('#dest-country-0');
+      await expect(countryInput).toBeVisible();
+      await expect(
+        page.locator('form.trip-step').locator('#dest-country-0'),
+      ).toBeVisible();
     });
 
     // ----------------------------------------------------------------

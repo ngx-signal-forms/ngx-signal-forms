@@ -16,7 +16,7 @@ export const COMPLEX_FORMS_CONTENT = {
           '• <strong>Dynamic arrays:</strong> Add/remove items with reactive updates',
           '• <strong>Automatic layout:</strong> Label + input + error container',
           '• <strong>Type safety:</strong> Full TypeScript inference',
-          '• <strong>Maximum reduction:</strong> 67% less boilerplate',
+          '• <strong>Less boilerplate:</strong> Labels, errors, and layout come from the wrapper instead of per-field markup',
         ],
       },
       {
@@ -65,8 +65,7 @@ export const COMPLEX_FORMS_CONTENT = {
       {
         title: 'Code Reduction Benefits',
         items: [
-          '• <strong>Without wrapper:</strong> ~320 lines (manual labels/errors/layout)',
-          '• <strong>With wrapper:</strong> ~280 lines (33% less boilerplate)',
+          '• <strong>Wrapper-owned chrome:</strong> Labels, errors, and layout stay consistent without hand-wiring each field',
           '• <strong>Zero manual ARIA:</strong> Automatic accessibility',
           '• <strong>Consistent UX:</strong> Unified error display and stable control-family layouts',
         ],

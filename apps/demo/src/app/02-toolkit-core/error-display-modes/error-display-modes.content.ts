@@ -14,7 +14,7 @@ export const ERROR_DISPLAY_MODES_CONTENT = {
           '<strong>Email:</strong> Required, valid email format',
           '<strong>Company:</strong> Optional, max 100 characters',
           '<strong>Product Used:</strong> Required selection',
-          '<strong>Rating:</strong> Required, 1-5 stars',
+          '<strong>Rating:</strong> Required number, 1-5',
           '<strong>Improvement Suggestions:</strong> Required if rating ≤ 3, min 10 chars, max 500',
           '<strong>Detailed Feedback:</strong> Optional, max 1000 characters',
         ],
@@ -33,7 +33,6 @@ export const ERROR_DISPLAY_MODES_CONTENT = {
         items: [
           'Conditional validation (improvement suggestions for low ratings)',
           'Character counting with live feedback',
-          'Cross-field validation',
           'Dynamic field visibility',
         ],
       },
@@ -53,8 +52,8 @@ export const ERROR_DISPLAY_MODES_CONTENT = {
       {
         title: '🎯 Conditional Validation Test',
         items: [
-          '1. Set rating to 3 or below → Improvement field becomes required',
-          '2. Type less than 10 characters → Error: "at least 10 characters"',
+          '1. Set rating to 3 or below → Improvement field becomes required: "Please help us understand what could be improved"',
+          '2. Type less than 10 characters → Error: "Please provide at least 10 characters of feedback"',
           '3. Type 500+ characters → Character count turns red',
           '4. Set rating to 4 or 5 → Improvement field becomes optional',
         ],

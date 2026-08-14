@@ -17,6 +17,11 @@ test.describe('Advanced - i18n: Runtime Language Switch', () => {
     await expect(page.emailInput).toBeVisible();
   });
 
+  test('shows Form State & Validation bound to the live i18n form tree', async () => {
+    await expect(page.page.locator('ngx-split-layout')).toBeVisible();
+    await expect(page.page.locator('ngx-signal-form-debugger')).toBeVisible();
+  });
+
   test('should switch the required error text on a runtime language change', async () => {
     await test.step('Touch full name to trigger the required error in English', async () => {
       await page.fullNameInput.focus();

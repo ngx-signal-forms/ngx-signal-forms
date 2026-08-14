@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, input } from '@angular/core';
+import { RouterLink } from '@angular/router';
 import { CardComponent } from '../card/card';
 
 type DemonstratedCardConfig = {
@@ -33,7 +34,7 @@ type LearningCardConfig = {
   selector: 'ngx-example-cards',
   changeDetection: ChangeDetectionStrategy.OnPush,
 
-  imports: [CardComponent],
+  imports: [CardComponent, RouterLink],
   templateUrl: './example-cards.html',
   styleUrl: './example-cards.scss',
 })
@@ -41,7 +42,7 @@ export class ExampleCardsComponent {
   demonstrated = input.required<DemonstratedCardConfig>();
   learning = input.required<LearningCardConfig>();
 
-  protected readonly demonstratedHeadingId = `demonstrated-${Math.random()
-    .toString(36)
-    .slice(2, 15)}`;
+  static #nextDemonstratedHeadingId = 0;
+
+  protected readonly demonstratedHeadingId = `example-cards-demonstrated-${++ExampleCardsComponent.#nextDemonstratedHeadingId}`;
 }
