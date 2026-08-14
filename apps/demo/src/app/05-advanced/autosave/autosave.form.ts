@@ -9,7 +9,7 @@ import {
   signal,
   untracked,
 } from '@angular/core';
-import { form, FormField } from '@angular/forms/signals';
+import { form, FormField, type FieldState } from '@angular/forms/signals';
 import {
   type ResolvedErrorDisplayStrategy,
   type FormFieldAppearance,
@@ -215,6 +215,29 @@ export class AutosaveComponent {
    * `Object.keys` for the same `keyof` precision reason as
    * `server-integration.form.ts`'s `PROFILE_FIELD_KEYS` — there are only two
    * fields here, so the loop would cost more clarity than it saves.
+   *
+   * A third, easy-to-miss condition guards against a real race in
+   * `debounce()`: writing to a control marks the field `dirty()`
+   * *synchronously*, but `value()` only catches up once the debounce
+   * elapses — see `ReadonlyFieldState.value`'s doc comment in
+   * `@angular/forms/signals`: "updates from the UI control are eventually
+   * reflected here, they may be delayed if debounced." Between those two
+   * moments, `dirty()` is already `true` while `value()` is still the
+   * field's *previous* settled value, not the edit the user just made.
+   * Gating on `dirty()` and `valid()` alone would read that stale
+   * `value()` and PATCH it — a save that fires before the user has even
+   * stopped typing, carrying the wrong content (see #366).
+   *
+   * `field().controlValue()` is the undebounced counterpart — the literal
+   * value of the bound control right now (`ReadonlyFieldState.controlValue`,
+   * `@publicApi 22.0`). It equals `value()` exactly when nothing is
+   * buffered behind the debounce, i.e. once the 500ms has elapsed and the
+   * pending sync has copied it across. Peeking it with `untracked` keeps
+   * every keystroke (which changes `controlValue()` on its own) from
+   * re-running this computed — it still only re-runs when `dirty()`,
+   * `valid()`, or `value()` actually change, exactly as before; by the
+   * time any of those does, the peek tells us whether the debounce has
+   * actually settled.
    */
   protected readonly dirtyValidPatch = computed<
     Partial<AutosaveProfileModel> | undefined
@@ -223,15 +246,31 @@ export class AutosaveComponent {
     const bio = this.profileForm.bio();
     const patch: Partial<AutosaveProfileModel> = {};
 
-    if (displayName.dirty() && displayName.valid()) {
+    if (this.#isSettledDirtyValid(displayName)) {
       patch.displayName = displayName.value();
     }
-    if (bio.dirty() && bio.valid()) {
+    if (this.#isSettledDirtyValid(bio)) {
       patch.bio = bio.value();
     }
 
     return Object.keys(patch).length > 0 ? patch : undefined;
   });
+
+  /**
+   * The three-part gate `dirtyValidPatch()` applies to each field —
+   * `dirty()`, `valid()`, and settled (see the doc comment above). Both
+   * fields are strings, so one predicate covers both; the field's
+   * `.value()` is still read at each call site (not returned from here),
+   * to keep the `keyof`-precision assignment (`patch.displayName = …`,
+   * `patch.bio = …`) explicit rather than routed through a generic key.
+   */
+  #isSettledDirtyValid(field: FieldState<string>): boolean {
+    return (
+      field.dirty() &&
+      field.valid() &&
+      untracked(field.controlValue) === field.value()
+    );
+  }
 
   /**
    * The patch actually included in the most recently issued PATCH — a plain
@@ -305,10 +344,28 @@ export class AutosaveComponent {
     );
 
     for (const key of safeFields) {
+      const field = this.profileForm[key]();
+
+      // Guard against the same debounce race `dirtyValidPatch()` guards
+      // against, on the other side of the request: calling no-argument
+      // `FieldState.reset()` on a field with a pending, not-yet-elapsed
+      // debounce discards that buffered edit instead of letting it sync
+      // normally. `fieldsSafeToMarkSaved()` only compares `value()` —
+      // Angular's canonical, debounce-settled signal — against the sent
+      // snapshot, so it cannot see an edit still buffered behind an
+      // *unelapsed* debounce (`controlValue()` has moved on, `value()`
+      // hasn't yet). Skipping the reset here leaves the field dirty;
+      // once its debounce elapses, `dirtyValidPatch()` picks the newer
+      // value up on the next cycle exactly like any other edit made
+      // mid-flight (see #366).
+      if (field.controlValue() !== field.value()) {
+        continue;
+      }
+
       // No-argument `reset()` clears touched/dirty for this field alone,
       // without touching its value or any sibling field — see
       // `FieldState.reset()` in `@angular/forms/signals`.
-      this.profileForm[key]().reset();
+      field.reset();
     }
   }
 

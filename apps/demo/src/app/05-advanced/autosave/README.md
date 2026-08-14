@@ -61,13 +61,25 @@ protected readonly dirtyValidPatch = computed(() => {
   const displayName = this.profileForm.displayName();
   const bio = this.profileForm.bio();
   const patch: Partial<AutosaveProfileModel> = {};
-  if (displayName.dirty() && displayName.valid()) patch.displayName = displayName.value();
-  if (bio.dirty() && bio.valid()) patch.bio = bio.value();
+  if (
+    displayName.dirty() &&
+    displayName.valid() &&
+    untracked(displayName.controlValue) === displayName.value()
+  ) {
+    patch.displayName = displayName.value();
+  }
+  if (
+    bio.dirty() &&
+    bio.valid() &&
+    untracked(bio.controlValue) === bio.value()
+  ) {
+    patch.bio = bio.value();
+  }
   return Object.keys(patch).length > 0 ? patch : undefined;
 });
 ```
 
-Both conditions matter independently:
+Three conditions matter independently:
 
 - `dirty()` excludes a pristine value — one that hasn't changed since the
   field's last reset baseline, including immediately after this demo's own
@@ -75,11 +87,25 @@ Both conditions matter independently:
   alone would keep re-including an already-saved value forever, since
   validity doesn't change just because a request resolved.
 - `valid()` excludes a settled invalid value. Without it, `dirty()` alone
-  would happily PATCH a value that currently fails validation. Neither
-  signal is affected by unrelated re-renders, and — because `debounce()`
-  delays what `dirty()`/`valid()` ever observe until the value has
-  settled — there is no "still typing" intermediate value to worry about
-  either; the gate only ever sees settled values.
+  would happily PATCH a value that currently fails validation.
+- `controlValue() === value()` excludes a value that's still mid-debounce.
+  This one is the counter-intuitive part, and got this demo wrong for a
+  while (see [#366](https://github.com/ngx-signal-forms/ngx-signal-forms/issues/366)):
+  `debounce()` only delays `value()`, the field's canonical, model-facing
+  signal — writing to a control marks `dirty()` `true` **synchronously**,
+  on the same keystroke. `ReadonlyFieldState.value`'s own doc comment says
+  as much: "updates from the UI control are eventually reflected here,
+  they may be delayed if debounced." Gating on `dirty()` and `valid()`
+  alone reads `value()` while it is still the field's _previous_ settled
+  value — not the edit the user just made — and PATCHes that: a save that
+  fires before the user has even stopped typing, carrying stale content.
+  `ReadonlyFieldState.controlValue` (`@publicApi 22.0`) is the literal,
+  undebounced value of the bound control; it only ever equals `value()`
+  once the debounce has actually elapsed and synced. Peeking it with
+  `untracked` keeps every keystroke (which changes `controlValue()` on its
+  own) from re-running this computed — it still only re-runs when
+  `dirty()`, `valid()`, or `value()` change, exactly as the two-condition
+  version did.
 
 Each field is gated independently, so one invalid field never blocks the
 other from autosaving.
@@ -132,12 +158,21 @@ The fix, in `autosave.form.ts`:
    each field's **current** value. A field is safe to mark saved only if it
    was part of the request that resolved **and** its value hasn't moved on
    since.
-3. Each safe field gets its own no-argument `reset()` —
+3. Before resetting, `#reconcileAfterSave()` checks one more thing:
+   `field.controlValue() !== field.value()`. `FieldState.reset()` (no
+   argument) aborts that field's pending debounce sync internally, so
+   calling it while an edit is still buffered behind an _unelapsed_
+   debounce would discard those keystrokes instead of letting them sync
+   normally — the same race `dirtyValidPatch()`'s settledness check
+   guards against, on the other side of the request (see
+   [#366](https://github.com/ngx-signal-forms/ngx-signal-forms/issues/366)).
+   `fieldsSafeToMarkSaved()` only sees `value()`, so it can't detect this
+   on its own.
+4. Each field that passes both checks gets its own no-argument `reset()` —
    `this.profileForm[key]().reset()` — which clears that field's
    `dirty()`/`touched()` alone, without touching its value or any sibling
-   field. A field that fails either check in step 2 is left dirty, so the
-   next debounce cycle autosaves it for real instead of silently dropping
-   it.
+   field. A field that fails any check is left dirty, so the next debounce
+   cycle autosaves it for real instead of silently dropping it.
 
 This works because Signal Forms' `FieldState.reset()` takes an optional
 value but doesn't require one: called on a single field with no argument, it
@@ -236,8 +271,10 @@ form.
 - [autosave.save-reconciliation.ts](autosave.save-reconciliation.ts) — the
   pure lost-update guard (`fieldsSafeToMarkSaved()`), with its own
   [spec](autosave.save-reconciliation.spec.ts).
-- [autosave.form.ts](autosave.form.ts) — the dirty+valid gate, `httpResource`,
-  the post-save reconciliation, save-status live regions.
+- [autosave.form.ts](autosave.form.ts) — the dirty+valid+settled gate,
+  `httpResource`, the post-save reconciliation, save-status live regions,
+  with its own [spec](autosave.form.spec.ts) covering the settled-value
+  race from #366.
 - [autosave.page.ts](autosave.page.ts) — page wrapper and debugger.
 - `apps/demo/src/mocks/handlers.ts` — the `PATCH /api/autosave/profile` MSW
   handler.
