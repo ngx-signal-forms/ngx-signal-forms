@@ -355,11 +355,13 @@ protected readonly guardStep: WizardCanNavigate = (event) => {
 ```
 
 Run whole-form validation at the end by touching everything (`submit()` marks all fields touched
-internally) before the final action. Honest gap: the maintained `advanced-wizard` demo uses a
-_form-per-step_ + NgRx architecture rather than one shared model, so treat it as a reference for
-step orchestration, not for the single-model pattern above.
+internally) before the final action. The maintained `advanced-wizard` demo uses a _form-per-step_ +
+NgRx architecture rather than one shared model — treat it as a reference for step orchestration.
+`single-model-wizard` is the runnable reference for the single-model pattern above, including the
+cross-step rule and the `canNavigate` guard shown here.
 
 **See:** [demo: wizard component](../apps/demo/src/app/shared/wizard/README.md) ·
+[demo: single-model-wizard](../apps/demo/src/app/05-advanced/single-model-wizard/README.md) ·
 [demo: advanced-wizard](../apps/demo/src/app/05-advanced/advanced-wizard/README.md)
 
 ### How do I two-way sync my form model with an NgRx SignalStore without update loops?
