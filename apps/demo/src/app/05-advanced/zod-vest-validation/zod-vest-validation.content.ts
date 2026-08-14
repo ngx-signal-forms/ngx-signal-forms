@@ -58,6 +58,15 @@ export const ZOD_VEST_VALIDATION_CONTENT = {
           '• Flows that want native Angular <code>submit()</code> while still teaching users through non-blocking warnings.',
         ],
       },
+      {
+        title: 'Required markers with Standard Schema',
+        items: [
+          '• <strong><code>validateStandardSchema()</code> maps issues, not requiredness:</strong> the Standard Schema contract gives no portable way to ask "is this field required?" The toolkit cannot safely read an object&apos;s keys from the schema alone, so it cannot enumerate required fields from a single root-level call.',
+          '• <strong>Per-field bridge:</strong> <code>requiredFromStandardSchema(path.field, schema)</code> closes that gap. It probes one field at a time and registers Angular&apos;s <code>REQUIRED</code> metadata — the signal that drives <code>aria-required</code> and the wrapper&apos;s required marker. This demo calls it once per unconditionally required Zod field: first name, last name, email, password, account type, and country.',
+          '• <strong>What it does not catch:</strong> conditional or async requiredness is not inferred by this synchronous probe. <strong>VAT number</strong> is a live example — it is only required for <code>Business</code> accounts in <code>DE</code>/<code>NL</code>/<code>BE</code>, so that rule lives in the Vest suite instead, not in a <code>requiredFromStandardSchema()</code> call.',
+          '• <strong>Read more:</strong> <a href="https://github.com/ngx-signal-forms/ngx-signal-forms/blob/main/docs/FAQ.md">FAQ</a> · <a href="https://github.com/ngx-signal-forms/ngx-signal-forms/blob/main/docs/MIGRATING_BETA_TO_V1.md">beta-to-v1 migration guide</a>.',
+        ],
+      },
     ],
     nextStep: {
       text: 'Compare this with a pure Vest suite →',
