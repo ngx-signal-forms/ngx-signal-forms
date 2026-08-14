@@ -7,6 +7,8 @@ import { isBlockingError, isWarningError } from '../warning-error';
  * Reactive reader for the resolved field name. Invoked inside the resulting
  * computed so signal-backed readers stay tracked. Returns `null` when no
  * field name has been resolved yet.
+ *
+ * @group ARIA Composition
  */
 export type AriaDescribedByFieldNameReader = () => string | null;
 
@@ -15,6 +17,8 @@ export type AriaDescribedByFieldNameReader = () => string | null;
  * verbatim (hints stamped by template, descriptions, etc.). Called per
  * computed evaluation so consumers re-evaluating their preserved list see
  * fresh values without re-creating the factory.
+ *
+ * @group ARIA Composition
  */
 export type AriaDescribedByPreservedIdsReader = () => string | null;
 
@@ -25,6 +29,8 @@ export type AriaDescribedByPreservedIdsReader = () => string | null;
  * `aria-describedby` value tracks each of them reactively. `preservedIds`
  * and `fieldName` are plain readers so consumers can thread DOM reads or
  * service queries through without forcing them into a `Signal` shape.
+ *
+ * @group ARIA Composition
  */
 export interface CreateAriaDescribedBySignalOptions {
   /**
@@ -105,6 +111,7 @@ export interface CreateAriaDescribedBySignalOptions {
  * surface (custom wrappers built on Material, PrimeNG, Spartan, etc.).
  *
  * @public
+ * @group ARIA Composition
  */
 export function createAriaDescribedBySignal(
   options: CreateAriaDescribedBySignalOptions,

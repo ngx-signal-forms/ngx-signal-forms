@@ -14,6 +14,7 @@ import { computed, signal, type Signal } from '@angular/core';
  * pulling in a runtime dependency on the design-system itself.
  *
  * @public
+ * @group ARIA Composition
  */
 export interface AriaDescribedByBridge {
   /**
@@ -33,6 +34,7 @@ export interface AriaDescribedByBridge {
  * Inputs for {@link createAriaDescribedByBridge}.
  *
  * @public
+ * @group ARIA Composition
  */
 export interface CreateAriaDescribedByBridgeOptions {
   /**
@@ -94,6 +96,7 @@ export interface CreateAriaDescribedByBridgeOptions {
  * ```
  *
  * @public
+ * @group ARIA Composition
  */
 export function createAriaDescribedByBridge(
   options: CreateAriaDescribedByBridgeOptions,

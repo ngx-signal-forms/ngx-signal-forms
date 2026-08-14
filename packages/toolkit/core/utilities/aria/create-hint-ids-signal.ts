@@ -4,6 +4,8 @@ import { computed, type Signal } from '@angular/core';
  * Reactive reader for the current field's name. Accepts a plain getter or a
  * `Signal<string | null>`; both are invoked inside the resulting computed so
  * signal-based readers stay tracked.
+ *
+ * @group ARIA Composition
  */
 export type HintIdsFieldNameReader = () => string | null;
 
@@ -12,6 +14,8 @@ export type HintIdsFieldNameReader = () => string | null;
  *
  * Exposed so consumers composing custom wrappers can type their own
  * `aria-describedby` aggregators without re-deriving the shape.
+ *
+ * @group ARIA Composition
  */
 export type HintIdsSignal = Signal<readonly string[]>;
 
@@ -23,6 +27,8 @@ export type HintIdsSignal = Signal<readonly string[]>;
  * type-import the factory's inputs without using package-internal imports.
  * Production code passes its `NgxFieldIdentity` instance in
  * directly via structural assignability.
+ *
+ * @group ARIA Composition
  */
 export interface HintIdsIdentityLike {
   readonly hintIds: Signal<readonly string[]>;
@@ -41,6 +47,8 @@ export interface HintIdsIdentityLike {
  * type-import the factory's inputs without using package-internal imports.
  * Production code passes its `NgxSignalFormHintRegistry` instance
  * in directly via structural assignability.
+ *
+ * @group ARIA Composition
  */
 export interface HintIdsRegistryLike {
   readonly hints: Signal<
@@ -54,6 +62,8 @@ export interface HintIdsRegistryLike {
  * All three properties are optional — the factory must produce a stable
  * signal even when neither an identity service nor a registry is available,
  * matching the directive shell's "no wrapper context" branch.
+ *
+ * @group ARIA Composition
  */
 export interface CreateHintIdsSignalOptions {
   /**
@@ -104,6 +114,7 @@ export interface CreateHintIdsSignalOptions {
  * testable without `TestBed` and reusable from any injection context.
  *
  * @public
+ * @group ARIA Composition
  */
 export function createHintIdsSignal(
   options: CreateHintIdsSignalOptions = {},

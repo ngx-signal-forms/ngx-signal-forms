@@ -19,20 +19,33 @@
  * - `null` / `undefined` — treated as length `0`
  *
  * Any other value type is treated as length `0`.
+ *
+ * Shared by the directive (`field: FieldTree<CharacterCountValue>`) and the
+ * factory (`CreateCharacterCountOptions.field`) alike; grouped with its
+ * three sibling exports from this module under the directive's section
+ * (its primary/canonical consumer) rather than split across two groups.
+ *
+ * @group Directives
  */
 export type CharacterCountValue = string | readonly string[] | null | undefined;
 
 /**
  * Character count limit state.
+ *
+ * @group Directives
  */
 export type CharacterCountLimitState = 'ok' | 'warning' | 'danger' | 'exceeded';
 
 /**
  * Default warning threshold percentage.
+ *
+ * @group Directives
  */
 export const DEFAULT_WARNING_THRESHOLD = 0.8;
 
 /**
  * Default danger threshold percentage.
+ *
+ * @group Directives
  */
 export const DEFAULT_DANGER_THRESHOLD = 0.95;

@@ -29,6 +29,8 @@ import {
 
 /**
  * Fieldset state signals exposed by the headless directive.
+ *
+ * @group Directives
  */
 export interface FieldsetStateSignals {
   /** Aggregated and deduplicated errors from all fields */
@@ -126,6 +128,8 @@ export interface FieldsetStateSignals {
  * registry → default) as `NgxHeadlessErrorState`.
  *
  * @template TFieldset The type of the fieldset field value
+ *
+ * @group Directives
  */
 @Directive({
   selector: '[ngxHeadlessFieldset]',

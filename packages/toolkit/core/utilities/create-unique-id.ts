@@ -89,6 +89,7 @@ const warnFallback = createDevWarnOnce();
  * ```
  *
  * @public
+ * @group Utility Functions
  */
 export function createUniqueId(prefix: string): string {
   // Probe the injection context *before* calling `inject()`. This isolates

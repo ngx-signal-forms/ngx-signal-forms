@@ -210,7 +210,9 @@ Resolves field names and generates stable IDs for ARIA linking. Falls back to th
 
 Signals: `resolvedFieldName()` (nullable), `errorId()` (nullable), `warningId()` (nullable).
 
-## Reactive primitives
+## Reactive Primitives
+
+Factories that return plain signals for programmatic use — in services, host directives, or custom renderers that don't want a template directive.
 
 ### createErrorMessageSignal
 
@@ -254,9 +256,9 @@ Options of note:
 - `strategy` / `submittedStatus`: forwarded to `createErrorVisibility`. Omit to inherit from the form context.
 - `injector`: optional, for use outside an Angular injection context.
 
-## Utility functions
+### createErrorState / createCharacterCount / createFieldStateFlags
 
-For programmatic use without directives:
+For programmatic use without a directive:
 
 ```typescript
 // Error state without a directive
@@ -273,28 +275,23 @@ const count = createCharacterCount({ field: form.bio, maxLength: 500 });
 // Common field-state flags in one object
 const flags = createFieldStateFlags(form.email);
 // flags.isTouched(), flags.isDirty(), flags.isValid(), flags.isInvalid(), flags.isPending()
+```
 
-// Safe field state reading
-readFieldFlag(field(), 'invalid'); // boolean, null-safe
-readErrors(field()); // uses errorSummary() or errors()
-dedupeValidationErrors(errors); // remove duplicates by kind+message
+### createFieldOptionalitySummary / summarizeFieldOptionality
 
-// Human-readable field paths
-humanizeFieldPath('address.postalCode'); // 'Address / Postal code'
+Reach for these when a custom component needs to know whether a field is required/optional to render a marker or legend:
 
-// Unique ID generation
-createUniqueId('field'); // 'field-1', 'field-2', ...
-
-// Error-summary building blocks (what NgxHeadlessErrorSummary uses internally)
-toErrorSummaryEntry(error); // ValidationError → ErrorSummaryEntryData with focus()
-focusBoundControlFromError(error); // focus the control bound to an error
-
+```typescript
 // Required/optional leaf summary for a form tree (drives marking legends)
 const summary = summarizeFieldOptionality(formTree); // { hasRequired, hasOptional }
 const reactive = createFieldOptionalitySummary(() => this.formTree()); // computed signals
 ```
 
-## Custom-wrapper ARIA factories (re-exported from core)
+### createFieldsetAggregation / createErrorSummaryEntries
+
+The pure pipelines behind `NgxHeadlessFieldset` and `NgxHeadlessErrorSummary` — reach for these when building a custom grouped surface. No injection context required, but you supply pre-resolved `showErrors`/`showWarnings` signals from your own visibility seam call. See the source JSDoc for the option/result contracts.
+
+## ARIA Composition
 
 This entry point also re-exports the pure factories that
 [`docs/CUSTOM_WRAPPERS.md`](https://github.com/ngx-signal-forms/ngx-signal-forms/blob/main/docs/CUSTOM_WRAPPERS.md)
@@ -309,8 +306,29 @@ teaches for hosts that own their own ARIA instead of using
 | `createHintIdsSignal(...)`         | Hint-id collection for the described-by chain                       |
 | `createAriaDescribedByBridge(...)` | Bridge for hosts whose described-by attribute another library owns  |
 | `createFieldNameResolver(...)`     | Field-name cascade (explicit → label `for` (opt-in) → control `id`) |
-| `createErrorRendererInputs(...)`   | Input set for driving a custom error renderer                       |
-| `toHintDescriptors(...)`           | Normalize projected hints for registry registration                 |
+
+## Utility Functions
+
+Plain, dependency-free helpers used internally by the directives and factories above — safe to call directly for one-off reads:
+
+```typescript
+// Safe field state reading
+readFieldFlag(field(), 'invalid'); // boolean, null-safe
+readErrors(field()); // uses errorSummary() or errors()
+readDirectErrors(field()); // only direct-field errors, not descendants
+dedupeValidationErrors(errors); // remove duplicates by kind+message
+
+// Human-readable field paths
+humanizeFieldPath('address.postalCode'); // 'Address / Postal code'
+
+// Unique ID generation
+createUniqueId('field'); // 'field-1', 'field-2', ...
+
+// Error-summary building blocks (what NgxHeadlessErrorSummary uses internally)
+toErrorSummaryEntry(error); // ValidationError → ErrorSummaryEntryData with focus()
+resolveFieldNameFromError(error); // ValidationError → human-readable field name
+focusBoundControlFromError(error); // focus the control bound to an error
+```
 
 ## Related documentation
 

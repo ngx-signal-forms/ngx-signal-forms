@@ -7,6 +7,7 @@ import { createDevWarnOnce } from './dev-warn-once';
  * over `contentChildren(NgxSignalFormControlSemanticsDirective)`.
  *
  * @public
+ * @group ARIA Composition
  */
 export type BoundControlElementReader = () => HTMLElement | null;
 
@@ -16,6 +17,7 @@ export type BoundControlElementReader = () => HTMLElement | null;
  * (Spartan's `BrnLabel`, for instance).
  *
  * @public
+ * @group ARIA Composition
  */
 export type LabelForReader = () => string | null;
 
@@ -23,6 +25,7 @@ export type LabelForReader = () => string | null;
  * Inputs for {@link createFieldNameResolver}.
  *
  * @public
+ * @group ARIA Composition
  */
 export interface CreateFieldNameResolverOptions {
   /**
@@ -79,6 +82,7 @@ export interface CreateFieldNameResolverOptions {
  * ```
  *
  * @public
+ * @group ARIA Composition
  */
 export function createFieldNameResolver(
   options: CreateFieldNameResolverOptions,

@@ -31,6 +31,7 @@ import { resolveErrorMessage } from './utilities';
  *   non-stripped `message` override.
  *
  * @public
+ * @group Reactive Primitives
  */
 export interface ResolvedFieldError {
   readonly kind: string;
@@ -48,6 +49,7 @@ export interface ResolvedFieldError {
  * - `'only'` — warnings only
  *
  * @public
+ * @group Reactive Primitives
  */
 export type IncludeWarningsOption = boolean | 'only';
 
@@ -55,6 +57,7 @@ export type IncludeWarningsOption = boolean | 'only';
  * Options for {@link createErrorMessageSignal}.
  *
  * @public
+ * @group Reactive Primitives
  */
 export interface CreateErrorMessageSignalOptions {
   /**
@@ -215,6 +218,7 @@ type FieldStateAccessor = () => FieldStateInput;
  * ```
  *
  * @public
+ * @group Reactive Primitives
  */
 export function createErrorMessageSignal(
   field: FieldStateAccessor,

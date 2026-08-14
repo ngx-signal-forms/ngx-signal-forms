@@ -23,6 +23,7 @@ const ANGULAR_FORM_NAME_PREFIX = /^[^.]+\.form\d+\./u;
  * @returns Human-readable label; nested segments are joined with ` / `
  *
  * @public
+ * @group Utility Functions
  */
 export function humanizeFieldPath(fieldName: string): string {
   const strippedFieldName = fieldName

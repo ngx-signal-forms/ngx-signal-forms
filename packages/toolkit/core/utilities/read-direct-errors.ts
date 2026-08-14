@@ -10,6 +10,8 @@ function normalizeValidationErrors(errors: unknown): ValidationError[] {
  *
  * Unlike `errorSummary()`-based approaches, this only reads direct `errors()`
  * from the current field/group state.
+ *
+ * @group Utility Functions
  */
 export function readDirectErrors(state: unknown): ValidationError[] {
   if (!state || typeof state !== 'object') {
