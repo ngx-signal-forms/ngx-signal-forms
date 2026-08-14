@@ -29,8 +29,8 @@ export const WARNING_SUPPORT_CONTENT = {
       {
         title: 'WCAG 2.2 Messaging',
         items: [
-          '<strong>Errors:</strong> <code>role="alert"</code> with <code>aria-live="assertive"</code>',
-          '<strong>Warnings:</strong> <code>role="status"</code> with <code>aria-live="polite"</code>',
+          '<strong>Errors:</strong> <code>role="alert"</code> (implicitly assertive; the toolkit renders no explicit <code>aria-live</code>)',
+          '<strong>Warnings:</strong> <code>role="status"</code> (implicitly polite; the toolkit renders no explicit <code>aria-live</code>)',
           'Immediate announcement for errors (blocking)',
           'Polite announcement for warnings (non-intrusive)',
         ],
