@@ -13,29 +13,54 @@ import type {
 /**
  * Resolve whether an element is visible from a CSS perspective.
  *
- * Prefers `Element.checkVisibility()` (Chromium 105+, Firefox 125+,
- * Safari 17.4+) so `display: none`, `hidden`, and ancestor-collapse all
- * register as "not visible". Falls back to `offsetParent` on older
- * runtimes — sufficient to detect `display: none` in detached subtrees,
- * which is the common collapsed-fieldset case the issue calls out.
+ * Uses `Element.checkVisibility()` — Baseline 2024, and the only API that
+ * answers the question correctly. Its default behaviour already reports
+ * `false` for `display: none`, `display: contents`, the `hidden` attribute,
+ * `content-visibility: hidden`, and a collapsed `<details>` (whose
+ * `::details-content` is `content-visibility: hidden`). The options below add
+ * `visibility: hidden` and `opacity: 0`; browsers ignore dictionary members
+ * they do not know, so passing all three is safe on every runtime that has
+ * the method at all. `checkVisibilityCSS` is the historic alias for
+ * `visibilityProperty` and is kept for runtimes between Chromium 105 and 121.
+ *
+ * **When the method is unavailable, this reports `true`.** That is a
+ * deliberate fail-open, not an oversight. The obvious fallback,
+ * `offsetParent !== null`, is wrong in both directions: it is a false
+ * *positive* for a collapsed `<details>` and for `content-visibility: hidden`
+ * — the exact cases this function exists to catch — and a false *negative*
+ * for `position: fixed` elements, for `<body>`/`<html>`, and for every
+ * environment with no layout engine at all (jsdom, and any non-rendering
+ * host). Guessing "hidden" there would strip correct ARIA state from visible
+ * controls, which is strictly worse than leaving state in place on a control
+ * the user cannot see anyway.
  *
  * Exposed publicly (re-exported from `@ngx-signal-forms/toolkit`) so custom
  * controls and third-party wrappers can apply the exact same visibility test
- * the canonical wrapper uses internally, keeping the native-binding and
- * CSS-fallback ARIA paths in lockstep.
+ * the toolkit uses internally, keeping the native-binding and CSS-fallback
+ * ARIA paths in lockstep.
  *
  * @public
  */
 export function isElementCssVisible(el: HTMLElement): boolean {
   const checkVisibility = (
     el as HTMLElement & {
-      checkVisibility?: (options?: { checkVisibilityCSS?: boolean }) => boolean;
+      checkVisibility?: (options?: {
+        checkVisibilityCSS?: boolean;
+        visibilityProperty?: boolean;
+        opacityProperty?: boolean;
+      }) => boolean;
     }
   ).checkVisibility;
-  if (typeof checkVisibility === 'function') {
-    return checkVisibility.call(el, { checkVisibilityCSS: true });
+
+  if (typeof checkVisibility !== 'function') {
+    return true;
   }
-  return el.offsetParent !== null;
+
+  return checkVisibility.call(el, {
+    checkVisibilityCSS: true,
+    visibilityProperty: true,
+    opacityProperty: true,
+  });
 }
 
 /**

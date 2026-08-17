@@ -57,6 +57,7 @@ releases will not include any of the renames below.
 - **BREAKING: `canSubmitWithWarnings()` now reads `errorSummary()`** — child-path blocking errors now correctly disable submission (see [§5c](#5c-cansubmitwithwarnings-now-aggregates-descendant-errors))
 - **BREAKING: `injectFieldControl()` validates the resolved value against the runtime `FieldTree` contract** — an id resolving to a non-`FieldTree` property now throws instead of silently returning an unsound cast (see [§5d](#5d-injectfieldcontrol-validates-the-resolved-fieldtree))
 - **BREAKING: `ErrorSummarySignals` gained `shouldShowWarnings`** — implementers of the interface must add this member (see [§8](#8-headless-audit-fixes-v100))
+- **New: `NgxFieldIdentityProvider`** — host directive letting a third-party wrapper declare a field name that differs from the bound control's `id`; also fixes stale `aria-invalid` on controls with no layout box, for every wrapper (see [§15](#15-new-api-ngxfieldidentityprovider--third-party-wrappers-can-own-field-naming-387))
 - **BREAKING: `NgxFieldIdentity.hintIds` is now `Signal<readonly string[] | null>`** — `null` means the hint channel was never published (fall back to the hint registry), `[]` means published-and-empty; identity now shadows the fallback registries per channel rather than by mere presence (see [§14](#14-ngxfieldidentityhintids-is-nullable--identity-shadows-the-registries-per-channel-387))
 - **BREAKING: `CharacterCountResult` members are now typed `Signal<T>`** (was the looser `ReadSignal<T>` alias); a new `hasLimit` member was added — compile-time tightening only, no runtime change
 - **Bug fix** — error summary no longer drops a second field's error when two different fields share the same kind + message-less default; `NgxHeadlessNotification` no longer leaks the internal `warn:` prefix; `createErrorMessageSignal`'s ID fallback strips Angular's internal `{appId}.form{n}.` prefix; required `Date`/`File`/`Map`-valued leaves no longer vanish from field-optionality summaries
@@ -1643,3 +1644,79 @@ one another, per [ADR-0007](./decisions/0007-warning-display-timing-cascade.md).
 **Files:** `packages/toolkit/core/services/field-identity.ts`,
 `packages/toolkit/core/utilities/aria/create-hint-ids-signal.ts`,
 `packages/toolkit/core/directives/auto-aria.ts`.
+
+## 15. New API: `NgxFieldIdentityProvider` — third-party wrappers can own field naming (#387)
+
+**Root cause:** `NgxSignalFormAutoAria` derives a field name from the bound
+control's `id` attribute unless an ancestor provides an `NgxFieldIdentity`,
+and only the built-in wrapper ever did. A custom wrapper therefore could not
+use a field name that differed from the control's DOM `id` — which breaks for
+a third-party widget that generates its own inner input id, and for a
+`role="group"` cluster whose name belongs to the group rather than to any one
+control. The generated `{fieldName}-error` id then disagreed with what the
+wrapper rendered, leaving a dangling `aria-describedby` (axe
+`aria-valid-attr-value`) and error text unreachable by assistive technology.
+
+**New API:** compose `NgxFieldIdentityProvider` onto your wrapper's host with
+`hostDirectives`. It is selectorless on purpose — host placement is
+load-bearing.
+
+```typescript
+import { NgxFieldIdentityProvider } from '@ngx-signal-forms/toolkit';
+
+@Component({
+  selector: 'my-field',
+  hostDirectives: [
+    { directive: NgxFieldIdentityProvider, inputs: ['fieldName'] },
+  ],
+  /* ... */
+})
+export class MyField {}
+```
+
+```html
+<my-field fieldName="emailAddress">
+  <input id="p-inputtext-42" [formField]="form.emailAddress" />
+</my-field>
+<!-- aria-describedby="emailAddress-error", not "p-inputtext-42-error" -->
+```
+
+It publishes the **field-name channel only**. Hints and display timing keep
+resolving through `NGX_SIGNAL_FORM_HINT_REGISTRY` and
+`NGX_SIGNAL_FORM_FIELD_VISIBILITY_REGISTRY`, and composing the directive does
+not disturb them (see [§14](#14-ngxfieldidentityhintids-is-nullable--identity-shadows-the-registries-per-channel-387)).
+The `set*` writers on `NgxFieldIdentity` stay `@internal` and stay stripped
+from the published type definitions.
+
+Binding `null` means "not resolvable yet" and skips ARIA wiring; it does not
+fall back to the control's `id`, because a wrapper that declares its own
+naming has said the `id` is not the name. Leaving the input unbound _and_
+never driving the injected identity logs a dev-mode warning.
+
+**Behavior fix (no API change): `aria-invalid` no longer goes stale on a
+control with no layout box.** The gate that removes `aria-invalid` from a
+hidden control used to read a flag only the built-in wrapper published, so a
+custom wrapper inside a collapsed `<details>`, an inactive tab, or a
+non-current wizard step kept a stale attribute — with `'manual'` ARIA mode as
+the only escape. `NgxSignalFormAutoAria` now probes its own host element, so
+the fix applies to every wrapper. In a multi-control cluster each control now
+tracks its own layout state rather than the cluster's first control's.
+
+**Behavior change on a public function: `isElementCssVisible()`.** On runtimes
+without `Element.checkVisibility()` it now reports `true` instead of guessing
+from `offsetParent`. The old fallback was wrong in both directions — a false
+positive for collapsed `<details>` and `content-visibility: hidden` (the very
+cases it existed for), and a false negative for `position: fixed` elements and
+for any environment with no layout engine. `checkVisibility()` is Baseline
+2024, so the fallback is only reached on genuinely old runtimes, where
+reporting "visible" preserves prior behavior rather than stripping ARIA on a
+guess. If you assert visibility in tests, those assertions need a real
+browser — jsdom implements neither `checkVisibility()` nor layout.
+
+See [ADR-0011](./decisions/0011-field-identity-provider-host-directive.md),
+including why `NgxFormFieldWrapper` does not itself compose the directive
+(Angular gives a component no way to bind its own host directive's inputs).
+
+**Files:** `packages/toolkit/core/directives/field-identity-provider.ts`,
+`packages/toolkit/core/directives/auto-aria.ts`,
+`packages/toolkit/core/services/field-identity.ts`.

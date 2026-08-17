@@ -489,65 +489,113 @@ Each factory is independently usable. Common partial compositions:
 The contract each factory advertises is `fieldState in → ARIA out`. Pick the
 ones you need.
 
-## Element-scoped identity vs. form-scoped visibility registration
+## Which seam publishes what
 
-Two DI-visible mechanisms feed `NgxSignalFormAutoAria` a field's resolved
-strategy/visibility state so it doesn't have to recompute — and possibly
-disagree with — the cascade already resolved elsewhere. They are **not**
-two equally-available options for a wrapper author to pick between: one is
-an internal implementation detail of the toolkit's own built-in wrapper,
-the other is the actual public integration path for third-party wrappers
-and standalone surfaces.
+`NgxSignalFormAutoAria` needs three things it cannot work out on its own: what
+the field is **called**, when its error/warning regions are **visible**, and
+which **hint** elements describe it. Each of those is a separate channel with
+its own seam, and you pick per channel — they compose, they are not
+alternatives:
 
-| Surface                                                      | Mechanism                                                         | Who drives it                                                                     |
-| ------------------------------------------------------------ | ----------------------------------------------------------------- | --------------------------------------------------------------------------------- |
-| `NgxFormFieldWrapper` (the toolkit's own built-in wrapper)   | `NgxFieldIdentity` — element-scoped, internal write API           | The toolkit itself, from `form-field-wrapper.ts`'s `afterEveryRender` write phase |
-| Your custom wrapper, or any standalone error/warning surface | `NGX_SIGNAL_FORM_FIELD_VISIBILITY_REGISTRY` — form-scoped, public | You — this is the supported integration seam                                      |
+| Channel                            | Seam                                        | Use it when                                               |
+| ---------------------------------- | ------------------------------------------- | --------------------------------------------------------- |
+| **Field name**                     | `NgxFieldIdentityProvider` (host directive) | The field's name is not the bound control's `id`          |
+| **Error / warning display timing** | `NGX_SIGNAL_FORM_FIELD_VISIBILITY_REGISTRY` | You resolve strategy yourself and render your own regions |
+| **Hint IDs**                       | `NGX_SIGNAL_FORM_HINT_REGISTRY`             | You render hint elements auto-aria should reference       |
 
-`NgxSignalFormAutoAria` prefers a present `NgxFieldIdentity` (confirmed in
-`auto-aria.ts`: the registry lookup is skipped whenever `NgxFieldIdentity`
-is injected) and falls back to the visibility registry otherwise — so the
-two are mutually exclusive per field, not layered, but that fallback is
-what makes the registry path work for anyone who isn't `NgxFormFieldWrapper`
-itself.
+Resolution is **per channel**: providing a field identity does not disturb the
+registries, and publishing to a registry does not disturb the identity. A
+wrapper that only needs the field-name fix takes only that seam and keeps
+everything else working ([ADR-0010](decisions/0010-field-identity-shadows-registries-per-channel.md)).
 
-### `NgxFieldIdentity` — the built-in wrapper's internal mechanism
+### `NgxFieldIdentityProvider` — declaring the field's name
 
-`NgxFieldIdentity` (`providedIn: null`, exported from
-`@ngx-signal-forms/toolkit`) is the centralized, per-wrapper-instance
-service `NgxFormFieldWrapper` provides at its own component level and
-drives from its `afterEveryRender` write phase — field-name resolution
-output, the bound control's element/visibility, and the wrapper's resolved
-error/warning display strategies all flow through it.
+By default auto-aria derives the field name from the bound control's `id`
+attribute, which forces the name and the DOM `id` to be the same string. Two
+common shapes can't satisfy that: a third-party widget that generates its own
+inner input `id`, and a `role="group"` cluster whose name belongs to the group
+rather than to any one control. In both cases the ids auto-aria generates
+(`{fieldName}-error`, `{fieldName}-warning`) disagree with what you rendered,
+leaving `aria-describedby` pointing at nothing.
 
-Its **resolved read signals** (`fieldName`, `controlId`, `errorId`,
-`warningId`, `hintIds`, `describedBy`, `isControlVisible`,
-`resolvedErrorStrategy`, `resolvedWarningStrategy`,
-`resolveControlElement()`) are public — read them if you've injected an
-ancestor-provided `NgxFieldIdentity` and want the same resolved state
-`NgxSignalFormAutoAria` sees. Its **writer methods**
-(`setFieldName`, `setControlElement`, `setControlVisible`, `setHintIds`,
-`setResolvedStrategies`) are explicitly tagged `@internal` in
-`field-identity.ts` — _"must not be called from outside this package —
-consumers read the resolved signals, they do not drive them."_ A custom
-wrapper must **not** provide its own `NgxFieldIdentity` instance and call
-those setters; that is not a supported contract today.
+Compose the provider onto your wrapper's host to declare the name yourself:
 
-> **Open design question (pre-v1):** promoting `NgxFieldIdentity`'s writers
-> into a supported surface third-party wrappers can drive themselves —
-> instead of routing through the registry below — is a real possibility
-> under consideration before the API freezes at 1.0. No commitment either
-> way yet; this document describes the contract as it exists today, not a
-> roadmap promise.
+```typescript
+import { Component, input } from '@angular/core';
+import {
+  NgxFieldIdentityProvider,
+  NgxFormFieldError,
+} from '@ngx-signal-forms/toolkit';
 
-### `NGX_SIGNAL_FORM_FIELD_VISIBILITY_REGISTRY` — the public integration path
+@Component({
+  selector: 'my-field',
+  hostDirectives: [
+    { directive: NgxFieldIdentityProvider, inputs: ['fieldName'] },
+  ],
+  imports: [NgxFormFieldError],
+  template: `
+    <ng-content />
+    <ngx-form-field-error [formField]="field()" [fieldName]="name()" />
+  `,
+})
+export class MyField {
+  readonly field = input.required<unknown>();
+  readonly name = input.required<string>();
+}
+```
 
-This is the seam to use for your own wrapper or any standalone error/warning
-surface. It's provided by `NgxSignalForm` at the `[ngxSignalForm]` host, so
-it's reachable from anywhere inside that form, and `NgxSignalFormAutoAria`
-falls back to reading it whenever no `NgxFieldIdentity` is present in the
-injector chain — which is always true for a custom wrapper unless it
-happens to sit _inside_ the toolkit's own `NgxFormFieldWrapper`:
+```html
+<my-field
+  fieldName="emailAddress"
+  [field]="form.emailAddress"
+  name="emailAddress"
+>
+  <label for="p-inputtext-42">Email</label>
+  <input id="p-inputtext-42" [formField]="form.emailAddress" />
+</my-field>
+<!-- aria-describedby="emailAddress-error", not "p-inputtext-42-error" -->
+```
+
+Three things worth knowing:
+
+- **It has no selector.** Placement on the host element is load-bearing — that
+  is the element injector your contained controls resolve through — and a
+  selector would invite putting it somewhere that silently does nothing.
+- **Providing an identity claims the naming channel for the whole subtree.**
+  Binding `null` means "not resolvable yet" and skips ARIA wiring; it does not
+  fall back to the control's `id`. If nothing ever publishes a name, a
+  dev-mode warning says so.
+- **It publishes the name and nothing else.** Strategy deliberately has no
+  channel here: the visibility registry publishes the _observed_ boolean that
+  already gates a rendered region, so it cannot drift from the DOM the way a
+  separately-declared strategy could.
+
+`NgxFieldIdentity`'s **resolved read signals** (`fieldName`, `controlId`,
+`errorId`, `warningId`, `hintIds`, `describedBy`, `isControlVisible`,
+`resolvedErrorStrategy`, `resolvedWarningStrategy`, `resolveControlElement()`)
+are public — inject an ancestor-provided instance and read the same resolved
+state auto-aria sees. Its **writer methods** stay `@internal` and are stripped
+from the published type definitions; `NgxFieldIdentityProvider` drives them
+for you. Note that `hintIds` is `readonly string[] | null`, where `null` means
+"this identity never published hints" — see
+[ADR-0010](decisions/0010-field-identity-shadows-registries-per-channel.md).
+
+> `NgxFormFieldWrapper` does not compose this directive; it provides and
+> drives `NgxFieldIdentity` directly. Angular gives a component no way to bind
+> its own host directive's inputs, and the wrapper's name is only known after
+> its render-phase DOM read — see
+> [ADR-0011](decisions/0011-field-identity-provider-host-directive.md).
+
+### `NGX_SIGNAL_FORM_FIELD_VISIBILITY_REGISTRY` — declaring display timing
+
+This is the seam for display timing, in your own wrapper or in any standalone
+error/warning surface. It's provided by `NgxSignalForm` at the
+`[ngxSignalForm]` host, so it's reachable from anywhere inside that form.
+`NgxSignalFormAutoAria` reads it for a field whenever no identity has
+published a strategy for that channel — including when an identity exists but
+owns only the field name, which is exactly the `NgxFieldIdentityProvider` case
+above. The error and warning channels fall back independently of one another
+([ADR-0007](decisions/0007-warning-display-timing-cascade.md)):
 
 ```typescript
 import { effect, inject } from '@angular/core';

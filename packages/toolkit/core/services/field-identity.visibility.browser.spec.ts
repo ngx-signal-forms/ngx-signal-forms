@@ -1,0 +1,96 @@
+import { afterEach, describe, expect, it } from 'vitest';
+import { isElementCssVisible } from './field-identity';
+
+/**
+ * The real semantics of {@link isElementCssVisible}, which need a layout
+ * engine and a runtime that implements `Element.checkVisibility()`. jsdom has
+ * neither, so its sibling spec can only pin the fail-open contract.
+ *
+ * The collapsed-`<details>` case is the one that matters most: it is the
+ * headline scenario for the `aria-invalid` staleness fix, and it is precisely
+ * where the old `offsetParent !== null` fallback gave the wrong answer — a
+ * collapsed `<details>` still reports an `offsetParent`, so the fallback
+ * called a hidden control visible.
+ */
+describe('isElementCssVisible — real layout semantics', () => {
+  const created: HTMLElement[] = [];
+
+  function mount(html: string, selector: string): HTMLElement {
+    const holder = document.createElement('div');
+    holder.innerHTML = html;
+    document.body.append(holder);
+    created.push(holder);
+    const el = holder.querySelector<HTMLElement>(selector);
+    if (!el) throw new Error(`no element matched ${selector}`);
+    return el;
+  }
+
+  afterEach(() => {
+    for (const el of created.splice(0)) {
+      el.remove();
+    }
+  });
+
+  it('reports a laid-out control visible', () => {
+    expect(isElementCssVisible(mount('<input id="a" />', '#a'))).toBe(true);
+  });
+
+  it('reports display:none hidden', () => {
+    expect(
+      isElementCssVisible(mount('<input id="a" style="display:none" />', '#a')),
+    ).toBe(false);
+  });
+
+  it('reports a [hidden] control hidden', () => {
+    expect(isElementCssVisible(mount('<input id="a" hidden />', '#a'))).toBe(
+      false,
+    );
+  });
+
+  it('reports a control inside a collapsed <details> hidden', () => {
+    const el = mount(
+      '<details><summary>More</summary><input id="a" /></details>',
+      '#a',
+    );
+
+    // The old `offsetParent` fallback returned a truthy parent here, calling
+    // a hidden control visible — the exact false positive that made the
+    // staleness fix silently ineffective on runtimes taking that branch.
+    expect(el.offsetParent).not.toBeNull();
+    expect(isElementCssVisible(el)).toBe(false);
+  });
+
+  it('reports a control inside an open <details> visible', () => {
+    expect(
+      isElementCssVisible(
+        mount(
+          '<details open><summary>More</summary><input id="a" /></details>',
+          '#a',
+        ),
+      ),
+    ).toBe(true);
+  });
+
+  it('reports visibility:hidden and opacity:0 hidden', () => {
+    expect(
+      isElementCssVisible(
+        mount('<input id="a" style="visibility:hidden" />', '#a'),
+      ),
+    ).toBe(false);
+    expect(
+      isElementCssVisible(mount('<input id="a" style="opacity:0" />', '#a')),
+    ).toBe(false);
+  });
+
+  it('reports a position:fixed control visible', () => {
+    // `offsetParent` is null for fixed-position elements — a false negative
+    // that would have stripped ARIA from a control the user can plainly see.
+    const el = mount(
+      '<input id="a" style="position:fixed;top:0;left:0" />',
+      '#a',
+    );
+
+    expect(el.offsetParent).toBeNull();
+    expect(isElementCssVisible(el)).toBe(true);
+  });
+});
