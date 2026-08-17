@@ -63,14 +63,14 @@ The old fallback for runtimes without `Element.checkVisibility()` was `offsetPar
 - **False positive** for a collapsed `<details>` and for `content-visibility: hidden` — the headline cases this probe exists for. The fallback reported those controls visible, so on any runtime taking that branch the staleness fix silently did nothing.
 - **False negative** for `position: fixed` elements, for `<body>`/`<html>`, and for every environment with no layout engine — jsdom, and any non-rendering host. There it would strip correct ARIA from controls the user can plainly see.
 
-`checkVisibility()` is Baseline 2024, so the fallback is reached only on genuinely old runtimes. Reporting `true` there keeps the pre-existing behaviour instead of stripping ARIA on a guess. The call also now passes `visibilityProperty` and `opacityProperty` alongside the historic `checkVisibilityCSS` alias; browsers ignore dictionary members they do not know.
+`checkVisibility()` is Baseline 2024, so the fallback is reached only on genuinely old runtimes. Reporting `true` there keeps the pre-existing behavior instead of stripping ARIA on a guess. The call also passes `visibilityProperty`, the modern name for the historic `checkVisibilityCSS` alias, so both spellings are covered. `opacityProperty` is deliberately NOT passed: an `opacity: 0` control is still laid out, focusable, and interactive — it is the standard custom-checkbox pattern, and treating it as hidden would strip `aria-invalid` from a control the user is operating.
 
 ## Consequences
 
 - New public API: `NgxFieldIdentityProvider`, exported from the package root barrel. A root re-export is required because `/core` is stripped from the published `exports` map.
 - `NgxFieldIdentity`'s published `.d.ts` is unchanged — still no `set*` members after `post-build`.
-- `aria-invalid` behaviour changes for multi-control clusters: each control now tracks its own layout state rather than the cluster's first control's. Asserted deliberately rather than incidentally.
-- `isElementCssVisible` changes behaviour on runtimes without `checkVisibility()`, from "guess from `offsetParent`" to "report visible". It is exported publicly, so this is a behaviour change on a public function.
+- `aria-invalid` behavior changes for multi-control clusters: each control now tracks its own layout state rather than the cluster's first control's. Asserted deliberately rather than incidentally.
+- `isElementCssVisible` changes behavior on runtimes without `checkVisibility()`, from "guess from `offsetParent`" to "report visible". It is exported publicly, so this is a behavior change on a public function.
 - Visibility semantics are now only assertable in browser specs. The jsdom specs pin the fail-open contract instead, which is all jsdom can honestly answer.
 
 ## Alternatives Considered

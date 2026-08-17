@@ -71,15 +71,28 @@ describe('isElementCssVisible — real layout semantics', () => {
     ).toBe(true);
   });
 
-  it('reports visibility:hidden and opacity:0 hidden', () => {
+  it('reports visibility:hidden hidden', () => {
     expect(
       isElementCssVisible(
         mount('<input id="a" style="visibility:hidden" />', '#a'),
       ),
     ).toBe(false);
-    expect(
-      isElementCssVisible(mount('<input id="a" style="opacity:0" />', '#a')),
-    ).toBe(false);
+  });
+
+  it('reports an opacity:0 control VISIBLE', () => {
+    // The standard custom-checkbox / custom-radio pattern: a real input sits
+    // transparently over a styled box. It is laid out, focusable, and being
+    // operated by the user — stripping its `aria-invalid` would be an a11y
+    // regression, so `opacityProperty` is deliberately not passed to
+    // `checkVisibility()`.
+    const el = mount(
+      '<input id="a" type="checkbox" style="opacity:0" />',
+      '#a',
+    );
+
+    expect(isElementCssVisible(el)).toBe(true);
+    el.focus();
+    expect(document.activeElement).toBe(el);
   });
 
   it('reports a position:fixed control visible', () => {

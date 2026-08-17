@@ -14,14 +14,20 @@ import type {
  * Resolve whether an element is visible from a CSS perspective.
  *
  * Uses `Element.checkVisibility()` — Baseline 2024, and the only API that
- * answers the question correctly. Its default behaviour already reports
+ * answers the question correctly. Its default behavior already reports
  * `false` for `display: none`, `display: contents`, the `hidden` attribute,
  * `content-visibility: hidden`, and a collapsed `<details>` (whose
- * `::details-content` is `content-visibility: hidden`). The options below add
- * `visibility: hidden` and `opacity: 0`; browsers ignore dictionary members
- * they do not know, so passing all three is safe on every runtime that has
- * the method at all. `checkVisibilityCSS` is the historic alias for
- * `visibilityProperty` and is kept for runtimes between Chromium 105 and 121.
+ * `::details-content` is `content-visibility: hidden`). `visibilityProperty`
+ * adds `visibility: hidden`, which removes an element from the accessibility
+ * tree just as thoroughly. `checkVisibilityCSS` is the historic alias for the
+ * same option, kept for runtimes between Chromium 105 and 121; browsers
+ * ignore dictionary members they do not know, so passing both is safe.
+ *
+ * **`opacityProperty` is deliberately not passed.** An `opacity: 0` control
+ * is still laid out, still focusable, and still interactive — it is the
+ * standard custom-checkbox and custom-radio pattern, where a real input sits
+ * transparently over a styled box. Treating those as hidden would strip
+ * `aria-invalid` from controls a keyboard user is actively operating.
  *
  * **When the method is unavailable, this reports `true`.** That is a
  * deliberate fail-open, not an oversight. The obvious fallback,
@@ -47,7 +53,6 @@ export function isElementCssVisible(el: HTMLElement): boolean {
       checkVisibility?: (options?: {
         checkVisibilityCSS?: boolean;
         visibilityProperty?: boolean;
-        opacityProperty?: boolean;
       }) => boolean;
     }
   ).checkVisibility;
@@ -59,7 +64,6 @@ export function isElementCssVisible(el: HTMLElement): boolean {
   return checkVisibility.call(el, {
     checkVisibilityCSS: true,
     visibilityProperty: true,
-    opacityProperty: true,
   });
 }
 
@@ -209,9 +213,15 @@ export class NgxFieldIdentity {
    * the viewport.
    *
    * Driven by the wrapper, which calls `setControlVisible` from its
-   * `afterEveryRender` write phase using `Element.checkVisibility()`
-   * (with an `offsetParent` fallback). Defaults to `true` so consumers
-   * never strip ARIA attributes pre-visibility-eval.
+   * `afterEveryRender` write phase via {@link isElementCssVisible}. Defaults
+   * to `true` so consumers never strip ARIA attributes pre-visibility-eval.
+   *
+   * Nothing inside the toolkit reads this any more: `NgxSignalFormAutoAria`
+   * probes its own host element instead, so its `aria-invalid` gate works for
+   * every wrapper rather than only the built-in one, and each control in a
+   * cluster tracks its own layout state (ADR-0011). The channel stays because
+   * it is a published read surface — a consumer holding an ancestor identity
+   * can still read the wrapper's view of its bound control.
    *
    * This member is a {@link ControlVisibilitySignal}: a real `Signal<boolean>`
    * (reactive, threadable into `computed()`) that additionally accepts an
@@ -335,8 +345,8 @@ export class NgxFieldIdentity {
   /**
    * Updates the cached visibility of the bound control. Idempotent.
    *
-   * The wrapper drives this from its `afterEveryRender` write phase using
-   * `Element.checkVisibility()` (or `offsetParent` fallback). Polling the
+   * The wrapper drives this from its `afterEveryRender` write phase via
+   * {@link isElementCssVisible}. Polling the
    * visibility on each render rather than via `IntersectionObserver`
    * avoids both the spurious "scroll = hidden" semantics IO has and the
    * teardown/leak surface of long-lived observers.

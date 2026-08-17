@@ -36,7 +36,7 @@ They stop being the same statement the moment anything else provides an identity
 Each channel therefore needs a state that means "never published", distinct from every legitimate resolved value:
 
 - `resolvedErrorStrategy` and `resolvedWarningStrategy` already had one — they are `null` until `setResolvedStrategies` runs. No type change; the call sites changed from testing the service to testing the value.
-- `hintIds` did not. It was `readonly string[]`, initialised to `[]`, which conflated "nobody published hints" with "this field genuinely has no hints". It is now `readonly string[] | null`:
+- `hintIds` did not. It was `readonly string[]`, initialized to `[]`, which conflated "nobody published hints" with "this field genuinely has no hints". It is now `readonly string[] | null`:
   - `null` — unpublished. Consumers fall through to the hint registry exactly as they would with no identity at all.
   - `[]` — published, and this field has no hints. Authoritative; the registry is not consulted.
 
@@ -47,9 +47,9 @@ The `set*` writers stay `@internal` and stay stripped from the published `.d.ts`
 ## Consequences
 
 - **Breaking, on a public read surface.** `NgxFieldIdentity.hintIds` and the structural type `HintIdsIdentityLike` (re-exported from both the `core` and `headless` barrels) widen to `readonly string[] | null`. Anything reading `identity.hintIds()` directly must handle `null`. `createHintIdsSignal` still _returns_ a non-null `Signal<readonly string[]>` — it coalesces internally — so consumers who go through the factory are unaffected, which is every wrapper in this repo.
-- `NgxFieldIdentity.describedBy` treats the unpublished state as "no IDs", so it stays `string | null` and its behaviour is unchanged.
+- `NgxFieldIdentity.describedBy` treats the unpublished state as "no IDs", so it stays `string | null` and its behavior is unchanged.
 - `setHintIds([])` is now a meaningful claim rather than a no-op: it is how a driver says "I own this channel and there is nothing in it".
-- `NgxFormFieldWrapper` behaviour is unchanged. It publishes every channel on every render, so it takes the same branch it always did.
+- `NgxFormFieldWrapper` behavior is unchanged. It publishes every channel on every render, so it takes the same branch it always did.
 - This is a prerequisite for shipping any public way to provide an identity. Without it, the facade would be a foot-gun on arrival.
 
 ## Alternatives Considered

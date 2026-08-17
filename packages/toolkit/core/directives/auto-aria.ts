@@ -206,13 +206,14 @@ export class NgxSignalFormAutoAria {
    *
    * Note what this deliberately does *not* check: whether
    * {@link #fieldIdentity} exists. An identity that is merely injectable
-   * claims nothing — only a *published* strategy does, and that is tested
-   * per channel at the two call sites below. Gating on service presence
-   * instead would mean any partially-driven identity (a third-party wrapper
-   * that owns only the field name, say) silently switched both strategy
-   * channels off the registry and onto the ambient form context, dropping
-   * the field-level overrides a standalone `<ngx-form-field-error>` had
-   * published. See ADR-0010.
+   * claims nothing. Only a *published* strategy does, and the two call sites
+   * below test for that per channel.
+   *
+   * Gating on service presence instead would break any partially-driven
+   * identity — a third-party wrapper that owns only the field name, say. It
+   * would switch both strategy channels off the registry and onto the ambient
+   * form context, dropping the field-level overrides a standalone
+   * `<ngx-form-field-error>` had published. See ADR-0010.
    */
   readonly #registryVisibilityEntry = computed(() => {
     const fieldName = this.#domSnapshot().fieldName;
@@ -243,13 +244,17 @@ export class NgxSignalFormAutoAria {
    * identity happens to be injectable — see `#registryVisibilityEntry`.
    */
   readonly #visibilityByStrategy = computed(() => {
-    if (this.#fieldIdentity?.resolvedErrorStrategy() != null) {
-      return this.#ownVisibilityByStrategy();
+    const publishedErrorStrategy =
+      this.#fieldIdentity?.resolvedErrorStrategy() ?? null;
+
+    if (publishedErrorStrategy === null) {
+      const registryEntry = this.#registryVisibilityEntry();
+      if (registryEntry) return registryEntry.errorContainerVisible();
     }
 
-    const registryEntry = this.#registryVisibilityEntry();
-    if (registryEntry) return registryEntry.errorContainerVisible();
-
+    // `#ownVisibilityByStrategy` already reads the published strategy and
+    // falls back to the ambient form context when it is null, so it covers
+    // both remaining branches.
     return this.#ownVisibilityByStrategy();
   });
 

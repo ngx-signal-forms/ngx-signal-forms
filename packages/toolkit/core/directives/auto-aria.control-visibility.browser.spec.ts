@@ -1,5 +1,11 @@
 import { Component, input, signal } from '@angular/core';
-import { FormField, form, minLength, schema } from '@angular/forms/signals';
+import {
+  FormField,
+  form,
+  minLength,
+  required,
+  schema,
+} from '@angular/forms/signals';
 import { render } from '@testing-library/angular';
 import { describe, expect, it } from 'vitest';
 import { NgxFormFieldError } from '../../assistive/form-field-error';
@@ -95,9 +101,9 @@ describe('auto-aria — aria-invalid on a control with no layout box (custom wra
     const { fixture } = await render(CollapsibleCustomHost, {
       inputs: { open: true },
     });
-    const control = fixture.nativeElement.querySelector<HTMLElement>(
-      'input#widget-generated-7',
-    );
+    const control = (
+      fixture.nativeElement as HTMLElement
+    ).querySelector<HTMLElement>('input#widget-generated-7');
     expect(control?.getAttribute('aria-invalid')).toBe('true');
 
     fixture.componentRef.setInput('open', false);
@@ -113,9 +119,9 @@ describe('auto-aria — aria-invalid on a control with no layout box (custom wra
     const { fixture } = await render(CollapsibleCustomHost, {
       inputs: { open: false },
     });
-    const control = fixture.nativeElement.querySelector<HTMLElement>(
-      'input#widget-generated-7',
-    );
+    const control = (
+      fixture.nativeElement as HTMLElement
+    ).querySelector<HTMLElement>('input#widget-generated-7');
 
     fixture.componentRef.setInput('open', true);
     await fixture.whenStable();
@@ -158,8 +164,9 @@ describe('auto-aria — aria-invalid on a control with no layout box (built-in w
     const { fixture } = await render(CollapsibleBuiltinHost, {
       inputs: { open: true },
     });
-    const control =
-      fixture.nativeElement.querySelector<HTMLElement>('input#email');
+    const control = (
+      fixture.nativeElement as HTMLElement
+    ).querySelector<HTMLElement>('input#email');
     expect(control?.getAttribute('aria-invalid')).toBe('true');
 
     fixture.componentRef.setInput('open', false);
@@ -168,5 +175,104 @@ describe('auto-aria — aria-invalid on a control with no layout box (built-in w
     await fixture.whenStable();
 
     expect(control?.getAttribute('aria-invalid')).toBeNull();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Selection cluster — the one shape where self-probing changes behavior
+// ---------------------------------------------------------------------------
+
+@Component({
+  selector: 'ngx-test-cluster-visibility-host',
+  imports: [NgxFormFieldWrapper, FormField, NgxSignalFormToolkit],
+  template: `
+    <form [formRoot]="deliveryForm" ngxSignalForm>
+      <details [open]="open()">
+        <summary>Delivery</summary>
+        <ngx-form-field-wrapper
+          [formField]="deliveryForm.deliveryMethod"
+          fieldName="deliveryMethod"
+          strategy="immediate"
+        >
+          <div>
+            <label>
+              <input
+                id="delivery-standard"
+                type="radio"
+                [formField]="deliveryForm.deliveryMethod"
+                value="standard"
+                [style.display]="hideFirstOption() ? 'none' : null"
+              />
+              Standard
+            </label>
+            <label>
+              <input
+                id="delivery-express"
+                type="radio"
+                [formField]="deliveryForm.deliveryMethod"
+                value="express"
+              />
+              Express
+            </label>
+          </div>
+        </ngx-form-field-wrapper>
+      </details>
+    </form>
+  `,
+})
+class ClusterVisibilityHost {
+  readonly open = input.required<boolean>();
+  readonly hideFirstOption = input.required<boolean>();
+
+  readonly #model = signal({ deliveryMethod: '' });
+  readonly deliveryForm = form(
+    this.#model,
+    schema((path) => {
+      required(path.deliveryMethod, { message: 'Pick a delivery method' });
+    }),
+  );
+}
+
+/**
+ * A selection cluster has exactly one auto-aria instance, on the wrapper host
+ * that carries the group role — the individual radios are excluded by the
+ * directive's selector. Self-probing therefore moves the visibility source
+ * from "whichever single control the wrapper resolved" to "the element that
+ * actually carries `aria-invalid`". That is a deliberate behavior change, so
+ * both halves of it are asserted rather than left to the general suite.
+ */
+describe('auto-aria — aria-invalid on a selection cluster', () => {
+  async function renderCluster(open: boolean, hideFirstOption: boolean) {
+    const { fixture } = await render(ClusterVisibilityHost, {
+      inputs: { open, hideFirstOption },
+    });
+    return {
+      fixture,
+      group: (fixture.nativeElement as HTMLElement).querySelector<HTMLElement>(
+        'ngx-form-field-wrapper',
+      ),
+    };
+  }
+
+  it('keeps the group aria-invalid when one option is hidden but the group is not', async () => {
+    const { group } = await renderCluster(true, true);
+
+    // The wrapper used to publish the *first* resolved control's visibility
+    // for the whole cluster, so hiding that radio stripped `aria-invalid`
+    // off a group the user can plainly see.
+    expect(group?.checkVisibility()).toBe(true);
+    expect(group?.getAttribute('aria-invalid')).toBe('true');
+  });
+
+  it('removes the group aria-invalid when the whole cluster loses its layout box', async () => {
+    const { fixture, group } = await renderCluster(true, false);
+    expect(group?.getAttribute('aria-invalid')).toBe('true');
+
+    fixture.componentRef.setInput('open', false);
+    await fixture.whenStable();
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    expect(group?.getAttribute('aria-invalid')).toBeNull();
   });
 });
