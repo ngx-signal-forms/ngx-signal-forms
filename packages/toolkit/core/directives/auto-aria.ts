@@ -186,17 +186,20 @@ export class NgxSignalFormAutoAria {
   #previousTickWasManualAriaMode: boolean | null = null;
 
   /**
-   * The wrapper-less fallback channel's entry for the currently bound
-   * control's field name, or `undefined` when there is none to fall back
-   * to. Deliberately skipped whenever {@link #fieldIdentity} is present —
-   * the wrapper fast-path already accounts for the wrapper's own
-   * field-level overrides, and preferring it keeps existing wrapped-field
-   * behavior unchanged. Only consulted for the wrapper-less case, where a
-   * sibling `<ngx-form-field-error>` has no other way to reach auto-aria.
+   * The fallback channel's entry for the currently bound control's field
+   * name, or `undefined` when there is none to fall back to.
+   *
+   * Note what this deliberately does *not* check: whether
+   * {@link #fieldIdentity} exists. An identity that is merely injectable
+   * claims nothing — only a *published* strategy does, and that is tested
+   * per channel at the two call sites below. Gating on service presence
+   * instead would mean any partially-driven identity (a third-party wrapper
+   * that owns only the field name, say) silently switched both strategy
+   * channels off the registry and onto the ambient form context, dropping
+   * the field-level overrides a standalone `<ngx-form-field-error>` had
+   * published. See ADR-0010.
    */
   readonly #registryVisibilityEntry = computed(() => {
-    if (this.#fieldIdentity) return undefined;
-
     const fieldName = this.#domSnapshot().fieldName;
     if (!fieldName) return undefined;
 
@@ -213,15 +216,22 @@ export class NgxSignalFormAutoAria {
    * `[ngxSignalForm]` context (strategy + submittedStatus) via DI, matching
    * the same cascade as the form-field wrapper and headless error-state.
    *
-   * When an owning `NgxFormFieldWrapper` has published its own resolved
-   * strategy, that wins: it already accounts for the wrapper's field-level
-   * `strategy` input, which the ambient form context cannot see. Absent a
-   * wrapper, a registry entry — published by a standalone
-   * `<ngx-form-field-error>` — wins instead: its `errorContainerVisible` is
-   * the exact boolean already gating that component's own live region, so
-   * reusing it here can't drift from what is actually rendered.
+   * When an owning wrapper has **published an error strategy** on the
+   * identity, that wins: it already accounts for the wrapper's field-level
+   * `strategy` input, which the ambient form context cannot see. Otherwise a
+   * registry entry — published by a standalone `<ngx-form-field-error>` —
+   * wins: its `errorContainerVisible` is the exact boolean already gating
+   * that component's own live region, so reusing it here can't drift from
+   * what is actually rendered.
+   *
+   * The precedence test is on the published *value*, not on whether an
+   * identity happens to be injectable — see `#registryVisibilityEntry`.
    */
   readonly #visibilityByStrategy = computed(() => {
+    if (this.#fieldIdentity?.resolvedErrorStrategy() != null) {
+      return this.#ownVisibilityByStrategy();
+    }
+
     const registryEntry = this.#registryVisibilityEntry();
     if (registryEntry) return registryEntry.errorContainerVisible();
 
@@ -254,14 +264,25 @@ export class NgxSignalFormAutoAria {
    * visible warning that `aria-describedby` never references, leaving the
    * advisory text unavailable to assistive technology (WCAG 1.3.1).
    *
-   * Same registry fallback as {@link #visibilityByStrategy}: absent a
-   * wrapper, a standalone error component's published
+   * Same per-channel fallback as {@link #visibilityByStrategy}, resolved
+   * **independently of the error channel**: ADR-0007 establishes the two
+   * cascades as separate, so an identity that publishes an error strategy
+   * but not a warning strategy must still let the registry own warnings.
+   * Absent a published warning strategy, a standalone error component's
    * `warningContainerVisible` wins over recomputing the cascade from the
    * ambient form context.
    */
   readonly #warningVisibilityByStrategy = computed(() => {
-    const registryEntry = this.#registryVisibilityEntry();
-    if (registryEntry) return registryEntry.warningContainerVisible();
+    // A wrapper's published strategy already resolved its field-level
+    // `warningStrategy` input, so it takes precedence over both the registry
+    // and the ambient form context.
+    const publishedWarningStrategy =
+      this.#fieldIdentity?.resolvedWarningStrategy() ?? null;
+
+    if (publishedWarningStrategy === null) {
+      const registryEntry = this.#registryVisibilityEntry();
+      if (registryEntry) return registryEntry.warningContainerVisible();
+    }
 
     const fieldState = this.#resolveFieldState();
     if (!fieldState) return false;
@@ -269,10 +290,7 @@ export class NgxSignalFormAutoAria {
     return shouldShowWarnings(
       fieldState.errors().some(isWarningError),
       fieldState.touched(),
-      // A wrapper's published strategy already resolved its field-level
-      // `warningStrategy` input, so it takes precedence over the ambient
-      // form context.
-      this.#fieldIdentity?.resolvedWarningStrategy() ??
+      publishedWarningStrategy ??
         resolveWarningStrategyFromContext(
           undefined,
           this.#formContext,

@@ -57,6 +57,7 @@ releases will not include any of the renames below.
 - **BREAKING: `canSubmitWithWarnings()` now reads `errorSummary()`** — child-path blocking errors now correctly disable submission (see [§5c](#5c-cansubmitwithwarnings-now-aggregates-descendant-errors))
 - **BREAKING: `injectFieldControl()` validates the resolved value against the runtime `FieldTree` contract** — an id resolving to a non-`FieldTree` property now throws instead of silently returning an unsound cast (see [§5d](#5d-injectfieldcontrol-validates-the-resolved-fieldtree))
 - **BREAKING: `ErrorSummarySignals` gained `shouldShowWarnings`** — implementers of the interface must add this member (see [§8](#8-headless-audit-fixes-v100))
+- **BREAKING: `NgxFieldIdentity.hintIds` is now `Signal<readonly string[] | null>`** — `null` means the hint channel was never published (fall back to the hint registry), `[]` means published-and-empty; identity now shadows the fallback registries per channel rather than by mere presence (see [§14](#14-ngxfieldidentityhintids-is-nullable--identity-shadows-the-registries-per-channel-387))
 - **BREAKING: `CharacterCountResult` members are now typed `Signal<T>`** (was the looser `ReadSignal<T>` alias); a new `hasLimit` member was added — compile-time tightening only, no runtime change
 - **Bug fix** — error summary no longer drops a second field's error when two different fields share the same kind + message-less default; `NgxHeadlessNotification` no longer leaks the internal `warn:` prefix; `createErrorMessageSignal`'s ID fallback strips Angular's internal `{appId}.form{n}.` prefix; required `Date`/`File`/`Map`-valued leaves no longer vanish from field-optionality summaries
 - **BREAKING: `NgxFormFieldCharacterCount`'s `colorThresholds` input removed** — warning/danger color breakpoints are now CSS-only via `--ngx-form-field-char-count-warning-threshold` / `-danger-threshold` (default `80`/`95`); `[liveAnnounce]` wording stays fixed at those defaults regardless of a CSS override (see [§13](#13-ngxformfieldcharactercount-colorthresholds-removed--thresholds-are-css-only-355))
@@ -1589,3 +1590,56 @@ Restyling the color threshold is a pure presentation change; the
 announcement timing stays exactly where it was.
 
 **Files:** `packages/toolkit/assistive/character-count.ts`.
+
+## 14. `NgxFieldIdentity.hintIds` is nullable — identity shadows the registries per channel (#387)
+
+**Root cause:** `NgxSignalFormAutoAria` and `createHintIdsSignal` both decided
+whether to use an `NgxFieldIdentity` or a fallback registry by asking whether
+the identity service was _injectable_, not whether it had published anything.
+That was indistinguishable from correct while `NgxFormFieldWrapper` was the
+only thing that ever provided one, because it drives every channel on every
+render. It stops being correct as soon as a partially-driven identity exists —
+a wrapper that adopts the identity only to fix its field naming would, by the
+mere act of providing it, switch its own hints and its own field-level
+`strategy`/`warningStrategy` overrides off the registries and onto the ambient
+form context.
+
+Resolution is now **per channel**: a channel belongs to the identity only when
+the identity has published a value for it. See
+[ADR-0010](./decisions/0010-field-identity-shadows-registries-per-channel.md).
+
+**Breaking change:** `NgxFieldIdentity.hintIds` and the structural type
+`HintIdsIdentityLike` (re-exported from both the `core` and `headless`
+barrels) widen from `Signal<readonly string[]>` to
+`Signal<readonly string[] | null>`. The two empty-ish states now mean
+different things:
+
+| Value  | Meaning                                                            |
+| ------ | ------------------------------------------------------------------ |
+| `null` | Channel never published — consumers fall back to the hint registry |
+| `[]`   | Published, and this field genuinely has no hints — authoritative   |
+
+```typescript
+// before — `[]` was both "nothing published yet" and "no hints"
+const ids: readonly string[] = identity.hintIds();
+
+// after — decide which of the two you mean
+const ids = identity.hintIds() ?? [];
+```
+
+**Who is affected:** only code that reads `identity.hintIds()` **directly**.
+`createHintIdsSignal` coalesces internally and still returns a non-null
+`Signal<readonly string[]>`, so every wrapper that composes ARIA through the
+published factories — which is the documented path, and all of this repo's
+demo wrappers — needs no change at all.
+
+`NgxFieldIdentity.describedBy` is unchanged (`string | null`); it treats the
+unpublished state as "no IDs". `resolvedErrorStrategy` and
+`resolvedWarningStrategy` needed no type change — they were already `null`
+until published — but consumers must now test that **value** rather than the
+presence of the service. The two strategy channels fall back independently of
+one another, per [ADR-0007](./decisions/0007-warning-display-timing-cascade.md).
+
+**Files:** `packages/toolkit/core/services/field-identity.ts`,
+`packages/toolkit/core/utilities/aria/create-hint-ids-signal.ts`,
+`packages/toolkit/core/directives/auto-aria.ts`.

@@ -26,10 +26,29 @@ describe('NgxFieldIdentity', () => {
       expect(svc.warningId()).toBeNull();
     });
 
-    it('exposes empty hintIds and null describedBy by default', () => {
+    it('reports the hint channel as unpublished, with a null describedBy, by default', () => {
       const svc = createService();
+      // `null`, not `[]` — an identity nobody has driven yet must not look
+      // like one that published "this field has no hints", or consumers
+      // would stop falling back to the hint registry. See ADR-0010.
+      expect(svc.hintIds()).toBeNull();
+      expect(svc.describedBy()).toBeNull();
+    });
+
+    it('distinguishes a published-but-empty hint list from the unpublished default', () => {
+      const svc = createService();
+      expect(svc.hintIds()).toBeNull();
+
+      svc.setHintIds([]);
+
       expect(svc.hintIds()).toEqual([]);
       expect(svc.describedBy()).toBeNull();
+    });
+
+    it('leaves the strategy channels unpublished by default', () => {
+      const svc = createService();
+      expect(svc.resolvedErrorStrategy()).toBeNull();
+      expect(svc.resolvedWarningStrategy()).toBeNull();
     });
 
     it('reports control visible by default', () => {

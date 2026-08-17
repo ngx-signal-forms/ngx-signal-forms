@@ -77,7 +77,17 @@ export interface ControlVisibilitySignal extends Signal<boolean> {
  *
  * Provided at the `NgxFormFieldWrapper` level via `providers: [NgxFieldIdentity]`.
  * `NgxSignalFormAutoAria` and hint directives inject it optionally, falling
- * back to their current behavior when absent.
+ * back to their registry-driven behavior when absent.
+ *
+ * **Channels publish independently.** An identity does not have to drive
+ * every channel, and merely *existing* claims nothing. Each of the hint,
+ * error-strategy, and warning-strategy channels advertises "unpublished" as
+ * a distinct `null` state, and consumers fall back to
+ * `NGX_SIGNAL_FORM_HINT_REGISTRY` / `NGX_SIGNAL_FORM_FIELD_VISIBILITY_REGISTRY`
+ * per channel — never by testing whether this service is injectable. This is
+ * what lets a partially-driven identity (one that only owns the field name,
+ * say) coexist with the registries instead of silently disabling them.
+ * See ADR-0010.
  *
  * Element-scoped: `providedIn: null` makes it a contract violation to
  * provide this service at the root injector. Each wrapper gets a fresh
@@ -94,7 +104,7 @@ export class NgxFieldIdentity {
   readonly #fieldName = signal<string | null>(null);
   readonly #controlElement = signal<HTMLElement | null>(null);
   readonly #controlId = signal<string | null>(null);
-  readonly #hintIds = signal<readonly string[]>([]);
+  readonly #hintIds = signal<readonly string[] | null>(null);
   readonly #isControlVisible = signal(true);
   readonly #resolvedErrorStrategy = signal<ResolvedErrorDisplayStrategy | null>(
     null,
@@ -132,6 +142,12 @@ export class NgxFieldIdentity {
   /**
    * Hint IDs contributed by the surrounding hint registry, filtered for
    * this field. Updated by `NgxFormFieldWrapper` when `hintDescriptors` changes.
+   *
+   * `null` means this identity has **never published** the hint channel —
+   * consumers must fall back to `NGX_SIGNAL_FORM_HINT_REGISTRY` exactly as
+   * they would with no identity present at all. An empty array means the
+   * channel *was* published and this field genuinely has no hints, which is
+   * authoritative and suppresses the fallback. See ADR-0010.
    */
   readonly hintIds = this.#hintIds.asReadonly();
 
@@ -225,7 +241,7 @@ export class NgxFieldIdentity {
    */
   readonly describedBy = computed<string | null>(() => {
     const ids = this.#hintIds();
-    return ids.length > 0 ? ids.join(' ') : null;
+    return ids !== null && ids.length > 0 ? ids.join(' ') : null;
   });
 
   /**
@@ -309,16 +325,22 @@ export class NgxFieldIdentity {
   }
 
   /**
-   * Updates the hint IDs visible to this field's identity. Idempotent —
-   * shallow array equality short-circuits the write so consumers don't
-   * re-run their describedBy computeds when the list is structurally
-   * unchanged.
+   * Publishes the hint IDs visible to this field's identity, claiming the
+   * hint channel. Idempotent — shallow array equality short-circuits the
+   * write so consumers don't re-run their describedBy computeds when the
+   * list is structurally unchanged.
+   *
+   * The first call flips {@link hintIds} off its unpublished `null` default,
+   * which is what stops consumers falling back to the hint registry. Passing
+   * `[]` is therefore a meaningful claim ("no hints for this field"), not a
+   * no-op.
    *
    * @internal
    */
   setHintIds(ids: readonly string[]): void {
     const current = this.#hintIds();
     if (
+      current !== null &&
       current.length === ids.length &&
       current.every((id, index) => id === ids[index])
     ) {
