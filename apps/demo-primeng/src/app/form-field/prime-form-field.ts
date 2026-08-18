@@ -6,6 +6,7 @@ import {
   contentChildren,
   effect,
   inject,
+  Injector,
   input,
   isDevMode,
   signal,
@@ -31,6 +32,7 @@ import {
   createAriaRequiredSignal,
   createFieldNameResolver,
 } from '@ngx-signal-forms/toolkit/headless';
+import { createControlVisibilitySignal } from '../a11y/control-visibility';
 
 /**
  * PrimeNG-flavoured form-field wrapper.
@@ -289,6 +291,7 @@ export class PrimeFormFieldComponent<TValue = unknown> {
 
   readonly #config = inject(NGX_SIGNAL_FORMS_CONFIG);
   readonly #formContext = injectFormContext();
+  readonly #injector = inject(Injector);
 
   /**
    * Strategy resolved against the global config and any form-level
@@ -342,9 +345,22 @@ export class PrimeFormFieldComponent<TValue = unknown> {
     this.submittedStatus,
   );
 
+  /**
+   * Layout probe for the bound control — the element `aria-invalid` actually
+   * lands on (auto-ARIA writes it there for `input-like` controls, and the
+   * `p-select` / `p-checkbox` shims write it onto their inner focusable
+   * element). Probing the wrapper host instead would miss a control hidden
+   * inside a still-laid-out wrapper.
+   */
+  readonly #isControlVisible = createControlVisibilitySignal(
+    () => this.#boundControlElement(),
+    this.#injector,
+  );
+
   readonly ariaInvalidValue = createAriaInvalidSignal(
     this.#fieldStateSignal,
     this.#showByStrategy,
+    this.#isControlVisible,
   );
 
   readonly ariaRequiredValue = createAriaRequiredSignal(this.#fieldStateSignal);

@@ -31,6 +31,7 @@ import {
   createAriaRequiredSignal,
   createHintIdsSignal,
 } from '@ngx-signal-forms/toolkit/headless';
+import { createControlVisibilitySignal } from '../a11y/control-visibility';
 import { Select, SelectModule } from 'primeng/select';
 import type { RoleOption } from '../profile-form/profile-form.model';
 
@@ -166,9 +167,21 @@ export class PrimeSelectControlComponent implements FormValueControl<string> {
     fieldName: () => this.#fieldContext?.fieldName() ?? null,
   });
 
+  /**
+   * Layout probe for the element this shim writes `aria-invalid` onto — the
+   * inner `[role="combobox"]`, not the component host. Same element the
+   * write phase below resolves, so the attribute is never set on a control
+   * that has no layout box (collapsed `<details>`, inactive tab panel, …).
+   */
+  readonly #isControlVisible = createControlVisibilitySignal(
+    () => this.#comboboxElement(),
+    this.#injector,
+  );
+
   protected readonly ariaInvalid = createAriaInvalidSignal(
     this.#fieldState,
     this.#visibility,
+    this.#isControlVisible,
   );
 
   protected readonly ariaRequired = createAriaRequiredSignal(this.#fieldState);
@@ -181,14 +194,23 @@ export class PrimeSelectControlComponent implements FormValueControl<string> {
     fieldName: () => this.#fieldContext?.fieldName() ?? null,
   });
 
+  /**
+   * The inner element PrimeNG gives the combobox role to. `p-select` renders
+   * it, so there is no `viewChild` handle for it — a scoped DOM query is the
+   * only way in, and it is shared by the layout probe and the write phase so
+   * both address the same element.
+   */
+  #comboboxElement(): HTMLElement | null {
+    return this.#host.nativeElement.querySelector<HTMLElement>(
+      '[role="combobox"]',
+    );
+  }
+
   constructor() {
     afterEveryRender(
       {
         write: () => {
-          const combobox =
-            this.#host.nativeElement.querySelector<HTMLElement>(
-              '[role="combobox"]',
-            );
+          const combobox = this.#comboboxElement();
 
           if (!combobox) {
             return;

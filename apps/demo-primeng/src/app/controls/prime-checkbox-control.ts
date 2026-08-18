@@ -30,6 +30,7 @@ import {
   createAriaRequiredSignal,
   createHintIdsSignal,
 } from '@ngx-signal-forms/toolkit/headless';
+import { createControlVisibilitySignal } from '../a11y/control-visibility';
 import { Checkbox, CheckboxModule } from 'primeng/checkbox';
 
 /**
@@ -126,9 +127,20 @@ export class PrimeCheckboxControlComponent implements FormValueControl<boolean> 
     fieldName: () => this.#fieldContext?.fieldName() ?? null,
   });
 
+  /**
+   * Layout probe for the element this shim writes `aria-invalid` onto — the
+   * native `<input type="checkbox">` PrimeNG renders inside `p-checkbox`,
+   * not the component host. Same element the write phase below resolves.
+   */
+  readonly #isControlVisible = createControlVisibilitySignal(
+    () => this.#nativeInput(),
+    this.#injector,
+  );
+
   protected readonly ariaInvalid = createAriaInvalidSignal(
     this.#fieldState,
     this.#visibility,
+    this.#isControlVisible,
   );
 
   protected readonly ariaRequired = createAriaRequiredSignal(this.#fieldState);
@@ -141,16 +153,26 @@ export class PrimeCheckboxControlComponent implements FormValueControl<boolean> 
     fieldName: () => this.#fieldContext?.fieldName() ?? null,
   });
 
+  /**
+   * The native `<input>` inside `p-checkbox`. PrimeNG exposes it as
+   * `inputViewChild`, which is a signal on newer versions and a plain
+   * `ElementRef` on older ones — hence the shape check. Shared by the
+   * layout probe and the write phase so both address the same element.
+   */
+  #nativeInput(): HTMLInputElement | null {
+    const inputViewChild = this.checkboxControl().inputViewChild;
+
+    return (
+      (typeof inputViewChild === 'function' ? inputViewChild() : inputViewChild)
+        ?.nativeElement ?? null
+    );
+  }
+
   constructor() {
     afterEveryRender(
       {
         write: () => {
-          const inputViewChild = this.checkboxControl().inputViewChild;
-          const nativeInput =
-            (typeof inputViewChild === 'function'
-              ? inputViewChild()
-              : inputViewChild
-            )?.nativeElement ?? null;
+          const nativeInput = this.#nativeInput();
 
           if (!nativeInput) {
             return;

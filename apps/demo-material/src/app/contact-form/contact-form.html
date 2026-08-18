@@ -52,31 +52,50 @@
     </mat-error>
   </mat-form-field>
 
-  <mat-form-field
-    class="demo-form__field"
-    [ngxMatFormField]="contactForm.topic"
-    fieldName="contact-topic"
+  <!-- Collapsible container — the `aria-invalid` staleness case.
+
+       `[open]` + `(toggle)` keeps `topicExpanded` authoritative: a bare
+       `<details>` toggles in the browser without going through Angular, so
+       nothing would re-run change detection and the wrapper's layout probe
+       would never re-read. With the binding in place, collapsing the section
+       takes the `<mat-select>`'s layout box away, the wrapper's
+       `createControlVisibilitySignal` probe reports `false` in the next
+       `earlyRead`, and `data-ngx-mat-invalid` drops off instead of freezing
+       at its last value. -->
+  <details
+    class="demo-form__collapsible"
+    [open]="topicExpanded()"
+    (toggle)="onTopicToggle($event)"
+    data-testid="topic-details"
   >
-    <mat-label>Topic</mat-label>
-    <mat-select
-      id="contact-topic"
-      [formField]="contactForm.topic"
-      ngxMatSelectControl
+    <summary class="demo-form__collapsible-summary">Topic details</summary>
+
+    <mat-form-field
+      class="demo-form__field"
+      [ngxMatFormField]="contactForm.topic"
+      fieldName="contact-topic"
     >
-      <mat-option value="">— Choose one —</mat-option>
-      <mat-option value="support">Product support</mat-option>
-      <mat-option value="sales">Sales question</mat-option>
-      <mat-option value="feedback">General feedback</mat-option>
-    </mat-select>
-    <mat-hint *ngxMatHintSlot="contactForm.topic; let warning">
-      @if (warning) {
-      <ngx-mat-feedback-outlet [message]="warning" severity="warning" />
-      } @else { Pick the closest match }
-    </mat-hint>
-    <mat-error *ngxMatErrorSlot="contactForm.topic; let message">
-      <ngx-mat-feedback-outlet [message]="message" severity="error" />
-    </mat-error>
-  </mat-form-field>
+      <mat-label>Topic</mat-label>
+      <mat-select
+        id="contact-topic"
+        [formField]="contactForm.topic"
+        ngxMatSelectControl
+      >
+        <mat-option value="">— Choose one —</mat-option>
+        <mat-option value="support">Product support</mat-option>
+        <mat-option value="sales">Sales question</mat-option>
+        <mat-option value="feedback">General feedback</mat-option>
+      </mat-select>
+      <mat-hint *ngxMatHintSlot="contactForm.topic; let warning">
+        @if (warning) {
+        <ngx-mat-feedback-outlet [message]="warning" severity="warning" />
+        } @else { Pick the closest match }
+      </mat-hint>
+      <mat-error *ngxMatErrorSlot="contactForm.topic; let message">
+        <ngx-mat-feedback-outlet [message]="message" severity="error" />
+      </mat-error>
+    </mat-form-field>
+  </details>
 
   <!-- `*ngxMatFeedback` is declared BEFORE `<mat-checkbox>` on purpose: the
        checkbox's `[aria-describedby]` binding (below) reads this directive's

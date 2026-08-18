@@ -819,7 +819,7 @@ that own their DOM and ARIA. Use the factories as one composition unit instead
 of reproducing the wrapper's strategy, identity, hint, and renderer rules.
 
 ```typescript
-createAriaInvalidSignal(fieldState, visibility): Signal<'true' | null>
+createAriaInvalidSignal(fieldState, visibility, isControlVisible?): Signal<'true' | 'false' | null>
 createAriaRequiredSignal(fieldState): Signal<'true' | null>
 createAriaDescribedBySignal(options): Signal<string | null>
 createHintIdsSignal(options): Signal<readonly string[]>
@@ -829,6 +829,13 @@ createFieldNameResolver(options): Signal<string | null>
 
 - `createFieldNameResolver` resolves explicit input → optional label `for` →
   bound control `id`.
+- `createAriaInvalidSignal`'s third argument is optional in the type signature
+  only. A wrapper that composes the factory owns the layout probe itself —
+  without it `aria-invalid` goes stale on a control inside a collapsed
+  `<details>`, an inactive tab panel, or a non-current wizard step. Probe the
+  element that carries the attribute with `isElementCssVisible` in
+  `afterEveryRender`'s `earlyRead` phase. See `docs/CUSTOM_WRAPPERS.md`
+  call-out 5 under "Composing ARIA primitives".
 - `createAriaDescribedByBridge` coordinates the chain with a third-party host
   that owns `aria-describedby`; ordinary custom wrappers use
   `createAriaDescribedBySignal` directly.

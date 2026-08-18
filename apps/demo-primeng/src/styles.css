@@ -161,6 +161,26 @@ main.shell {
   gap: 1.2rem;
 }
 
+/* Collapsible section around the role select and newsletter checkbox. Its
+   only job in this demo is to take those controls' layout boxes away on
+   demand, so each surface's visibility probe has something real to react
+   to. */
+.profile-form__collapsible {
+  padding: 1rem 1.1rem;
+  border: 1px solid var(--demo-border);
+  border-radius: 1rem;
+  background: rgb(255 255 255 / 0.55);
+}
+
+.profile-form__collapsible-summary {
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.profile-form__collapsible-body {
+  margin-top: 1.2rem;
+}
+
 .profile-form__status {
   padding: 1rem 1.1rem;
   border: 1px solid var(--demo-border);

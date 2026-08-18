@@ -184,6 +184,23 @@ body {
   width: 100%;
 }
 
+/* Collapsible section around the Topic field. Its only job in this demo is
+   to take a bound control's layout box away on demand, so the wrapper's
+   visibility probe has something real to react to. */
+.demo-form__collapsible {
+  border: 1px solid rgba(15, 41, 74, 0.14);
+  border-radius: 20px;
+  padding: 0.85rem 1rem 1rem;
+  background: rgba(255, 255, 255, 0.55);
+}
+
+.demo-form__collapsible-summary {
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.95rem;
+  margin-bottom: 0.75rem;
+}
+
 .demo-form__field {
   --mat-form-field-container-height: 54px;
   --mat-form-field-container-vertical-padding: 13px;

@@ -5,6 +5,7 @@ import {
   contentChildren,
   effect,
   inject,
+  Injector,
   input,
   isDevMode,
   type Type,
@@ -32,6 +33,7 @@ import {
   createFieldNameResolver,
   createHintIdsSignal,
 } from '@ngx-signal-forms/toolkit/headless';
+import { createControlVisibilitySignal } from './control-visibility';
 import { NgxSpartanFormFieldError } from './spartan-form-field-error';
 
 /**
@@ -384,6 +386,7 @@ export class NgxSpartanFormField<TValue = unknown> {
    */
   readonly #config = inject(NGX_SIGNAL_FORMS_CONFIG);
   readonly #formContext = injectFormContext();
+  readonly #injector = inject(Injector);
 
   protected readonly effectiveStrategy = computed(() =>
     resolveErrorDisplayStrategy(
@@ -438,9 +441,22 @@ export class NgxSpartanFormField<TValue = unknown> {
   // verify the toolkit's identity model is wired even though Brain owns
   // the host binding on the bound control (and the bridge feeds it).
 
+  /**
+   * Layout probe for the bound helm control — the element Brain host-binds
+   * `aria-invalid` onto, not the wrapper host. Threading it into
+   * `createAriaInvalidSignal` keeps `ariaInvalidValue` (and the
+   * `data-spartan-invalid` mirror) from freezing while the control sits in
+   * a collapsed container.
+   */
+  readonly #isControlVisible = createControlVisibilitySignal(
+    () => this.#boundControlElement(),
+    this.#injector,
+  );
+
   readonly ariaInvalidValue = createAriaInvalidSignal(
     this.#fieldStateSignal,
     this.#showByStrategy,
+    this.#isControlVisible,
   );
 
   readonly ariaRequiredValue = createAriaRequiredSignal(this.#fieldStateSignal);

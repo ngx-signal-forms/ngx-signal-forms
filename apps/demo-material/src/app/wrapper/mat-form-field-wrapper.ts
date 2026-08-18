@@ -4,6 +4,7 @@ import {
   Directive,
   effect,
   inject,
+  Injector,
   input,
   isDevMode,
   signal,
@@ -37,6 +38,7 @@ import {
   NgxMatSlideToggleControl,
   NgxMatTextControl,
 } from './control-directives';
+import { createControlVisibilitySignal } from './control-visibility';
 import { NgxMatFeedback } from './feedback-directive';
 import { NgxMatFeedbackOutlet } from './material-error-renderer';
 import { NgxMatErrorSlot, NgxMatHintSlot } from './slot-directives';
@@ -152,6 +154,7 @@ export class MatFormFieldWrapper<TValue = unknown> {
 
   readonly #config = inject(NGX_SIGNAL_FORMS_CONFIG);
   readonly #formContext = injectFormContext();
+  readonly #injector = inject(Injector);
 
   readonly effectiveStrategy = computed(() =>
     resolveErrorDisplayStrategy(
@@ -301,9 +304,22 @@ export class MatFormFieldWrapper<TValue = unknown> {
   // can verify the toolkit's identity model is wired even when Material
   // owns the actual DOM ARIA writes.
 
+  /**
+   * Layout probe for the element Material writes `aria-invalid` onto — the
+   * bound control, not the `<mat-form-field>` host. Threading it into
+   * `createAriaInvalidSignal` is what keeps `ariaInvalidValue` (and the
+   * `data-ngx-mat-invalid` mirror) from going stale while the control sits
+   * inside a collapsed container.
+   */
+  readonly #isControlVisible = createControlVisibilitySignal(
+    () => this.#boundControlElement(),
+    this.#injector,
+  );
+
   readonly ariaInvalidValue = createAriaInvalidSignal(
     this.#fieldStateSignal,
     this.#showByStrategy,
+    this.#isControlVisible,
   );
 
   readonly ariaRequiredValue = createAriaRequiredSignal(this.#fieldStateSignal);

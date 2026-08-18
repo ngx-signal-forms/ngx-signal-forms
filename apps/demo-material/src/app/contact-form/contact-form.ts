@@ -98,6 +98,20 @@ export class ContactFormComponent {
   protected readonly submitted = signal(false);
 
   /**
+   * Drives the `<details>` around the Topic field. The `<details>` binds
+   * `[open]` to this signal and pushes browser-initiated toggles back into
+   * it via `(toggle)` — a bare `<details>` would open and close without ever
+   * running change detection, so `MatFormFieldWrapper`'s layout probe would
+   * never re-read and `data-ngx-mat-invalid` would go stale on the hidden
+   * `<mat-select>`.
+   */
+  protected readonly topicExpanded = signal(true);
+
+  protected onTopicToggle(event: Event): void {
+    this.topicExpanded.set((event.target as HTMLDetailsElement).open);
+  }
+
+  /**
    * Drives the consent checkbox's `[aria-describedby]` in the template —
    * `<mat-checkbox>` doesn't project into `<mat-form-field>`, so nothing
    * else associates its rendered `*ngxMatFeedback` block with the control.

@@ -236,6 +236,14 @@ test.describe('demo-primeng — profile form', () => {
 
     await test.step('Tab onto the combobox and open it with the keyboard', async () => {
       await page.locator('#profile-email').focus();
+
+      // The role select lives inside a collapsible `<details>` (the #406
+      // layout-box case), so its `<summary>` is the intervening tab stop.
+      await page.keyboard.press('Tab');
+      await expect(
+        page.getByTestId('preferences-details').locator('> summary'),
+      ).toBeFocused();
+
       await page.keyboard.press('Tab');
       await expect(roleCombobox).toBeFocused();
 

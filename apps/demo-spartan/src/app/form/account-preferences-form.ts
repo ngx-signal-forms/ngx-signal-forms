@@ -125,23 +125,46 @@ const accountSchema = schema<AccountPreferences>((path) => {
         falling through to the hlm-select host id, which is invisible to
         the label and easy to forget when refactoring).
       -->
-      <spartan-form-field [ngxSpartanFormField]="form.plan" fieldName="plan">
-        <label hlmLabel for="plan-trigger">Plan</label>
-        <hlm-select
-          id="plan"
-          ngxSignalFormControl="input-like"
-          [formField]="form.plan"
-        >
-          <hlm-select-trigger buttonId="plan-trigger" class="w-full">
-            <hlm-select-value placeholder="Select a plan" />
-          </hlm-select-trigger>
-          <hlm-select-content *hlmSelectPortal>
-            <hlm-select-item value="starter">Starter</hlm-select-item>
-            <hlm-select-item value="pro">Pro</hlm-select-item>
-            <hlm-select-item value="enterprise">Enterprise</hlm-select-item>
-          </hlm-select-content>
-        </hlm-select>
-      </spartan-form-field>
+      <!--
+        The plan field lives inside a collapsible container so the demo can
+        take a bound control's layout box away on demand.
+
+        \`[open]\` + \`(toggle)\` keeps \`planExpanded\` authoritative: a bare
+        \`<details>\` toggles in the browser without going through Angular, so
+        nothing would re-run change detection and the wrapper's layout probe
+        would never re-read. With the binding in place, collapsing the section
+        makes \`NgxSpartanFormField\`'s probe report \`false\` in the next
+        \`earlyRead\`, and \`data-spartan-invalid\` drops off the wrapper
+        instead of freezing at its last value.
+      -->
+      <details
+        class="mt-5 rounded-md border p-4"
+        [open]="planExpanded()"
+        (toggle)="onPlanToggle($event)"
+        data-testid="plan-details"
+      >
+        <summary class="cursor-pointer text-sm font-medium">
+          Plan selection
+        </summary>
+
+        <spartan-form-field [ngxSpartanFormField]="form.plan" fieldName="plan">
+          <label hlmLabel for="plan-trigger">Plan</label>
+          <hlm-select
+            id="plan"
+            ngxSignalFormControl="input-like"
+            [formField]="form.plan"
+          >
+            <hlm-select-trigger buttonId="plan-trigger" class="w-full">
+              <hlm-select-value placeholder="Select a plan" />
+            </hlm-select-trigger>
+            <hlm-select-content *hlmSelectPortal>
+              <hlm-select-item value="starter">Starter</hlm-select-item>
+              <hlm-select-item value="pro">Pro</hlm-select-item>
+              <hlm-select-item value="enterprise">Enterprise</hlm-select-item>
+            </hlm-select-content>
+          </hlm-select>
+        </spartan-form-field>
+      </details>
 
       <!--
         Checkbox. hlm-checkbox's host is display:contents (invisible to
@@ -217,4 +240,17 @@ export class AccountPreferencesForm {
   );
 
   protected readonly lastSubmission = signal<string | null>(null);
+
+  /**
+   * Drives the `<details>` around the plan select. Bound both ways
+   * (`[open]` out, `(toggle)` back in) so a browser-initiated toggle still
+   * runs change detection — otherwise `NgxSpartanFormField`'s layout probe
+   * would never re-read and `aria-invalid` would go stale on the hidden
+   * control.
+   */
+  protected readonly planExpanded = signal(true);
+
+  protected onPlanToggle(event: Event): void {
+    this.planExpanded.set((event.target as HTMLDetailsElement).open);
+  }
 }
