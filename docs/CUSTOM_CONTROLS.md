@@ -499,6 +499,43 @@ on the wrapper or an `id` on the bound control:
 </ngx-form-field-wrapper>
 ```
 
+### If the wrapper is your own
+
+Both options above are inputs on `ngx-form-field-wrapper`. A wrapper **you**
+wrote has neither: auto-ARIA on the projected control resolves the name from
+the control's `id` and never asks your component, so a widget that generates
+its own inner `id` produces `pn_id_42-error` while your wrapper renders
+`country-error`. Nothing errors — `aria-describedby` simply points at an
+element that does not exist.
+
+Declare the name on your wrapper's host instead:
+
+```typescript
+import { NgxFieldIdentityProvider } from '@ngx-signal-forms/toolkit';
+
+@Component({
+  selector: 'my-field',
+  hostDirectives: [
+    { directive: NgxFieldIdentityProvider, inputs: ['fieldName'] },
+  ],
+})
+export class MyField {}
+```
+
+The directive provides `NgxFieldIdentity` on that host element, which is the
+element injector your projected control resolves through. It is selectorless
+on purpose — host placement is load-bearing, and a selector would invite
+putting it somewhere that silently does nothing.
+
+It publishes the **field name only**. Hint ids keep flowing through
+`NGX_SIGNAL_FORM_HINT_REGISTRY` and display timing through
+`NGX_SIGNAL_FORM_FIELD_VISIBILITY_REGISTRY`, so adopting it for the name does
+not disturb the rest of your wrapper.
+
+Full contract in [`CUSTOM_WRAPPERS.md`](./CUSTOM_WRAPPERS.md); runnable
+version in the
+[`field-identity` demo](https://ngx-signal-forms.github.io/ngx-signal-forms/form-field-wrapper/field-identity/).
+
 ## Custom Control Checklist
 
 When building custom controls that work with the toolkit:
