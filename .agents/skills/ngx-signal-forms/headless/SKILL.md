@@ -176,6 +176,31 @@ export class DsFormFieldComponent {
 }
 ```
 
+### Publishing the field name from a design-system host
+
+The pattern above projects the bound control via `<ng-content />`, so auto-ARIA
+runs on the **consumer's** element and resolves the field name from that
+element's `id`. When the control's `id` is not the field's name — a widget that
+generates its own inner `id`, or a `role="group"` cluster — declare the name on
+your host so every generated id agrees:
+
+```typescript
+import { NgxFieldIdentityProvider } from '@ngx-signal-forms/toolkit'; // root, not /headless
+
+hostDirectives: [
+  {
+    directive: NgxHeadlessErrorState,
+    inputs: ['field', 'fieldName', 'strategy'],
+  },
+  { directive: NgxFieldIdentityProvider, inputs: ['fieldName'] },
+];
+```
+
+One `fieldName` attribute feeds both. The provider publishes the **name**
+channel only — hints and display timing keep resolving through their
+registries. See `references/pitfalls.md` for the `[formField]` naming trap that
+comes with this, and `docs/CUSTOM_WRAPPERS.md` for the full contract.
+
 ## Field-Name Directive
 
 `NgxHeadlessFieldName` exposes the resolved field name plus the canonical

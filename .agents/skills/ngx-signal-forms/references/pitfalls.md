@@ -348,6 +348,42 @@ When the actual bound control is nested inside a custom component or its `id` is
 resolved dynamically, pass `fieldName` explicitly on the wrapper to keep error
 IDs and described-by wiring deterministic.
 
+## Your Own Wrapper — Publish the Name, and Call the Input `field`
+
+`fieldName` is an input on `ngx-form-field-wrapper`. A wrapper **you** wrote has
+no such input: auto-ARIA on the projected control resolves the name from the
+control's `id` and never asks your component. A widget that mints its own inner
+`id` then gets `pn_id_42-error` while your wrapper renders `country-error`, and
+`aria-describedby` points at nothing. Nothing throws.
+
+```typescript
+// Correct — publish the field-NAME channel from your wrapper's host
+@Component({
+  selector: 'my-field',
+  hostDirectives: [
+    { directive: NgxFieldIdentityProvider, inputs: ['fieldName'] },
+  ],
+})
+export class MyField {
+  // Name it `field`, not `formField`.
+  readonly field = input.required<FieldTree<unknown>>();
+}
+```
+
+Two rules travel with this:
+
+- **Import `NgxFieldIdentityProvider` from the package root**, not `/headless`.
+- **Call the field input `field`.** `NgxSignalFormAutoAria` and Angular's own
+  `FormField` both select on `[formField]` _including on elements that are not
+  controls_, so `<my-field [formField]="...">` pulls both directives onto your
+  wrapper host and auto-ARIA fails to inject `FORM_FIELD`:
+  `NG0201: No provider found for InjectionToken FORM_FIELD`. Reusing the name
+  works only if every consumer template also has `FormField` in scope — which is
+  why `ngx-form-field-wrapper` gets away with it.
+
+The provider publishes the name channel only; hints and display timing keep
+resolving through their registries. Full contract: `docs/CUSTOM_WRAPPERS.md`.
+
 ## Error Strategy `'on-submit'` Without `[formRoot]`
 
 ```html
