@@ -385,15 +385,19 @@ class NgxFieldIdentityProvider {
   // string    -> the resolved name (trimmed); all generated ids derive from it
   // null      -> bound but unresolvable yet; ARIA wiring is skipped, and it does
   //              NOT fall back to the control's `id`
-  // unbound   -> publishes nothing, for a component that drives the injected
-  //              NgxFieldIdentity itself. Providing an identity still claims the
-  //              naming channel, so a provider nobody drives logs a dev warning.
+  // unbound   -> publishes nothing, leaving the name to the composing component.
+  //              Providing an identity still claims the naming channel, so a
+  //              provider nobody drives logs a dev warning.
 }
 // Usage:
 //   hostDirectives: [{ directive: NgxFieldIdentityProvider, inputs: ['fieldName'] }]
 // It publishes the field-NAME channel only. Hints and display timing keep
 // resolving through the two registries below — identity shadows them per
 // channel, not by presence (ADR-0010).
+// NgxFormFieldWrapper composes this same directive rather than providing
+// NgxFieldIdentity itself, so the built-in wrapper runs on the public seam.
+// One `fieldName` attribute feeds both a component's own input and its
+// exposed host-directive input, so composing it costs consumers nothing.
 
 // Third-party wrapper hint-registry contract (link projected hints into
 // aria-describedby without auto-ARIA querying the DOM). See docs/CUSTOM_WRAPPERS.md.

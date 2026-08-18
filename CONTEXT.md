@@ -116,9 +116,13 @@ ngx-signal-forms — an Angular toolkit for working with Signal Forms.
   through — instead registers its already-rendered
   `errorContainerVisible()`/`warningContainerVisible()` booleans into
   `NGX_SIGNAL_FORM_FIELD_VISIBILITY_REGISTRY`, keyed by field name and
-  provided per-form by `NgxSignalForm`. Auto-aria prefers `NgxFieldIdentity`
-  when present and falls back to the registry; without either, it sees only
-  the ambient form context. Any new surface that gates a message region must
+  provided per-form by `NgxSignalForm`. Auto-aria resolves these **per
+  channel**, on the published value: a strategy the identity has actually
+  published wins, otherwise the registry entry does, otherwise it sees only
+  the ambient form context. It never branches on whether `NgxFieldIdentity`
+  is injectable — an identity that owns only the field name must leave both
+  strategy channels to the registry, and the error and warning channels fall
+  back independently of one another (ADR-0010). Any new surface that gates a message region must
   feed its decision through one of these two channels, or it will produce a
   dangling id (axe `aria-valid-attr-value`) or an unreferenced one
   (WCAG 1.3.1).
@@ -127,6 +131,18 @@ ngx-signal-forms — an Angular toolkit for working with Signal Forms.
   _different_ contracts — direct `errors()` vs aggregated `errorSummary()`
   reads, the deliberate `focus-first-invalid` policy asymmetry — merging is the
   bug, and those are marked in place as intentional.
+
+- **A field's name is owned by whoever provides its identity.** Auto-aria
+  derives a field name from the bound control's `id` unless an ancestor
+  provides an `NgxFieldIdentity`, in which case that service owns the name
+  outright — a `null` there means "not resolvable yet" and skips ARIA wiring,
+  it does not revert to the `id`. Wrappers get an identity by composing
+  `NgxFieldIdentityProvider` as a host directive, the built-in
+  `NgxFormFieldWrapper` included, so the public seam and the internal one are
+  the same seam. The provider publishes the name channel only; the wrapper
+  additionally drives the control element, visibility, hints, and resolved
+  strategies in-package, because none of those can travel through an input.
+  See ADR-0011.
 
 - **`packages/toolkit/core` is not a public entry point.** It is a
   build-time-only secondary entry that sibling entries compile against;

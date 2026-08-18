@@ -481,16 +481,23 @@ Building blocks for custom wrappers and headless UIs that want to join the
 | `resolveFieldNameFromCandidates(...candidates)` | Pick the first non-blank field name from a precedence chain (explicit → host id → context)  |
 | `generateErrorId(fieldName, kind?)`             | Derive `{fieldName}-error` (container) or `{fieldName}-error-{kind}` (per-error) element id |
 | `generateWarningId(fieldName)`                  | Derive the `{fieldName}-warning` element id used for `aria-describedby`                     |
-| `isElementCssVisible(element)`                  | CSS-visibility test (`Element.checkVisibility()` with `offsetParent` fallback)              |
+| `isElementCssVisible(element)`                  | CSS-visibility test via `Element.checkVisibility()`; reports `true` on runtimes without it  |
 
 ### Field identity service
 
 `NgxFieldIdentity` is the element-scoped service that consolidates the three
 load-bearing accessibility primitives every assistive/headless surface depends
 on: **field-name resolution**, **control visibility**, and **stable error /
-warning ID generation**. The canonical `ngx-form-field-wrapper` provides and
-drives it; custom controls and third-party wrappers can provide it themselves
-to get identical behavior without re-deriving the rules.
+warning ID generation**. Both the canonical `ngx-form-field-wrapper` and any
+third-party wrapper get one the same way — by composing
+[`NgxFieldIdentityProvider`](../../docs/CUSTOM_WRAPPERS.md) as a host
+directive.
+
+Its channels publish **independently**. Merely providing an identity claims
+nothing but the field name: hint ids and the error / warning display
+strategies keep resolving through `NGX_SIGNAL_FORM_HINT_REGISTRY` and
+`NGX_SIGNAL_FORM_FIELD_VISIBILITY_REGISTRY` until this service actually
+publishes them (ADR-0010).
 
 | Member                      | Description                                                                                                                 |
 | --------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
@@ -498,7 +505,7 @@ to get identical behavior without re-deriving the rules.
 | `controlId()`               | The bound control element's `id` attribute, or `null`                                                                       |
 | `errorId()`                 | Stable `{fieldName}-error` id, or `null` when no name is resolved                                                           |
 | `warningId()`               | Stable `{fieldName}-warning` id, or `null` when no name is resolved                                                         |
-| `hintIds()`                 | Hint ids contributed by the surrounding registry for this field                                                             |
+| `hintIds()`                 | Hint ids for this field, or `null` when the hint channel was never published (consumers fall back to the hint registry)     |
 | `describedBy()`             | Aggregated `aria-describedby` chain from `hintIds()`, or `null`                                                             |
 | `isControlVisible()`        | Callable signal: no-arg returns the cached, reactive visibility flag                                                        |
 | `isControlVisible(element)` | Same member with an element argument: ad-hoc, non-reactive `isElementCssVisible(element)` probe                             |
@@ -514,9 +521,10 @@ names:
   an **opt-in** middle step. Omit `labelFor` and the two paths emit the same
   name byte-for-byte.
 
-The `set*` writer methods are tagged `@internal`: the surrounding
-`ngx-form-field-wrapper` **drives** the identity, and consumers **read** the
-resolved signals — they do not drive them. A post-build step
+The `set*` writer methods are tagged `@internal`: a wrapper **drives** the
+identity — through `NgxFieldIdentityProvider` for the field name, and directly
+in-package for the rest — and consumers **read** the resolved signals. A
+post-build step
 (`scripts/strip-internal-members.mjs`) removes `@internal`-tagged class
 members from the published `.d.ts`, so the writers do not appear there — this
 is a compile-time barrier, not just a naming convention. (`tsconfig.lib.json`
@@ -524,10 +532,22 @@ does not enable TypeScript's own `stripInternal`: that flag breaks
 ng-packagr's multi-entry-point `.d.ts` bundling for this package, dropping
 unrelated public symbols along with the tagged ones — see #289.)
 
-Building a wrapper of your own? Don't reach for the writers — compose the pure
-ARIA factories (`createAriaDescribedBySignal`, `createAriaInvalidSignal`, …)
-instead. That is the supported seam, and it is what
-[`CUSTOM_WRAPPERS.md`](../../docs/CUSTOM_WRAPPERS.md) documents.
+Building a wrapper of your own? Don't reach for the writers. Compose
+`NgxFieldIdentityProvider` when your field's name is not the bound control's
+`id`, and compose the pure ARIA factories (`createAriaDescribedBySignal`,
+`createAriaInvalidSignal`, …) for the rest. Those are the supported seams, and
+they are what [`CUSTOM_WRAPPERS.md`](../../docs/CUSTOM_WRAPPERS.md)
+documents — the built-in wrapper runs on the same ones.
+
+```typescript
+@Component({
+  selector: 'my-field',
+  hostDirectives: [
+    { directive: NgxFieldIdentityProvider, inputs: ['fieldName'] },
+  ],
+})
+export class MyField {}
+```
 
 #### Custom control example
 
