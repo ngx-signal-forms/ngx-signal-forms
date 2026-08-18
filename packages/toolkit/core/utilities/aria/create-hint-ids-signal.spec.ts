@@ -14,7 +14,7 @@ import { createHintIdsSignal } from './create-hint-ids-signal';
  * matches the production signature without spinning up a TestBed.
  */
 function createStubIdentity(
-  hintIds: Signal<readonly string[]>,
+  hintIds: Signal<readonly string[] | null>,
 ): NgxFieldIdentity {
   return { hintIds } as unknown as NgxFieldIdentity;
 }
@@ -63,6 +63,60 @@ describe('createHintIdsSignal – identity-service path', () => {
     });
 
     expect(result()).toEqual(['from-identity']);
+  });
+
+  it('falls through to the registry when the identity has published no hints', () => {
+    const identityHintIds = signal<readonly string[] | null>(null);
+    const registryHints = signal<readonly NgxSignalFormHintDescriptor[]>([
+      { id: 'from-registry', fieldName: 'email' },
+    ]);
+
+    const result = createHintIdsSignal({
+      identity: createStubIdentity(identityHintIds),
+      registry: createStubRegistry(registryHints),
+      fieldName: () => 'email',
+    });
+
+    expect(result()).toEqual(['from-registry']);
+  });
+
+  it('treats a published-but-empty hint list as authoritative, not as a fallback trigger', () => {
+    const identityHintIds = signal<readonly string[] | null>([]);
+    const registryHints = signal<readonly NgxSignalFormHintDescriptor[]>([
+      { id: 'from-registry', fieldName: 'email' },
+    ]);
+
+    const result = createHintIdsSignal({
+      identity: createStubIdentity(identityHintIds),
+      registry: createStubRegistry(registryHints),
+      fieldName: () => 'email',
+    });
+
+    expect(result()).toEqual([]);
+  });
+
+  it('stops falling back the moment the identity publishes its channel', () => {
+    const identityHintIds = signal<readonly string[] | null>(null);
+    const registryHints = signal<readonly NgxSignalFormHintDescriptor[]>([
+      { id: 'from-registry', fieldName: null },
+    ]);
+
+    const result = createHintIdsSignal({
+      identity: createStubIdentity(identityHintIds),
+      registry: createStubRegistry(registryHints),
+    });
+    expect(result()).toEqual(['from-registry']);
+
+    identityHintIds.set(['from-identity']);
+    expect(result()).toEqual(['from-identity']);
+  });
+
+  it('returns an empty list when an unpublished identity has no registry to fall back to', () => {
+    const result = createHintIdsSignal({
+      identity: createStubIdentity(signal<readonly string[] | null>(null)),
+    });
+
+    expect(result()).toEqual([]);
   });
 });
 

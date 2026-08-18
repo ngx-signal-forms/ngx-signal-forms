@@ -32,7 +32,10 @@ import { createErrorVisibility } from '../utilities/create-error-visibility';
 import { createAriaDescribedBySignal } from '../utilities/aria/create-aria-described-by-signal';
 import { createHintIdsSignal } from '../utilities/aria/create-hint-ids-signal';
 import { isBlockingError, isWarningError } from '../utilities/warning-error';
-import { NgxFieldIdentity } from '../services/field-identity';
+import {
+  isElementCssVisible,
+  NgxFieldIdentity,
+} from '../services/field-identity';
 
 interface AutoAriaDomSnapshot {
   readonly fieldName: string | null;
@@ -40,6 +43,15 @@ interface AutoAriaDomSnapshot {
   readonly ariaInvalid: string | null;
   readonly ariaRequired: string | null;
   readonly role: string | null;
+  /**
+   * Whether *this* control had a CSS layout box as of the last read phase.
+   *
+   * Probed from the directive's own host element rather than read off a
+   * wrapper-published flag, so it works for any wrapper (or none) and so each
+   * control in a multi-control cluster tracks its own layout state instead of
+   * inheriting the cluster's first control's.
+   */
+  readonly isControlVisible: boolean;
 }
 
 const INITIAL_DOM_SNAPSHOT: AutoAriaDomSnapshot = {
@@ -48,6 +60,9 @@ const INITIAL_DOM_SNAPSHOT: AutoAriaDomSnapshot = {
   ariaInvalid: null,
   ariaRequired: null,
   role: null,
+  // Assume laid out until a real read phase says otherwise, so ARIA is never
+  // stripped on the strength of a pre-layout probe.
+  isControlVisible: true,
 };
 
 /**
@@ -186,17 +201,21 @@ export class NgxSignalFormAutoAria {
   #previousTickWasManualAriaMode: boolean | null = null;
 
   /**
-   * The wrapper-less fallback channel's entry for the currently bound
-   * control's field name, or `undefined` when there is none to fall back
-   * to. Deliberately skipped whenever {@link #fieldIdentity} is present —
-   * the wrapper fast-path already accounts for the wrapper's own
-   * field-level overrides, and preferring it keeps existing wrapped-field
-   * behavior unchanged. Only consulted for the wrapper-less case, where a
-   * sibling `<ngx-form-field-error>` has no other way to reach auto-aria.
+   * The fallback channel's entry for the currently bound control's field
+   * name, or `undefined` when there is none to fall back to.
+   *
+   * Note what this deliberately does *not* check: whether
+   * {@link #fieldIdentity} exists. An identity that is merely injectable
+   * claims nothing. Only a *published* strategy does, and the two call sites
+   * below test for that per channel.
+   *
+   * Gating on service presence instead would break any partially-driven
+   * identity — a third-party wrapper that owns only the field name, say. It
+   * would switch both strategy channels off the registry and onto the ambient
+   * form context, dropping the field-level overrides a standalone
+   * `<ngx-form-field-error>` had published. See ADR-0010.
    */
   readonly #registryVisibilityEntry = computed(() => {
-    if (this.#fieldIdentity) return undefined;
-
     const fieldName = this.#domSnapshot().fieldName;
     if (!fieldName) return undefined;
 
@@ -213,18 +232,29 @@ export class NgxSignalFormAutoAria {
    * `[ngxSignalForm]` context (strategy + submittedStatus) via DI, matching
    * the same cascade as the form-field wrapper and headless error-state.
    *
-   * When an owning `NgxFormFieldWrapper` has published its own resolved
-   * strategy, that wins: it already accounts for the wrapper's field-level
-   * `strategy` input, which the ambient form context cannot see. Absent a
-   * wrapper, a registry entry — published by a standalone
-   * `<ngx-form-field-error>` — wins instead: its `errorContainerVisible` is
-   * the exact boolean already gating that component's own live region, so
-   * reusing it here can't drift from what is actually rendered.
+   * When an owning wrapper has **published an error strategy** on the
+   * identity, that wins: it already accounts for the wrapper's field-level
+   * `strategy` input, which the ambient form context cannot see. Otherwise a
+   * registry entry — published by a standalone `<ngx-form-field-error>` —
+   * wins: its `errorContainerVisible` is the exact boolean already gating
+   * that component's own live region, so reusing it here can't drift from
+   * what is actually rendered.
+   *
+   * The precedence test is on the published *value*, not on whether an
+   * identity happens to be injectable — see `#registryVisibilityEntry`.
    */
   readonly #visibilityByStrategy = computed(() => {
-    const registryEntry = this.#registryVisibilityEntry();
-    if (registryEntry) return registryEntry.errorContainerVisible();
+    const publishedErrorStrategy =
+      this.#fieldIdentity?.resolvedErrorStrategy() ?? null;
 
+    if (publishedErrorStrategy === null) {
+      const registryEntry = this.#registryVisibilityEntry();
+      if (registryEntry) return registryEntry.errorContainerVisible();
+    }
+
+    // `#ownVisibilityByStrategy` already reads the published strategy and
+    // falls back to the ambient form context when it is null, so it covers
+    // both remaining branches.
     return this.#ownVisibilityByStrategy();
   });
 
@@ -254,14 +284,25 @@ export class NgxSignalFormAutoAria {
    * visible warning that `aria-describedby` never references, leaving the
    * advisory text unavailable to assistive technology (WCAG 1.3.1).
    *
-   * Same registry fallback as {@link #visibilityByStrategy}: absent a
-   * wrapper, a standalone error component's published
+   * Same per-channel fallback as {@link #visibilityByStrategy}, resolved
+   * **independently of the error channel**: ADR-0007 establishes the two
+   * cascades as separate, so an identity that publishes an error strategy
+   * but not a warning strategy must still let the registry own warnings.
+   * Absent a published warning strategy, a standalone error component's
    * `warningContainerVisible` wins over recomputing the cascade from the
    * ambient form context.
    */
   readonly #warningVisibilityByStrategy = computed(() => {
-    const registryEntry = this.#registryVisibilityEntry();
-    if (registryEntry) return registryEntry.warningContainerVisible();
+    // A wrapper's published strategy already resolved its field-level
+    // `warningStrategy` input, so it takes precedence over both the registry
+    // and the ambient form context.
+    const publishedWarningStrategy =
+      this.#fieldIdentity?.resolvedWarningStrategy() ?? null;
+
+    if (publishedWarningStrategy === null) {
+      const registryEntry = this.#registryVisibilityEntry();
+      if (registryEntry) return registryEntry.warningContainerVisible();
+    }
 
     const fieldState = this.#resolveFieldState();
     if (!fieldState) return false;
@@ -269,10 +310,7 @@ export class NgxSignalFormAutoAria {
     return shouldShowWarnings(
       fieldState.errors().some(isWarningError),
       fieldState.touched(),
-      // A wrapper's published strategy already resolved its field-level
-      // `warningStrategy` input, so it takes precedence over the ambient
-      // form context.
-      this.#fieldIdentity?.resolvedWarningStrategy() ??
+      publishedWarningStrategy ??
         resolveWarningStrategyFromContext(
           undefined,
           this.#formContext,
@@ -314,10 +352,28 @@ export class NgxSignalFormAutoAria {
     return this.#shouldShowBy('warning');
   });
 
+  /**
+   * Whether this control is currently laid out, sourced from the directive's
+   * own read phase.
+   *
+   * Deliberately *not* the owning wrapper's published
+   * `NgxFieldIdentity.isControlVisible`. Reading that flag made the
+   * `aria-invalid` staleness fix conditional on there being a built-in
+   * wrapper: a custom wrapper inside a collapsed `<details>`, an inactive
+   * tab, or a non-current wizard step kept a stale `aria-invalid` on a hidden
+   * control, and the only escape was `NGX_SIGNAL_FORM_ARIA_MODE: 'manual'` —
+   * forfeiting all of auto-aria to fix one attribute. It is also more correct
+   * for a multi-control cluster, where the wrapper publishes one control's
+   * visibility for all of them.
+   */
+  readonly #isControlVisible = computed(
+    () => this.#domSnapshot().isControlVisible,
+  );
+
   readonly #factoryAriaInvalid = createAriaInvalidSignal(
     this.#fieldStateSignal,
     this.#visibilityByStrategy,
-    this.#fieldIdentity?.isControlVisible,
+    this.#isControlVisible,
   );
 
   /**
@@ -494,7 +550,13 @@ export class NgxSignalFormAutoAria {
     return preserved.length > 0 ? preserved.join(' ') : null;
   }
 
-  #readDomSnapshot(): AutoAriaDomSnapshot {
+  /**
+   * @param isControlVisible The layout probe's result. Passed in rather than
+   *   taken here so the constructor's pre-layout seed can assume `true`,
+   *   while the `earlyRead` phase — the only point at which a layout read is
+   *   both meaningful and cheap — supplies the real value.
+   */
+  #readDomSnapshot(isControlVisible: boolean): AutoAriaDomSnapshot {
     // When the identity service is present (wrapper context), prefer its
     // field name over the element's id attribute. This ensures auto-aria and
     // the wrapper always agree on which name drives ID generation.
@@ -514,6 +576,7 @@ export class NgxSignalFormAutoAria {
       // DOM by the time `afterEveryRender` runs, so this reflects the
       // current render's role, not a stale one.
       role: this.#element.nativeElement.getAttribute('role'),
+      isControlVisible,
     };
   }
 
@@ -530,19 +593,25 @@ export class NgxSignalFormAutoAria {
   }
 
   constructor() {
-    this.#domSnapshot.set(this.#readDomSnapshot());
-
-    // Visibility tracking lives entirely in `NgxFieldIdentity` — auto-aria
-    // reads `isControlVisible()` directly in the `ariaInvalid` computed,
-    // so no afterEveryRender wiring is needed here.
+    // Seed with `isControlVisible: true`. The element exists by now but has
+    // not been through layout, and `checkVisibility()` on a not-yet-laid-out
+    // element reports `false` — probing here would strip `aria-invalid` on
+    // the first tick and put it back on the next.
+    this.#domSnapshot.set(this.#readDomSnapshot(true));
 
     // Single afterEveryRender with proper phased callbacks:
-    // - earlyRead: read DOM attributes before any writes (prevents layout thrashing)
+    // - earlyRead: read DOM attributes and probe layout before any writes
+    //   (prevents layout thrashing)
     // - write: update the snapshot signal and write managed ARIA attributes to the DOM
     afterEveryRender(
       {
         earlyRead: () => {
-          return this.#readDomSnapshot();
+          // The layout probe belongs here, not in an `effect()`. Effects
+          // flush strictly before render hooks in the same change-detection
+          // cycle, so an effect-based probe would read pre-layout geometry.
+          return this.#readDomSnapshot(
+            isElementCssVisible(this.#element.nativeElement),
+          );
         },
         write: (snapshot) => {
           const current = this.#domSnapshot();
@@ -555,7 +624,8 @@ export class NgxSignalFormAutoAria {
             current.describedBy !== snapshot.describedBy ||
             current.ariaInvalid !== snapshot.ariaInvalid ||
             current.ariaRequired !== snapshot.ariaRequired ||
-            current.role !== snapshot.role
+            current.role !== snapshot.role ||
+            current.isControlVisible !== snapshot.isControlVisible
           ) {
             this.#domSnapshot.set(snapshot);
           }

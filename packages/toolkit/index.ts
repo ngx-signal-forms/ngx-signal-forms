@@ -26,6 +26,7 @@ export {
   NGX_SIGNAL_FORMS_CONFIG,
   NgxControlPresetRegistry,
   NgxFieldIdentity,
+  NgxFieldIdentityProvider,
   NgxSignalFormAutoAria,
   NgxSignalFormControlSemanticsDirective,
   NgxSignalForm,

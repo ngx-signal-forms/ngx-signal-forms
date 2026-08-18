@@ -22,6 +22,7 @@ export * from './services/field-visibility-registry';
 
 // Directives
 export * from './directives/auto-aria';
+export * from './directives/field-identity-provider';
 export * from './directives/control-semantics';
 export {
   NgxSignalForm,

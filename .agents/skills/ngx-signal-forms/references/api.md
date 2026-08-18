@@ -373,6 +373,34 @@ createErrorVisibility(options: CreateErrorVisibilityOptions): ControlVisibilityS
 NgxFieldIdentity        // resolves/tracks a control's field identity
 NgxControlPresetRegistry // resolves control-semantics preset defaults
 
+// Element-scoped field identity for a third-party wrapper. Selectorless —
+// compose it on your wrapper's HOST via hostDirectives, which is what puts
+// NgxFieldIdentity on the element injector your contained controls resolve
+// through. Use it when the field's name is NOT the bound control's `id`
+// (a widget that generates its own inner id; a role="group" cluster).
+// See docs/CUSTOM_WRAPPERS.md and ADR-0011.
+@Directive({ providers: [NgxFieldIdentity] })
+class NgxFieldIdentityProvider {
+  readonly fieldName: InputSignal<string | null | undefined>;
+  // string    -> the resolved name (trimmed); all generated ids derive from it
+  // null      -> bound but unresolvable yet; ARIA wiring is skipped, and it does
+  //              NOT fall back to the control's `id`
+  // unbound   -> publishes nothing, leaving the name to the composing component.
+  //              Providing an identity still claims the naming channel, so a
+  //              provider nobody drives logs a dev warning.
+}
+// Usage:
+//   hostDirectives: [{ directive: NgxFieldIdentityProvider, inputs: ['fieldName'] }]
+// It publishes the field-NAME channel only. Hints and display timing keep
+// resolving through the two registries below — identity shadows them per
+// channel, not by presence (ADR-0010).
+// NgxFormFieldWrapper composes this same directive rather than providing
+// NgxFieldIdentity itself, so the built-in wrapper runs on the public seam.
+// If your component declares its own input under the SAME public name (as the
+// wrapper does), Angular feeds one attribute to both it and the exposed
+// host-directive input — consumers bind `fieldName` once. Declare a different
+// name and you are asking for two bindings.
+
 // Third-party wrapper hint-registry contract (link projected hints into
 // aria-describedby without auto-ARIA querying the DOM). See docs/CUSTOM_WRAPPERS.md.
 const NGX_SIGNAL_FORM_HINT_REGISTRY: InjectionToken<NgxSignalFormHintRegistry>;
@@ -382,8 +410,10 @@ interface NgxSignalFormHintRegistry { readonly hints: Signal<readonly NgxSignalF
 // Wrapper-less standalone error surfaces (e.g. a sibling <ngx-form-field-error>
 // with its own strategy/warningStrategy overrides) publish their resolved
 // visibility here so auto-ARIA's aria-describedby mirrors what is actually
-// rendered. Wrapped fields publish through NgxFieldIdentity instead. See
-// docs/CUSTOM_CONTROLS.md for the worked example.
+// rendered. Auto-ARIA reads this whenever no NgxFieldIdentity has PUBLISHED a
+// strategy for the channel — including when an identity exists but owns only
+// the field name. The error and warning channels fall back independently
+// (ADR-0007, ADR-0010). See docs/CUSTOM_CONTROLS.md for the worked example.
 const NGX_SIGNAL_FORM_FIELD_VISIBILITY_REGISTRY: InjectionToken<NgxSignalFormFieldVisibilityRegistry>;
 interface NgxSignalFormFieldVisibilityDescriptor {
   readonly fieldName: string;

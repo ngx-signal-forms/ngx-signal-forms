@@ -44,6 +44,7 @@ import {
   FORM_FIELD_ORIENTATION_VALUES,
   NGX_SIGNAL_FORM_HINT_REGISTRY,
   NgxFieldIdentity,
+  NgxFieldIdentityProvider,
   devWarnOnce,
   isElementCssVisible,
   type WarnOnceRef,
@@ -181,8 +182,20 @@ import { resolveUnionInput } from './utilities/resolve-union-input';
   selector: 'ngx-form-field-wrapper',
 
   imports: [NgComponentOutlet, NgxFormFieldError],
+  // `NgxFieldIdentity` is provided by the host directive, not listed here.
+  // Composing the public surface rather than duplicating it keeps one
+  // provisioning site, and means the `fieldName` input a consumer already
+  // binds reaches the identity through exactly the seam a third-party wrapper
+  // uses. Angular feeds one `fieldName` attribute to both this component's own
+  // input and the exposed host-directive input, so nothing changes for
+  // consumers. Tier 2 of the name cascade (the bound control's `id`) cannot
+  // travel through an input at all — it is only known in the render write
+  // phase below — so this component still drives the identity itself for that
+  // tier and for every non-name channel. See ADR-0011.
+  hostDirectives: [
+    { directive: NgxFieldIdentityProvider, inputs: ['fieldName'] },
+  ],
   providers: [
-    NgxFieldIdentity,
     {
       provide: NGX_SIGNAL_FORM_FIELD_CONTEXT,
       useFactory: () => {

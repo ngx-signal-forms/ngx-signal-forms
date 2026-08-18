@@ -13,29 +13,58 @@ import type {
 /**
  * Resolve whether an element is visible from a CSS perspective.
  *
- * Prefers `Element.checkVisibility()` (Chromium 105+, Firefox 125+,
- * Safari 17.4+) so `display: none`, `hidden`, and ancestor-collapse all
- * register as "not visible". Falls back to `offsetParent` on older
- * runtimes — sufficient to detect `display: none` in detached subtrees,
- * which is the common collapsed-fieldset case the issue calls out.
+ * Uses `Element.checkVisibility()` — Baseline 2024, and the only API that
+ * answers the question correctly. Its default behavior already reports
+ * `false` for `display: none`, `display: contents`, the `hidden` attribute,
+ * `content-visibility: hidden`, and a collapsed `<details>` (whose
+ * `::details-content` is `content-visibility: hidden`). `visibilityProperty`
+ * adds `visibility: hidden`, which removes an element from the accessibility
+ * tree just as thoroughly. `checkVisibilityCSS` is the historic alias for the
+ * same option, kept for runtimes between Chromium 105 and 121; browsers
+ * ignore dictionary members they do not know, so passing both is safe.
+ *
+ * **`opacityProperty` is deliberately not passed.** An `opacity: 0` control
+ * is still laid out, still focusable, and still interactive — it is the
+ * standard custom-checkbox and custom-radio pattern, where a real input sits
+ * transparently over a styled box. Treating those as hidden would strip
+ * `aria-invalid` from controls a keyboard user is actively operating.
+ *
+ * **When the method is unavailable, this reports `true`.** That is a
+ * deliberate fail-open, not an oversight. The obvious fallback,
+ * `offsetParent !== null`, is wrong in both directions: it is a false
+ * *positive* for a collapsed `<details>` and for `content-visibility: hidden`
+ * — the exact cases this function exists to catch — and a false *negative*
+ * for `position: fixed` elements, for `<body>`/`<html>`, and for every
+ * environment with no layout engine at all (jsdom, and any non-rendering
+ * host). Guessing "hidden" there would strip correct ARIA state from visible
+ * controls, which is strictly worse than leaving state in place on a control
+ * the user cannot see anyway.
  *
  * Exposed publicly (re-exported from `@ngx-signal-forms/toolkit`) so custom
  * controls and third-party wrappers can apply the exact same visibility test
- * the canonical wrapper uses internally, keeping the native-binding and
- * CSS-fallback ARIA paths in lockstep.
+ * the toolkit uses internally, keeping the native-binding and CSS-fallback
+ * ARIA paths in lockstep.
  *
  * @public
  */
 export function isElementCssVisible(el: HTMLElement): boolean {
   const checkVisibility = (
     el as HTMLElement & {
-      checkVisibility?: (options?: { checkVisibilityCSS?: boolean }) => boolean;
+      checkVisibility?: (options?: {
+        checkVisibilityCSS?: boolean;
+        visibilityProperty?: boolean;
+      }) => boolean;
     }
   ).checkVisibility;
-  if (typeof checkVisibility === 'function') {
-    return checkVisibility.call(el, { checkVisibilityCSS: true });
+
+  if (typeof checkVisibility !== 'function') {
+    return true;
   }
-  return el.offsetParent !== null;
+
+  return checkVisibility.call(el, {
+    checkVisibilityCSS: true,
+    visibilityProperty: true,
+  });
 }
 
 /**
@@ -77,7 +106,17 @@ export interface ControlVisibilitySignal extends Signal<boolean> {
  *
  * Provided at the `NgxFormFieldWrapper` level via `providers: [NgxFieldIdentity]`.
  * `NgxSignalFormAutoAria` and hint directives inject it optionally, falling
- * back to their current behavior when absent.
+ * back to their registry-driven behavior when absent.
+ *
+ * **Channels publish independently.** An identity does not have to drive
+ * every channel, and merely *existing* claims nothing. Each of the hint,
+ * error-strategy, and warning-strategy channels advertises "unpublished" as
+ * a distinct `null` state, and consumers fall back to
+ * `NGX_SIGNAL_FORM_HINT_REGISTRY` / `NGX_SIGNAL_FORM_FIELD_VISIBILITY_REGISTRY`
+ * per channel — never by testing whether this service is injectable. This is
+ * what lets a partially-driven identity (one that only owns the field name,
+ * say) coexist with the registries instead of silently disabling them.
+ * See ADR-0010.
  *
  * Element-scoped: `providedIn: null` makes it a contract violation to
  * provide this service at the root injector. Each wrapper gets a fresh
@@ -94,7 +133,7 @@ export class NgxFieldIdentity {
   readonly #fieldName = signal<string | null>(null);
   readonly #controlElement = signal<HTMLElement | null>(null);
   readonly #controlId = signal<string | null>(null);
-  readonly #hintIds = signal<readonly string[]>([]);
+  readonly #hintIds = signal<readonly string[] | null>(null);
   readonly #isControlVisible = signal(true);
   readonly #resolvedErrorStrategy = signal<ResolvedErrorDisplayStrategy | null>(
     null,
@@ -132,6 +171,12 @@ export class NgxFieldIdentity {
   /**
    * Hint IDs contributed by the surrounding hint registry, filtered for
    * this field. Updated by `NgxFormFieldWrapper` when `hintDescriptors` changes.
+   *
+   * `null` means this identity has **never published** the hint channel —
+   * consumers must fall back to `NGX_SIGNAL_FORM_HINT_REGISTRY` exactly as
+   * they would with no identity present at all. An empty array means the
+   * channel *was* published and this field genuinely has no hints, which is
+   * authoritative and suppresses the fallback. See ADR-0010.
    */
   readonly hintIds = this.#hintIds.asReadonly();
 
@@ -168,9 +213,15 @@ export class NgxFieldIdentity {
    * the viewport.
    *
    * Driven by the wrapper, which calls `setControlVisible` from its
-   * `afterEveryRender` write phase using `Element.checkVisibility()`
-   * (with an `offsetParent` fallback). Defaults to `true` so consumers
-   * never strip ARIA attributes pre-visibility-eval.
+   * `afterEveryRender` write phase via {@link isElementCssVisible}. Defaults
+   * to `true` so consumers never strip ARIA attributes pre-visibility-eval.
+   *
+   * Nothing inside the toolkit reads this any more: `NgxSignalFormAutoAria`
+   * probes its own host element instead, so its `aria-invalid` gate works for
+   * every wrapper rather than only the built-in one, and each control in a
+   * cluster tracks its own layout state (ADR-0011). The channel stays because
+   * it is a published read surface — a consumer holding an ancestor identity
+   * can still read the wrapper's view of its bound control.
    *
    * This member is a {@link ControlVisibilitySignal}: a real `Signal<boolean>`
    * (reactive, threadable into `computed()`) that additionally accepts an
@@ -225,7 +276,7 @@ export class NgxFieldIdentity {
    */
   readonly describedBy = computed<string | null>(() => {
     const ids = this.#hintIds();
-    return ids.length > 0 ? ids.join(' ') : null;
+    return ids !== null && ids.length > 0 ? ids.join(' ') : null;
   });
 
   /**
@@ -294,8 +345,8 @@ export class NgxFieldIdentity {
   /**
    * Updates the cached visibility of the bound control. Idempotent.
    *
-   * The wrapper drives this from its `afterEveryRender` write phase using
-   * `Element.checkVisibility()` (or `offsetParent` fallback). Polling the
+   * The wrapper drives this from its `afterEveryRender` write phase via
+   * {@link isElementCssVisible}. Polling the
    * visibility on each render rather than via `IntersectionObserver`
    * avoids both the spurious "scroll = hidden" semantics IO has and the
    * teardown/leak surface of long-lived observers.
@@ -309,16 +360,22 @@ export class NgxFieldIdentity {
   }
 
   /**
-   * Updates the hint IDs visible to this field's identity. Idempotent —
-   * shallow array equality short-circuits the write so consumers don't
-   * re-run their describedBy computeds when the list is structurally
-   * unchanged.
+   * Publishes the hint IDs visible to this field's identity, claiming the
+   * hint channel. Idempotent — shallow array equality short-circuits the
+   * write so consumers don't re-run their describedBy computeds when the
+   * list is structurally unchanged.
+   *
+   * The first call flips {@link hintIds} off its unpublished `null` default,
+   * which is what stops consumers falling back to the hint registry. Passing
+   * `[]` is therefore a meaningful claim ("no hints for this field"), not a
+   * no-op.
    *
    * @internal
    */
   setHintIds(ids: readonly string[]): void {
     const current = this.#hintIds();
     if (
+      current !== null &&
       current.length === ids.length &&
       current.every((id, index) => id === ids[index])
     ) {

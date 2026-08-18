@@ -57,6 +57,8 @@ releases will not include any of the renames below.
 - **BREAKING: `canSubmitWithWarnings()` now reads `errorSummary()`** — child-path blocking errors now correctly disable submission (see [§5c](#5c-cansubmitwithwarnings-now-aggregates-descendant-errors))
 - **BREAKING: `injectFieldControl()` validates the resolved value against the runtime `FieldTree` contract** — an id resolving to a non-`FieldTree` property now throws instead of silently returning an unsound cast (see [§5d](#5d-injectfieldcontrol-validates-the-resolved-fieldtree))
 - **BREAKING: `ErrorSummarySignals` gained `shouldShowWarnings`** — implementers of the interface must add this member (see [§8](#8-headless-audit-fixes-v100))
+- **New: `NgxFieldIdentityProvider`** — host directive letting a third-party wrapper declare a field name that differs from the bound control's `id`; also fixes stale `aria-invalid` on controls with no layout box, for every wrapper (see [§15](#15-new-api-ngxfieldidentityprovider--third-party-wrappers-can-own-field-naming-387))
+- **BREAKING: `NgxFieldIdentity.hintIds` is now `Signal<readonly string[] | null>`** — `null` means the hint channel was never published (fall back to the hint registry), `[]` means published-and-empty; identity now shadows the fallback registries per channel rather than by mere presence (see [§14](#14-ngxfieldidentityhintids-is-nullable--identity-shadows-the-registries-per-channel-387))
 - **BREAKING: `CharacterCountResult` members are now typed `Signal<T>`** (was the looser `ReadSignal<T>` alias); a new `hasLimit` member was added — compile-time tightening only, no runtime change
 - **Bug fix** — error summary no longer drops a second field's error when two different fields share the same kind + message-less default; `NgxHeadlessNotification` no longer leaks the internal `warn:` prefix; `createErrorMessageSignal`'s ID fallback strips Angular's internal `{appId}.form{n}.` prefix; required `Date`/`File`/`Map`-valued leaves no longer vanish from field-optionality summaries
 - **BREAKING: `NgxFormFieldCharacterCount`'s `colorThresholds` input removed** — warning/danger color breakpoints are now CSS-only via `--ngx-form-field-char-count-warning-threshold` / `-danger-threshold` (default `80`/`95`); `[liveAnnounce]` wording stays fixed at those defaults regardless of a CSS override (see [§13](#13-ngxformfieldcharactercount-colorthresholds-removed--thresholds-are-css-only-355))
@@ -1589,3 +1591,135 @@ Restyling the color threshold is a pure presentation change; the
 announcement timing stays exactly where it was.
 
 **Files:** `packages/toolkit/assistive/character-count.ts`.
+
+## 14. `NgxFieldIdentity.hintIds` is nullable — identity shadows the registries per channel (#387)
+
+**Root cause:** `NgxSignalFormAutoAria` and `createHintIdsSignal` both decided
+whether to use an `NgxFieldIdentity` or a fallback registry by asking whether
+the identity service was _injectable_, not whether it had published anything.
+That was indistinguishable from correct while `NgxFormFieldWrapper` was the
+only thing that ever provided one, because it drives every channel on every
+render. It stops being correct as soon as a partially-driven identity exists —
+a wrapper that adopts the identity only to fix its field naming would, by the
+mere act of providing it, switch its own hints and its own field-level
+`strategy`/`warningStrategy` overrides off the registries and onto the ambient
+form context.
+
+Resolution is now **per channel**: a channel belongs to the identity only when
+the identity has published a value for it. See
+[ADR-0010](./decisions/0010-field-identity-shadows-registries-per-channel.md).
+
+**Breaking change:** `NgxFieldIdentity.hintIds` (from the root entry point)
+and the structural type `HintIdsIdentityLike` (from
+`@ngx-signal-forms/toolkit/headless`) widen from `Signal<readonly string[]>`
+to `Signal<readonly string[] | null>`. The two empty-ish states now mean
+different things:
+
+| Value  | Meaning                                                            |
+| ------ | ------------------------------------------------------------------ |
+| `null` | Channel never published — consumers fall back to the hint registry |
+| `[]`   | Published, and this field genuinely has no hints — authoritative   |
+
+```typescript
+// before — `[]` was both "nothing published yet" and "no hints"
+const ids: readonly string[] = identity.hintIds();
+
+// after — decide which of the two you mean
+const ids = identity.hintIds() ?? [];
+```
+
+**Who is affected:** only code that reads `identity.hintIds()` **directly**.
+`createHintIdsSignal` coalesces internally and still returns a non-null
+`Signal<readonly string[]>`, so every wrapper that composes ARIA through the
+published factories — which is the documented path, and all of this repo's
+demo wrappers — needs no change at all.
+
+`NgxFieldIdentity.describedBy` is unchanged (`string | null`); it treats the
+unpublished state as "no IDs". `resolvedErrorStrategy` and
+`resolvedWarningStrategy` needed no type change — they were already `null`
+until published — but consumers must now test that **value** rather than the
+presence of the service. The two strategy channels fall back independently of
+one another, per [ADR-0007](./decisions/0007-warning-display-timing-cascade.md).
+
+**Files:** `packages/toolkit/core/services/field-identity.ts`,
+`packages/toolkit/core/utilities/aria/create-hint-ids-signal.ts`,
+`packages/toolkit/core/directives/auto-aria.ts`.
+
+## 15. New API: `NgxFieldIdentityProvider` — third-party wrappers can own field naming (#387)
+
+**Root cause:** `NgxSignalFormAutoAria` derives a field name from the bound
+control's `id` attribute unless an ancestor provides an `NgxFieldIdentity`,
+and only the built-in wrapper ever did. A custom wrapper therefore could not
+use a field name that differed from the control's DOM `id` — which breaks for
+a third-party widget that generates its own inner input id, and for a
+`role="group"` cluster whose name belongs to the group rather than to any one
+control. The generated `{fieldName}-error` id then disagreed with what the
+wrapper rendered, leaving a dangling `aria-describedby` (axe
+`aria-valid-attr-value`) and error text unreachable by assistive technology.
+
+**New API:** compose `NgxFieldIdentityProvider` onto your wrapper's host with
+`hostDirectives`. It is selectorless on purpose — host placement is
+load-bearing.
+
+```typescript
+import { NgxFieldIdentityProvider } from '@ngx-signal-forms/toolkit';
+
+@Component({
+  selector: 'my-field',
+  hostDirectives: [
+    { directive: NgxFieldIdentityProvider, inputs: ['fieldName'] },
+  ],
+  /* ... */
+})
+export class MyField {}
+```
+
+```html
+<my-field fieldName="emailAddress">
+  <input id="p-inputtext-42" [formField]="form.emailAddress" />
+</my-field>
+<!-- aria-describedby="emailAddress-error", not "p-inputtext-42-error" -->
+```
+
+It publishes the **field-name channel only**. Hints and display timing keep
+resolving through `NGX_SIGNAL_FORM_HINT_REGISTRY` and
+`NGX_SIGNAL_FORM_FIELD_VISIBILITY_REGISTRY`, and composing the directive does
+not disturb them (see [§14](#14-ngxfieldidentityhintids-is-nullable--identity-shadows-the-registries-per-channel-387)).
+The `set*` writers on `NgxFieldIdentity` stay `@internal` and stay stripped
+from the published type definitions.
+
+Binding `null` means "not resolvable yet" and skips ARIA wiring; it does not
+fall back to the control's `id`, because a wrapper that declares its own
+naming has said the `id` is not the name. Leaving the input unbound _and_
+never driving the injected identity logs a dev-mode warning.
+
+**Behavior fix (no API change): `aria-invalid` no longer goes stale on a
+control with no layout box.** The gate that removes `aria-invalid` from a
+hidden control used to read a flag only the built-in wrapper published, so a
+custom wrapper inside a collapsed `<details>`, an inactive tab, or a
+non-current wizard step kept a stale attribute — with `'manual'` ARIA mode as
+the only escape. `NgxSignalFormAutoAria` now probes its own host element, so
+the fix applies to every wrapper. In a multi-control cluster each control now
+tracks its own layout state rather than the cluster's first control's.
+
+**Behavior change on a public function: `isElementCssVisible()`.** On runtimes
+without `Element.checkVisibility()` it now reports `true` instead of guessing
+from `offsetParent`. The old fallback was wrong in both directions — a false
+positive for collapsed `<details>` and `content-visibility: hidden` (the very
+cases it existed for), and a false negative for `position: fixed` elements and
+for any environment with no layout engine. `checkVisibility()` is Baseline
+2024, so the fallback is only reached on genuinely old runtimes, where
+reporting "visible" preserves prior behavior rather than stripping ARIA on a
+guess. If you assert visibility in tests, those assertions need a real
+browser — jsdom implements neither `checkVisibility()` nor layout.
+
+`NgxFormFieldWrapper` composes this same directive rather than providing
+`NgxFieldIdentity` itself, so the built-in wrapper runs on the seam a
+third-party wrapper uses. Nothing changes for its consumers: Angular feeds one
+`fieldName` attribute to both the wrapper's own input and the exposed
+host-directive input. See
+[ADR-0011](./decisions/0011-field-identity-provider-host-directive.md).
+
+**Files:** `packages/toolkit/core/directives/field-identity-provider.ts`,
+`packages/toolkit/core/directives/auto-aria.ts`,
+`packages/toolkit/core/services/field-identity.ts`.
