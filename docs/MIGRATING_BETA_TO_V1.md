@@ -1609,10 +1609,10 @@ Resolution is now **per channel**: a channel belongs to the identity only when
 the identity has published a value for it. See
 [ADR-0010](./decisions/0010-field-identity-shadows-registries-per-channel.md).
 
-**Breaking change:** `NgxFieldIdentity.hintIds` and the structural type
-`HintIdsIdentityLike` (re-exported from both the `core` and `headless`
-barrels) widen from `Signal<readonly string[]>` to
-`Signal<readonly string[] | null>`. The two empty-ish states now mean
+**Breaking change:** `NgxFieldIdentity.hintIds` (from the root entry point)
+and the structural type `HintIdsIdentityLike` (from
+`@ngx-signal-forms/toolkit/headless`) widen from `Signal<readonly string[]>`
+to `Signal<readonly string[] | null>`. The two empty-ish states now mean
 different things:
 
 | Value  | Meaning                                                            |

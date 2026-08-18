@@ -396,8 +396,10 @@ class NgxFieldIdentityProvider {
 // channel, not by presence (ADR-0010).
 // NgxFormFieldWrapper composes this same directive rather than providing
 // NgxFieldIdentity itself, so the built-in wrapper runs on the public seam.
-// One `fieldName` attribute feeds both a component's own input and its
-// exposed host-directive input, so composing it costs consumers nothing.
+// If your component declares its own input under the SAME public name (as the
+// wrapper does), Angular feeds one attribute to both it and the exposed
+// host-directive input — consumers bind `fieldName` once. Declare a different
+// name and you are asking for two bindings.
 
 // Third-party wrapper hint-registry contract (link projected hints into
 // aria-describedby without auto-ARIA querying the DOM). See docs/CUSTOM_WRAPPERS.md.

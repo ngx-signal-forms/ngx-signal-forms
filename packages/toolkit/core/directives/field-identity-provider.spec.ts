@@ -20,6 +20,14 @@ import { NgxFieldIdentityProvider } from './field-identity-provider';
  * wrapper rendered, producing a dangling `aria-describedby` (axe
  * `aria-valid-attr-value`).
  */
+/**
+ * Mirrors the worked example in `docs/CUSTOM_WRAPPERS.md` exactly, so the
+ * documented pattern is compiled and executed rather than only asserted in
+ * prose. Note the component declares its own `fieldName` input under the
+ * *same public name* the host directive exposes: Angular feeds one attribute
+ * to both, so consumers bind it once and the component can still read it for
+ * its own template.
+ */
 @Component({
   selector: 'ngx-test-custom-wrapper',
   hostDirectives: [
@@ -29,15 +37,15 @@ import { NgxFieldIdentityProvider } from './field-identity-provider';
   template: `
     <ng-content />
     <ngx-form-field-error
-      [formField]="errorField()"
-      [fieldName]="errorFieldName()"
+      [formField]="field()"
+      [fieldName]="fieldName()"
       strategy="immediate"
     />
   `,
 })
 class CustomWrapper {
-  readonly errorField = input.required<unknown>();
-  readonly errorFieldName = input.required<string>();
+  readonly field = input.required<unknown>();
+  readonly fieldName = input.required<string>();
 }
 
 @Component({
@@ -47,8 +55,7 @@ class CustomWrapper {
     <form [formRoot]="loginForm" ngxSignalForm>
       <ngx-test-custom-wrapper
         fieldName="emailAddress"
-        [errorField]="loginForm.emailAddress"
-        errorFieldName="emailAddress"
+        [field]="loginForm.emailAddress"
       >
         <label for="p-inputtext-42">Email</label>
         <input id="p-inputtext-42" [formField]="loginForm.emailAddress" />
@@ -106,14 +113,14 @@ describe('NgxFieldIdentityProvider', () => {
       template: `
         <ng-content />
         <ngx-form-field-error
-          [formField]="errorField()"
+          [formField]="field()"
           fieldName="username"
           strategy="immediate"
         />
       `,
     })
     class InertWrapper {
-      readonly errorField = input.required<unknown>();
+      readonly field = input.required<unknown>();
     }
 
     @Component({
@@ -121,7 +128,7 @@ describe('NgxFieldIdentityProvider', () => {
       imports: [InertWrapper, FormField, NgxSignalFormToolkit],
       template: `
         <form [formRoot]="userForm" ngxSignalForm>
-          <ngx-test-inert-wrapper [errorField]="userForm.username">
+          <ngx-test-inert-wrapper [field]="userForm.username">
             <label for="username">Username</label>
             <input id="username" [formField]="userForm.username" />
           </ngx-test-inert-wrapper>

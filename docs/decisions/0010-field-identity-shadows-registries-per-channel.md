@@ -46,7 +46,7 @@ The `set*` writers stay `@internal` and stay stripped from the published `.d.ts`
 
 ## Consequences
 
-- **Breaking, on a public read surface.** `NgxFieldIdentity.hintIds` and the structural type `HintIdsIdentityLike` (re-exported from both the `core` and `headless` barrels) widen to `readonly string[] | null`. Anything reading `identity.hintIds()` directly must handle `null`. `createHintIdsSignal` still _returns_ a non-null `Signal<readonly string[]>` — it coalesces internally — so consumers who go through the factory are unaffected, which is every wrapper in this repo.
+- **Breaking, on a public read surface.** `NgxFieldIdentity.hintIds` widens to `readonly string[] | null`. `NgxFieldIdentity` is published from the root entry point; the structural type `HintIdsIdentityLike` widens with it and is published from `@ngx-signal-forms/toolkit/headless` only — the `core` barrel it also lives in is a build-time-only source barrel that `strip-internal-exports.mjs` removes from the published `exports` map. Anything reading `identity.hintIds()` directly must handle `null`. `createHintIdsSignal` still _returns_ a non-null `Signal<readonly string[]>` — it coalesces internally — so consumers who go through the factory are unaffected, which is every wrapper in this repo.
 - `NgxFieldIdentity.describedBy` treats the unpublished state as "no IDs", so it stays `string | null` and its behavior is unchanged.
 - `setHintIds([])` is now a meaningful claim rather than a no-op: it is how a driver says "I own this channel and there is nothing in it".
 - `NgxFormFieldWrapper` behavior is unchanged. It publishes every channel on every render, so it takes the same branch it always did.

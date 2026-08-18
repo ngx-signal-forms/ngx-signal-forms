@@ -535,21 +535,21 @@ import {
   imports: [NgxFormFieldError],
   template: `
     <ng-content />
-    <ngx-form-field-error [formField]="field()" [fieldName]="name()" />
+    <ngx-form-field-error [formField]="field()" [fieldName]="fieldName()" />
   `,
 })
 export class MyField {
   readonly field = input.required<unknown>();
-  readonly name = input.required<string>();
+  // Declare `fieldName` on your component too, with the same public name the
+  // host directive exposes. Angular feeds one attribute to both, so consumers
+  // bind it once and you can still read it for your own template. This is
+  // exactly what `NgxFormFieldWrapper` does.
+  readonly fieldName = input.required<string>();
 }
 ```
 
 ```html
-<my-field
-  fieldName="emailAddress"
-  [field]="form.emailAddress"
-  name="emailAddress"
->
+<my-field fieldName="emailAddress" [field]="form.emailAddress">
   <label for="p-inputtext-42">Email</label>
   <input id="p-inputtext-42" [formField]="form.emailAddress" />
 </my-field>
