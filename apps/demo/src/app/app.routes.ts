@@ -131,6 +131,14 @@ export const appRoutes: Routes = [
         title: getRouteTitle('/form-field-wrapper/labelless-fields'),
       },
       {
+        path: 'field-identity',
+        loadComponent: () =>
+          import('./04-form-field-wrapper/field-identity/field-identity.page').then(
+            (m) => m.FieldIdentityPage,
+          ),
+        title: getRouteTitle('/form-field-wrapper/field-identity'),
+      },
+      {
         path: 'field-marking',
         loadComponent: () =>
           import('./04-form-field-wrapper/field-marking/field-marking.page').then(

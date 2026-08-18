@@ -22,6 +22,10 @@ This section demonstrates the batteries-included path: one component (`ngx-form-
   - What you'll learn: `showMarkerWhen` modes (`required`/`optional`/`none`) · configurable marker text · legend auto-hide when no relevant field exists.
 - **[labelless-fields](./labelless-fields/README.md)** — where the wrapper's reserved label row can legitimately collapse.
   - What you'll learn: `aria-label`-only accessible names · `role="group"` field grouping · keeping the error region at full wrapper width around narrowed inputs.
+- **[brand-theming](./brand-theming/README.md)** — theming the wrapper through brand tokens, with dark mode and stateful colors.
+  - What you'll learn: which CSS custom properties are the public theming surface · how state colors (invalid, warning, disabled) resolve.
+- **[field-identity](./field-identity/README.md)** — the one page that does not use the built-in wrapper: a third-party-style one that owns its own field name, inside a collapsible container.
+  - What you'll learn: composing `NgxFieldIdentityProvider` via `hostDirectives` · why the field name is not the control's generated `id` · per-channel resolution (name here, hints and display timing through their registries) · `aria-invalid` on a control with no layout box.
 
 ## 🧠 Core concepts
 

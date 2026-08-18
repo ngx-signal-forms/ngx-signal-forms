@@ -38,6 +38,7 @@ These tests verify **form/toolkit behavior** (validation, submission, debugger i
   - `custom-controls.spec.ts` - Custom control integration
   - `fieldset-appearance.spec.ts` - Fieldset appearance
   - `labelless-fields.spec.ts` - Labelless field patterns
+  - `field-identity.spec.ts` - Custom wrapper owning its field name; aria-invalid on a control with no layout box
   - `signal-form-debugger.spec.ts` - Signal form debugger
 
 - **`05-advanced/`** - Advanced scenarios
