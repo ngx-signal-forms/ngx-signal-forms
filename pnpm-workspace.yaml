@@ -65,7 +65,7 @@ catalogs:
   primeng:
     '@primeuix/themes': '2.0.3'
     primeicons: '8.0.0'
-    primeng: '21.1.9'
+    primeng: '22.0.0'
   shiki:
     '@shikijs/core': '^4.4.3'
     '@shikijs/types': '^4.4.3'
