@@ -85,15 +85,19 @@ import { IdentityProbeComponent } from './field-identity.probe';
     <div class="flex flex-col gap-1.5">
       <ng-content select="label" />
 
+      <!--
+        Order here is presentational only. Angular's default content slot
+        receives just the content that matches no other slot, regardless of
+        declaration order, so the hint slot below is live even though the
+        default one is declared first — verified in the browser, not assumed.
+      -->
       <ng-content />
 
       <ng-content select="ngx-form-field-hint" />
 
       <ngx-form-field-error [formField]="field()" [fieldName]="fieldName()" />
 
-      @if (showProbe()) {
-        <ngx-demo-identity-probe [declaredFieldName]="fieldName()" />
-      }
+      <ngx-demo-identity-probe [declaredFieldName]="fieldName()" />
     </div>
   `,
   styles: `
@@ -115,9 +119,6 @@ export class IdentityFieldComponent {
 
   /** The field's real name — see the class doc for why it is declared here. */
   readonly fieldName = input.required<string>();
-
-  /** Renders the live attribute readout below the control. */
-  readonly showProbe = input(true);
 
   readonly resolvedFieldName = computed<string | null>(
     () => this.fieldName().trim() || null,

@@ -67,6 +67,11 @@ const EMPTY_READING: ProbeReading = {
         {{ reading().ariaInvalid ?? '(absent)' }}
       </dd>
 
+      <dt class="text-gray-500 dark:text-gray-400">aria-required</dt>
+      <dd class="m-0" data-probe="aria-required">
+        {{ reading().ariaRequired ?? '(absent)' }}
+      </dd>
+
       <dt class="text-gray-500 dark:text-gray-400">aria-describedby</dt>
       <dd class="m-0" data-probe="aria-describedby">
         @if (reading().describedBy.length === 0) {
@@ -99,7 +104,7 @@ const EMPTY_READING: ProbeReading = {
 export class IdentityProbeComponent {
   readonly declaredFieldName = input.required<string>();
 
-  readonly #host = inject(ElementRef<HTMLElement>);
+  readonly #host = inject<ElementRef<HTMLElement>>(ElementRef);
   readonly #reading = signal<ProbeReading>(EMPTY_READING);
 
   /**
@@ -123,10 +128,14 @@ export class IdentityProbeComponent {
     });
   }
 
+  /**
+   * Mirrors `FieldIdentityPage.describedByTokens()` in the e2e suite on
+   * purpose. Both resolve the same tokens against the same document, one
+   * inside the Angular runtime and one inside Playwright's `evaluate`, so
+   * neither can be derived from the other.
+   */
   #probe(): ProbeReading {
-    const wrapper = (this.#host.nativeElement as HTMLElement).closest(
-      'ngx-demo-identity-field',
-    );
+    const wrapper = this.#host.nativeElement.closest('ngx-demo-identity-field');
     const control = wrapper?.querySelector<HTMLElement>(
       'input, select, textarea',
     );

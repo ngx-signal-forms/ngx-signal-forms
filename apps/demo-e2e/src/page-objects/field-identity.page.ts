@@ -20,12 +20,10 @@ export class FieldIdentityPage extends BaseFormPage {
   readonly deliveryControl: Locator;
 
   readonly emailProbe: Locator;
-  readonly deliveryProbe: Locator;
 
   readonly deliveryDetails: Locator;
   readonly deliverySummary: Locator;
 
-  readonly immediateModeRadio: Locator;
   readonly onTouchModeRadio: Locator;
 
   constructor(page: Page) {
@@ -40,18 +38,11 @@ export class FieldIdentityPage extends BaseFormPage {
     this.emailProbe = this.emailWrapper.locator(
       '[data-testid="identity-probe"]',
     );
-    this.deliveryProbe = this.deliveryWrapper.locator(
-      '[data-testid="identity-probe"]',
-    );
-
     this.deliveryDetails = this.form.locator(
       '[data-testid="delivery-details"]',
     );
     this.deliverySummary = this.deliveryDetails.locator('summary');
 
-    this.immediateModeRadio = this.page.getByRole('radio', {
-      name: 'Immediate',
-    });
     this.onTouchModeRadio = this.page.getByRole('radio', {
       name: 'On Touch (Recommended)',
     });
@@ -64,6 +55,11 @@ export class FieldIdentityPage extends BaseFormPage {
   /**
    * Every `aria-describedby` token on a control, paired with whether it
    * resolves to an element that exists in the document.
+   *
+   * Deliberately mirrors the page's own on-screen readout
+   * (`IdentityProbeComponent`) rather than reading it: this runs in
+   * Playwright's `evaluate`, so a bug in the readout cannot hide a bug in
+   * the attributes.
    */
   describedByTokens(
     control: Locator,

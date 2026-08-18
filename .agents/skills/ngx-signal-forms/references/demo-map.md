@@ -25,6 +25,7 @@ Repository paths in `apps/demo/src/app/` organized by the current live demo. Use
 - `04-form-field-wrapper/field-marking/` — Required/optional marker config (`showMarkerWhen`, `requiredMarker`, `optionalMarker`) plus the `NgxFormMarkingLegend` form-level legend explaining the markers
 - `04-form-field-wrapper/fieldset-appearance/` — `NgxFormFieldset` appearance controls: `NgxFormFieldsetAppearance`, `NgxFormFieldsetFeedbackAppearance`, `NgxFormFieldsetSurfaceTone`, `NgxFormFieldsetValidationSurface`
 - `04-form-field-wrapper/labelless-fields/` — Wrappers for controls with no redundant `<label>` (accessible name via `aria-label` / `aria-labelledby`), compared with vs without label across appearances
+- `04-form-field-wrapper/field-identity/` — The only page not using the built-in wrapper: a custom one composing `NgxFieldIdentityProvider` so the field name is not the control's generated `id`, plus `aria-invalid` inside a collapsible `<details>`
 
 Horizontal `FormFieldOrientation` is exercised via the shared `ui/orientation-toggle` component wired into multiple 05-advanced demos — there's no dedicated page yet. `provideNgxSignalFormsConfig({ defaultFormFieldOrientation: 'horizontal' })` drives the default; per-wrapper `orientation="horizontal"` overrides it.
 
