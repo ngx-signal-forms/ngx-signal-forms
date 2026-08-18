@@ -11,6 +11,7 @@ import { describe, expect, it } from 'vitest';
 import { NgxFormFieldError } from '../../assistive/form-field-error';
 import { NgxFormFieldWrapper } from '../../form-field/form-field-wrapper';
 import { NgxSignalFormToolkit } from '../../index';
+import { isElementCssVisible } from '../services/field-identity';
 import { NgxFieldIdentityProvider } from './field-identity-provider';
 
 /**
@@ -111,7 +112,7 @@ describe('auto-aria — aria-invalid on a control with no layout box (custom wra
     fixture.detectChanges();
     await fixture.whenStable();
 
-    expect(control?.checkVisibility()).toBe(false);
+    expect(isElementCssVisible(control!)).toBe(false);
     expect(control?.getAttribute('aria-invalid')).toBeNull();
   });
 
@@ -260,7 +261,7 @@ describe('auto-aria — aria-invalid on a selection cluster', () => {
     // The wrapper used to publish the *first* resolved control's visibility
     // for the whole cluster, so hiding that radio stripped `aria-invalid`
     // off a group the user can plainly see.
-    expect(group?.checkVisibility()).toBe(true);
+    expect(isElementCssVisible(group!)).toBe(true);
     expect(group?.getAttribute('aria-invalid')).toBe('true');
   });
 

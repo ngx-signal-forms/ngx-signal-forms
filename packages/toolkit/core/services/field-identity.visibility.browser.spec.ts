@@ -48,16 +48,14 @@ describe('isElementCssVisible — real layout semantics', () => {
   });
 
   it('reports a control inside a collapsed <details> hidden', () => {
-    const el = mount(
-      '<details><summary>More</summary><input id="a" /></details>',
-      '#a',
-    );
-
-    // The old `offsetParent` fallback returned a truthy parent here, calling
-    // a hidden control visible — the exact false positive that made the
-    // staleness fix silently ineffective on runtimes taking that branch.
-    expect(el.offsetParent).not.toBeNull();
-    expect(isElementCssVisible(el)).toBe(false);
+    expect(
+      isElementCssVisible(
+        mount(
+          '<details><summary>More</summary><input id="a" /></details>',
+          '#a',
+        ),
+      ),
+    ).toBe(false);
   });
 
   it('reports a control inside an open <details> visible', () => {
@@ -96,8 +94,51 @@ describe('isElementCssVisible — real layout semantics', () => {
   });
 
   it('reports a position:fixed control visible', () => {
-    // `offsetParent` is null for fixed-position elements — a false negative
-    // that would have stripped ARIA from a control the user can plainly see.
+    expect(
+      isElementCssVisible(
+        mount('<input id="a" style="position:fixed;top:0;left:0" />', '#a'),
+      ),
+    ).toBe(true);
+  });
+});
+
+/**
+ * Evidence for ADR-0011 §5, kept separate from the contract tests above.
+ *
+ * These assert the behaviour of `offsetParent`, not of `isElementCssVisible`.
+ * They exist so the claim "the old fallback was wrong in both directions" is
+ * demonstrated rather than asserted in prose. A failure here means the
+ * rationale changed, not that the visibility contract broke — read it as a
+ * prompt to revisit the ADR, not as a regression in the helper.
+ */
+describe('why the offsetParent fallback was removed (rationale, not contract)', () => {
+  const created: HTMLElement[] = [];
+
+  function mount(html: string, selector: string): HTMLElement {
+    const holder = document.createElement('div');
+    holder.innerHTML = html;
+    document.body.append(holder);
+    created.push(holder);
+    const el = holder.querySelector<HTMLElement>(selector);
+    if (!el) throw new Error(`no element matched ${selector}`);
+    return el;
+  }
+
+  afterEach(() => {
+    for (const el of created.splice(0)) el.remove();
+  });
+
+  it('was a false positive: a collapsed <details> still reports an offsetParent', () => {
+    const el = mount(
+      '<details><summary>More</summary><input id="a" /></details>',
+      '#a',
+    );
+
+    expect(el.offsetParent).not.toBeNull();
+    expect(isElementCssVisible(el)).toBe(false);
+  });
+
+  it('was a false negative: a visible position:fixed control has no offsetParent', () => {
     const el = mount(
       '<input id="a" style="position:fixed;top:0;left:0" />',
       '#a',

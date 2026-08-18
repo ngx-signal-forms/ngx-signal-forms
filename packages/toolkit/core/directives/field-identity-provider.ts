@@ -103,13 +103,14 @@ export class NgxFieldIdentityProvider {
    *   the control's `id`, because a wrapper that declares its own naming has
    *   said the control's `id` is not the name.
    * - unbound — this directive publishes nothing, leaving the identity's name
-   *   to the composing component. That is what lets a wrapper resolve a name
-   *   from somewhere an input cannot reach. `NgxFormFieldWrapper` relies on
-   *   it: tier 2 of its cascade reads the bound control's `id`, which is only
-   *   known in its render write phase, long after inputs are set. Note that
-   *   providing an identity at all hands it the naming channel, so leaving
-   *   the input unbound *and* never driving the identity means the contained
-   *   controls get no ARIA wiring — a dev-mode diagnostic calls that out.
+   *   to the composing component. That branch exists for **package-internal**
+   *   composers, which can reach the `@internal` writers: `NgxFormFieldWrapper`
+   *   relies on it, because tier 2 of its cascade reads the bound control's
+   *   `id`, which is only known in its render write phase, long after inputs
+   *   are set. Third-party wrappers cannot take this branch usefully — the
+   *   writers are stripped from the published type definitions — so for them
+   *   an unbound input means no ARIA wiring at all, and a dev-mode diagnostic
+   *   says so.
    *
    * Not `input.required`, deliberately. Exposing a required host-directive
    * input makes it mandatory in every consumer template (`NG8008`, chained
@@ -152,8 +153,8 @@ export class NgxFieldIdentityProvider {
           'published. Providing a field identity takes over field naming for ' +
           'this subtree, so ARIA wiring is skipped until a name arrives — ' +
           "the bound control's `id` is no longer used as a fallback. Expose " +
-          'the `fieldName` input via `hostDirectives` and bind it, or drive ' +
-          'the injected `NgxFieldIdentity` yourself.',
+          'the `fieldName` input via `hostDirectives` and bind it, or drop ' +
+          "this directive if the control's `id` is already the field name.",
       );
     });
   }
