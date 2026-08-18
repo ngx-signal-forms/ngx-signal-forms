@@ -217,6 +217,29 @@ Consumers authoring `<ngx-form-field-hint>...</ngx-form-field-hint>` between
 the wrapper's tags must import `NgxFormFieldHint` themselves (or a bundle
 export that re-exports it from `@ngx-signal-forms/toolkit/assistive`).
 
+### Naming the field input
+
+The example above calls its field input `formField`, matching
+`NgxFormFieldWrapper`. That name is not free: both `NgxSignalFormAutoAria` and
+Angular's own `FormField` select on `[formField]` **including on elements that
+are not controls**, so `<my-form-field [formField]="...">` pulls both
+directives onto your wrapper's host. Auto-aria then injects `FORM_FIELD`,
+which only `FormField` provides — so a consumer that imports auto-aria but not
+`FormField` gets `NG0201: No provider found for InjectionToken FORM_FIELD` at
+runtime.
+
+Two ways out, both fine:
+
+- **Keep `formField`** and make sure every consumer template that binds it also
+  has Angular's `FormField` in scope. `FormField` declares
+  `passThroughInput: "formField"`, so it defers to your component's own input
+  rather than trying to bind a value to your wrapper element. This is what the
+  toolkit's own demos do.
+- **Pick a different name** — `field` is the obvious one — and neither
+  directive matches your host at all. `apps/demo`'s field-identity page takes
+  this route; see
+  `apps/demo/src/app/04-form-field-wrapper/field-identity/README.md`.
+
 A production wrapper will resolve `fieldName` from the bound control's `id`
 attribute, propagate `strategy` and `submittedStatus` from the form context,
 and gate rendering on `shouldShowErrors()` — `NgxFormFieldWrapper` is the
@@ -579,6 +602,11 @@ from the published type definitions; `NgxFieldIdentityProvider` drives them
 for you. Note that `hintIds` is `readonly string[] | null`, where `null` means
 "this identity never published hints" — see
 [ADR-0010](decisions/0010-field-identity-shadows-registries-per-channel.md).
+
+A runnable version of exactly this shape — a widget that mints its own inner
+`id`, wrapped by a component that declares the field name, inside a
+collapsible container — lives at `/form-field-wrapper/field-identity` in
+`apps/demo`.
 
 > `NgxFormFieldWrapper` composes this same directive rather than providing
 > `NgxFieldIdentity` itself, so the built-in wrapper runs on the seam you do.
