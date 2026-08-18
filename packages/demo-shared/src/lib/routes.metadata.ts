@@ -8,6 +8,7 @@ export const DEMO_PATHS = {
   fieldsetAppearance: '/form-field-wrapper/fieldset-appearance',
   customControls: '/form-field-wrapper/custom-controls',
   labellessFields: '/form-field-wrapper/labelless-fields',
+  fieldIdentity: '/form-field-wrapper/field-identity',
   fieldMarking: '/form-field-wrapper/field-marking',
   brandTheming: '/form-field-wrapper/brand-theming',
   zodValidation: '/validation/zod-validation',
@@ -96,6 +97,11 @@ export const DEMO_CATEGORIES = [
       {
         path: '/form-field-wrapper/labelless-fields',
         label: 'Labelless Fields',
+        hasControls: true,
+      },
+      {
+        path: '/form-field-wrapper/field-identity',
+        label: 'Field Identity (Custom Wrapper)',
         hasControls: true,
       },
       {

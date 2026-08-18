@@ -1,0 +1,111 @@
+<form
+  [formRoot]="identityForm"
+  ngxSignalForm
+  [errorStrategy]="errorDisplayMode()"
+  class="max-w-xl space-y-8 px-6 pt-0 pb-6"
+>
+  <!-- Section 1: declared field name vs the widget's generated id -->
+  <section
+    class="rounded-lg border border-gray-200 p-4 dark:border-gray-700"
+    data-section="declared-name"
+  >
+    <h3 class="mb-1 text-base font-semibold">
+      1. The wrapper declares the name, the widget owns the id
+    </h3>
+    <p class="mb-4 text-sm text-gray-600 dark:text-gray-400">
+      The widget generated its own
+      <code>id</code>. The wrapper declares
+      <code>fieldName="emailAddress"</code>, so the message elements — and the
+      <code>aria-describedby</code> that points at them — follow the declared
+      name, not the id.
+    </p>
+
+    <ngx-demo-identity-field
+      fieldName="emailAddress"
+      [field]="identityForm.emailAddress"
+      data-testid="email-field"
+    >
+      <label class="text-sm font-medium" [attr.for]="emailWidget.generatedId">
+        Email address
+      </label>
+
+      <ngx-demo-generated-id-widget
+        #emailWidget
+        type="email"
+        placeholder="you@example.com"
+        [field]="identityForm.emailAddress"
+      />
+
+      <ngx-form-field-hint>
+        We only use this to confirm your order.
+      </ngx-form-field-hint>
+    </ngx-demo-identity-field>
+  </section>
+
+  <!-- Section 2: aria-invalid on a control with no layout box -->
+  <section
+    class="rounded-lg border border-gray-200 p-4 dark:border-gray-700"
+    data-section="collapsible"
+  >
+    <h3 class="mb-1 text-base font-semibold">
+      2. <code>aria-invalid</code> inside a collapsible container
+    </h3>
+    <p class="mb-4 text-sm text-gray-600 dark:text-gray-400">
+      Collapse the section below and watch <code>aria-invalid</code> disappear
+      from the hidden control, then come back on reopen. A stale
+      <code>true</code> would be wrong the instant the container reopens with a
+      different validation state.
+    </p>
+
+    <details
+      class="rounded-md border border-gray-200 p-3 dark:border-gray-700"
+      [open]="deliveryExpanded()"
+      (toggle)="onDeliveryToggle($event)"
+      data-testid="delivery-details"
+    >
+      <summary class="cursor-pointer text-sm font-medium">
+        Delivery instructions
+      </summary>
+
+      <div class="pt-3">
+        <ngx-demo-identity-field
+          fieldName="deliveryNote"
+          [field]="identityForm.deliveryNote"
+          data-testid="delivery-field"
+        >
+          <label
+            class="text-sm font-medium"
+            [attr.for]="deliveryWidget.generatedId"
+          >
+            Delivery note
+          </label>
+
+          <ngx-demo-generated-id-widget
+            #deliveryWidget
+            placeholder="Leave at the front desk"
+            [field]="identityForm.deliveryNote"
+          />
+
+          <ngx-form-field-hint>
+            Visible to the courier only.
+          </ngx-form-field-hint>
+        </ngx-demo-identity-field>
+      </div>
+    </details>
+
+    <p
+      class="mt-3 text-sm text-gray-600 dark:text-gray-400"
+      data-testid="collapsed-state"
+    >
+      Container is
+      <strong>{{ deliveryExpanded() ? 'expanded' : 'collapsed' }}</strong>.
+    </p>
+  </section>
+
+  <button
+    type="submit"
+    class="rounded-md bg-[#005d96] px-4 py-2 text-sm font-medium text-white hover:bg-[#004a78] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#005fcc]"
+  >
+    Submit
+  </button>
+</form>
