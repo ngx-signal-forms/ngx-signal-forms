@@ -605,8 +605,9 @@ for you. Note that `hintIds` is `readonly string[] | null`, where `null` means
 
 A runnable version of exactly this shape — a widget that mints its own inner
 `id`, wrapped by a component that declares the field name, inside a
-collapsible container — lives at `/form-field-wrapper/field-identity` in
-`apps/demo`.
+collapsible container — is the
+[`field-identity` demo](https://ngx-signal-forms.github.io/ngx-signal-forms/form-field-wrapper/field-identity/)
+([code](../apps/demo/src/app/04-form-field-wrapper/field-identity/README.md)).
 
 > `NgxFormFieldWrapper` composes this same directive rather than providing
 > `NgxFieldIdentity` itself, so the built-in wrapper runs on the seam you do.

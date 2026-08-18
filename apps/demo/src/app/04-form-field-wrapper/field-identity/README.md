@@ -6,7 +6,7 @@ Every other demo on this site uses the built-in `ngx-form-field-wrapper`. This o
 
 Two behaviors, one story — a wrapper that owns its identity, inside UI that collapses:
 
-1. A widget generates its own inner `id` (`demo-widget-1`), and the wrapper declares `fieldName="emailAddress"`. The rendered message elements, and the `aria-describedby` that points at them, follow the declared name.
+1. A widget generates its own inner `id` (`demo-widget-N`, from a module-level counter — the number depends on how many widgets the session has instantiated), and the wrapper declares `fieldName="emailAddress"`. The rendered message elements, and the `aria-describedby` that points at them, follow the declared name.
 2. The same wrapper inside a `<details>`. While collapsed the control has no layout box, so `aria-invalid` is removed rather than left stale.
 
 ## Toolkit features showcased
