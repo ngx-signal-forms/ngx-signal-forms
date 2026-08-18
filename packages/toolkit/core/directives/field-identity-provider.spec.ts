@@ -3,7 +3,9 @@ import { FormField, form, minLength, schema } from '@angular/forms/signals';
 import { render } from '@testing-library/angular';
 import { describe, expect, it, vi } from 'vitest';
 import { NgxFormFieldError } from '../../assistive/form-field-error';
+import { NgxFormFieldWrapper } from '../../form-field/form-field-wrapper';
 import { NgxSignalFormToolkit } from '../../index';
+import { NgxFieldIdentity } from '../services/field-identity';
 import { NgxFieldIdentityProvider } from './field-identity-provider';
 
 /**
@@ -204,5 +206,83 @@ describe('NgxFieldIdentityProvider', () => {
     const describedBy = control?.getAttribute('aria-describedby') ?? '';
     expect(describedBy).not.toContain('username-error');
     expect(describedBy).not.toContain('account-error');
+  });
+});
+
+describe('NgxFieldIdentityProvider — composed by NgxFormFieldWrapper', () => {
+  @Component({
+    selector: 'ngx-test-builtin-wrapper-host',
+    imports: [NgxFormFieldWrapper, FormField, NgxSignalFormToolkit],
+    template: `
+      <form [formRoot]="userForm" ngxSignalForm>
+        <ngx-form-field-wrapper
+          [formField]="userForm.username"
+          [fieldName]="explicitName()"
+          strategy="immediate"
+        >
+          <label for="username-control">Username</label>
+          <input id="username-control" [formField]="userForm.username" />
+        </ngx-form-field-wrapper>
+      </form>
+    `,
+  })
+  class BuiltinWrapperHost {
+    readonly explicitName = input.required<string | undefined>();
+    readonly #model = signal({ username: 'no' });
+    readonly userForm = form(
+      this.#model,
+      schema((path) => {
+        minLength(path.username, 5, { message: 'At least 5 characters' });
+      }),
+    );
+  }
+
+  it('provides the identity through the directive, not a duplicate providers entry', async () => {
+    const { fixture } = await render(BuiltinWrapperHost, {
+      inputs: { explicitName: 'account' },
+    });
+
+    const wrapperEl = (
+      fixture.nativeElement as HTMLElement
+    ).querySelector<HTMLElement>('ngx-form-field-wrapper');
+    const wrapperNode = fixture.debugElement.query(
+      (candidate) => candidate.nativeElement === wrapperEl,
+    );
+
+    // The directive must be on the wrapper's own host — that is the element
+    // injector the projected control resolves `NgxFieldIdentity` through.
+    expect(wrapperNode.injector.get(NgxFieldIdentityProvider)).toBeTruthy();
+    expect(wrapperNode.injector.get(NgxFieldIdentity).fieldName()).toBe(
+      'account',
+    );
+  });
+
+  it('routes a consumer-bound fieldName through the directive (cascade tier 1)', async () => {
+    const { fixture } = await render(BuiltinWrapperHost, {
+      inputs: { explicitName: 'account' },
+    });
+
+    const describedBy = (fixture.nativeElement as HTMLElement)
+      .querySelector('input#username-control')
+      ?.getAttribute('aria-describedby');
+
+    // The declared name wins over the control's `id`, and one `fieldName`
+    // attribute feeds both the wrapper's own input and the host directive's.
+    expect(describedBy).toContain('account-error');
+    expect(describedBy).not.toContain('username-control-error');
+  });
+
+  it('still derives the name from the control id when nothing is bound (cascade tier 2)', async () => {
+    // The directive stays inert here — a DOM-derived name is only known in the
+    // wrapper's render write phase, so it can never arrive through an input.
+    const { fixture } = await render(BuiltinWrapperHost, {
+      inputs: { explicitName: undefined },
+    });
+
+    const describedBy = (fixture.nativeElement as HTMLElement)
+      .querySelector('input#username-control')
+      ?.getAttribute('aria-describedby');
+
+    expect(describedBy).toContain('username-control-error');
   });
 });

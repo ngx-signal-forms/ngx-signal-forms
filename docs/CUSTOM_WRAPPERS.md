@@ -580,10 +580,10 @@ for you. Note that `hintIds` is `readonly string[] | null`, where `null` means
 "this identity never published hints" — see
 [ADR-0010](decisions/0010-field-identity-shadows-registries-per-channel.md).
 
-> `NgxFormFieldWrapper` does not compose this directive; it provides and
-> drives `NgxFieldIdentity` directly. Angular gives a component no way to bind
-> its own host directive's inputs, and the wrapper's name is only known after
-> its render-phase DOM read — see
+> `NgxFormFieldWrapper` composes this same directive rather than providing
+> `NgxFieldIdentity` itself, so the built-in wrapper runs on the seam you do.
+> It still writes the identity directly for what an input cannot carry — the
+> `id`-derived name tier, and every non-name channel — see
 > [ADR-0011](decisions/0011-field-identity-provider-host-directive.md).
 
 ### `NGX_SIGNAL_FORM_FIELD_VISIBILITY_REGISTRY` — declaring display timing

@@ -77,6 +77,12 @@ import { devWarnOnce, type WarnOnceRef } from '../utilities/dev-warn-once';
  * from the published type definitions. This directive is the public surface;
  * it drives them on your behalf.
  *
+ * `NgxFormFieldWrapper` composes this directive too, rather than providing
+ * `NgxFieldIdentity` itself — so the seam a third-party wrapper uses is the
+ * same one the built-in wrapper runs on. Angular feeds a single `fieldName`
+ * attribute to both a component's own input and its exposed host-directive
+ * input, so composing it costs consumers nothing.
+ *
  * @public
  * @group ARIA Composition
  */
@@ -97,19 +103,20 @@ export class NgxFieldIdentityProvider {
    *   the control's `id`, because a wrapper that declares its own naming has
    *   said the control's `id` is not the name.
    * - unbound — this directive publishes nothing, leaving the identity's name
-   *   for the composing component to drive itself. This is what lets a
-   *   component compose the directive purely to *provision* the identity:
-   *   Angular gives a component no way to bind its own host directive's
-   *   inputs, and `NgxFormFieldWrapper`'s name is only known after its
-   *   render-phase DOM read. Note that providing an identity at all hands it
-   *   the naming channel, so leaving the input unbound *and* never driving
-   *   the identity means the contained controls get no ARIA wiring — a
-   *   dev-mode diagnostic calls that out.
+   *   to the composing component. That is what lets a wrapper resolve a name
+   *   from somewhere an input cannot reach. `NgxFormFieldWrapper` relies on
+   *   it: tier 2 of its cascade reads the bound control's `id`, which is only
+   *   known in its render write phase, long after inputs are set. Note that
+   *   providing an identity at all hands it the naming channel, so leaving
+   *   the input unbound *and* never driving the identity means the contained
+   *   controls get no ARIA wiring — a dev-mode diagnostic calls that out.
    *
-   * Not `input.required`, deliberately. A required input on a host directive
-   * must be re-exposed by the composing component (`NG2019`), and once
-   * exposed every consumer template must bind it (`NG8008`) — which would
-   * make `[fieldName]` mandatory on every wrapper that composes this.
+   * Not `input.required`, deliberately. Exposing a required host-directive
+   * input makes it mandatory in every consumer template (`NG8008`, chained
+   * from `NG2019` if it is not re-exposed at all). A wrapper's own
+   * `fieldName` is normally optional — `NgxFormFieldWrapper`'s certainly is,
+   * because the control's `id` is the usual source — so requiring it here
+   * would break every field that relies on that fallback.
    */
   readonly fieldName = input<string | null | undefined>(undefined);
 

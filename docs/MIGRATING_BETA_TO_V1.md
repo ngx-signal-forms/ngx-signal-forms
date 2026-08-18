@@ -1713,9 +1713,12 @@ reporting "visible" preserves prior behavior rather than stripping ARIA on a
 guess. If you assert visibility in tests, those assertions need a real
 browser — jsdom implements neither `checkVisibility()` nor layout.
 
-See [ADR-0011](./decisions/0011-field-identity-provider-host-directive.md),
-including why `NgxFormFieldWrapper` does not itself compose the directive
-(Angular gives a component no way to bind its own host directive's inputs).
+`NgxFormFieldWrapper` composes this same directive rather than providing
+`NgxFieldIdentity` itself, so the built-in wrapper runs on the seam a
+third-party wrapper uses. Nothing changes for its consumers: Angular feeds one
+`fieldName` attribute to both the wrapper's own input and the exposed
+host-directive input. See
+[ADR-0011](./decisions/0011-field-identity-provider-host-directive.md).
 
 **Files:** `packages/toolkit/core/directives/field-identity-provider.ts`,
 `packages/toolkit/core/directives/auto-aria.ts`,

@@ -34,17 +34,25 @@ A wrapper author does not actually want the writers — they want an `NgxFieldId
 
 `input<string | null | undefined>(undefined)`, not `input.required`.
 
-A required input on a host directive must be re-exposed by the composing component (`NG2019`, `HOST_DIRECTIVE_MISSING_REQUIRED_BINDING`), and once exposed, every consumer template must bind it (`NG8008`) — attributed to the host directive's class, and firing even with `strictTemplates: false`. Making the input required would therefore make `[fieldName]` mandatory on every wrapper that composes this directive, in every downstream template. `required` buys nothing here anyway: `null` is a legal bound value, so the only thing lost is the unbound-vs-null distinction, which we use for a different purpose.
+A required host-directive input must be re-exposed by the composing component (`NG2019`, `HOST_DIRECTIVE_MISSING_REQUIRED_BINDING`), and once exposed, every consumer template must bind it (`NG8008`) — attributed to the host directive's class, and firing even with `strictTemplates: false`.
 
-### 3. `NgxFormFieldWrapper` does **not** compose the directive
+Note what this does _not_ mean. Angular feeds one `fieldName` attribute to both a component's own input and its exposed host-directive input, so composing this directive never asks consumers for an extra binding. The problem is narrower: a wrapper's own `fieldName` is normally _optional_. `NgxFormFieldWrapper`'s is, because tier 2 of the name cascade reads the bound control's `id` and that is the usual source. Requiring the input here would promote that optional input to mandatory and break every field relying on the `id` fallback.
 
-This deviates from the plan recorded on the issue, which called for the built-in wrapper to refactor onto the new surface to dogfood it. Angular does not permit it.
+`required` buys little anyway: `null` is a legal bound value, so the only thing lost is the unbound-vs-null distinction, which §3 puts to work.
 
-A component cannot bind its own host directive's inputs — the only way in is to expose the input to _its_ consumers, which for `NgxFormFieldWrapper` would make `[fieldName]` mandatory on every `<ngx-form-field-wrapper>` in existence. And it could not use the input even if it were bindable: the wrapper's name is DOM-derived in its `afterEveryRender` write phase, strictly after inputs are set.
+### 3. `NgxFormFieldWrapper` composes the directive
 
-Composing the directive with its input left unbound would work mechanically, but it would only be reusing a one-line `providers` array while adding a false-positive dev warning and a provider-resolution risk to the most-used component in the package. That is indirection, not dogfooding. The wrapper keeps `providers: [NgxFieldIdentity]` and drives it directly, as an in-package consumer of an in-package service.
+The built-in wrapper drops `NgxFieldIdentity` from its own `providers` and composes `NgxFieldIdentityProvider` on its host with the `fieldName` input exposed. The public seam and the built-in one are then the same seam, which is the only way to keep the third-party path honest.
 
-The third-party path is instead proven by test fixtures that are genuine custom wrappers, including an axe scan of one inside collapsible markup.
+This costs consumers nothing. Angular feeds a single `fieldName` attribute to both the wrapper's own input and the exposed host-directive input, and a component composing the directive resolves `NgxFieldIdentity` from the directive's `providers` — no duplicate provider, no second instance. Every existing wrapper spec passed unchanged across the refactor.
+
+The wrapper still drives the identity itself, because the input cannot carry everything:
+
+- **Tier 1 of the name cascade** — an explicitly bound `fieldName` — now travels through the directive.
+- **Tier 2** — the bound control's `id` — cannot. It is only known in the wrapper's `afterEveryRender` write phase, strictly after inputs are set. The directive stays inert (its input is unbound) and the wrapper writes the resolved name itself.
+- **Every non-name channel** — control element, visibility, hints, resolved strategies — has no channel on the directive at all and stays with the wrapper.
+
+The two writers do not contend. Effects flush before render hooks, so within a tick the directive publishes first and the wrapper's write phase follows with the fully-resolved cascade, which subsumes it.
 
 ### 4. Auto-aria probes its own host element for the `aria-invalid` gate
 
