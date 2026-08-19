@@ -130,7 +130,7 @@ internal token layer plus pseudo-private aliases. Override only the public
 `--ngx-signal-form-*` variables; the internal `--_error-*` values are
 implementation details.
 
-> **Note:** The default `--ngx-signal-form-warning-color` was `#f59e0b` prior to v1.0; it was changed to `#a16207` (Tailwind amber-700) for WCAG 1.4.3 AA contrast compliance on white backgrounds.
+> **Note:** The default `--ngx-signal-form-warning-color` was `#f59e0b` prior to v1.0; it was changed to `#a16207` (Tailwind amber-700) to meet WCAG 2.2 SC 1.4.3 Contrast (Minimum), Level AA, on white backgrounds.
 
 | Property                                            | Default                                                             | Description                        |
 | :-------------------------------------------------- | :------------------------------------------------------------------ | :--------------------------------- |
@@ -254,28 +254,29 @@ Renders a form-level, clickable list of aggregated validation errors (GOV.UK
 / WAI error-summary pattern). Each entry is a `<button>` that focuses its
 associated control on click.
 
-| Property                                   | Default   | Description                                                                                                                    |
-| :----------------------------------------- | :-------- | :----------------------------------------------------------------------------------------------------------------------------- |
-| `--ngx-error-summary-border-color`         | `#dc2626` | Card border color                                                                                                              |
-| `--ngx-error-summary-bg`                   | `#fef2f2` | Card background color                                                                                                          |
-| `--ngx-error-summary-label-color`          | `#991b1b` | Optional summary label text color                                                                                              |
-| `--ngx-error-summary-link-color`           | `#b91c1c` | Entry link text color                                                                                                          |
-| `--ngx-error-summary-link-hover-color`     | `#991b1b` | Entry link hover color                                                                                                         |
-| `--ngx-error-summary-link-min-target-size` | `1.5rem`  | Minimum block-size AND inline-size of each entry link — enforces the 24x24px WCAG 2.5.8 target-size minimum in both directions |
-| `--ngx-error-summary-link-padding-inline`  | `0.25rem` | Horizontal padding on each entry link                                                                                          |
-| `--ngx-error-summary-focus-color`          | `#2563eb` | `:focus-visible` outline color on entry links                                                                                  |
+| Property                                   | Default   | Description                                                                                                               |
+| :----------------------------------------- | :-------- | :------------------------------------------------------------------------------------------------------------------------ |
+| `--ngx-error-summary-border-color`         | `#dc2626` | Card border color                                                                                                         |
+| `--ngx-error-summary-bg`                   | `#fef2f2` | Card background color                                                                                                     |
+| `--ngx-error-summary-label-color`          | `#991b1b` | Optional summary label text color                                                                                         |
+| `--ngx-error-summary-link-color`           | `#b91c1c` | Entry link text color                                                                                                     |
+| `--ngx-error-summary-link-hover-color`     | `#991b1b` | Entry link hover color                                                                                                    |
+| `--ngx-error-summary-link-min-target-size` | `1.5rem`  | Minimum block-size AND inline-size of each entry link — enforces the 24×24px WCAG 2.2 SC 2.5.8 minimum in both directions |
+| `--ngx-error-summary-link-padding-inline`  | `0.25rem` | Horizontal padding on each entry link                                                                                     |
+| `--ngx-error-summary-focus-color`          | `#2563eb` | `:focus-visible` outline color on entry links                                                                             |
 
 `--ngx-error-summary-link-color` defaults to `#b91c1c` (Tailwind red-700)
 rather than the `#dc2626` used for the card border: on the summary's
 `#fef2f2` background, `#dc2626` text resolves to ~4.41:1, just under the
-4.5:1 minimum for 14px text (WCAG 1.4.3 AA); `#b91c1c` resolves to ~5.9:1.
+4.5:1 minimum for 14px text (WCAG 2.2 SC 1.4.3 Contrast (Minimum), Level AA);
+`#b91c1c` resolves to ~5.9:1.
 
 Each entry link keeps `all: unset` for the rest of its reset but sets an
 explicit `display: inline-flex` plus `min-block-size` and `min-inline-size`
 — `all: unset` resets `display` to its initial value (`inline`), and
 `min-height`/`min-block-size`/`min-inline-size` have no effect on
 non-replaced inline elements per spec, so the resulting target would
-silently stay below the WCAG 2.5.8 24x24px minimum without the explicit
+silently stay below the WCAG 2.2 SC 2.5.8 24×24px minimum without the explicit
 `inline-flex`. Both dimensions are floored (not just block-size) because a
 short or empty `fieldName`/message could otherwise render narrower than
 24px; `justify-content: center` keeps short text centered within the
@@ -355,7 +356,7 @@ The default color is deliberately darker than the
 is written down, so it is held to body-text contrast rather than the muted
 tone that supporting copy can afford: it resolves to ~6.6:1 on white, against
 ~4.9:1 for the secondary tone. If you re-theme it, keep it at or above 4.5:1
-against the page background — WCAG 1.4.3 AA.
+against the page background — WCAG 2.2 SC 1.4.3 Contrast (Minimum), Level AA.
 
 Which marker the legend names comes from the `showMarkerWhen` /
 `requiredMarker` / `optionalMarker` config (or the matching inputs), not from
@@ -1048,8 +1049,8 @@ accessibility, prefer giving the `<input>` an `aria-label` or
 ### Accessibility notes — placeholder is not a label
 
 Using only a `placeholder` as the visible hint (even with a matching
-`aria-label` for screen readers) is a well-known WCAG 3.3.2
-antipattern: the hint disappears as soon as the user types, so sighted
+`aria-label` for screen readers) is a well-known WCAG 2.2 SC 3.3.2 Labels or
+Instructions, Level A, antipattern: the hint disappears as soon as the user types, so sighted
 users can lose the field's purpose mid-entry — especially with
 autofill, copy/paste, or when returning to a partially-filled form.
 Prefer one of the following when the labelless wrapper is appropriate
