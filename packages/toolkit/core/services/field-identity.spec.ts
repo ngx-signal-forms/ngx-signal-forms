@@ -1,11 +1,19 @@
-import { Component, computed, inject, isDevMode } from '@angular/core';
+import {
+  Component,
+  computed,
+  inject,
+  Injector,
+  isDevMode,
+} from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { render } from '@testing-library/angular';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
+  createControlVisibilitySignal as createControlVisibilitySignalPublic,
   isElementCssVisible as isElementCssVisiblePublic,
   NgxFieldIdentity as NgxFieldIdentityPublic,
 } from '@ngx-signal-forms/toolkit';
+import { createControlVisibilitySignal } from './control-visibility-signal';
 import { isElementCssVisible, NgxFieldIdentity } from './field-identity';
 
 describe('NgxFieldIdentity', () => {
@@ -377,6 +385,12 @@ describe('NgxFieldIdentity', () => {
       expect(NgxFieldIdentityPublic).toBe(NgxFieldIdentity);
       expect(isElementCssVisiblePublic).toBe(isElementCssVisible);
     });
+
+    it('re-exports createControlVisibilitySignal from the public barrel', () => {
+      expect(createControlVisibilitySignalPublic).toBe(
+        createControlVisibilitySignal,
+      );
+    });
   });
 
   describe('isElementCssVisible helper', () => {
@@ -408,6 +422,25 @@ describe('NgxFieldIdentity', () => {
 
     it('fails open for a detached element', () => {
       expect(isElementCssVisible(document.createElement('input'))).toBe(true);
+    });
+  });
+
+  describe('createControlVisibilitySignal', () => {
+    // jsdom computes no layout, so the real collapse/reopen transitions live
+    // in `control-visibility-signal.browser.spec.ts`. What is assertable here
+    // is the fail-open start: the signal must read `true` before any render
+    // hook has run, otherwise `aria-invalid` flickers off on first paint.
+    it('starts true and stays true for an unresolvable element', () => {
+      const injector = TestBed.inject(Injector);
+      const isVisible = TestBed.runInInjectionContext(() =>
+        createControlVisibilitySignal(() => null, injector),
+      );
+
+      expect(isVisible()).toBe(true);
+
+      TestBed.tick();
+
+      expect(isVisible()).toBe(true);
     });
   });
 

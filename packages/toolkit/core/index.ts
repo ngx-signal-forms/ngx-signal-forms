@@ -17,6 +17,7 @@ export * from './providers/form-field-renderer.provider';
 
 // Services
 export * from './services/control-preset-registry';
+export * from './services/control-visibility-signal';
 export * from './services/field-identity';
 export * from './services/field-visibility-registry';
 

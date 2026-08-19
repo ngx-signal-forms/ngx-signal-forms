@@ -307,6 +307,16 @@ teaches for hosts that own their own ARIA instead of using
 | `createAriaDescribedByBridge(...)` | Bridge for hosts whose described-by attribute another library owns  |
 | `createFieldNameResolver(...)`     | Field-name cascade (explicit → label `for` (opt-in) → control `id`) |
 
+`createAriaInvalidSignal`'s third argument is a `Signal<boolean>` saying
+whether the element that carries the attribute still has a layout box. It has
+no default: omit it and `aria-invalid` goes stale on a control inside a
+collapsed `<details>`, an inactive tab panel, or a non-current wizard step.
+The probe needs DI and a render hook, so it lives in the root entry, not here
+— use `createControlVisibilitySignal(resolveElement, injector)` when the
+wrapper has no render hook of its own, or `isElementCssVisible(el)` inside an
+existing `afterEveryRender` `earlyRead` when it already runs one. Both come
+from `@ngx-signal-forms/toolkit`.
+
 ## Utility Functions
 
 Plain, dependency-free helpers used internally by the directives and factories above — safe to call directly for one-off reads:

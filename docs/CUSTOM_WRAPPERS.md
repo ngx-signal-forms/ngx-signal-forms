@@ -514,24 +514,58 @@ A few things to call out:
    freezes at whatever it was when the container closed, and is wrong the
    instant the container reopens with a different validation state.
 
-   Nothing supplies this for you. `NgxSignalFormAutoAria` probes its own host
+   Nothing wires this for you. `NgxSignalFormAutoAria` probes its own host
    element every read phase, so plain `[formField]` controls get the
    behaviour for free — but a wrapper that opts out of the directive and
-   composes the factories instead inherits none of it. Probe with
-   `isElementCssVisible(el)` (the same public helper auto-aria uses; it fails
-   open on runtimes without `Element.checkVisibility()`) inside
-   `afterEveryRender`'s `earlyRead` phase, publish the result into a signal,
-   and thread that signal in — exactly as the example above does.
+   composes the factories instead inherits none of it, and has to thread the
+   argument in itself.
 
-   Probe **the element you write `aria-invalid` onto**, which is not always
-   the wrapper host. A shim that writes onto an inner focusable element (a
-   rendered `[role="combobox"]`, the native `<input>` inside a design-system
-   checkbox) must probe that inner element, or a control hidden inside a
-   still-laid-out wrapper goes unnoticed. The three design-system reference
-   apps under `apps/demo-material`, `apps/demo-primeng`, and
-   `apps/demo-spartan` each carry a `createControlVisibilitySignal` helper
-   that packages this phasing, and a collapsible-container case in their
-   e2e suites that proves it.
+   The toolkit ships the probe in two forms. Reach for whichever matches the
+   render hooks your wrapper already has:
+
+   | Form                                                      | Reach for it when                                                                                                                                                                                                                                                       |
+   | --------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+   | `createControlVisibilitySignal(resolveElement, injector)` | Your wrapper has **no** render hook. The factory registers one `afterEveryRender`, probes in `earlyRead`, publishes in `write`, and hands back a `Signal<boolean>` ready for `createAriaInvalidSignal`'s third argument.                                                |
+   | `isElementCssVisible(el)`                                 | Your wrapper or shim **already** runs `afterEveryRender`. Fold the probe into your existing `earlyRead` and reuse the element you resolved there, instead of paying for a second hook. The worked example above does exactly this, and so does `NgxSignalFormAutoAria`. |
+
+   Both fail open on runtimes without `Element.checkVisibility()`, and
+   `createControlVisibilitySignal` additionally stays `true` while
+   `resolveElement` returns `null` — an element that has not been through
+   layout reports `false`, which would flicker the attribute off on first
+   paint.
+
+   Either way, probe **the element you write `aria-invalid` onto**, which is
+   not always the wrapper host. A shim that writes onto an inner focusable
+   element (a rendered `[role="combobox"]`, the native `<input>` inside a
+   design-system checkbox) must probe that inner element, or a control hidden
+   inside a still-laid-out wrapper goes unnoticed. Both forms are in use in
+   the reference apps: `apps/demo-material`, `apps/demo-primeng`, and
+   `apps/demo-spartan` each call `createControlVisibilitySignal` from their
+   wrapper, and the two PrimeNG control shims — which already run their own
+   render hook — call `isElementCssVisible` on the inner element they write
+   to instead. Each app has a collapsible-container case in its e2e suite
+   that proves the wiring.
+
+   ```typescript
+   import { Injector, inject } from '@angular/core';
+   import { createControlVisibilitySignal } from '@ngx-signal-forms/toolkit';
+   import { createAriaInvalidSignal } from '@ngx-signal-forms/toolkit/headless';
+
+   readonly #injector = inject(Injector);
+
+   // Resolve the element that CARRIES the attribute — here, the bound
+   // control, not the wrapper host.
+   readonly #isControlVisible = createControlVisibilitySignal(
+     () => this.#boundControlElement(),
+     this.#injector,
+   );
+
+   readonly ariaInvalidValue = createAriaInvalidSignal(
+     this.#fieldState,
+     this.#showErrors,
+     this.#isControlVisible,
+   );
+   ```
 
 6. **The consumer never inherits `NgxSignalFormAutoAria`.** That's the whole
    point — your directive owns the host, owns the writes, and owns the
