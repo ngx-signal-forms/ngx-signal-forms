@@ -2,14 +2,14 @@
 
 This guide covers every breaking change between the last beta
 (`1.0.0-beta.10`) and the current v1 release-candidate surface, including
-`v1.0.0-rc.11`. It is intentionally written against the **latest state only**.
+`v1.0.0-rc.12`. It is intentionally written against the **latest state only**.
 
 That means this document does **not** walk through interim RC-to-RC
 waypoints. Every “before → after” example below shows the migration from
 beta-era usage to the API you should use **today**. For an RC-to-RC upgrade,
 read the applicable guide in [`docs/migrations/`](./migrations/README.md);
-for example, [`v1.0.0-rc.11`](./migrations/v1.0.0-rc.11.md) documents the
-upgrade from rc.10.
+for example, [`v1.0.0-rc.12`](./migrations/v1.0.0-rc.12.md) documents the
+upgrade from rc.11.
 
 If a later RC ships without new beta-to-v1 breaking changes, this guide
 remains the correct migration target without needing another RC-number bump.
@@ -62,6 +62,9 @@ releases will not include any of the renames below.
 - **BREAKING: `CharacterCountResult` members are now typed `Signal<T>`** (was the looser `ReadSignal<T>` alias); a new `hasLimit` member was added — compile-time tightening only, no runtime change
 - **Bug fix** — error summary no longer drops a second field's error when two different fields share the same kind + message-less default; `NgxHeadlessNotification` no longer leaks the internal `warn:` prefix; `createErrorMessageSignal`'s ID fallback strips Angular's internal `{appId}.form{n}.` prefix; required `Date`/`File`/`Map`-valued leaves no longer vanish from field-optionality summaries
 - **BREAKING: `NgxFormFieldCharacterCount`'s `colorThresholds` input removed** — warning/danger color breakpoints are now CSS-only via `--ngx-form-field-char-count-warning-threshold` / `-danger-threshold` (default `80`/`95`); `[liveAnnounce]` wording stays fixed at those defaults regardless of a CSS override (see [§13](#13-ngxformfieldcharactercount-colorthresholds-removed--thresholds-are-css-only-355))
+- **BREAKING: `expectNoA11yViolations` no longer accepts `runOnly`** — the WCAG 2.2 AA tag set is a non-overridable baseline, enforced at both compile time and runtime; use the new `createA11yValidator({ tags })` when a narrower scope is the point of the test (see [§16](#16-testing-the-wcag-22-aa-baseline-is-non-overridable-347))
+- **BREAKING: Vest's typed field-name union now flows through the adapter** — a suite declared `create<{ fields: … }>(…)` makes a mistyped `only` name a compile error instead of a silent no-op that reported the field valid; untyped suites are unaffected and no caller writes the type parameter (see [§17](#17-vest-the-suites-typed-field-name-union-flows-through-the-adapter-308))
+- **BREAKING (widening): four public types now accept an explicit `undefined`** — `NgxSignalFormsUserConfig`, `NgxSignalFormControlPresetOverrides`, `ErrorMessageRegistry`, and `resolveValidationErrorMessage`/`getDefaultValidationMessage` (via the new `ResolvableValidationError`); every previously-valid input still compiles (see [§18](#18-four-public-types-now-accept-an-explicit-undefined-286))
 
 ---
 
@@ -1193,8 +1196,7 @@ leaf is counted consistently whether it's `null` or populated.
   pass an explicit `submittedStatus` — otherwise errors will stay hidden
   (this is the fix, not a regression).
 
-- **Apply the current rc.11 API changes** when upgrading from any earlier
-  release candidate:
+- **Apply the rc.11 API changes** when upgrading from rc.10 or earlier:
   - replace form-level `errorStrategy="inherit"` with a concrete strategy or
     remove the binding;
   - replace `[formField]` with `[formTree]` on `NgxFormMarkingLegend`;
@@ -1207,6 +1209,28 @@ leaf is counted consistently whether it's `null` or populated.
     requires it.
     Read [`docs/migrations/v1.0.0-rc.11.md`](./migrations/v1.0.0-rc.11.md) for
     the bounded rc.10 → rc.11 upgrade guide and before/after templates.
+
+- **Apply the current rc.12 API changes** when upgrading from any earlier
+  release candidate:
+  - replace `<ngx-form-field-notification>` with `<ngx-form-field-error
+presentation="panel">`, and rename the `--ngx-signal-form-notification-*`
+    custom properties to their `-error-panel-*` / `-warning-panel-*`
+    equivalents;
+  - replace `showErrors(…)` with `createShowErrorsComputed(…)`;
+  - move `[colorThresholds]` on `NgxFormFieldCharacterCount` into the
+    `--ngx-form-field-char-count-warning-threshold` /
+    `--ngx-form-field-char-count-danger-threshold` CSS tokens;
+  - drop `runOnly` from any `expectNoA11yViolations` options object;
+  - drop `focusCurrentField` from Vest registrations and register the suite
+    against the path whose value the suite was authored for;
+  - fix any focus name your typed Vest suite's field union rejects — the old
+    code ran zero tests for that field and reported it valid;
+  - coalesce direct `NgxFieldIdentity.hintIds()` reads with `?? []`;
+  - inline `toHintDescriptors` / `createErrorRendererInputs` in custom
+    wrappers, and pass the `isControlVisible` probe to
+    `createAriaInvalidSignal`.
+    Read [`docs/migrations/v1.0.0-rc.12.md`](./migrations/v1.0.0-rc.12.md) for
+    the bounded rc.11 → rc.12 upgrade guide and before/after templates.
 
 - **Run your consumer's existing type-check, build, and relevant tests** to
   catch remaining references and behavior changes.
@@ -1723,3 +1747,118 @@ host-directive input. See
 **Files:** `packages/toolkit/core/directives/field-identity-provider.ts`,
 `packages/toolkit/core/directives/auto-aria.ts`,
 `packages/toolkit/core/services/field-identity.ts`.
+
+---
+
+## 16. `/testing`: the WCAG 2.2 AA baseline is non-overridable (#347)
+
+`expectNoA11yViolations`' second parameter is narrowed to
+`Omit<axe.RunOptions, 'runOnly'>`, and `runOnly` is applied **after** the
+options spread inside `axe.run()`.
+
+```ts
+// before — silently replaced the WCAG 2.2 AA baseline with a narrower set
+await expectNoA11yViolations(el, { runOnly: ['wcag2a'] });
+
+// after — compile error
+await expectNoA11yViolations(el);
+```
+
+The type narrowing alone was not enough: `Omit<…>` only rejects a fresh object
+literal, so a value already typed as `axe.RunOptions` still type-checked and
+its `runOnly` won the spread. Applying `runOnly` last makes the baseline win at
+runtime regardless of how the caller's options value got its type. Every other
+key — including `resultTypes` — is still honored, and still overridable.
+
+Toolkit components are published primitives, so an a11y violation in one is a
+bug. This helper is a hard gate by design; weakening the tag set at a call site
+turned that gate off silently.
+
+When a test genuinely wants a narrower scope, build an explicitly scoped
+checker instead:
+
+```ts
+import { createA11yValidator } from '@ngx-signal-forms/toolkit/testing';
+
+const checkWcag21 = createA11yValidator({ tags: ['wcag2a', 'wcag21a'] });
+await checkWcag21(element);
+```
+
+`tags` is constrained to `WCAG_22_AA_TAG`, so the option can only narrow the
+baseline, never reach outside it. Passing an empty array throws rather than
+silently disabling the check.
+
+**Files:** `packages/toolkit/testing/a11y.ts`.
+
+---
+
+## 17. Vest: the suite's typed field-name union flows through the adapter (#308)
+
+Vest propagates a field-name union `F` when a suite is declared with
+`create<{ fields: 'email' | 'password' }>(…)` or from a schema. The adapter
+used to erase that union to plain `string` at every boundary, so a mistyped
+focus name compiled, ran **zero** tests, and reported the field valid — a
+silent, fail-open defect.
+
+`VestRunnableSuite`, `VestOnlyFieldSelector`, `VestResultLike`,
+`VestRegisterOptions`, `RunVestSuiteParams`/`RunVestSuiteResult`,
+`ValidateVestOptions`, `validateVest`, `validateVestWarnings`, and
+`VestSuiteAdapter.register`/`runVestSuite` now carry a field-name type
+parameter `F extends string = string`, inferred from the `suite` argument.
+
+```ts
+const suite = create<{ fields: 'email' | 'password' }>('login', (data) => {
+  /* ... */
+});
+
+validateVest(form, { suite, only: () => 'emial' });
+//                                     ^^^^^^^ now a compile error
+```
+
+**No caller writes `F` explicitly**, and an untyped suite (`F` defaulting to
+`string`) is completely unaffected. If a typed suite now rejects a name you
+were passing, fix the name — the previous behavior validated nothing for that
+field.
+
+**Files:** `packages/toolkit/vest/src/vest-adapter.ts`,
+`packages/toolkit/vest/src/validate-vest.ts`.
+
+---
+
+## 18. Four public types now accept an explicit `undefined` (#286)
+
+Under `exactOptionalPropertyTypes`, a bare `?:` member permits omission but not
+an explicit `undefined`. Four surfaces accepted explicit `undefined` at runtime
+— with specs asserting the fall-through — while their types denied it. The
+types were wrong, not the implementations.
+
+| Surface                                                         | Change                                                                       |
+| --------------------------------------------------------------- | ---------------------------------------------------------------------------- |
+| `NgxSignalFormsUserConfig`                                      | every member accepts explicit `undefined`; the `??`-based merge inherits     |
+| `NgxSignalFormControlPresetOverrides`                           | inner `Partial<>` replaced by an explicit-undefined mapped type              |
+| `ErrorMessageRegistry` (via `BuiltInErrorMessages`)             | an `undefined` entry falls through to the next tier                          |
+| `resolveValidationErrorMessage` / `getDefaultValidationMessage` | both take `ResolvableValidationError` instead of Angular's `ValidationError` |
+
+This is **widening only** — every previously-valid input still compiles. It is
+called out because it changes exported type shapes at a pre-1.0 boundary.
+
+The practical win: you can spread a partially-populated config, or build an
+error-message registry from optional i18n lookups, without `exactOptionalPropertyTypes`
+rejecting the `undefined` members that the merge was always designed to handle.
+
+```ts
+// now type-checks under exactOptionalPropertyTypes
+provideNgxSignalFormsConfig({
+  defaultErrorStrategy: userPrefs.strategy, // possibly undefined → inherits
+});
+```
+
+> **Known gap:** `ResolvableValidationError` currently reaches only the
+> unpublished `/core` entry point, so a consumer importing
+> `resolveValidationErrorMessage` from the package root cannot name its
+> parameter type. Inline object literals and Angular `ValidationError` values
+> still compile. Promoting the type to the root barrel is a non-breaking
+> addition and is tracked as a follow-up.
+
+**Files:** `packages/toolkit/core/utilities/resolve-error-message.ts`,
+`packages/toolkit/core/types/`, `packages/toolkit/core/providers/`.

@@ -8,7 +8,13 @@ immediately preceding version to that release.
 | -------------- | -------------- | ---------------------------------- |
 | `v1.0.0-rc.10` | `v1.0.0-rc.11` | [Upgrade guide](./v1.0.0-rc.11.md) |
 | `v1.0.0-rc.11` | `v1.0.0-rc.12` | [Upgrade guide](./v1.0.0-rc.12.md) |
-| `v1.0.0-rc.12` | `v1.0.0-rc.13` | [Upgrade guide](./v1.0.0-rc.13.md) |
+
+> **Add the guide before you cut the release, not after.** A guide written
+> against a version number that is never published strands its content: readers
+> upgrading from the last _published_ version never reach it, because the hop it
+> documents does not exist. If work lands after a guide is drafted but before
+> that version ships, fold the new entries into the pending guide rather than
+> starting the next one.
 
 Each guide starts with an `Upgrade from v<previous-version>` section:
 

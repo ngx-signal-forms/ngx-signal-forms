@@ -10,7 +10,8 @@ A comprehensive guide to styling `@ngx-signal-forms/toolkit` components using st
 - [2. Headless & standalone components](#2-headless--standalone-components) —
   [Error & warning messages](#error--warning-messages) · [Hints](#hints) ·
   [Grouped panel feedback](#grouped-panel-feedback-panel-presentation) · [Error summary](#error-summary) ·
-  [Character count](#character-count) · [Assistive row](#assistive-row) · [Fieldset](#fieldset)
+  [Character count](#character-count) · [Marking legend](#marking-legend) ·
+  [Assistive row](#assistive-row) · [Fieldset](#fieldset)
 - [3. Form field component](#3-form-field-component) —
   [Layout modes](#layout-modes-standard-outline-and-plain) · [Semantic color scale](#semantic-color-scale-the-knobs) ·
   [Specific overrides](#specific-overrides) · [States & focus](#states--focus) ·
@@ -333,6 +334,32 @@ consumed by its own `color-mix()` expression, but it stays in the public
 [`--ngx-form-field-hint-display`](#hints): an **internal coordination
 hook, not a theming knob**. It is documented here for transparency (e.g.
 debugging computed styles), not as something to set.
+
+### Marking Legend
+
+**Component:** `ngx-form-marking-legend`
+
+Renders the one-line "* indicates a required field" caption above a form, so
+the meaning of the per-field markers is stated once rather than guessed. It
+sits outside `ngx-form-field-wrapper` and does not inherit the Shared Feedback
+layer — it is body copy, not micro-copy, so it carries its own two tokens.
+
+| Property                              | Default                  | Description       |
+| :------------------------------------ | :----------------------- | :---------------- |
+| `--ngx-form-marking-legend-font-size` | `0.875rem`               | Legend font size  |
+| `--ngx-form-marking-legend-color`     | `rgba(50, 65, 85, 0.85)` | Legend text color |
+
+The default color is deliberately darker than the
+`--ngx-form-field-color-text-secondary` used for labels and hints
+(`rgba(50, 65, 85, 0.75)`). The legend is the only place the marker's meaning
+is written down, so it is held to body-text contrast rather than the muted
+tone that supporting copy can afford: it resolves to ~6.6:1 on white, against
+~4.9:1 for the secondary tone. If you re-theme it, keep it at or above 4.5:1
+against the page background — WCAG 1.4.3 AA.
+
+Which marker the legend names comes from the `showMarkerWhen` /
+`requiredMarker` / `optionalMarker` config (or the matching inputs), not from
+CSS — see the [`/assistive` README](../assistive/README.md#ngxformmarkinglegend).
 
 ### Assistive Row
 
