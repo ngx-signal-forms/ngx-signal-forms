@@ -64,7 +64,7 @@ catalogs:
     eslint-plugin-playwright: '^2.11.0'
   primeng:
     '@primeuix/themes': '2.0.3'
-    primeicons: '7.0.0'
+    primeicons: '8.0.0'
     primeng: '21.1.9'
   shiki:
     '@shikijs/core': '^4.4.3'
