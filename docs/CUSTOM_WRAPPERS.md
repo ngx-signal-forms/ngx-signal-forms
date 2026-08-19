@@ -317,6 +317,7 @@ import {
   createErrorVisibility,
   generateErrorId,
   generateWarningId,
+  isElementCssVisible,
   resolveFieldName,
 } from '@ngx-signal-forms/toolkit';
 import {
@@ -330,11 +331,17 @@ import {
 interface MyAriaDomSnapshot {
   readonly fieldName: string | null;
   readonly describedBy: string | null;
+  /** Whether the element that carries `aria-invalid` still has a layout box. */
+  readonly isControlVisible: boolean;
 }
 
 const INITIAL_DOM_SNAPSHOT: MyAriaDomSnapshot = {
   fieldName: null,
   describedBy: null,
+  // Assume laid out until a real read phase says otherwise: an element that
+  // has not been through layout reports `false`, and stripping `aria-invalid`
+  // on the strength of a pre-layout probe would flicker it off and back on.
+  isControlVisible: true,
 };
 
 @Directive({
@@ -381,9 +388,17 @@ export class MyDesignSystemAriaDirective {
     fieldName: () => this.#domSnapshot().fieldName,
   });
 
+  // The visibility probe is the wrapper's own responsibility (see call-out 5
+  // below): nothing in the factory reads the DOM, so `aria-invalid` would go
+  // stale on a control inside a collapsed container without this.
+  readonly #isControlVisible = computed(
+    () => this.#domSnapshot().isControlVisible,
+  );
+
   readonly #ariaInvalid = createAriaInvalidSignal(
     this.#fieldState,
     this.#visibility,
+    this.#isControlVisible,
   );
 
   readonly #ariaRequired = createAriaRequiredSignal(this.#fieldState);
@@ -402,13 +417,20 @@ export class MyDesignSystemAriaDirective {
     //    thrashing — never mix `read` and `write` work in the same callback.
     afterEveryRender(
       {
-        earlyRead: () => this.#readDomSnapshot(),
+        earlyRead: () =>
+          // `checkVisibility()` is a layout read, so it belongs here rather
+          // than in an `effect()` — effects flush before render hooks in the
+          // same cycle and would report pre-layout geometry.
+          this.#readDomSnapshot(
+            isElementCssVisible(this.#element.nativeElement),
+          ),
         write: (snapshot) => {
           // Commit the snapshot read in `earlyRead`. Doing it here (not in
           // `earlyRead`) keeps the write phase the single mutation point.
           if (
             snapshot.fieldName !== this.#domSnapshot().fieldName ||
-            snapshot.describedBy !== this.#domSnapshot().describedBy
+            snapshot.describedBy !== this.#domSnapshot().describedBy ||
+            snapshot.isControlVisible !== this.#domSnapshot().isControlVisible
           ) {
             this.#domSnapshot.set(snapshot);
           }
@@ -422,7 +444,7 @@ export class MyDesignSystemAriaDirective {
     );
   }
 
-  #readDomSnapshot(): MyAriaDomSnapshot {
+  #readDomSnapshot(isControlVisible: boolean): MyAriaDomSnapshot {
     const el = this.#element.nativeElement;
     const fieldName = resolveFieldName(el);
     const raw = el.getAttribute('aria-describedby');
@@ -431,7 +453,7 @@ export class MyDesignSystemAriaDirective {
     // get re-counted as "preserved". A production directive caches the managed
     // ID set in a signal; this example recomputes inline for clarity.
     if (!raw || !fieldName) {
-      return { fieldName, describedBy: raw };
+      return { fieldName, describedBy: raw, isControlVisible };
     }
 
     const managed = new Set<string>([
@@ -447,6 +469,7 @@ export class MyDesignSystemAriaDirective {
     return {
       fieldName,
       describedBy: preserved.length > 0 ? preserved : null,
+      isControlVisible,
     };
   }
 
@@ -483,12 +506,33 @@ A few things to call out:
    pre-existing `aria-describedby` IDs to preserve) never race with the
    attribute writes that follow. Mixing reads and writes in the same callback
    triggers layout thrash on every change-detection cycle.
-5. **`isControlVisible` is optional.** `createAriaInvalidSignal` accepts an
-   optional third argument — a `Signal<boolean>` that suppresses
-   `aria-invalid` when the host is collapsed (e.g. inside a closed
-   `<details>`). `NgxSignalFormAutoAria` wires this from `NgxFieldIdentity`'s
-   shared visibility flag; consumers can pass any `Signal<boolean>` they
-   already maintain.
+5. **A wrapper composing `createAriaInvalidSignal` owns the visibility probe
+   itself.** The factory's third argument is a `Signal<boolean>` that resolves
+   the attribute to `null` while the control has no layout box — a collapsed
+   `<details>`, an inactive tab panel, a non-current wizard step. It is
+   optional in the type signature only; omitting it means `aria-invalid`
+   freezes at whatever it was when the container closed, and is wrong the
+   instant the container reopens with a different validation state.
+
+   Nothing supplies this for you. `NgxSignalFormAutoAria` probes its own host
+   element every read phase, so plain `[formField]` controls get the
+   behaviour for free — but a wrapper that opts out of the directive and
+   composes the factories instead inherits none of it. Probe with
+   `isElementCssVisible(el)` (the same public helper auto-aria uses; it fails
+   open on runtimes without `Element.checkVisibility()`) inside
+   `afterEveryRender`'s `earlyRead` phase, publish the result into a signal,
+   and thread that signal in — exactly as the example above does.
+
+   Probe **the element you write `aria-invalid` onto**, which is not always
+   the wrapper host. A shim that writes onto an inner focusable element (a
+   rendered `[role="combobox"]`, the native `<input>` inside a design-system
+   checkbox) must probe that inner element, or a control hidden inside a
+   still-laid-out wrapper goes unnoticed. The three design-system reference
+   apps under `apps/demo-material`, `apps/demo-primeng`, and
+   `apps/demo-spartan` each carry a `createControlVisibilitySignal` helper
+   that packages this phasing, and a collapsible-container case in their
+   e2e suites that proves it.
+
 6. **The consumer never inherits `NgxSignalFormAutoAria`.** That's the whole
    point — your directive owns the host, owns the writes, and owns the
    render phasing. The factories are reactive transforms over `FieldState`,
@@ -760,6 +804,10 @@ above). See `NgxFormFieldError` for the reference implementation.
 - [ ] Wrapper does **not** write `aria-invalid`, `aria-required`, or
       `aria-describedby` on its host element — those belong on the bound
       control and are owned by `NgxSignalFormAutoAria`.
+- [ ] If the wrapper composes `createAriaInvalidSignal` instead of inheriting
+      `NgxSignalFormAutoAria`, it passes the third `isControlVisible`
+      argument, probed from the element that carries the attribute — see
+      call-out 5 under [Composing ARIA primitives](#composing-aria-primitives).
 - [ ] Optional: register `NGX_FORM_FIELD_HINT_RENDERER` via
       `provideFormFieldHintRenderer(...)` if you want projected
       `<ngx-form-field-hint>` instances to render with design-system chrome.

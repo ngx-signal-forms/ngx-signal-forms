@@ -110,43 +110,76 @@ import { profileFormSchema } from './profile-form.schema';
             Work addresses are best for recovery and team handoff.
           </ngx-form-field-hint>
         </prime-form-field>
-
-        <!-- Select (PrimeNG compatibility shim; toolkit wiring still lives in the wrapper layer) -->
-        <prime-form-field
-          [ngxPrimeFormField]="roleField"
-          fieldName="profile-role"
-          showRequiredMarker
-        >
-          <label id="profile-role-label" for="profile-role">Role</label>
-          <prime-select-control
-            inputId="profile-role"
-            ariaLabelledBy="profile-role-label"
-            [options]="roleOptions"
-            placeholder="Pick a role"
-            ngxSignalFormControl="standalone-field-like"
-            [formField]="roleField"
-          />
-          <ngx-form-field-hint>
-            We use this to tailor examples and sensible defaults.
-          </ngx-form-field-hint>
-        </prime-form-field>
       </div>
 
-      <!-- Checkbox -->
-      <prime-form-field
-        [ngxPrimeFormField]="newsletterField"
-        fieldName="profile-newsletter"
+      <!--
+        Collapsible section — the \`aria-invalid\` staleness case.
+
+        \`[open]\` + \`(toggle)\` keeps \`preferencesExpanded\` authoritative. A
+        bare \`<details>\` toggles without going through Angular, so no change
+        detection runs and no layout probe re-reads. Collapsing the section
+        takes the layout box away from three surfaces at once:
+
+        - \`<prime-form-field>\`'s own \`data-invalid\` mirror,
+        - the \`[role="combobox"]\` element \`prime-select-control\` writes
+          \`aria-invalid\` onto,
+        - the native \`<input type="checkbox">\` \`prime-checkbox-control\`
+          writes \`aria-invalid\` onto.
+
+        All three probe the element they write to, so all three drop the
+        attribute instead of freezing at its last value.
+      -->
+      <details
+        class="profile-form__collapsible"
+        [open]="preferencesExpanded()"
+        (toggle)="onPreferencesToggle($event)"
+        data-testid="preferences-details"
       >
-        <label for="profile-newsletter">Subscribe to the release notes</label>
-        <prime-checkbox-control
-          inputId="profile-newsletter"
-          ngxSignalFormControl="checkbox"
-          [formField]="newsletterField"
-        />
-        <ngx-form-field-hint>
-          One concise digest when new toolkit features ship — no inbox confetti.
-        </ngx-form-field-hint>
-      </prime-form-field>
+        <summary class="profile-form__collapsible-summary">
+          Role and subscription preferences
+        </summary>
+
+        <div class="profile-form__collapsible-body field-stack">
+          <!-- Select (PrimeNG compatibility shim; toolkit wiring still lives in the wrapper layer) -->
+          <prime-form-field
+            [ngxPrimeFormField]="roleField"
+            fieldName="profile-role"
+            showRequiredMarker
+          >
+            <label id="profile-role-label" for="profile-role">Role</label>
+            <prime-select-control
+              inputId="profile-role"
+              ariaLabelledBy="profile-role-label"
+              [options]="roleOptions"
+              placeholder="Pick a role"
+              ngxSignalFormControl="standalone-field-like"
+              [formField]="roleField"
+            />
+            <ngx-form-field-hint>
+              We use this to tailor examples and sensible defaults.
+            </ngx-form-field-hint>
+          </prime-form-field>
+
+          <!-- Checkbox -->
+          <prime-form-field
+            [ngxPrimeFormField]="newsletterField"
+            fieldName="profile-newsletter"
+          >
+            <label for="profile-newsletter"
+              >Subscribe to the release notes</label
+            >
+            <prime-checkbox-control
+              inputId="profile-newsletter"
+              ngxSignalFormControl="checkbox"
+              [formField]="newsletterField"
+            />
+            <ngx-form-field-hint>
+              One concise digest when new toolkit features ship — no inbox
+              confetti.
+            </ngx-form-field-hint>
+          </prime-form-field>
+        </div>
+      </details>
 
       <aside class="profile-form__status" aria-live="polite">
         <p class="profile-form__status-label">Validation rhythm</p>
@@ -240,6 +273,17 @@ export class ProfileFormComponent {
   );
 
   protected readonly lastSubmission = signal<string | null>(null);
+
+  /**
+   * Drives the `<details>` around the role select and newsletter checkbox.
+   * Bound both ways so a browser-initiated toggle still runs change
+   * detection — see the template comment on the `<details>` for why.
+   */
+  protected readonly preferencesExpanded = signal(true);
+
+  protected onPreferencesToggle(event: Event): void {
+    this.preferencesExpanded.set((event.target as HTMLDetailsElement).open);
+  }
 
   protected reset(): void {
     // Reset model first so the form derives its baseline from the cleared

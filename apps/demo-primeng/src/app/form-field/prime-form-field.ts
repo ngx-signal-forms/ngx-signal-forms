@@ -6,6 +6,7 @@ import {
   contentChildren,
   effect,
   inject,
+  Injector,
   input,
   isDevMode,
   signal,
@@ -31,6 +32,7 @@ import {
   createAriaRequiredSignal,
   createFieldNameResolver,
 } from '@ngx-signal-forms/toolkit/headless';
+import { createControlVisibilitySignal } from '../a11y/control-visibility';
 
 /**
  * PrimeNG-flavoured form-field wrapper.
@@ -160,7 +162,11 @@ import {
   host: {
     style:
       '--prime-form-field-invalid-border-color: var(--p-form-field-invalid-border-color, #ef4444);',
-    '[attr.data-invalid]': 'ariaInvalidValue() === "true" ? "true" : null',
+    // Mirrors `ariaInvalidValue()` verbatim, so 'false' (valid, laid out) and
+    // absent (no layout box) stay distinguishable — matching the Material and
+    // Spartan wrappers. The styles.css seam keys off [data-invalid='true'],
+    // so only that value drives the invalid border.
+    '[attr.data-invalid]': 'ariaInvalidValue()',
     '[attr.data-field-name]': 'resolvedFieldName()',
     '[attr.data-prime-required]': 'ariaRequiredValue()',
     '[class.prime-form-field--checkbox]': 'isCheckboxControl()',
@@ -289,6 +295,7 @@ export class PrimeFormFieldComponent<TValue = unknown> {
 
   readonly #config = inject(NGX_SIGNAL_FORMS_CONFIG);
   readonly #formContext = injectFormContext();
+  readonly #injector = inject(Injector);
 
   /**
    * Strategy resolved against the global config and any form-level
@@ -342,9 +349,22 @@ export class PrimeFormFieldComponent<TValue = unknown> {
     this.submittedStatus,
   );
 
+  /**
+   * Layout probe for the bound control — the element `aria-invalid` actually
+   * lands on (auto-ARIA writes it there for `input-like` controls, and the
+   * `p-select` / `p-checkbox` shims write it onto their inner focusable
+   * element). Probing the wrapper host instead would miss a control hidden
+   * inside a still-laid-out wrapper.
+   */
+  readonly #isControlVisible = createControlVisibilitySignal(
+    () => this.#boundControlElement(),
+    this.#injector,
+  );
+
   readonly ariaInvalidValue = createAriaInvalidSignal(
     this.#fieldStateSignal,
     this.#showByStrategy,
+    this.#isControlVisible,
   );
 
   readonly ariaRequiredValue = createAriaRequiredSignal(this.#fieldStateSignal);
