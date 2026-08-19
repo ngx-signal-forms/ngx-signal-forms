@@ -473,15 +473,16 @@ Building blocks for custom wrappers and headless UIs that want to join the
 
 ### ARIA and identity
 
-| Function                                        | Description                                                                                 |
-| ----------------------------------------------- | ------------------------------------------------------------------------------------------- |
-| `buildAriaDescribedBy(fieldName, options)`      | Assemble `aria-describedby` for manual ARIA controls                                        |
-| `normalizeFieldName(value)`                     | Trim and null-collapse a candidate name into the v1 identity form                           |
-| `resolveFieldName(element)`                     | Read a usable field name from an element's `id` (trimmed, with `element.id` fallback)       |
-| `resolveFieldNameFromCandidates(...candidates)` | Pick the first non-blank field name from a precedence chain (explicit → host id → context)  |
-| `generateErrorId(fieldName, kind?)`             | Derive `{fieldName}-error` (container) or `{fieldName}-error-{kind}` (per-error) element id |
-| `generateWarningId(fieldName)`                  | Derive the `{fieldName}-warning` element id used for `aria-describedby`                     |
-| `isElementCssVisible(element)`                  | CSS-visibility test via `Element.checkVisibility()`; reports `true` on runtimes without it  |
+| Function                                                  | Description                                                                                                           |
+| --------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
+| `buildAriaDescribedBy(fieldName, options)`                | Assemble `aria-describedby` for manual ARIA controls                                                                  |
+| `normalizeFieldName(value)`                               | Trim and null-collapse a candidate name into the v1 identity form                                                     |
+| `resolveFieldName(element)`                               | Read a usable field name from an element's `id` (trimmed, with `element.id` fallback)                                 |
+| `resolveFieldNameFromCandidates(...candidates)`           | Pick the first non-blank field name from a precedence chain (explicit → host id → context)                            |
+| `generateErrorId(fieldName, kind?)`                       | Derive `{fieldName}-error` (container) or `{fieldName}-error-{kind}` (per-error) element id                           |
+| `generateWarningId(fieldName)`                            | Derive the `{fieldName}-warning` element id used for `aria-describedby`                                               |
+| `isElementCssVisible(element)`                            | CSS-visibility test via `Element.checkVisibility()`; reports `true` on runtimes without it                            |
+| `createControlVisibilitySignal(resolveElement, injector)` | Reactive layout probe for `createAriaInvalidSignal`'s third argument; registers one `afterEveryRender` and fails open |
 
 ### Field identity service
 

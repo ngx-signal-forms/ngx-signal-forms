@@ -280,6 +280,16 @@ normalizeFieldName(fieldName): string | null // trim; empty/whitespace/nullish â
 resolveFieldNameFromCandidates(...candidates): string | null // first non-null normalized candidate wins
 isElementCssVisible(element): boolean // used by field identity / focus management
 
+// Layout probe for `createAriaInvalidSignal`'s third argument. Registers one
+// `afterEveryRender` (probe in `earlyRead`, publish in `write`) and returns a
+// reactive `Signal<boolean>`. `resolveElement` must return the element that
+// CARRIES `aria-invalid`, not necessarily the wrapper host. Fails open:
+// starts `true` and stays `true` while `resolveElement` returns `null`.
+// Reach for it when the wrapper has no render hook of its own; a wrapper or
+// shim that already runs `afterEveryRender` calls `isElementCssVisible` in
+// its own `earlyRead` instead.
+createControlVisibilitySignal(resolveElement, injector): Signal<boolean>
+
 interface AriaDescribedByChainOptions {
   readonly baseIds?: readonly string[];     // hint or helper IDs to prepend
   readonly showErrors?: boolean;             // whether the error ID should be in the chain
@@ -832,10 +842,12 @@ createFieldNameResolver(options): Signal<string | null>
 - `createAriaInvalidSignal`'s third argument is optional in the type signature
   only. A wrapper that composes the factory owns the layout probe itself â€”
   without it `aria-invalid` goes stale on a control inside a collapsed
-  `<details>`, an inactive tab panel, or a non-current wizard step. Probe the
-  element that carries the attribute with `isElementCssVisible` in
-  `afterEveryRender`'s `earlyRead` phase. See `docs/CUSTOM_WRAPPERS.md`
-  call-out 5 under "Composing ARIA primitives".
+  `<details>`, an inactive tab panel, or a non-current wizard step. Two forms:
+  `createControlVisibilitySignal(resolveElement, injector)` from the root
+  entry when the wrapper has no render hook, or `isElementCssVisible` inside
+  an existing `afterEveryRender` `earlyRead` phase when it already runs one.
+  Probe the element that carries the attribute, which is not always the host.
+  See `docs/CUSTOM_WRAPPERS.md` call-out 5 under "Composing ARIA primitives".
 - `createAriaDescribedByBridge` coordinates the chain with a third-party host
   that owns `aria-describedby`; ordinary custom wrappers use
   `createAriaDescribedBySignal` directly.
