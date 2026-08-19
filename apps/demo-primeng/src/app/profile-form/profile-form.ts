@@ -116,10 +116,9 @@ import { profileFormSchema } from './profile-form.schema';
         Collapsible section — the \`aria-invalid\` staleness case.
 
         \`[open]\` + \`(toggle)\` keeps \`preferencesExpanded\` authoritative. A
-        bare \`<details>\` toggles in the browser without going through
-        Angular, so nothing would re-run change detection and no layout probe
-        would re-read. With the binding in place, collapsing the section takes
-        the layout box away from three surfaces at once:
+        bare \`<details>\` toggles without going through Angular, so no change
+        detection runs and no layout probe re-reads. Collapsing the section
+        takes the layout box away from three surfaces at once:
 
         - \`<prime-form-field>\`'s own \`data-invalid\` mirror,
         - the \`[role="combobox"]\` element \`prime-select-control\` writes
@@ -277,10 +276,8 @@ export class ProfileFormComponent {
 
   /**
    * Drives the `<details>` around the role select and newsletter checkbox.
-   * Bound both ways (`[open]` out, `(toggle)` back in) so a browser-initiated
-   * toggle still runs change detection — otherwise the wrapper's and the two
-   * shims' layout probes would never re-read and `aria-invalid` would go
-   * stale on the hidden controls.
+   * Bound both ways so a browser-initiated toggle still runs change
+   * detection — see the template comment on the `<details>` for why.
    */
   protected readonly preferencesExpanded = signal(true);
 

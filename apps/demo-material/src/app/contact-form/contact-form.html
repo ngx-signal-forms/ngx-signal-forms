@@ -54,14 +54,12 @@
 
   <!-- Collapsible container — the `aria-invalid` staleness case.
 
-       `[open]` + `(toggle)` keeps `topicExpanded` authoritative: a bare
-       `<details>` toggles in the browser without going through Angular, so
-       nothing would re-run change detection and the wrapper's layout probe
-       would never re-read. With the binding in place, collapsing the section
-       takes the `<mat-select>`'s layout box away, the wrapper's
-       `createControlVisibilitySignal` probe reports `false` in the next
-       `earlyRead`, and `data-ngx-mat-invalid` drops off instead of freezing
-       at its last value. -->
+       `[open]` + `(toggle)` keeps `topicExpanded` authoritative. A bare
+       `<details>` toggles without going through Angular, so no change
+       detection runs and the layout probe never re-reads. Collapsing this
+       section takes the `<mat-select>`'s layout box away, and
+       `data-ngx-mat-invalid` drops off the wrapper. See
+       `createControlVisibilitySignal` in ../wrapper/control-visibility.ts. -->
   <details
     class="demo-form__collapsible"
     [open]="topicExpanded()"

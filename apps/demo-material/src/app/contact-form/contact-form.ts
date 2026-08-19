@@ -98,12 +98,9 @@ export class ContactFormComponent {
   protected readonly submitted = signal(false);
 
   /**
-   * Drives the `<details>` around the Topic field. The `<details>` binds
-   * `[open]` to this signal and pushes browser-initiated toggles back into
-   * it via `(toggle)` — a bare `<details>` would open and close without ever
-   * running change detection, so `MatFormFieldWrapper`'s layout probe would
-   * never re-read and `data-ngx-mat-invalid` would go stale on the hidden
-   * `<mat-select>`.
+   * Drives the `<details>` around the Topic field. Bound both ways so a
+   * browser-initiated toggle still runs change detection — see the template
+   * comment on the `<details>` for why that matters.
    */
   protected readonly topicExpanded = signal(true);
 

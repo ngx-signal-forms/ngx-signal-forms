@@ -19,6 +19,7 @@ import {
 } from '@angular/forms/signals';
 import {
   createErrorVisibility,
+  isElementCssVisible,
   NGX_SIGNAL_FORM_ARIA_MODE,
   NGX_SIGNAL_FORM_FIELD_CONTEXT,
   NGX_SIGNAL_FORM_HINT_REGISTRY,
@@ -30,7 +31,6 @@ import {
   createAriaRequiredSignal,
   createHintIdsSignal,
 } from '@ngx-signal-forms/toolkit/headless';
-import { createControlVisibilitySignal } from '../a11y/control-visibility';
 import { Checkbox, CheckboxModule } from 'primeng/checkbox';
 
 /**
@@ -128,19 +128,17 @@ export class PrimeCheckboxControlComponent implements FormValueControl<boolean> 
   });
 
   /**
-   * Layout probe for the element this shim writes `aria-invalid` onto — the
-   * native `<input type="checkbox">` PrimeNG renders inside `p-checkbox`,
-   * not the component host. Same element the write phase below resolves.
+   * Whether the element this shim writes `aria-invalid` onto still has a
+   * layout box. The single render hook below owns it: `earlyRead` probes the
+   * native input, `write` publishes the result and then writes the
+   * attributes, so one DOM lookup serves both phases.
    */
-  readonly #isControlVisible = createControlVisibilitySignal(
-    () => this.#nativeInput(),
-    this.#injector,
-  );
+  readonly #isControlVisible = signal(true);
 
   protected readonly ariaInvalid = createAriaInvalidSignal(
     this.#fieldState,
     this.#visibility,
-    this.#isControlVisible,
+    this.#isControlVisible.asReadonly(),
   );
 
   protected readonly ariaRequired = createAriaRequiredSignal(this.#fieldState);
@@ -171,8 +169,23 @@ export class PrimeCheckboxControlComponent implements FormValueControl<boolean> 
   constructor() {
     afterEveryRender(
       {
-        write: () => {
+        // `checkVisibility()` is a layout read, so it belongs in `earlyRead`:
+        // effects flush before render hooks and would report pre-layout
+        // geometry. Resolving the input here also hands `write` the same
+        // element, so `inputViewChild` is walked once per render.
+        earlyRead: () => {
           const nativeInput = this.#nativeInput();
+
+          return {
+            nativeInput,
+            visible: nativeInput === null || isElementCssVisible(nativeInput),
+          };
+        },
+        write: ({ nativeInput, visible }) => {
+          // Publish before reading `ariaInvalid()`: the computed re-runs on
+          // read, so the attribute reflects this render's layout rather than
+          // the previous one's.
+          this.#isControlVisible.set(visible);
 
           if (!nativeInput) {
             return;

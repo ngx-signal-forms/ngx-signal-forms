@@ -129,13 +129,11 @@ const accountSchema = schema<AccountPreferences>((path) => {
         The plan field lives inside a collapsible container so the demo can
         take a bound control's layout box away on demand.
 
-        \`[open]\` + \`(toggle)\` keeps \`planExpanded\` authoritative: a bare
-        \`<details>\` toggles in the browser without going through Angular, so
-        nothing would re-run change detection and the wrapper's layout probe
-        would never re-read. With the binding in place, collapsing the section
-        makes \`NgxSpartanFormField\`'s probe report \`false\` in the next
-        \`earlyRead\`, and \`data-spartan-invalid\` drops off the wrapper
-        instead of freezing at its last value.
+        \`[open]\` + \`(toggle)\` keeps \`planExpanded\` authoritative. A bare
+        \`<details>\` toggles without going through Angular, so no change
+        detection runs and the layout probe never re-reads. Collapsing the
+        section makes \`NgxSpartanFormField\`'s probe report \`false\`, and
+        \`data-spartan-invalid\` drops off the wrapper.
       -->
       <details
         class="mt-5 rounded-md border p-4"
@@ -242,11 +240,9 @@ export class AccountPreferencesForm {
   protected readonly lastSubmission = signal<string | null>(null);
 
   /**
-   * Drives the `<details>` around the plan select. Bound both ways
-   * (`[open]` out, `(toggle)` back in) so a browser-initiated toggle still
-   * runs change detection — otherwise `NgxSpartanFormField`'s layout probe
-   * would never re-read and `aria-invalid` would go stale on the hidden
-   * control.
+   * Drives the `<details>` around the plan select. Bound both ways so a
+   * browser-initiated toggle still runs change detection — see the template
+   * comment on the `<details>` for why.
    */
   protected readonly planExpanded = signal(true);
 

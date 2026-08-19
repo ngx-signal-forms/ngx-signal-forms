@@ -20,6 +20,7 @@ import {
 } from '@angular/forms/signals';
 import {
   createErrorVisibility,
+  isElementCssVisible,
   NGX_SIGNAL_FORM_ARIA_MODE,
   NGX_SIGNAL_FORM_FIELD_CONTEXT,
   NGX_SIGNAL_FORM_HINT_REGISTRY,
@@ -31,7 +32,6 @@ import {
   createAriaRequiredSignal,
   createHintIdsSignal,
 } from '@ngx-signal-forms/toolkit/headless';
-import { createControlVisibilitySignal } from '../a11y/control-visibility';
 import { Select, SelectModule } from 'primeng/select';
 import type { RoleOption } from '../profile-form/profile-form.model';
 
@@ -168,20 +168,19 @@ export class PrimeSelectControlComponent implements FormValueControl<string> {
   });
 
   /**
-   * Layout probe for the element this shim writes `aria-invalid` onto — the
-   * inner `[role="combobox"]`, not the component host. Same element the
-   * write phase below resolves, so the attribute is never set on a control
-   * that has no layout box (collapsed `<details>`, inactive tab panel, …).
+   * Whether the element this shim writes `aria-invalid` onto still has a
+   * layout box. The single render hook below owns it: `earlyRead` probes the
+   * combobox, `write` publishes the result and then writes the attributes,
+   * so one DOM query serves both phases and the attribute never lands on a
+   * control that has no layout box (collapsed `<details>`, inactive tab
+   * panel, and so on).
    */
-  readonly #isControlVisible = createControlVisibilitySignal(
-    () => this.#comboboxElement(),
-    this.#injector,
-  );
+  readonly #isControlVisible = signal(true);
 
   protected readonly ariaInvalid = createAriaInvalidSignal(
     this.#fieldState,
     this.#visibility,
-    this.#isControlVisible,
+    this.#isControlVisible.asReadonly(),
   );
 
   protected readonly ariaRequired = createAriaRequiredSignal(this.#fieldState);
@@ -209,8 +208,23 @@ export class PrimeSelectControlComponent implements FormValueControl<string> {
   constructor() {
     afterEveryRender(
       {
-        write: () => {
+        // `checkVisibility()` is a layout read, so it belongs in `earlyRead`:
+        // effects flush before render hooks and would report pre-layout
+        // geometry. Resolving the combobox here also hands `write` the same
+        // element, so the DOM is queried once per render.
+        earlyRead: () => {
           const combobox = this.#comboboxElement();
+
+          return {
+            combobox,
+            visible: combobox === null || isElementCssVisible(combobox),
+          };
+        },
+        write: ({ combobox, visible }) => {
+          // Publish before reading `ariaInvalid()`: the computed re-runs on
+          // read, so the attribute reflects this render's layout rather than
+          // the previous one's.
+          this.#isControlVisible.set(visible);
 
           if (!combobox) {
             return;

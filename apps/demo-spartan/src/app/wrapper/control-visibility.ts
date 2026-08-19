@@ -8,42 +8,33 @@ import { isElementCssVisible } from '@ngx-signal-forms/toolkit';
 
 /**
  * Tracks whether the element that carries `aria-invalid` still has a CSS
- * layout box, and publishes the answer as a signal fit for
+ * layout box, and publishes the answer as a signal for
  * `createAriaInvalidSignal`'s third parameter.
  *
- * **Why a wrapper needs this.** `NgxSignalFormAutoAria` probes its own host
- * element every read phase, so plain `[formField]` controls drop
- * `aria-invalid` for free when a collapsed `<details>`, an inactive tab
- * panel, or a non-current wizard step takes their layout box away. A
- * reference wrapper that opts out of auto-ARIA and composes the pure
- * factories instead inherits nothing — without this probe its
- * `aria-invalid` freezes at whatever it was when the container closed, and
- * is wrong the instant the container reopens with a different validation
- * state.
+ * A wrapper that composes the pure ARIA factories opts out of
+ * `NgxSignalFormAutoAria`, so it inherits no layout probe and must own one.
+ * `docs/CUSTOM_WRAPPERS.md` ("Composing ARIA primitives") explains why.
  *
- * **Why `afterEveryRender`'s `earlyRead` phase.** `checkVisibility()` is a
- * layout read. Effects flush strictly *before* render hooks in the same
- * change-detection cycle, so an effect-based probe would report pre-layout
- * geometry. `earlyRead` runs after layout and before any write phase, so
- * the write that sets the attribute sees a value settled for this render.
+ * The probe runs in `afterEveryRender`'s `earlyRead` phase because
+ * `checkVisibility()` is a layout read. Effects flush before render hooks,
+ * so an effect-based probe would report pre-layout geometry.
  * `NgxSignalFormAutoAria` (`packages/toolkit/core/directives/auto-aria.ts`)
  * is the reference for the phasing.
  *
- * The signal starts at `true` and stays `true` while `resolveElement`
- * returns `null`: an element that has not been through layout reports
- * `false`, and stripping `aria-invalid` on the strength of a pre-layout
- * probe would flicker the attribute off and back on every first render.
- * Fail open, then correct on the first real read phase.
+ * The probe fails open: the signal starts `true` and stays `true` while
+ * `resolveElement` returns `null`. An element that has not been through
+ * layout reports `false`, which would flicker the attribute off and back on
+ * during the first render.
  *
- * Each of the three design-system reference apps carries its own copy of
- * this helper on purpose — they are standalone references, and neither
- * depends on the others.
+ * Each design-system demo app carries its own copy. The repo has no shared
+ * Angular library for demo code — `packages/demo-shared` is framework-free
+ * Playwright metadata — so there is nowhere else to put it today.
  *
- * @param resolveElement Returns the element that carries `aria-invalid` —
- *   NOT necessarily the wrapper host. Shims that write onto an inner
- *   focusable element must probe that element.
- * @param injector Injector used to register the render hook, so the helper can
- *   be called from a field initializer rather than only inside a constructor.
+ * @param resolveElement Returns the element that carries `aria-invalid`,
+ *   which is not necessarily the wrapper host. A shim that writes onto an
+ *   inner focusable element must probe that element.
+ * @param injector Registers the render hook, so a field initializer can call
+ *   this helper instead of only a constructor.
  */
 export function createControlVisibilitySignal(
   resolveElement: () => HTMLElement | null,
@@ -59,9 +50,7 @@ export function createControlVisibilitySignal(
         return element === null ? true : isElementCssVisible(element);
       },
       write: (visible) => {
-        if (isControlVisible() !== visible) {
-          isControlVisible.set(visible);
-        }
+        isControlVisible.set(visible);
       },
     },
     { injector },

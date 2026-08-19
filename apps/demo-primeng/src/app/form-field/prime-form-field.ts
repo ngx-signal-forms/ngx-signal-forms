@@ -162,7 +162,11 @@ import { createControlVisibilitySignal } from '../a11y/control-visibility';
   host: {
     style:
       '--prime-form-field-invalid-border-color: var(--p-form-field-invalid-border-color, #ef4444);',
-    '[attr.data-invalid]': 'ariaInvalidValue() === "true" ? "true" : null',
+    // Mirrors `ariaInvalidValue()` verbatim, so 'false' (valid, laid out) and
+    // absent (no layout box) stay distinguishable — matching the Material and
+    // Spartan wrappers. The styles.css seam keys off [data-invalid='true'],
+    // so only that value drives the invalid border.
+    '[attr.data-invalid]': 'ariaInvalidValue()',
     '[attr.data-field-name]': 'resolvedFieldName()',
     '[attr.data-prime-required]': 'ariaRequiredValue()',
     '[class.prime-form-field--checkbox]': 'isCheckboxControl()',
