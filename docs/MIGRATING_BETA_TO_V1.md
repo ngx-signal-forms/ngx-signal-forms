@@ -65,6 +65,7 @@ releases will not include any of the renames below.
 - **BREAKING: `expectNoA11yViolations` no longer accepts `runOnly`** — the WCAG 2.2 AA tag set is a non-overridable baseline, enforced at both compile time and runtime; use the new `createA11yValidator({ tags })` when a narrower scope is the point of the test (see [§16](#16-testing-the-wcag-22-aa-baseline-is-non-overridable-347))
 - **BREAKING: Vest's typed field-name union now flows through the adapter** — a suite declared `create<{ fields: … }>(…)` makes a mistyped `only` name a compile error instead of a silent no-op that reported the field valid; untyped suites are unaffected and no caller writes the type parameter (see [§17](#17-vest-the-suites-typed-field-name-union-flows-through-the-adapter-308))
 - **BREAKING (widening): four public types now accept an explicit `undefined`** — `NgxSignalFormsUserConfig`, `NgxSignalFormControlPresetOverrides`, `ErrorMessageRegistry`, and `resolveValidationErrorMessage`/`getDefaultValidationMessage` (via the new `ResolvableValidationError`); every previously-valid input still compiles (see [§18](#18-four-public-types-now-accept-an-explicit-undefined-286))
+- **New: `ResolvableValidationError` / `ResolveErrorMessageOptions` on the root** — the two parameter types of `resolveValidationErrorMessage` and `getDefaultValidationMessage` are now nameable from `@ngx-signal-forms/toolkit`, so a consumer can type a wrapper around either function
 
 ---
 
@@ -1853,12 +1854,24 @@ provideNgxSignalFormsConfig({
 });
 ```
 
-> **Known gap:** `ResolvableValidationError` currently reaches only the
-> unpublished `/core` entry point, so a consumer importing
-> `resolveValidationErrorMessage` from the package root cannot name its
-> parameter type. Inline object literals and Angular `ValidationError` values
-> still compile. Promoting the type to the root barrel is a non-breaking
-> addition and is tracked as a follow-up.
+`ResolvableValidationError` and `ResolveErrorMessageOptions` are both on the
+package root, so a wrapper around either function can name its parameter
+types:
+
+```ts
+import {
+  resolveValidationErrorMessage,
+  type ResolvableValidationError,
+  type ResolveErrorMessageOptions,
+} from '@ngx-signal-forms/toolkit';
+
+function describe(
+  error: ResolvableValidationError,
+  options?: ResolveErrorMessageOptions,
+) {
+  return resolveValidationErrorMessage(error, myRegistry, options);
+}
+```
 
 **Files:** `packages/toolkit/core/utilities/resolve-error-message.ts`,
 `packages/toolkit/core/types/`, `packages/toolkit/core/providers/`.
