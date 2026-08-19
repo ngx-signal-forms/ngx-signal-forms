@@ -133,8 +133,8 @@ catalogs:
       specifier: 2.0.3
       version: 2.0.3
     primeicons:
-      specifier: 7.0.0
-      version: 7.0.0
+      specifier: 8.0.0
+      version: 8.0.0
     primeng:
       specifier: 21.1.9
       version: 21.1.9
@@ -598,7 +598,7 @@ importers:
         version: 2.0.3
       primeicons:
         specifier: catalog:primeng
-        version: 7.0.0
+        version: 8.0.0
       primeng:
         specifier: catalog:primeng
         version: 21.1.9(dd3db7c5ac189d7f71d86185c2ff1d71)
@@ -8327,8 +8327,8 @@ packages:
     resolution: {integrity: sha512-Qb1gy5OrP5+zDf2Bvnzdl3jsTf1qXVMazbvCoKhtKqVs4/YK4ozX4gKQJJVyNe+cajNPn0KoC0MC3FUmaHWEmQ==}
     engines: {node: ^10.13.0 || ^12.13.0 || ^14.15.0 || >=15.0.0}
 
-  primeicons@7.0.0:
-    resolution: {integrity: sha512-jK3Et9UzwzTsd6tzl2RmwrVY/b8raJ3QZLzoDACj+oTJ0oX7L9Hy+XnVwgo4QVKlKpnP/Ur13SXV/pVh4LzaDw==}
+  primeicons@8.0.0:
+    resolution: {integrity: sha512-eZGk+Mgb4fE+LkJi9LvllbnB4RVUF9kzmnLVnT3ZMY6stqKVh7TUJ0mFoMNIEgTnJSvhaGcJotDiSvtVvkHd7g==}
 
   primeng@21.1.9:
     resolution: {integrity: sha512-Z76PtF08X0PNSTCNMobao8Qm71vC56mtZSdUtX/gsn4+q4x0NbUUtkeK1pc33a+kxVm2zkmOwzUIEGmb9VdoIA==}
@@ -18389,7 +18389,7 @@ snapshots:
       ansi-styles: 5.2.0
       react-is: 17.0.2
 
-  primeicons@7.0.0: {}
+  primeicons@8.0.0: {}
 
   primeng@21.1.9(dd3db7c5ac189d7f71d86185c2ff1d71):
     dependencies:
