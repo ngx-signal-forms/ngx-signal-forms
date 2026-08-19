@@ -132,6 +132,8 @@ export type {
   NgxSignalFormsUserConfig,
   OnInvalidHandlerOptions,
   ReactiveOrStatic,
+  ResolvableValidationError,
+  ResolveErrorMessageOptions,
   ResolvedErrorDisplayStrategy,
   ResolvedNgxSignalFormControlSemantics,
   ResolvedWarningDisplayStrategy,

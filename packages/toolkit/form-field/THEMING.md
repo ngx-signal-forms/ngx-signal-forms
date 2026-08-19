@@ -10,7 +10,8 @@ A comprehensive guide to styling `@ngx-signal-forms/toolkit` components using st
 - [2. Headless & standalone components](#2-headless--standalone-components) —
   [Error & warning messages](#error--warning-messages) · [Hints](#hints) ·
   [Grouped panel feedback](#grouped-panel-feedback-panel-presentation) · [Error summary](#error-summary) ·
-  [Character count](#character-count) · [Assistive row](#assistive-row) · [Fieldset](#fieldset)
+  [Character count](#character-count) · [Marking legend](#marking-legend) ·
+  [Assistive row](#assistive-row) · [Fieldset](#fieldset)
 - [3. Form field component](#3-form-field-component) —
   [Layout modes](#layout-modes-standard-outline-and-plain) · [Semantic color scale](#semantic-color-scale-the-knobs) ·
   [Specific overrides](#specific-overrides) · [States & focus](#states--focus) ·
@@ -129,7 +130,7 @@ internal token layer plus pseudo-private aliases. Override only the public
 `--ngx-signal-form-*` variables; the internal `--_error-*` values are
 implementation details.
 
-> **Note:** The default `--ngx-signal-form-warning-color` was `#f59e0b` prior to v1.0; it was changed to `#a16207` (Tailwind amber-700) for WCAG 1.4.3 AA contrast compliance on white backgrounds.
+> **Note:** The default `--ngx-signal-form-warning-color` was `#f59e0b` prior to v1.0; it was changed to `#a16207` (Tailwind amber-700) to meet WCAG 2.2 SC 1.4.3 Contrast (Minimum), Level AA, on white backgrounds.
 
 | Property                                            | Default                                                             | Description                        |
 | :-------------------------------------------------- | :------------------------------------------------------------------ | :--------------------------------- |
@@ -253,28 +254,29 @@ Renders a form-level, clickable list of aggregated validation errors (GOV.UK
 / WAI error-summary pattern). Each entry is a `<button>` that focuses its
 associated control on click.
 
-| Property                                   | Default   | Description                                                                                                                    |
-| :----------------------------------------- | :-------- | :----------------------------------------------------------------------------------------------------------------------------- |
-| `--ngx-error-summary-border-color`         | `#dc2626` | Card border color                                                                                                              |
-| `--ngx-error-summary-bg`                   | `#fef2f2` | Card background color                                                                                                          |
-| `--ngx-error-summary-label-color`          | `#991b1b` | Optional summary label text color                                                                                              |
-| `--ngx-error-summary-link-color`           | `#b91c1c` | Entry link text color                                                                                                          |
-| `--ngx-error-summary-link-hover-color`     | `#991b1b` | Entry link hover color                                                                                                         |
-| `--ngx-error-summary-link-min-target-size` | `1.5rem`  | Minimum block-size AND inline-size of each entry link — enforces the 24x24px WCAG 2.5.8 target-size minimum in both directions |
-| `--ngx-error-summary-link-padding-inline`  | `0.25rem` | Horizontal padding on each entry link                                                                                          |
-| `--ngx-error-summary-focus-color`          | `#2563eb` | `:focus-visible` outline color on entry links                                                                                  |
+| Property                                   | Default   | Description                                                                                                               |
+| :----------------------------------------- | :-------- | :------------------------------------------------------------------------------------------------------------------------ |
+| `--ngx-error-summary-border-color`         | `#dc2626` | Card border color                                                                                                         |
+| `--ngx-error-summary-bg`                   | `#fef2f2` | Card background color                                                                                                     |
+| `--ngx-error-summary-label-color`          | `#991b1b` | Optional summary label text color                                                                                         |
+| `--ngx-error-summary-link-color`           | `#b91c1c` | Entry link text color                                                                                                     |
+| `--ngx-error-summary-link-hover-color`     | `#991b1b` | Entry link hover color                                                                                                    |
+| `--ngx-error-summary-link-min-target-size` | `1.5rem`  | Minimum block-size AND inline-size of each entry link — enforces the 24×24px WCAG 2.2 SC 2.5.8 minimum in both directions |
+| `--ngx-error-summary-link-padding-inline`  | `0.25rem` | Horizontal padding on each entry link                                                                                     |
+| `--ngx-error-summary-focus-color`          | `#2563eb` | `:focus-visible` outline color on entry links                                                                             |
 
 `--ngx-error-summary-link-color` defaults to `#b91c1c` (Tailwind red-700)
 rather than the `#dc2626` used for the card border: on the summary's
 `#fef2f2` background, `#dc2626` text resolves to ~4.41:1, just under the
-4.5:1 minimum for 14px text (WCAG 1.4.3 AA); `#b91c1c` resolves to ~5.9:1.
+4.5:1 minimum for 14px text (WCAG 2.2 SC 1.4.3 Contrast (Minimum), Level AA);
+`#b91c1c` resolves to ~5.9:1.
 
 Each entry link keeps `all: unset` for the rest of its reset but sets an
 explicit `display: inline-flex` plus `min-block-size` and `min-inline-size`
 — `all: unset` resets `display` to its initial value (`inline`), and
 `min-height`/`min-block-size`/`min-inline-size` have no effect on
 non-replaced inline elements per spec, so the resulting target would
-silently stay below the WCAG 2.5.8 24x24px minimum without the explicit
+silently stay below the WCAG 2.2 SC 2.5.8 24×24px minimum without the explicit
 `inline-flex`. Both dimensions are floored (not just block-size) because a
 short or empty `fieldName`/message could otherwise render narrower than
 24px; `justify-content: center` keeps short text centered within the
@@ -333,6 +335,32 @@ consumed by its own `color-mix()` expression, but it stays in the public
 [`--ngx-form-field-hint-display`](#hints): an **internal coordination
 hook, not a theming knob**. It is documented here for transparency (e.g.
 debugging computed styles), not as something to set.
+
+### Marking Legend
+
+**Component:** `ngx-form-marking-legend`
+
+Renders the one-line "* indicates a required field" caption above a form, so
+the meaning of the per-field markers is stated once rather than guessed. It
+sits outside `ngx-form-field-wrapper` and does not inherit the Shared Feedback
+layer — it is body copy, not micro-copy, so it carries its own two tokens.
+
+| Property                              | Default                  | Description       |
+| :------------------------------------ | :----------------------- | :---------------- |
+| `--ngx-form-marking-legend-font-size` | `0.875rem`               | Legend font size  |
+| `--ngx-form-marking-legend-color`     | `rgba(50, 65, 85, 0.85)` | Legend text color |
+
+The default color is deliberately darker than the
+`--ngx-form-field-color-text-secondary` used for labels and hints
+(`rgba(50, 65, 85, 0.75)`). The legend is the only place the marker's meaning
+is written down, so it is held to body-text contrast rather than the muted
+tone that supporting copy can afford: it resolves to ~6.6:1 on white, against
+~4.9:1 for the secondary tone. If you re-theme it, keep it at or above 4.5:1
+against the page background — WCAG 2.2 SC 1.4.3 Contrast (Minimum), Level AA.
+
+Which marker the legend names comes from the `showMarkerWhen` /
+`requiredMarker` / `optionalMarker` config (or the matching inputs), not from
+CSS — see the [`/assistive` README](../assistive/README.md#ngxformmarkinglegend).
 
 ### Assistive Row
 
@@ -1021,8 +1049,8 @@ accessibility, prefer giving the `<input>` an `aria-label` or
 ### Accessibility notes — placeholder is not a label
 
 Using only a `placeholder` as the visible hint (even with a matching
-`aria-label` for screen readers) is a well-known WCAG 3.3.2
-antipattern: the hint disappears as soon as the user types, so sighted
+`aria-label` for screen readers) is a well-known WCAG 2.2 SC 3.3.2 Labels or
+Instructions, Level A, antipattern: the hint disappears as soon as the user types, so sighted
 users can lose the field's purpose mid-entry — especially with
 autofill, copy/paste, or when returning to a partially-filled form.
 Prefer one of the following when the labelless wrapper is appropriate

@@ -4,7 +4,14 @@ import type {
 } from '@angular/forms/signals';
 import type { ErrorMessageRegistry } from '../providers/error-messages.provider';
 
-interface ResolveErrorMessageOptions {
+/**
+ * Options accepted by {@link resolveValidationErrorMessage} and
+ * {@link getDefaultValidationMessage}.
+ *
+ * Exported because both functions are on the package root: a caller that
+ * wraps either one needs to be able to name this type.
+ */
+export interface ResolveErrorMessageOptions {
   readonly stripWarningPrefix?: boolean;
 }
 
