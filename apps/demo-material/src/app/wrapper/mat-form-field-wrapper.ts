@@ -11,6 +11,7 @@ import {
 } from '@angular/core';
 import type { FieldState, FieldTree } from '@angular/forms/signals';
 import {
+  createControlVisibilitySignal,
   createShowErrorsComputed,
   injectFormContext,
   isBlockingError,
@@ -38,7 +39,6 @@ import {
   NgxMatSlideToggleControl,
   NgxMatTextControl,
 } from './control-directives';
-import { createControlVisibilitySignal } from './control-visibility';
 import { NgxMatFeedback } from './feedback-directive';
 import { NgxMatFeedbackOutlet } from './material-error-renderer';
 import { NgxMatErrorSlot, NgxMatHintSlot } from './slot-directives';

@@ -34,6 +34,7 @@ export {
   buildAriaDescribedBy,
   canSubmitWithWarnings,
   combineShowErrors,
+  createControlVisibilitySignal,
   createErrorVisibility,
   createOnInvalidHandler,
   createShowErrorsComputed,

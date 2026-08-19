@@ -59,7 +59,8 @@
        detection runs and the layout probe never re-reads. Collapsing this
        section takes the `<mat-select>`'s layout box away, and
        `data-ngx-mat-invalid` drops off the wrapper. See
-       `createControlVisibilitySignal` in ../wrapper/control-visibility.ts. -->
+       the toolkit's `createControlVisibilitySignal`, threaded into
+       `createAriaInvalidSignal` by ../wrapper/mat-form-field-wrapper.ts. -->
   <details
     class="demo-form__collapsible"
     [open]="topicExpanded()"

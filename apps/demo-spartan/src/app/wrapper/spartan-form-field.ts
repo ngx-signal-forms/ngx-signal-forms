@@ -14,6 +14,7 @@ import type { FieldState, FieldTree } from '@angular/forms/signals';
 import { BrnField, BrnFieldA11yService } from '@spartan-ng/brain/field';
 import { BrnLabel } from '@spartan-ng/brain/label';
 import {
+  createControlVisibilitySignal,
   createErrorVisibility,
   createShowErrorsComputed,
   injectFormContext,
@@ -33,7 +34,6 @@ import {
   createFieldNameResolver,
   createHintIdsSignal,
 } from '@ngx-signal-forms/toolkit/headless';
-import { createControlVisibilitySignal } from './control-visibility';
 import { NgxSpartanFormFieldError } from './spartan-form-field-error';
 
 /**
