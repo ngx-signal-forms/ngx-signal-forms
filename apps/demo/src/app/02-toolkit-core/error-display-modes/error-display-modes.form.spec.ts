@@ -87,13 +87,13 @@ describe('ErrorDisplayModesFormComponent', () => {
    * `render()` + `fireEvent` + `findBy*` helpers (used by every other test
    * in this file). Those helpers await `ApplicationRef.isStable` under the
    * hood, and on this page that promise never resolves once a real invalid
-   * submit is fired: `ngx-form-field-wrapper`'s own `afterEveryRender` write
-   * phase republishes a fresh (but content-equal) hint-id array on every
-   * render, which keeps the zoneless app "dirty" forever even though the
-   * rendered DOM itself settles within a couple of ticks. That is a
-   * pre-existing characteristic of the wrapper component (out of scope for
-   * this page), not something introduced here — bounded manual ticks route
-   * around it while still exercising the toolkit's real submit path.
+   * submit is fired: with a structural `@if` gated on a submit-reactive
+   * signal, combined with this page's `ngx-form-field-wrapper` fields,
+   * zoneless change detection did not reach stability in specs. The exact
+   * mechanism inside the toolkit wrapper has not been confirmed — that
+   * investigation is out of scope for this page. Bounded manual ticks route
+   * around the symptom while still exercising the toolkit's real submit
+   * path.
    */
   it('shows the submission-error banner only after a real submit attempt on an invalid form, and hides it once the form becomes valid', async () => {
     await TestBed.configureTestingModule({

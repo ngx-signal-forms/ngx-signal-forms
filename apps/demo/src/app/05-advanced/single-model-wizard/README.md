@@ -16,9 +16,8 @@ replacement for it. Read both READMEs together; the contrast is the point.
 - One `form()` spanning every step; each step's template binds only its own slice
   (`wizardForm.account…`, `wizardForm.shipping…`).
 - The shared `ngx-wizard`'s async-aware `canNavigate` input as the subtree-validation gate
-  (progress-header navigation, and — via a shared helper — the custom Next button; see the
-  "Shared component finding" section below) — see
-  [`components/wizard.ts`](../../shared/wizard/wizard.ts) and its
+  for every forward transition — the built-in Next button and progress-header navigation
+  alike — see [`components/wizard.ts`](../../shared/wizard/wizard.ts) and its
   [README](../../shared/wizard/README.md).
 - Cross-step `validate(path, ctx => …)`: step 2's `expressShipping` reads step 1's `email`
   via `ctx.valueOf(path.account.email)` — no store, no event, no manual sync.
@@ -86,64 +85,31 @@ protected readonly guardStep: WizardCanNavigate = (event) => {
 work with one call: the whole step's errors surface at once, exactly like a normal
 single-screen form submit — just scoped to a subtree instead of the whole model.
 
-`#validateStep` is called from two places: `guardStep` (bound to `canNavigate`, gating
-progress-header clicks) and the custom Next button's `nextStep()` method (see the finding
-below for why Next can't drive through `canNavigate` directly). Both paths enforce the
-identical rule, so there's exactly one place that decides what "this step is valid enough
-to leave" means.
+`guardStep` is the single place that decides what "this step is valid enough to leave"
+means. The shared `ngx-wizard` runs it for every forward transition — the built-in Next
+button and the progress header's own step clicks alike — so there's exactly one rule to
+keep in sync.
 
-The final step's Confirm button calls `submit(wizardForm, action)` directly — it isn't
-gated by `canNavigate` at all, because `submit()` performs its own whole-form validation
-and touches everything itself.
+The final step's Confirm button (`submitLabel="Confirm order"`, wired through
+`(wizardSubmit)="confirmOrder()"`) isn't gated by `canNavigate` at all — `submit()`
+performs its own whole-form validation and touches everything itself.
 
-## Shared component finding
+## Shared wizard history: the built-in Next button used to be unusable here
 
-**The wizard's built-in Next button cannot be used to drive `canNavigate`-gated
-progression to a step that hasn't been visited yet — including the very first "Next"
-click of the whole wizard.**
+An earlier version of this demo could not use the wizard's built-in Next button:
+`next()` used to route through the same `canNavigateToStep()` check as progress-header
+clicks, which allows navigation only to a step that's current, already **visited**, or
+already **completed**. On a fresh wizard, step 2 is none of those, so clicking Next on
+step 1 was a silent no-op regardless of whether step 1 was valid. The workaround at the
+time was `[showNavigation]="false"` with custom Next/Previous buttons that ran
+`#validateStep()` directly and bypassed the visited/completed check.
 
-`WizardComponent.next()` calls `goToStep()`, which checks `canNavigateToStep()` **before**
-ever touching the `canNavigate` guard:
-
-```ts
-async goToStep(stepId: string): Promise<void> {
-  if (!this.canNavigateToStep(stepId)) {
-    return; // canNavigate is never even invoked
-  }
-  // ...only here does `canNavigate` get awaited
-}
-```
-
-`canNavigateToStep()` allows navigation to a step only if it's the current step, already
-**visited**, or already marked **completed**. On a fresh wizard, step 2 is none of those —
-so clicking the built-in "Next" button on step 1 is a no-op, silently, regardless of
-whether step 1 is valid. This isn't specific to a single-model form; it would affect any
-consumer trying to use the built-in Next button purely as a `canNavigate`-gated "validate
-then advance" control. `advanced-wizard` never hits this because it doesn't call
-`next()`/`goToStep()` for its own Next/Previous flow at all — it drives `currentStep`
-through its NgRx store directly (`[showNavigation]="false"` plus custom buttons calling
-`store.goToNextStep()`), which happens to sidestep the check without anyone having
-diagnosed it as one.
-
-**Resolution, without touching the shared component:** this demo also uses
-`[showNavigation]="false"` with custom buttons — the "Custom Navigation" pattern the
-wizard's own README already documents — but goes one step further than `advanced-wizard`:
-`nextStep()` calls the exact same `#validateStep()` helper the `canNavigate` guard uses,
-then writes `currentStep` directly (bypassing `goToStep()`/`canNavigateToStep()`
-entirely). The `canNavigate` guard stays bound and does real work for the progress
-header's own step-click navigation. Zero changes were made to
-[`shared/wizard/wizard.ts`](../../shared/wizard/wizard.ts).
-
-One consequence worth naming: because the custom Next/Previous buttons never call
-`goToStep()`, the wizard's own `#visitedSteps` set is never populated by this demo — so a
-header button is only ever enabled for the _current_ step or a step whose subtree is
-_presently_ valid (`completedSteps()`), never for "a step you visited a while ago,
-whatever state it's in now". That turns out to matter for the next section.
-
-If the shared component is ever revisited, the fix is narrow: `canNavigateToStep()`
-should not gate `next()`'s call into `goToStep()` — only header-click navigation needs
-the visited/completed check. That's a decision for the shared component's own owners, not
-something this demo should decide unilaterally.
+The shared wizard's navigation has since been fixed: `next()`/`previous()` now run the
+`canNavigate` guard directly, without the visited/completed gate — only `goToStep()`
+(direct step selection, e.g. progress-header clicks) still checks
+`canNavigateToStep()` first. This demo now uses the shared `ngx-wizard`'s built-in
+navigation unmodified, with no custom Next/Previous buttons and no
+`[showNavigation]="false"`.
 
 ## Confirm is unreachable with an invalid earlier step
 
@@ -152,10 +118,10 @@ edited back into an invalid state after already passing it once), and have `subm
 fail at Confirm? Tested and confirmed **no** — this is not just untested, it's
 unreachable through the UI, by construction:
 
-- Every forward transition — the custom Next button (`nextStep()`) and the progress
-  header's own clicks (`goToStep()` → `canNavigate`) — re-validates the subtree of the
-  step **currently being left**, per `#validateStep()`. An invalid step can never be left
-  forward, by either path.
+- Every forward transition — the built-in Next button and the progress header's own
+  clicks — runs `guardStep`, which re-validates the subtree of the step **currently
+  being left**, per `#validateStep()`. An invalid step can never be left forward, by
+  either path.
 - The Confirm button only renders once `isLastStep()` (Review). Reaching Review requires
   leaving Shipping forward at least once _after_ it was last made invalid — which
   `#validateStep()` blocks.

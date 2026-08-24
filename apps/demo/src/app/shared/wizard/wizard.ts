@@ -130,9 +130,12 @@ export class WizardComponent {
   readonly allowStepClick = input(true, { transform: booleanAttribute });
 
   /**
-   * Optional async-aware navigation guard, checked by `goToStep` (and, in
-   * turn, `next()`/`previous()`) for every attempted transition — including
-   * progress-header step clicks. See {@link WizardCanNavigate}.
+   * Optional async-aware navigation guard, checked for every attempted
+   * transition — direct step selection (`goToStep`, e.g. progress-header
+   * clicks) and sequential navigation (`next()`/`previous()`) alike. Both
+   * paths run the guard through the shared `#navigateToStep` step; only
+   * `goToStep` also checks `canNavigateToStep` first. See
+   * {@link WizardCanNavigate}.
    */
   readonly canNavigate = input<WizardCanNavigate | null>(null);
 

@@ -81,10 +81,12 @@ const INITIAL_MODEL: ProductFeedbackModel = {
       <!--
         [hidden] (not @if) on purpose: see the matching note above the
         submission-error banner in ErrorDisplayModesFormComponent's own
-        template. A structural directive here, gated on a signal that
-        changes as part of the same render pass as a real submit, combined
-        with this page's ngx-form-field-wrapper fields, sends zoneless
-        change detection into a non-converging render loop.
+        template. In specs, a structural directive here — gated on a signal
+        that changes as part of the same render pass as a real submit,
+        combined with this page's ngx-form-field-wrapper fields — did not
+        let zoneless change detection reach stability. The root cause inside
+        the toolkit wrapper has not been isolated; [hidden] avoids the
+        symptom.
       -->
       <div
         class="mt-3 rounded-md border border-indigo-300 bg-white px-3 py-2 text-xs font-medium text-indigo-800 dark:border-indigo-700 dark:bg-indigo-900 dark:text-indigo-100"
@@ -422,16 +424,16 @@ export class ErrorDisplayHelpersComponent {
         submittedStatus doc comment) combined with the form's own invalid().
         No hand-rolled "submission attempted" signal needed.
 
-        [hidden] (not @if) on purpose: gating this element's creation with a
-        structural directive tied to helpers.submittedStatus() — a signal
-        that changes as part of the same render pass triggered by a real
-        submit — combined with the ngx-form-field-wrapper fields above sends
-        zoneless change detection into a non-converging render loop (create
-        the element -> re-run wrapper afterEveryRender -> re-check the
-        signal -> recreate). Keeping the element always mounted and only
-        toggling its hidden attribute avoids the create/destroy cycle
-        entirely; the element is already inert to assistive tech while
-        hidden, matching the previous @if's effect.
+        [hidden] (not @if) on purpose: in specs, gating this element's
+        creation with a structural directive tied to
+        helpers.submittedStatus() — a signal that changes as part of the
+        same render pass triggered by a real submit — combined with the
+        ngx-form-field-wrapper fields above did not let zoneless change
+        detection reach stability. The root cause inside the toolkit
+        wrapper has not been isolated. Keeping the element always mounted
+        and only toggling its hidden attribute avoids the symptom entirely;
+        the element is already inert to assistive tech while hidden,
+        matching the previous @if's effect.
       -->
       <div class="form-actions">
         <div
