@@ -3,5 +3,16 @@
     "network": {
       "allowedDomains": ["www.google-analytics.com"]
     }
+  },
+  "extraKnownMarketplaces": {
+    "nx-claude-plugins": {
+      "source": {
+        "source": "github",
+        "repo": "nrwl/nx-ai-agents-config"
+      }
+    }
+  },
+  "enabledPlugins": {
+    "nx@nx-claude-plugins": true
   }
 }
