@@ -211,6 +211,13 @@ export class WizardComponent {
   /**
    * Navigate to a specific step by ID.
    *
+   * Gated by {@link canNavigateToStep}: only the current step, an
+   * already-visited step, or an already-completed step can be reached this
+   * way. This is the guard used by the progress-header step buttons, where
+   * jumping to an untouched future step should stay blocked. Sequential
+   * navigation via `next()`/`previous()` does NOT go through this gate —
+   * see {@link #navigateToStep}.
+   *
    * Async by design: after the synchronous `stepChange`/`preventDefault`
    * check, this awaits the `canNavigate` guard (if one is bound) BEFORE
    * writing `currentStep` — so a consumer performing async validation there
@@ -223,33 +230,7 @@ export class WizardComponent {
       return;
     }
 
-    const fromStep = this.currentStep();
-    const fromIndex = this.currentStepIndex();
-    const toIndex = this.steps().findIndex((s) => s.stepId() === stepId);
-
-    if (toIndex < 0 || stepId === fromStep) {
-      return;
-    }
-
-    const event = this.#createNavigationEvent(
-      fromStep,
-      stepId,
-      fromIndex,
-      toIndex,
-    );
-    this.stepChange.emit(event);
-
-    if (event.defaultPrevented) {
-      return;
-    }
-
-    const guard = this.canNavigate();
-    if (guard && !(await guard(event))) {
-      return;
-    }
-
-    this.#visitedSteps.update((visited) => new Set([...visited, stepId]));
-    this.currentStep.set(stepId);
+    await this.#navigateToStep(stepId);
   }
 
   /** Navigate to the next step. */
@@ -257,7 +238,7 @@ export class WizardComponent {
     const allSteps = this.steps();
     const nextIndex = this.currentStepIndex() + 1;
     if (nextIndex < allSteps.length) {
-      await this.goToStep(allSteps[nextIndex].stepId());
+      await this.#navigateToStep(allSteps[nextIndex].stepId());
     }
   }
 
@@ -266,7 +247,7 @@ export class WizardComponent {
     const allSteps = this.steps();
     const prevIndex = this.currentStepIndex() - 1;
     if (prevIndex >= 0) {
-      await this.goToStep(allSteps[prevIndex].stepId());
+      await this.#navigateToStep(allSteps[prevIndex].stepId());
     }
   }
 
@@ -300,6 +281,44 @@ export class WizardComponent {
   // ══════════════════════════════════════════════════════════════════════════
   // Private Methods
   // ══════════════════════════════════════════════════════════════════════════
+
+  /**
+   * Core navigation logic shared by `goToStep()`, `next()`, and
+   * `previous()`. Does NOT check `canNavigateToStep()` — sequential
+   * navigation by one step is always allowed as long as the `stepChange`
+   * event isn't prevented and the `canNavigate` guard (if any) resolves
+   * `true`. Callers that need the visited/completed gate (progress-header
+   * clicks) must check `canNavigateToStep()` themselves before calling this.
+   */
+  async #navigateToStep(stepId: string): Promise<void> {
+    const fromStep = this.currentStep();
+    const fromIndex = this.currentStepIndex();
+    const toIndex = this.steps().findIndex((s) => s.stepId() === stepId);
+
+    if (toIndex < 0 || stepId === fromStep) {
+      return;
+    }
+
+    const event = this.#createNavigationEvent(
+      fromStep,
+      stepId,
+      fromIndex,
+      toIndex,
+    );
+    this.stepChange.emit(event);
+
+    if (event.defaultPrevented) {
+      return;
+    }
+
+    const guard = this.canNavigate();
+    if (guard && !(await guard(event))) {
+      return;
+    }
+
+    this.#visitedSteps.update((visited) => new Set([...visited, stepId]));
+    this.currentStep.set(stepId);
+  }
 
   #createNavigationEvent(
     fromStep: string,
