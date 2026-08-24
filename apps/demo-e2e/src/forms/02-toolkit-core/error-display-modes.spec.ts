@@ -118,31 +118,37 @@ test.describe('Error Display Modes', () => {
     });
   });
 
-  test('does not set author-owned aria-describedby on toolkit-managed native inputs', async () => {
-    const controlIds = [
-      'name',
-      'email',
-      'company',
-      'productUsed',
-      'overallRating',
-      'detailedFeedback',
-    ];
+  test('stamps toolkit-managed aria-describedby pointing at the hint on initial load', async () => {
+    // Each hinted control is wrapped in NgxFormFieldHint, so the toolkit
+    // stamps aria-describedby="<field>-hint" itself from the start — there
+    // is no author-owned id to keep out of the attribute.
+    const controlHintIds: Record<string, string> = {
+      name: 'name-hint',
+      email: 'email-hint',
+      company: 'company-hint',
+      productUsed: 'product-hint',
+      overallRating: 'rating-hint',
+      detailedFeedback: 'detailed-hint',
+    };
 
-    for (const id of controlIds) {
-      await expect(formPage.page.locator(`#${id}`)).not.toHaveAttribute(
-        'aria-describedby',
-      );
+    for (const [controlId, hintId] of Object.entries(controlHintIds)) {
+      const control = formPage.page.locator(`#${controlId}`);
+      await expect(control).toHaveAttribute('aria-describedby', hintId);
+      await expect(formPage.page.locator(`#${hintId}`)).toBeVisible();
     }
 
-    await expect(formPage.page.locator('#name-hint')).toBeVisible();
-    await expect(formPage.page.locator('#detailed-hint')).toBeVisible();
     await expect(formPage.page.locator('#detailed-counter')).toBeVisible();
 
+    // A dynamically-shown field (revealed once rating < 3) gets the same
+    // toolkit-managed describedby wiring, not an author-owned id.
     await formPage.ratingInput.fill('2');
     await formPage.ratingInput.blur();
     const improvement = formPage.page.locator('#improvementSuggestions');
     await expect(improvement).toBeVisible();
-    await expect(improvement).not.toHaveAttribute('aria-describedby');
+    await expect(improvement).toHaveAttribute(
+      'aria-describedby',
+      'improvement-hint',
+    );
     await expect(formPage.page.locator('#improvement-hint')).toBeVisible();
     await expect(formPage.page.locator('#improvement-counter')).toBeVisible();
   });

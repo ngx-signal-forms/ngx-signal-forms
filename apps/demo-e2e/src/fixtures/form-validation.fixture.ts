@@ -56,8 +56,11 @@ export async function verifyNoErrorsOnInitialLoad(
     await page.locator(selector).waitFor({ state: 'visible' });
   }
 
-  /// Verify NO error messages are visible (allow brief stabilization window)
-  const alerts = page.locator(ROLE_ALERT_SELECTOR);
+  /// Verify NO error messages are visible (allow brief stabilization window).
+  /// A pre-rendered `role="alert"` shell (e.g. the submission-error banner)
+  /// may legitimately be attached but hidden — filter to only visible
+  /// alerts so this stays a check on what a user would actually perceive.
+  const alerts = page.locator(ROLE_ALERT_SELECTOR).locator('visible=true');
   await expect(alerts).toHaveCount(0, { timeout: 2000 });
 }
 

@@ -90,6 +90,18 @@ export class ErrorDisplayModesPage extends ErrorStrategyFormPage {
   }
 
   /**
+   * Get all VISIBLE error alerts. This demo pre-renders the submission-error
+   * banner (`#submission-error`, `role="alert"`) and toggles it with
+   * `[hidden]` rather than adding it structurally on submit, so the base
+   * `errorAlerts` locator (which only excludes empty live-region shells)
+   * would count it even while hidden. Filter to visibility so callers keep
+   * asserting what a user would actually perceive.
+   */
+  override get errorAlerts(): Locator {
+    return super.errorAlerts.locator('visible=true');
+  }
+
+  /**
    * Get all text and email inputs for bulk operations
    */
   get textAndEmailInputs(): Locator {
