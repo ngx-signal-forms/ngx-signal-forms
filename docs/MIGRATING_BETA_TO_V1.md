@@ -645,7 +645,7 @@ driven by `prefers-color-scheme` only, consistently across all engines.
   `--ngx-signal-form-error-*` / `--ngx-signal-form-warning-*` /
   `--ngx-signal-form-error-panel-*` / `--ngx-signal-form-warning-panel-*`
   custom properties yourself, scoped to your `.dark` selector — see the
-  [assistive README](../packages/toolkit/assistive/README.md#dark-mode).
+  [assistive README](../packages/toolkit/assistive/README.md#theming).
 
 ---
 
