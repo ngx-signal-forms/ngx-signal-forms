@@ -57,7 +57,10 @@ concurrency:
 jobs:
   release:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    # The quality gate runs every affected e2e suite in this one job, including
+    # demo-e2e unsharded (ci.yml splits it across a 4-way matrix). Matches the
+    # 35 min ci.yml allows its own main job.
+    timeout-minutes: 35
     # Gate the release behind a protected environment. Store RELEASE_TOKEN as an
     # *environment* secret (not a plain repo secret) with required reviewers, so
     # a `workflow_dispatch` on an untrusted ref cannot reach the admin push token
@@ -91,6 +94,66 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      # Fail fast if the release credential is missing, expired, or revoked.
+      # A release runs a ~15 min quality gate before it ever touches the push
+      # token; without this the only signal of an expired PAT is a failure at
+      # the very end. Deliberately placed BEFORE `pnpm install`: no
+      # third-party code has executed yet, so the token is never resident in
+      # the environment while untrusted dependency code runs.
+      - name: Verify release credential
+        env:
+          # Resolved separately from the token itself: the `||` fallback below
+          # is indistinguishable from a real RELEASE_TOKEN once evaluated, so
+          # without this the preflight would happily green-light a run that
+          # has no push credential at all.
+          HAS_RELEASE_TOKEN: ${{ secrets.RELEASE_TOKEN != '' }}
+          RELEASE_TOKEN: ${{ secrets.RELEASE_TOKEN || secrets.GITHUB_TOKEN }}
+        run: |
+          if [ "$HAS_RELEASE_TOKEN" != "true" ]; then
+            echo "::error::RELEASE_TOKEN is not set on the 'release' environment."
+            echo "The workflow would fall back to GITHUB_TOKEN, which cannot push to" >&2
+            echo "protected main, so the Release step would fail only after the full" >&2
+            echo "quality gate has already run. Add the secret in" >&2
+            echo "Settings > Environments > release." >&2
+            exit 1
+          fi
+
+          BODY=$(mktemp)
+          HEADERS=$(mktemp)
+          CODE=$(curl -sS -o "$BODY" -D "$HEADERS" -w '%{http_code}' \
+            -H "Authorization: Bearer $RELEASE_TOKEN" \
+            -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/$GITHUB_REPOSITORY")
+
+          if [ "$CODE" != "200" ]; then
+            echo "::error::RELEASE_TOKEN could not authenticate against $GITHUB_REPOSITORY (HTTP $CODE)."
+            echo "The token is expired, revoked, or invalid. Mint a new one and update" >&2
+            echo "the RELEASE_TOKEN secret in Settings > Environments > release." >&2
+            exit 1
+          fi
+
+          # GitHub returns this header for PATs that carry an expiry date.
+          EXPIRY=$(grep -i '^github-authentication-token-expiration:' "$HEADERS" \
+            | cut -d: -f2- | sed 's/^ *//' | tr -d '\r')
+
+          if [ -n "$EXPIRY" ]; then
+            echo "Release credential expires: $EXPIRY"
+            echo "- Release credential expires: \`$EXPIRY\`" >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "Release credential has no expiration date set."
+            echo "- Release credential: no expiry" >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+          # Warn (do not block) if push access is not visible: the permissions
+          # object is absent for some GitHub App installation tokens that can
+          # still push perfectly well.
+          PUSH=$(python3 -c "import json,sys; d=json.load(open(sys.argv[1])); p=d.get('permissions'); print('' if p is None else str(p.get('push', False)).lower())" "$BODY")
+          if [ "$PUSH" = "false" ]; then
+            echo "::warning::RELEASE_TOKEN authenticated but reports no push permission on $GITHUB_REPOSITORY; the Release step may fail."
+          fi
+
+          echo "Release credential OK."
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
@@ -146,7 +209,14 @@ jobs:
         # Using affected ensures we only verify what changed, but caching handles the rest.
         # We target all projects to ensure workspace health before release.
         # nx-safe.sh falls back to local execution if Nx Cloud rejects our token.
-        run: bash .github/scripts/nx-safe.sh pnpm exec nx affected -t lint test test-browser build e2e-ci --outputStyle=static
+        #
+        # Use the non-atomized `e2e` target, never `e2e-ci`. The Playwright
+        # plugin's `ciTargetName: e2e-ci` (nx.json) splits each suite into
+        # per-spec tasks that Nx refuses to run without Nx Agents, and this
+        # workspace stopped distributing in #252. ci.yml was switched at the
+        # same time; this gate was missed and broke for any release whose
+        # affected set contains an e2e project.
+        run: bash .github/scripts/nx-safe.sh pnpm exec nx affected -t lint test test-browser build e2e --outputStyle=static
 
       - name: Validate release inputs
         env:
