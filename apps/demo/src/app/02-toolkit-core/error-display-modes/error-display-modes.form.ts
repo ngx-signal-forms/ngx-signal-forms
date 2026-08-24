@@ -16,7 +16,8 @@ import {
   createShowErrorsComputed,
   type SubmittedStatus,
 } from '@ngx-signal-forms/toolkit';
-import { NgxFormFieldError } from '@ngx-signal-forms/toolkit/assistive';
+import { NgxFormFieldHint } from '@ngx-signal-forms/toolkit/assistive';
+import { NgxFormField } from '@ngx-signal-forms/toolkit/form-field';
 
 import {
   productFeedbackSchema,
@@ -77,15 +78,22 @@ const INITIAL_MODEL: ProductFeedbackModel = {
         </div>
       </div>
 
-      @if (showPersonalInfoErrors()) {
-        <div
-          class="mt-3 rounded-md border border-indigo-300 bg-white px-3 py-2 text-xs font-medium text-indigo-800 dark:border-indigo-700 dark:bg-indigo-900 dark:text-indigo-100"
-          role="status"
-          aria-live="polite"
-        >
-          Personal info has visible errors (aggregated with a computed signal)
-        </div>
-      }
+      <!--
+        [hidden] (not @if) on purpose: see the matching note above the
+        submission-error banner in ErrorDisplayModesFormComponent's own
+        template. A structural directive here, gated on a signal that
+        changes as part of the same render pass as a real submit, combined
+        with this page's ngx-form-field-wrapper fields, sends zoneless
+        change detection into a non-converging render loop.
+      -->
+      <div
+        class="mt-3 rounded-md border border-indigo-300 bg-white px-3 py-2 text-xs font-medium text-indigo-800 dark:border-indigo-700 dark:bg-indigo-900 dark:text-indigo-100"
+        role="status"
+        aria-live="polite"
+        [hidden]="!showPersonalInfoErrors()"
+      >
+        Personal info has visible errors (aggregated with a computed signal)
+      </div>
     </div>
   `,
 })
@@ -105,7 +113,15 @@ export class ErrorDisplayHelpersComponent {
     () => this.#formContext?.errorStrategy() ?? 'on-touch',
   );
 
-  protected readonly submittedStatus = computed<SubmittedStatus>(
+  /**
+   * Public (not `protected`) so the page-level template can read it through
+   * a template reference variable (`#helpers`) — the submission-error banner
+   * and submit button live outside this component's own subtree but still
+   * need the submitted status. See `injectFormContext()`'s doc comment:
+   * directive providers are only visible within the `<form ngxSignalForm>`
+   * subtree, and this component is the one actually rendered inside it.
+   */
+  readonly submittedStatus = computed<SubmittedStatus>(
     () => this.#formContext?.submittedStatus() ?? 'unsubmitted',
   );
 
@@ -143,7 +159,8 @@ export class ErrorDisplayHelpersComponent {
     ErrorDisplayHelpersComponent,
     FormField,
     NgxSignalFormToolkit,
-    NgxFormFieldError,
+    NgxFormField,
+    NgxFormFieldHint,
   ],
   template: `
     <!-- Product Feedback Form -->
@@ -155,6 +172,7 @@ export class ErrorDisplayHelpersComponent {
       aria-label="Product feedback"
     >
       <ngx-error-display-helpers
+        #helpers
         [nameField]="productForm.name"
         [emailField]="productForm.email"
         class="mb-6 block"
@@ -168,7 +186,11 @@ export class ErrorDisplayHelpersComponent {
         </legend>
 
         <!-- Name Field -->
-        <div class="form-field">
+        <ngx-form-field-wrapper
+          class="form-field"
+          appearance="plain"
+          [formField]="productForm.name"
+        >
           <label class="form-label" for="name">Full Name *</label>
           <input
             class="form-input"
@@ -178,17 +200,17 @@ export class ErrorDisplayHelpersComponent {
             [formField]="productForm.name"
             placeholder="Your full name"
           />
-          <div class="form-hint" id="name-hint">
+          <ngx-form-field-hint id="name-hint">
             We use this to personalize our response
-          </div>
-          <ngx-form-field-error
-            [formField]="productForm.name"
-            fieldName="name"
-          />
-        </div>
+          </ngx-form-field-hint>
+        </ngx-form-field-wrapper>
 
         <!-- Email Field -->
-        <div class="form-field">
+        <ngx-form-field-wrapper
+          class="form-field"
+          appearance="plain"
+          [formField]="productForm.email"
+        >
           <label class="form-label" for="email">Email Address *</label>
           <input
             class="form-input"
@@ -198,17 +220,17 @@ export class ErrorDisplayHelpersComponent {
             [formField]="productForm.email"
             placeholder="your.email@company.com"
           />
-          <div class="form-hint" id="email-hint">
+          <ngx-form-field-hint id="email-hint">
             For follow-up questions (we respect your privacy)
-          </div>
-          <ngx-form-field-error
-            [formField]="productForm.email"
-            fieldName="email"
-          />
-        </div>
+          </ngx-form-field-hint>
+        </ngx-form-field-wrapper>
 
         <!-- Company Field -->
-        <div class="form-field">
+        <ngx-form-field-wrapper
+          class="form-field"
+          appearance="plain"
+          [formField]="productForm.company"
+        >
           <label class="form-label" for="company">Company</label>
           <input
             class="form-input"
@@ -218,14 +240,10 @@ export class ErrorDisplayHelpersComponent {
             [formField]="productForm.company"
             placeholder="Your company (optional)"
           />
-          <div class="form-hint" id="company-hint">
+          <ngx-form-field-hint id="company-hint">
             Helps us understand your use case
-          </div>
-          <ngx-form-field-error
-            [formField]="productForm.company"
-            fieldName="company"
-          />
-        </div>
+          </ngx-form-field-hint>
+        </ngx-form-field-wrapper>
       </fieldset>
 
       <!-- Feedback Section -->
@@ -237,7 +255,11 @@ export class ErrorDisplayHelpersComponent {
         </legend>
 
         <!-- Product Used -->
-        <div class="form-field">
+        <ngx-form-field-wrapper
+          class="form-field"
+          appearance="plain"
+          [formField]="productForm.productUsed"
+        >
           <label class="form-label" for="productUsed"
             >Which product did you use? *</label
           >
@@ -253,17 +275,17 @@ export class ErrorDisplayHelpersComponent {
             <option value="Documentation">User Documentation</option>
             <option value="Other">Other</option>
           </select>
-          <div class="form-hint" id="product-hint">
+          <ngx-form-field-hint id="product-hint">
             Which product are you providing feedback about?
-          </div>
-          <ngx-form-field-error
-            [formField]="productForm.productUsed"
-            fieldName="productUsed"
-          />
-        </div>
+          </ngx-form-field-hint>
+        </ngx-form-field-wrapper>
 
         <!-- Overall Rating -->
-        <div class="form-field">
+        <ngx-form-field-wrapper
+          class="form-field"
+          appearance="plain"
+          [formField]="productForm.overallRating"
+        >
           <label class="form-label" for="overallRating">Overall Rating *</label>
           <input
             class="form-input"
@@ -272,16 +294,18 @@ export class ErrorDisplayHelpersComponent {
             [formField]="productForm.overallRating"
             placeholder="Rate 1-5"
           />
-          <div class="form-hint" id="rating-hint">1 = Poor, 5 = Excellent</div>
-          <ngx-form-field-error
-            [formField]="productForm.overallRating"
-            fieldName="overallRating"
-          />
-        </div>
+          <ngx-form-field-hint id="rating-hint">
+            1 = Poor, 5 = Excellent
+          </ngx-form-field-hint>
+        </ngx-form-field-wrapper>
 
         <!-- Conditional Improvement Suggestions -->
         @if (showImprovementSuggestions()) {
-          <div class="form-field">
+          <ngx-form-field-wrapper
+            class="form-field"
+            appearance="plain"
+            [formField]="productForm.improvementSuggestions"
+          >
             <label class="form-label" for="improvementSuggestions">
               What could we improve? *
             </label>
@@ -292,28 +316,27 @@ export class ErrorDisplayHelpersComponent {
               [formField]="productForm.improvementSuggestions"
               placeholder="Please help us understand what went wrong..."
             ></textarea>
-            <div class="mt-1 flex items-center justify-between">
-              <div class="form-hint" id="improvement-hint">
-                Please help us understand what went wrong
-              </div>
-              <span
-                id="improvement-counter"
-                class="text-xs text-gray-500 dark:text-gray-400"
-                [class.text-red-600]="improvementLength() > 500"
-                [class.dark:text-red-400]="improvementLength() > 500"
-              >
-                {{ improvementLength() }}/500
-              </span>
-            </div>
-            <ngx-form-field-error
-              [formField]="productForm.improvementSuggestions"
-              fieldName="improvementSuggestions"
-            />
-          </div>
+            <ngx-form-field-hint id="improvement-hint">
+              Please help us understand what went wrong
+            </ngx-form-field-hint>
+            <span
+              characterCount
+              id="improvement-counter"
+              class="text-xs text-gray-500 dark:text-gray-400"
+              [class.text-red-600]="improvementLength() > 500"
+              [class.dark:text-red-400]="improvementLength() > 500"
+            >
+              {{ improvementLength() }}/500
+            </span>
+          </ngx-form-field-wrapper>
         }
 
         <!-- Detailed Feedback -->
-        <div class="form-field">
+        <ngx-form-field-wrapper
+          class="form-field"
+          appearance="plain"
+          [formField]="productForm.detailedFeedback"
+        >
           <label class="form-label" for="detailedFeedback">
             Additional Comments
           </label>
@@ -324,24 +347,19 @@ export class ErrorDisplayHelpersComponent {
             [formField]="productForm.detailedFeedback"
             placeholder="Share your detailed experience..."
           ></textarea>
-          <div class="mt-1 flex items-center justify-between">
-            <div class="form-hint" id="detailed-hint">
-              Any additional thoughts or suggestions
-            </div>
-            <span
-              id="detailed-counter"
-              class="text-xs text-gray-500 dark:text-gray-400"
-              [class.text-red-600]="detailedLength() > 1000"
-              [class.dark:text-red-400]="detailedLength() > 1000"
-            >
-              {{ detailedLength() }}/1000
-            </span>
-          </div>
-          <ngx-form-field-error
-            [formField]="productForm.detailedFeedback"
-            fieldName="detailedFeedback"
-          />
-        </div>
+          <ngx-form-field-hint id="detailed-hint">
+            Any additional thoughts or suggestions
+          </ngx-form-field-hint>
+          <span
+            characterCount
+            id="detailed-counter"
+            class="text-xs text-gray-500 dark:text-gray-400"
+            [class.text-red-600]="detailedLength() > 1000"
+            [class.dark:text-red-400]="detailedLength() > 1000"
+          >
+            {{ detailedLength() }}/1000
+          </span>
+        </ngx-form-field-wrapper>
       </fieldset>
 
       <!-- Preferences Section -->
@@ -396,18 +414,38 @@ export class ErrorDisplayHelpersComponent {
       }
 
       <!-- Submit Section -->
+      <!--
+        Submission-error visibility comes from the toolkit's own tracking:
+        helpers.submittedStatus() reads NgxSignalForm's submittedStatus()
+        (via ErrorDisplayHelpersComponent, the only element in this template
+        actually rendered inside the form[ngxSignalForm] subtree — see its
+        submittedStatus doc comment) combined with the form's own invalid().
+        No hand-rolled "submission attempted" signal needed.
+
+        [hidden] (not @if) on purpose: gating this element's creation with a
+        structural directive tied to helpers.submittedStatus() — a signal
+        that changes as part of the same render pass triggered by a real
+        submit — combined with the ngx-form-field-wrapper fields above sends
+        zoneless change detection into a non-converging render loop (create
+        the element -> re-run wrapper afterEveryRender -> re-check the
+        signal -> recreate). Keeping the element always mounted and only
+        toggling its hidden attribute avoids the create/destroy cycle
+        entirely; the element is already inert to assistive tech while
+        hidden, matching the previous @if's effect.
+      -->
       <div class="form-actions">
-        @if (showSubmissionError()) {
-          <div
-            id="submission-error"
-            class="feedback-alert feedback-alert--error"
-            role="alert"
-          >
-            <div class="text-sm font-medium">
-              Please fix the errors above before submitting.
-            </div>
+        <div
+          id="submission-error"
+          class="feedback-alert feedback-alert--error"
+          role="alert"
+          [hidden]="
+            !(helpers.submittedStatus() === 'submitted' && productForm().invalid())
+          "
+        >
+          <div class="text-sm font-medium">
+            Please fix the errors above before submitting.
           </div>
-        }
+        </div>
 
         @if (showPendingMessage()) {
           <div
@@ -426,7 +464,10 @@ export class ErrorDisplayHelpersComponent {
           class="btn-primary"
           [disabled]="productForm().submitting()"
           [attr.aria-describedby]="
-            showSubmissionError() ? 'submission-error' : null
+            helpers.submittedStatus() === 'submitted' &&
+            productForm().invalid()
+              ? 'submission-error'
+              : null
           "
         >
           @if (productForm().submitting()) {
@@ -450,14 +491,9 @@ export class ErrorDisplayModesFormComponent {
   readonly productForm = form(this.#model, productFeedbackSchema, {
     submission: {
       action: async () => {
-        this.#submissionAttempted.set(true);
         this.successMessage.set('Thank you for your feedback!');
       },
-      onInvalid: createOnInvalidHandler({
-        afterInvalid: () => {
-          this.#submissionAttempted.set(true);
-        },
-      }),
+      onInvalid: createOnInvalidHandler(),
     },
   });
 
@@ -476,14 +512,6 @@ export class ErrorDisplayModesFormComponent {
     const current = this.productForm.detailedFeedback().value();
     return current.length;
   });
-
-  /** Track submission attempts manually */
-  readonly #submissionAttempted = signal(false);
-
-  /** Computed: show submission error when form invalid after submit attempt */
-  protected readonly showSubmissionError = computed(
-    () => this.#submissionAttempted() && this.productForm().invalid(),
-  );
 
   /** Computed: show pending message during async validation */
   protected readonly showPendingMessage = computed(() =>
