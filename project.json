@@ -48,7 +48,7 @@
       "executor": "nx:run-commands",
       "cache": false,
       "options": {
-        "command": "vitest run --config vitest.coverage.config.mts --coverage",
+        "command": "vitest run --config vitest.coverage.config.mts --coverage --maxWorkers=2",
         "cwd": "{workspaceRoot}"
       }
     },

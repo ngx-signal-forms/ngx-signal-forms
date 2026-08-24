@@ -21,18 +21,25 @@ import { defineConfig } from 'vitest/config';
 export default defineConfig({
   test: {
     /**
-     * The two projects that exercise toolkit source. `toolkit-browser` runs
+     * Every project whose specs exercise toolkit source, including the demo
+     * app's own unit specs. `toolkit-browser` runs
      * through the Playwright provider; the demo-e2e Playwright suite is not
      * a Vitest project and is intentionally absent — see the coverage docs.
      *
      * `demo-shared` is excluded on purpose: its single spec covers route
-     * metadata, adds nothing to toolkit coverage, and its differing
-     * `maxWorkers` would collide with the toolkit projects' shared
-     * `sequence.groupOrder`.
+     * metadata rather than any toolkit code.
+     *
+     * Note the `--maxWorkers=2` in the `workspace:coverage` target. Vitest
+     * refuses to run two projects that share a `sequence.groupOrder` but
+     * resolve different `maxWorkers`, which these configs otherwise do under
+     * CI. A CLI value applies to every project at the highest priority and
+     * removes the divergence; a percentage does not, because it resolves
+     * per project.
      */
     projects: [
       'packages/toolkit/vitest.jsdom.config.mts',
       'packages/toolkit/vitest.browser.config.mts',
+      'apps/demo/vitest.config.mts',
     ],
     coverage: {
       provider: 'v8',

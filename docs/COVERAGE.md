@@ -16,15 +16,24 @@ under `packages/toolkit`. Specs, barrel files (`index.ts`, `public_api.ts`), and
 test setup are excluded, as are the demo apps and build scripts. They are not
 part of the published package, and including them would dilute the figure.
 
-Two Vitest projects feed it, and both are required:
+Three Vitest projects feed it, and all three are required:
 
 | Project           | Environment             | Covers                          |
 | ----------------- | ----------------------- | ------------------------------- |
 | `toolkit-jsdom`   | jsdom, forks pool       | the bulk of the unit specs      |
 | `toolkit-browser` | Chromium via Playwright | `*.browser.spec.ts`, incl. a11y |
+| `demo`            | jsdom, forks pool       | demo specs driving the toolkit  |
 
-Vitest instruments once across both projects and emits a single merged report.
-There is no separate merge step.
+Vitest instruments once across all three projects and emits a single merged
+report. There is no separate merge step.
+
+`demo-shared` is not listed: its one spec covers route metadata, not toolkit
+code.
+
+The run pins `--maxWorkers=2`. Vitest refuses to start two projects that share
+a `sequence.groupOrder` but resolve different `maxWorkers`, which these configs
+do under CI. A CLI value applies to every project at the highest priority and
+removes the divergence — a percentage does not, since it resolves per project.
 
 ## Why the config lives at the root
 
@@ -54,11 +63,12 @@ is not wired to Vitest. So `toolkit:test` and `toolkit:test-browser` stay plain
 test targets, and coverage runs through the dedicated `workspace:coverage`
 target instead.
 
-The `demo-e2e` Playwright suite is deliberately outside coverage. It exercises
-the demo application rather than the published toolkit, and instrumenting a
-dev-server build to attribute those lines back to `packages/toolkit` would add
-significant machinery for a figure nobody acts on. End-to-end behaviour is
-already gated by the a11y baseline and the visual snapshot suites.
+The `demo-e2e` Playwright suite is not yet part of the number. It does drive
+toolkit code through the demo app, so counting it is coherent — but it needs
+source instrumentation (`vite-plugin-istanbul` behind an env flag), a fixture
+that drains `window.__coverage__` after each test, and a merge across the four
+CI shards. Until that lands, end-to-end behaviour stays gated by the a11y
+baseline and the visual snapshot suites instead.
 
 Note that `toolkit-browser` uses Playwright too — as Vitest's browser provider.
 That one _is_ included, and is why the merged run needs browsers installed.
