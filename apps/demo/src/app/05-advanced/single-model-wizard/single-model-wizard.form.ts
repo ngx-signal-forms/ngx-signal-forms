@@ -39,12 +39,6 @@ import {
 } from './single-model-wizard.model';
 import { singleModelWizardSchema } from './single-model-wizard.validations';
 
-const STEP_ORDER: readonly SingleModelWizardStepId[] = [
-  'account',
-  'shipping',
-  'review',
-];
-
 /**
  * Single-model wizard: one `form()` spans every step, and each step's
  * template binds only its own slice (`wizardForm.account…`,
@@ -52,12 +46,11 @@ const STEP_ORDER: readonly SingleModelWizardStepId[] = [
  * every step its own `form()` fed by a shared store — see this feature's
  * README for when each shape earns its keep.
  *
- * Uses the shared `ngx-wizard` UNMODIFIED, with `[showNavigation]="false"`
- * and custom Previous/Next/Confirm buttons — exactly the "Custom
- * Navigation" pattern documented in its own README. That pattern turned
- * out to be required, not optional, here: see the README's "Shared
- * component finding" section for why the built-in nav buttons can't
- * reach an unvisited step even when `canNavigate` would allow it.
+ * Uses the shared `ngx-wizard`'s built-in navigation (Previous/Next/Submit),
+ * driven by the `canNavigate` guard below. The guard reuses the same
+ * `#validateStep` helper for both the progress-header clicks and the
+ * built-in Next button, so both paths enforce the identical per-step
+ * validation rule.
  */
 @Component({
   selector: 'ngx-single-model-wizard',
@@ -89,16 +82,6 @@ export class SingleModelWizardComponent {
   protected readonly currentStep = signal<SingleModelWizardStepId>('account');
   protected readonly stepCount = SINGLE_MODEL_WIZARD_STEP_COUNT;
   protected readonly expressShippingSurcharge = EXPRESS_SHIPPING_SURCHARGE;
-
-  protected readonly currentStepIndex = computed(() =>
-    STEP_ORDER.indexOf(this.currentStep()),
-  );
-  protected readonly isFirstStep = computed(
-    () => this.currentStepIndex() === 0,
-  );
-  protected readonly isLastStep = computed(
-    () => this.currentStepIndex() === STEP_ORDER.length - 1,
-  );
 
   protected readonly orderConfirmed = signal(false);
   protected readonly submitAttempted = signal(false);
@@ -165,14 +148,11 @@ export class SingleModelWizardComponent {
   });
 
   /**
-   * Gates PROGRESS-HEADER clicks — bound unmodified as `[canNavigate]` on
+   * Gates every forward transition — both progress-header clicks and the
+   * shared wizard's built-in Next button — bound as `[canNavigate]` on
    * `<ngx-wizard>`. Per docs/FAQ.md's single-model-wizard answer, it
    * validates the subtree of the step being LEFT, not the one being
    * entered, and only ever runs for forward moves.
-   *
-   * This is NOT what gates the Next button below — see the README's
-   * "Shared component finding" for why the built-in navigation had to move
-   * to custom buttons that call `#validateStep` directly instead.
    */
   protected readonly guardStep: WizardCanNavigate = (event) => {
     if (event.toIndex <= event.fromIndex) {
@@ -184,8 +164,9 @@ export class SingleModelWizardComponent {
   /**
    * Marks the given step's subtree touched (cascades to every descendant
    * field) and reports whether it's valid, focusing the first invalid
-   * field when it isn't. Shared by the header-click guard above and the
-   * custom Next button below, so both paths enforce the identical rule.
+   * field when it isn't. Used by the `canNavigate` guard above, which the
+   * shared wizard's built-in Next button and progress-header clicks both
+   * go through.
    */
   #validateStep(stepId: string): boolean {
     const stepField = this.#stepField(stepId);
@@ -210,24 +191,6 @@ export class SingleModelWizardComponent {
         return this.wizardForm.shipping;
       default:
         return null;
-    }
-  }
-
-  protected previousStep(): void {
-    const previousIndex = this.currentStepIndex() - 1;
-    if (previousIndex >= 0) {
-      this.currentStep.set(STEP_ORDER[previousIndex]);
-    }
-  }
-
-  protected nextStep(): void {
-    if (!this.#validateStep(this.currentStep())) {
-      return;
-    }
-
-    const nextIndex = this.currentStepIndex() + 1;
-    if (nextIndex < STEP_ORDER.length) {
-      this.currentStep.set(STEP_ORDER[nextIndex]);
     }
   }
 

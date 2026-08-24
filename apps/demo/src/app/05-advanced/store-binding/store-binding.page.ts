@@ -2,14 +2,10 @@ import {
   ChangeDetectionStrategy,
   Component,
   computed,
-  effect,
   signal,
   viewChild,
 } from '@angular/core';
-import {
-  type FormFieldAppearance,
-  type FormFieldOrientation,
-} from '@ngx-signal-forms/toolkit';
+import { type FormFieldAppearance } from '@ngx-signal-forms/toolkit';
 import { NgxSignalFormDebugger } from '@ngx-signal-forms/debugger';
 import {
   AppearanceToggleComponent,
@@ -23,8 +19,8 @@ import {
 } from '../../ui';
 import { getAppearanceLabel } from '../../ui/appearance-toggle';
 import {
+  createOrientationSelection,
   getOrientationLabel,
-  isOrientationDisabledForAppearance,
 } from '../../ui/orientation-toggle';
 import { STORE_BINDING_CONTENT } from './store-binding.content';
 import { StoreBindingFormComponent } from './store-binding.form';
@@ -107,8 +103,9 @@ import { StoreBindingFormComponent } from './store-binding.form';
 export class StoreBindingPage {
   protected readonly selectedAppearance =
     signal<FormFieldAppearance>('outline');
-  protected readonly selectedOrientation =
-    signal<FormFieldOrientation>('vertical');
+  protected readonly selectedOrientation = createOrientationSelection(
+    this.selectedAppearance,
+  );
   protected readonly currentControlChips = computed(() => [
     {
       label: 'Appearance',
@@ -121,17 +118,4 @@ export class StoreBindingPage {
   ]);
   protected readonly content = STORE_BINDING_CONTENT;
   protected readonly formRef = viewChild(StoreBindingFormComponent);
-
-  constructor() {
-    effect(() => {
-      if (
-        isOrientationDisabledForAppearance(
-          this.selectedAppearance(),
-          this.selectedOrientation(),
-        )
-      ) {
-        this.selectedOrientation.set('vertical');
-      }
-    });
-  }
 }

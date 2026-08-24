@@ -7,7 +7,9 @@
     [(currentStep)]="currentStep"
     [completedSteps]="completedSteps()"
     [canNavigate]="guardStep"
-    [showNavigation]="false"
+    [showNavigation]="!orderConfirmed()"
+    submitLabel="Confirm order"
+    (wizardSubmit)="confirmOrder()"
   >
     <!-- Account step: bound to wizardForm.account -->
     <ng-template
@@ -178,34 +180,4 @@
       } }
     </ng-template>
   </ngx-wizard>
-
-  <!--
-    Custom navigation (ngx-wizard's `[showNavigation]="false"` +
-    "Custom Navigation" pattern from its own README). `nextStep()` calls
-    the SAME `#validateStep` the `canNavigate` guard above uses — see the
-    README's "Shared component finding" for why the built-in Next button
-    can't be used here.
-  -->
-  @if (!orderConfirmed()) {
-  <div class="wizard-navigation">
-    <button
-      type="button"
-      class="btn btn-secondary"
-      [disabled]="isFirstStep()"
-      (click)="previousStep()"
-    >
-      Previous
-    </button>
-
-    @if (!isLastStep()) {
-    <button type="button" class="btn btn-primary" (click)="nextStep()">
-      Next
-    </button>
-    } @else {
-    <button type="button" class="btn btn-success" (click)="confirmOrder()">
-      Confirm order
-    </button>
-    }
-  </div>
-  }
 </form>
