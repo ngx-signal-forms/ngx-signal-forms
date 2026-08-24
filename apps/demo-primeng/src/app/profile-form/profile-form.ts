@@ -193,20 +193,17 @@ import { profileFormSchema } from './profile-form.schema';
         <button
           pButton
           type="submit"
-          label="Save profile"
-          icon="pi pi-save"
           [loading]="isSubmitting()"
           [disabled]="isSubmitting()"
           data-testid="submit-button"
-        ></button>
-        <button
-          pButton
-          type="button"
-          label="Reset"
-          severity="secondary"
-          icon="pi pi-refresh"
-          (click)="reset()"
-        ></button>
+        >
+          <i class="pi pi-save" pButtonIcon aria-hidden="true"></i>
+          <span pButtonLabel>Save profile</span>
+        </button>
+        <button pButton type="button" severity="secondary" (click)="reset()">
+          <i class="pi pi-refresh" pButtonIcon aria-hidden="true"></i>
+          <span pButtonLabel>Reset</span>
+        </button>
       </div>
 
       @if (lastSubmission()) {
