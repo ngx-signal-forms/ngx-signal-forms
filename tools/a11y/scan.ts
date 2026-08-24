@@ -2,7 +2,7 @@
 /// <reference types="node" />
 
 import { mkdirSync, writeFileSync } from 'node:fs';
-import AxeBuilder from '@axe-core/playwright';
+import { AxeBuilder } from '@axe-core/playwright';
 import type { Page, TestInfo } from '@playwright/test';
 import {
   WCAG_22_AA_TAGS,

@@ -77,7 +77,6 @@ export default defineConfig({
   use: {
     ...preset.use,
     baseURL,
-    channel: browserChannel,
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
@@ -97,7 +96,7 @@ export default defineConfig({
   projects: [
     {
       name: 'chromium',
-      use: { ...devices['Desktop Chrome'] },
+      use: { ...devices['Desktop Chrome'], channel: browserChannel },
     },
   ],
 });

@@ -7,9 +7,10 @@ import { BaseFormPage } from './base-form.page';
  * Route: /advanced-scenarios/single-model-wizard
  *
  * A three-step wizard (Account → Shipping → Review) driven by ONE `form()`
- * model. The custom Next button validates the active step directly via a
- * shared `#validateStep` helper; the `ngx-wizard`'s `canNavigate` guard
- * calls the same helper to gate progress-header clicks.
+ * model, using the shared `ngx-wizard`'s built-in Previous/Next/Submit
+ * navigation. The `ngx-wizard`'s `canNavigate` guard validates the active
+ * step directly via a shared `#validateStep` helper, gating both the
+ * built-in Next button and progress-header clicks alike.
  */
 export class SingleModelWizardPage extends BaseFormPage {
   readonly fullNameInput: Locator;

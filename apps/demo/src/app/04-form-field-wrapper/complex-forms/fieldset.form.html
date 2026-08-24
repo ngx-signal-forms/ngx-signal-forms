@@ -433,14 +433,21 @@
 
   <!-- Same as Shipping Checkbox -->
   <div class="my-6">
-    <label class="choice-target flex cursor-pointer items-center gap-2">
+    <ngx-form-field-wrapper
+      [formField]="fieldsetForm.billingSameAsShipping"
+      [appearance]="appearance()"
+      [orientation]="orientation()"
+    >
+      <label for="billingSameAsShipping"
+        >Billing address is the same as shipping</label
+      >
       <input
+        id="billingSameAsShipping"
         type="checkbox"
-        class="form-checkbox"
+        ngxSignalFormControl="checkbox"
         [formField]="fieldsetForm.billingSameAsShipping"
       />
-      <span class="text-sm">Billing address is the same as shipping</span>
-    </label>
+    </ngx-form-field-wrapper>
   </div>
 
   <!-- Billing Address Fieldset - Shown when different from shipping -->

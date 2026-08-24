@@ -1,5 +1,11 @@
 :host {
   display: block;
+
+  /* The shared wizard's default success color (#22c55e) is only 2.27:1
+     against white text — fails WCAG 2.2 AA's 4.5:1 minimum for the
+     "Confirm order" button. Override with a darker green here instead of
+     changing the shared component's default for every consumer. */
+  --wizard-color-success: #166534;
 }
 
 .single-model-wizard {
@@ -72,12 +78,9 @@
   margin: 0 0 0.75rem;
 }
 
-.wizard-navigation {
-  display: flex;
-  justify-content: space-between;
-  margin-top: 1.5rem;
-}
-
+/* Only `.btn`/`.btn-secondary` remain: the "Start a new order" button on
+   the confirmed-review state. Previous/Next/Confirm are now the shared
+   `ngx-wizard`'s built-in navigation buttons (styled in wizard.scss). */
 .btn {
   padding: 0.5rem 1.5rem;
   border-radius: 0.375rem;
@@ -90,20 +93,7 @@
   }
 }
 
-.btn-primary {
-  background-color: var(--color-primary, #3b82f6);
-  color: white;
-}
-
 .btn-secondary {
   background-color: #e5e7eb;
   color: #374151;
-}
-
-.btn-success {
-  /* #22c55e (the shared --color-success token's usual fallback) is only
-     2.27:1 against white text — fails WCAG 2.2 AA's 4.5:1 minimum. Use a
-     darker green here instead of reusing that token's default. */
-  background-color: #166534;
-  color: white;
 }

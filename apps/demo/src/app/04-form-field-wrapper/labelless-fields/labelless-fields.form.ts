@@ -75,22 +75,22 @@ import { labellessFieldsSchema } from './labelless-fields.validations';
       margin: 0;
     }
 
-    /* Shrink the bordered content box (not the wrapper) so error messages
-       below still render at the wrapper's full width on a single line. */
-    .narrow-age ::ng-deep .ngx-signal-form-field-wrapper__content {
-      width: fit-content;
+    /* Shrink the wrapper itself to hug the narrow input, from the app's own
+       styling layer -- selecting the toolkit's host tag directly, with no
+       view-encapsulation-piercing selector reaching into its internal DOM.
+       This narrows the whole field -- label, content, and assistive/error
+       area -- rather than only the bordered content box, so long error text
+       wraps into a narrower column instead of staying on one full-width
+       line. */
+    .narrow-age ngx-form-field-wrapper,
+    .narrow-zip ngx-form-field-wrapper {
+      inline-size: fit-content;
       align-self: flex-start;
-      justify-self: start;
     }
     .narrow-age input[id='age'] {
       max-width: 5ch;
     }
 
-    .narrow-zip ::ng-deep .ngx-signal-form-field-wrapper__content {
-      width: fit-content;
-      align-self: flex-start;
-      justify-self: start;
-    }
     .narrow-zip input[id='zipCode'] {
       max-width: 9ch;
     }
