@@ -1,6 +1,6 @@
 import { ApplicationRef, Component, signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
-import { render } from '@testing-library/angular';
+import { render, screen } from '@testing-library/angular';
 import { describe, expect, it } from 'vitest';
 
 import { WizardComponent } from './wizard';
@@ -18,9 +18,15 @@ import { WizardStepDirective } from './wizard-step';
       [(currentStep)]="currentStep"
       [completedSteps]="completedSteps()"
     >
-      <ng-template ngxWizardStep="step1" label="Step 1">Step 1 content</ng-template>
-      <ng-template ngxWizardStep="step2" label="Step 2">Step 2 content</ng-template>
-      <ng-template ngxWizardStep="step3" label="Step 3">Step 3 content</ng-template>
+      <ng-template ngxWizardStep="step1" label="Step 1"
+        >Step 1 content</ng-template
+      >
+      <ng-template ngxWizardStep="step2" label="Step 2"
+        >Step 2 content</ng-template
+      >
+      <ng-template ngxWizardStep="step3" label="Step 3"
+        >Step 3 content</ng-template
+      >
     </ngx-wizard>
   `,
   imports: [WizardComponent, WizardStepDirective],
@@ -33,10 +39,16 @@ class ThreeStepHostComponent {
 async function renderThreeStepWizard() {
   const { fixture } = await render(ThreeStepHostComponent);
   await TestBed.inject(ApplicationRef).whenStable();
-  const wizard = fixture.debugElement.query(
-    (el) => el.componentInstance instanceof WizardComponent,
-  ).componentInstance as WizardComponent;
-  return { fixture, wizard };
+  return fixture;
+}
+
+/** The progress-header button for a given step label, e.g. "Step 2". */
+function stepHeaderButton(label: string) {
+  return screen.getByRole('button', { name: new RegExp(label) });
+}
+
+function navButton(label: 'Next' | 'Previous') {
+  return screen.getByRole('button', { name: label });
 }
 
 describe('WizardComponent navigation', () => {
@@ -47,67 +59,70 @@ describe('WizardComponent navigation', () => {
     // forward step (never visited, not completed) could never be reached.
     // This fails on the old code (goToStep unconditionally checking
     // canNavigateToStep before proceeding).
-    const { fixture, wizard } = await renderThreeStepWizard();
+    const fixture = await renderThreeStepWizard();
+    expect(screen.getByText('Step 1 content')).toBeInTheDocument();
 
-    expect(wizard.currentStep()).toBe('step1');
-
-    await wizard.next();
+    navButton('Next').click();
     fixture.detectChanges();
     await TestBed.inject(ApplicationRef).whenStable();
 
-    expect(wizard.currentStep()).toBe('step2');
+    expect(screen.getByText('Step 2 content')).toBeInTheDocument();
+    expect(screen.queryByText('Step 1 content')).not.toBeInTheDocument();
   });
 
   it('direct step-click to an unvisited future step is still blocked', async () => {
-    const { fixture, wizard } = await renderThreeStepWizard();
+    const fixture = await renderThreeStepWizard();
 
     // step3 has never been visited or completed, and is not the current
-    // step — canNavigateToStep() must keep blocking header clicks.
-    expect(wizard.canNavigateToStep('step3')).toBe(false);
+    // step — the header button must render disabled, and clicking it must
+    // not change the visible step.
+    const step3Button = stepHeaderButton('Step 3');
+    expect(step3Button).toBeDisabled();
 
-    await wizard.goToStep('step3');
+    step3Button.click();
     fixture.detectChanges();
     await TestBed.inject(ApplicationRef).whenStable();
 
-    expect(wizard.currentStep()).toBe('step1');
+    expect(screen.getByText('Step 1 content')).toBeInTheDocument();
   });
 
   it('previous() moves back to the prior step', async () => {
-    const { fixture, wizard } = await renderThreeStepWizard();
+    const fixture = await renderThreeStepWizard();
 
-    await wizard.next();
+    navButton('Next').click();
     fixture.detectChanges();
     await TestBed.inject(ApplicationRef).whenStable();
-    expect(wizard.currentStep()).toBe('step2');
+    expect(screen.getByText('Step 2 content')).toBeInTheDocument();
 
-    await wizard.previous();
+    navButton('Previous').click();
     fixture.detectChanges();
     await TestBed.inject(ApplicationRef).whenStable();
 
-    expect(wizard.currentStep()).toBe('step1');
+    expect(screen.getByText('Step 1 content')).toBeInTheDocument();
   });
 
   it('allows click-navigation to an already-visited step', async () => {
-    const { fixture, wizard } = await renderThreeStepWizard();
+    const fixture = await renderThreeStepWizard();
 
-    await wizard.next(); // step1 -> step2, step2 now visited
+    navButton('Next').click(); // step1 -> step2, step2 now visited
     fixture.detectChanges();
     await TestBed.inject(ApplicationRef).whenStable();
 
-    await wizard.next(); // step2 -> step3
+    navButton('Next').click(); // step2 -> step3
     fixture.detectChanges();
     await TestBed.inject(ApplicationRef).whenStable();
-    expect(wizard.currentStep()).toBe('step3');
+    expect(screen.getByText('Step 3 content')).toBeInTheDocument();
 
-    // step2 was visited on the way through — a header click back to it
-    // must be allowed.
-    expect(wizard.canNavigateToStep('step2')).toBe(true);
+    // step2 was visited on the way through — its header button must be
+    // enabled, and clicking it must be allowed.
+    const step2Button = stepHeaderButton('Step 2');
+    expect(step2Button).not.toBeDisabled();
 
-    await wizard.goToStep('step2');
+    step2Button.click();
     fixture.detectChanges();
     await TestBed.inject(ApplicationRef).whenStable();
 
-    expect(wizard.currentStep()).toBe('step2');
+    expect(screen.getByText('Step 2 content')).toBeInTheDocument();
   });
 
   it('allows click-navigation to an already-completed step even if never visited', async () => {
@@ -119,16 +134,13 @@ describe('WizardComponent navigation', () => {
     fixture.detectChanges();
     await TestBed.inject(ApplicationRef).whenStable();
 
-    const wizard = fixture.debugElement.query(
-      (el) => el.componentInstance instanceof WizardComponent,
-    ).componentInstance as WizardComponent;
+    const step3Button = stepHeaderButton('Step 3');
+    expect(step3Button).not.toBeDisabled();
 
-    expect(wizard.canNavigateToStep('step3')).toBe(true);
-
-    await wizard.goToStep('step3');
+    step3Button.click();
     fixture.detectChanges();
     await TestBed.inject(ApplicationRef).whenStable();
 
-    expect(wizard.currentStep()).toBe('step3');
+    expect(screen.getByText('Step 3 content')).toBeInTheDocument();
   });
 });
