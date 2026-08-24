@@ -103,8 +103,22 @@ jobs:
       # the environment while untrusted dependency code runs.
       - name: Verify release credential
         env:
+          # Resolved separately from the token itself: the `||` fallback below
+          # is indistinguishable from a real RELEASE_TOKEN once evaluated, so
+          # without this the preflight would happily green-light a run that
+          # has no push credential at all.
+          HAS_RELEASE_TOKEN: ${{ secrets.RELEASE_TOKEN != '' }}
           RELEASE_TOKEN: ${{ secrets.RELEASE_TOKEN || secrets.GITHUB_TOKEN }}
         run: |
+          if [ "$HAS_RELEASE_TOKEN" != "true" ]; then
+            echo "::error::RELEASE_TOKEN is not set on the 'release' environment."
+            echo "The workflow would fall back to GITHUB_TOKEN, which cannot push to" >&2
+            echo "protected main, so the Release step would fail only after the full" >&2
+            echo "quality gate has already run. Add the secret in" >&2
+            echo "Settings > Environments > release." >&2
+            exit 1
+          fi
+
           BODY=$(mktemp)
           HEADERS=$(mktemp)
           CODE=$(curl -sS -o "$BODY" -D "$HEADERS" -w '%{http_code}' \
@@ -114,7 +128,7 @@ jobs:
 
           if [ "$CODE" != "200" ]; then
             echo "::error::RELEASE_TOKEN could not authenticate against $GITHUB_REPOSITORY (HTTP $CODE)."
-            echo "The token is most likely expired or revoked. Mint a new one and update" >&2
+            echo "The token is expired, revoked, or invalid. Mint a new one and update" >&2
             echo "the RELEASE_TOKEN secret in Settings > Environments > release." >&2
             exit 1
           fi
