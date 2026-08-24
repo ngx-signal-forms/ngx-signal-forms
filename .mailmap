@@ -1,0 +1,12 @@
+# Canonical identity for the maintainer.
+#
+# Git and GitHub both read this file, so every historical spelling below
+# resolves to one author in `git log`, `git shortlog`, GitHub's blame and
+# contributor views, and the nx release changelog.
+#
+# Format: <Proper Name> <proper@email> <Commit Name> <commit@email>
+
+Arjen <4863062+the-ult@users.noreply.github.com> <ult_dev@pm.me>
+Arjen <4863062+the-ult@users.noreply.github.com> <the-ult@users.noreply.github.com>
+Arjen <4863062+the-ult@users.noreply.github.com> The Ult <4863062+the-ult@users.noreply.github.com>
+Arjen <4863062+the-ult@users.noreply.github.com> the-ult <4863062+the-ult@users.noreply.github.com>
