@@ -429,12 +429,12 @@ export interface NgxSignalFormsUserConfig {
   /** Override the `'required'` legend text. `{marker}` is substituted. */
   requiredLegendText?: string | undefined;
   /** Override the `'optional'` legend text. `{marker}` is substituted. */
+  optionalLegendText?: string | undefined;
   /**
    * Override the visually-hidden required-hint text for `role="group"`
    * selection clusters. Pass `''` to suppress the hint entirely — the
    * wrapper renders no hint node and omits its id from `aria-describedby`,
    * rather than pointing the description at an empty element.
    */
-  optionalLegendText?: string | undefined;
   requiredHintText?: string | undefined;
 }
