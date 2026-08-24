@@ -72,8 +72,9 @@ describe('ErrorDisplayModesFormComponent', () => {
     fireEvent.input(ratingInput, { target: { value: '2' } });
     fireEvent.blur(ratingInput);
 
-    const improvementInput =
-      await screen.findByLabelText(/what could we improve/i);
+    const improvementInput = await screen.findByLabelText(
+      /what could we improve/i,
+    );
     const hint = container.querySelector('#improvement-hint');
     expect(hint).toBeTruthy();
 
@@ -142,7 +143,9 @@ describe('ErrorDisplayModesFormComponent', () => {
 
     // Fill in every required field with valid values.
     const setValue = (selector: string, value: string) => {
-      const el = root.querySelector(selector) as HTMLInputElement | HTMLSelectElement;
+      const el = root.querySelector(selector) as
+        | HTMLInputElement
+        | HTMLSelectElement;
       el.value = value;
       el.dispatchEvent(new Event('input', { bubbles: true }));
       el.dispatchEvent(new Event('change', { bubbles: true }));

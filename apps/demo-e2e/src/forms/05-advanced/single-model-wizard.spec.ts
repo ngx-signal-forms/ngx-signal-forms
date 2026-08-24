@@ -5,10 +5,11 @@ import { SingleModelWizardPage } from '../../page-objects/single-model-wizard.pa
  * Single-Model Wizard - E2E Tests
  * Route: /advanced-scenarios/single-model-wizard
  *
- * One `form()` model spans every step. "Next" validates the active step's
- * subtree directly via a shared `#validateStep` helper; the `ngx-wizard`'s
- * `canNavigate` guard calls that same helper to gate progress-header
- * navigation (a shared-component finding — see the README).
+ * One `form()` model spans every step, using the shared `ngx-wizard`'s
+ * built-in Previous/Next/Submit navigation. Its `canNavigate` guard calls
+ * a shared `#validateStep` helper to validate the subtree of the step
+ * being LEFT, for both the built-in Next button and progress-header
+ * clicks alike.
  */
 test.describe('Advanced Scenarios - Single-Model Wizard', () => {
   let wizard: SingleModelWizardPage;
@@ -138,10 +139,12 @@ test.describe('Advanced Scenarios - Single-Model Wizard', () => {
     // re-validating the WHOLE form is a safety net for exactly the state
     // this test tries (and fails) to construct. This test pins that the
     // safety net is currently unreachable through the UI, not merely
-    // untested — every forward transition (custom Next AND the shared
-    // wizard's progress-header clicks) re-validates the subtree of the
-    // step being left, so an invalid step can never be left forward, and
-    // Confirm only ever renders on Review, the last step.
+    // untested — every forward transition, whether through the shared
+    // wizard's built-in Next button or a progress-header click, runs
+    // through the same `canNavigate` guard, which re-validates the
+    // subtree of the step being left. So an invalid step can never be
+    // left forward, and Confirm only ever renders on Review, the last
+    // step.
     await test.step('complete the wizard once, validly, reaching Review', async () => {
       await wizard.fillAccountStep('Grace Hopper', 'grace@navy.example');
       await wizard.nextButton.click();
@@ -168,16 +171,20 @@ test.describe('Advanced Scenarios - Single-Model Wizard', () => {
     });
 
     await test.step("the progress header can't be used to route around the block either", async () => {
-      // Review was never marked "visited" by the shared wizard (the
-      // custom Next/Previous buttons write `currentStep` directly and
-      // never call `goToStep()`), so its own header button is only ever
-      // enabled while Review is the CURRENT step (`completedSteps()`
-      // treats Review as completed once reached — see
-      // single-model-wizard.form.ts) or, once left, never again. From
-      // here (currently on Shipping, not Review), neither condition
-      // holds, so the button stays disabled — part of why the state is
-      // unreachable, not just coincidentally blocked once.
-      await expect(wizard.stepNavButton('Review')).toBeDisabled();
+      // Review WAS visited earlier in this test (step 1's "reaching
+      // Review" transition marks it visited via the shared wizard's
+      // `#visitedSteps`), so its header button stays enabled here — the
+      // built-in `canNavigateToStep()` gate only cares whether a step was
+      // ever visited, not whether the CURRENT step is valid. But clicking
+      // it still routes through `goToStep()` -> the same `canNavigate`
+      // guard, which re-validates the subtree being LEFT (Shipping, now
+      // invalid). So the click is refused and the wizard stays put — the
+      // guard, not a disabled button, is what makes Confirm unreachable.
+      await wizard.stepNavButton('Review').click();
+
+      await expect(wizard.stepHeading).toHaveText(/Step 2 of 3: Shipping/);
+      await expect(wizard.errorAlerts.first()).toBeVisible();
+      await expect(wizard.confirmOrderButton).toHaveCount(0);
     });
   });
 });

@@ -111,24 +111,37 @@ test.describe('Accessibility - ARIA Attributes', () => {
       const ratingInput = page.locator('#overallRating');
 
       await expect(page.locator('#rating-hint')).toBeVisible();
-      await expect(ratingInput).not.toHaveAttribute('aria-describedby');
+      /// The hint joins aria-describedby from the start (author-owned id).
+      await expect(ratingInput).toHaveAttribute(
+        'aria-describedby',
+        /rating-hint/,
+      );
 
       /// Trigger validation error by entering invalid value and blurring
       await ratingInput.fill('0');
       await ratingInput.blur();
 
-      /// After error, auto-ARIA adds the error id. The hint stays visible
-      /// without an author-owned aria-describedby on the control.
-      await expect(ratingInput).toHaveAttribute(
-        'aria-describedby',
-        /overallRating-error/,
-      );
-      await expect(page.locator('#rating-hint')).toBeVisible();
+      /// After error, auto-ARIA adds the error id alongside the existing
+      /// hint id -- merge, not replace. The wrapper visually swaps the
+      /// hint slot out for the error component while an error is shown
+      /// (display:none, not removed), so the hint stays attached with its
+      /// id intact but is not visible here -- only the describedby merge
+      /// is asserted.
+      const describedbyWithError =
+        await ratingInput.getAttribute('aria-describedby');
+      expect(describedbyWithError).toContain('rating-hint');
+      expect(describedbyWithError).toContain('overallRating-error');
+      await expect(page.locator('#rating-hint')).toBeAttached();
 
-      /// Fix the value and verify the error id is removed
+      /// Fix the value and verify the error id is removed while the hint
+      /// id is preserved
       await ratingInput.fill('4');
       await ratingInput.blur();
 
+      await expect(ratingInput).toHaveAttribute(
+        'aria-describedby',
+        /rating-hint/,
+      );
       await expect(ratingInput).not.toHaveAttribute(
         'aria-describedby',
         /overallRating-error/,
@@ -155,19 +168,26 @@ test.describe('Accessibility - ARIA Attributes', () => {
 
       await expect(page.locator('#improvement-hint')).toBeVisible();
       await expect(page.locator('#improvement-counter')).toBeVisible();
-      await expect(improvementTextarea).not.toHaveAttribute('aria-describedby');
+      /// The hint joins aria-describedby from the start (author-owned id).
+      await expect(improvementTextarea).toHaveAttribute(
+        'aria-describedby',
+        /improvement-hint/,
+      );
 
       /// Trigger validation error by blurring empty required field
       await improvementTextarea.focus();
       await improvementTextarea.blur();
 
-      /// After error, auto-ARIA links the error container. Hint and counter
-      /// stay in the DOM with stable ids.
-      await expect(improvementTextarea).toHaveAttribute(
-        'aria-describedby',
-        /improvementSuggestions-error/,
-      );
-      await expect(page.locator('#improvement-hint')).toBeVisible();
+      /// After error, auto-ARIA adds the error id alongside the existing
+      /// hint id -- merge, not replace. The wrapper visually swaps the
+      /// hint slot out for the error component while an error is shown
+      /// (display:none, not removed) -- the character count lives in a
+      /// separate slot and stays visible throughout.
+      const describedbyWithError =
+        await improvementTextarea.getAttribute('aria-describedby');
+      expect(describedbyWithError).toContain('improvement-hint');
+      expect(describedbyWithError).toContain('improvementSuggestions-error');
+      await expect(page.locator('#improvement-hint')).toBeAttached();
       await expect(page.locator('#improvement-counter')).toBeVisible();
     });
   });

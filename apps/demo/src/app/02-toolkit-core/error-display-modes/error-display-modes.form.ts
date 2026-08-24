@@ -441,7 +441,10 @@ export class ErrorDisplayHelpersComponent {
           class="feedback-alert feedback-alert--error"
           role="alert"
           [hidden]="
-            !(helpers.submittedStatus() === 'submitted' && productForm().invalid())
+            !(
+              helpers.submittedStatus() === 'submitted' &&
+              productForm().invalid()
+            )
           "
         >
           <div class="text-sm font-medium">
@@ -466,8 +469,7 @@ export class ErrorDisplayHelpersComponent {
           class="btn-primary"
           [disabled]="productForm().submitting()"
           [attr.aria-describedby]="
-            helpers.submittedStatus() === 'submitted' &&
-            productForm().invalid()
+            helpers.submittedStatus() === 'submitted' && productForm().invalid()
               ? 'submission-error'
               : null
           "
