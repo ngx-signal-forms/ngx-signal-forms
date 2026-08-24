@@ -133,7 +133,7 @@ export type NgxCharacterCountAnnouncementFormatter = (
  * }
  * ```
  *
- * Color States (aligned with Figma design tokens):
+ * Color States:
  * - **ok**: 0-80% of limit (text/secondary)
  * - **warning**: 80-95% of limit (amber)
  * - **danger**: 95-100% of limit (interaction/danger)

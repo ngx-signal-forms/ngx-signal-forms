@@ -364,7 +364,7 @@
     var(--_field-line-height-body)
   );
 
-  /* States (Figma: focus/spread/m = 4px, interaction/primary/enabled = #007bc7) */
+  /* States: focus ring spread 4px, primary interaction color #007bc7. */
   --_state-ring-opacity: var(--ngx-form-field-state-ring-opacity, 25%);
   --_hover-state-opacity: var(--ngx-form-field-hover-state-opacity, 6%);
   --_active-state-opacity: var(--ngx-form-field-active-state-opacity, 10%);
@@ -1086,7 +1086,7 @@
     --ngx-form-field-assistive-min-height,
     var(--ngx-signal-form-feedback-line-height, 1rem)
   );
-  /* Figma feedback aligns directly below the field border by default. */
+  /* Feedback aligns directly below the field border by default. */
   margin-top: var(--ngx-form-field-assistive-margin-top, 0);
   margin-bottom: var(--ngx-form-field-assistive-margin-bottom, 0);
   /* A scoped transition lets consumers collapse the reserved space smoothly. */

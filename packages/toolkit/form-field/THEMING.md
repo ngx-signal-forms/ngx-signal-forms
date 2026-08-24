@@ -45,6 +45,14 @@ by the most demanding features used:
 | Native CSS nesting                             | 112    | 112  | 16.5   | 117     |
 | `color-mix()`                                  | 111    | 111  | 16.2   | 113     |
 
+> **On the nesting row.** Browser compatibility tables list full nesting
+> support at Chrome/Edge 120 and Safari 17.2. The earlier versions above are
+> the partial implementation, whose one gap is nested rules that _start with a
+> type selector_ (`input { … }` nested inside another rule). No stylesheet in
+> this package does that — nested rules start with `&`, `:host`, `:is()`, or a
+> class — so the partial implementation is sufficient and 112 / 16.5 is the
+> real floor. Firefox shipped nesting complete in 117.
+
 The effective baseline is the **most demanding** row, not any single
 feature: each component stylesheet uses native nesting on every rule,
 so the `:has(...)` row's lower Safari threshold does **not** relax

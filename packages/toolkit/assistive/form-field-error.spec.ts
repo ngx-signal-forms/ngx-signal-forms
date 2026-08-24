@@ -1523,7 +1523,7 @@ describe('NgxFormFieldError', () => {
       );
     });
 
-    it('defaults the panel error background to the Figma soft-danger token', () => {
+    it('defaults the panel error background to the soft-danger token', () => {
       // Runtime resolution is covered by the *.browser.spec.ts suite and
       // e2e snapshots; jsdom can't compute custom properties from emulated
       // component stylesheets.
