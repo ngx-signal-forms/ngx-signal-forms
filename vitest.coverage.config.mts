@@ -59,6 +59,7 @@ export default defineConfig({
         'packages/toolkit/assistive/**/*.ts',
         'packages/toolkit/form-field/**/*.ts',
         'packages/toolkit/headless/**/*.ts',
+        'packages/toolkit/testing/**/*.ts',
         'packages/toolkit/vest/**/*.ts',
       ],
       exclude: [

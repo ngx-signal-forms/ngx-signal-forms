@@ -11,8 +11,10 @@ It writes `coverage/lcov.info` (for reporting services), an HTML report at
 
 ## What the number covers
 
-Toolkit source only — `core`, `assistive`, `form-field`, `headless`, and `vest`
-under `packages/toolkit`. Specs, barrel files (`index.ts`, `public_api.ts`), and
+Toolkit source only — `core`, `assistive`, `form-field`, `headless`, `vest`,
+and `testing` under `packages/toolkit`. Every published entry point is listed;
+`testing` earns its place because `ng-package.json` makes it the public
+`@ngx-signal-forms/toolkit/testing` surface. Specs, barrel files (`index.ts`, `public_api.ts`), and
 test setup are excluded, as are the demo apps and build scripts. They are not
 part of the published package, and including them would dilute the figure.
 
@@ -46,10 +48,13 @@ See <https://vitest.dev/guide/projects.html#unsupported-options>.
 
 ## Never gate a single project
 
-Both toolkit configs share one `include` glob spanning the whole source tree,
-but each project runs only its own specs. Measured alone, `toolkit-browser`
-reports around 70% — not because that code is untested, but because its tests
-live in the jsdom project. The two only make sense together.
+Coverage instruments the whole toolkit source tree, because the `include` list
+lives once in the root `vitest.coverage.config.mts`. Each project's own
+`test.include` picks up only its half of the specs — `toolkitSpecFiles` for
+jsdom, `toolkitBrowserSpecFiles` for the browser project. Measured alone,
+`toolkit-browser` therefore reports around 70% — not because that code is
+untested, but because its tests live in the jsdom project. The two only make
+sense together.
 
 Thresholds therefore apply once, to the merged result, and are declared only in
 `vitest.coverage.config.mts`.
@@ -58,10 +63,12 @@ Thresholds therefore apply once, to the merged result, and are declared only in
 
 Nx does not merge coverage; Vitest does. The `@nx/vitest:test` executor has no
 `coverage` option at all — its `configFile`, `reportsDirectory`, `mode`,
-`runMode`, `testFiles`, and `watch` are the complete set, and `reportsDirectory`
-is not wired to Vitest. So `toolkit:test` and `toolkit:test-browser` stay plain
-test targets, and coverage runs through the dedicated `workspace:coverage`
-target instead.
+`runMode`, `testFiles`, and `watch` are the complete set. It does forward
+`reportsDirectory` into Vitest as `test.coverage.reportsDirectory`, but that
+only relocates the output directory; it neither enables coverage nor merges
+across projects. So `toolkit:test` and `toolkit:test-browser` stay plain test
+targets, and coverage runs through the dedicated `workspace:coverage` target
+instead.
 
 The `demo-e2e` Playwright suite is not yet part of the number. It does drive
 toolkit code through the demo app, so counting it is coherent — but it needs
