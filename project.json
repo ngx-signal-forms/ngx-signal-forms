@@ -44,6 +44,14 @@
         "command": "oxfmt . --check"
       }
     },
+    "coverage": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "vitest run --config vitest.coverage.config.mts --coverage --maxWorkers=2",
+        "cwd": "{workspaceRoot}"
+      }
+    },
     "a11y-report": {
       "executor": "nx:run-commands",
       "cache": false,

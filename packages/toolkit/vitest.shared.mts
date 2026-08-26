@@ -71,29 +71,10 @@ export const toolkitSharedConfig = {
     maxConcurrency: process.env['CI'] === 'true' ? 2 : 5,
     maxWorkers: process.env['CI'] === 'true' ? 2 : undefined,
     ...sharedProjectTestConfig,
-    coverage: {
-      provider: 'v8',
-      include: [
-        'core/**/*.ts',
-        'assistive/**/*.ts',
-        'form-field/**/*.ts',
-        'headless/**/*.ts',
-        'vest/**/*.ts',
-      ],
-      exclude: [
-        '**/*.spec.ts',
-        '**/*.test.ts',
-        '**/index.ts',
-        '**/public_api.ts',
-        '**/test-setup*.ts',
-      ],
-      thresholds: {
-        statements: 80,
-        branches: 75,
-        functions: 80,
-        lines: 80,
-      },
-    },
+    // Coverage is intentionally absent here. Vitest treats `coverage` as a
+    // root-only option and silently ignores it in a project config, so the
+    // merged settings live in `vitest.coverage.config.mts` at the workspace
+    // root. See https://vitest.dev/guide/projects.html#unsupported-options
   } satisfies NonNullable<UserWorkspaceConfig['test']>,
   define: {
     'import.meta.vitest': true,
