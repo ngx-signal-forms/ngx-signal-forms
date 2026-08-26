@@ -50,11 +50,15 @@ See <https://vitest.dev/guide/projects.html#unsupported-options>.
 
 Coverage instruments the whole toolkit source tree, because the `include` list
 lives once in the root `vitest.coverage.config.mts`. Each project's own
-`test.include` picks up only its half of the specs — `toolkitSpecFiles` for
-jsdom, `toolkitBrowserSpecFiles` for the browser project. Measured alone,
-`toolkit-browser` therefore reports around 70% — not because that code is
-untested, but because its tests live in the jsdom project. The two only make
-sense together.
+`test.include` then claims a slice of the specs. Note that the two toolkit
+globs do not partition on their own: `toolkitSpecFiles` matches the browser
+specs as well, so the jsdom project only leaves them to `toolkit-browser`
+because it also sets `exclude: [toolkitBrowserSpecFiles]`.
+
+The whole tree measured against one slice of the specs is a meaningless
+figure. Run alone, `toolkit-browser` reports around 70% — not because that
+code is untested, but because its tests live in the jsdom project, and `demo`
+alone would look worse still. Only the merged run says anything true.
 
 Thresholds therefore apply once, to the merged result, and are declared only in
 `vitest.coverage.config.mts`.
