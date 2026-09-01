@@ -8,7 +8,7 @@ process.env['NX_DAEMON'] ??= 'false';
 
 export default defineConfig({
   root: __dirname,
-  cacheDir: '../../node_modules/.vite/libs/debugger',
+  cacheDir: '../../../node_modules/.vite/packages/demo/debugger',
   plugins: [angular(), tsconfigPaths()],
   optimizeDeps: {
     include: [

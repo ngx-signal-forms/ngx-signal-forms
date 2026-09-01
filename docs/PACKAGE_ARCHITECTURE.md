@@ -147,7 +147,7 @@ axe-core ^4.5 (optional peer for /testing)
 ### Internal-only debugger
 
 The form debugger is no longer part of the published toolkit package. It now
-lives in `libs/debugger` for internal/demo usage and is consumed via
+lives in `packages/demo/debugger` for internal/demo usage and is consumed via
 `@ngx-signal-forms/debugger` path aliases inside this repository.
 
 ### Publishing notes

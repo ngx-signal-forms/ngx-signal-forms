@@ -14,13 +14,13 @@
 //
 // 1. Top-level declarations inside the `/core` secondary entry (tokens,
 //    factories, helper types) that sibling entries (`form-field`,
-//    `assistive`, `headless`) and `libs/debugger` legitimately import at
+//    `assistive`, `headless`) and `packages/demo/debugger` legitimately import at
 //    build time. `/core` is already hidden from external consumers by
 //    `strip-internal-exports.mjs`, which deletes `"./core"` from the
 //    published `exports` map — so these are *already* unreachable from
 //    outside the package. Stripping them here would break the legitimate
 //    cross-entry/cross-project use case (see AGENTS.md note on
-//    `libs/debugger` consuming `/core` internals), so this script leaves
+//    `packages/demo/debugger` consuming `/core` internals), so this script leaves
 //    them alone.
 // 2. `@internal`-tagged *members* on an otherwise-public class, interface,
 //    or namespace (e.g. `NgxFieldIdentity.setFieldName`) — the container

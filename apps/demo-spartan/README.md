@@ -105,7 +105,7 @@ src/app/
 - A custom wrapper component (`spartan-form-field`) that **composes**
   Spartan's `BrnField` host directive instead of re-skinning Spartan's
   internals.
-- Real `@spartan-ng/helm` components scaffolded into `libs/spartan/ui` via
+- Real `@spartan-ng/helm` components scaffolded into `packages/demo/spartan-ui` via
   `@spartan-ng/cli` (`hlmInput`, `<hlm-select>`, `<hlm-checkbox>`,
   `[hlmLabel]`) — the demo exercises the actual Spartan toolchain rather
   than a CSS impersonation.
@@ -283,7 +283,7 @@ relative to `[formField]`:
   button an AT actually reads, so Brain's raw `aria-invalid` (from
   `BrnSelectTrigger`) would otherwise show `"true"` on a pristine,
   required-and-empty select before it's touched.
-  `libs/spartan/ui/select/src/lib/hlm-select-trigger.ts` fixes this at
+  `packages/demo/spartan-ui/select/src/lib/hlm-select-trigger.ts` fixes this at
   the source instead: it reads `BrnFieldControl.spartanInvalid()` —
   Brain's own touched-gated invalid signal, the same one driving the
   `data-matches-spartan-invalid` destructive-ring styling — and writes
@@ -372,7 +372,7 @@ build.
 
 Spartan's `helm` styled components are not distributed as a runtime npm
 package — they ship as a `@spartan-ng/cli` generator that copies source
-into the consumer's tree. This demo did exactly that: `libs/spartan/ui` was
+into the consumer's tree. This demo did exactly that: `packages/demo/spartan-ui` was
 scaffolded via the workspace-root `components.json` config and exposes
 `@spartan-ng/helm/*` secondary entry points. The Spartan version is
 pinned via the `spartan:` pnpm catalog in `pnpm-workspace.yaml`.
@@ -383,7 +383,7 @@ tokens helm uses (`--background`, `--foreground`, `--destructive`,
 `--ring`, `--radius`, etc.) in `oklch`. Both light and dark palettes
 ship; theme flipping uses the `.dark` variant.
 
-`@source '../../../libs/spartan/ui'` is what makes Tailwind's JIT scan
+`@source '../../../packages/demo/spartan-ui'` is what makes Tailwind's JIT scan
 the vendored helm components for the utility classes embedded in their
 templates — Nx runs Vite with `cwd: apps/demo-spartan` (see
 `project.json`'s `build`/`serve` options), so Tailwind's own auto-detection

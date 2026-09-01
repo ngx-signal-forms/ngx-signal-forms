@@ -32,7 +32,7 @@ This document is written for a later implementation agent. It is self-contained.
 **Out of scope:**
 
 - Public toolkit API changes in `packages/toolkit`.
-- Debugger feature work in `libs/debugger` beyond wiring an existing debugger into a demo page that already uses it elsewhere.
+- Debugger feature work in `packages/demo/debugger` beyond wiring an existing debugger into a demo page that already uses it elsewhere.
 - Mass deletion of `changeDetection: ChangeDetectionStrategy.OnPush` across the demo (allowed only when already editing that file for another required change).
 - Visual redesign of Display Controls.
 - Creating a worktree or implementation branch as part of writing this spec.

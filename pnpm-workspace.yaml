@@ -1,6 +1,7 @@
 packages:
   - 'apps/*'
   - 'packages/*'
+  - 'packages/demo/*'
 allowBuilds:
   '@parcel/watcher': false
   '@swc/core': true

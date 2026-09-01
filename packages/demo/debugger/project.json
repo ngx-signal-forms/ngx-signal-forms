@@ -1,7 +1,7 @@
 {
   "name": "debugger",
-  "$schema": "../../node_modules/nx/schemas/project-schema.json",
-  "sourceRoot": "libs/debugger/src",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "packages/demo/debugger/src",
   "prefix": "ngx",
   "tags": ["scope:demo", "type:lib"],
   "projectType": "library",
@@ -10,8 +10,8 @@
       "executor": "@nx/vitest:test",
       "outputs": ["{options.reportsDirectory}"],
       "options": {
-        "configFile": "libs/debugger/vite.config.mts",
-        "reportsDirectory": "{projectRoot}/../../coverage/libs/debugger"
+        "configFile": "packages/demo/debugger/vite.config.mts",
+        "reportsDirectory": "{workspaceRoot}/coverage/packages/demo/debugger"
       }
     }
   }
