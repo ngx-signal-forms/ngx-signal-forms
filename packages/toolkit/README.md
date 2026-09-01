@@ -186,6 +186,11 @@ The directive class keeps its `Directive` suffix to avoid colliding with the
 
 Built-in kinds: `input-like`, `standalone-field-like`, `switch`, `checkbox`, `radio-group`, `slider`, `composite`.
 
+Field-shaped custom comboboxes infer `input-like` from `role="combobox"`.
+A closed custom select that should look like a text field also uses
+`input-like` — there is no `select` kind. Widget-shaped controls stay
+`slider` or `composite` and usually use `appearance="plain"`.
+
 See [Custom Controls](https://github.com/ngx-signal-forms/ngx-signal-forms/blob/main/docs/CUSTOM_CONTROLS.md) for detailed guidance.
 
 ## Configuration

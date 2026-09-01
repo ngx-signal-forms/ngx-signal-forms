@@ -14,6 +14,7 @@ Reach for this guide when you are working with:
 - custom controls that implement Angular Signal Forms control interfaces
 - switch-style toggles that are more than a plain checkbox row
 - slider or composite widgets
+- field-shaped custom selects and comboboxes that should look like a text field
 - third-party controls that already own some or all ARIA attributes
 - cases where wrapper layout or auto-ARIA should follow an explicit control family instead of toolkit heuristics
 
@@ -186,6 +187,54 @@ It does **not** mean you stop using the wrapper. The wrapper can still provide:
 controls for the same reason: the wrapper still contributes semantics and
 feedback, while the widget keeps ownership of its own visual chrome. These are
 related choices, but they are not the same choice.
+
+## Field-shaped vs widget-shaped custom controls
+
+Decide the control family from the **visual contract**, not from "this is a
+custom component".
+
+| Shape         | Looks like                                       | Kind                    | Chrome                                                                                             |
+| ------------- | ------------------------------------------------ | ----------------------- | -------------------------------------------------------------------------------------------------- |
+| Field-shaped  | A text field (typed search, closed select)       | `input-like`            | Naked trigger. The wrapper owns border, focus, and invalid. Use `standard`, `outline`, or `plain`. |
+| Widget-shaped | A slider, rating, datepicker, or other composite | `slider` or `composite` | The widget owns its chrome. Pair with `appearance="plain"` in most cases.                          |
+
+There is **no `select` kind**. A closed custom select is `input-like`.
+
+Join the wrapper with one of these two paths:
+
+1. **Combobox inference.** Put a stable `id` on an inner `role="combobox"`
+   trigger. The wrapper infers `input-like`. Keep the trigger naked — no
+   widget border, no widget focus ring, no `:host-context` undo.
+2. **Explicit `input-like`.** Put `id` and
+   `ngxSignalFormControl="input-like"` on the `[formField]` host. Do **not**
+   set `role="combobox"` on that host. This is the closed-select path.
+
+```html
+<!-- Path 1: inner combobox infers input-like -->
+<ngx-form-field-wrapper [formField]="form.framework">
+  <label for="framework">Framework</label>
+  <app-autocomplete inputId="framework" [formField]="form.framework" />
+</ngx-form-field-wrapper>
+
+<!-- Path 2: host declares input-like without a combobox role -->
+<ngx-form-field-wrapper [formField]="form.frameworkSelect">
+  <label id="framework-select-label" for="frameworkSelect">Framework</label>
+  <app-select
+    id="frameworkSelect"
+    ngxSignalFormControl="input-like"
+    [attr.aria-labelledby]="'framework-select-label'"
+    [formField]="form.frameworkSelect"
+  />
+</ngx-form-field-wrapper>
+```
+
+Do not restyle `composite` or `slider` as text fields. Do not paint a second
+outline on the widget and then undo it with `:host-context`.
+
+For combobox and select behavior, follow the Angular Aria guides:
+
+- [Combobox](https://angular.dev/guide/aria/combobox)
+- [Select](https://angular.dev/guide/aria/select)
 
 To fully disable toolkit ARIA participation on a bespoke host, use
 `ngxSignalFormAutoAriaDisabled` on the control element instead of an `ariaMode` value.

@@ -85,6 +85,13 @@ These are derived from explicit control semantics when present (for example
 markup. Prefer these attributes over `:has(...)` selectors for long-term theme
 customizations.
 
+`role="combobox"` infers `input-like`, not `composite`. A closed custom
+select that should look like a text field also uses `input-like` (set
+`ngxSignalFormControl="input-like"` on the host; do not add a `select`
+kind). Theme `--textual` / outline / standard / plain on that wrapper.
+Leave `slider` and `composite` as widget chrome, usually with
+`appearance="plain"`.
+
 ### Architecture: Semantic Layering
 
 The system works in layers to ensure consistency while allowing deep customization.

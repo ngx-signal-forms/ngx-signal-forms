@@ -33,6 +33,14 @@ describe('findBoundControl', () => {
     expect(control?.tagName.toLowerCase()).toBe('button');
   });
 
+  it('finds a non-native combobox trigger with an id', () => {
+    const host = makeHost(
+      '<div id="framework" role="combobox" aria-expanded="false"></div>',
+    );
+    const control = findBoundControl(host);
+    expect(control?.id).toBe('framework');
+  });
+
   it('ignores a submit/reset button even with an id (only type="button" matches)', () => {
     const host = makeHost('<button type="submit" id="submit-btn"></button>');
     expect(findBoundControl(host)).toBeNull();

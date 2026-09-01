@@ -1,4 +1,4 @@
-import { min, required, schema } from '@angular/forms/signals';
+import { min, required, schema, validate } from '@angular/forms/signals';
 import type { CustomControlsModel } from './custom-controls.model';
 
 /**
@@ -13,6 +13,34 @@ import type { CustomControlsModel } from './custom-controls.model';
 export const customControlsSchema = schema<CustomControlsModel>((path) => {
   // Product name is required
   required(path.productName, { message: 'Product name is required' });
+
+  required(path.framework, { message: 'Select a framework' });
+  validate(path.framework, ({ value }) => {
+    if (
+      value() &&
+      !['angular', 'react', 'svelte', 'vue', 'solid'].includes(value())
+    ) {
+      return {
+        kind: 'invalidFramework',
+        message: 'Select a listed framework',
+      };
+    }
+    return undefined;
+  });
+
+  required(path.frameworkSelect, { message: 'Select a framework' });
+  validate(path.frameworkSelect, ({ value }) => {
+    if (
+      value() &&
+      !['angular', 'react', 'svelte', 'vue', 'solid'].includes(value())
+    ) {
+      return {
+        kind: 'invalidFramework',
+        message: 'Select a listed framework',
+      };
+    }
+    return undefined;
+  });
 
   // Rating must be at least 1 star
   required(path.rating, { message: 'Please provide a rating' });

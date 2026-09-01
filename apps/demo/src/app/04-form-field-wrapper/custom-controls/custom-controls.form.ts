@@ -26,6 +26,10 @@ import {
   RatingControlComponent,
   SwitchControlComponent,
 } from '../../shared/controls';
+import {
+  AriaAutocompleteComponent,
+  AriaSelectComponent,
+} from '@ngx-signal-forms/demo-shared/ui';
 import { initialCustomControlsModel } from './custom-controls.model';
 import { customControlsSchema } from './custom-controls.validations';
 
@@ -62,6 +66,8 @@ import { customControlsSchema } from './custom-controls.validations';
     FormField,
     NgxSignalFormToolkit,
     NgxFormField,
+    AriaAutocompleteComponent,
+    AriaSelectComponent,
     LegacyDatepickerAdapterComponent,
     RatingControlComponent,
     SwitchControlComponent,

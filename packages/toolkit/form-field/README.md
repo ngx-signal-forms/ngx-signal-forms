@@ -179,7 +179,8 @@ The wrapper needs a field name for ARIA linking. It resolves from the `fieldName
 
 ### Custom controls
 
-For non-native controls (sliders, date pickers, composites), declare control semantics on the `[formField]` host:
+Widget-shaped controls (sliders, date pickers, composites) declare control
+semantics on the `[formField]` host and usually use `appearance="plain"`:
 
 ```html
 <ngx-form-field-wrapper [formField]="form.rating" appearance="plain">
@@ -194,7 +195,19 @@ For non-native controls (sliders, date pickers, composites), declare control sem
 </ngx-form-field-wrapper>
 ```
 
-A native `input[type="checkbox"][role="switch"]` is recognized as a switch automatically — no extra directives needed. See [Custom Controls](https://github.com/ngx-signal-forms/ngx-signal-forms/blob/main/docs/CUSTOM_CONTROLS.md) for detailed guidance.
+Field-shaped custom controls (a combobox or closed select that should look
+like a text field) stay `input-like`. Keep the trigger naked so the wrapper
+owns border, focus, and invalid chrome. There is no `select` kind.
+
+- Inner `role="combobox"` with an `id` infers `input-like`.
+- Or set `ngxSignalFormControl="input-like"` on the `[formField]` host
+  without a combobox role.
+
+See [Custom Controls](https://github.com/ngx-signal-forms/ngx-signal-forms/blob/main/docs/CUSTOM_CONTROLS.md#field-shaped-vs-widget-shaped-custom-controls)
+and the Angular Aria [Combobox](https://angular.dev/guide/aria/combobox) and
+[Select](https://angular.dev/guide/aria/select) guides.
+
+A native `input[type="checkbox"][role="switch"]` is recognized as a switch automatically — no extra directives needed.
 
 ### Warning support
 

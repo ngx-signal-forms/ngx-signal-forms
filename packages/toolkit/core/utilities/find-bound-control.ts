@@ -6,6 +6,9 @@
  * - `input[id], textarea[id], select[id], button[type="button"][id]` —
  *   native controls with an `id`. This is the canonical case and works in
  *   both dev and prod builds.
+ * - `[role="combobox"][id]` — a non-native combobox trigger with an `id`.
+ *   This covers readonly select widgets whose trigger is a `div` or another
+ *   element that is not a native form control.
  * - `[id][formField]` — the Signal Forms host binding on a custom control.
  * - `[id][ng-reflect-form-field]` — Angular's dev-mode reflection
  *   attribute. Populated only in dev builds and only when the `formField`
@@ -31,7 +34,7 @@
  * control share one resolution rule.
  */
 export const BOUND_CONTROL_SELECTOR =
-  'input[id], textarea[id], select[id], button[type="button"][id], [id][formField], [id][ng-reflect-form-field], [id][data-ngx-signal-form-control]';
+  'input[id], textarea[id], select[id], button[type="button"][id], [role="combobox"][id], [id][formField], [id][ng-reflect-form-field], [id][data-ngx-signal-form-control]';
 
 /**
  * Locate the bound form control inside a host element.

@@ -590,6 +590,111 @@ test.describe('Custom Signal Forms Controls', () => {
     });
   });
 
+  test.describe('Field-shaped custom controls', () => {
+    test('should infer input-like from the autocomplete combobox', async () => {
+      const wrapper = page.getWrapperByControlId('framework');
+
+      await test.step('Verify the inner trigger is a combobox with an id', async () => {
+        await expect(page.frameworkInput).toHaveAttribute('role', 'combobox');
+        await expect(page.frameworkInput).toHaveAttribute('id', 'framework');
+      });
+
+      await test.step('Verify the wrapper treats the control as a text field', async () => {
+        await expect(wrapper).toHaveAttribute(
+          'data-ngx-signal-form-control-kind',
+          'input-like',
+        );
+        await expect(wrapper).toHaveClass(
+          /ngx-signal-form-field-wrapper--textual/,
+        );
+        await expect(wrapper).not.toHaveClass(
+          /ngx-signal-form-field-wrapper--padded-control/,
+        );
+      });
+
+      await test.step('Verify the inner trigger stays naked', async () => {
+        await expect(page.frameworkInput).toHaveCSS('border-width', '0px');
+        await expect(page.frameworkChevron).toBeVisible();
+      });
+    });
+
+    test('should treat the closed select as input-like without a combobox role', async () => {
+      const wrapper = page.getWrapperByControlId('frameworkSelect');
+
+      await test.step('Verify the host is a button listbox trigger, not a combobox', async () => {
+        await expect(page.frameworkSelectTrigger).toHaveAttribute(
+          'role',
+          'button',
+        );
+        await expect(page.frameworkSelectTrigger).toHaveAttribute(
+          'aria-haspopup',
+          'listbox',
+        );
+        await expect(page.frameworkSelectTrigger).not.toHaveAttribute(
+          'role',
+          'combobox',
+        );
+        await expect(page.frameworkSelectTrigger).toHaveAttribute(
+          'ngxsignalformcontrol',
+          'input-like',
+        );
+      });
+
+      await test.step('Verify the wrapper treats the control as a text field', async () => {
+        await expect(wrapper).toHaveAttribute(
+          'data-ngx-signal-form-control-kind',
+          'input-like',
+        );
+        await expect(wrapper).toHaveClass(
+          /ngx-signal-form-field-wrapper--textual/,
+        );
+      });
+    });
+
+    test('should pick an autocomplete option and close the popup', async () => {
+      await page.frameworkInput.fill('Ang');
+      await page.page.getByRole('option', { name: 'Angular' }).click();
+
+      await expect(page.frameworkInput).toHaveValue('Angular');
+      await expect(page.frameworkInput).toHaveAttribute(
+        'aria-expanded',
+        'false',
+      );
+    });
+
+    test('should pick a select option and close the popup', async () => {
+      await page.frameworkSelectTrigger.click();
+      await page.page.getByRole('option', { name: 'Angular' }).click();
+
+      await expect(page.frameworkSelectTrigger).toContainText('Angular');
+      await expect(page.frameworkSelectTrigger).toHaveAttribute(
+        'aria-expanded',
+        'false',
+      );
+    });
+
+    test('should keep the popup outside the form-field outline', async () => {
+      const autocompleteContent =
+        page.getWrapperContentByControlId('framework');
+
+      await test.step('Verify outline contains only the trigger field', async () => {
+        await page.showOutlineAppearance();
+        await page.frameworkInput.fill('Ang');
+
+        const option = page.page.getByRole('option', { name: 'Angular' });
+        await expect(option).toBeVisible();
+        await expect(autocompleteContent).toHaveCSS('border-style', 'solid');
+        await expect(autocompleteContent).toHaveCSS('border-width', '1px');
+        await expect(page.frameworkInput).toHaveCSS('border-width', '0px');
+
+        const optionInsideWrapper = await option.evaluate((element) => {
+          return Boolean(element.closest('ngx-form-field-wrapper'));
+        });
+        expect(optionInsideWrapper).toBe(false);
+      });
+    });
+  });
+
   test.describe('Outline appearance integration', () => {
     test('should apply horizontal orientation only to eligible wrappers in standard mode', async () => {
       await test.step('Switch the demo to horizontal orientation', async () => {
@@ -605,6 +710,8 @@ test.describe('Custom Signal Forms Controls', () => {
       await test.step('Verify textual and custom plain wrappers resolve to horizontal', async () => {
         for (const controlId of [
           'productName',
+          'framework',
+          'frameworkSelect',
           'feedback',
           'rating',
           'serviceRating',
@@ -660,7 +767,13 @@ test.describe('Custom Signal Forms Controls', () => {
       });
 
       await test.step('Verify wrappers resolve back to vertical orientation', async () => {
-        for (const controlId of ['productName', 'feedback', 'rating']) {
+        for (const controlId of [
+          'productName',
+          'framework',
+          'frameworkSelect',
+          'feedback',
+          'rating',
+        ]) {
           const wrapper = page.getWrapperByControlId(controlId);
 
           await expect(wrapper).toHaveAttribute('data-orientation', 'vertical');
@@ -686,6 +799,48 @@ test.describe('Custom Signal Forms Controls', () => {
           await expect(wrapper).toHaveAttribute('outline', '');
           await expect(wrapper).toHaveClass(/ngx-signal-forms-outline/);
         }
+      });
+
+      await test.step('Verify the field-shaped autocomplete uses the shared outline shell', async () => {
+        const wrapper = page.getWrapperByControlId('framework');
+        const content = page.getWrapperContentByControlId('framework');
+
+        await expect(wrapper).toHaveAttribute('outline', '');
+        await expect(wrapper).toHaveClass(/ngx-signal-forms-outline/);
+        await expect(wrapper).toHaveClass(
+          /ngx-signal-form-field-wrapper--textual/,
+        );
+        await expect(wrapper).toHaveAttribute(
+          'data-ngx-signal-form-control-kind',
+          'input-like',
+        );
+        await expect(content).toHaveCSS('border-style', 'solid');
+        await expect(content).toHaveCSS('border-width', '1px');
+        await expect(page.frameworkInput).toHaveCSS('border-width', '0px');
+        await expect(page.frameworkChevron).toBeVisible();
+
+        await page.frameworkInput.focus();
+        await expect(content).not.toHaveCSS('box-shadow', 'none');
+      });
+
+      await test.step('Verify the field-shaped select uses the shared outline shell', async () => {
+        const wrapper = page.getWrapperByControlId('frameworkSelect');
+        const content = page.getWrapperContentByControlId('frameworkSelect');
+
+        await expect(wrapper).toHaveClass(/ngx-signal-forms-outline/);
+        await expect(wrapper).toHaveClass(
+          /ngx-signal-form-field-wrapper--textual/,
+        );
+        await expect(wrapper).toHaveAttribute(
+          'data-ngx-signal-form-control-kind',
+          'input-like',
+        );
+        await expect(content).toHaveCSS('border-style', 'solid');
+        await expect(page.frameworkSelectTrigger).toHaveCSS(
+          'border-width',
+          '0px',
+        );
+        await expect(page.frameworkSelectChevron).toBeVisible();
       });
 
       await test.step('Verify custom rating and slider wrappers stay plain even when the demo toggles to outline mode', async () => {
@@ -722,7 +877,11 @@ test.describe('Custom Signal Forms Controls', () => {
     });
 
     test('should keep invalid outline borders only for outlined native textual required fields', async () => {
-      const outlinedControlIds = ['productName'] as const;
+      const outlinedControlIds = [
+        'productName',
+        'framework',
+        'frameworkSelect',
+      ] as const;
       const plainControlIds = [
         'rating',
         'serviceRating',

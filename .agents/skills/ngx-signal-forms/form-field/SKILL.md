@@ -40,7 +40,8 @@ The form-field entry point provides a pre-styled field shell (label + control + 
 
 7. **Custom controls:** Implement `FormValueControl<T>`, `FormCheckboxControl`, or `FormUiControl` from `@angular/forms/signals`. Give the host a stable `id` so the wrapper links correctly.
 
-- Use `appearance="plain"` for widget-style controls (sliders, star-rating, switch rows) where outlined or standard default field chrome would look wrong.
+- Field-shaped custom controls (combobox, closed select that should look like a text field) are `input-like`. Keep the trigger naked so the wrapper owns border, focus, and invalid. Inner `role="combobox"` with an `id` infers `input-like`. A closed select without that role sets `ngxSignalFormControl="input-like"` on the host. There is no `select` kind. See the Angular Aria Combobox and Select guides.
+- Use `appearance="plain"` for widget-style controls (sliders, star-rating, switch rows) where outlined or standard default field chrome would look wrong. Do not restyle `composite` or `slider` as text fields.
 - Declare control semantics explicitly with `ngxSignalFormControl` on the bound host. Without it, the wrapper falls back to DOM heuristics that can produce the wrong layout or ARIA behavior:
 
   ```html
@@ -179,6 +180,6 @@ Use `includeNestedErrors` on the fieldset only when the overall summary must agg
 - If grouped summary duplicates child messages: remove `includeNestedErrors` or scope `fields` explicitly.
 - If floating label doesn't animate: add `placeholder=" "` (a single space) and use `appearance="outline"`.
 - If a switch row collapses or inherits text-input styling: make sure the bound control declares `ngxSignalFormControl="switch"` (in addition to `role="switch"` for a11y) so the wrapper uses switch-specific layout.
-- If a slider or composite control gets an outlined text-field shell: add `ngxSignalFormControl="slider"` (or `"composite"`) to the bound host so the wrapper picks up the correct layout.
+- If a slider or composite control gets an outlined text-field shell: add `ngxSignalFormControl="slider"` (or `"composite"`) to the bound host so the wrapper picks up the correct layout. If a field-shaped combobox or closed select does **not** get the text-field shell, keep the trigger naked and join as `input-like` (combobox role + id, or explicit `ngxSignalFormControl="input-like"`). Do not add a `select` kind.
 - If auto-ARIA conflicts with a custom control's own ARIA attributes: add `ngxSignalFormControlAria="manual"` on the control host to suppress toolkit ARIA management. Use `buildAriaDescribedBy` to assemble the `aria-describedby` value manually.
 - For fully custom markup without wrapper assumptions, switch to `headless/SKILL.md`.

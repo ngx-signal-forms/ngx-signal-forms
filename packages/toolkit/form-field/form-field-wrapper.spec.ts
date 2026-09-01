@@ -3745,6 +3745,73 @@ describe('NgxSignalFormWrapperComponent', () => {
         );
         expect(formField).not.toHaveClass('ngx-signal-forms-outline');
       });
+
+      it('treats a projected combobox trigger as a textual field in outline appearance', async () => {
+        const { container } = await render(
+          `<ngx-form-field-wrapper [formField]="field" appearance="outline">
+            <label for="framework">Framework</label>
+            <div id="framework" role="combobox" tabindex="0"></div>
+          </ngx-form-field-wrapper>`,
+          {
+            imports: [NgxSignalFormWrapperComponent],
+            componentProperties: {
+              field: createMockFieldState(),
+            },
+          },
+        );
+
+        const formField = container.querySelector('ngx-form-field-wrapper');
+
+        expect(formField).toHaveAttribute(
+          'data-ngx-signal-form-control-kind',
+          'input-like',
+        );
+        expect(formField).toHaveClass(
+          'ngx-signal-form-field-wrapper--textual',
+          'ngx-signal-forms-outline',
+        );
+        expect(formField).not.toHaveClass(
+          'ngx-signal-form-field-wrapper--padded-control',
+        );
+      });
+
+      it('treats an explicit input-like custom control as a textual field without a combobox role', async () => {
+        const { container } = await render(
+          `<ngx-form-field-wrapper [formField]="field" appearance="outline">
+            <label for="theme">Theme</label>
+            <button
+              id="theme"
+              type="button"
+              ngxSignalFormControl="input-like"
+            >
+              Pick theme
+            </button>
+          </ngx-form-field-wrapper>`,
+          {
+            imports: [
+              NgxSignalFormWrapperComponent,
+              NgxSignalFormControlSemanticsDirective,
+            ],
+            componentProperties: {
+              field: createMockFieldState(),
+            },
+          },
+        );
+
+        const formField = container.querySelector('ngx-form-field-wrapper');
+
+        expect(formField).toHaveAttribute(
+          'data-ngx-signal-form-control-kind',
+          'input-like',
+        );
+        expect(formField).toHaveClass(
+          'ngx-signal-form-field-wrapper--textual',
+          'ngx-signal-forms-outline',
+        );
+        expect(formField).not.toHaveClass(
+          'ngx-signal-form-field-wrapper--padded-control',
+        );
+      });
     });
   });
 

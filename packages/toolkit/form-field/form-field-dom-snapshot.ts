@@ -115,11 +115,34 @@ export function readFormFieldWrapperDomSnapshot(
   // therefore arrives here as `nativeControl === null` and falls through to the
   // probe, which still finds the inner `<input id>`.
   const inputEl = nativeControl ?? (cacheHit ? cachedControl : probedControl);
+  const inputSemantics = resolveNgxSignalFormControlSemantics(
+    inputEl,
+    controlPresets,
+  );
+
+  // A custom FormValueControl can own a native input internally. The input is
+  // the bound element, but the semantics directive lives on the custom-control
+  // host. Use the nearest nested semantics host instead of making each custom
+  // control duplicate toolkit data attributes on its internals.
+  let semantics = inputSemantics;
+  for (
+    let ancestor = inputEl?.parentElement;
+    ancestor && ancestor !== hostEl;
+    ancestor = ancestor.parentElement
+  ) {
+    if (ancestor.hasAttribute('data-ngx-signal-form-control')) {
+      semantics = resolveNgxSignalFormControlSemantics(
+        ancestor,
+        controlPresets,
+      );
+      break;
+    }
+  }
 
   return {
     inputEl,
     inputId: inputEl && inputEl.id.length > 0 ? inputEl.id : null,
-    semantics: resolveNgxSignalFormControlSemantics(inputEl, controlPresets),
+    semantics,
     // Scope the scan to the projected control region so selection controls
     // rendered in `[prefix]` / `[suffix]` (e.g. a checkbox-shaped icon
     // toggle) cannot flip a single-control wrapper into selection-cluster

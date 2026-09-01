@@ -669,13 +669,14 @@
 /* `::ng-deep` reaches into projected form controls (also `<ng-content>`); the */
 /* consumer's `<input>`/`<textarea>`/`<select>` are scoped to their template, */
 /* not ours. */
-:host:not(.ngx-signal-form-field-wrapper--switch)
+:host(.ngx-signal-form-field-wrapper--textual)
   ::ng-deep
   .ngx-signal-form-field-wrapper__main
   :is(
     input:not([type='radio']):not([type='checkbox']):not([role='switch']),
     textarea,
-    select
+    select,
+    [role='combobox']
   ) {
   font-size: var(--_input-size);
   font-family: var(--_input-font-family);
@@ -710,20 +711,24 @@
   }
 }
 
-:host:not(.ngx-signal-form-field-wrapper--switch)
+:host(.ngx-signal-form-field-wrapper--textual)
   ::ng-deep
   .ngx-signal-form-field-wrapper__main
   input:not([type='radio']):not([type='checkbox']):not(
     [role='switch']
   ):focus-visible,
-:host:not(.ngx-signal-form-field-wrapper--switch)
+:host(.ngx-signal-form-field-wrapper--textual)
   ::ng-deep
   .ngx-signal-form-field-wrapper__main
   textarea:focus-visible,
-:host:not(.ngx-signal-form-field-wrapper--switch)
+:host(.ngx-signal-form-field-wrapper--textual)
   ::ng-deep
   .ngx-signal-form-field-wrapper__main
-  select:focus-visible {
+  select:focus-visible,
+:host(.ngx-signal-form-field-wrapper--textual)
+  ::ng-deep
+  .ngx-signal-form-field-wrapper__main
+  [role='combobox']:focus-visible {
   outline: none;
   box-shadow: none;
 }
@@ -898,10 +903,10 @@
 }
 
 /* Remove input default styling (container provides all visual feedback) */
-:host(.ngx-signal-forms-outline):not(.ngx-signal-form-field-wrapper--switch)
+:host(.ngx-signal-forms-outline.ngx-signal-form-field-wrapper--textual)
   ::ng-deep
   .ngx-signal-form-field-wrapper__main
-  :is(input:not([role='switch']), textarea, select) {
+  :is(input:not([role='switch']), textarea, select, [role='combobox']) {
   border: none;
   background-color: transparent;
   padding: 0;
@@ -929,7 +934,7 @@
 }
 
 /* Placeholder (slightly more subtle in outlined) */
-:host(.ngx-signal-forms-outline)
+:host(.ngx-signal-forms-outline.ngx-signal-form-field-wrapper--textual)
   ::ng-deep
   .ngx-signal-form-field-wrapper__main
   :is(input:not([role='switch']), textarea)::placeholder {
