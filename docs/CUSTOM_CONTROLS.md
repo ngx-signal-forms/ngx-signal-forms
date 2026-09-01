@@ -702,6 +702,8 @@ Usage with toolkit:
   <ngx-form-field-wrapper [formField]="myForm.country">
     <label for="country-select">Country</label>
     <app-custom-select
+      id="country"
+      ngxSignalFormControl="input-like"
       [selectId]="'country-select'"
       [formField]="myForm.country"
       [options]="countries"

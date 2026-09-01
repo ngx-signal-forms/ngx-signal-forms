@@ -1,4 +1,5 @@
 import {
+  afterRenderEffect,
   ChangeDetectionStrategy,
   Component,
   computed,
@@ -9,6 +10,8 @@ import {
   model,
   output,
   signal,
+  untracked,
+  viewChild,
 } from '@angular/core';
 import type { FormValueControl, ValidationError } from '@angular/forms/signals';
 import { Listbox, Option } from '@angular/aria/listbox';
@@ -190,10 +193,10 @@ const DEFAULT_OPTIONS: readonly AriaSelectOption[] = [
           focusMode="activedescendant"
           selectionMode="explicit"
           [tabindex]="-1"
-          [activeDescendant]="listbox.activeDescendant()"
           [(value)]="selectedOption"
           (keydown.enter)="commitSelection()"
           (keydown.space)="commitSelection()"
+          (keydown.escape)="closePopupAndFocus()"
         >
           @for (option of options(); track option.value) {
             <li
@@ -227,6 +230,8 @@ export class AriaSelectComponent implements FormValueControl<string> {
 
   protected readonly popupExpanded = signal(false);
   protected readonly selectedOption = signal<string[]>([]);
+  protected readonly ariaListbox = viewChild<Listbox<string>>(Listbox);
+  readonly #focusListboxOnOpen = signal(false);
 
   protected readonly selectedLabel = computed(() => {
     const selected = this.options().find(
@@ -239,6 +244,20 @@ export class AriaSelectComponent implements FormValueControl<string> {
     effect(() => {
       const value = this.value();
       this.selectedOption.set(value ? [value] : []);
+    });
+
+    afterRenderEffect(() => {
+      if (!this.popupExpanded() || !this.#focusListboxOnOpen()) return;
+
+      const listbox = this.ariaListbox();
+      if (!listbox) return;
+
+      // The connected overlay attaches after the component render. Focus the
+      // rendered listbox without tracking the focus operation itself.
+      untracked(() => {
+        listbox.element.focus();
+        this.#focusListboxOnOpen.set(false);
+      });
     });
   }
 
@@ -260,21 +279,33 @@ export class AriaSelectComponent implements FormValueControl<string> {
       event.key === 'ArrowDown'
     ) {
       event.preventDefault();
+      this.#focusListboxOnOpen.set(true);
       this.popupExpanded.set(true);
     }
     if (event.key === 'Escape') {
-      this.popupExpanded.set(false);
+      event.preventDefault();
+      this.closePopupAndFocus();
     }
   }
 
   // oxlint-disable-next-line typescript/prefer-readonly-parameter-types -- DOM FocusEvent
   protected onBlur(event: FocusEvent): void {
     const next = event.relatedTarget;
-    if (next instanceof Node && this.#host.nativeElement.contains(next)) {
+    const listbox = this.ariaListbox();
+    if (
+      next instanceof Node &&
+      (this.#host.nativeElement.contains(next) || next === listbox?.element)
+    ) {
       return;
     }
     this.popupExpanded.set(false);
     this.touch.emit();
+  }
+
+  protected closePopupAndFocus(): void {
+    this.#focusListboxOnOpen.set(false);
+    this.popupExpanded.set(false);
+    this.#host.nativeElement.focus();
   }
 
   protected commitSelection(value?: string): void {
@@ -283,7 +314,7 @@ export class AriaSelectComponent implements FormValueControl<string> {
     if (!option) return;
 
     this.value.set(option.value);
-    this.popupExpanded.set(false);
+    this.closePopupAndFocus();
     this.touch.emit();
   }
 }

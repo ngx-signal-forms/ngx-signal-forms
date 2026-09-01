@@ -176,7 +176,7 @@ const DEFAULT_OPTIONS: readonly AriaAutocompleteOption[] = [
         [(value)]="query"
         [(expanded)]="popupExpanded"
         (focus)="popupExpanded.set(true)"
-        (blur)="touch.emit()"
+        (blur)="popupExpanded.set(false); touch.emit()"
       />
       <span class="select__chevron" aria-hidden="true"></span>
     </div>

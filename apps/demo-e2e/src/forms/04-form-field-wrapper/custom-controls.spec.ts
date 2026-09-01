@@ -771,6 +771,36 @@ test.describe('Custom Signal Forms Controls', () => {
       );
     });
 
+    test('should support keyboard navigation and selection for the closed select', async () => {
+      const listbox = page.page.locator('ul.select__list');
+
+      await page.frameworkSelectTrigger.focus();
+      await page.frameworkSelectTrigger.press('ArrowDown');
+
+      await expect(listbox).toBeVisible();
+      await expect(listbox).toBeFocused();
+
+      await page.page.keyboard.press('ArrowDown');
+      await page.page.keyboard.press('Enter');
+
+      await expect(page.frameworkSelectTrigger).toContainText('React');
+      await expect(page.frameworkSelectTrigger).toHaveAttribute(
+        'aria-expanded',
+        'false',
+      );
+      await expect(page.frameworkSelectTrigger).toBeFocused();
+
+      await page.frameworkSelectTrigger.press('ArrowDown');
+      await expect(listbox).toBeFocused();
+      await page.page.keyboard.press('Escape');
+
+      await expect(page.frameworkSelectTrigger).toHaveAttribute(
+        'aria-expanded',
+        'false',
+      );
+      await expect(page.frameworkSelectTrigger).toBeFocused();
+    });
+
     test('should keep the popup outside the form-field outline', async () => {
       const autocompleteContent =
         page.getWrapperContentByControlId('framework');

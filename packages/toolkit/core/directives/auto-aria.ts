@@ -43,6 +43,7 @@ interface AutoAriaDomSnapshot {
   readonly ariaInvalid: string | null;
   readonly ariaRequired: string | null;
   readonly role: string | null;
+  readonly tagName: string;
   /**
    * Whether *this* control had a CSS layout box as of the last read phase.
    *
@@ -60,6 +61,7 @@ const INITIAL_DOM_SNAPSHOT: AutoAriaDomSnapshot = {
   ariaInvalid: null,
   ariaRequired: null,
   role: null,
+  tagName: '',
   // Assume laid out until a real read phase says otherwise, so ARIA is never
   // stripped on the strength of a pre-layout probe.
   isControlVisible: true,
@@ -430,14 +432,10 @@ export class NgxSignalFormAutoAria {
    *   consumer's DOM value wins.
    * - role-aware suppression — `aria-required` is only valid ARIA on a
    *   handful of roles (`radiogroup`, `combobox`, `textbox`, …) plus native
-   *   form controls with no explicit role. This directive also matches
-   *   `NgxFormFieldWrapper`'s host when a multi-control cluster binds
-   *   `[formField]` directly on the wrapper, and that host can carry
-   *   `role="group"` for a checkbox cluster — a role ARIA does NOT allow
-   *   `aria-required` on. Rather than enumerate every allowed role, this
-   *   blocks the one role this directive can attach to that forbids it;
-   *   `radiogroup` (the wrapper's other cluster role) and plain controls
-   *   (no `role` attribute) are unaffected. See
+   *   form controls with no explicit role. Explicit roles that do not permit
+   *   it, such as `group` and `button`, must not receive the attribute. The
+   *   native `<button>` case is gated separately because its implicit role is
+   *   not present in the DOM `role` attribute. See
    *   https://github.com/ngx-signal-forms/ngx-signal-forms/issues/300.
    */
   protected readonly ariaRequired = computed(() => {
@@ -445,7 +443,8 @@ export class NgxSignalFormAutoAria {
       return this.#domSnapshot().ariaRequired;
     }
 
-    if (this.#domSnapshot().role === 'group') {
+    const { role, tagName } = this.#domSnapshot();
+    if (role === 'group' || role === 'button' || tagName === 'BUTTON') {
       return null;
     }
 
@@ -592,6 +591,7 @@ export class NgxSignalFormAutoAria {
       // DOM by the time `afterEveryRender` runs, so this reflects the
       // current render's role, not a stale one.
       role: ariaTarget.getAttribute('role'),
+      tagName: ariaTarget.tagName,
       isControlVisible,
     };
   }
@@ -646,6 +646,7 @@ export class NgxSignalFormAutoAria {
             current.ariaInvalid !== snapshot.ariaInvalid ||
             current.ariaRequired !== snapshot.ariaRequired ||
             current.role !== snapshot.role ||
+            current.tagName !== snapshot.tagName ||
             current.isControlVisible !== snapshot.isControlVisible
           ) {
             this.#domSnapshot.set(snapshot);

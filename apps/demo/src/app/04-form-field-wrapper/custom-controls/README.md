@@ -20,7 +20,7 @@ Angular Signal Forms replaces the legacy `ControlValueAccessor` boilerplate with
 
 ## Form model
 
-- Signal model: `signal<CustomControlsModel>({ productName, rating, serviceRating, emailUpdates, shareReviewPublicly, accessibilityAudit })`.
+- Signal model: `signal<CustomControlsModel>({ productName, framework, frameworkSelect, rating, serviceRating, emailUpdates, shareReviewPublicly, accessibilityAudit })`.
 - Schema: `form(model, customControlsSchema)`.
 
 ## Validation rules
@@ -28,6 +28,8 @@ Angular Signal Forms replaces the legacy `ControlValueAccessor` boilerplate with
 ### Errors
 
 - Product name — required.
+- Framework — required; must be one of `angular`, `react`, `svelte`, `vue`, or `solid`.
+- Framework select — required; must be one of `angular`, `react`, `svelte`, `vue`, or `solid`.
 - Rating — required; min 1.
 - Service rating — required; min 1.
 - Email updates switch — required (must be toggled on).

@@ -186,7 +186,8 @@ The directive class keeps its `Directive` suffix to avoid colliding with the
 
 Built-in kinds: `input-like`, `standalone-field-like`, `switch`, `checkbox`, `radio-group`, `slider`, `composite`.
 
-Field-shaped custom comboboxes infer `input-like` from `role="combobox"`.
+Field-shaped custom comboboxes infer `input-like` from `role="combobox"` with
+an ID.
 A closed custom select that should look like a text field also uses
 `input-like` — there is no `select` kind. Keep that trigger naked so the
 wrapper owns border, focus, invalid chrome, and the public input type

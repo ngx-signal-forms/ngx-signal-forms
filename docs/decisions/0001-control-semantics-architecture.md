@@ -142,7 +142,7 @@ highest precedence first:
 DOM inference still covers the common native case: a plain
 `<input type="text">` without any directive resolves to `input-like`, a
 `<textarea>` to `standalone-field-like`, and `input[type="checkbox"][role="switch"]`
-to `switch`. A `role="combobox"` trigger also infers `input-like` so a
+to `switch`. A `role="combobox"` trigger with an ID also infers `input-like` so a
 field-shaped custom combobox can join the wrapper shell without a new
 kind. There is no `select` kind: a closed custom select that should look
 like a text field declares `ngxSignalFormControl="input-like"` on the

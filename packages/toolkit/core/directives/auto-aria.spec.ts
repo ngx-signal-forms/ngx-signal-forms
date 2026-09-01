@@ -451,6 +451,50 @@ describe('NgxSignalFormAutoAria', () => {
       expect(group?.hasAttribute('aria-required')).toBe(false);
     });
 
+    it('does NOT set aria-required on a host with role="button"', async () => {
+      @Component({
+        template:
+          '<div role="button" id="select" [formField]="selectControl()"></div>',
+        imports: [MockFormFieldDirective, NgxSignalFormAutoAria],
+      })
+      class TestComponent {
+        selectControl = createMockControl(
+          true,
+          true,
+          [{ kind: 'required', message: 'Selection is required' }],
+          true,
+        );
+      }
+
+      const { container } = await render(TestComponent);
+      await TestBed.inject(ApplicationRef).whenStable();
+
+      const button = container.querySelector('[role="button"]');
+      expect(button?.hasAttribute('aria-required')).toBe(false);
+    });
+
+    it('does NOT set aria-required on a native button', async () => {
+      @Component({
+        template:
+          '<button type="button" id="select" [formField]="selectControl()"></button>',
+        imports: [MockFormFieldDirective, NgxSignalFormAutoAria],
+      })
+      class TestComponent {
+        selectControl = createMockControl(
+          true,
+          true,
+          [{ kind: 'required', message: 'Selection is required' }],
+          true,
+        );
+      }
+
+      const { container } = await render(TestComponent);
+      await TestBed.inject(ApplicationRef).whenStable();
+
+      const button = container.querySelector('button');
+      expect(button?.hasAttribute('aria-required')).toBe(false);
+    });
+
     it('still sets aria-required="true" on a host with role="radiogroup"', async () => {
       @Component({
         template:

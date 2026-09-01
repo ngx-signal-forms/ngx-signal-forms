@@ -88,7 +88,8 @@ customizations.
 `role="combobox"` infers `input-like`, not `composite`. A closed custom
 select that should look like a text field also uses `input-like` (set
 `ngxSignalFormControl="input-like"` on the host; do not add a `select`
-kind). Theme `--textual` / outline / standard / plain on that wrapper.
+kind). Use one of the valid appearances — `inherit`, `standard`, `outline`, or
+`plain` — on that wrapper.
 The wrapper then applies the public input type tokens
 (`--ngx-form-field-input-*`, `--ngx-form-field-outline-input-*`,
 `--ngx-form-field-placeholder-color`) to that host. Override those
