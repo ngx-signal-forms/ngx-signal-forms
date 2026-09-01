@@ -115,29 +115,11 @@ export function readFormFieldWrapperDomSnapshot(
   // therefore arrives here as `nativeControl === null` and falls through to the
   // probe, which still finds the inner `<input id>`.
   const inputEl = nativeControl ?? (cacheHit ? cachedControl : probedControl);
-  const inputSemantics = resolveNgxSignalFormControlSemantics(
+  const semantics = resolveProjectedControlSemantics(
     inputEl,
+    hostEl,
     controlPresets,
   );
-
-  // A custom FormValueControl can own a native input internally. The input is
-  // the bound element, but the semantics directive lives on the custom-control
-  // host. Use the nearest nested semantics host instead of making each custom
-  // control duplicate toolkit data attributes on its internals.
-  let semantics = inputSemantics;
-  for (
-    let ancestor = inputEl?.parentElement;
-    ancestor && ancestor !== hostEl;
-    ancestor = ancestor.parentElement
-  ) {
-    if (ancestor.hasAttribute('data-ngx-signal-form-control')) {
-      semantics = resolveNgxSignalFormControlSemantics(
-        ancestor,
-        controlPresets,
-      );
-      break;
-    }
-  }
 
   return {
     inputEl,
@@ -156,6 +138,24 @@ export function readFormFieldWrapperDomSnapshot(
       ':scope > .ngx-signal-form-field-wrapper__label :is(label, [ngxFormFieldLabel])',
     ),
   };
+}
+
+function resolveProjectedControlSemantics(
+  inputEl: HTMLElement | null,
+  hostEl: HTMLElement,
+  controlPresets: NgxSignalFormControlPresetRegistry,
+): ResolvedNgxSignalFormControlSemantics {
+  for (
+    let ancestor = inputEl?.parentElement;
+    ancestor && ancestor !== hostEl;
+    ancestor = ancestor.parentElement
+  ) {
+    if (ancestor.hasAttribute('data-ngx-signal-form-control')) {
+      return resolveNgxSignalFormControlSemantics(ancestor, controlPresets);
+    }
+  }
+
+  return resolveNgxSignalFormControlSemantics(inputEl, controlPresets);
 }
 
 /**

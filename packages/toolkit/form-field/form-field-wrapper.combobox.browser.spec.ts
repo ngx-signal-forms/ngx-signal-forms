@@ -85,4 +85,38 @@ describe('NgxFormFieldWrapper — combobox field chrome', () => {
       'input-like',
     );
   });
+
+  it('does not give explicit composite controls the textual outline shell', async () => {
+    const { container } = await render(
+      `<ngx-form-field-wrapper [formField]="field" appearance="outline">
+        <label for="rating">Rating</label>
+        <div
+          id="rating"
+          ngxSignalFormControl="composite"
+        >
+          ★★★☆☆
+        </div>
+      </ngx-form-field-wrapper>`,
+      {
+        imports: [NgxFormFieldWrapper, NgxSignalFormControlSemanticsDirective],
+        componentProperties: { field: mockField() },
+      },
+    );
+
+    const wrapper = container.querySelector<HTMLElement>(
+      'ngx-form-field-wrapper',
+    );
+    const content = container.querySelector<HTMLElement>(
+      '.ngx-signal-form-field-wrapper__content',
+    );
+
+    expect(wrapper && content).toBeTruthy();
+    expect(wrapper!.getAttribute('data-ngx-signal-form-control-kind')).toBe(
+      'composite',
+    );
+    expect(wrapper).not.toHaveClass('ngx-signal-form-field-wrapper--textual');
+
+    const contentStyle = getComputedStyle(content!);
+    expect(parseFloat(contentStyle.borderTopWidth)).toBe(0);
+  });
 });
