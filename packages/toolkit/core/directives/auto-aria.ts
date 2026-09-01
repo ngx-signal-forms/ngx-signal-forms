@@ -444,7 +444,11 @@ export class NgxSignalFormAutoAria {
     }
 
     const { role, tagName } = this.#domSnapshot();
-    if (role === 'group' || role === 'button' || tagName === 'BUTTON') {
+    if (
+      role === 'group' ||
+      role === 'button' ||
+      (!role && tagName === 'BUTTON')
+    ) {
       return null;
     }
 

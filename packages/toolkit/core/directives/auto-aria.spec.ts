@@ -495,6 +495,28 @@ describe('NgxSignalFormAutoAria', () => {
       expect(button?.hasAttribute('aria-required')).toBe(false);
     });
 
+    it('sets aria-required="true" on a button with role="combobox"', async () => {
+      @Component({
+        template:
+          '<button type="button" role="combobox" id="select" [formField]="selectControl()"></button>',
+        imports: [MockFormFieldDirective, NgxSignalFormAutoAria],
+      })
+      class TestComponent {
+        selectControl = createMockControl(
+          true,
+          true,
+          [{ kind: 'required', message: 'Selection is required' }],
+          true,
+        );
+      }
+
+      const { container } = await render(TestComponent);
+      await TestBed.inject(ApplicationRef).whenStable();
+
+      const combobox = container.querySelector('[role="combobox"]');
+      expect(combobox?.getAttribute('aria-required')).toBe('true');
+    });
+
     it('still sets aria-required="true" on a host with role="radiogroup"', async () => {
       @Component({
         template:
