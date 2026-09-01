@@ -1195,6 +1195,42 @@ describe('NgxSignalFormWrapperComponent', () => {
       ).toBeTruthy();
     });
 
+    it('marks a required custom combobox from field state when the inner trigger has no required attribute', async () => {
+      // Autocomplete-style FormValueControl: [formField] lives on the host,
+      // while the discovered bound control is the inner role="combobox".
+      // Auto-ARIA may write aria-required on that combobox later in the same
+      // render, so the visual marker must also read field.required().
+      const requiredField = signal({
+        invalid: () => false,
+        touched: () => false,
+        errors: () => [],
+        required: () => true,
+      });
+
+      const { container } = await render(
+        `<ngx-form-field-wrapper [formField]="field" fieldName="framework">
+          <label for="framework">Preferred framework</label>
+          <div data-ngx-signal-form-control>
+            <input id="framework" role="combobox" />
+          </div>
+        </ngx-form-field-wrapper>`,
+        {
+          imports: [NgxSignalFormWrapperComponent],
+          componentProperties: {
+            field: requiredField,
+          },
+        },
+      );
+
+      const formField = container.querySelector('ngx-form-field-wrapper');
+      expect(formField).toHaveAttribute('data-marker', 'required');
+      expect(
+        formField?.querySelector(
+          '.ngx-signal-form-field-wrapper__required-marker',
+        ),
+      ).toBeTruthy();
+    });
+
     it("renders no marker before a control is projected, even in 'optional' mode (no flash)", async () => {
       // resolvedMarker short-circuits to null while #boundControlElement() is
       // null, so the optional marker never flashes before required-ness is

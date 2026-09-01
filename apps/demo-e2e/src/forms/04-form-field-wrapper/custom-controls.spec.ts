@@ -616,6 +616,21 @@ test.describe('Custom Signal Forms Controls', () => {
         await expect(page.frameworkInput).toHaveCSS('border-width', '0px');
         await expect(page.frameworkChevron).toBeVisible();
       });
+
+      await test.step('Verify auto-ARIA and the required marker target the combobox', async () => {
+        const autocompleteHost = wrapper.locator('ngx-aria-autocomplete');
+
+        await expect(page.frameworkInput).toHaveAttribute(
+          'aria-required',
+          'true',
+        );
+        await expect(autocompleteHost).not.toHaveAttribute('aria-required');
+        await expect(autocompleteHost).not.toHaveAttribute('aria-invalid');
+        await expect(autocompleteHost).not.toHaveAttribute('aria-describedby');
+        await expect(
+          wrapper.locator('.ngx-signal-form-field-wrapper__required-marker'),
+        ).toHaveCount(1);
+      });
     });
 
     test('should treat the closed select as input-like without a combobox role', async () => {
@@ -648,6 +663,89 @@ test.describe('Custom Signal Forms Controls', () => {
         await expect(wrapper).toHaveClass(
           /ngx-signal-form-field-wrapper--textual/,
         );
+      });
+    });
+
+    test('should use the same form-field input type scale as the native text field', async () => {
+      await page.showOutlineAppearance();
+
+      await test.step('Verify custom controls inherit wrapper input tokens', async () => {
+        const metrics = await page.productNameInput.evaluate((nativeEl) => {
+          const read = (el: Element | null) => {
+            if (!el) {
+              return null;
+            }
+            const style = getComputedStyle(el);
+            return {
+              fontSize: style.fontSize,
+              lineHeight: style.lineHeight,
+              fontWeight: style.fontWeight,
+              fontFamily: style.fontFamily,
+            };
+          };
+
+          const wrapper = nativeEl.closest('ngx-form-field-wrapper');
+          const probe = document.createElement('span');
+          probe.style.fontSize = 'var(--_input-outline-size)';
+          probe.style.lineHeight = 'var(--_input-outline-line-height)';
+          probe.style.color = 'var(--_placeholder-color)';
+          (wrapper ?? document.body).append(probe);
+          const probeStyle = getComputedStyle(probe);
+          const tokenFontSize = probeStyle.fontSize;
+          const tokenLineHeight = probeStyle.lineHeight;
+          const tokenPlaceholderColor = probeStyle.color;
+          probe.remove();
+
+          return {
+            tokenFontSize,
+            tokenLineHeight,
+            tokenPlaceholderColor,
+            productName: read(nativeEl),
+            productNamePlaceholder: getComputedStyle(nativeEl, '::placeholder')
+              .color,
+            framework: read(document.querySelector('#framework')),
+            frameworkPlaceholder: getComputedStyle(
+              document.querySelector('#framework') as Element,
+              '::placeholder',
+            ).color,
+            frameworkSelect: read(document.querySelector('#frameworkSelect')),
+            frameworkSelectPlaceholder: getComputedStyle(
+              document.querySelector(
+                '#frameworkSelect .select__value--placeholder',
+              ) as Element,
+            ).color,
+          };
+        });
+
+        expect(metrics.productName).not.toBeNull();
+        expect(metrics.productName?.fontSize).toBe(metrics.tokenFontSize);
+        expect(metrics.productName?.lineHeight).toBe(metrics.tokenLineHeight);
+        expect(metrics.framework).toEqual(metrics.productName);
+        expect(metrics.frameworkSelect).toEqual(metrics.productName);
+        expect(metrics.productNamePlaceholder).toBe(
+          metrics.tokenPlaceholderColor,
+        );
+        expect(metrics.frameworkPlaceholder).toBe(
+          metrics.tokenPlaceholderColor,
+        );
+        expect(metrics.frameworkSelectPlaceholder).toBe(
+          metrics.tokenPlaceholderColor,
+        );
+      });
+
+      await test.step('Verify outline field shells share the same content height', async () => {
+        const nativeHeight = await page
+          .getWrapperContentByControlId('productName')
+          .evaluate((el) => el.getBoundingClientRect().height);
+        const autocompleteHeight = await page
+          .getWrapperContentByControlId('framework')
+          .evaluate((el) => el.getBoundingClientRect().height);
+        const selectHeight = await page
+          .getWrapperContentByControlId('frameworkSelect')
+          .evaluate((el) => el.getBoundingClientRect().height);
+
+        expect(autocompleteHeight).toBe(nativeHeight);
+        expect(selectHeight).toBe(nativeHeight);
       });
     });
 
@@ -691,6 +789,18 @@ test.describe('Custom Signal Forms Controls', () => {
           return Boolean(element.closest('ngx-form-field-wrapper'));
         });
         expect(optionInsideWrapper).toBe(false);
+
+        const inputFont = await page.frameworkInput.evaluate((el) => {
+          const style = getComputedStyle(el);
+          return {
+            fontSize: style.fontSize,
+            fontFamily: style.fontFamily,
+            fontWeight: style.fontWeight,
+          };
+        });
+        await expect(option).toHaveCSS('font-size', inputFont.fontSize);
+        await expect(option).toHaveCSS('font-family', inputFont.fontFamily);
+        await expect(option).toHaveCSS('font-weight', inputFont.fontWeight);
       });
     });
   });

@@ -56,14 +56,11 @@ const DEFAULT_OPTIONS: readonly AriaSelectOption[] = [
       align-items: center;
       inline-size: 100%;
       min-inline-size: 0;
-      min-block-size: 1.25rem;
       padding: 0;
       border: 0;
       background: transparent;
       color: inherit;
       cursor: pointer;
-      font: inherit;
-      line-height: inherit;
       text-align: start;
       user-select: none;
     }
@@ -79,10 +76,19 @@ const DEFAULT_OPTIONS: readonly AriaSelectOption[] = [
     .select__value {
       flex: 1;
       min-inline-size: 0;
+      min-block-size: inherit;
       padding-inline-end: 1.5rem;
+      font: inherit;
+      line-height: inherit;
     }
     .select__value--placeholder {
-      color: var(--ngx-form-field-color-text-secondary, rgba(50, 65, 85, 0.75));
+      color: var(
+        --_placeholder-color,
+        var(
+          --ngx-form-field-placeholder-color,
+          var(--ngx-form-field-color-text-secondary, rgba(50, 65, 85, 0.75))
+        )
+      );
     }
     .select__chevron {
       position: absolute;
@@ -117,6 +123,11 @@ const DEFAULT_OPTIONS: readonly AriaSelectOption[] = [
           var(--ngx-form-field-color-text, #324155) 18%,
           transparent
         );
+      color: var(--ngx-form-field-color-text, #324155);
+      font-family: var(--ngx-form-field-input-font-family, inherit);
+      font-size: var(--ngx-form-field-input-size, 0.875rem);
+      font-weight: var(--ngx-form-field-input-weight, 400);
+      line-height: var(--ngx-form-field-input-line-height, 1.25rem);
     }
     .select__list {
       display: flex;
@@ -126,6 +137,7 @@ const DEFAULT_OPTIONS: readonly AriaSelectOption[] = [
       padding: 0;
       outline: none;
       list-style: none;
+      font: inherit;
     }
     .select__option {
       display: flex;
@@ -133,7 +145,8 @@ const DEFAULT_OPTIONS: readonly AriaSelectOption[] = [
       min-block-size: 2.5rem;
       padding: 0.625rem 0.75rem;
       border-radius: calc(var(--ngx-form-field-radius, 0.25rem) * 0.7);
-      color: var(--ngx-form-field-color-text, #324155);
+      color: inherit;
+      font: inherit;
       cursor: pointer;
     }
     .select__option:hover,
@@ -169,7 +182,7 @@ const DEFAULT_OPTIONS: readonly AriaSelectOption[] = [
       }"
       [cdkConnectedOverlayOpen]="popupExpanded()"
     >
-      <div class="select__popup">
+      <div class="select__popup" (mousedown)="$event.preventDefault()">
         <ul
           #listbox="ngListbox"
           ngListbox
@@ -179,7 +192,6 @@ const DEFAULT_OPTIONS: readonly AriaSelectOption[] = [
           [tabindex]="-1"
           [activeDescendant]="listbox.activeDescendant()"
           [(value)]="selectedOption"
-          (click)="commitSelection()"
           (keydown.enter)="commitSelection()"
           (keydown.space)="commitSelection()"
         >
@@ -189,6 +201,7 @@ const DEFAULT_OPTIONS: readonly AriaSelectOption[] = [
               ngOption
               [value]="option.value"
               [label]="option.label"
+              (click)="commitSelection(option.value)"
             >
               {{ option.label }}
             </li>
@@ -264,8 +277,8 @@ export class AriaSelectComponent implements FormValueControl<string> {
     this.touch.emit();
   }
 
-  protected commitSelection(): void {
-    const selected = this.selectedOption()[0];
+  protected commitSelection(value?: string): void {
+    const selected = value ?? this.selectedOption()[0];
     const option = this.options().find((item) => item.value === selected);
     if (!option) return;
 

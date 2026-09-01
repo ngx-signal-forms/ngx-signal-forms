@@ -113,6 +113,11 @@ const DEFAULT_OPTIONS: readonly AriaAutocompleteOption[] = [
           var(--ngx-form-field-color-text, #324155) 18%,
           transparent
         );
+      color: var(--ngx-form-field-color-text, #324155);
+      font-family: var(--ngx-form-field-input-font-family, inherit);
+      font-size: var(--ngx-form-field-input-size, 0.875rem);
+      font-weight: var(--ngx-form-field-input-weight, 400);
+      line-height: var(--ngx-form-field-input-line-height, 1.25rem);
     }
     .select__list {
       display: flex;
@@ -122,12 +127,17 @@ const DEFAULT_OPTIONS: readonly AriaAutocompleteOption[] = [
       padding: 0;
       outline: none;
       list-style: none;
+      font: inherit;
+    }
+    .select__option,
+    .select__empty {
+      font: inherit;
     }
     .select__option {
       min-block-size: 2.5rem;
       padding: 0.625rem 0.75rem;
       border-radius: calc(var(--ngx-form-field-radius, 0.25rem) * 0.7);
-      color: var(--ngx-form-field-color-text, #324155);
+      color: inherit;
       cursor: pointer;
     }
     .select__option:hover,
@@ -179,7 +189,7 @@ const DEFAULT_OPTIONS: readonly AriaAutocompleteOption[] = [
       [cdkConnectedOverlayOpen]="popupExpanded()"
     >
       <ng-template ngComboboxPopup [combobox]="combobox">
-        <div class="select__popup">
+        <div class="select__popup" (mousedown)="$event.preventDefault()">
           @if (filteredOptions().length === 0) {
             <div class="select__empty">No matching options</div>
           } @else {

@@ -1,4 +1,5 @@
 import { signal } from '@angular/core';
+import { NgxSignalFormControlSemanticsDirective } from '@ngx-signal-forms/toolkit';
 import { render } from '@testing-library/angular';
 import { describe, expect, it } from 'vitest';
 import { NgxFormFieldWrapper } from './form-field-wrapper';
@@ -45,5 +46,43 @@ describe('NgxFormFieldWrapper — combobox field chrome', () => {
       triggerStyle.outlineStyle === 'none' ||
         triggerStyle.outlineWidth === '0px',
     ).toBe(true);
+  });
+
+  it('applies form-field input tokens to input-like custom hosts', async () => {
+    const { container } = await render(
+      `<ngx-form-field-wrapper [formField]="field" appearance="outline">
+        <label for="productName">Product name</label>
+        <input id="productName" type="text" placeholder="Acme" />
+      </ngx-form-field-wrapper>
+      <ngx-form-field-wrapper [formField]="field" appearance="outline">
+        <label for="frameworkSelect">Framework</label>
+        <button
+          id="frameworkSelect"
+          type="button"
+          ngxSignalFormControl="input-like"
+        >
+          Select a framework
+        </button>
+      </ngx-form-field-wrapper>`,
+      {
+        imports: [NgxFormFieldWrapper, NgxSignalFormControlSemanticsDirective],
+        componentProperties: { field: mockField() },
+      },
+    );
+
+    const native = container.querySelector<HTMLElement>('#productName');
+    const custom = container.querySelector<HTMLElement>('#frameworkSelect');
+    expect(native && custom).toBeTruthy();
+
+    const nativeStyle = getComputedStyle(native!);
+    const customStyle = getComputedStyle(custom!);
+
+    expect(customStyle.fontSize).toBe(nativeStyle.fontSize);
+    expect(customStyle.lineHeight).toBe(nativeStyle.lineHeight);
+    expect(customStyle.fontWeight).toBe(nativeStyle.fontWeight);
+    expect(customStyle.fontFamily).toBe(nativeStyle.fontFamily);
+    expect(custom.getAttribute('data-ngx-signal-form-control-kind')).toBe(
+      'input-like',
+    );
   });
 });

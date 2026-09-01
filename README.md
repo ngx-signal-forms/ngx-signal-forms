@@ -211,7 +211,8 @@ advanced and specialized cases — pull them in when you hit that specific need.
 | Control when errors appear           | Core + `errorStrategy`                                                             | [`error-display-modes`](./apps/demo/src/app/02-toolkit-core/error-display-modes)                                                                           |
 | Show non-blocking warnings           | `warningError()` + wrapper                                                         | [`warning-support`](./apps/demo/src/app/02-toolkit-core/warning-support)                                                                                   |
 | Build complex multi-section forms    | `/form-field` + `<ngx-form-fieldset>`                                              | [`complex-forms`](./apps/demo/src/app/04-form-field-wrapper/complex-forms)                                                                                 |
-| Wrap custom / third-party controls   | `/form-field` + `ngxSignalFormControl`                                             | [`custom-controls`](./apps/demo/src/app/04-form-field-wrapper/custom-controls)                                                                             |
+| Wrap a combobox or closed select     | `/form-field` + `input-like` (naked trigger)                                       | [`custom-controls`](./apps/demo/src/app/04-form-field-wrapper/custom-controls)                                                                             |
+| Wrap sliders / third-party widgets   | `/form-field` + `ngxSignalFormControl` (`plain`)                                   | [`custom-controls`](./apps/demo/src/app/04-form-field-wrapper/custom-controls)                                                                             |
 | Build my own field wrapper component | [Custom wrapper contracts](./docs/CUSTOM_WRAPPERS.md) + `NgxFieldIdentityProvider` | [`field-identity`](./apps/demo/src/app/04-form-field-wrapper/field-identity)                                                                               |
 | Bring my own markup / design system  | [`/headless`](./packages/toolkit/headless/README.md) primitives                    | [`fieldset-utilities`](./apps/demo/src/app/03-headless/fieldset-utilities)                                                                                 |
 | Validate with Vest business rules    | [`/vest`](./packages/toolkit/vest/README.md) entry point                           | [`vest-validation`](./apps/demo/src/app/05-advanced/vest-validation)                                                                                       |
@@ -234,7 +235,7 @@ If you're adopting Angular v22 Signal Forms for the first time, follow this orde
 1. Start with [`/form-field`](./packages/toolkit/form-field/README.md) and ship one working field wrapper.
 2. Add form-level context only when needed with [`ngxSignalForm`](#adding-form-level-context-with-ngxsignalform).
 3. Tune error and warning timing with [error strategies](#error-strategies-in-plain-english).
-4. Add custom-control semantics only when native inference is not enough ([custom controls](./docs/CUSTOM_CONTROLS.md)).
+4. Add custom-control semantics when a field is not a native input. For a combobox or closed select that should look like the text field next to it, keep the trigger naked and use `input-like` so the wrapper owns the shell and type tokens ([custom controls](./docs/CUSTOM_CONTROLS.md#field-shaped-vs-widget-shaped-custom-controls)).
 5. Lock in behavior with accessibility checks via [`/testing`](./packages/toolkit/testing/README.md).
 
 > [!TIP]
@@ -803,7 +804,7 @@ screen-reader testing) before claiming conformance.
 - [Best practices](./docs/BEST_PRACTICES.md) — the five practices, with do/don't examples and a review checklist
 - [Angular vs toolkit](./docs/ANGULAR_VS_TOOLKIT.md) — what the toolkit adds, with a before/after example
 - [Validation strategies](./docs/VALIDATION_STRATEGY.md) — when to use Angular validators, Zod, or Vest
-- [Custom controls](./docs/CUSTOM_CONTROLS.md) — wrapping custom and third-party widgets
+- [Custom controls](./docs/CUSTOM_CONTROLS.md) — field-shaped combobox/select (wrapper owns the shell) and widget-shaped sliders, date pickers, and third-party adapters
 - [Custom wrappers](./docs/CUSTOM_WRAPPERS.md) — DI contracts for third-party form-field wrappers (Material, PrimeNG, in-house) · runnable references: [`demo-material`](./apps/demo-material/README.md), [`demo-spartan`](./apps/demo-spartan/README.md), [`demo-primeng`](./apps/demo-primeng/README.md)
 - [Complex and nested forms](./docs/COMPLEX_NESTED_FORMS.md) — fieldset aggregation, error summary, strategy inheritance
 - [Warnings support](./docs/WARNINGS_SUPPORT.md) — warning convention, error flow, message resolution

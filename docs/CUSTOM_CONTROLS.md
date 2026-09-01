@@ -4,22 +4,21 @@ This guide explains how custom form controls interact with Angular Signal Forms 
 
 ## When to read this guide
 
-Most toolkit users do **not** need the APIs described here.
+Skip this guide if every field is a native `<input>`, `<textarea>`, or
+`<select>` inside `ngx-form-field-wrapper`. The toolkit defaults cover that.
 
-If your form uses the default native field families (`<input>`, `<textarea>`, `<select>`) and standard wrapper
-usage, the toolkit defaults are usually enough and you can skip this guide.
+Read it when you ship a custom control. The most common case is a
+**field-shaped** combobox or closed select that should look like the
+native text field next to it. The wrapper already owns that shell.
+Keep the widget naked and inherit the public form-field tokens.
 
-Reach for this guide when you are working with:
+Also read it for:
 
-- custom controls that implement Angular Signal Forms control interfaces
 - switch-style toggles that are more than a plain checkbox row
 - slider or composite widgets
-- field-shaped custom selects and comboboxes that should look like a text field
 - third-party controls that already own some or all ARIA attributes
-- cases where wrapper layout or auto-ARIA should follow an explicit control family instead of toolkit heuristics
-
-In short: this is mostly an **edge-case / custom-control integration guide**,
-not a baseline requirement for ordinary forms.
+- cases where wrapper layout or auto-ARIA should follow an explicit
+  control family instead of toolkit heuristics
 
 ## Angular Control Interfaces
 
@@ -190,34 +189,43 @@ related choices, but they are not the same choice.
 
 ## Field-shaped vs widget-shaped custom controls
 
+This is the common custom-control path: a searchable combobox or a closed
+select that should sit in the same row as Product Name and share its
+outline, type scale, and placeholder color.
+
 Decide the control family from the **visual contract**, not from "this is a
 custom component".
 
-| Shape         | Looks like                                       | Kind                    | Chrome                                                                                             |
-| ------------- | ------------------------------------------------ | ----------------------- | -------------------------------------------------------------------------------------------------- |
-| Field-shaped  | A text field (typed search, closed select)       | `input-like`            | Naked trigger. The wrapper owns border, focus, and invalid. Use `standard`, `outline`, or `plain`. |
-| Widget-shaped | A slider, rating, datepicker, or other composite | `slider` or `composite` | The widget owns its chrome. Pair with `appearance="plain"` in most cases.                          |
+| Shape         | Looks like                                       | Kind                    | Chrome                                                                         |
+| ------------- | ------------------------------------------------ | ----------------------- | ------------------------------------------------------------------------------ |
+| Field-shaped  | A text field (typed search, closed select)       | `input-like`            | Naked trigger. The wrapper owns border, focus, invalid, and input type tokens. |
+| Widget-shaped | A slider, rating, datepicker, or other composite | `slider` or `composite` | The widget owns its chrome. Pair with `appearance="plain"` in most cases.      |
 
 There is **no `select` kind**. A closed custom select is `input-like`.
 
-Join the wrapper with one of these two paths:
+### Wrapper owns the shell
+
+Keep the trigger naked. Do not paint a widget border, padding, or focus
+ring, then undo it with `:host-context`. The wrapper already has
+`standard`, `outline`, and `plain`.
+
+Join with one of these two paths:
 
 1. **Combobox inference.** Put a stable `id` on an inner `role="combobox"`
-   trigger. The wrapper infers `input-like`. Keep the trigger naked — no
-   widget border, no widget focus ring, no `:host-context` undo.
+   trigger. The wrapper infers `input-like`.
 2. **Explicit `input-like`.** Put `id` and
    `ngxSignalFormControl="input-like"` on the `[formField]` host. Do **not**
    set `role="combobox"` on that host. This is the closed-select path.
 
 ```html
 <!-- Path 1: inner combobox infers input-like -->
-<ngx-form-field-wrapper [formField]="form.framework">
+<ngx-form-field-wrapper [formField]="form.framework" appearance="outline">
   <label for="framework">Framework</label>
   <app-autocomplete inputId="framework" [formField]="form.framework" />
 </ngx-form-field-wrapper>
 
 <!-- Path 2: host declares input-like without a combobox role -->
-<ngx-form-field-wrapper [formField]="form.frameworkSelect">
+<ngx-form-field-wrapper [formField]="form.frameworkSelect" appearance="outline">
   <label id="framework-select-label" for="frameworkSelect">Framework</label>
   <app-select
     id="frameworkSelect"
@@ -228,8 +236,40 @@ Join the wrapper with one of these two paths:
 </ngx-form-field-wrapper>
 ```
 
-Do not restyle `composite` or `slider` as text fields. Do not paint a second
-outline on the widget and then undo it with `:host-context`.
+### Inherit public input tokens
+
+Once the host is `input-like`, the wrapper applies the same public tokens
+it uses on native text fields:
+
+| Token                                | What it sets                                       |
+| ------------------------------------ | -------------------------------------------------- |
+| `--ngx-form-field-input-size`        | Standard appearance font size (default `0.875rem`) |
+| `--ngx-form-field-input-line-height` | Standard line height (default `1.25rem`)           |
+| `--ngx-form-field-input-font-family` | Font family (`inherit`)                            |
+| `--ngx-form-field-input-weight`      | Font weight (`400`)                                |
+| `--ngx-form-field-outline-input-*`   | Outline aliases of the same tokens                 |
+| `--ngx-form-field-placeholder-color` | Placeholder / empty-select color                   |
+
+Override those tokens on a parent `form` or page. Do not hardcode `rem`
+on the widget. Inner text should use `font: inherit` and
+`line-height: inherit` so the wrapper tokens win.
+
+A closed select that shows placeholder copy (not a native
+`::placeholder`) should color that copy with
+`var(--_placeholder-color, var(--ngx-form-field-placeholder-color, …))`.
+`--_placeholder-color` is the wrapper's resolved token. The public name
+is the fallback when the widget is used outside the wrapper.
+
+Do not restyle `composite` or `slider` as text fields.
+
+**Runnable reference:**
+[`custom-controls`](../apps/demo/src/app/04-form-field-wrapper/custom-controls)
+puts a native Product Name input, an Angular Aria combobox, and a closed
+select in the same form. Switch to Outline and they share type scale,
+placeholder color, and content height.
+
+Token tables:
+[THEMING.md](../packages/toolkit/form-field/THEMING.md).
 
 For combobox and select behavior, follow the Angular Aria guides:
 
@@ -600,6 +640,8 @@ When building custom controls that work with the toolkit:
 - [ ] Use `[formField]` directive binding (not manual wiring)
 - [ ] Test that `focusFirstInvalid()` reaches your control
 - [ ] Expose a stable `id` on the host (or set `fieldName` on the wrapper) so ARIA IDs resolve
+- [ ] Field-shaped combobox / closed select: keep the trigger naked, use `input-like`, inherit `--ngx-form-field-input-*` (and outline aliases) plus `--ngx-form-field-placeholder-color`
+- [ ] Widget-shaped slider / datepicker / composite: use `appearance="plain"` and do not restyle as a text field
 
 ## Example: Complete Custom Select
 

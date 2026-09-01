@@ -197,7 +197,9 @@ semantics on the `[formField]` host and usually use `appearance="plain"`:
 
 Field-shaped custom controls (a combobox or closed select that should look
 like a text field) stay `input-like`. Keep the trigger naked so the wrapper
-owns border, focus, and invalid chrome. There is no `select` kind.
+owns border, focus, invalid chrome, and the public input type tokens
+(`--ngx-form-field-input-*` / `--ngx-form-field-outline-input-*`, plus
+`--ngx-form-field-placeholder-color`). There is no `select` kind.
 
 - Inner `role="combobox"` with an `id` infers `input-like`.
 - Or set `ngxSignalFormControl="input-like"` on the `[formField]` host
@@ -486,5 +488,5 @@ Quick example:
 - [Toolkit core](../README.md) — error strategies, ARIA, configuration
 - [Assistive components](../assistive/README.md) — standalone error, grouped panel feedback, hint, counter, and summary components
 - [Headless primitives](../headless/README.md) — renderless directives for full custom UI
-- [Custom controls](https://github.com/ngx-signal-forms/ngx-signal-forms/blob/main/docs/CUSTOM_CONTROLS.md) — wrapping sliders, date pickers, and third-party widgets
+- [Custom controls](https://github.com/ngx-signal-forms/ngx-signal-forms/blob/main/docs/CUSTOM_CONTROLS.md) — field-shaped combobox/select (wrapper owns the shell) and widget-shaped sliders, date pickers, and third-party adapters
 - [CSS framework integration](https://github.com/ngx-signal-forms/ngx-signal-forms/blob/main/docs/CSS_FRAMEWORK_INTEGRATION.md) — Tailwind, Bootstrap, Material

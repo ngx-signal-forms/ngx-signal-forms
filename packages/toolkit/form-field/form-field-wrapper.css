@@ -676,11 +676,14 @@
     input:not([type='radio']):not([type='checkbox']):not([role='switch']),
     textarea,
     select,
-    [role='combobox']
+    [role='combobox'],
+    [data-ngx-signal-form-control-kind='input-like']
   ) {
   font-size: var(--_input-size);
   font-family: var(--_input-font-family);
+  font-weight: var(--_input-weight);
   line-height: var(--_input-line-height);
+  min-block-size: var(--_input-line-height);
   color: var(--_input-color);
   padding: 0; /* No padding - container handles it */
   border: none; /* No border - container handles it */
@@ -728,7 +731,11 @@
 :host(.ngx-signal-form-field-wrapper--textual)
   ::ng-deep
   .ngx-signal-form-field-wrapper__main
-  [role='combobox']:focus-visible {
+  [role='combobox']:focus-visible,
+:host(.ngx-signal-form-field-wrapper--textual)
+  ::ng-deep
+  .ngx-signal-form-field-wrapper__main
+  [data-ngx-signal-form-control-kind='input-like']:focus-visible {
   outline: none;
   box-shadow: none;
 }
@@ -906,7 +913,13 @@
 :host(.ngx-signal-forms-outline.ngx-signal-form-field-wrapper--textual)
   ::ng-deep
   .ngx-signal-form-field-wrapper__main
-  :is(input:not([role='switch']), textarea, select, [role='combobox']) {
+  :is(
+    input:not([role='switch']),
+    textarea,
+    select,
+    [role='combobox'],
+    [data-ngx-signal-form-control-kind='input-like']
+  ) {
   border: none;
   background-color: transparent;
   padding: 0;
@@ -916,6 +929,7 @@
   font-family: var(--_input-outline-font-family);
   line-height: var(--_input-outline-line-height);
   font-weight: var(--_input-outline-weight);
+  min-block-size: var(--_input-outline-line-height);
   color: var(--_input-outline-color);
   outline: none;
   box-shadow: none;
@@ -937,7 +951,7 @@
 :host(.ngx-signal-forms-outline.ngx-signal-form-field-wrapper--textual)
   ::ng-deep
   .ngx-signal-form-field-wrapper__main
-  :is(input:not([role='switch']), textarea)::placeholder {
+  :is(input:not([role='switch']), textarea, [role='combobox'])::placeholder {
   color: var(--_placeholder-color);
 }
 

@@ -514,6 +514,21 @@ export class NgxSignalFormAutoAria {
     return Array.from(new Set(managedIds));
   }
 
+  /**
+   * Element that assistive tech actually uses. Autocomplete-style
+   * FormValueControl hosts bind `[formField]` on a custom element while
+   * Angular Aria Combobox puts `role="combobox"` on an inner input. Write
+   * managed ARIA there so `aria-required` / `aria-invalid` /
+   * `aria-describedby` land on a valid widget, not a host with no role.
+   * `querySelector` only searches descendants, so a native
+   * `input[formField]` (or a host that is itself the combobox) stays the
+   * target.
+   */
+  #ariaTarget(): HTMLElement {
+    const host = this.#element.nativeElement;
+    return host.querySelector<HTMLElement>('[role="combobox"][id]') ?? host;
+  }
+
   #readPreservedDescribedBy(fieldName: string | null): string | null {
     // First-render note: at construction time `#managedDescribedByIds()` is
     // still empty, so the preserved list returned here can momentarily
@@ -523,7 +538,7 @@ export class NgxSignalFormAutoAria {
     // `write` callback — do not "simplify" by calling this once eagerly,
     // and do not assume the snapshot is authoritative until the first write
     // has run.
-    const raw = this.#element.nativeElement.getAttribute('aria-describedby');
+    const raw = this.#ariaTarget().getAttribute('aria-describedby');
 
     if (!raw) {
       return null;
@@ -560,22 +575,23 @@ export class NgxSignalFormAutoAria {
     // When the identity service is present (wrapper context), prefer its
     // field name over the element's id attribute. This ensures auto-aria and
     // the wrapper always agree on which name drives ID generation.
+    const ariaTarget = this.#ariaTarget();
     const fieldName = this.#fieldIdentity
       ? this.#fieldIdentity.fieldName()
-      : resolveFieldName(this.#element.nativeElement);
+      : resolveFieldName(ariaTarget);
 
     return {
       fieldName,
       describedBy: this.#readPreservedDescribedBy(fieldName),
-      ariaInvalid: this.#element.nativeElement.getAttribute('aria-invalid'),
-      ariaRequired: this.#element.nativeElement.getAttribute('aria-required'),
+      ariaInvalid: ariaTarget.getAttribute('aria-invalid'),
+      ariaRequired: ariaTarget.getAttribute('aria-required'),
       // Read fresh every tick (rather than cached) so the `group` gate in
       // `ariaRequired` above reacts the same render cycle a host's `role`
       // changes — e.g. `NgxFormFieldWrapper` switching cluster kind. Host
       // `[attr.*]` bindings on the same element are already flushed to the
       // DOM by the time `afterEveryRender` runs, so this reflects the
       // current render's role, not a stale one.
-      role: this.#element.nativeElement.getAttribute('role'),
+      role: ariaTarget.getAttribute('role'),
       isControlVisible,
     };
   }
@@ -584,12 +600,19 @@ export class NgxSignalFormAutoAria {
     name: 'aria-describedby' | 'aria-invalid' | 'aria-required',
     value: string | null,
   ): void {
+    const host = this.#element.nativeElement;
+    const target = this.#ariaTarget();
+
+    if (target !== host) {
+      host.removeAttribute(name);
+    }
+
     if (value === null) {
-      this.#element.nativeElement.removeAttribute(name);
+      target.removeAttribute(name);
       return;
     }
 
-    this.#element.nativeElement.setAttribute(name, value);
+    target.setAttribute(name, value);
   }
 
   constructor() {
@@ -609,9 +632,7 @@ export class NgxSignalFormAutoAria {
           // The layout probe belongs here, not in an `effect()`. Effects
           // flush strictly before render hooks in the same change-detection
           // cycle, so an effect-based probe would read pre-layout geometry.
-          return this.#readDomSnapshot(
-            isElementCssVisible(this.#element.nativeElement),
-          );
+          return this.#readDomSnapshot(isElementCssVisible(this.#ariaTarget()));
         },
         write: (snapshot) => {
           const current = this.#domSnapshot();
@@ -641,7 +662,7 @@ export class NgxSignalFormAutoAria {
 
           if (this.#isManualAriaMode()) {
             const currentDescribedBy =
-              this.#element.nativeElement.getAttribute('aria-describedby');
+              this.#ariaTarget().getAttribute('aria-describedby');
             const describedByParts = currentDescribedBy
               ? currentDescribedBy.split(' ').filter(Boolean)
               : [];

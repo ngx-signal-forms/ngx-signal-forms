@@ -1198,10 +1198,14 @@ export class NgxFormFieldWrapper<TValue = unknown> {
         // `:has([aria-required='true'])` detection. Read each render so the
         // marker reacts to dynamic schema changes (auto-aria toggles
         // `aria-required` whenever the field's required state flips).
+        const fieldState = this.#fieldState() as {
+          required?: () => boolean;
+        };
         const isRequired =
           inputEl !== null &&
           (inputEl.hasAttribute('required') ||
-            inputEl.getAttribute('aria-required') === 'true');
+            inputEl.getAttribute('aria-required') === 'true' ||
+            Boolean(fieldState.required?.()));
         if (isRequired !== this.#boundControlIsRequired()) {
           this.#boundControlIsRequired.set(isRequired);
         }

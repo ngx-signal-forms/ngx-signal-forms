@@ -2,12 +2,16 @@
 
 ## Intent
 
-Angular Signal Forms replaces the legacy `ControlValueAccessor` boilerplate with plain signals and `FormValueControl`. This demo shows how to build custom inputs (star rating, native switch, slider) that integrate seamlessly with the toolkit's auto-ARIA, wrapper layout, and explicit control-semantics system.
+Angular Signal Forms replaces the legacy `ControlValueAccessor` boilerplate with plain signals and `FormValueControl`. This demo shows two common paths:
+
+- **Field-shaped** combobox and closed select. The trigger stays naked. The wrapper owns outline, focus, invalid chrome, type scale, and placeholder color (`input-like`).
+- **Widget-shaped** star rating, switch, slider, and a third-party datepicker adapter. Those keep their own chrome, usually with `appearance="plain"`.
 
 ## Toolkit features showcased
 
 - `FormValueControl` interface — lightweight contract exposing value/touched signals in place of CVA.
 - `NgxFormField` wrapper — automatic label/error/hint linkage for custom components.
+- Field-shaped `input-like` — Angular Aria combobox infers this from inner `role="combobox"`; closed select sets `ngxSignalFormControl="input-like"` on the host. Both inherit `--ngx-form-field-input-*` / outline aliases / `--ngx-form-field-placeholder-color`.
 - `ngxSignalFormControl="switch"` — native checkbox switch semantics (inline row layout).
 - `ngxSignalFormControl="checkbox"` — opt-in checkbox semantics for a standard checkbox.
 - `ngxSignalFormControl="slider"` — custom slider with `layout: 'custom'` and `ariaMode: 'manual'` so the control owns its own `aria-describedby` chain.
@@ -36,7 +40,8 @@ Angular Signal Forms replaces the legacy `ControlValueAccessor` boilerplate with
 
 ## Strong suites
 
-- The only demo that exercises all three control-semantics options (`switch`, `checkbox`, `slider`) side by side.
+- Puts a native Product Name input next to a combobox and a closed select so they share outline, font size, line height, placeholder color, and content height.
+- Exercises `switch`, `checkbox`, and `slider` semantics side by side with the field-shaped path.
 - Shows that custom controls need no CVA glue — just a signal contract and the `ngxSignalFormControl` hint.
 - Proves that a custom component can own its own ARIA wiring (`ariaMode: 'manual'`) while still rendering wrapper errors.
 
@@ -53,15 +58,17 @@ Angular Signal Forms replaces the legacy `ControlValueAccessor` boilerplate with
 ## How to test
 
 1. Run the demo and navigate to `/form-field-wrapper/custom-controls`.
-2. Click stars to set a rating; watch the debug panel update instantly.
-3. Tab into the rating control, use arrow keys, and blur — confirm "touched" state updates and errors render below.
-4. Blur the share-review checkbox without checking it and verify the wrapper error appears via explicit checkbox semantics.
-5. Blur the accessibility-audit slider empty and confirm it keeps its own `aria-describedby` chain while still rendering wrapper errors.
-6. Toggle the email-updates switch to observe the inline-row preset applied at the app level.
-7. Type `not-a-date` into Date of Birth and tab out — a `parse` error renders; replace it with a real date to clear it.
-8. Click the 📅 button, pick a day from the popup, then click Reset — confirm the text field clears, proving the value round-trips through the adapter in both directions.
+2. Switch to Outline. Product Name, Preferred framework, and the closed select should share font size, line height, placeholder color, and content height.
+3. Click stars to set a rating; watch the debug panel update instantly.
+4. Tab into the rating control, use arrow keys, and blur — confirm "touched" state updates and errors render below.
+5. Blur the share-review checkbox without checking it and verify the wrapper error appears via explicit checkbox semantics.
+6. Blur the accessibility-audit slider empty and confirm it keeps its own `aria-describedby` chain while still rendering wrapper errors.
+7. Toggle the email-updates switch to observe the inline-row preset applied at the app level.
+8. Type `not-a-date` into Date of Birth and tab out — a `parse` error renders; replace it with a real date to clear it.
+9. Click the 📅 button, pick a day from the popup, then click Reset — confirm the text field clears, proving the value round-trips through the adapter in both directions.
 
 ## Related
 
+- [Custom controls guide](../../../../../../docs/CUSTOM_CONTROLS.md#field-shaped-vs-widget-shaped-custom-controls) — field-shaped vs widget-shaped, and public input tokens.
 - [Complex Forms](../complex-forms/README.md) — wrapper usage for nested/array-heavy forms.
 - [Global Configuration](../../05-advanced/global-configuration/README.md) — where the app-level presets are registered.

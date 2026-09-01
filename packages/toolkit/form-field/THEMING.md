@@ -89,7 +89,11 @@ customizations.
 select that should look like a text field also uses `input-like` (set
 `ngxSignalFormControl="input-like"` on the host; do not add a `select`
 kind). Theme `--textual` / outline / standard / plain on that wrapper.
-Leave `slider` and `composite` as widget chrome, usually with
+The wrapper then applies the public input type tokens
+(`--ngx-form-field-input-*`, `--ngx-form-field-outline-input-*`,
+`--ngx-form-field-placeholder-color`) to that host. Override those
+tokens on a parent form or page; the widgets inherit them. Leave
+`slider` and `composite` as widget chrome, usually with
 `appearance="plain"`.
 
 ### Architecture: Semantic Layering
