@@ -121,6 +121,9 @@ jobs:
       # Run locally because Nx Agents can leave tasks unassigned or stall the
       # coordinator; use non-atomized e2e targets so cloud-less fallback works.
       - name: Run affected tasks (excluding demo-e2e)
+        env:
+          NX_NO_CLOUD: 'true'
+          NX_DAEMON: 'false'
         run: bash .github/scripts/nx-safe.sh pnpm exec nx affected -t lint test test-browser build e2e --exclude=demo-e2e --parallel=4 --outputStyle=static
 
       - name: Generate lint report
