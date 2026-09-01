@@ -8,6 +8,7 @@ import {
   signal,
   viewChild,
 } from '@angular/core';
+import type { FormFieldAppearance } from '@ngx-signal-forms/toolkit';
 
 /**
  * A tiny, self-contained stand-in for a "legacy" third-party datepicker
@@ -28,7 +29,7 @@ import {
  *   boundary.
  * - Interacting with it moves focus across more than one element (the text
  *   input, the calendar-trigger button, and the day buttons inside the
- *   popup dialog). A plain `(blur)` on the internal input would fire every
+ *   popup). A plain `(blur)` on the internal input would fire every
  *   time focus hops between those elements, long before the user is done
  *   with the widget as a whole.
  *
@@ -41,12 +42,19 @@ import {
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: {
     class: 'legacy-datepicker',
+    '[attr.data-appearance]': 'appearance()',
   },
   styles: `
     :host {
+      --legacy-datepicker-trigger-gap: 0.375rem;
+      --legacy-datepicker-trigger-size: 2rem;
+
       display: inline-flex;
       align-items: center;
-      gap: 0.375rem;
+      gap: var(--legacy-datepicker-trigger-gap);
+      inline-size: 100%;
+      min-inline-size: 0;
+      position: relative;
     }
 
     /*
@@ -61,7 +69,9 @@ import {
      *    surface (#1f2937): ~5.8:1 — same floors, dark-theme pairing.
      */
     .legacy-datepicker__input {
-      inline-size: 11rem;
+      flex: 1 1 auto;
+      inline-size: auto;
+      min-inline-size: 0;
       padding: 0.375rem 0.5rem;
       border: 1px solid #6b7280;
       border-radius: 0.25rem;
@@ -80,6 +90,12 @@ import {
     }
 
     .legacy-datepicker__trigger {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex: 0 0 var(--legacy-datepicker-trigger-size);
+      inline-size: var(--legacy-datepicker-trigger-size);
+      min-block-size: var(--legacy-datepicker-trigger-size);
       padding: 0.375rem 0.5rem;
       border: 1px solid #6b7280;
       border-radius: 0.25rem;
@@ -90,12 +106,52 @@ import {
       line-height: 1;
     }
 
+    /* Standard fields keep the third-party trigger as a separate action next
+       to the bordered input. The wrapper reserves this trailing space. */
+    :host([data-appearance='standard']) {
+      gap: 0;
+    }
+
+    :host([data-appearance='standard']) .legacy-datepicker__trigger {
+      position: absolute;
+      inset-inline-start: calc(
+        100% + var(--legacy-datepicker-trigger-gap) +
+          var(--_padding-horizontal, 0.5rem) + 1px
+      );
+      inset-block-start: 50%;
+      translate: 0 -50%;
+    }
+
+    /* Outline fields use the wrapper border as their shared chrome, so the
+       trigger reads as an integrated suffix instead of a nested button. */
+    :host([data-appearance='outline']) .legacy-datepicker__trigger {
+      border-color: transparent;
+      background: transparent;
+    }
+
+    :host([data-appearance='outline']) .legacy-datepicker__trigger:hover {
+      background: color-mix(in srgb, currentColor 6%, transparent);
+    }
+
+    :host([data-appearance='outline'])
+      .legacy-datepicker__trigger:focus-visible {
+      outline: 2px solid var(--_focus-color, #007bc7);
+      outline-offset: 1px;
+    }
+
     .legacy-datepicker__trigger:disabled {
       cursor: not-allowed;
       opacity: 0.6;
     }
 
     .legacy-datepicker__popup {
+      position: fixed;
+      position-area: block-end span-inline-start;
+      position-try-fallbacks: flip-block;
+      align-self: start;
+      justify-self: end;
+      inset: auto;
+      margin: 0.375rem 0 0;
       padding: 0.75rem;
       border: 1px solid #6b7280;
       border-radius: 0.5rem;
@@ -182,19 +238,21 @@ import {
       type="button"
       class="legacy-datepicker__trigger"
       [disabled]="widgetDisabled()"
-      (click)="openPopup()"
+      (click)="preparePopup()"
+      [attr.popovertarget]="popupId()"
       aria-label="Choose date"
       aria-haspopup="dialog"
     >
       📅
     </button>
 
-    <dialog
-      #dialog
+    <div
+      #popup
+      [id]="popupId()"
       class="legacy-datepicker__popup"
+      popover="auto"
+      role="dialog"
       [attr.aria-label]="'Choose date'"
-      (close)="onDialogClose()"
-      (click)="onDialogClick($event)"
     >
       <div class="legacy-datepicker__popup-header">
         <button
@@ -228,12 +286,17 @@ import {
           </button>
         }
       </div>
-    </dialog>
+    </div>
   `,
 })
 export class LegacyDatepickerComponent {
   /** Id placed on the widget's real, focusable `<input>` element. */
   readonly widgetId = input.required<string>();
+
+  /** Parent field appearance used to place and style the calendar trigger. */
+  readonly appearance = input<FormFieldAppearance>('standard');
+
+  protected readonly popupId = computed(() => `${this.widgetId()}-popup`);
 
   /**
    * The widget's own value/change API: a free-typed raw string, not a
@@ -255,8 +318,7 @@ export class LegacyDatepickerComponent {
   protected readonly inputEl = viewChild<ElementRef<HTMLInputElement>>('input');
   protected readonly triggerEl =
     viewChild<ElementRef<HTMLButtonElement>>('trigger');
-  protected readonly dialogEl =
-    viewChild<ElementRef<HTMLDialogElement>>('dialog');
+  protected readonly popupEl = viewChild<ElementRef<HTMLElement>>('popup');
 
   protected readonly viewMonth = signal(startOfMonth(new Date()));
 
@@ -318,7 +380,7 @@ export class LegacyDatepickerComponent {
     }
   }
 
-  protected openPopup(): void {
+  protected preparePopup(): void {
     if (this.widgetDisabled()) return;
     // `fromIso` returns null for anything that isn't a real calendar date —
     // including regex-shaped-but-impossible text like "2026-02-30", which
@@ -329,18 +391,6 @@ export class LegacyDatepickerComponent {
     // rejects as a `parse` error never silently redirects the calendar.
     const typedDate = fromIso(this.rawValue());
     this.viewMonth.set(startOfMonth(typedDate ?? new Date()));
-    this.dialogEl()?.nativeElement.showModal();
-  }
-
-  protected onDialogClose(): void {
-    this.triggerEl()?.nativeElement.focus();
-  }
-
-  /** Closing on backdrop click: only when the click lands on the dialog itself. */
-  protected onDialogClick(event: MouseEvent): void {
-    if (event.target === this.dialogEl()?.nativeElement) {
-      this.dialogEl()?.nativeElement.close();
-    }
   }
 
   protected previousMonth(): void {
@@ -355,7 +405,8 @@ export class LegacyDatepickerComponent {
 
   protected pickDay(iso: string): void {
     this.rawValue.set(iso);
-    this.dialogEl()?.nativeElement.close();
+    this.popupEl()?.nativeElement.hidePopover();
+    this.triggerEl()?.nativeElement.focus();
   }
 }
 

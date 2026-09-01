@@ -145,12 +145,14 @@
 
     <!-- Date of Birth - FormValueControl adapter around a self-contained
          fake "legacy" third-party datepicker widget. The widget owns its
-         internal <input>, so ARIA stays manual and the wrapper stays
-         plain — see LegacyDatepickerAdapterComponent for the full adapter
-         boundary writeup (value round-trip, touched hook, ARIA forwarding,
-         parse errors). -->
+         internal <input>, so ARIA stays manual. Its calendar trigger sits
+         outside the standard input chrome and becomes an integrated trailing
+         action in outline appearance. See LegacyDatepickerAdapterComponent
+         for the full adapter boundary writeup (value round-trip, touched
+         hook, ARIA forwarding, parse errors). -->
     <ngx-form-field-wrapper
-      appearance="plain"
+      class="legacy-datepicker-field"
+      [appearance]="appearance()"
       [orientation]="orientation()"
       [formField]="reviewForm.birthDate"
       fieldName="birthDate"
@@ -163,6 +165,7 @@
         [labelledBy]="'birthDate-label'"
         ngxSignalFormControlAria="manual"
         [describedBy]="birthDateDescribedBy()"
+        [appearance]="appearance()"
         [formField]="reviewForm.birthDate"
       />
       <ngx-form-field-hint id="birthDate-hint">
