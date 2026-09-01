@@ -22,6 +22,16 @@ test.describe('Advanced Scenarios - Single-Model Wizard', () => {
   test('should display the account step first', async () => {
     await expect(wizard.stepHeading).toHaveText(/Step 1 of 3: Account/);
     await expect(wizard.fullNameInput).toBeVisible();
+    await expect(wizard.outlineAppearanceButton).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    );
+    await expect(wizard.standardAppearanceButton).toBeVisible();
+    await expect(wizard.plainAppearanceButton).toBeVisible();
+    await expect(wizard.verticalOrientationButton).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    );
   });
 
   test('blocks Next on an invalid step and surfaces touched errors', async () => {
