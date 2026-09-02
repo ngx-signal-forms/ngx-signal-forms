@@ -1062,6 +1062,19 @@ test.describe('Custom Signal Forms Controls', () => {
       expect(blockGap).toBeLessThanOrEqual(8);
     });
 
+    test('should return focus to the trigger when Escape closes the popup', async () => {
+      await page.birthDateTrigger.click();
+      const day = page.birthDatePopup
+        .locator('.legacy-datepicker__day')
+        .first();
+      await day.focus();
+
+      await page.birthDatePopup.press('Escape');
+
+      await expect(page.birthDatePopup).not.toBeVisible();
+      await expect(page.birthDateTrigger).toBeFocused();
+    });
+
     test('should place the calendar trigger outside standard chrome and inside outline chrome', async () => {
       const wrapper = page.getWrapperByControlId('birthDate');
       const content = page.getWrapperContentByControlId('birthDate');

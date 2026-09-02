@@ -91,6 +91,7 @@ import type { FormFieldAppearance } from '@ngx-signal-forms/toolkit';
 
     .legacy-datepicker__trigger {
       display: inline-flex;
+      box-sizing: border-box;
       align-items: center;
       justify-content: center;
       flex: 0 0 var(--legacy-datepicker-trigger-size);
@@ -253,6 +254,7 @@ import type { FormFieldAppearance } from '@ngx-signal-forms/toolkit';
       popover="auto"
       role="dialog"
       [attr.aria-label]="'Choose date'"
+      (toggle)="onPopupToggle($event)"
     >
       <div class="legacy-datepicker__popup-header">
         <button
@@ -391,6 +393,15 @@ export class LegacyDatepickerComponent {
     // rejects as a `parse` error never silently redirects the calendar.
     const typedDate = fromIso(this.rawValue());
     this.viewMonth.set(startOfMonth(typedDate ?? new Date()));
+  }
+
+  protected onPopupToggle(event: Event): void {
+    if ((event as ToggleEvent).newState !== 'closed') return;
+
+    const popup = this.popupEl()?.nativeElement;
+    if (popup?.contains(document.activeElement)) {
+      this.triggerEl()?.nativeElement.focus();
+    }
   }
 
   protected previousMonth(): void {
