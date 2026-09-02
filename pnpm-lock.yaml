@@ -605,11 +605,13 @@ importers:
 
   apps/demo-spartan: {}
 
-  packages/demo-shared:
+  packages/demo/shared:
     dependencies:
       tslib:
         specifier: catalog:utilities
         version: 2.8.1
+
+  packages/demo/spartan-ui: {}
 
   packages/toolkit:
     dependencies:

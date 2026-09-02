@@ -22,7 +22,7 @@ export default defineConfig({
      * Browser-mode coverage stays available through the explicit Nx target.
      */
     projects: [
-      'packages/demo-shared/vitest.config.mts',
+      'packages/demo/shared/vitest.config.mts',
       'packages/toolkit/vitest.jsdom.config.mts',
     ],
   },

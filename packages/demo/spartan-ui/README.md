@@ -9,7 +9,7 @@ them locally.
 ## These files are NOT kept identical to CLI output
 
 Earlier revisions of this README claimed the files under
-`libs/spartan/ui/{checkbox,icon,input,label,select,utils}` were kept
+`packages/demo/spartan-ui/{checkbox,icon,input,label,select,utils}` were kept
 byte-identical to the Spartan CLI's output. That claim is false and has
 been for a while — diffing against `@spartan-ng/cli@1.0.4`'s generator
 templates shows real divergence, most of it intentional:
@@ -46,7 +46,7 @@ form-state integration this demo depends on. Treat a regenerate as a
 three-way diff: upstream's new baseline, this repo's current file, and
 the toolkit-integration bits that must survive the merge.
 
-PR review suggestions that target `libs/spartan/ui/*` should call out
+PR review suggestions that target `packages/demo/spartan-ui/*` should call out
 which category (integration / restorable drift / styling-convention drift)
 a proposed change falls into — restorable-drift fixes (like #182 above)
 are welcome; wholesale regeneration is not, without a plan for

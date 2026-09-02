@@ -5,7 +5,7 @@ import tsconfigPaths from 'vite-tsconfig-paths';
 
 export default defineConfig({
   root: __dirname,
-  cacheDir: '../../node_modules/.vite/packages/demo-shared',
+  cacheDir: '../../../node_modules/.vite/packages/demo/shared',
   plugins: [tsconfigPaths()],
   test: {
     name: 'demo-shared',

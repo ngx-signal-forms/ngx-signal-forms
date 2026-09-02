@@ -13,7 +13,7 @@ import { expect, test } from '@playwright/test';
  * `aria-invalid` off the raw, ungated `FieldState.invalid` — with `plan`
  * required and empty, that would fire `aria-invalid="true"` on first paint
  * regardless of the demo's `on-touch` default, on a form nobody has touched
- * yet. `HlmSelectTrigger` (`libs/spartan/ui/select`) now gates its own
+ * yet. `HlmSelectTrigger` (`packages/demo/spartan-ui/select`) now gates its own
  * `aria-invalid` write off `BrnFieldControl.spartanInvalid()` — the same
  * touched-aware signal driving the destructive-ring styling — so both
  * controls agree on "no errors before touch".

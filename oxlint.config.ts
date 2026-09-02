@@ -220,7 +220,7 @@ export default defineConfig({
     {
       files: [
         'apps/demo/src/**/*.ts',
-        'libs/debugger/**/*.ts',
+        'packages/demo/debugger/**/*.ts',
         'packages/toolkit/vite.config.mts',
       ],
       rules: {
@@ -410,7 +410,7 @@ export default defineConfig({
       // rewrite them to fit our local style; instead we relax the rules
       // that conflict with helm's conventions (underscore-prefixed private
       // signals, `cva` typing patterns, etc.).
-      files: ['libs/spartan/ui/**/*.ts'],
+      files: ['packages/demo/spartan-ui/**/*.ts'],
       rules: {
         'no-underscore-dangle': 'off',
         '@typescript-eslint/no-unsafe-type-assertion': 'off',
@@ -420,7 +420,7 @@ export default defineConfig({
       },
     },
     {
-      files: ['packages/toolkit/**/*.json', 'packages/demo-shared/**/*.json'],
+      files: ['packages/toolkit/**/*.json', 'packages/demo/shared/**/*.json'],
       jsPlugins: ['@nx/eslint-plugin'],
       rules: {
         '@nx/dependency-checks': [
