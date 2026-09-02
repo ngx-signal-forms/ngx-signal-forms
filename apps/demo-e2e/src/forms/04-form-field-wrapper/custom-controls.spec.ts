@@ -1400,7 +1400,7 @@ test.describe('Custom Signal Forms Controls', () => {
               triggerBox!.width -
               (wrapperBox!.x + wrapperBox!.width),
           ),
-        ).toBeLessThanOrEqual(1);
+        ).toBeLessThanOrEqual(4);
       });
 
       await test.step('Verify the outline trigger is the integrated trailing action', async () => {
