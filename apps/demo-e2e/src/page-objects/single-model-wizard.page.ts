@@ -23,6 +23,11 @@ export class SingleModelWizardPage extends BaseFormPage {
   readonly previousButton: Locator;
   readonly confirmOrderButton: Locator;
   readonly stepHeading: Locator;
+  readonly standardAppearanceButton: Locator;
+  readonly outlineAppearanceButton: Locator;
+  readonly plainAppearanceButton: Locator;
+  readonly verticalOrientationButton: Locator;
+  readonly horizontalOrientationButton: Locator;
 
   constructor(page: Page) {
     super(page);
@@ -36,6 +41,27 @@ export class SingleModelWizardPage extends BaseFormPage {
     this.previousButton = this.page.getByRole('button', { name: 'Previous' });
     this.confirmOrderButton = this.page.getByRole('button', {
       name: 'Confirm order',
+    });
+    const appearanceGroup = this.page.getByRole('group', {
+      name: 'Field appearance',
+    });
+    const orientationGroup = this.page.getByRole('group', {
+      name: 'Field orientation',
+    });
+    this.standardAppearanceButton = appearanceGroup.getByRole('button', {
+      name: 'Standard',
+    });
+    this.outlineAppearanceButton = appearanceGroup.getByRole('button', {
+      name: 'Outline',
+    });
+    this.plainAppearanceButton = appearanceGroup.getByRole('button', {
+      name: 'Plain',
+    });
+    this.verticalOrientationButton = orientationGroup.getByRole('button', {
+      name: 'Vertical',
+    });
+    this.horizontalOrientationButton = orientationGroup.getByRole('button', {
+      name: 'Horizontal',
     });
     // Scoped to the wizard's own step heading — the page also renders an
     // unrelated `<h2>` for the "Demonstrated" example card.

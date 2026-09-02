@@ -55,6 +55,16 @@ test.describe('Form Field Wrapper - Fieldset Appearance', () => {
       'aria-pressed',
       'true',
     );
+    await expect(page.standardWrapperButton).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    );
+    await expect(page.outlineWrapperButton).toBeVisible();
+    await expect(page.plainWrapperButton).toBeVisible();
+    await expect(page.verticalOrientationButton).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    );
     await expect(page.autoFeedbackButton).toHaveAttribute(
       'aria-pressed',
       'true',
@@ -80,6 +90,18 @@ test.describe('Form Field Wrapper - Fieldset Appearance', () => {
       'bottom',
     );
     await expect(page.errorAlerts.first()).toBeVisible();
+  });
+
+  test('should switch the individual wrapper appearance to outline', async () => {
+    await page.showOutlineWrapper();
+
+    await expect(page.outlineWrapperButton).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    );
+    await expect(page.shippingStreetWrapper).toHaveClass(
+      /ngx-signal-forms-outline/,
+    );
   });
 
   test('should switch the shipping fieldset shell between bordered and semantic-only', async () => {

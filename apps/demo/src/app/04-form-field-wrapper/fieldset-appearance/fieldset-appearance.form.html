@@ -56,6 +56,23 @@
     </div>
 
     <ngx-display-controls-section
+      title="🎨 Wrapper styling"
+      description="Switch the individual field wrappers between standard, outline, and plain while keeping the grouped fieldset controls unchanged."
+    >
+      <ngx-appearance-toggle [(value)]="selectedAppearance" />
+    </ngx-display-controls-section>
+
+    <ngx-display-controls-section
+      title="↔️ Label orientation"
+      description="Compare vertical and horizontal labels for the individual wrappers. Outline stays vertical because it uses floating-label chrome."
+    >
+      <ngx-orientation-toggle
+        [(value)]="selectedOrientation"
+        [appearance]="selectedAppearance()"
+      />
+    </ngx-display-controls-section>
+
+    <ngx-display-controls-section
       title="🧱 Fieldset shell"
       description="Switch between the current bordered section shell and a semantic-only fieldset that keeps just the legend and grouped meaning."
     >
@@ -282,6 +299,8 @@
   <ngx-fieldset-form
     #formComponent
     [errorDisplayMode]="selectedMode()"
+    [appearance]="selectedAppearance()"
+    [orientation]="selectedOrientation()"
     [fieldsetAppearance]="selectedFieldsetAppearance()"
     [errorPlacement]="selectedErrorPlacement()"
     [feedbackAppearance]="selectedFeedbackAppearance()"
