@@ -38,18 +38,19 @@ jobs:
 
     steps:
       - name: Checkout branch
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           ref: ${{ github.ref_name }}
           fetch-depth: 0
           filter: tree:0
+          persist-credentials: false
 
-      - uses: pnpm/action-setup@v6
+      - uses: pnpm/action-setup@0977fd99725f1db4007ccb2928dbb4e90d06cc86
         name: Install pnpm
         with:
           run_install: false
 
-      - uses: actions/setup-node@v6
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
         with:
           node-version-file: '.node-version'
           cache: 'pnpm'
@@ -86,13 +87,17 @@ jobs:
 
       - name: Update Playwright snapshots
         if: ${{ inputs.scope == 'all' || inputs.scope == 'playwright' }}
-        # --skip-nx-cache: e2e-ci is cacheable, but __screenshots__/ isn't in
+        # --skip-nx-cache: e2e is cacheable, but __screenshots__/ isn't in
         # the target's outputs, so a cache hit would silently skip regeneration.
-        run: bash .github/scripts/nx-safe.sh pnpm exec nx run demo-e2e:e2e-ci --updateSnapshots --skip-nx-cache
+        #
+        # `e2e`, not `e2e-ci`: the latter is the Playwright plugin's atomized
+        # target and Nx refuses to run it without Nx Agents, which this
+        # workspace stopped using in #252.
+        run: pnpm exec nx run demo-e2e:e2e --updateSnapshots --skip-nx-cache
 
       - name: Update Vitest browser screenshots
         if: ${{ inputs.scope == 'all' || inputs.scope == 'vitest' }}
-        run: bash .github/scripts/nx-safe.sh pnpm nx test-browser toolkit -- --update
+        run: pnpm nx test-browser toolkit -- --update
 
       - name: Commit snapshot updates
         id: commit
@@ -129,6 +134,8 @@ jobs:
           fi
 
           git commit -m "test(snapshots): update ${INPUT_SCOPE} baselines"
+
+          git remote set-url origin "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git"
           git push origin "${TARGET_BRANCH}"
           echo "changed=true" >> "$GITHUB_OUTPUT"
 

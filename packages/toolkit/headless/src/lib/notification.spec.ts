@@ -6,9 +6,11 @@ import { NgxHeadlessNotification } from './notification';
 
 /**
  * Headless-level specs for `NgxHeadlessNotification`. These lock in the
- * tone-resolution rules and container-id behavior independent of the styled
- * `NgxFormFieldNotification` shell, so a regression in the directive is
- * caught even when the shell's spec passes.
+ * tone-resolution rules and container-id behavior for any custom UI built
+ * directly on this directive — there is no in-tree styled shell over it
+ * (the former `NgxFormFieldNotification` was folded into `NgxFormFieldError`
+ * as its `presentation="panel"` mode, which composes `NgxHeadlessErrorState`
+ * instead; see `assistive/form-field-error.ts`).
  */
 describe('NgxHeadlessNotification', () => {
   function setup(initial: {

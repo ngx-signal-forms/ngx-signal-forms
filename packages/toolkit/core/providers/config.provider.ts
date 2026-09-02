@@ -44,6 +44,11 @@ function createConfigFactory(
         configDefault: parentOrNull?.defaultErrorStrategy,
         fallback: DEFAULT_NGX_SIGNAL_FORMS_CONFIG.defaultErrorStrategy,
       }),
+      defaultWarningStrategy: createCascadingResolver({
+        input: userConfig.defaultWarningStrategy,
+        configDefault: parentOrNull?.defaultWarningStrategy,
+        fallback: DEFAULT_NGX_SIGNAL_FORMS_CONFIG.defaultWarningStrategy,
+      }),
       defaultFormFieldAppearance: createCascadingResolver({
         input: userConfig.defaultFormFieldAppearance,
         configDefault: parentOrNull?.defaultFormFieldAppearance,
@@ -78,6 +83,11 @@ function createConfigFactory(
         input: userConfig.optionalLegendText,
         configDefault: parentOrNull?.optionalLegendText,
         fallback: DEFAULT_NGX_SIGNAL_FORMS_CONFIG.optionalLegendText,
+      }),
+      requiredHintText: createCascadingResolver({
+        input: userConfig.requiredHintText,
+        configDefault: parentOrNull?.requiredHintText,
+        fallback: DEFAULT_NGX_SIGNAL_FORMS_CONFIG.requiredHintText,
       }),
     };
   };

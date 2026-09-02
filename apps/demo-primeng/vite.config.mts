@@ -1,7 +1,7 @@
 import { defineConfig } from 'vite';
-import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
 import analog from '@analogjs/vite-plugin-angular';
 import { join } from 'node:path';
+import tsconfigPaths from 'vite-tsconfig-paths';
 
 const appDir = import.meta.dirname;
 
@@ -25,6 +25,6 @@ export default defineConfig({
     analog({
       tsconfig: '../tsconfig.app.json',
     }),
-    nxViteTsPaths(),
+    tsconfigPaths(),
   ],
 });

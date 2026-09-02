@@ -44,11 +44,8 @@
       }
     },
     "test": {
-      "executor": "@nx/vitest:test",
-      "outputs": ["{options.reportsDirectory}"],
       "options": {
-        "configFile": "apps/demo-spartan/vitest.config.mts",
-        "reportsDirectory": "../../coverage/apps/demo-spartan"
+        "config": "./vitest.config.mts"
       }
     },
     "serve-static": {

@@ -39,7 +39,7 @@ describe('unwrapValue', () => {
     });
 
     it('should return undefined directly', () => {
-      const result = unwrapValue();
+      const result = unwrapValue(undefined);
       expect(result).toBeUndefined();
     });
   });

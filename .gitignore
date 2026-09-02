@@ -32,7 +32,7 @@ node_modules
 # misc
 /.sass-cache
 /connect.lock
-/coverage
+coverage/
 /libpeerconnection.log
 npm-debug.log
 yarn-error.log
@@ -59,6 +59,7 @@ playwright-report/
 build.log
 
 .claude/worktrees
+.worktrees/
 .claude/settings.local.json
 .claude/scheduled_tasks.lock
 .nx/polygraph
@@ -70,3 +71,7 @@ build.log
 
 # graphify knowledge graph output
 graphify-out/
+
+# Vitest browser-mode failure artifacts (regenerated on every failing run)
+**/__screenshots__/
+**/.vitest-attachments/

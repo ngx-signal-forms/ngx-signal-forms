@@ -1,4 +1,5 @@
-import { computed, isDevMode, type Signal } from '@angular/core';
+import { computed, type Signal } from '@angular/core';
+import { createDevWarnOnce } from './dev-warn-once';
 
 /**
  * Reactive reader of the bound control's host element. Returns `null` when
@@ -6,6 +7,7 @@ import { computed, isDevMode, type Signal } from '@angular/core';
  * over `contentChildren(NgxSignalFormControlSemanticsDirective)`.
  *
  * @public
+ * @group ARIA Composition
  */
 export type BoundControlElementReader = () => HTMLElement | null;
 
@@ -15,6 +17,7 @@ export type BoundControlElementReader = () => HTMLElement | null;
  * (Spartan's `BrnLabel`, for instance).
  *
  * @public
+ * @group ARIA Composition
  */
 export type LabelForReader = () => string | null;
 
@@ -22,6 +25,7 @@ export type LabelForReader = () => string | null;
  * Inputs for {@link createFieldNameResolver}.
  *
  * @public
+ * @group ARIA Composition
  */
 export interface CreateFieldNameResolverOptions {
   /**
@@ -78,13 +82,14 @@ export interface CreateFieldNameResolverOptions {
  * ```
  *
  * @public
+ * @group ARIA Composition
  */
 export function createFieldNameResolver(
   options: CreateFieldNameResolverOptions,
 ): Signal<string | null> {
   const { explicit, boundControl, labelFor, wrapperName } = options;
 
-  let warned = false;
+  const warnOnce = createDevWarnOnce();
 
   return computed<string | null>(() => {
     const explicitValue = explicit()?.trim();
@@ -104,15 +109,13 @@ export function createFieldNameResolver(
       return boundId;
     }
 
-    if (isDevMode() && !warned) {
-      warned = true;
-      console.error(
-        `[${wrapperName}] Could not resolve a deterministic field name. ` +
-          `Add an explicit \`fieldName\` input, a labelable id (e.g. \`for=\`), ` +
-          `or an \`id\` attribute on the bound control. ARIA wiring will be ` +
-          `skipped until a name is available.`,
-      );
-    }
+    warnOnce(
+      'error',
+      `[${wrapperName}] Could not resolve a deterministic field name. ` +
+        `Add an explicit \`fieldName\` input, a labelable id (e.g. \`for=\`), ` +
+        `or an \`id\` attribute on the bound control. ARIA wiring will be ` +
+        `skipped until a name is available.`,
+    );
 
     return null;
   });

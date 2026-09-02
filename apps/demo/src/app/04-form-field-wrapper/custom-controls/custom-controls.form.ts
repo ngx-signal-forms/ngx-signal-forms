@@ -22,6 +22,7 @@ import {
 } from '@ngx-signal-forms/toolkit';
 import { NgxFormField } from '@ngx-signal-forms/toolkit/form-field';
 import {
+  LegacyDatepickerAdapterComponent,
   RatingControlComponent,
   SwitchControlComponent,
 } from '../../shared/controls';
@@ -61,6 +62,7 @@ import { customControlsSchema } from './custom-controls.validations';
     FormField,
     NgxSignalFormToolkit,
     NgxFormField,
+    LegacyDatepickerAdapterComponent,
     RatingControlComponent,
     SwitchControlComponent,
   ],
@@ -179,6 +181,17 @@ export class CustomControlsFormComponent {
       'accessibilityAudit',
       ['accessibilityAudit-hint'],
     );
+
+  /**
+   * `LegacyDatepickerAdapterComponent` also runs in manual ARIA mode (its
+   * internal widget owns the real `<input>`), so it needs the same
+   * explicit described-by chain as the rating controls above.
+   */
+  protected readonly birthDateDescribedBy = this.#buildRatingDescribedBy(
+    this.reviewForm.birthDate,
+    'birthDate',
+    ['birthDate-hint'],
+  );
 
   /**
    * Reset form to initial values.

@@ -31,7 +31,7 @@
   }
 
   &.active .wizard-step-number {
-    background-color: var(--wizard-color-primary, #3b82f6);
+    background-color: var(--wizard-color-primary, #2563eb);
     color: white;
   }
 
@@ -66,7 +66,7 @@
 
 .wizard-progress-fill {
   height: 100%;
-  background-color: var(--wizard-color-primary, #3b82f6);
+  background-color: var(--wizard-color-primary, #2563eb);
   transition: width 0.3s ease;
 }
 
@@ -95,7 +95,7 @@
   }
 
   &-primary {
-    background-color: var(--wizard-color-primary, #3b82f6);
+    background-color: var(--wizard-color-primary, #2563eb);
     color: white;
     border: none;
   }

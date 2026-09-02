@@ -1,11 +1,19 @@
-import { Component, computed, inject, isDevMode } from '@angular/core';
+import {
+  Component,
+  computed,
+  inject,
+  Injector,
+  isDevMode,
+} from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { render } from '@testing-library/angular';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
+  createControlVisibilitySignal as createControlVisibilitySignalPublic,
   isElementCssVisible as isElementCssVisiblePublic,
   NgxFieldIdentity as NgxFieldIdentityPublic,
 } from '@ngx-signal-forms/toolkit';
+import { createControlVisibilitySignal } from './control-visibility-signal';
 import { isElementCssVisible, NgxFieldIdentity } from './field-identity';
 
 describe('NgxFieldIdentity', () => {
@@ -26,10 +34,29 @@ describe('NgxFieldIdentity', () => {
       expect(svc.warningId()).toBeNull();
     });
 
-    it('exposes empty hintIds and null describedBy by default', () => {
+    it('reports the hint channel as unpublished, with a null describedBy, by default', () => {
       const svc = createService();
+      // `null`, not `[]` — an identity nobody has driven yet must not look
+      // like one that published "this field has no hints", or consumers
+      // would stop falling back to the hint registry. See ADR-0010.
+      expect(svc.hintIds()).toBeNull();
+      expect(svc.describedBy()).toBeNull();
+    });
+
+    it('distinguishes a published-but-empty hint list from the unpublished default', () => {
+      const svc = createService();
+      expect(svc.hintIds()).toBeNull();
+
+      svc.setHintIds([]);
+
       expect(svc.hintIds()).toEqual([]);
       expect(svc.describedBy()).toBeNull();
+    });
+
+    it('leaves the strategy channels unpublished by default', () => {
+      const svc = createService();
+      expect(svc.resolvedErrorStrategy()).toBeNull();
+      expect(svc.resolvedWarningStrategy()).toBeNull();
     });
 
     it('reports control visible by default', () => {
@@ -271,36 +298,33 @@ describe('NgxFieldIdentity', () => {
         expect(svc.isControlVisible()).toBe(false);
       });
 
-      it('returns false for an element with display:none', () => {
+      // The real hidden/visible answers need a layout engine and live in
+      // `field-identity.visibility.browser.spec.ts`. What jsdom *can* pin is
+      // the fail-open contract for runtimes with no `checkVisibility()`.
+      it('reports visible in an environment without checkVisibility()', () => {
         const svc = createService();
         const el = document.createElement('input');
         el.style.display = 'none';
         document.body.append(el);
         try {
-          expect(svc.isControlVisible(el)).toBe(false);
+          expect(svc.isControlVisible(el)).toBe(true);
         } finally {
           el.remove();
         }
       });
 
-      it('returns false for a detached element', () => {
-        const svc = createService();
-        const el = document.createElement('input');
-        expect(svc.isControlVisible(el)).toBe(false);
-      });
-
       it('element-arg does not mutate the cached no-arg value', () => {
         const svc = createService();
-        const hidden = document.createElement('input');
-        hidden.style.display = 'none';
-        document.body.append(hidden);
+        svc.setControlVisible(false);
+        const probed = document.createElement('input');
+        document.body.append(probed);
         try {
-          expect(svc.isControlVisible(hidden)).toBe(false);
           // Probing an element must not flip the cached flag, which is
           // driven exclusively by `setControlVisible`.
-          expect(svc.isControlVisible()).toBe(true);
+          expect(svc.isControlVisible(probed)).toBe(true);
+          expect(svc.isControlVisible()).toBe(false);
         } finally {
-          hidden.remove();
+          probed.remove();
         }
       });
 
@@ -361,26 +385,62 @@ describe('NgxFieldIdentity', () => {
       expect(NgxFieldIdentityPublic).toBe(NgxFieldIdentity);
       expect(isElementCssVisiblePublic).toBe(isElementCssVisible);
     });
+
+    it('re-exports createControlVisibilitySignal from the public barrel', () => {
+      expect(createControlVisibilitySignalPublic).toBe(
+        createControlVisibilitySignal,
+      );
+    });
   });
 
   describe('isElementCssVisible helper', () => {
-    // jsdom does not compute layout, so `offsetParent` is unreliable for
-    // attached elements. We assert only the negative cases here; the
-    // positive path is exercised in browser specs where layout is real.
-    it('returns false for an element with display:none', () => {
+    // jsdom implements no `checkVisibility()` and computes no layout, so the
+    // only contract assertable here is the fail-open one. Every real
+    // hidden/visible case lives in `field-identity.visibility.browser.spec.ts`.
+    it('fails open when the runtime has no checkVisibility()', () => {
+      expect(
+        (
+          document.createElement('input') as HTMLElement & {
+            checkVisibility?: unknown;
+          }
+        ).checkVisibility,
+      ).toBeUndefined();
+
       const el = document.createElement('input');
       el.style.display = 'none';
       document.body.append(el);
       try {
-        expect(isElementCssVisible(el)).toBe(false);
+        // Guessing "hidden" from `offsetParent` here would strip correct ARIA
+        // from every control in any layout-less environment — and it is a
+        // false positive for collapsed `<details>` anyway, the very case the
+        // probe exists for.
+        expect(isElementCssVisible(el)).toBe(true);
       } finally {
         el.remove();
       }
     });
 
-    it('returns false for a detached element', () => {
-      const el = document.createElement('input');
-      expect(isElementCssVisible(el)).toBe(false);
+    it('fails open for a detached element', () => {
+      expect(isElementCssVisible(document.createElement('input'))).toBe(true);
+    });
+  });
+
+  describe('createControlVisibilitySignal', () => {
+    // jsdom computes no layout, so the real collapse/reopen transitions live
+    // in `control-visibility-signal.browser.spec.ts`. What is assertable here
+    // is the fail-open start: the signal must read `true` before any render
+    // hook has run, otherwise `aria-invalid` flickers off on first paint.
+    it('starts true and stays true for an unresolvable element', () => {
+      const injector = TestBed.inject(Injector);
+      const isVisible = TestBed.runInInjectionContext(() =>
+        createControlVisibilitySignal(() => null, injector),
+      );
+
+      expect(isVisible()).toBe(true);
+
+      TestBed.tick();
+
+      expect(isVisible()).toBe(true);
     });
   });
 

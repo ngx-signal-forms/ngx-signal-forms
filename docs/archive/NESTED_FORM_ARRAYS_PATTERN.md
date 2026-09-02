@@ -1837,7 +1837,7 @@ export class FactsStepComponent {
 
 ### Why ONE Store? (Recommended)
 
-For multi-step wizards with nested data, use **ONE store** with composable `signalStoreFeature` slices. This is the pattern used in the [Advanced Wizard Demo](../apps/demo/src/app/05-advanced/advanced-wizard).
+For multi-step wizards with nested data, use **ONE store** with composable `signalStoreFeature` slices. This is the pattern used in the [Advanced Wizard Demo](../../apps/demo/src/app/05-advanced/advanced-wizard).
 
 **Key Reasoning:**
 
@@ -2281,7 +2281,7 @@ For a production-scale end-to-end implementation, use the maintained demo and pa
 - [NgRx Toolkit withMutations](https://ngrx-toolkit.angulararchitects.io/docs/mutations)
 - [NgRx Toolkit withEntityResources](https://ngrx-toolkit.angulararchitects.io/docs/with-entity-resources)
 - [NgRx Toolkit withResource](https://ngrx-toolkit.angulararchitects.io/docs/with-resource)
-- [NgRx Toolkit Instructions](../.github/instructions/ngx-signal-forms-toolkit.instructions.md)
+- [NgRx Toolkit Instructions](../../.github/instructions/ngx-signal-forms-toolkit.instructions.md)
 - [Zod 4 Documentation](https://zod.dev)
 - [Zod 4 Changelog](https://zod.dev/v4/changelog)
 - [Zod API Reference](https://zod.dev/v4/api)

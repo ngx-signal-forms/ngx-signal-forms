@@ -32,6 +32,15 @@ export const CUSTOM_CONTROLS_CONTENT: ExampleCardConfig = {
         ],
       },
       {
+        title: 'Adapting a third-party widget',
+        items: [
+          'LegacyDatepickerAdapterComponent implements <code>FormValueControl&lt;Date | null&gt;</code> around a self-contained fake "legacy" datepicker with its own value/change API — no toolkit or Signal Forms knowledge in the widget itself',
+          "<code>transformedValue()</code> owns the parse/format boundary between the widget's raw text and the field's <code>Date | null</code>, and reports a <code>kind: 'parse'</code> error automatically when the text is not a real YYYY-MM-DD date",
+          "Touched is reported on <code>(focusout)</code> with a relatedTarget containment check — not a plain <code>(blur)</code> — because focus moves across the widget's input, trigger button, and popup day buttons before the user is actually done",
+          'The widget owns its own internal <code>&lt;input&gt;</code>, so the wrapper stays <code>appearance="plain"</code> and the adapter forwards <code>aria-describedby</code>/<code>aria-invalid</code>/<code>aria-required</code> down onto that input via the widget\'s own passthrough inputs',
+        ],
+      },
+      {
         title: 'Wrapper Integration',
         items: [
           'Auto-derives field names for simple projected controls and supports explicit fieldName for nested custom controls',
@@ -60,6 +69,8 @@ export const CUSTOM_CONTROLS_CONTENT: ExampleCardConfig = {
           '5. <strong>Share this review publicly:</strong> tick the checkbox → its required error clears',
           '6. <strong>Accessibility Audit:</strong> its error renders <strong>above</strong> the stars (errorPlacement="top") — like every rating control on this page, it wires <code>aria-describedby</code> itself (manual ARIA); rate 1+ stars to clear it',
           '7. Fill <strong>Product Name</strong> and the remaining ratings → the footer flips to "✓ All fields valid"',
+          '8. <strong>Date of Birth:</strong> type <code>not-a-date</code> and tab out → a <code>parse</code> error appears; replace it with <code>2026-02-30</code> → a different parse error ("not a real calendar date"); type a real date like <code>1990-05-17</code> → the error clears',
+          '9. Click the 📅 button next to Date of Birth, pick a day → the text field updates and the popup closes; click <strong>Reset</strong> → the text field clears back to empty, proving the value change flows back through the adapter in both directions',
         ],
       },
       {

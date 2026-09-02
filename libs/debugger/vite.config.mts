@@ -1,15 +1,15 @@
 /// <reference types='vitest' />
 
 import angular from '@analogjs/vite-plugin-angular';
-import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
 import { defineConfig } from 'vitest/config';
+import tsconfigPaths from 'vite-tsconfig-paths';
 
-process.env.NX_DAEMON ??= 'false';
+process.env['NX_DAEMON'] ??= 'false';
 
 export default defineConfig({
   root: __dirname,
   cacheDir: '../../node_modules/.vite/libs/debugger',
-  plugins: [angular(), nxViteTsPaths()],
+  plugins: [angular(), tsconfigPaths()],
   optimizeDeps: {
     include: [
       '@analogjs/vitest-angular/setup-serializers',
@@ -27,7 +27,7 @@ export default defineConfig({
     include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
     reporters: ['default'],
     pool: 'forks',
-    maxConcurrency: process.env.CI === 'true' ? 2 : 5,
-    maxWorkers: process.env.CI === 'true' ? 2 : undefined,
+    maxConcurrency: process.env['CI'] === 'true' ? 2 : 5,
+    maxWorkers: process.env['CI'] === 'true' ? 2 : undefined,
   },
 });

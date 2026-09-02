@@ -2,36 +2,35 @@ import {
   booleanAttribute,
   computed,
   Directive,
-  inject,
   input,
   type Signal,
 } from '@angular/core';
 import type { FieldTree, ValidationError } from '@angular/forms/signals';
 import {
-  injectFormContext,
-  NGX_SIGNAL_FORMS_CONFIG,
-  readDirectErrors,
+  createErrorVisibility,
   resolveStrategyFromContext,
   resolveSubmittedStatusFromContext,
-  showErrors,
-  splitByKind,
+  resolveWarningStrategyFromContext,
+  createShowErrorsComputed,
   type ErrorDisplayStrategy,
   type ResolvedErrorDisplayStrategy,
+  type ResolvedWarningDisplayStrategy,
   type SubmittedStatus,
+  type WarningDisplayStrategy,
 } from '@ngx-signal-forms/toolkit';
-import { NGX_ERROR_MESSAGES } from '@ngx-signal-forms/toolkit/core';
 
-import type { ResolvedError } from './error-state';
+import { buildHeadlessContext } from './build-headless-context';
 import {
+  createFieldsetAggregation,
   createFieldStateFlags,
   createUniqueId,
-  dedupeValidationErrors,
-  readErrors,
-  resolveErrorMessage,
+  type ResolvedError,
 } from './utilities';
 
 /**
  * Fieldset state signals exposed by the headless directive.
+ *
+ * @group Directives
  */
 export interface FieldsetStateSignals {
   /** Aggregated and deduplicated errors from all fields */
@@ -67,7 +66,7 @@ export interface FieldsetStateSignals {
    * Resolved warning display strategy, independent of {@link resolvedStrategy}
    * (which only governs blocking errors). Always a concrete strategy.
    */
-  readonly resolvedWarningStrategy: Signal<ResolvedErrorDisplayStrategy>;
+  readonly resolvedWarningStrategy: Signal<ResolvedWarningDisplayStrategy>;
   /** Resolved submitted status (from input override, form context, or default) */
   readonly resolvedSubmittedStatus: Signal<SubmittedStatus>;
   /** Fieldset validation state flags */
@@ -91,7 +90,7 @@ export interface FieldsetStateSignals {
  * - **Aggregated Errors**: Collects errors from all nested fields via `errorSummary()`
  * - **Deduplication**: Same error shown only once even if multiple fields have it
  * - **Warning Support**: Non-blocking warnings (with `warn:` prefix), timed independently
- *   of blocking errors via `warningStrategy` (defaults to `'immediate'`)
+ *   of blocking errors via `warningStrategy` (defaults to `'on-touch'`)
  * - **Strategy Aware**: Respects error display strategy from form context
  * - **State Flags**: Exposes invalid, valid, touched, dirty, pending states
  * - **Nested Control**: `includeNestedErrors` toggles between aggregated and direct errors
@@ -129,6 +128,8 @@ export interface FieldsetStateSignals {
  * registry → default) as `NgxHeadlessErrorState`.
  *
  * @template TFieldset The type of the fieldset field value
+ *
+ * @group Directives
  */
 @Directive({
   selector: '[ngxHeadlessFieldset]',
@@ -137,11 +138,10 @@ export interface FieldsetStateSignals {
 export class NgxHeadlessFieldset<
   TFieldset = unknown,
 > implements FieldsetStateSignals {
-  readonly #formContext = injectFormContext();
-  readonly #config = inject(NGX_SIGNAL_FORMS_CONFIG, { optional: true });
-  readonly #errorMessagesRegistry = inject(NGX_ERROR_MESSAGES, {
-    optional: true,
-  });
+  readonly #context = buildHeadlessContext();
+  readonly #formContext = this.#context.formContext;
+  readonly #config = this.#context.config;
+  readonly #errorMessagesRegistry = this.#context.errorMessagesRegistry;
   readonly #generatedFieldsetId = createUniqueId('fieldset');
 
   /**
@@ -174,27 +174,24 @@ export class NgxHeadlessFieldset<
 
   /**
    * Warning display strategy override, independent of {@link strategy}
-   * (which only governs blocking errors). Mirrors the contract already
-   * established by `NgxFormFieldWrapper.warningStrategy` /
-   * `NgxFormFieldError.warningStrategy`: non-blocking warnings default to
-   * `'immediate'` so advisory feedback stays visible even while blocking
-   * errors are gated by `'on-touch'` / `'on-submit'`.
+   * (which only governs blocking errors). Mirrors the contract established
+   * by `NgxFormFieldWrapper.warningStrategy` /
+   * `NgxFormFieldError.warningStrategy`.
    *
-   * Resolution order differs from {@link strategy} on purpose:
-   * - Explicitly set (including `'inherit'`) → resolved against the ambient
-   *   form context (`resolveStrategyFromContext`), falling back to
-   *   `'on-touch'` if there is none.
-   * - Left unset (`undefined`) → `'immediate'` directly, WITHOUT consulting
-   *   the form context or `NGX_SIGNAL_FORMS_CONFIG.defaultErrorStrategy`.
+   * Resolves through the warning cascade, which parallels {@link strategy}'s
+   * cascade but never reaches into the error channel:
    *
-   * This asymmetry (vs. {@link strategy}'s context/config cascade) is
-   * intentional and matches the wrapper/error-renderer contract exactly —
-   * an unset `warningStrategy` must not silently inherit an ambient
-   * `'on-submit'` strategy meant for blocking errors.
+   * 1. this input, when set and not `'inherit'`
+   * 2. the ambient form context's `warningStrategy()`
+   * 3. `NGX_SIGNAL_FORMS_CONFIG.defaultWarningStrategy`
+   * 4. `'on-touch'`
    *
-   * @default `'immediate'`
+   * No tier consults `defaultErrorStrategy`, so an ambient `'on-submit'`
+   * meant for blocking errors never silently gates warnings.
+   *
+   * @default `'on-touch'`
    */
-  readonly warningStrategy = input<ErrorDisplayStrategy | undefined>();
+  readonly warningStrategy = input<WarningDisplayStrategy | undefined>();
 
   /**
    * Form submission status override.
@@ -236,25 +233,22 @@ export class NgxHeadlessFieldset<
     resolveStrategyFromContext(
       this.strategy(),
       this.#formContext,
-      this.#config?.defaultErrorStrategy ?? 'on-touch',
+      this.#config.defaultErrorStrategy,
     ),
   );
 
   /**
-   * Resolved warning display strategy. See the {@link warningStrategy} input
-   * doc for the resolution cascade — deliberately narrower than
-   * {@link resolvedStrategy}'s: an unset input defaults straight to
-   * `'immediate'` rather than falling through to the form context or global
-   * config default.
+   * Resolved warning display strategy. Uses the full warning cascade:
+   * explicit input → form context warning strategy → config default →
+   * `'on-touch'`.
    */
-  readonly resolvedWarningStrategy = computed<ResolvedErrorDisplayStrategy>(
-    () => {
-      const explicit = this.warningStrategy();
-      if (explicit !== undefined) {
-        return resolveStrategyFromContext(explicit, this.#formContext);
-      }
-      return 'immediate';
-    },
+  readonly resolvedWarningStrategy = computed<ResolvedWarningDisplayStrategy>(
+    () =>
+      resolveWarningStrategyFromContext(
+        this.warningStrategy(),
+        this.#formContext,
+        this.#config.defaultWarningStrategy,
+      ),
   );
 
   /**
@@ -277,13 +271,20 @@ export class NgxHeadlessFieldset<
   );
 
   /**
-   * Show errors signal based on strategy.
+   * Show errors signal based on strategy. Routes through the shared
+   * `createErrorVisibility` seam (ADR-0006) rather than re-inlining
+   * `createShowErrorsComputed` — {@link resolvedStrategy} /
+   * {@link resolvedSubmittedStatus} stay separately computed above because
+   * they are part of this directive's public surface, but the raw
+   * `strategy`/`submittedStatus` inputs feed the seam directly so it applies
+   * the identical cascade (same function, same `configDefault`) rather than
+   * a parallel reimplementation.
    */
-  readonly #showErrorsSignal = showErrors(
-    this.#fieldsetState,
-    this.resolvedStrategy,
-    this.resolvedSubmittedStatus,
-  );
+  readonly #showErrorsSignal = createErrorVisibility(this.#fieldsetState, {
+    strategy: this.strategy,
+    submittedStatus: this.submittedStatus,
+    configDefault: this.#config.defaultErrorStrategy,
+  });
 
   /**
    * Show warnings signal based on {@link resolvedWarningStrategy}, timed
@@ -291,68 +292,52 @@ export class NgxHeadlessFieldset<
    * be stuck behind whatever timing the blocking-error strategy uses (e.g.
    * `'on-submit'`), the exact asymmetry `warningStrategy` exists to fix.
    */
-  readonly #showWarningsSignal = showErrors(
+  readonly #showWarningsSignal = createShowErrorsComputed(
     this.#fieldsetState,
     this.resolvedWarningStrategy,
     this.resolvedSubmittedStatus,
   );
 
   /**
-   * Aggregated and deduplicated validation messages.
-   * Uses shared utilities from utilities.ts.
+   * Error/warning aggregation, delegated to {@link createFieldsetAggregation}
+   * — this directive is a pure projection over its result. Pass the
+   * already-resolved {@link #showErrorsSignal} / {@link #showWarningsSignal} rather
+   * than raw strategy inputs: the factory itself never calls `inject()`
+   * (ADR-0005), so visibility timing stays owned by this directive's single
+   * `createErrorVisibility()` / `createShowErrorsComputed()` seam call
+   * (ADR-0006).
    */
-  readonly #allMessages = computed(() => {
-    const override = this.fields();
-    const readFn = this.includeNestedErrors() ? readErrors : readDirectErrors;
-
-    // `null` means "not provided" → aggregate the fieldset's own errors.
-    // An explicitly bound `[]` means "provided but empty" → aggregate
-    // nothing. Distinguishing these (instead of `override.length > 0`)
-    // keeps a dynamically-computed field list that becomes empty from
-    // silently falling back to the fieldset's own (possibly unrelated)
-    // errors.
-    if (override !== null) {
-      const messages = override.flatMap((field) => readFn(field()));
-      return dedupeValidationErrors(messages);
-    }
-
-    return dedupeValidationErrors(readFn(this.#fieldsetState()));
+  readonly #aggregation = createFieldsetAggregation({
+    fieldState: this.#fieldsetState,
+    fields: this.fields,
+    includeNestedErrors: this.includeNestedErrors,
+    showErrors: this.#showErrorsSignal,
+    showWarnings: this.#showWarningsSignal,
+    errorMessages: this.#errorMessagesRegistry,
   });
 
-  readonly #split = computed(() => splitByKind(this.#allMessages()));
-
-  readonly aggregatedErrors = computed(() => this.#split().blocking);
-  readonly aggregatedWarnings = computed(() => this.#split().warnings);
-  readonly hasErrors = computed(() => this.#split().blocking.length > 0);
-  readonly hasWarnings = computed(() => this.#split().warnings.length > 0);
+  readonly aggregatedErrors = this.#aggregation.aggregatedErrors;
+  readonly aggregatedWarnings = this.#aggregation.aggregatedWarnings;
 
   /**
    * {@link aggregatedErrors}, resolved to display messages. See the class
    * doc's usage note for why this (not `error.message`) is the recommended
    * rendering surface.
    */
-  readonly resolvedErrors: Signal<readonly ResolvedError[]> = computed(() =>
-    this.aggregatedErrors().map((error) => this.#toResolvedError(error)),
-  );
+  readonly resolvedErrors: Signal<readonly ResolvedError[]> =
+    this.#aggregation.resolvedErrors;
 
   /** {@link aggregatedWarnings}, resolved the same way as {@link resolvedErrors}. */
-  readonly resolvedWarnings: Signal<readonly ResolvedError[]> = computed(() =>
-    this.aggregatedWarnings().map((error) => this.#toResolvedError(error)),
-  );
+  readonly resolvedWarnings: Signal<readonly ResolvedError[]> =
+    this.#aggregation.resolvedWarnings;
 
-  #toResolvedError(error: ValidationError): ResolvedError {
-    return {
-      kind: error.kind,
-      message: resolveErrorMessage(error, this.#errorMessagesRegistry),
-    };
-  }
+  readonly hasErrors = this.#aggregation.hasErrors;
+  readonly hasWarnings = this.#aggregation.hasWarnings;
 
   /**
    * Whether to show errors based on strategy.
    */
-  readonly shouldShowErrors = computed(
-    () => this.#showErrorsSignal() && this.hasErrors(),
-  );
+  readonly shouldShowErrors = this.#aggregation.shouldShowErrors;
 
   /**
    * Whether to show warnings, timed by {@link resolvedWarningStrategy}.
@@ -371,9 +356,7 @@ export class NgxHeadlessFieldset<
    * `filteredErrorsSignal` and its `--warning` host class, which explicitly
    * guard on `!shouldShowErrors()` for that reason.
    */
-  readonly shouldShowWarnings = computed(
-    () => this.#showWarningsSignal() && this.hasWarnings(),
-  );
+  readonly shouldShowWarnings = this.#aggregation.shouldShowWarnings;
 
   readonly #flags = createFieldStateFlags(this.#fieldsetState);
 

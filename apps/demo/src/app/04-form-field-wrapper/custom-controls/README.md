@@ -12,6 +12,7 @@ Angular Signal Forms replaces the legacy `ControlValueAccessor` boilerplate with
 - `ngxSignalFormControl="checkbox"` — opt-in checkbox semantics for a standard checkbox.
 - `ngxSignalFormControl="slider"` — custom slider with `layout: 'custom'` and `ariaMode: 'manual'` so the control owns its own `aria-describedby` chain.
 - Component-scoped control presets inherited via `provideNgxSignalFormControlPresetsForComponent()`.
+- `LegacyDatepickerAdapterComponent` — a `FormValueControl<Date | null>` adapter wrapped around a self-contained fake third-party datepicker widget (`LegacyDatepickerComponent`), demonstrating `ngxSignalFormControlAria="manual"` plus Angular's `transformedValue()` for the parse/format boundary. See [docs/CUSTOM_CONTROLS.md](../../../../../../docs/CUSTOM_CONTROLS.md#adapting-an-existing-third-party-widget).
 
 ## Form model
 
@@ -44,7 +45,10 @@ Angular Signal Forms replaces the legacy `ControlValueAccessor` boilerplate with
 - [custom-controls.form.ts](custom-controls.form.ts) — consuming form and wrapper bindings.
 - [custom-controls.html](custom-controls.html) — template with the three control semantics paths.
 - [custom-controls.validations.ts](custom-controls.validations.ts) — schema rules.
+- [custom-controls.legacy-datepicker.spec.ts](custom-controls.legacy-datepicker.spec.ts) — unit coverage for the third-party widget adapter (value round-trip, `parse` errors, composite touched hook, programmatic reset).
 - `apps/demo/src/app/shared/controls/rating-control` — reusable star rating implementation.
+- `apps/demo/src/app/shared/controls/legacy-datepicker-widget` — the fake, self-contained "legacy" third-party datepicker widget (its own value/change API; no Signal Forms awareness).
+- `apps/demo/src/app/shared/controls/legacy-datepicker-adapter` — the `FormValueControl<Date | null>` adapter that bridges the widget above; see its class-level doc comment for the full design writeup.
 
 ## How to test
 
@@ -54,6 +58,8 @@ Angular Signal Forms replaces the legacy `ControlValueAccessor` boilerplate with
 4. Blur the share-review checkbox without checking it and verify the wrapper error appears via explicit checkbox semantics.
 5. Blur the accessibility-audit slider empty and confirm it keeps its own `aria-describedby` chain while still rendering wrapper errors.
 6. Toggle the email-updates switch to observe the inline-row preset applied at the app level.
+7. Type `not-a-date` into Date of Birth and tab out — a `parse` error renders; replace it with a real date to clear it.
+8. Click the 📅 button, pick a day from the popup, then click Reset — confirm the text field clears, proving the value round-trips through the adapter in both directions.
 
 ## Related
 

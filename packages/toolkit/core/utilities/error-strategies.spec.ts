@@ -2,31 +2,39 @@ import { signal } from '@angular/core';
 import { describe, expect, it } from 'vitest';
 import type { ErrorDisplayStrategy, SubmittedStatus } from '../types';
 import { shouldShowErrors } from './error-strategies';
-import { showErrors } from './show-errors';
+import { createShowErrorsComputed } from './show-errors';
 
 describe('error-strategies', () => {
-  describe('showErrors (reactive computed)', () => {
+  describe('createShowErrorsComputed (reactive computed)', () => {
     describe('immediate strategy', () => {
       it('should show errors immediately when field is invalid', () => {
         const fieldState = signal({
-          invalid: () => true,
-          touched: () => false,
+          invalid: signal(true),
+          touched: signal(false),
         });
         const submittedStatus = signal<SubmittedStatus>('unsubmitted');
 
-        const result = showErrors(fieldState, 'immediate', submittedStatus);
+        const result = createShowErrorsComputed(
+          fieldState,
+          'immediate',
+          submittedStatus,
+        );
 
         expect(result()).toBe(true);
       });
 
       it('should not show errors when field is valid', () => {
         const fieldState = signal({
-          invalid: () => false,
-          touched: () => false,
+          invalid: signal(false),
+          touched: signal(false),
         });
         const submittedStatus = signal<SubmittedStatus>('unsubmitted');
 
-        const result = showErrors(fieldState, 'immediate', submittedStatus);
+        const result = createShowErrorsComputed(
+          fieldState,
+          'immediate',
+          submittedStatus,
+        );
 
         expect(result()).toBe(false);
       });
@@ -34,12 +42,16 @@ describe('error-strategies', () => {
       it('should update reactively when field state changes', () => {
         const invalid = signal(false);
         const fieldState = signal({
-          invalid: () => invalid(),
-          touched: () => false,
+          invalid,
+          touched: signal(false),
         });
         const submittedStatus = signal<SubmittedStatus>('unsubmitted');
 
-        const result = showErrors(fieldState, 'immediate', submittedStatus);
+        const result = createShowErrorsComputed(
+          fieldState,
+          'immediate',
+          submittedStatus,
+        );
 
         expect(result()).toBe(false);
 
@@ -52,12 +64,16 @@ describe('error-strategies', () => {
 
       it('should not be affected by submission status', () => {
         const fieldState = signal({
-          invalid: () => true,
-          touched: () => false,
+          invalid: signal(true),
+          touched: signal(false),
         });
         const submittedStatus = signal<SubmittedStatus>('unsubmitted');
 
-        const result = showErrors(fieldState, 'immediate', submittedStatus);
+        const result = createShowErrorsComputed(
+          fieldState,
+          'immediate',
+          submittedStatus,
+        );
 
         expect(result()).toBe(true);
 
@@ -77,12 +93,16 @@ describe('error-strategies', () => {
         // WHY: Ensures errors don't appear immediately on page load with on-touch strategy
         // SCENARIO: User lands on form page, all fields are empty and invalid but untouched
         const fieldState = signal({
-          invalid: () => true, // Field is invalid (e.g., required but empty)
-          touched: () => false, // Field has NOT been interacted with yet
+          invalid: signal(true), // Field is invalid (e.g., required but empty)
+          touched: signal(false), // Field has NOT been interacted with yet
         });
         const submittedStatus = signal<SubmittedStatus>('unsubmitted');
 
-        const result = showErrors(fieldState, 'on-touch', submittedStatus);
+        const result = createShowErrorsComputed(
+          fieldState,
+          'on-touch',
+          submittedStatus,
+        );
 
         // EXPECT: NO errors should be visible on initial page load
         expect(result()).toBe(false);
@@ -90,24 +110,32 @@ describe('error-strategies', () => {
 
       it('should not show errors when field is invalid but not touched', () => {
         const fieldState = signal({
-          invalid: () => true,
-          touched: () => false,
+          invalid: signal(true),
+          touched: signal(false),
         });
         const submittedStatus = signal<SubmittedStatus>('unsubmitted');
 
-        const result = showErrors(fieldState, 'on-touch', submittedStatus);
+        const result = createShowErrorsComputed(
+          fieldState,
+          'on-touch',
+          submittedStatus,
+        );
 
         expect(result()).toBe(false);
       });
 
       it('should show errors when field is invalid and touched', () => {
         const fieldState = signal({
-          invalid: () => true,
-          touched: () => true,
+          invalid: signal(true),
+          touched: signal(true),
         });
         const submittedStatus = signal<SubmittedStatus>('unsubmitted');
 
-        const result = showErrors(fieldState, 'on-touch', submittedStatus);
+        const result = createShowErrorsComputed(
+          fieldState,
+          'on-touch',
+          submittedStatus,
+        );
 
         expect(result()).toBe(true);
       });
@@ -116,12 +144,16 @@ describe('error-strategies', () => {
         // Simplified architecture: on-touch only checks touched()
         // Angular's submit() calls markAllAsTouched(), so touched() handles submission
         const fieldState = signal({
-          invalid: () => true,
-          touched: () => false,
+          invalid: signal(true),
+          touched: signal(false),
         });
         const submittedStatus = signal<SubmittedStatus>('submitted');
 
-        const result = showErrors(fieldState, 'on-touch', submittedStatus);
+        const result = createShowErrorsComputed(
+          fieldState,
+          'on-touch',
+          submittedStatus,
+        );
 
         // submittedStatus is ignored for on-touch - only touched() matters
         expect(result()).toBe(false);
@@ -129,12 +161,16 @@ describe('error-strategies', () => {
 
       it('should not show errors when field is valid even if touched', () => {
         const fieldState = signal({
-          invalid: () => false,
-          touched: () => true,
+          invalid: signal(false),
+          touched: signal(true),
         });
         const submittedStatus = signal<SubmittedStatus>('unsubmitted');
 
-        const result = showErrors(fieldState, 'on-touch', submittedStatus);
+        const result = createShowErrorsComputed(
+          fieldState,
+          'on-touch',
+          submittedStatus,
+        );
 
         expect(result()).toBe(false);
       });
@@ -142,12 +178,16 @@ describe('error-strategies', () => {
       it('should update reactively when touched state changes', () => {
         const touched = signal(false);
         const fieldState = signal({
-          invalid: () => true,
-          touched: () => touched(),
+          invalid: signal(true),
+          touched,
         });
         const submittedStatus = signal<SubmittedStatus>('unsubmitted');
 
-        const result = showErrors(fieldState, 'on-touch', submittedStatus);
+        const result = createShowErrorsComputed(
+          fieldState,
+          'on-touch',
+          submittedStatus,
+        );
 
         expect(result()).toBe(false);
 
@@ -159,12 +199,16 @@ describe('error-strategies', () => {
         // Simplified architecture: on-touch only checks touched()
         // In real usage, Angular's submit() would have called markAllAsTouched()
         const fieldState = signal({
-          invalid: () => true,
-          touched: () => false,
+          invalid: signal(true),
+          touched: signal(false),
         });
         const submittedStatus = signal<SubmittedStatus>('submitting');
 
-        const result = showErrors(fieldState, 'on-touch', submittedStatus);
+        const result = createShowErrorsComputed(
+          fieldState,
+          'on-touch',
+          submittedStatus,
+        );
 
         // submittedStatus is ignored for on-touch - only touched() matters
         expect(result()).toBe(false);
@@ -175,12 +219,16 @@ describe('error-strategies', () => {
         // Angular's submit() calls markAllAsTouched(), which sets touched() to true
         const touched = signal(false);
         const fieldState = signal({
-          invalid: () => true,
-          touched: () => touched(),
+          invalid: signal(true),
+          touched,
         });
         const submittedStatus = signal<SubmittedStatus>('unsubmitted');
 
-        const result = showErrors(fieldState, 'on-touch', submittedStatus);
+        const result = createShowErrorsComputed(
+          fieldState,
+          'on-touch',
+          submittedStatus,
+        );
 
         // Initially no errors (not touched)
         expect(result()).toBe(false);
@@ -201,12 +249,16 @@ describe('error-strategies', () => {
         // WHY: Critical for UX - users shouldn't see errors before attempting to submit
         // SCENARIO: Form just loaded, fields are invalid and touched, but not submitted
         const fieldState = signal({
-          invalid: () => true,
-          touched: () => true, // Even if touched
+          invalid: signal(true),
+          touched: signal(true), // Even if touched
         });
         const submittedStatus = signal<SubmittedStatus>('unsubmitted');
 
-        const result = showErrors(fieldState, 'on-submit', submittedStatus);
+        const result = createShowErrorsComputed(
+          fieldState,
+          'on-submit',
+          submittedStatus,
+        );
 
         // EXPECT: NO errors until form is submitted
         expect(result()).toBe(false);
@@ -214,36 +266,48 @@ describe('error-strategies', () => {
 
       it('should not show errors when form is not submitted', () => {
         const fieldState = signal({
-          invalid: () => true,
-          touched: () => true,
+          invalid: signal(true),
+          touched: signal(true),
         });
         const submittedStatus = signal<SubmittedStatus>('unsubmitted');
 
-        const result = showErrors(fieldState, 'on-submit', submittedStatus);
+        const result = createShowErrorsComputed(
+          fieldState,
+          'on-submit',
+          submittedStatus,
+        );
 
         expect(result()).toBe(false);
       });
 
       it('should show errors when field is invalid and form is submitted', () => {
         const fieldState = signal({
-          invalid: () => true,
-          touched: () => false,
+          invalid: signal(true),
+          touched: signal(false),
         });
         const submittedStatus = signal<SubmittedStatus>('submitted');
 
-        const result = showErrors(fieldState, 'on-submit', submittedStatus);
+        const result = createShowErrorsComputed(
+          fieldState,
+          'on-submit',
+          submittedStatus,
+        );
 
         expect(result()).toBe(true);
       });
 
       it('should not show errors when field is valid even if submitted', () => {
         const fieldState = signal({
-          invalid: () => false,
-          touched: () => true,
+          invalid: signal(false),
+          touched: signal(true),
         });
         const submittedStatus = signal<SubmittedStatus>('submitted');
 
-        const result = showErrors(fieldState, 'on-submit', submittedStatus);
+        const result = createShowErrorsComputed(
+          fieldState,
+          'on-submit',
+          submittedStatus,
+        );
 
         expect(result()).toBe(false);
       });
@@ -251,11 +315,15 @@ describe('error-strategies', () => {
       it('should update reactively when submission state changes', () => {
         const submitted = signal<SubmittedStatus>('unsubmitted');
         const fieldState = signal({
-          invalid: () => true,
-          touched: () => false,
+          invalid: signal(true),
+          touched: signal(false),
         });
 
-        const result = showErrors(fieldState, 'on-submit', submitted);
+        const result = createShowErrorsComputed(
+          fieldState,
+          'on-submit',
+          submitted,
+        );
 
         expect(result()).toBe(false);
 
@@ -265,24 +333,32 @@ describe('error-strategies', () => {
 
       it('should show errors during async submission', () => {
         const fieldState = signal({
-          invalid: () => true,
-          touched: () => false,
+          invalid: signal(true),
+          touched: signal(false),
         });
         const submittedStatus = signal<SubmittedStatus>('submitting');
 
-        const result = showErrors(fieldState, 'on-submit', submittedStatus);
+        const result = createShowErrorsComputed(
+          fieldState,
+          'on-submit',
+          submittedStatus,
+        );
 
         expect(result()).toBe(true);
       });
 
       it('should show errors immediately when submission starts', () => {
         const fieldState = signal({
-          invalid: () => true,
-          touched: () => false,
+          invalid: signal(true),
+          touched: signal(false),
         });
         const submittedStatus = signal<SubmittedStatus>('unsubmitted');
 
-        const result = showErrors(fieldState, 'on-submit', submittedStatus);
+        const result = createShowErrorsComputed(
+          fieldState,
+          'on-submit',
+          submittedStatus,
+        );
 
         // No errors before submission
         expect(result()).toBe(false);
@@ -301,12 +377,16 @@ describe('error-strategies', () => {
       it('should support strategy as a signal', () => {
         const strategy = signal<ErrorDisplayStrategy>('on-touch');
         const fieldState = signal({
-          invalid: () => true,
-          touched: () => false,
+          invalid: signal(true),
+          touched: signal(false),
         });
         const submittedStatus = signal<SubmittedStatus>('unsubmitted');
 
-        const result = showErrors(fieldState, strategy, submittedStatus);
+        const result = createShowErrorsComputed(
+          fieldState,
+          strategy,
+          submittedStatus,
+        );
 
         expect(result()).toBe(false);
 
@@ -318,12 +398,16 @@ describe('error-strategies', () => {
       it('should react to strategy changes', () => {
         const strategy = signal<ErrorDisplayStrategy>('on-submit');
         const fieldState = signal({
-          invalid: () => true,
-          touched: () => true,
+          invalid: signal(true),
+          touched: signal(true),
         });
         const submittedStatus = signal<SubmittedStatus>('unsubmitted');
 
-        const result = showErrors(fieldState, strategy, submittedStatus);
+        const result = createShowErrorsComputed(
+          fieldState,
+          strategy,
+          submittedStatus,
+        );
 
         expect(result()).toBe(false);
 
@@ -337,28 +421,36 @@ describe('error-strategies', () => {
         const fieldState = signal(null);
         const submittedStatus = signal<SubmittedStatus>('unsubmitted');
 
-        const result = showErrors(fieldState, 'immediate', submittedStatus);
+        const result = createShowErrorsComputed(
+          fieldState,
+          'immediate',
+          submittedStatus,
+        );
 
         expect(result()).toBe(false);
       });
 
       it('should handle undefined field state gracefully', () => {
-        const fieldState = signal();
+        const fieldState = signal(undefined);
         const submittedStatus = signal<SubmittedStatus>('unsubmitted');
 
-        const result = showErrors(fieldState, 'immediate', submittedStatus);
+        const result = createShowErrorsComputed(
+          fieldState,
+          'immediate',
+          submittedStatus,
+        );
 
         expect(result()).toBe(false);
       });
 
       it('should default to on-touch behavior for unknown strategies', () => {
         const fieldState = signal({
-          invalid: () => true,
-          touched: () => false,
+          invalid: signal(true),
+          touched: signal(false),
         });
         const submittedStatus = signal<SubmittedStatus>('unsubmitted');
 
-        const result = showErrors(
+        const result = createShowErrorsComputed(
           fieldState,
           'unknown' as ErrorDisplayStrategy,
           submittedStatus,
@@ -368,10 +460,10 @@ describe('error-strategies', () => {
 
         // Should behave like 'on-touch'
         const touchedState = signal({
-          invalid: () => true,
-          touched: () => true,
+          invalid: signal(true),
+          touched: signal(true),
         });
-        const result2 = showErrors(
+        const result2 = createShowErrorsComputed(
           touchedState,
           'unknown' as ErrorDisplayStrategy,
           submittedStatus,
@@ -407,23 +499,25 @@ describe('error-strategies', () => {
       );
     });
 
-    it('maps inherit at the showErrors boundary to on-touch semantics', () => {
+    it('maps inherit at the createShowErrorsComputed boundary to on-touch semantics', () => {
       // shouldShowErrors now accepts only ResolvedErrorDisplayStrategy.
-      // `'inherit'` is resolved upstream by showErrors() /
+      // `'inherit'` is resolved upstream by createShowErrorsComputed() /
       // resolveErrorDisplayStrategy(). Exercise that contract through the
       // public reactive entry point rather than casting.
       const touched = signal({
-        invalid: () => true,
-        touched: () => true,
+        invalid: signal(true),
+        touched: signal(true),
       });
       const untouched = signal({
-        invalid: () => true,
-        touched: () => false,
+        invalid: signal(true),
+        touched: signal(false),
       });
       const status = signal<SubmittedStatus>('unsubmitted');
 
-      expect(showErrors(touched, 'inherit', status)()).toBe(true);
-      expect(showErrors(untouched, 'inherit', status)()).toBe(false);
+      expect(createShowErrorsComputed(touched, 'inherit', status)()).toBe(true);
+      expect(createShowErrorsComputed(untouched, 'inherit', status)()).toBe(
+        false,
+      );
     });
   });
 });

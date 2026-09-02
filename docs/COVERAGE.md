@@ -1,0 +1,85 @@
+# Coverage
+
+One command produces one number:
+
+```bash
+pnpm coverage        # -> pnpm nx run workspace:coverage
+```
+
+It writes `coverage/lcov.info` (for reporting services), an HTML report at
+`coverage/index.html`, and a summary in the terminal.
+
+## What the number covers
+
+Toolkit source only — `core`, `assistive`, `form-field`, `headless`, `vest`,
+and `testing` under `packages/toolkit`. Every published entry point is listed;
+`testing` earns its place because `ng-package.json` makes it the public
+`@ngx-signal-forms/toolkit/testing` surface. Specs, barrel files (`index.ts`, `public_api.ts`), and
+test setup are excluded, as are the demo apps and build scripts. They are not
+part of the published package, and including them would dilute the figure.
+
+Three Vitest projects feed it, and all three are required:
+
+| Project           | Environment             | Covers                          |
+| ----------------- | ----------------------- | ------------------------------- |
+| `toolkit-jsdom`   | jsdom, forks pool       | the bulk of the unit specs      |
+| `toolkit-browser` | Chromium via Playwright | `*.browser.spec.ts`, incl. a11y |
+| `demo`            | jsdom, forks pool       | demo specs driving the toolkit  |
+
+Vitest instruments once across all three projects and emits a single merged
+report. There is no separate merge step.
+
+`demo-shared` is not listed: its one spec covers route metadata, not toolkit
+code.
+
+The run pins `--maxWorkers=2`. Vitest refuses to start two projects that share
+a `sequence.groupOrder` but resolve different `maxWorkers`, which these configs
+do under CI. A CLI value applies to every project at the highest priority and
+removes the divergence — a percentage does not, since it resolves per project.
+
+## Why the config lives at the root
+
+`coverage` is a **root-only** Vitest option. A `coverage` block declared inside
+a project config is silently ignored, so the settings live in
+`vitest.coverage.config.mts` at the workspace root rather than in
+`packages/toolkit/vitest.shared.mts`.
+
+See <https://vitest.dev/guide/projects.html#unsupported-options>.
+
+## Never gate a single project
+
+Coverage instruments the whole toolkit source tree, because the `include` list
+lives once in the root `vitest.coverage.config.mts`. Each project's own
+`test.include` then claims a slice of the specs. Note that the two toolkit
+globs do not partition on their own: `toolkitSpecFiles` matches the browser
+specs as well, so the jsdom project only leaves them to `toolkit-browser`
+because it also sets `exclude: [toolkitBrowserSpecFiles]`.
+
+The whole tree measured against one slice of the specs is a meaningless
+figure. Run alone, `toolkit-browser` reports around 70% — not because that
+code is untested, but because its tests live in the jsdom project, and `demo`
+alone would look worse still. Only the merged run says anything true.
+
+Thresholds therefore apply once, to the merged result, and are declared only in
+`vitest.coverage.config.mts`.
+
+## Nx and Playwright
+
+Nx does not merge coverage; Vitest does. The `@nx/vitest:test` executor has no
+`coverage` option at all — its `configFile`, `reportsDirectory`, `mode`,
+`runMode`, `testFiles`, and `watch` are the complete set. It does forward
+`reportsDirectory` into Vitest as `test.coverage.reportsDirectory`, but that
+only relocates the output directory; it neither enables coverage nor merges
+across projects. So `toolkit:test` and `toolkit:test-browser` stay plain test
+targets, and coverage runs through the dedicated `workspace:coverage` target
+instead.
+
+The `demo-e2e` Playwright suite is not yet part of the number. It does drive
+toolkit code through the demo app, so counting it is coherent — but it needs
+source instrumentation (`vite-plugin-istanbul` behind an env flag), a fixture
+that drains `window.__coverage__` after each test, and a merge across the four
+CI shards. Until that lands, end-to-end behaviour stays gated by the a11y
+baseline and the visual snapshot suites instead.
+
+Note that `toolkit-browser` uses Playwright too — as Vitest's browser provider.
+That one _is_ included, and is why the merged run needs browsers installed.

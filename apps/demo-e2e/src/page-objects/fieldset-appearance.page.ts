@@ -11,6 +11,11 @@ export class FieldsetAppearancePage extends BaseFormPage {
 
   readonly borderedShellButton: Locator;
   readonly semanticOnlyShellButton: Locator;
+  readonly standardWrapperButton: Locator;
+  readonly outlineWrapperButton: Locator;
+  readonly plainWrapperButton: Locator;
+  readonly verticalOrientationButton: Locator;
+  readonly horizontalOrientationButton: Locator;
   readonly autoFeedbackButton: Locator;
   readonly plainFeedbackButton: Locator;
   readonly notificationFeedbackButton: Locator;
@@ -26,6 +31,7 @@ export class FieldsetAppearancePage extends BaseFormPage {
   readonly titleOffButton: Locator;
 
   readonly shippingStreetInput: Locator;
+  readonly shippingStreetWrapper: Locator;
   readonly credentialsPasswordInput: Locator;
   readonly credentialsConfirmPasswordInput: Locator;
   readonly deliveryMethodRadios: Locator;
@@ -39,6 +45,12 @@ export class FieldsetAppearancePage extends BaseFormPage {
 
     const fieldsetAppearanceGroup = this.page.getByRole('group', {
       name: 'Fieldset appearance',
+    });
+    const wrapperAppearanceGroup = this.page.getByRole('group', {
+      name: 'Field appearance',
+    });
+    const orientationGroup = this.page.getByRole('group', {
+      name: 'Field orientation',
     });
     const feedbackAppearanceGroup = this.page.getByRole('group', {
       name: 'Grouped feedback appearance',
@@ -64,6 +76,21 @@ export class FieldsetAppearancePage extends BaseFormPage {
     });
     this.semanticOnlyShellButton = fieldsetAppearanceGroup.getByRole('button', {
       name: 'Semantic only',
+    });
+    this.standardWrapperButton = wrapperAppearanceGroup.getByRole('button', {
+      name: 'Standard',
+    });
+    this.outlineWrapperButton = wrapperAppearanceGroup.getByRole('button', {
+      name: 'Outline',
+    });
+    this.plainWrapperButton = wrapperAppearanceGroup.getByRole('button', {
+      name: 'Plain',
+    });
+    this.verticalOrientationButton = orientationGroup.getByRole('button', {
+      name: 'Vertical',
+    });
+    this.horizontalOrientationButton = orientationGroup.getByRole('button', {
+      name: 'Horizontal',
     });
 
     this.autoFeedbackButton = feedbackAppearanceGroup.getByRole('button', {
@@ -115,6 +142,9 @@ export class FieldsetAppearancePage extends BaseFormPage {
     });
 
     this.shippingStreetInput = this.form.locator('#shippingStreet');
+    this.shippingStreetWrapper = this.form.locator(
+      'ngx-form-field-wrapper:has(#shippingStreet)',
+    );
     this.credentialsPasswordInput = this.form.locator('#password');
     this.credentialsConfirmPasswordInput =
       this.form.locator('#confirmPassword');
@@ -134,8 +164,7 @@ export class FieldsetAppearancePage extends BaseFormPage {
   }
 
   override async goto(): Promise<void> {
-    await this.page.goto(this.getFullUrl(this.route));
-    await this.waitForReady();
+    await this.gotoRoute(this.route);
   }
 
   getFieldsetSurface(fieldset: Locator): Locator {
@@ -159,11 +188,15 @@ export class FieldsetAppearancePage extends BaseFormPage {
   }
 
   getNotificationTitle(fieldset: Locator): Locator {
-    return fieldset.locator('.ngx-form-field-notification__title').first();
+    return fieldset.locator('.ngx-form-field-error__title').first();
   }
 
   async showSemanticOnlyShell(): Promise<void> {
     await this.semanticOnlyShellButton.click();
+  }
+
+  async showOutlineWrapper(): Promise<void> {
+    await this.outlineWrapperButton.click();
   }
 
   async showBorderedShell(): Promise<void> {

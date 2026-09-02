@@ -65,7 +65,7 @@ provider → built-in default. To be explicit or override, set `strategy` on the
 </form>
 ```
 
-Warnings have an independent `warningStrategy` (default `'immediate'`) that this doesn't affect.
+Warnings have an independent `warningStrategy` (default `'on-touch'`) with its own cascade that this doesn't affect. See [Warning display timing](./WARNINGS_SUPPORT.md#when-warnings-appear--warningstrategy) for details on the four-tier cascade.
 
 **See:** [docs/BEST_PRACTICES.md](./BEST_PRACTICES.md) ·
 [packages/toolkit/form-field/README.md](../packages/toolkit/form-field/README.md) ·
@@ -258,24 +258,29 @@ canonical rather than re-deriving tokens.
 
 **See:** [packages/toolkit/form-field/THEMING.md](../packages/toolkit/form-field/THEMING.md) ·
 [docs/MIGRATING_CSS_VARS.md](./MIGRATING_CSS_VARS.md) ·
-[docs/CSS_FRAMEWORK_INTEGRATION.md](./CSS_FRAMEWORK_INTEGRATION.md)
+[docs/CSS_FRAMEWORK_INTEGRATION.md](./CSS_FRAMEWORK_INTEGRATION.md) ·
+[demo: brand-theming](../apps/demo/src/app/04-form-field-wrapper/brand-theming/README.md)
 
 ### How do I integrate a third-party datepicker (value/change API, not a native input)?
 
 Write a thin adapter that implements `FormValueControl<Date | null>` on your datepicker host:
 expose `value = model<Date | null>(null)` and sync it to/from the third-party widget's own
-value/change events, add a `focus()` method (needed for `focusFirstInvalid()` and error-summary
+value/change events (Angular's `transformedValue()` is the built-in tool for that parse/format
+boundary — see below), add a `focus()` method (needed for `focusFirstInvalid()` and error-summary
 navigation), and optional `touch`/`disabled`/`invalid`. Bind it with the standard
 `[formField]="form.birthDate"`. Because the widget owns its own visuals and ARIA, pair it with
 `ngxSignalFormControlAria="manual"` and `appearance="plain"` so the toolkit supplies label/hint/
 error content and field-identity IDs without clashing. Handle any type mismatch (e.g. `Date` vs
-ISO string) inside the adapter's read/write path. There is no runnable datepicker demo yet — the
-adapter pattern generalizes from the `FormValueControl` examples in custom-controls; the Material
-app's README also notes date-picker ARIA gotchas.
+ISO string) inside the adapter's read/write path, and surface unparseable input as a
+`kind: 'parse'` error. Widgets with internal popups or multiple focusable pieces (a calendar grid,
+segmented input) need a composite-aware touched hook — `(focusout)` with a `relatedTarget`
+containment check — instead of a plain `(blur)`.
 
-**See:** [docs/CUSTOM_CONTROLS.md](./CUSTOM_CONTROLS.md) ·
-[demo: custom-controls](../apps/demo/src/app/04-form-field-wrapper/custom-controls/README.md) ·
-[demo-material README](../apps/demo-material/README.md)
+**See:** [docs/CUSTOM_CONTROLS.md § Adapting an Existing Third-Party Widget](./CUSTOM_CONTROLS.md#adapting-an-existing-third-party-widget) ·
+runnable demo: the "Date of Birth" field in
+[demo: custom-controls](../apps/demo/src/app/04-form-field-wrapper/custom-controls/README.md)
+(`apps/demo/src/app/shared/controls/legacy-datepicker-adapter.ts`) · the Material app's README also
+notes date-picker ARIA gotchas.
 
 ---
 
@@ -355,11 +360,13 @@ protected readonly guardStep: WizardCanNavigate = (event) => {
 ```
 
 Run whole-form validation at the end by touching everything (`submit()` marks all fields touched
-internally) before the final action. Honest gap: the maintained `advanced-wizard` demo uses a
-_form-per-step_ + NgRx architecture rather than one shared model, so treat it as a reference for
-step orchestration, not for the single-model pattern above.
+internally) before the final action. The maintained `advanced-wizard` demo uses a _form-per-step_ +
+NgRx architecture rather than one shared model — treat it as a reference for step orchestration.
+`single-model-wizard` is the runnable reference for the single-model pattern above, including the
+cross-step rule and the `canNavigate` guard shown here.
 
 **See:** [demo: wizard component](../apps/demo/src/app/shared/wizard/README.md) ·
+[demo: single-model-wizard](../apps/demo/src/app/05-advanced/single-model-wizard/README.md) ·
 [demo: advanced-wizard](../apps/demo/src/app/05-advanced/advanced-wizard/README.md)
 
 ### How do I two-way sync my form model with an NgRx SignalStore without update loops?
@@ -482,22 +489,41 @@ toward `invalid()`, submit warning-only forms via `canSubmitWithWarnings`/`submi
 Both go through provider factories that you can wire to your translation service.
 `provideErrorMessages(factory)` registers a message registry (keys are camelCase error kinds, values
 are a string or `(params) => string`); `provideFieldLabels(factory)` does the same for field
-labels/paths. Use the factory form so you can `inject()` your translation service:
+labels/paths. The factory itself runs once, at injection — so the contract for a runtime language
+switch is:
+
+- A **string** entry is captured once, at injection time, and frozen for the injector's lifetime.
+  It never changes afterward.
+- A **function** entry is invoked on every render, and re-renders on a language change only if it
+  reads a reactive signal during that call. Calling `translate.instant(...)` alone reads nothing
+  reactive — you must also read a language signal, e.g. `toSignal(translate.onLangChange)`.
+
+Make every entry a function that reads that signal:
 
 ```ts
+import { inject } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { TranslateService } from '@ngx-translate/core';
+import { provideFieldLabels } from '@ngx-signal-forms/toolkit';
+import { humanizeFieldPath } from '@ngx-signal-forms/toolkit/headless';
+
 provideFieldLabels(() => {
   const t = inject(TranslateService);
-  return (path) => t.instant(`fields.${path}`) || humanizeFieldPath(path);
+  const lang = toSignal(t.onLangChange, { initialValue: null });
+  return (path) => {
+    lang(); // reactive dependency — re-renders on language switch
+    return t.instant(`fields.${path}`) || humanizeFieldPath(path);
+  };
 });
 ```
 
 Validators keep emitting plain `{ kind, message }`; the toolkit resolves display text via a 3-tier
 cascade (validator `message` → registry → built-in fallback), exposed declaratively
 (`ngx-form-field-error`, wrapper) and programmatically (`createErrorMessageSignal`,
-`resolveValidationErrorMessage`). Honest gaps: the worked i18n example in the docs is written for
-`provideFieldLabels` (apply the same shape to `provideErrorMessages`), there is no i18n demo, and
-whether an already-rendered message re-renders on a runtime language switch is not documented as a
-guarantee.
+`resolveValidationErrorMessage`). `$localize` cannot do any of this — it's build-time only (one
+build per locale via `ng build --localize`), with no runtime language switching. Honest gap: there
+is still no end-to-end i18n demo proving a runtime language switch (tracked in
+[#231](https://github.com/ngx-signal-forms/ngx-signal-forms/issues/231)).
 
 **See:** [docs/WARNINGS_SUPPORT.md](./WARNINGS_SUPPORT.md) ·
 [packages/toolkit/README.md](../packages/toolkit/README.md) ·
@@ -520,35 +546,40 @@ the summary.
 
 ### How do I unit-test a form component (set value, touch, assert rendered error + `aria-invalid`) in Vitest/TestBed?
 
-Render the component with TestBed, drive state through the model signal and the field's own methods,
-then assert on the toolkit's documented, stable id/attribute contract: error containers use
+Render the component and drive it through native DOM events — type into the control, then tab or
+click away — rather than writing the model signal or calling a field's `markAsTouched()` directly.
+A direct signal write changes the value but never marks the field touched, so an `'on-touch'` (the
+toolkit default) or `'on-submit'` strategy would never reveal the error you're asserting on. Then
+assert on the toolkit's documented, stable id/attribute contract: error containers use
 `{fieldName}-error`, and the bound input carries `aria-invalid="true"` and an `aria-describedby`
 that chains to that id. Blocking errors render inside a `role="alert"` element.
 
 ```ts
-const fixture = TestBed.createComponent(LoginForm);
-const cmp = fixture.componentInstance;
+const user = userEvent.setup();
+const { container } = await render(LoginForm);
 
-cmp.model.update((m) => ({ ...m, email: 'not-an-email' })); // set value
-cmp.form.email().markAsTouched(); // trigger 'on-touch' visibility
-fixture.detectChanges();
-await fixture.whenStable();
+const emailInput = screen.getByLabelText(/email/i) as HTMLInputElement;
+await user.type(emailInput, 'not-an-email'); // set value
+await user.tab(); // blur → marks the field touched, triggering 'on-touch' visibility
 
-const input = fixture.nativeElement.querySelector('#email');
-expect(input.getAttribute('aria-invalid')).toBe('true');
-expect(fixture.nativeElement.querySelector('#email-error')).toHaveTextContent(
-  /valid email/i,
-);
+expect(await screen.findByText(/valid email/i)).toBeInTheDocument();
+await waitFor(() => {
+  expect(emailInput.getAttribute('aria-invalid')).toBe('true');
+});
+expect(container.querySelector('#email-error')).not.toBeNull();
 ```
 
-To assert a submit-time path, call Angular's `submit(cmp.form, { action })` (it marks every field
-touched). For accessibility, the toolkit ships `expectNoA11yViolations()` from
+To assert a submit-time path, click the submit button through `userEvent` — Angular's own
+`submit()`, invoked internally by the form's `submission` config, marks every field touched. For
+accessibility, the toolkit ships `expectNoA11yViolations()` from
 `@ngx-signal-forms/toolkit/testing` (axe-core WCAG 2.2 AA) for use in a Vitest browser-mode spec
-after rendering a fixture. Honest gap: no dedicated component-testing guide or example spec exists
-yet — the mechanics above are assembled from the id/ARIA contract plus Angular's own testing
-conventions.
+after rendering a fixture.
 
-**See:** [packages/toolkit/README.md](../packages/toolkit/README.md) ·
+**See:** [docs/TESTING.md](./TESTING.md) — the full walkthrough, including driving controls
+through native events with `@testing-library/angular` and flushing effects before asserting ·
+[apps/demo/.../your-first-form.spec.ts](../apps/demo/src/app/01-getting-started/your-first-form/your-first-form.spec.ts) —
+the runnable example this FAQ entry and the guide are both backed by ·
+[packages/toolkit/README.md](../packages/toolkit/README.md) ·
 [packages/toolkit/headless/README.md](../packages/toolkit/headless/README.md) ·
 [docs/decisions/0004-wcag22-testing-strategy.md](./decisions/0004-wcag22-testing-strategy.md)
 
@@ -568,15 +599,22 @@ Mappings (Signal Forms + this toolkit):
   `submit()` also marks everything touched internally.
 - **custom `ValidatorFn`** → schema functions: `validate()`/`validateAsync()` for sync/async field
   rules, `validateStandardSchema()` for Zod/contract schemas, `validateVest()` for business policy.
-- **coexistence** → `compatForm()` (from `@angular/forms/signals/compat`) lets a Signal Form model
-  embed existing Reactive `FormControl` instances as leaf values, so you can absorb Reactive
-  controls incrementally rather than rewrite a whole form at once.
+- **coexistence** → `compatForm()` (top-down) or `SignalFormControl` (bottom-up), both from
+  `@angular/forms/signals/compat`, let a Signal Form model absorb existing Reactive controls, or
+  let a Reactive `FormGroup` absorb one Signal-Forms-backed field, so you can migrate one field or
+  one form at a time rather than rewrite everything at once.
 
-Honest gap: there is **no dedicated Reactive Forms migration guide or demo** yet (the existing
-migration docs cover ngx-vest-forms and the toolkit beta→v1), and `compatForm()` has no worked
-example in this repo — the mappings above are the pattern, verified against the Angular 22 types.
+Angular's own **[framework-level migration guide](https://angular.dev/guide/forms/signals/migration)**
+covers the `compat` API itself. This toolkit's
+**[docs/MIGRATING_FROM_REACTIVE_FORMS.md](./MIGRATING_FROM_REACTIVE_FORMS.md)** covers the layer
+Angular's guide doesn't: how `ngx-form-field-wrapper`, error-message resolution, the error-display
+strategy cascade, and `NG_STATUS_CLASSES` behave when a field is bridged through compat — including
+a documented divergence (a compat leaf's validity comes from the underlying `AbstractControl`'s
+own Reactive validators, not from Signal Forms schema validators registered on that same path) and
+a worked one-field-at-a-time coexistence example.
 
 **See:** [../README.md](../README.md) ·
+[docs/MIGRATING_FROM_REACTIVE_FORMS.md](./MIGRATING_FROM_REACTIVE_FORMS.md) ·
 [docs/ANGULAR_VS_TOOLKIT.md](./ANGULAR_VS_TOOLKIT.md) ·
 [docs/VALIDATION_STRATEGY.md](./VALIDATION_STRATEGY.md) ·
 [docs/ANGULAR_PUBLIC_API_POLICY.md](./ANGULAR_PUBLIC_API_POLICY.md)

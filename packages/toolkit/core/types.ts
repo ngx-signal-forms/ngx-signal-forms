@@ -53,6 +53,26 @@ export type ResolvedErrorDisplayStrategy =
 export type ErrorDisplayStrategy = ResolvedErrorDisplayStrategy | 'inherit';
 
 /**
+ * Resolved warning display strategy used by forms and config defaults.
+ *
+ * This excludes 'inherit', which only makes sense for field-level overrides.
+ */
+export type ResolvedWarningDisplayStrategy =
+  | 'immediate'
+  | 'on-touch'
+  | 'on-submit';
+
+/**
+ * Warning display strategy determines when warnings are shown to the user.
+ *
+ * - `'immediate'` — Show warnings as they occur (real-time)
+ * - `'on-touch'` — Show after blur or submit (default)
+ * - `'on-submit'` — Show only after form submission
+ * - `'inherit'` — Inherit from the form's warning strategy (field-level only)
+ */
+export type WarningDisplayStrategy = ResolvedWarningDisplayStrategy | 'inherit';
+
+/**
  * Form field appearance values accepted from consumers and used internally.
  *
  * - `'standard'`: Label above input (default)
@@ -230,8 +250,21 @@ export type NgxSignalFormControlPresetRegistry = Record<
 /**
  * Consumer overrides for the preset registry.
  */
+// `Partial<T>` is deliberately NOT used for the inner shape: under
+// `exactOptionalPropertyTypes` it permits omission but not an explicit
+// `undefined`, and the resolver merges overrides onto the base preset with
+// `??` so that `{ slider: { layout: maybeUnset } }` preserves the base
+// invariants rather than clobbering them. The mapped type below declares
+// that contract instead of leaving it to the implementation.
 export type NgxSignalFormControlPresetOverrides = Partial<
-  Record<NgxSignalFormControlKind, Partial<NgxSignalFormControlPreset>>
+  Record<
+    NgxSignalFormControlKind,
+    {
+      [K in keyof NgxSignalFormControlPreset]?:
+        | NgxSignalFormControlPreset[K]
+        | undefined;
+    }
+  >
 >;
 
 /**
@@ -286,6 +319,17 @@ export interface NgxSignalFormsConfig {
   defaultErrorStrategy: ResolvedErrorDisplayStrategy;
 
   /**
+   * Default warning display strategy.
+   *
+   * A warning judges a *complete* value, so it is gated until the user
+   * commits the value by blur or submit. Set `'immediate'` if you want
+   * advisory messages to appear while the user types.
+   *
+   * @default 'on-touch'
+   */
+  defaultWarningStrategy: ResolvedWarningDisplayStrategy;
+
+  /**
    * Default appearance for form fields.
    * @default 'standard'
    */
@@ -334,6 +378,18 @@ export interface NgxSignalFormsConfig {
    * @default 'All fields are required unless marked {marker}'
    */
   optionalLegendText: string;
+
+  /**
+   * Text for the visually-hidden required-state hint on a `role="group"`
+   * multi-control selection cluster (e.g. a required checkbox cluster).
+   *
+   * `group` does not support `aria-required` (only `radiogroup` does), so
+   * `NgxFormFieldWrapper` relocates required-ness into this text, exposed
+   * via `aria-describedby` instead of an ARIA state — see
+   * https://github.com/ngx-signal-forms/ngx-signal-forms/issues/300.
+   * @default 'required'
+   */
+  requiredHintText: string;
 }
 
 /**
@@ -346,24 +402,39 @@ export interface NgxSignalFormsConfig {
  * the inherited marker (for themes that render the required hint entirely
  * via CSS); omitting the key inherits the parent value instead.
  */
+// Every member carries an explicit `| undefined` on purpose. Under
+// `exactOptionalPropertyTypes` a bare `?:` permits omission but NOT an
+// explicit `undefined`, and the merge below is `??`-based precisely so a
+// caller can spread partially-populated config (`{ ...base, showMarkerWhen:
+// maybeUnset }`) and have each undefined member fall through to the parent.
+// Declaring it keeps the type honest about the merge this interface exists
+// to feed.
 export interface NgxSignalFormsUserConfig {
-  autoAria?: boolean;
-  defaultErrorStrategy?: ResolvedErrorDisplayStrategy;
-  defaultFormFieldAppearance?: FormFieldAppearance;
-  defaultFormFieldOrientation?: FormFieldOrientation;
-  showMarkerWhen?: FieldMarkingMode;
+  autoAria?: boolean | undefined;
+  defaultErrorStrategy?: ResolvedErrorDisplayStrategy | undefined;
+  defaultWarningStrategy?: ResolvedWarningDisplayStrategy | undefined;
+  defaultFormFieldAppearance?: FormFieldAppearance | undefined;
+  defaultFormFieldOrientation?: FormFieldOrientation | undefined;
+  showMarkerWhen?: FieldMarkingMode | undefined;
   /**
    * Custom character(s) rendered as the required marker. Pass `''` to
    * clear an inherited marker without changing `showMarkerWhen`.
    */
-  requiredMarker?: string;
+  requiredMarker?: string | undefined;
   /**
    * Custom text rendered as the optional marker. Pass `''` to clear an
    * inherited marker without changing `showMarkerWhen`.
    */
-  optionalMarker?: string;
+  optionalMarker?: string | undefined;
   /** Override the `'required'` legend text. `{marker}` is substituted. */
-  requiredLegendText?: string;
+  requiredLegendText?: string | undefined;
   /** Override the `'optional'` legend text. `{marker}` is substituted. */
-  optionalLegendText?: string;
+  optionalLegendText?: string | undefined;
+  /**
+   * Override the visually-hidden required-hint text for `role="group"`
+   * selection clusters. Pass `''` to suppress the hint entirely — the
+   * wrapper renders no hint node and omits its id from `aria-describedby`,
+   * rather than pointing the description at an empty element.
+   */
+  requiredHintText?: string | undefined;
 }

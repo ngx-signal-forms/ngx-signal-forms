@@ -8,7 +8,7 @@ import {
 import { TestBed } from '@angular/core/testing';
 import { form, maxLength as signalMaxLength } from '@angular/forms/signals';
 import { render, screen } from '@testing-library/angular';
-import { describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { NgxFormFieldCharacterCount } from './character-count';
 
 /**
@@ -39,24 +39,13 @@ import { NgxFormFieldCharacterCount } from './character-count';
   standalone: true,
   imports: [NgxFormFieldCharacterCount],
   template: `
-    @if (colorThresholds(); as thresholds) {
-      <ngx-form-field-character-count
-        [formField]="testForm.text"
-        [maxLength]="maxLength()"
-        [position]="position()"
-        [showLimitColors]="showLimitColors()"
-        [liveAnnounce]="liveAnnounce()"
-        [colorThresholds]="thresholds"
-      />
-    } @else {
-      <ngx-form-field-character-count
-        [formField]="testForm.text"
-        [maxLength]="maxLength()"
-        [position]="position()"
-        [showLimitColors]="showLimitColors()"
-        [liveAnnounce]="liveAnnounce()"
-      />
-    }
+    <ngx-form-field-character-count
+      [formField]="testForm.text"
+      [maxLength]="maxLength()"
+      [position]="position()"
+      [showLimitColors]="showLimitColors()"
+      [liveAnnounce]="liveAnnounce()"
+    />
   `,
 })
 class TestWrapperComponent {
@@ -65,9 +54,6 @@ class TestWrapperComponent {
   readonly position = input<'left' | 'right'>('right');
   readonly showLimitColors = input(true);
   readonly liveAnnounce = input(false);
-  readonly colorThresholds = input<
-    { warning: number; danger: number } | undefined
-  >();
 
   readonly #model = signal({ text: '' });
   protected readonly testForm = form(this.#model);
@@ -99,6 +85,26 @@ class AutoDetectMaxLengthWrapperComponent {
       this.#model.set({ text: this.textModel() });
     });
   }
+}
+
+/**
+ * Wrapper with no `maxLength` input and no `maxLength` validator, bound to a
+ * field whose value is an unsupported type (an object). This exercises the
+ * `#charCountState() === null` fallback path in `currentLength` — no
+ * `createCharacterCount()` factory is ever created, since there is no
+ * resolved limit.
+ */
+@Component({
+  selector: 'ngx-test-unsupported-value-no-maxlength',
+  standalone: true,
+  imports: [NgxFormFieldCharacterCount],
+  template: ` <ngx-form-field-character-count [formField]="objectField" /> `,
+})
+class UnsupportedValueNoMaxLengthWrapperComponent {
+  // An object value is unsupported by the character count component.
+  readonly #model = signal({ data: { nested: 'value' } });
+  readonly objectForm = form(this.#model);
+  readonly objectField = this.objectForm.data;
 }
 
 describe('NgxFormFieldCharacterCount', () => {
@@ -249,96 +255,90 @@ describe('NgxFormFieldCharacterCount', () => {
     });
   });
 
-  describe('Custom thresholds', () => {
-    it('should use custom warning threshold', async () => {
+  describe('CSS custom property contract (colorThresholds removed, #355)', () => {
+    // `colorThresholds` is gone — thresholds are CSS-only, driven by
+    // `--ngx-form-field-char-count-warning-threshold` /
+    // `-danger-threshold`, which default to 80/95 in the component's own
+    // styles (not asserted here — see the browser a11y spec for a real
+    // computed-style assertion, since jsdom doesn't evaluate CSS
+    // `color-mix()`/`clamp()`). This suite pins the piece jsdom *can*
+    // verify: the component publishes its percent-used as an inline custom
+    // property, which is the only input the CSS side needs.
+
+    it('publishes --ngx-form-field-char-count-percent-used as an inline custom property', async () => {
       const { container } = await render(TestWrapperComponent, {
-        componentInputs: {
-          textModel: 'a'.repeat(85),
-          maxLength: 100,
-          colorThresholds: { warning: 85, danger: 95 },
-        },
+        componentInputs: { textModel: 'a'.repeat(42), maxLength: 100 },
       });
 
-      const host = container.querySelector('ngx-form-field-character-count');
-      expect(host).toHaveAttribute('data-limit-state', 'warning');
-      expect(screen.getByText('85/100')).toBeInTheDocument();
+      const host = container.querySelector(
+        'ngx-form-field-character-count',
+      ) as HTMLElement;
+      expect(
+        host.style.getPropertyValue('--ngx-form-field-char-count-percent-used'),
+      ).toBe('42');
     });
 
-    it('should use custom danger threshold', async () => {
-      const { container } = await render(TestWrapperComponent, {
-        componentInputs: {
-          textModel: 'a'.repeat(98),
-          maxLength: 100,
-          colorThresholds: { warning: 90, danger: 98 },
-        },
+    it('updates the published percent-used as the field value changes', async () => {
+      const { container, rerender } = await render(TestWrapperComponent, {
+        componentInputs: { textModel: 'a'.repeat(10), maxLength: 100 },
       });
 
-      const host = container.querySelector('ngx-form-field-character-count');
-      expect(host).toHaveAttribute('data-limit-state', 'danger');
-      expect(screen.getByText('98/100')).toBeInTheDocument();
-    });
+      const host = container.querySelector(
+        'ngx-form-field-character-count',
+      ) as HTMLElement;
+      expect(
+        host.style.getPropertyValue('--ngx-form-field-char-count-percent-used'),
+      ).toBe('10');
 
-    it('does NOT clamp out-of-range thresholds — values above 100 are passed straight through', async () => {
-      // Regression/documentation test: `colorThresholds` is entirely
-      // unvalidated (see character-count.ts `#charCountState`). Percentages
-      // are divided by 100 and used as raw ratios with no clamping, so a
-      // `warning`/`danger` above 100 produces a ratio the component can
-      // never reach via the normal 0-100% "ok" range — those thresholds
-      // become unreachable and the state jumps straight from 'ok' to
-      // 'exceeded' once `current > maxLength`. This is the actual current
-      // behavior; a real "clamp to 0-100" feature does not exist.
-      const { rerender, container } = await render(TestWrapperComponent, {
-        componentInputs: {
-          textModel: 'a'.repeat(50),
-          maxLength: 100,
-          colorThresholds: { warning: 150, danger: 200 },
-        },
-      });
-
-      const host = () =>
-        container.querySelector('ngx-form-field-character-count');
-
-      // 50% — nowhere near the (unreachable) 150%/200% thresholds.
-      expect(host()).toHaveAttribute('data-limit-state', 'ok');
-
-      // Even at exactly the limit (ratio === 1), the unreachable thresholds
-      // mean the state is still 'ok' — never 'warning' or 'danger'.
       await rerender({
-        componentInputs: {
-          textModel: 'a'.repeat(100),
-          maxLength: 100,
-          colorThresholds: { warning: 150, danger: 200 },
-        },
+        componentInputs: { textModel: 'a'.repeat(150), maxLength: 100 },
       });
       await TestBed.inject(ApplicationRef).whenStable();
-      expect(host()).toHaveAttribute('data-limit-state', 'ok');
 
-      // One character over the limit flips straight to 'exceeded' — the
-      // ratio > 1 branch is checked before the (unreachable) danger/warning
-      // thresholds, so there is no intermediate 'warning'/'danger' state.
-      await rerender({
-        componentInputs: {
-          textModel: 'a'.repeat(101),
-          maxLength: 100,
-          colorThresholds: { warning: 150, danger: 200 },
-        },
-      });
-      await TestBed.inject(ApplicationRef).whenStable();
-      expect(host()).toHaveAttribute('data-limit-state', 'exceeded');
+      expect(
+        host.style.getPropertyValue('--ngx-form-field-char-count-percent-used'),
+      ).toBe('150');
     });
 
-    it('does NOT validate negative thresholds — a negative warning threshold makes every non-empty value "warning"', async () => {
-      // Further documents the "entirely unvalidated" contract: a negative
-      // percentage divides down to a negative ratio, which `ratio >=
-      // warning` satisfies immediately (any non-negative ratio is >= a
-      // negative number). This is a real gap, not desired behavior — noted
-      // for a future follow-up rather than fixed here (test-hardening pass).
+    it('publishes 0 when no maxLength is resolved (no configured or auto-detected limit)', async () => {
       const { container } = await render(TestWrapperComponent, {
-        componentInputs: {
-          textModel: 'a',
-          maxLength: 100,
-          colorThresholds: { warning: -10, danger: 95 },
-        },
+        componentInputs: { textModel: 'a'.repeat(42), maxLength: 0 },
+      });
+
+      const host = container.querySelector(
+        'ngx-form-field-character-count',
+      ) as HTMLElement;
+      expect(
+        host.style.getPropertyValue('--ngx-form-field-char-count-percent-used'),
+      ).toBe('0');
+      expect(host).toHaveAttribute('data-limit-state', 'disabled');
+    });
+
+    it('has no colorThresholds input in the compiled component metadata', () => {
+      // Static metadata check, not an instantiation — inputs are declared
+      // on the compiled `ɵcmp.inputs` map regardless of injection context.
+      const inputs = (
+        NgxFormFieldCharacterCount as unknown as {
+          ɵcmp: { inputs: Record<string, unknown> };
+        }
+      ).ɵcmp.inputs;
+
+      expect(Object.keys(inputs)).not.toContain('colorThresholds');
+      // Sanity check the reflection itself still finds the inputs that do
+      // exist, so a broken lookup can't silently pass the assertion above.
+      expect(Object.keys(inputs)).toContain('formField');
+      expect(Object.keys(inputs)).toContain('maxLength');
+    });
+  });
+
+  describe('Limit state uses the fixed 80%/95% defaults (no colorThresholds input)', () => {
+    it('is not affected by an unrelated custom threshold-shaped input on the host (documentation only)', async () => {
+      // Documents that limit-state transitions (and therefore the
+      // liveAnnounce wording) always use the toolkit's fixed 80%/95%
+      // defaults now — there is no way to shift them per-instance anymore.
+      // See 'Limit state calculation' above for the exact 80/95 breakpoints.
+      const { container } = await render(TestWrapperComponent, {
+        componentInputs: { textModel: 'a'.repeat(80), maxLength: 100 },
       });
 
       const host = container.querySelector('ngx-form-field-character-count');
@@ -597,6 +597,67 @@ describe('NgxFormFieldCharacterCount', () => {
       const host = container.querySelector('ngx-form-field-character-count');
       expect(host).toBeTruthy();
       expect(host?.textContent).toContain('0/100');
+    });
+  });
+
+  describe('unsupported value type dev warning without maxLength (regression for #269)', () => {
+    // The `currentLength` fallback used when no `maxLength` is configured
+    // (or auto-detected) duplicated the factory's string/array length logic
+    // but silently dropped its one-shot dev warning. This suite pins the
+    // warning for that fallback path specifically.
+
+    beforeEach(() => {
+      vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+    });
+
+    afterEach(() => {
+      vi.restoreAllMocks();
+    });
+
+    it('emits a console.warn once when the field value is an unsupported type and no maxLength is configured', async () => {
+      const { fixture } = await render(
+        UnsupportedValueNoMaxLengthWrapperComponent,
+      );
+      await fixture.whenStable();
+
+      // The displayed count still falls back to 0 (no crash), matching the
+      // maxLength-configured path's behavior.
+      expect(screen.getByText('0')).toBeInTheDocument();
+
+      expect(console.warn).toHaveBeenCalledOnce();
+      expect(console.warn).toHaveBeenCalledWith(
+        expect.stringContaining('NgxFormFieldCharacterCount'),
+        expect.anything(),
+        expect.stringContaining('0'),
+      );
+
+      // Trigger another change-detection cycle; warn must NOT fire again.
+      fixture.detectChanges();
+      await fixture.whenStable();
+      expect(console.warn).toHaveBeenCalledOnce();
+    });
+
+    it('logs a type descriptor only, never the raw value', async () => {
+      await render(UnsupportedValueNoMaxLengthWrapperComponent);
+
+      expect(console.warn).toHaveBeenCalledOnce();
+      const loggedArgs = vi.mocked(console.warn).mock.calls[0] ?? [];
+
+      // Every logged argument must itself be a string — not the raw object.
+      // Mapping through `String()` before asserting would collapse a leaked
+      // object argument to the harmless-looking `'[object Object]'`, so this
+      // checks the *raw* mock-call arguments' types instead.
+      for (const arg of loggedArgs) {
+        expect(typeof arg).toBe('string');
+      }
+
+      // The raw object's data (`{ nested: 'value' }`) must never reach the
+      // console — only the type descriptor (e.g. `'Object'`). `'value'` is
+      // not checked directly since the diagnostic message text legitimately
+      // contains the word "value" (e.g. "unsupported value type").
+      const joinedArgs = loggedArgs.join(' ');
+      expect(joinedArgs).not.toContain('nested');
+      expect(joinedArgs).not.toMatch(/\{.*nested.*\}/u);
     });
   });
 });

@@ -35,6 +35,7 @@
           "mkdir -p dist/packages/toolkit",
           "cp README.md dist/packages/toolkit/README.md",
           "cp LICENSE dist/packages/toolkit/LICENSE",
+          "node packages/toolkit/scripts/strip-internal-members.mjs",
           "node packages/toolkit/scripts/strip-internal-exports.mjs"
         ],
         "parallel": false,
@@ -49,19 +50,17 @@
       }
     },
     "test": {
-      "executor": "@nx/vitest:test",
-      "outputs": ["{options.reportsDirectory}"],
+      "executor": "nx:run-commands",
       "options": {
-        "configFile": "packages/toolkit/vitest.jsdom.config.mts",
-        "reportsDirectory": "{projectRoot}/../../coverage/packages/toolkit/jsdom"
+        "command": "vitest run --config vitest.jsdom.config.mts",
+        "cwd": "packages/toolkit"
       }
     },
     "test-browser": {
-      "executor": "@nx/vitest:test",
-      "outputs": ["{options.reportsDirectory}"],
+      "executor": "nx:run-commands",
       "options": {
-        "configFile": "packages/toolkit/vitest.browser.config.mts",
-        "reportsDirectory": "{projectRoot}/../../coverage/packages/toolkit/browser"
+        "command": "vitest run --config vitest.browser.config.mts",
+        "cwd": "packages/toolkit"
       }
     },
     "lint": {

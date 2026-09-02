@@ -4,6 +4,7 @@ import {
   form,
   schema,
   validate,
+  type FieldTree,
   type ValidationError,
 } from '@angular/forms/signals';
 import { provideNgxSignalFormsConfig } from '@ngx-signal-forms/toolkit';
@@ -11,6 +12,8 @@ import { NGX_SIGNAL_FORM_CONTEXT } from '@ngx-signal-forms/toolkit/core';
 import { describe, expect, it } from 'vitest';
 import {
   createErrorState,
+  createErrorSummaryEntries,
+  createFieldsetAggregation,
   createUniqueId,
   dedupeValidationErrors,
   humanizeFieldPath,
@@ -30,12 +33,17 @@ describe('Headless Utilities', () => {
   describe('readFieldFlag', () => {
     describe('with valid FieldState-like objects', () => {
       it('should read invalid flag when true', () => {
+        // Real signals, not bare closures: `FieldStateLike.invalid` and
+        // `.touched` borrow Angular's own `FieldState` types, which are
+        // branded `Signal`s. Mocking them as plain arrows types-checks only
+        // against the three members that are declared `() => boolean`, and
+        // produces a shape `FieldState` never emits.
         const state: FieldStateLike = {
-          invalid: () => true,
-          valid: () => false,
-          touched: () => false,
-          dirty: () => false,
-          pending: () => false,
+          invalid: signal(true),
+          valid: signal(false),
+          touched: signal(false),
+          dirty: signal(false),
+          pending: signal(false),
         };
 
         expect(readFieldFlag(state, 'invalid')).toBe(true);
@@ -44,11 +52,11 @@ describe('Headless Utilities', () => {
 
       it('should read touched flag when true', () => {
         const state: FieldStateLike = {
-          invalid: () => false,
-          valid: () => true,
-          touched: () => true,
-          dirty: () => false,
-          pending: () => false,
+          invalid: signal(false),
+          valid: signal(true),
+          touched: signal(true),
+          dirty: signal(false),
+          pending: signal(false),
         };
 
         expect(readFieldFlag(state, 'touched')).toBe(true);
@@ -57,11 +65,11 @@ describe('Headless Utilities', () => {
 
       it('should read dirty flag when true', () => {
         const state: FieldStateLike = {
-          invalid: () => false,
-          valid: () => true,
-          touched: () => false,
-          dirty: () => true,
-          pending: () => false,
+          invalid: signal(false),
+          valid: signal(true),
+          touched: signal(false),
+          dirty: signal(true),
+          pending: signal(false),
         };
 
         expect(readFieldFlag(state, 'dirty')).toBe(true);
@@ -69,11 +77,11 @@ describe('Headless Utilities', () => {
 
       it('should read pending flag when true', () => {
         const state: FieldStateLike = {
-          invalid: () => false,
-          valid: () => false,
-          touched: () => false,
-          dirty: () => false,
-          pending: () => true,
+          invalid: signal(false),
+          valid: signal(false),
+          touched: signal(false),
+          dirty: signal(false),
+          pending: signal(true),
         };
 
         expect(readFieldFlag(state, 'pending')).toBe(true);
@@ -81,11 +89,11 @@ describe('Headless Utilities', () => {
 
       it('should read all flags correctly', () => {
         const state: FieldStateLike = {
-          invalid: () => true,
-          valid: () => false,
-          touched: () => true,
-          dirty: () => true,
-          pending: () => false,
+          invalid: signal(true),
+          valid: signal(false),
+          touched: signal(true),
+          dirty: signal(true),
+          pending: signal(false),
         };
 
         expect(readFieldFlag(state, 'invalid')).toBe(true);
@@ -111,7 +119,12 @@ describe('Headless Utilities', () => {
       });
 
       it('should return false when flag is undefined', () => {
-        const state: Partial<FieldStateLike> = {
+        // Deliberately NOT annotated `Partial<FieldStateLike>`: under
+        // `exactOptionalPropertyTypes` an optional member cannot be set to
+        // `undefined`, and the whole point of this case is the degenerate
+        // shape. `readFieldFlag` accepts `unknown`, so the annotation only
+        // ever claimed a conformance this object does not have.
+        const state = {
           invalid: undefined,
           valid: () => true,
         };
@@ -159,6 +172,14 @@ describe('Headless Utilities', () => {
   // readErrors
   // ============================================================================
 
+  // `readErrors` / `readDirectErrors` accept `unknown` and duck-type their
+  // way to the errors — that structural read IS the subject of these tests.
+  // The mocks below are therefore deliberately left unannotated: a
+  // `FieldStateLike` annotation would assert that `errors` is a
+  // `Signal<ValidationError.WithFieldTree[]>` (every entry carrying a
+  // `fieldTree`), which these intentionally-minimal shapes are not. Tests
+  // that do stand in for a real `FieldState` use real signals — see the
+  // `readFieldFlag` block above.
   describe('readErrors', () => {
     describe('with errorSummary (aggregated errors)', () => {
       it('should return errors from errorSummary when available', () => {
@@ -167,7 +188,7 @@ describe('Headless Utilities', () => {
           { kind: 'email', message: 'Invalid email' },
         ];
 
-        const state: FieldStateLike = {
+        const state = {
           errorSummary: () => errors,
           errors: () => [{ kind: 'other', message: 'Should not be used' }],
         };
@@ -176,11 +197,11 @@ describe('Headless Utilities', () => {
 
         expect(result).toEqual(errors);
         expect(result).toHaveLength(2);
-        expect(result[0].kind).toBe('required');
+        expect(result[0]?.kind).toBe('required');
       });
 
       it('should return empty array when errorSummary returns null', () => {
-        const state: FieldStateLike = {
+        const state = {
           errorSummary: () => null as unknown as ValidationError[],
         };
 
@@ -188,7 +209,7 @@ describe('Headless Utilities', () => {
       });
 
       it('should return empty array when errorSummary returns undefined', () => {
-        const state: FieldStateLike = {
+        const state = {
           errorSummary: () => undefined as unknown as ValidationError[],
         };
 
@@ -202,7 +223,7 @@ describe('Headless Utilities', () => {
           { kind: 'minLength', message: 'Too short' },
         ];
 
-        const state: FieldStateLike = {
+        const state = {
           errors: () => errors,
           // No errorSummary
         };
@@ -210,11 +231,11 @@ describe('Headless Utilities', () => {
         const result = readErrors(state);
 
         expect(result).toEqual(errors);
-        expect(result[0].kind).toBe('minLength');
+        expect(result[0]?.kind).toBe('minLength');
       });
 
       it('should return empty array when errors returns null', () => {
-        const state: FieldStateLike = {
+        const state = {
           errors: () => null as unknown as ValidationError[],
         };
 
@@ -228,7 +249,7 @@ describe('Headless Utilities', () => {
       });
 
       it('should return empty array when state is undefined', () => {
-        expect(readErrors()).toEqual([]);
+        expect(readErrors(undefined)).toEqual([]);
       });
 
       it('should return empty array when state is not an object', () => {
@@ -252,7 +273,7 @@ describe('Headless Utilities', () => {
 
     describe('error types', () => {
       it('should handle blocking errors (no warn: prefix)', () => {
-        const state: FieldStateLike = {
+        const state = {
           errors: () => [
             { kind: 'required', message: 'Required' },
             { kind: 'email', message: 'Invalid email' },
@@ -266,7 +287,7 @@ describe('Headless Utilities', () => {
       });
 
       it('should handle warning errors (warn: prefix)', () => {
-        const state: FieldStateLike = {
+        const state = {
           errors: () => [
             {
               kind: 'warn:weak-password',
@@ -283,7 +304,7 @@ describe('Headless Utilities', () => {
       });
 
       it('should handle mixed errors and warnings', () => {
-        const state: FieldStateLike = {
+        const state = {
           errors: () => [
             { kind: 'required', message: 'Required' },
             { kind: 'warn:suggestion', message: 'Consider improvement' },
@@ -293,8 +314,8 @@ describe('Headless Utilities', () => {
         const result = readErrors(state);
 
         expect(result).toHaveLength(2);
-        expect(result[0].kind).toBe('required');
-        expect(result[1].kind).toBe('warn:suggestion');
+        expect(result[0]?.kind).toBe('required');
+        expect(result[1]?.kind).toBe('warn:suggestion');
       });
     });
   });
@@ -315,7 +336,7 @@ describe('Headless Utilities', () => {
           { kind: 'passwordMismatch', message: 'Passwords must match' },
         ];
 
-        const state: FieldStateLike = {
+        const state = {
           errors: () => directErrors,
           errorSummary: () => summaryErrors,
         };
@@ -324,11 +345,11 @@ describe('Headless Utilities', () => {
 
         expect(result).toEqual(directErrors);
         expect(result).toHaveLength(1);
-        expect(result[0].kind).toBe('passwordMismatch');
+        expect(result[0]?.kind).toBe('passwordMismatch');
       });
 
       it('should return empty array when no direct errors exist', () => {
-        const state: FieldStateLike = {
+        const state = {
           errors: () => [],
           errorSummary: () => [{ kind: 'nested', message: 'Nested error' }],
         };
@@ -345,7 +366,7 @@ describe('Headless Utilities', () => {
       });
 
       it('should return empty array when state is undefined', () => {
-        expect(readDirectErrors()).toEqual([]);
+        expect(readDirectErrors(undefined)).toEqual([]);
       });
 
       it('should return empty array when state is not an object', () => {
@@ -362,7 +383,7 @@ describe('Headless Utilities', () => {
       });
 
       it('should return empty array when errors returns null', () => {
-        const state: FieldStateLike = {
+        const state = {
           errors: () => null as unknown as ValidationError[],
         };
 
@@ -493,8 +514,8 @@ describe('Headless Utilities', () => {
         const result = dedupeValidationErrors(errors);
 
         expect(result).toHaveLength(2);
-        expect(result[0].kind).toBe('warn:weak');
-        expect(result[1].kind).toBe('required');
+        expect(result[0]?.kind).toBe('warn:weak');
+        expect(result[1]?.kind).toBe('required');
       });
     });
   });
@@ -645,9 +666,9 @@ describe('Headless Utilities', () => {
       const id3 = createUniqueId('a');
 
       // Extract numbers from IDs
-      const num1 = parseInt(id1.split('-')[1], 10);
-      const num2 = parseInt(id2.split('-')[1], 10);
-      const num3 = parseInt(id3.split('-')[1], 10);
+      const num1 = parseInt(id1.split('-')[1] ?? '', 10);
+      const num2 = parseInt(id2.split('-')[1] ?? '', 10);
+      const num3 = parseInt(id3.split('-')[1] ?? '', 10);
 
       // Numbers should be sequential
       expect(num2).toBe(num1 + 1);
@@ -895,6 +916,305 @@ describe('Headless Utilities', () => {
       emailForm.email().markAsTouched();
       expect(errorState.hasErrors()).toBe(true);
       expect(errorState.shouldShowErrors()).toBe(true);
+    });
+  });
+
+  // ============================================================================
+  // createFieldsetAggregation — extracted from NgxHeadlessFieldset (#351)
+  // ============================================================================
+
+  describe('createFieldsetAggregation', () => {
+    // Pure function: no `inject()` calls, so plain signal mocks exercise the
+    // full contract without TestBed/injection context (ADR-0005).
+
+    it('aggregates direct errors by default and resolves display messages', () => {
+      const fieldState = signal({
+        errors: () => [{ kind: 'required', message: 'Required' }],
+      });
+      const showErrors = signal(true);
+      const showWarnings = signal(true);
+
+      const result = createFieldsetAggregation({
+        fieldState,
+        showErrors,
+        showWarnings,
+      });
+
+      expect(result.aggregatedErrors()).toEqual([
+        { kind: 'required', message: 'Required' },
+      ]);
+      expect(result.resolvedErrors()).toEqual([
+        { kind: 'required', message: 'Required' },
+      ]);
+      expect(result.hasErrors()).toBe(true);
+      expect(result.shouldShowErrors()).toBe(true);
+    });
+
+    it('aggregates nested errors via errorSummary() when includeNestedErrors is true', () => {
+      const fieldState = signal({
+        errors: () => [],
+        errorSummary: () => [
+          { kind: 'required', message: 'Street required' },
+          { kind: 'required', message: 'City required' },
+        ],
+      });
+
+      const result = createFieldsetAggregation({
+        fieldState,
+        includeNestedErrors: true,
+        showErrors: signal(true),
+        showWarnings: signal(true),
+      });
+
+      expect(result.aggregatedErrors()).toHaveLength(2);
+    });
+
+    it('dedupes aggregated messages by kind + message', () => {
+      const fieldState = signal({
+        errorSummary: () => [
+          { kind: 'required', message: 'Required' },
+          { kind: 'required', message: 'Required' },
+        ],
+      });
+
+      const result = createFieldsetAggregation({
+        fieldState,
+        includeNestedErrors: true,
+        showErrors: signal(true),
+        showWarnings: signal(true),
+      });
+
+      expect(result.aggregatedErrors()).toHaveLength(1);
+    });
+
+    it('splits blocking errors from warn:-prefixed warnings', () => {
+      const fieldState = signal({
+        errors: () => [
+          { kind: 'required', message: 'Required' },
+          { kind: 'warn:optional', message: 'Consider filling this in' },
+        ],
+      });
+
+      const result = createFieldsetAggregation({
+        fieldState,
+        showErrors: signal(true),
+        showWarnings: signal(true),
+      });
+
+      expect(result.aggregatedErrors()).toEqual([
+        { kind: 'required', message: 'Required' },
+      ]);
+      expect(result.aggregatedWarnings()).toEqual([
+        { kind: 'warn:optional', message: 'Consider filling this in' },
+      ]);
+      expect(result.hasWarnings()).toBe(true);
+    });
+
+    it('treats an explicitly bound empty `fields` override as "aggregate nothing", not "not provided"', () => {
+      const fieldState = signal({
+        errors: () => [{ kind: 'required', message: 'Own error' }],
+      });
+
+      const result = createFieldsetAggregation({
+        fieldState,
+        fields: signal([]),
+        showErrors: signal(true),
+        showWarnings: signal(true),
+      });
+
+      expect(result.aggregatedErrors()).toEqual([]);
+    });
+
+    it('aggregates from an explicit `fields` override when provided', () => {
+      const fieldState = signal({ errors: () => [] });
+      const overrideField = (() => ({
+        errors: () => [{ kind: 'required', message: 'Field required' }],
+      })) as unknown as FieldTree<unknown>;
+
+      const result = createFieldsetAggregation({
+        fieldState,
+        fields: signal([overrideField]),
+        showErrors: signal(true),
+        showWarnings: signal(true),
+      });
+
+      expect(result.aggregatedErrors()).toEqual([
+        { kind: 'required', message: 'Field required' },
+      ]);
+    });
+
+    it('gates shouldShowErrors/shouldShowWarnings on the caller-supplied visibility signals', () => {
+      const fieldState = signal({
+        errors: () => [{ kind: 'required', message: 'Required' }],
+      });
+
+      const result = createFieldsetAggregation({
+        fieldState,
+        showErrors: signal(false),
+        showWarnings: signal(false),
+      });
+
+      expect(result.hasErrors()).toBe(true);
+      expect(result.shouldShowErrors()).toBe(false);
+    });
+  });
+
+  // ============================================================================
+  // createErrorSummaryEntries — extracted from NgxHeadlessErrorSummary (#351)
+  // ============================================================================
+
+  describe('createErrorSummaryEntries', () => {
+    // Pure function: no `inject()` calls, so plain signal mocks exercise the
+    // full contract without TestBed/injection context (ADR-0005).
+
+    function fieldTreeFor(
+      name: string,
+      overrides: Readonly<{ hidden?: boolean; disabled?: boolean }> = {},
+    ) {
+      return () => ({
+        name: () => name,
+        hidden: () => overrides.hidden ?? false,
+        disabled: () => overrides.disabled ?? false,
+        focusBoundControl: () => {
+          /* no-op for spec */
+        },
+      });
+    }
+
+    it('maps blocking errors to focusable entries with resolved messages and field names', () => {
+      const error: ValidationError = {
+        kind: 'required',
+        message: 'Required',
+        fieldTree: fieldTreeFor('email'),
+      } as ValidationError;
+
+      const fieldState = signal({ errorSummary: () => [error] });
+
+      const result = createErrorSummaryEntries({
+        fieldState,
+        showErrors: signal(true),
+      });
+
+      expect(result.entries()).toHaveLength(1);
+      expect(result.entries()[0]?.kind).toBe('required');
+      expect(result.entries()[0]?.message).toBe('Required');
+      expect(result.hasErrors()).toBe(true);
+    });
+
+    it('separates warn:-prefixed entries into warningEntries', () => {
+      const warning: ValidationError = {
+        kind: 'warn:street-optional',
+        message: 'Street can be left blank',
+        fieldTree: fieldTreeFor('street'),
+      } as ValidationError;
+
+      const fieldState = signal({ errorSummary: () => [warning] });
+
+      const result = createErrorSummaryEntries({
+        fieldState,
+        showErrors: signal(true),
+      });
+
+      expect(result.entries()).toHaveLength(0);
+      expect(result.warningEntries()).toHaveLength(1);
+      expect(result.hasWarnings()).toBe(true);
+    });
+
+    it('omits entries for hidden or disabled fields', () => {
+      const hiddenError: ValidationError = {
+        kind: 'required',
+        message: 'Secret required',
+        fieldTree: fieldTreeFor('secret', { hidden: true }),
+      } as ValidationError;
+      const disabledError: ValidationError = {
+        kind: 'required',
+        message: 'Token required',
+        fieldTree: fieldTreeFor('token', { disabled: true }),
+      } as ValidationError;
+      const visibleError: ValidationError = {
+        kind: 'required',
+        message: 'Email required',
+        fieldTree: fieldTreeFor('email'),
+      } as ValidationError;
+
+      const fieldState = signal({
+        errorSummary: () => [hiddenError, disabledError, visibleError],
+      });
+
+      const result = createErrorSummaryEntries({
+        fieldState,
+        showErrors: signal(true),
+      });
+
+      expect(result.entries().map((entry) => entry.fieldName)).toEqual([
+        'Email',
+      ]);
+    });
+
+    it('keeps a separate entry per field when two fields share kind and a message-less error', () => {
+      const first: ValidationError = {
+        kind: 'required',
+        fieldTree: fieldTreeFor('email'),
+      } as ValidationError;
+      const second: ValidationError = {
+        kind: 'required',
+        fieldTree: fieldTreeFor('name'),
+      } as ValidationError;
+
+      const fieldState = signal({ errorSummary: () => [first, second] });
+
+      const result = createErrorSummaryEntries({
+        fieldState,
+        showErrors: signal(true),
+      });
+
+      expect(result.entries()).toHaveLength(2);
+    });
+
+    it('gates shouldShow/shouldShowWarnings on the caller-supplied showErrors signal', () => {
+      const error: ValidationError = {
+        kind: 'required',
+        message: 'Required',
+        fieldTree: fieldTreeFor('email'),
+      } as ValidationError;
+
+      const fieldState = signal({ errorSummary: () => [error] });
+      const showErrors = signal(false);
+
+      const result = createErrorSummaryEntries({ fieldState, showErrors });
+
+      expect(result.hasErrors()).toBe(true);
+      expect(result.shouldShow()).toBe(false);
+
+      showErrors.set(true);
+
+      expect(result.shouldShow()).toBe(true);
+    });
+
+    it("focus() on an entry calls the field's focusBoundControl()", () => {
+      let focused = false;
+      const error: ValidationError = {
+        kind: 'required',
+        message: 'Required',
+        fieldTree: () => ({
+          name: () => 'email',
+          hidden: () => false,
+          disabled: () => false,
+          focusBoundControl: () => {
+            focused = true;
+          },
+        }),
+      } as ValidationError;
+
+      const fieldState = signal({ errorSummary: () => [error] });
+
+      const result = createErrorSummaryEntries({
+        fieldState,
+        showErrors: signal(true),
+      });
+
+      result.entries()[0]?.focus();
+      expect(focused).toBe(true);
     });
   });
 });

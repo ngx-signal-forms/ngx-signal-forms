@@ -29,8 +29,8 @@ export const WARNING_SUPPORT_CONTENT = {
       {
         title: 'WCAG 2.2 Messaging',
         items: [
-          '<strong>Errors:</strong> <code>role="alert"</code> with <code>aria-live="assertive"</code>',
-          '<strong>Warnings:</strong> <code>role="status"</code> with <code>aria-live="polite"</code>',
+          '<strong>Errors:</strong> <code>role="alert"</code> (implicitly assertive; the toolkit renders no explicit <code>aria-live</code>)',
+          '<strong>Warnings:</strong> <code>role="status"</code> (implicitly polite; the toolkit renders no explicit <code>aria-live</code>)',
           'Immediate announcement for errors (blocking)',
           'Polite announcement for warnings (non-intrusive)',
         ],
@@ -44,9 +44,9 @@ export const WARNING_SUPPORT_CONTENT = {
         title: '🧪 Try This',
         items: [
           '1. Leave fields empty → Submit → See blocking errors prevent submission',
-          '2. Enter username "abc" (3 chars) → Warning appears: "Consider 6+ characters"',
-          '3. Enter password "Short123" (8 chars) → Warning: "Consider 12+ characters"',
-          '4. Enter password "alllowercase" → Warning: "Mix uppercase, numbers, special chars"',
+          '2. Enter username "abc" (3 chars) → Warning appears: "Consider using 6+ characters for better security"',
+          '3. Enter password "Short123" (8 chars) → Warning: "Consider using 12+ characters for better security"',
+          '4. Enter password "alllowercase" → Warning: "Consider mixing uppercase, lowercase, numbers, and special characters"',
           "5. Submit with warnings present → Submission succeeds! Warnings don't block.",
         ],
       },

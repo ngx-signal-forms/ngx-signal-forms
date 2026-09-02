@@ -21,8 +21,7 @@ export class SubmissionPatternsPage extends ErrorStrategyFormPage {
   }
 
   async goto(): Promise<void> {
-    await this.page.goto(DEMO_PATHS.submissionPatterns);
-    await this.waitForReady();
+    await this.gotoRoute(DEMO_PATHS.submissionPatterns);
   }
 
   async submit(): Promise<void> {

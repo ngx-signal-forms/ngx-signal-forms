@@ -1,4 +1,8 @@
-import type { ResolvedErrorDisplayStrategy, SubmittedStatus } from '../types';
+import type {
+  ResolvedErrorDisplayStrategy,
+  ResolvedWarningDisplayStrategy,
+  SubmittedStatus,
+} from '../types';
 
 /**
  * Determines if errors should be shown immediately without creating a reactive signal.
@@ -15,7 +19,7 @@ import type { ResolvedErrorDisplayStrategy, SubmittedStatus } from '../types';
  * - Implement custom logic that doesn't need automatic updates
  * - Reduce memory overhead when reactivity isn't needed
  *
- * **Use {@link showErrors} instead when you need reactive updates.**
+ * **Use {@link createShowErrorsComputed} instead when you need reactive updates.**
  *
  * ## Strategy contract
  * This helper accepts a {@link ResolvedErrorDisplayStrategy} — the `'inherit'`
@@ -23,9 +27,9 @@ import type { ResolvedErrorDisplayStrategy, SubmittedStatus } from '../types';
  * resolved to a concrete strategy (`'immediate' | 'on-touch' | 'on-submit'`)
  * before calling this function. Route user input through
  * {@link resolveErrorDisplayStrategy} or {@link resolveStrategyFromContext}
- * first. Reactive surfaces should use {@link showErrors} /
- * {@link createShowErrorsComputed}, which accept the wider
- * `ErrorDisplayStrategy` and resolve `'inherit'` internally.
+ * first. Reactive surfaces should use {@link createShowErrorsComputed},
+ * which accepts the wider `ErrorDisplayStrategy` and resolves `'inherit'`
+ * internally.
  *
  * ## How does it work?
  * 1. Accepts unwrapped (static) field state, strategy, and submission status
@@ -56,7 +60,7 @@ import type { ResolvedErrorDisplayStrategy, SubmittedStatus } from '../types';
  * }
  * ```
  *
- * @see {@link showErrors} For reactive version that creates a computed signal
+ * @see {@link createShowErrorsComputed} For reactive version that creates a computed signal
  * @see {@link ResolvedErrorDisplayStrategy} For the resolved strategy union
  * @see {@link resolveErrorDisplayStrategy} To resolve `'inherit'` before calling this
  *
@@ -83,5 +87,33 @@ export function shouldShowErrors(
     default:
       strategy satisfies never;
       return isInvalid && isTouched;
+  }
+}
+
+/**
+ * Determines if warnings should be shown based on warning strategy.
+ * Unlike `shouldShowErrors`, this checks for the presence of warnings rather than
+ * field invalidity, since warnings are non-blocking and don't affect the `invalid` state.
+ */
+export function shouldShowWarnings(
+  hasWarnings: boolean,
+  isTouched: boolean,
+  strategy: ResolvedWarningDisplayStrategy,
+  submittedStatus: SubmittedStatus,
+): boolean {
+  const hasSubmitted = submittedStatus !== 'unsubmitted';
+
+  switch (strategy) {
+    case 'immediate':
+      return hasWarnings;
+
+    case 'on-touch':
+      return hasWarnings && isTouched;
+
+    case 'on-submit':
+      return hasWarnings && hasSubmitted;
+
+    default:
+      return hasWarnings && isTouched;
   }
 }

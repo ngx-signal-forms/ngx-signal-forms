@@ -1,16 +1,46 @@
 import { signal, type Signal } from '@angular/core';
-import type { FieldState, ValidationError } from '@angular/forms/signals';
+import type {
+  FieldState,
+  ReadonlyFieldTree,
+  ValidationError,
+} from '@angular/forms/signals';
 import { describe, expect, it } from 'vitest';
 import { warningError } from '../warning-error';
 import { createAriaDescribedBySignal } from './create-aria-described-by-signal';
 
 type FieldStateStub = Pick<FieldState<unknown>, 'errors'>;
 
+/**
+ * `FieldState.errors` is `Signal<ValidationError.WithFieldTree[]>`: every
+ * error Angular emits carries a back-reference to the (callable) node that
+ * produced it. These specs used to hold bare `ValidationError`s, a shape no
+ * real form ever emits. The two assertions are confined to this one factory —
+ * the stub deliberately implements only the `errors` slice that this pure
+ * factory reads, and the node is callable, as every real `FieldTree` is.
+ */
+function createFieldStateStub(initialErrors: readonly ValidationError[] = []): {
+  readonly state: FieldState<unknown>;
+  readonly setErrors: (next: readonly ValidationError[]) => void;
+} {
+  const errors = signal<ValidationError.WithFieldTree[]>([]);
+  const stub: FieldStateStub = { errors };
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- Narrowing a deliberate partial stub to the slice under test.
+  const state = stub as FieldState<unknown>;
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- A FieldTree is callable; this stand-in only serves as the errors' back-reference.
+  const fieldTree = (() => state) as unknown as ReadonlyFieldTree<unknown>;
+  const setErrors = (next: readonly ValidationError[]): void => {
+    errors.set(next.map((error) => ({ ...error, fieldTree })));
+  };
+
+  setErrors(initialErrors);
+
+  return { state, setErrors };
+}
+
 function fieldStateSignal(
   errors: readonly ValidationError[] = [],
 ): Signal<FieldState<unknown> | null> {
-  const stub: FieldStateStub = { errors: signal(errors) };
-  return signal(stub as FieldState<unknown>);
+  return signal(createFieldStateStub(errors).state);
 }
 
 describe('createAriaDescribedBySignal', () => {
@@ -139,6 +169,85 @@ describe('createAriaDescribedBySignal', () => {
     });
 
     expect(ariaDescribedBy()).toBe('password-error');
+  });
+
+  /**
+   * The `warningVisibility` option is optional "for backwards compatibility
+   * with callers written before the two channels could diverge" (see the
+   * option's JSDoc). When omitted, the factory falls back to `visibility`
+   * (the **error** channel) for the warning decision too — which is only
+   * correct while both display strategies agree. These specs pin the edge
+   * case explicitly: a caller that omits `warningVisibility` on a form
+   * where the error and warning strategies actually diverge (e.g.
+   * `errorStrategy="on-submit"` + `warningStrategy="immediate"`) gets the
+   * *error* channel's timing applied to the warning, not the warning
+   * channel's own timing — silently suppressing (or prematurely showing)
+   * warnings until the caller threads `warningVisibility` through.
+   */
+  describe('two-channel visibility: warningVisibility omitted while the channels diverge', () => {
+    it('suppresses a warning-only field when the fallback (error) visibility is false, even though a real warning-strategy would show it', () => {
+      // Simulates errorStrategy="on-submit" (visibility=false pre-submit)
+      // with warningStrategy="immediate" (should be visible pre-submit).
+      // Without warningVisibility, the warning incorrectly inherits the
+      // error channel's "not yet visible" timing.
+      const fieldState = fieldStateSignal([warningError('weak-password')]);
+      const hintIds = signal<readonly string[]>([]);
+      const errorChannelVisibility = signal(false);
+
+      const ariaDescribedBy = createAriaDescribedBySignal({
+        fieldState,
+        hintIds,
+        visibility: errorChannelVisibility,
+        // warningVisibility intentionally omitted.
+        preservedIds: () => null,
+        fieldName: () => 'password',
+      });
+
+      expect(ariaDescribedBy()).toBeNull();
+    });
+
+    it('passing the real warning-strategy visibility as warningVisibility surfaces the warning that the fallback would have suppressed', () => {
+      // Same divergent scenario as above, but now the caller threads the
+      // warning channel's own resolved visibility through — the documented
+      // fix for the omitted-parameter edge case.
+      const fieldState = fieldStateSignal([warningError('weak-password')]);
+      const hintIds = signal<readonly string[]>([]);
+      const errorChannelVisibility = signal(false);
+      const warningChannelVisibility = signal(true);
+
+      const ariaDescribedBy = createAriaDescribedBySignal({
+        fieldState,
+        hintIds,
+        visibility: errorChannelVisibility,
+        warningVisibility: warningChannelVisibility,
+        preservedIds: () => null,
+        fieldName: () => 'password',
+      });
+
+      expect(ariaDescribedBy()).toBe('password-warning');
+    });
+
+    it('the omitted-parameter fallback can also over-show: a true error-channel visibility surfaces a warning even when the real warning strategy would still be hiding it', () => {
+      // Mirror case: errorStrategy="immediate" (visibility=true) with
+      // warningStrategy="on-submit" (should still be hidden pre-submit).
+      // Without warningVisibility, the warning incorrectly inherits the
+      // error channel's "already visible" timing.
+      const fieldState = fieldStateSignal([warningError('weak-password')]);
+      const hintIds = signal<readonly string[]>([]);
+      const errorChannelVisibility = signal(true);
+
+      const ariaDescribedBy = createAriaDescribedBySignal({
+        fieldState,
+        hintIds,
+        visibility: errorChannelVisibility,
+        // warningVisibility intentionally omitted — the real warning
+        // strategy (on-submit, not yet submitted) would resolve to false.
+        preservedIds: () => null,
+        fieldName: () => 'password',
+      });
+
+      expect(ariaDescribedBy()).toBe('password-warning');
+    });
   });
 
   it('composes preserved + hint + error IDs (warning omitted) when a blocking error is also present', () => {
@@ -323,10 +432,8 @@ describe('createAriaDescribedBySignal', () => {
   });
 
   it('reacts to errors changing on the bound field state', () => {
-    const errors = signal<readonly ValidationError[]>([]);
-    const stub = signal<FieldState<unknown> | null>({
-      errors,
-    } as FieldState<unknown>);
+    const { state, setErrors } = createFieldStateStub();
+    const stub = signal<FieldState<unknown> | null>(state);
     const hintIds = signal<readonly string[]>([]);
     const visibility = signal(true);
 
@@ -340,10 +447,10 @@ describe('createAriaDescribedBySignal', () => {
 
     expect(ariaDescribedBy()).toBeNull();
 
-    errors.set([{ kind: 'required', message: 'Required' }]);
+    setErrors([{ kind: 'required', message: 'Required' }]);
     expect(ariaDescribedBy()).toBe('email-error');
 
-    errors.set([warningError('weak')]);
+    setErrors([warningError('weak')]);
     expect(ariaDescribedBy()).toBe('email-warning');
   });
 

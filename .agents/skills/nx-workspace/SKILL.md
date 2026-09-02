@@ -5,13 +5,13 @@ description: "Explore and understand Nx workspaces. USE WHEN answering questions
 
 # Nx Workspace Exploration
 
-This skill provides read-only exploration of Nx workspaces. Use it to understand workspace structure, project configuration, available targets, and dependencies.
+This skill provides read-only exploration of Nx workspaces. Use the Nx MCP server first to inspect workspace structure, project configuration, available targets, and dependencies. Use the CLI only when MCP is unavailable or cannot provide the required detail.
 
-Keep in mind that you might have to prefix commands with `npx`/`pnpx`/`yarn` if nx isn't installed globally. Check the lockfile to determine the package manager in use.
+This workspace uses pnpm and has Nx installed locally. Prefix CLI fallback commands with `pnpm nx` rather than relying on a global or transient Nx installation.
 
 ## Listing Projects
 
-Use `nx show projects` to list projects in the workspace.
+Use `pnpm nx show projects` to list projects in the workspace.
 
 The project filtering syntax (`-p`/`--projects`) works across many Nx commands including `nx run-many`, `nx release`, `nx show projects`, and more. Filters support explicit names, glob patterns, tag references (e.g. `tag:name`), directories, and negation (e.g. `!project-name`).
 
@@ -45,7 +45,7 @@ nx show projects --json
 
 ## Project Configuration
 
-Use `nx show project <name> --json` to get the full resolved configuration for a project.
+Use `pnpm nx show project <name> --json` to get the full resolved configuration for a project.
 
 **Important**: Do NOT read `project.json` directly - it only contains partial configuration. The `nx show project --json` command returns the full resolved config including inferred targets from plugins.
 

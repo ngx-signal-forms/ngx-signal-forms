@@ -17,25 +17,31 @@ permissions:
   actions: read
   contents: read
 
+# Cancel superseded runs on the same branch/PR - every other push/PR/tag
+# workflow in this repo already does this (deploy-demo, publish, release,
+# update-snapshots); ci.yml was the one gap. Saves both GH Actions minutes
+# and Nx Cloud credits when a branch is pushed to repeatedly.
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 jobs:
   main:
     runs-on: ubuntu-latest
-    # Broad PRs that touch shared libs make nearly every project "affected"
-    # (4 demo e2e suites + toolkit browser tests), which can exceed 20 min.
-    timeout-minutes: 35
+    timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           filter: tree:0
           fetch-depth: 0
           persist-credentials: false
 
-      - uses: pnpm/action-setup@v6
+      - uses: pnpm/action-setup@0977fd99725f1db4007ccb2928dbb4e90d06cc86
         name: Install pnpm
         with:
           run_install: false
 
-      - uses: actions/setup-node@v6
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
         with:
           node-version-file: '.node-version'
           cache: 'pnpm'
@@ -44,10 +50,10 @@ jobs:
 
       - name: Cache Playwright browsers
         id: playwright-cache
-        uses: actions/cache@v6
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
         with:
           path: ~/.cache/ms-playwright
-          key: playwright-${{ runner.os }}-${{ hashFiles('**/pnpm-lock.yaml') }}
+          key: playwright-all-${{ runner.os }}-${{ hashFiles('**/pnpm-lock.yaml') }}
 
       - name: Install Playwright browsers
         run: pnpm exec playwright install --with-deps
@@ -56,14 +62,6 @@ jobs:
       - name: Install Playwright system dependencies
         run: pnpm exec playwright install-deps
         if: steps.playwright-cache.outputs.cache-hit == 'true'
-
-      - name: Cache oxc binaries
-        uses: actions/cache@v6
-        with:
-          path: ~/.cache/oxc
-          key: oxc-${{ runner.os }}-${{ hashFiles('**/pnpm-lock.yaml') }}
-          restore-keys: |
-            oxc-${{ runner.os }}-
 
       - name: Configure Nx Cloud access
         id: nx_cloud
@@ -97,32 +95,25 @@ jobs:
             echo "No Nx Cloud token configured. Running without Nx Cloud."
           fi
 
-      # Set BASE/HEAD for affected commands; continue if the helper cannot resolve SHAs
-      - uses: nrwl/nx-set-shas@v5
-        continue-on-error: true
+      # Set BASE/HEAD for affected commands.
+      - uses: nrwl/nx-set-shas@afb73a62d26e41464e9254689e1fd6122ee683c1
 
       - name: Nx Report
-        # nx-safe.sh keeps diagnostics available even if Nx Cloud auth is broken.
-        run: bash .github/scripts/nx-safe.sh pnpm exec nx report
+        run: pnpm exec nx report
 
       - name: Check formatting
         env:
           NX_NO_CLOUD: 'true'
           NX_DAEMON: 'false'
-        run: bash .github/scripts/nx-safe.sh pnpm run format:check
+        run: pnpm run format:check
 
-      - name: Lint with GitHub annotations
-        if: ${{ always() }}
-        run: pnpm exec oxlint . --format=github
-        continue-on-error: true
-
-      # Run tasks locally - no DTE distribution to conserve Nx Cloud credits.
-      # Set skip_cloud=true via workflow_dispatch to force-disable Nx Cloud.
-      # If Nx Cloud is unavailable or rejects the workspace at runtime,
-      # nx-safe.sh automatically retries with NX_NO_CLOUD=true so CI never
-      # hard-blocks on cloud availability.
-      - name: Run affected tasks
-        run: bash .github/scripts/nx-safe.sh pnpm exec nx affected -t lint test test-browser build e2e-ci --parallel=3 --outputStyle=static
+      # Keep the critical path focused on fast checks + smaller e2e suites.
+      # The heavy demo-e2e suite is sharded in a separate parallel job.
+      # Do not distribute this graph. Use non-atomized e2e targets so it can
+      # run without Nx Agents.
+      - name: Run affected tasks (excluding demo-e2e)
+        run: pnpm exec nx affected -t lint test test-browser build e2e --exclude=demo-e2e --parallel=2 --outputStyle=static
+        timeout-minutes: 10
 
       - name: Generate lint report
         if: ${{ always() }}
@@ -130,12 +121,12 @@ jobs:
 
       - name: Upload test and lint artifacts
         if: ${{ always() && !cancelled() }}
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         with:
           name: test-artifacts-${{ github.run_id }}-${{ github.run_attempt }}
           path: |
-            apps/demo-e2e/playwright-report/
-            dist/.playwright/apps/demo-e2e/test-output/
+            apps/*-e2e/playwright-report/
+            dist/.playwright/apps/*-e2e/test-output/
             coverage/packages/toolkit/browser/
             lint-report.json
           if-no-files-found: ignore
@@ -144,8 +135,72 @@ jobs:
       # https://nx.dev/ci/features/self-healing-ci
       # continue-on-error: fix-ci requires Nx Cloud, may fail if quota exceeded
       - run: pnpm exec nx fix-ci --outputStyle=static
-        if: ${{ always() && !inputs.skip_cloud && steps.nx_cloud.outputs.enabled == 'true' }}
+        if: ${{ always() && !inputs.skip_cloud && steps.nx_cloud.outputs.enabled == 'true' && env.NX_NO_CLOUD != 'true' }}
         continue-on-error: true
+
+  demo-e2e-sharded:
+    name: Demo E2E (sharded)
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      matrix:
+        shard-index: [1, 2, 3, 4]
+    env:
+      NX_NO_CLOUD: 'true'
+      NX_DAEMON: 'false'
+      SHARD_TOTAL: '4'
+      PLAYWRIGHT_DEMO_PORT: '4300'
+      PW_WORKERS: '2'
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          filter: tree:0
+          fetch-depth: 0
+          persist-credentials: false
+
+      - uses: pnpm/action-setup@0977fd99725f1db4007ccb2928dbb4e90d06cc86
+        name: Install pnpm
+        with:
+          run_install: false
+
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version-file: '.node-version'
+          cache: 'pnpm'
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Cache Playwright browsers
+        id: playwright-cache
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-chromium-${{ runner.os }}-${{ hashFiles('**/pnpm-lock.yaml') }}
+
+      - name: Install Playwright browsers
+        run: pnpm exec playwright install --with-deps chromium
+        if: steps.playwright-cache.outputs.cache-hit != 'true'
+
+      - name: Install Playwright system dependencies
+        run: pnpm exec playwright install-deps chromium
+        if: steps.playwright-cache.outputs.cache-hit == 'true'
+
+      - name: Run demo-e2e shard
+        env:
+          SHARD_INDEX: ${{ matrix.shard-index }}
+        run: pnpm exec nx run demo-e2e:e2e-ci-shard --outputStyle=static
+
+      - name: Upload demo-e2e shard artifacts
+        if: ${{ always() && !cancelled() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: demo-e2e-shard-${{ matrix.shard-index }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            apps/demo-e2e/playwright-report/
+            dist/.playwright/apps/demo-e2e/test-output/
+          if-no-files-found: ignore
+          retention-days: 14
 
   # Proves the published toolkit stays design-system-free as the reference
   # demo apps (#40 - Material/PrimeNG/Spartan) land. Two assertions:
@@ -161,18 +216,18 @@ jobs:
     env:
       NX_NO_CLOUD: 'true'
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           filter: tree:0
           fetch-depth: 1
           persist-credentials: false
 
-      - uses: pnpm/action-setup@v6
+      - uses: pnpm/action-setup@0977fd99725f1db4007ccb2928dbb4e90d06cc86
         name: Install pnpm
         with:
           run_install: false
 
-      - uses: actions/setup-node@v6
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
         with:
           node-version-file: '.node-version'
           cache: 'pnpm'
@@ -209,18 +264,18 @@ jobs:
       NX_NO_CLOUD: 'true'
       NX_DAEMON: 'false'
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           filter: tree:0
           fetch-depth: 0
           persist-credentials: false
 
-      - uses: pnpm/action-setup@v6
+      - uses: pnpm/action-setup@0977fd99725f1db4007ccb2928dbb4e90d06cc86
         name: Install pnpm
         with:
           run_install: false
 
-      - uses: actions/setup-node@v6
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
         with:
           node-version-file: '.node-version'
           cache: 'pnpm'
@@ -231,10 +286,10 @@ jobs:
       # accessibility coverage of the last-2-versions browser policy.
       - name: Cache Playwright browsers
         id: playwright-cache
-        uses: actions/cache@v6
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
         with:
           path: ~/.cache/ms-playwright
-          key: playwright-${{ runner.os }}-${{ hashFiles('**/pnpm-lock.yaml') }}
+          key: playwright-chromium-firefox-${{ runner.os }}-${{ hashFiles('**/pnpm-lock.yaml') }}
 
       - name: Install Playwright browsers
         run: pnpm exec playwright install --with-deps chromium firefox
@@ -244,8 +299,7 @@ jobs:
         run: pnpm exec playwright install-deps chromium firefox
         if: steps.playwright-cache.outputs.cache-hit == 'true'
 
-      - uses: nrwl/nx-set-shas@v5
-        continue-on-error: true
+      - uses: nrwl/nx-set-shas@afb73a62d26e41464e9254689e1fd6122ee683c1
 
       # PRs: only the affected demo apps, for fast feedback.
       - name: Scan affected demo apps (pull request)
@@ -274,7 +328,7 @@ jobs:
 
       - name: Upload a11y artifacts
         if: ${{ always() && !cancelled() }}
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         with:
           name: a11y-artifacts-${{ github.run_id }}-${{ github.run_attempt }}
           path: |

@@ -4,7 +4,7 @@ import type {
   FormGroupDirective,
   NgForm,
 } from '@angular/forms';
-import type { ValidationError } from '@angular/forms/signals';
+import type { Field, ValidationError } from '@angular/forms/signals';
 import { ErrorStateMatcher } from '@angular/material/core';
 import { isBlockingError } from '@ngx-signal-forms/toolkit';
 
@@ -21,17 +21,31 @@ import { isBlockingError } from '@ngx-signal-forms/toolkit';
  * `shouldShowErrors()` / `shouldShowWarnings()` distinction and the "gentle
  * warning, not a blocker" UX the reference form advertises.
  *
- * `control.errors` (as surfaced by `InteropNgControl`) is a
- * `{ [kind]: value }` map — the same shape reactive forms uses — so this
- * matcher inspects the *keys* for any kind that {@link isBlockingError}
- * (the toolkit's canonical `warn:*` predicate) says is NOT a warning, and
- * only then falls through to the default touched/submitted timing check.
+ * Material 22.0.5+ evaluates controls bound with `[formField]` through
+ * `isSignalErrorState`, passing the native Signal Forms {@link Field}. The
+ * legacy `isErrorState` path remains for reactive and template-driven forms.
+ * Both paths use {@link isBlockingError} so `warn:*` results never produce
+ * Material's invalid styling or `aria-invalid="true"`.
  *
  * Registered app-wide by `provideNgxMatForms()` / at component scope by
  * `provideNgxMatFormsForComponent()` — see `index.ts`.
  */
 @Injectable()
 export class NgxMatWarningAwareErrorStateMatcher implements ErrorStateMatcher {
+  isSignalErrorState(field: Field<unknown> | null): boolean {
+    if (!field) {
+      return false;
+    }
+
+    const state = field();
+    return (
+      state.touched() &&
+      state
+        .errors()
+        .some((error: Readonly<ValidationError>) => isBlockingError(error))
+    );
+  }
+
   isErrorState(
     control: AbstractControl | null,
     form: FormGroupDirective | NgForm | null,

@@ -121,18 +121,50 @@ schema-validated fields need the extra call.
 ## Notification Tone Is Content-Driven — There Is No `tone` Input
 
 ```html
-<!-- Wrong — `tone` is not an input on the notification -->
-<ngx-form-field-notification [errors]="field().errors()" tone="auto" />
+<!-- Wrong — `tone` is not an input on the grouped panel -->
+<ngx-form-field-error
+  [errors]="field().errors()"
+  presentation="panel"
+  tone="auto"
+/>
 
 <!-- Correct — tone is resolved from the errors themselves -->
-<ngx-form-field-notification [errors]="field().errors()" fieldName="email" />
+<ngx-form-field-error
+  [errors]="field().errors()"
+  fieldName="email"
+  presentation="panel"
+/>
 ```
 
-`NgxFormFieldNotification` (assistive) and `NgxHeadlessNotification` (headless)
-route tone automatically from content: any blocking error raises the error
-container (`role="alert"`); a warning-only list raises the warning container
-(`role="status"`); an empty list hides both. Do not try to set a tone — there is
+`NgxFormFieldError`'s `presentation="panel"` mode (assistive) and
+`NgxHeadlessNotification` (headless) route tone automatically from content:
+any blocking error raises the error container (`role="alert"`); a
+warning-only list raises the warning container (`role="status"`); an empty
+list hides both. Do not try to set a tone — there is
 no such input.
+
+## Warnings Have Their Own Timing — `warningStrategy`, Not `strategy`
+
+```html
+<!-- Wrong — expects warnings to follow the error strategy -->
+<ngx-form-field-wrapper strategy="on-submit" [formField]="form.bio">
+  ...
+</ngx-form-field-wrapper>
+
+<!-- Correct — warnings time through their own cascade -->
+<ngx-form-field-wrapper
+  strategy="on-submit"
+  warningStrategy="on-submit"
+  [formField]="form.bio"
+>
+  ...
+</ngx-form-field-wrapper>
+```
+
+Warnings never affect `invalid`, so they do not follow `errorStrategy`. The
+warning cascade is `warningStrategy` input → `defaultWarningStrategy` config →
+`'on-touch'`. Set `warningStrategy` on the wrapper or `ngxSignalForm` when
+warnings should surface on the same schedule as errors.
 
 ## Wrapper Identity — Always Provide `id`
 
@@ -154,15 +186,23 @@ no such input.
 
 These were removed or are not public:
 
-| Removed                        | Use Instead                           |
-| ------------------------------ | ------------------------------------- |
-| `'manual'` strategy            | `showErrors()` + manual signal        |
-| `computeShowErrors()`          | `showErrors()`                        |
-| `createShowErrorsSignal()`     | `showErrors()`                        |
-| `canSubmit()`                  | `canSubmitWithWarnings()`             |
-| `isSubmitting()`               | `submittedStatus()` from `[formRoot]` |
-| `fieldNameResolver` config     | Provide `id` on bound control         |
-| `strictFieldResolution` config | Removed — strict by default           |
+| Removed                        | Use Instead                                                          |
+| ------------------------------ | -------------------------------------------------------------------- |
+| `'manual'` strategy            | `createShowErrorsComputed()` + manual signal                         |
+| `computeShowErrors()`          | `createShowErrorsComputed()`                                         |
+| `createShowErrorsSignal()`     | `createShowErrorsComputed()`                                         |
+| `showErrors()`                 | `createShowErrorsComputed()` — same signature, gone (not deprecated) |
+| `canSubmit()`                  | `canSubmitWithWarnings()`                                            |
+| `isSubmitting()`               | `submittedStatus()` from `[formRoot]`                                |
+| `fieldNameResolver` config     | Provide `id` on bound control                                        |
+| `strictFieldResolution` config | Removed — strict by default                                          |
+| `NgxFormFieldNotification`     | `NgxFormFieldError` with `presentation="panel"` + `[errors]`         |
+| `toHintDescriptors()`          | Inline the two-line `computed()` — see `docs/CUSTOM_WRAPPERS.md`     |
+| `createErrorRendererInputs()`  | Inline the two-line `computed()` — see `docs/CUSTOM_WRAPPERS.md`     |
+| `resolveUnionInput()`          | Inline the union unwrap at the call site                             |
+
+The notification fold also renamed the CSS hooks: `--ngx-signal-form-notification-*`
+became `--ngx-signal-form-error-panel-*` / `--ngx-signal-form-warning-panel-*`.
 
 ## Renamed — Update the Name, Same Behavior
 
@@ -308,6 +348,42 @@ When the actual bound control is nested inside a custom component or its `id` is
 resolved dynamically, pass `fieldName` explicitly on the wrapper to keep error
 IDs and described-by wiring deterministic.
 
+## Your Own Wrapper — Publish the Name, and Call the Input `field`
+
+`fieldName` is an input on `ngx-form-field-wrapper`. A wrapper **you** wrote has
+no such input: auto-ARIA on the projected control resolves the name from the
+control's `id` and never asks your component. A widget that mints its own inner
+`id` then gets `pn_id_42-error` while your wrapper renders `country-error`, and
+`aria-describedby` points at nothing. Nothing throws.
+
+```typescript
+// Correct — publish the field-NAME channel from your wrapper's host
+@Component({
+  selector: 'my-field',
+  hostDirectives: [
+    { directive: NgxFieldIdentityProvider, inputs: ['fieldName'] },
+  ],
+})
+export class MyField {
+  // Name it `field`, not `formField`.
+  readonly field = input.required<FieldTree<unknown>>();
+}
+```
+
+Two rules travel with this:
+
+- **Import `NgxFieldIdentityProvider` from the package root**, not `/headless`.
+- **Call the field input `field`.** `NgxSignalFormAutoAria` and Angular's own
+  `FormField` both select on `[formField]` _including on elements that are not
+  controls_, so `<my-field [formField]="...">` pulls both directives onto your
+  wrapper host and auto-ARIA fails to inject `FORM_FIELD`:
+  `NG0201: No provider found for InjectionToken FORM_FIELD`. Reusing the name
+  works only if every consumer template also has `FormField` in scope — which is
+  why `ngx-form-field-wrapper` gets away with it.
+
+The provider publishes the name channel only; hints and display timing keep
+resolving through their registries. Full contract: `docs/CUSTOM_WRAPPERS.md`.
+
 ## Error Strategy `'on-submit'` Without `[formRoot]`
 
 ```html
@@ -322,23 +398,56 @@ IDs and described-by wiring deterministic.
 <form [formRoot]="form" ngxSignalForm errorStrategy="on-submit">...</form>
 ```
 
-## Standalone `showErrors('on-submit')` Without `submittedStatus`
+## Standalone `createShowErrorsComputed('on-submit')` Without `submittedStatus`
 
 ```typescript
 // Wrong — silently never shows errors. Dev mode logs a one-shot
-// console.warn('[ngx-signal-forms] showErrors(...) called with strategy "on-submit"...').
-const visible = showErrors(form.email, 'on-submit');
+// console.warn("[ngx-signal-forms] createShowErrorsComputed(): 'on-submit' strategy
+// requires an explicit submittedStatus signal. Without it, errors will never
+// surface. Wire the status from NgxSignalForm ('ngxSignalForm') or pass
+// submittedStatus explicitly.").
+const visible = createShowErrorsComputed(form.email, 'on-submit');
 
 // Correct — pass the submitted-status signal explicitly
-const visible = showErrors(form.email, 'on-submit', () => submittedStatus());
+const visible = createShowErrorsComputed(form.email, 'on-submit', () =>
+  submittedStatus(),
+);
 ```
 
 Inside `form[formRoot][ngxSignalForm]` the wrapper, auto-ARIA, and headless
 directives inherit `submittedStatus` from the form context automatically — this
-pitfall only applies to standalone callers of `showErrors()` or
-`createShowErrorsComputed()` outside that context (custom utilities,
-hand-rolled components, services). Either pass the status, or move the work
+pitfall only applies to standalone callers of `createShowErrorsComputed()`
+outside that context (custom utilities, hand-rolled components, services).
+Either pass the status, or move the work
 inside the form context so inheritance can do it for you.
+
+## Vest — An Invalid Field Name Throws in Dev Mode
+
+```typescript
+// Wrong — `address.cityy` is a typo: `address` resolves on the bound field
+// tree, but `cityy` does not. Throws synchronously in dev mode.
+const suite = create((data: { address: { city: string } }) => {
+  test('address.cityy', 'City is required', () => {
+    /* ... */
+  });
+});
+
+// Correct — name a real child of the bound path
+const suite = create((data: { address: { city: string } }) => {
+  test('address.city', 'City is required', () => {
+    /* ... */
+  });
+});
+```
+
+A Vest field name whose FIRST segment does not resolve (e.g.
+`test('passwordMatch', …)` on a model with no `passwordMatch` field) is a
+legitimate **virtual** field name — a deliberate, form-level error — and
+never throws. Only a valid prefix followed by an unresolvable tail, or a
+resolution probe that throws, is treated as an authoring bug: a hard throw in
+dev mode, `console.error()` in production (still attaching the failure to
+the bound field either way). See [Vest field-name resolution](https://github.com/ngx-signal-forms/ngx-signal-forms/blob/main/packages/toolkit/vest/README.md#vest-field-name-resolution)
+and [ADR-0008](https://github.com/ngx-signal-forms/ngx-signal-forms/blob/main/docs/decisions/0008-vest-suite-input-is-the-bound-path.md).
 
 ## Vest — Sharing One Suite Across Concurrent Forms Is Safe by Default
 

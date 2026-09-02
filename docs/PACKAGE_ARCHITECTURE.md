@@ -49,7 +49,7 @@ documented public entry points only.
 ### Public entry points
 
 - `@ngx-signal-forms/toolkit` — core directives, providers, utilities
-- `@ngx-signal-forms/toolkit/assistive` — styled error/notification/hint/counter/summary UI
+- `@ngx-signal-forms/toolkit/assistive` — styled error/hint/counter/summary UI
 - `@ngx-signal-forms/toolkit/form-field` — prebuilt wrapper + fieldset UI
 - `@ngx-signal-forms/toolkit/headless` — renderless directives and utility functions
 - `@ngx-signal-forms/toolkit/vest` — Vest helper adapters
@@ -69,7 +69,6 @@ packages/toolkit/
 │   ├── character-count.ts
 │   ├── form-field-error.ts
 │   ├── form-field-error-summary.ts
-│   ├── form-field-notification.ts
 │   ├── form-marking-legend.ts
 │   ├── hint.ts
 │   ├── warning-error.ts
@@ -98,7 +97,8 @@ packages/toolkit/
 │   ├── src/
 │   │   ├── index.ts
 │   │   ├── validate-vest.ts
-│   │   └── vest-adapter.ts             # createVestAdapter() + VestSuiteAdapter contract
+│   │   ├── vest-adapter.ts             # createVestAdapter() + VestSuiteAdapter contract
+│   │   └── vest-run-coordinator.ts     # cache, contention detection, FIFO queue, settlement (ADR-0009)
 │   ├── ng-package.json
 │   └── README.md
 ├── scripts/
@@ -122,7 +122,7 @@ absolute URLs.
 ```typescript
 import { provideNgxSignalFormsConfig } from '@ngx-signal-forms/toolkit';
 import { NgxFormField } from '@ngx-signal-forms/toolkit/form-field';
-import { NgxFormFieldNotification } from '@ngx-signal-forms/toolkit/assistive';
+import { NgxFormFieldError } from '@ngx-signal-forms/toolkit/assistive';
 import { NgxHeadlessNotification } from '@ngx-signal-forms/toolkit/headless';
 import { validateVest } from '@ngx-signal-forms/toolkit/vest';
 ```

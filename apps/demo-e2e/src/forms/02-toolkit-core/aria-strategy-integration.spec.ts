@@ -58,10 +58,11 @@ test.describe('ARIA Strategy Integration', () => {
       await ratingInput.focus();
       await ratingInput.fill('0');
 
-      /// aria-describedby should only contain hint, NOT error ID
-      await expect(ratingInput).toHaveAttribute(
+      /// On this wrapper-free page, auto-ARIA does not stamp author hint
+      /// ids. Before blur it must not link the error container either.
+      await expect(ratingInput).not.toHaveAttribute(
         'aria-describedby',
-        'rating-hint',
+        /overallRating-error/,
       );
     });
   });
@@ -76,10 +77,16 @@ test.describe('ARIA Strategy Integration', () => {
       await ratingInput.fill('0');
       await ratingInput.blur();
 
-      /// aria-describedby should contain both hint AND error ID
-      const describedBy = await ratingInput.getAttribute('aria-describedby');
-      expect(describedBy).toContain('rating-hint');
-      expect(describedBy).toContain('overallRating-error');
+      /// After blur, auto-ARIA merges the error container id into
+      /// aria-describedby alongside the toolkit-managed hint id — the hint
+      /// id is retained even though the wrapper hides the hint slot while
+      /// the error renders (the toolkit's designed hint/error swap).
+      await expect(ratingInput).toHaveAttribute(
+        'aria-describedby',
+        'rating-hint overallRating-error',
+      );
+      await expect(page.locator('#rating-hint')).toBeAttached();
+      await expect(page.locator('#rating-hint')).not.toBeVisible();
     });
   });
 

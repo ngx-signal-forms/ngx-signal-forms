@@ -42,6 +42,26 @@ ngx-signal-forms — an Angular toolkit for working with Signal Forms.
   records known axe violations. The CI `a11y` job diffs the current run against
   this file; new violations trigger auto-issue creation and a baseline update.
   Synonym to avoid: "known violations list" (ambiguous — use "a11y baseline").
+- **Bound path** — the `SchemaPath` a Vest registration is attached to
+  (`validateVest(path.address, suite)` → the bound path is `path.address`). It
+  fixes two things at once: where the resulting errors attach, and what the
+  suite input is. Synonym to avoid: "field path" (that is the Vest-side name,
+  see **Vest field name**).
+- **Suite input** — the value a Vest suite's callback receives. **The bound
+  path's value _is_ the suite input.** Binding to the form root gives the suite
+  the whole model; binding to a subtree gives it that subtree's value, and is
+  correct only when the suite is authored for that shape. Synonyms to avoid:
+  "model" (misleading once a subtree is bound), "form value".
+- **Vest field name** — the string a Vest `test()` is registered under, e.g.
+  `test('city', …)`. **Relative to the bound path**, never to the form root,
+  because the suite only ever sees the suite input. A name that resolves to no
+  field is either a **virtual Vest field name** or an authoring bug, split by
+  shape: an unresolvable _first_ segment is virtual; a valid prefix with an
+  invalid tail (`address.cityy`) is a typo and fails hard in dev mode.
+- **Virtual Vest field name** — a Vest field name that deliberately matches no
+  field in the suite input, used to carry a form-level error
+  (`test('passwordMatch', 'Passwords must match', …)`). It attaches to the bound
+  field. Legitimate and silent — the toolkit must not treat it as an error.
 
 ## Key concepts
 
@@ -55,3 +75,99 @@ ngx-signal-forms — an Angular toolkit for working with Signal Forms.
   for the plain objects custom validators emit. A compile-time exhaustiveness
   guard (`Record<NgValidationError['kind'], true>` + an `assertNever` switch
   default) forces review whenever an Angular minor adds a new built-in kind.
+
+- **One cascade seam** — error-visibility timing is composed once, in
+  `createErrorVisibility()`, and consumers call it rather than re-inlining the
+  `resolveStrategyFromContext` → `resolveSubmittedStatusFromContext` →
+  `createShowErrorsComputed` chain. All in-tree surfaces now route through it
+  for blocking errors (`NgxHeadlessErrorState`, `NgxHeadlessFieldset`,
+  `createErrorState()`, `NgxFormFieldWrapper`, plus the pre-existing
+  `NgxSignalFormAutoAria` / `createAriaInvalidSignal` /
+  `createErrorMessageSignal()` / `NgxHeadlessErrorSummary` callers). Surfaces
+  that also expose a resolved strategy as public API keep that computed
+  separately — the seam only returns a visibility boolean — rather than
+  re-implementing the cascade a second time. How the two feed back into the
+  seam differs: `NgxFormFieldWrapper.effectiveStrategy` /
+  `submittedStatus` are already fully resolved, so the wrapper's _resolved_
+  values feed the seam directly (no `configDefault`, since resolution
+  already happened); `NgxHeadlessFieldset.resolvedStrategy` is a parallel
+  computation kept only for its public API — `NgxHeadlessFieldset` feeds the
+  seam its _raw_ `strategy` / `submittedStatus` inputs plus `configDefault`,
+  so the seam re-runs the identical cascade independently rather than
+  reusing `resolvedStrategy`. See
+  [ADR-0006](docs/decisions/0006-one-cascade-seam.md). The **warning** channel
+  is already consolidated: all surfaces resolve through
+  `resolveWarningStrategyFromContext()` (input → form context
+  `warningStrategy()` → `defaultWarningStrategy` → `'on-touch'`), which fixed
+  the drift where `warningStrategy="inherit"` gave two different answers
+  outside a form host. See
+  [ADR-0007](docs/decisions/0007-warning-display-timing-cascade.md).
+
+- **`aria-describedby` tracks what is rendered, not what is validated.**
+  `NgxSignalFormAutoAria` composes the control's `aria-describedby` from the
+  same two visibility decisions the renderer uses — the error cascade for
+  `{name}-error`, the warning cascade for `{name}-warning` — so a rendered
+  region is always referenced and a suppressed one never is. There are two
+  channels field-level overrides reach it through, depending on composition:
+  a **wrapped** field's `NgxFormFieldWrapper` publishes both resolved
+  strategies via `NgxFieldIdentity.setResolvedStrategies()`; a **standalone**
+  `<ngx-form-field-error>` — a sibling of the control it describes, not an
+  ancestor, so it has no shared element injector to publish an identity
+  through — instead registers its already-rendered
+  `errorContainerVisible()`/`warningContainerVisible()` booleans into
+  `NGX_SIGNAL_FORM_FIELD_VISIBILITY_REGISTRY`, keyed by field name and
+  provided per-form by `NgxSignalForm`. Auto-aria resolves these **per
+  channel**, on the published value: a strategy the identity has actually
+  published wins, otherwise the registry entry does, otherwise it sees only
+  the ambient form context. It never branches on whether `NgxFieldIdentity`
+  is injectable — an identity that owns only the field name must leave both
+  strategy channels to the registry, and the error and warning channels fall
+  back independently of one another (ADR-0010). Any new surface that gates a message region must
+  feed its decision through one of these two channels, or it will produce a
+  dangling id (axe `aria-valid-attr-value`) or an unreferenced one
+  (WCAG 1.3.1).
+  The rule is narrow on purpose: it applies to the strategy/visibility cascade,
+  where the copies encode _one_ contract. Where duplicated-looking code encodes
+  _different_ contracts — direct `errors()` vs aggregated `errorSummary()`
+  reads, the deliberate `focus-first-invalid` policy asymmetry — merging is the
+  bug, and those are marked in place as intentional.
+
+- **A field's name is owned by whoever provides its identity.** Auto-aria
+  derives a field name from the bound control's `id` unless an ancestor
+  provides an `NgxFieldIdentity`, in which case that service owns the name
+  outright — a `null` there means "not resolvable yet" and skips ARIA wiring,
+  it does not revert to the `id`. Wrappers get an identity by composing
+  `NgxFieldIdentityProvider` as a host directive, the built-in
+  `NgxFormFieldWrapper` included, so the public seam and the internal one are
+  the same seam. The provider publishes the name channel only; the wrapper
+  additionally drives the control element, visibility, hints, and resolved
+  strategies in-package, because none of those can travel through an input.
+  See ADR-0011.
+
+- **`packages/toolkit/core` is not a public entry point.** It is a
+  build-time-only secondary entry that sibling entries compile against;
+  `packages/toolkit/scripts/strip-internal-exports.mjs` deletes `"./core"` from
+  the published `exports` map at post-build, and `packages/toolkit/index.ts`
+  hand-enumerates the public surface rather than re-exporting `/core`
+  wholesale, so `@internal` plumbing stays out of the shipped `.d.ts`. A symbol
+  tagged `@public` inside `/core` is only public if the root barrel lists it.
+
+- **A Vest registration binds a path and a suite that must agree.** The
+  **bound path**'s value is the **suite input**, and **Vest field names** are
+  relative to that path. There is no second value source: Angular's
+  `FieldContext` exposes no parent or root accessor, so a registration cannot
+  reach past its own path to fetch the model. This is why `focusCurrentField`
+  and field-scoped registration were **deleted** rather than repaired — they
+  bound a suite to a leaf while the suite expected the model, so
+  `suite.run(<the field's string>)` made every `data.x` read `undefined` and
+  produced a blocking error that never cleared, on a valid value. Do not
+  reintroduce a "bind here, read the model from over there" shape: the
+  descendant relation between the two paths is not expressible in TypeScript, so
+  its central invariant cannot be enforced. Automatic per-field focus is a
+  _root-level_ concern instead — see
+  [ADR-0008](docs/decisions/0008-vest-suite-input-is-the-bound-path.md).
+  Implemented in
+  [#287](https://github.com/ngx-signal-forms/ngx-signal-forms/issues/287);
+  the unresolvable-Vest-field-name rule
+  ([#291](https://github.com/ngx-signal-forms/ngx-signal-forms/issues/291))
+  shipped in [#307](https://github.com/ngx-signal-forms/ngx-signal-forms/pull/307).

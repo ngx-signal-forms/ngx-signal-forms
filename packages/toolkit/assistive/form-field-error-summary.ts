@@ -4,9 +4,9 @@ import {
   ElementRef,
   inject,
   input,
-  isDevMode,
   untracked,
 } from '@angular/core';
+import { devWarnOnce, type WarnOnceRef } from '@ngx-signal-forms/toolkit/core';
 import { NgxHeadlessErrorSummary } from '@ngx-signal-forms/toolkit/headless';
 
 /**
@@ -76,7 +76,7 @@ import { NgxHeadlessErrorSummary } from '@ngx-signal-forms/toolkit/headless';
     <!--
       The role="alert" container is rendered UNCONDITIONALLY (even when
       empty), the same always-mounted live-region pattern NgxFormFieldError
-      and NgxFormFieldNotification use: role="alert" only fires reliably on
+      uses (both its inline and panel presentations): role="alert" only fires reliably on
       content insertion into a pre-existing live region, so inserting the
       container and its content in the same tick risks the NVDA + Chrome
       missed-first-announcement bug. aria-hidden/[hidden] are intentionally
@@ -131,7 +131,7 @@ import { NgxHeadlessErrorSummary } from '@ngx-signal-forms/toolkit/headless';
     /* Empty live-region shell: the @if in the template guarantees zero
      * content while empty, so we additionally zero the box model to
      * collapse it visually — mirrors the --empty pattern in
-     * NgxFormFieldError / NgxFormFieldNotification. */
+     * NgxFormFieldError's own --empty presentation. */
     .ngx-form-field-error-summary--empty {
       border-width: 0;
       padding: 0;
@@ -155,8 +155,26 @@ import { NgxHeadlessErrorSummary } from '@ngx-signal-forms/toolkit/headless';
 
     .ngx-form-field-error-summary__link {
       all: unset;
+      /* all: unset resets display to its initial value (inline), and
+       * min-block-size/min-inline-size have no effect on non-replaced
+       * inline elements per spec -- so the WCAG 2.5.8 24x24px target-size
+       * minimum below would be silently ignored without switching to
+       * inline-flex here. The minimum is applied in BOTH directions
+       * (block and inline): a short/empty fieldName or message could
+       * otherwise render narrower than 24px even with the block-size
+       * floor in place. justify-content centers short text within the
+       * enforced inline minimum. */
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-block-size: var(--ngx-error-summary-link-min-target-size, 1.5rem);
+      min-inline-size: var(--ngx-error-summary-link-min-target-size, 1.5rem);
+      padding-inline: var(--ngx-error-summary-link-padding-inline, 0.25rem);
       cursor: pointer;
-      color: var(--ngx-error-summary-link-color, #dc2626);
+      /* #b91c1c (Tailwind red-700) on the #fef2f2 summary background
+       * resolves to ~5.9:1, clearing the WCAG 1.4.3 AA minimum of 4.5:1 for
+       * this 14px text -- the previous #dc2626 default only reached ~4.4:1. */
+      color: var(--ngx-error-summary-link-color, #b91c1c);
       text-decoration: underline;
       font-size: 0.875rem;
 
@@ -187,7 +205,7 @@ export class NgxFormFieldErrorSummary {
    * mirror the `#warnedMissingName` pattern used in
    * `form-field-error.ts` and `NgxHeadlessFieldName`.
    */
-  #warnedFocusFailure = false;
+  readonly #warnedFocusFailure: WarnOnceRef = { current: false };
 
   /**
    * Label displayed above the error list.
@@ -267,14 +285,12 @@ export class NgxFormFieldErrorSummary {
           // the WCAG 2.4.3 + 3.3.1 contract silently breaks. Once-per-
           // instance warning so we don't spam the console.
           if (
-            isDevMode() &&
-            !this.#warnedFocusFailure &&
             typeof document !== 'undefined' &&
             document.activeElement !== host
           ) {
-            this.#warnedFocusFailure = true;
-            // oxlint-disable-next-line no-console -- dev-mode a11y signal
-            console.warn(
+            devWarnOnce(
+              this.#warnedFocusFailure,
+              'warn',
               '[ngx-signal-forms] NgxFormFieldErrorSummary: ' +
                 'host.focus() did not move focus (likely detached, ' +
                 'display:none, covered by a modal, or has tabindex ' +

@@ -1,42 +1,70 @@
-import {
-  computed,
-  Injectable,
-  isDevMode,
-  signal,
-  type Signal,
-} from '@angular/core';
+import { computed, Injectable, signal, type Signal } from '@angular/core';
+import { devWarnOnce, type WarnOnceRef } from '../utilities/dev-warn-once';
 import {
   createFieldMessageIdSignals,
   normalizeFieldName,
   resolveFieldName,
 } from '../utilities/field-resolution';
+import type {
+  ResolvedErrorDisplayStrategy,
+  ResolvedWarningDisplayStrategy,
+} from '../types';
 
 /**
  * Resolve whether an element is visible from a CSS perspective.
  *
- * Prefers `Element.checkVisibility()` (Chromium 105+, Firefox 125+,
- * Safari 17.4+) so `display: none`, `hidden`, and ancestor-collapse all
- * register as "not visible". Falls back to `offsetParent` on older
- * runtimes — sufficient to detect `display: none` in detached subtrees,
- * which is the common collapsed-fieldset case the issue calls out.
+ * Uses `Element.checkVisibility()` — Baseline 2024, and the only API that
+ * answers the question correctly. Its default behavior already reports
+ * `false` for `display: none`, `display: contents`, the `hidden` attribute,
+ * `content-visibility: hidden`, and a collapsed `<details>` (whose
+ * `::details-content` is `content-visibility: hidden`). `visibilityProperty`
+ * adds `visibility: hidden`, which removes an element from the accessibility
+ * tree just as thoroughly. `checkVisibilityCSS` is the historic alias for the
+ * same option, kept for runtimes between Chromium 105 and 121; browsers
+ * ignore dictionary members they do not know, so passing both is safe.
+ *
+ * **`opacityProperty` is deliberately not passed.** An `opacity: 0` control
+ * is still laid out, still focusable, and still interactive — it is the
+ * standard custom-checkbox and custom-radio pattern, where a real input sits
+ * transparently over a styled box. Treating those as hidden would strip
+ * `aria-invalid` from controls a keyboard user is actively operating.
+ *
+ * **When the method is unavailable, this reports `true`.** That is a
+ * deliberate fail-open, not an oversight. The obvious fallback,
+ * `offsetParent !== null`, is wrong in both directions: it is a false
+ * *positive* for a collapsed `<details>` and for `content-visibility: hidden`
+ * — the exact cases this function exists to catch — and a false *negative*
+ * for `position: fixed` elements, for `<body>`/`<html>`, and for every
+ * environment with no layout engine at all (jsdom, and any non-rendering
+ * host). Guessing "hidden" there would strip correct ARIA state from visible
+ * controls, which is strictly worse than leaving state in place on a control
+ * the user cannot see anyway.
  *
  * Exposed publicly (re-exported from `@ngx-signal-forms/toolkit`) so custom
  * controls and third-party wrappers can apply the exact same visibility test
- * the canonical wrapper uses internally, keeping the native-binding and
- * CSS-fallback ARIA paths in lockstep.
+ * the toolkit uses internally, keeping the native-binding and CSS-fallback
+ * ARIA paths in lockstep.
  *
  * @public
  */
 export function isElementCssVisible(el: HTMLElement): boolean {
   const checkVisibility = (
     el as HTMLElement & {
-      checkVisibility?: (options?: { checkVisibilityCSS?: boolean }) => boolean;
+      checkVisibility?: (options?: {
+        checkVisibilityCSS?: boolean;
+        visibilityProperty?: boolean;
+      }) => boolean;
     }
   ).checkVisibility;
-  if (typeof checkVisibility === 'function') {
-    return checkVisibility.call(el, { checkVisibilityCSS: true });
+
+  if (typeof checkVisibility !== 'function') {
+    return true;
   }
-  return el.offsetParent !== null;
+
+  return checkVisibility.call(el, {
+    checkVisibilityCSS: true,
+    visibilityProperty: true,
+  });
 }
 
 /**
@@ -78,7 +106,17 @@ export interface ControlVisibilitySignal extends Signal<boolean> {
  *
  * Provided at the `NgxFormFieldWrapper` level via `providers: [NgxFieldIdentity]`.
  * `NgxSignalFormAutoAria` and hint directives inject it optionally, falling
- * back to their current behavior when absent.
+ * back to their registry-driven behavior when absent.
+ *
+ * **Channels publish independently.** An identity does not have to drive
+ * every channel, and merely *existing* claims nothing. Each of the hint,
+ * error-strategy, and warning-strategy channels advertises "unpublished" as
+ * a distinct `null` state, and consumers fall back to
+ * `NGX_SIGNAL_FORM_HINT_REGISTRY` / `NGX_SIGNAL_FORM_FIELD_VISIBILITY_REGISTRY`
+ * per channel — never by testing whether this service is injectable. This is
+ * what lets a partially-driven identity (one that only owns the field name,
+ * say) coexist with the registries instead of silently disabling them.
+ * See ADR-0010.
  *
  * Element-scoped: `providedIn: null` makes it a contract violation to
  * provide this service at the root injector. Each wrapper gets a fresh
@@ -95,9 +133,14 @@ export class NgxFieldIdentity {
   readonly #fieldName = signal<string | null>(null);
   readonly #controlElement = signal<HTMLElement | null>(null);
   readonly #controlId = signal<string | null>(null);
-  readonly #hintIds = signal<readonly string[]>([]);
+  readonly #hintIds = signal<readonly string[] | null>(null);
   readonly #isControlVisible = signal(true);
-  #warnedNoId = false;
+  readonly #resolvedErrorStrategy = signal<ResolvedErrorDisplayStrategy | null>(
+    null,
+  );
+  readonly #resolvedWarningStrategy =
+    signal<ResolvedWarningDisplayStrategy | null>(null);
+  readonly #warnedNoId: WarnOnceRef = { current: false };
 
   /**
    * Resolved field name. Null when no field name can be determined.
@@ -128,8 +171,39 @@ export class NgxFieldIdentity {
   /**
    * Hint IDs contributed by the surrounding hint registry, filtered for
    * this field. Updated by `NgxFormFieldWrapper` when `hintDescriptors` changes.
+   *
+   * `null` means this identity has **never published** the hint channel —
+   * consumers must fall back to `NGX_SIGNAL_FORM_HINT_REGISTRY` exactly as
+   * they would with no identity present at all. An empty array means the
+   * channel *was* published and this field genuinely has no hints, which is
+   * authoritative and suppresses the fallback. See ADR-0010.
    */
   readonly hintIds = this.#hintIds.asReadonly();
+
+  /**
+   * The owning wrapper's fully-resolved blocking-error display strategy, or
+   * `null` when no wrapper has published one (standalone auto-aria usage).
+   *
+   * Exists so `NgxSignalFormAutoAria` can gate `aria-describedby` on the same
+   * decision the wrapper uses to render its message regions. Without it,
+   * auto-aria only sees the form context and global config, so a *field*-level
+   * `strategy` override on the wrapper would make the attribute reference an
+   * element the wrapper never rendered (a dangling id — axe
+   * `aria-valid-attr-value`), or omit one it did.
+   *
+   * Updated by `NgxFormFieldWrapper` via `setResolvedStrategies`.
+   */
+  readonly resolvedErrorStrategy = this.#resolvedErrorStrategy.asReadonly();
+
+  /**
+   * The owning wrapper's fully-resolved warning display strategy, or `null`
+   * when no wrapper has published one.
+   *
+   * Separate from {@link resolvedErrorStrategy} because the two cascades are
+   * independent (ADR-0007): a field can show warnings on `'immediate'` while
+   * its blocking errors wait for `'on-submit'`.
+   */
+  readonly resolvedWarningStrategy = this.#resolvedWarningStrategy.asReadonly();
 
   /**
    * Whether the bound control currently has a CSS layout box that the
@@ -139,9 +213,15 @@ export class NgxFieldIdentity {
    * the viewport.
    *
    * Driven by the wrapper, which calls `setControlVisible` from its
-   * `afterEveryRender` write phase using `Element.checkVisibility()`
-   * (with an `offsetParent` fallback). Defaults to `true` so consumers
-   * never strip ARIA attributes pre-visibility-eval.
+   * `afterEveryRender` write phase via {@link isElementCssVisible}. Defaults
+   * to `true` so consumers never strip ARIA attributes pre-visibility-eval.
+   *
+   * Nothing inside the toolkit reads this any more: `NgxSignalFormAutoAria`
+   * probes its own host element instead, so its `aria-invalid` gate works for
+   * every wrapper rather than only the built-in one, and each control in a
+   * cluster tracks its own layout state (ADR-0011). The channel stays because
+   * it is a published read surface — a consumer holding an ancestor identity
+   * can still read the wrapper's view of its bound control.
    *
    * This member is a {@link ControlVisibilitySignal}: a real `Signal<boolean>`
    * (reactive, threadable into `computed()`) that additionally accepts an
@@ -196,7 +276,7 @@ export class NgxFieldIdentity {
    */
   readonly describedBy = computed<string | null>(() => {
     const ids = this.#hintIds();
-    return ids.length > 0 ? ids.join(' ') : null;
+    return ids !== null && ids.length > 0 ? ids.join(' ') : null;
   });
 
   /**
@@ -249,16 +329,10 @@ export class NgxFieldIdentity {
       return;
     }
     const isWrapperHosted = el.closest('ngx-form-field-wrapper') !== null;
-    if (
-      isDevMode() &&
-      !el.id &&
-      !this.#fieldName() &&
-      !this.#warnedNoId &&
-      !isWrapperHosted
-    ) {
-      this.#warnedNoId = true;
-      // oxlint-disable-next-line no-console -- dev-only a11y diagnostic
-      console.warn(
+    if (!el.id && !this.#fieldName() && !isWrapperHosted) {
+      devWarnOnce(
+        this.#warnedNoId,
+        'warn',
         '[ngx-signal-forms] NgxFieldIdentity: the bound control has no `id` ' +
           'attribute. `label[for]` and `aria-describedby` linking will not ' +
           'work until an `id` is set on the control element or an explicit ' +
@@ -271,8 +345,8 @@ export class NgxFieldIdentity {
   /**
    * Updates the cached visibility of the bound control. Idempotent.
    *
-   * The wrapper drives this from its `afterEveryRender` write phase using
-   * `Element.checkVisibility()` (or `offsetParent` fallback). Polling the
+   * The wrapper drives this from its `afterEveryRender` write phase via
+   * {@link isElementCssVisible}. Polling the
    * visibility on each render rather than via `IntersectionObserver`
    * avoids both the spurious "scroll = hidden" semantics IO has and the
    * teardown/leak surface of long-lived observers.
@@ -286,21 +360,50 @@ export class NgxFieldIdentity {
   }
 
   /**
-   * Updates the hint IDs visible to this field's identity. Idempotent —
-   * shallow array equality short-circuits the write so consumers don't
-   * re-run their describedBy computeds when the list is structurally
-   * unchanged.
+   * Publishes the hint IDs visible to this field's identity, claiming the
+   * hint channel. Idempotent — shallow array equality short-circuits the
+   * write so consumers don't re-run their describedBy computeds when the
+   * list is structurally unchanged.
+   *
+   * The first call flips {@link hintIds} off its unpublished `null` default,
+   * which is what stops consumers falling back to the hint registry. Passing
+   * `[]` is therefore a meaningful claim ("no hints for this field"), not a
+   * no-op.
    *
    * @internal
    */
   setHintIds(ids: readonly string[]): void {
     const current = this.#hintIds();
     if (
+      current !== null &&
       current.length === ids.length &&
       current.every((id, index) => id === ids[index])
     ) {
       return;
     }
     this.#hintIds.set(ids);
+  }
+
+  /**
+   * Publishes the wrapper's resolved error and warning display strategies so
+   * `NgxSignalFormAutoAria` can keep `aria-describedby` in lockstep with the
+   * regions the wrapper actually renders.
+   *
+   * Both are written together because they are read together; each write is
+   * guarded by an equality check so unchanged strategies do not invalidate
+   * consumers' computeds.
+   *
+   * @internal
+   */
+  setResolvedStrategies(
+    errorStrategy: ResolvedErrorDisplayStrategy | null,
+    warningStrategy: ResolvedWarningDisplayStrategy | null,
+  ): void {
+    if (errorStrategy !== this.#resolvedErrorStrategy()) {
+      this.#resolvedErrorStrategy.set(errorStrategy);
+    }
+    if (warningStrategy !== this.#resolvedWarningStrategy()) {
+      this.#resolvedWarningStrategy.set(warningStrategy);
+    }
   }
 }

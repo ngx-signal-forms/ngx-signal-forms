@@ -15,30 +15,36 @@ user sees.
 
 ## The binding seam
 
-- **Read seam** — `linkedSignal({ source, computation })` projects the store
-  slice into a writable handle. Reads re-evaluate whenever the store changes.
-- **Write seam** — a demo-local `delegatedStoreField` helper overrides `set` /
-  `update` on that handle to call `store.updateSettings(...)` (which calls
-  `patchState`). Every form edit lands in the store immediately.
-- The helper returns a genuine `WritableSignal<T>` that `form(model)` accepts as
-  its model.
+`linkedSignal({ source, computation, set })` is the whole seam — a single
+native `WritableSignal<T>` handle, no helper file:
 
-### Why the helper is needed on `22.0.0-rc.x`
+- **Read seam** — `source` / `computation` project the store slice into the
+  linked value. Reads re-evaluate whenever the store changes.
+- **Write seam** — the native `set` callback receives every value the form
+  writes and calls `store.updateSettings(...)` (which calls `patchState`).
+  Every form edit lands in the store immediately.
+- `set` deliberately never calls its `rawSet` parameter. There is no local
+  draft buffer to keep in sync: once `patchState` updates the store's own
+  signals, the next read of the linked signal re-runs `computation` against
+  the fresh `source` value, so the field is coherent without mirroring
+  anything locally.
 
-On rc.x, the `WritableSignal` returned by `linkedSignal({ source, computation })`
-is writable, but its `.set` only updates the **local** linked value — it does
-**not** propagate back to `source`. The delegated-write helper closes that gap by
-routing writes through `patchState` first.
+This is Angular's native custom-`set` overload
+([PR #68708](https://github.com/angular/angular/pull/68708), shipped in
+**22.1**): `set?: (value, rawSet) => void`. `ngxtension`'s `writableSlice` and
+ngrx's reverted `delegatedSignal` ([ngrx #5157](https://github.com/ngrx/platform/pull/5157))
+both converged on this same native overload, which is why they were retired in
+favor of it.
 
-### 22.1 follow-up
+### History
 
-Angular [PR #68708](https://github.com/angular/angular/pull/68708)
-(`target: minor`, ships in **22.1+**) adds a native custom-`set` overload to
-`linkedSignal`. Once the workspace moves to ≥ 22.1, the `delegatedStoreField`
-helper can be deleted and replaced with the built-in `set`. `ngxtension`'s
-`writableSlice` and ngrx's reverted `delegatedSignal`
-([ngrx #5157](https://github.com/ngrx/platform/pull/5157)) both converge on that
-same native overload.
+Earlier revisions of this demo shipped a demo-local `delegatedStoreField`
+helper, because the workspace was pinned to `22.0.0-rc.x`, where the
+`WritableSignal` returned by `linkedSignal({ source, computation })` only
+updated its **local** value — `.set()` never propagated back to `source`. Now
+that the workspace is on Angular 22.1+, the native `set` option expresses the
+same write-through behavior directly, so the helper (and its spec) were
+deleted.
 
 ## Scope
 
@@ -49,9 +55,11 @@ Demo only. The `@ngx-signal-forms/toolkit` source is **not** touched, and the
 
 - [settings.store.ts](settings.store.ts) — `providedIn: 'root'` signal store with
   `updateSettings` and `simulateRemoteSync` mutators (no draft buffer).
-- [delegated-store-field.ts](delegated-store-field.ts) — the delegated-write
-  helper (read via `linkedSignal`, write via `patchState`).
-- [store-binding.form.ts](store-binding.form.ts) — the form wired to the helper.
+- [store-binding.form.ts](store-binding.form.ts) — the form whose model is the
+  native `linkedSignal({ source, computation, set })` handle.
+- [store-binding.form.spec.ts](store-binding.form.spec.ts) — locks in the
+  binding seam's reactive guarantees, including that omitting `rawSet` keeps
+  reads coherent.
 - [store-binding.page.ts](store-binding.page.ts) — page wrapper and debugger.
 
 ## How to test
@@ -68,3 +76,5 @@ Demo only. The `@ngx-signal-forms/toolkit` source is **not** touched, and the
 
 - [Advanced Wizard](../advanced-wizard/README.md) — the contrasting draft/commit
   buffer pattern.
+- [Autosave](../autosave/README.md) — the contrasting "persist valid, dirty
+  changes as the user types" pattern, with no submit button.

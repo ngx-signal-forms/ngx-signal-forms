@@ -401,6 +401,68 @@ Or with headless primitives:
 </div>
 ```
 
+### Publishing visibility for a custom standalone error surface
+
+Both snippets above render **without** `<ngx-form-field-wrapper>` — the
+bound control and the error/warning surface are siblings, not
+ancestor/descendant. `NgxSignalFormAutoAria` normally learns a field's
+resolved `strategy`/`warningStrategy` from `NgxFieldIdentity`, but that
+service is only provided by `NgxFormFieldWrapper`, so a wrapper-less
+surface has no DI path to publish an override through — and without one,
+`aria-describedby` falls back to the ambient form context, which can
+disagree with whatever the surface actually renders (a dangling id, or a
+rendered-but-unreferenced region).
+
+If your custom surface resolves error/warning visibility independently
+(the way the snippets above do via `ngxHeadlessErrorState` or
+`ngx-form-field-error`), register it with
+`NGX_SIGNAL_FORM_FIELD_VISIBILITY_REGISTRY` so auto-ARIA can read the
+booleans it already computed instead of recomputing — and possibly
+disagreeing with — its own cascade. The registry is provided by
+`NgxSignalForm` at the `[ngxSignalForm]` host, so it is available
+anywhere inside that form:
+
+```ts
+import { effect, inject } from '@angular/core';
+import { NGX_SIGNAL_FORM_FIELD_VISIBILITY_REGISTRY } from '@ngx-signal-forms/toolkit';
+
+@Component({
+  /* ... */
+})
+export class MyStandaloneErrorSurface {
+  readonly #registry = inject(NGX_SIGNAL_FORM_FIELD_VISIBILITY_REGISTRY, {
+    optional: true,
+  });
+
+  // Whatever already gates your rendered live regions — e.g. an
+  // `ngxHeadlessErrorState` view child's `shouldShowErrors`/
+  // `shouldShowWarnings`, or your own computed signals.
+  protected readonly errorVisible = /* ... */;
+  protected readonly warningVisible = /* ... */;
+
+  constructor() {
+    effect((onCleanup) => {
+      const fieldName = this.resolvedFieldName();
+      if (!this.#registry || fieldName === null) return;
+
+      const unregister = this.#registry.register({
+        fieldName,
+        errorContainerVisible: this.errorVisible,
+        warningContainerVisible: this.warningVisible,
+      });
+      onCleanup(unregister);
+    });
+  }
+}
+```
+
+Register the exact booleans you already used to decide whether your
+`${fieldName}-error` / `${fieldName}-warning` elements are in the DOM —
+not a strategy for auto-ARIA to re-resolve — so the published value can
+never drift from what your surface actually renders. `NgxFormFieldError`
+follows this same pattern; see `packages/toolkit/assistive/form-field-error.ts`
+for the reference implementation.
+
 ## Field identity: `id` and `fieldName`
 
 The toolkit's auto-ARIA wiring builds stable `"<field>-error"` and
@@ -436,6 +498,43 @@ on the wrapper or an `id` on the bound control:
   <app-custom-select [formField]="form.country" />
 </ngx-form-field-wrapper>
 ```
+
+### If the wrapper is your own
+
+Both options above are inputs on `ngx-form-field-wrapper`. A wrapper **you**
+wrote has neither: auto-ARIA on the projected control resolves the name from
+the control's `id` and never asks your component, so a widget that generates
+its own inner `id` produces `pn_id_42-error` while your wrapper renders
+`country-error`. Nothing errors — `aria-describedby` simply points at an
+element that does not exist.
+
+Declare the name on your wrapper's host instead:
+
+```typescript
+import { NgxFieldIdentityProvider } from '@ngx-signal-forms/toolkit';
+
+@Component({
+  selector: 'my-field',
+  hostDirectives: [
+    { directive: NgxFieldIdentityProvider, inputs: ['fieldName'] },
+  ],
+})
+export class MyField {}
+```
+
+The directive provides `NgxFieldIdentity` on that host element, which is the
+element injector your projected control resolves through. It is selectorless
+on purpose — host placement is load-bearing, and a selector would invite
+putting it somewhere that silently does nothing.
+
+It publishes the **field name only**. Hint ids keep flowing through
+`NGX_SIGNAL_FORM_HINT_REGISTRY` and display timing through
+`NGX_SIGNAL_FORM_FIELD_VISIBILITY_REGISTRY`, so adopting it for the name does
+not disturb the rest of your wrapper.
+
+Full contract in [`CUSTOM_WRAPPERS.md`](./CUSTOM_WRAPPERS.md); runnable
+version in the
+[`field-identity` demo](https://ngx-signal-forms.github.io/ngx-signal-forms/form-field-wrapper/field-identity/).
 
 ## Custom Control Checklist
 
@@ -519,6 +618,127 @@ Usage with toolkit:
   </ngx-form-field-wrapper>
 </form>
 ```
+
+## Adapting an Existing Third-Party Widget
+
+Everything above builds a control **from scratch**. This section is the
+other case: you already have a widget — a datepicker, a rich-text editor, a
+combobox — with its own value/change API, and you need a thin
+`FormValueControl<T>` adapter around it rather than a new control.
+
+**Runnable reference:** the custom-controls demo's "Date of Birth" field —
+`apps/demo/src/app/shared/controls/legacy-datepicker-adapter.ts`, wrapping a
+self-contained fake "legacy" datepicker widget
+(`legacy-datepicker-widget.ts`) that has no Signal Forms awareness at all.
+See that adapter's class-level doc comment for the full design writeup; this
+section summarizes the four decisions it makes.
+
+### 1. Value round-trip and type mismatch
+
+The widget almost never speaks your model's type. Ours exposes a raw string
+(`YYYY-MM-DD`, or garbage while the user is mid-typo); the field needs
+`Date | null`. Use Angular Signal Forms' `transformedValue()` to own that
+boundary in one place:
+
+```typescript
+protected readonly rawValue = transformedValue(this.value, {
+  parse: (raw: string): ParseResult<Date | null> => {
+    /* raw text -> Date | null, or { error: { kind: 'parse', message } } */
+  },
+  format: (value: Date | null): string => {
+    /* Date | null -> raw text */
+  },
+});
+```
+
+`parse` runs on every widget change event; `format` runs whenever `value`
+changes from outside — including a programmatic `form().reset()` — so the
+widget always redisplays what the model actually holds.
+
+### 2. Touched propagation without a single native blur
+
+Third-party widgets are often composites: a text input plus a trigger
+button plus a popup with its own focusable elements (segments, calendar
+days, list options). A plain `(blur)` on the widget's internal input fires
+every time focus hops between those pieces — long before the user is done
+with the widget as a whole.
+
+Listen for `(focusout)` on the **adapter's own host** instead, and only
+treat it as "the user left the control" when the newly focused element
+(`event.relatedTarget`) is not contained anywhere inside that host:
+
+```typescript
+protected onHostFocusOut(event: FocusEvent): void {
+  const related = event.relatedTarget;
+  const relatedNode = related instanceof Node ? related : null;
+  if (relatedNode === null || !this.#host.nativeElement.contains(relatedNode)) {
+    this.touch.emit();
+  }
+}
+```
+
+This fires exactly once, whichever internal element focus was on when it
+finally left — including out of a native `<dialog>` popup, which stays in
+the same DOM subtree (so `contains()` still sees it) even while promoted to
+the browser's top layer.
+
+### 3. Where ARIA lands
+
+If the widget renders its own internal `<input>`, that input — not the
+adapter's host element — is the thing screen readers care about. Pair the
+adapter with `ngxSignalFormControlAria="manual"` and `appearance="plain"` so
+the wrapper still supplies the label, hint, and error content, and forward
+`aria-describedby` / `aria-invalid` / `aria-required` down onto the widget's
+real input through whatever passthrough inputs the widget exposes:
+
+```html
+<ngx-form-field-wrapper
+  appearance="plain"
+  [formField]="form.birthDate"
+  fieldName="birthDate"
+>
+  <label id="birthDate-label" for="birthDate">Date of birth</label>
+  <ngx-legacy-datepicker-adapter
+    [controlId]="'birthDate'"
+    [labelledBy]="'birthDate-label'"
+    ngxSignalFormControlAria="manual"
+    [describedBy]="birthDateDescribedBy()"
+    [formField]="form.birthDate"
+  />
+</ngx-form-field-wrapper>
+```
+
+Because the adapter's host is not the focusable element, `id` cannot live on
+that host — use `fieldName` on the wrapper (as above) instead of an `id`
+attribute, and forward the same identifier into the widget as its internal
+input's real `id`. This is the same "control can't expose an id" pattern
+from [Field identity: `id` and `fieldName`](#field-identity-id-and-fieldname)
+above, applied to a composite host. If the real widget you're wrapping
+doesn't expose an ARIA passthrough at all, you don't get this choice — fall
+back to whatever ARIA surface it does own, or treat the gap as a defect to
+raise with the widget's maintainers.
+
+### 4. Parse/invalid-input path
+
+Report unparseable or partial input as a `kind: 'parse'` validation error —
+the same built-in kind `transformedValue`'s own reference example uses, and
+one the toolkit's `resolveErrorMessage` already renders through the normal
+error surface with no extra wiring:
+
+```typescript
+if (!isRealCalendarDate) {
+  return {
+    error: {
+      kind: 'parse',
+      message: `"${trimmed}" is not a real calendar date`,
+    },
+  };
+}
+```
+
+Because `transformedValue` is called inside the component bound via
+`[formField]`, that error is reported to the nearest field automatically —
+no manual `errors` input wiring required.
 
 ## Related
 

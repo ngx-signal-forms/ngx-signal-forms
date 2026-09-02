@@ -15,6 +15,8 @@ import { resolveErrorMessage } from './utilities';
 
 /**
  * Resolved notification message with kind and human-facing message.
+ *
+ * @group Directives
  */
 export interface ResolvedNotificationMessage {
   readonly kind: string;
@@ -23,9 +25,11 @@ export interface ResolvedNotificationMessage {
 
 /**
  * State signals exposed by the headless notification directive. A custom
- * styled component should be able to render a complete grouped notification
- * surface (alert + status live regions, IDs, messages) using only these
- * signals — the assistive `NgxFormFieldNotification` is one such consumer.
+ * styled component can render a complete grouped notification surface
+ * (alert + status live regions, IDs, messages) using only these signals —
+ * see the usage example below.
+ *
+ * @group Directives
  */
 export interface NotificationStateSignals {
   /** Whether any messages are present. */
@@ -48,9 +52,13 @@ export interface NotificationStateSignals {
  * Headless directive for grouped validation notifications.
  *
  * Owns the message-resolution, tone-routing, and ID-generation logic for
- * grouped fieldset feedback and custom summary cards. Used as a
- * `hostDirectives` entry by `NgxFormFieldNotification` so the styled shell
- * stays a UI-only wrapper.
+ * grouped fieldset feedback and custom summary cards. There is no in-tree
+ * styled shell over this directive — `NgxFormFieldError`'s
+ * `presentation="panel"` mode covers that case by composing
+ * `NgxHeadlessErrorState`'s own error/warning override instead (same
+ * tone-resolution outcome, one fewer headless directive in that
+ * composition). Reach for this directive directly when building a custom
+ * grouped-notification UI from scratch.
  *
  * ## Tone resolution rules
  *
@@ -81,6 +89,8 @@ export interface NotificationStateSignals {
  *   }
  * </div>
  * ```
+ *
+ * @group Directives
  */
 @Directive({
   selector: '[ngxHeadlessNotification]',

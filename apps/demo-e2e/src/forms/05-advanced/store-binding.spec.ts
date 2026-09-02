@@ -4,10 +4,11 @@ import { expect, test, type Page } from '@playwright/test';
  * Live Store Binding - E2E Tests
  * Route: /advanced-scenarios/store-binding
  *
- * Verifies the two-way binding between the form and the NgRx SignalStore via
- * the `delegatedStoreField` helper: form edits write straight back to the store
- * (no draft/commit buffer), and out-of-band store mutations flow back into the
- * inputs through the `linkedSignal` read seam.
+ * Verifies the two-way binding between the form and the NgRx SignalStore via a
+ * native `linkedSignal({ source, computation, set })` handle: form edits write
+ * straight back to the store through the `set` callback (no draft/commit
+ * buffer), and out-of-band store mutations flow back into the inputs through
+ * the `source` / `computation` read seam.
  *
  * Locators are scoped to the form because the site chrome also exposes a
  * "Change theme" control, which would otherwise collide with the Theme field.

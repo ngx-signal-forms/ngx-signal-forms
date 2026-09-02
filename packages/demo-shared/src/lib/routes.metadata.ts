@@ -8,18 +8,23 @@ export const DEMO_PATHS = {
   fieldsetAppearance: '/form-field-wrapper/fieldset-appearance',
   customControls: '/form-field-wrapper/custom-controls',
   labellessFields: '/form-field-wrapper/labelless-fields',
+  fieldIdentity: '/form-field-wrapper/field-identity',
   fieldMarking: '/form-field-wrapper/field-marking',
+  brandTheming: '/form-field-wrapper/brand-theming',
   zodValidation: '/validation/zod-validation',
   vestValidation: '/validation/vest-validation',
   zodVestValidation: '/validation/zod-vest-validation',
   globalConfiguration: '/advanced-scenarios/global-configuration',
   submissionPatterns: '/advanced-scenarios/submission-patterns',
   advancedWizard: '/advanced-scenarios/advanced-wizard',
+  singleModelWizard: '/advanced-scenarios/single-model-wizard',
   asyncValidation: '/advanced-scenarios/async-validation',
   fieldStatePatterns: '/advanced-scenarios/field-state-patterns',
   crossFieldValidation: '/advanced-scenarios/cross-field-validation',
   storeBinding: '/advanced-scenarios/store-binding',
   serverIntegration: '/advanced-scenarios/server-integration',
+  autosave: '/advanced-scenarios/autosave',
+  i18n: '/advanced-scenarios/i18n',
 } as const;
 
 export const DEMO_CATEGORIES = [
@@ -82,7 +87,7 @@ export const DEMO_CATEGORIES = [
       {
         path: '/form-field-wrapper/fieldset-appearance',
         label: 'Fieldset Appearance',
-        hasControls: false,
+        hasControls: true,
       },
       {
         path: '/form-field-wrapper/custom-controls',
@@ -95,8 +100,18 @@ export const DEMO_CATEGORIES = [
         hasControls: true,
       },
       {
+        path: '/form-field-wrapper/field-identity',
+        label: 'Field Identity (Custom Wrapper)',
+        hasControls: true,
+      },
+      {
         path: '/form-field-wrapper/field-marking',
         label: 'Required / Optional Marking',
+        hasControls: true,
+      },
+      {
+        path: '/form-field-wrapper/brand-theming',
+        label: 'Brand Theming',
         hasControls: true,
       },
     ],
@@ -144,6 +159,11 @@ export const DEMO_CATEGORIES = [
         hasControls: true,
       },
       {
+        path: '/advanced-scenarios/single-model-wizard',
+        label: 'Single-Model Wizard',
+        hasControls: false,
+      },
+      {
         path: '/advanced-scenarios/async-validation',
         label: 'Async Validation',
         hasControls: true,
@@ -161,10 +181,21 @@ export const DEMO_CATEGORIES = [
       {
         path: '/advanced-scenarios/store-binding',
         label: 'Store Binding (@ngrx/signals two-way)',
+        hasControls: true,
       },
       {
         path: '/advanced-scenarios/server-integration',
         label: 'Server Integration',
+        hasControls: true,
+      },
+      {
+        path: '/advanced-scenarios/autosave',
+        label: 'Autosave',
+        hasControls: true,
+      },
+      {
+        path: '/advanced-scenarios/i18n',
+        label: 'i18n: Runtime Language Switch',
         hasControls: true,
       },
     ],

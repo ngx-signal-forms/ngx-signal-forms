@@ -8,7 +8,7 @@ import { injectFieldControl } from './inject-field-control';
 
 /**
  * Minimal `FieldTree`-shaped mock satisfying the runtime contract enforced by
- * `isFieldTree()` (callable, backing `FieldState` with the required methods
+ * `isFieldTreeLike()` (callable, backing `FieldState` with the required methods
  * and a `.fieldTree` back-reference to itself).
  */
 function createMockFieldTree<TValue>(value: TValue): FieldTree<TValue> {
@@ -34,7 +34,7 @@ function createMockFieldTree<TValue>(value: TValue): FieldTree<TValue> {
  * `createMockFieldTree`'s plain-object test-fixture parents: in a real form
  * *every* node — the form root and every intermediate group, not just
  * leaves — is itself callable (`typeof node === 'function'`) and satisfies
- * `isFieldTree()`. Child fields are exposed as properties directly on the
+ * `isFieldTreeLike()`. Child fields are exposed as properties directly on the
  * callable function object (mirroring `formInstance.address.city`).
  *
  * This is the shape that exposed the pre-fix bug: `injectFieldControl`'s
@@ -64,14 +64,42 @@ function createGroupFieldTree<TValue extends Record<string, unknown>>(
   return fieldTree;
 }
 
+/**
+ * Callable form root carrying deliberately malformed children.
+ *
+ * Negative tests need a root that is shaped like a real form — because in a
+ * real form the root is ALWAYS a callable `FieldTree` — while placing a
+ * non-`FieldTree` value at a child path, which is the shape `isFieldTree()`
+ * exists to reject. The cast is confined to this helper precisely because
+ * the value it produces is invalid on purpose; the positive-path mocks above
+ * carry no casts and must satisfy `FieldTree` honestly.
+ */
+function createRootWithMalformedChildren(
+  children: Record<string, unknown>,
+): FieldTree<unknown> {
+  const call = () => ({
+    value: () => ({}),
+    touched: () => false,
+    errors: () => [],
+    errorSummary: () => [],
+    submitting: () => false,
+    markAsTouched: () => {},
+    invalid: () => false,
+  });
+  return Object.assign(call, children) as unknown as FieldTree<unknown>;
+}
+
 describe('injectFieldControl', () => {
   it('should resolve field control from form using id attribute', () => {
     const emailControl = createMockFieldTree('');
-    const mockForm = { email: emailControl };
+    const mockForm = createGroupFieldTree(
+      { email: '' },
+      { email: emailControl },
+    );
     const mockContext: NgxSignalFormContext = {
       form: mockForm,
-      submittedStatus: () => 'unsubmitted',
-      errorStrategy: () => 'on-touch',
+      submittedStatus: signal<SubmittedStatus>('unsubmitted'),
+      errorStrategy: signal('on-touch'),
     };
     const injector = Injector.create({
       providers: [{ provide: NGX_SIGNAL_FORM_CONTEXT, useValue: mockContext }],
@@ -86,11 +114,14 @@ describe('injectFieldControl', () => {
 
   it('should resolve nested field control using dot notation', () => {
     const cityControl = createMockFieldTree('');
-    const mockForm = { address: { city: cityControl } };
+    const mockForm = createGroupFieldTree(
+      { address: { city: '' } },
+      { address: createGroupFieldTree({ city: '' }, { city: cityControl }) },
+    );
     const mockContext: NgxSignalFormContext = {
       form: mockForm,
-      submittedStatus: () => 'unsubmitted',
-      errorStrategy: () => 'on-touch',
+      submittedStatus: signal<SubmittedStatus>('unsubmitted'),
+      errorStrategy: signal('on-touch'),
     };
 
     const injector = Injector.create({
@@ -126,8 +157,8 @@ describe('injectFieldControl', () => {
     );
     const mockContext: NgxSignalFormContext = {
       form: mockForm,
-      submittedStatus: () => 'unsubmitted',
-      errorStrategy: () => 'on-touch',
+      submittedStatus: signal<SubmittedStatus>('unsubmitted'),
+      errorStrategy: signal('on-touch'),
     };
 
     const injector = Injector.create({
@@ -143,11 +174,14 @@ describe('injectFieldControl', () => {
 
   it('should work with ElementRef', () => {
     const emailControl = createMockFieldTree('');
-    const mockForm = { email: emailControl };
+    const mockForm = createGroupFieldTree(
+      { email: '' },
+      { email: emailControl },
+    );
     const mockContext: NgxSignalFormContext = {
       form: mockForm,
-      submittedStatus: () => 'unsubmitted',
-      errorStrategy: () => 'on-touch',
+      submittedStatus: signal<SubmittedStatus>('unsubmitted'),
+      errorStrategy: signal('on-touch'),
     };
     const injector = Injector.create({
       providers: [{ provide: NGX_SIGNAL_FORM_CONTEXT, useValue: mockContext }],
@@ -163,9 +197,9 @@ describe('injectFieldControl', () => {
 
   it('should throw error when field name cannot be resolved', () => {
     const mockContext: NgxSignalFormContext = {
-      form: {},
-      submittedStatus: () => 'unsubmitted',
-      errorStrategy: () => 'on-touch',
+      form: createGroupFieldTree({}, {}),
+      submittedStatus: signal<SubmittedStatus>('unsubmitted'),
+      errorStrategy: signal('on-touch'),
     };
 
     const injector = Injector.create({
@@ -181,11 +215,14 @@ describe('injectFieldControl', () => {
   });
 
   it('should throw error when field not found in form', () => {
-    const mockForm = { email: signal({ value: '' }) };
+    const mockForm = createGroupFieldTree(
+      { email: '' },
+      { email: createMockFieldTree('') },
+    );
     const mockContext: NgxSignalFormContext = {
       form: mockForm,
-      submittedStatus: () => 'unsubmitted',
-      errorStrategy: () => 'on-touch',
+      submittedStatus: signal<SubmittedStatus>('unsubmitted'),
+      errorStrategy: signal('on-touch'),
     };
 
     const injector = Injector.create({
@@ -201,11 +238,19 @@ describe('injectFieldControl', () => {
   });
 
   it('should throw error when nested field path is invalid', () => {
-    const mockForm = { address: { street: signal({ value: '' }) } };
+    const mockForm = createGroupFieldTree(
+      { address: { street: '' } },
+      {
+        address: createGroupFieldTree(
+          { street: '' },
+          { street: createMockFieldTree('') },
+        ),
+      },
+    );
     const mockContext: NgxSignalFormContext = {
       form: mockForm,
-      submittedStatus: () => 'unsubmitted',
-      errorStrategy: () => 'on-touch',
+      submittedStatus: signal<SubmittedStatus>('unsubmitted'),
+      errorStrategy: signal('on-touch'),
     };
 
     const injector = Injector.create({
@@ -226,13 +271,13 @@ describe('injectFieldControl', () => {
         {
           provide: NGX_SIGNAL_FORM_CONTEXT,
           useValue: {
-            get form() {
+            get form(): FieldTree<unknown> {
               throw new Error(
                 'NG0950: Input is required but no value is available yet',
               );
             },
-            submittedStatus: () => 'unsubmitted',
-            errorStrategy: () => 'on-touch',
+            submittedStatus: signal<SubmittedStatus>('unsubmitted'),
+            errorStrategy: signal('on-touch'),
           } satisfies NgxSignalFormContext,
         },
       ],
@@ -274,11 +319,13 @@ describe('injectFieldControl', () => {
     // validate only `isRecord(control) && part in control`, then blindly
     // cast the result to `FieldTree`, deferring the failure to a confusing
     // downstream call site instead of throwing here with a clear message.
-    const mockForm = { metadata: { note: 'plain data, not a FieldTree' } };
+    const mockForm = createRootWithMalformedChildren({
+      metadata: { note: 'plain data, not a FieldTree' },
+    });
     const mockContext: NgxSignalFormContext = {
       form: mockForm,
-      submittedStatus: () => 'unsubmitted',
-      errorStrategy: () => 'on-touch',
+      submittedStatus: signal<SubmittedStatus>('unsubmitted'),
+      errorStrategy: signal('on-touch'),
     };
     const injector = Injector.create({
       providers: [{ provide: NGX_SIGNAL_FORM_CONTEXT, useValue: mockContext }],
@@ -296,11 +343,13 @@ describe('injectFieldControl', () => {
     // A callable property (e.g. a plain function living on the form object)
     // passes a naive "is it a function" check but is not a real FieldTree —
     // calling it does not produce a conforming FieldState.
-    const mockForm = { email: () => 'not a FieldState' };
+    const mockForm = createRootWithMalformedChildren({
+      email: () => 'not a FieldState',
+    });
     const mockContext: NgxSignalFormContext = {
       form: mockForm,
-      submittedStatus: () => 'unsubmitted',
-      errorStrategy: () => 'on-touch',
+      submittedStatus: signal<SubmittedStatus>('unsubmitted'),
+      errorStrategy: signal('on-touch'),
     };
     const injector = Injector.create({
       providers: [{ provide: NGX_SIGNAL_FORM_CONTEXT, useValue: mockContext }],

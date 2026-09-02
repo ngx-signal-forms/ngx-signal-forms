@@ -7,13 +7,25 @@ const toPosixPath = (filePath) => filePath.replaceAll('\\', '/');
 const toCommandArguments = (filePaths) =>
   filePaths.map((filePath) => JSON.stringify(filePath)).join(' ');
 
-const isOxlintIgnoredGeneratedFile = (filePath) =>
-  toPosixPath(filePath) === 'apps/demo/public/mockServiceWorker.js';
+const oxlintIgnoredPathPrefixes = ['.agents/', '.github/skills/', '.opencode/'];
+
+const oxlintIgnoredFilePaths = new Set([
+  'apps/demo/public/mockServiceWorker.js',
+]);
+
+const isOxlintIgnoredFile = (filePath) => {
+  const posixPath = toPosixPath(filePath);
+
+  return (
+    oxlintIgnoredFilePaths.has(posixPath) ||
+    oxlintIgnoredPathPrefixes.some((prefix) => posixPath.startsWith(prefix))
+  );
+};
 
 const createOxcCommands = (files) => {
   const repoRelativeFiles = files.map(toRepoRelativePath);
   const lintableFiles = repoRelativeFiles.filter(
-    (filePath) => !isOxlintIgnoredGeneratedFile(filePath),
+    (filePath) => !isOxlintIgnoredFile(filePath),
   );
 
   if (lintableFiles.length === 0) {

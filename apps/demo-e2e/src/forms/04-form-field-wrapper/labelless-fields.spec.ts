@@ -1,5 +1,4 @@
 import { expect, test } from '@playwright/test';
-import { stabilizeLayoutSnapshotViewport } from '../../fixtures/layout-screenshot.fixture';
 import { LabellessFieldsPage } from '../../page-objects/labelless-fields.page';
 
 test.describe('Labelless Form Fields', () => {
@@ -83,36 +82,57 @@ test.describe('Labelless Form Fields', () => {
     expect(scrollWidth).toBeLessThanOrEqual(clientWidth);
   });
 
-  test('snapshot: comparison grid and narrow inputs @layout', async () => {
-    await stabilizeLayoutSnapshotViewport(page.page);
-    // Settle layout by focusing then blurring the age input with an
-    // invalid value so the narrow-input error is visible in the shot.
+  test('keeps comparison wrappers present and accessible across appearance/orientation variants', async () => {
+    await expect(page.comparisonSection).toBeVisible();
+    await expect(page.comparisonLabelledWrapper).toBeVisible();
+    await expect(page.comparisonLabellessWrapper).toBeVisible();
+
+    const standardHeights = await Promise.all([
+      page.comparisonLabelledWrapper.evaluate((el) =>
+        Math.round((el as HTMLElement).offsetHeight),
+      ),
+      page.comparisonLabellessWrapper.evaluate((el) =>
+        Math.round((el as HTMLElement).offsetHeight),
+      ),
+    ]);
+    expect(standardHeights[0]).toBeGreaterThan(standardHeights[1]);
+
+    await page.horizontalOrientationButton.click();
+    await expect(page.comparisonSection).toBeVisible();
+
+    const horizontalOffset = await page.comparisonLabellessWrapper.evaluate(
+      (el) => {
+        const wrapperRect = el.getBoundingClientRect();
+        const input = el.querySelector('input');
+        const inputRect = input?.getBoundingClientRect();
+
+        return inputRect ? inputRect.left - wrapperRect.left : null;
+      },
+    );
+
+    expect(horizontalOffset).not.toBeNull();
+    expect(horizontalOffset ?? 0).toBeLessThan(64);
+
+    await page.outlineAppearanceButton.click();
+    await expect(page.comparisonSection).toBeVisible();
+    await expect(page.outlineAppearanceButton).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    );
+
+    const outlineHeights = await Promise.all([
+      page.comparisonLabelledWrapper.evaluate((el) =>
+        Math.round((el as HTMLElement).offsetHeight),
+      ),
+      page.comparisonLabellessWrapper.evaluate((el) =>
+        Math.round((el as HTMLElement).offsetHeight),
+      ),
+    ]);
+    expect(outlineHeights[0]).toBeGreaterThanOrEqual(outlineHeights[1]);
+
     await page.ageInput.fill('5');
     await page.ageInput.blur();
-
-    await expect(page.comparisonSection).toHaveScreenshot(
-      'labelless-comparison-grid.png',
-    );
-    await expect(page.narrowInputsSection).toHaveScreenshot(
-      'labelless-narrow-inputs.png',
-    );
-  });
-
-  test('snapshot: comparison grid (outline appearance) @layout', async () => {
-    await stabilizeLayoutSnapshotViewport(page.page);
-    await page.outlineAppearanceButton.click();
-
-    await expect(page.comparisonSection).toHaveScreenshot(
-      'labelless-comparison-grid-outline.png',
-    );
-  });
-
-  test('snapshot: comparison grid (horizontal orientation) @layout', async () => {
-    await stabilizeLayoutSnapshotViewport(page.page);
-    await page.horizontalOrientationButton.click();
-
-    await expect(page.comparisonSection).toHaveScreenshot(
-      'labelless-comparison-grid-horizontal.png',
-    );
+    await expect(page.form.getByText('Must be 18 or older')).toBeVisible();
+    await expect(page.narrowInputsSection).toBeVisible();
   });
 });

@@ -13,6 +13,7 @@ import {
   type FormFieldAppearance,
   type FormFieldOrientation,
   NgxSignalFormToolkit,
+  submitWithWarnings,
 } from '@ngx-signal-forms/toolkit';
 import { NgxFormField } from '@ngx-signal-forms/toolkit/form-field';
 
@@ -26,7 +27,7 @@ import { WizardStepInterface } from '../wizard-step.interface';
 
   imports: [FormField, NgxSignalFormToolkit, NgxFormField],
   template: `
-    <div class="trip-step">
+    <form [formRoot]="tripForm" class="trip-step">
       <h2 #stepHeading class="mb-4 text-xl font-semibold" tabindex="-1">
         Trip Details
       </h2>
@@ -373,7 +374,7 @@ import { WizardStepInterface } from '../wizard-step.interface';
           + Add Another Destination
         </button>
       }
-    </div>
+    </form>
   `,
   styles: `
     .trip-step {
@@ -451,18 +452,18 @@ export class TripStepComponent implements WizardStepInterface {
     this.store.setDestinations(this.#model().destinations);
   }
 
-  validateAndFocus(): Promise<boolean> {
-    this.tripForm().markAsTouched();
+  async validateAndFocus(): Promise<boolean> {
+    await submitWithWarnings(this.tripForm, () => Promise.resolve());
 
     if (this.tripForm().invalid() || !this.hasDestinations()) {
       const focused = focusFirstInvalid(this.tripForm);
       if (!focused && !this.hasDestinations()) {
         this.addDestinationButton()?.nativeElement.focus();
       }
-      return Promise.resolve(false);
+      return false;
     }
 
-    return Promise.resolve(true);
+    return true;
   }
 
   focusHeading(): void {

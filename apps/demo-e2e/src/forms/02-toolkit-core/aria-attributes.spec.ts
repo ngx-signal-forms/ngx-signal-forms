@@ -110,32 +110,43 @@ test.describe('Accessibility - ARIA Attributes', () => {
     await test.step('Verify additive aria-describedby behavior', async () => {
       const ratingInput = page.locator('#overallRating');
 
-      /// Verify initial aria-describedby contains only the hint
-      const initialDescribedBy = ratingInput;
-      await expect(initialDescribedBy).toHaveAttribute(
+      await expect(page.locator('#rating-hint')).toBeVisible();
+      /// The hint joins aria-describedby from the start (author-owned id).
+      await expect(ratingInput).toHaveAttribute(
         'aria-describedby',
-        'rating-hint',
+        /rating-hint/,
       );
 
       /// Trigger validation error by entering invalid value and blurring
       await ratingInput.fill('0');
       await ratingInput.blur();
 
-      /// After error, aria-describedby should contain BOTH hint and error ID
-      const updatedDescribedBy =
+      /// After error, auto-ARIA adds the error id alongside the existing
+      /// hint id -- merge, not replace. The wrapper visually swaps the
+      /// hint slot out for the error component while an error is shown
+      /// (display:none, not removed), so the hint stays attached with its
+      /// id intact but is not visible here -- only the describedby merge
+      /// is asserted.
+      const describedbyWithError =
         await ratingInput.getAttribute('aria-describedby');
-      expect(updatedDescribedBy).toContain('rating-hint');
-      expect(updatedDescribedBy).toContain('overallRating-error');
+      expect(describedbyWithError).toContain('rating-hint');
+      expect(describedbyWithError).toContain('overallRating-error');
+      await expect(page.locator('#rating-hint')).toBeAttached();
 
-      /// Fix the value and verify error ID is removed but hint remains
+      /// Fix the value and verify the error id is removed while the hint
+      /// id is preserved
       await ratingInput.fill('4');
       await ratingInput.blur();
 
-      const finalDescribedBy = ratingInput;
-      await expect(finalDescribedBy).toHaveAttribute(
+      await expect(ratingInput).toHaveAttribute(
         'aria-describedby',
-        'rating-hint',
+        /rating-hint/,
       );
+      await expect(ratingInput).not.toHaveAttribute(
+        'aria-describedby',
+        /overallRating-error/,
+      );
+      await expect(page.locator('#rating-hint')).toBeVisible();
     });
   });
 
@@ -155,22 +166,29 @@ test.describe('Accessibility - ARIA Attributes', () => {
       const improvementTextarea = page.locator('#improvementSuggestions');
       await expect(improvementTextarea).toBeVisible({ timeout: 3000 });
 
-      /// Verify initial aria-describedby contains both hint and counter
-      const initialDescribedBy =
-        await improvementTextarea.getAttribute('aria-describedby');
-      expect(initialDescribedBy).toContain('improvement-hint');
-      expect(initialDescribedBy).toContain('improvement-counter');
+      await expect(page.locator('#improvement-hint')).toBeVisible();
+      await expect(page.locator('#improvement-counter')).toBeVisible();
+      /// The hint joins aria-describedby from the start (author-owned id).
+      await expect(improvementTextarea).toHaveAttribute(
+        'aria-describedby',
+        /improvement-hint/,
+      );
 
       /// Trigger validation error by blurring empty required field
       await improvementTextarea.focus();
       await improvementTextarea.blur();
 
-      /// After error, aria-describedby should contain hint, counter, AND error ID
-      const updatedDescribedBy =
+      /// After error, auto-ARIA adds the error id alongside the existing
+      /// hint id -- merge, not replace. The wrapper visually swaps the
+      /// hint slot out for the error component while an error is shown
+      /// (display:none, not removed) -- the character count lives in a
+      /// separate slot and stays visible throughout.
+      const describedbyWithError =
         await improvementTextarea.getAttribute('aria-describedby');
-      expect(updatedDescribedBy).toContain('improvement-hint');
-      expect(updatedDescribedBy).toContain('improvement-counter');
-      expect(updatedDescribedBy).toContain('improvementSuggestions-error');
+      expect(describedbyWithError).toContain('improvement-hint');
+      expect(describedbyWithError).toContain('improvementSuggestions-error');
+      await expect(page.locator('#improvement-hint')).toBeAttached();
+      await expect(page.locator('#improvement-counter')).toBeVisible();
     });
   });
 });

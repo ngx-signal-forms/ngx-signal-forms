@@ -1,6 +1,6 @@
 {
   "name": "@ngx-signal-forms/toolkit",
-  "version": "1.0.0-rc.10",
+  "version": "1.0.0-rc.12",
   "description": "Zero-intrusive toolkit for Angular Signal Forms with automatic accessibility, error display strategies, and form field wrappers",
   "keywords": [
     "angular",
@@ -39,7 +39,6 @@
       "optional": true
     }
   },
-  "dependencies": {},
   "devDependencies": {
     "@angular/common": "catalog:angular",
     "@angular/compiler": "catalog:angular",

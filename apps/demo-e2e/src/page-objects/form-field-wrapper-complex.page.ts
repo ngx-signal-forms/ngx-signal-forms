@@ -60,8 +60,7 @@ export class FormFieldWrapperComplexPage extends BaseFormPage {
   }
 
   async goto(): Promise<void> {
-    await this.page.goto(this.getFullUrl(DEMO_PATHS.complexForms));
-    await this.waitForReady();
+    await this.gotoRoute(DEMO_PATHS.complexForms);
   }
 
   /**
@@ -138,9 +137,7 @@ export class FormFieldWrapperComplexPage extends BaseFormPage {
   get credentialsFieldsetErrorList(): Locator {
     return this.credentialsFieldset
       .locator('.ngx-signal-form-fieldset__messages')
-      .locator(
-        '.ngx-form-field-notification__list, .ngx-form-field-error__list',
-      )
+      .locator('.ngx-form-field-error__list')
       .first();
   }
 

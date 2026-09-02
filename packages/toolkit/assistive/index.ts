@@ -27,14 +27,10 @@ export {
 } from './character-count';
 export {
   NgxFormFieldError,
+  type NgxFormFieldErrorPresentation,
   type NgxFormFieldListStyle,
   type NgxFormFieldErrorListStyle,
 } from './form-field-error';
-export {
-  NgxFormFieldNotification,
-  type NgxFormFieldNotificationListStyle,
-} from './form-field-notification';
 export { NgxFormFieldErrorSummary } from './form-field-error-summary';
 export { NgxFormMarkingLegend } from './form-marking-legend';
 export { NgxFormFieldHint } from './hint';
-export { isBlockingError, isWarningError, warningError } from './warning-error';

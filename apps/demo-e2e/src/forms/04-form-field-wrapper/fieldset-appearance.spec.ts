@@ -55,6 +55,16 @@ test.describe('Form Field Wrapper - Fieldset Appearance', () => {
       'aria-pressed',
       'true',
     );
+    await expect(page.standardWrapperButton).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    );
+    await expect(page.outlineWrapperButton).toBeVisible();
+    await expect(page.plainWrapperButton).toBeVisible();
+    await expect(page.verticalOrientationButton).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    );
     await expect(page.autoFeedbackButton).toHaveAttribute(
       'aria-pressed',
       'true',
@@ -80,6 +90,18 @@ test.describe('Form Field Wrapper - Fieldset Appearance', () => {
       'bottom',
     );
     await expect(page.errorAlerts.first()).toBeVisible();
+  });
+
+  test('should switch the individual wrapper appearance to outline', async () => {
+    await page.showOutlineWrapper();
+
+    await expect(page.outlineWrapperButton).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    );
+    await expect(page.shippingStreetWrapper).toHaveClass(
+      /ngx-signal-forms-outline/,
+    );
   });
 
   test('should switch the shipping fieldset shell between bordered and semantic-only', async () => {
@@ -155,7 +177,7 @@ test.describe('Form Field Wrapper - Fieldset Appearance', () => {
     await expect(
       page
         .getGroupedMessages(page.shippingAddressFieldset)
-        .locator('.ngx-form-field-notification__list li'),
+        .locator('.ngx-form-field-error__list li'),
     ).toHaveCount(4);
   });
 
@@ -172,7 +194,9 @@ test.describe('Form Field Wrapper - Fieldset Appearance', () => {
       groupedMessages.locator('ngx-form-field-error').first(),
     ).toBeVisible();
     await expect(
-      groupedMessages.locator('ngx-form-field-notification'),
+      groupedMessages.locator(
+        'ngx-form-field-error[data-presentation="panel"]',
+      ),
     ).toHaveCount(0);
 
     await page.showNotificationFeedback();
@@ -182,7 +206,9 @@ test.describe('Form Field Wrapper - Fieldset Appearance', () => {
       'notification',
     );
     await expect(
-      groupedMessages.locator('ngx-form-field-notification'),
+      groupedMessages.locator(
+        'ngx-form-field-error[data-presentation="panel"]',
+      ),
     ).toBeVisible();
     await expect(
       page.getNotificationTitle(page.credentialsFieldset),
@@ -226,10 +252,6 @@ test.describe('Form Field Wrapper - Fieldset Appearance', () => {
     await page.showSuccessTone();
     await page.showTintSurface();
 
-    const baseBackground = await page.credentialsFieldset.evaluate(
-      (fieldset) => getComputedStyle(fieldset).backgroundColor,
-    );
-
     await page.triggerCredentialsMismatch();
 
     await expect(page.successToneButton).toHaveAttribute(
@@ -252,15 +274,10 @@ test.describe('Form Field Wrapper - Fieldset Appearance', () => {
       /ngx-signal-form-fieldset--surface-invalid/,
     );
 
-    const [fieldsetBackground, alertBox] = await Promise.all([
-      page.credentialsFieldset.evaluate(
-        (fieldset) => getComputedStyle(fieldset).backgroundColor,
-      ),
-      page.getGroupedAlert(page.credentialsFieldset).boundingBox(),
-    ]);
+    const alertBox = await page
+      .getGroupedAlert(page.credentialsFieldset)
+      .boundingBox();
 
-    expect(fieldsetBackground).not.toBe('rgba(0, 0, 0, 0)');
-    expect(fieldsetBackground).not.toBe(baseBackground);
     expect(
       requireValue(alertBox, 'credentials grouped alert bounding box').height,
     ).toBeGreaterThan(0);

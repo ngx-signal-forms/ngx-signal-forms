@@ -56,6 +56,6 @@ export class LabellessFieldsPage extends BaseFormPage {
   }
 
   async goto(): Promise<void> {
-    await this.page.goto(this.getFullUrl(this.route));
+    await this.gotoRoute(this.route);
   }
 }

@@ -36,7 +36,8 @@ export const YOUR_FIRST_FORM_CONTENT = {
       {
         title: 'Validation ownership',
         items: [
-          '<strong>Native HTML still matters:</strong> Keep semantic control attributes such as <code>type</code>, <code>required</code>, and <code>autocomplete</code>',
+          '<strong>Native HTML still matters:</strong> Keep semantic control attributes such as <code>type</code> and <code>autocomplete</code>',
+          '<strong>Signal Forms owns requiredness:</strong> Required rules live in the schema. Do not add HTML <code>required</code> — it fights Signal Forms / toolkit error timing',
           '<strong>Signal Forms owns displayed state:</strong> Error visibility follows field state and the selected strategy, not browser submit-time validation UI',
           '<strong>Toolkit owns presentation:</strong> <code>aria-invalid</code>, <code>aria-describedby</code>, and reusable error rendering come from Signal Forms state',
         ],
@@ -58,10 +59,10 @@ export const YOUR_FIRST_FORM_CONTENT = {
       {
         title: '🧪 Try This (On Touch Strategy)',
         items: [
-          '1. Click the Name field → Tab away → See error appear',
-          '2. Type "A" → Error: "min 2 characters"',
+          '1. Click the Name field → Tab away → See error appear: "Name is required"',
+          '2. Type "A" → Error: "Name must be at least 2 characters"',
           '3. Type "Ab" → Error disappears',
-          '4. Test Email: Enter "test" → Leave field → Invalid email error',
+          '4. Test Email: Enter "test" → Leave field → "Please enter a valid email address"',
           '5. Submit empty form → All errors show at once',
         ],
       },

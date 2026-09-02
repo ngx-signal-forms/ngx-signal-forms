@@ -41,6 +41,48 @@ export function normalizeFieldName(
  * input first, host element id second, parent context third — and you want
  * the same trimming/empty-collapse rules applied to every source.
  *
+ * ## The canonical field-name cascade
+ *
+ * This is the toolkit's canonical statement of the field-name precedence
+ * contract. `NgxFormFieldError` and `NgxHeadlessFieldName` call this
+ * primitive directly; `NgxFormFieldWrapper.resolvedFieldName` and
+ * `createFieldNameResolver` implement the same cascade semantics inline
+ * (same trim/empty-collapse rules) rather than calling it. Reading top to
+ * bottom, later tiers only run when every earlier tier resolved to `null`:
+ *
+ * 1. **Explicit input** — a `fieldName` (or equivalent) input the consumer
+ *    bound directly on *this* component/directive. Always wins when
+ *    non-empty, regardless of what any ancestor already resolved.
+ * 2. **Bound-control `id`** — read via {@link resolveFieldName} from the
+ *    element the component/directive is itself attached to or projecting.
+ *    Only components that own (or are attached to) the control participate
+ *    in this tier — `NgxFormFieldWrapper` and `NgxHeadlessFieldName` both
+ *    do; a standalone `NgxFormFieldError` does not, because it has no
+ *    control of its own.
+ * 3. **Inherited context** — the nearest ancestor's *already-resolved*
+ *    field name, read through `NGX_SIGNAL_FORM_FIELD_CONTEXT`. This is how
+ *    a projected `<ngx-form-field-error>` (which has no bound control of
+ *    its own) still ends up with the wrapper's tier-2 id-derived name: the
+ *    wrapper resolves tiers 1–2 for itself, publishes the result as
+ *    context, and the child's own cascade stops at tier 3.
+ *
+ * Concretely:
+ * - `NgxFormFieldWrapper.resolvedFieldName` cascades 1 → 2 (it owns the
+ *   projected control, so it never needs tier 3).
+ * - `NgxFormFieldError.#resolvedFieldName` and `NgxHeadlessFieldName`'s
+ *   directive-scoped resolution cascade 1 → 3 for `NgxFormFieldError`
+ *   (no control of its own to read an id from) and 1 → 2 for
+ *   `NgxHeadlessFieldName` (attached directly to the control, so it never
+ *   needs context).
+ * - `createFieldNameResolver` (in `core/utilities/`) is the one wrapper-
+ *   authoring helper that inserts an *optional* fourth tier — a projected
+ *   label's `for=` attribute — between explicit and bound-control-id, for
+ *   design systems that want that additional fallback.
+ *
+ * A `null` result at the end of any of these cascades means the same thing
+ * everywhere: ARIA wiring is skipped for that field until a name becomes
+ * resolvable, never a thrown error or a synthetic `"-error"` id.
+ *
  * @example
  * ```typescript
  * // explicit input wins, then host id, then context
@@ -212,4 +254,25 @@ export function buildAriaDescribedBy(
  */
 export function generateWarningId(fieldName: string): string {
   return `${fieldName}-warning`;
+}
+
+/**
+ * Generates the ID for a selection cluster's visually-hidden required hint.
+ *
+ * `role="group"` does not support `aria-required` (only `radiogroup` does),
+ * so `NgxFormFieldWrapper` relocates required-ness for `group` clusters into
+ * a visually-hidden node referenced by `aria-describedby` instead of an ARIA
+ * state — see
+ * https://github.com/ngx-signal-forms/ngx-signal-forms/issues/300.
+ *
+ * @param fieldName - The field name
+ * @returns The required-hint ID in format: `{fieldName}-required-hint`
+ *
+ * @example
+ * ```typescript
+ * generateRequiredHintId('consent'); // Returns: 'consent-required-hint'
+ * ```
+ */
+export function generateRequiredHintId(fieldName: string): string {
+  return `${fieldName}-required-hint`;
 }

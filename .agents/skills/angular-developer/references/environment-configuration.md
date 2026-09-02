@@ -69,9 +69,8 @@ initialization.
 
 ### Example
 
-`src/assets/config.json`:
-
 ```json
+// src/assets/config.json
 {
   "apiUrl": "https://api.example.com"
 }
@@ -82,15 +81,10 @@ Load the configuration before the application starts:
 ```ts
 import { Service, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { tap } from 'rxjs';
-
-interface AppConfig {
-  apiUrl: string;
-}
 
 @Service()
 export class AppConfigService {
-  private config!: AppConfig;
+  private config!: { apiUrl: string };
 
   private readonly http = inject(HttpClient);
 

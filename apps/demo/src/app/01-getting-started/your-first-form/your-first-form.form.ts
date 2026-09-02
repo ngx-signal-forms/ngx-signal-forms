@@ -32,6 +32,7 @@ import { contactFormSchema } from './your-first-form.validations';
         <input
           id="contact-name"
           type="text"
+          autocomplete="name"
           [formField]="contactForm.name"
           class="form-input"
           placeholder="Your name"
@@ -50,6 +51,7 @@ import { contactFormSchema } from './your-first-form.validations';
         <input
           id="contact-email"
           type="email"
+          autocomplete="email"
           [formField]="contactForm.email"
           class="form-input"
           placeholder="you@example.com"

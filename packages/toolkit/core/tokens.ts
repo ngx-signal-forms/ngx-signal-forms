@@ -32,6 +32,7 @@ export interface NgxSignalFormFieldContext {
 export const DEFAULT_NGX_SIGNAL_FORMS_CONFIG = {
   autoAria: true,
   defaultErrorStrategy: 'on-touch',
+  defaultWarningStrategy: 'on-touch',
   defaultFormFieldAppearance: 'standard',
   defaultFormFieldOrientation: 'vertical',
   showMarkerWhen: 'required',
@@ -39,6 +40,7 @@ export const DEFAULT_NGX_SIGNAL_FORMS_CONFIG = {
   optionalMarker: ' (optional)',
   requiredLegendText: '{marker} indicates a required field',
   optionalLegendText: 'All fields are required unless marked {marker}',
+  requiredHintText: 'required',
 } as const satisfies NgxSignalFormsConfig;
 
 /**
@@ -184,6 +186,77 @@ export interface NgxSignalFormHintRegistry {
 export const NGX_SIGNAL_FORM_HINT_REGISTRY =
   new InjectionToken<NgxSignalFormHintRegistry>(
     'NGX_SIGNAL_FORM_HINT_REGISTRY',
+  );
+
+/**
+ * A single field's resolved, already-rendered error/warning visibility,
+ * published by a message-rendering surface (e.g. `NgxFormFieldError`) that
+ * gates its own live regions independently of the ambient form context.
+ *
+ * `errorContainerVisible`/`warningContainerVisible` are the exact booleans
+ * the surface used to decide whether its `${fieldName}-error` /
+ * `${fieldName}-warning` element is in the DOM — not a strategy to
+ * re-resolve — so `NgxSignalFormAutoAria` mirrors what is actually rendered
+ * instead of recomputing the cascade a second time. Named to match
+ * `NgxFormFieldError`'s own `errorContainerVisible`/`warningContainerVisible`
+ * signals verbatim, so the publish/read seam is grep-traceable end to end.
+ *
+ * Public wire format for the {@link NgxSignalFormFieldVisibilityRegistry}
+ * contract.
+ *
+ * @public
+ */
+export interface NgxSignalFormFieldVisibilityDescriptor {
+  readonly fieldName: string;
+  readonly errorContainerVisible: Signal<boolean>;
+  readonly warningContainerVisible: Signal<boolean>;
+}
+
+/**
+ * Registry of field-level error/warning visibility, keyed by field name.
+ * Fills the gap `NgxFieldIdentity` cannot: `NgxFieldIdentity` is an
+ * element-scoped service provided only by `NgxFormFieldWrapper`, so it has
+ * no channel for a standalone `<ngx-form-field-error>` that is a *sibling*
+ * of the control it describes rather than an ancestor.
+ *
+ * `NgxSignalFormAutoAria` prefers `NgxFieldIdentity` when present (the
+ * wrapper fast-path) and falls back to this registry so `aria-describedby`
+ * still agrees with a wrapper-less error component's own resolved
+ * `strategy`/`warningStrategy` overrides.
+ *
+ * @public
+ */
+export interface NgxSignalFormFieldVisibilityRegistry {
+  /**
+   * Publishes (or replaces) the descriptor for `descriptor.fieldName`.
+   * Returns an unregister function that removes the entry — call it when the
+   * publishing surface is destroyed or stops resolving that field name.
+   */
+  register(descriptor: NgxSignalFormFieldVisibilityDescriptor): () => void;
+
+  /** Reads the current descriptor for `fieldName`, if one is registered. */
+  get(fieldName: string): NgxSignalFormFieldVisibilityDescriptor | undefined;
+}
+
+/**
+ * Injection token for the field-visibility registry contributed by
+ * `NgxSignalForm`. Provided at the `[ngxSignalForm]` host so every field
+ * inside the same form — wrapped or standalone — shares one registry.
+ *
+ * Third-party message-rendering surfaces that gate a live region on their
+ * own resolved strategy should register into this token so
+ * `NgxSignalFormAutoAria` can keep `aria-describedby` in lockstep. This is
+ * the channel for **wrapper-less** surfaces specifically — a wrapped field
+ * publishes through `NgxFieldIdentity` instead (see
+ * `docs/CUSTOM_WRAPPERS.md` for that contract). See
+ * "Publishing visibility for a custom standalone error surface" in
+ * `docs/CUSTOM_CONTROLS.md` for the worked example.
+ *
+ * @public
+ */
+export const NGX_SIGNAL_FORM_FIELD_VISIBILITY_REGISTRY =
+  new InjectionToken<NgxSignalFormFieldVisibilityRegistry>(
+    'NGX_SIGNAL_FORM_FIELD_VISIBILITY_REGISTRY',
   );
 
 /**

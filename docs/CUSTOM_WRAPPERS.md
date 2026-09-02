@@ -217,6 +217,29 @@ Consumers authoring `<ngx-form-field-hint>...</ngx-form-field-hint>` between
 the wrapper's tags must import `NgxFormFieldHint` themselves (or a bundle
 export that re-exports it from `@ngx-signal-forms/toolkit/assistive`).
 
+### Naming the field input
+
+The example above calls its field input `formField`, matching
+`NgxFormFieldWrapper`. That name is not free: both `NgxSignalFormAutoAria` and
+Angular's own `FormField` select on `[formField]` **including on elements that
+are not controls**, so `<my-form-field [formField]="...">` pulls both
+directives onto your wrapper's host. Auto-aria then injects `FORM_FIELD`,
+which only `FormField` provides — so a consumer that imports auto-aria but not
+`FormField` gets `NG0201: No provider found for InjectionToken FORM_FIELD` at
+runtime.
+
+Two ways out, both fine:
+
+- **Keep `formField`** and make sure every consumer template that binds it also
+  has Angular's `FormField` in scope. `FormField` declares
+  `passThroughInput: "formField"`, so it defers to your component's own input
+  rather than trying to bind a value to your wrapper element. This is what the
+  toolkit's own demos do.
+- **Pick a different name** — `field` is the obvious one — and neither
+  directive matches your host at all. `apps/demo`'s field-identity page takes
+  this route; see
+  `apps/demo/src/app/04-form-field-wrapper/field-identity/README.md`.
+
 A production wrapper will resolve `fieldName` from the bound control's `id`
 attribute, propagate `strategy` and `submittedStatus` from the form context,
 and gate rendering on `shouldShowErrors()` — `NgxFormFieldWrapper` is the
@@ -294,6 +317,7 @@ import {
   createErrorVisibility,
   generateErrorId,
   generateWarningId,
+  isElementCssVisible,
   resolveFieldName,
 } from '@ngx-signal-forms/toolkit';
 import {
@@ -307,11 +331,17 @@ import {
 interface MyAriaDomSnapshot {
   readonly fieldName: string | null;
   readonly describedBy: string | null;
+  /** Whether the element that carries `aria-invalid` still has a layout box. */
+  readonly isControlVisible: boolean;
 }
 
 const INITIAL_DOM_SNAPSHOT: MyAriaDomSnapshot = {
   fieldName: null,
   describedBy: null,
+  // Assume laid out until a real read phase says otherwise: an element that
+  // has not been through layout reports `false`, and stripping `aria-invalid`
+  // on the strength of a pre-layout probe would flicker it off and back on.
+  isControlVisible: true,
 };
 
 @Directive({
@@ -358,9 +388,17 @@ export class MyDesignSystemAriaDirective {
     fieldName: () => this.#domSnapshot().fieldName,
   });
 
+  // The visibility probe is the wrapper's own responsibility (see call-out 5
+  // below): nothing in the factory reads the DOM, so `aria-invalid` would go
+  // stale on a control inside a collapsed container without this.
+  readonly #isControlVisible = computed(
+    () => this.#domSnapshot().isControlVisible,
+  );
+
   readonly #ariaInvalid = createAriaInvalidSignal(
     this.#fieldState,
     this.#visibility,
+    this.#isControlVisible,
   );
 
   readonly #ariaRequired = createAriaRequiredSignal(this.#fieldState);
@@ -379,13 +417,20 @@ export class MyDesignSystemAriaDirective {
     //    thrashing — never mix `read` and `write` work in the same callback.
     afterEveryRender(
       {
-        earlyRead: () => this.#readDomSnapshot(),
+        earlyRead: () =>
+          // `checkVisibility()` is a layout read, so it belongs here rather
+          // than in an `effect()` — effects flush before render hooks in the
+          // same cycle and would report pre-layout geometry.
+          this.#readDomSnapshot(
+            isElementCssVisible(this.#element.nativeElement),
+          ),
         write: (snapshot) => {
           // Commit the snapshot read in `earlyRead`. Doing it here (not in
           // `earlyRead`) keeps the write phase the single mutation point.
           if (
             snapshot.fieldName !== this.#domSnapshot().fieldName ||
-            snapshot.describedBy !== this.#domSnapshot().describedBy
+            snapshot.describedBy !== this.#domSnapshot().describedBy ||
+            snapshot.isControlVisible !== this.#domSnapshot().isControlVisible
           ) {
             this.#domSnapshot.set(snapshot);
           }
@@ -399,7 +444,7 @@ export class MyDesignSystemAriaDirective {
     );
   }
 
-  #readDomSnapshot(): MyAriaDomSnapshot {
+  #readDomSnapshot(isControlVisible: boolean): MyAriaDomSnapshot {
     const el = this.#element.nativeElement;
     const fieldName = resolveFieldName(el);
     const raw = el.getAttribute('aria-describedby');
@@ -408,7 +453,7 @@ export class MyDesignSystemAriaDirective {
     // get re-counted as "preserved". A production directive caches the managed
     // ID set in a signal; this example recomputes inline for clarity.
     if (!raw || !fieldName) {
-      return { fieldName, describedBy: raw };
+      return { fieldName, describedBy: raw, isControlVisible };
     }
 
     const managed = new Set<string>([
@@ -424,6 +469,7 @@ export class MyDesignSystemAriaDirective {
     return {
       fieldName,
       describedBy: preserved.length > 0 ? preserved : null,
+      isControlVisible,
     };
   }
 
@@ -460,12 +506,67 @@ A few things to call out:
    pre-existing `aria-describedby` IDs to preserve) never race with the
    attribute writes that follow. Mixing reads and writes in the same callback
    triggers layout thrash on every change-detection cycle.
-5. **`isControlVisible` is optional.** `createAriaInvalidSignal` accepts an
-   optional third argument — a `Signal<boolean>` that suppresses
-   `aria-invalid` when the host is collapsed (e.g. inside a closed
-   `<details>`). `NgxSignalFormAutoAria` wires this from `NgxFieldIdentity`'s
-   shared visibility flag; consumers can pass any `Signal<boolean>` they
-   already maintain.
+5. **A wrapper composing `createAriaInvalidSignal` owns the visibility probe
+   itself.** The factory's third argument is a `Signal<boolean>` that resolves
+   the attribute to `null` while the control has no layout box — a collapsed
+   `<details>`, an inactive tab panel, a non-current wizard step. It is
+   optional in the type signature only; omitting it means `aria-invalid`
+   freezes at whatever it was when the container closed, and is wrong the
+   instant the container reopens with a different validation state.
+
+   Nothing wires this for you. `NgxSignalFormAutoAria` probes its own host
+   element every read phase, so plain `[formField]` controls get the
+   behaviour for free — but a wrapper that opts out of the directive and
+   composes the factories instead inherits none of it, and has to thread the
+   argument in itself.
+
+   The toolkit ships the probe in two forms. Reach for whichever matches the
+   render hooks your wrapper already has:
+
+   | Form                                                      | Reach for it when                                                                                                                                                                                                                                                       |
+   | --------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+   | `createControlVisibilitySignal(resolveElement, injector)` | Your wrapper has **no** render hook. The factory registers one `afterEveryRender`, probes in `earlyRead`, publishes in `write`, and hands back a `Signal<boolean>` ready for `createAriaInvalidSignal`'s third argument.                                                |
+   | `isElementCssVisible(el)`                                 | Your wrapper or shim **already** runs `afterEveryRender`. Fold the probe into your existing `earlyRead` and reuse the element you resolved there, instead of paying for a second hook. The worked example above does exactly this, and so does `NgxSignalFormAutoAria`. |
+
+   Both fail open on runtimes without `Element.checkVisibility()`, and
+   `createControlVisibilitySignal` additionally stays `true` while
+   `resolveElement` returns `null` — an element that has not been through
+   layout reports `false`, which would flicker the attribute off on first
+   paint.
+
+   Either way, probe **the element you write `aria-invalid` onto**, which is
+   not always the wrapper host. A shim that writes onto an inner focusable
+   element (a rendered `[role="combobox"]`, the native `<input>` inside a
+   design-system checkbox) must probe that inner element, or a control hidden
+   inside a still-laid-out wrapper goes unnoticed. Both forms are in use in
+   the reference apps: `apps/demo-material`, `apps/demo-primeng`, and
+   `apps/demo-spartan` each call `createControlVisibilitySignal` from their
+   wrapper, and the two PrimeNG control shims — which already run their own
+   render hook — call `isElementCssVisible` on the inner element they write
+   to instead. Each app has a collapsible-container case in its e2e suite
+   that proves the wiring.
+
+   ```typescript
+   import { Injector, inject } from '@angular/core';
+   import { createControlVisibilitySignal } from '@ngx-signal-forms/toolkit';
+   import { createAriaInvalidSignal } from '@ngx-signal-forms/toolkit/headless';
+
+   readonly #injector = inject(Injector);
+
+   // Resolve the element that CARRIES the attribute — here, the bound
+   // control, not the wrapper host.
+   readonly #isControlVisible = createControlVisibilitySignal(
+     () => this.#boundControlElement(),
+     this.#injector,
+   );
+
+   readonly ariaInvalidValue = createAriaInvalidSignal(
+     this.#fieldState,
+     this.#showErrors,
+     this.#isControlVisible,
+   );
+   ```
+
 6. **The consumer never inherits `NgxSignalFormAutoAria`.** That's the whole
    point — your directive owns the host, owns the writes, and owns the
    render phasing. The factories are reactive transforms over `FieldState`,
@@ -488,6 +589,161 @@ Each factory is independently usable. Common partial compositions:
 
 The contract each factory advertises is `fieldState in → ARIA out`. Pick the
 ones you need.
+
+## Which seam publishes what
+
+`NgxSignalFormAutoAria` needs three things it cannot work out on its own: what
+the field is **called**, when its error/warning regions are **visible**, and
+which **hint** elements describe it. Each of those is a separate channel with
+its own seam, and you pick per channel — they compose, they are not
+alternatives:
+
+| Channel                            | Seam                                        | Use it when                                               |
+| ---------------------------------- | ------------------------------------------- | --------------------------------------------------------- |
+| **Field name**                     | `NgxFieldIdentityProvider` (host directive) | The field's name is not the bound control's `id`          |
+| **Error / warning display timing** | `NGX_SIGNAL_FORM_FIELD_VISIBILITY_REGISTRY` | You resolve strategy yourself and render your own regions |
+| **Hint IDs**                       | `NGX_SIGNAL_FORM_HINT_REGISTRY`             | You render hint elements auto-aria should reference       |
+
+Resolution is **per channel**: providing a field identity does not disturb the
+registries, and publishing to a registry does not disturb the identity. A
+wrapper that only needs the field-name fix takes only that seam and keeps
+everything else working ([ADR-0010](decisions/0010-field-identity-shadows-registries-per-channel.md)).
+
+### `NgxFieldIdentityProvider` — declaring the field's name
+
+By default auto-aria derives the field name from the bound control's `id`
+attribute, which forces the name and the DOM `id` to be the same string. Two
+common shapes can't satisfy that: a third-party widget that generates its own
+inner input `id`, and a `role="group"` cluster whose name belongs to the group
+rather than to any one control. In both cases the ids auto-aria generates
+(`{fieldName}-error`, `{fieldName}-warning`) disagree with what you rendered,
+leaving `aria-describedby` pointing at nothing.
+
+Compose the provider onto your wrapper's host to declare the name yourself:
+
+```typescript
+import { Component, input } from '@angular/core';
+import {
+  NgxFieldIdentityProvider,
+  NgxFormFieldError,
+} from '@ngx-signal-forms/toolkit';
+
+@Component({
+  selector: 'my-field',
+  hostDirectives: [
+    { directive: NgxFieldIdentityProvider, inputs: ['fieldName'] },
+  ],
+  imports: [NgxFormFieldError],
+  template: `
+    <ng-content />
+    <ngx-form-field-error [formField]="field()" [fieldName]="fieldName()" />
+  `,
+})
+export class MyField {
+  readonly field = input.required<unknown>();
+  // Declare `fieldName` on your component too, with the same public name the
+  // host directive exposes. Angular feeds one attribute to both, so consumers
+  // bind it once and you can still read it for your own template. This is
+  // exactly what `NgxFormFieldWrapper` does.
+  readonly fieldName = input.required<string>();
+}
+```
+
+```html
+<my-field fieldName="emailAddress" [field]="form.emailAddress">
+  <label for="p-inputtext-42">Email</label>
+  <input id="p-inputtext-42" [formField]="form.emailAddress" />
+</my-field>
+<!-- aria-describedby="emailAddress-error", not "p-inputtext-42-error" -->
+```
+
+Three things worth knowing:
+
+- **It has no selector.** Placement on the host element is load-bearing — that
+  is the element injector your contained controls resolve through — and a
+  selector would invite putting it somewhere that silently does nothing.
+- **Providing an identity claims the naming channel for the whole subtree.**
+  Binding `null` means "not resolvable yet" and skips ARIA wiring; it does not
+  fall back to the control's `id`. If nothing ever publishes a name, a
+  dev-mode warning says so.
+- **It publishes the name and nothing else.** Strategy deliberately has no
+  channel here: the visibility registry publishes the _observed_ boolean that
+  already gates a rendered region, so it cannot drift from the DOM the way a
+  separately-declared strategy could.
+
+`NgxFieldIdentity`'s **resolved read signals** (`fieldName`, `controlId`,
+`errorId`, `warningId`, `hintIds`, `describedBy`, `isControlVisible`,
+`resolvedErrorStrategy`, `resolvedWarningStrategy`, `resolveControlElement()`)
+are public — inject an ancestor-provided instance and read the same resolved
+state auto-aria sees. Its **writer methods** stay `@internal` and are stripped
+from the published type definitions; `NgxFieldIdentityProvider` drives them
+for you. Note that `hintIds` is `readonly string[] | null`, where `null` means
+"this identity never published hints" — see
+[ADR-0010](decisions/0010-field-identity-shadows-registries-per-channel.md).
+
+A runnable version of exactly this shape — a widget that mints its own inner
+`id`, wrapped by a component that declares the field name, inside a
+collapsible container — is the
+[`field-identity` demo](https://ngx-signal-forms.github.io/ngx-signal-forms/form-field-wrapper/field-identity/)
+([code](../apps/demo/src/app/04-form-field-wrapper/field-identity/README.md)).
+
+> `NgxFormFieldWrapper` composes this same directive rather than providing
+> `NgxFieldIdentity` itself, so the built-in wrapper runs on the seam you do.
+> It still writes the identity directly for what an input cannot carry — the
+> `id`-derived name tier, and every non-name channel — see
+> [ADR-0011](decisions/0011-field-identity-provider-host-directive.md).
+
+### `NGX_SIGNAL_FORM_FIELD_VISIBILITY_REGISTRY` — declaring display timing
+
+This is the seam for display timing, in your own wrapper or in any standalone
+error/warning surface. It's provided by `NgxSignalForm` at the
+`[ngxSignalForm]` host, so it's reachable from anywhere inside that form.
+`NgxSignalFormAutoAria` reads it for a field whenever no identity has
+published a strategy for that channel — including when an identity exists but
+owns only the field name, which is exactly the `NgxFieldIdentityProvider` case
+above. The error and warning channels fall back independently of one another
+([ADR-0007](decisions/0007-warning-display-timing-cascade.md)):
+
+```typescript
+import { effect, inject } from '@angular/core';
+import { NGX_SIGNAL_FORM_FIELD_VISIBILITY_REGISTRY } from '@ngx-signal-forms/toolkit';
+
+@Component({
+  /* ... */
+})
+export class MyStandaloneErrorSurface {
+  readonly #registry = inject(NGX_SIGNAL_FORM_FIELD_VISIBILITY_REGISTRY, {
+    optional: true,
+  });
+
+  // Whatever already gates your rendered live regions.
+  protected readonly errorVisible = /* ... */;
+  protected readonly warningVisible = /* ... */;
+
+  constructor() {
+    effect((onCleanup) => {
+      const fieldName = this.resolvedFieldName();
+      if (!this.#registry || fieldName === null) return;
+
+      const unregister = this.#registry.register({
+        fieldName,
+        errorContainerVisible: this.errorVisible,
+        warningContainerVisible: this.warningVisible,
+      });
+      onCleanup(unregister);
+    });
+  }
+}
+```
+
+Register the exact booleans you already used to decide whether your
+`${fieldName}-error` / `${fieldName}-warning` elements are in the DOM — not
+a strategy for auto-ARIA to re-resolve — so the published value can never
+drift from what your surface actually renders. See ["Publishing visibility
+for a custom standalone error
+surface"](./CUSTOM_CONTROLS.md#publishing-visibility-for-a-custom-standalone-error-surface)
+in `CUSTOM_CONTROLS.md` for the full worked example this pattern is drawn
+from, including the `NgxFormFieldError` reference implementation.
 
 ## Customising the renderer
 
@@ -582,6 +838,10 @@ above). See `NgxFormFieldError` for the reference implementation.
 - [ ] Wrapper does **not** write `aria-invalid`, `aria-required`, or
       `aria-describedby` on its host element — those belong on the bound
       control and are owned by `NgxSignalFormAutoAria`.
+- [ ] If the wrapper composes `createAriaInvalidSignal` instead of inheriting
+      `NgxSignalFormAutoAria`, it passes the third `isControlVisible`
+      argument, probed from the element that carries the attribute — see
+      call-out 5 under [Composing ARIA primitives](#composing-aria-primitives).
 - [ ] Optional: register `NGX_FORM_FIELD_HINT_RENDERER` via
       `provideFormFieldHintRenderer(...)` if you want projected
       `<ngx-form-field-hint>` instances to render with design-system chrome.
@@ -635,18 +895,12 @@ should alias.
 
 ### Use the toolkit's wrapper helpers instead of reinventing them
 
-The `@ngx-signal-forms/toolkit/headless` entry point exposes four
-helpers for the boilerplate every form-field wrapper otherwise
-reimplements:
+The `@ngx-signal-forms/toolkit/headless` entry point exposes helpers for
+the boilerplate every form-field wrapper otherwise reimplements:
 
 - `createFieldNameResolver({ explicit, labelFor?, boundControl, wrapperName })` —
   the priority cascade `explicit → labelFor → boundControl.id → null +
 dev warning`.
-- `toHintDescriptors(hints)` — maps `Signal<readonly NgxFormFieldHint[]>`
-  to the registry wire format.
-- `createErrorRendererInputs({ formField, strategy, submittedStatus })` —
-  builds the `*ngComponentOutlet` `inputs:` map with a typed
-  `NgxFormFieldErrorRendererInputs<TValue>` payload.
 - `createAriaDescribedByBridge({ toolkit })` — for design systems that
   own `aria-describedby` via an injectable a11y service (Spartan brain's
   `BrnFieldA11yService`, or any equivalent), exposes a structurally
@@ -658,3 +912,24 @@ These keep every reference wrapper on a single canonical primitive so a
 behaviour change in one place takes effect everywhere — and they give
 new wrappers a consistent look so consumers reading any reference
 recognise the shape.
+
+Two smaller pieces of boilerplate are trivial enough that each reference
+wrapper (`NgxFormFieldWrapper` included) now inlines them directly rather
+than importing a shared helper — each is a single `computed()`:
+
+```ts
+// Hint descriptors for NGX_SIGNAL_FORM_HINT_REGISTRY
+readonly hintDescriptors = computed(() =>
+  this.hintChildren().map((hint) => ({
+    id: hint.resolvedId(),
+    fieldName: hint.resolvedFieldName(),
+  })),
+);
+
+// *ngComponentOutlet inputs for the error renderer
+readonly errorRendererInputs = computed<Record<string, unknown>>(() => ({
+  formField: this.formField(),
+  strategy: this.effectiveStrategy(),
+  submittedStatus: this.submittedStatus(),
+}));
+```

@@ -29,14 +29,14 @@ test.describe('Advanced Scenarios - Field State Patterns', () => {
   }) => {
     const inviteCodeInput = page.locator('#field-state-invite-code');
 
-    // Initially invite-only is unchecked — invite-code must not be visible
-    // (hidden at the attribute/CSS level via the wrapper; always in the DOM).
-    await expect(inviteCodeInput).not.toBeVisible();
+    // Initially invite-only is unchecked — invite-code should not be rendered.
+    await expect(inviteCodeInput).toHaveCount(0);
 
     // Enable invite-only.
     await page.locator('#field-state-invite-only').check();
 
-    // Now the invite-code field must appear.
+    // Now the invite-code field should be rendered and visible.
+    await expect(inviteCodeInput).toHaveCount(1);
     await expect(inviteCodeInput).toBeVisible();
   });
 
@@ -47,10 +47,11 @@ test.describe('Advanced Scenarios - Field State Patterns', () => {
     const inviteCodeInput = page.locator('#field-state-invite-code');
 
     await inviteOnlyCheckbox.check();
+    await expect(inviteCodeInput).toHaveCount(1);
     await expect(inviteCodeInput).toBeVisible();
 
     await inviteOnlyCheckbox.uncheck();
-    await expect(inviteCodeInput).not.toBeVisible();
+    await expect(inviteCodeInput).toHaveCount(0);
   });
 
   test('should disable the mobile-number field until SMS preference is selected (disabled)', async ({

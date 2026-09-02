@@ -60,7 +60,7 @@ describe('NgxFormField bundle', () => {
         // the `data-ngx-signal-form-control-*` attributes was never
         // declared, so the wrapper's control-kind resolution never saw it
         // and fell back to `kind: null`.
-        imports: [FormField, NgxFormField],
+        imports: [FormField, ...NgxFormField],
         componentProperties: { field: invalidField },
       },
     );

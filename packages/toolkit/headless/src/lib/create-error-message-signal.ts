@@ -1,11 +1,9 @@
-import { computed, inject, type Injector, type Signal } from '@angular/core';
+import { computed, type Injector, type Signal } from '@angular/core';
 import type { ValidationError } from '@angular/forms/signals';
-import { NGX_SIGNAL_FORMS_CONFIG } from '@ngx-signal-forms/toolkit';
 import {
   assertInjector,
   createErrorVisibility,
   generateErrorId,
-  NGX_ERROR_MESSAGES,
   readDirectErrors,
   splitByKind,
   stripAngularFormPrefix,
@@ -15,6 +13,7 @@ import {
   type SubmittedStatus,
 } from '@ngx-signal-forms/toolkit/core';
 
+import { buildHeadlessContext } from './build-headless-context';
 import { resolveErrorMessage } from './utilities';
 
 /**
@@ -32,6 +31,7 @@ import { resolveErrorMessage } from './utilities';
  *   non-stripped `message` override.
  *
  * @public
+ * @group Reactive Primitives
  */
 export interface ResolvedFieldError {
   readonly kind: string;
@@ -49,6 +49,7 @@ export interface ResolvedFieldError {
  * - `'only'` — warnings only
  *
  * @public
+ * @group Reactive Primitives
  */
 export type IncludeWarningsOption = boolean | 'only';
 
@@ -56,6 +57,7 @@ export type IncludeWarningsOption = boolean | 'only';
  * Options for {@link createErrorMessageSignal}.
  *
  * @public
+ * @group Reactive Primitives
  */
 export interface CreateErrorMessageSignalOptions {
   /**
@@ -216,6 +218,7 @@ type FieldStateAccessor = () => FieldStateInput;
  * ```
  *
  * @public
+ * @group Reactive Primitives
  */
 export function createErrorMessageSignal(
   field: FieldStateAccessor,
@@ -223,26 +226,25 @@ export function createErrorMessageSignal(
 ): Signal<readonly ResolvedFieldError[]> {
   return assertInjector(createErrorMessageSignal, options?.injector, () => {
     const registrySignal = options?.errorMessages;
-    // Only auto-inject when no explicit registry is supplied. Calling
-    // `inject()` when a registry is already provided would force callers to
-    // wrap every test in `runInInjectionContext`, defeating the explicit
-    // override.
-    const injectedRegistry =
-      registrySignal === undefined
-        ? inject(NGX_ERROR_MESSAGES, { optional: true })
-        : null;
-
-    // Falls back to the global `defaultErrorStrategy` config (same cascade
-    // `NgxHeadlessFieldset` applies) when neither an explicit `strategy` nor
-    // a form context is present, keeping standalone usage consistent
-    // regardless of which headless surface a consumer reaches for.
-    const config = inject(NGX_SIGNAL_FORMS_CONFIG, { optional: true });
+    // Resolves the shared ambient DI contract (form context, config,
+    // registry, label resolver) in one call. `buildHeadlessContext()` always
+    // resolves `NGX_ERROR_MESSAGES` — even when an explicit `errorMessages`
+    // registry is supplied and the resolved value goes unused below — since
+    // an optional token resolution is inexpensive and every other headless
+    // call site already resolves the full contract unconditionally the same
+    // way.
+    const { config, errorMessagesRegistry: injectedRegistry } =
+      buildHeadlessContext();
 
     const visibilityOptions: CreateErrorVisibilityOptions = {
       ...(options?.strategy !== undefined && { strategy: options.strategy }),
       ...(options?.submittedStatus !== undefined && {
         submittedStatus: options.submittedStatus,
       }),
+      // Falls back to the global `defaultErrorStrategy` config (same cascade
+      // `NgxHeadlessFieldset` applies) when neither an explicit `strategy` nor
+      // a form context is present, keeping standalone usage consistent
+      // regardless of which headless surface a consumer reaches for.
       ...(config?.defaultErrorStrategy !== undefined && {
         configDefault: config.defaultErrorStrategy,
       }),

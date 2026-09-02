@@ -1,4 +1,30 @@
-# General Guidelines for the LLM
+# Agent instructions for ngx-signal-forms
+
+Canonical instructions for every assistant. `CLAUDE.md` and `.github/copilot-instructions.md` are thin delegates — add rules here, never there.
+
+## Writing
+
+- **Write in Simplified Technical English** -- use short sentences, active voice, one meaning per word, cut clutter, keep it warm and human.
+
+## Commits
+
+Conventional Commits. The subject line drives `nx release` versioning **and lands verbatim in the GitHub release notes**, so it is public prose.
+
+- `feat:` bumps minor, `fix:` bumps patch, `!` or a `BREAKING CHANGE:` footer bumps major.
+- Backtick any `@word` in a subject — write `` `@group` ``, not `@group`. GitHub renders a bare `@word` in release notes as a user mention and links a stranger's account.
+- Author commits as `Arjen <4863062+the-ult@users.noreply.github.com>`. `.mailmap` folds the older spellings into it.
+
+## Where the rules live
+
+| Topic                           | Read                                                                                                       |
+| ------------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| Toolkit usage (non-negotiable)  | `.github/instructions/ngx-signal-forms-toolkit.instructions.md` + the `ngx-signal-forms` skill             |
+| Angular / Signal Forms          | `angular-developer` skill (`references/signal-forms.md`)                                                   |
+| A11y (WCAG 2.2 AA)              | `.github/instructions/a11y.instructions.md`                                                                |
+| Domain vocabulary and decisions | `CONTEXT.md` at the repo root, ADRs at `docs/decisions/` (this repo's convention, not `docs/adr/`)         |
+| Issues and PRDs                 | GitHub issues at `ngx-signal-forms/ngx-signal-forms` via the `gh` CLI — see `docs/agents/issue-tracker.md` |
+
+Triage labels: `needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`.
 
 <!-- nx configuration start-->
 <!-- Leave the start & end comments to automatically receive updates. -->
@@ -23,26 +49,3 @@
 - The `nx-generate` skill handles generator discovery internally - don't call nx_docs just to look up generator syntax
 
 <!-- nx configuration end-->
-
-## Repo Conventions
-
-Canonical repo rules (stack, structure, commands, testing/snapshot policy) live in `.github/copilot-instructions.md`. Domain-specific rules:
-
-- Toolkit usage: `.github/instructions/ngx-signal-forms-toolkit.instructions.md` + the `ngx-signal-forms` skill (`.agents/skills/ngx-signal-forms/SKILL.md`)
-- Angular / Signal Forms: `angular-developer` skill (`references/signal-forms.md`)
-- A11y: `.github/instructions/a11y.instructions.md` (WCAG 2.2 AA)
-- Commits: `.github/instructions/commit.instructions.md` (Conventional Commits, drives nx release)
-
-## Agent skills
-
-### Issue tracker
-
-Issues live as GitHub issues at `ngx-signal-forms/ngx-signal-forms` (use the `gh` CLI). See `docs/agents/issue-tracker.md`.
-
-### Triage labels
-
-Default vocabulary: `needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`. See `docs/agents/triage-labels.md`.
-
-### Domain docs
-
-Single-context: `CONTEXT.md` at the repo root, ADRs at `docs/decisions/` (this repo's convention, not the default `docs/adr/`). See `docs/agents/domain.md`.

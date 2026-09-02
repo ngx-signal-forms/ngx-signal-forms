@@ -5,7 +5,7 @@ import {
   signal,
 } from '@angular/core';
 import type {
-  ErrorDisplayStrategy,
+  FormFieldAppearance,
   ResolvedErrorDisplayStrategy,
 } from '@ngx-signal-forms/toolkit';
 import {
@@ -17,15 +17,22 @@ import {
 } from '@ngx-signal-forms/toolkit/form-field';
 import { NgxSignalFormDebugger } from '@ngx-signal-forms/debugger';
 import {
+  AppearanceToggleComponent,
   DisplayControlsCardComponent,
   DisplayControlsSectionComponent,
   NgxPageControlsDirective,
+  OrientationToggleComponent,
   SplitLayoutComponent,
 } from '../../ui';
+import { APPEARANCE_LABELS } from '../../ui/appearance-toggle';
 import {
   ERROR_DISPLAY_MODES,
   ERROR_DISPLAY_MODE_LABELS,
 } from '../../ui/error-display-mode-selector/error-display-mode-selector';
+import {
+  createOrientationSelection,
+  getOrientationLabel,
+} from '../../ui/orientation-toggle';
 import { FieldsetFormComponent } from '../complex-forms/fieldset.form';
 
 const FEEDBACK_APPEARANCE_OPTIONS: readonly NgxFormFieldsetFeedbackAppearance[] =
@@ -93,7 +100,7 @@ const ERROR_PLACEMENT_OPTIONS: readonly NgxFormFieldErrorPlacement[] = [
   'bottom',
 ];
 
-const ERROR_DISPLAY_MODE_OPTIONS: readonly ErrorDisplayStrategy[] = [
+const ERROR_DISPLAY_MODE_OPTIONS: readonly ResolvedErrorDisplayStrategy[] = [
   'immediate',
   'on-touch',
   'on-submit',
@@ -109,11 +116,13 @@ const ERROR_PLACEMENT_LABELS: Record<NgxFormFieldErrorPlacement, string> = {
   changeDetection: ChangeDetectionStrategy.OnPush,
 
   imports: [
+    AppearanceToggleComponent,
     DisplayControlsCardComponent,
     DisplayControlsSectionComponent,
     FieldsetFormComponent,
     NgxPageControlsDirective,
     NgxSignalFormDebugger,
+    OrientationToggleComponent,
     SplitLayoutComponent,
   ],
   styles: `
@@ -271,6 +280,11 @@ export class FieldsetAppearanceFormComponent {
   // 'on-touch' / 'on-submit' visibly demonstrates the error-timing control.
   protected readonly selectedMode =
     signal<ResolvedErrorDisplayStrategy>('immediate');
+  protected readonly selectedAppearance =
+    signal<FormFieldAppearance>('standard');
+  protected readonly selectedOrientation = createOrientationSelection(
+    this.selectedAppearance,
+  );
   protected readonly selectedFieldsetAppearance =
     signal<NgxFormFieldsetAppearance>('outline');
   protected readonly selectedFeedbackAppearance =
@@ -326,7 +340,6 @@ export class FieldsetAppearanceFormComponent {
     switch (this.selectedMode()) {
       case 'immediate':
         return '1. Start typing invalid data → 2. See feedback update instantly → 3. Notice how errors clear as you type';
-      case 'inherit':
       case 'on-touch':
         return '1. Click a field → 2. Enter invalid data → 3. Tab away → 4. Observe errors appearing after you leave the field';
       case 'on-submit':
@@ -340,6 +353,14 @@ export class FieldsetAppearanceFormComponent {
     {
       label: 'Mode',
       value: ERROR_DISPLAY_MODE_LABELS[this.selectedMode()],
+    },
+    {
+      label: 'Appearance',
+      value: APPEARANCE_LABELS[this.selectedAppearance()],
+    },
+    {
+      label: 'Orientation',
+      value: getOrientationLabel(this.selectedOrientation()),
     },
     {
       label: 'Shell',

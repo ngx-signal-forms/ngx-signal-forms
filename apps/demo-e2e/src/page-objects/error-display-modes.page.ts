@@ -38,8 +38,7 @@ export class ErrorDisplayModesPage extends ErrorStrategyFormPage {
   }
 
   async goto(): Promise<void> {
-    await this.page.goto(DEMO_PATHS.errorDisplayModes);
-    await this.waitForReady();
+    await this.gotoRoute(DEMO_PATHS.errorDisplayModes);
   }
 
   override async selectErrorMode(
@@ -88,6 +87,18 @@ export class ErrorDisplayModesPage extends ErrorStrategyFormPage {
    */
   async submit(): Promise<void> {
     await this.submitButton.click();
+  }
+
+  /**
+   * Get all VISIBLE error alerts. This demo pre-renders the submission-error
+   * banner (`#submission-error`, `role="alert"`) and toggles it with
+   * `[hidden]` rather than adding it structurally on submit, so the base
+   * `errorAlerts` locator (which only excludes empty live-region shells)
+   * would count it even while hidden. Filter to visibility so callers keep
+   * asserting what a user would actually perceive.
+   */
+  override get errorAlerts(): Locator {
+    return super.errorAlerts.locator('visible=true');
   }
 
   /**

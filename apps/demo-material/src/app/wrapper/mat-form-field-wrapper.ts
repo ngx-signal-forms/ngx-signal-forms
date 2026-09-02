@@ -4,12 +4,14 @@ import {
   Directive,
   effect,
   inject,
+  Injector,
   input,
   isDevMode,
   signal,
 } from '@angular/core';
 import type { FieldState, FieldTree } from '@angular/forms/signals';
 import {
+  createControlVisibilitySignal,
   createShowErrorsComputed,
   injectFormContext,
   isBlockingError,
@@ -29,7 +31,6 @@ import {
   createAriaRequiredSignal,
   createFieldNameResolver,
   createHintIdsSignal,
-  toHintDescriptors,
 } from '@ngx-signal-forms/toolkit/headless';
 import {
   NgxMatBoundControl,
@@ -153,6 +154,7 @@ export class MatFormFieldWrapper<TValue = unknown> {
 
   readonly #config = inject(NGX_SIGNAL_FORMS_CONFIG);
   readonly #formContext = injectFormContext();
+  readonly #injector = inject(Injector);
 
   readonly effectiveStrategy = computed(() =>
     resolveErrorDisplayStrategy(
@@ -285,11 +287,16 @@ export class MatFormFieldWrapper<TValue = unknown> {
 
   /**
    * Hint descriptors in the public wire format consumed by
-   * `NGX_SIGNAL_FORM_HINT_REGISTRY`. Built via the toolkit's
-   * {@link toHintDescriptors} helper so the registry-wire shape stays in
-   * lockstep with the canonical wrapper.
+   * `NGX_SIGNAL_FORM_HINT_REGISTRY`. Mirrors the shape the canonical
+   * wrapper builds from its own projected hints, so the registry-wire
+   * shape stays in lockstep.
    */
-  readonly hintDescriptors = toHintDescriptors(this.hintChildren);
+  readonly hintDescriptors = computed(() =>
+    this.hintChildren().map((hint) => ({
+      id: hint.resolvedId(),
+      fieldName: hint.resolvedFieldName(),
+    })),
+  );
 
   // ── ARIA primitive factories ──────────────────────────────────────────
   // The four factories from `@ngx-signal-forms/toolkit/headless` drive
@@ -297,9 +304,22 @@ export class MatFormFieldWrapper<TValue = unknown> {
   // can verify the toolkit's identity model is wired even when Material
   // owns the actual DOM ARIA writes.
 
+  /**
+   * Layout probe for the element Material writes `aria-invalid` onto — the
+   * bound control, not the `<mat-form-field>` host. Threading it into
+   * `createAriaInvalidSignal` is what keeps `ariaInvalidValue` (and the
+   * `data-ngx-mat-invalid` mirror) from going stale while the control sits
+   * inside a collapsed container.
+   */
+  readonly #isControlVisible = createControlVisibilitySignal(
+    () => this.#boundControlElement(),
+    this.#injector,
+  );
+
   readonly ariaInvalidValue = createAriaInvalidSignal(
     this.#fieldStateSignal,
     this.#showByStrategy,
+    this.#isControlVisible,
   );
 
   readonly ariaRequiredValue = createAriaRequiredSignal(this.#fieldStateSignal);

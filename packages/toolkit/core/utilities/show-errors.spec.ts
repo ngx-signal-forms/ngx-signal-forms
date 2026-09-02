@@ -1,17 +1,13 @@
 import { signal, WritableSignal } from '@angular/core';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { ErrorDisplayStrategy, SubmittedStatus } from '../types';
-import {
-  combineShowErrors,
-  createShowErrorsComputed,
-  showErrors,
-} from './show-errors';
+import { combineShowErrors, createShowErrorsComputed } from './show-errors';
 
 /**
  * Test suite for show-errors utility functions.
  *
  * Tests cover:
- * - showErrors (re-exported from error-strategies)
+ * - createShowErrorsComputed (the reactive visibility-timing computed)
  * - combineShowErrors (combining multiple signals)
  */
 describe('show-errors utilities', () => {
@@ -25,16 +21,20 @@ describe('show-errors utilities', () => {
     });
   };
 
-  describe('showErrors', () => {
+  describe('createShowErrorsComputed', () => {
     it('should be a function', () => {
-      expect(typeof showErrors).toBe('function');
+      expect(typeof createShowErrorsComputed).toBe('function');
     });
 
     it('should work with immediate strategy', () => {
       const fieldState = createMockFieldState(true, false);
       const submittedStatus = signal<SubmittedStatus>('unsubmitted');
 
-      const result = showErrors(fieldState, 'immediate', submittedStatus);
+      const result = createShowErrorsComputed(
+        fieldState,
+        'immediate',
+        submittedStatus,
+      );
 
       expect(result()).toBe(true);
     });
@@ -43,7 +43,11 @@ describe('show-errors utilities', () => {
       const fieldState = createMockFieldState(true, true);
       const submittedStatus = signal<SubmittedStatus>('unsubmitted');
 
-      const result = showErrors(fieldState, 'on-touch', submittedStatus);
+      const result = createShowErrorsComputed(
+        fieldState,
+        'on-touch',
+        submittedStatus,
+      );
 
       expect(result()).toBe(true);
     });
@@ -53,33 +57,16 @@ describe('show-errors utilities', () => {
       const strategy = signal<ErrorDisplayStrategy>('immediate');
       const submittedStatus = signal<SubmittedStatus>('unsubmitted');
 
-      const result = showErrors(fieldState, strategy, submittedStatus);
+      const result = createShowErrorsComputed(
+        fieldState,
+        strategy,
+        submittedStatus,
+      );
 
       expect(result()).toBe(true);
 
       strategy.set('on-touch');
       expect(result()).toBe(false);
-    });
-  });
-
-  describe('createShowErrorsComputed', () => {
-    it('should be a function and match showErrors behavior', () => {
-      // Extraction target: the helper must be the canonical path behind
-      // showErrors(). Keeping them observationally equivalent is load-bearing
-      // for the wrapper/auto-aria/form-field-error dedupe.
-      expect(typeof createShowErrorsComputed).toBe('function');
-
-      const fieldState = createMockFieldState(true, true);
-      const submittedStatus = signal<SubmittedStatus>('unsubmitted');
-
-      const viaFactory = createShowErrorsComputed(
-        fieldState,
-        'on-touch',
-        submittedStatus,
-      );
-      const viaPublicApi = showErrors(fieldState, 'on-touch', submittedStatus);
-
-      expect(viaFactory()).toBe(viaPublicApi());
     });
 
     it('should return false for null field state', () => {
@@ -137,7 +124,7 @@ describe('show-errors utilities', () => {
     it('keeps errors hidden for a touched invalid field', () => {
       const fieldState = createMockFieldState(true, true);
 
-      const result = showErrors(fieldState, 'on-submit');
+      const result = createShowErrorsComputed(fieldState, 'on-submit');
 
       expect(result()).toBe(false);
     });
@@ -145,7 +132,7 @@ describe('show-errors utilities', () => {
     it('emits a dev-mode console.warn once', () => {
       const fieldState = createMockFieldState(true, true);
 
-      const result = showErrors(fieldState, 'on-submit');
+      const result = createShowErrorsComputed(fieldState, 'on-submit');
       result();
       result();
 
@@ -158,7 +145,11 @@ describe('show-errors utilities', () => {
       const fieldState = createMockFieldState(true, true);
       const submittedStatus = signal<SubmittedStatus>('unsubmitted');
 
-      const result = showErrors(fieldState, 'on-submit', submittedStatus);
+      const result = createShowErrorsComputed(
+        fieldState,
+        'on-submit',
+        submittedStatus,
+      );
       result();
 
       expect(warnSpy).not.toHaveBeenCalled();
@@ -167,8 +158,8 @@ describe('show-errors utilities', () => {
     it('does not warn for strategies other than on-submit', () => {
       const fieldState = createMockFieldState(true, true);
 
-      const onTouch = showErrors(fieldState, 'on-touch');
-      const immediate = showErrors(fieldState, 'immediate');
+      const onTouch = createShowErrorsComputed(fieldState, 'on-touch');
+      const immediate = createShowErrorsComputed(fieldState, 'immediate');
       onTouch();
       immediate();
 
@@ -244,15 +235,27 @@ describe('show-errors utilities', () => {
       expect(result()).toBe(false);
     });
 
-    it('should work with showErrors results', () => {
+    it('should work with createShowErrorsComputed results', () => {
       const field1 = createMockFieldState(true, true);
       const field2 = createMockFieldState(false, true);
       const field3 = createMockFieldState(true, false);
       const submittedStatus = signal<SubmittedStatus>('unsubmitted');
 
-      const showErrors1 = showErrors(field1, 'on-touch', submittedStatus);
-      const showErrors2 = showErrors(field2, 'on-touch', submittedStatus);
-      const showErrors3 = showErrors(field3, 'on-touch', submittedStatus);
+      const showErrors1 = createShowErrorsComputed(
+        field1,
+        'on-touch',
+        submittedStatus,
+      );
+      const showErrors2 = createShowErrorsComputed(
+        field2,
+        'on-touch',
+        submittedStatus,
+      );
+      const showErrors3 = createShowErrorsComputed(
+        field3,
+        'on-touch',
+        submittedStatus,
+      );
 
       const anyErrors = combineShowErrors([
         showErrors1,
@@ -274,10 +277,10 @@ describe('show-errors utilities', () => {
 
       expect(result()).toBe(false);
 
-      signals[50].set(true);
+      signals[50]?.set(true);
       expect(result()).toBe(true);
 
-      signals[50].set(false);
+      signals[50]?.set(false);
       expect(result()).toBe(false);
     });
   });
@@ -288,8 +291,12 @@ describe('show-errors utilities', () => {
       const passwordField = createMockFieldState(true, false);
       const submittedStatus = signal<SubmittedStatus>('unsubmitted');
 
-      const emailErrors = showErrors(emailField, 'on-touch', submittedStatus);
-      const passwordErrors = showErrors(
+      const emailErrors = createShowErrorsComputed(
+        emailField,
+        'on-touch',
+        submittedStatus,
+      );
+      const passwordErrors = createShowErrorsComputed(
         passwordField,
         'immediate',
         submittedStatus,
@@ -307,8 +314,16 @@ describe('show-errors utilities', () => {
       const strategy = signal<ErrorDisplayStrategy>('on-touch');
       const submittedStatus = signal<SubmittedStatus>('unsubmitted');
 
-      const errors1 = showErrors(field1, strategy, submittedStatus);
-      const errors2 = showErrors(field2, strategy, submittedStatus);
+      const errors1 = createShowErrorsComputed(
+        field1,
+        strategy,
+        submittedStatus,
+      );
+      const errors2 = createShowErrorsComputed(
+        field2,
+        strategy,
+        submittedStatus,
+      );
       const anyErrors = combineShowErrors([errors1, errors2]);
 
       expect(anyErrors()).toBe(false);

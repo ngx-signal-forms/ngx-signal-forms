@@ -5,6 +5,7 @@ import {
   contentChildren,
   effect,
   inject,
+  Injector,
   input,
   isDevMode,
   type Type,
@@ -13,6 +14,7 @@ import type { FieldState, FieldTree } from '@angular/forms/signals';
 import { BrnField, BrnFieldA11yService } from '@spartan-ng/brain/field';
 import { BrnLabel } from '@spartan-ng/brain/label';
 import {
+  createControlVisibilitySignal,
   createErrorVisibility,
   createShowErrorsComputed,
   injectFormContext,
@@ -29,10 +31,8 @@ import {
   createAriaDescribedByBridge,
   createAriaInvalidSignal,
   createAriaRequiredSignal,
-  createErrorRendererInputs,
   createFieldNameResolver,
   createHintIdsSignal,
-  toHintDescriptors,
 } from '@ngx-signal-forms/toolkit/headless';
 import { NgxSpartanFormFieldError } from './spartan-form-field-error';
 
@@ -331,11 +331,16 @@ export class NgxSpartanFormField<TValue = unknown> {
   /**
    * Hint descriptors in the public wire format consumed by
    * `NGX_SIGNAL_FORM_HINT_REGISTRY`. Auto-ARIA reads these IDs and threads
-   * them into `aria-describedby` on the bound control. Built via the
-   * toolkit's {@link toHintDescriptors} helper so the registry-wire
-   * shape stays in lockstep with the canonical wrapper.
+   * them into `aria-describedby` on the bound control. Mirrors the shape
+   * the canonical `NgxFormFieldWrapper` builds from its own projected
+   * hints.
    */
-  readonly hintDescriptors = toHintDescriptors(this.hintChildren);
+  readonly hintDescriptors = computed(() =>
+    this.hintChildren().map((hint) => ({
+      id: hint.resolvedId(),
+      fieldName: hint.resolvedFieldName(),
+    })),
+  );
 
   /**
    * Resolved field name. Built via the toolkit's
@@ -381,6 +386,7 @@ export class NgxSpartanFormField<TValue = unknown> {
    */
   readonly #config = inject(NGX_SIGNAL_FORMS_CONFIG);
   readonly #formContext = injectFormContext();
+  readonly #injector = inject(Injector);
 
   protected readonly effectiveStrategy = computed(() =>
     resolveErrorDisplayStrategy(
@@ -395,17 +401,16 @@ export class NgxSpartanFormField<TValue = unknown> {
   );
 
   /**
-   * Inputs handed to `*ngComponentOutlet`. Built via the toolkit's
-   * {@link createErrorRendererInputs} so the renderer contract
-   * (`{ formField, strategy, submittedStatus }`) stays in lockstep with
-   * the canonical wrapper and any `NgxFormFieldErrorRendererInputs`-typed
-   * renderer that consumers swap in.
+   * Inputs handed to `*ngComponentOutlet`. Mirrors the
+   * `{ formField, strategy, submittedStatus }` contract the canonical
+   * wrapper builds, so any renderer that consumers swap in sees the same
+   * shape regardless of which reference wrapper mounts it.
    */
-  protected readonly errorInputs = createErrorRendererInputs({
-    formField: this.formField,
-    strategy: this.effectiveStrategy,
-    submittedStatus: this.submittedStatus,
-  });
+  protected readonly errorInputs = computed<Record<string, unknown>>(() => ({
+    formField: this.formField(),
+    strategy: this.effectiveStrategy(),
+    submittedStatus: this.submittedStatus(),
+  }));
 
   /**
    * Bridges the `InputSignal<FieldTree>` to the underlying `FieldState`.
@@ -436,9 +441,22 @@ export class NgxSpartanFormField<TValue = unknown> {
   // verify the toolkit's identity model is wired even though Brain owns
   // the host binding on the bound control (and the bridge feeds it).
 
+  /**
+   * Layout probe for the bound helm control — the element Brain host-binds
+   * `aria-invalid` onto, not the wrapper host. Threading it into
+   * `createAriaInvalidSignal` keeps `ariaInvalidValue` (and the
+   * `data-spartan-invalid` mirror) from freezing while the control sits in
+   * a collapsed container.
+   */
+  readonly #isControlVisible = createControlVisibilitySignal(
+    () => this.#boundControlElement(),
+    this.#injector,
+  );
+
   readonly ariaInvalidValue = createAriaInvalidSignal(
     this.#fieldStateSignal,
     this.#showByStrategy,
+    this.#isControlVisible,
   );
 
   readonly ariaRequiredValue = createAriaRequiredSignal(this.#fieldStateSignal);

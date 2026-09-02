@@ -22,8 +22,7 @@ export class WarningSupportPage extends ErrorStrategyFormPage {
   }
 
   async goto(): Promise<void> {
-    await this.page.goto(DEMO_PATHS.warningSupport);
-    await this.waitForReady();
+    await this.gotoRoute(DEMO_PATHS.warningSupport);
   }
 
   /**

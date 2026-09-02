@@ -4,7 +4,14 @@ import type {
 } from '@angular/forms/signals';
 import type { ErrorMessageRegistry } from '../providers/error-messages.provider';
 
-interface ResolveErrorMessageOptions {
+/**
+ * Options accepted by {@link resolveValidationErrorMessage} and
+ * {@link getDefaultValidationMessage}.
+ *
+ * Exported because both functions are on the package root: a caller that
+ * wraps either one needs to be able to name this type.
+ */
+export interface ResolveErrorMessageOptions {
   readonly stripWarningPrefix?: boolean;
 }
 
@@ -40,7 +47,9 @@ const BUILT_IN_ERROR_KIND_LOOKUP: Record<NgValidationError['kind'], true> = {
  * module-federation host. Matching on `kind` survives those boundaries and also
  * recognizes the plain error objects that custom validators emit.
  */
-function isBuiltInError(error: ValidationError): error is NgValidationError {
+function isBuiltInError(
+  error: ResolvableValidationError,
+): error is NgValidationError {
   return Object.hasOwn(BUILT_IN_ERROR_KIND_LOOKUP, error.kind);
 }
 
@@ -97,8 +106,23 @@ function humanizeCustomKind(
   return normalizedKind.replaceAll('_', ' ');
 }
 
+/**
+ * A `ValidationError` whose `message` may be *explicitly* `undefined`.
+ *
+ * Angular declares `message?: string`, which under `exactOptionalPropertyTypes`
+ * permits omission but not an explicit `undefined`. A custom validator that
+ * builds its error from optional data (`{ kind, message: maybeMissing }`)
+ * produces exactly that shape at runtime, and the nullish check below already
+ * treats it as "fall through to the registry". This alias widens the parameter
+ * to accept what the function already handles — it only ever accepts more, so
+ * every real `ValidationError` still fits.
+ */
+export type ResolvableValidationError = Omit<ValidationError, 'message'> & {
+  readonly message?: string | undefined;
+};
+
 export function resolveValidationErrorMessage(
-  error: ValidationError,
+  error: ResolvableValidationError,
   registry?: Readonly<ErrorMessageRegistry> | null,
   options?: ResolveErrorMessageOptions,
 ): string {
@@ -130,7 +154,7 @@ export function resolveValidationErrorMessage(
 }
 
 export function getDefaultValidationMessage(
-  error: ValidationError,
+  error: ResolvableValidationError,
   options?: ResolveErrorMessageOptions,
 ): string {
   return isBuiltInError(error)

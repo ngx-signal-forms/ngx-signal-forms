@@ -4,17 +4,20 @@ import {
   ElementRef,
   inject,
   input,
-  isDevMode,
   type Signal,
 } from '@angular/core';
 import {
   createFieldMessageIdSignals,
+  devWarnOnce,
   resolveFieldName,
   resolveFieldNameFromCandidates,
+  type WarnOnceRef,
 } from '@ngx-signal-forms/toolkit/core';
 
 /**
  * Field name state signals exposed by the headless directive.
+ *
+ * @group Directives
  */
 export interface FieldNameStateSignals {
   /** Resolved field name from input or override; `null` when no name is resolvable. */
@@ -83,6 +86,8 @@ export interface FieldNameStateSignals {
  *   <label [for]="fieldName.resolvedFieldName()">Email</label>
  * </div>
  * ```
+ *
+ * @group Directives
  */
 @Directive({
   selector: '[ngxHeadlessFieldName]',
@@ -90,7 +95,7 @@ export interface FieldNameStateSignals {
 })
 export class NgxHeadlessFieldName implements FieldNameStateSignals {
   readonly #elementRef = inject<ElementRef<HTMLElement>>(ElementRef);
-  #warnedMissingName = false;
+  readonly #warnedMissingName: WarnOnceRef = { current: false };
 
   /**
    * The field name to use for ID generation.
@@ -100,6 +105,11 @@ export class NgxHeadlessFieldName implements FieldNameStateSignals {
 
   /**
    * Resolved field name.
+   *
+   * Tier 1 (explicit input) → tier 2 (bound-control id) of the toolkit's
+   * canonical field-name cascade — this directive is attached directly to
+   * the control, so it never needs tier 3 (inherited context). See
+   * {@link resolveFieldNameFromCandidates} for the full cascade.
    *
    * Returns `null` when neither a non-empty `fieldName` input nor a
    * non-empty host `id` is available. A `console.error` is emitted in
@@ -116,12 +126,11 @@ export class NgxHeadlessFieldName implements FieldNameStateSignals {
       return resolvedFieldName;
     }
 
-    if (isDevMode() && !this.#warnedMissingName) {
-      this.#warnedMissingName = true;
-      console.error(
-        '[ngx-signal-forms] ngxHeadlessFieldName requires either a non-empty `fieldName` input or a host element `id`. ARIA wiring will be skipped.',
-      );
-    }
+    devWarnOnce(
+      this.#warnedMissingName,
+      'error',
+      '[ngx-signal-forms] ngxHeadlessFieldName requires either a non-empty `fieldName` input or a host element `id`. ARIA wiring will be skipped.',
+    );
 
     return null;
   });

@@ -220,6 +220,16 @@ test.describe('Warning Support Demo', () => {
     });
   });
 
+  test.describe('Form host contract', () => {
+    test('uses a formRoot host with native novalidate', async ({
+      page: playwrightPage,
+    }) => {
+      const form = playwrightPage.locator('ngx-warning-support-form form');
+      await expect(form).toBeVisible();
+      await expect(form).toHaveAttribute('novalidate', '');
+    });
+  });
+
   test.describe('Form Submission', () => {
     test('should show success message after valid submission (no warnings)', async () => {
       await page.usernameInput.fill('testuser123');

@@ -173,7 +173,7 @@ describe('createSubmittedStatusTracker', () => {
   });
 
   it('throws synchronously when given neither a FieldTree nor a Signal<FieldTree>', () => {
-    // Negative: passing a value that fails the `isFieldTree` guard must
+    // Negative: passing a value that fails the `isFieldTreeLike` guard must
     // surface a clear error rather than silently producing 'unsubmitted'.
     expect(() =>
       TestBed.runInInjectionContext(() =>

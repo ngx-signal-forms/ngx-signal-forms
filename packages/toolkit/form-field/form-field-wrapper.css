@@ -108,7 +108,10 @@
 
   /* Icon/touch targets */
   --_field-icon-size: 1.25rem; /* 20px */
-  --_field-touch-target: 2rem; /* 32px */
+  /* WCAG 2.2 AA target-size contract (32px, deliberate headroom over the
+   * 24px minimum) — public override, rationale, and ownership boundary are
+   * documented in THEMING.md's "Selection target size" section (#253). */
+  --_field-touch-target: var(--ngx-form-field-touch-target, 2rem); /* 32px */
 
   /* Legacy aliases (for backward compatibility) */
   --_field-text-xs: var(--_field-text-caption);
@@ -676,6 +679,7 @@
   ) {
   font-size: var(--_input-size);
   font-family: var(--_input-font-family);
+  line-height: var(--_input-line-height);
   color: var(--_input-color);
   padding: 0; /* No padding - container handles it */
   border: none; /* No border - container handles it */
@@ -740,7 +744,7 @@
   grid-template-areas:
     'content'
     'assistive';
-  gap: var(--_field-space-3xs); /* 2px gap between container and assistive */
+  row-gap: 0;
 
   /* Label wrapper positioned inside the content area (caption style) */
   .ngx-signal-form-field-wrapper__label {
@@ -872,6 +876,25 @@
   color: var(--_optional-marker-color);
   font-weight: var(--_optional-marker-weight);
   opacity: var(--ngx-form-field-optional-marker-opacity, 0.7);
+}
+
+/* Relocated required-state text for a `group`-role selection cluster (see
+   `groupRequiredHintId` in form-field-wrapper.ts) — perceivable to
+   assistive tech via `aria-describedby`, hidden from sighted users. Standard
+   clip-rect technique (not `display: none` / `visibility: hidden`, which
+   screen readers also skip); matches the pattern already used by
+   `ngx-form-field-character-count`. */
+.ngx-signal-form-field-wrapper__visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
 }
 
 /* Remove input default styling (container provides all visual feedback) */
@@ -1015,8 +1038,8 @@
 /* the CSS should not rely on that invariant). */
 :host(
   .ngx-signal-form-field-wrapper--textual.ngx-signal-form-field-wrapper--horizontal:not(
-    .ngx-signal-forms-plain
-  )
+      .ngx-signal-forms-plain
+    )
 ):not(
   :has(.ngx-signal-form-field-wrapper__label :is(label, [ngxFormFieldLabel]))
 ) {
@@ -1028,8 +1051,8 @@
 
 :host(
   .ngx-signal-form-field-wrapper--textual.ngx-signal-form-field-wrapper--horizontal.ngx-signal-form-field-wrapper--messages-top:not(
-    .ngx-signal-forms-plain
-  )
+      .ngx-signal-forms-plain
+    )
 ):not(
   :has(.ngx-signal-form-field-wrapper__label :is(label, [ngxFormFieldLabel]))
 ) {
@@ -1052,10 +1075,26 @@
   align-items: flex-start;
   justify-content: space-between;
   gap: var(--ngx-form-field-assistive-gap, 0.5rem);
-  min-height: var(--ngx-form-field-assistive-min-height, 1.25rem);
-  /* Increased from 2px to 4px (0.25rem) for better visual separation per modern web guidance */
-  margin-top: var(--ngx-form-field-assistive-margin-top, 0.25rem);
-  margin-bottom: var(--ngx-form-field-assistive-margin-bottom, 0.25rem);
+  /*
+   * The row is always reserved (never collapsed) so a field does not shift when
+   * a hint is swapped for an error or warning. The reservation is exactly one
+   * caption line — the feedback line-height a hint/message renders at — so a
+   * single-line message fits without leaving dead space below every field
+   * (#246). Multi-line messages grow the row, which is the accepted shift.
+   */
+  min-height: var(
+    --ngx-form-field-assistive-min-height,
+    var(--ngx-signal-form-feedback-line-height, 1rem)
+  );
+  /* Figma feedback aligns directly below the field border by default. */
+  margin-top: var(--ngx-form-field-assistive-margin-top, 0);
+  margin-bottom: var(--ngx-form-field-assistive-margin-bottom, 0);
+  /* A scoped transition lets consumers collapse the reserved space smoothly. */
+  transition: var(
+    --ngx-form-field-assistive-transition,
+    min-height 0.15s ease-out,
+    margin-block 0.15s ease-out
+  );
   width: 100%;
 }
 
@@ -1072,10 +1111,64 @@
   flex-shrink: 0;
 }
 
+/*
+ * `.ngx-signal-form-field-wrapper__hint-slot` (see form-field-wrapper.ts) is
+ * a documented structural hook, not an accidental one: it wraps the
+ * projected `ngx-form-field-hint` content inside `.assistive-left` so the
+ * `collapse` empty-row query below can detect "no hint projected" via
+ * `:empty` without being defeated by that wrapper's own always-present
+ * element node.
+ */
+
 /* Hide empty slots to prevent unnecessary spacing */
 .ngx-signal-form-field-wrapper__assistive-left:empty,
 .ngx-signal-form-field-wrapper__assistive-right:empty {
   display: none;
+}
+
+/*
+ * Opt-in: collapse the reserved row instead of keeping it at
+ * `--ngx-form-field-assistive-min-height` when it carries no hint, error,
+ * warning or character count. `reserve` (the default) reproduces today's
+ * rendering exactly — nothing moves unless a consumer opts in (#297).
+ *
+ * A behavioural token, not a `-display` one: the row stays a flex container
+ * either way, so consumers never need to know that detail to use this.
+ *
+ * Implemented as a container style query so unsupported browsers simply
+ * keep the reserved default — a safe fallback, since it is the behaviour
+ * they already had. Baseline "Newly available"; every element is
+ * implicitly a style-query container, so no `container-type` is needed.
+ * https://developer.mozilla.org/en-US/docs/Web/CSS/@container#container_style_queries
+ */
+:host {
+  --_assistive-empty-behavior: var(
+    --ngx-form-field-assistive-empty-behavior,
+    reserve
+  );
+}
+
+@container style(--_assistive-empty-behavior: collapse) {
+  /*
+   * "Content-less" cannot be read off `.assistive-left:empty` directly: its
+   * hint slot is an unconditional wrapper div (toggled via inline
+   * `display`, not structurally removed), so `.assistive-left` always has
+   * at least that one child even when no hint is projected. Check the hint
+   * slot's own emptiness plus the absence of any other left-slot child
+   * (the error/warning renderer, when present) instead.
+   */
+  .ngx-signal-form-field-wrapper__assistive:not(
+    :has(
+      .ngx-signal-form-field-wrapper__assistive-left
+        > :not(.ngx-signal-form-field-wrapper__hint-slot),
+      .ngx-signal-form-field-wrapper__hint-slot:not(:empty),
+      .ngx-signal-form-field-wrapper__assistive-right:not(:empty)
+    )
+  ) {
+    min-height: 0;
+    margin-top: 0;
+    margin-bottom: 0;
+  }
 }
 
 /*
@@ -1108,6 +1201,12 @@
   )
 ) {
   --ngx-form-field-hint-display: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ngx-signal-form-field-wrapper__assistive {
+    transition: none;
+  }
 }
 
 /* Windows High Contrast (`forced-colors: active`): color-mix() borders and */

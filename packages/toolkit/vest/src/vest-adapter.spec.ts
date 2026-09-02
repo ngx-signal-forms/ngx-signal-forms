@@ -5,7 +5,26 @@ import { render, screen } from '@testing-library/angular';
 import userEvent from '@testing-library/user-event';
 import { create, enforce, test as vestTest, warn } from 'vest';
 import { describe, expect, it, vi } from 'vitest';
-import { createVestAdapter } from './vest-adapter';
+import {
+  createVestAdapter,
+  sharedVestAdapter,
+  type VestFieldPath,
+} from './vest-adapter';
+
+// Vitest hoists `vi.mock` above every import in this file (including its own
+// `@angular/core` import elsewhere), registering the mock before any other
+// module can observe the real `isDevMode`. Only `isDevMode` is overridden --
+// everything else passes through the real module untouched. `value` starts
+// `true`, matching how these unit tests actually run (see the dev-mode-only
+// `it.skipIf` pattern elsewhere in this package), so every OTHER test in this
+// file is unaffected; only the tests below that explicitly flip it exercise
+// the production-mode branch of ADR-0008 decision point 4.
+const vestFieldResolutionDevMode = vi.hoisted(() => ({ value: true }));
+
+vi.mock('@angular/core', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@angular/core')>();
+  return { ...actual, isDevMode: () => vestFieldResolutionDevMode.value };
+});
 
 describe('createVestAdapter', () => {
   it('shares one suite run across two register calls on the same path/value', async () => {
@@ -321,6 +340,321 @@ describe('createVestAdapter', () => {
     ).toBe(false);
   });
 
+  it('attaches a virtual Vest field name (unresolvable first segment) to the bound field, silently', async () => {
+    // `passwordMatch` names no model field at all -- a deliberate,
+    // form-level Vest error (ADR-0008 decision point 4's motivating example).
+    // An unresolvable FIRST path segment is indistinguishable from a
+    // deliberate virtual name, so it must attach to the bound field with NO
+    // diagnostic: no throw (even though these tests run in dev mode, where
+    // an 'invalid'-shaped miss WOULD throw), and no console.error.
+    const adapter = createVestAdapter();
+    const consoleErrorSpy = vi
+      .spyOn(console, 'error')
+      .mockImplementation(() => {});
+
+    const suite = create((data: { password: string; confirm: string }) => {
+      vestTest('passwordMatch', 'Passwords must match', () => {
+        enforce(data.confirm).equals(data.password);
+      });
+    });
+
+    @Component({
+      selector: 'ngx-test-adapter-virtual-field',
+      imports: [FormField],
+
+      template: `
+        <input id="password" [formField]="f.password" />
+        <input id="confirm" [formField]="f.confirm" />
+      `,
+    })
+    class TestComponent {
+      readonly model = signal({ password: 'a', confirm: 'b' });
+      readonly f = form(this.model, (path) => {
+        adapter.register(path, suite);
+      });
+    }
+
+    const { fixture } = await render(TestComponent);
+    await TestBed.inject(ApplicationRef).whenStable();
+
+    const rootErrors = fixture.componentInstance.f().errors();
+    expect(
+      rootErrors.some((error) => error.message === 'Passwords must match'),
+    ).toBe(true);
+    expect(consoleErrorSpy).not.toHaveBeenCalled();
+
+    consoleErrorSpy.mockRestore();
+  });
+
+  it('resolves a Vest field name past a valid prefix with an invalid tail: throws in dev mode', async () => {
+    // `address.cityy` -- a typo one letter off from the real child `city`.
+    // The first segment (`address`) DOES resolve, so this is not a virtual
+    // name; nothing but an authoring mistake explains it. Per ADR-0008
+    // decision point 4, dev mode hard-errors rather than silently
+    // mis-attaching (or silently dropping) the failure.
+    const adapter = createVestAdapter();
+
+    interface Model {
+      address: { city: string };
+    }
+    const suite = create((data: Model) => {
+      vestTest('address.cityy', 'City is required', () => {
+        enforce(data.address.city).isNotBlank();
+      });
+    });
+
+    @Component({
+      selector: 'ngx-test-adapter-invalid-tail-dev',
+      imports: [FormField],
+
+      template: `<input id="city" [formField]="f.address.city" />`,
+    })
+    class TestComponent {
+      readonly model = signal<Model>({ address: { city: '' } });
+      readonly f = form(this.model, (path) => {
+        adapter.register(path, suite);
+      });
+    }
+
+    await expect(async () => {
+      const { fixture } = await render(TestComponent);
+      // The sync `validateTree` pass reads the mis-resolved entry eagerly, so
+      // the throw can surface either during initial render or the first
+      // stability wait -- await both so either timing is caught.
+      await TestBed.inject(ApplicationRef).whenStable();
+      void fixture;
+    }).rejects.toThrow(
+      /does not resolve against the validator's bound field tree/,
+    );
+  });
+
+  it('resolves a Vest field name past a valid prefix with an invalid tail: logs via console.error and attaches to the bound field in production mode', async () => {
+    // Same authoring typo as the dev-mode spec above, but with `isDevMode()`
+    // forced `false` (see the `vi.mock('@angular/core', …)` at the top of
+    // this file). Per ADR-0008 decision point 4, production must not throw --
+    // it logs via `console.error` and still attaches the failure to the
+    // validator's bound field, so it is not silently lost.
+    vestFieldResolutionDevMode.value = false;
+    // Declared outside `try` (and restored in `finally`, not at the tail of
+    // `try`) so a failing assertion above it cannot leak the spy into later
+    // tests.
+    let consoleErrorSpy: { mockRestore: () => void } | undefined;
+    try {
+      const adapter = createVestAdapter();
+      consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+      interface Model {
+        address: { city: string };
+      }
+      const suite = create((data: Model) => {
+        vestTest('address.cityy', 'City is required', () => {
+          enforce(data.address.city).isNotBlank();
+        });
+      });
+
+      @Component({
+        selector: 'ngx-test-adapter-invalid-tail-prod',
+        imports: [FormField],
+
+        template: `<input id="city" [formField]="f.address.city" />`,
+      })
+      class TestComponent {
+        readonly model = signal<Model>({ address: { city: '' } });
+        readonly f = form(this.model, (path) => {
+          adapter.register(path, suite);
+        });
+      }
+
+      const { fixture } = await render(TestComponent);
+      await TestBed.inject(ApplicationRef).whenStable();
+
+      // No throw reached here -- production logs and continues.
+      expect(consoleErrorSpy).toHaveBeenCalledWith(
+        expect.stringContaining(
+          "does not resolve against the validator's bound field tree",
+        ),
+      );
+
+      // The mis-resolved entry attaches to the validator's bound field
+      // (the form root here) rather than being silently dropped.
+      const rootErrors = fixture.componentInstance.f().errors();
+      expect(
+        rootErrors.some((error) => error.message === 'City is required'),
+      ).toBe(true);
+    } finally {
+      consoleErrorSpy?.mockRestore();
+      vestFieldResolutionDevMode.value = true;
+    }
+  });
+
+  it('resolves a Vest field name whose probe throws: dev mode throws with the underlying error message included', async () => {
+    // `address` is a LEAF string field (not an object), but the Vest field
+    // name names a further child (`address.street`) past it. The first
+    // segment DOES resolve, so probing the second segment against Angular
+    // Signal Forms' leaf field-tree proxy throws (its `getOwnPropertyDescriptor`
+    // trap rejects a non-object target) rather than merely reporting "no such
+    // child". Per the PR #307 review finding, the caught error's own detail
+    // must be propagated into the dev-mode throw / production `console.error`
+    // -- previously it was dropped, leaving the diagnostic unactionable.
+    const adapter = createVestAdapter();
+
+    interface Model {
+      address: string;
+    }
+    const suite = create((data: Model) => {
+      vestTest('address.street', 'Street is required', () => {
+        enforce(data.address).isNotBlank();
+      });
+    });
+
+    @Component({
+      selector: 'ngx-test-adapter-probe-throw-dev',
+      imports: [FormField],
+
+      template: `<input id="address" [formField]="f.address" />`,
+    })
+    class TestComponent {
+      readonly model = signal<Model>({ address: '' });
+      readonly f = form(this.model, (path) => {
+        adapter.register(path, suite);
+      });
+    }
+
+    await expect(async () => {
+      const { fixture } = await render(TestComponent);
+      await TestBed.inject(ApplicationRef).whenStable();
+      void fixture;
+    }).rejects.toThrow(/probing segment "street" threw: .+/);
+  });
+
+  it('resolves a Vest field name whose probe throws: production mode logs with the underlying error message included', async () => {
+    vestFieldResolutionDevMode.value = false;
+    let consoleErrorSpy: { mockRestore: () => void } | undefined;
+    try {
+      const adapter = createVestAdapter();
+      consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+      interface Model {
+        address: string;
+      }
+      const suite = create((data: Model) => {
+        vestTest('address.street', 'Street is required', () => {
+          enforce(data.address).isNotBlank();
+        });
+      });
+
+      @Component({
+        selector: 'ngx-test-adapter-probe-throw-prod',
+        imports: [FormField],
+
+        template: `<input id="address" [formField]="f.address" />`,
+      })
+      class TestComponent {
+        readonly model = signal<Model>({ address: '' });
+        readonly f = form(this.model, (path) => {
+          adapter.register(path, suite);
+        });
+      }
+
+      const { fixture } = await render(TestComponent);
+      await TestBed.inject(ApplicationRef).whenStable();
+
+      // The propagated detail (not just the generic wrapper message) must be
+      // present in the logged diagnostic.
+      expect(consoleErrorSpy).toHaveBeenCalledWith(
+        expect.stringMatching(/probing segment "street" threw: .+/),
+      );
+
+      // Still attaches to the bound field rather than being dropped.
+      const rootErrors = fixture.componentInstance.f().errors();
+      expect(
+        rootErrors.some((error) => error.message === 'Street is required'),
+      ).toBe(true);
+    } finally {
+      consoleErrorSpy?.mockRestore();
+      vestFieldResolutionDevMode.value = true;
+    }
+  });
+
+  it('resolves a bracket-indexed Vest field name (items[0].sku) to the matching array item field', async () => {
+    interface Model {
+      items: { sku: string }[];
+    }
+    const suite = create((data: Model) => {
+      vestTest('items[0].sku', 'SKU is required', () => {
+        enforce(data.items[0]?.sku).isNotBlank();
+      });
+    });
+
+    @Component({
+      selector: 'ngx-test-adapter-bracket-index',
+      imports: [FormField],
+
+      template: `<input id="sku" [formField]="f.items[0].sku" />`,
+    })
+    class TestComponent {
+      readonly model = signal<Model>({ items: [{ sku: '' }] });
+      readonly f = form(this.model, (path) => {
+        adapter.register(path, suite);
+      });
+    }
+
+    const adapter = createVestAdapter();
+    const { fixture } = await render(TestComponent);
+    await TestBed.inject(ApplicationRef).whenStable();
+
+    const skuErrors = fixture.componentInstance.f.items[0].sku().errors();
+    expect(skuErrors.some((error) => error.message === 'SKU is required')).toBe(
+      true,
+    );
+    // Must not fall back to the bound (root) field.
+    expect(
+      fixture.componentInstance
+        .f()
+        .errors()
+        .some((error) => error.message === 'SKU is required'),
+    ).toBe(false);
+  });
+
+  it('resolves a dot-numeric Vest field name (items.0.sku) to the matching array item field', async () => {
+    interface Model {
+      items: { sku: string }[];
+    }
+    const suite = create((data: Model) => {
+      vestTest('items.0.sku', 'SKU is required', () => {
+        enforce(data.items[0]?.sku).isNotBlank();
+      });
+    });
+
+    @Component({
+      selector: 'ngx-test-adapter-dot-numeric-index',
+      imports: [FormField],
+
+      template: `<input id="sku" [formField]="f.items[0].sku" />`,
+    })
+    class TestComponent {
+      readonly model = signal<Model>({ items: [{ sku: '' }] });
+      readonly f = form(this.model, (path) => {
+        adapter.register(path, suite);
+      });
+    }
+
+    const adapter = createVestAdapter();
+    const { fixture } = await render(TestComponent);
+    await TestBed.inject(ApplicationRef).whenStable();
+
+    const skuErrors = fixture.componentInstance.f.items[0].sku().errors();
+    expect(skuErrors.some((error) => error.message === 'SKU is required')).toBe(
+      true,
+    );
+    expect(
+      fixture.componentInstance
+        .f()
+        .errors()
+        .some((error) => error.message === 'SKU is required'),
+    ).toBe(false);
+  });
+
   it('does not reset a shared suite while another registration is still mounted (concurrent mounts)', () => {
     const adapter = createVestAdapter();
     const baseSuite = create((data: { email: string }) => {
@@ -362,5 +696,225 @@ describe('createVestAdapter', () => {
     second.destroy();
     // Only the LAST surviving registration's teardown actually resets.
     expect(resetCount).toBe(1);
+  });
+
+  it('leaves the resetOnDestroy ref count unchanged when inject(DestroyRef) throws outside an injection context', () => {
+    // Issue #325: `maybeRegisterResetOnDestroy` used to increment the
+    // per-suite ref count and only THEN call `inject(DestroyRef)`. If that
+    // injection throws -- e.g. `register` called outside an injection
+    // context -- the count stayed permanently one too high, so no surviving
+    // registration's teardown could ever bring it back to zero and the suite
+    // was never reset. The fix injects first, increments second.
+    const adapter = createVestAdapter();
+
+    let resetCount = 0;
+    const baseSuite = create((data: { email: string }) => {
+      vestTest('email', 'Email is required', () => {
+        enforce(data.email).isNotBlank();
+      });
+    });
+    const suite = {
+      ...baseSuite,
+      reset: () => {
+        resetCount += 1;
+        baseSuite.reset();
+      },
+    };
+
+    // `register`'s path argument is never dereferenced before the throw:
+    // `maybeRegisterResetOnDestroy` runs before any path-dependent work, so a
+    // placeholder is safe here. Called straight from the test body -- no
+    // `TestBed.runInInjectionContext`, no component construction -- so
+    // `inject(DestroyRef)` throws NG0203.
+    const placeholderPath = {} as VestFieldPath<{ email: string }>;
+    expect(() => {
+      adapter.register(placeholderPath, suite, { resetOnDestroy: true });
+    }).toThrow(/injection context/iu);
+
+    // A later, properly-scoped registration on the SAME suite must still
+    // reset on destroy -- proving the failed attempt above left the
+    // per-suite ref count at zero, not stuck at one.
+    @Component({ template: '' })
+    class TestComponent {
+      readonly model = signal({ email: '' });
+      readonly f = form(this.model, (path) => {
+        adapter.register(path, suite, { resetOnDestroy: true });
+      });
+    }
+
+    const fixture = TestBed.createComponent(TestComponent);
+    fixture.destroy();
+
+    expect(resetCount).toBe(1);
+  });
+});
+
+describe('sharedVestAdapter', () => {
+  // Direct assertions against the public `sharedVestAdapter` singleton --
+  // the instance the built-in `validateVest`/`validateVestWarnings` entry
+  // points are wired onto (see `./validate-vest.ts`). Previously this
+  // singleton's guarantees were only asserted INDIRECTLY, through
+  // `validateVest`; see issue #358.
+  //
+  // Every test below builds its own Vest suite instance. The run
+  // coordinator's caches are keyed by suite object identity (ADR-0009), so a
+  // fresh suite per test cannot leak state into another spec file sharing
+  // this same module-scope singleton within one test run. Each test also
+  // calls `sharedVestAdapter.invalidate(suite)` in a `finally` block once
+  // done, as an extra belt-and-braces reset.
+
+  it('shares one suite execution across two direct sharedVestAdapter.register calls on the same field tree and value (cross-consumer cache reuse within one form)', async () => {
+    let runCount = 0;
+    const baseSuite = create((data: { email: string }) => {
+      vestTest('email', 'Email is required', () => {
+        enforce(data.email).isNotBlank();
+      });
+      vestTest('email', 'Consider a longer email', () => {
+        warn();
+        enforce(data.email.length >= 12).isTruthy();
+      });
+    });
+    const suite = {
+      ...baseSuite,
+      run(value: { email: string }) {
+        runCount += 1;
+        return baseSuite.run(value);
+      },
+    };
+
+    @Component({
+      selector: 'ngx-test-shared-adapter-cache-reuse',
+      imports: [FormField],
+
+      template: `<input [formField]="f.email" />`,
+    })
+    class TestComponent {
+      readonly model = signal({ email: '' });
+      readonly f = form(this.model, (path) => {
+        // Two direct registrations on the SINGLETON (not a private,
+        // factory-built adapter), on the same path -- two independent
+        // consumers of the SAME form (e.g. an errors surface and a warnings
+        // surface) wiring the same suite/value. The run cache is keyed by
+        // field tree, so reuse is scoped to consumers sharing one form --
+        // a second component with its own form() gets its own run.
+        sharedVestAdapter.register(path, suite, { includeErrors: true });
+        sharedVestAdapter.register(path, suite, {
+          includeErrors: false,
+          includeWarnings: true,
+        });
+      });
+    }
+
+    try {
+      await render(TestComponent);
+      await TestBed.inject(ApplicationRef).whenStable();
+
+      // Both register calls must resolve to a single shared suite execution.
+      expect(runCount).toBe(1);
+    } finally {
+      sharedVestAdapter.invalidate(suite);
+    }
+  });
+
+  it('reference-counts resetOnDestroy on the singleton: one of two consumers tearing down leaves the suite intact, the last resets it', () => {
+    let resetCount = 0;
+    const baseSuite = create((data: { email: string }) => {
+      vestTest('email', 'Email is required', () => {
+        enforce(data.email).isNotBlank();
+      });
+    });
+    const suite = {
+      ...baseSuite,
+      reset: () => {
+        resetCount += 1;
+        baseSuite.reset();
+      },
+    };
+
+    // No template/inputs needed: `form()` (and the singleton registration it
+    // triggers) runs during construction, before any change detection pass.
+    @Component({ template: '' })
+    class TestComponent {
+      readonly model = signal({ email: '' });
+      readonly f = form(this.model, (path) => {
+        sharedVestAdapter.register(path, suite, { resetOnDestroy: true });
+      });
+    }
+
+    // Two independently mounted consumers registering the SAME suite
+    // directly on the singleton -- the README-recommended module-scope
+    // pattern, exercised against `sharedVestAdapter` itself.
+    const first = TestBed.createComponent(TestComponent);
+    const second = TestBed.createComponent(TestComponent);
+
+    try {
+      first.destroy();
+      // The second consumer is still mounted and relying on this suite --
+      // resetting now would wipe its retained state out from under it.
+      expect(resetCount).toBe(0);
+
+      second.destroy();
+      // Only the LAST surviving registration's teardown actually resets.
+      expect(resetCount).toBe(1);
+    } finally {
+      sharedVestAdapter.invalidate(suite);
+    }
+  });
+
+  it('invalidate drops the singleton run cache so a subsequent runVestSuite call for the identical tuple re-executes instead of reusing the cache', () => {
+    let runCount = 0;
+    const baseSuite = create((data: { email: string }) => {
+      vestTest('email', 'Email is required', () => {
+        enforce(data.email).isNotBlank();
+      });
+    });
+    const suite = {
+      ...baseSuite,
+      run(value: { email: string }) {
+        runCount += 1;
+        return baseSuite.run(value);
+      },
+    };
+
+    // Only the field tree's identity is needed (no rendering, no DOM
+    // binding) -- build it directly via an injection context, matching
+    // `validate-vest.spec.ts`'s field-tree-only setup.
+    const fieldTree = TestBed.runInInjectionContext(() =>
+      form(signal({ email: '' })),
+    );
+    const value = { email: '' };
+
+    try {
+      const first = sharedVestAdapter.runVestSuite({
+        suite,
+        fieldTree,
+        value,
+      });
+      expect(first.fromCache).toBe(false);
+      expect(runCount).toBe(1);
+
+      // Identical tuple -> cached, no extra run.
+      const second = sharedVestAdapter.runVestSuite({
+        suite,
+        fieldTree,
+        value,
+      });
+      expect(second.fromCache).toBe(true);
+      expect(runCount).toBe(1);
+
+      sharedVestAdapter.invalidate(suite);
+
+      // Same (suite, fieldTree, value) tuple as `second` -- without
+      // `invalidate`, this would be a cache hit. It must re-execute.
+      const third = sharedVestAdapter.runVestSuite({
+        suite,
+        fieldTree,
+        value,
+      });
+      expect(third.fromCache).toBe(false);
+      expect(runCount).toBe(2);
+    } finally {
+      sharedVestAdapter.invalidate(suite);
+    }
   });
 });

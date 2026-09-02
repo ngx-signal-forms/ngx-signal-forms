@@ -12,6 +12,18 @@ import { defineConfig } from 'oxlint';
 // (TS2322, TS2345, etc.) through oxlint for files that aren't in the build
 // tsconfig. Type checking is tsc's responsibility; lint should be for lint
 // rules. Leaving `typeCheck` on turns oxlint into a noisy second type checker.
+//
+// Known `tsgolint` crash: a file that imports `Validators` from
+// `@angular/forms` alongside `compatForm`/`SignalFormControl` from
+// `@angular/forms/signals/compat` panics the type-aware pass with "Expected
+// file to be in inferred program", then cascades into hundreds of spurious
+// `no-unsafe-*` warnings across unrelated files in the same project.
+// Reproduced in isolation against `packages/toolkit/form-field/form-field-wrapper.compat.integration.spec.ts`
+// — unrelated to that spec's correctness or to `@angular/forms/signals/compat`
+// itself. Workaround: use an inline `ValidatorFn` instead of
+// `Validators.required` in any file that also imports from the compat entry
+// point. `tsgolint` is still experimental (see the link above); revisit this
+// workaround when it's updated.
 
 export default defineConfig({
   plugins: [
@@ -60,6 +72,7 @@ export default defineConfig({
   ignorePatterns: [
     '.angular',
     '.nx',
+    '.worktrees',
     '.agents',
     '.github/skills',
     '**/dist',

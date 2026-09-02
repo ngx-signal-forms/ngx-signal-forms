@@ -1,0 +1,183 @@
+<form [formRoot]="wizardForm" ngxSignalForm class="single-model-wizard">
+  <div class="status-row" aria-live="polite">
+    <span class="order-total">Running total: ${{ orderTotal() }}</span>
+  </div>
+
+  <ngx-wizard
+    [(currentStep)]="currentStep"
+    [completedSteps]="completedSteps()"
+    [canNavigate]="guardStep"
+    [showNavigation]="!orderConfirmed()"
+    submitLabel="Confirm order"
+    (wizardSubmit)="confirmOrder()"
+  >
+    <!-- Account step: bound to wizardForm.account -->
+    <ng-template
+      ngxWizardStep="account"
+      label="Account"
+      let-stepNumber="stepNumber"
+    >
+      <h2 #stepHeading tabindex="-1" class="step-heading">
+        Step {{ stepNumber }} of {{ stepCount }}: Account details
+      </h2>
+
+      <div class="step-fields">
+        <ngx-form-field-wrapper
+          [formField]="wizardForm.account.fullName"
+          [appearance]="appearance()"
+          [orientation]="orientation()"
+        >
+          <label for="fullName">Full name</label>
+          <input
+            id="fullName"
+            type="text"
+            [formField]="wizardForm.account.fullName"
+          />
+        </ngx-form-field-wrapper>
+
+        <ngx-form-field-wrapper
+          [formField]="wizardForm.account.email"
+          [appearance]="appearance()"
+          [orientation]="orientation()"
+        >
+          <label for="email">Email</label>
+          <input
+            id="email"
+            type="email"
+            [formField]="wizardForm.account.email"
+          />
+          <ngx-form-field-hint>
+            A work email unlocks express shipping on the next step.
+          </ngx-form-field-hint>
+        </ngx-form-field-wrapper>
+      </div>
+    </ng-template>
+
+    <!-- Shipping step: bound to wizardForm.shipping, cross-step rule reads account.email -->
+    <ng-template
+      ngxWizardStep="shipping"
+      label="Shipping"
+      let-stepNumber="stepNumber"
+    >
+      <h2 #stepHeading tabindex="-1" class="step-heading">
+        Step {{ stepNumber }} of {{ stepCount }}: Shipping details
+      </h2>
+
+      <div class="step-fields">
+        <ngx-form-field-wrapper
+          [formField]="wizardForm.shipping.street"
+          [appearance]="appearance()"
+          [orientation]="orientation()"
+        >
+          <label for="street">Street address</label>
+          <input
+            id="street"
+            type="text"
+            [formField]="wizardForm.shipping.street"
+          />
+        </ngx-form-field-wrapper>
+
+        <ngx-form-field-wrapper
+          [formField]="wizardForm.shipping.city"
+          [appearance]="appearance()"
+          [orientation]="orientation()"
+        >
+          <label for="city">City</label>
+          <input id="city" type="text" [formField]="wizardForm.shipping.city" />
+        </ngx-form-field-wrapper>
+
+        <ngx-form-field-wrapper
+          [formField]="wizardForm.shipping.postalCode"
+          [appearance]="appearance()"
+          [orientation]="orientation()"
+        >
+          <label for="postalCode">Postal code</label>
+          <input
+            id="postalCode"
+            type="text"
+            [formField]="wizardForm.shipping.postalCode"
+          />
+        </ngx-form-field-wrapper>
+
+        <ngx-form-field-wrapper
+          [formField]="wizardForm.shipping.expressShipping"
+          [appearance]="appearance()"
+          [orientation]="orientation()"
+        >
+          <label for="expressShipping">
+            Express shipping (+${{ expressShippingSurcharge }})
+          </label>
+          <input
+            id="expressShipping"
+            type="checkbox"
+            ngxSignalFormControl="checkbox"
+            [formField]="wizardForm.shipping.expressShipping"
+          />
+          <ngx-form-field-hint>
+            Requires a work email address, entered on step 1.
+          </ngx-form-field-hint>
+        </ngx-form-field-wrapper>
+      </div>
+    </ng-template>
+
+    <!-- Review step: read-only, live values pulled from the SAME model -->
+    <ng-template
+      ngxWizardStep="review"
+      label="Review"
+      let-stepNumber="stepNumber"
+    >
+      <h2 #stepHeading tabindex="-1" class="step-heading">
+        Step {{ stepNumber }} of {{ stepCount }}: Review your order
+      </h2>
+
+      @if (orderConfirmed()) {
+      <div
+        class="success-message"
+        role="status"
+        aria-live="polite"
+        aria-atomic="true"
+      >
+        <p>Order confirmed! A confirmation email is on its way.</p>
+        <button
+          type="button"
+          class="btn btn-secondary"
+          (click)="startNewOrder()"
+        >
+          Start a new order
+        </button>
+      </div>
+      } @else {
+      <dl class="order-summary">
+        <div>
+          <dt>Name</dt>
+          <dd>{{ wizardForm.account.fullName().value() || '—' }}</dd>
+        </div>
+        <div>
+          <dt>Email</dt>
+          <dd>{{ wizardForm.account.email().value() || '—' }}</dd>
+        </div>
+        <div>
+          <dt>Address</dt>
+          <dd>
+            {{ wizardForm.shipping.street().value() }}, {{
+            wizardForm.shipping.city().value() }} {{
+            wizardForm.shipping.postalCode().value() }}
+          </dd>
+        </div>
+        <div>
+          <dt>Shipping</dt>
+          <dd>
+            {{ wizardForm.shipping.expressShipping().value() ? 'Express' :
+            'Standard' }} — ${{ orderTotal() }}
+          </dd>
+        </div>
+      </dl>
+
+      @if (submitAttempted() && wizardForm().invalid()) {
+      <p class="review-error" role="alert">
+        Some details still need attention — check the earlier steps.
+      </p>
+      } }
+    </ng-template>
+  </ngx-wizard>
+</form>

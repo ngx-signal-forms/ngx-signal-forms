@@ -4,11 +4,11 @@ import {
   NGX_SIGNAL_FORM_CONTROL_KIND_VALUES,
 } from '@ngx-signal-forms/toolkit/core';
 import type { NgxSignalFormControlKind } from '@ngx-signal-forms/toolkit';
+import { readFormFieldWrapperDomSnapshot } from './form-field-dom-snapshot';
 import {
   hasPaddedControlContent,
   isSelectionGroupKind,
   isTextualControlKind,
-  readFormFieldWrapperDomSnapshot,
   supportsOutlinedAppearance,
 } from './form-field.utils';
 

@@ -131,12 +131,28 @@ export const appRoutes: Routes = [
         title: getRouteTitle('/form-field-wrapper/labelless-fields'),
       },
       {
+        path: 'field-identity',
+        loadComponent: () =>
+          import('./04-form-field-wrapper/field-identity/field-identity.page').then(
+            (m) => m.FieldIdentityPage,
+          ),
+        title: getRouteTitle('/form-field-wrapper/field-identity'),
+      },
+      {
         path: 'field-marking',
         loadComponent: () =>
           import('./04-form-field-wrapper/field-marking/field-marking.page').then(
             (m) => m.FieldMarkingPage,
           ),
         title: getRouteTitle('/form-field-wrapper/field-marking'),
+      },
+      {
+        path: 'brand-theming',
+        loadComponent: () =>
+          import('./04-form-field-wrapper/brand-theming/brand-theming.page').then(
+            (m) => m.BrandThemingPage,
+          ),
+        title: getRouteTitle('/form-field-wrapper/brand-theming'),
       },
     ],
   },
@@ -205,6 +221,14 @@ export const appRoutes: Routes = [
         title: getRouteTitle('/advanced-scenarios/advanced-wizard'),
       },
       {
+        path: 'single-model-wizard',
+        loadComponent: () =>
+          import('./05-advanced/single-model-wizard/single-model-wizard.page').then(
+            (m) => m.SingleModelWizardPageComponent,
+          ),
+        title: getRouteTitle('/advanced-scenarios/single-model-wizard'),
+      },
+      {
         path: 'async-validation',
         loadComponent: () =>
           import('./05-advanced/async-validation/async-validation.page').then(
@@ -243,6 +267,20 @@ export const appRoutes: Routes = [
             (m) => m.ServerIntegrationPage,
           ),
         title: getRouteTitle('/advanced-scenarios/server-integration'),
+      },
+      {
+        path: 'autosave',
+        loadComponent: () =>
+          import('./05-advanced/autosave/autosave.page').then(
+            (m) => m.AutosavePage,
+          ),
+        title: getRouteTitle('/advanced-scenarios/autosave'),
+      },
+      {
+        path: 'i18n',
+        loadComponent: () =>
+          import('./05-advanced/i18n/i18n.page').then((m) => m.I18nDemoPage),
+        title: getRouteTitle('/advanced-scenarios/i18n'),
       },
     ],
   },

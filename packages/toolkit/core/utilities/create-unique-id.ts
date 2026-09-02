@@ -1,10 +1,5 @@
-import {
-  assertInInjectionContext,
-  inject,
-  InjectionToken,
-  isDevMode,
-  Service,
-} from '@angular/core';
+import { assertInInjectionContext, inject, Service } from '@angular/core';
+import { createDevWarnOnce } from './dev-warn-once';
 
 /**
  * Per-injector counter used by {@link createUniqueId} to mint stable,
@@ -51,19 +46,6 @@ export class NgxSignalFormIdCounter {
 }
 
 /**
- * Optional override token that lets tests (and niche composition roots)
- * inject a custom id strategy without subclassing {@link NgxSignalFormIdCounter}.
- *
- * When provided, {@link createUniqueId} delegates to this function instead of
- * the service. Consumers typically have no reason to override this.
- *
- * @internal
- */
-export const NGX_SIGNAL_FORM_ID_STRATEGY = new InjectionToken<
-  (prefix: string) => string
->('NGX_SIGNAL_FORM_ID_STRATEGY');
-
-/**
  * Module-scoped fallback counter, used only when {@link createUniqueId} is
  * called outside an Angular injection context. Regular toolkit usage always
  * flows through the per-injector service and therefore stays SSR-safe.
@@ -71,7 +53,7 @@ export const NGX_SIGNAL_FORM_ID_STRATEGY = new InjectionToken<
  * @internal
  */
 let fallbackCounter = 0;
-let warnedFallback = false;
+const warnFallback = createDevWarnOnce();
 
 /**
  * Mints a stable, per-injector unique id for ARIA wiring.
@@ -107,32 +89,26 @@ let warnedFallback = false;
  * ```
  *
  * @public
+ * @group Utility Functions
  */
 export function createUniqueId(prefix: string): string {
   // Probe the injection context *before* calling `inject()`. This isolates
   // the "not in injection context" branch (the intended fallback trigger)
-  // from every other throw path: a DI-graph misconfiguration or a broken
-  // `NGX_SIGNAL_FORM_ID_STRATEGY` factory now surfaces to the caller
-  // instead of being silently folded into the module-scoped counter.
+  // from every other throw path: a DI-graph misconfiguration now surfaces to
+  // the caller instead of being silently folded into the module-scoped
+  // counter.
   try {
     assertInInjectionContext(createUniqueId);
   } catch {
-    if (isDevMode() && !warnedFallback) {
-      warnedFallback = true;
-      // oxlint-disable-next-line no-console -- dev-only diagnostic
-      console.warn(
-        '[ngx-signal-forms] createUniqueId() called outside an injection context. ' +
-          'SSR-safe id generation requires calling this from a component/directive/provider ' +
-          'injection context. Falling back to a module-scoped counter.',
-      );
-    }
+    warnFallback(
+      'warn',
+      '[ngx-signal-forms] createUniqueId() called outside an injection context. ' +
+        'SSR-safe id generation requires calling this from a component/directive/provider ' +
+        'injection context. Falling back to a module-scoped counter.',
+    );
     fallbackCounter += 1;
     return `${prefix}-${fallbackCounter}`;
   }
 
-  const override = inject(NGX_SIGNAL_FORM_ID_STRATEGY, { optional: true });
-  if (override) {
-    return override(prefix);
-  }
   return inject(NgxSignalFormIdCounter).next(prefix);
 }

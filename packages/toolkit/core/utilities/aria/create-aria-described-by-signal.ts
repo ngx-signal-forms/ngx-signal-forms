@@ -7,6 +7,8 @@ import { isBlockingError, isWarningError } from '../warning-error';
  * Reactive reader for the resolved field name. Invoked inside the resulting
  * computed so signal-backed readers stay tracked. Returns `null` when no
  * field name has been resolved yet.
+ *
+ * @group ARIA Composition
  */
 export type AriaDescribedByFieldNameReader = () => string | null;
 
@@ -15,6 +17,8 @@ export type AriaDescribedByFieldNameReader = () => string | null;
  * verbatim (hints stamped by template, descriptions, etc.). Called per
  * computed evaluation so consumers re-evaluating their preserved list see
  * fresh values without re-creating the factory.
+ *
+ * @group ARIA Composition
  */
 export type AriaDescribedByPreservedIdsReader = () => string | null;
 
@@ -25,6 +29,8 @@ export type AriaDescribedByPreservedIdsReader = () => string | null;
  * `aria-describedby` value tracks each of them reactively. `preservedIds`
  * and `fieldName` are plain readers so consumers can thread DOM reads or
  * service queries through without forcing them into a `Signal` shape.
+ *
+ * @group ARIA Composition
  */
 export interface CreateAriaDescribedBySignalOptions {
   /**
@@ -41,12 +47,26 @@ export interface CreateAriaDescribedBySignalOptions {
   readonly hintIds: Signal<readonly string[]>;
 
   /**
-   * Visibility computed (typically from `createErrorVisibility`). When
-   * `true`, error/warning IDs are appended whenever the field has matching
-   * errors. When `false`, no error or warning IDs are appended even if the
-   * field is invalid.
+   * Blocking-error visibility computed (typically from
+   * `createErrorVisibility`). When `true`, the error ID is appended whenever
+   * the field has a blocking error. When `false`, no error ID is appended
+   * even if the field is invalid.
    */
   readonly visibility: Signal<boolean>;
+
+  /**
+   * Warning visibility computed, resolved through the **warning** cascade
+   * (`warningStrategy` → form context → `defaultWarningStrategy` →
+   * `'on-touch'`).
+   *
+   * Optional for backwards compatibility with callers written before the
+   * two channels could diverge; omitting it falls back to {@link visibility},
+   * which is correct only while both strategies agree. Pass it whenever the
+   * renderer times its warning region independently, or a form with e.g.
+   * `errorStrategy="on-submit"` and `warningStrategy="immediate"` will show
+   * a warning that this attribute never references.
+   */
+  readonly warningVisibility?: Signal<boolean>;
 
   /**
    * Reader for non-managed IDs (e.g. existing hint IDs stamped into the
@@ -78,8 +98,9 @@ export interface CreateAriaDescribedBySignalOptions {
  *    may still preserve them when re-binding.
  * 3. When `visibility()` is `true` AND the field has at least one blocking
  *    error, append `generateErrorId(fieldName)`.
- * 4. When `visibility()` is `true` AND the field has at least one warning
- *    error, append `generateWarningId(fieldName)`.
+ * 4. When `warningVisibility()` (falling back to `visibility()`) is `true`
+ *    AND the field has at least one warning error AND no blocking error is
+ *    being shown, append `generateWarningId(fieldName)`.
  * 5. Deduplicate while preserving insertion order.
  * 6. Return the joined list, or `null` when nothing accumulated, so
  *    consumers can drop the attribute entirely.
@@ -90,11 +111,19 @@ export interface CreateAriaDescribedBySignalOptions {
  * surface (custom wrappers built on Material, PrimeNG, Spartan, etc.).
  *
  * @public
+ * @group ARIA Composition
  */
 export function createAriaDescribedBySignal(
   options: CreateAriaDescribedBySignalOptions,
 ): Signal<string | null> {
-  const { fieldState, hintIds, visibility, preservedIds, fieldName } = options;
+  const {
+    fieldState,
+    hintIds,
+    visibility,
+    warningVisibility,
+    preservedIds,
+    fieldName,
+  } = options;
 
   return computed((): string | null => {
     const resolvedFieldName = fieldName();
@@ -118,13 +147,16 @@ export function createAriaDescribedBySignal(
     }
 
     const state = fieldState();
-    const isVisible = visibility();
 
-    if (state && isVisible) {
+    if (state) {
       const errors = state.errors();
-      const hasBlockingError = errors.some(isBlockingError);
+      // The two channels are gated separately: a blocking error is visible
+      // per the error strategy, a warning per the warning strategy, and the
+      // two can differ (e.g. errorStrategy="on-submit" with
+      // warningStrategy="immediate").
+      const showsBlockingError = visibility() && errors.some(isBlockingError);
 
-      if (hasBlockingError) {
+      if (showsBlockingError) {
         const errorId = generateErrorId(resolvedFieldName);
         if (!parts.includes(errorId)) {
           parts.push(errorId);
@@ -137,7 +169,10 @@ export function createAriaDescribedBySignal(
       // case), so no `${fieldName}-warning` element exists in the DOM at
       // that point. Compose the id here too or `aria-describedby` dangles —
       // an axe `aria-valid-attr-value` violation.
-      if (!hasBlockingError && errors.some(isWarningError)) {
+      const showsWarning =
+        (warningVisibility ?? visibility)() && errors.some(isWarningError);
+
+      if (!showsBlockingError && showsWarning) {
         const warningId = generateWarningId(resolvedFieldName);
         if (!parts.includes(warningId)) {
           parts.push(warningId);

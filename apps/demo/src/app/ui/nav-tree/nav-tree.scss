@@ -88,7 +88,13 @@
   line-height: 1;
   padding: 0.18rem 0.36rem;
   border-radius: 999px;
-  color: rgb(148 163 184);
+  /* slate-600 (was slate-400, rgb(148 163 184) / #94a3b8): that gray on this
+     pill's slate-100 background is 2.34:1, well under the 4.5:1 WCAG 1.4.3 AA
+     floor for this 9.92px text — a pre-existing violation baselined across
+     every route (apps/demo-e2e/a11y-baseline.json), not something specific
+     to any one page. slate-600 clears it at 6.92:1 while staying in the
+     same muted gray family as the rest of the pill. */
+  color: rgb(71 85 105);
   background: rgb(241 245 249);
   transition:
     color 140ms ease,
@@ -96,7 +102,11 @@
 }
 
 :host-context(.dark) .cat__count {
-  color: rgb(100 116 139);
+  /* slate-400 (was slate-500, rgb(100 116 139) / #64748b): that gray against
+     this pill's translucent dark background resolves to ~3.47:1 once
+     blended with the page's actual dark background — also under 4.5:1.
+     slate-400 clears it at 6.43:1 on the same blended background. */
+  color: rgb(148 163 184);
   background: rgb(30 41 59 / 0.7);
 }
 

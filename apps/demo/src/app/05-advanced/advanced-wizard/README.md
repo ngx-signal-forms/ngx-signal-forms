@@ -78,6 +78,9 @@ The most complex demo in the app: a three-step travel-booking wizard built on a 
 
 ## Related
 
+- [Single-Model Wizard](../single-model-wizard/README.md) — the single-`form()`
+  alternative to this demo's form-per-step architecture; read together for the contrast.
 - [Cross-Field Validation](../cross-field-validation/README.md) — the simpler cross-field primer.
 - [Submission Patterns](../submission-patterns/README.md) — declarative submission in a single-screen form.
 - [Global Configuration](../global-configuration/README.md) — app-level defaults the wizard also consumes.
+- [Autosave](../autosave/README.md) — the native `debounce()` schema rule replacing this wizard's own RxJS-based auto-save draft, for simple field-level cases.

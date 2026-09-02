@@ -3,20 +3,13 @@
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "projectType": "application",
   "sourceRoot": "apps/demo-e2e/src",
-  "implicitDependencies": ["demo"],
   "tags": ["scope:demo", "type:app"],
+  "implicitDependencies": ["demo"],
   "targets": {
     "lint": {
       "executor": "nx:run-commands",
       "options": {
         "command": "oxlint {projectRoot} --type-aware"
-      }
-    },
-    "e2e": {
-      "executor": "@nx/playwright:playwright",
-      "outputs": ["{workspaceRoot}/dist/.playwright/apps/demo-e2e"],
-      "options": {
-        "config": "{projectRoot}/playwright.config.ts"
       }
     },
     "e2e-toolkit": {
@@ -50,21 +43,23 @@
         "parallel": false
       }
     },
-    "e2e-ci": {
-      "executor": "@nx/playwright:playwright",
+    "e2e-ci-shard": {
+      "executor": "nx:run-commands",
       "outputs": ["{workspaceRoot}/dist/.playwright/apps/demo-e2e"],
       "options": {
-        "config": "{projectRoot}/playwright.config.ts"
+        "command": "bash -lc 'pnpm exec playwright test --config apps/demo-e2e/playwright.config.ts --project=chromium --shard=${SHARD_INDEX:-1}/${SHARD_TOTAL:-4}'"
       }
     },
     "a11y": {
-      "executor": "@nx/playwright:playwright",
+      "executor": "nx:run-commands",
+      "cache": true,
+      "inputs": ["default", "^production"],
       "outputs": [
         "{workspaceRoot}/dist/.playwright/apps/demo-e2e-a11y",
         "{workspaceRoot}/dist/.a11y/demo-e2e"
       ],
       "options": {
-        "config": "{projectRoot}/playwright.a11y.config.ts"
+        "command": "pnpm exec playwright test --config apps/demo-e2e/playwright.a11y.config.ts"
       }
     }
   }

@@ -3,6 +3,8 @@ import type { FieldState } from '@angular/forms/signals';
 
 /**
  * Minimal FieldState contract required for aria-required resolution.
+ *
+ * @group ARIA Composition
  */
 export type AriaRequiredFieldState = Pick<FieldState<unknown>, 'required'>;
 
@@ -31,6 +33,7 @@ export type AriaRequiredFieldState = Pick<FieldState<unknown>, 'required'>;
  * ```
  *
  * @public
+ * @group ARIA Composition
  */
 export function createAriaRequiredSignal(
   fieldState: Signal<AriaRequiredFieldState | null>,

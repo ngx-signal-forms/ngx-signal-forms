@@ -1,17 +1,18 @@
-import { computed, isDevMode, type Signal } from '@angular/core';
+import { computed, type Signal } from '@angular/core';
 import type {
   ErrorDisplayStrategy,
   ReactiveOrStatic,
   ResolvedErrorDisplayStrategy,
   SubmittedStatus,
 } from '../types';
+import { createDevWarnOnce } from './dev-warn-once';
 import { shouldShowErrors } from './error-strategies';
 import type { ErrorVisibilityState } from './field-state-types';
 import { unwrapValue } from './unwrap-signal-or-value';
 
 /**
- * Creates a reactive computed signal that determines if a form field's errors should
- * be shown to the user based on the error display strategy.
+ * Creates a reactive computed signal that determines if a form field's errors
+ * should be shown to the user based on the error display strategy.
  *
  * This is the shared visibility-timing primitive: `createErrorState()`,
  * `NgxHeadlessErrorState`, `NgxHeadlessErrorSummary`,
@@ -24,16 +25,20 @@ import { unwrapValue } from './unwrap-signal-or-value';
  * strategy evaluation is not reimplemented anywhere. Add layer-specific
  * filters at the call site rather than forking this primitive.
  *
+ * **Not the same as {@link shouldShowErrors}.** That function is a pure,
+ * synchronous boolean predicate — no signals, no reactivity, for imperative
+ * one-off checks. This one returns a `Signal<boolean>` that recomputes as
+ * the field's `invalid()` / `touched()` state changes. The `create*` prefix
+ * is deliberate: it is the toolkit's convention for signal factories
+ * (`createErrorVisibility`, `createUniqueId`, `createCharacterCount`,
+ * `createCascadingResolver`, …), which reads unambiguously next to
+ * `shouldShowErrors`'s different name and different return type.
+ *
  * ## Simplified Architecture (aligned with Angular Signal Forms)
  *
  * Angular's `submit()` helper calls `markAllAsTouched()`, which means `field.touched()`
  * becomes true for all fields after submission. This makes `submittedStatus` **optional**
  * for the default `'on-touch'` strategy - we just check `field.touched()`.
- *
- * ## When to use it?
- * Use `showErrors()` when you need to:
- * - Implement error visibility logic for form fields
- * - Control when validation errors appear based on user interaction
  *
  * ## How does it work?
  * 1. Accepts field state, error display strategy, and optional submission status
@@ -53,7 +58,7 @@ import { unwrapValue } from './unwrap-signal-or-value';
  *
  * @example Simple usage (recommended - no submittedStatus needed)
  * ```typescript
- * import { showErrors } from '@ngx-signal-forms/toolkit';
+ * import { createShowErrorsComputed } from '@ngx-signal-forms/toolkit';
  *
  * @Component({
  *   template: `
@@ -67,7 +72,7 @@ import { unwrapValue } from './unwrap-signal-or-value';
  *   protected readonly form = form(this.#model, emailSchema);
  *
  *   // Simple! Angular's submit() marks fields touched, so this just works.
- *   protected readonly shouldShowErrors = showErrors(
+ *   protected readonly shouldShowErrors = createShowErrorsComputed(
  *     this.form.email,
  *     'on-touch'
  *   );
@@ -76,7 +81,7 @@ import { unwrapValue } from './unwrap-signal-or-value';
  *
  * @example With on-submit strategy (needs submittedStatus)
  * ```typescript
- * protected readonly shouldShowErrors = showErrors(
+ * protected readonly shouldShowErrors = createShowErrorsComputed(
  *   this.form.email,
  *   'on-submit',
  *   computed<SubmittedStatus>(() => {
@@ -88,42 +93,6 @@ import { unwrapValue } from './unwrap-signal-or-value';
  * ```
  *
  * @see {@link combineShowErrors} For combining multiple error signals
- */
-export function showErrors(
-  field: ReactiveOrStatic<Partial<ErrorVisibilityState> | null | undefined>,
-  strategy: ReactiveOrStatic<ErrorDisplayStrategy>,
-  submittedStatus?: ReactiveOrStatic<SubmittedStatus | undefined>,
-): Signal<boolean> {
-  return createShowErrorsComputed(field, strategy, submittedStatus);
-}
-
-/**
- * Creates a reactive visibility-timing computed for a `FieldState`.
- *
- * This is the single extraction point behind `showErrors()`, the wrapper
- * component's `shouldShowErrors`, `NgxSignalFormAutoAria`, and
- * `NgxFormFieldError`. Each of those used to build its own
- * `computed(() => shouldShowErrors(field.invalid(), field.touched(), strategy, status))`
- * inline — consolidating here means visibility timing cannot drift between
- * them.
- *
- * **When to use directly:** internal toolkit code that already owns a
- * `FieldState` signal and wants the same visibility rules without routing
- * through `showErrors()`'s type-wide `ErrorVisibilityState` parameter.
- *
- * **When to use `showErrors()` instead:** public callers that want the
- * documented entry point and may pass partial shapes.
- *
- * @param field Reactive or static field state. `null`/`undefined` shapes
- *   short-circuit to `false`.
- * @param strategy Reactive or static `ErrorDisplayStrategy`.
- * @param submittedStatus Reactive or static submission status. **Required**
- *   for `'on-submit'` strategy — without it the helper defaults to
- *   `'unsubmitted'` and errors will never surface. A one-shot
- *   `console.warn` is emitted in dev mode (`isDevMode()`) when the
- *   miswiring is detected.
- * @returns A computed `Signal<boolean>` that is `true` when the strategy
- *   says errors should be visible.
  *
  * @public
  */
@@ -132,7 +101,56 @@ export function createShowErrorsComputed(
   strategy: ReactiveOrStatic<ErrorDisplayStrategy>,
   submittedStatus?: ReactiveOrStatic<SubmittedStatus | undefined>,
 ): Signal<boolean> {
-  return computeShowErrorsInternal(field, strategy, submittedStatus);
+  const warnOnce = createDevWarnOnce();
+
+  return computed(() => {
+    const fieldState = unwrapValue(field);
+    const strategyValue = unwrapValue(strategy);
+
+    // Angular 21.2's `FieldState` guarantees `invalid`/`touched` signals, so
+    // the only shapes we defend against here are nullish (no field yet) and
+    // caller-supplied partials where a signal may be absent.
+    const isInvalid = fieldState?.invalid?.() ?? false;
+    const isTouched = fieldState?.touched?.() ?? false;
+
+    const resolvedStatus =
+      submittedStatus === undefined ? undefined : unwrapValue(submittedStatus);
+
+    // `'inherit'` is only meaningful at the user-facing boundary: it signals
+    // "use the form-context / global-config default". By the time we reach
+    // here we have no further context to consult, so fall back to
+    // `'on-touch'` — that matches the historical behavior of the
+    // now-removed `'inherit'` branch in `shouldShowErrors`. Call sites that
+    // own a context should resolve `'inherit'` themselves via
+    // `resolveErrorDisplayStrategy` / `resolveStrategyFromContext` before
+    // passing the value in.
+    const resolvedStrategy: ResolvedErrorDisplayStrategy =
+      strategyValue === 'inherit' ? 'on-touch' : strategyValue;
+
+    // `on-submit` requires an explicit submission status to fire. Previously
+    // the helper fell back to `touched → 'submitted'`, which silently
+    // defeated the strategy for standalone `createShowErrorsComputed()` /
+    // `createErrorState()` consumers who forgot to wire `submittedStatus`.
+    // Default to `'unsubmitted'` instead — errors won't surface until a
+    // real status is supplied, and in dev mode we emit a one-shot console
+    // warning to make the miswiring obvious.
+    if (resolvedStrategy === 'on-submit' && resolvedStatus === undefined) {
+      warnOnce(
+        'warn',
+        "[ngx-signal-forms] createShowErrorsComputed(): 'on-submit' strategy requires an explicit submittedStatus signal. " +
+          "Without it, errors will never surface. Wire the status from NgxSignalForm ('ngxSignalForm') or pass submittedStatus explicitly.",
+      );
+    }
+
+    const fallbackStatus = resolvedStatus ?? 'unsubmitted';
+
+    return shouldShowErrors(
+      isInvalid,
+      isTouched,
+      resolvedStrategy,
+      fallbackStatus,
+    );
+  });
 }
 
 /**
@@ -162,9 +180,9 @@ export function createShowErrorsComputed(
  * @example Form-level error indicator
  * ```typescript
  * const showAnyFormErrors = combineShowErrors([
- *   showErrors(form.email, 'on-touch', submitted),
- *   showErrors(form.password, 'on-touch', submitted),
- *   showErrors(form.confirmPassword, 'on-touch', submitted)
+ *   createShowErrorsComputed(form.email, 'on-touch', submitted),
+ *   createShowErrorsComputed(form.password, 'on-touch', submitted),
+ *   createShowErrorsComputed(form.confirmPassword, 'on-touch', submitted)
  * ]);
  *
  * /// Use in template
@@ -178,8 +196,8 @@ export function createShowErrorsComputed(
  * @example Disable submit button
  * ```typescript
  * const hasVisibleErrors = combineShowErrors([
- *   showErrors(form.username, strategy, submitted),
- *   showErrors(form.email, strategy, submitted)
+ *   createShowErrorsComputed(form.username, strategy, submitted),
+ *   createShowErrorsComputed(form.email, strategy, submitted)
  * ]);
  *
  * /// In template
@@ -189,23 +207,23 @@ export function createShowErrorsComputed(
  * @example Section-level validation
  * ```typescript
  * const showAddressErrors = combineShowErrors([
- *   showErrors(form.street, strategy, submitted),
- *   showErrors(form.city, strategy, submitted),
- *   showErrors(form.zipCode, strategy, submitted)
+ *   createShowErrorsComputed(form.street, strategy, submitted),
+ *   createShowErrorsComputed(form.city, strategy, submitted),
+ *   createShowErrorsComputed(form.zipCode, strategy, submitted)
  * ]);
  *
  * const showPaymentErrors = combineShowErrors([
- *   showErrors(form.cardNumber, strategy, submitted),
- *   showErrors(form.cvv, strategy, submitted)
+ *   createShowErrorsComputed(form.cardNumber, strategy, submitted),
+ *   createShowErrorsComputed(form.cvv, strategy, submitted)
  * ]);
  * ```
  *
  * @example Custom error count
  * ```typescript
  * const errorSignals = [
- *   showErrors(form.field1, 'on-touch', submitted),
- *   showErrors(form.field2, 'on-touch', submitted),
- *   showErrors(form.field3, 'on-touch', submitted)
+ *   createShowErrorsComputed(form.field1, 'on-touch', submitted),
+ *   createShowErrorsComputed(form.field2, 'on-touch', submitted),
+ *   createShowErrorsComputed(form.field3, 'on-touch', submitted)
  * ];
  *
  * const hasErrors = combineShowErrors(errorSignals);
@@ -214,73 +232,10 @@ export function createShowErrorsComputed(
  * );
  * ```
  *
- * @see {@link showErrors} For creating individual error visibility signals
+ * @see {@link createShowErrorsComputed} For creating individual error visibility signals
  */
 export function combineShowErrors(
   showErrorsSignals: readonly Signal<boolean>[],
 ): Signal<boolean> {
   return computed(() => showErrorsSignals.some((signal) => signal()));
-}
-
-function computeShowErrorsInternal(
-  field: ReactiveOrStatic<Partial<ErrorVisibilityState> | null | undefined>,
-  strategy: ReactiveOrStatic<ErrorDisplayStrategy>,
-  submittedStatus?: ReactiveOrStatic<SubmittedStatus | undefined>,
-): Signal<boolean> {
-  let warnedMissingStatus = false;
-
-  return computed(() => {
-    const fieldState = unwrapValue(field);
-    const strategyValue = unwrapValue(strategy);
-
-    // Angular 21.2's `FieldState` guarantees `invalid`/`touched` signals, so
-    // the only shapes we defend against here are nullish (no field yet) and
-    // caller-supplied partials where a signal may be absent.
-    const isInvalid = fieldState?.invalid?.() ?? false;
-    const isTouched = fieldState?.touched?.() ?? false;
-
-    const resolvedStatus =
-      submittedStatus === undefined ? undefined : unwrapValue(submittedStatus);
-
-    // `'inherit'` is only meaningful at the user-facing boundary: it signals
-    // "use the form-context / global-config default". By the time we reach
-    // here we have no further context to consult, so fall back to
-    // `'on-touch'` — that matches the historical behavior of the
-    // now-removed `'inherit'` branch in `shouldShowErrors`. Call sites that
-    // own a context should resolve `'inherit'` themselves via
-    // `resolveErrorDisplayStrategy` / `resolveStrategyFromContext` before
-    // passing the value in.
-    const resolvedStrategy: ResolvedErrorDisplayStrategy =
-      strategyValue === 'inherit' ? 'on-touch' : strategyValue;
-
-    // `on-submit` requires an explicit submission status to fire. Previously
-    // the helper fell back to `touched → 'submitted'`, which silently
-    // defeated the strategy for standalone `showErrors()` / `createErrorState()`
-    // consumers who forgot to wire `submittedStatus`. Default to
-    // `'unsubmitted'` instead — errors won't surface until a real status is
-    // supplied, and in dev mode we emit a one-shot console warning to make
-    // the miswiring obvious.
-    if (
-      isDevMode() &&
-      resolvedStrategy === 'on-submit' &&
-      resolvedStatus === undefined &&
-      !warnedMissingStatus
-    ) {
-      warnedMissingStatus = true;
-      // oxlint-disable-next-line no-console -- dev-only diagnostic
-      console.warn(
-        "[ngx-signal-forms] showErrors(): 'on-submit' strategy requires an explicit submittedStatus signal. " +
-          "Without it, errors will never surface. Wire the status from NgxSignalForm ('ngxSignalForm') or pass submittedStatus explicitly.",
-      );
-    }
-
-    const fallbackStatus = resolvedStatus ?? 'unsubmitted';
-
-    return shouldShowErrors(
-      isInvalid,
-      isTouched,
-      resolvedStrategy,
-      fallbackStatus,
-    );
-  });
 }

@@ -24,6 +24,8 @@ export {
   type RunVestSuiteParams,
   type RunVestSuiteResult,
   type VestAdapterOptions,
+  type VestCoordinatedSuite,
+  type VestFieldExclusion,
   type VestFieldPath,
   type VestOnlyFieldSelector,
   type VestRegisterOptions,

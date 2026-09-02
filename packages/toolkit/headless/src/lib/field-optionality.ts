@@ -9,6 +9,7 @@ import { isFieldStateInteractive } from '@ngx-signal-forms/toolkit/core';
  * no leaf fields — reports `false` for both.
  *
  * @public
+ * @group Reactive Primitives
  */
 export interface FieldOptionality {
   readonly hasRequired: boolean;
@@ -179,6 +180,7 @@ function readRequired(leaf: AnyFieldTree): boolean {
  *
  * @param tree A form `FieldTree` (typically a form root or a subtree).
  * @public
+ * @group Reactive Primitives
  */
 export function summarizeFieldOptionality(
   tree: AnyFieldTree,
@@ -223,6 +225,7 @@ export function summarizeFieldOptionality(
  * ```
  *
  * @public
+ * @group Reactive Primitives
  */
 export function createFieldOptionalitySummary(
   treeSource: () => AnyFieldTree | null | undefined,

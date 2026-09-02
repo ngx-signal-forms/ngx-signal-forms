@@ -1,5 +1,5 @@
 ---
-description: Sub-skill of ngx-signal-forms for the @ngx-signal-forms/toolkit/headless entry point — renderless primitives for custom design-system components with full DOM control: headless error state, grouped notifications, error summaries, character count, fieldset aggregation, field-name resolution, and programmatic utilities. Not independently invocable; the hub SKILL.md routes here.
+description: Headless toolkit surface. Use when building custom form markup with renderless state, programmatic feedback, or ARIA composition.
 ---
 
 # Toolkit Headless
@@ -31,13 +31,28 @@ For ready-to-render components with built-in markup, use `assistive/SKILL.md` or
    - `hostDirectives` composition for reusable design-system components.
    - `createErrorState()` / `createCharacterCount()` for programmatic use outside template directives.
 
-4. **Wire ARIA manually.** Headless directives expose signal IDs (`errorId`, `warningId`) — bind them in your markup:
+4. **Compose ARIA from toolkit primitives.** Headless directives expose signal IDs (`errorId`, `warningId`) for direct template bindings:
 
-   ```html
-   [attr.aria-describedby]="errorState.showErrors() ? errorState.errorId : null"
-   ```
+```html
+<input
+  [attr.aria-describedby]="errorState.shouldShowErrors() ? errorState.errorId : null"
+/>
+```
 
-5. **Use `NgxHeadlessFieldset`** for aggregated group state — validity, errors, and warnings across a field tree without rebuilding the traversal.
+For a reusable custom wrapper that owns its ARIA, use the re-exported
+factories instead of recreating toolkit resolution rules: `createAriaInvalidSignal`,
+`createAriaRequiredSignal`, `createAriaDescribedBySignal`, and
+`createHintIdsSignal`. Use `createFieldNameResolver` for the canonical
+explicit → optional label `for` → control `id` identity cascade.
+`createAriaDescribedByBridge` is only for a host whose `aria-describedby`
+is owned by another library. A custom wrapper's error-renderer inputs
+(`{ formField, strategy, submittedStatus }`) and hint descriptors (for
+`NGX_SIGNAL_FORM_HINT_REGISTRY`) are each a single inline `computed()` —
+too small to warrant a shared factory; see `docs/CUSTOM_WRAPPERS.md` for
+the shape. Read `../references/api.md` for the remaining factories'
+contracts before composing them.
+
+5. **Use `NgxHeadlessFieldset`** for aggregated group state — validity, errors, and warnings across a field tree without rebuilding the traversal. Building a custom grouped surface instead? The same pipelines are exported as the pure factories `createFieldsetAggregation()` and `createErrorSummaryEntries()` — no injection context required, but you supply pre-resolved `showErrors`/`showWarnings` signals from your own visibility seam call. See `../references/api.md` for the option/result contracts.
 
 6. **Use `NgxHeadlessNotification`** when you already have aggregated `ValidationError[]` and need a grouped live-region surface. Tone is content-driven (no `tone` input): any blocking error raises the assertive `role="alert"` container, a warning-only list raises the polite `role="status"` container — you keep full DOM control.
 
@@ -119,10 +134,10 @@ Tone is fully content-driven — there is no input to set. `resolvedTone()` retu
     id="email"
     type="email"
     [formField]="form.email"
-    [attr.aria-describedby]="errorState.showErrors() && errorState.hasErrors() ? errorState.errorId : null"
+    [attr.aria-describedby]="errorState.shouldShowErrors() && errorState.hasErrors() ? errorState.errorId : null"
     [attr.aria-invalid]="errorState.hasErrors() || null"
   />
-  @if (errorState.showErrors() && errorState.hasErrors()) {
+  @if (errorState.shouldShowErrors() && errorState.hasErrors()) {
   <ul [id]="errorState.errorId" role="alert">
     @for (error of errorState.resolvedErrors(); track error.kind) {
     <li>{{ error.message }}</li>
@@ -149,7 +164,7 @@ import { NgxHeadlessErrorState } from '@ngx-signal-forms/toolkit/headless';
   template: `
     <ng-content select="label" />
     <ng-content />
-    @if (errorState.showErrors() && errorState.hasErrors()) {
+    @if (errorState.shouldShowErrors() && errorState.hasErrors()) {
       <span [id]="errorState.errorId" role="alert" class="ds-error">
         {{ errorState.resolvedErrors()[0].message }}
       </span>
@@ -161,6 +176,31 @@ export class DsFormFieldComponent {
 }
 ```
 
+### Publishing the field name from a design-system host
+
+The pattern above projects the bound control via `<ng-content />`, so auto-ARIA
+runs on the **consumer's** element and resolves the field name from that
+element's `id`. When the control's `id` is not the field's name — a widget that
+generates its own inner `id`, or a `role="group"` cluster — declare the name on
+your host so every generated id agrees:
+
+```typescript
+import { NgxFieldIdentityProvider } from '@ngx-signal-forms/toolkit'; // root, not /headless
+
+hostDirectives: [
+  {
+    directive: NgxHeadlessErrorState,
+    inputs: ['field', 'fieldName', 'strategy'],
+  },
+  { directive: NgxFieldIdentityProvider, inputs: ['fieldName'] },
+];
+```
+
+One `fieldName` attribute feeds both. The provider publishes the **name**
+channel only — hints and display timing keep resolving through their
+registries. See `references/pitfalls.md` for the `[formField]` naming trap that
+comes with this, and `docs/CUSTOM_WRAPPERS.md` for the full contract.
+
 ## Field-Name Directive
 
 `NgxHeadlessFieldName` exposes the resolved field name plus the canonical
@@ -168,7 +208,7 @@ export class DsFormFieldComponent {
 for it when a custom component owns its own error rendering but still needs
 the toolkit's ID conventions (so `aria-describedby` chains stay consistent
 with `NgxFormFieldError`, the wrapper, and other toolkit consumers). Prefer
-`NgxHeadlessErrorState` when you also want `showErrors()`/`hasErrors()`.
+`NgxHeadlessErrorState` when you also want `shouldShowErrors()`/`hasErrors()`.
 
 ```html
 <div ngxHeadlessFieldName #fieldName="fieldName" [field]="form.email">
@@ -236,6 +276,6 @@ createUniqueId('my-field'); // 'my-field-1', 'my-field-2', ...
 ## Error Handling
 
 - If IDs are inconsistent: add explicit `fieldName` instead of relying on implicit host `id` detection.
-- If `'on-submit'` errors don't appear: ensure the form uses `form[formRoot][ngxSignalForm]` so submitted status and toolkit context are available.
+- If `'on-submit'` errors don't appear: use `form[formRoot][ngxSignalForm]` so context supplies submitted status, or pass `submittedStatus` explicitly to the relevant programmatic factory.
 - If a grouped notification resolves to the wrong live region: check whether the error list includes any blocking errors — tone is content-driven, so `role="alert"` is used whenever any blocking error is present, regardless of intent.
 - If the component is recreating the full wrapper layout: stop and use `form-field/SKILL.md` instead.

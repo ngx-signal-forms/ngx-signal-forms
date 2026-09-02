@@ -2,7 +2,7 @@
 /// <reference types="node" />
 
 import { mkdirSync, writeFileSync } from 'node:fs';
-import AxeBuilder from '@axe-core/playwright';
+import { AxeBuilder } from '@axe-core/playwright';
 import type { Page, TestInfo } from '@playwright/test';
 import {
   WCAG_22_AA_TAGS,
@@ -78,6 +78,79 @@ function stableTarget(nodeTargets: readonly string[]): string {
     .join(', ');
 }
 
+/** How long nothing may be animating before the page counts as settled. */
+const ANIMATION_QUIET_MS = 250;
+
+/**
+ * Upper bound on the settle wait. An indefinite animation (a loading spinner, a
+ * looping decorative effect) never goes quiet; axe is happy to audit around one,
+ * so give up waiting rather than fail the scan.
+ */
+const ANIMATION_SETTLE_TIMEOUT_MS = 5000;
+
+/**
+ * Blocks until the Angular app has bootstrapped, rendered, and settled its web
+ * fonts and entry transitions — the state an axe audit actually needs.
+ *
+ * This deliberately does **not** use `waitForLoadState('networkidle')`. The
+ * demo apps are served by a Vite dev server, which holds a permanent HMR
+ * WebSocket open. Firefox never reports the network as idle while that socket
+ * is alive, so the wait would hang until the test timed out even though every
+ * HTTP request had already completed (verified: 112 started, 112 finished, 0
+ * in flight, still no idle event). It is a race — whether it hangs depends on
+ * how fast the socket is established relative to the idle window — so it
+ * failed intermittently in Firefox only, roughly one run in three. Playwright
+ * documents `networkidle` as discouraged for exactly this reason.
+ *
+ * Settling fonts and animations matters beyond flake avoidance. `color-contrast`
+ * and `target-size` are paint- and geometry-sensitive, and the demo shell fades
+ * its chrome in on navigation. Auditing mid-transition reads the interpolated
+ * colours — e.g. #f2f3f4 on #feffff, a contrast ratio of 1.1 — and reports
+ * violations that do not exist once the transition lands. `networkidle` used to
+ * mask this by taking long enough for the ~300ms of transitions to finish; that
+ * was luck, not intent, so the settle is now explicit.
+ */
+async function waitForRenderedApp(page: Page): Promise<void> {
+  // Angular stamps `ng-version` on the bootstrap root element, so this is
+  // app-agnostic across the demo apps (ngx-root, app-root, …).
+  await page.waitForFunction(() => {
+    const root = document.querySelector('[ng-version]');
+    return root !== null && root.childElementCount > 0;
+  });
+
+  await page.evaluate(async () => {
+    await document.fonts.ready;
+  });
+
+  // A quiet *window*, not a snapshot: the shell's transitions do not exist yet
+  // at the moment the root first has children — they start a few milliseconds
+  // later — so awaiting whatever happens to be running right now is a no-op.
+  // Polling on animation frames instead catches them starting, waits them out,
+  // and only proceeds once nothing has been running for QUIET_MS.
+  try {
+    await page.waitForFunction(
+      (quietMs: number) => {
+        const marked = window as Window & { a11yQuietSince?: number };
+        const running = document
+          .getAnimations()
+          .some((animation) => animation.playState === 'running');
+
+        if (running) {
+          marked.a11yQuietSince = undefined;
+          return false;
+        }
+
+        marked.a11yQuietSince ??= performance.now();
+        return performance.now() - marked.a11yQuietSince >= quietMs;
+      },
+      ANIMATION_QUIET_MS,
+      { timeout: ANIMATION_SETTLE_TIMEOUT_MS },
+    );
+  } catch {
+    // Never quiet — audit the page as it stands rather than failing the scan.
+  }
+}
+
 /**
  * Navigates to `route`, runs a WCAG 2.2 AA axe audit, writes the result to the
  * app's output dir (one file per project+route, so parallel workers never race
@@ -109,7 +182,7 @@ export async function scanRoute(
   }>,
 ): Promise<A11yViolationRecord[]> {
   await page.goto(route);
-  await page.waitForLoadState('networkidle');
+  await waitForRenderedApp(page);
 
   let builder = new AxeBuilder({ page }).withTags([...WCAG_22_AA_TAGS]);
   if (disableRules.length > 0) {

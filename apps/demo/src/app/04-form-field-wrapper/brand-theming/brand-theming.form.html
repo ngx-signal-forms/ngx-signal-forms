@@ -1,0 +1,46 @@
+<!--
+  errorStrategy="immediate" so the required/pattern errors (and the warning,
+  once the budget crosses the threshold) are visible on load — the whole
+  point of this page is comparing colors, not chasing focus/blur timing.
+-->
+<form
+  [formRoot]="brandThemingForm"
+  ngxSignalForm
+  errorStrategy="immediate"
+  class="brand-theming-stack"
+>
+  <ngx-form-field-wrapper [formField]="brandThemingForm.teamName">
+    <label for="teamName">Team name</label>
+    <input id="teamName" type="text" [formField]="brandThemingForm.teamName" />
+  </ngx-form-field-wrapper>
+
+  <ngx-form-field-wrapper [formField]="brandThemingForm.workspaceSlug">
+    <label for="workspaceSlug">Workspace URL</label>
+    <input
+      id="workspaceSlug"
+      type="text"
+      placeholder="acme-widgets"
+      [formField]="brandThemingForm.workspaceSlug"
+    />
+  </ngx-form-field-wrapper>
+
+  <ngx-form-field-wrapper [formField]="brandThemingForm.monthlyBudget">
+    <label for="monthlyBudget">Monthly budget (USD)</label>
+    <input
+      id="monthlyBudget"
+      type="number"
+      min="0"
+      step="100"
+      [formField]="brandThemingForm.monthlyBudget"
+    />
+  </ngx-form-field-wrapper>
+
+  <ngx-form-field-wrapper [formField]="brandThemingForm.legacyWorkspaceId">
+    <label for="legacyWorkspaceId">Legacy workspace ID</label>
+    <input
+      id="legacyWorkspaceId"
+      type="text"
+      [formField]="brandThemingForm.legacyWorkspaceId"
+    />
+  </ngx-form-field-wrapper>
+</form>

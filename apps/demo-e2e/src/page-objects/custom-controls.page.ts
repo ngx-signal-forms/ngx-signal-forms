@@ -30,6 +30,12 @@ export class CustomControlsPage extends BaseFormPage {
   readonly wouldRecommendControl: Locator;
   readonly accessibilityAuditControl: Locator;
 
+  // Legacy datepicker adapter (FormValueControl<Date | null>)
+  readonly birthDateInput: Locator;
+  readonly birthDateTrigger: Locator;
+  readonly birthDatePopup: Locator;
+  readonly birthDateAdapterHost: Locator;
+
   constructor(page: Page) {
     super(page);
 
@@ -65,6 +71,16 @@ export class CustomControlsPage extends BaseFormPage {
     this.serviceRatingControl = this.form.locator('#serviceRating');
     this.wouldRecommendControl = this.form.locator('#wouldRecommend');
     this.accessibilityAuditControl = this.form.locator('#accessibilityAudit');
+
+    // Legacy datepicker adapter
+    this.birthDateInput = this.form.locator('#birthDate');
+    this.birthDateTrigger = this.form.getByRole('button', {
+      name: 'Choose date',
+    });
+    this.birthDatePopup = this.form.locator('.legacy-datepicker__popup');
+    this.birthDateAdapterHost = this.form.locator(
+      'ngx-legacy-datepicker-adapter',
+    );
   }
 
   /**
@@ -78,8 +94,7 @@ export class CustomControlsPage extends BaseFormPage {
    * Navigate to the custom controls demo page.
    */
   override async goto(): Promise<void> {
-    await this.page.goto(this.getFullUrl(this.route));
-    await this.waitForReady();
+    await this.gotoRoute(this.route);
   }
 
   /**
@@ -197,6 +212,15 @@ export class CustomControlsPage extends BaseFormPage {
     if (!(await this.shareReviewPubliclyCheckbox.isChecked())) {
       await this.shareReviewPubliclyCheckbox.click();
     }
+  }
+
+  /**
+   * Open the legacy datepicker popup and pick today's date (the widget's
+   * grid always renders the current month by default).
+   */
+  async pickTodayInBirthDatePopup(): Promise<void> {
+    await this.birthDateTrigger.click();
+    await this.birthDatePopup.locator('[aria-current="date"]').click();
   }
 
   /**

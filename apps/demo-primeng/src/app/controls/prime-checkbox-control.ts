@@ -19,6 +19,7 @@ import {
 } from '@angular/forms/signals';
 import {
   createErrorVisibility,
+  isElementCssVisible,
   NGX_SIGNAL_FORM_ARIA_MODE,
   NGX_SIGNAL_FORM_FIELD_CONTEXT,
   NGX_SIGNAL_FORM_HINT_REGISTRY,
@@ -126,9 +127,18 @@ export class PrimeCheckboxControlComponent implements FormValueControl<boolean> 
     fieldName: () => this.#fieldContext?.fieldName() ?? null,
   });
 
+  /**
+   * Whether the element this shim writes `aria-invalid` onto still has a
+   * layout box. The single render hook below owns it: `earlyRead` probes the
+   * native input, `write` publishes the result and then writes the
+   * attributes, so one DOM lookup serves both phases.
+   */
+  readonly #isControlVisible = signal(true);
+
   protected readonly ariaInvalid = createAriaInvalidSignal(
     this.#fieldState,
     this.#visibility,
+    this.#isControlVisible.asReadonly(),
   );
 
   protected readonly ariaRequired = createAriaRequiredSignal(this.#fieldState);
@@ -141,12 +151,41 @@ export class PrimeCheckboxControlComponent implements FormValueControl<boolean> 
     fieldName: () => this.#fieldContext?.fieldName() ?? null,
   });
 
+  /**
+   * The native `<input>` inside `p-checkbox`. PrimeNG exposes it as
+   * `inputViewChild`, which is a signal on newer versions and a plain
+   * `ElementRef` on older ones — hence the shape check. Shared by the
+   * layout probe and the write phase so both address the same element.
+   */
+  #nativeInput(): HTMLInputElement | null {
+    const inputViewChild = this.checkboxControl().inputViewChild;
+
+    return (
+      (typeof inputViewChild === 'function' ? inputViewChild() : inputViewChild)
+        ?.nativeElement ?? null
+    );
+  }
+
   constructor() {
     afterEveryRender(
       {
-        write: () => {
-          const nativeInput =
-            this.checkboxControl().inputViewChild?.nativeElement ?? null;
+        // `checkVisibility()` is a layout read, so it belongs in `earlyRead`:
+        // effects flush before render hooks and would report pre-layout
+        // geometry. Resolving the input here also hands `write` the same
+        // element, so `inputViewChild` is walked once per render.
+        earlyRead: () => {
+          const nativeInput = this.#nativeInput();
+
+          return {
+            nativeInput,
+            visible: nativeInput === null || isElementCssVisible(nativeInput),
+          };
+        },
+        write: ({ nativeInput, visible }) => {
+          // Publish before reading `ariaInvalid()`: the computed re-runs on
+          // read, so the attribute reflects this render's layout rather than
+          // the previous one's.
+          this.#isControlVisible.set(visible);
 
           if (!nativeInput) {
             return;

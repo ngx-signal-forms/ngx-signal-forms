@@ -141,10 +141,13 @@ describe('NgxFormFieldError — WCAG 4.1.3 live-region first-insertion', () => {
     expect(statusBefore?.hasAttribute('aria-hidden')).toBe(false);
     expect(statusBefore?.textContent?.trim()).toBe('');
 
-    // Type a short password to trigger the `warn:weak-password` warning.
+    // Type a short password to trigger the `warn:weak-password` warning, then
+    // blur: warnings default to 'on-touch', so the judgement only lands once
+    // the user has committed the value.
     const input = container.querySelector<HTMLInputElement>('input#pwd')!;
     await userEvent.click(input);
     await userEvent.type(input, 'abc');
+    await userEvent.tab();
 
     // Same DOM node must now expose its content (the live region was NOT
     // newly inserted — that's the WCAG 4.1.3 guarantee for status too).

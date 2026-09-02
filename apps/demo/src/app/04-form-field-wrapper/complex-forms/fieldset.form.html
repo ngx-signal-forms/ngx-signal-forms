@@ -135,7 +135,7 @@
         >
           <legend class="form-label">Delivery option</legend>
 
-          <label class="playground-radio-option">
+          <label class="playground-radio-option choice-target">
             <input
               type="radio"
               class="form-radio"
@@ -145,7 +145,7 @@
             <span>Standard (3-5 business days)</span>
           </label>
 
-          <label class="playground-radio-option">
+          <label class="playground-radio-option choice-target">
             <input
               type="radio"
               class="form-radio"
@@ -155,7 +155,7 @@
             <span>Express (1-2 business days)</span>
           </label>
 
-          <label class="playground-radio-option">
+          <label class="playground-radio-option choice-target">
             <input
               type="radio"
               class="form-radio"
@@ -278,7 +278,7 @@
         >
           <legend class="form-label">Delivery option *</legend>
 
-          <label class="playground-radio-option">
+          <label class="playground-radio-option choice-target">
             <input
               type="radio"
               class="form-radio"
@@ -288,7 +288,7 @@
             <span>Standard (3-5 business days)</span>
           </label>
 
-          <label class="playground-radio-option">
+          <label class="playground-radio-option choice-target">
             <input
               type="radio"
               class="form-radio"
@@ -298,7 +298,7 @@
             <span>Express (1-2 business days)</span>
           </label>
 
-          <label class="playground-radio-option">
+          <label class="playground-radio-option choice-target">
             <input
               type="radio"
               class="form-radio"
@@ -433,14 +433,21 @@
 
   <!-- Same as Shipping Checkbox -->
   <div class="my-6">
-    <label class="flex cursor-pointer items-center gap-2">
+    <ngx-form-field-wrapper
+      [formField]="fieldsetForm.billingSameAsShipping"
+      [appearance]="appearance()"
+      [orientation]="orientation()"
+    >
+      <label for="billingSameAsShipping"
+        >Billing address is the same as shipping</label
+      >
       <input
+        id="billingSameAsShipping"
         type="checkbox"
-        class="form-checkbox"
+        ngxSignalFormControl="checkbox"
         [formField]="fieldsetForm.billingSameAsShipping"
       />
-      <span class="text-sm">Billing address is the same as shipping</span>
-    </label>
+    </ngx-form-field-wrapper>
   </div>
 
   <!-- Billing Address Fieldset - Shown when different from shipping -->
@@ -563,7 +570,7 @@
     >
       <legend class="form-label">Delivery option *</legend>
 
-      <label class="flex cursor-pointer items-center gap-2">
+      <label class="choice-target flex cursor-pointer items-center gap-2">
         <input
           type="radio"
           class="form-radio"
@@ -573,7 +580,7 @@
         <span class="text-sm">Standard (3-5 business days)</span>
       </label>
 
-      <label class="flex cursor-pointer items-center gap-2">
+      <label class="choice-target flex cursor-pointer items-center gap-2">
         <input
           type="radio"
           class="form-radio"
@@ -583,7 +590,7 @@
         <span class="text-sm">Express (1-2 business days)</span>
       </label>
 
-      <label class="flex cursor-pointer items-center gap-2">
+      <label class="choice-target flex cursor-pointer items-center gap-2">
         <input
           type="radio"
           class="form-radio"

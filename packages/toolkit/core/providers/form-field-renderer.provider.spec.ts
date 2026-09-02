@@ -56,7 +56,7 @@ describe('provideFormFieldErrorRenderer (environment scope)', () => {
       provideFormFieldErrorRenderer({ component: StubErrorComponent }),
     ]);
 
-    expect(injector.get(NGX_FORM_FIELD_ERROR_RENDERER).component).toBe(
+    expect(injector.get(NGX_FORM_FIELD_ERROR_RENDERER)?.component).toBe(
       StubErrorComponent,
     );
   });
@@ -70,10 +70,10 @@ describe('provideFormFieldErrorRenderer (environment scope)', () => {
       parent,
     );
 
-    expect(child.get(NGX_FORM_FIELD_ERROR_RENDERER).component).toBe(
+    expect(child.get(NGX_FORM_FIELD_ERROR_RENDERER)?.component).toBe(
       OverrideErrorComponent,
     );
-    expect(parent.get(NGX_FORM_FIELD_ERROR_RENDERER).component).toBe(
+    expect(parent.get(NGX_FORM_FIELD_ERROR_RENDERER)?.component).toBe(
       StubErrorComponent,
     );
   });
@@ -97,7 +97,7 @@ describe('provideFormFieldErrorRendererForComponent (component scope)', () => {
     });
 
     const fixture = TestBed.createComponent(HostComponent);
-    expect(fixture.componentInstance.renderer.component).toBe(
+    expect(fixture.componentInstance.renderer?.component).toBe(
       StubErrorComponent,
     );
   });
@@ -123,7 +123,7 @@ describe('provideFormFieldErrorRendererForComponent (component scope)', () => {
     });
 
     const fixture = TestBed.createComponent(HostComponent);
-    expect(fixture.componentInstance.renderer.component).toBe(
+    expect(fixture.componentInstance.renderer?.component).toBe(
       OverrideErrorComponent,
     );
   });
@@ -135,7 +135,7 @@ describe('provideFormFieldHintRenderer (environment scope)', () => {
       provideFormFieldHintRenderer({ component: StubHintComponent }),
     ]);
 
-    expect(injector.get(NGX_FORM_FIELD_HINT_RENDERER).component).toBe(
+    expect(injector.get(NGX_FORM_FIELD_HINT_RENDERER)?.component).toBe(
       StubHintComponent,
     );
   });
@@ -149,10 +149,10 @@ describe('provideFormFieldHintRenderer (environment scope)', () => {
       parent,
     );
 
-    expect(child.get(NGX_FORM_FIELD_HINT_RENDERER).component).toBe(
+    expect(child.get(NGX_FORM_FIELD_HINT_RENDERER)?.component).toBe(
       OverrideHintComponent,
     );
-    expect(parent.get(NGX_FORM_FIELD_HINT_RENDERER).component).toBe(
+    expect(parent.get(NGX_FORM_FIELD_HINT_RENDERER)?.component).toBe(
       StubHintComponent,
     );
   });
@@ -176,7 +176,7 @@ describe('provideFormFieldHintRendererForComponent (component scope)', () => {
     });
 
     const fixture = TestBed.createComponent(HostComponent);
-    expect(fixture.componentInstance.renderer.component).toBe(
+    expect(fixture.componentInstance.renderer?.component).toBe(
       StubHintComponent,
     );
   });
@@ -202,7 +202,7 @@ describe('provideFormFieldHintRendererForComponent (component scope)', () => {
     });
 
     const fixture = TestBed.createComponent(HostComponent);
-    expect(fixture.componentInstance.renderer.component).toBe(
+    expect(fixture.componentInstance.renderer?.component).toBe(
       OverrideHintComponent,
     );
   });

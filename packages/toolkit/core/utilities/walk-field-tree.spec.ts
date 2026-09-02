@@ -116,9 +116,9 @@ function createMockWalkableField<TValue>(value: TValue): FieldTree<TValue> {
     hidden: signal(false),
     invalid: signal(false),
     keyInParent: signal('root'),
-    max: signal<number | undefined>(undefined),
+    max: signal<NonNullable<TValue> | undefined>(undefined),
     maxLength: signal<number | undefined>(undefined),
-    min: signal<number | undefined>(undefined),
+    min: signal<NonNullable<TValue> | undefined>(undefined),
     minLength: signal<number | undefined>(undefined),
     name: signal('root'),
     pattern: signal<readonly RegExp[]>([]),
@@ -133,7 +133,11 @@ function createMockWalkableField<TValue>(value: TValue): FieldTree<TValue> {
     markAsTouched: (): void => undefined,
     metadata: <M>(_key: MetadataKey<M, unknown, unknown>): M | undefined =>
       undefined,
+    hasMetadata: (_key: MetadataKey<unknown, unknown, unknown>): boolean =>
+      false,
+    getError: (_kind: string): undefined => undefined,
     reset: (): void => undefined,
+    reloadValidation: (): void => undefined,
   };
 
   fieldTree = Object.assign(
@@ -149,7 +153,10 @@ function createMockWalkableField<TValue>(value: TValue): FieldTree<TValue> {
         yield* entries;
       },
     },
-  ) as FieldTree<TValue>;
+    // `FieldTree<TValue>` is a conditional type over an unresolved `TValue`, so
+    // TypeScript cannot see the overlap with the concrete callable built here.
+    // The assertion is confined to this one fixture factory.
+  ) as unknown as FieldTree<TValue>;
 
   Object.defineProperty(fieldTree, 'setChildrenForTest', {
     value(nextEntries: Array<readonly [string, unknown]>) {

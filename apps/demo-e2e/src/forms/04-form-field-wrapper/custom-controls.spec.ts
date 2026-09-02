@@ -6,7 +6,6 @@ import {
   collectConsoleErrors,
   verifyNoErrorsOnInitialLoad,
 } from '../../fixtures/form-validation.fixture';
-import { stabilizeLayoutSnapshotViewport } from '../../fixtures/layout-screenshot.fixture';
 import { CustomControlsPage } from '../../page-objects/custom-controls.page';
 
 /**
@@ -383,6 +382,16 @@ test.describe('Custom Signal Forms Controls', () => {
             'manual',
           );
         }
+      });
+
+      // The component no longer hand-authors this marker in its host
+      // metadata (#369); it reaches the DOM only via the
+      // ngxSignalFormControl directive applied at the call sites.
+      await test.step('Verify the rating control host carries the semantics marker', async () => {
+        await expect(page.ratingControl).toHaveAttribute(
+          'data-ngx-signal-form-control',
+          '',
+        );
       });
 
       await test.step('Verify the rating control starts with its hint-only described-by chain', async () => {
@@ -912,16 +921,48 @@ test.describe('Custom Signal Forms Controls', () => {
       });
     });
 
-    test('should match the outline vertical wrapper baseline @layout', async () => {
-      await stabilizeLayoutSnapshotViewport(page.page);
+    test('should keep outline vertical wrapper layout contracts stable', async () => {
       await test.step('Show the outline state', async () => {
         await page.showOutlineAppearance();
       });
 
-      await test.step('Capture the wrapper form baseline', async () => {
-        await expect(page.form).toHaveScreenshot(
-          'custom-controls-outline-vertical.png',
-        );
+      await test.step('Verify outlined textual wrappers and plain custom wrappers keep expected classes', async () => {
+        const outlinedWrapper = page.getWrapperByControlId('productName');
+        await expect(outlinedWrapper).toHaveClass(/ngx-signal-forms-outline/);
+
+        for (const controlId of ['rating', 'serviceRating', 'wouldRecommend']) {
+          const wrapper = page.getWrapperByControlId(controlId);
+          await expect(wrapper).toHaveClass(/ngx-signal-forms-plain/);
+          await expect(wrapper).not.toHaveClass(/ngx-signal-forms-outline/);
+        }
+      });
+
+      await test.step('Verify plain custom wrappers keep horizontal padding parity with outlined textual wrappers', async () => {
+        const outlinedPadding = await page
+          .getWrapperContentByControlId('productName')
+          .evaluate((element) => {
+            const styles = window.getComputedStyle(element);
+
+            return {
+              paddingLeft: styles.paddingLeft,
+              paddingRight: styles.paddingRight,
+            };
+          });
+
+        for (const controlId of ['rating', 'serviceRating', 'wouldRecommend']) {
+          const padding = await page
+            .getWrapperContentByControlId(controlId)
+            .evaluate((element) => {
+              const styles = window.getComputedStyle(element);
+
+              return {
+                paddingLeft: styles.paddingLeft,
+                paddingRight: styles.paddingRight,
+              };
+            });
+
+          expect(padding).toEqual(outlinedPadding);
+        }
       });
     });
 
@@ -975,6 +1016,132 @@ test.describe('Custom Signal Forms Controls', () => {
 
         const ratingError = page.getErrorById('rating');
         await expect(ratingError).toBeVisible();
+      });
+    });
+  });
+
+  // Regression coverage for issue #272: LegacyDatepickerAdapterComponent, a
+  // FormValueControl<Date | null> adapter around a self-contained fake
+  // "legacy" third-party datepicker widget. See
+  // apps/demo/src/app/shared/controls/legacy-datepicker-adapter.ts for the
+  // full design writeup this pins down.
+  test.describe('Legacy Datepicker Adapter', () => {
+    test('should render the widget with manual ARIA ownership and no wrapper-owned aria-invalid on load', async () => {
+      await expect(page.birthDateInput).toBeVisible();
+      await expect(page.birthDateInput).toHaveAttribute(
+        'aria-invalid',
+        'false',
+      );
+
+      // Manual ARIA mode: the adapter host (not the wrapper, and not the
+      // widget's internal input) carries the semantics marker, matching the
+      // `ngxSignalFormControlAria="manual"` declared in the template.
+      await expect(page.birthDateAdapterHost).toHaveAttribute(
+        'data-ngx-signal-form-control-aria-mode',
+        'manual',
+      );
+    });
+
+    test('should forward aria-describedby/aria-invalid onto the widget internal input, not the adapter host', async () => {
+      await test.step('Touch the field with unparseable text to trigger a parse error', async () => {
+        await page.birthDateInput.fill('not-a-date');
+        await page.birthDateInput.blur();
+      });
+
+      await test.step('Verify the described-by/invalid attributes land on the real input', async () => {
+        await expect(page.birthDateInput).toHaveAttribute(
+          'aria-invalid',
+          'true',
+        );
+        await expect(page.birthDateInput).toHaveAttribute(
+          'aria-describedby',
+          /birthDate-error/,
+        );
+      });
+
+      await test.step('Verify the error message renders as a parse error', async () => {
+        const error = page.getErrorById('birthDate');
+        await expect(error).toBeVisible();
+        await expect(error).toContainText(/not a date in yyyy-mm-dd format/i);
+      });
+    });
+
+    test('should surface an impossible calendar date as a parse error', async () => {
+      await page.birthDateInput.fill('2026-02-30');
+      await page.birthDateInput.blur();
+
+      const error = page.getErrorById('birthDate');
+      await expect(error).toBeVisible();
+      await expect(error).toContainText(/not a real calendar date/i);
+    });
+
+    test('should clear the parse error once the typed text becomes a real date', async () => {
+      await test.step('Trigger the parse error', async () => {
+        await page.birthDateInput.fill('garbage');
+        await page.birthDateInput.blur();
+        await expect(page.getErrorById('birthDate')).toBeVisible();
+      });
+
+      await test.step('Replace it with a real date', async () => {
+        await page.birthDateInput.fill('');
+        await page.birthDateInput.fill('1990-05-17');
+        await page.birthDateInput.blur();
+      });
+
+      await test.step('Verify the error clears and aria-invalid resets', async () => {
+        await expect(page.getErrorById('birthDate')).toHaveCount(0);
+        await expect(page.birthDateInput).toHaveAttribute(
+          'aria-invalid',
+          'false',
+        );
+      });
+    });
+
+    test('should not mark the field touched while focus moves within the widget, but does once focus truly leaves', async () => {
+      await test.step('Seed invalid text, then move focus from the input to the widget trigger button', async () => {
+        // Invalid text first: a false-positive touch (e.g. from a naive
+        // (blur) on the input, which the composite focusout +
+        // relatedTarget hook exists to avoid) must be observable as a
+        // rendered `parse` error below. An empty, valid field would pass
+        // this assertion even with a plain (blur) adapter.
+        await page.birthDateInput.fill('bad-date');
+        await page.birthDateInput.focus();
+        await page.birthDateTrigger.focus();
+      });
+
+      await test.step('Verify no error renders yet — the internal hop did not touch the field', async () => {
+        // aria-invalid mirrors the field's raw validity unconditionally
+        // (same convention as the rating controls elsewhere on this page),
+        // so it is not gated by touched and is not the discriminating
+        // signal here. The rendered error message is what the wrapper's
+        // 'on-touch' strategy actually gates.
+        await expect(page.getErrorById('birthDate')).toHaveCount(0);
+      });
+
+      await test.step('Verify leaving the whole widget does mark it touched', async () => {
+        await page.productNameInput.focus();
+
+        await expect(page.getErrorById('birthDate')).toBeVisible();
+        await expect(page.birthDateInput).toHaveAttribute(
+          'aria-invalid',
+          'true',
+        );
+      });
+    });
+
+    test('should round-trip a value picked from the popup calendar and clear it on reset', async () => {
+      await test.step('Pick a date from the popup', async () => {
+        await page.pickTodayInBirthDatePopup();
+      });
+
+      await test.step('Verify the text input reflects the picked date and the popup closed', async () => {
+        await expect(page.birthDatePopup).toBeHidden();
+        await expect(page.birthDateInput).not.toHaveValue('');
+      });
+
+      await test.step('Reset the form and verify the widget clears back to empty', async () => {
+        await page.getSubmitButton(/reset/i).click();
+        await expect(page.birthDateInput).toHaveValue('');
       });
     });
   });

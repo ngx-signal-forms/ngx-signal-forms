@@ -42,7 +42,11 @@ describe('immutable-array utilities', () => {
         { city: 'Rome', activities: [{ name: 'Colosseum' }] },
       ];
 
-      const result = updateNested(
+      // `U` has no inference site in `updateNested`'s parameters — it only
+      // appears in the `T extends Record<K, U[]>` constraint and in the
+      // updater — so it widens to `unknown` and the updater's argument is
+      // unspreadable. Naming the element type restores the real shape.
+      const result = updateNested<Destination, 'activities', Activity>(
         destinations,
         0,
         'activities',
@@ -50,8 +54,8 @@ describe('immutable-array utilities', () => {
         (activity) => ({ ...activity, name: 'Eiffel Tower' }),
       );
 
-      expect(result[0].activities[1].name).toBe('Eiffel Tower');
-      expect(result[0].activities[0].name).toBe('Louvre');
+      expect(result[0]?.activities[1]?.name).toBe('Eiffel Tower');
+      expect(result[0]?.activities[0]?.name).toBe('Louvre');
       expect(result[1]).toBe(destinations[1]); // Unchanged reference
     });
 
@@ -62,7 +66,7 @@ describe('immutable-array utilities', () => {
 
       updateNested(destinations, 0, 'activities', 0, () => ({ name: 'New' }));
 
-      expect(destinations[0].activities[0].name).toBe('Louvre');
+      expect(destinations[0]?.activities[0]?.name).toBe('Louvre');
     });
   });
 });
