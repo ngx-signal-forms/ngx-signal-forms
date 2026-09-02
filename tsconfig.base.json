@@ -40,6 +40,9 @@
         "./packages/toolkit/testing/index.ts"
       ],
       "@ngx-signal-forms/demo-shared": ["./packages/demo/shared/src/index.ts"],
+      "@ngx-signal-forms/demo-shared/ui": [
+        "./packages/demo/shared/src/lib/ui/index.ts"
+      ],
       "@ngx-signal-forms/a11y-testing": ["./tools/a11y/scan.ts"],
       "@ngx-signal-forms/debugger": ["./packages/demo/debugger/src/index.ts"],
       "@spartan-ng/helm": ["./packages/demo/spartan-ui/src/index.ts"],

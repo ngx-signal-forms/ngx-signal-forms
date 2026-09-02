@@ -20,6 +20,10 @@ export class CustomControlsPage extends BaseFormPage {
 
   // Native input fields
   readonly productNameInput: Locator;
+  readonly frameworkInput: Locator;
+  readonly frameworkChevron: Locator;
+  readonly frameworkSelectTrigger: Locator;
+  readonly frameworkSelectChevron: Locator;
   readonly emailUpdatesSwitch: Locator;
   readonly shareReviewPubliclyCheckbox: Locator;
   readonly feedbackTextarea: Locator;
@@ -60,6 +64,14 @@ export class CustomControlsPage extends BaseFormPage {
 
     // Native inputs
     this.productNameInput = this.form.locator('#productName');
+    this.frameworkInput = this.form.locator('#framework');
+    this.frameworkChevron = this.form.locator(
+      'ngx-aria-autocomplete .select__chevron',
+    );
+    this.frameworkSelectTrigger = this.form.locator('#frameworkSelect');
+    this.frameworkSelectChevron = this.form.locator(
+      'ngx-aria-select .select__chevron',
+    );
     this.emailUpdatesSwitch = this.form.locator('#emailUpdates');
     this.shareReviewPubliclyCheckbox = this.form.locator(
       '#shareReviewPublicly',
@@ -228,6 +240,10 @@ export class CustomControlsPage extends BaseFormPage {
    */
   async fillValidForm(): Promise<void> {
     await this.productNameInput.fill('Test Product');
+    await this.frameworkInput.fill('Ang');
+    await this.page.getByRole('option', { name: 'Angular' }).click();
+    await this.frameworkSelectTrigger.click();
+    await this.page.getByRole('option', { name: 'Angular' }).click();
     await this.selectStar(this.ratingControl, 4);
     await this.selectStar(this.serviceRatingControl, 5);
     await this.selectStar(this.wouldRecommendControl, 2);

@@ -115,11 +115,16 @@ export function readFormFieldWrapperDomSnapshot(
   // therefore arrives here as `nativeControl === null` and falls through to the
   // probe, which still finds the inner `<input id>`.
   const inputEl = nativeControl ?? (cacheHit ? cachedControl : probedControl);
+  const semantics = resolveProjectedControlSemantics(
+    inputEl,
+    hostEl,
+    controlPresets,
+  );
 
   return {
     inputEl,
     inputId: inputEl && inputEl.id.length > 0 ? inputEl.id : null,
-    semantics: resolveNgxSignalFormControlSemantics(inputEl, controlPresets),
+    semantics,
     // Scope the scan to the projected control region so selection controls
     // rendered in `[prefix]` / `[suffix]` (e.g. a checkbox-shaped icon
     // toggle) cannot flip a single-control wrapper into selection-cluster
@@ -133,6 +138,24 @@ export function readFormFieldWrapperDomSnapshot(
       ':scope > .ngx-signal-form-field-wrapper__label :is(label, [ngxFormFieldLabel])',
     ),
   };
+}
+
+function resolveProjectedControlSemantics(
+  inputEl: HTMLElement | null,
+  hostEl: HTMLElement,
+  controlPresets: NgxSignalFormControlPresetRegistry,
+): ResolvedNgxSignalFormControlSemantics {
+  for (
+    let ancestor = inputEl?.parentElement;
+    ancestor && ancestor !== hostEl;
+    ancestor = ancestor.parentElement
+  ) {
+    if (ancestor.hasAttribute('data-ngx-signal-form-control')) {
+      return resolveNgxSignalFormControlSemantics(ancestor, controlPresets);
+    }
+  }
+
+  return resolveNgxSignalFormControlSemantics(inputEl, controlPresets);
 }
 
 /**

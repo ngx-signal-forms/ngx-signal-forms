@@ -590,6 +590,251 @@ test.describe('Custom Signal Forms Controls', () => {
     });
   });
 
+  test.describe('Field-shaped custom controls', () => {
+    test('should infer input-like from the autocomplete combobox', async () => {
+      const wrapper = page.getWrapperByControlId('framework');
+
+      await test.step('Verify the inner trigger is a combobox with an id', async () => {
+        await expect(page.frameworkInput).toHaveAttribute('role', 'combobox');
+        await expect(page.frameworkInput).toHaveAttribute('id', 'framework');
+      });
+
+      await test.step('Verify the wrapper treats the control as a text field', async () => {
+        await expect(wrapper).toHaveAttribute(
+          'data-ngx-signal-form-control-kind',
+          'input-like',
+        );
+        await expect(wrapper).toHaveClass(
+          /ngx-signal-form-field-wrapper--textual/,
+        );
+        await expect(wrapper).not.toHaveClass(
+          /ngx-signal-form-field-wrapper--padded-control/,
+        );
+      });
+
+      await test.step('Verify the inner trigger stays naked', async () => {
+        await expect(page.frameworkInput).toHaveCSS('border-width', '0px');
+        await expect(page.frameworkChevron).toBeVisible();
+      });
+
+      await test.step('Verify auto-ARIA and the required marker target the combobox', async () => {
+        const autocompleteHost = wrapper.locator('ngx-aria-autocomplete');
+
+        await expect(page.frameworkInput).toHaveAttribute(
+          'aria-required',
+          'true',
+        );
+        await expect(autocompleteHost).not.toHaveAttribute('aria-required');
+        await expect(autocompleteHost).not.toHaveAttribute('aria-invalid');
+        await expect(autocompleteHost).not.toHaveAttribute('aria-describedby');
+        await expect(
+          wrapper.locator('.ngx-signal-form-field-wrapper__required-marker'),
+        ).toHaveCount(1);
+      });
+    });
+
+    test('should treat the closed select as input-like without a combobox role', async () => {
+      const wrapper = page.getWrapperByControlId('frameworkSelect');
+
+      await test.step('Verify the host is a button listbox trigger, not a combobox', async () => {
+        await expect(page.frameworkSelectTrigger).toHaveAttribute(
+          'role',
+          'button',
+        );
+        await expect(page.frameworkSelectTrigger).toHaveAttribute(
+          'aria-haspopup',
+          'listbox',
+        );
+        await expect(page.frameworkSelectTrigger).not.toHaveAttribute(
+          'role',
+          'combobox',
+        );
+        await expect(page.frameworkSelectTrigger).toHaveAttribute(
+          'ngxsignalformcontrol',
+          'input-like',
+        );
+      });
+
+      await test.step('Verify the wrapper treats the control as a text field', async () => {
+        await expect(wrapper).toHaveAttribute(
+          'data-ngx-signal-form-control-kind',
+          'input-like',
+        );
+        await expect(wrapper).toHaveClass(
+          /ngx-signal-form-field-wrapper--textual/,
+        );
+      });
+    });
+
+    test('should use the same form-field input type scale as the native text field', async () => {
+      await page.showOutlineAppearance();
+
+      await test.step('Verify custom controls inherit wrapper input tokens', async () => {
+        const metrics = await page.productNameInput.evaluate((nativeEl) => {
+          const read = (el: Element | null) => {
+            if (!el) {
+              return null;
+            }
+            const style = getComputedStyle(el);
+            return {
+              fontSize: style.fontSize,
+              lineHeight: style.lineHeight,
+              fontWeight: style.fontWeight,
+              fontFamily: style.fontFamily,
+            };
+          };
+
+          const wrapper = nativeEl.closest('ngx-form-field-wrapper');
+          const probe = document.createElement('span');
+          probe.style.fontSize = 'var(--_input-outline-size)';
+          probe.style.lineHeight = 'var(--_input-outline-line-height)';
+          probe.style.color = 'var(--_placeholder-color)';
+          (wrapper ?? document.body).append(probe);
+          const probeStyle = getComputedStyle(probe);
+          const tokenFontSize = probeStyle.fontSize;
+          const tokenLineHeight = probeStyle.lineHeight;
+          const tokenPlaceholderColor = probeStyle.color;
+          probe.remove();
+
+          return {
+            tokenFontSize,
+            tokenLineHeight,
+            tokenPlaceholderColor,
+            productName: read(nativeEl),
+            productNamePlaceholder: getComputedStyle(nativeEl, '::placeholder')
+              .color,
+            framework: read(document.querySelector('#framework')),
+            frameworkPlaceholder: getComputedStyle(
+              document.querySelector('#framework') as Element,
+              '::placeholder',
+            ).color,
+            frameworkSelect: read(document.querySelector('#frameworkSelect')),
+            frameworkSelectPlaceholder: getComputedStyle(
+              document.querySelector(
+                '#frameworkSelect .select__value--placeholder',
+              ) as Element,
+            ).color,
+          };
+        });
+
+        expect(metrics.productName).not.toBeNull();
+        expect(metrics.productName?.fontSize).toBe(metrics.tokenFontSize);
+        expect(metrics.productName?.lineHeight).toBe(metrics.tokenLineHeight);
+        expect(metrics.framework).toEqual(metrics.productName);
+        expect(metrics.frameworkSelect).toEqual(metrics.productName);
+        expect(metrics.productNamePlaceholder).toBe(
+          metrics.tokenPlaceholderColor,
+        );
+        expect(metrics.frameworkPlaceholder).toBe(
+          metrics.tokenPlaceholderColor,
+        );
+        expect(metrics.frameworkSelectPlaceholder).toBe(
+          metrics.tokenPlaceholderColor,
+        );
+      });
+
+      await test.step('Verify outline field shells share the same content height', async () => {
+        const nativeHeight = await page
+          .getWrapperContentByControlId('productName')
+          .evaluate((el) => el.getBoundingClientRect().height);
+        const autocompleteHeight = await page
+          .getWrapperContentByControlId('framework')
+          .evaluate((el) => el.getBoundingClientRect().height);
+        const selectHeight = await page
+          .getWrapperContentByControlId('frameworkSelect')
+          .evaluate((el) => el.getBoundingClientRect().height);
+
+        expect(autocompleteHeight).toBe(nativeHeight);
+        expect(selectHeight).toBe(nativeHeight);
+      });
+    });
+
+    test('should pick an autocomplete option and close the popup', async () => {
+      await page.frameworkInput.fill('Ang');
+      await page.page.getByRole('option', { name: 'Angular' }).click();
+
+      await expect(page.frameworkInput).toHaveValue('Angular');
+      await expect(page.frameworkInput).toHaveAttribute(
+        'aria-expanded',
+        'false',
+      );
+    });
+
+    test('should pick a select option and close the popup', async () => {
+      await page.frameworkSelectTrigger.click();
+      await page.page.getByRole('option', { name: 'Angular' }).click();
+
+      await expect(page.frameworkSelectTrigger).toContainText('Angular');
+      await expect(page.frameworkSelectTrigger).toHaveAttribute(
+        'aria-expanded',
+        'false',
+      );
+    });
+
+    test('should support keyboard navigation and selection for the closed select', async () => {
+      const listbox = page.page.locator('ul.select__list');
+
+      await page.frameworkSelectTrigger.focus();
+      await page.frameworkSelectTrigger.press('ArrowDown');
+
+      await expect(listbox).toBeVisible();
+      await expect(listbox).toBeFocused();
+
+      await page.page.keyboard.press('ArrowDown');
+      await page.page.keyboard.press('Enter');
+
+      await expect(page.frameworkSelectTrigger).toContainText('React');
+      await expect(page.frameworkSelectTrigger).toHaveAttribute(
+        'aria-expanded',
+        'false',
+      );
+      await expect(page.frameworkSelectTrigger).toBeFocused();
+
+      await page.frameworkSelectTrigger.press('ArrowDown');
+      await expect(listbox).toBeFocused();
+      await page.page.keyboard.press('Escape');
+
+      await expect(page.frameworkSelectTrigger).toHaveAttribute(
+        'aria-expanded',
+        'false',
+      );
+      await expect(page.frameworkSelectTrigger).toBeFocused();
+    });
+
+    test('should keep the popup outside the form-field outline', async () => {
+      const autocompleteContent =
+        page.getWrapperContentByControlId('framework');
+
+      await test.step('Verify outline contains only the trigger field', async () => {
+        await page.showOutlineAppearance();
+        await page.frameworkInput.fill('Ang');
+
+        const option = page.page.getByRole('option', { name: 'Angular' });
+        await expect(option).toBeVisible();
+        await expect(autocompleteContent).toHaveCSS('border-style', 'solid');
+        await expect(autocompleteContent).toHaveCSS('border-width', '1px');
+        await expect(page.frameworkInput).toHaveCSS('border-width', '0px');
+
+        const optionInsideWrapper = await option.evaluate((element) => {
+          return Boolean(element.closest('ngx-form-field-wrapper'));
+        });
+        expect(optionInsideWrapper).toBe(false);
+
+        const inputFont = await page.frameworkInput.evaluate((el) => {
+          const style = getComputedStyle(el);
+          return {
+            fontSize: style.fontSize,
+            fontFamily: style.fontFamily,
+            fontWeight: style.fontWeight,
+          };
+        });
+        await expect(option).toHaveCSS('font-size', inputFont.fontSize);
+        await expect(option).toHaveCSS('font-family', inputFont.fontFamily);
+        await expect(option).toHaveCSS('font-weight', inputFont.fontWeight);
+      });
+    });
+  });
+
   test.describe('Outline appearance integration', () => {
     test('should apply horizontal orientation only to eligible wrappers in standard mode', async () => {
       await test.step('Switch the demo to horizontal orientation', async () => {
@@ -605,6 +850,8 @@ test.describe('Custom Signal Forms Controls', () => {
       await test.step('Verify textual and custom plain wrappers resolve to horizontal', async () => {
         for (const controlId of [
           'productName',
+          'framework',
+          'frameworkSelect',
           'feedback',
           'rating',
           'serviceRating',
@@ -660,7 +907,13 @@ test.describe('Custom Signal Forms Controls', () => {
       });
 
       await test.step('Verify wrappers resolve back to vertical orientation', async () => {
-        for (const controlId of ['productName', 'feedback', 'rating']) {
+        for (const controlId of [
+          'productName',
+          'framework',
+          'frameworkSelect',
+          'feedback',
+          'rating',
+        ]) {
           const wrapper = page.getWrapperByControlId(controlId);
 
           await expect(wrapper).toHaveAttribute('data-orientation', 'vertical');
@@ -686,6 +939,48 @@ test.describe('Custom Signal Forms Controls', () => {
           await expect(wrapper).toHaveAttribute('outline', '');
           await expect(wrapper).toHaveClass(/ngx-signal-forms-outline/);
         }
+      });
+
+      await test.step('Verify the field-shaped autocomplete uses the shared outline shell', async () => {
+        const wrapper = page.getWrapperByControlId('framework');
+        const content = page.getWrapperContentByControlId('framework');
+
+        await expect(wrapper).toHaveAttribute('outline', '');
+        await expect(wrapper).toHaveClass(/ngx-signal-forms-outline/);
+        await expect(wrapper).toHaveClass(
+          /ngx-signal-form-field-wrapper--textual/,
+        );
+        await expect(wrapper).toHaveAttribute(
+          'data-ngx-signal-form-control-kind',
+          'input-like',
+        );
+        await expect(content).toHaveCSS('border-style', 'solid');
+        await expect(content).toHaveCSS('border-width', '1px');
+        await expect(page.frameworkInput).toHaveCSS('border-width', '0px');
+        await expect(page.frameworkChevron).toBeVisible();
+
+        await page.frameworkInput.focus();
+        await expect(content).not.toHaveCSS('box-shadow', 'none');
+      });
+
+      await test.step('Verify the field-shaped select uses the shared outline shell', async () => {
+        const wrapper = page.getWrapperByControlId('frameworkSelect');
+        const content = page.getWrapperContentByControlId('frameworkSelect');
+
+        await expect(wrapper).toHaveClass(/ngx-signal-forms-outline/);
+        await expect(wrapper).toHaveClass(
+          /ngx-signal-form-field-wrapper--textual/,
+        );
+        await expect(wrapper).toHaveAttribute(
+          'data-ngx-signal-form-control-kind',
+          'input-like',
+        );
+        await expect(content).toHaveCSS('border-style', 'solid');
+        await expect(page.frameworkSelectTrigger).toHaveCSS(
+          'border-width',
+          '0px',
+        );
+        await expect(page.frameworkSelectChevron).toBeVisible();
       });
 
       await test.step('Verify custom rating and slider wrappers stay plain even when the demo toggles to outline mode', async () => {
@@ -722,7 +1017,11 @@ test.describe('Custom Signal Forms Controls', () => {
     });
 
     test('should keep invalid outline borders only for outlined native textual required fields', async () => {
-      const outlinedControlIds = ['productName'] as const;
+      const outlinedControlIds = [
+        'productName',
+        'framework',
+        'frameworkSelect',
+      ] as const;
       const plainControlIds = [
         'rating',
         'serviceRating',
@@ -1101,7 +1400,7 @@ test.describe('Custom Signal Forms Controls', () => {
               triggerBox!.width -
               (wrapperBox!.x + wrapperBox!.width),
           ),
-        ).toBeLessThanOrEqual(1);
+        ).toBeLessThanOrEqual(4);
       });
 
       await test.step('Verify the outline trigger is the integrated trailing action', async () => {

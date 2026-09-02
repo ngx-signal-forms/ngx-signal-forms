@@ -143,8 +143,10 @@
      Skipped under forced-colors so user/UA focus indicators remain the only
      visible cue in high-contrast modes (WCAG 2.4.7 / 1.4.11). */
   @media not (forced-colors: active) {
-    ngx-form-field-wrapper :is(input, textarea, select):focus,
-    ngx-form-field-wrapper :is(input, textarea, select):focus-visible {
+    ngx-form-field-wrapper.ngx-signal-form-field-wrapper--textual
+      :is(input, textarea, select):focus,
+    ngx-form-field-wrapper.ngx-signal-form-field-wrapper--textual
+      :is(input, textarea, select):focus-visible {
       outline: none !important;
       box-shadow: none !important;
     }

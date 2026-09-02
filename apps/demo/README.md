@@ -67,14 +67,14 @@ Renderless primitives for custom UI systems.
 
 The batteries-included path for reusable field UI.
 
-| Example                                                                                  | Focus                     | What You Learn                                                                                 |
-| ---------------------------------------------------------------------------------------- | ------------------------- | ---------------------------------------------------------------------------------------------- |
-| **[complex-forms](./src/app/04-form-field-wrapper/complex-forms/README.md)**             | Nested objects + arrays   | Wrapper composition, grouped sections, long-form UX                                            |
-| **[fieldset-appearance](./src/app/04-form-field-wrapper/fieldset-appearance/README.md)** | Grouped feedback styling  | Fieldset appearance, tones, aggregation, placement                                             |
-| **[custom-controls](./src/app/04-form-field-wrapper/custom-controls/README.md)**         | FormValueControl patterns | Custom control integration with wrapper + auto-ARIA; `NgxFieldIdentity`                        |
-| **[labelless-fields](./src/app/04-form-field-wrapper/labelless-fields/README.md)**       | Label-free layouts        | Wrappers without projected labels; aria-label guidance                                         |
-| **[field-identity](./src/app/04-form-field-wrapper/field-identity/README.md)**           | Custom wrapper identity   | A wrapper declaring its own field name, and `aria-invalid` when a control loses its layout box |
-| **[field-marking](./src/app/04-form-field-wrapper/field-marking/README.md)**             | Required/optional marking | `showMarkerWhen`, marker text, `NgxFormMarkingLegend`                                          |
+| Example                                                                                  | Focus                     | What You Learn                                                                                   |
+| ---------------------------------------------------------------------------------------- | ------------------------- | ------------------------------------------------------------------------------------------------ |
+| **[complex-forms](./src/app/04-form-field-wrapper/complex-forms/README.md)**             | Nested objects + arrays   | Wrapper composition, grouped sections, long-form UX                                              |
+| **[fieldset-appearance](./src/app/04-form-field-wrapper/fieldset-appearance/README.md)** | Grouped feedback styling  | Fieldset appearance, tones, aggregation, placement                                               |
+| **[custom-controls](./src/app/04-form-field-wrapper/custom-controls/README.md)**         | FormValueControl patterns | Field-shaped combobox/select inherit the wrapper shell; sliders stay `plain`; `NgxFieldIdentity` |
+| **[labelless-fields](./src/app/04-form-field-wrapper/labelless-fields/README.md)**       | Label-free layouts        | Wrappers without projected labels; aria-label guidance                                           |
+| **[field-identity](./src/app/04-form-field-wrapper/field-identity/README.md)**           | Custom wrapper identity   | A wrapper declaring its own field name, and `aria-invalid` when a control loses its layout box   |
+| **[field-marking](./src/app/04-form-field-wrapper/field-marking/README.md)**             | Required/optional marking | `showMarkerWhen`, marker text, `NgxFormMarkingLegend`                                            |
 
 ### Level 5: Validation
 
@@ -112,7 +112,7 @@ Production-ready patterns for real applications.
 - **Reactive error signal** → [`error-message-signal`](./src/app/03-headless/error-message-signal/README.md) — `errorMessage` signal for template-only reactive error binding
 - **Wrapper long-form composition** → [`complex-forms`](./src/app/04-form-field-wrapper/complex-forms/README.md) — consolidated wrapper basics, grouped sections, nested arrays
 - **Fieldset presentation APIs** → [`fieldset-appearance`](./src/app/04-form-field-wrapper/fieldset-appearance/README.md) — grouped summary appearance, surfaced tones, and nested aggregation
-- **Custom control integration + NgxFieldIdentity** → [`custom-controls`](./src/app/04-form-field-wrapper/custom-controls/README.md) — wrapper + custom value controls; `NgxFieldIdentity` reference implementation (rating control)
+- **Custom control integration + NgxFieldIdentity** → [`custom-controls`](./src/app/04-form-field-wrapper/custom-controls/README.md) — field-shaped combobox/select inherit the wrapper shell; sliders stay `plain`; `NgxFieldIdentity` on the rating control
 - **Label-free field layouts** → [`labelless-fields`](./src/app/04-form-field-wrapper/labelless-fields/README.md) — wrappers without projected labels; aria-label guidance
 - **A field name that is not the control's `id`** → [`field-identity`](./src/app/04-form-field-wrapper/field-identity/README.md) — a custom wrapper composing `NgxFieldIdentityProvider`, inside collapsible UI
 - **Required / optional field marking** → [`field-marking`](./src/app/04-form-field-wrapper/field-marking/README.md) — `showMarkerWhen`, marker text, `NgxFormMarkingLegend`

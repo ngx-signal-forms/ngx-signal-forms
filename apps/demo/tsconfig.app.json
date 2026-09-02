@@ -32,6 +32,9 @@
       ],
       "@ngx-signal-forms/demo-shared": [
         "../../packages/demo/shared/src/index.ts"
+      ],
+      "@ngx-signal-forms/demo-shared/ui": [
+        "../../packages/demo/shared/src/lib/ui/index.ts"
       ]
     }
   },

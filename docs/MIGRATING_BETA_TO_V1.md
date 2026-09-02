@@ -2,17 +2,18 @@
 
 This guide covers every breaking change between the last beta
 (`1.0.0-beta.10`) and the current v1 release-candidate surface, including
-`v1.0.0-rc.12`. It is intentionally written against the **latest state only**.
+`v1.0.0-rc.13`. It is intentionally written against the **latest state only**.
 
 That means this document does **not** walk through interim RC-to-RC
 waypoints. Every “before → after” example below shows the migration from
 beta-era usage to the API you should use **today**. For an RC-to-RC upgrade,
 read the applicable guide in [`docs/migrations/`](./migrations/README.md);
-for example, [`v1.0.0-rc.12`](./migrations/v1.0.0-rc.12.md) documents the
-upgrade from rc.11.
+for example, [`v1.0.0-rc.13`](./migrations/v1.0.0-rc.13.md) documents the
+upgrade from rc.12.
 
-If a later RC ships without new beta-to-v1 breaking changes, this guide
-remains the correct migration target without needing another RC-number bump.
+`v1.0.0-rc.13` adds no new beta-to-v1 breaking TypeScript API. Combobox
+hosts now infer `input-like` instead of `composite`. See that hop guide if
+you already sit on rc.12.
 
 The toolkit follows semver strictly from `1.0.0` onward. Future 1.x
 releases will not include any of the renames below.
@@ -1232,6 +1233,13 @@ presentation="panel">`, and rename the `--ngx-signal-form-notification-*`
     `createAriaInvalidSignal`.
     Read [`docs/migrations/v1.0.0-rc.12.md`](./migrations/v1.0.0-rc.12.md) for
     the bounded rc.11 → rc.12 upgrade guide and before/after templates.
+
+- **Apply the current rc.13 behavior** when a custom combobox must stay a
+  widget: set `ngxSignalFormControl="composite"` (or `slider`). Field-shaped
+  comboboxes with an `id` now join the wrapper as `input-like`. Closed custom
+  selects declare `ngxSignalFormControl="input-like"`. There is no `select`
+  kind. Read [`docs/migrations/v1.0.0-rc.13.md`](./migrations/v1.0.0-rc.13.md)
+  for the bounded rc.12 → rc.13 upgrade guide.
 
 - **Run your consumer's existing type-check, build, and relevant tests** to
   catch remaining references and behavior changes.

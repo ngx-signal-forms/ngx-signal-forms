@@ -6,6 +6,12 @@ export interface CustomControlsModel {
   /** Product name */
   productName: string;
 
+  /** Framework selected with the Angular Aria autocomplete control */
+  framework: string;
+
+  /** Framework selected with the Angular Aria select control */
+  frameworkSelect: string;
+
   /** Product rating (1-5 stars) using custom RatingControl */
   rating: number;
 
@@ -41,6 +47,8 @@ export interface CustomControlsModel {
  */
 export const initialCustomControlsModel: CustomControlsModel = {
   productName: '',
+  framework: '',
+  frameworkSelect: '',
   rating: 0,
   serviceRating: 0,
   wouldRecommend: 0,

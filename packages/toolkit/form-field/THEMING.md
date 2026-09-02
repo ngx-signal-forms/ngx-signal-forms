@@ -85,6 +85,18 @@ These are derived from explicit control semantics when present (for example
 markup. Prefer these attributes over `:has(...)` selectors for long-term theme
 customizations.
 
+`role="combobox"` infers `input-like`, not `composite`. A closed custom
+select that should look like a text field also uses `input-like` (set
+`ngxSignalFormControl="input-like"` on the host; do not add a `select`
+kind). Use one of the valid appearances — `inherit`, `standard`, `outline`, or
+`plain` — on that wrapper.
+The wrapper then applies the public input type tokens
+(`--ngx-form-field-input-*`, `--ngx-form-field-outline-input-*`,
+`--ngx-form-field-placeholder-color`) to that host. Override those
+tokens on a parent form or page; the widgets inherit them. Leave
+`slider` and `composite` as widget chrome, usually with
+`appearance="plain"`.
+
 ### Architecture: Semantic Layering
 
 The system works in layers to ensure consistency while allowing deep customization.

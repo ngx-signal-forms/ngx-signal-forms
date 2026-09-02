@@ -27,6 +27,44 @@
       />
     </ngx-form-field-wrapper>
 
+    <!-- Framework - Angular Aria autocomplete as a FormValueControl -->
+    <ngx-form-field-wrapper
+      [appearance]="appearance()"
+      [orientation]="orientation()"
+      fieldName="framework"
+      [formField]="reviewForm.framework"
+    >
+      <label for="framework">Preferred framework</label>
+      <ngx-aria-autocomplete
+        inputId="framework"
+        [formField]="reviewForm.framework"
+      />
+      <ngx-form-field-hint id="framework-hint">
+        Type to filter, then choose an option with the mouse or keyboard.
+      </ngx-form-field-hint>
+    </ngx-form-field-wrapper>
+
+    <!-- Framework - Angular Aria select as a separate non-editable control -->
+    <ngx-form-field-wrapper
+      [appearance]="appearance()"
+      [orientation]="orientation()"
+      fieldName="frameworkSelect"
+      [formField]="reviewForm.frameworkSelect"
+    >
+      <label id="framework-select-label" for="frameworkSelect"
+        >Preferred framework (select)</label
+      >
+      <ngx-aria-select
+        id="frameworkSelect"
+        ngxSignalFormControl="input-like"
+        [attr.aria-labelledby]="'framework-select-label'"
+        [formField]="reviewForm.frameworkSelect"
+      />
+      <ngx-form-field-hint id="framework-select-hint">
+        Choose a framework from the fixed list with the mouse or keyboard.
+      </ngx-form-field-hint>
+    </ngx-form-field-wrapper>
+
     <!-- Product Rating - Custom RatingControl with auto-derived fieldName -->
     <ngx-form-field-wrapper
       appearance="plain"
