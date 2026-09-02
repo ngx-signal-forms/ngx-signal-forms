@@ -112,9 +112,6 @@ jobs:
       # Do not distribute this graph. Use non-atomized e2e targets so it can
       # run without Nx Agents.
       - name: Run affected tasks (excluding demo-e2e)
-        env:
-          NX_NO_CLOUD: 'true'
-          NX_DAEMON: 'false'
         run: pnpm exec nx affected -t lint test test-browser build e2e --exclude=demo-e2e --parallel=2 --outputStyle=static
         timeout-minutes: 10
 
