@@ -14,6 +14,7 @@ import {
   type ParseResult,
   type ValidationError,
 } from '@angular/forms/signals';
+import type { FormFieldAppearance } from '@ngx-signal-forms/toolkit';
 import { LegacyDatepickerComponent } from './legacy-datepicker-widget';
 
 /**
@@ -96,7 +97,7 @@ function formatLegacyDate(value: Date | null): string {
  * ## Touched propagation without a single native blur
  *
  * The widget spans three focusable elements (its text input, its calendar
- * trigger button, and the day buttons inside its popup `<dialog>`). A plain
+ * trigger button, and the day buttons inside its popover). A plain
  * `(blur)` on the internal input would mark the field touched — and could
  * flash a validation error — every time focus moves from the input to the
  * trigger button, even though the user is still interacting with the same
@@ -104,9 +105,9 @@ function formatLegacyDate(value: Date | null): string {
  * host and only emits `touch` when the newly focused element
  * (`event.relatedTarget`) is *not* contained anywhere inside the host. That
  * fires exactly once, when focus truly leaves the whole widget — whether
- * from the input, the trigger, or a day button in the popup (native `dialog`
- * elements stay in the same DOM subtree even while promoted to the top
- * layer, so `contains()` still sees them).
+ * from the input, the trigger, or a day button in the popup (popover elements
+ * stay in the same DOM subtree even while promoted to the top layer, so
+ * `contains()` still sees them).
  *
  * ## Where ARIA lands
  *
@@ -127,6 +128,13 @@ function formatLegacyDate(value: Date | null): string {
   host: {
     '(focusout)': 'onHostFocusOut($event)',
   },
+  styles: `
+    :host {
+      display: block;
+      inline-size: 100%;
+      min-inline-size: 0;
+    }
+  `,
   template: `
     <ngx-legacy-datepicker
       #widget
@@ -137,6 +145,7 @@ function formatLegacyDate(value: Date | null): string {
       [ariaDescribedBy]="describedBy()"
       [ariaInvalid]="invalid()"
       [ariaRequired]="required()"
+      [appearance]="appearance()"
     />
   `,
 })
@@ -161,6 +170,9 @@ export class LegacyDatepickerAdapterComponent implements FormValueControl<Date |
    * pattern used elsewhere on this page.
    */
   readonly describedBy = input<string | null>(null);
+
+  /** Wrapper appearance used only to align the widget's calendar trigger. */
+  readonly appearance = input<FormFieldAppearance>('standard');
 
   readonly disabled = input(false);
   readonly invalid = input(false);

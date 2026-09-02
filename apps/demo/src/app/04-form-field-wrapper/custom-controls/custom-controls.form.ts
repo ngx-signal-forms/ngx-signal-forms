@@ -71,6 +71,14 @@ import { customControlsSchema } from './custom-controls.validations';
     :host {
       display: block;
     }
+
+    /* Keep room for the legacy widget's separate calendar action when the
+       standard wrapper puts that action outside the bordered input surface. */
+    .legacy-datepicker-field:not(.ngx-signal-forms-outline):not(
+        .ngx-signal-forms-plain
+      ) {
+      padding-inline-end: 2.375rem;
+    }
   `,
 })
 export class CustomControlsFormComponent {
