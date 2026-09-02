@@ -9,12 +9,10 @@ import { CustomControlsFormComponent } from './custom-controls.form';
  * Focused coverage for `LegacyDatepickerAdapterComponent` (issue #272), run
  * through the "Date of Birth" field on the custom-controls demo form.
  *
- * The widget's own popup calendar relies on `<dialog>.showModal()`, which
- * jsdom does not implement (and jsdom's tab-order computation across the
- * widget's popup buttons is unreliable), so this spec drives touched state
- * with a direct `.blur()` rather than `userEvent.tab()`. The popup's
- * day-picking path — and real focus traversal through the widget — is
- * covered in
+ * jsdom's tab-order computation across the widget's popover buttons is
+ * unreliable, so this spec drives touched state with a direct `.blur()`
+ * rather than `userEvent.tab()`. The popup's day-picking path — and real
+ * focus traversal through the widget — is covered in
  * `apps/demo-e2e/src/forms/04-form-field-wrapper/custom-controls.spec.ts`
  * under a real browser.
  */

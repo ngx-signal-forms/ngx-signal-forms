@@ -1325,6 +1325,106 @@ test.describe('Custom Signal Forms Controls', () => {
   // apps/demo/src/app/shared/controls/legacy-datepicker-adapter.ts for the
   // full design writeup this pins down.
   test.describe('Legacy Datepicker Adapter', () => {
+    test('should anchor the calendar popup next to its trigger', async () => {
+      await expect(page.birthDateTrigger).toHaveAttribute(
+        'popovertarget',
+        'birthDate-popup',
+      );
+      await expect(page.birthDatePopup).toHaveAttribute(
+        'id',
+        'birthDate-popup',
+      );
+
+      await page.birthDateTrigger.click();
+      await expect(page.birthDatePopup).toBeVisible();
+
+      const [popupBox, triggerBox] = await Promise.all([
+        page.birthDatePopup.boundingBox(),
+        page.birthDateTrigger.boundingBox(),
+      ]);
+
+      expect(popupBox).not.toBeNull();
+      expect(triggerBox).not.toBeNull();
+
+      const inlineOverlap =
+        Math.min(
+          popupBox!.x + popupBox!.width,
+          triggerBox!.x + triggerBox!.width,
+        ) - Math.max(popupBox!.x, triggerBox!.x);
+      const blockGap = Math.max(
+        popupBox!.y - (triggerBox!.y + triggerBox!.height),
+        triggerBox!.y - (popupBox!.y + popupBox!.height),
+        0,
+      );
+
+      expect(inlineOverlap).toBeGreaterThan(0);
+      expect(blockGap).toBeLessThanOrEqual(8);
+    });
+
+    test('should return focus to the trigger when Escape closes the popup', async () => {
+      await page.birthDateTrigger.click();
+      const day = page.birthDatePopup
+        .locator('.legacy-datepicker__day')
+        .first();
+      await day.focus();
+
+      await page.birthDatePopup.press('Escape');
+
+      await expect(page.birthDatePopup).not.toBeVisible();
+      await expect(page.birthDateTrigger).toBeFocused();
+    });
+
+    test('should place the calendar trigger outside standard chrome and inside outline chrome', async () => {
+      const wrapper = page.getWrapperByControlId('birthDate');
+      const content = page.getWrapperContentByControlId('birthDate');
+
+      await test.step('Verify the standard trigger is a separate trailing action', async () => {
+        await page.showStandardAppearance();
+        await expect(wrapper).not.toHaveClass(/ngx-signal-forms-outline/);
+
+        const [contentBox, triggerBox, wrapperBox] = await Promise.all([
+          content.boundingBox(),
+          page.birthDateTrigger.boundingBox(),
+          wrapper.boundingBox(),
+        ]);
+
+        expect(contentBox).not.toBeNull();
+        expect(triggerBox).not.toBeNull();
+        expect(wrapperBox).not.toBeNull();
+        expect(triggerBox!.x).toBeGreaterThan(
+          contentBox!.x + contentBox!.width,
+        );
+        expect(
+          Math.abs(
+            triggerBox!.x +
+              triggerBox!.width -
+              (wrapperBox!.x + wrapperBox!.width),
+          ),
+        ).toBeLessThanOrEqual(1);
+      });
+
+      await test.step('Verify the outline trigger is the integrated trailing action', async () => {
+        await page.showOutlineAppearance();
+        await expect(wrapper).toHaveClass(/ngx-signal-forms-outline/);
+
+        const [contentBox, inputBox, triggerBox] = await Promise.all([
+          content.boundingBox(),
+          page.birthDateInput.boundingBox(),
+          page.birthDateTrigger.boundingBox(),
+        ]);
+
+        expect(contentBox).not.toBeNull();
+        expect(inputBox).not.toBeNull();
+        expect(triggerBox).not.toBeNull();
+        expect(triggerBox!.x).toBeGreaterThanOrEqual(
+          inputBox!.x + inputBox!.width,
+        );
+        expect(triggerBox!.x + triggerBox!.width).toBeLessThanOrEqual(
+          contentBox!.x + contentBox!.width,
+        );
+      });
+    });
+
     test('should render the widget with manual ARIA ownership and no wrapper-owned aria-invalid on load', async () => {
       await expect(page.birthDateInput).toBeVisible();
       await expect(page.birthDateInput).toHaveAttribute(

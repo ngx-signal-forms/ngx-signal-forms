@@ -14,7 +14,7 @@ import { stripNestedInternalMembers } from './strip-internal-members.mjs';
 //
 // Deliberately does NOT strip top-level `@internal` declarations: `/core`'s
 // build-time-only plumbing (tokens, factories) is legitimately imported by
-// sibling entries and `libs/debugger` at build time, and is already hidden
+// sibling entries and `packages/demo/debugger` at build time, and is already hidden
 // from external consumers by `strip-internal-exports.mjs` deleting `"./core"`
 // from the published `exports` map. Only members nested inside an otherwise
 // public class/interface/namespace — reachable because the *container* is
@@ -246,7 +246,7 @@ describe('strip-internal-members.mjs (CLI)', () => {
     // The class member is gone (the actual enforcement gap).
     expect(core).not.toContain('setFieldName');
     // The top-level `/core`-only token survives — sibling entries and
-    // `libs/debugger` legitimately import it at build time, and it is
+    // `packages/demo/debugger` legitimately import it at build time, and it is
     // already unreachable externally via the stripped `"./core"` export.
     expect(core).toContain('NGX_ERROR_MESSAGES');
     expect(core).toContain('readonly fieldName: unknown;');

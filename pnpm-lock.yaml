@@ -605,7 +605,7 @@ importers:
 
   apps/demo-spartan: {}
 
-  packages/demo-shared:
+  packages/demo/shared:
     dependencies:
       '@angular/aria':
         specifier: catalog:angular
@@ -622,6 +622,8 @@ importers:
       tslib:
         specifier: catalog:utilities
         version: 2.8.1
+
+  packages/demo/spartan-ui: {}
 
   packages/toolkit:
     dependencies:

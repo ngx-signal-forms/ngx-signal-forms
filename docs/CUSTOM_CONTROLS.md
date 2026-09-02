@@ -771,9 +771,8 @@ protected onHostFocusOut(event: FocusEvent): void {
 ```
 
 This fires exactly once, whichever internal element focus was on when it
-finally left — including out of a native `<dialog>` popup, which stays in
-the same DOM subtree (so `contains()` still sees it) even while promoted to
-the browser's top layer.
+finally left — including out of a popover, which stays in the same DOM subtree
+(so `contains()` still sees it) even while promoted to the browser's top layer.
 
 ### 3. Where ARIA lands
 
