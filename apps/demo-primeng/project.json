@@ -38,11 +38,8 @@
       }
     },
     "test": {
-      "executor": "@nx/vitest:test",
-      "outputs": ["{options.reportsDirectory}"],
       "options": {
-        "config": "apps/demo-primeng/vitest.config.mts",
-        "reportsDirectory": "{workspaceRoot}/coverage/apps/demo-primeng"
+        "config": "./vitest.config.mts"
       }
     },
     "lint": {

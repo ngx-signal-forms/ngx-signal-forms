@@ -93,11 +93,11 @@ jobs:
         # `e2e`, not `e2e-ci`: the latter is the Playwright plugin's atomized
         # target and Nx refuses to run it without Nx Agents, which this
         # workspace stopped using in #252.
-        run: bash .github/scripts/nx-safe.sh pnpm exec nx run demo-e2e:e2e --updateSnapshots --skip-nx-cache
+        run: pnpm exec nx run demo-e2e:e2e --updateSnapshots --skip-nx-cache
 
       - name: Update Vitest browser screenshots
         if: ${{ inputs.scope == 'all' || inputs.scope == 'vitest' }}
-        run: bash .github/scripts/nx-safe.sh pnpm nx test-browser toolkit -- --update
+        run: pnpm nx test-browser toolkit -- --update
 
       - name: Commit snapshot updates
         id: commit

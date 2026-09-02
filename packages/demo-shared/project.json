@@ -16,11 +16,8 @@
       }
     },
     "test": {
-      "executor": "@nx/vitest:test",
-      "outputs": ["{options.reportsDirectory}"],
       "options": {
-        "configFile": "packages/demo-shared/vitest.config.mts",
-        "reportsDirectory": "{projectRoot}/../../coverage/packages/demo-shared"
+        "config": "./vitest.config.mts"
       }
     },
     "lint": {
