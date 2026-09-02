@@ -193,30 +193,26 @@ jobs:
           fi
 
       - uses: nrwl/nx-set-shas@afb73a62d26e41464e9254689e1fd6122ee683c1
-        continue-on-error: true
 
       - name: Nx Report
-        # nx-safe.sh keeps diagnostics available even if Nx Cloud auth is broken.
-        run: bash .github/scripts/nx-safe.sh pnpm exec nx report --outputStyle=static
+        run: pnpm exec nx report --outputStyle=static
 
       - name: Check formatting
         env:
           NX_NO_CLOUD: 'true'
           NX_DAEMON: 'false'
-        run: bash .github/scripts/nx-safe.sh pnpm run format:check
+        run: pnpm run format:check
 
       - name: Verify Quality (Lint, Test, Build, E2E)
         # Using affected ensures we only verify what changed, but caching handles the rest.
         # We target all projects to ensure workspace health before release.
-        # nx-safe.sh falls back to local execution if Nx Cloud rejects our token.
-        #
         # Use the non-atomized `e2e` target, never `e2e-ci`. The Playwright
         # plugin's `ciTargetName: e2e-ci` (nx.json) splits each suite into
         # per-spec tasks that Nx refuses to run without Nx Agents, and this
         # workspace stopped distributing in #252. ci.yml was switched at the
         # same time; this gate was missed and broke for any release whose
         # affected set contains an e2e project.
-        run: bash .github/scripts/nx-safe.sh pnpm exec nx affected -t lint test test-browser build e2e --outputStyle=static
+        run: pnpm exec nx affected -t lint test test-browser build e2e --outputStyle=static
 
       - name: Validate release inputs
         env:
@@ -269,7 +265,7 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "Running: \`nx release ${{ steps.version_cmd.outputs.cmd }} --skip-publish --dry-run ${{ steps.first_release_flag.outputs.flag }}\`" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          bash .github/scripts/nx-safe.sh pnpm exec nx release ${{ steps.version_cmd.outputs.cmd }} --skip-publish --dry-run ${{ steps.first_release_flag.outputs.flag }} > /tmp/release-preview.txt 2>&1 || true
+          pnpm exec nx release ${{ steps.version_cmd.outputs.cmd }} --skip-publish --dry-run ${{ steps.first_release_flag.outputs.flag }} > /tmp/release-preview.txt 2>&1 || true
           echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
           head -100 /tmp/release-preview.txt >> $GITHUB_STEP_SUMMARY
           echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
@@ -278,17 +274,12 @@ jobs:
 
       - name: Release (Dry Run)
         if: ${{ inputs.dry_run }}
-        run: bash .github/scripts/nx-safe.sh pnpm exec nx release ${{ steps.version_cmd.outputs.cmd }} --skip-publish --dry-run ${{ steps.first_release_flag.outputs.flag }}
+        run: pnpm exec nx release ${{ steps.version_cmd.outputs.cmd }} --skip-publish --dry-run ${{ steps.first_release_flag.outputs.flag }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Release
         if: ${{ !inputs.dry_run }}
-        # Run nx release directly, never through nx-safe.sh: this command is
-        # non-idempotent (version bump, changelog, tag, commit, push). If Nx
-        # Cloud fails mid-sequence, retrying could create duplicate tags or a
-        # corrupted release. Fail loudly and let a human re-run cleanly.
-        #
         # The push credential is bound here and nowhere earlier: RELEASE_TOKEN is
         # an admin-scoped token (PAT with Contents:write, or a GitHub App token)
         # that bypasses the `main` ruleset; GITHUB_TOKEN cannot push to protected

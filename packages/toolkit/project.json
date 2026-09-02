@@ -50,15 +50,17 @@
       }
     },
     "test": {
-      "executor": "@nx/vitest:test",
+      "executor": "nx:run-commands",
       "options": {
-        "configFile": "packages/toolkit/vitest.jsdom.config.mts"
+        "command": "vitest run --config vitest.jsdom.config.mts",
+        "cwd": "packages/toolkit"
       }
     },
     "test-browser": {
-      "executor": "@nx/vitest:test",
+      "executor": "nx:run-commands",
       "options": {
-        "configFile": "packages/toolkit/vitest.browser.config.mts"
+        "command": "vitest run --config vitest.browser.config.mts",
+        "cwd": "packages/toolkit"
       }
     },
     "lint": {
