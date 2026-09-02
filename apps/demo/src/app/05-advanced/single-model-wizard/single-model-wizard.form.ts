@@ -5,6 +5,7 @@ import {
   computed,
   effect,
   ElementRef,
+  input,
   signal,
   viewChild,
 } from '@angular/core';
@@ -67,8 +68,8 @@ import { singleModelWizardSchema } from './single-model-wizard.validations';
   styleUrl: './single-model-wizard.form.scss',
 })
 export class SingleModelWizardComponent {
-  protected readonly appearance = signal<FormFieldAppearance>('outline');
-  protected readonly orientation = signal<FormFieldOrientation>('vertical');
+  readonly appearance = input<FormFieldAppearance>('outline');
+  readonly orientation = input<FormFieldOrientation>('vertical');
 
   readonly #model = signal<SingleModelWizardValue>(
     INITIAL_SINGLE_MODEL_WIZARD_VALUE,

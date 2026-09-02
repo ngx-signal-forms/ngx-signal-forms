@@ -28,9 +28,7 @@ concurrency:
 jobs:
   main:
     runs-on: ubuntu-latest
-    # Broad PRs that touch shared libs make nearly every project "affected"
-    # (4 demo e2e suites + toolkit browser tests), which can exceed 20 min.
-    timeout-minutes: 35
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
@@ -97,31 +95,25 @@ jobs:
             echo "No Nx Cloud token configured. Running without Nx Cloud."
           fi
 
-      # Set BASE/HEAD for affected commands; continue if the helper cannot resolve SHAs
+      # Set BASE/HEAD for affected commands.
       - uses: nrwl/nx-set-shas@afb73a62d26e41464e9254689e1fd6122ee683c1
-        continue-on-error: true
 
       - name: Nx Report
-        # nx-safe.sh keeps diagnostics available even if Nx Cloud auth is broken.
-        run: bash .github/scripts/nx-safe.sh pnpm exec nx report
+        run: pnpm exec nx report
 
       - name: Check formatting
         env:
           NX_NO_CLOUD: 'true'
           NX_DAEMON: 'false'
-        run: bash .github/scripts/nx-safe.sh pnpm run format:check
-
-      - name: Lint with GitHub annotations
-        if: ${{ always() }}
-        run: pnpm exec oxlint . --format=github
-        continue-on-error: true
+        run: pnpm run format:check
 
       # Keep the critical path focused on fast checks + smaller e2e suites.
       # The heavy demo-e2e suite is sharded in a separate parallel job.
-      # Run locally because Nx Agents can leave tasks unassigned or stall the
-      # coordinator; use non-atomized e2e targets so cloud-less fallback works.
+      # Do not distribute this graph. Use non-atomized e2e targets so it can
+      # run without Nx Agents.
       - name: Run affected tasks (excluding demo-e2e)
-        run: bash .github/scripts/nx-safe.sh pnpm exec nx affected -t lint test test-browser build e2e --exclude=demo-e2e --parallel=4 --outputStyle=static
+        run: pnpm exec nx affected -t lint test test-browser build e2e --exclude=demo-e2e --parallel=2 --outputStyle=static
+        timeout-minutes: 10
 
       - name: Generate lint report
         if: ${{ always() }}
@@ -197,7 +189,7 @@ jobs:
       - name: Run demo-e2e shard
         env:
           SHARD_INDEX: ${{ matrix.shard-index }}
-        run: bash .github/scripts/nx-safe.sh pnpm exec nx run demo-e2e:e2e-ci-shard --outputStyle=static
+        run: pnpm exec nx run demo-e2e:e2e-ci-shard --outputStyle=static
 
       - name: Upload demo-e2e shard artifacts
         if: ${{ always() && !cancelled() }}
@@ -308,7 +300,6 @@ jobs:
         if: steps.playwright-cache.outputs.cache-hit == 'true'
 
       - uses: nrwl/nx-set-shas@afb73a62d26e41464e9254689e1fd6122ee683c1
-        continue-on-error: true
 
       # PRs: only the affected demo apps, for fast feedback.
       - name: Scan affected demo apps (pull request)

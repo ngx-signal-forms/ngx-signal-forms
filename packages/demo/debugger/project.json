@@ -7,11 +7,8 @@
   "projectType": "library",
   "targets": {
     "test": {
-      "executor": "@nx/vitest:test",
-      "outputs": ["{options.reportsDirectory}"],
       "options": {
-        "configFile": "packages/demo/debugger/vite.config.mts",
-        "reportsDirectory": "{workspaceRoot}/coverage/packages/demo/debugger"
+        "config": "./vite.config.mts"
       }
     }
   }

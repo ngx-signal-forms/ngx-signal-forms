@@ -17,7 +17,7 @@
       "!{projectRoot}/src/test-setup.[jt]s",
       "!{projectRoot}/test-setup.[jt]s"
     ],
-    "sharedGlobals": ["{workspaceRoot}/.github/workflows/ci.yml"]
+    "sharedGlobals": []
   },
   "nxCloudId": "6996105d7ca3ad8352dfd299",
   "targetDefaults": {
@@ -35,7 +35,7 @@
       "cache": true,
       "inputs": ["default", "{workspaceRoot}/oxlint.config.ts"]
     },
-    "@nx/vitest:test": {
+    "test": {
       "cache": true,
       "inputs": ["default", "^production"]
     },
@@ -165,6 +165,20 @@
         "targetName": "e2e",
         "ciTargetName": "e2e-ci"
       }
+    },
+    {
+      "plugin": "@nx/vitest",
+      "options": {
+        "testTargetName": "test",
+        "testMode": "watch"
+      },
+      "include": [
+        "apps/demo/**/*",
+        "apps/demo-primeng/**/*",
+        "apps/demo-spartan/**/*",
+        "packages/demo/debugger/**/*",
+        "packages/demo/shared/**/*"
+      ]
     }
   ]
 }

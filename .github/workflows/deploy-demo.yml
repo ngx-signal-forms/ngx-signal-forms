@@ -66,8 +66,7 @@ jobs:
           fi
 
       - name: Build Demo
-        # nx-safe.sh retries locally if Nx Cloud rejects workspace authorization.
-        run: bash .github/scripts/nx-safe.sh pnpm exec nx run demo:build --configuration=production --base=/ngx-signal-forms/
+        run: pnpm exec nx run demo:build --configuration=production --base=/ngx-signal-forms/
 
       - name: Create 404.html for SPA routing
         run: cp dist/apps/demo/index.html dist/apps/demo/404.html
