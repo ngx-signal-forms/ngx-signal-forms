@@ -27,5 +27,12 @@ export default defineConfig({
      * Angular TestBed stays most predictable when specs run in isolated forks.
      */
     pool: 'forks',
+    /**
+     * The custom-control specs drive `userEvent.type()` keystroke by keystroke
+     * through a full demo form, so each render pass is real work. That stays
+     * near 2s on a developer machine but crosses the 5s default on shared CI
+     * runners, which made the legacy-datepicker spec flake.
+     */
+    testTimeout: 20_000,
   },
 });
