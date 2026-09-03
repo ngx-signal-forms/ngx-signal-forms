@@ -5,11 +5,17 @@ import { isFieldStateInteractive } from './field-interactivity';
 /**
  * Focus the first **focusable** invalid field in a form after failed submission.
  *
- * Iterates `errorSummary()` and focuses the first error whose bound field is
- * both interactive (not `hidden()` or `disabled()`) and exposes a
- * `focusBoundControl()` method. Skips errors that point at fields the user
- * cannot interact with — focusing them would either throw (no DOM element) or
- * strand focus on a non-interactive control.
+ * Iterates `errorSummary()` and, for each error whose bound field is
+ * interactive (not `hidden()` or `disabled()`), calls `focusBoundControl()`
+ * and checks whether `document.activeElement` actually changed. Angular's
+ * `focusBoundControl()` is a silent no-op when the field has no registered
+ * binding — it exists as a method on every real `FieldState` regardless of
+ * whether a control ever called `registerAsBinding()`, so its mere presence
+ * cannot signal success. Only an observed focus move counts as a hit; a
+ * no-op call continues to the next candidate. A descendant binding (a
+ * composite control whose child registered) still counts, because the check
+ * is "did focus move anywhere", not "did it land on this exact field's own
+ * element".
  *
  * `readonly()` fields are **not** skipped: they are visible, focusable, and
  * the validation error is usually still meaningful to the user even though
@@ -73,8 +79,18 @@ export function focusFirstInvalid(formTree: FieldTree<unknown>): boolean {
 
     if (!isFieldStateInteractive(fieldState)) continue;
 
+    // `focusBoundControl()` exists on every real `FieldState` — its presence
+    // does not mean a control registered a binding. Angular's own
+    // implementation is a silent no-op when `getBindingForFocus()` finds
+    // nothing to call `.focus()` on, so the only reliable success signal is
+    // an observed change to `document.activeElement`.
+    const activeElementBefore =
+      typeof document === 'undefined' ? null : document.activeElement;
     fieldState.focusBoundControl();
-    return true;
+    const activeElementAfter =
+      typeof document === 'undefined' ? null : document.activeElement;
+
+    if (activeElementAfter !== activeElementBefore) return true;
   }
 
   // The form is invalid but every error was filtered out: no bound control,
