@@ -145,8 +145,12 @@ opt into end alignment.
 | `position` | `'left' \| 'right' \| null` | `null`  | Alignment within the assistive row.                                                                                               |
 
 When the hint is inside `ngx-form-field-wrapper`, its resolved ID is registered
-for automatic `aria-describedby` composition. Use an explicit `id` when a
-custom wrapper or design system needs to control the hint's stable DOM identity:
+for automatic `aria-describedby` composition. Without an explicit `id`, a hint
+falls back to `${fieldName}-hint`. Project more than one unnamed hint into the
+same wrapper and the first keeps that short id; each later one gets a unique
+numbered suffix (`${fieldName}-hint-2`, `${fieldName}-hint-3`, …) so no two
+hints share a DOM id (WCAG 1.3.1). Use an explicit `id` when a custom wrapper
+or design system needs to control the hint's stable DOM identity:
 
 ```html
 <ngx-form-field-hint [id]="hintId"

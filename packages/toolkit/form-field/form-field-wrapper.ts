@@ -202,6 +202,18 @@ import { resolveUnionInput } from './utilities/resolve-union-input';
         const component = inject(NgxFormFieldWrapper);
         return {
           fieldName: component.resolvedFieldName,
+          // Disambiguates the generated hint fallback id (issue #435): a
+          // hint that needs `${fieldName}-hint` asks for its ordinal among
+          // sibling hints that also need it, so a second unnamed hint
+          // doesn't collide with the first on the DOM id (WCAG 1.3.1).
+          // Read through `hintChildren()` and each candidate's
+          // `usesGeneratedFallbackId()` so this stays reactive to
+          // projected-hint changes.
+          hintOrdinal: (hint: object) =>
+            component
+              .hintChildren()
+              .filter((candidate) => candidate.usesGeneratedFallbackId())
+              .indexOf(hint as NgxFormFieldHint),
         };
       },
     },

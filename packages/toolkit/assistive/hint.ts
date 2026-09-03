@@ -196,6 +196,26 @@ export class NgxFormFieldHint {
    */
   readonly #generatedId = createUniqueId('hint');
 
+  /**
+   * True when this hint has neither a bound (`id`/`[id]`) nor an explicit
+   * host-attribute id and therefore needs the generated fallback id.
+   * Public so a wrapper's {@link NgxSignalFormFieldContext.hintOrdinal}
+   * implementation can restrict its sibling count to hints that actually
+   * compete for the same `${fieldName}-hint` fallback — a hint with its
+   * own id never claims an ordinal slot.
+   *
+   * @internal
+   */
+  readonly usesGeneratedFallbackId = computed(() => {
+    const bound = this.id();
+    // oxlint-disable-next-line @typescript-eslint/strict-boolean-expressions -- empty-string is "not set", same as below
+    if (bound) return false;
+
+    const explicit = this.#explicitId();
+    // oxlint-disable-next-line @typescript-eslint/strict-boolean-expressions -- empty-string id/fieldName is intentionally treated as "not set"; freezing semantic for v1
+    return !explicit;
+  });
+
   readonly resolvedId = computed(() => {
     const bound = this.id();
     // oxlint-disable-next-line @typescript-eslint/strict-boolean-expressions -- empty-string is "not set", same as below
@@ -207,7 +227,19 @@ export class NgxFormFieldHint {
 
     const fieldName = this.resolvedFieldName();
     // oxlint-disable-next-line @typescript-eslint/strict-boolean-expressions -- empty-string id/fieldName is intentionally treated as "not set"; freezing semantic for v1
-    if (fieldName) return `${fieldName}-hint`;
+    if (fieldName) {
+      // Ask the field context (typically the form-field wrapper) for this
+      // hint's 0-based position among sibling hints that also need the
+      // fallback id. The first such hint keeps the short, stable
+      // `${fieldName}-hint` name so existing ids and consumer CSS keep
+      // working; later hints get a unique numbered suffix (WCAG 1.3.1).
+      // Contexts that don't track hints (e.g. no wrapper) omit
+      // `hintOrdinal`, so every such hint resolves to ordinal 0.
+      const ordinal = this.#fieldContext?.hintOrdinal?.(this) ?? 0;
+      return ordinal > 0
+        ? `${fieldName}-hint-${ordinal + 1}`
+        : `${fieldName}-hint`;
+    }
 
     return this.#generatedId;
   });
