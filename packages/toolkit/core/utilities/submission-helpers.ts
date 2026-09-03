@@ -7,7 +7,11 @@ import {
   type Signal,
   type WritableSignal,
 } from '@angular/core';
-import { type FieldTree, type ValidationError } from '@angular/forms/signals';
+import {
+  submit,
+  type FieldTree,
+  type ValidationError,
+} from '@angular/forms/signals';
 import type { SubmittedStatus } from '../types';
 import { isBlockingError } from './warning-error';
 import { isFieldTreeLike } from './walk-field-tree';
@@ -189,10 +193,15 @@ export function canSubmitWithWarnings(
 ): Signal<boolean> {
   return computed(() => {
     const formState = formTree();
-    if (formState.submitting() || formState.pending()) {
+    if (formState.submitting()) {
       return false;
     }
 
+    // Pending async validators do not block, matching Angular `submit()`'s
+    // default `ignoreValidators: 'pending'` — an in-flight validator is not
+    // treated as a reason to refuse submission. Only settled blocking errors
+    // (not warnings) gate here.
+    //
     // `errors()` only reports the field's OWN errors; validators placed on
     // child paths (the common case) never surface here. `errorSummary()`
     // aggregates descendant errors too, matching what `submitWithWarnings()`
@@ -206,49 +215,49 @@ export function canSubmitWithWarnings(
  *
  * Marks all form fields as touched (including all descendants), yields one
  * microtask so that synchronously-resolving validation state propagates, then
- * invokes `action` only when there are no blocking errors. Still-pending async
- * validators are handled by the `pending()` guard that follows the yield.
- * Warnings (errors whose `kind` starts with `'warn:'`) do not block submission.
+ * — when no blocking errors remain — delegates to Angular's `submit()` with
+ * `ignoreValidators: 'all'` (the blocking-error gate above already replaces
+ * Angular's own check, which would otherwise treat warnings as blocking too).
+ * Warnings (errors whose `kind` starts with `'warn:'`) never block submission.
+ *
+ * **Pending validators do not block**, matching Angular `submit()`'s default
+ * `ignoreValidators: 'pending'` behavior: a still-in-flight async validator is
+ * not a reason to refuse submission. Only settled blocking errors gate.
+ *
+ * **Return value**: matches Angular's own `submit()` — `true` once `action`
+ * has run and settled, `false` when the call was refused (blocking errors
+ * present) or dropped (re-entrant call, see below).
+ *
+ * Because the success path delegates to native `submit()`, `submitting()`
+ * flips for its duration and `createSubmittedStatusTracker` picks up the
+ * completed attempt automatically — no extra wiring needed. A refused call
+ * (blocking errors present) never reaches native `submit()`, so `submitting()`
+ * does not flip for it either — the same behavior as Angular's own `submit()`
+ * on an invalid form. Pass a `WritableSignal<boolean>` into
+ * {@link createSubmittedStatusTracker}'s `submitAttempted` parameter and set
+ * it to `true` when this function returns `false` without running `action` if
+ * a form using `errorStrategy: 'on-submit'` needs to react to that refusal.
  *
  * **Re-entrancy**: concurrent calls for the same `formTree` — from a
  * double-click, Enter spam, or an overlapping native submit — are silently
  * dropped. The in-flight guard is cleared in the `finally` block so the form
  * is always re-submittable after the current call settles (even on rejection).
  *
- * **`errorStrategy: 'on-submit'` interplay**: this helper runs `action`
- * outside Angular's native `submit()` flow, so it never flips the native
- * `submitting()` signal and has no integration with `NgxSignalForm`'s
- * internal submitted-attempt tracking. When called from a `type="button"`
- * click handler (i.e. there is no native `submit` event on
- * `form[ngxSignalForm]`), `createSubmittedStatusTracker`'s derived status —
- * and therefore any form configured with `errorStrategy: 'on-submit'` — never
- * observes a completed submit attempt, so blocking errors never become
- * visible after a failed `submitWithWarnings()` call. (`markAsTouched()`,
- * called unconditionally above, only satisfies the `'on-touch'` strategy.)
- * To surface errors after a blocked `submitWithWarnings()` call:
- * - Trigger it from inside a real `<form (ngSubmit)>` / `[ngxSignalForm]`
- *   submit handler so the native submit event still fires, or
- * - Use `errorStrategy: 'on-touch'` (or `'always'`) instead of `'on-submit'`
- *   for forms that call this from a plain button, or
- * - Pass a `WritableSignal<boolean>` into your own
- *   {@link createSubmittedStatusTracker} call (its `submitAttempted`
- *   parameter) and set it to `true` when this function returns without
- *   invoking `action`, mirroring how a native failed submit would be
- *   recorded.
- *
  * @param formTree - The root `FieldTree` of the form to submit
  * @param action - Async callback invoked only when no blocking errors remain
+ * @returns `true` once `action` has run and settled; `false` when the call
+ *   was refused or dropped
  *
  * @public
  */
 export async function submitWithWarnings<TModel>(
   formTree: FieldTree<TModel>,
   action: () => Promise<void>,
-): Promise<void> {
+): Promise<boolean> {
   // Re-entrant call (double-click, Enter spam) or overlapping native
   // submission: bail out instead of running the action a second time.
   if (formTree().submitting() || inFlightSubmits.has(formTree)) {
-    return;
+    return false;
   }
 
   inFlightSubmits.add(formTree);
@@ -260,17 +269,21 @@ export async function submitWithWarnings<TModel>(
 
     await waitForValidationSettlement();
 
-    // Mirrors the canSubmitWithWarnings() guard: async validators may still be
-    // settling after the microtask delay — skip action until they resolve.
-    if (formTree().pending()) {
-      return;
-    }
-
     if (getBlockingErrors(formTree().errorSummary()).length > 0) {
-      return;
+      return false;
     }
 
-    await action();
+    // Blocking-error gate already passed above (warnings included), so
+    // `ignoreValidators: 'all'` bypasses Angular's own invalid/pending check
+    // — which would otherwise treat a warning-only form as invalid — and lets
+    // native `submit()` flip `submitting()` and run `action` for us.
+    return await submit(formTree, {
+      action: async () => {
+        await action();
+        return undefined;
+      },
+      ignoreValidators: 'all',
+    });
   } finally {
     inFlightSubmits.delete(formTree);
   }

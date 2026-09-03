@@ -455,16 +455,16 @@ Building blocks for custom wrappers and headless UIs that want to join the
 
 ### Warning support
 
-| Function                             | Description                                   |
-| ------------------------------------ | --------------------------------------------- |
-| `warningError(kind, message)`        | Creates a non-blocking warning                |
-| `isWarningError(error)`              | `true` if kind starts with `warn:`            |
-| `isBlockingError(error)`             | `true` if not a warning                       |
-| `splitByKind(errors)`                | Partition into `blocking` and `warnings`      |
-| `hasOnlyWarnings(errors)`            | `true` when no blocking errors are present    |
-| `getBlockingErrors(errors)`          | Filters out warning-only messages             |
-| `canSubmitWithWarnings(form)`        | Allows submission when only warnings remain   |
-| `submitWithWarnings(form, callback)` | Submit helper that blocks only on real errors |
+| Function                             | Description                                                                                                                                                                                                             |
+| ------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `warningError(kind, message)`        | Creates a non-blocking warning                                                                                                                                                                                          |
+| `isWarningError(error)`              | `true` if kind starts with `warn:`                                                                                                                                                                                      |
+| `isBlockingError(error)`             | `true` if not a warning                                                                                                                                                                                                 |
+| `splitByKind(errors)`                | Partition into `blocking` and `warnings`                                                                                                                                                                                |
+| `hasOnlyWarnings(errors)`            | `true` when no blocking errors are present                                                                                                                                                                              |
+| `getBlockingErrors(errors)`          | Filters out warning-only messages                                                                                                                                                                                       |
+| `canSubmitWithWarnings(form)`        | Allows submission when only warnings remain, even while a validator is still pending                                                                                                                                    |
+| `submitWithWarnings(form, callback)` | Delegates to Angular `submit()`; blocks only on settled blocking errors, not warnings or pending validators; returns `Promise<boolean>` (`true` once the callback has run and settled, `false` when refused or dropped) |
 
 > Warning **display timing** is controlled separately from error timing via the
 > `warningStrategy` input on `NgxFormFieldError` (default:

@@ -356,10 +356,16 @@ describe('canSubmitWithWarnings', () => {
     expect(canSubmit()).toBe(false);
   });
 
-  it('returns false while submitting()/pending() are true (mock form)', () => {
+  it('returns false while submitting() is true, but pending() does not block (mock form)', () => {
     // canSubmitWithWarnings reads `submitting()` and `pending()` on the
     // FieldState. Use a mock to drive both signals deterministically without
     // racing the Angular submit pipeline.
+    //
+    // `pending()` no longer gates here (issue #437): Angular `submit()`'s
+    // default `ignoreValidators: 'pending'` does not wait for in-flight
+    // async validators either, and `submitWithWarnings()` delegates to it —
+    // keeping the two helpers in agreement means a pending validator must
+    // not silently drop a submit attempt.
     const submittingState = signal(false);
     const pendingState = signal(false);
     const errorsState = signal<readonly ValidationError[]>([]);
@@ -395,9 +401,9 @@ describe('canSubmitWithWarnings', () => {
     expect(canSubmit()).toBe(false);
     submittingState.set(false);
 
-    // pending() true → block.
+    // pending() true → does NOT block.
     pendingState.set(true);
-    expect(canSubmit()).toBe(false);
+    expect(canSubmit()).toBe(true);
     pendingState.set(false);
 
     // Back to idle.
