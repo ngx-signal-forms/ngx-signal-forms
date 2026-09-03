@@ -28,6 +28,7 @@ import {
   generateWarningId,
   resolveFieldName,
 } from '../utilities/field-resolution';
+import { devWarnOnce, type WarnOnceRef } from '../utilities/dev-warn-once';
 import { createErrorVisibility } from '../utilities/create-error-visibility';
 import { createAriaDescribedBySignal } from '../utilities/aria/create-aria-described-by-signal';
 import { createHintIdsSignal } from '../utilities/aria/create-hint-ids-signal';
@@ -180,6 +181,15 @@ export class NgxSignalFormAutoAria {
 
   readonly #domSnapshot = signal(INITIAL_DOM_SNAPSHOT);
   readonly #managedDescribedByIds = signal<readonly string[]>([]);
+
+  /**
+   * One-shot dev-mode diagnostic flag for {@link #readPreservedDescribedBy}.
+   * Relocating managed ARIA to an inner combobox (see {@link #ariaTarget})
+   * strips `aria-describedby` off the host every write tick; the first tick
+   * that finds an author-written value there is the only one worth telling
+   * the author about.
+   */
+  readonly #describedByRelocationWarned: WarnOnceRef = { current: false };
 
   readonly #isManualAriaMode = computed(() => {
     return this.#ariaModeSignal?.() === 'manual';
@@ -541,13 +551,39 @@ export class NgxSignalFormAutoAria {
     // `write` callback — do not "simplify" by calling this once eagerly,
     // and do not assume the snapshot is authoritative until the first write
     // has run.
-    const raw = this.#ariaTarget().getAttribute('aria-describedby');
+    const target = this.#ariaTarget();
+    const host = this.#element.nativeElement;
+    const targetRaw = target.getAttribute('aria-describedby');
 
-    if (!raw) {
-      return null;
+    // When managed attributes relocate to an inner combobox,
+    // `#writeManagedAttribute` unconditionally strips `aria-describedby`
+    // (and the other two managed names) off the host every write tick. An
+    // author-written value there would otherwise vanish silently the moment
+    // ownership moves — read it here so its ids are carried onto the
+    // target's preserved list instead of dropped, and flag the relocation
+    // once so authors notice where their ids went.
+    const hostRaw =
+      target === host ? null : host.getAttribute('aria-describedby');
+
+    if (hostRaw) {
+      devWarnOnce(
+        this.#describedByRelocationWarned,
+        'warn',
+        `[ngx-signal-forms] NgxSignalFormAutoAria: aria-describedby="${hostRaw}" is authored on the host element, but managed ARIA attributes are written on its inner role="combobox" descendant instead. The host's ids are preserved on the combobox — author aria-describedby on the combobox directly to avoid this warning.`,
+        host,
+      );
     }
 
-    const parts = raw.split(' ').filter(Boolean);
+    const parts = Array.from(
+      new Set([
+        ...(targetRaw ? targetRaw.split(' ').filter(Boolean) : []),
+        ...(hostRaw ? hostRaw.split(' ').filter(Boolean) : []),
+      ]),
+    );
+
+    if (parts.length === 0) {
+      return null;
+    }
 
     if (!fieldName) {
       const preserved = parts.filter(
@@ -578,10 +614,20 @@ export class NgxSignalFormAutoAria {
     // When the identity service is present (wrapper context), prefer its
     // field name over the element's id attribute. This ensures auto-aria and
     // the wrapper always agree on which name drives ID generation.
+    //
+    // Absent an identity, the name always comes from the *host* element
+    // (`this.#element.nativeElement`), never from `#ariaTarget()`. A
+    // field-shaped custom control (e.g. a FormValueControl host wrapping an
+    // Angular Aria Combobox) binds `[formField]` on the host and only
+    // relocates the *managed ARIA attributes* to the inner `role="combobox"`
+    // descendant — field identity still belongs to whichever element
+    // `[formField]` sits on, so a sibling `<ngx-form-field-error
+    // fieldName="…">` (which has no way to see the inner combobox's id) and
+    // auto-aria agree on the same generated ids.
     const ariaTarget = this.#ariaTarget();
     const fieldName = this.#fieldIdentity
       ? this.#fieldIdentity.fieldName()
-      : resolveFieldName(ariaTarget);
+      : resolveFieldName(this.#element.nativeElement);
 
     return {
       fieldName,

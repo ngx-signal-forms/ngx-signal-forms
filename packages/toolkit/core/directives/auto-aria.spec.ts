@@ -539,11 +539,15 @@ describe('NgxSignalFormAutoAria', () => {
       expect(group?.getAttribute('aria-required')).toBe('true');
     });
 
-    it('writes managed ARIA onto an inner combobox instead of the FormValueControl host', async () => {
+    it('writes managed ARIA onto an inner combobox instead of the FormValueControl host, naming the field from the host id', async () => {
       // Autocomplete hosts bind [formField] on a custom element while Angular
       // Aria Combobox puts role="combobox" on the inner input. AT follows the
       // combobox, so aria-required / aria-invalid / aria-describedby must
-      // land there — not on a host with no widget role.
+      // land there — not on a host with no widget role. The field *name*
+      // still comes from the host id: a sibling
+      // `<ngx-form-field-error fieldName="framework-host">` and auto-ARIA
+      // must agree on the same generated id, and the inner combobox's `id`
+      // is never rendered by anything else that would need to match it.
       @Component({
         template: `
           <div id="framework-host" [formField]="frameworkControl()">
@@ -569,10 +573,61 @@ describe('NgxSignalFormAutoAria', () => {
 
       expect(combobox).toHaveAttribute('aria-required', 'true');
       expect(combobox).toHaveAttribute('aria-invalid', 'true');
-      expect(combobox).toHaveAttribute('aria-describedby', 'framework-error');
+      expect(combobox).toHaveAttribute(
+        'aria-describedby',
+        'framework-host-error',
+      );
       expect(host).not.toHaveAttribute('aria-required');
       expect(host).not.toHaveAttribute('aria-invalid');
       expect(host).not.toHaveAttribute('aria-describedby');
+    });
+
+    it('preserves a host-authored aria-describedby on the relocated inner combobox and warns once in dev mode', async () => {
+      // The host may carry its own author-written aria-describedby (a
+      // description that has nothing to do with the toolkit's managed
+      // error/warning/hint ids). Relocating managed attributes to the inner
+      // combobox must not silently drop that id — it has to survive on the
+      // target, and the relocation should be flagged once via a dev-mode
+      // console.warn so authors notice the id moved.
+      const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+      @Component({
+        template: `
+          <div
+            id="framework-host"
+            aria-describedby="framework-host-help"
+            [formField]="frameworkControl()"
+          >
+            <input id="framework" role="combobox" />
+          </div>
+        `,
+        imports: [MockFormFieldDirective, NgxSignalFormAutoAria],
+      })
+      class TestComponent {
+        frameworkControl = createMockControl(
+          true,
+          true,
+          [{ kind: 'required', message: 'Select a framework' }],
+          true,
+        );
+      }
+
+      const { container } = await render(TestComponent);
+      await TestBed.inject(ApplicationRef).whenStable();
+
+      const host = container.querySelector('#framework-host');
+      const combobox = container.querySelector('#framework');
+
+      expect(combobox?.getAttribute('aria-describedby')).toContain(
+        'framework-host-help',
+      );
+      expect(combobox?.getAttribute('aria-describedby')).toContain(
+        'framework-host-error',
+      );
+      expect(host).not.toHaveAttribute('aria-describedby');
+      expect(warnSpy).toHaveBeenCalledTimes(1);
+
+      warnSpy.mockRestore();
     });
 
     it('still sets aria-required="true" on a host with no role attribute', async () => {
