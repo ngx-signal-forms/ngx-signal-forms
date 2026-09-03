@@ -25,9 +25,9 @@ export type VestFieldExclusion<F extends string = string> =
  * Whole-suite failure map returned by Vest selector APIs such as
  * `result.getErrors()` and `result.getWarnings()`.
  *
- * Exported so `./vest-adapter` — the other module that talks about Vest
- * selector shapes — imports this one definition instead of re-declaring an
- * identical local copy.
+ * Exported so `./vest-result-mapper` — the other module that talks about
+ * Vest selector shapes — imports this one definition instead of
+ * re-declaring an identical local copy.
  */
 export type VestFailureMessages = Readonly<Record<string, readonly string[]>>;
 
@@ -46,7 +46,7 @@ export type VestFieldMessages = readonly string[];
  * selector signatures more precisely than a plain `Pick<SuiteResult, ...>`.
  * The adapter's OWN internal helpers only ever call the zero-argument,
  * whole-suite overload — every internal call site passes no field name (see
- * `toVestValidationEntries` in `./vest-adapter`, verified against
+ * `toVestValidationEntries` in `./vest-result-mapper`, verified against
  * vest@6.3.2). The field-scoped `(fieldName: F)` overload exists so that
  * `RunVestSuiteResult.runResult`/`initialResult`, which this type also backs,
  * stay a faithful, typed mirror of Vest's public result object for consumers
@@ -564,13 +564,24 @@ async function deferVestRunUntilIdle<TValue, F extends string = string>(
  * settle — leaving that field `pending()` forever.
  *
  * When the suite exposes `subscribe`/`get` (true for suites created via
- * Vest's `create()`), race the run's own promise against the suite-wide
- * `ALL_RUNNING_TESTS_FINISHED` bus event, which only fires once ALL pending
- * tests — including this run's — have finished, regardless of which `run()`
- * call's resolver ends up firing it. On that event, `suite.get()` returns the
- * suite's current accumulated result, which by then reflects this run's
- * outcome. Suites without `subscribe`/`get` fall back to the original
- * (potentially superseded) promise unchanged.
+ * Vest's `create()`), first checks `suite.get().isPending()` — the same
+ * up-front check {@link waitForSuiteIdle} makes. A suite that is already
+ * idle by the time settlement is awaited will never fire another
+ * `ALL_RUNNING_TESTS_FINISHED` event (the one that reported it idle already
+ * happened, possibly before this call), so racing the run's promise against
+ * a NEW subscription would wait forever for a superseded run. Instead it
+ * races `runResult` itself (still, in case it settles — a REJECTION must
+ * still surface, e.g. to `vest-adapter.ts`'s `onError`) against `suite.get()`
+ * resolved immediately; `runResult` is listed first so that when both are
+ * already settled, its rejection wins the tie (promise reactions fire in
+ * `.then()`-registration order). In the genuinely superseded case
+ * `runResult` never settles at all, so `get()` — which by then reflects this
+ * run's outcome — is what actually resolves the race. Only when the suite is
+ * still pending does this race the run's own promise against the bus event,
+ * which fires once ALL pending tests — including this run's — have finished,
+ * regardless of which `run()` call's resolver ends up firing it. Suites
+ * without `subscribe`/`get` fall back to the original (potentially
+ * superseded) promise unchanged.
  */
 function awaitVestRunSettlement<TValue, F extends string = string>(
   runResult: VestResultLike<F> | PromiseLike<VestResultLike<F>>,
@@ -584,6 +595,15 @@ function awaitVestRunSettlement<TValue, F extends string = string>(
   }
   const subscribe = suite.subscribe;
   const get = suite.get;
+
+  if (!get().isPending()) {
+    // The suite is already idle: no further bus event is coming, so
+    // resolving on one would hang forever for a superseded run — see this
+    // function's doc comment and `waitForSuiteIdle`, which makes the same
+    // up-front check. Race `runResult` (first, so its rejection wins a tie)
+    // against `get()`'s current snapshot instead of blindly trusting either.
+    return Promise.race([Promise.resolve(runResult), Promise.resolve(get())]);
+  }
 
   return new Promise((resolve, reject) => {
     let settled = false;
