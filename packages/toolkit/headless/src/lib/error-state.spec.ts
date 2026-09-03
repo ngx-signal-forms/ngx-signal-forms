@@ -1,4 +1,5 @@
 import {
+  ApplicationRef,
   Component,
   computed,
   inject,
@@ -7,15 +8,18 @@ import {
   viewChild,
   type Signal,
 } from '@angular/core';
+import { TestBed } from '@angular/core/testing';
 import {
   form,
   FormField,
   required,
   schema,
+  validate,
   type ValidationError,
 } from '@angular/forms/signals';
 import {
   provideNgxSignalFormsConfig,
+  warningError,
   type ErrorReadableState,
   type SubmittedStatus,
 } from '@ngx-signal-forms/toolkit';
@@ -681,6 +685,70 @@ describe('NgxHeadlessErrorState', () => {
         .hostField.set({ touched: signal(true), invalid: signal(true) });
       fixture.detectChanges();
       expect(screen.getByTestId('bridge-show')).toBeTruthy();
+    });
+  });
+
+  describe('warning visibility seam', () => {
+    it('holds warnings back while a blocking error is visible on the same field', async () => {
+      @Component({
+        selector: 'ngx-test-warning-suppression',
+        imports: [FormField, NgxHeadlessErrorState],
+
+        template: `
+          <div>
+            <input id="password" [formField]="signupForm.password" />
+            <div
+              ngxHeadlessErrorState
+              #errorState="errorState"
+              [field]="signupForm.password"
+              fieldName="password"
+              strategy="immediate"
+              warningStrategy="immediate"
+            >
+              <span data-testid="has-errors">
+                {{ errorState.hasErrors() }}
+              </span>
+              <span data-testid="show-warnings">
+                {{ errorState.shouldShowWarnings() }}
+              </span>
+            </div>
+          </div>
+        `,
+      })
+      class TestComponent {
+        readonly model = signal({ password: 'abcd' });
+        readonly signupForm = form(
+          this.model,
+          schema((path) => {
+            validate(path.password, (ctx) =>
+              ctx.value().length < 5
+                ? { kind: 'minLength', message: 'At least 5 characters' }
+                : null,
+            );
+            validate(path.password, (ctx) =>
+              ctx.value().length < 12
+                ? warningError('weak-password', 'Use 12+ characters')
+                : null,
+            );
+          }),
+        );
+      }
+
+      const { fixture } = await render(TestComponent);
+
+      // 'abcd' trips both validators. The blocking error is visible, so the
+      // warning region stays closed even under `warningStrategy="immediate"`.
+      expect(screen.getByTestId('has-errors')).toHaveTextContent('true');
+      expect(screen.getByTestId('show-warnings')).toHaveTextContent('false');
+
+      // A longer-but-still-weak value clears the blocking error and leaves
+      // only the warning.
+      fixture.componentInstance.model.set({ password: 'abcdefg' });
+      fixture.detectChanges();
+      await TestBed.inject(ApplicationRef).whenStable();
+
+      expect(screen.getByTestId('has-errors')).toHaveTextContent('false');
+      expect(screen.getByTestId('show-warnings')).toHaveTextContent('true');
     });
   });
 });

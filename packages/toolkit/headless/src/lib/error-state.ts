@@ -2,14 +2,12 @@ import { computed, Directive, input, signal, type Signal } from '@angular/core';
 import type { FieldTree, ValidationError } from '@angular/forms/signals';
 import {
   createErrorVisibility,
+  createWarningVisibility,
   resolveSubmittedStatusFromContext,
-  resolveWarningStrategyFromContext,
-  shouldShowWarnings,
   unwrapValue,
   type ErrorDisplayStrategy,
   type ErrorReadableState,
   type ReactiveOrStatic,
-  type ResolvedWarningDisplayStrategy,
   type SubmittedStatus,
   type WarningDisplayStrategy,
 } from '@ngx-signal-forms/toolkit';
@@ -211,15 +209,6 @@ export class NgxHeadlessErrorState<
     this.#bridgedFieldState.set(s);
   }
 
-  readonly #resolvedWarningStrategy = computed<ResolvedWarningDisplayStrategy>(
-    () =>
-      resolveWarningStrategyFromContext(
-        this.warningStrategy(),
-        this.#injectedContext,
-        this.#config.defaultWarningStrategy,
-      ),
-  );
-
   /**
    * Resolved submission status after applying form-context defaults.
    * Exposed so that host components composing this directive via
@@ -270,21 +259,29 @@ export class NgxHeadlessErrorState<
     configDefault: this.#config.defaultErrorStrategy,
   });
 
-  readonly #strategyBasedShowWarnings = computed(() => {
-    // For warnings, we need to check hasWarnings instead of invalid
-    // since warnings are non-blocking and don't affect the field's invalid state
-    const hasWarnings = this.hasWarnings();
-    const isTouched = this.#fieldState()?.touched?.() ?? false;
-    const strategy = this.#resolvedWarningStrategy();
-    const submittedStatus = this.resolvedSubmittedStatus() ?? 'unsubmitted';
-
-    return shouldShowWarnings(
-      hasWarnings,
-      isTouched,
-      strategy,
-      submittedStatus,
-    );
-  });
+  /**
+   * Warning timing, routed through the shared `createWarningVisibility` seam
+   * (ADR-0006) so the four-tier warning cascade of ADR-0007 is composed in
+   * one place rather than re-assembled here.
+   *
+   * Presence comes from {@link hasWarnings} rather than the field's own
+   * `errors()`, because direct-errors mode (`errorsOverride`) supplies the
+   * warning list from outside the field. `errorVisibility` mirrors what the
+   * renderers already enforce (`NgxFormFieldError.errorContainerVisible`):
+   * a blocking error that is actually on screen owns the message region, so
+   * the warning waits.
+   */
+  readonly #strategyBasedShowWarnings = createWarningVisibility(
+    this.#fieldState,
+    {
+      strategy: this.warningStrategy,
+      submittedStatus: this.submittedStatus,
+      configDefault: this.#config.defaultWarningStrategy,
+      hasWarnings: this.hasWarnings,
+      errorVisibility: () =>
+        this.#strategyBasedShowErrors() && this.hasErrors(),
+    },
+  );
 
   /**
    * Whether errors should be shown based on strategy.
@@ -318,7 +315,9 @@ export class NgxHeadlessErrorState<
    * The two unconditional-`true` cases are the same as
    * {@link shouldShowErrors}, and for the same reasons — direct-errors mode
    * delegates gating upstream, and with no field state the host owns
-   * visibility. Only the strategy branch differs.
+   * visibility. The strategy branch differs: it runs the warning cascade,
+   * gates on warning presence rather than `invalid()`, and stays `false`
+   * while a blocking error is visible on this field (ADR-0007).
    */
   readonly shouldShowWarnings = computed(() => {
     if (this.errorsOverride()) return true;
