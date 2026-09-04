@@ -59,7 +59,7 @@ The toolkit is an enhancement layer, not a replacement. Angular Signal Forms own
 9. **Use submission helpers over manual state tracking:**
    - `focusFirstInvalid(form)` — focus on invalid target after failed submit. Skips errors whose bound field is `hidden()` or `disabled()` — focusing a non-interactive control would either throw or strand focus on something the user cannot operate. Also skips orphan errors with no field tree (nothing to focus is better than stealing focus to an unrelated control).
    - `createOnInvalidHandler()` — creates an `onInvalid` callback for `form()` submit options
-   - `submitWithWarnings(form, callback)` — submit even when only warnings remain
+   - `submitWithWarnings(form, callback)` — submit even when only warnings remain or a validator is still pending. Delegates to Angular `submit()` once its own gate passes, so `submitting()` and `submittedStatus` track automatically. Returns `Promise<boolean>`: `true` once `callback` has run and settled, `false` when refused (blocking errors) or dropped (re-entrant call)
    - `hasSubmitted(form)` — `Signal<boolean>` for completed submission tracking
 
 10. **Field interactivity helpers** (`isFieldStateInteractive`, `isFieldStateHidden`) drive consistent behavior across focus, wrapper rendering, and error surfacing. The wrapper mirrors `hidden()` onto the host via `[attr.hidden]` so screen readers skip it. `readonly()` counts as interactive — the control is still visible and focusable, and the error remains meaningful. Headless aggregation filters errors through `isErrorOnInteractiveField()`, which uses the same predicate but **keeps orphan errors visible** — the asymmetry vs. `focusFirstInvalid()` is deliberate: silently hiding a validation message is worse than showing one without focus.
@@ -136,7 +136,7 @@ import { warningError } from '@ngx-signal-forms/toolkit';
 return warningError('weak-password', 'Consider using 12+ characters');
 ```
 
-Use `canSubmitWithWarnings(form)` and `submitWithWarnings(form, callback)` when warnings should not block submission. Angular Signal Forms treats all `ValidationError`s as blockers by default.
+Use `canSubmitWithWarnings(form)` and `submitWithWarnings(form, callback)` when warnings should not block submission. Angular Signal Forms treats all `ValidationError`s as blockers by default. Both helpers also ignore pending async validators (matching Angular `submit()`'s default `ignoreValidators: 'pending'`) — only settled blocking errors gate. `submitWithWarnings` delegates to Angular `submit()` once its gate passes and returns the same `Promise<boolean>` shape.
 
 ## Immutable Array Helpers
 

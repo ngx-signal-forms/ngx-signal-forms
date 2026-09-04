@@ -312,7 +312,12 @@ isBlockingError(error): boolean
 hasOnlyWarnings(errors): boolean
 getBlockingErrors(errors): ValidationError[]
 canSubmitWithWarnings(form): boolean
-submitWithWarnings(form, callback): Promise<void>
+// Ignores pending async validators, matching Angular `submit()`'s default
+// `ignoreValidators: 'pending'` — only settled blocking errors gate.
+submitWithWarnings(form, callback): Promise<boolean>
+// Delegates to Angular `submit()` after its own warning-aware gate passes.
+// Returns `true` once `callback` has run and settled, `false` when refused
+// (blocking errors) or dropped (re-entrant call).
 
 // Form context injection
 injectFormContext(injector?): NgxSignalFormContext | undefined

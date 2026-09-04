@@ -650,17 +650,21 @@ import {
   canSubmitWithWarnings,
 } from '@ngx-signal-forms/toolkit';
 
-// submitWithWarnings() marks all fields touched, waits for async validators,
-// guards double-submits, then runs the action only when no *blocking* errors
-// remain. Warnings pass through.
+// submitWithWarnings() marks all fields touched, guards double-submits, then
+// delegates to Angular's submit() once no *blocking* errors remain. Warnings
+// pass through, and a still-pending async validator does not block either
+// (matches Angular submit()'s default ignoreValidators: 'pending'). Because
+// it delegates to submit(), submitting() and submittedStatus track the call
+// automatically. It returns Promise<boolean> — true once the callback has
+// run and settled, false when refused or dropped.
 const onSubmit = () =>
   submitWithWarnings(form, async () => {
     await api.save(form().value());
   });
 
 // For reactive gating (e.g. a submit button's [disabled]),
-// canSubmitWithWarnings(form) returns a Signal<boolean> — true when no blocking
-// errors are present.
+// canSubmitWithWarnings(form) returns a Signal<boolean> — true when no
+// settled blocking errors are present (a pending validator does not block).
 ```
 
 ### Checking for Warnings
