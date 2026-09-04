@@ -82,6 +82,14 @@ test.describe('Labelless Form Fields', () => {
     expect(scrollWidth).toBeLessThanOrEqual(clientWidth);
   });
 
+  test('provides a submit action for validating the labelless fields', async () => {
+    const submit = page.form.getByRole('button', { name: 'Validate fields' });
+
+    await expect(submit).toBeVisible();
+    await submit.click();
+    await expect(page.form.getByText('Country code is required')).toBeVisible();
+  });
+
   test('keeps comparison wrappers present and accessible across appearance/orientation variants', async () => {
     await expect(page.comparisonSection).toBeVisible();
     await expect(page.comparisonLabelledWrapper).toBeVisible();

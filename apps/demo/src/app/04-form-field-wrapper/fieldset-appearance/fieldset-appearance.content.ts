@@ -35,7 +35,7 @@ export const FIELDSET_APPEARANCE_CONTENT: ExampleCardConfig = {
     title: 'When to reach for each primitive',
     sections: [
       {
-        title: '🧪 Try This (On Touch mode, default controls)',
+        title: '🧪 Try This (Immediate mode, default controls)',
         items: [
           '1. Type <code>1234</code> in <strong>Shipping ZIP</strong> → Tab away → grouped summary shows "ZIP code must be 5 digits (e.g., 12345 or 12345-6789)"',
           '2. Switch <strong>Grouped feedback</strong> from Notification to Plain → the same messages re-render as compact text instead of the surfaced card with its "Review the grouped fields below" title',
