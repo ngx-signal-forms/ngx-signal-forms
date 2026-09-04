@@ -268,9 +268,9 @@ export function createErrorMessageSignal(
       // `NgxHeadlessFieldset` applies) when neither an explicit `strategy` nor
       // a form context is present, keeping standalone usage consistent
       // regardless of which headless surface a consumer reaches for.
-      ...(config?.defaultErrorStrategy !== undefined && {
-        configDefault: config.defaultErrorStrategy,
-      }),
+      // `buildHeadlessContext()` always resolves a config (the built-in
+      // defaults when no token is provided), so this key is unconditional.
+      configDefault: config.defaultErrorStrategy,
     };
     // `createErrorVisibility` is typed against Angular's `Partial<ErrorVisibilityState>`
     // (signal-branded `invalid` / `touched`). Our `FieldStateLike` keeps the
@@ -297,9 +297,7 @@ export function createErrorMessageSignal(
       ...(options?.submittedStatus !== undefined && {
         submittedStatus: options.submittedStatus,
       }),
-      ...(config?.defaultWarningStrategy !== undefined && {
-        configDefault: config.defaultWarningStrategy,
-      }),
+      configDefault: config.defaultWarningStrategy,
     };
     const showWarnings = createWarningVisibility(
       field as Parameters<typeof createWarningVisibility>[0],

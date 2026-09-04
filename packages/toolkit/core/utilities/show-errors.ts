@@ -107,7 +107,7 @@ export function createShowErrorsComputed(
     const fieldState = unwrapValue(field);
     const strategyValue = unwrapValue(strategy);
 
-    // Angular 21.2's `FieldState` guarantees `invalid`/`touched` signals, so
+    // Angular 22's `FieldState` guarantees `invalid`/`touched` signals, so
     // the only shapes we defend against here are nullish (no field yet) and
     // caller-supplied partials where a signal may be absent.
     const isInvalid = fieldState?.invalid?.() ?? false;

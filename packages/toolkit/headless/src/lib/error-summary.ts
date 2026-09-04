@@ -167,7 +167,7 @@ export class NgxHeadlessErrorSummary implements ErrorSummarySignals {
     resolveStrategyFromContext(
       this.strategy(),
       this.#formContext,
-      this.#config?.defaultErrorStrategy,
+      this.#config.defaultErrorStrategy,
     ),
   );
 
@@ -181,7 +181,7 @@ export class NgxHeadlessErrorSummary implements ErrorSummarySignals {
       resolveWarningStrategyFromContext(
         this.warningStrategy(),
         this.#formContext,
-        this.#config?.defaultWarningStrategy,
+        this.#config.defaultWarningStrategy,
       ),
   );
 
@@ -190,12 +190,7 @@ export class NgxHeadlessErrorSummary implements ErrorSummarySignals {
   readonly #showErrorsSignal = createErrorVisibility(this.#fieldState, {
     strategy: this.strategy,
     submittedStatus: this.submittedStatus,
-    // `exactOptionalPropertyTypes` forbids assigning `undefined` to an
-    // optional `ResolvedErrorDisplayStrategy | null` property, so the key
-    // is omitted entirely rather than set to `undefined`.
-    ...(this.#config?.defaultErrorStrategy !== undefined && {
-      configDefault: this.#config.defaultErrorStrategy,
-    }),
+    configDefault: this.#config.defaultErrorStrategy,
   });
 
   /**
@@ -213,9 +208,7 @@ export class NgxHeadlessErrorSummary implements ErrorSummarySignals {
     strategy: this.warningStrategy,
     submittedStatus: this.submittedStatus,
     hasWarnings: true,
-    ...(this.#config?.defaultWarningStrategy !== undefined && {
-      configDefault: this.#config.defaultWarningStrategy,
-    }),
+    configDefault: this.#config.defaultWarningStrategy,
   });
 
   /**
