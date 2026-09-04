@@ -114,6 +114,7 @@ export function shouldShowWarnings(
       return hasWarnings && hasSubmitted;
 
     default:
+      strategy satisfies never;
       return hasWarnings && isTouched;
   }
 }
