@@ -5,7 +5,7 @@
 /* https://lea.verou.me/blog/2021/10/custom-properties-with-defaults/ */
 /* Layering approach: */
 /* 1. Design tokens (internal, --_fieldset-*) - Base values for colors, spacing, typography */
-/* 2. Shared feedback tier (--_feedback-*, from form-field/_feedback-tokens) */
+/* 2. Shared feedback tier (--_feedback-*, from core/feedback-tokens.css) */
 /* 3. Public API (--ngx-signal-form-fieldset-*) - Overridable by consumers */
 /* 4. Pseudo-private (--_fieldset-*) - Resolve public → feedback → internal defaults */
 /* 5. Implementation - Uses only the resolved --_* variables */

@@ -23,6 +23,9 @@
 /* Usage: add this file to a component's `styleUrls` alongside the component's  */
 /* own CSS. Both files' `:host { ... }` blocks merge into the same host, so the */
 /* resolved `--_feedback-*` variables are visible to the component's rules.     */
+/*                                                                              */
+/* Lives in `core/` because every other entry point sits above it. `/assistive` */
+/* and `/form-field` both pull it in, and neither may reach into the other.     */
 
 :host {
   --_feedback-font-size-default: 0.75rem;

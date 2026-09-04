@@ -1,4 +1,4 @@
-import { readFileSync } from 'node:fs';
+import { readdirSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { Component, signal } from '@angular/core';
 import {
@@ -996,14 +996,13 @@ describe('NgxFormFieldError', () => {
       expect(messages[0]?.textContent).not.toContain('From field validator');
     });
 
-    // Regression: createErrorMessageSignal pinned the directive's `strategy`
-    // input even in `errorsOverride` mode. With `strategy="on-submit"` and no
-    // submitted status, the headless directive's own `shouldShowErrors` would
-    // bypass the strategy gate (override-mode short-circuit) and the
-    // error container would become visible — but the primitive's visibility
-    // cascade would still suppress message resolution, leaving an empty live
-    // region. Fixed by switching the primitive's strategy to `'immediate'`
-    // when `errorsOverride` is bound.
+    // Regression: the component used to resolve its own messages through a
+    // second visibility cascade, which read the `strategy` input even in
+    // `errorsOverride` mode. With `strategy="on-submit"` and no submitted
+    // status the directive's `shouldShowErrors` short-circuits to `true` and
+    // opens the container, while the second cascade suppressed the messages —
+    // an empty live region. The component now renders the directive's own
+    // un-gated `resolvedErrors()`, so the two cannot disagree.
     it('should resolve override errors under on-submit strategy without a submitted status', async () => {
       @Component({
         selector: 'ngx-test-override-on-submit-regression',
@@ -1523,6 +1522,34 @@ describe('NgxFormFieldError', () => {
       );
     });
 
+    it('renders override warnings under an on-submit strategy before submit', async () => {
+      // The warning counterpart of the blocking-error regression in
+      // "edge cases". Override mode delegates gating to the caller, who has
+      // already aggregated and filtered the list, so nothing inside the
+      // component may re-gate it or the status container renders empty.
+      const warnings = signal([
+        { kind: 'warn:po-box', message: 'PO boxes may delay delivery' },
+      ]);
+
+      await render(
+        `<ngx-form-field-error
+          [errors]="warnings"
+          fieldName="address"
+          strategy="on-submit"
+          submittedStatus="unsubmitted"
+          presentation="panel"
+        />`,
+        {
+          imports: [NgxFormFieldError],
+          componentProperties: { warnings },
+        },
+      );
+
+      expect(screen.getByRole('status')).toHaveTextContent(
+        'PO boxes may delay delivery',
+      );
+    });
+
     it('defaults the panel error background to the Figma soft-danger token', () => {
       // Runtime resolution is covered by the *.browser.spec.ts suite and
       // e2e snapshots; jsdom can't compute custom properties from emulated
@@ -1533,6 +1560,37 @@ describe('NgxFormFieldError', () => {
       expect(errorCssSource).toMatch(
         /--_error-bg:[^;]*--ngx-signal-form-error-panel-bg[^;]*--_error-panel-clr-danger-soft/,
       );
+    });
+  });
+
+  describe('single resolution path and entry-point layering', () => {
+    // Source-level assertions. The properties they lock are invisible from the
+    // rendered DOM — a component that resolved its messages twice and one that
+    // reads the host directive's produce the same markup — so the source is
+    // the only place to assert them.
+
+    it('resolves messages once, through the host directive', () => {
+      const source = readFileSync(
+        resolve(import.meta.dirname, './form-field-error.ts'),
+        'utf8',
+      );
+
+      expect(source).not.toContain('createErrorMessageSignal');
+      expect(source).toContain('this.headless.resolvedErrors');
+      expect(source).toContain('this.headless.resolvedWarnings');
+    });
+
+    it('keeps every shipped assistive file clear of paths into form-field/', () => {
+      // Assembled from parts so this spec file does not match itself.
+      const upwardPath = `../form-field/`;
+      const dir = import.meta.dirname;
+      const offenders = readdirSync(dir)
+        .filter((name) => /\.(ts|css)$/.test(name) && !name.includes('.spec.'))
+        .filter((name) =>
+          readFileSync(resolve(dir, name), 'utf8').includes(upwardPath),
+        );
+
+      expect(offenders).toEqual([]);
     });
   });
 });
