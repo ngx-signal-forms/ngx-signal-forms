@@ -113,10 +113,13 @@ Exposes error state signals for custom error display.
 | `field`           | `FieldTree` (optional)                                                                                                                                                 | The field to track. Omit when using `errorsOverride` or the host `connectFieldState()` bridge                                                                       |
 | `fieldName`       | `string \| null` (optional, default `null`)                                                                                                                            | Field name for ID generation. Pass `null` (or omit) to disable id generation until a name resolves                                                                  |
 | `errorsOverride`  | `ReactiveOrStatic<readonly ValidationError[]>` (optional) — a plain array, a `Signal<readonly ValidationError[]>`, or a bare `() => readonly ValidationError[]` reader | Pre-aggregated errors that replace field-based extraction (e.g. for fieldsets). When provided, `field` is not required and `shouldShowErrors` always returns `true` |
-| `strategy`        | `ErrorDisplayStrategy`                                                                                                                                                 | Override (inherits from context)                                                                                                                                    |
+| `strategy`        | `ErrorDisplayStrategy`                                                                                                                                                 | Override for blocking errors (inherits from context)                                                                                                                |
+| `warningStrategy` | `WarningDisplayStrategy`                                                                                                                                               | Override for warnings, independent of `strategy` (default: `'on-touch'`)                                                                                            |
 | `submittedStatus` | `SubmittedStatus`                                                                                                                                                      | Override for `'on-submit'` strategy                                                                                                                                 |
 
 Signals: `shouldShowErrors()`, `shouldShowWarnings()`, `hasErrors()`, `hasWarnings()`, `errors()`, `warnings()`, `resolvedErrors()`, `resolvedWarnings()`, `errorId` (nullable), `warningId` (nullable).
+
+`shouldShowWarnings()` runs the warning cascade — `warningStrategy` input → the form context's `warningStrategy()` → `NGX_SIGNAL_FORMS_CONFIG.defaultWarningStrategy` → `'on-touch'` — and gates on warning presence rather than `invalid()`. It stays `false` while a blocking error is visible on the same field, because both categories share one message region.
 
 ### NgxHeadlessErrorSummary
 
@@ -124,17 +127,18 @@ Selector: `[ngxHeadlessErrorSummary]` · Export: `errorSummary`
 
 Aggregates all errors from a form tree. Each entry has a `focus()` method that calls Angular's `focusBoundControl()`.
 
-| Input             | Type                   | Description                         |
-| ----------------- | ---------------------- | ----------------------------------- |
-| `formTree`        | `FieldTree` (required) | Root form to aggregate              |
-| `strategy`        | `ErrorDisplayStrategy` | Override (inherits from context)    |
-| `submittedStatus` | `SubmittedStatus`      | Override for `'on-submit'` strategy |
+| Input             | Type                     | Description                                                              |
+| ----------------- | ------------------------ | ------------------------------------------------------------------------ |
+| `formTree`        | `FieldTree` (required)   | Root form to aggregate                                                   |
+| `strategy`        | `ErrorDisplayStrategy`   | Override for blocking errors (inherits from context)                     |
+| `warningStrategy` | `WarningDisplayStrategy` | Override for warnings, independent of `strategy` (default: `'on-touch'`) |
+| `submittedStatus` | `SubmittedStatus`        | Override for `'on-submit'` strategy                                      |
 
-Signals: `entries()`, `warningEntries()`, `hasErrors()`, `hasWarnings()`, `shouldShow()`, `shouldShowWarnings()`.
+Signals: `entries()`, `warningEntries()`, `hasErrors()`, `hasWarnings()`, `shouldShow()`, `shouldShowWarnings()`, `resolvedStrategy()`, `resolvedWarningStrategy()`.
 
 Method: `focusFirst()` — focuses the first error entry.
 
-`shouldShow()` gates `entries()` (strategy && `hasErrors()`); `shouldShowWarnings()` gates `warningEntries()` (strategy && `hasWarnings()`) — a warnings-only form has no blocking errors, so `shouldShow()` alone can never reveal warnings.
+`shouldShow()` gates `entries()` (`strategy` && `hasErrors()`); `shouldShowWarnings()` gates `warningEntries()` (`warningStrategy` && `hasWarnings()`). The two are independent in both directions: a warnings-only form has no blocking errors, so `shouldShow()` alone can never reveal warnings, and a form that defers its errors to submit still surfaces summary warnings on touch.
 
 ### NgxHeadlessCharacterCount
 
@@ -236,7 +240,6 @@ export class EmailErrors {
   readonly resolvedWarnings = createErrorMessageSignal(() => this.field()(), {
     includeWarnings: 'only',
     fieldName: 'email',
-    strategy: 'immediate',
   });
 }
 ```
@@ -254,6 +257,7 @@ Options of note:
 - `stripWarningPrefix`: defaults to `true` (display-oriented); set to `false` to keep the `warn:` prefix visible for debugging.
 - `errorMessages`: explicit `Signal<ErrorMessageRegistry>` override; when omitted, the primitive auto-injects `NGX_ERROR_MESSAGES`.
 - `strategy` / `submittedStatus`: forwarded to `createErrorVisibility`. Omit to inherit from the form context.
+- `warningStrategy`: forwarded to `createWarningVisibility`, which times the entries `includeWarnings` selects. Its cascade — this option → the form context's `warningStrategy()` → `defaultWarningStrategy` → `'on-touch'` — never consults `defaultErrorStrategy`, so an `'on-submit'` form still shows warnings on touch and the example above needs no `strategy: 'immediate'` workaround.
 - `injector`: optional, for use outside an Angular injection context.
 
 ### createErrorState / createCharacterCount / createFieldStateFlags
@@ -289,7 +293,7 @@ const reactive = createFieldOptionalitySummary(() => this.formTree()); // comput
 
 ### createFieldsetAggregation / createErrorSummaryEntries
 
-The pure pipelines behind `NgxHeadlessFieldset` and `NgxHeadlessErrorSummary` — reach for these when building a custom grouped surface. No injection context required, but you supply pre-resolved `showErrors`/`showWarnings` signals from your own visibility seam call. See the source JSDoc for the option/result contracts.
+The pure pipelines behind `NgxHeadlessFieldset` and `NgxHeadlessErrorSummary` — reach for these when building a custom grouped surface. No injection context required, but both take pre-resolved `showErrors` and `showWarnings` signals, which you produce with your own `createErrorVisibility()` and `createWarningVisibility()` calls. Passing one signal for both re-couples the channels and defeats the warning cascade. See the source JSDoc for the option/result contracts.
 
 ## ARIA Composition
 

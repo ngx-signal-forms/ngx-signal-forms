@@ -611,7 +611,7 @@ import { NgxHeadlessToolkit } from '@ngx-signal-forms/toolkit/headless';
 
 Directive-level types and constants also available from this entry point:
 
-- `createErrorMessageSignal(field, options?): Signal<readonly ResolvedFieldError[]>` — reactive primitive that resolves a field's errors (with the 3-tier message cascade + stable IDs) for custom rendering. Options: `CreateErrorMessageSignalOptions`; `IncludeWarningsOption` (`false` blocking-only \| `true` blocking then warnings \| `'only'` warnings) selects the subset; `ResolvedFieldError` is `{ kind, message, id, error }`.
+- `createErrorMessageSignal(field, options?): Signal<readonly ResolvedFieldError[]>` — reactive primitive that resolves a field's errors (with the 3-tier message cascade + stable IDs) for custom rendering. Options: `CreateErrorMessageSignalOptions`; `IncludeWarningsOption` (`false` blocking-only \| `true` blocking then warnings \| `'only'` warnings) selects the subset; `ResolvedFieldError` is `{ kind, message, id, error }`. Blocking errors are timed by `strategy`, the selected warnings by `warningStrategy` — two independent cascades (ADR-0007).
 - `ErrorStateSignals`, `ResolvedError` — from `NgxHeadlessErrorState`
 - `FieldsetStateSignals` — from `NgxHeadlessFieldset`
 - `CharacterCountStateSignals`, `CharacterCountLimitState` — from `NgxHeadlessCharacterCount`
@@ -624,11 +624,12 @@ Directive-level types and constants also available from this entry point:
 
 Selector: `[ngxHeadlessErrorState]` | Export: `#errorState="errorState"`
 
-Inputs: `field` (required), `fieldName` (required), `strategy`
+Inputs: `field` (required), `fieldName` (required), `strategy`, `warningStrategy`
 
 Signals:
 
 - `shouldShowErrors()` — whether to display errors now
+- `shouldShowWarnings()` — whether to display warnings now, on `warningStrategy`'s own cascade
 - `hasErrors()` / `hasWarnings()`
 - `resolvedErrors()` / `resolvedWarnings()` — `ResolvedError[]` with `.message`, `.kind`
 - `errorId` / `warningId` — stable IDs for `aria-describedby`
@@ -637,7 +638,7 @@ Signals:
 
 Selector: `[ngxHeadlessErrorSummary]` | Export: `#summary="errorSummary"`
 
-Inputs: `formTree` (required), `strategy`, `submittedStatus`
+Inputs: `formTree` (required), `strategy`, `warningStrategy`, `submittedStatus`
 
 Signals/methods (implements `ErrorSummarySignals`):
 
@@ -645,6 +646,8 @@ Signals/methods (implements `ErrorSummarySignals`):
 - `warningEntries()` — `ErrorSummaryEntry[]` — warning entries (not available in styled component)
 - `hasErrors()` / `hasWarnings()`
 - `shouldShow()` — computed from strategy + submittedStatus
+- `shouldShowWarnings()` — computed from `warningStrategy`'s own cascade, independent of `shouldShow()`
+- `resolvedStrategy()` / `resolvedWarningStrategy()`
 - `focusFirst()` — focus the control for the first error entry
 
 `ErrorSummaryEntry` interface:
@@ -728,7 +731,8 @@ toErrorSummaryEntry(error, registry?, options?, labelResolver?): ErrorSummaryEnt
 // inject(), no injection context required (ADR-0005), testable with plain
 // signal() mocks. Visibility timing is NOT resolved inside — pass pre-resolved
 // showErrors/showWarnings signals from your own createErrorVisibility() /
-// createShowErrorsComputed() seam call (ADR-0006).
+// createWarningVisibility() seam calls (ADR-0006). Two separate signals:
+// passing one for both re-couples the channels (ADR-0007).
 createFieldsetAggregation(options: CreateFieldsetAggregationOptions): FieldsetAggregationResult
 // Options: { fieldState: () => unknown;              // reader for field()()
 //            fields?; includeNestedErrors?;          // same contract as the directive inputs
@@ -739,7 +743,7 @@ createFieldsetAggregation(options: CreateFieldsetAggregationOptions): FieldsetAg
 //           shouldShowErrors, shouldShowWarnings } — all Signal<...>
 createErrorSummaryEntries(options: CreateErrorSummaryEntriesOptions): ErrorSummaryEntriesResult
 // Options: { fieldState: () => unknown;              // reader for formTree()()
-//            showErrors;                             // pre-resolved visibility, shared by both channels
+//            showErrors; showWarnings;               // pre-resolved visibility, one per channel
 //            errorMessages?; labelResolver? }        // labelResolver falls back to humanizeFieldPath
 // Reads errorSummary(), filters out hidden/disabled fields, dedupes per field,
 // splits by kind, maps to focusable entries.
@@ -787,11 +791,13 @@ interface CreateErrorStateOptions<TValue = unknown> {
   readonly field: FieldTree<TValue>;
   readonly fieldName?: string;
   readonly strategy?: ErrorDisplayStrategy;
+  readonly warningStrategy?: WarningDisplayStrategy;
   readonly submittedStatus?: SignalLike<SubmittedStatus>;
 }
 
 interface ErrorStateResult {
   readonly shouldShowErrors: Signal<boolean>;
+  readonly shouldShowWarnings: Signal<boolean>;
   readonly hasErrors: Signal<boolean>;
   readonly hasWarnings: Signal<boolean>;
   readonly resolvedErrors: Signal<readonly ResolvedError[]>;

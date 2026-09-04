@@ -52,7 +52,7 @@ too small to warrant a shared factory; see `docs/CUSTOM_WRAPPERS.md` for
 the shape. Read `../references/api.md` for the remaining factories'
 contracts before composing them.
 
-5. **Use `NgxHeadlessFieldset`** for aggregated group state — validity, errors, and warnings across a field tree without rebuilding the traversal. Building a custom grouped surface instead? The same pipelines are exported as the pure factories `createFieldsetAggregation()` and `createErrorSummaryEntries()` — no injection context required, but you supply pre-resolved `showErrors`/`showWarnings` signals from your own visibility seam call. See `../references/api.md` for the option/result contracts.
+5. **Use `NgxHeadlessFieldset`** for aggregated group state — validity, errors, and warnings across a field tree without rebuilding the traversal. Building a custom grouped surface instead? The same pipelines are exported as the pure factories `createFieldsetAggregation()` and `createErrorSummaryEntries()` — no injection context required, but you supply pre-resolved `showErrors` and `showWarnings` signals from your own `createErrorVisibility()` / `createWarningVisibility()` calls — one per channel, since passing a single signal for both re-couples warning timing to the error strategy (ADR-0007). See `../references/api.md` for the option/result contracts.
 
 6. **Use `NgxHeadlessNotification`** when you already have aggregated `ValidationError[]` and need a grouped live-region surface. Tone is content-driven (no `tone` input): any blocking error raises the assertive `role="alert"` container, a warning-only list raises the polite `role="status"` container — you keep full DOM control.
 
@@ -247,6 +247,8 @@ const resolved = createErrorMessageSignal(() => form.email(), {
   fieldName: 'email',
   // includeWarnings: true | 'only' (default: false)
   // strategy / submittedStatus inherit from form context when omitted
+  // warningStrategy times the warnings on its own cascade — no need to pin
+  // strategy: 'immediate' to keep warnings visible under an on-submit form
 });
 // resolved() => readonly { kind, message, id, error }[]
 //   kind:    validator kind (lifted from error.kind for template ergonomics)

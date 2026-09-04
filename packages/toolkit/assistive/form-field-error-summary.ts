@@ -69,7 +69,7 @@ import { NgxHeadlessErrorSummary } from '@ngx-signal-forms/toolkit/headless';
   hostDirectives: [
     {
       directive: NgxHeadlessErrorSummary,
-      inputs: ['formTree', 'strategy', 'submittedStatus'],
+      inputs: ['formTree', 'strategy', 'warningStrategy', 'submittedStatus'],
     },
   ],
   template: `

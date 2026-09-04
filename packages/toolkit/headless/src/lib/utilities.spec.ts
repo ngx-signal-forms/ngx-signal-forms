@@ -689,20 +689,17 @@ describe('Headless Utilities', () => {
   });
 
   // ============================================================================
-  // Warning visibility coupling contract
+  // Warning display cascade (ADR-0007, issue #439)
   // ============================================================================
 
-  describe('warning visibility coupling (createErrorState)', () => {
-    // The toolkit's `createErrorState()` aliases `shouldShowWarnings: showErrorsSignal`
-    // because warnings are regular `ValidationError`s that Angular still marks
-    // as `invalid() === true` (they come from the same validator pipeline as
-    // blocking errors; the toolkit only splits them later via `splitByKind`).
+  describe('warning display cascade (createErrorState)', () => {
+    // `createErrorState()` used to alias `shouldShowWarnings: showErrorsSignal`,
+    // which made an ambient `'on-submit'` error strategy hold warnings back
+    // until submit — the rejected "warnings inherit the error strategy"
+    // alternative in ADR-0007. Warnings now run their own cascade.
     //
-    // These tests are a *contract* against Angular — if a future release
-    // changed warning semantics so that `kind: 'warn:*'` errors no longer
-    // marked the field invalid, the `showWarnings === showErrors` aliasing
-    // would silently break. Keep them passing or audit `createErrorState`
-    // before shipping.
+    // The first test stays a *contract* against Angular: it pins the reason
+    // the split cannot key off `invalid()`.
 
     function buildWarningOnlyForm() {
       const model = signal({ password: 'short' });
@@ -727,13 +724,13 @@ describe('Headless Utilities', () => {
       const passwordForm = buildWarningOnlyForm();
       const passwordState = passwordForm.password();
 
-      // Contract: Angular does not distinguish warnings from errors. The
-      // toolkit's warning visibility relies on this.
+      // Contract: Angular does not distinguish warnings from errors, so the
+      // toolkit gates warnings on `warn:` presence, not on `invalid()`.
       expect(passwordState.errors().length).toBeGreaterThan(0);
       expect(passwordState.invalid()).toBe(true);
     });
 
-    it('createErrorState surfaces warning-only fields via showWarnings after touch', () => {
+    it('surfaces warning-only fields after touch', () => {
       const passwordForm = buildWarningOnlyForm();
 
       const errorState = TestBed.runInInjectionContext(() =>
@@ -743,17 +740,126 @@ describe('Headless Utilities', () => {
         }),
       );
 
-      // Before touch, on-touch strategy hides both errors and warnings.
-      expect(errorState.shouldShowErrors()).toBe(false);
       expect(errorState.shouldShowWarnings()).toBe(false);
 
       passwordForm.password().markAsTouched();
 
-      // After touch, the warning surfaces because `invalid()` is true and
-      // the same visibility gate drives both showErrors and showWarnings.
       expect(errorState.hasWarnings()).toBe(true);
       expect(errorState.hasErrors()).toBe(false);
       expect(errorState.shouldShowWarnings()).toBe(true);
+    });
+
+    it('shows the warning on touch while an on-submit form context still hides errors', () => {
+      const submittedStatus = signal<
+        'unsubmitted' | 'submitting' | 'submitted'
+      >('unsubmitted');
+
+      TestBed.configureTestingModule({
+        providers: [
+          {
+            provide: NGX_SIGNAL_FORM_CONTEXT,
+            useValue: {
+              errorStrategy: signal('on-submit'),
+              // The context publishes both channels; only the error one is
+              // set here, which is exactly the shape that used to hold
+              // warnings back until submit.
+              warningStrategy: signal(undefined),
+              submittedStatus,
+              form: {},
+            },
+          },
+        ],
+      });
+
+      const passwordForm = buildWarningOnlyForm();
+      const errorState = TestBed.runInInjectionContext(() =>
+        createErrorState({
+          field: passwordForm.password,
+          fieldName: 'password',
+        }),
+      );
+
+      passwordForm.password().markAsTouched();
+
+      // The error channel waits for submit; the warning channel does not.
+      expect(errorState.shouldShowErrors()).toBe(false);
+      expect(errorState.shouldShowWarnings()).toBe(true);
+    });
+
+    it('falls back to defaultWarningStrategy, never to defaultErrorStrategy', () => {
+      TestBed.configureTestingModule({
+        providers: [
+          provideNgxSignalFormsConfig({
+            defaultErrorStrategy: 'immediate',
+            defaultWarningStrategy: 'on-submit',
+          }),
+        ],
+      });
+
+      const passwordForm = buildWarningOnlyForm();
+      const errorState = TestBed.runInInjectionContext(() =>
+        createErrorState({
+          field: passwordForm.password,
+          fieldName: 'password',
+        }),
+      );
+
+      passwordForm.password().markAsTouched();
+
+      // `'immediate'` governs blocking errors only; warnings wait for submit.
+      expect(errorState.hasWarnings()).toBe(true);
+      expect(errorState.shouldShowWarnings()).toBe(false);
+    });
+
+    it('lets the warningStrategy option override the config default', () => {
+      TestBed.configureTestingModule({
+        providers: [
+          provideNgxSignalFormsConfig({ defaultWarningStrategy: 'on-submit' }),
+        ],
+      });
+
+      const passwordForm = buildWarningOnlyForm();
+      const errorState = TestBed.runInInjectionContext(() =>
+        createErrorState({
+          field: passwordForm.password,
+          fieldName: 'password',
+          warningStrategy: 'immediate',
+        }),
+      );
+
+      expect(errorState.shouldShowWarnings()).toBe(true);
+    });
+
+    it('hides the warning while a blocking error on the same field is visible', () => {
+      const model = signal({ password: '' });
+      const passwordForm = TestBed.runInInjectionContext(() =>
+        form(
+          model,
+          schema((path) => {
+            validate(path.password, (ctx) =>
+              ctx.value() ? null : { kind: 'required', message: 'Required' },
+            );
+            validate(path.password, (ctx) =>
+              ctx.value().length < 12
+                ? { kind: 'warn:weak-password', message: 'Too weak' }
+                : null,
+            );
+          }),
+        ),
+      );
+
+      const errorState = TestBed.runInInjectionContext(() =>
+        createErrorState({
+          field: passwordForm.password,
+          fieldName: 'password',
+        }),
+      );
+
+      passwordForm.password().markAsTouched();
+
+      expect(errorState.shouldShowErrors()).toBe(true);
+      expect(errorState.hasWarnings()).toBe(true);
+      expect(errorState.shouldShowWarnings()).toBe(false);
     });
   });
 
@@ -1093,6 +1199,7 @@ describe('Headless Utilities', () => {
       const result = createErrorSummaryEntries({
         fieldState,
         showErrors: signal(true),
+        showWarnings: signal(true),
       });
 
       expect(result.entries()).toHaveLength(1);
@@ -1113,6 +1220,7 @@ describe('Headless Utilities', () => {
       const result = createErrorSummaryEntries({
         fieldState,
         showErrors: signal(true),
+        showWarnings: signal(true),
       });
 
       expect(result.entries()).toHaveLength(0);
@@ -1144,6 +1252,7 @@ describe('Headless Utilities', () => {
       const result = createErrorSummaryEntries({
         fieldState,
         showErrors: signal(true),
+        showWarnings: signal(true),
       });
 
       expect(result.entries().map((entry) => entry.fieldName)).toEqual([
@@ -1166,12 +1275,13 @@ describe('Headless Utilities', () => {
       const result = createErrorSummaryEntries({
         fieldState,
         showErrors: signal(true),
+        showWarnings: signal(true),
       });
 
       expect(result.entries()).toHaveLength(2);
     });
 
-    it('gates shouldShow/shouldShowWarnings on the caller-supplied showErrors signal', () => {
+    it('gates shouldShow on the caller-supplied showErrors signal', () => {
       const error: ValidationError = {
         kind: 'required',
         message: 'Required',
@@ -1181,7 +1291,11 @@ describe('Headless Utilities', () => {
       const fieldState = signal({ errorSummary: () => [error] });
       const showErrors = signal(false);
 
-      const result = createErrorSummaryEntries({ fieldState, showErrors });
+      const result = createErrorSummaryEntries({
+        fieldState,
+        showErrors,
+        showWarnings: signal(true),
+      });
 
       expect(result.hasErrors()).toBe(true);
       expect(result.shouldShow()).toBe(false);
@@ -1189,6 +1303,33 @@ describe('Headless Utilities', () => {
       showErrors.set(true);
 
       expect(result.shouldShow()).toBe(true);
+    });
+
+    it('gates shouldShowWarnings on showWarnings, not on showErrors', () => {
+      const warning: ValidationError = {
+        kind: 'warn:street-optional',
+        message: 'Street can be left blank',
+        fieldTree: fieldTreeFor('street'),
+      } as ValidationError;
+
+      const fieldState = signal({ errorSummary: () => [warning] });
+      const showErrors = signal(false);
+      const showWarnings = signal(true);
+
+      const result = createErrorSummaryEntries({
+        fieldState,
+        showErrors,
+        showWarnings,
+      });
+
+      // The error channel is closed (e.g. an on-submit form before submit);
+      // the warning list is timed separately and still shows (ADR-0007).
+      expect(result.shouldShow()).toBe(false);
+      expect(result.shouldShowWarnings()).toBe(true);
+
+      showWarnings.set(false);
+
+      expect(result.shouldShowWarnings()).toBe(false);
     });
 
     it("focus() on an entry calls the field's focusBoundControl()", () => {
@@ -1211,6 +1352,7 @@ describe('Headless Utilities', () => {
       const result = createErrorSummaryEntries({
         fieldState,
         showErrors: signal(true),
+        showWarnings: signal(true),
       });
 
       result.entries()[0]?.focus();

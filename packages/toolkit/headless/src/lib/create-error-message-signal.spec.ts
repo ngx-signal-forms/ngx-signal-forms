@@ -289,6 +289,95 @@ describe('createErrorMessageSignal — includeWarnings', () => {
 });
 
 // ---------------------------------------------------------------------------
+// Warning display cascade (ADR-0007, issue #439)
+// ---------------------------------------------------------------------------
+
+describe('createErrorMessageSignal — warning cascade', () => {
+  const weakWarning: ValidationError = {
+    kind: 'warn:weak',
+    message: 'Could be stronger',
+  };
+
+  it('shows warnings on touch while an on-submit error strategy hides errors', () => {
+    const injector = injectorWithRegistry(null);
+    const field = mockFieldState({
+      invalid: true,
+      touched: true,
+      errors: [{ kind: 'required', message: 'Required' }, weakWarning],
+    });
+
+    const errorsOnly = runInInjectionContext(injector, () =>
+      createErrorMessageSignal(() => field, {
+        fieldName: 'password',
+        strategy: 'on-submit',
+      }),
+    );
+    const warnings = runInInjectionContext(injector, () =>
+      createErrorMessageSignal(() => field, {
+        fieldName: 'password',
+        strategy: 'on-submit',
+        includeWarnings: 'only',
+      }),
+    );
+
+    expect(errorsOnly()).toEqual([]);
+    expect(warnings().map((r) => r.kind)).toEqual(['warn:weak']);
+  });
+
+  it('honors an explicit warningStrategy over the error strategy', () => {
+    const injector = injectorWithRegistry(null);
+    const field = mockFieldState({
+      invalid: true,
+      touched: false,
+      errors: [weakWarning],
+    });
+
+    const result = runInInjectionContext(injector, () =>
+      createErrorMessageSignal(() => field, {
+        fieldName: 'password',
+        strategy: 'immediate',
+        warningStrategy: 'on-touch',
+        includeWarnings: 'only',
+      }),
+    );
+
+    expect(result()).toEqual([]);
+
+    field.touched.set(true);
+    expect(result().map((r) => r.kind)).toEqual(['warn:weak']);
+  });
+
+  it('falls back to defaultWarningStrategy, never to defaultErrorStrategy', () => {
+    const injector = Injector.create({
+      providers: [
+        {
+          provide: NGX_SIGNAL_FORMS_CONFIG,
+          useValue: {
+            defaultErrorStrategy: 'immediate',
+            defaultWarningStrategy: 'on-submit',
+          },
+        },
+      ],
+    });
+    const field = mockFieldState({
+      invalid: true,
+      touched: true,
+      errors: [{ kind: 'required', message: 'Required' }, weakWarning],
+    });
+
+    const result = runInInjectionContext(injector, () =>
+      createErrorMessageSignal(() => field, {
+        fieldName: 'password',
+        includeWarnings: true,
+      }),
+    );
+
+    // 'immediate' governs blocking errors only; the warning waits for submit.
+    expect(result().map((r) => r.kind)).toEqual(['required']);
+  });
+});
+
+// ---------------------------------------------------------------------------
 // stripWarningPrefix option
 // ---------------------------------------------------------------------------
 
