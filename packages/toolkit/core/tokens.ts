@@ -32,6 +32,12 @@ export interface NgxSignalFormFieldContext {
    * Read reactively (inside a `computed`) so ids stay in sync as sibling
    * hints are added, removed, or reordered. Omitted by contexts that don't
    * track hints — callers fall back to ordinal `0`.
+   *
+   * Contract: implementations must return `0` for a `hint` they cannot
+   * place among their own candidates (unknown instance, or one that
+   * belongs to a nested field context) rather than a sentinel like `-1` —
+   * callers use the return value directly to build an id, so an unresolved
+   * position must still resolve to the unsuffixed `${fieldName}-hint`.
    */
   readonly hintOrdinal?: (hint: object) => number;
 }

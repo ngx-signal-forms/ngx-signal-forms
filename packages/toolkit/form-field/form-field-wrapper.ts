@@ -209,11 +209,32 @@ import { resolveUnionInput } from './utilities/resolve-union-input';
           // Read through `hintChildren()` and each candidate's
           // `usesGeneratedFallbackId()` so this stays reactive to
           // projected-hint changes.
-          hintOrdinal: (hint: object) =>
-            component
+          //
+          // `hintChildren` queries with `descendants: true`, so it also
+          // picks up hints that live inside a nested `ngx-form-field-wrapper`
+          // projected into this one's content — those hints resolve their
+          // own id through the nested wrapper's own context (DI resolves to
+          // the closest provider), but they'd still shift this wrapper's
+          // ordinals if left in the candidate list. Restrict candidates to
+          // hints whose resolved field name matches this wrapper's own, so
+          // a nested wrapper's hints never count against this one.
+          //
+          // `indexOf` returns -1 when `hint` isn't found among the filtered
+          // candidates (for example, if `hintChildren()` hasn't picked it up
+          // yet). Treat that as ordinal 0 rather than propagating -1 into
+          // the id — a transient miss should still resolve to a valid id.
+          hintOrdinal: (hint: object) => {
+            const ownFieldName = component.resolvedFieldName();
+            const candidates = component
               .hintChildren()
-              .filter((candidate) => candidate.usesGeneratedFallbackId())
-              .indexOf(hint as NgxFormFieldHint),
+              .filter(
+                (candidate) =>
+                  candidate.usesGeneratedFallbackId() &&
+                  candidate.resolvedFieldName() === ownFieldName,
+              );
+            const ordinal = candidates.indexOf(hint as NgxFormFieldHint);
+            return ordinal === -1 ? 0 : ordinal;
+          },
         };
       },
     },

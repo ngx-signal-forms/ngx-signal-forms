@@ -758,8 +758,7 @@ describe('form-field wrapper — WCAG 2.2 AA conformance', () => {
       const firstId = firstHint?.getAttribute('id');
       const secondId = secondHint?.getAttribute('id');
       expect(firstId).toBe('password-hint');
-      expect(secondId).toBeTruthy();
-      expect(secondId).not.toBe(firstId);
+      expect(secondId).toBe('password-hint-2');
 
       const input = container.querySelector('#password');
       const describedBy = input?.getAttribute('aria-describedby') ?? '';
