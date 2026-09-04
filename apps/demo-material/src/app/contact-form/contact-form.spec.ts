@@ -189,6 +189,64 @@ describe('ContactFormComponent (Material reference, smoke)', () => {
     });
   });
 
+  it('drops the real aria-invalid on a bound control that loses its layout box (#409)', async () => {
+    // Regression for #409 — #406 fixed the wrapper's `data-ngx-mat-invalid`
+    // mirror but left the *real* `aria-invalid` on `<input matInput>` stale:
+    // Material's `errorState` (via `NgxMatWarningAwareErrorStateMatcher`)
+    // has no concept of layout, so the attribute survived a control with no
+    // layout box (a collapsed `<details>`, an inactive tab panel).
+    // `NgxMatBoundControl`'s own `afterEveryRender` now gates it on
+    // `isElementCssVisible`.
+    const user = userEvent.setup();
+    await setup();
+
+    const emailInput = screen.getByLabelText(/email/i) as HTMLInputElement;
+
+    await user.click(emailInput);
+    await user.type(emailInput, 'not-an-email');
+    await user.tab();
+
+    await waitFor(() => {
+      expect(emailInput.getAttribute('aria-invalid')).toBe('true');
+    });
+
+    // Simulate the control losing its layout box (e.g. its `<details>`
+    // ancestor collapsing) without going through real layout, which jsdom
+    // does not compute — the same stub-`checkVisibility` technique the
+    // toolkit uses to pin the fail-open contract in `field-identity.spec.ts`.
+    Object.defineProperty(emailInput, 'checkVisibility', {
+      value: () => false,
+      configurable: true,
+    });
+
+    // Drive a genuine render pass through a real signal write — the
+    // zoneless scheduler only runs `ApplicationRef.tick()` (and therefore
+    // `afterEveryRender`) off real reactive changes, not off a bare
+    // `fixture.detectChanges()` call with nothing dirty. The still-invalid
+    // value keeps the field's error state (and Material's own
+    // `[attr.aria-invalid]` host binding) unchanged, isolating the layout
+    // gate as the only thing under test.
+    await user.type(emailInput, 'x');
+
+    await waitFor(() => {
+      expect(emailInput.getAttribute('aria-invalid')).toBeNull();
+    });
+
+    // Restoring the layout box brings the attribute back: Material's own
+    // `errorState` host binding rewrites it during the regular CD pass that
+    // runs before `afterEveryRender`, and the (now visible) control is left
+    // alone.
+    Object.defineProperty(emailInput, 'checkVisibility', {
+      value: () => true,
+      configurable: true,
+    });
+    await user.type(emailInput, 'y');
+
+    await waitFor(() => {
+      expect(emailInput.getAttribute('aria-invalid')).toBe('true');
+    });
+  });
+
   it('does not block submission on a non-blocking warning (warn:short-name)', async () => {
     const user = userEvent.setup();
     await setup();
