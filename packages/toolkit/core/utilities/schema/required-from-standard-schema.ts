@@ -111,6 +111,12 @@ function isStandardSchemaKeyRequired(
   }
 
   if (isPromiseLike(result)) {
+    // The probe's answer is `false` either way, but dropping the promise on
+    // the floor would let an async validator that rejects surface as an
+    // unhandled rejection (a crash under Node's default policy) from a call
+    // the consumer never made themselves. Adopt it and swallow the outcome.
+    void Promise.resolve(result).catch(() => undefined);
+
     return false;
   }
 

@@ -68,6 +68,13 @@ export {
 } from './utilities/create-field-name-resolver';
 export * from './utilities/create-unique-id';
 export * from './utilities/control-semantics';
+export {
+  isHtmlButtonElement,
+  isHtmlElement,
+  isHtmlInputElement,
+  isHtmlSelectElement,
+  isHtmlTextAreaElement,
+} from './utilities/dom-guards';
 export * from './utilities/form-field-input';
 export {
   shouldShowErrors,
@@ -76,6 +83,7 @@ export {
 export {
   isFieldStateHidden,
   isFieldStateInteractive,
+  isFieldStateRequired,
 } from './utilities/field-interactivity';
 export * from './utilities/field-resolution';
 export * from './utilities/find-bound-control';

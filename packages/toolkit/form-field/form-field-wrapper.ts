@@ -1,6 +1,7 @@
 import { NgComponentOutlet } from '@angular/common';
 import {
   afterEveryRender,
+  ChangeDetectionStrategy,
   Component,
   computed,
   contentChildren,
@@ -47,6 +48,8 @@ import {
   NgxFieldIdentityProvider,
   devWarnOnce,
   isElementCssVisible,
+  isFieldStateRequired,
+  isHtmlElement,
   type WarnOnceRef,
 } from '@ngx-signal-forms/toolkit/core';
 import {
@@ -180,8 +183,14 @@ import { resolveUnionInput } from './utilities/resolve-union-input';
  */
 @Component({
   selector: 'ngx-form-field-wrapper',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 
-  imports: [NgComponentOutlet, NgxFormFieldError],
+  // `NgxFormFieldError` is deliberately absent: the wrapper never writes the
+  // element in its template, it renders whatever `#errorRendererComponent()`
+  // resolves through `NgComponentOutlet` (the default being
+  // `NgxFormFieldError`). Listing it here only earned an NG8113 "unused
+  // import" build warning.
+  imports: [NgComponentOutlet],
   // `NgxFieldIdentity` is provided by the host directive, not listed here.
   // Composing the public surface rather than duplicating it keeps one
   // provisioning site, and means the `fieldName` input a consumer already
@@ -633,7 +642,7 @@ export class NgxFormFieldWrapper<TValue = unknown> {
     const raw = appearance as string;
     const hint =
       raw === 'stacked'
-        ? " The legacy 'stacked' appearance alias resolves to 'standard'."
+        ? ` The legacy 'stacked' appearance alias resolves to the configured default ('${this.#config.defaultFormFieldAppearance}').`
         : raw === 'bare'
           ? " The 'bare' appearance was renamed to 'plain' in v1 rc.1."
           : undefined;
@@ -1231,17 +1240,14 @@ export class NgxFormFieldWrapper<TValue = unknown> {
         // `:has([aria-required='true'])` detection. Read each render so the
         // marker reacts to dynamic schema changes (auto-aria toggles
         // `aria-required` whenever the field's required state flips).
-        const fieldState = this.#fieldState() as
-          | {
-              required?: () => boolean;
-            }
-          | null
-          | undefined;
+        // Reads the typed `required` signal through the core helper (which
+        // states the `Pick<FieldState, 'required'>` contract) instead of
+        // casting the field state to a hand-written `{ required?: … }` shape.
         const isRequired =
           inputEl !== null &&
           (inputEl.hasAttribute('required') ||
             inputEl.getAttribute('aria-required') === 'true' ||
-            Boolean(fieldState?.required?.()));
+            isFieldStateRequired(this.#fieldState()));
         if (isRequired !== this.#boundControlIsRequired()) {
           this.#boundControlIsRequired.set(isRequired);
         }
@@ -1253,7 +1259,7 @@ export class NgxFormFieldWrapper<TValue = unknown> {
           this.#isSelectionCluster.set(isSelectionCluster);
         }
 
-        if (label instanceof HTMLElement && isSelectionCluster) {
+        if (isHtmlElement(label) && isSelectionCluster) {
           const existingLabelId = label.id.trim();
           const resolvedFieldName = this.resolvedFieldName();
           // Two unnamed selection clusters on one page would otherwise

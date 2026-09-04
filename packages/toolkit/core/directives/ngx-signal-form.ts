@@ -232,7 +232,7 @@ export class NgxSignalForm {
    * Submission status derived from Angular Signal Forms' native signals
    * and the directive's own submit-attempt tracking.
    *
-   * Angular 21.2 provides a `submitting()` signal on `FieldState`,
+   * Angular 22 provides a `submitting()` signal on `FieldState`,
    * but NOT a `submittedStatus()` signal. The toolkit derives it:
    *
    * - `'unsubmitted'` - No submission attempt yet

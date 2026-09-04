@@ -6,6 +6,12 @@ import type {
   NgxSignalFormControlPresetRegistry,
   NgxSignalFormControlSemantics,
 } from '../types';
+import {
+  isHtmlButtonElement,
+  isHtmlInputElement,
+  isHtmlSelectElement,
+  isHtmlTextAreaElement,
+} from './dom-guards';
 
 export interface ResolvedNgxSignalFormControlSemantics {
   readonly kind: NgxSignalFormControlKind | null;
@@ -167,14 +173,11 @@ export function inferNgxSignalFormControlKind(
     return null;
   }
 
-  if (
-    element instanceof HTMLTextAreaElement ||
-    element instanceof HTMLSelectElement
-  ) {
+  if (isHtmlTextAreaElement(element) || isHtmlSelectElement(element)) {
     return 'standalone-field-like';
   }
 
-  if (element instanceof HTMLInputElement) {
+  if (isHtmlInputElement(element)) {
     if (element.type === 'checkbox') {
       return element.getAttribute('role') === 'switch' ? 'switch' : 'checkbox';
     }
@@ -210,7 +213,7 @@ export function inferNgxSignalFormControlKind(
   }
 
   if (
-    element instanceof HTMLButtonElement ||
+    isHtmlButtonElement(element) ||
     element.hasAttribute('data-ngx-signal-form-control')
   ) {
     return 'composite';

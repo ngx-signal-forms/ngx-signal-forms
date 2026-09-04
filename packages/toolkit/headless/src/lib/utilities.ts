@@ -9,6 +9,8 @@ import {
   splitByKind,
   unwrapValue,
   type ErrorDisplayStrategy,
+  type ReactiveOrStatic,
+  type SignalLike,
   type SubmittedStatus,
   type WarningDisplayStrategy,
 } from '@ngx-signal-forms/toolkit';
@@ -78,9 +80,6 @@ export interface ResolvedError {
 // from './lib/utilities'` keeps resolving after the type moved to the
 // shared character-count-types module (see that file's docblock for why).
 export type { CharacterCountValue };
-
-type ReadSignal<T> = () => T;
-type ReactiveOrStatic<T> = T | ReadSignal<T>;
 
 /**
  * Deduplicate validation errors by kind + message combination.
@@ -159,9 +158,9 @@ interface HeadlessErrorStateCore {
  * @internal
  */
 export function buildHeadlessErrorState(
-  fieldState: ReadSignal<unknown>,
-  fieldName: ReadSignal<string | null>,
-  errorsOverride?: ReadSignal<readonly ValidationError[] | undefined>,
+  fieldState: SignalLike<unknown>,
+  fieldName: SignalLike<string | null>,
+  errorsOverride?: SignalLike<readonly ValidationError[] | undefined>,
 ): HeadlessErrorStateCore {
   const split = computed(() => {
     const override = errorsOverride?.();
@@ -347,8 +346,8 @@ function createErrorStateInternal<TValue = unknown>(
   // (ADR-0006) instead of re-inlining `resolveStrategyFromContext` →
   // `resolveSubmittedStatusFromContext` → `createShowErrorsComputed`.
   //
-  // `strategy`/`submittedStatus` are `ReactiveOrStatic<T>` (this file's own
-  // signal-or-plain-function-or-value union), which also accepts a bare
+  // `strategy`/`submittedStatus` are core's `ReactiveOrStatic<T>`
+  // (signal-or-plain-function-or-value union), which also accepts a bare
   // `() => T` reader — a shape `createErrorVisibility`'s `Signal<T>`-typed
   // options don't structurally accept. Normalize through `computed()` so
   // both a real Signal and a plain reader unwrap the same way.
@@ -563,7 +562,7 @@ export function createCharacterCount(
  */
 export interface CreateFieldsetAggregationOptions {
   /** Reactive reader for the fieldset's own field state (from `field()()`). */
-  readonly fieldState: ReadSignal<unknown>;
+  readonly fieldState: SignalLike<unknown>;
   /**
    * Explicit field-list override. `null`/omitted means "not provided" —
    * aggregate `fieldState`'s own errors. See `NgxHeadlessFieldset.fields`
@@ -573,9 +572,9 @@ export interface CreateFieldsetAggregationOptions {
   /** Whether to aggregate nested field errors (`errorSummary()`) instead of direct ones (`errors()`). */
   readonly includeNestedErrors?: ReactiveOrStatic<boolean>;
   /** Pre-resolved blocking-error visibility (from the caller's own visibility seam call). */
-  readonly showErrors: ReadSignal<boolean>;
+  readonly showErrors: SignalLike<boolean>;
   /** Pre-resolved warning visibility, timed independently of {@link showErrors}. */
-  readonly showWarnings: ReadSignal<boolean>;
+  readonly showWarnings: SignalLike<boolean>;
   /** Error message registry for 3-tier message resolution. */
   readonly errorMessages?: Readonly<ErrorMessageRegistry> | null;
 }
@@ -724,11 +723,11 @@ const STRIP_WARNING_PREFIX_OPTION = { stripWarningPrefix: true } as const;
  */
 export interface CreateErrorSummaryEntriesOptions {
   /** Reactive reader for the root field state (from `formTree()()`). */
-  readonly fieldState: ReadSignal<unknown>;
+  readonly fieldState: SignalLike<unknown>;
   /** Pre-resolved blocking-error visibility. */
-  readonly showErrors: ReadSignal<boolean>;
+  readonly showErrors: SignalLike<boolean>;
   /** Pre-resolved warning visibility, timed independently of {@link showErrors}. */
-  readonly showWarnings: ReadSignal<boolean>;
+  readonly showWarnings: SignalLike<boolean>;
   /** Error message registry for 3-tier message resolution. */
   readonly errorMessages?: Readonly<ErrorMessageRegistry> | null;
   /** Optional field-label resolver; falls back to `humanizeFieldPath`. */

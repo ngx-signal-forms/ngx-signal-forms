@@ -1,5 +1,6 @@
 import {
   afterNextRender,
+  ChangeDetectionStrategy,
   Component,
   computed,
   effect,
@@ -91,6 +92,7 @@ import {
  */
 @Component({
   selector: 'ngx-form-field-hint',
+  changeDetection: ChangeDetectionStrategy.OnPush,
   template: `<ng-content />`,
   styles: `
     :host {

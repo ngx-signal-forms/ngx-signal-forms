@@ -6,15 +6,21 @@ import type {
 import { resolveNgxSignalFormControlSemantics } from '@ngx-signal-forms/toolkit';
 import {
   findBoundControl,
+  isHtmlElement,
   resolveBoundControlFromBindings,
   type FormFieldBindingsState,
 } from '@ngx-signal-forms/toolkit/core';
 
 /**
  * Resolve the host element from an `ElementRef`, asserting that it is an
- * `HTMLElement`. The wrapper component can't do useful DOM work otherwise
- * (the SSR/test setups that miss `HTMLElement` are contract violations
- * the caller should surface loudly).
+ * `HTMLElement`. The wrapper component can't do useful DOM work otherwise,
+ * so a host that is not an element is a contract violation this surfaces
+ * loudly.
+ *
+ * The check goes through {@link isHtmlElement}, which reads a server-side
+ * element as an element instead of throwing on the missing `HTMLElement`
+ * global. This function only ever runs inside `afterEveryRender`, which a
+ * server pass skips, but a direct caller must not crash the render either.
  *
  * @internal
  */
@@ -23,7 +29,7 @@ export function requireHostElement(
 ): HTMLElement {
   const hostEl = elementRef.nativeElement;
 
-  if (!(hostEl instanceof HTMLElement)) {
+  if (!isHtmlElement(hostEl)) {
     throw new TypeError('NgxFormFieldWrapper requires an HTMLElement host.');
   }
 

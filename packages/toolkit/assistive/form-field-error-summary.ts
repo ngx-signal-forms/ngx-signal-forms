@@ -1,5 +1,6 @@
 import {
   afterRenderEffect,
+  ChangeDetectionStrategy,
   Component,
   ElementRef,
   inject,
@@ -59,6 +60,7 @@ import { NgxHeadlessErrorSummary } from '@ngx-signal-forms/toolkit/headless';
  */
 @Component({
   selector: 'ngx-form-field-error-summary',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 
   host: {
     // `tabindex="-1"` makes the host programmatically focusable without

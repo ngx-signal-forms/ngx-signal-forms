@@ -2,6 +2,7 @@ import { NgComponentOutlet, NgTemplateOutlet } from '@angular/common';
 import {
   afterEveryRender,
   booleanAttribute,
+  ChangeDetectionStrategy,
   Component,
   computed,
   ElementRef,
@@ -21,7 +22,11 @@ import {
   NGX_FORM_FIELD_ERROR_RENDERER,
   type NgxFormFieldErrorPlacement,
 } from '@ngx-signal-forms/toolkit';
-import { devWarnOnce, type WarnOnceRef } from '@ngx-signal-forms/toolkit/core';
+import {
+  devWarnOnce,
+  isHtmlElement,
+  type WarnOnceRef,
+} from '@ngx-signal-forms/toolkit/core';
 import { resolveUnionInput } from './utilities/resolve-union-input';
 
 export type NgxFormFieldsetFeedbackAppearance =
@@ -135,6 +140,7 @@ const FIELDSET_SURFACE_TONE_VALUES = [
  */
 @Component({
   selector: 'ngx-form-fieldset, [ngxFormFieldset]',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 
   hostDirectives: [
     {
@@ -552,11 +558,10 @@ export class NgxFormFieldset {
       earlyRead: () => {
         const host = this.#elementRef.nativeElement;
         const legend = host.querySelector(':scope > legend');
-        const legendId =
-          legend instanceof HTMLElement ? legend.id || null : null;
+        const legendId = isHtmlElement(legend) ? legend.id || null : null;
 
         return {
-          legend: legend instanceof HTMLElement ? legend : null,
+          legend: isHtmlElement(legend) ? legend : null,
           legendId,
         };
       },

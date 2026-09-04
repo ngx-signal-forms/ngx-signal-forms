@@ -1,3 +1,5 @@
+import { isHtmlElement } from './dom-guards';
+
 /**
  * CSS selector used to discover a bound control inside a wrapper host.
  *
@@ -10,9 +12,11 @@
  *   This covers readonly select widgets whose trigger is a `div` or another
  *   element that is not a native form control.
  * - `[id][formField]` — the Signal Forms host binding on a custom control.
- * - `[id][ng-reflect-form-field]` — Angular's dev-mode reflection
- *   attribute. Populated only in dev builds and only when the `formField`
- *   input serializes to a string, so it's safe to ignore in production.
+ * - `[id][ng-reflect-form-field]` — Angular's reflection attribute. Since
+ *   Angular 22 it is opt-in: an application only carries it when it calls
+ *   `provideNgReflectAttributes()`, and even then only when the `formField`
+ *   input serializes to a string. Kept as a courtesy branch for those
+ *   applications; nothing in the toolkit depends on it.
  * - `[id][data-ngx-signal-form-control]` — the stable attribute written
  *   by `NgxSignalFormControlSemanticsDirective`. Recommended fallback for
  *   custom control hosts that don't carry a native `[formField]` binding
@@ -40,7 +44,9 @@ export const BOUND_CONTROL_SELECTOR =
  * Locate the bound form control inside a host element.
  *
  * Returns `null` when no match is found or when the first match isn't an
- * `HTMLElement` (guards against exotic host node types).
+ * `HTMLElement` (guards against exotic host node types). The element check
+ * goes through {@link isHtmlElement} so a server render pass, where the DOM
+ * constructors are not global, gets `null` rather than a `ReferenceError`.
  *
  * `hostEl` should already be scoped to the region that can only contain the
  * real control — see the document-order caveat on {@link BOUND_CONTROL_SELECTOR}.
@@ -50,5 +56,5 @@ export function findBoundControl(
   hostEl: HTMLElement,
 ): HTMLElement | null {
   const element = hostEl.querySelector(BOUND_CONTROL_SELECTOR);
-  return element instanceof HTMLElement ? element : null;
+  return isHtmlElement(element) ? element : null;
 }
