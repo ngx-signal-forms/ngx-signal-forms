@@ -92,8 +92,15 @@ export function shouldShowErrors(
 
 /**
  * Determines if warnings should be shown based on warning strategy.
- * Unlike `shouldShowErrors`, this checks for the presence of warnings rather than
- * field invalidity, since warnings are non-blocking and don't affect the `invalid` state.
+ *
+ * Unlike `shouldShowErrors`, this gates on the presence of warnings rather
+ * than on `invalid()`. Angular offers no separate non-invalidating channel:
+ * a `warn:`-prefixed `ValidationError` comes out of the same validator
+ * pipeline and marks the field `invalid()` like any other, so `invalid()`
+ * cannot tell the two apart. The toolkit splits on `kind` instead
+ * (`splitByKind()` / `isWarningError()`). Warnings are non-blocking in the
+ * sense the toolkit defines — they never gate submission, and they are
+ * timed by their own cascade (ADR-0007).
  */
 export function shouldShowWarnings(
   hasWarnings: boolean,

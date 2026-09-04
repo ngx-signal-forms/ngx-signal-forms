@@ -101,13 +101,22 @@ ngx-signal-forms — an Angular toolkit for working with Signal Forms.
   form context `warningStrategy()` → `defaultWarningStrategy` → `'on-touch'`)
   with the two rules that differ from the error channel — warnings gate on
   warning _presence_ rather than `invalid()`, and a visible blocking error on
-  the same field suppresses them. `NgxHeadlessErrorState` and
-  `NgxHeadlessFieldset` route through it. The fieldset passes neither the
-  presence check (its warnings live on member fields, and its aggregation
-  applies that gate) nor a blocking-error visibility (an error on one member
-  field must not silence a warning on a sibling). The single cascade fixed
-  the drift where `warningStrategy="inherit"` gave two different answers
-  outside a form host. See
+  the same field suppresses them. Every warning-bearing surface routes
+  through it: `NgxHeadlessErrorState`, `NgxHeadlessFieldset`,
+  `NgxHeadlessErrorSummary` (and `NgxFormFieldErrorSummary` through it),
+  `createErrorState()` and `createErrorMessageSignal()`. Aggregate surfaces —
+  the fieldset and the summary — pass neither the presence check (their
+  warnings live on member fields, and their aggregation applies that gate)
+  nor a blocking-error visibility (an error on one member field must not
+  silence a warning on a sibling). The pure pipelines
+  `createFieldsetAggregation()` and `createErrorSummaryEntries()` take
+  `showErrors` and `showWarnings` as two separate pre-resolved signals for
+  the same reason. The single cascade fixed the drift where
+  `warningStrategy="inherit"` gave two different answers outside a form host,
+  and issue #439 removed the last surfaces that timed warnings by the error
+  cascade. Note that `invalid()` cannot be used to tell the channels apart:
+  Angular marks a `warn:`-prefixed error invalid like any other, so the split
+  is on `kind`. See
   [ADR-0007](docs/decisions/0007-warning-display-timing-cascade.md).
 
 - **`aria-describedby` tracks what is rendered, not what is validated.**

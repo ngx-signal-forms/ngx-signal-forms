@@ -108,14 +108,20 @@ describe('*ngxMatErrorSlot / *ngxMatHintSlot — strategy microsyntax alias', ()
     expect(view.queryByTestId('msg')).toBeNull();
   });
 
-  it('honors a per-slot `strategy: "immediate"` override on *ngxMatHintSlot for an untouched field', async () => {
+  it('honors a per-slot `warningStrategy: "immediate"` override on *ngxMatHintSlot for an untouched field', async () => {
     @Component({
       selector: 'ngx-host',
       imports: [FormField, NgxSignalFormToolkit, NgxMatHintSlot],
       template: `
         <form [formRoot]="form" ngxSignalForm>
           <input type="text" [formField]="form.email" />
-          <div *ngxMatHintSlot="form.email; strategy: 'immediate'; let warning">
+          <div
+            *ngxMatHintSlot="
+              form.email;
+              warningStrategy: 'immediate';
+              let warning
+            "
+          >
             @if (warning) {
               <span data-testid="warning">{{ warning }}</span>
             } @else {

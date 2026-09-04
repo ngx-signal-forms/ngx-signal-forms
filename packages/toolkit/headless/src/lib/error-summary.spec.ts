@@ -377,6 +377,109 @@ describe('NgxHeadlessErrorSummary', () => {
         'true',
       );
     });
+
+    it('shows warnings on touch while an on-submit error strategy hides errors', async () => {
+      // ADR-0007: the warning list runs the warning cascade, so deferring
+      // blocking errors to submit does not defer the warnings with them.
+      @Component({
+        selector: 'ngx-test-summary-warning-cascade',
+        imports: [FormField, NgxHeadlessErrorSummary],
+        template: `
+          <div>
+            <input id="street" [formField]="addressForm.street" />
+            <input id="city" [formField]="addressForm.city" />
+            <div
+              ngxHeadlessErrorSummary
+              #summary="errorSummary"
+              [formTree]="addressForm"
+              strategy="on-submit"
+            >
+              <span data-testid="should-show">{{ summary.shouldShow() }}</span>
+              <span data-testid="should-show-warnings">{{
+                summary.shouldShowWarnings()
+              }}</span>
+            </div>
+          </div>
+        `,
+      })
+      class TestComponent {
+        readonly #model = signal({ street: '', city: '' });
+        readonly addressForm = form(
+          this.#model,
+          schema((path) => {
+            required(path.city, { message: 'City is required' });
+            validate(path.street, (ctx) =>
+              ctx.value()
+                ? null
+                : { kind: 'warn:street-optional', message: 'Optional' },
+            );
+          }),
+        );
+      }
+
+      const { fixture } = await render(TestComponent);
+
+      fixture.componentInstance.addressForm.street().markAsTouched();
+      fixture.detectChanges();
+      await TestBed.inject(ApplicationRef).whenStable();
+
+      expect(screen.getByTestId('should-show')).toHaveTextContent('false');
+      expect(screen.getByTestId('should-show-warnings')).toHaveTextContent(
+        'true',
+      );
+    });
+
+    it('honors the warningStrategy input over the config default', async () => {
+      @Component({
+        selector: 'ngx-test-summary-warning-strategy-input',
+        imports: [FormField, NgxHeadlessErrorSummary],
+        template: `
+          <div>
+            <input id="street" [formField]="addressForm.street" />
+            <div
+              ngxHeadlessErrorSummary
+              #summary="errorSummary"
+              [formTree]="addressForm"
+              warningStrategy="immediate"
+            >
+              <span data-testid="should-show-warnings">{{
+                summary.shouldShowWarnings()
+              }}</span>
+              <span data-testid="resolved-warning-strategy">{{
+                summary.resolvedWarningStrategy()
+              }}</span>
+            </div>
+          </div>
+        `,
+      })
+      class TestComponent {
+        readonly #model = signal({ street: '' });
+        readonly addressForm = form(
+          this.#model,
+          schema((path) => {
+            validate(path.street, (ctx) =>
+              ctx.value()
+                ? null
+                : { kind: 'warn:street-optional', message: 'Optional' },
+            );
+          }),
+        );
+      }
+
+      await render(TestComponent, {
+        providers: [
+          provideNgxSignalFormsConfig({ defaultWarningStrategy: 'on-submit' }),
+        ],
+      });
+
+      // Untouched and unsubmitted: only the 'immediate' input can reveal it.
+      expect(screen.getByTestId('should-show-warnings')).toHaveTextContent(
+        'true',
+      );
+      expect(screen.getByTestId('resolved-warning-strategy')).toHaveTextContent(
+        'immediate',
+      );
+    });
   });
 
   describe('focus capability', () => {

@@ -3,12 +3,14 @@ import type { FieldTree, ValidationError } from '@angular/forms/signals';
 import {
   createErrorVisibility,
   createUniqueId,
+  createWarningVisibility,
   readDirectErrors,
   resolveValidationErrorMessage,
   splitByKind,
   unwrapValue,
   type ErrorDisplayStrategy,
   type SubmittedStatus,
+  type WarningDisplayStrategy,
 } from '@ngx-signal-forms/toolkit';
 import {
   assertInjector,
@@ -202,6 +204,16 @@ export interface CreateErrorStateOptions<TValue = unknown> {
    */
   readonly strategy?: ReactiveOrStatic<ErrorDisplayStrategy>;
   /**
+   * Warning display strategy override, independent of {@link strategy}.
+   *
+   * Resolution order: this option (when not `'inherit'`) → ambient
+   * `NGX_SIGNAL_FORM_CONTEXT.warningStrategy` → the global
+   * `NGX_SIGNAL_FORMS_CONFIG.defaultWarningStrategy` → `'on-touch'`. No tier
+   * consults `defaultErrorStrategy`, so an ambient `'on-submit'` meant for
+   * blocking errors never silently gates warnings (ADR-0007).
+   */
+  readonly warningStrategy?: ReactiveOrStatic<WarningDisplayStrategy>;
+  /**
    * Submitted status override.
    *
    * Resolution order: this option (when not `undefined`) → ambient
@@ -290,17 +302,16 @@ export interface ErrorStateResult {
  * `createErrorVisibility()` / `createErrorMessageSignal()`.
  *
  * @remarks
- * **Why `showWarnings` aliases `createShowErrorsComputed`'s result:** toolkit warnings are
+ * **Warnings run on their own cascade.** Toolkit warnings are
  * `ValidationError`s with `kind: 'warn:*'` produced by the same validator
- * pipeline as blocking errors. Angular Signal Forms sees them as regular
- * errors and marks `field.invalid() === true` regardless of the `warn:`
- * prefix; the toolkit only splits them later via `splitByKind()` /
- * `isWarningError()` from `@ngx-signal-forms/toolkit` core. Because the
- * `invalid()` gate is shared, the same `shouldShowErrors(strategy, status)`
- * decision applies to both surfaces — routing them through one signal is
- * intentional. Consumers that need to show warnings on a field that is
- * otherwise valid would need a non-invalidating validation channel, which
- * Angular does not currently expose.
+ * pipeline as blocking errors, so Angular marks `field.invalid() === true`
+ * for them like any other error — `invalid()` cannot tell the two channels
+ * apart. `shouldShowWarnings` therefore does not reuse the error decision:
+ * it runs the warning cascade (`warningStrategy` option → form context
+ * `warningStrategy()` → `defaultWarningStrategy` → `'on-touch'`), gates on
+ * warning *presence* from `splitByKind()` rather than on `invalid()`, and
+ * stays `false` while a blocking error is visible on the same field
+ * (ADR-0007).
  *
  * @see {@link splitByKind} and {@link isWarningError} for the warning
  *   convention.
@@ -318,7 +329,8 @@ export function createErrorState<TValue = unknown>(
 function createErrorStateInternal<TValue = unknown>(
   options: Readonly<CreateErrorStateOptions<TValue>>,
 ): ErrorStateResult {
-  const { field, fieldName, strategy, submittedStatus } = options;
+  const { field, fieldName, strategy, warningStrategy, submittedStatus } =
+    options;
 
   // Falls back to the global `defaultErrorStrategy` config (same cascade
   // `NgxHeadlessFieldset` applies) when neither an explicit `strategy` nor a
@@ -354,9 +366,28 @@ function createErrorStateInternal<TValue = unknown>(
 
   const core = buildHeadlessErrorState(fieldState, resolvedFieldName);
 
+  // The warning channel gets its own seam call (ADR-0006) running the warning
+  // cascade of ADR-0007, so an ambient `'on-submit'` error strategy no longer
+  // holds a weak-password warning back until submit. Presence comes from the
+  // split (`core.hasWarnings`) rather than `invalid()`, and a blocking error
+  // that is actually on screen owns the message region until it clears.
+  const showWarningsSignal = createWarningVisibility(fieldState, {
+    strategy:
+      warningStrategy === undefined
+        ? undefined
+        : computed(() => unwrapValue(warningStrategy)),
+    submittedStatus:
+      submittedStatus === undefined
+        ? undefined
+        : computed(() => unwrapValue(submittedStatus)),
+    configDefault: config.defaultWarningStrategy,
+    hasWarnings: core.hasWarnings,
+    errorVisibility: () => showErrorsSignal() && core.hasErrors(),
+  });
+
   return {
     shouldShowErrors: showErrorsSignal,
-    shouldShowWarnings: showErrorsSignal,
+    shouldShowWarnings: showWarningsSignal,
     ...core,
     fieldName: resolvedFieldName,
   };
@@ -682,18 +713,22 @@ const STRIP_WARNING_PREFIX_OPTION = { stripWarningPrefix: true } as const;
 /**
  * Options for {@link createErrorSummaryEntries}.
  *
- * `showErrors` is a pre-resolved visibility signal, not a raw strategy
- * input — mirrors {@link CreateFieldsetAggregationOptions}'s contract
- * (ADR-0005: factories take DI-resolved values as inputs, never `inject()`
- * themselves).
+ * `showErrors`/`showWarnings` are pre-resolved visibility signals, not raw
+ * strategy inputs — mirrors {@link CreateFieldsetAggregationOptions}'s
+ * contract (ADR-0005: factories take DI-resolved values as inputs, never
+ * `inject()` themselves). Callers supply them from their own
+ * `createErrorVisibility()` / `createWarningVisibility()` calls, which is
+ * what keeps the two channels independently timed (ADR-0007).
  *
  * @group Reactive Primitives
  */
 export interface CreateErrorSummaryEntriesOptions {
   /** Reactive reader for the root field state (from `formTree()()`). */
   readonly fieldState: ReadSignal<unknown>;
-  /** Pre-resolved visibility, shared by both the error and warning channel. */
+  /** Pre-resolved blocking-error visibility. */
   readonly showErrors: ReadSignal<boolean>;
+  /** Pre-resolved warning visibility, timed independently of {@link showErrors}. */
+  readonly showWarnings: ReadSignal<boolean>;
   /** Error message registry for 3-tier message resolution. */
   readonly errorMessages?: Readonly<ErrorMessageRegistry> | null;
   /** Optional field-label resolver; falls back to `humanizeFieldPath`. */
@@ -716,7 +751,7 @@ export interface ErrorSummaryEntriesResult {
   readonly hasWarnings: Signal<boolean>;
   /** `showErrors() && hasErrors()`. */
   readonly shouldShow: Signal<boolean>;
-  /** `showErrors() && hasWarnings()`. */
+  /** `showWarnings() && hasWarnings()`. */
   readonly shouldShowWarnings: Signal<boolean>;
 }
 
@@ -738,7 +773,8 @@ export interface ErrorSummaryEntriesResult {
 export function createErrorSummaryEntries(
   options: Readonly<CreateErrorSummaryEntriesOptions>,
 ): ErrorSummaryEntriesResult {
-  const { fieldState, showErrors, errorMessages, labelResolver } = options;
+  const { fieldState, showErrors, showWarnings, errorMessages, labelResolver } =
+    options;
 
   const split = computed(() => {
     const visibleErrors = readErrors(fieldState()).filter(
@@ -768,7 +804,7 @@ export function createErrorSummaryEntries(
   const hasWarnings = computed(() => split().warnings.length > 0);
 
   const shouldShow = computed(() => showErrors() && hasErrors());
-  const shouldShowWarnings = computed(() => showErrors() && hasWarnings());
+  const shouldShowWarnings = computed(() => showWarnings() && hasWarnings());
 
   return {
     entries,

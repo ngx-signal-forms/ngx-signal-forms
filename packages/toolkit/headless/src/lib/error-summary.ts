@@ -2,10 +2,14 @@ import { computed, Directive, input, type Signal } from '@angular/core';
 import type { FieldTree } from '@angular/forms/signals';
 import {
   createErrorVisibility,
+  createWarningVisibility,
   resolveStrategyFromContext,
+  resolveWarningStrategyFromContext,
   type ErrorDisplayStrategy,
   type ResolvedErrorDisplayStrategy,
+  type ResolvedWarningDisplayStrategy,
   type SubmittedStatus,
+  type WarningDisplayStrategy,
 } from '@ngx-signal-forms/toolkit';
 
 import { buildHeadlessContext } from './build-headless-context';
@@ -38,12 +42,14 @@ export interface ErrorSummarySignals {
   /** Whether the summary should be visible based on strategy */
   readonly shouldShow: Signal<boolean>;
   /**
-   * Whether the warning list should be visible based on strategy.
+   * Whether the warning list should be visible, timed by
+   * {@link resolvedWarningStrategy}.
    *
-   * Independent of {@link shouldShow}: a warnings-only form (no blocking
-   * errors) has `hasErrors() === false`, so `shouldShow()` never gates
-   * `warningEntries()`. Consumers rendering `warningEntries()` should gate
-   * on this signal instead of `shouldShow()`.
+   * Independent of {@link shouldShow} in both directions: a warnings-only
+   * form has `hasErrors() === false`, so `shouldShow()` never gates
+   * `warningEntries()`, and the warning cascade never consults the
+   * blocking-error strategy (ADR-0007). Consumers rendering
+   * `warningEntries()` should gate on this signal instead of `shouldShow()`.
    */
   readonly shouldShowWarnings: Signal<boolean>;
   /**
@@ -54,6 +60,13 @@ export interface ErrorSummarySignals {
    * `strategy` input, which may be `undefined`.
    */
   readonly resolvedStrategy: Signal<ResolvedErrorDisplayStrategy>;
+  /**
+   * The fully-resolved warning display strategy, independent of
+   * {@link resolvedStrategy}: `warningStrategy` input → form context
+   * `warningStrategy()` → `NGX_SIGNAL_FORMS_CONFIG.defaultWarningStrategy` →
+   * `'on-touch'`.
+   */
+  readonly resolvedWarningStrategy: Signal<ResolvedWarningDisplayStrategy>;
   /** Focus the control for the first error entry */
   readonly focusFirst: () => void;
 }
@@ -125,6 +138,19 @@ export class NgxHeadlessErrorSummary implements ErrorSummarySignals {
   readonly strategy = input<ErrorDisplayStrategy | undefined>();
 
   /**
+   * Warning display strategy override, independent of {@link strategy}
+   * (which only governs blocking errors).
+   *
+   * Cascade: this input → the ambient form context's `warningStrategy()` →
+   * `NGX_SIGNAL_FORMS_CONFIG.defaultWarningStrategy` → `'on-touch'`. No tier
+   * consults `defaultErrorStrategy`, so a form that defers its errors to
+   * submit still surfaces summary warnings on touch (ADR-0007).
+   *
+   * @default `'on-touch'`
+   */
+  readonly warningStrategy = input<WarningDisplayStrategy | undefined>();
+
+  /**
    * Form submission status (optional).
    * If not provided, inherits from form context.
    */
@@ -145,6 +171,20 @@ export class NgxHeadlessErrorSummary implements ErrorSummarySignals {
     ),
   );
 
+  /**
+   * Resolved warning display strategy — the warning cascade, run with the
+   * same tiers `NgxHeadlessFieldset.resolvedWarningStrategy` uses so
+   * `'inherit'` gives one answer across headless surfaces.
+   */
+  readonly resolvedWarningStrategy = computed<ResolvedWarningDisplayStrategy>(
+    () =>
+      resolveWarningStrategyFromContext(
+        this.warningStrategy(),
+        this.#formContext,
+        this.#config?.defaultWarningStrategy,
+      ),
+  );
+
   readonly #fieldState = computed(() => this.formTree()());
 
   readonly #showErrorsSignal = createErrorVisibility(this.#fieldState, {
@@ -155,6 +195,26 @@ export class NgxHeadlessErrorSummary implements ErrorSummarySignals {
     // is omitted entirely rather than set to `undefined`.
     ...(this.#config?.defaultErrorStrategy !== undefined && {
       configDefault: this.#config.defaultErrorStrategy,
+    }),
+  });
+
+  /**
+   * Warning visibility, routed through the warning seam (ADR-0006) so the
+   * summary's warning list is timed by `warningStrategy`, not by whatever
+   * the blocking-error strategy happens to be.
+   *
+   * `hasWarnings: true` because a summary's warnings live on member fields
+   * rather than on the root's own `errors()`; {@link #entries} applies the
+   * presence gate. `errorVisibility` is omitted for the same reason
+   * `NgxHeadlessFieldset` omits it — a blocking error on one field must not
+   * silence a warning on a sibling.
+   */
+  readonly #showWarningsSignal = createWarningVisibility(this.#fieldState, {
+    strategy: this.warningStrategy,
+    submittedStatus: this.submittedStatus,
+    hasWarnings: true,
+    ...(this.#config?.defaultWarningStrategy !== undefined && {
+      configDefault: this.#config.defaultWarningStrategy,
     }),
   });
 
@@ -175,6 +235,7 @@ export class NgxHeadlessErrorSummary implements ErrorSummarySignals {
   readonly #entries = createErrorSummaryEntries({
     fieldState: this.#fieldState,
     showErrors: this.#showErrorsSignal,
+    showWarnings: this.#showWarningsSignal,
     errorMessages: this.#errorMessagesRegistry,
     labelResolver: this.#labelResolver,
   });
