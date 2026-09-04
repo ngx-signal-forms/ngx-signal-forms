@@ -596,13 +596,18 @@ function awaitVestRunSettlement<TValue, F extends string = string>(
   const subscribe = suite.subscribe;
   const get = suite.get;
 
-  if (!get().isPending()) {
+  const currentResult = get();
+  if (!currentResult.isPending()) {
     // The suite is already idle: no further bus event is coming, so
     // resolving on one would hang forever for a superseded run — see this
     // function's doc comment and `waitForSuiteIdle`, which makes the same
     // up-front check. Race `runResult` (first, so its rejection wins a tie)
-    // against `get()`'s current snapshot instead of blindly trusting either.
-    return Promise.race([Promise.resolve(runResult), Promise.resolve(get())]);
+    // against the SAME snapshot just read above — calling `get()` again here
+    // would risk racing against a result that changed between the two calls.
+    return Promise.race([
+      Promise.resolve(runResult),
+      Promise.resolve(currentResult),
+    ]);
   }
 
   return new Promise((resolve, reject) => {
