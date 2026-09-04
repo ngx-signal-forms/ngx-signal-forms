@@ -129,10 +129,11 @@ export interface CreateErrorMessageSignalOptions {
     | Signal<WarningDisplayStrategy | undefined>;
 
   /**
-   * Submission status override forwarded to {@link createErrorVisibility}.
+   * Submission status override forwarded to both {@link createErrorVisibility}
+   * and {@link createWarningVisibility} — one status feeds both cascades.
    *
-   * Only relevant for the `'on-submit'` strategy. Omit to inherit from the
-   * form context.
+   * Only relevant for the `'on-submit'` strategy on either channel. Omit to
+   * inherit from the form context.
    */
   readonly submittedStatus?:
     | SubmittedStatus

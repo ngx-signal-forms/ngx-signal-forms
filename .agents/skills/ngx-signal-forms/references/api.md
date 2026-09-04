@@ -624,7 +624,7 @@ Directive-level types and constants also available from this entry point:
 
 Selector: `[ngxHeadlessErrorState]` | Export: `#errorState="errorState"`
 
-Inputs: `field` (required), `fieldName` (required), `strategy`, `warningStrategy`
+Inputs: `field` (optional — omit when `errorsOverride` is bound or a host bridges state via `connectFieldState()`), `fieldName` (optional, default `null` — `null` disables ID generation), `errorsOverride`, `strategy`, `warningStrategy`, `submittedStatus`
 
 Signals:
 
