@@ -14,7 +14,7 @@ Real-world forms often need _non-blocking_ feedback — "weak password", "dispos
 ## Form model
 
 - Signal model: `signal<PasswordFormModel>({ username, email, password })`.
-- Schema: `form(model, passwordFormSchema)` plus manual submit wiring.
+- Schema: `form(model, passwordFormSchema)` with declarative `{ submission }` configuration.
 
 ## Validation rules
 
@@ -29,12 +29,12 @@ Real-world forms often need _non-blocking_ feedback — "weak password", "dispos
 - `warn:short-username` — username between 3 and 5 characters.
 - `warn:disposable-email` — email from a disposable provider (`tempmail.com`, `throwaway.email`, `10minutemail.com`).
 - `warn:weak-password` — password between 8 and 11 characters.
-- `warn:simple-password` — password missing 3 of 4 character classes (upper/lower/digit/symbol).
+- `warn:simple-password` — password uses fewer than 3 of 4 character classes (upper/lower/digit/symbol).
 
 ## Strong suites
 
 - Clearest example of the `warn:*` convention and the visual/ARIA split between errors and warnings.
-- Shows the _manual_ submission path: when you can't (or don't want to) use declarative `submission`, `submitWithWarnings` is the supported escape hatch.
+- Shows declarative warning-tolerant submission through the `submission` form option.
 - Good reference for policy-style guidance where blocking would be user-hostile.
 
 ## Key files

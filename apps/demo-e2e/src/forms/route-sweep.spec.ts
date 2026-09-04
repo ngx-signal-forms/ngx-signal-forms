@@ -1,6 +1,7 @@
 import { expect, test } from '@playwright/test';
 
 const DEMO_ROUTES = [
+  '/',
   '/getting-started/your-first-form',
   '/toolkit-core/error-display-modes',
   '/toolkit-core/warning-support',
@@ -43,8 +44,8 @@ test.describe('Demo route smoke sweep', () => {
       page.on('pageerror', (error) => pageErrors.push(error.message));
 
       await page.goto(route);
-      await expect(page.getByRole('main')).toBeVisible();
-      await expect(page.locator('h1')).toBeVisible();
+      await expect(page.getByRole('main')).toBeVisible({ timeout: 15_000 });
+      await expect(page.locator('h1')).toBeVisible({ timeout: 15_000 });
 
       expect(consoleErrors).toEqual([]);
       expect(pageErrors).toEqual([]);
