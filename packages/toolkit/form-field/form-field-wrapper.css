@@ -669,17 +669,21 @@
 /* `::ng-deep` reaches into projected form controls (also `<ng-content>`); the */
 /* consumer's `<input>`/`<textarea>`/`<select>` are scoped to their template, */
 /* not ours. */
-:host:not(.ngx-signal-form-field-wrapper--switch)
+:host(.ngx-signal-form-field-wrapper--textual)
   ::ng-deep
   .ngx-signal-form-field-wrapper__main
   :is(
     input:not([type='radio']):not([type='checkbox']):not([role='switch']),
     textarea,
-    select
+    select,
+    [role='combobox'],
+    [data-ngx-signal-form-control-kind='input-like']
   ) {
   font-size: var(--_input-size);
   font-family: var(--_input-font-family);
+  font-weight: var(--_input-weight);
   line-height: var(--_input-line-height);
+  min-block-size: var(--_input-line-height);
   color: var(--_input-color);
   padding: 0; /* No padding - container handles it */
   border: none; /* No border - container handles it */
@@ -710,20 +714,28 @@
   }
 }
 
-:host:not(.ngx-signal-form-field-wrapper--switch)
+:host(.ngx-signal-form-field-wrapper--textual)
   ::ng-deep
   .ngx-signal-form-field-wrapper__main
   input:not([type='radio']):not([type='checkbox']):not(
     [role='switch']
   ):focus-visible,
-:host:not(.ngx-signal-form-field-wrapper--switch)
+:host(.ngx-signal-form-field-wrapper--textual)
   ::ng-deep
   .ngx-signal-form-field-wrapper__main
   textarea:focus-visible,
-:host:not(.ngx-signal-form-field-wrapper--switch)
+:host(.ngx-signal-form-field-wrapper--textual)
   ::ng-deep
   .ngx-signal-form-field-wrapper__main
-  select:focus-visible {
+  select:focus-visible,
+:host(.ngx-signal-form-field-wrapper--textual)
+  ::ng-deep
+  .ngx-signal-form-field-wrapper__main
+  [role='combobox']:focus-visible,
+:host(.ngx-signal-form-field-wrapper--textual)
+  ::ng-deep
+  .ngx-signal-form-field-wrapper__main
+  [data-ngx-signal-form-control-kind='input-like']:focus-visible {
   outline: none;
   box-shadow: none;
 }
@@ -898,10 +910,16 @@
 }
 
 /* Remove input default styling (container provides all visual feedback) */
-:host(.ngx-signal-forms-outline):not(.ngx-signal-form-field-wrapper--switch)
+:host(.ngx-signal-forms-outline.ngx-signal-form-field-wrapper--textual)
   ::ng-deep
   .ngx-signal-form-field-wrapper__main
-  :is(input:not([role='switch']), textarea, select) {
+  :is(
+    input:not([role='switch']),
+    textarea,
+    select,
+    [role='combobox'],
+    [data-ngx-signal-form-control-kind='input-like']
+  ) {
   border: none;
   background-color: transparent;
   padding: 0;
@@ -911,6 +929,7 @@
   font-family: var(--_input-outline-font-family);
   line-height: var(--_input-outline-line-height);
   font-weight: var(--_input-outline-weight);
+  min-block-size: var(--_input-outline-line-height);
   color: var(--_input-outline-color);
   outline: none;
   box-shadow: none;
@@ -929,10 +948,10 @@
 }
 
 /* Placeholder (slightly more subtle in outlined) */
-:host(.ngx-signal-forms-outline)
+:host(.ngx-signal-forms-outline.ngx-signal-form-field-wrapper--textual)
   ::ng-deep
   .ngx-signal-form-field-wrapper__main
-  :is(input:not([role='switch']), textarea)::placeholder {
+  :is(input:not([role='switch']), textarea, [role='combobox'])::placeholder {
   color: var(--_placeholder-color);
 }
 

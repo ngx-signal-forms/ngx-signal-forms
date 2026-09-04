@@ -186,7 +186,16 @@ The directive class keeps its `Directive` suffix to avoid colliding with the
 
 Built-in kinds: `input-like`, `standalone-field-like`, `switch`, `checkbox`, `radio-group`, `slider`, `composite`.
 
-See [Custom Controls](https://github.com/ngx-signal-forms/ngx-signal-forms/blob/main/docs/CUSTOM_CONTROLS.md) for detailed guidance.
+Field-shaped custom comboboxes infer `input-like` from `role="combobox"` with
+an ID.
+A closed custom select that should look like a text field also uses
+`input-like` — there is no `select` kind. Keep that trigger naked so the
+wrapper owns border, focus, invalid chrome, and the public input type
+tokens (`--ngx-form-field-input-*`, outline aliases, placeholder color).
+Widget-shaped controls stay `slider` or `composite` and usually use
+`appearance="plain"`.
+
+See [Custom Controls](https://github.com/ngx-signal-forms/ngx-signal-forms/blob/main/docs/CUSTOM_CONTROLS.md#field-shaped-vs-widget-shaped-custom-controls) for detailed guidance.
 
 ## Configuration
 
@@ -669,5 +678,5 @@ authoritative enumeration of the public surface.
 - [Vest integration](./vest/README.md) — Vest adapter
 - [Accessibility testing harness](#accessibility-testing-harness) — WCAG 2.2 AA axe-core assertions
 - [Theming guide](./form-field/THEMING.md) — CSS custom properties
-- [Custom controls](https://github.com/ngx-signal-forms/ngx-signal-forms/blob/main/docs/CUSTOM_CONTROLS.md) — wrapping custom and third-party widgets
+- [Custom controls](https://github.com/ngx-signal-forms/ngx-signal-forms/blob/main/docs/CUSTOM_CONTROLS.md) — field-shaped combobox/select (wrapper owns the shell) and widget-shaped sliders, date pickers, and third-party adapters
 - [Warnings support](https://github.com/ngx-signal-forms/ngx-signal-forms/blob/main/docs/WARNINGS_SUPPORT.md) — warning convention and flow

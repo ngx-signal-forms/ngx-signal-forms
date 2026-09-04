@@ -15,7 +15,9 @@
         "../../packages/toolkit/assistive/index.ts",
         "../../dist/packages/toolkit/assistive"
       ],
-      "@ngx-signal-forms/debugger": ["../../libs/debugger/src/index.ts"],
+      "@ngx-signal-forms/debugger": [
+        "../../packages/demo/debugger/src/index.ts"
+      ],
       "@ngx-signal-forms/toolkit/form-field": [
         "../../packages/toolkit/form-field/index.ts",
         "../../dist/packages/toolkit/form-field"
@@ -29,17 +31,20 @@
         "../../dist/packages/toolkit/vest"
       ],
       "@ngx-signal-forms/demo-shared": [
-        "../../packages/demo-shared/src/index.ts"
+        "../../packages/demo/shared/src/index.ts"
+      ],
+      "@ngx-signal-forms/demo-shared/ui": [
+        "../../packages/demo/shared/src/lib/ui/index.ts"
       ]
     }
   },
   "include": [
     "src/**/*.ts",
-    "../../packages/demo-shared/src/**/*.ts",
+    "../../packages/demo/shared/src/**/*.ts",
     "../../packages/toolkit/index.ts",
     "../../packages/toolkit/core/**/*.ts",
     "../../packages/toolkit/assistive/**/*.ts",
-    "../../libs/debugger/**/*.ts",
+    "../../packages/demo/debugger/**/*.ts",
     "../../packages/toolkit/form-field/**/*.ts",
     "../../packages/toolkit/headless/src/**/*.ts",
     "../../packages/toolkit/vest/src/**/*.ts"
@@ -57,8 +62,8 @@
     "src/**/*.spec.js",
     "src/**/*.test.jsx",
     "src/**/*.spec.jsx",
-    "../../packages/demo-shared/src/**/*.test.ts",
-    "../../packages/demo-shared/src/**/*.spec.ts",
+    "../../packages/demo/shared/src/**/*.test.ts",
+    "../../packages/demo/shared/src/**/*.spec.ts",
     "../../packages/toolkit/**/*.spec.ts",
     "../../packages/toolkit/test-setup.ts",
     "../../packages/toolkit/test-setup.browser.ts",

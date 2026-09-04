@@ -675,6 +675,39 @@ export function createVestAdapter(
       });
     };
 
+    /**
+     * Memoizes the async `params` payload by the run's own `runResult`
+     * object -- stable across every re-evaluation that resolves to the same
+     * coordinator cache entry (a cache hit reuses `runResult` unchanged; see
+     * `createVestRunCoordinator`'s `request`). Angular's `resource` compares
+     * `params` by identity, so returning a freshly built object on every
+     * evaluation reloaded the resource — re-awaiting an already-finished
+     * (and possibly superseded) run — even when nothing about the run
+     * itself had changed, e.g. a `hidden`/`disabled` toggle on the bound
+     * path, or an `only` selector that reads an unrelated signal. Building
+     * the payload at most once per run, and handing back that SAME object on
+     * every later evaluation for the same run, keeps `resource`'s params
+     * identity stable so it neither reloads nor re-awaits `settled()`.
+     */
+    const pendingPayloadByRun = new WeakMap<
+      object,
+      PendingVestValidationPayload
+    >();
+    const getStablePendingPayload = (
+      runResult: VestResultLike<F> | PromiseLike<VestResultLike<F>>,
+      build: () => PendingVestValidationPayload,
+    ): PendingVestValidationPayload => {
+      const key = runResult as object;
+      const cached = pendingPayloadByRun.get(key);
+      if (cached) {
+        return cached;
+      }
+
+      const payload = build();
+      pendingPayloadByRun.set(key, payload);
+      return payload;
+    };
+
     validateTree(path, (ctx) => {
       const { fieldTree } = ctx;
       const entry = requestRun(ctx);
@@ -712,38 +745,46 @@ export function createVestAdapter(
             return undefined;
           }
 
-          return {
-            settled: entry.settled,
-            initialSnapshot: { errors: [], warnings: [] },
-          } satisfies PendingVestValidationPayload;
+          return getStablePendingPayload(
+            entry.runResult,
+            () =>
+              ({
+                settled: entry.settled,
+                initialSnapshot: { errors: [], warnings: [] },
+              }) satisfies PendingVestValidationPayload,
+          );
         }
 
-        if (!entry.initialResult.isPending()) {
+        const initialResult = entry.initialResult;
+        if (!initialResult.isPending()) {
           return undefined;
         }
 
-        // Match the sync `validateTree` pass above: while pending, warnings
-        // are deferred (not yet surfaced), so the baseline used to compute
-        // the async delta must NOT already count them as shown — otherwise
-        // `onSuccess`'s `filterExistingVestEntries` would treat them as
-        // already-emitted and drop them from the final, settled result.
-        const snapshotOptions = shouldDeferVestWarnings(
-          validationOptions,
-          entry.initialResult,
-        )
-          ? {
-              ...validationOptions,
-              includeWarnings: false,
-            }
-          : validationOptions;
+        return getStablePendingPayload(entry.runResult, () => {
+          // Match the sync `validateTree` pass above: while pending,
+          // warnings are deferred (not yet surfaced), so the baseline used
+          // to compute the async delta must NOT already count them as shown
+          // — otherwise `onSuccess`'s `filterExistingVestEntries` would treat
+          // them as already-emitted and drop them from the final, settled
+          // result.
+          const snapshotOptions = shouldDeferVestWarnings(
+            validationOptions,
+            initialResult,
+          )
+            ? {
+                ...validationOptions,
+                includeWarnings: false,
+              }
+            : validationOptions;
 
-        return {
-          settled: entry.settled,
-          initialSnapshot: createVestValidationSnapshot(
-            entry.initialResult,
-            snapshotOptions,
-          ),
-        } satisfies PendingVestValidationPayload;
+          return {
+            settled: entry.settled,
+            initialSnapshot: createVestValidationSnapshot(
+              initialResult,
+              snapshotOptions,
+            ),
+          } satisfies PendingVestValidationPayload;
+        });
       },
       factory: (pendingValidation) => {
         return resource({

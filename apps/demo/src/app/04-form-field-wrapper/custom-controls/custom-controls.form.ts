@@ -26,6 +26,10 @@ import {
   RatingControlComponent,
   SwitchControlComponent,
 } from '../../shared/controls';
+import {
+  AriaAutocompleteComponent,
+  AriaSelectComponent,
+} from '@ngx-signal-forms/demo-shared/ui';
 import { initialCustomControlsModel } from './custom-controls.model';
 import { customControlsSchema } from './custom-controls.validations';
 
@@ -62,6 +66,8 @@ import { customControlsSchema } from './custom-controls.validations';
     FormField,
     NgxSignalFormToolkit,
     NgxFormField,
+    AriaAutocompleteComponent,
+    AriaSelectComponent,
     LegacyDatepickerAdapterComponent,
     RatingControlComponent,
     SwitchControlComponent,
@@ -70,6 +76,14 @@ import { customControlsSchema } from './custom-controls.validations';
   styles: `
     :host {
       display: block;
+    }
+
+    /* Keep room for the legacy widget's separate calendar action when the
+       standard wrapper puts that action outside the bordered input surface. */
+    .legacy-datepicker-field:not(.ngx-signal-forms-outline):not(
+        .ngx-signal-forms-plain
+      ) {
+      padding-inline-end: 2.375rem;
     }
   `,
 })

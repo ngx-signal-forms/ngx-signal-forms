@@ -233,6 +233,59 @@ describe('readFormFieldWrapperDomSnapshot — native-vs-fallback precedence', ()
     expect(snapshot.inputEl).toBe(realControl);
     expect(snapshot.inputId).toBe('real-control');
   });
+
+  it('uses semantics from a nested custom-control host for its internal input', () => {
+    const internalInput = document.createElement('input');
+    internalInput.id = 'framework';
+
+    const customHost = document.createElement('div');
+    customHost.setAttribute('data-ngx-signal-form-control', '');
+    customHost.setAttribute('data-ngx-signal-form-control-kind', 'composite');
+    customHost.setAttribute('data-ngx-signal-form-control-layout', 'custom');
+    customHost.setAttribute('data-ngx-signal-form-control-aria-mode', 'manual');
+    customHost.append(internalInput);
+
+    const host = hostWithProjectedControls(customHost);
+    const snapshot = readFormFieldWrapperDomSnapshot(
+      host,
+      null,
+      DEFAULT_NGX_SIGNAL_FORM_CONTROL_PRESETS,
+      null,
+    );
+
+    expect(snapshot.inputEl).toBe(internalInput);
+    expect(snapshot.semantics).toEqual({
+      kind: 'composite',
+      layout: 'custom',
+      ariaMode: 'manual',
+    });
+  });
+
+  it('uses nested host input-like semantics when the inner trigger is a combobox', () => {
+    const trigger = document.createElement('div');
+    trigger.id = 'framework';
+    trigger.setAttribute('role', 'combobox');
+
+    const customHost = document.createElement('div');
+    customHost.setAttribute('data-ngx-signal-form-control', '');
+    customHost.setAttribute('data-ngx-signal-form-control-kind', 'input-like');
+    customHost.append(trigger);
+
+    const host = hostWithProjectedControls(customHost);
+    const snapshot = readFormFieldWrapperDomSnapshot(
+      host,
+      null,
+      DEFAULT_NGX_SIGNAL_FORM_CONTROL_PRESETS,
+      null,
+    );
+
+    expect(snapshot.inputEl).toBe(trigger);
+    expect(snapshot.semantics).toEqual({
+      kind: 'input-like',
+      layout: 'stacked',
+      ariaMode: 'auto',
+    });
+  });
 });
 
 describe('null (unresolved) control kind fallback', () => {

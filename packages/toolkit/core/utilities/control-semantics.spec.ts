@@ -205,6 +205,18 @@ describe('inferNgxSignalFormControlKind', () => {
     expect(inferNgxSignalFormControlKind(el)).toBe('slider');
   });
 
+  it('should infer input-like for a combobox trigger', () => {
+    const el = document.createElement('div');
+    el.setAttribute('role', 'combobox');
+    expect(inferNgxSignalFormControlKind(el)).toBe('input-like');
+  });
+
+  it('should infer input-like for a button combobox trigger before the composite fallback', () => {
+    const el = document.createElement('button');
+    el.setAttribute('role', 'combobox');
+    expect(inferNgxSignalFormControlKind(el)).toBe('input-like');
+  });
+
   it('should infer radio-group from role=radiogroup on non-input', () => {
     const el = document.createElement('div');
     el.setAttribute('role', 'radiogroup');

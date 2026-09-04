@@ -2,10 +2,14 @@
   "name": "@ngx-signal-forms/demo-shared",
   "version": "0.0.1",
   "private": true,
-  "type": "commonjs",
+  "type": "module",
   "main": "./src/index.js",
   "types": "./src/index.d.ts",
   "dependencies": {
+    "@angular/aria": "catalog:angular",
+    "@angular/cdk": "catalog:angular",
+    "@angular/core": "catalog:angular",
+    "@angular/forms": "catalog:angular",
     "tslib": "catalog:utilities"
   }
 }

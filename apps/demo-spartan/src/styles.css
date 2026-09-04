@@ -12,7 +12,7 @@
 
 /* Tailwind needs to scan helm-generated sources so its JIT picks up the
    utility classes embedded in the @spartan-ng/helm components. */
-@source '../../../libs/spartan/ui';
+@source '../../../packages/demo/spartan-ui';
 
 @variant dark (.dark &);
 

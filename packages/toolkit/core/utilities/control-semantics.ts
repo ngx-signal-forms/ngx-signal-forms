@@ -205,6 +205,10 @@ export function inferNgxSignalFormControlKind(
     return 'radio-group';
   }
 
+  if (role === 'combobox') {
+    return 'input-like';
+  }
+
   if (
     element instanceof HTMLButtonElement ||
     element.hasAttribute('data-ngx-signal-form-control')

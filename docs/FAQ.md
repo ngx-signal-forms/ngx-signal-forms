@@ -23,6 +23,7 @@ entry points).
   - [Can I set the error-display strategy once app-wide and override it per form or per field?](#can-i-set-the-error-display-strategy-once-app-wide-and-override-it-per-form-or-per-field)
 - **[Custom controls & design systems](#custom-controls--design-systems)**
   - [How do I make my own design-system inputs work inside the wrapper (aria-invalid, aria-describedby, error timing)?](#how-do-i-make-my-own-design-system-inputs-work-inside-the-wrapper-aria-invalid-aria-describedby-error-timing)
+  - [How do I make a custom combobox or closed select look like the native text field?](#how-do-i-make-a-custom-combobox-or-closed-select-look-like-the-native-text-field)
   - [We don't want the toolkit's wrapper markup at all — how do I build my own with the headless APIs?](#we-dont-want-the-toolkits-wrapper-markup-at-all--how-do-i-build-my-own-with-the-headless-apis)
   - [How do I theme the built-in wrapper with our brand tokens?](#how-do-i-theme-the-built-in-wrapper-with-our-brand-tokens)
   - [How do I integrate a third-party datepicker (value/change API, not a native input)?](#how-do-i-integrate-a-third-party-datepicker-valuechange-api-not-a-native-input)
@@ -225,6 +226,31 @@ set `fieldName` on the wrapper) so error/warning IDs resolve, and import
 
 **See:** [docs/CUSTOM_CONTROLS.md](./CUSTOM_CONTROLS.md) ·
 [packages/toolkit/form-field/README.md](../packages/toolkit/form-field/README.md) ·
+[demo: custom-controls](../apps/demo/src/app/04-form-field-wrapper/custom-controls/README.md)
+
+### How do I make a custom combobox or closed select look like the native text field?
+
+Treat it as **field-shaped**, not as a widget. Keep the trigger naked (no
+border, padding, or focus ring on the host). Let `ngx-form-field-wrapper`
+own outline, focus, invalid chrome, font size, line height, and placeholder
+color.
+
+- Inner `role="combobox"` with a stable `id` infers `input-like`.
+- A closed select (host `role="button"`) sets
+  `ngxSignalFormControl="input-like"` on the `[formField]` host. There is
+  no `select` kind.
+- Inner text uses `font: inherit`. Placeholder copy uses
+  `--ngx-form-field-placeholder-color` (or the wrapper's
+  `--_placeholder-color` when present).
+- Override `--ngx-form-field-input-*` / `--ngx-form-field-outline-input-*`
+  on a parent form if the page type scale is not the toolkit default.
+  Do not hardcode `rem` on the widget.
+
+Sliders, ratings, and datepickers stay widget-shaped:
+`appearance="plain"`, usually with `ngxSignalFormControlAria="manual"`.
+
+**See:** [docs/CUSTOM_CONTROLS.md § Field-shaped vs widget-shaped](./CUSTOM_CONTROLS.md#field-shaped-vs-widget-shaped-custom-controls) ·
+[packages/toolkit/form-field/THEMING.md](../packages/toolkit/form-field/THEMING.md) ·
 [demo: custom-controls](../apps/demo/src/app/04-form-field-wrapper/custom-controls/README.md)
 
 ### We don't want the toolkit's wrapper markup at all — how do I build my own with the headless APIs?

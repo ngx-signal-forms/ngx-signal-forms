@@ -176,8 +176,8 @@
         "apps/demo/**/*",
         "apps/demo-primeng/**/*",
         "apps/demo-spartan/**/*",
-        "libs/debugger/**/*",
-        "packages/demo-shared/**/*"
+        "packages/demo/debugger/**/*",
+        "packages/demo/shared/**/*"
       ]
     }
   ]

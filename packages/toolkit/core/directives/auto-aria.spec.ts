@@ -451,6 +451,72 @@ describe('NgxSignalFormAutoAria', () => {
       expect(group?.hasAttribute('aria-required')).toBe(false);
     });
 
+    it('does NOT set aria-required on a host with role="button"', async () => {
+      @Component({
+        template:
+          '<div role="button" id="select" [formField]="selectControl()"></div>',
+        imports: [MockFormFieldDirective, NgxSignalFormAutoAria],
+      })
+      class TestComponent {
+        selectControl = createMockControl(
+          true,
+          true,
+          [{ kind: 'required', message: 'Selection is required' }],
+          true,
+        );
+      }
+
+      const { container } = await render(TestComponent);
+      await TestBed.inject(ApplicationRef).whenStable();
+
+      const button = container.querySelector('[role="button"]');
+      expect(button?.hasAttribute('aria-required')).toBe(false);
+    });
+
+    it('does NOT set aria-required on a native button', async () => {
+      @Component({
+        template:
+          '<button type="button" id="select" [formField]="selectControl()"></button>',
+        imports: [MockFormFieldDirective, NgxSignalFormAutoAria],
+      })
+      class TestComponent {
+        selectControl = createMockControl(
+          true,
+          true,
+          [{ kind: 'required', message: 'Selection is required' }],
+          true,
+        );
+      }
+
+      const { container } = await render(TestComponent);
+      await TestBed.inject(ApplicationRef).whenStable();
+
+      const button = container.querySelector('button');
+      expect(button?.hasAttribute('aria-required')).toBe(false);
+    });
+
+    it('sets aria-required="true" on a button with role="combobox"', async () => {
+      @Component({
+        template:
+          '<button type="button" role="combobox" id="select" [formField]="selectControl()"></button>',
+        imports: [MockFormFieldDirective, NgxSignalFormAutoAria],
+      })
+      class TestComponent {
+        selectControl = createMockControl(
+          true,
+          true,
+          [{ kind: 'required', message: 'Selection is required' }],
+          true,
+        );
+      }
+
+      const { container } = await render(TestComponent);
+      await TestBed.inject(ApplicationRef).whenStable();
+
+      const combobox = container.querySelector('[role="combobox"]');
+      expect(combobox?.getAttribute('aria-required')).toBe('true');
+    });
+
     it('still sets aria-required="true" on a host with role="radiogroup"', async () => {
       @Component({
         template:
@@ -471,6 +537,42 @@ describe('NgxSignalFormAutoAria', () => {
 
       const group = container.querySelector('[role="radiogroup"]');
       expect(group?.getAttribute('aria-required')).toBe('true');
+    });
+
+    it('writes managed ARIA onto an inner combobox instead of the FormValueControl host', async () => {
+      // Autocomplete hosts bind [formField] on a custom element while Angular
+      // Aria Combobox puts role="combobox" on the inner input. AT follows the
+      // combobox, so aria-required / aria-invalid / aria-describedby must
+      // land there — not on a host with no widget role.
+      @Component({
+        template: `
+          <div id="framework-host" [formField]="frameworkControl()">
+            <input id="framework" role="combobox" />
+          </div>
+        `,
+        imports: [MockFormFieldDirective, NgxSignalFormAutoAria],
+      })
+      class TestComponent {
+        frameworkControl = createMockControl(
+          true,
+          true,
+          [{ kind: 'required', message: 'Select a framework' }],
+          true,
+        );
+      }
+
+      const { container } = await render(TestComponent);
+      await TestBed.inject(ApplicationRef).whenStable();
+
+      const host = container.querySelector('#framework-host');
+      const combobox = container.querySelector('#framework');
+
+      expect(combobox).toHaveAttribute('aria-required', 'true');
+      expect(combobox).toHaveAttribute('aria-invalid', 'true');
+      expect(combobox).toHaveAttribute('aria-describedby', 'framework-error');
+      expect(host).not.toHaveAttribute('aria-required');
+      expect(host).not.toHaveAttribute('aria-invalid');
+      expect(host).not.toHaveAttribute('aria-describedby');
     });
 
     it('still sets aria-required="true" on a host with no role attribute', async () => {

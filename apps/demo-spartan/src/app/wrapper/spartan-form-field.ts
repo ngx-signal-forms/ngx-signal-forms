@@ -147,7 +147,7 @@ const assertBrnFieldA11yPublicSurfaceIsExhaustive: AssertBrnFieldA11yPublicSurfa
  * - Select: `[formField]` is on `<hlm-select>`, one level above the actual
  *   `role="combobox"` button rendered inside `<hlm-select-trigger>`'s own
  *   template — auto-ARIA can only reach the `hlm-select` host, never the
- *   button an AT reads. `HlmSelectTrigger` (`libs/spartan/ui/select`) now
+ *   button an AT reads. `HlmSelectTrigger` (`packages/demo/spartan-ui/select`) now
  *   corrects this itself: it reads `BrnFieldControl.spartanInvalid()`
  *   (Brain's own touched-gated invalid signal, the same one driving the
  *   `data-matches-spartan-invalid` destructive-ring styling) and writes the
