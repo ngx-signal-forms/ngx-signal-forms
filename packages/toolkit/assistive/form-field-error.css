@@ -5,7 +5,7 @@
 /* https://lea.verou.me/blog/2021/10/custom-properties-with-defaults/ */
 /* Layering approach: */
 /* 1. Design tokens (internal, --_error-*) */
-/* 2. Shared feedback tier (--_feedback-*, from form-field/_feedback-tokens) */
+/* 2. Shared feedback tier (--_feedback-*, from core/feedback-tokens.css) */
 /* 3. Public API (--ngx-signal-form-error-* / --ngx-signal-form-warning-*) */
 /* 4. Resolved pseudo-private variables (--_error-* / --_warning-*) */
 /* 5. Implementation consumes only the resolved variables */

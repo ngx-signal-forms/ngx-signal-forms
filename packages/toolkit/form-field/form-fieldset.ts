@@ -151,7 +151,7 @@ const FIELDSET_SURFACE_TONE_VALUES = [
     },
   ],
   imports: [NgComponentOutlet, NgTemplateOutlet, NgxFormFieldError],
-  styleUrls: ['./feedback-tokens.css', './form-fieldset.css'],
+  styleUrls: ['../core/feedback-tokens.css', './form-fieldset.css'],
   exportAs: 'ngxFormFieldset',
   // BEM classnames keep the legacy `ngx-signal-form-fieldset--*` prefix for
   // theming back-compat. The host's element selector uses the new short
