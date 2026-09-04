@@ -567,6 +567,46 @@ describe('createVestRunCoordinator', () => {
       expect(listeners.size).toBe(0);
     });
 
+    it('settles a superseded run immediately once the suite is idle, without waiting for a further bus event', async () => {
+      // Regression test for issue #433: `awaitVestRunSettlement` used to
+      // always race the run's promise against the NEXT
+      // `ALL_RUNNING_TESTS_FINISHED` event, even when the suite had already
+      // gone idle (and fired that event) before `settled()` was ever called.
+      // A focused run that supersedes an earlier unfocused run's resolver,
+      // followed by a `.settled()` call made only once everything has
+      // already finished, must not wait for a bus event that will never
+      // come again -- `waitForSuiteIdle` already checks `isPending()` first;
+      // `awaitVestRunSettlement` must too.
+      const coordinator = createVestRunCoordinator();
+      const { suite, started, finishAll } = createSupersedingSuite();
+
+      const superseded = coordinator.request({
+        suite,
+        cacheKey: {},
+        value: 'a',
+      });
+      coordinator.request({ suite, cacheKey: {}, value: 'b', focus: 'email' });
+      expect(started).toEqual(['a', 'b']);
+
+      // Finish everything and fire the bus BEFORE anything ever calls
+      // `settled()` on the superseded handle.
+      finishAll();
+      await drainMicrotasks();
+
+      // No further bus event will ever fire from here on. `settled()` must
+      // resolve because the suite is already idle, not hang waiting for one.
+      await expect(
+        Promise.race([
+          superseded.settled().then(() => 'settled' as const),
+          new Promise<'timeout'>((resolve) => {
+            setTimeout(() => {
+              resolve('timeout');
+            }, 200);
+          }),
+        ]),
+      ).resolves.toBe('settled');
+    });
+
     it('settles from the run itself for a suite WITHOUT subscribe/get', async () => {
       const coordinator = createVestRunCoordinator();
       const { suite, started, finish, settledResult } = createControllableSuite(

@@ -386,8 +386,14 @@ request-scoped provider — rather than at module scope.
 ### Async caveats
 
 - `suite.run(data)` returns a synchronous `SuiteResult` that is _also_ a
-  thenable. The adapter surfaces sync errors immediately, then awaits the
-  thenable when `result.isPending()` is `true`.
+  thenable. The adapter surfaces sync errors immediately, then, when
+  `result.isPending()` is `true`, awaits the run's _settlement_ — not the raw
+  thenable directly. See
+  [Awaiting a manual run's outcome](#awaiting-a-manual-runs-outcome): a later
+  `run()` on the same suite instance can supersede the thenable's resolver
+  before it ever settles, so the adapter races it against the suite's
+  `ALL_RUNNING_TESTS_FINISHED` bus event — resolving immediately from
+  `suite.get()` once the suite is already idle — to recover.
 - If a consumer-wrapped suite returns a `Promise<SuiteResult>` directly from
   `run()` (no sync result), the adapter drives validation straight from the
   promise. This keeps bridge suites that wrap a remote policy check working

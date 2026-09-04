@@ -940,6 +940,80 @@ describe('validateVest', () => {
     expect(fixture.componentInstance.f.password().pending()).toBe(false);
   });
 
+  it('reuses a stable async payload identity across repeated evaluations for an unchanged (value, focus) pair, so an unrelated re-evaluation does not reload the resource or leave the field pending', async () => {
+    // Regression for #433. Angular `resource` compares its `params` by
+    // identity. Before the fix, `validateAsync`'s params callback returned a
+    // brand-new payload object on EVERY evaluation -- including a
+    // re-evaluation that resolves to the exact same coordinator cache entry
+    // (same suite, cache key, value, and focus). `resource` then reloaded
+    // and re-awaited an already-finished run on every such re-evaluation,
+    // the same shape as the `hidden`/`disabled`-toggle trigger the issue
+    // describes: something Angular tracks as a dependency of `validateAsync`
+    // changes, but the field's OWN value and focus do not.
+    //
+    // Reading an unrelated toggle signal from `only` reproduces that
+    // dependency deterministically (the toolkit's own documented hook for
+    // "track which field is active yourself" -- see the vest skill's
+    // "Focused runs with `only`" section) without relying on exactly how
+    // Angular's internal `shouldSkipValidation()` gate schedules a
+    // `hidden`/`disabled` re-evaluation.
+    const suite = create((email: string) => {
+      test('email', 'Email check', async () => {
+        await Promise.resolve();
+        enforce(email).isNotBlank();
+      });
+    });
+
+    // Spies on the ONE observable side effect a re-awaited settlement always
+    // produces regardless of whether the suite is still pending: a call to
+    // `suite.get()` (see `awaitVestRunSettlement`). Counting it is a stable
+    // proxy for "how many times was `settled()` invoked", independent of the
+    // fresh closure the coordinator mints per cache hit.
+    const getSpy = vi.fn(suite.get.bind(suite));
+    Object.assign(suite, { get: getSpy });
+
+    const unrelatedToggle = signal(false);
+
+    @Component({
+      selector: 'ngx-test-vest-stable-payload',
+      imports: [FormField],
+
+      template: `<input id="email" [formField]="f.email" />`,
+    })
+    class TestComponent {
+      readonly model = signal({ email: 'a' });
+      readonly f = form(this.model, (path) => {
+        validateVest(path.email, suite, {
+          only: () => {
+            unrelatedToggle();
+            return undefined;
+          },
+        });
+      });
+    }
+
+    const { fixture } = await render(TestComponent);
+    await TestBed.inject(ApplicationRef).whenStable();
+
+    expect(fixture.componentInstance.f.email().pending()).toBe(false);
+
+    const getCallsAfterSettle = getSpy.mock.calls.length;
+    expect(getCallsAfterSettle).toBeGreaterThan(0);
+
+    // Flip the unrelated signal WITHOUT changing the model value or the
+    // resolved focus (`only` still returns `undefined`). This re-evaluates
+    // `validateAsync`'s params for the SAME already-settled run.
+    unrelatedToggle.set(true);
+    fixture.detectChanges();
+    await TestBed.inject(ApplicationRef).whenStable();
+
+    expect(fixture.componentInstance.f.email().pending()).toBe(false);
+    // The payload handed to `resource` is the SAME object reference for the
+    // unchanged (value, focus) pair, so it never reloads and never calls
+    // `settled()` (and therefore `suite.get()`) again.
+    expect(getSpy.mock.calls.length).toBe(getCallsAfterSettle);
+  });
+
   it('does not throw a TDZ ReferenceError when suite.subscribe fires its callback synchronously', async () => {
     // Regression: the settlement race in `awaitVestRunSettlement` captured
     // `subscribe(...)`'s return value in a `const unsubscribe`, then called
