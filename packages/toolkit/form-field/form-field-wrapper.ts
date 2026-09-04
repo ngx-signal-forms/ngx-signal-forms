@@ -76,7 +76,8 @@ import { resolveUnionInput } from './utilities/resolve-union-input';
  * - Accessibility-compliant structure
  * - Content projection for labels and inputs
  * - Type-safe field binding with generics
- * - Outlined appearance with floating label (`appearance="outline"`)
+ * - Outlined appearance with the label as a caption inside the border
+ *   (`appearance="outline"`)
  * - Plain appearance for custom or low-chrome fields (`appearance="plain"`)
  * - Support for hints and character counts
  *
@@ -483,7 +484,10 @@ export class NgxFormFieldWrapper<TValue = unknown> {
    * Form field appearance variant.
    *
    * - `'standard'`: Label above input (default)
-   * - `'outline'`: Material-inspired outlined appearance with floating label
+   * - `'outline'`: Bordered container with the label printed inside it as a
+   *   static caption above the control. The label never moves, so no
+   *   `placeholder=" "` is needed — the stylesheet has no `:placeholder-shown`
+   *   rule, transition, or keyframes on it.
    * - `'plain'`: Minimal wrapper chrome while keeping labels, hints, and errors
    * - `'inherit'`: Use the global config default
    *
@@ -498,8 +502,8 @@ export class NgxFormFieldWrapper<TValue = unknown> {
    * - `'horizontal'`: Label to the left of the input
    * - `'inherit'`: Use the global config default
    *
-   * Outline fields always resolve to vertical because the floating-label
-   * treatment depends on the label sitting inside the bordered container.
+   * Outline fields always resolve to vertical because their label caption
+   * sits inside the bordered container, above the control.
    *
    * Selection controls (checkbox, switch, radio-group) ignore this setting
    * because they already manage their own inline layout.

@@ -1,5 +1,5 @@
 ---
-description: Form-field toolkit surface. Use when adding wrappers, fieldsets, floating labels, field markers, or custom-control layouts.
+description: Form-field toolkit surface. Use when adding wrappers, fieldsets, field appearances, field markers, or custom-control layouts.
 ---
 
 # Toolkit Form Field

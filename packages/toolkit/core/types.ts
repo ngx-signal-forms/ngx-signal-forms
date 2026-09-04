@@ -76,7 +76,8 @@ export type WarningDisplayStrategy = ResolvedWarningDisplayStrategy | 'inherit';
  * Form field appearance values accepted from consumers and used internally.
  *
  * - `'standard'`: Label above input (default)
- * - `'outline'`: Material-inspired outlined appearance with floating label
+ * - `'outline'`: Bordered container with the label inside it, as a static
+ *   caption above the control — it does not float
  * - `'plain'`: Minimal wrapper chrome while keeping wrapper semantics
  *
  * @public
@@ -87,7 +88,8 @@ export type FormFieldAppearance = 'standard' | 'outline' | 'plain';
  * Form field appearance input for component-level control.
  *
  * - `'standard'`: Default appearance with label above input
- * - `'outline'`: Material-inspired outlined appearance with floating label
+ * - `'outline'`: Bordered container with the label inside it, as a static
+ *   caption above the control — it does not float
  * - `'plain'`: No border or background chrome while keeping labels, hints, and errors
  * - `'inherit'`: Use the global config default (component-level only)
  *
@@ -116,8 +118,8 @@ export type FormFieldAppearanceInput = FormFieldAppearance | 'inherit';
  * Form field orientation controls whether the label is positioned
  * above the input (vertical) or to the left of it (horizontal).
  *
- * `outline` appearance always resolves to vertical because the floating-label
- * treatment depends on the label staying inside the field chrome.
+ * `outline` appearance always resolves to vertical because its label caption
+ * sits inside the field chrome, above the control.
  *
  * @public
  */

@@ -1027,7 +1027,7 @@
 }
 
 /* Outline: hide the label div and drop the top-padding reservation that */
-/* accommodates the floating label. `.ngx-signal-forms-outline` and */
+/* holds the label caption. `.ngx-signal-forms-outline` and */
 /* `.ngx-signal-forms-plain` are mutually exclusive appearance classes, so */
 /* no extra exclusion is needed here. */
 :host(.ngx-signal-forms-outline.ngx-signal-form-field-wrapper--textual):not(

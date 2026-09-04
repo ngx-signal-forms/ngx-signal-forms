@@ -207,8 +207,8 @@ removed. Replace them with the v1 equivalents.
 </ngx-form-field-wrapper>
 ```
 
-The wrapper now owns floating-label behavior via the `appearance`
-input, so there is nothing extra to import.
+The wrapper now owns label placement via the `appearance` input, so there
+is nothing extra to import.
 
 ### `NgxSignalFormsUserConfig` is now flat
 

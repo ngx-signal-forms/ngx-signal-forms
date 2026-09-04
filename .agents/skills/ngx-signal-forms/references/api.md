@@ -247,8 +247,13 @@ createShowErrorsComputed(field, strategy, submittedStatus?): Signal<boolean>
 combineShowErrors(signals: readonly Signal<boolean>[]): Signal<boolean>
 shouldShowErrors(isInvalid, isTouched, strategy, submittedStatus): boolean
 shouldShowWarnings(hasWarnings, isTouched, strategy, submittedStatus): boolean
-// Warning-specific counterpart to shouldShowErrors: checks warning presence,
-// not invalidity — warnings never affect the `invalid` state.
+// Warning-specific counterpart to shouldShowErrors. The visibility gate reads
+// warning PRESENCE instead of isInvalid. That is not because a warning leaves
+// the field valid: a `warn:` error is an ordinary ValidationError to Angular
+// and does set FieldState.invalid(). invalid() cannot tell the two channels
+// apart, so the toolkit splits on `kind` (splitByKind / isWarningError).
+// "Non-blocking" describes submission and timing, not field state. See
+// ADR-0007.
 
 // Field interactivity (drives focus management, wrapper rendering, summary filtering)
 isFieldStateInteractive(fieldState): boolean // false when hidden() or disabled(); readonly() counts as interactive

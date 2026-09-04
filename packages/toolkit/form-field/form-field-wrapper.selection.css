@@ -405,7 +405,8 @@
 /* ============================================================================ */
 /* Label placed to the left of the input via CSS Grid. */
 /* Only applies to non-outline wrappers. */
-/* Outline keeps its floating-label treatment and always resolves to vertical. */
+/* Outline keeps its label caption inside the border and always resolves to */
+/* vertical. */
 /* Selection controls (checkbox, switch, radio-group) are excluded in the */
 /* component and keep their own grid templates. */
 
