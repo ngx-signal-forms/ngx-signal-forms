@@ -157,6 +157,11 @@ export function createWarningVisibility(
     return computed(() => {
       const fieldState = unwrapValue(field);
 
+      // No field state, nothing for a warning to attach to. Checked ahead of
+      // the overrides so `hasWarnings` cannot force the region open on a
+      // field that is not there yet.
+      if (fieldState === null || fieldState === undefined) return false;
+
       const errorsVisible =
         opts?.errorVisibility === undefined
           ? false

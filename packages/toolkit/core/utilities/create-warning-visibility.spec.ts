@@ -102,6 +102,18 @@ describe('createWarningVisibility – presence', () => {
 
     expect(visible()).toBe(false);
   });
+
+  it('stays false for a nullish field state even when presence is overridden', () => {
+    // With no field there is nothing for a warning to attach to, so a
+    // presence override must not force the region open.
+    const visible = createWarningVisibility(signal(undefined), {
+      strategy: 'immediate',
+      hasWarnings: true,
+      injector: injectorWithoutContext(),
+    });
+
+    expect(visible()).toBe(false);
+  });
 });
 
 // ---------------------------------------------------------------------------
