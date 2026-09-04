@@ -38,6 +38,7 @@ export {
   createErrorVisibility,
   createOnInvalidHandler,
   createShowErrorsComputed,
+  createWarningVisibility,
   createSubmittedStatusTracker,
   createUniqueId,
   focusFirstInvalid,
@@ -97,6 +98,7 @@ export type {
   AriaDescribedByChainOptions,
   ControlVisibilitySignal,
   CreateErrorVisibilityOptions,
+  CreateWarningVisibilityOptions,
   ErrorDisplayStrategy,
   ErrorMessageRegistry,
   ErrorReadableState,
@@ -144,4 +146,5 @@ export type {
   StandardSchemaLikeResult,
   SubmittedStatus,
   WarningDisplayStrategy,
+  WarningVisibilityState,
 } from '@ngx-signal-forms/toolkit/core';

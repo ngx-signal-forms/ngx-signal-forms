@@ -96,9 +96,16 @@ ngx-signal-forms — an Angular toolkit for working with Signal Forms.
   so the seam re-runs the identical cascade independently rather than
   reusing `resolvedStrategy`. See
   [ADR-0006](docs/decisions/0006-one-cascade-seam.md). The **warning** channel
-  is already consolidated: all surfaces resolve through
-  `resolveWarningStrategyFromContext()` (input → form context
-  `warningStrategy()` → `defaultWarningStrategy` → `'on-touch'`), which fixed
+  has its own seam next to the error one, `createWarningVisibility()`, which
+  composes the warning cascade (`resolveWarningStrategyFromContext()`: input →
+  form context `warningStrategy()` → `defaultWarningStrategy` → `'on-touch'`)
+  with the two rules that differ from the error channel — warnings gate on
+  warning _presence_ rather than `invalid()`, and a visible blocking error on
+  the same field suppresses them. `NgxHeadlessErrorState` and
+  `NgxHeadlessFieldset` route through it. The fieldset passes neither the
+  presence check (its warnings live on member fields, and its aggregation
+  applies that gate) nor a blocking-error visibility (an error on one member
+  field must not silence a warning on a sibling). The single cascade fixed
   the drift where `warningStrategy="inherit"` gave two different answers
   outside a form host. See
   [ADR-0007](docs/decisions/0007-warning-display-timing-cascade.md).
