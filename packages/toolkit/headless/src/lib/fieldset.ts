@@ -8,10 +8,10 @@ import {
 import type { FieldTree, ValidationError } from '@angular/forms/signals';
 import {
   createErrorVisibility,
+  createWarningVisibility,
   resolveStrategyFromContext,
   resolveSubmittedStatusFromContext,
   resolveWarningStrategyFromContext,
-  createShowErrorsComputed,
   type ErrorDisplayStrategy,
   type ResolvedErrorDisplayStrategy,
   type ResolvedWarningDisplayStrategy,
@@ -287,16 +287,29 @@ export class NgxHeadlessFieldset<
   });
 
   /**
-   * Show warnings signal based on {@link resolvedWarningStrategy}, timed
-   * independently of {@link resolvedStrategy}. Without this, warnings would
-   * be stuck behind whatever timing the blocking-error strategy uses (e.g.
-   * `'on-submit'`), the exact asymmetry `warningStrategy` exists to fix.
+   * Show warnings signal, timed independently of {@link resolvedStrategy}.
+   * Without this, warnings would be stuck behind whatever timing the
+   * blocking-error strategy uses (e.g. `'on-submit'`), the exact asymmetry
+   * `warningStrategy` exists to fix.
+   *
+   * Routes through `createWarningVisibility` (ADR-0006) for the same reason
+   * {@link #showErrorsSignal} routes through `createErrorVisibility`: the raw
+   * inputs plus `configDefault` feed the seam, which re-runs the identical
+   * warning cascade rather than reusing {@link resolvedWarningStrategy} —
+   * that computed exists for the public API.
+   *
+   * `hasWarnings: true` because a fieldset's warnings live on its member
+   * fields, not on its own `errors()`; {@link #aggregation} applies the
+   * aggregated presence check. `errorVisibility` is omitted because this is
+   * an aggregate surface — a blocking error on one member field must not
+   * silence a warning on a sibling (see {@link shouldShowWarnings}).
    */
-  readonly #showWarningsSignal = createShowErrorsComputed(
-    this.#fieldsetState,
-    this.resolvedWarningStrategy,
-    this.resolvedSubmittedStatus,
-  );
+  readonly #showWarningsSignal = createWarningVisibility(this.#fieldsetState, {
+    strategy: this.warningStrategy,
+    submittedStatus: this.submittedStatus,
+    configDefault: this.#config.defaultWarningStrategy,
+    hasWarnings: true,
+  });
 
   /**
    * Error/warning aggregation, delegated to {@link createFieldsetAggregation}
