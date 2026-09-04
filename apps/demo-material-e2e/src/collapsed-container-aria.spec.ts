@@ -31,7 +31,7 @@ test.describe('demo-material — aria state inside a collapsed container', () =>
     const details = page.getByTestId('topic-details');
     const summary = details.locator('> summary');
     const topicField = details.locator('mat-form-field');
-    const topic = page.getByRole('combobox', { name: 'Topic' });
+    const topic = details.locator('mat-select');
 
     await test.step('touch the required topic select so it reports invalid', async () => {
       // Opening and dismissing the panel is what marks `mat-select` touched;
