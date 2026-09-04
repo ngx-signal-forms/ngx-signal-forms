@@ -197,10 +197,10 @@ Selector: `[ngxHeadlessNotification]` · Export: `notificationState`
 
 Tone-aware grouped validation state for custom notification cards and summary blocks.
 
-| Input       | Type                                 | Description                             |
-| ----------- | ------------------------------------ | --------------------------------------- |
-| `errors`    | `Signal<readonly ValidationError[]>` | Grouped validation messages             |
-| `fieldName` | `string \| null`                     | Base id for generated error/warning ids |
+| Input       | Type                                                      | Description                                                                                                        |
+| ----------- | --------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| `errors`    | `ReactiveOrStatic<readonly ValidationError[]>` (optional) | Grouped validation messages: a plain array, a `Signal`, or a bare `() => …` reader. Omitted reads as an empty list |
+| `fieldName` | `string \| null` (optional)                               | Base id for generated error/warning ids; omitted or `null` turns id output off                                     |
 
 Tone is fully content-driven — there is no `tone` input. Any blocking (non-`warn:`) error resolves the group to `'error'` (`role="alert"`); an all-warning list resolves to `'warning'` (polite `role="status"`).
 

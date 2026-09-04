@@ -31,13 +31,15 @@ For ready-to-render components with built-in markup, use `assistive/SKILL.md` or
    - `hostDirectives` composition for reusable design-system components.
    - `createErrorState()` / `createCharacterCount()` for programmatic use outside template directives.
 
-4. **Compose ARIA from toolkit primitives.** Headless directives expose signal IDs (`errorId`, `warningId`) for direct template bindings:
+4. **Compose ARIA from toolkit primitives.** Headless directives expose the IDs as signals (`errorId`, `warningId`), so call them in the template:
 
 ```html
 <input
-  [attr.aria-describedby]="errorState.shouldShowErrors() ? errorState.errorId : null"
+  [attr.aria-describedby]="errorState.shouldShowErrors() ? errorState.errorId() : null"
 />
 ```
+
+Both return `null` until a field name resolves. Keep the `null` — an unresolved name must not produce an id like `-error`.
 
 For a reusable custom wrapper that owns its ARIA, use the re-exported
 factories instead of recreating toolkit resolution rules: `createAriaInvalidSignal`,
@@ -64,7 +66,7 @@ Use `ngxHeadlessErrorSummary` when you need a form-level summary with full DOM c
 
 ```html
 <div ngxHeadlessErrorSummary #summary="errorSummary" [formTree]="myForm">
-  @if (summary.shouldShow() && summary.hasErrors()) {
+  @if (summary.shouldShow()) {
   <div role="alert">
     <p>Please fix the following errors:</p>
     <ul>
@@ -77,7 +79,7 @@ Use `ngxHeadlessErrorSummary` when you need a form-level summary with full DOM c
       }
     </ul>
   </div>
-  } @if (summary.shouldShow() && summary.hasWarnings()) {
+  } @if (summary.shouldShowWarnings()) {
   <div role="status">
     @for (w of summary.warningEntries(); track w.kind + w.fieldName) {
     <p>{{ w.fieldName }}: {{ w.message }}</p>
@@ -87,11 +89,13 @@ Use `ngxHeadlessErrorSummary` when you need a form-level summary with full DOM c
 </div>
 ```
 
+`shouldShow()` is already `showErrors() && hasErrors()`, and `shouldShowWarnings()` is `showWarnings() && hasWarnings()`, so neither needs a second presence check. The two gates run separate cascades: `strategy` times the errors, `warningStrategy` times the warnings (ADR-0007). Gating `warningEntries()` on `shouldShow()` hides every warning on a form that has no blocking errors.
+
 For a styled out-of-the-box error summary without warnings, use `NgxFormFieldErrorSummary` from `@ngx-signal-forms/toolkit/assistive` instead.
 
 ## Grouped Notification Directive Pattern
 
-Use `ngxHeadlessNotification` when a fieldset, summary card, or custom block already owns the grouped `ValidationError[]` list and only needs content-driven tone routing, message lookup, and deterministic IDs. It exposes only `errors` (required) and `fieldName` — there is no `tone` input.
+Use `ngxHeadlessNotification` when a fieldset, summary card, or custom block already owns the grouped `ValidationError[]` list and only needs content-driven tone routing, message lookup, and deterministic IDs. It exposes only `errors` and `fieldName`, both optional — there is no `tone` input. An omitted `errors` reads as an empty list, so both containers stay hidden; `errors` accepts a plain array, a `Signal`, or a bare `() => …` reader. An omitted `fieldName` turns off id output, so `errorContainerId()` and `warningContainerId()` return `null`.
 
 ```html
 <section
@@ -134,11 +138,11 @@ Tone is fully content-driven — there is no input to set. `resolvedTone()` retu
     id="email"
     type="email"
     [formField]="form.email"
-    [attr.aria-describedby]="errorState.shouldShowErrors() && errorState.hasErrors() ? errorState.errorId : null"
+    [attr.aria-describedby]="errorState.shouldShowErrors() && errorState.hasErrors() ? errorState.errorId() : null"
     [attr.aria-invalid]="errorState.hasErrors() || null"
   />
   @if (errorState.shouldShowErrors() && errorState.hasErrors()) {
-  <ul [id]="errorState.errorId" role="alert">
+  <ul [id]="errorState.errorId()" role="alert">
     @for (error of errorState.resolvedErrors(); track error.kind) {
     <li>{{ error.message }}</li>
     }
@@ -158,14 +162,14 @@ import { NgxHeadlessErrorState } from '@ngx-signal-forms/toolkit/headless';
   hostDirectives: [
     {
       directive: NgxHeadlessErrorState,
-      inputs: ['field', 'fieldName', 'strategy'],
+      inputs: ['field', 'fieldName', 'strategy', 'warningStrategy'],
     },
   ],
   template: `
     <ng-content select="label" />
     <ng-content />
     @if (errorState.shouldShowErrors() && errorState.hasErrors()) {
-      <span [id]="errorState.errorId" role="alert" class="ds-error">
+      <span [id]="errorState.errorId()" role="alert" class="ds-error">
         {{ errorState.resolvedErrors()[0].message }}
       </span>
     }
@@ -190,7 +194,7 @@ import { NgxFieldIdentityProvider } from '@ngx-signal-forms/toolkit'; // root, n
 hostDirectives: [
   {
     directive: NgxHeadlessErrorState,
-    inputs: ['field', 'fieldName', 'strategy'],
+    inputs: ['field', 'fieldName', 'strategy', 'warningStrategy'],
   },
   { directive: NgxFieldIdentityProvider, inputs: ['fieldName'] },
 ];
@@ -210,8 +214,11 @@ the toolkit's ID conventions (so `aria-describedby` chains stay consistent
 with `NgxFormFieldError`, the wrapper, and other toolkit consumers). Prefer
 `NgxHeadlessErrorState` when you also want `shouldShowErrors()`/`hasErrors()`.
 
+It takes no `field` input — it never reads validation state. Name it with the
+`fieldName` input, or let it read the host element's `id`:
+
 ```html
-<div ngxHeadlessFieldName #fieldName="fieldName" [field]="form.email">
+<div ngxHeadlessFieldName #fieldName="fieldName" fieldName="email">
   <input
     id="email"
     [formField]="form.email"
@@ -219,6 +226,9 @@ with `NgxFormFieldError`, the wrapper, and other toolkit consumers). Prefer
   />
 </div>
 ```
+
+With neither, `resolvedFieldName()`, `errorId()` and `warningId()` all return
+`null` and the directive logs one dev-mode `console.error`.
 
 ## Programmatic State
 
@@ -236,7 +246,8 @@ const state = createErrorState({
   fieldName: 'email',
   strategy: 'on-touch',
 });
-const count = createCharacterCount({ field: form.bio }); // maxLength auto-detected from validator
+// `maxLength` is required — it is not read back from the validator.
+const count = createCharacterCount({ field: form.bio, maxLength: 500 });
 const flags = createFieldStateFlags(() => form.email()); // boolean signal flags
 
 // Reactive resolved errors: visibility cascade + 3-tier message resolution

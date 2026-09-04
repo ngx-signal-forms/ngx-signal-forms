@@ -294,6 +294,29 @@ default to `'on-touch'`, but they resolve separately: changing
 `defaultErrorStrategy` does not move warnings, and changing
 `defaultWarningStrategy` does not move errors.
 
+Since rc.13 every warning-bearing surface runs it through one seam,
+`createWarningVisibility()`, the counterpart to `createErrorVisibility()`:
+`NgxHeadlessErrorState`, `NgxHeadlessFieldset`, `NgxHeadlessErrorSummary` (and
+`NgxFormFieldErrorSummary` through it), `createErrorState()` and
+`createErrorMessageSignal()`. Before rc.13 the last four timed warnings by the
+blocking-error strategy, so an `'on-submit'` form held its warnings back too.
+
+The seam adds two rules the error channel does not have:
+
+- **Presence, not validity.** Warnings gate on `warn:` errors being present.
+  Gating on `invalid()` would not work: Angular marks a `warn:`-prefixed error
+  invalid like any other, so `invalid()` cannot tell the channels apart. The
+  toolkit splits on `kind`.
+- **A visible blocking error wins.** On a single field the two categories share
+  one message region, so a warning waits until the error clears. Aggregate
+  surfaces — the fieldset and the summary — skip this rule: a blocking error on
+  one member field must not silence a warning on a sibling.
+
+Building your own grouped surface? `createFieldsetAggregation()` and
+`createErrorSummaryEntries()` take `showErrors` and `showWarnings` as two
+separate pre-resolved signals. Passing one signal for both re-couples the
+channels and defeats the cascade.
+
 ### Configuration
 
 #### Global Default: `defaultWarningStrategy`

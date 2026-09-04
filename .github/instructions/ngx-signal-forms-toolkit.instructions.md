@@ -12,7 +12,7 @@ Enhancement layer on top of Angular Signal Forms. For API detail, entry points, 
 | Entry point                            | Purpose                                                    |
 | -------------------------------------- | ---------------------------------------------------------- |
 | `@ngx-signal-forms/toolkit`            | Core: `[formRoot]`, auto-ARIA, strategies, utilities       |
-| `@ngx-signal-forms/toolkit/form-field` | Styled wrapper, fieldset grouping, floating label          |
+| `@ngx-signal-forms/toolkit/form-field` | Styled wrapper, fieldset grouping, field appearances       |
 | `@ngx-signal-forms/toolkit/assistive`  | Standalone errors, grouped notifications, hints, summaries |
 | `@ngx-signal-forms/toolkit/headless`   | Renderless state, notification, and summary directives     |
 | `@ngx-signal-forms/toolkit/vest`       | Vest validation adapter (optional)                         |
@@ -28,6 +28,6 @@ Enhancement layer on top of Angular Signal Forms. For API detail, entry points, 
 5. Bound controls inside `ngx-form-field-wrapper` need a stable `id` unless the wrapper gets an explicit `fieldName`.
 6. Declare control semantics explicitly with `ngxSignalFormControl` for controls outside the default native field families (switches, checkboxes, sliders, composites). For switch controls also add `role="switch"` on the interactive element.
 7. Standalone imports are template-local — if a child custom control renders the real `[formField]` element, import toolkit auto-ARIA in that child component too.
-8. Do not use removed APIs: `manual` strategy, `computeShowErrors`, `createShowErrorsSignal`, `canSubmit`, `isSubmitting`, `fieldNameResolver`, `strictFieldResolution`, `injectFormConfig`.
+8. Do not use removed APIs: `manual` strategy, `computeShowErrors`, `createShowErrorsSignal`, `canSubmit`, `isSubmitting`, `fieldNameResolver`, `strictFieldResolution`, `injectFormConfig`, `NgxFormFieldNotification` (use `NgxFormFieldError` with `presentation="panel"`), `toHintDescriptors`, `createErrorRendererInputs`, `resolveUnionInput`.
 9. Use renamed tokens: `standard` (not `stacked`), `plain` (not `bare`).
 10. Drop the `Component`/`Directive` suffix from all public class imports. The single exception is `NgxSignalFormControlSemanticsDirective`, which retains its suffix.

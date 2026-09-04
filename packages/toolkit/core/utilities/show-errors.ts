@@ -36,9 +36,10 @@ import { unwrapValue } from './unwrap-signal-or-value';
  *
  * ## Simplified Architecture (aligned with Angular Signal Forms)
  *
- * Angular's `submit()` helper calls `markAllAsTouched()`, which means `field.touched()`
- * becomes true for all fields after submission. This makes `submittedStatus` **optional**
- * for the default `'on-touch'` strategy - we just check `field.touched()`.
+ * Angular's `submit()` helper calls `markAsTouched()` on the submitted node,
+ * which cascades to every descendant, so `field.touched()` is true across the
+ * tree after a submit. That makes `submittedStatus` **optional** for the
+ * default `'on-touch'` strategy — checking `field.touched()` is enough.
  *
  * ## How does it work?
  * 1. Accepts field state, error display strategy, and optional submission status

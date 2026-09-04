@@ -404,7 +404,12 @@ export class NgxFormFieldWrapper<TValue = unknown> {
    * and `<button type="button">` elements.
    *
    * **Custom Signal Forms controls:** Also works with custom `FormValueControl` components
-   * when the bound host element has an `id` attribute.
+   * when the bound host element has an `id` attribute. The probe also matches
+   * an inner `[role="combobox"][id]` (see `BOUND_CONTROL_SELECTOR`), so a
+   * field-shaped widget whose only `id` sits on its combobox trigger still
+   * resolves a name. Auto-ARIA reads the `[formField]` host's own `id` first,
+   * so give the host an `id` — or pass `fieldName` — whenever the two would
+   * otherwise disagree.
    *
    * **Explicit override:**
    * Provide an explicit field name when you need to override the automatic behavior
@@ -458,7 +463,11 @@ export class NgxFormFieldWrapper<TValue = unknown> {
    * renderer at all: it renders whenever blocking errors OR warnings
    * should be visible, not just on the blocking-error timing.
    *
-   * @default `'on-touch'`
+   * Left unset the value is `undefined`, and the renderer runs the warning
+   * cascade instead: form context `warningStrategy()` →
+   * `NGX_SIGNAL_FORMS_CONFIG.defaultWarningStrategy` → `'on-touch'`.
+   *
+   * @default Inherited from form context or `'on-touch'`
    */
   readonly warningStrategy = input<WarningDisplayStrategy | undefined>();
 
@@ -1327,11 +1336,12 @@ export class NgxFormFieldWrapper<TValue = unknown> {
         }
 
         // Sync the shared NgxFieldIdentity service so auto-aria and any other
-        // consumer always see the same field name, control element, IDs, and
-        // visibility state. Visibility is polled per render via
-        // `Element.checkVisibility()` so a control inside a collapsed
-        // `<details>` / `hidden` ancestor flips the flag the next time
-        // Angular runs CD, which is when wrappers see the change anyway.
+        // consumer always see the same field name, resolved strategies and
+        // hint ids. Auto-aria does NOT read the visibility flag written
+        // below — it probes its own host element in its own `earlyRead`
+        // phase (ADR-0011 §4), which is more correct for a multi-control
+        // cluster where one published flag cannot speak for every control.
+        // The flag stays for consumers that read the identity directly.
         // Keep order: name → element → visible → hints.
         const resolvedFieldName = this.resolvedFieldName();
 

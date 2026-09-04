@@ -1,8 +1,9 @@
 # Context
 
-> **TODO:** Fill this in. The engineering skills (`improve-codebase-architecture`, `diagnose`, `tdd`,
-> `to-issues`, `qa`) read this file to learn the project's domain language and key concepts.
-> The `/grill-with-docs` skill can populate it incrementally as terms get resolved during real work.
+The project's domain language and the decisions behind it. The engineering
+skills (`improve-codebase-architecture`, `diagnose`, `tdd`, `to-issues`, `qa`)
+read this file first. Add a term when real work settles its meaning, and record
+the synonym you are steering away from.
 
 ## Project
 

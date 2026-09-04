@@ -161,10 +161,15 @@ no such input.
 </ngx-form-field-wrapper>
 ```
 
-Warnings never affect `invalid`, so they do not follow `errorStrategy`. The
-warning cascade is `warningStrategy` input → `defaultWarningStrategy` config →
-`'on-touch'`. Set `warningStrategy` on the wrapper or `ngxSignalForm` when
-warnings should surface on the same schedule as errors.
+The warning cascade is `warningStrategy` input → the form context's
+`warningStrategy()` → `defaultWarningStrategy` config → `'on-touch'`. No tier
+consults `defaultErrorStrategy`. Set `warningStrategy` on the wrapper or on
+`ngxSignalForm` when warnings should surface on the same schedule as errors.
+
+A `warn:` error does mark the field `invalid()` — Angular has no separate
+non-invalidating channel, and the toolkit splits the two on `kind`. So do not
+reach for `invalid()` to tell a warning-only field from a failing one; use
+`splitByKind()` or `isWarningError()`.
 
 ## Wrapper Identity — Always Provide `id`
 
@@ -218,17 +223,23 @@ These still exist under a new name:
 > control _layout_ value `'stacked'` (in `NgxSignalFormControlLayout`) is
 > unrelated and remains unchanged.
 
-## Floating Labels Require a Placeholder Space
+## The Outline Label Does Not Float — Drop the Placeholder Space
+
+`appearance="outline"` puts the label inside the bordered container as a static
+caption above the control. It never moves, so there is no float to trigger:
 
 ```html
-<!-- Wrong — label won't float upward -->
-<input id="email" [formField]="form.email" />
-
-<!-- Correct — single space placeholder triggers float animation -->
+<!-- Pointless — the space placeholder animates nothing -->
 <input id="email" [formField]="form.email" placeholder=" " />
+
+<!-- Fine — no placeholder, or a real one the user should read -->
+<input id="email" [formField]="form.email" />
+<input id="email" [formField]="form.email" placeholder="name@example.com" />
 ```
 
-Required only for `appearance="outline"` (floating label behavior).
+The wrapper stylesheet has no `:placeholder-shown` rule, no transition and no
+keyframes on the label. Guides written for Material-style floating labels do
+not carry over.
 
 ## Angular Template Binding — Prefer Static Attributes for Literal Strings
 

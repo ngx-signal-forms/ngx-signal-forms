@@ -158,10 +158,13 @@ export const NGX_SIGNAL_FORM_FIELD_CONTEXT =
  * longer needs a direct class import, which lets the two directives evolve
  * independently.
  *
- * Internal contract between the control-semantics directive and the
- * auto-ARIA directive. Consumers should use `ngxSignalFormControlAria` on
- * their control host instead of providing this token directly — that keeps
- * the public API focused on the declarative directive input.
+ * Exported from the package root so a custom wrapper that writes its own ARIA
+ * can declare the mode for a control host it builds itself. Prefer the
+ * `ngxSignalFormControlAria` attribute on the control host wherever a
+ * template can carry it — provide this token directly only when there is no
+ * such host to annotate.
+ *
+ * @public
  */
 export const NGX_SIGNAL_FORM_ARIA_MODE = new InjectionToken<
   Signal<NgxSignalFormControlAriaMode | null>

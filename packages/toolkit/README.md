@@ -413,16 +413,17 @@ provideFieldLabels(() => {
 
 ## Utilities
 
-### Error visibility
+### Error and warning visibility
 
-| Function                                                     | Description                                                                                |
-| ------------------------------------------------------------ | ------------------------------------------------------------------------------------------ |
-| `createErrorVisibility(field, opts?)`                        | One call: `Signal<boolean>` with strategy + submitted status auto-read from the DI context |
-| `createShowErrorsComputed(field, strategy, status?)`         | `Signal<boolean>` — whether errors should show now                                         |
-| `shouldShowErrors(invalid, touched, strategy, status)`       | Pure boolean strategy helper — not reactive; use `createShowErrorsComputed` for a signal   |
-| `shouldShowWarnings(hasWarnings, touched, strategy, status)` | Pure boolean warning-timing counterpart to `shouldShowErrors`                              |
-| `combineShowErrors(signals)`                                 | Combines an array of visibility signals, e.g. `combineShowErrors([sigA, sigB])`            |
-| `readDirectErrors(state)`                                    | Direct `errors()` of a field/group only — excludes nested-field errors                     |
+| Function                                                     | Description                                                                                 |
+| ------------------------------------------------------------ | ------------------------------------------------------------------------------------------- |
+| `createErrorVisibility(field, opts?)`                        | One call: `Signal<boolean>` with strategy + submitted status auto-read from the DI context  |
+| `createWarningVisibility(field, opts?)`                      | The warning channel's counterpart — same tiers, plus warning presence and error suppression |
+| `createShowErrorsComputed(field, strategy, status?)`         | `Signal<boolean>` — whether errors should show now                                          |
+| `shouldShowErrors(invalid, touched, strategy, status)`       | Pure boolean strategy helper — not reactive; use `createShowErrorsComputed` for a signal    |
+| `shouldShowWarnings(hasWarnings, touched, strategy, status)` | Pure boolean warning-timing counterpart to `shouldShowErrors`                               |
+| `combineShowErrors(signals)`                                 | Combines an array of visibility signals, e.g. `combineShowErrors([sigA, sigB])`             |
+| `readDirectErrors(state)`                                    | Direct `errors()` of a field/group only — excludes nested-field errors                      |
 
 ### Strategy & context resolution
 

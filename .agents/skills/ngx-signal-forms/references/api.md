@@ -174,6 +174,8 @@ interface ResolvedMarker {
   readonly text: string;
 }
 type ErrorVisibilityState = Pick<FieldState<unknown>, 'invalid' | 'touched'>;
+// Warnings gate on `errors` (the `warn:` kinds present), never on `invalid`.
+type WarningVisibilityState = Pick<FieldState<unknown>, 'errors' | 'touched'>;
 type ErrorReadableState = Pick<
   FieldState<unknown>,
   'errors' | 'invalid' | 'touched'
@@ -381,8 +383,24 @@ These are public but only needed when building custom wrappers or low-level prim
 // Low-level error-visibility factory (backs NgxSignalFormAutoAria and headless
 // factories). Reach for it when hand-rolling a directive that needs the same
 // strategy/submittedStatus resolution.
-createErrorVisibility(options: CreateErrorVisibilityOptions): ControlVisibilitySignal
+createErrorVisibility(field, options?: CreateErrorVisibilityOptions): Signal<boolean>
 // CreateErrorVisibilityOptions: { strategy?, submittedStatus?, configDefault?, injector? }
+
+// The warning channel's counterpart, with the same tiers plus the two rules
+// warnings need (ADR-0007). Never derive warning timing from the error seam.
+createWarningVisibility(field, options?: CreateWarningVisibilityOptions): Signal<boolean>
+// CreateWarningVisibilityOptions: {
+//   strategy?; submittedStatus?; configDefault?; injector?;  // same tiers
+//   hasWarnings?;     // presence override; default reads `warn:` kinds off the
+//                     // field's own errors(). Aggregate surfaces pass `true`
+//                     // and apply the presence gate downstream.
+//   errorVisibility?; // while it reads true the warning stays hidden — one
+//                     // message region per field. Omit on aggregate surfaces:
+//                     // an error on one member must not silence a sibling's
+//                     // warning.
+// }
+// `field` is ReactiveOrStatic<Partial<WarningVisibilityState> | null | undefined>;
+// nullish short-circuits to false.
 
 // Services
 NgxFieldIdentity        // resolves/tracks a control's field identity
@@ -568,7 +586,7 @@ import {
 | ----------------- | ------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
 | `formField`       | field                                             | Required                                                                                        |
 | `fieldName`       | string                                            | Derived from bound control `id`; pass explicitly for nested custom controls or dynamic identity |
-| `strategy`        | ErrorDisplayStrategy                              | Inherited                                                                                       |
+| `strategy`        | `ErrorDisplayStrategy \| null`                    | `null` — inherits                                                                               |
 | `warningStrategy` | WarningDisplayStrategy                            | Inherited — warnings time independently of errors                                               |
 | `appearance`      | `'standard' \| 'outline' \| 'plain' \| 'inherit'` | `'inherit'`                                                                                     |
 | `orientation`     | `'vertical' \| 'horizontal' \| 'inherit'`         | `'inherit'`                                                                                     |
@@ -672,9 +690,9 @@ Use this directive instead of `NgxFormFieldErrorSummary` when you need full DOM 
 
 Selector: `[ngxHeadlessCharacterCount]` | Export: `#charCount="charCount"`
 
-Inputs: `field` (required), `maxLength`
+Inputs: `field` (required), `maxLength` (required). Unlike the styled `NgxFormFieldCharacterCount`, neither this directive nor `createCharacterCount()` reads the limit back from a `maxLength` validator — pass it.
 
-Signals: `currentLength()`, `resolvedMaxLength()`, `remaining()`, `limitState()` (`'ok'|'warning'|'danger'|'exceeded'`), `hasLimit()`, `isExceeded()`, `percentUsed()` (0–100, clamped)
+Signals: `currentLength()`, `resolvedMaxLength()`, `remaining()`, `limitState()` (`'ok'|'warning'|'danger'|'exceeded'`), `hasLimit()` (always `true`, since `maxLength` is required), `isExceeded()`, `percentUsed()` (0–100, clamped)
 
 ### NgxHeadlessFieldset
 
@@ -688,9 +706,9 @@ Signals: `isValid()`, `isInvalid()`, `isTouched()`, `isDirty()`, `aggregatedErro
 
 Selector: `[ngxHeadlessFieldName]` | Export: `#fieldName="fieldName"`
 
-Inputs: `field` (required), `fieldName`
+Inputs: `fieldName` (optional). There is no `field` input — the directive reads no validation state. With no `fieldName`, it falls back to the host element's `id`; with neither, everything below returns `null` and it logs one dev-mode `console.error`.
 
-Signals: `resolvedFieldName()` (`string | null`), `errorId` (`Signal<string | null>`), `warningId` (`Signal<string | null>`)
+Signals: `resolvedFieldName()` (`string | null`), `errorId()`, `warningId()` (both `Signal<string | null>`)
 
 ### NgxHeadlessNotification
 
@@ -794,10 +812,10 @@ interface FieldStateFlags {
 
 interface CreateErrorStateOptions<TValue = unknown> {
   readonly field: FieldTree<TValue>;
-  readonly fieldName?: string;
-  readonly strategy?: ErrorDisplayStrategy;
-  readonly warningStrategy?: WarningDisplayStrategy;
-  readonly submittedStatus?: SignalLike<SubmittedStatus>;
+  readonly fieldName: ReactiveOrStatic<string | null>; // required; null disables id generation
+  readonly strategy?: ReactiveOrStatic<ErrorDisplayStrategy>;
+  readonly warningStrategy?: ReactiveOrStatic<WarningDisplayStrategy>;
+  readonly submittedStatus?: ReactiveOrStatic<SubmittedStatus>;
 }
 
 interface ErrorStateResult {
@@ -813,7 +831,9 @@ interface ErrorStateResult {
 
 interface CreateCharacterCountOptions {
   readonly field: FieldTree<CharacterCountValue>;
-  readonly maxLength?: SignalLike<number | null | undefined>;
+  readonly maxLength: ReactiveOrStatic<number>; // required
+  readonly warningThreshold?: ReactiveOrStatic<number>; // 0-1, default 0.8
+  readonly dangerThreshold?: ReactiveOrStatic<number>; // 0-1, default 0.95
 }
 
 interface CharacterCountResult {
@@ -868,8 +888,37 @@ createFieldNameResolver(options): Signal<string | null>
   (each has too few call sites to earn one). See `docs/CUSTOM_WRAPPERS.md`
   for the inlined shape.
 
+Each factory's option and reader types ship from `/headless` alongside it.
+They are named after the factory, so read the option interface for the exact
+field list:
+
+```typescript
+// createAriaDescribedBySignal / createAriaDescribedByBridge
+(CreateAriaDescribedBySignalOptions, CreateAriaDescribedByBridgeOptions);
+(AriaDescribedByFieldNameReader, AriaDescribedByPreservedIdsReader);
+AriaDescribedByBridge;
+// createHintIdsSignal
+(CreateHintIdsSignalOptions, HintIdsSignal);
+(HintIdsFieldNameReader, HintIdsIdentityLike, HintIdsRegistryLike);
+// createFieldNameResolver
+(CreateFieldNameResolverOptions, BoundControlElementReader, LabelForReader);
+// createAriaRequiredSignal
+AriaRequiredFieldState; // Pick<FieldState<unknown>, 'required'>
+```
+
+The `*Reader` types are `() => …` functions, not `Signal`s, so a custom wrapper
+can feed them from any source and a spec can pass a literal function. The
+`*Like` types are the same idea for the identity and hint-registry inputs:
+structural minimums, so no DI is needed to call the factory.
+
+The root entry point exports `ResolvableValidationError` and
+`ResolveErrorMessageOptions` for `resolveValidationErrorMessage`, and
+`/assistive` exports `NgxCharacterCountAnnouncementState` and
+`NgxCharacterCountAnnouncementInfo` for the character count's
+`[announcementFormatter]`.
+
 Read `packages/toolkit/headless/README.md` or `docs/CUSTOM_WRAPPERS.md` for the
-full composition examples and the exported option types.
+full composition examples.
 
 ---
 
@@ -889,11 +938,24 @@ import {
   type VestAdapterOptions,
   type VestCoordinatedSuite,
   type VestFieldExclusion,
+  type VestFieldPath,
   type VestOnlyFieldSelector,
   type VestRegisterOptions,
+  type VestResultLike,
   type VestRunnableSuite,
   type VestSuiteAdapter,
 } from '@ngx-signal-forms/toolkit/vest';
+
+// The schema path `register()`, `validateVest()` and `validateVestWarnings()`
+// accept — `path.email`, not `form.email`.
+type VestFieldPath<TValue> = SchemaPath<TValue> & SchemaPathTree<TValue>;
+
+// The adapter's structural view of a Vest `SuiteResult`: `isPending()` plus
+// `getErrors()` / `getWarnings()` in both their whole-suite and field-scoped
+// overloads. Backs `RunVestSuiteResult.runResult` / `initialResult`, so a
+// consumer reading a run's outcome types against this rather than importing
+// Vest's own result type.
+interface VestResultLike<F extends string = string> { … }
 
 interface ValidateVestOptions<TValue = unknown, F extends string = string> {
   includeWarnings?: boolean; // default: false — surface warn() as toolkit warnings

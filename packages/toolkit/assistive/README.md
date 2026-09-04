@@ -49,10 +49,15 @@ import {
 </form>
 ```
 
-`ngx-form-field-hint` and `ngx-form-field-character-count` are only
-auto-associated with the control when a form-field wrapper (or a custom
-`NGX_SIGNAL_FORM_HINT_REGISTRY` provider) owns the field association. Used
-next to a bare control as shown above, they remain visual-only.
+`ngx-form-field-hint` reaches the control's `aria-describedby` only when a
+form-field wrapper (or your own `NGX_SIGNAL_FORM_HINT_REGISTRY` provider)
+registers it. Next to a bare control, as shown above, it stays visual-only.
+
+`ngx-form-field-character-count` is never referenced from `aria-describedby`,
+inside a wrapper or not: it carries no id and nothing registers it. Set
+`[liveAnnounce]="true"` to give it its own polite live region, which speaks
+only on a threshold change, not on every keystroke. State the limit in a hint
+when the user needs it before typing.
 
 ## Components
 
@@ -93,7 +98,7 @@ presentations share this one component:
 | `warningStrategy` | `WarningDisplayStrategy`                       | Override warning display strategy (defaults to `'on-touch'`)                |
 | `listStyle`       | `'plain' \| 'bullets'`                         | Visual layout for rendered messages (`'plain'` by default)                  |
 | `submittedStatus` | `SubmittedStatus`                              | Manual override for `'on-submit'` strategy                                  |
-| `title`           | `string`                                       | Optional title rendered above a visible container's message list            |
+| `title`           | `string \| null \| undefined`                  | Optional title rendered above a visible container's message list            |
 | `presentation`    | `'inline' \| 'panel'`                          | Visual treatment — bare messages vs. a bordered card (`'inline'` default)   |
 
 - Blocking errors render with `role="alert"` (assertive)
