@@ -6,15 +6,19 @@ import { isFieldStateInteractive } from './field-interactivity';
  * Focus the first **focusable** invalid field in a form after failed submission.
  *
  * Iterates `errorSummary()` and, for each error whose bound field is
- * interactive (not `hidden()` or `disabled()`), calls `focusBoundControl()`
- * and checks whether `document.activeElement` actually changed. Angular's
- * `focusBoundControl()` is a silent no-op when the field has no registered
- * binding — it exists as a method on every real `FieldState` regardless of
- * whether a control ever called `registerAsBinding()`, so its mere presence
- * cannot signal success. Only an observed focus move counts as a hit; a
- * no-op call continues to the next candidate. A descendant binding (a
- * composite control whose child registered) still counts, because the check
- * is "did focus move anywhere", not "did it land on this exact field's own
+ * interactive (not `hidden()` or `disabled()`), determines success by either
+ * of two signals: the active element is already inside one of the field's
+ * registered bindings (submit triggered from within the invalid control
+ * itself, e.g. pressing Enter), or calling `focusBoundControl()` changes
+ * `document.activeElement`. Angular's `focusBoundControl()` is a silent
+ * no-op when the field has no registered binding — it exists as a method on
+ * every real `FieldState` regardless of whether a control ever called
+ * `registerAsBinding()`, so its mere presence cannot signal success, and an
+ * unchanged `document.activeElement` cannot either, since the control may
+ * already hold focus. A no-op call with focus elsewhere continues to the
+ * next candidate. A descendant binding (a composite control whose child
+ * registered) still counts, because the check is "did focus move anywhere,
+ * or was it already there", not "did it land on this exact field's own
  * element".
  *
  * `readonly()` fields are **not** skipped: they are visible, focusable, and
@@ -86,6 +90,20 @@ export function focusFirstInvalid(formTree: FieldTree<unknown>): boolean {
     // an observed change to `document.activeElement`.
     const activeElementBefore =
       typeof document === 'undefined' ? null : document.activeElement;
+
+    // Submitting from within the first invalid control itself (e.g. pressing
+    // Enter) leaves `document.activeElement` unchanged even on success: the
+    // control already holds focus before `focusBoundControl()` runs. Treat
+    // that as a hit too, or the before/after comparison below would
+    // misreport it as a no-op and wrongly advance to the next error.
+    if (
+      activeElementBefore &&
+      isElementWithinFieldBindings(activeElementBefore, fieldState)
+    ) {
+      fieldState.focusBoundControl();
+      return true;
+    }
+
     fieldState.focusBoundControl();
     const activeElementAfter =
       typeof document === 'undefined' ? null : document.activeElement;
@@ -95,18 +113,40 @@ export function focusFirstInvalid(formTree: FieldTree<unknown>): boolean {
 
   // The form is invalid but every error was filtered out: no bound control,
   // missing fieldTree, or every candidate is non-interactive. This typically
-  // means a custom control forgot to call `registerAsBinding()`, so the user
-  // sees the error message but focus is stranded wherever the submit button
-  // was. Warn in dev mode so the wiring mistake is obvious.
+  // means a custom control forgot to call `registerAsBinding()`, so no
+  // registered binding ever received focus and the user sees the error
+  // message while focus stays stranded wherever the submit button was. Warn
+  // in dev mode so the wiring mistake is obvious.
   if (isDevMode()) {
     console.warn(
       '[ngx-signal-forms] focusFirstInvalid() found validation errors but ' +
         'could not focus any of them. Typical cause: a custom control is ' +
-        'missing `registerAsBinding()` so its `focusBoundControl()` is ' +
-        'unavailable. Fields hidden or disabled via `hidden()`/`disabled()` ' +
-        'are deliberately skipped.',
+        'missing `registerAsBinding()`, so no registered binding received ' +
+        'focus. Fields hidden or disabled via `hidden()`/`disabled()` are ' +
+        'deliberately skipped.',
     );
   }
 
   return false;
+}
+
+/**
+ * Whether `element` is one of `fieldState`'s registered
+ * `FormField`/`FormFieldBinding` elements, or nested inside one — covers the
+ * composite-control case where the binding element is a wrapper around the
+ * actually-focused descendant.
+ */
+function isElementWithinFieldBindings(
+  element: Element,
+  fieldState: FieldState<unknown>,
+): boolean {
+  const bindings =
+    typeof fieldState.formFieldBindings === 'function'
+      ? fieldState.formFieldBindings()
+      : [];
+
+  return bindings.some(
+    (binding) =>
+      binding.element === element || binding.element.contains(element),
+  );
 }

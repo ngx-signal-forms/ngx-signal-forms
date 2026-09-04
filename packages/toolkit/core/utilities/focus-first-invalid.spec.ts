@@ -339,6 +339,48 @@ describe('focusFirstInvalid', () => {
       expect(result).toBe(true);
     });
   });
+
+  describe('Already-focused control (submit triggered from within the invalid field)', () => {
+    it('treats the already-focused first invalid control as success and does not advance to the next error', () => {
+      // Submitting via Enter from inside the first invalid control leaves it
+      // already focused: focusBoundControl() is then a same-element no-op,
+      // so document.activeElement never changes even though focus is
+      // already correct. That must still count as success.
+      const alreadyFocusedElement = createFocusTarget();
+      alreadyFocusedElement.focus();
+
+      const nextFocusSpy = vi.fn();
+
+      const mockField = createMockFieldWithErrors([
+        createMockAlreadyFocusedError(alreadyFocusedElement),
+        createMockError(() => {
+          nextFocusSpy();
+        }),
+      ]);
+
+      const result = focusFirstInvalid(mockField);
+
+      expect(result).toBe(true);
+      expect(nextFocusSpy).not.toHaveBeenCalled();
+    });
+
+    it('still counts as a hit when the already-focused element is a descendant of the registered binding', () => {
+      const bindingElement = document.createElement('div');
+      bindingElement.setAttribute('data-mock-focus-target', '');
+      const descendant = document.createElement('input');
+      bindingElement.append(descendant);
+      document.body.append(bindingElement);
+      descendant.focus();
+
+      const mockField = createMockFieldWithErrors([
+        createMockAlreadyFocusedError(bindingElement),
+      ]);
+
+      const result = focusFirstInvalid(mockField);
+
+      expect(result).toBe(true);
+    });
+  });
 });
 
 /**
@@ -471,6 +513,30 @@ function createMockDescendantFocusError(): ValidationError.WithFieldTree {
 }
 
 /**
+ * Helper: Create a mock ValidationError whose field state already has
+ * `boundElement` registered as a `formFieldBindings()` entry and whose
+ * `focusBoundControl()` is a no-op (mirroring focusing an element that is
+ * already focused: the browser does not fire a focus change). Simulates
+ * submitting from within the invalid control itself.
+ */
+function createMockAlreadyFocusedError(
+  boundElement: HTMLElement,
+): ValidationError.WithFieldTree {
+  return {
+    kind: 'required',
+    message: 'Required',
+    fieldTree: createMockFieldTree({
+      errors: [],
+      focusBoundControl: (_options?: FocusOptions): void => undefined,
+      invalid: true,
+      valid: false,
+      value: '',
+      formFieldBindings: [boundElement],
+    }),
+  } satisfies ValidationError.WithFieldTree;
+}
+
+/**
  * Helper: Append a focusable element to the document so tests can assert on
  * real `document.activeElement` transitions. Cleaned up in `afterEach`.
  */
@@ -491,6 +557,7 @@ function createMockFieldTree<TValue>({
   hidden = false,
   disabled = false,
   isReadonly = false,
+  formFieldBindings = [],
 }: {
   errors: ValidationError.WithFieldTree[];
   focusBoundControl?: (options?: FocusOptions) => void;
@@ -501,6 +568,8 @@ function createMockFieldTree<TValue>({
   hidden?: boolean;
   disabled?: boolean;
   isReadonly?: boolean;
+  /** Elements to expose via `fieldState.formFieldBindings()`. */
+  formFieldBindings?: readonly HTMLElement[];
 }): FieldTree<TValue> {
   let fieldTree!: FieldTree<TValue>;
 
@@ -520,7 +589,10 @@ function createMockFieldTree<TValue>({
     dirty: signal(false),
     errorSummary: errorSignal,
     errors: errorSignal,
-    formFieldBindings: signal<FormField<unknown>[]>([]),
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- test-only partial FormField shape; only `element` is read by the code under test.
+    formFieldBindings: signal(
+      formFieldBindings.map((element) => ({ element }) as FormField<unknown>),
+    ),
     hidden: signal(hidden),
     invalid: signal(invalid),
     keyInParent: signal<string | number>('root'),
