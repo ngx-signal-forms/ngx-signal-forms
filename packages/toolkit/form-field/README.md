@@ -115,7 +115,7 @@ export class ContactFormComponent {
 | `fieldName`       | `string`                                          | From `id`   | Explicit field name; derived from control `id`               |
 | `appearance`      | `'standard' \| 'outline' \| 'plain' \| 'inherit'` | `'inherit'` | Visual style variant                                         |
 | `orientation`     | `'vertical' \| 'horizontal' \| 'inherit'`         | `'inherit'` | Label position (see [Orientation](#orientation))             |
-| `strategy`        | `ErrorDisplayStrategy`                            | Inherited   | Override error display strategy                              |
+| `strategy`        | `ErrorDisplayStrategy \| null`                    | `null`      | Override error display strategy; `null` inherits             |
 | `warningStrategy` | `WarningDisplayStrategy`                          | Inherited   | Override warning display strategy, independent of `strategy` |
 | `errorPlacement`  | `'top' \| 'bottom'`                               | `'bottom'`  | Render errors above or below the control                     |
 | `showMarkerWhen`  | `'required' \| 'optional' \| 'none'`              | Config      | Which fields carry a visual marker                           |
@@ -131,7 +131,7 @@ these inputs only to override a specific field — see
 ### Appearances
 
 - **`standard`** — label above input, simple vertical layout
-- **`outline`** — Material Design floating label with bordered container (requires CSS `:has()` — Chrome 105+, Firefox 121+, Safari 15.4+)
+- **`outline`** — bordered container with the label printed inside it as a static caption above the control. The label does not float or animate, so no `placeholder=" "` is needed. Needs CSS `:has()`, but the wrapper's stylesheets also use native nesting throughout, which sets the real floor at Chrome 112, Edge 112, Safari 16.5, Firefox 121 — see [THEMING.md](./THEMING.md#browser-support).
 - **`plain`** — no field chrome; the wrapper still provides labels, errors, and field identity. Good for custom controls with their own visual treatment.
 - **`inherit`** (default) — uses the value from `provideNgxSignalFormsConfig()`
 
@@ -141,8 +141,8 @@ these inputs only to override a specific field — see
 - **`horizontal`** — label in a shared column to the left of the field control
 - **`inherit`** (default input value) — uses the value from `provideNgxSignalFormsConfig()`
 
-`appearance="outline"` always resolves to vertical because the floating-label
-treatment depends on the label staying inside the field chrome. Selection rows
+`appearance="outline"` always resolves to vertical because its label caption
+sits inside the field chrome, above the control. Selection rows
 such as checkbox, switch, and radio-group controls keep their own inline
 layouts even when `orientation="horizontal"` is requested.
 
@@ -158,7 +158,7 @@ in the page or feature container.
 | `plain`    | ✅ Supported             | ✅ Supported               |
 | `outline`  | ✅ Supported             | ↩️ Resolves to vertical    |
 
-`outline` keeps a vertical layout because floating-label behavior depends on that structure.
+`outline` keeps a vertical layout because its label caption lives inside the bordered container.
 
 ### Prefix and suffix slots
 

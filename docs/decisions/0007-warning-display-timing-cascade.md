@@ -104,7 +104,7 @@ export function shouldShowWarnings(
 }
 ```
 
-This mirrors `shouldShowErrors()` but gates on warning _presence_ rather than the field's invalid state, since warnings are non-blocking and never make a field invalid.
+This mirrors `shouldShowErrors()` but gates on warning _presence_ rather than the field's invalid state. Angular offers no non-invalidating validation channel: a `warn:`-prefixed `ValidationError` comes out of the same validator pipeline and marks the field `invalid()` like any other, so `invalid()` cannot tell the two channels apart. The toolkit splits on `kind` instead. "Non-blocking" here is the toolkit's own meaning — warnings never gate submission, and they are timed by this cascade.
 
 ### New Resolution Functions
 

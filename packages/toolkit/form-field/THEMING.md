@@ -630,11 +630,12 @@ The form field wrapper supports three appearance modes via the `appearance` inpu
 
 #### Outline layout (`appearance="outline"`)
 
-- Material Design inspired floating label inside border
-- Label sits inside the input container
+- Label sits inside the bordered container as a static caption above the
+  control. It does not float, so no `placeholder=" "` is needed.
 - Uses `--ngx-form-field-outline-label-*` properties
 - Uses `--ngx-form-field-outline-input-*` properties
-- Requires CSS `:has()` selector (Chrome 105+, Firefox 121+, Safari 15.4+)
+- Requires CSS `:has()` (Chrome 105+, Firefox 121+, Safari 15.4+), inside the
+  wider baseline in [Browser support](#browser-support)
 
 #### Plain layout (`appearance="plain"`)
 
@@ -800,8 +801,8 @@ Set `orientation="horizontal"` on `ngx-form-field-wrapper` (or configure
 to the **left** of the input.
 
 This mode applies to **standard** and **plain** wrappers. `appearance="outline"`
-always resolves back to vertical because its floating-label treatment depends on
-the label staying inside the outlined container. Selection controls (checkbox,
+always resolves back to vertical because its label caption sits inside the
+outlined container, above the control. Selection controls (checkbox,
 switch, radio-group) are also excluded and keep their inline layout.
 
 | Property                                   | Default   | Description                                                       |
@@ -1030,7 +1031,7 @@ orientations:
 
 - **Standard (vertical)** — the label slot is removed (`display: none`);
   the flex gap above the input also collapses.
-- **Outline** — the floating-label slot inside the bordered container is
+- **Outline** — the label slot inside the bordered container is
   dropped; `--_outline-min-height` shrinks to match the input's own
   line-height plus vertical padding.
 - **Horizontal** — the grid collapses to a single content column; the

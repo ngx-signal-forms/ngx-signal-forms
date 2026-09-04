@@ -57,7 +57,7 @@ The toolkit is an enhancement layer, not a replacement. Angular Signal Forms own
 8. **Use warning helpers for non-blocking guidance.** Warnings use `kind: 'warn:*'` convention and render with polite ARIA (`role="status"`). Blocking errors render with assertive ARIA (`role="alert"`). Warnings time independently of errors through their own cascade: `warningStrategy` input on the wrapper or `ngxSignalForm` → `defaultWarningStrategy` config → terminal `'on-touch'` (see `resolveWarningStrategy` in `../references/api.md`). Setting `errorStrategy` alone does not move warnings.
 
 9. **Use submission helpers over manual state tracking:**
-   - `focusFirstInvalid(form)` — focus on invalid target after failed submit. Skips errors whose bound field is `hidden()` or `disabled()` — focusing a non-interactive control would either throw or strand focus on something the user cannot operate. Also skips orphan errors with no field tree (nothing to focus is better than stealing focus to an unrelated control).
+   - `focusFirstInvalid(form)` — focus on invalid target after failed submit. Skips errors whose bound field is `hidden()` or `disabled()` — focusing a non-interactive control would either throw or strand focus on something the user cannot operate. Also skips orphan errors with no field tree (nothing to focus is better than stealing focus to an unrelated control). Returns `true` only when focus actually moved, or when it was already inside the candidate field (submitting with Enter from within it). A field with no registered binding makes Angular's `focusBoundControl()` a silent no-op, so the helper moves on to the next candidate; if none works it returns `false` and warns in dev mode.
    - `createOnInvalidHandler()` — creates an `onInvalid` callback for `form()` submit options
    - `submitWithWarnings(form, callback)` — submit even when only warnings remain or a validator is still pending. Delegates to Angular `submit()` once its own gate passes, so `submitting()` and `submittedStatus` track automatically. Returns `Promise<boolean>`: `true` once `callback` has run and settled, `false` when refused (blocking errors) or dropped (re-entrant call)
    - `hasSubmitted(form)` — `Signal<boolean>` for completed submission tracking
@@ -79,12 +79,7 @@ import { NgxFormField } from '@ngx-signal-forms/toolkit/form-field';
     <form [formRoot]="userForm" ngxSignalForm errorStrategy="on-submit">
       <ngx-form-field-wrapper [formField]="userForm.email" appearance="outline">
         <label for="email">Email</label>
-        <input
-          id="email"
-          type="email"
-          [formField]="userForm.email"
-          placeholder=" "
-        />
+        <input id="email" type="email" [formField]="userForm.email" />
       </ngx-form-field-wrapper>
       <button type="submit">Submit</button>
     </form>

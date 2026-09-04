@@ -17,16 +17,16 @@ Routing loop:
 2. Open exactly one sub-skill first.
 3. Open a second sub-skill only if the task truly crosses surfaces.
 
-| Task                                                                  | Entry point                            | Sub-skill to read                          |
-| --------------------------------------------------------------------- | -------------------------------------- | ------------------------------------------ |
-| Upgrade from beta or an earlier release candidate                     | —                                      | [migrations/SKILL.md](migrations/SKILL.md) |
-| `[formRoot]`, error strategy, ARIA, submission, config, or presets    | `@ngx-signal-forms/toolkit`            | [core/SKILL.md](core/SKILL.md)             |
-| Styled wrappers, fieldsets, floating labels, or custom-control layout | `@ngx-signal-forms/toolkit/form-field` | [form-field/SKILL.md](form-field/SKILL.md) |
-| Standalone errors, notifications, hints, counters, or summaries       | `@ngx-signal-forms/toolkit/assistive`  | [assistive/SKILL.md](assistive/SKILL.md)   |
-| Full DOM control or custom wrapper ARIA/identity composition          | `…/headless` (+ root for identity)     | [headless/SKILL.md](headless/SKILL.md)     |
-| Vest suites or custom Vest validation flows                           | `@ngx-signal-forms/toolkit/vest`       | [vest/SKILL.md](vest/SKILL.md)             |
-| axe-core WCAG assertions                                              | `@ngx-signal-forms/toolkit/testing`    | [testing/SKILL.md](testing/SKILL.md)       |
-| Dev-time form inspection                                              | `@ngx-signal-forms/debugger`           | [debugger/SKILL.md](debugger/SKILL.md)     |
+| Task                                                                    | Entry point                            | Sub-skill to read                          |
+| ----------------------------------------------------------------------- | -------------------------------------- | ------------------------------------------ |
+| Upgrade from beta or an earlier release candidate                       | —                                      | [migrations/SKILL.md](migrations/SKILL.md) |
+| `[formRoot]`, error strategy, ARIA, submission, config, or presets      | `@ngx-signal-forms/toolkit`            | [core/SKILL.md](core/SKILL.md)             |
+| Styled wrappers, fieldsets, field appearances, or custom-control layout | `@ngx-signal-forms/toolkit/form-field` | [form-field/SKILL.md](form-field/SKILL.md) |
+| Standalone errors, notifications, hints, counters, or summaries         | `@ngx-signal-forms/toolkit/assistive`  | [assistive/SKILL.md](assistive/SKILL.md)   |
+| Full DOM control or custom wrapper ARIA/identity composition            | `…/headless` (+ root for identity)     | [headless/SKILL.md](headless/SKILL.md)     |
+| Vest suites or custom Vest validation flows                             | `@ngx-signal-forms/toolkit/vest`       | [vest/SKILL.md](vest/SKILL.md)             |
+| axe-core WCAG assertions                                                | `@ngx-signal-forms/toolkit/testing`    | [testing/SKILL.md](testing/SKILL.md)       |
+| Dev-time form inspection                                                | `@ngx-signal-forms/debugger`           | [debugger/SKILL.md](debugger/SKILL.md)     |
 
 ## Shared References
 

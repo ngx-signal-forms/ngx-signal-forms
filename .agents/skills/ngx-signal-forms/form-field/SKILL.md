@@ -1,5 +1,5 @@
 ---
-description: Form-field toolkit surface. Use when adding wrappers, fieldsets, floating labels, field markers, or custom-control layouts.
+description: Form-field toolkit surface. Use when adding wrappers, fieldsets, field appearances, field markers, or custom-control layouts.
 ---
 
 # Toolkit Form Field
@@ -21,7 +21,7 @@ The form-field entry point provides a pre-styled field shell (label + control + 
 - Bound control must have a stable `id` — the wrapper derives field identity from it.
 - For nested custom controls or dynamically identified inner controls, pass explicit `fieldName` on the wrapper instead of relying on implicit id discovery.
 - Set `appearance="outline"` for modern outlined inputs; `appearance="standard"` for label-above layout; `appearance="plain"` for minimal chrome; `appearance="inherit"` to follow parent config.
-- Add `placeholder=" "` (a single space) alongside `appearance="outline"` when you want the floating label animation.
+- `appearance="outline"` prints the label as a static caption inside the border. It does not float or animate, so it needs no `placeholder=" "` trick — write a real placeholder when the field wants one, or none at all.
 
 3. **Error placement:**
    - Default for wrapper: `errorPlacement="bottom"`
@@ -119,12 +119,7 @@ import { NgxFormField } from '@ngx-signal-forms/toolkit/form-field';
         appearance="outline"
       >
         <label for="email">Email</label>
-        <input
-          id="email"
-          type="email"
-          [formField]="profileForm.email"
-          placeholder=" "
-        />
+        <input id="email" type="email" [formField]="profileForm.email" />
       </ngx-form-field-wrapper>
 
       <ngx-form-field-wrapper
@@ -132,7 +127,7 @@ import { NgxFormField } from '@ngx-signal-forms/toolkit/form-field';
         appearance="outline"
       >
         <label for="name">Full name</label>
-        <input id="name" [formField]="profileForm.name" placeholder=" " />
+        <input id="name" [formField]="profileForm.name" />
         <ngx-form-field-hint>As it appears on your ID</ngx-form-field-hint>
       </ngx-form-field-wrapper>
 
@@ -162,12 +157,12 @@ export class ProfileFormComponent {
     appearance="outline"
   >
     <label for="street">Street</label>
-    <input id="street" [formField]="form.address.street" placeholder=" " />
+    <input id="street" [formField]="form.address.street" />
   </ngx-form-field-wrapper>
 
   <ngx-form-field-wrapper [formField]="form.address.city" appearance="outline">
     <label for="city">City</label>
-    <input id="city" [formField]="form.address.city" placeholder=" " />
+    <input id="city" [formField]="form.address.city" />
   </ngx-form-field-wrapper>
 </ngx-form-fieldset>
 ```
@@ -178,7 +173,6 @@ Use `includeNestedErrors` on the fieldset only when the overall summary must agg
 
 - If wrapper errors don't appear: confirm the bound control has an `id` attribute matching the field, or add explicit `fieldName` when the control is nested.
 - If grouped summary duplicates child messages: remove `includeNestedErrors` or scope `fields` explicitly.
-- If floating label doesn't animate: add `placeholder=" "` (a single space) and use `appearance="outline"`.
 - If a switch row collapses or inherits text-input styling: make sure the bound control declares `ngxSignalFormControl="switch"` (in addition to `role="switch"` for a11y) so the wrapper uses switch-specific layout.
 - If a slider or composite control gets an outlined text-field shell: add `ngxSignalFormControl="slider"` (or `"composite"`) to the bound host so the wrapper picks up the correct layout. If a field-shaped combobox or closed select does **not** get the text-field shell, keep the trigger naked and join as `input-like` (combobox role + id, or explicit `ngxSignalFormControl="input-like"`). Do not add a `select` kind.
 - If auto-ARIA conflicts with a custom control's own ARIA attributes: add `ngxSignalFormControlAria="manual"` on the control host to suppress toolkit ARIA management. Use `buildAriaDescribedBy` to assemble the `aria-describedby` value manually.

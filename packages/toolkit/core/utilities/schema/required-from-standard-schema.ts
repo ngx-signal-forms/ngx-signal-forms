@@ -159,7 +159,7 @@ function isStandardSchemaKeyRequired(
  * @example
  * ```typescript
  * import { form, validateStandardSchema } from '@angular/forms/signals';
- * import { requiredFromStandardSchema } from '@ngx-signal-forms/toolkit/core';
+ * import { requiredFromStandardSchema } from '@ngx-signal-forms/toolkit';
  *
  * const travelerForm = form(model, (path) => {
  *   validateStandardSchema(path, TravelerSchema);

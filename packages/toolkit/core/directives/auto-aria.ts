@@ -73,7 +73,9 @@ const INITIAL_DOM_SNAPSHOT: AutoAriaDomSnapshot = {
  *
  * Adds:
  * - `aria-invalid`: Reflects the field's validation state
- * - `aria-describedby`: Links to error messages for screen readers
+ * - `aria-required`: Reflects `FieldState.required()`
+ * - `aria-describedby`: Links to the error, warning and hint regions that
+ *   are currently rendered
  *
  * **Selector Strategy**: Automatically applies to all form controls with `[formField]` attribute,
  * except radio buttons and standard checkboxes. Checkbox-based switches opt back in

@@ -22,8 +22,10 @@ your design system's posture:
 
 - [`apps/demo-material`](../apps/demo-material/README.md) — wraps Angular
   Material's `<mat-form-field>`. Material **owns** `aria-describedby` and
-  the toolkit's auto-ARIA is suppressed via `ariaMode="manual"` per-control
-  directives; the wrapper composes only `createAriaInvalidSignal` /
+  the toolkit's auto-ARIA is suppressed per control with the
+  `ngxSignalFormControlAria="manual"` attribute (the same setting the
+  `ngxSignalFormControl` config object spells `ariaMode: 'manual'`); the
+  wrapper composes only `createAriaInvalidSignal` /
   `createAriaRequiredSignal` and lets Material aggregate hint and error
   IDs through its own slot mechanism.
 - [`apps/demo-spartan`](../apps/demo-spartan/README.md) — wraps Spartan's
@@ -495,7 +497,9 @@ A few things to call out:
    `errorDisplayStrategy` + `submittedStatus` cascade the rest of the toolkit
    uses applies here without you having to thread it through. Pass
    `{ strategy: 'immediate' }` (or a `Signal<ErrorDisplayStrategy>`) to
-   override.
+   override. A wrapper that renders warnings calls `createWarningVisibility`
+   for that channel — one seam call per channel. Reusing the error signal for
+   both would put warnings back on the blocking-error strategy (ADR-0007).
 3. **Hint composition is registry-driven.** Pass the optional
    `NGX_SIGNAL_FORM_HINT_REGISTRY` token in via `createHintIdsSignal`'s
    `registry` option and the factory filters by the current field name for

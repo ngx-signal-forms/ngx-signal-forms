@@ -125,9 +125,12 @@ export function validateVestWarnings<TValue, F extends string = string>(
  * to opt out when you deliberately want suite state to persist.
  *
  * Pass `{ only: (ctx) => fieldName }` to enable per-field focused runs. The
- * adapter then invokes `suite.run(value, fieldName)` (or
- * `suite.only(fieldName).run(value)` where supported) rather than a full-suite
- * run. Works with suite callbacks that use `only(fieldName)` internally.
+ * adapter then prefers `suite.only(fieldName).run(value)`, which also accepts
+ * a list of field names, and falls back to `suite.run(value, fieldName)` only
+ * for a suite that exposes no `only()` — that legacy path takes one field name
+ * and collapses a list to its first entry. Either way it replaces the
+ * full-suite run, and works with suite callbacks that call `only(fieldName)`
+ * internally.
  *
  * Built on the public {@link sharedVestAdapter}; advanced consumers can wire
  * the same machinery manually via `createVestAdapter` /

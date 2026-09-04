@@ -23,7 +23,7 @@ The assistive entry point provides accessible feedback rendering that sits betwe
    - Inside a wrapper, `fieldName` is inherited automatically.
    - Use `listStyle="bullets"` for grouped summaries; default `'plain'` for inline single-field output.
 
-3. **`NgxFormFieldHint`** — static helper text that participates in `aria-describedby` linkage. Place before or after the input; the wrapper handles ordering automatically.
+3. **`NgxFormFieldHint`** — static helper text that participates in `aria-describedby` linkage. Place before or after the input; the wrapper handles ordering automatically. Without an explicit `id` a hint falls back to `${fieldName}-hint`; inside one wrapper the first unnamed hint keeps that name and later ones become `${fieldName}-hint-2`, `-hint-3`, so no two share a DOM id. Set an explicit `id` when the id must be stable across reordering.
 
 4. **`NgxFormFieldCharacterCount`** — live character count with progressive color states:
    - Provide `[formField]` for the bound field.
@@ -149,7 +149,7 @@ import {
 - If a property-bound hint id (`[id]="expr"`) doesn't reach `aria-describedby`: update the toolkit — older versions read the id once at construction and missed property bindings; current versions map both static `id` and `[id]` onto the hint's `id` input.
 - If hints don't appear in `aria-describedby`: confirm the component is inside a `ngx-form-field-wrapper` or use `NgxHeadlessFieldName` to wire it manually.
 - If a grouped notification announces with the wrong urgency: check the `[errors]` list you pass in — routing is content-driven, so a stray blocking error will force the assertive `role="alert"` container. There is no `tone` input to override it.
-- For grouped summaries or fieldset-level output, switch to `form-field/SKILL.md` (`NgxFormFieldset`).
+- For grouped output you already aggregate yourself, stay here: `NgxFormFieldError` with `presentation="panel"` (step 5). Switch to `form-field/SKILL.md` (`NgxFormFieldset`) only when you also want the styled group shell — legend, border, surface tone — to do the aggregating for you.
 - If error summary does not show: verify `ngxSignalForm` is applied to the `<form>` element so context is active, or provide `strategy` and `submittedStatus` explicitly.
-- If error summary entries don't focus controls on click: ensure the bound `<input>` / `<textarea>` / `<select>` has a stable `id` attribute — `focusBoundControl()` requires it.
+- If error summary entries don't focus controls on click: the field needs a registered binding. Native controls with `[formField]` register themselves; a custom control must call `registerAsBinding()`. Angular's `focusBoundControl()` is a silent no-op without one, and `focusFirstInvalid()` then reports `false` and logs a dev-mode warning.
 - For warning entries in the summary, use `NgxHeadlessErrorSummary` from `@ngx-signal-forms/toolkit/headless`, or use `NgxFormFieldError` with `presentation="panel"` when you already have aggregated `ValidationError[]`.
