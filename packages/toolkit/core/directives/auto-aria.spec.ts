@@ -630,6 +630,42 @@ describe('NgxSignalFormAutoAria', () => {
       warnSpy.mockRestore();
     });
 
+    it('falls back to the inner combobox id when the FormValueControl host has no id of its own', async () => {
+      // Regression test for PR #446: some field-shaped custom controls (e.g.
+      // the demo-primeng PrimeSelectControlComponent shim) never put an `id`
+      // on their own `[formField]` host — the shim derives its field name
+      // independently through injected wrapper context instead, and only the
+      // *relocated* combobox descendant carries an id. Preferring the host
+      // id (issue #436) must not regress to `null` when the host simply has
+      // no id at all; it has to fall back to the target's, matching the
+      // pre-#436 behavior for this shape.
+      @Component({
+        template: `
+          <div [formField]="roleControl()">
+            <span id="role" role="combobox"></span>
+          </div>
+        `,
+        imports: [MockFormFieldDirective, NgxSignalFormAutoAria],
+      })
+      class TestComponent {
+        roleControl = createMockControl(
+          true,
+          true,
+          [{ kind: 'required', message: 'Role is required' }],
+          true,
+        );
+      }
+
+      const { container } = await render(TestComponent);
+      await TestBed.inject(ApplicationRef).whenStable();
+
+      const combobox = container.querySelector('#role');
+
+      expect(combobox).toHaveAttribute('aria-required', 'true');
+      expect(combobox).toHaveAttribute('aria-invalid', 'true');
+      expect(combobox).toHaveAttribute('aria-describedby', 'role-error');
+    });
+
     it('still sets aria-required="true" on a host with no role attribute', async () => {
       @Component({
         template: '<div id="cluster" [formField]="clusterControl()"></div>',

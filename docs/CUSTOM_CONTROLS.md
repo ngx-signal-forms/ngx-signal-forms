@@ -217,15 +217,19 @@ Join with one of these two paths:
    `ngxSignalFormControl="input-like"` on the `[formField]` host. Do **not**
    set `role="combobox"` on that host. This is the closed-select path.
 
-The field **name** always comes from the `[formField]` host's `id` — Path 1
-relocates the managed ARIA attributes (`aria-invalid`, `aria-required`,
-`aria-describedby`) to the inner combobox, but the _name_ used to build
-`${fieldName}-error` and `${fieldName}-warning` stays the host's. A sibling
-`<ngx-form-field-error fieldName="…">` has no way to see the inner
-combobox's `id`, so it must name the field after the host to agree with
-auto-ARIA. If the host also carries an author-written `aria-describedby`,
-that value is preserved on the relocated combobox rather than dropped, and
-a one-time dev-mode `console.warn` flags the relocation.
+The field **name** comes from the `[formField]` host's `id` when it has one
+— Path 1 relocates the managed ARIA attributes (`aria-invalid`,
+`aria-required`, `aria-describedby`) to the inner combobox, but the _name_
+used to build `${fieldName}-error` and `${fieldName}-warning` stays the
+host's. A sibling `<ngx-form-field-error>` must set its explicit
+`fieldName` to that host name to agree with auto-ARIA, since it has no way
+to see the inner combobox's `id`. When the host itself carries no `id` at
+all — a custom control that derives its field name some other way and only
+ever put an `id` on the relocated target — the name falls back to the
+combobox's `id` instead of resolving to nothing. If the host also carries
+an author-written `aria-describedby`, that value is preserved on the
+relocated combobox rather than dropped, and a one-time dev-mode
+`console.warn` flags the relocation.
 
 ```html
 <!-- Path 1: inner combobox infers input-like -->

@@ -569,8 +569,13 @@ export class NgxSignalFormAutoAria {
       devWarnOnce(
         this.#describedByRelocationWarned,
         'warn',
-        `[ngx-signal-forms] NgxSignalFormAutoAria: aria-describedby="${hostRaw}" is authored on the host element, but managed ARIA attributes are written on its inner role="combobox" descendant instead. The host's ids are preserved on the combobox — author aria-describedby on the combobox directly to avoid this warning.`,
+        '[ngx-signal-forms] NgxSignalFormAutoAria: aria-describedby is ' +
+          'authored on the host element, but managed ARIA attributes are ' +
+          'written on its inner role="combobox" descendant instead. The ' +
+          "host's ids are preserved on the combobox — author " +
+          'aria-describedby on the combobox directly to avoid this warning.',
         host,
+        hostRaw,
       );
     }
 
@@ -615,19 +620,30 @@ export class NgxSignalFormAutoAria {
     // field name over the element's id attribute. This ensures auto-aria and
     // the wrapper always agree on which name drives ID generation.
     //
-    // Absent an identity, the name always comes from the *host* element
-    // (`this.#element.nativeElement`), never from `#ariaTarget()`. A
-    // field-shaped custom control (e.g. a FormValueControl host wrapping an
-    // Angular Aria Combobox) binds `[formField]` on the host and only
-    // relocates the *managed ARIA attributes* to the inner `role="combobox"`
-    // descendant — field identity still belongs to whichever element
-    // `[formField]` sits on, so a sibling `<ngx-form-field-error
-    // fieldName="…">` (which has no way to see the inner combobox's id) and
-    // auto-aria agree on the same generated ids.
+    // Absent an identity, the *host* id wins when present — never
+    // `#ariaTarget()`'s. A field-shaped custom control (e.g. a
+    // FormValueControl host wrapping an Angular Aria Combobox) binds
+    // `[formField]` on the host and only relocates the *managed ARIA
+    // attributes* to the inner `role="combobox"` descendant — field identity
+    // still belongs to whichever element `[formField]` sits on, so a sibling
+    // `<ngx-form-field-error fieldName="…">` (which has no way to see the
+    // inner combobox's id) and auto-aria agree on the same generated ids.
+    // See issue #436.
+    //
+    // When the host has *no* id at all, fall back to the target's id rather
+    // than resolving to `null`. Some field-shaped custom controls put the
+    // only `id` on the relocated target and rely on it for their own,
+    // independently-composed field-name resolution (e.g. a FormValueControl
+    // shim that writes its own ARIA and derives its field name from injected
+    // wrapper context, not from its own host's `id`) — treating a nameless
+    // host as authoritative would silently drop the field name auto-aria
+    // agrees on with the rest of that composition (regression caught in
+    // demo-primeng's `PrimeSelectControlComponent` shim, PR #446).
     const ariaTarget = this.#ariaTarget();
     const fieldName = this.#fieldIdentity
       ? this.#fieldIdentity.fieldName()
-      : resolveFieldName(this.#element.nativeElement);
+      : (resolveFieldName(this.#element.nativeElement) ??
+        resolveFieldName(ariaTarget));
 
     return {
       fieldName,
