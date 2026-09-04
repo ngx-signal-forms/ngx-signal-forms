@@ -724,4 +724,49 @@ describe('form-field wrapper — WCAG 2.2 AA conformance', () => {
       await expectNoA11yViolations(container);
     });
   });
+
+  describe('multiple hints in one wrapper (issue #435)', () => {
+    it('gives two unnamed hints distinct ids, lists both in aria-describedby, and has no violations', async () => {
+      const TestComponent = defineFixtureComponent(
+        'ngx-test-a11y-multi-hint',
+        `
+          <form [formRoot]="testForm" ngxSignalForm>
+            <ngx-form-field-wrapper
+              [formField]="testForm.password"
+              fieldName="password"
+            >
+              <label for="password">Password</label>
+              <input
+                id="password"
+                type="password"
+                [formField]="testForm.password"
+              />
+              <ngx-form-field-hint>At least 8 characters.</ngx-form-field-hint>
+              <ngx-form-field-hint>Include a number.</ngx-form-field-hint>
+            </ngx-form-field-wrapper>
+          </form>
+        `,
+        () => form(signal({ password: '' })),
+      );
+
+      const { container } = await render(TestComponent);
+      await TestBed.inject(ApplicationRef).whenStable();
+
+      const hints = container.querySelectorAll('ngx-form-field-hint');
+      expect(hints).toHaveLength(2);
+      const [firstHint, secondHint] = [...hints];
+      const firstId = firstHint?.getAttribute('id');
+      const secondId = secondHint?.getAttribute('id');
+      expect(firstId).toBe('password-hint');
+      expect(secondId).toBe('password-hint-2');
+
+      const input = container.querySelector('#password');
+      const describedBy = input?.getAttribute('aria-describedby') ?? '';
+      const describedByIds = describedBy.split(/\s+/u);
+      expect(describedByIds).toContain(firstId);
+      expect(describedByIds).toContain(secondId);
+
+      await expectNoA11yViolations(container);
+    });
+  });
 });

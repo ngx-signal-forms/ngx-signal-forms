@@ -4666,4 +4666,46 @@ describe('NgxSignalFormWrapperComponent', () => {
       );
     });
   });
+
+  describe('multiple-hint id uniqueness (issue #435)', () => {
+    it("does not let a nested wrapper's hints shift this wrapper's own fallback ordinals", async () => {
+      const outerField = createMockFieldState();
+      const innerField = createMockFieldState();
+
+      // The inner `ngx-form-field-wrapper` is projected between the outer
+      // wrapper's two unnamed hints, so `hintChildren()` (queried with
+      // `descendants: true`) sees all three hints in this DOM order:
+      // outer hint 1, inner hint, outer hint 2. Without filtering
+      // candidates down to this wrapper's own field name, the inner hint
+      // would consume an ordinal slot and push the outer wrapper's second
+      // hint to "outer-hint-3" instead of "outer-hint-2".
+      const { container } = await render(
+        `<ngx-form-field-wrapper [formField]="outerField" fieldName="outer">
+          <label for="outer-control">Outer</label>
+          <input id="outer-control" />
+          <ngx-form-field-hint>Outer hint one</ngx-form-field-hint>
+
+          <ngx-form-field-wrapper [formField]="innerField" fieldName="inner">
+            <label for="inner-control">Inner</label>
+            <input id="inner-control" />
+            <ngx-form-field-hint>Inner hint</ngx-form-field-hint>
+          </ngx-form-field-wrapper>
+
+          <ngx-form-field-hint>Outer hint two</ngx-form-field-hint>
+        </ngx-form-field-wrapper>`,
+        {
+          imports: [NgxSignalFormWrapperComponent, NgxFormFieldHint],
+          componentProperties: { outerField, innerField },
+        },
+      );
+
+      const hints = [...container.querySelectorAll('ngx-form-field-hint')];
+      const idFor = (text: string) =>
+        hints.find((hint) => hint.textContent?.trim() === text)?.id;
+
+      expect(idFor('Outer hint one')).toBe('outer-hint');
+      expect(idFor('Outer hint two')).toBe('outer-hint-2');
+      expect(idFor('Inner hint')).toBe('inner-hint');
+    });
+  });
 });
