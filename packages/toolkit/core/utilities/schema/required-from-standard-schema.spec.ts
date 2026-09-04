@@ -151,6 +151,52 @@ describe('requiredFromStandardSchema', () => {
     );
   });
 
+  it('reports not-required, and leaves no unhandled rejection, when the async schema rejects', async () => {
+    const schema: StandardSchemaLike<{ firstName: string }> = {
+      '~standard': {
+        validate: () => Promise.reject(new Error('async schema exploded')),
+      },
+    };
+
+    @Component({
+      selector: 'ngx-test-standard-schema-required-async-rejects',
+      imports: [FormField],
+      template: `<input [formField]="testForm.firstName" />`,
+    })
+    class TestComponent {
+      readonly #model = signal({ firstName: '' });
+      readonly testForm = form(this.#model, (path) => {
+        requiredFromStandardSchema(path.firstName, schema);
+      });
+    }
+
+    const unhandled: unknown[] = [];
+    const recordUnhandled = (reason: unknown): void => {
+      unhandled.push(reason);
+    };
+    process.on('unhandledRejection', recordUnhandled);
+
+    try {
+      const { fixture } = await render(TestComponent);
+      await TestBed.inject(ApplicationRef).whenStable();
+
+      // Node reports an unhandled rejection after the microtask checkpoint,
+      // so let the macrotask queue turn before asserting there was none.
+      await new Promise((resolve) => {
+        setTimeout(resolve, 0);
+      });
+
+      // Same answer as the resolved-promise path above: an async validator
+      // cannot answer a synchronous probe either way.
+      expect(fixture.componentInstance.testForm.firstName().required()).toBe(
+        false,
+      );
+      expect(unhandled).toEqual([]);
+    } finally {
+      process.off('unhandledRejection', recordUnhandled);
+    }
+  });
+
   it('reports not-required when the schema throws while being probed', async () => {
     const schema: StandardSchemaLike<{ firstName: string }> = {
       '~standard': {
