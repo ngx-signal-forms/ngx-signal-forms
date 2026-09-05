@@ -42,6 +42,14 @@
         "cwd": "{workspaceRoot}"
       }
     },
+    "check-documentation-starter": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["post-build"],
+      "options": {
+        "command": "node tools/scripts/check-documentation-starter.mjs",
+        "cwd": "{workspaceRoot}"
+      }
+    },
     "nx-release-publish": {
       "dependsOn": ["build", "post-build"],
       "options": {
