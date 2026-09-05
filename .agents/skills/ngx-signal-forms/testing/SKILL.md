@@ -121,6 +121,7 @@ it('has no WCAG 2.2 AA violations when showing an error', async () => {
   const fixture = TestBed.createComponent(TestField);
   fixture.detectChanges();
   fixture.componentInstance.profileForm.name().markAsTouched();
+  fixture.detectChanges();
   await fixture.whenStable();
 
   await expectNoA11yViolations(fixture.nativeElement);

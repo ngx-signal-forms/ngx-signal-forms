@@ -282,7 +282,7 @@ export class ManualEmailComponent {
     hintIds: signal<readonly string[]>(['email-hint']),
     preservedIds: () => null,
     visibility: this.errorState.shouldShowErrors,
-    warningVisibility: this.errorState.shouldShowWarnings,
+    warningVisibility: this.showWarnings,
   });
 }
 ```

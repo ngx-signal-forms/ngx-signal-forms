@@ -105,8 +105,8 @@ The decision script returns one of the following statuses. This table defines th
 
 **Decision outcomes**: only `ci_success` confirms successful CI completion.
 Cancellation, timeouts, exhausted budgets, and errors must report the last known
-CI state and what remains unresolved. `fix_auto_applying` and retryable `error`
-outcomes continue monitoring rather than ending it.
+CI state and what remains unresolved. `fix_auto_applying` continues monitoring
+rather than ending it.
 
 | Status                  | Default Behavior                                                                                                 |
 | ----------------------- | ---------------------------------------------------------------------------------------------------------------- |
@@ -117,7 +117,7 @@ outcomes continue monitoring rather than ending it.
 | `circuit_breaker`       | Exit when the decision script reports its no-progress limit                                                      |
 | `environment_rerun_cap` | Exit, environment reruns exhausted                                                                               |
 | `fix_auto_applying`     | Self-healing is handling it — just record `last_cipe_url`, enter wait mode. No MCP call or local git ops needed. |
-| `error`                 | Schedule the retry through the host's supported waiting mechanism, within the existing limits                    |
+| `error`                 | Exit after reporting the parse failure, last known CI state, and unresolved work                                 |
 
 **Statuses requiring action** — when handling these in Step 3, read `references/fix-flows.md` for the detailed flow:
 
