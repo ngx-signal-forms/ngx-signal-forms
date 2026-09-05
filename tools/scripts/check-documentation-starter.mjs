@@ -11,14 +11,12 @@ import {
 import { createRequire } from 'node:module';
 import { dirname, join } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
+import { documentationStarter } from '../../packages/toolkit/scripts/documentation-starter.mjs';
 
 const root = fileURLToPath(new URL('../../', import.meta.url));
 const require = createRequire(import.meta.url);
 const readme = await readFile(join(root, 'README.md'), 'utf8');
-const source = readme.match(
-  /<!-- documentation-starter:start -->\s*```typescript\n([\s\S]*?)\n```\s*<!-- documentation-starter:end -->/,
-)?.[1];
-assert.ok(source, 'README must contain one marked TypeScript starter');
+const source = documentationStarter(readme);
 await mkdir(join(root, 'tmp'), { recursive: true });
 const scratch = await mkdtemp(join(root, 'tmp/documentation-starter-'));
 
