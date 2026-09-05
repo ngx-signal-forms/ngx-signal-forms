@@ -42,32 +42,34 @@ import {
 
 ## Quick start
 
-Apply a headless directive, export it via `exportAs`, and bind to its signals:
+This template excerpt uses toolkit-owned ARIA. Import Angular's `FormField`,
+the root `NgxSignalFormToolkit` bundle, and `NgxHeadlessErrorState` in the
+component rendering it. Use the model and submission setup from the
+[root starter](../../../README.md#quick-start). Do not manually bind ARIA
+while auto-ARIA owns the control.
 
 ```html
 <div
   ngxHeadlessErrorState
   #errorState="errorState"
-  [field]="form.email"
+  [field]="contactForm.email"
   fieldName="email"
 >
   <label for="email">Email</label>
-  <input
-    id="email"
-    [formField]="form.email"
-    [attr.aria-invalid]="errorState.hasErrors() ? 'true' : null"
-    [attr.aria-describedby]="
-      errorState.shouldShowErrors() ? errorState.errorId() : null
-    "
-  />
+  <input id="email" [formField]="contactForm.email" />
 
-  @if (errorState.shouldShowErrors() && errorState.hasErrors()) {
   <div [id]="errorState.errorId()" role="alert" class="my-error">
-    @for (error of errorState.resolvedErrors(); track error.kind) {
+    @if (errorState.shouldShowErrors()) { @for (error of
+    errorState.resolvedErrors(); track $index) {
     <span>{{ error.message }}</span>
-    }
+    } }
   </div>
-  }
+  <div [id]="errorState.warningId()" role="status" class="my-warning">
+    @if (errorState.shouldShowWarnings()) { @for (warning of
+    errorState.resolvedWarnings(); track $index) {
+    <span>{{ warning.message }}</span>
+    } }
+  </div>
 </div>
 ```
 
@@ -88,7 +90,7 @@ Headless directives work as Angular [host directives](https://angular.dev/guide/
     <ng-content />
     @if (errorState.shouldShowErrors()) {
       <div class="error-container">
-        @for (error of errorState.resolvedErrors(); track error.kind) {
+        @for (error of errorState.resolvedErrors(); track $index) {
           <span class="error">{{ error.message }}</span>
         }
       </div>
@@ -120,6 +122,10 @@ Exposes error state signals for custom error display.
 Signals: `shouldShowErrors()`, `shouldShowWarnings()`, `hasErrors()`, `hasWarnings()`, `errors()`, `warnings()`, `resolvedErrors()`, `resolvedWarnings()`, `errorId` (nullable), `warningId` (nullable).
 
 `shouldShowWarnings()` runs the warning cascade — `warningStrategy` input → the form context's `warningStrategy()` → `NGX_SIGNAL_FORMS_CONFIG.defaultWarningStrategy` → `'on-touch'` — and gates on warning presence rather than `invalid()`. It stays `false` while a blocking error is visible on the same field, because both categories share one message region.
+
+Exception: `errorsOverride` makes both visibility signals true. The caller owns
+timing and suppression in that mode. Omitting a warning strategy and setting
+`inherit` both defer to context/config, not an unconditional input default.
 
 ### NgxHeadlessErrorSummary
 
@@ -183,7 +189,7 @@ Render `resolvedErrors()` / `resolvedWarnings()` (not `aggregatedErrors()[i].mes
 <fieldset ngxHeadlessFieldset #fieldset="fieldset" [field]="form.address">
   @if (fieldset.shouldShowErrors() && fieldset.hasErrors()) {
   <div class="errors">
-    @for (error of fieldset.resolvedErrors(); track error.kind) {
+    @for (error of fieldset.resolvedErrors(); track $index) {
     <span>{{ error.message }}</span>
     }
   </div>
@@ -248,7 +254,7 @@ Each entry is `{ kind, message, id, error }`:
 
 - `kind` — convenience copy of the validator kind, lifted to the top level so templates can write `entry.kind` instead of `entry.error.kind`.
 - `message` — the resolved display string after the 3-tier cascade.
-- `id` — `{fieldName}-error-{kind}`, stable so external renderers and the in-tree wrapper interoperate on `aria-describedby` chains without re-deriving the format.
+- `id` names a per-message entry, such as `{fieldName}-error-{kind}`. The wrapper references `{fieldName}-error` and `{fieldName}-warning` containers instead. Preserve those containers or update the description chain when swapping renderers. Repeated kinds need occurrence-safe IDs when rendered individually.
 - `error` — the raw `ValidationError` from the field, kept for consumers that need validator-specific params or a non-stripped `message` override.
 
 Options of note:

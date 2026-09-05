@@ -2,7 +2,7 @@
 
 How to use `@ngx-signal-forms/toolkit` the way it's designed to be used. Each
 practice below states what to do, what to avoid, and why — with links to the
-guide that goes deeper. The [root README](../README.md#best-practices) carries
+guide that goes deeper. The [root README](../README.md#guides) carries
 the one-line version of this list.
 
 These aren't arbitrary style rules: each one follows from the toolkit's two
@@ -55,7 +55,7 @@ is an exception worth noticing. Explicit falsy values are respected:
 `requiredMarker: ''` clears the marker, while omitting the key inherits it.
 
 See [how settings resolve](../README.md#how-settings-resolve-the-cascade) and
-[per-component overrides](../README.md#per-component-overrides).
+[per-component overrides](../packages/toolkit/README.md#configuration).
 
 ---
 

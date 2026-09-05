@@ -6,7 +6,7 @@
 
 This section is your entry point into the toolkit. It demonstrates the smallest possible setup that still delivers auto-ARIA, strategy-aware error timing, and a reusable error component — without pulling in the full field wrapper.
 
-**Adoption level:** 20% toolkit (core directives only, no wrapper).
+Imports the root bundle and assistive error component, without the styled wrapper.
 
 **Focus:** progressive error disclosure and automatic accessibility with minimal setup.
 
@@ -17,7 +17,7 @@ This section is your entry point into the toolkit. It demonstrates the smallest 
 
 ## 🧠 Core concepts
 
-- **Auto-ARIA** — the toolkit syncs `aria-invalid`, `aria-required`, and `aria-describedby` automatically once you apply `ngxSignalForm` or the wrapper. See [toolkit README](../../../../../packages/toolkit/README.md).
+- **Auto-ARIA** selects eligible `[formField]` hosts when its directive is imported in that template. The `ngxSignalForm` directive provides optional form context; it is not the activation switch. See [toolkit README](../../../../../packages/toolkit/README.md).
 - **Error strategy** — when errors become visible (`on-touch` by default). Deep dive in [error-display-modes](../02-toolkit-core/error-display-modes/README.md).
 - **Assistive components** — `NgxFormFieldError` handles visibility, message resolution, and ARIA without per-field `@if` blocks. See [assistive README](../../../../../packages/toolkit/assistive/README.md).
 

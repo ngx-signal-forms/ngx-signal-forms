@@ -6,7 +6,7 @@ Not every field needs a visible `<label>`. This demo shows where the `NgxFormFie
 
 ## Toolkit features showcased
 
-- `NgxSignalFormToolkit` (`ngxSignalForm`) — root directive for auto-ARIA and form context.
+- `NgxSignalFormToolkit` is an import bundle containing auto-ARIA and the `ngxSignalForm` context directive.
 - `NgxFormField` wrapper (`ngx-form-field-wrapper`) — collapses the reserved label row (standard/plain) or floating-label padding (outline) when no `<label>` is projected, across both orientations.
 - Prefix/suffix projection — search icon prefix, `$` prefix and `.00` suffix on the amount field.
 - `role="group"` + `aria-labelledby` — grouping the three phone-number parts under one heading instead of three labels.

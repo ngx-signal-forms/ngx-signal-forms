@@ -2,11 +2,13 @@
 
 This guide covers every breaking change between the last beta
 (`1.0.0-beta.10`) and the current v1 release-candidate surface, including
-`v1.0.0-rc.13`. It is intentionally written against the **latest state only**.
+the upcoming `v1.0.0-rc.13` source changes. The package manifest still names
+RC.12; this guide is not evidence that RC.13 is published. Historical beta
+examples below remain migration examples, not current API recipes.
 
 That means this document does **not** walk through interim RC-to-RC
 waypoints. Every “before → after” example below shows the migration from
-beta-era usage to the API you should use **today**. For an RC-to-RC upgrade,
+beta-era usage to the current source API. For an RC-to-RC upgrade,
 read the applicable guide in [`docs/migrations/`](./migrations/README.md);
 for example, [`v1.0.0-rc.13`](./migrations/v1.0.0-rc.13.md) documents the
 upgrade from rc.12.
@@ -646,7 +648,7 @@ driven by `prefers-color-scheme` only, consistently across all engines.
   `--ngx-signal-form-error-*` / `--ngx-signal-form-warning-*` /
   `--ngx-signal-form-error-panel-*` / `--ngx-signal-form-warning-panel-*`
   custom properties yourself, scoped to your `.dark` selector — see the
-  [assistive README](../packages/toolkit/assistive/README.md#dark-mode).
+  [theming guide](../packages/toolkit/form-field/THEMING.md#scenario-c-dark-mode).
 
 ---
 

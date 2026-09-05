@@ -92,8 +92,8 @@ inactive UI components from the contrast requirement, and the toolkit's own
 1. Load the page: **Team name** and **Workspace URL** show the brand danger
    color immediately (no interaction needed).
 2. Type `12345678` into **Monthly budget**: a `role="status"` warning appears
-   in the brand warning color; the form stays submittable (warnings never
-   block).
+   in the brand warning color. This page demonstrates feedback only: it has
+   no submission action or submit control.
 3. **Legacy workspace ID** renders with the brand disabled background at
    reduced opacity and cannot be edited.
 4. Tab into any field: the focus ring uses the brand primary color.

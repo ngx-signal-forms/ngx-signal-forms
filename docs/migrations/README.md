@@ -1,5 +1,9 @@
 # Versioned migration guides
 
+RC.11 and RC.12 are released guides. RC.13 documents upcoming, source-present
+changes; its guide does not establish publication. Check the installed version
+before applying a hop.
+
 Every published toolkit version must add `v<version>.md` in this directory
 before it is released. The guide is the authoritative upgrade path from the
 immediately preceding version to that release.

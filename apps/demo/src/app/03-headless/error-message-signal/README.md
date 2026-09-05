@@ -12,7 +12,7 @@ A password field wired to three simultaneous `createErrorMessageSignal` instance
 
 ```html
 <ul>
-  @for (entry of errors(); track entry.kind) {
+  @for (entry of errors(); track $index) {
   <li [id]="entry.id">{{ entry.message }}</li>
   }
 </ul>
@@ -33,7 +33,10 @@ readonly ariaDescribedByBlocking = computed(() => {
 <input [attr.aria-describedby]="ariaDescribedByBlocking()" />
 ```
 
-IDs are `{fieldName}-error-{kind}` — the same format the in-tree wrapper uses, so swapping between headless and wrapper never breaks `aria-describedby` chains.
+These are per-message IDs. The wrapper uses `{fieldName}-error` and
+`{fieldName}-warning` containers instead. A renderer swap must preserve those
+containers or update `aria-describedby`. Repeated kinds also need unique IDs
+when rendering individual entries. The actual demo selects manual ARIA ownership.
 
 ### Reactive registry swap
 
@@ -47,6 +50,7 @@ readonly errors = createErrorMessageSignal(
 
 toggleRegistry(): void {
   this.activeRegistry.set(this.verboseRegistry() ? REGISTRY_TERSE : REGISTRY_VERBOSE);
+  this.verboseRegistry.update((value) => !value);
 }
 ```
 

@@ -1,33 +1,33 @@
 # Advanced Scenarios
 
-> **Production Ready:** Patterns for real applications — configuration, submission, async state, cross-field rules, and multi-step wizards.
+Configuration, submission, async state, cross-field rules, and multi-step demos.
 
 ## 🎯 Purpose
 
 This is the production frontier of the demo app. Each demo here stands on its own and targets a concrete real-world pattern you'd hit when shipping a non-trivial form: app-wide configuration, declarative submission UX, async server-backed validation, dependent fields, and multi-step flows with shared store state.
 
-**Adoption level:** 100% toolkit.
+Choose individual patterns. The wizard and server-save demos document known runtime limits.
 
 **Prereqs:** familiarity with [02-toolkit-core](../02-toolkit-core/README.md) (strategies + warnings) and ideally [04-form-field-wrapper](../04-form-field-wrapper/README.md) (wrapper).
 
 ## 📂 Demos in this section
 
 - **[global-configuration](./global-configuration/README.md)** — `provideNgxSignalFormsConfig()` + control-family presets with a local override.
-  - What you'll learn: app-level defaults · reading resolved config at runtime · form-level override semantics.
+  - App-level defaults and local overrides. The explanation panel is not a resolved-config inspector.
 - **[submission-patterns](./submission-patterns/README.md)** — declarative submission via `form(..., { submission })` + `[formRoot]`.
   - What you'll learn: `createOnInvalidHandler()` · submitting state · GOV.UK-style error summary with click-to-focus.
 - **[advanced-wizard](./advanced-wizard/README.md)** — canonical multi-step wizard with NgRx Signal Store, Zod schemas, and lazy step loading.
   - What you'll learn: form-per-step architecture · draft vs. committed state · cross-step validation · `@defer` lazy loading.
 - **[async-validation](./async-validation/README.md)** — `validateHttp` with automatic cancellation and pending state.
-  - What you'll learn: `pending()` / `status()` signals · suffix projection for loading indicators · gating submission on pending validators.
+  - Two username variants, request versus blur debounce, `pending()` indicators, and submission gating. Request failures create warnings, which ordinary submission still blocks.
 - **[field-state-patterns](./field-state-patterns/README.md)** — dynamic `hidden`, `disabled`, and `readonly` state driven by the same `{ when }` syntax as validation rules.
-  - What you'll learn: choosing the right state for conditional workflows · state-driven UX without manual DOM branching.
+  - Choose participation state separately from rendering. The template uses `@if` for hidden controls; their values remain in the model.
 - **[cross-field-validation](./cross-field-validation/README.md)** — validators that read sibling values via `ctx.valueOf(path.*)`.
   - What you'll learn: schema-level cross-field rules · reactive re-validation · field-vs-group error placement.
 - **[server-integration](./server-integration/README.md)** — `resource()` prefill + declarative submission + server errors mapped onto `TreeValidationResult`.
   - What you'll learn: `resource()`-driven prefill · form-level vs. field-level server errors · the auto-clear semantics of submission errors · `reset(value)` after a successful save.
 - **[store-binding](./store-binding/README.md)** — honest two-way binding between a Signal Form and an `@ngrx/signals` store via `linkedSignal`, contrasted with the wizard's draft/commit buffer.
-  - What you'll learn: `linkedSignal({ source, computation })` read seam · overriding `set`/`update` to write straight through to `patchState` · when live binding beats draft/commit.
+  - Uses the native options-level `set` callback to write through to `patchState`; it does not replace the signal's setter methods.
 - **[autosave](./autosave/README.md)** — debounced, field-level save via `debounce(path, 500)` + `httpResource`, with no submit button.
   - What you'll learn: the native `debounce()` schema rule · gating a save on `dirty()` **and** `valid()` · pausing `httpResource` with an `undefined` request · accessible save-status live regions.
 - **[i18n](./i18n/README.md)** — `provideErrorMessages()`/`provideFieldLabels()` factories reacting to a runtime language signal.

@@ -62,7 +62,7 @@ packages/toolkit/
 ├── core/                               # Internal implementation (not public import path)
 │   ├── directives/
 │   ├── providers/
-│   ├── utilities/
+│   ├── utilities/                      # Includes warning-error.ts (public helpers via root)
 │   ├── tokens.ts
 │   └── types.ts
 ├── assistive/
@@ -71,7 +71,6 @@ packages/toolkit/
 │   ├── form-field-error-summary.ts
 │   ├── form-marking-legend.ts
 │   ├── hint.ts
-│   ├── warning-error.ts
 │   └── index.ts
 ├── form-field/
 │   ├── form-field-wrapper.ts
@@ -133,7 +132,7 @@ import { validateVest } from '@ngx-signal-forms/toolkit/vest';
 @angular/core (peer)
 @angular/forms/signals (peer)
 vest ^6 (optional peer for /vest)
-axe-core ^4.5 (optional peer for /testing)
+axe-core (optional peer for /testing; range in package.json)
         ↓
 @ngx-signal-forms/toolkit
 ├── root (core public API)
@@ -145,6 +144,9 @@ axe-core ^4.5 (optional peer for /testing)
 ```
 
 ### Internal-only debugger
+
+The [package manifest](../packages/toolkit/package.json) is the source of
+truth for peer version ranges.
 
 The form debugger is no longer part of the published toolkit package. It now
 lives in `packages/demo/debugger` for internal/demo usage and is consumed via

@@ -137,10 +137,7 @@ These components inherit from the **Shared Feedback** layer but can be overridde
 
 controls the display of validation errors and warnings.
 
-Like the wrapper and fieldset styles, error styling now resolves through an
-internal token layer plus pseudo-private aliases. Override only the public
-`--ngx-signal-form-*` variables; the internal `--_error-*` values are
-implementation details.
+Override public `--ngx-signal-form-*` variables, not internal `--_*` aliases.
 
 > **Note:** The default `--ngx-signal-form-warning-color` was `#f59e0b` prior to v1.0; it was changed to `#a16207` (Tailwind amber-700) to meet WCAG 2.2 SC 1.4.3 Contrast (Minimum), Level AA, on white backgrounds.
 
@@ -159,8 +156,6 @@ implementation details.
 | `--ngx-signal-form-error-border-width`              | `0`                                                                 | Border width                       |
 | `--ngx-signal-form-error-border-radius`             | `0`                                                                 | Border radius                      |
 | `--ngx-signal-form-error-padding`                   | `0`                                                                 | Container padding                  |
-| `--ngx-signal-form-error-padding-inline-start`      | `var(--...feedback...)`                                             | Start-edge (inline) padding        |
-| `--ngx-signal-form-error-padding-inline-end`        | `var(--...feedback...)`                                             | End-edge (inline) padding          |
 | `--ngx-signal-form-error-animation`                 | `ngx-status-slide-in 300ms cubic-bezier(0.2, 0.8, 0.2, 1) forwards` | Entry animation                    |
 | `--ngx-signal-form-error-list-style`                | `var(--...feedback...)`                                             | `list-style` shorthand for bullets |
 | `--ngx-signal-form-error-list-padding-inline-start` | `var(--...feedback...)`                                             | Indent for bulleted summaries      |
@@ -199,15 +194,8 @@ tokens shared by both presentations: color, list style, message spacing,
 etc.). `--ngx-signal-form-error-panel-*` / `--ngx-signal-form-warning-panel-*`
 below only apply while `presentation="panel"`.
 
-Panel styling follows the same pattern as the rest of the toolkit:
-
-- internal defaults live on `--_error-panel-*` tokens
-- public overrides come from `--ngx-signal-form-error-panel-*` /
-  `--ngx-signal-form-warning-panel-*`
-- implementation consumes the resolved pseudo-private variables only
-
-That keeps dark-mode defaults and Figma-aligned surfaces centralized without
-shadowing consumer-provided theme variables.
+Use `--ngx-signal-form-error-panel-*` and
+`--ngx-signal-form-warning-panel-*` to override panel defaults.
 
 | Property                                        | Default                                                                     | Description                                     |
 | :---------------------------------------------- | :-------------------------------------------------------------------------- | :---------------------------------------------- |
@@ -235,24 +223,15 @@ own `--ngx-signal-form-error-panel-color` and
 `--ngx-signal-form-warning-panel-color` overrides so it remains readable on
 the tinted card surfaces.
 
-The light-theme danger defaults follow the current Figma card recipe:
-
-- text: `#db1818`
-- border: same semantic danger hue at `50%` alpha
-- background: `#fdebeb`
-
-The panel presentation animates as a progressive enhancement:
-
-- baseline-safe fade/slide/color transitions always apply
-- browsers with `interpolate-size: allow-keywords` also animate the card's block-size between `0` and `auto`
-- `calc-size()` is intentionally not used here because the component does not need size math; `interpolate-size` is the recommended simpler opt-in for this case
+The table above is the reference for panel defaults. Panel text is `#b91c1c`
+on `#fdebeb`. The current panel does not animate block size from zero to auto.
 
 The border still derives from the semantic danger color by default, while the
-background stays pinned to the Figma light-danger surface. Override
+background stays at the light-danger default. Override
 `--ngx-signal-form-error-panel-bg` when your theme needs a different
 surface color.
 
-Panel messages use Figma's body-2 token by default (`0.875rem` / `1.25rem`),
+Panel messages use `0.875rem` / `1.25rem` by default,
 while inline errors and hints retain caption sizing (`0.75rem` / `1rem`).
 Setting `--ngx-signal-form-error-font-size` does not affect the panel
 presentation; override `--ngx-signal-form-error-panel-font-size` and
@@ -400,15 +379,8 @@ messages grow the row, which is the only accepted shift. Reservation changes use
 a short 150ms `ease-out` transition; motion is disabled for
 `prefers-reduced-motion`.
 
-The reservation is deliberate, not an oversight: a row that collapses when
-empty shifts the field's layout the instant an error or warning appears,
-which is worse for users tracking focus than a permanently reserved line. An
-earlier PR (#248) advertised a `--ngx-form-field-assistive-empty-display`
-token in its description as the opt-out for this behavior; that token was
-never implemented — the PR reversed the change mid-review and merged with a
-stale description. It does not exist in this package. The supported opt-out
-is `--ngx-form-field-assistive-empty-behavior` (below) or, for most cases,
-setting `--ngx-form-field-assistive-min-height: 0` directly.
+Reserved space reduces movement when feedback appears. To opt out, set
+`--ngx-form-field-assistive-min-height: 0`, or use the empty-row policy below.
 
 Scale or collapse the reserved space per form scope:
 
@@ -455,15 +427,8 @@ behavior they already had, not a regression.
 
 Groups related fields with consistent spacing.
 
-Like `ngx-form-field-wrapper`, the fieldset now resolves its public CSS API
-through an internal token layer plus pseudo-private aliases. In other words:
-
-- internal defaults live on `--_fieldset-*` tokens
-- public overrides come from `--ngx-signal-form-fieldset-*`
-- implementation reads only the resolved `--_*` variables
-
-That keeps default values defined in one place and avoids repeating literal
-fallbacks throughout the stylesheet.
+Use public `--ngx-signal-form-fieldset-*` overrides. Internal defaults are
+implementation details, not part of the theming API.
 
 #### Layout & spacing
 
@@ -592,7 +557,7 @@ instead of the fieldset edge.
 
 ```css
 .credentials-fieldset {
-  --ngx-signal-form-fieldset-content-offset: 0;
+  --ngx-signal-form-fieldset-message-margin-bottom: 0;
   --ngx-signal-form-fieldset-message-inset-inline-start: 0.875rem;
   --ngx-signal-form-fieldset-message-padding-inline-start: 0;
   --ngx-signal-form-fieldset-message-padding-inline-end: 0;
@@ -608,6 +573,10 @@ That recipe does two things:
 
 If you want the summary to read like plain text again, set
 `--ngx-signal-form-fieldset-message-list-style: none`.
+
+This recipe targets `feedbackAppearance="plain"` with `errorPlacement="top"`.
+Notification cards have separate notification inset and list tokens.
+`content-offset` is horizontal and already defaults to zero.
 
 ---
 
@@ -701,14 +670,19 @@ If the semantic colors aren't enough, you can override specific parts of the com
 
 **Applies to both standard and outline layouts.**
 
-| Property                        | Default                                      | Description               |
-| :------------------------------ | :------------------------------------------- | :------------------------ |
-| `--ngx-form-field-prefix-gap`   | `0.5rem`                                     | Gap after prefix content  |
-| `--ngx-form-field-suffix-gap`   | `0.5rem`                                     | Gap before suffix content |
-| `--ngx-form-field-prefix-color` | `var(--ngx-form-field-color-text-secondary)` | Prefix color              |
-| `--ngx-form-field-suffix-color` | `var(--ngx-form-field-color-text-secondary)` | Suffix color              |
+| Property                        | Default                                      | Description                 |
+| :------------------------------ | :------------------------------------------- | :-------------------------- |
+| `--ngx-form-field-suffix-gap`   | `0.5rem`                                     | Gap between suffix children |
+| `--ngx-form-field-prefix-color` | `var(--ngx-form-field-color-text-secondary)` | Prefix color                |
+| `--ngx-form-field-suffix-color` | `var(--ngx-form-field-color-text-secondary)` | Suffix color                |
 
 #### Labels (Standard Layout)
+
+Known token limits: `--ngx-form-field-prefix-gap` has no active CSS consumer.
+Inline error padding is fixed to zero, so the declared
+`--ngx-signal-form-error-padding-inline-start` and `-end` aliases have no
+effect there. These names are not reliable customization controls in the
+current source; no runtime token behavior was changed by this guide.
 
 **Only applies when `appearance="standard"` (default).**
 
@@ -979,23 +953,26 @@ ngx-form-field-wrapper {
 
 ### Scenario C: Dark Mode
 
-The wrapper and fieldset use `prefers-color-scheme` as the default signal, and
-also support explicit class-based theming such as `html.dark` / `html.light`.
-Manual app theme selection should win over OS/browser preference, but only
-when the user has actively chosen one — an absent class should defer back
-to `prefers-color-scheme`.
+The components do not share one automatic OS-theme policy:
+
+| Component                       | Current built-in behavior                                                                           |
+| ------------------------------- | --------------------------------------------------------------------------------------------------- |
+| Wrapper                         | Dark rules exist, but `:root:not(.dark)` restores light defaults when the root has no `.dark` class |
+| Fieldset, hint, character count | No equivalent automatic OS-dark rules                                                               |
+| Error component                 | Has `prefers-color-scheme: dark` rules                                                              |
+
+Use explicit public tokens for an application-wide light/dark policy. An
+absent theme class does not consistently select the OS theme across components.
 
 > [!NOTE]
-> The standalone feedback components (`ngx-form-field-error` in either inline
-> or panel presentation, hints, character count) follow
-> `prefers-color-scheme` only. Class-based ancestor theming is not detectable
-> reliably across browsers from plain component CSS, so a class-driven dark
-> mode should also map its dark tokens onto the public
+> A class-driven theme must map tokens for each feedback component. Set the public
 > `--ngx-signal-form-error-*`, `--ngx-signal-form-warning-*`,
 > `--ngx-signal-form-error-panel-*`,
 > `--ngx-signal-form-warning-panel-*`, hint, and character-count variables.
 
-If your app has a manual toggle, use this pattern:
+The following partial recipe makes wrapper colors follow OS preference, with
+an explicit light override. Extend it to error, warning, fieldset, hint, and
+counter tokens before treating it as a complete theme:
 
 ```scss
 /* app.scss or global styles */

@@ -6,11 +6,11 @@ Demonstrates how the toolkit's error display strategies change _when_ validation
 
 ## Toolkit features showcased
 
-- `NgxSignalFormToolkit` — root directive providing auto-ARIA and form context.
+- `NgxSignalFormToolkit` is an import bundle providing auto-ARIA and form context.
 - `NgxFormFieldError` — strategy-aware error rendering.
 - `[errorStrategy]` binding — drives all descendants' error visibility.
 - `injectFormContext()` — read the active strategy from inside child components to build custom visibility helpers.
-- Conditional validation via `applyWhen` — the "improvement suggestions" field only validates when rating ≤ 3.
+- Conditional required/custom checks apply to improvement suggestions at ratings 1–3. Maximum length applies at every rating.
 
 ## Form model
 

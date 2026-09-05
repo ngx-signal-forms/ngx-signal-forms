@@ -6,9 +6,9 @@ For most projects, the real choice is not just **Angular vs toolkit** — it is 
 - when to reuse a Standard Schema validator such as Zod or generated OpenAPI schemas
 - when to use [Vest](https://vestjs.dev/) for higher-order business rules
 
-These options are **complementary, not mutually exclusive**. In practice, it is often
-easiest to combine all three in the same form and let each layer handle the rules it
-expresses best.
+Start with Angular validators. Add a Standard Schema library when you need a
+shared contract, or Vest when its rule model helps express your business policy.
+They can coexist, but a form does not need all three by default.
 
 ## Decision table
 
@@ -28,9 +28,9 @@ You do **not** need to pick only one. Angular Signal Forms lets you register sma
 validators, Standard Schema validation, and Vest rules side by side in the same schema
 callback.
 
-## Recommended layering
+## Optional layering
 
-For many real-world forms, the cleanest stack is:
+When a form needs these separate responsibilities, assign each rule once:
 
 1. **Angular Signal Forms validators** for small local rules
 2. **Zod / OpenAPI Standard Schema** for contract-level validation
@@ -47,8 +47,9 @@ Examples:
 
 ## Combining Angular validators, Zod, and Vest
 
-This is a normal and recommended setup when a form has a mix of local UI rules, shared
-contract rules, and business policy.
+This partial schema excerpt shows an optional combination. Supply `SignupSchema`
+and `signupBusinessSuite` from your application. Do not add these dependencies
+unless the shared contract and policy rules need them.
 
 ```typescript
 import { signal } from '@angular/core';
