@@ -120,7 +120,7 @@ catalogs:
   validation:
     arktype: '^2.2.3'
     vest: '6.3.2'
-    zod: '^4.4.3'
+    zod: '^4.5.4'
   vitest:
     '@vitest/browser-playwright': '~4.1.11'
     '@vitest/coverage-v8': '~4.1.11'
