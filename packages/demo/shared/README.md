@@ -1,11 +1,7 @@
-# demo-shared
+# Demo shared utilities
 
-This library was generated with [Nx](https://nx.dev).
+Internal components and utilities shared by repository demos. This is not a
+published toolkit entry point. Keep consumer-facing APIs in `packages/toolkit`.
 
-## Building
-
-Run `nx build demo-shared` to build the library.
-
-## Running unit tests
-
-Run `nx test demo-shared` to execute the unit tests via [Jest](https://jestjs.io).
+Use the existing local imports as examples. Tests use Vitest, not Jest.
+Run the configured targets from the workspace root with `pnpm nx`.

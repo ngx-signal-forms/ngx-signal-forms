@@ -7,7 +7,7 @@ Validating against a server ("is this username taken?") is notoriously tricky: r
 ## Toolkit features showcased
 
 - `validateHttp(path, { request, onSuccess, onError })` — built-in async validator with automatic cancellation on value change.
-- `pending()` / `status()` signals — exposed per-field so you can show spinners or "Checking…" text with `@if`.
+- `pending()` drives the suffix spinner and submit-disabled state. This demo does not render a `status()` readout.
 - `NgxFormField` wrapper — picks up pending state and renders consistent feedback.
 - Suffix projection (`<span suffix>`) inside the wrapper — pattern for loading indicators next to the input.
 - `createOnInvalidHandler()` — focus-first-invalid on submit.
@@ -15,19 +15,19 @@ Validating against a server ("is this username taken?") is notoriously tricky: r
 
 ## Form model
 
-- Signal model: `signal<Registration>({ username: '' })`.
+- Model fields: `username` and `usernameOnBlur`. The first debounces requests by 350 ms; the second delays model updates until blur.
 - Schema: `form(model, registrationSchema, { submission })`.
 
 ## Validation rules
 
 ### Errors
 
-- Username — required.
-- Username — `validateHttp` hits `fake-api/check-user/:value`; if `response.available === false`, emits `usernameTaken` with a dynamic message.
+- Both usernames are required and need at least three characters.
+- `validateHttp` hits `fake-api/check-user/:value`. An unavailable response emits `usernameTaken` or `usernameTakenOnBlur` for the matching field.
 
 ### Warnings
 
-- None.
+- Request errors emit `warn:availabilityUnknown`. Despite the current warning text saying submission can proceed, this demo uses ordinary Angular submission, which still blocks warning-only invalidity. See the [warning submission contract](../../../../../../docs/WARNINGS_SUPPORT.md#form-submission-behavior).
 
 ## Strong suites
 
@@ -43,7 +43,7 @@ Validating against a server ("is this username taken?") is notoriously tricky: r
 ## How to test
 
 1. Run the demo and navigate to `/advanced-scenarios/async-validation`.
-2. Type `admin` quickly — confirm only one request fires at the end (stale requests cancelled).
+2. Type `admin` quickly and inspect requests. Cancellation prevents stale results from winning; it does not guarantee that only one request starts.
 3. Watch the "Checking…" suffix appear while the simulated request is in flight.
 4. Leave the value as `admin` and wait — confirm the `usernameTaken` error renders once the response arrives.
 5. Change to a different value and confirm the error clears as the new validation succeeds.

@@ -42,8 +42,8 @@ specific.
   "ARIA writes target the host element" below).
 - A custom **`PrimeFieldHintComponent`** registered through
   `provideFormFieldHintRenderer({ component: ... })` so the hint slot is
-  ready for the toolkit's future dynamic-outlet hint mode without any
-  template changes.
+  registered with the wrapper's hint renderer. This describes the current
+  demo integration, not a promise about a future rendering mode.
 
 The wrapper composes the toolkit's headless primitives directly
 (`createFieldNameResolver`, `createAriaInvalidSignal`,

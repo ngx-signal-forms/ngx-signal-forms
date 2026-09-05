@@ -6,7 +6,7 @@ Your introduction to `@ngx-signal-forms/toolkit`. Takes a plain contact form and
 
 ## Toolkit features showcased
 
-- `NgxSignalFormToolkit` — root directive that provides auto-ARIA (`aria-invalid`, `aria-describedby`, `aria-required`) and the shared form/error context.
+- `NgxSignalFormToolkit` is an import bundle containing auto-ARIA and form-context directives, plus Angular's `FormRoot`.
 - `NgxFormFieldError` — strategy-aware error rendering with `role="alert"` and automatic message resolution.
 - `errorStrategy` binding — switch between `on-touch`, `on-submit`, and `immediate` from a single input.
 - `createOnInvalidHandler()` — declarative focus-first-invalid behavior on failed submit.

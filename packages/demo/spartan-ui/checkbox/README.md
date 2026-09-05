@@ -1,3 +1,3 @@
 # @spartan-ng/helm/checkbox
 
-Secondary entry point of `@spartan-ng/helm`. It can be used by importing from `@spartan-ng/helm/checkbox`.
+Repository-local implementation, imported here through `@spartan-ng/helm/checkbox`. See the [parent guide](../README.md) for adaptations and regeneration limits.

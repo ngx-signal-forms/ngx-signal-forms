@@ -2,7 +2,8 @@
 
 ## Intent
 
-Every other demo on this site uses the built-in `ngx-form-field-wrapper`. This one does not. It builds a small third-party-style wrapper from scratch and gives it the one thing a wrapper author reaches for when the bound control's DOM `id` is not the field's name: `NgxFieldIdentityProvider`.
+This demo builds a custom wrapper with `NgxFieldIdentityProvider`. Its field
+name is independent of the bound control's DOM `id`.
 
 Two behaviors, one story — a wrapper that owns its identity, inside UI that collapses:
 

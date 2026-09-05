@@ -40,7 +40,9 @@ You always import the core entry point. The other entry points add UI components
 
 ## First 60 seconds (core)
 
-If you only need the core behavior layer first, copy/paste this:
+This rendering-only excerpt shows core imports. It has no submission action
+or error renderer. For a complete working form, use the
+[tested root starter](../../README.md#quick-start).
 
 ```typescript
 import { Component, signal } from '@angular/core';
@@ -53,7 +55,6 @@ import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit';
     <form [formRoot]="form" ngxSignalForm errorStrategy="on-submit">
       <label for="email">Email</label>
       <input id="email" [formField]="form.email" />
-      <button type="submit">Submit</button>
     </form>
   `,
 })
@@ -217,9 +218,13 @@ provideNgxSignalFormsConfig({
 
 This is the canonical list of configuration keys and their defaults.
 
+Known limit R01: `autoAria: false` is stored but is not consumed by the current
+auto-ARIA directive. Use per-control `ngxSignalFormControlAria="manual"` for
+implemented ownership exclusion. This remains a runtime defect to test and fix.
+
 ### How settings resolve (the cascade)
 
-Every presentation setting — error strategy, appearance, orientation, markers,
+Every presentation setting — error strategy, warning strategy, appearance, orientation, markers,
 control presets, renderers — resolves through **one precedence chain, most
 specific wins**:
 
@@ -235,6 +240,12 @@ See the
 [root README](https://github.com/ngx-signal-forms/ngx-signal-forms#how-settings-resolve-the-cascade)
 for the full walkthrough (per-tier details, nullish-merge semantics). Every
 "you can override this" in the sections below is a link in this chain.
+
+Only error timing, warning timing, and submitted status use form context.
+Visual settings skip that tier. `on-touch` is a built-in fallback, not an
+unconditional standalone setting. See the
+[shared timing contract](../../docs/WARNINGS_SUPPORT.md#timing-and-configuration)
+for standalone auto-ARIA and override-mode exceptions.
 
 ### Field marking
 
@@ -393,7 +404,7 @@ Use a factory for dynamic resolvers (ngx-translate, Transloco, etc.). The
 resolver it returns runs on every render, so a runtime language switch works
 only if the resolver reads a reactive language signal — `$localize` is
 build-time only and can't do this; see
-[`WARNINGS_SUPPORT.md`](https://github.com/ngx-signal-forms/ngx-signal-forms/blob/main/docs/WARNINGS_SUPPORT.md#the-i18n-contract-string-vs-function-entries)
+[`WARNINGS_SUPPORT.md`](../../docs/WARNINGS_SUPPORT.md#runtime-language-changes)
 for the full contract:
 
 ```typescript

@@ -6,7 +6,7 @@
 
 This section demonstrates the batteries-included path: one component (`ngx-form-field-wrapper`) gives you labels, layout, errors, hints, character counts, and full ARIA in a single projection-friendly shell. It's the right default for most apps.
 
-**Adoption level:** 100% toolkit (core + form-field entry point).
+Uses the root bundle and form-field entry point.
 
 **Focus:** wrapper composition in realistic long forms and custom-control integration with explicit semantics.
 

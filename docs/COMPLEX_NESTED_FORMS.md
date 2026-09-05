@@ -97,9 +97,12 @@ fields stay plain — let the fieldset display every descendant error once.
 ```html
 <ngx-form-fieldset [field]="form.address" [includeNestedErrors]="true">
   <legend>Address</legend>
-  <input [formField]="form.address.street" />
-  <input [formField]="form.address.city" />
-  <input [formField]="form.address.postalCode" />
+  <label for="address-street">Street</label>
+  <input id="address-street" [formField]="form.address.street" />
+  <label for="address-city">City</label>
+  <input id="address-city" [formField]="form.address.city" />
+  <label for="address-postal-code">Postal code</label>
+  <input id="address-postal-code" [formField]="form.address.postalCode" />
 </ngx-form-fieldset>
 ```
 
@@ -127,8 +130,14 @@ field's errors surface at the root. The summary:
 - Shows messages only when the strategy allows (e.g. after the first submit)
 - Renders each entry as a clickable link that calls Angular's
   `focusBoundControl()` to jump to the offending field
-- Uses `role="alert"` for blocking errors, `role="status"` for warnings
-- Deduplicates identical `kind` + `message` pairs across fields
+- Renders blocking errors in `role="alert"`; it does not render warnings
+- Deduplicates by originating field, kind, and message, keeping distinct fields
+
+| Component        | Warnings                                                    | Deduplication                   | Strategy scope   |
+| ---------------- | ----------------------------------------------------------- | ------------------------------- | ---------------- |
+| Styled summary   | Not rendered                                                | Field identity + kind + message | Summary only     |
+| Headless summary | Separate warning entries                                    | Field identity + kind + message | Summary only     |
+| Fieldset         | Separate signals; styled slot gives visible errors priority | Kind + message across the group | Aggregation only |
 
 For fully custom markup, the headless equivalent
 (`NgxHeadlessErrorSummary`) exposes the same managed state as signals
@@ -158,7 +167,8 @@ picks up the same strategy via DI:
 ```
 
 You can still override at any level by passing `[strategy]` to a specific
-wrapper or fieldset — it only affects that subtree. This is the settings
+wrapper or fieldset. A fieldset override affects its own aggregation, not
+descendant wrappers; it does not provide new form context. This is the settings
 cascade at work: field input ?? form context ?? component-scoped provider ??
 app-wide provider ?? built-in default — see
 [how settings resolve](../README.md#how-settings-resolve-the-cascade) in the
@@ -167,6 +177,11 @@ root README.
 ---
 
 ## Field labels for deep paths
+
+Known runtime concern R02: distinct fields with identical display labels,
+kinds, and messages can produce duplicate styled-summary rendering keys.
+Use distinct labels as a workaround. Raw field identity should drive rendering
+keys; this documentation does not fix that defect.
 
 For deeply nested arrays where paths vary by index (`facts.0.offenses.1.article`),
 pass a **factory** that returns a custom resolver and do the pattern matching
@@ -178,10 +193,10 @@ import { provideFieldLabels } from '@ngx-signal-forms/toolkit';
 
 provideFieldLabels(() => (fieldPath) => {
   if (/^facts\.\d+\.offenses\.\d+\.article$/.test(fieldPath)) {
-    return 'Legal article';
+    return `Legal article ${fieldPath}`;
   }
   if (/^facts\.\d+\.offenses\.\d+$/.test(fieldPath)) {
-    return 'Offense';
+    return `Offense ${fieldPath}`;
   }
   return humanizeFieldPath(fieldPath);
 });

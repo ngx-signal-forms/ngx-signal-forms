@@ -18,8 +18,8 @@ Prompted by [Auto-Saving Signal Forms](https://tech.trellis.org/blog/2026-07-08-
   writing a UI edit into a field's own value signal until 500ms after the
   user stops typing it. Applied per field (`displayName`, `bio`), so each
   debounces independently.
-- A computed patch gate: a field is included only when it is both `dirty()`
-  **and** `valid()`.
+- A computed patch gate includes a field only when it is dirty, valid,
+  and its control buffer equals its model value.
 - `httpResource` (`@angular/common/http`, `@publicApi 22.0`) — the request
   function returns `undefined` whenever nothing dirty+valid is waiting,
   pausing the resource. No separate "should I save?" flag.
@@ -81,9 +81,8 @@ protected readonly dirtyValidPatch = computed(() => {
 
 Three conditions matter independently:
 
-- `dirty()` excludes a pristine value — one that hasn't changed since the
-  field's last reset baseline, including immediately after this demo's own
-  post-save `reset()` (see "Lost-update guard" below). Without it, `valid()`
+- `dirty()` tracks interaction state, not inequality with an original value.
+  It excludes fields marked pristine by `reset()`. Without it, `valid()`
   alone would keep re-including an already-saved value forever, since
   validity doesn't change just because a request resolved.
 - `valid()` excludes a settled invalid value. Without it, `dirty()` alone
@@ -100,8 +99,9 @@ Three conditions matter independently:
   value — not the edit the user just made — and PATCHes that: a save that
   fires before the user has even stopped typing, carrying stale content.
   `ReadonlyFieldState.controlValue` (`@publicApi 22.0`) is the literal,
-  undebounced value of the bound control; it only ever equals `value()`
-  once the debounce has actually elapsed and synced. Peeking it with
+  undebounced value of the bound control. Equality shows that the buffer and
+  model match; it does not prove a timer elapsed. Blur can flush the value,
+  and typing back to the current model value can also restore equality. Peeking it with
   `untracked` keeps every keystroke (which changes `controlValue()` on its
   own) from re-running this computed — it still only re-runs when
   `dirty()`, `valid()`, or `value()` change, exactly as the two-condition

@@ -18,7 +18,7 @@ The most complex demo in the app: a three-step travel-booking wizard built on a 
 
 - Each step owns its own `form()`: `TravelerStepForm`, `TripStepForm`.
 - Local `linkedSignal<T>(() => store.stateSlice())` gives each form a writable, store-tracked model.
-- Steps commit to the store on `NEXT`; the store auto-saves committed state.
+- Next and Previous commit the active step. Autosave observes draft state.
 - `withLinkedState` on the store creates draft copies that reset automatically when server state reloads.
 
 ## Validation rules
@@ -45,7 +45,9 @@ The most complex demo in the app: a three-step travel-booking wizard built on a 
 
 ## Architecture in brief
 
-**Draft vs. committed state.** The store holds committed state (source of truth) and a `withLinkedState` draft that auto-resets when committed state reloads. Step forms read from committed state via `linkedSignal`, mutate locally, and call `store.setXxx(model())` on NEXT. This keeps steps isolated until commit and makes undo/discard trivial.
+**Draft and committed state.** The store keeps both. Step forms bind drafts;
+Trip reads draft destinations. Next and Previous commit the active step.
+Autosave watches drafts, so persistence is not restricted to committed data.
 
 **Lazy steps.** Each step is a `@defer` block so step-specific dependencies (validation libraries, data lists) ship as separate chunks. A shared `WizardStepInterface` lets the container call `validateAndFocus()` / `commitToStore()` / `focusHeading()` on whichever step is currently loaded.
 
@@ -74,7 +76,7 @@ The most complex demo in the app: a three-step travel-booking wizard built on a 
 3. Fill the traveler step and advance; confirm the auto-save indicator appears briefly (effect `onCleanup` pattern).
 4. On the trip step, add a destination and activity, then set an activity date outside the destination range — confirm the cross-field error.
 5. Go back to traveler, set a passport expiry before the trip end — confirm the cross-step validation error on the review step.
-6. Trigger a store reload (navigate away and back) and confirm drafts reset to committed state via `withLinkedState`.
+6. Navigate away and back. The root-provided store survives route re-entry; re-entry alone does not reload server state. Test explicit reload separately.
 
 ## Related
 

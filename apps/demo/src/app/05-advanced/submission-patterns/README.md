@@ -8,7 +8,7 @@ Manual submission plumbing — disabling buttons, tracking loading, catching err
 
 - `form(model, schema, { submission })` — declarative `action` + `onInvalid` lifecycle.
 - `[formRoot]` directive — orchestrates `preventDefault`, `novalidate`, submitting state, and invalid-submit handling.
-- `createOnInvalidHandler()` — focuses the first invalid field on failed submit.
+- `ignoreValidators: 'all'` delegates validation gating to the action. `hasOnlyWarnings()` permits warnings; blocking errors invoke the `createOnInvalidHandler()` handler explicitly.
 - `<ngx-form-field-error-summary>` — strategy-aware, aggregated, clickable error summary (`role="alert"`, using the role's implicit assertive live-region semantics).
 - Click-to-focus via Angular's native `focusBoundControl()`, invoked internally by the error summary.
 - `humanizeFieldPath` + `provideFieldLabels()` — readable field names in the summary.
@@ -17,8 +17,8 @@ Manual submission plumbing — disabling buttons, tracking loading, catching err
 
 ## Form model
 
-- Signal model: `signal<RegistrationModel>()`.
-- Schema: `form(model, registrationSchema, { submission })`.
+- Model: `SubmissionModel` with `username`, `password`, `confirmPassword`, and `simulateServerError`.
+- Schema: `form(model, submissionSchema, { submission })`.
 
 ## Validation rules
 
@@ -31,7 +31,7 @@ Manual submission plumbing — disabling buttons, tracking loading, catching err
 
 ### Warnings
 
-- None.
+- `warn:weak-password` is advisory. The action's blocking-error guard permits warning-only submissions.
 
 ## Strong suites
 
@@ -49,7 +49,7 @@ Manual submission plumbing — disabling buttons, tracking loading, catching err
 1. Run the demo and navigate to `/advanced-scenarios/submission-patterns`.
 2. Submit an empty form and observe the error summary at the top with one entry per invalid field.
 3. Click any summary entry and confirm focus jumps to the matching control.
-4. Check "Simulate Server Error" and submit a valid form — observe the submit button disable, the loading text appear, and the server error banner render.
+4. Check "Simulate Server Error" and submit valid data. Observe the disabled button and loading text, then the `usernameTaken` field error and its summary entry. This is not a separate server-error banner.
 5. Switch the error-strategy selector to `on-submit` and confirm errors stay hidden until the first submit attempt.
 6. Fix errors one at a time and confirm the summary shrinks and clears.
 

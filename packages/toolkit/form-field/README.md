@@ -41,6 +41,10 @@ import {
 
 ## Quick start
 
+Use the [tested root starter](../../../README.md#quick-start) for a complete
+component with submission and invalid-field focus. This example demonstrates
+rendering only, including hints and a counter. It has no save action.
+
 ```typescript
 import { Component, signal, ChangeDetectionStrategy } from '@angular/core';
 import {
@@ -86,8 +90,6 @@ import { NgxFormField } from '@ngx-signal-forms/toolkit/form-field';
           [maxLength]="500"
         />
       </ngx-form-field-wrapper>
-
-      <button type="submit">Send</button>
     </form>
   `,
 })
@@ -221,7 +223,7 @@ Warnings (errors with `kind` starting with `warn:`) display automatically:
   implicit live-region semantics of those roles — no explicit `aria-live`)
 
 Warning **display timing** is independent from error timing. The wrapper
-exposes a `warningStrategy` input (default `'on-touch'`, forwarded to the
+exposes an inherited `warningStrategy` input (built-in fallback `'on-touch'`, forwarded to the
 projected `NgxFormFieldError`) so advisory messages keep their own timing even
 when errors are gated by `'on-submit'` — the wrapper mounts its
 error/warning renderer whenever either should be visible, not just on the
@@ -286,7 +288,7 @@ aggregation signals without any prebuilt markup, drop down to
 ### Warning support
 
 Like `ngx-form-field-wrapper`, the fieldset decouples warning **display timing**
-from blocking-error timing: `warningStrategy` defaults to `'on-touch'` and
+from blocking-error timing: `warningStrategy` has a built-in fallback of `'on-touch'` and
 resolves through its own cascade, so aggregated warnings keep their own timing
 even when `strategy` is `'on-submit'`.
 

@@ -32,7 +32,7 @@ Shows how global toolkit defaults and app-level control-family presets (configur
 
 ## Strong suites
 
-- The canonical reference for wiring up global config and reading the resolved values at runtime.
+- Shows provider configuration and local inputs. The explanatory panel contains static/input-derived text, not a full resolved-config inspector.
 - Proves that app-level presets reach custom control semantics (the terms switch) without per-component configuration.
 - Makes the inheritance/override story concrete: global default + local override in one screen.
 

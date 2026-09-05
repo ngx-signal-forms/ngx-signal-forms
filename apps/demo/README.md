@@ -155,92 +155,17 @@ pnpm nx e2e demo-e2e
 5. Visit **Validation** to compare Zod, Vest, and layered strategies directly
 6. Finish with **Advanced Scenarios** for submission, configuration, async state, and orchestration
 
-## Key Concepts
+## Copy a working example
 
-### Angular Signal Forms (Core API)
+Use the [tested root starter](../../README.md#quick-start) for a complete
+component with labels, imports, validation, and a submission action. For
+assistive-only rendering, read the
+[first form source](./src/app/01-getting-started/your-first-form/README.md).
 
-```typescript
-import { form, FormField, required, email } from '@angular/forms/signals';
-
-@Component({
-  imports: [FormField],
-  template: `<input [formField]="myForm.email" />`,
-})
-class MyComponent {
-  readonly #model = signal({ email: '' });
-  readonly myForm = form(this.#model, (path) => {
-    required(path.email, { message: 'Required' });
-    email(path.email, { message: 'Valid email required' });
-  });
-}
-```
-
-### Toolkit Enhancement (Progressive)
-
-```typescript
-// Level 1: Auto-ARIA + Error Component (20% toolkit)
-import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit';
-
-@Component({
-  imports: [FormField, NgxSignalFormToolkit],
-  template: `
-    <form [formRoot]="myForm" ngxSignalForm>
-      <input [formField]="myForm.email" />
-      <ngx-form-field-error [formField]="myForm.email" fieldName="email" />
-    </form>
-  `,
-})
-```
-
-```typescript
-// Level 2: Form Field Wrapper (100% toolkit)
-import { NgxFormField } from '@ngx-signal-forms/toolkit/form-field';
-
-@Component({
-  imports: [FormField, NgxFormField],
-  template: `
-    <ngx-form-field-wrapper [formField]="myForm.email">
-      <label for="email">Email</label>
-      <input id="email" [formField]="myForm.email" />
-    </ngx-form-field-wrapper>
-  `,
-})
-```
-
-## Toolkit Value Proposition
-
-### What the Toolkit Adds
-
-| Feature                 | Without Toolkit                           | With Toolkit                   |
-| ----------------------- | ----------------------------------------- | ------------------------------ |
-| **ARIA Attributes**     | Manual `aria-invalid`, `aria-describedby` | Automatic ✅                   |
-| **Error Display**       | Manual templates + conditions             | Component ✅                   |
-| **Error Strategies**    | Manual state tracking                     | 3 built-in strategies ✅       |
-| **Warning Support**     | Not supported                             | Built-in ✅                    |
-| **Field visibility UX** | Manual timing/debug instrumentation       | Strategy + debugger tooling ✅ |
-| **Form Field Wrapper**  | Manual layout                             | Component with projection ✅   |
-| **WCAG 2.2 Compliance** | Manual implementation                     | Automatic ✅                   |
-| **Code Reduction**      | Baseline                                  | ~67% less code ✅              |
-
-### WCAG 2.2 Compliance Features
-
-✅ **Automatic ARIA**
-
-- `aria-invalid="true"` on invalid fields
-- `aria-describedby` linking errors to inputs
-- Proper focus management
-
-✅ **Live Regions**
-
-- Errors: `role="alert"` (implicit assertive live region)
-- Warnings: `role="status"` (implicit polite live region)
-- Screen reader announcements
-
-✅ **Error Display Strategies**
-
-- Progressive disclosure (on-touch recommended)
-- Clear error identification
-- Associated with form fields
+Angular owns form state and submission. Toolkit directives and components
+add feedback, ARIA associations, and layout. They do not guarantee WCAG
+conformance: test the finished page with a keyboard and screen reader, and
+check contrast for each theme.
 
 ## 🔧 Technology Stack
 
@@ -263,7 +188,7 @@ import { NgxFormField } from '@ngx-signal-forms/toolkit/form-field';
 **Issue:** Form not working
 
 - Verify `[formField]` directive is used (not `formControlName`)
-- Check that `Control` is imported from `@angular/forms/signals`
+- Check that `FormField` is imported from `@angular/forms/signals`
 - Ensure signal-based model: `signal<Model>({...})`
 
 **Issue:** Toolkit directives not working

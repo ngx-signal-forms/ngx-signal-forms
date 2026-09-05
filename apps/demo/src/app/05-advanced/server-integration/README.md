@@ -77,7 +77,7 @@ Try step 5 in "Try This" below to see this asymmetry directly.
 
 ## Reset behavior
 
-- **After a successful save**, the `action` calls `formData().reset(formData().value())` — this re-baselines the form at the just-saved value: `dirty()`/`touched()` clear immediately, but the fields keep showing exactly what the user typed.
+- **After a successful save**, the action rereads the current model and calls `formData().reset(formData().value())`. This is not necessarily the submitted snapshot. Inputs remain editable during the request: newer, unsaved edits can become pristine. Runtime concern R04 remains; do not copy this reset as a concurrency-safe save pattern. A regression test must edit a field during the save and verify that the later edit stays dirty.
 - The **Reset** button calls `profileForm().reset()` with no argument — this only clears `dirty()`/`touched()`, it does not change field values.
 - The **Reload from server** button calls `profileResource.reload()`, which re-runs the fake API's `loadProfile()`; the component's `effect()` then copies the new value into the model and calls `reset(value)` again, so a reload also lands pristine.
 
@@ -105,4 +105,4 @@ Try step 5 in "Try This" below to see this asymmetry directly.
 - [Submission Patterns](../submission-patterns/README.md) — declarative submission and the GOV.UK-style error summary; contrast its checkbox-triggered server error with this demo's real `TreeValidationResult` mapping.
 - [Field State Patterns](../field-state-patterns/README.md) — the `reset()` semantics used here also drive its Reset button.
 - [Async Validation](../async-validation/README.md) — the one demo in this section that _does_ route through MSW/real HTTP, for contrast with this demo's in-memory fake API.
-- [Autosave](../autosave/README.md) — reuses this demo's `reset(value)`-after-success pattern, but with no submit button and a real MSW-backed `httpResource` PATCH.
+- [Autosave](../autosave/README.md) compares each current field with the request snapshot before resetting it. That reconciliation is different from this demo's whole-form reset.

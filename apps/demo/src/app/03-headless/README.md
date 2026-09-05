@@ -6,14 +6,14 @@
 
 This section is the escape hatch for teams that cannot adopt the `NgxFormField` wrapper — usually because they own a design system with its own markup and styling conventions. You get the toolkit's state, visibility rules, and aggregation logic as renderless directives and plain factory functions.
 
-**Adoption level:** 100% toolkit (headless entry point only, no wrapper).
+The examples combine headless state with root and assistive imports, without the styled wrapper.
 
 **Focus:** renderless directives, composable state utilities, and custom error summaries.
 
 ## 📂 Demos in this section
 
 - **[fieldset-utilities](./fieldset-utilities/README.md)** — headless fieldset grouping plus the `createErrorState` / `createCharacterCount` / `createFieldStateFlags` utilities applied to a delivery form.
-  - What you'll learn: `NgxHeadlessToolkit` bundle · `ngxHeadlessErrorSummary` click-to-focus · `ngxHeadlessFieldset` aggregation · composing custom UI from utility factories · `provideFieldLabels()` for custom summary labels.
+  - Headless summaries, fieldset aggregation, and custom UI from state factories. For label providers, see [global configuration](../05-advanced/global-configuration/README.md).
 
 - **[error-message-signal](./error-message-signal/README.md)** — `createErrorMessageSignal` exercised across all three `includeWarnings` modes with reactive registry swapping and `aria-describedby` wiring.
   - What you'll learn: flat `@for` iteration without an outer `@if` gate · blocking-only vs. all-errors vs. warnings-only views · stable per-error IDs for `aria-describedby` · reactive `errorMessages` signal override.

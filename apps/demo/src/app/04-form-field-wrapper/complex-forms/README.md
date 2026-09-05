@@ -6,7 +6,7 @@ A realistic, non-trivial form with nested objects, dynamic arrays, and mixed con
 
 ## Toolkit features showcased
 
-- `NgxSignalFormToolkit` — root directive for auto-ARIA and form context.
+- `NgxSignalFormToolkit` is an import bundle for auto-ARIA and form context.
 - `NgxFormField` wrapper — automatic label/error/hint layout for every field.
 - `NgxFormFieldset` — realistic section structure with grouped state.
 - Wrapper-owned grouped radio feedback for the contact-method choice group.
@@ -53,9 +53,9 @@ A realistic, non-trivial form with nested objects, dynamic arrays, and mixed con
 3. Enter an age outside 18–120 or a malformed ZIP to see field-level errors.
 4. Enter different values in password and confirm password to see the credentials fieldset surface the shared mismatch error.
 5. Blur the contact-method radio group without choosing an option to see the wrapper-owned grouped error surface.
-6. Choose `SMS` as contact method to trigger the warning (submission still allowed).
+6. Choose `SMS` as contact method to trigger the warning. Ordinary submission still blocks this warning-only invalid state.
 7. Toggle the newsletter switch and notification checkbox and confirm each renders with the correct wrapper layout and ARIA wiring.
-8. Submit with errors and confirm aggregated fieldset errors appear at the section level.
+8. Submit with errors. Leaf errors appear in their wrappers; fieldsets keep the default group-only aggregation.
 
 ## Related
 
