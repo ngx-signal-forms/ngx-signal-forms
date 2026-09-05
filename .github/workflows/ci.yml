@@ -115,6 +115,11 @@ jobs:
         run: pnpm exec nx affected -t lint test test-browser build e2e --exclude=demo-e2e --parallel=2 --outputStyle=static
         timeout-minutes: 10
 
+      # Run outside affected selection so README/docs-only changes are checked.
+      # The build dependency can reuse the affected build's cache.
+      - name: Check README starter
+        run: pnpm exec nx run toolkit:check-documentation-starter --outputStyle=static
+
       - name: Generate lint report
         if: ${{ always() }}
         run: pnpm exec oxlint . --format=json > lint-report.json || true
