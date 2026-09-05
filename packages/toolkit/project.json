@@ -33,7 +33,7 @@
       "options": {
         "commands": [
           "mkdir -p dist/packages/toolkit",
-          "cp README.md dist/packages/toolkit/README.md",
+          "node packages/toolkit/scripts/generate-readme.mjs",
           "cp LICENSE dist/packages/toolkit/LICENSE",
           "node packages/toolkit/scripts/strip-internal-members.mjs",
           "node packages/toolkit/scripts/strip-internal-exports.mjs"
