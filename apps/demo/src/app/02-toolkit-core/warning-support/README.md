@@ -31,7 +31,7 @@ Real-world forms often need _non-blocking_ feedback — "weak password", "dispos
 - `warn:weak-password` — password between 8 and 11 characters.
 - `warn:simple-password` — password uses fewer than 3 of 4 character classes (upper/lower/digit/symbol).
 
-## Strong suites
+## Strong suits
 
 - Clearest example of the `warn:*` convention and the visual/ARIA split between errors and warnings.
 - Shows declarative warning-tolerant submission through the `submission` form option.
