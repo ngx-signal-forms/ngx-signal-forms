@@ -103,7 +103,10 @@ The `update_self_healing_fix` tool accepts a `shortLink` and an action: `APPLY`,
 
 The decision script returns one of the following statuses. This table defines the **default behavior** for each. User instructions can override any of these.
 
-**Simple exits** — just report and exit:
+**Decision outcomes**: only `ci_success` confirms successful CI completion.
+Cancellation, timeouts, exhausted budgets, and errors must report the last known
+CI state and what remains unresolved. `fix_auto_applying` continues monitoring
+rather than ending it.
 
 | Status                  | Default Behavior                                                                                                 |
 | ----------------------- | ---------------------------------------------------------------------------------------------------------------- |
@@ -111,10 +114,10 @@ The decision script returns one of the following statuses. This table defines th
 | `cipe_canceled`         | Exit, CI was canceled                                                                                            |
 | `cipe_timed_out`        | Exit, CI timed out                                                                                               |
 | `polling_timeout`       | Exit, polling timeout reached                                                                                    |
-| `circuit_breaker`       | Exit, no progress after 13 consecutive polls                                                                     |
+| `circuit_breaker`       | Exit when the decision script reports its no-progress limit                                                      |
 | `environment_rerun_cap` | Exit, environment reruns exhausted                                                                               |
 | `fix_auto_applying`     | Self-healing is handling it — just record `last_cipe_url`, enter wait mode. No MCP call or local git ops needed. |
-| `error`                 | Wait 60s and loop                                                                                                |
+| `error`                 | Exit after reporting the parse failure, last known CI state, and unresolved work                                 |
 
 **Statuses requiring action** — when handling these in Step 3, read `references/fix-flows.md` for the detailed flow:
 
@@ -204,10 +207,17 @@ Parse the JSON output and update tracking state:
 
 Based on `action`:
 
-- **`action == "poll"`**: Print `output.message`, sleep `output.delay` seconds, go to 2a
+- **`action == "poll"`**: Print `output.message`, schedule a wait of `output.delay` seconds through the host's supported mechanism, then go to 2a
   - If `output.newCipeDetected`: clear wait mode, reset `wait_mode = false`
-- **`action == "wait"`**: Print `output.message`, sleep `output.delay` seconds, go to 2a
-- **`action == "done"`**: Proceed to Step 3 with `output.code`
+- **`action == "wait"`**: Print `output.message`, schedule the same supported wait, then go to 2a
+- **`action == "done"`**: Proceed to Step 3 with `output.code`. This ends the decision step, not necessarily monitoring or the user's task.
+
+Respect host restrictions on waiting and polling. Use completion notifications or
+a supported scheduler rather than shell sleeps when the host forbids them. If no
+supported wait mechanism exists, report monitoring as incomplete with the last
+known state and the required next check. Do not claim CI passed or run a tight
+poll loop. Preserve the configured timeout and cycle budgets; extensions still
+require the approval in Step 4.
 
 ### Step 3: Handle Actionable Status
 
@@ -266,7 +276,7 @@ The script returns `{ cycleCount, agentTriggered, envRerunCount, approachingLimi
 
 #### Progress Tracking
 
-- `no_progress_count`, circuit breaker (5 polls), and backoff reset are handled by ci-poll-decide.mjs (progress = any change in cipeStatus, selfHealingStatus, verificationStatus, or failureClassification)
+- `no_progress_count`, the circuit-breaker threshold, and backoff reset are owned by `scripts/ci-poll-decide.mjs`. Read that script when the exact limits are needed rather than maintaining another numeric copy here.
 - `env_rerun_count` reset on non-environment status is handled by ci-state-update.mjs cycle-check
 - On new CI Attempt detected (poll script returns `newCipeDetected`) → reset `local_verify_count = 0`, `env_rerun_count = 0`
 

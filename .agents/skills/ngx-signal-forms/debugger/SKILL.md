@@ -34,7 +34,7 @@ The debugger is a **development-only** tool that makes invisible form state visi
 
 3. **Place the debugger alongside the form** — a side-by-side split layout works well for demos showing how error strategies, warnings, and submission state interact.
 
-4. **Guard with `@if (isDevMode())` so the bundle tree-shakes.** The debugger self-guards rendering with `isDevMode()` so production builds ship zero DOM even without a guard, but the compiled bundle still carries the ~13 KB JS + ~15 KB SCSS. Wrapping the element in `@if (isDevMode())` lets the compiler drop the code path entirely.
+4. **Guard rendering with `@if (isDevMode())`.** The debugger does not apply a production rendering guard itself. A host-template guard prevents production rendering, but does not guarantee removal of imported JavaScript or CSS. Keep debugger imports out of production entry paths when bundle exclusion is required, and verify the built output with bundle analysis. Do not promise fixed byte savings.
 
 5. Use `errorStrategy` input on the debugger component to highlight a specific strategy in teaching contexts.
 
@@ -44,30 +44,49 @@ The debugger is a **development-only** tool that makes invisible form state visi
 import { Component, signal, isDevMode } from '@angular/core';
 import { form, FormField, required } from '@angular/forms/signals';
 import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit';
+import { NgxFormFieldError } from '@ngx-signal-forms/toolkit/assistive';
 import { NgxSignalFormDebuggerToolkit } from '@ngx-signal-forms/debugger';
 
 @Component({
   selector: 'app-debug-form',
-  imports: [FormField, NgxSignalFormToolkit, NgxSignalFormDebuggerToolkit],
+  imports: [
+    FormField,
+    NgxSignalFormToolkit,
+    NgxFormFieldError,
+    NgxSignalFormDebuggerToolkit,
+  ],
   template: `
     <div class="split-layout">
       <form [formRoot]="demoForm" ngxSignalForm>
+        <label for="name">Name</label>
         <input id="name" [formField]="demoForm.name" />
+        <ngx-form-field-error [formField]="demoForm.name" fieldName="name" />
         <button type="submit">Submit</button>
-      </form>
 
-      @if (isDev) {
-        <ngx-signal-form-debugger [formTree]="demoForm" title="Live state" />
-      }
+        @if (isDev) {
+          <ngx-signal-form-debugger [formTree]="demoForm" title="Live state" />
+        }
+      </form>
     </div>
   `,
 })
 export class DebugFormComponent {
   protected readonly isDev = isDevMode();
   readonly #model = signal({ name: '' });
-  protected readonly demoForm = form(this.#model, (path) => {
-    required(path.name);
-  });
+  protected readonly savedName = signal<string | null>(null);
+  protected readonly demoForm = form(
+    this.#model,
+    (path) => {
+      required(path.name);
+    },
+    {
+      submission: {
+        action: async (tree) => {
+          this.savedName.set(tree().value().name);
+        },
+      },
+    },
+  );
 }
 ```
 
@@ -86,7 +105,7 @@ bundle and drop the directives into your template. Badge inputs: `variant`
 - Each field's current validation state: valid/invalid, touched/dirty, pending
 - Current errors and warnings with their `kind` values
 - Whether errors are currently visible given the active error strategy
-- Submitted status from `[formRoot]`
+- Submitted status from the `ngxSignalForm` enhancer's context, not Angular `FormRoot`
 - Live model value at each field
 
 ## Debugger Inputs
@@ -121,6 +140,6 @@ Dark mode is supported through `.dark` class context on an ancestor.
 ## Error Handling
 
 - If child fields don't appear in the tree: check that you passed `formTree` (not `formTree()`).
-- If submitted state doesn't show: verify the form uses `form[formRoot][ngxSignalForm]`.
+- If submitted state doesn't show: place the debugger inside `form[formRoot][ngxSignalForm]` so it can inject the enhancer's context. A sibling debugger does not inherit that element-scoped context.
 - If strategy mismatch in debugger: set `[errorStrategy]` explicitly on the debugger component.
-- If the debugger ships in a production bundle: wrap the element in `@if (isDevMode())` so the compiler can tree-shake the code path, not just the DOM.
+- If the debugger ships in a production bundle: inspect production imports and the built output. A template `@if` controls rendering; it is not proof of bundle exclusion.

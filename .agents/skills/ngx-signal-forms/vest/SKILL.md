@@ -1,4 +1,5 @@
 ---
+name: vest
 description: Vest toolkit surface. Use when integrating Vest suites, warning validation, focused runs, or custom Vest adapter flows.
 ---
 
@@ -130,7 +131,7 @@ persist across mounts:
 validateVest(path, signupSuite, { resetOnDestroy: false });
 ```
 
-**Concurrent mounts are safe.** Registrations against the same suite are
+**Concurrent mounts have limits.** Registrations against the same suite are
 reference-counted, so mounting a module-scope suite in two forms at once (a
 list/detail view, a wizard step beside a summary, two open tabs) does not reset
 one mount out from under the other — the suite only resets when the **last**
@@ -250,26 +251,91 @@ const userForm = form(userModel, (path) => {
 
 ## Warnings and Submission
 
-Vest `warn()` results map to toolkit warning errors (polite `role="status"` rendering). They don't block submission unless you treat them as blockers.
+Vest `warn()` results map to toolkit `warn:vest:` errors with polite
+`role="status"` rendering. They still make Angular's field state invalid and
+block ordinary Angular submission. Use a warning-aware submit path when the
+user may proceed with warnings.
 
-When only warnings remain and the user should still be able to submit:
+This complete component owns the native submit event, so it uses `novalidate`
+and `preventDefault()` instead of `[formRoot]`. Do not attach both submission
+paths to the same form or call `submitWithWarnings()` from an already-running
+`submission.action`. The default `'on-touch'` feedback appears when the helper
+marks the fields touched, including on a refused attempt.
 
 ```typescript
+import { Component, signal } from '@angular/core';
+import { form, FormField, required, minLength } from '@angular/forms/signals';
+import { create, enforce, test, warn } from 'vest';
 import {
-  canSubmitWithWarnings,
+  NgxSignalFormToolkit,
   submitWithWarnings,
 } from '@ngx-signal-forms/toolkit';
+import { NgxFormFieldError } from '@ngx-signal-forms/toolkit/assistive';
+import { validateVestWarnings } from '@ngx-signal-forms/toolkit/vest';
 
-// Gate a button
-[disabled] = '!canSubmitWithWarnings(signupForm)';
+@Component({
+  selector: 'app-warning-signup',
+  imports: [FormField, NgxSignalFormToolkit, NgxFormFieldError],
+  template: `
+    <form (submit)="save($event)" novalidate>
+      <label for="password">Password</label>
+      <input
+        id="password"
+        type="password"
+        autocomplete="new-password"
+        [formField]="signupForm.password"
+      />
+      <ngx-form-field-error
+        [formField]="signupForm.password"
+        fieldName="password"
+      />
+      <button type="submit" [disabled]="signupForm().submitting()">
+        Create account
+      </button>
+      <p role="status">{{ saved() ? 'Account details accepted.' : '' }}</p>
+    </form>
+  `,
+})
+export class WarningSignupComponent {
+  readonly #strengthSuite = create((data: { password: string }) => {
+    test('password', 'Consider using 12 or more characters', () => {
+      warn();
+      enforce(data.password).longerThanOrEquals(12);
+    });
+  });
+  readonly #model = signal({ password: '' });
+  protected readonly saved = signal(false);
+  protected readonly signupForm = form(this.#model, (path) => {
+    required(path.password);
+    minLength(path.password, 8);
+    validateVestWarnings(path, this.#strengthSuite);
+  });
 
-// Or in a submit handler
-await submitWithWarnings(signupForm, async () => {
-  await api.createUser(signupModel());
-});
+  protected async save(event: Event): Promise<void> {
+    event.preventDefault();
+    await submitWithWarnings(this.signupForm, async () => {
+      this.saved.set(true);
+    });
+  }
+}
 ```
 
-For Angular's `submit()` with Vest warnings, pass `{ ignoreValidators: 'all' }` and gate with `hasOnlyWarnings(form().errorSummary())`.
+`canSubmitWithWarnings(form)` returns a `Signal<boolean>`. Create it once in a
+field initializer and read that signal when you need an eligibility indicator.
+Keep the submit button enabled for invalid forms so an attempt can reveal
+feedback. Disable it during submission, as above.
+
+`hasOnlyWarnings([])` is `true`, meaning "no blocking errors". It also returns
+`true` for a warning-only list; a clean form is not a failing edge case.
+`submitWithWarnings()` checks the full error summary before delegating to
+Angular with `ignoreValidators: 'all'`. Do not use that bypass without the
+blocking-error gate. Pending validators do not block this helper.
+
+For a manual `'on-submit'` flow, create
+`createSubmittedStatusTracker(form, submitAttempted)` in an injection context.
+Set the writable `submitAttempted` signal for a refused invalid attempt and
+pass the returned status to feedback components. A refused call never flips
+Angular's `submitting()` signal.
 
 ## Error Handling
 
@@ -278,4 +344,4 @@ For Angular's `submit()` with Vest warnings, pass `{ ignoreValidators: 'all' }` 
 - If Vest v5 is installed: upgrade to `vest@^6.0.0` — v6+ implements the Standard Schema interface required by this adapter.
 - If stale errors appear on a second mount of a form using a module-scope suite: the adapter clears suite state on teardown by default — confirm `resetOnDestroy` has not been set to `false`. (Conversely, if you _want_ suite state to persist across mounts, pass `{ resetOnDestroy: false }`.)
 - If detecting Vest-origin errors in a custom strategy or test: import `VEST_ERROR_KIND_PREFIX` / `VEST_WARNING_KIND_PREFIX` and match against `error.kind` instead of hard-coding the string.
-- If a form throws in dev mode ("Vest field name ... does not resolve"): a Vest `test`/`warn` field name has a valid prefix but an invalid tail (e.g. `test('address.cityy', …)` when the bound path only has `address.city`) — fix the field name so it names a real child of the bound path. A field name whose FIRST segment doesn't resolve (e.g. `test('passwordMatch', …)`) is a legitimate **virtual** Vest field name and does not throw. See [Vest field-name resolution](../../../../packages/toolkit/vest/README.md#vest-field-name-resolution) and [`references/pitfalls.md`](../references/pitfalls.md).
+- If a form throws in dev mode ("Vest field name ... does not resolve"): a Vest `test`/`warn` field name has a valid prefix but an invalid tail (e.g. `test('address.cityy', …)` when the bound path only has `address.city`) — fix the field name so it names a real child of the bound path. A field name whose FIRST segment doesn't resolve (e.g. `test('passwordMatch', …)`) is a legitimate **virtual** Vest field name and does not throw. Read the "Vest field-name resolution" section in the [Vest README](../../../../packages/toolkit/vest/README.md) and [pitfalls](../references/pitfalls.md).

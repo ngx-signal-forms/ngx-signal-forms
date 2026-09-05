@@ -10,11 +10,11 @@ Read `../references/api.md` for the full export list and component input signatu
 
 ## Principle
 
-The assistive entry point provides accessible feedback rendering that sits between raw Angular field state and the fully styled `form-field` wrapper. Use it when you want pre-built accessible components but full control over layout structure, including grouped notification blocks driven by aggregated `ValidationError[]`. Use `form-field/SKILL.md` instead when a complete wrapper shell is acceptable.
+The assistive entry point provides accessible feedback rendering that sits between raw Angular field state and the fully styled `form-field` wrapper. Use it when you want pre-built accessible components but full control over layout structure, including grouped notification blocks driven by aggregated `ValidationError[]`. Use [form-field](../form-field/SKILL.md) instead when a complete wrapper shell is acceptable.
 
 ## Workflow
 
-1. Import from `@ngx-signal-forms/toolkit/assistive` — these components are also re-exported by `NgxFormField` for convenience when a form-field wrapper is present.
+1. Import from `@ngx-signal-forms/toolkit/assistive`. The `NgxFormField` bundle contains `NgxSignalFormAutoAria`, `NgxSignalFormControlSemanticsDirective`, `NgxFormFieldWrapper`, `NgxFormFieldHint`, `NgxFormFieldCharacterCount`, `NgxFormFieldError`, and `NgxFormFieldset`. It does not contain `NgxFormFieldErrorSummary` or `NgxFormMarkingLegend`; import those separately from `/assistive`.
 
 2. **`NgxFormFieldError`** — displays validation errors (and optionally warnings) for a single field or a pre-aggregated, grouped error list. Two presentations:
    - `presentation="inline"` (default) — bare messages under a single control. Always provide `[formField]` for this usage.
@@ -59,16 +59,23 @@ The assistive entry point provides accessible feedback rendering that sits betwe
 
 ```typescript
 import { Component, signal } from '@angular/core';
-import { form, FormField } from '@angular/forms/signals';
+import { form, FormField, required, email } from '@angular/forms/signals';
 import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit';
-import { NgxFormFieldErrorSummary } from '@ngx-signal-forms/toolkit/assistive';
+import {
+  NgxFormFieldError,
+  NgxFormFieldErrorSummary,
+} from '@ngx-signal-forms/toolkit/assistive';
 
 @Component({
   selector: 'app-registration-form',
-  imports: [FormField, NgxSignalFormToolkit, NgxFormFieldErrorSummary],
+  imports: [
+    FormField,
+    NgxSignalFormToolkit,
+    NgxFormFieldError,
+    NgxFormFieldErrorSummary,
+  ],
   template: `
     <form [formRoot]="registrationForm" ngxSignalForm errorStrategy="on-submit">
-      <!-- Error summary at top of form — inherits strategy from ngxSignalForm context -->
       <ngx-form-field-error-summary
         [formTree]="registrationForm"
         summaryLabel="Please fix the following errors before submitting:"
@@ -76,6 +83,10 @@ import { NgxFormFieldErrorSummary } from '@ngx-signal-forms/toolkit/assistive';
 
       <label for="email">Email</label>
       <input id="email" type="email" [formField]="registrationForm.email" />
+      <ngx-form-field-error
+        [formField]="registrationForm.email"
+        fieldName="email"
+      />
 
       <button type="submit">Submit</button>
     </form>
@@ -83,7 +94,21 @@ import { NgxFormFieldErrorSummary } from '@ngx-signal-forms/toolkit/assistive';
 })
 export class RegistrationFormComponent {
   readonly #model = signal({ email: '' });
-  protected readonly registrationForm = form(this.#model, {/* validators */});
+  protected readonly savedEmail = signal<string | null>(null);
+  protected readonly registrationForm = form(
+    this.#model,
+    (path) => {
+      required(path.email, { message: 'Email is required' });
+      email(path.email, { message: 'Enter a valid email' });
+    },
+    {
+      submission: {
+        action: async (tree) => {
+          this.savedEmail.set(tree().value().email);
+        },
+      },
+    },
+  );
 }
 ```
 
@@ -91,10 +116,9 @@ export class RegistrationFormComponent {
 
 ```typescript
 import { Component, signal } from '@angular/core';
-import { form, FormField, required, maxLength } from '@angular/forms/signals';
+import { form, FormField, maxLength } from '@angular/forms/signals';
 import {
   NgxFormFieldError,
-  NgxFormFieldHint,
   NgxFormFieldCharacterCount,
 } from '@ngx-signal-forms/toolkit/assistive';
 import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit';
@@ -105,24 +129,34 @@ import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit';
     FormField,
     NgxSignalFormToolkit,
     NgxFormFieldError,
-    NgxFormFieldHint,
     NgxFormFieldCharacterCount,
   ],
   template: `
     <form [formRoot]="profileForm" ngxSignalForm>
       <label for="bio">Bio</label>
       <textarea id="bio" [formField]="profileForm.bio"></textarea>
-      <ngx-form-field-hint>Briefly describe yourself.</ngx-form-field-hint>
       <ngx-form-field-character-count [formField]="profileForm.bio" />
       <ngx-form-field-error [formField]="profileForm.bio" fieldName="bio" />
+      <button type="submit">Save bio</button>
     </form>
   `,
 })
 export class BioFieldComponent {
   readonly #model = signal({ bio: '' });
-  protected readonly profileForm = form(this.#model, (path) => {
-    maxLength(path.bio, 500);
-  });
+  protected readonly savedBio = signal<string | null>(null);
+  protected readonly profileForm = form(
+    this.#model,
+    (path) => {
+      maxLength(path.bio, 500);
+    },
+    {
+      submission: {
+        action: async (tree) => {
+          this.savedBio.set(tree().value().bio);
+        },
+      },
+    },
+  );
 }
 ```
 
@@ -147,9 +181,9 @@ import {
 - If errors don't display: check that `fieldName` is provided when the component is used standalone.
 - If character count doesn't update or silently renders 0: verify the field value is a string and `[formField]` is bound. With no `maxLength` configured or auto-detected, an unsupported value type logs a one-shot dev-mode `console.warn` naming `NgxFormFieldCharacterCount` — watch the console.
 - If a property-bound hint id (`[id]="expr"`) doesn't reach `aria-describedby`: update the toolkit — older versions read the id once at construction and missed property bindings; current versions map both static `id` and `[id]` onto the hint's `id` input.
-- If hints don't appear in `aria-describedby`: confirm the component is inside a `ngx-form-field-wrapper` or use `NgxHeadlessFieldName` to wire it manually.
+- If hints don't appear in `aria-describedby`: use the wrapper's hint registry, or follow the explicit manual-ownership example in [headless](../headless/SKILL.md#manual-aria-example). `NgxHeadlessFieldName` supplies identity only; it does not register hints or compose their ARIA links.
 - If a grouped notification announces with the wrong urgency: check the `[errors]` list you pass in — routing is content-driven, so a stray blocking error will force the assertive `role="alert"` container. There is no `tone` input to override it.
-- For grouped output you already aggregate yourself, stay here: `NgxFormFieldError` with `presentation="panel"` (step 5). Switch to `form-field/SKILL.md` (`NgxFormFieldset`) only when you also want the styled group shell — legend, border, surface tone — to do the aggregating for you.
+- For grouped output you already aggregate yourself, use `NgxFormFieldError` with `presentation="panel"`. Switch to [form-field](../form-field/SKILL.md) for `NgxFormFieldset` when you also need the styled group shell and aggregation.
 - If error summary does not show: verify `ngxSignalForm` is applied to the `<form>` element so context is active, or provide `strategy` and `submittedStatus` explicitly.
-- If error summary entries don't focus controls on click: the field needs a registered binding. Native controls with `[formField]` register themselves; a custom control must call `registerAsBinding()`. Angular's `focusBoundControl()` is a silent no-op without one, and `focusFirstInvalid()` then reports `false` and logs a dev-mode warning.
+- If error summary entries don't focus controls on click: check the binding and focus target. Angular `FormField` registers native controls and normal custom `FormValueControl` components bound with `[formField]` automatically. A composite custom control may need a `focus()` method to forward focus to its inner control. `registerAsBinding()` is only for integrations that deliberately bypass `FormField`, not a requirement for ordinary custom controls. Without a usable binding, `focusBoundControl()` cannot move focus.
 - For warning entries in the summary, use `NgxHeadlessErrorSummary` from `@ngx-signal-forms/toolkit/headless`, or use `NgxFormFieldError` with `presentation="panel"` when you already have aggregated `ValidationError[]`.

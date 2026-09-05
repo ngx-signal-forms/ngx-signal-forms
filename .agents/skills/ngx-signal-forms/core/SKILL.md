@@ -22,7 +22,7 @@ The toolkit is an enhancement layer, not a replacement. Angular Signal Forms own
 - `'immediate'` — show errors from first load (useful for live guidance or sign-up flows)
 - `'on-submit'` — show errors only after submission attempt. Inside `form[formRoot][ngxSignalForm]` the wrapper, auto-ARIA, and headless directives inherit `submittedStatus` automatically. **Standalone callers of `createShowErrorsComputed()` MUST pass `submittedStatus` explicitly when using `'on-submit'`** — otherwise the helper stays at `'unsubmitted'` and errors never surface (dev mode logs a one-shot `console.warn` to flag the silent failure).
 
-3. **Let auto-ARIA manage ARIA attributes.** `NgxSignalFormAutoAria` (bundled in `NgxSignalFormToolkit`) handles `aria-invalid`, `aria-required`, and `aria-describedby` for native `<input>`, `<textarea>`, and `<select>` controls, custom hosts, and checkbox-based switches that opt in with `role="switch"`. Standard checkboxes and radios stay excluded. Never add those attributes manually.
+3. **Use automatic ARIA by default.** `NgxSignalFormAutoAria`, bundled in `NgxSignalFormToolkit`, handles `aria-invalid`, `aria-required`, and `aria-describedby` for native input-like controls, custom `[formField]` hosts, and checkbox switches with `role="switch"`. Standard checkboxes and radios are excluded by default; explicit `ngxSignalFormControl` semantics opt them in. A control that owns these attributes must explicitly select `ngxSignalFormControlAria="manual"` or `ariaMode: 'manual'` through semantics or presets. Headless markup alone does not disable auto-ARIA.
 
 4. **Remember that standalone imports are template-local.** Importing `NgxSignalFormToolkit` in a parent form component does not make `NgxSignalFormAutoAria` available inside a child component's template. If a custom control renders the actual `<input [formField]>` itself, import the toolkit bundle or the directive in that child component.
 
@@ -87,10 +87,21 @@ import { NgxFormField } from '@ngx-signal-forms/toolkit/form-field';
 })
 export class ExampleComponent {
   readonly #model = signal({ email: '' });
-  protected readonly userForm = form(this.#model, (path) => {
-    required(path.email, { message: 'Email is required' });
-    email(path.email, { message: 'Enter a valid email' });
-  });
+  protected readonly savedEmail = signal<string | null>(null);
+  protected readonly userForm = form(
+    this.#model,
+    (path) => {
+      required(path.email, { message: 'Email is required' });
+      email(path.email, { message: 'Enter a valid email' });
+    },
+    {
+      submission: {
+        action: async (tree) => {
+          this.savedEmail.set(tree().value().email);
+        },
+      },
+    },
+  );
 }
 ```
 
@@ -152,7 +163,7 @@ patchState(store, (s) => ({
 
 ## Required Markers, Standard Schema & Renderer Overrides
 
-- **Configure required/optional markers.** Global config takes `showMarkerWhen: FieldMarkingMode` (`'required' | 'optional' | 'none'`) plus `requiredMarker` / `optionalMarker` / `requiredLegendText` / `optionalLegendText`. `MarkerKind` is the non-`none` subset (`'required' | 'optional'`) and `ResolvedMarker` is the resolved shape. Render the form-level marker explanation with `NgxFormMarkingLegend` (`<ngx-form-marking-legend>`) from `@ngx-signal-forms/toolkit/assistive`.
+- **Configure required/optional markers.** Global config takes `showMarkerWhen: FieldMarkingMode` (`'required' | 'optional' | 'none'`) plus `requiredMarker` / `optionalMarker` / `requiredLegendText` / `optionalLegendText`. `requiredHintText`, default `'required'`, sets the wrapper's required hint text. `MarkerKind` is the non-`none` subset (`'required' | 'optional'`) and `ResolvedMarker` is the resolved shape. Render the form-level marker explanation with `NgxFormMarkingLegend` (`<ngx-form-marking-legend>`) from `@ngx-signal-forms/toolkit/assistive`.
 - **Surface `aria-required` for Standard Schema (Zod) fields.** Fields validated only through `validateStandardSchema()` (Zod, Valibot, ArkType, …) never register Angular's `required()` metadata, so `FieldState.required()` stays `false` and neither auto-ARIA's `aria-required` nor the `'required'` auto-marker fires. Call `requiredFromStandardSchema(path.field, Schema)` once per field, next to the `validateStandardSchema()` call, to close that gap. Types: `StandardSchemaLike`, `StandardSchemaLikeIssue`, `StandardSchemaLikeResult`.
 - **Swap error/hint rendering.** `provideFormFieldErrorRenderer()` / `provideFormFieldHintRenderer()` (and their `*ForComponent` variants) replace how the wrapper renders error and hint content, injected through the `NGX_FORM_FIELD_ERROR_RENDERER` / `NGX_FORM_FIELD_HINT_RENDERER` tokens. See `../references/api.md` for the override signatures (`NgxFormFieldErrorRendererOverride`, `NgxFormFieldHintRendererOverride`, `NgxFormFieldErrorPlacement`).
 
@@ -163,4 +174,4 @@ patchState(store, (s) => ({
 - If a switch does not receive auto-ARIA: confirm the actual bound element is `input[type="checkbox"][role="switch"]` and that the component rendering it imported the toolkit in its own standalone `imports`.
 - If ARIA attributes are duplicated: check for manual additions alongside auto-ARIA; remove the manual ones, or use `ngxSignalFormControlAria="manual"` to suppress auto management.
 - If wrapper layout is wrong for a custom control (e.g., outlined appearance on a slider, or inline layout on a composite): add `ngxSignalFormControl="slider"` (or the appropriate kind) to declare explicit semantics. For component-wide defaults, use `provideNgxSignalFormControlPresetsForComponent()`.
-- If submission helpers don't block on warnings: use `submitWithWarnings()` and ensure the validator uses `warningError()` with a `warn:` prefix kind.
+- If warnings block submission: Angular treats `warn:` errors as invalid. Use `submitWithWarnings()` for a warning-aware submit path and `warningError()` to create the warning kind. Warning helpers intentionally allow warnings. See [Vest submission](../vest/SKILL.md#warnings-and-submission) for event wiring.

@@ -1,232 +1,29 @@
-# Angular Signal Forms — Base API Quick Reference
+# Angular Signal Forms reference
 
-The toolkit builds on top of Angular Signal Forms. This reference covers the Angular-native layer that toolkit consumers need.
+For models, field state, validators, submission, and custom-control contracts,
+choose the first available source:
 
-Angular Signal Forms is **stable** as of Angular 22 (it shipped as a developer preview in v21.1) and is imported from `@angular/forms/signals`. `submit()` returns `Promise<boolean>` and `markAsTouched()` cascades to descendants.
+1. Read the workspace's [project-specific Angular reference](../../angular-developer/references/signal-forms.md) when present.
+2. Otherwise, use a global/user-level `angular-developer` skill exposed by the agent's skill discovery and read its Signal Forms reference. Resolve paths from the discovered skill location rather than assuming a fixed directory.
+3. If neither is available, fetch the [official Angular developer skill](https://github.com/angular/skills/blob/main/angular-developer/SKILL.md) and only its task-relevant references. Reading a URL does not install or activate a skill.
 
-## Setup
+Verify API choices against the [official Signal Forms documentation](https://angular.dev/guide/forms/signals/overview)
+and the installed Angular version. The [official skill catalog](https://angular.dev/ai/agent-skills#available-skills)
+lists `angular-developer` and `angular-new-app`; use the latter only for new-app tasks.
 
-```typescript
-import {
-  form,
-  FormField,
-  submit,
-  // Validators
-  required,
-  email,
-  minLength,
-  maxLength,
-  min,
-  max,
-  pattern,
-  disabled,
-  readonly,
-  hidden,
-  // Custom validation
-  validate,
-  validateHttp,
-  customError,
-  // Schema composition
-  schema,
-  apply,
-  applyEach,
-  applyWhenValue,
-  // Standard Schema (Zod, Valibot, etc.)
-  validateStandardSchema,
-} from '@angular/forms/signals';
-```
+Keep examples compatible with the package's declared peer range, or label their
+higher minimum version. Upstream guidance does not override project Nx conventions,
+toolkit contracts, or approval gates.
 
-## Creating a Form
+Recommend installation for repeated use when no installed skill is available,
+but keep it optional and continue the current task without waiting for installation.
+Do not install skills automatically. If remote access fails, continue work supported
+by verified local sources and state any uncertainty. Block only decisions that
+require unavailable evidence, not independent work.
 
-```typescript
-readonly #model = signal<MyModel>({ email: '', name: '' });
+For toolkit submission context and warning-aware submission, read the
+[core sub-skill](../core/SKILL.md). For custom wrapper identity and ARIA composition,
+read the [headless sub-skill](../headless/SKILL.md).
 
-protected readonly myForm = form(this.#model, (path) => {
-  required(path.email);
-  email(path.email, { message: 'Enter a valid email address' });
-  required(path.name);
-  minLength(path.name, 2);
-});
-```
-
-`this.#model` is the source of truth. `myForm` is a reactive view.
-
-## Template Binding
-
-```html
-<!-- Always use novalidate (added automatically by [formRoot]) -->
-<form [formRoot]="myForm">
-  <input id="email" type="email" [formField]="myForm.email" />
-  <input id="name" [formField]="myForm.name" />
-  <button type="submit">Submit</button>
-</form>
-```
-
-## Field State Signals
-
-```typescript
-myForm.email(); // field state (call the signal)
-myForm.email().valid();
-myForm.email().invalid();
-myForm.email().touched(); // true after blur
-myForm.email().dirty(); // true after value change
-myForm.email().pending(); // true during async validation
-myForm.email().errors(); // errors on this field only
-myForm.email().errorSummary(); // all errors including descendants
-
-// NO untouched() or pristine() — use !touched() and !dirty()
-
-// Programmatic state
-myForm.email().markAsTouched();
-myForm.email().markAsDirty();
-myForm.email().focusBoundControl();
-```
-
-## Form-Level State
-
-```typescript
-myForm(); // root field state
-myForm().valid();
-myForm().invalid();
-myForm().pending();
-myForm().errorSummary(); // all errors in form
-myForm().reset(); // resets touched/dirty (NOT values)
-
-// To reset values too:
-myForm().reset();
-this.#model.set(initialValue);
-```
-
-## Form Submission with Toolkit
-
-With `[formRoot]` (recommended):
-
-```typescript
-// Declare in form() — submit handler fires automatically
-protected readonly myForm = form(this.#model, (path) => {
-  required(path.email);
-}, {
-  submission: {
-    action: async () => {
-      await api.save(this.#model());
-    },
-    onInvalid: createOnInvalidHandler(),
-  }
-});
-```
-
-Without `[formRoot]` (fallback):
-
-```typescript
-protected async save(event: Event): Promise<void> {
-  event.preventDefault();
-  await submit(this.myForm, async (formData) => {
-    await api.save(formData().value());
-    return null; // success
-  });
-}
-```
-
-## Custom Validation
-
-```typescript
-// Field-level
-validate(path.username, (ctx) => {
-  if (ctx.value().includes(' '))
-    return customError({ kind: 'no_spaces', message: 'No spaces' });
-  return null;
-});
-
-// Cross-field
-validate(path.confirmPassword, (ctx) => {
-  if (ctx.value() !== ctx.valueOf(path.password))
-    return customError({ kind: 'mismatch', message: 'Passwords must match' });
-  return null;
-});
-
-// Async
-validateHttp(path.username, {
-  request: ({ value }) => (value() ? `/api/users/check/${value()}` : undefined),
-  errors: (res) =>
-    res.taken
-      ? customError({ kind: 'taken', message: 'Username taken' })
-      : null,
-});
-```
-
-## Schema Composition
-
-```typescript
-const addressSchema = schema<Address>((path) => {
-  required(path.street);
-  required(path.city);
-});
-
-form(model, (path) => {
-  apply(path.address, addressSchema); // static nested object
-  applyEach(path.items, itemSchema); // array items
-  applyWhenValue(path.payment, isCard, cardSchema); // conditional
-});
-```
-
-## Dynamic Arrays
-
-```typescript
-readonly #data = signal({ items: [{ name: '' }] });
-protected readonly myForm = form(this.#data, (path) => {
-  applyEach(path.items, (item) => required(item.name));
-});
-
-addItem(): void {
-  this.#data.update(d => ({ items: [...d.items, { name: '' }] }));
-}
-removeItem(i: number): void {
-  this.#data.update(d => ({ items: d.items.filter((_, j) => j !== i) }));
-}
-```
-
-## CSS Status Classes (Optional)
-
-Angular Signal Forms does not add classes automatically. To enable them:
-
-```typescript
-import {
-  provideSignalFormsConfig,
-  NG_STATUS_CLASSES,
-} from '@angular/forms/signals';
-
-// Preset (ng-valid, ng-invalid, ng-touched, ng-dirty, ng-pending)
-provideSignalFormsConfig({ classes: NG_STATUS_CLASSES });
-
-// Custom
-provideSignalFormsConfig({
-  classes: {
-    'is-invalid': (state) => state.invalid() && state.touched(),
-    'is-valid': (state) => state.valid() && state.touched(),
-  },
-});
-```
-
-> Toolkit applies ARIA attributes instead of relying on CSS classes for accessibility.
-
-## Custom Controls
-
-Implement `FormValueControl<T>`:
-
-```typescript
-@Directive({
-  selector: '[myControl]',
-  host: { '(input)': 'onChange($event.target.value)', '(blur)': 'onTouched()' },
-})
-export class MyControlDirective implements FormValueControl<string> {
-  readonly #el = inject(ElementRef<HTMLInputElement>);
-  onChange: (v: string) => void = () => {};
-  onTouched: () => void = () => {};
-  writeValue(v: string): void {
-    this.#el.nativeElement.value = v ?? '';
-  }
-  focus(): void {
-    this.#el.nativeElement.focus();
-  }
-}
-```
+Angular owns form values, validation, and submission. The toolkit adds presentation
+and integration behavior.
