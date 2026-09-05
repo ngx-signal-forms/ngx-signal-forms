@@ -10,7 +10,7 @@ Read `../references/api.md` for the full export list and all component inputs.
 
 ## Principle
 
-The form-field entry point provides a pre-styled field shell (label + control + feedback) that eliminates repeated layout boilerplate. Use it when the design wants consistent field presentation without custom markup. Use `headless/SKILL.md` when complete DOM control is needed.
+The form-field entry point provides a pre-styled field shell (label + control + feedback) that eliminates repeated layout boilerplate. Use it when the design wants consistent field presentation without custom markup. Use [headless](../headless/SKILL.md) when complete DOM control is needed.
 
 ## Workflow
 
@@ -18,7 +18,7 @@ The form-field entry point provides a pre-styled field shell (label + control + 
 
 2. **Wrap controls in `ngx-form-field-wrapper`:**
 
-- Bound control must have a stable `id` — the wrapper derives field identity from it.
+- Give the bound control a stable `id`, or set the wrapper's `fieldName` explicitly. Keep an accessible label association in either case.
 - For nested custom controls or dynamically identified inner controls, pass explicit `fieldName` on the wrapper instead of relying on implicit id discovery.
 - Set `appearance="outline"` for modern outlined inputs; `appearance="standard"` for label-above layout; `appearance="plain"` for minimal chrome; `appearance="inherit"` to follow parent config.
 - `appearance="outline"` prints the label as a static caption inside the border. It does not float or animate, so it needs no `placeholder=" "` trick — write a real placeholder when the field wants one, or none at all.
@@ -54,7 +54,7 @@ The form-field entry point provides a pre-styled field shell (label + control + 
     [formField]="form.emailUpdates"
   />
 
-  <!-- Native checkbox opt-in: declare kind so wrapper uses inline-control layout -->
+  <!-- Native checkbox opt-in uses the group preset; switches use inline-control. -->
   <input
     id="agreeToTerms"
     type="checkbox"
@@ -137,11 +137,25 @@ import { NgxFormField } from '@ngx-signal-forms/toolkit/form-field';
 })
 export class ProfileFormComponent {
   readonly #model = signal({ email: '', name: '' });
-  protected readonly profileForm = form(this.#model, (path) => {
-    required(path.email);
-    email(path.email);
-    required(path.name);
-  });
+  protected readonly savedProfile = signal<{
+    email: string;
+    name: string;
+  } | null>(null);
+  protected readonly profileForm = form(
+    this.#model,
+    (path) => {
+      required(path.email);
+      email(path.email);
+      required(path.name);
+    },
+    {
+      submission: {
+        action: async (tree) => {
+          this.savedProfile.set(tree().value());
+        },
+      },
+    },
+  );
 }
 ```
 
@@ -176,4 +190,4 @@ Use `includeNestedErrors` on the fieldset only when the overall summary must agg
 - If a switch row collapses or inherits text-input styling: make sure the bound control declares `ngxSignalFormControl="switch"` (in addition to `role="switch"` for a11y) so the wrapper uses switch-specific layout.
 - If a slider or composite control gets an outlined text-field shell: add `ngxSignalFormControl="slider"` (or `"composite"`) to the bound host so the wrapper picks up the correct layout. If a field-shaped combobox or closed select does **not** get the text-field shell, keep the trigger naked and join as `input-like` (combobox role + id, or explicit `ngxSignalFormControl="input-like"`). Do not add a `select` kind.
 - If auto-ARIA conflicts with a custom control's own ARIA attributes: add `ngxSignalFormControlAria="manual"` on the control host to suppress toolkit ARIA management. Use `buildAriaDescribedBy` to assemble the `aria-describedby` value manually.
-- For fully custom markup without wrapper assumptions, switch to `headless/SKILL.md`.
+- For fully custom markup without wrapper assumptions, switch to [headless](../headless/SKILL.md).

@@ -13,9 +13,10 @@ Leading word: **surface**. Route by surface first, then apply only that surface'
 
 Routing loop:
 
-1. Identify the required **surface** from imports/selectors/symbol names.
-2. Open exactly one sub-skill first.
-3. Open a second sub-skill only if the task truly crosses surfaces.
+1. Identify the primary **surface** from the task, imports, selectors, and symbols.
+2. Read its sub-skill.
+3. Read each additional sub-skill required by the task. Include core guidance for submission or ARIA ownership, and testing guidance when using toolkit accessibility assertions.
+4. Continue with the requested work. Resolve routine entry-point choices from the source and routing table.
 
 | Task                                                                    | Entry point                            | Sub-skill to read                          |
 | ----------------------------------------------------------------------- | -------------------------------------- | ------------------------------------------ |
@@ -33,15 +34,17 @@ Routing loop:
 Load these reference files when the sub-skill or task requires deeper API detail:
 
 - `references/api.md` — Complete public exports per entry point, types, and config
-- `references/signal-forms.md` — Angular Signal Forms base API (validators, field state, form())
+- `references/signal-forms.md` — Pointer to the canonical Angular Signal Forms reference
 - `references/pitfalls.md` — Common mistakes and how to avoid them
 - `references/demo-map.md` — Repository demo paths organized by feature
 - [`../../../docs/migrations/README.md`](../../../docs/migrations/README.md) —
   version-to-version migration guides; load the applicable guide before changing
   an existing toolkit integration.
 
-Completion check for this router skill: the task is mapped to the right surface
-sub-skill(s), and no guidance outside those surfaces is applied.
+Routing is complete when the required sub-skills are loaded. This completes only
+the routing phase. The requested work still requires implementation or analysis,
+verification, and a report of any unmet requirements. For read-only or
+review-before-edit requests, report recommendations without modifying files.
 
 ## Non-Negotiable Rules
 
