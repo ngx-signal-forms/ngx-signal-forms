@@ -94,6 +94,12 @@ import { labellessFieldsSchema } from './labelless-fields.validations';
     .narrow-zip input[id='zipCode'] {
       max-width: 9ch;
     }
+
+    .form-actions {
+      display: flex;
+      gap: 1rem;
+      margin-top: 1rem;
+    }
   `,
 })
 export class LabellessFieldsFormComponent {

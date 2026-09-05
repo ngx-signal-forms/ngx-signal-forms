@@ -14,7 +14,7 @@ Shows how global toolkit defaults and app-level control-family presets (configur
 
 ## Form model
 
-- Signal model: `signal<GlobalConfigModel>({ email, phone, website, acceptTerms })`.
+- Signal model: `signal<GlobalConfigModel>({ userEmail, userPhone, userWebsite, acceptTerms })`.
 - Schema: `form(model, globalConfigSchema)`.
 
 ## Validation rules

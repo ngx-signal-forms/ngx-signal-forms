@@ -8,13 +8,13 @@ Real-world forms often need _non-blocking_ feedback — "weak password", "dispos
 
 - `warn:*` error kinds — any `ValidationError` whose `kind` starts with `warn:` is treated as advisory.
 - `NgxFormFieldError` — renders blocking errors with `role="alert"` and warnings with `role="status"`, relying on those roles' implicit live-region semantics, plus distinct styling.
-- `submitWithWarnings()` — warning-tolerant submit helper used with `<form novalidate>` instead of Angular's native `submit()` (which treats every validation result as blocking).
+- Declarative warning-tolerant submission — the form uses `ignoreValidators: 'all'` together with `hasOnlyWarnings()` so warnings do not block a valid submission while blocking errors still do.
 - Separation of blocking errors from warnings at the form-state level.
 
 ## Form model
 
 - Signal model: `signal<PasswordFormModel>({ username, email, password })`.
-- Schema: `form(model, passwordFormSchema)` plus manual submit wiring.
+- Schema: `form(model, passwordFormSchema)` with declarative `{ submission }` configuration.
 
 ## Validation rules
 
@@ -29,18 +29,18 @@ Real-world forms often need _non-blocking_ feedback — "weak password", "dispos
 - `warn:short-username` — username between 3 and 5 characters.
 - `warn:disposable-email` — email from a disposable provider (`tempmail.com`, `throwaway.email`, `10minutemail.com`).
 - `warn:weak-password` — password between 8 and 11 characters.
-- `warn:simple-password` — password missing 3 of 4 character classes (upper/lower/digit/symbol).
+- `warn:simple-password` — password uses fewer than 3 of 4 character classes (upper/lower/digit/symbol).
 
-## Strong suites
+## Strong suits
 
 - Clearest example of the `warn:*` convention and the visual/ARIA split between errors and warnings.
-- Shows the _manual_ submission path: when you can't (or don't want to) use declarative `submission`, `submitWithWarnings` is the supported escape hatch.
+- Shows declarative warning-tolerant submission through the `submission` form option.
 - Good reference for policy-style guidance where blocking would be user-hostile.
 
 ## Key files
 
 - [warning-support.validations.ts](warning-support.validations.ts) — blocking rules and `warn:*` advisories.
-- [warning-support.form.ts](warning-support.form.ts) — `submitWithWarnings` wiring.
+- [warning-support.form.ts](warning-support.form.ts) — declarative warning-tolerant submission wiring.
 - [warning-support.page.ts](warning-support.page.ts) — page wrapper and debugger.
 
 ## How to test
