@@ -2,6 +2,10 @@
 
 ## Entry Point: `@ngx-signal-forms/toolkit` (Core)
 
+Consumers import core APIs from the package root. `@ngx-signal-forms/toolkit/core`
+is a build-time internal entry for sibling toolkit packages, hidden from the
+published exports map. Its barrel is not the consumer API.
+
 ### Bundle
 
 ```typescript
@@ -104,6 +108,7 @@ type FieldLabelMap = Record<string, string>;
 type FieldLabelResolver = (rawFieldPath: string) => string;
 interface NgxSignalFormFieldContext {
   readonly fieldName: Signal<string | null>;
+  readonly hintOrdinal?: (hint: object) => number;
 }
 interface NgxSignalFormControlPreset {
   readonly layout: NgxSignalFormControlLayout;
@@ -129,6 +134,10 @@ type NgxSignalFormControlLayout =
 type NgxSignalFormControlAriaMode = 'auto' | 'manual';
 ```
 
+`hintOrdinal` returns the zero-based position among sibling hints that need a
+generated fallback ID. Read it inside a computed so reordering updates IDs.
+An omitted resolver or an unknown hint resolves to `0`, never `-1`.
+
 ### Config Interface
 
 ```typescript
@@ -144,6 +153,7 @@ interface NgxSignalFormsUserConfig {
   optionalMarker?: string; // default: ' (optional)'
   requiredLegendText?: string; // default: '{marker} indicates a required field'
   optionalLegendText?: string; // default: 'All fields are required unless marked {marker}'
+  requiredHintText?: string; // default: 'required'
 }
 ```
 
@@ -208,9 +218,18 @@ const NGX_SIGNAL_FORMS_CONFIG: InjectionToken<NgxSignalFormsConfig>;
 const NGX_SIGNAL_FORM_CONTROL_PRESETS: InjectionToken<NgxSignalFormControlPresetRegistry>;
 const NGX_SIGNAL_FORM_CONTEXT: InjectionToken<NgxSignalFormContext>;
 const NGX_SIGNAL_FORM_FIELD_CONTEXT: InjectionToken<NgxSignalFormFieldContext>;
+const NGX_SIGNAL_FORM_ARIA_MODE: InjectionToken<
+  Signal<NgxSignalFormControlAriaMode | null>
+>;
 const NGX_FORM_FIELD_ERROR_RENDERER: InjectionToken<NgxFormFieldErrorRenderer | null>;
 const NGX_FORM_FIELD_HINT_RENDERER: InjectionToken<NgxFormFieldHintRenderer | null>;
 ```
+
+`NGX_SIGNAL_FORM_ARIA_MODE` belongs to the control's element injector.
+Auto-ARIA reads it with `{ optional: true, self: true }`, not from ancestors.
+It holds a signal of `'auto'`, `'manual'`, or `null`. Prefer
+`ngxSignalFormControlAria="manual"` on the bound host; provide the token directly
+only when the integration cannot annotate that host in a template.
 
 **Renderer-override types** (for the providers/tokens above — a renderer is a `{ component }` wrapper around a standalone component that owns the error/hint slot markup):
 
@@ -230,6 +249,47 @@ interface NgxFormFieldHintRendererOverride {
 type NgxFormFieldErrorPlacement = 'top' | 'bottom';
 ```
 
+### Renderer contracts
+
+Both renderer components must be standalone. A shared error renderer must
+declare the union of the inputs below; keep inputs absent from one caller optional.
+
+| Caller                                              | Inputs supplied to the error renderer                                      |
+| --------------------------------------------------- | -------------------------------------------------------------------------- |
+| `NgxFormFieldWrapper`                               | `formField`, `strategy`, `submittedStatus`, `warningStrategy`, `fieldName` |
+| `NgxFormFieldset` with `feedbackAppearance="plain"` | `errors`, `fieldName`, `strategy`, `submittedStatus`, `listStyle`          |
+
+The wrapper passes a field tree, resolved error strategy and submitted status,
+its warning-strategy input, and the resolved field name, which can be `null`.
+The fieldset passes `errors` as a signal of an already visibility-filtered array,
+not a field tree. It passes its resolved fieldset ID as `fieldName`. Honor that
+array directly instead of applying field timing again. The fieldset's default
+`'auto'` and explicit `'notification'` modes use the built-in panel and do not
+dispatch to the error-renderer override.
+
+For a resolved name, render `${fieldName}-error` for visible blocking messages
+and `${fieldName}-warning` for visible warnings. Use `role="alert"` and
+`role="status"`, respectively. Keep region hosts mounted before message updates;
+gate their content rather than creating the live region with its first message.
+Match the caller's visibility and blocking-error precedence so its
+`aria-describedby` never references missing or inactive feedback. Do not
+generate IDs from a `null` field name. Per-message IDs from
+`createErrorMessageSignal()` do not replace these container IDs.
+
+The hint renderer must declare all three inputs with `input()`:
+
+| Input               | Type                        |
+| ------------------- | --------------------------- |
+| `resolvedFieldName` | `string \| null`            |
+| `resolvedId`        | `string`                    |
+| `position`          | `'left' \| 'right' \| null` |
+
+`NgxFormFieldHint` forwards content through `projectableNodes`; the renderer
+must expose a default `<ng-content />` slot. The hint host owns `resolvedId`
+and remains the description target. Do not copy that ID onto an inner element.
+Without an override, the hint projects content directly. Missing hint inputs
+cause `componentRef.setInput()` errors.
+
 > `NGX_ERROR_MESSAGES` and `NGX_FIELD_LABEL_RESOLVER` are internal tokens used by sibling entry points inside the toolkit package. Use `provideErrorMessages()` and `provideFieldLabels()` instead.
 
 ### Utilities
@@ -241,6 +301,7 @@ createShowErrorsComputed(field, strategy, submittedStatus?): Signal<boolean>
 // 'on-submit' — without it the helper stays at 'unsubmitted' and errors never
 // surface (dev mode logs a one-shot console.warn). Inside [formRoot][ngxSignalForm]
 // the wrapper, auto-ARIA, and headless directives inherit it automatically.
+// Direct calls to this helper NEVER inject context, even inside that form.
 // This is the shared visibility-timing primitive behind the wrapper,
 // NgxFormFieldError, and NgxHeadlessErrorState. Not the same as
 // shouldShowErrors() below — that's a pure boolean predicate, not a signal.
@@ -297,6 +358,14 @@ isElementCssVisible(element): boolean // used by field identity / focus manageme
 // its own `earlyRead` instead.
 createControlVisibilitySignal(resolveElement, injector): Signal<boolean>
 
+// NgxFieldIdentity.isControlVisible has this separate hybrid type:
+interface ControlVisibilitySignal extends Signal<boolean> {
+  (el: HTMLElement): boolean;
+}
+// identity.isControlVisible(): cached reactive read.
+// identity.isControlVisible(element): non-reactive CSS probe of that element;
+// never updates the cached flag. Identity writer methods are package-internal.
+
 interface AriaDescribedByChainOptions {
   readonly baseIds?: readonly string[];     // hint or helper IDs to prepend
   readonly showErrors?: boolean;             // whether the error ID should be in the chain
@@ -309,16 +378,19 @@ focusFirstInvalid(form): boolean
 // **skips orphan errors** with no field tree — focusing nothing is better than
 // stealing focus to an unrelated control.
 createOnInvalidHandler(options?): (form) => void
-createSubmittedStatusTracker(form): Signal<SubmittedStatus>
+createSubmittedStatusTracker(form, submitAttempted?: WritableSignal<boolean>): Signal<SubmittedStatus>
+// Create in an injection context. Pass submitAttempted for refused manual
+// submissions that never enter Angular submit() and never flip submitting().
 hasSubmitted(form): Signal<boolean>
 
 // Warning helpers (also exported from assistive)
 warningError(kind: string, message: string): ValidationError
 isWarningError(error): boolean
 isBlockingError(error): boolean
-hasOnlyWarnings(errors): boolean
+hasOnlyWarnings(errors): boolean // true for [] as well as warning-only arrays
 getBlockingErrors(errors): ValidationError[]
-canSubmitWithWarnings(form): boolean
+canSubmitWithWarnings(form): Signal<boolean>
+// Create once, then read the returned signal. Also false while submitting().
 // Ignores pending async validators, matching Angular `submit()`'s default
 // `ignoreValidators: 'pending'` — only settled blocking errors gate.
 submitWithWarnings(form, callback): Promise<boolean>
@@ -515,7 +587,7 @@ never re-assigned at the same tick content is inserted.
   `aria-describedby` wiring; when omitted, a stable id is generated.
 - `NgxFormFieldListStyle` (`'plain' | 'bullets'`) — shared list-style union. `NgxFormFieldErrorListStyle` is a `@deprecated` alias of it.
 - `NgxFormFieldErrorPresentation` (`'inline' | 'panel'`) — the `presentation` input's type.
-- `NgxCharacterCountValue` + `NgxCharacterCountAnnouncement*` types — character-count announcement formatting hooks.
+- `NgxCharacterCountValue`, `NgxCharacterCountAnnouncementState`, `NgxCharacterCountAnnouncementInfo`, and `NgxCharacterCountAnnouncementFormatter` are the character-count types.
 
 ### NgxFormMarkingLegend inputs
 
@@ -558,12 +630,33 @@ For full DOM control over the error summary (incl. warning entries), use `NgxHea
 
 ### NgxFormFieldCharacterCount inputs
 
-| Input             | Type    | Notes                                   |
-| ----------------- | ------- | --------------------------------------- |
-| `formField`       | field   | Required                                |
-| `maxLength`       | number  | Auto-detected from validator if omitted |
-| `showLimitColors` | boolean | Default: `true`                         |
-| `liveAnnounce`    | boolean | SR live announcement                    |
+| Input                   | Type                                     | Notes                                              |
+| ----------------------- | ---------------------------------------- | -------------------------------------------------- |
+| `formField`             | field                                    | Required                                           |
+| `maxLength`             | number                                   | Auto-detected from validator if omitted            |
+| `showLimitColors`       | boolean                                  | Default: `true`                                    |
+| `liveAnnounce`          | boolean                                  | SR live announcement                               |
+| `position`              | `'left' \| 'right'`                      | Default: `'right'`                                 |
+| `announcementFormatter` | `NgxCharacterCountAnnouncementFormatter` | Optional; formats polite limit-state announcements |
+
+```typescript
+type NgxCharacterCountValue = string | readonly unknown[] | null | undefined;
+type NgxCharacterCountAnnouncementState = 'warning' | 'danger' | 'exceeded';
+interface NgxCharacterCountAnnouncementInfo {
+  readonly current: number;
+  readonly max: number;
+  readonly remaining: number;
+  readonly over: number;
+}
+type NgxCharacterCountAnnouncementFormatter = (
+  state: NgxCharacterCountAnnouncementState,
+  info: NgxCharacterCountAnnouncementInfo,
+) => string;
+```
+
+`liveAnnounce` defaults to `false`. The formatter is never called for `'ok'`.
+`remaining` and `over` are clamped to zero. CSS threshold overrides affect
+colors, not the fixed 80%/95% announcement transitions.
 
 Warning/danger color thresholds are CSS-only — no `colorThresholds` input. Override `--ngx-form-field-char-count-warning-threshold` / `--ngx-form-field-char-count-danger-threshold` (default `80`/`95`).
 
@@ -609,6 +702,7 @@ import {
 | `fieldsetId`          | string                                                                   | Auto-generated                                    |
 | `strategy`            | ErrorDisplayStrategy                                                     | Inherited                                         |
 | `warningStrategy`     | WarningDisplayStrategy                                                   | Inherited — warnings time independently of errors |
+| `submittedStatus`     | SubmittedStatus                                                          | Inherited from form context                       |
 | `showErrors`          | boolean                                                                  | `true`                                            |
 | `includeNestedErrors` | boolean                                                                  | `false`                                           |
 | `errorPlacement`      | `'top' \| 'bottom'`                                                      | `'bottom'`                                        |
@@ -652,7 +746,7 @@ Directive-level types and constants also available from this entry point:
 
 Selector: `[ngxHeadlessErrorState]` | Export: `#errorState="errorState"`
 
-Inputs: `field` (optional — omit when `errorsOverride` is bound or a host bridges state via `connectFieldState()`), `fieldName` (optional, default `null` — `null` disables ID generation), `errorsOverride`, `strategy`, `warningStrategy`, `submittedStatus`
+Inputs: `field` (optional; omit when `errorsOverride` supplies the messages), `fieldName` (optional, default `null`; `null` disables ID generation), `errorsOverride`, `strategy`, `warningStrategy`, `submittedStatus`. The `connectFieldState()` bridge is package-internal, not a consumer API.
 
 Signals:
 
@@ -697,13 +791,13 @@ Selector: `[ngxHeadlessCharacterCount]` | Export: `#charCount="charCount"`
 
 Inputs: `field` (required), `maxLength` (required). Unlike the styled `NgxFormFieldCharacterCount`, neither this directive nor `createCharacterCount()` reads the limit back from a `maxLength` validator — pass it.
 
-Signals: `currentLength()`, `resolvedMaxLength()`, `remaining()`, `limitState()` (`'ok'|'warning'|'danger'|'exceeded'`), `hasLimit()` (always `true`, since `maxLength` is required), `isExceeded()`, `percentUsed()` (0–100, clamped)
+Signals: `currentLength()`, `resolvedMaxLength()`, `remaining()`, `limitState()` (`'ok'|'warning'|'danger'|'exceeded'`), `hasLimit()` (always `true`, since `maxLength` is required), `isExceeded()`, `percentUsed()` (can exceed 100)
 
 ### NgxHeadlessFieldset
 
 Selector: `[ngxHeadlessFieldset]` | Export: `#fieldset="fieldset"`
 
-Inputs: `field` (required), `fields`, `strategy`, `warningStrategy`, `includeNestedErrors`
+Inputs: `field` (required), `fields`, `fieldsetId`, `strategy`, `warningStrategy`, `submittedStatus`, `includeNestedErrors`
 
 Signals: `isValid()`, `isInvalid()`, `isTouched()`, `isDirty()`, `aggregatedErrors()`, `aggregatedWarnings()`, `shouldShowErrors()`, `shouldShowWarnings()`
 
@@ -721,7 +815,7 @@ Selector: `[ngxHeadlessNotification]` | Export: `#notification="notificationStat
 
 Inputs (no `tone` — routing is content-driven):
 
-- `errors` (required) — `ReactiveOrStatic<readonly ValidationError[]>` (plain array or signal/getter; unwrapped internally)
+- `errors` (optional) — `ReactiveOrStatic<readonly ValidationError[]> | undefined`; omitted or `undefined` means `[]`. Supply an array or signal/getter, not `null`.
 - `fieldName` — `string | null | undefined`
 
 Signals/methods (implements `NotificationStateSignals`):
@@ -820,18 +914,20 @@ interface CreateErrorStateOptions<TValue = unknown> {
   readonly fieldName: ReactiveOrStatic<string | null>; // required; null disables id generation
   readonly strategy?: ReactiveOrStatic<ErrorDisplayStrategy>;
   readonly warningStrategy?: ReactiveOrStatic<WarningDisplayStrategy>;
-  readonly submittedStatus?: ReactiveOrStatic<SubmittedStatus>;
+  readonly submittedStatus?: ReactiveOrStatic<SubmittedStatus | undefined>;
+  readonly injector?: Injector;
 }
 
 interface ErrorStateResult {
   readonly shouldShowErrors: Signal<boolean>;
   readonly shouldShowWarnings: Signal<boolean>;
+  readonly errors: Signal<readonly ValidationError[]>;
+  readonly warnings: Signal<readonly ValidationError[]>;
   readonly hasErrors: Signal<boolean>;
   readonly hasWarnings: Signal<boolean>;
-  readonly resolvedErrors: Signal<readonly ResolvedError[]>;
-  readonly resolvedWarnings: Signal<readonly ResolvedError[]>;
   readonly errorId: Signal<string | null>;
   readonly warningId: Signal<string | null>;
+  readonly fieldName: Signal<string | null>;
 }
 
 interface CreateCharacterCountOptions {
@@ -839,12 +935,13 @@ interface CreateCharacterCountOptions {
   readonly maxLength: ReactiveOrStatic<number>; // required
   readonly warningThreshold?: ReactiveOrStatic<number>; // 0-1, default 0.8
   readonly dangerThreshold?: ReactiveOrStatic<number>; // 0-1, default 0.95
+  readonly component?: string; // name used in unsupported-value diagnostics
 }
 
 interface CharacterCountResult {
   readonly currentLength: Signal<number>;
-  readonly resolvedMaxLength: Signal<number | null>;
-  readonly remaining: Signal<number | null>;
+  readonly resolvedMaxLength: Signal<number>;
+  readonly remaining: Signal<number>;
   readonly limitState: Signal<CharacterCountLimitState>;
   readonly hasLimit: Signal<boolean>;
   readonly isExceeded: Signal<boolean>;
@@ -857,6 +954,10 @@ interface ErrorSummaryEntryData {
   readonly fieldName: string;
 }
 ```
+
+`createErrorState()` needs an injection context unless `injector` is supplied.
+It returns raw errors, not the directive's `resolvedErrors`/`resolvedWarnings`.
+Use `resolveValidationErrorMessage()` or `createErrorMessageSignal()` for copy.
 
 ### Custom-wrapper ARIA composition
 
@@ -887,11 +988,9 @@ createFieldNameResolver(options): Signal<string | null>
 - `createAriaDescribedByBridge` coordinates the chain with a third-party host
   that owns `aria-describedby`; ordinary custom wrappers use
   `createAriaDescribedBySignal` directly.
-- Joining a custom error renderer to `{ formField, strategy, submittedStatus }`,
-  or projected hints to `NGX_SIGNAL_FORM_HINT_REGISTRY`'s wire format, is a
-  single inline `computed()` in the wrapper — no shared helper for either
-  (each has too few call sites to earn one). See `docs/CUSTOM_WRAPPERS.md`
-  for the inlined shape.
+- Build renderer input maps and hint descriptors inline. Use the complete
+  [renderer contracts](#renderer-contracts), including `warningStrategy` and
+  `fieldName` for wrapper errors and the separate fieldset input set.
 
 Each factory's option and reader types ship from `/headless` alongside it.
 They are named after the factory, so read the option interface for the exact
@@ -918,8 +1017,8 @@ structural minimums, so no DI is needed to call the factory.
 
 The root entry point exports `ResolvableValidationError` and
 `ResolveErrorMessageOptions` for `resolveValidationErrorMessage`, and
-`/assistive` exports `NgxCharacterCountAnnouncementState` and
-`NgxCharacterCountAnnouncementInfo` for the character count's
+`/assistive` exports `NgxCharacterCountAnnouncementFormatter`,
+`NgxCharacterCountAnnouncementState`, and `NgxCharacterCountAnnouncementInfo` for the character count's
 `[announcementFormatter]`.
 
 Read `packages/toolkit/headless/README.md` or `docs/CUSTOM_WRAPPERS.md` for the
@@ -1173,13 +1272,15 @@ type NgxSignalFormDebuggerBadgeAppearance =
   'neutral' | 'info' | 'success' | 'warning' | 'danger';
 ```
 
-### Production tree-shaking
+### Production rendering and bundle analysis
 
-The debugger component self-guards rendering with `isDevMode()`, so a
-production build ships zero DOM even if the element is unconditionally placed.
-**For true bundle tree-shaking** (dropping the ~13 KB JS + ~15 KB SCSS at
-build time), wrap the element in an `@if (isDevMode())` block so the compiler
-can drop the code path entirely.
+The internal debugger renders whenever its input is usable, including in
+production demo builds. Use a host-template `@if (isDevMode())` guard when the
+panel must be hidden in production. This controls rendering, not guaranteed
+JavaScript or CSS removal. Exclude debugger imports from production entry paths
+when required, then verify the output with bundle analysis. No fixed byte saving
+is guaranteed. Submission history comes from the `ngxSignalForm` enhancer's
+ancestor context, not Angular `FormRoot`.
 
 ### Theming
 

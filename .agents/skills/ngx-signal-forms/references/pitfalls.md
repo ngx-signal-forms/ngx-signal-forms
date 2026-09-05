@@ -29,29 +29,34 @@ form.email().pristine();
 
 ```html
 <!-- Wrong -->
-<form (ngSubmit)="save()">
-  <!-- Correct with [formRoot] (preferred) -->
-  <form [formRoot]="myForm">
-    <!-- Correct without [formRoot] -->
-    <form (submit)="save($event)" novalidate></form>
-  </form>
-</form>
+<form (ngSubmit)="save()"></form>
+
+<!-- Correct with [formRoot] and configured submission.action -->
+<form [formRoot]="myForm"></form>
+
+<!-- Alternative without [formRoot]; save must prevent the default event -->
+<form (submit)="save($event)" novalidate></form>
 ```
 
 With `[formRoot]`, configure submission in `form()` options. Without it, always call `event.preventDefault()`.
 
 ## Value Resets
 
-`form.reset()` resets control state (touched, dirty, submitted) but NOT values:
+The method is `form().reset(value?: TValue)`, called on the field state.
+Without an argument it clears touched/dirty state on the field and descendants
+without changing values. With a value it also replaces the model value:
 
 ```typescript
-// Wrong — doesn't clear input values
+// Keep current values; clear interaction state.
 this.myForm().reset();
 
-// Correct
-this.myForm().reset();
-this.#model.set(initialValue);
+// Restore an explicitly retained initial value and clear interaction state.
+this.myForm().reset(initialValue);
 ```
+
+Angular does not retain an initial snapshot for this call. Toolkit submission
+history resets separately when its tracker observes touched change from true
+to false; `submittedStatus` is not an Angular reset field.
 
 ## Immutable Array Updates
 
@@ -77,7 +82,7 @@ import { NgxSignalFormDebugger } from '@ngx-signal-forms/debugger'; // Internal/
 import { validateVest } from '@ngx-signal-forms/toolkit/vest';
 ```
 
-## ARIA — Never Manual on Toolkit-Managed Controls
+## ARIA ownership
 
 ```html
 <!-- Wrong — toolkit auto-ARIA already manages these -->
@@ -87,7 +92,9 @@ import { validateVest } from '@ngx-signal-forms/toolkit/vest';
 <input id="email" [formField]="form.email" />
 ```
 
-Only add ARIA manually for headless usage where you control the markup explicitly.
+Use automatic ARIA by default. Manual ownership requires an explicit mode;
+using headless directives alone does not opt out. Static helper IDs in
+`aria-describedby` may be preserved as the base of an automatic chain.
 
 If you explicitly opt a control into `ngxSignalFormControlAria="manual"`, the
 toolkit preserves your existing ARIA attributes instead of generating them.
@@ -171,7 +178,7 @@ non-invalidating channel, and the toolkit splits the two on `kind`. So do not
 reach for `invalid()` to tell a warning-only field from a failing one; use
 `splitByKind()` or `isWarningError()`.
 
-## Wrapper Identity — Always Provide `id`
+## Wrapper identity: control `id` or explicit `fieldName`
 
 ```html
 <!-- Wrong — wrapper can't derive field identity -->
@@ -187,24 +194,28 @@ reach for `invalid()` to tell a warning-only field from a failing one; use
 </ngx-form-field-wrapper>
 ```
 
+For nested or dynamically identified controls, set the wrapper's `fieldName`
+explicitly. This supplies message identity, not an accessible label; keep a
+valid label association for the actual control.
+
 ## Removed / Non-Public APIs — Never Use
 
 These were removed or are not public:
 
-| Removed                        | Use Instead                                                          |
-| ------------------------------ | -------------------------------------------------------------------- |
-| `'manual'` strategy            | `createShowErrorsComputed()` + manual signal                         |
-| `computeShowErrors()`          | `createShowErrorsComputed()`                                         |
-| `createShowErrorsSignal()`     | `createShowErrorsComputed()`                                         |
-| `showErrors()`                 | `createShowErrorsComputed()` — same signature, gone (not deprecated) |
-| `canSubmit()`                  | `canSubmitWithWarnings()`                                            |
-| `isSubmitting()`               | `submittedStatus()` from `[formRoot]`                                |
-| `fieldNameResolver` config     | Provide `id` on bound control                                        |
-| `strictFieldResolution` config | Removed — strict by default                                          |
-| `NgxFormFieldNotification`     | `NgxFormFieldError` with `presentation="panel"` + `[errors]`         |
-| `toHintDescriptors()`          | Inline the two-line `computed()` — see `docs/CUSTOM_WRAPPERS.md`     |
-| `createErrorRendererInputs()`  | Inline the two-line `computed()` — see `docs/CUSTOM_WRAPPERS.md`     |
-| `resolveUnionInput()`          | Inline the union unwrap at the call site                             |
+| Removed                        | Use Instead                                                                                                     |
+| ------------------------------ | --------------------------------------------------------------------------------------------------------------- |
+| `'manual'` strategy            | `createShowErrorsComputed()` + manual signal                                                                    |
+| `computeShowErrors()`          | `createShowErrorsComputed()`                                                                                    |
+| `createShowErrorsSignal()`     | `createShowErrorsComputed()`                                                                                    |
+| `showErrors()`                 | `createShowErrorsComputed()` — same signature, gone (not deprecated)                                            |
+| `canSubmit()`                  | `canSubmitWithWarnings()`                                                                                       |
+| `isSubmitting()`               | Angular `form().submitting()` for in-flight state; toolkit `submittedStatus()` from `ngxSignalForm` for history |
+| `fieldNameResolver` config     | Control `id` or explicit wrapper `fieldName`                                                                    |
+| `strictFieldResolution` config | Removed — strict by default                                                                                     |
+| `NgxFormFieldNotification`     | `NgxFormFieldError` with `presentation="panel"` + `[errors]`                                                    |
+| `toHintDescriptors()`          | Inline the two-line `computed()` — see `docs/CUSTOM_WRAPPERS.md`                                                |
+| `createErrorRendererInputs()`  | Inline the two-line `computed()` — see `docs/CUSTOM_WRAPPERS.md`                                                |
+| `resolveUnionInput()`          | Inline the union unwrap at the call site                                                                        |
 
 The notification fold also renamed the CSS hooks: `--ngx-signal-form-notification-*`
 became `--ngx-signal-form-error-panel-*` / `--ngx-signal-form-warning-panel-*`.
@@ -405,7 +416,7 @@ resolving through their registries. Full contract: `docs/CUSTOM_WRAPPERS.md`.
   >
 </form>
 
-<!-- Correct — [formRoot] provides submittedStatus context -->
+<!-- Correct — ngxSignalForm provides submittedStatus context; configure submission.action -->
 <form [formRoot]="form" ngxSignalForm errorStrategy="on-submit">...</form>
 ```
 
@@ -425,12 +436,10 @@ const visible = createShowErrorsComputed(form.email, 'on-submit', () =>
 );
 ```
 
-Inside `form[formRoot][ngxSignalForm]` the wrapper, auto-ARIA, and headless
-directives inherit `submittedStatus` from the form context automatically — this
-pitfall only applies to standalone callers of `createShowErrorsComputed()`
-outside that context (custom utilities, hand-rolled components, services).
-Either pass the status, or move the work
-inside the form context so inheritance can do it for you.
+The wrapper, auto-ARIA, and headless directives inherit `submittedStatus` from
+`form[formRoot][ngxSignalForm]`. A direct `createShowErrorsComputed()` call does
+not inject context. Always pass its status argument for `'on-submit'`, even
+inside that form's injection context.
 
 ## Vest — An Invalid Field Name Throws in Dev Mode
 
@@ -460,12 +469,19 @@ dev mode, `console.error()` in production (still attaching the failure to
 the bound field either way). See [Vest field-name resolution](https://github.com/ngx-signal-forms/ngx-signal-forms/blob/main/packages/toolkit/vest/README.md#vest-field-name-resolution)
 and [ADR-0008](https://github.com/ngx-signal-forms/ngx-signal-forms/blob/main/docs/decisions/0008-vest-suite-input-is-the-bound-path.md).
 
-## Vest — Sharing One Suite Across Concurrent Forms Is Safe by Default
+## Vest concurrency and request isolation
 
-A module-scope Vest suite mounted in two forms at once (list/detail, wizard step
-beside a summary, two open tabs) is safe: `validateVest()` reference-counts its
-registrations and only calls `suite.reset()` when the **last** surviving mount's
-injection context tears down (`resetOnDestroy: true`, the default). Destroying
-one mount leaves a sibling mount's `only()`-run state and in-flight async runs
-untouched (#201, #214, #216). Pass `{ resetOnDestroy: false }` only when you
-deliberately want suite state to persist across mounts.
+Registrations reference-count teardown and reset the suite only after the last
+registration leaves. This prevents one mount's teardown from resetting another,
+but does not make every concurrent execution safe.
+
+The coordinator defers overlapping unfocused runs from different field trees.
+Focused `only` runs are not deferred. Shared focused registrations for fields
+of the same form are supported; a focused run racing an unrelated form on the
+same suite is not. Give independently mounted forms separate suite instances
+in that case.
+
+For SSR, create a suite and `createVestAdapter()` per request rather than share
+module-scope suite state or `sharedVestAdapter` across requests. Await a manual
+run's `settled()`, not `runResult`, which can be superseded and remain pending.
+See [Vest lifecycle](../vest/SKILL.md#suite-lifecycle) for the full contract.
