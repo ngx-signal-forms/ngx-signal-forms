@@ -1,5 +1,7 @@
 # @ngx-signal-forms/toolkit
 
+[![skills.sh](https://skills.sh/b/ngx-signal-forms/ngx-signal-forms)](https://skills.sh/ngx-signal-forms/ngx-signal-forms)
+
 Error and warning display, automatic ARIA, focus helpers, and themed fields for
 Angular Signal Forms. Angular owns the model, validation, field state, and
 submission. Keep using `form()`, `[formRoot]`, and `[formField]`.
@@ -21,9 +23,30 @@ peers needed only for their respective entry points.
 The styled components include their CSS. No separate stylesheet import is
 needed. Use public CSS custom properties to theme them.
 
-This checkout includes changes planned for RC.13. The package manifest still
-names RC.12. See the [migration index](./docs/migrations/README.md) before
-using source-only features with a published package.
+Check your installed version against the [migration index](./docs/migrations/README.md)
+before using features from the current source tree.
+
+## AI agent skill
+
+Install the `ngx-signal-forms` skill with either CLI:
+
+- **skills.sh:** `npx skills add ngx-signal-forms/ngx-signal-forms --skill ngx-signal-forms`
+- **Context7:** `npx ctx7 skills install /ngx-signal-forms/ngx-signal-forms ngx-signal-forms --universal`
+
+Choose one installer. The Context7 command uses `.agents/skills/`, which supports
+GitHub Copilot, Codex, and other agents. See the [skills.sh CLI](https://skills.sh/docs/cli)
+and [Context7 skill commands](https://github.com/upstash/context7/blob/master/skills/context7-cli/references/skills.md)
+for other agents and global installs.
+
+The [skill](./.agents/skills/ngx-signal-forms/SKILL.md) includes guides for forms,
+warnings, custom controls, wrappers, accessibility checks, and migrations.
+It works without this repository, Nx, or another installed skill. Keep its
+supporting files together. Deeper source examples and version-specific migration
+guides need network access; API choices use your installed package declarations.
+
+Ask your agent, for example: “Use ngx-signal-forms to add a profile form with
+validation feedback and inherited styling.” Context7 documentation lookup is
+optional and separate from installing this skill.
 
 ## Quick start
 

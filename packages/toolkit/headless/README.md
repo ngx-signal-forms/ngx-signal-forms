@@ -83,24 +83,57 @@ Headless directives work as Angular [host directives](https://angular.dev/guide/
   hostDirectives: [
     {
       directive: NgxHeadlessErrorState,
-      inputs: ['field', 'fieldName', 'strategy'],
+      inputs: [
+        'field',
+        'fieldName',
+        'strategy',
+        'warningStrategy',
+        'submittedStatus',
+      ],
     },
   ],
   template: `
     <ng-content />
-    @if (errorState.shouldShowErrors()) {
-      <div class="error-container">
+    <div
+      role="alert"
+      [attr.id]="
+        errorState.shouldShowErrors() && errorState.hasErrors()
+          ? errorState.errorId()
+          : null
+      "
+    >
+      @if (errorState.shouldShowErrors()) {
         @for (error of errorState.resolvedErrors(); track $index) {
           <span class="error">{{ error.message }}</span>
         }
-      </div>
-    }
+      }
+    </div>
+    <div
+      role="status"
+      [attr.id]="
+        errorState.shouldShowWarnings() && errorState.hasWarnings()
+          ? errorState.warningId()
+          : null
+      "
+    >
+      @if (errorState.shouldShowWarnings()) {
+        @for (warning of errorState.resolvedWarnings(); track $index) {
+          <span>{{ warning.message }}</span>
+        }
+      }
+    </div>
   `,
 })
 export class MyFormFieldComponent {
   protected readonly errorState = inject(NgxHeadlessErrorState);
 }
 ```
+
+This fragment composes feedback, not the whole wrapper. Before using local
+timing overrides, publish the same active-region gates through the visibility
+registry. Declare identity when the control ID differs from the field name,
+and register hints separately. Read [wrapper channels](../../../docs/CUSTOM_WRAPPERS.md#which-seam-publishes-what).
+Headless composition does not choose an ARIA owner for the projected control.
 
 ## Directives
 
@@ -112,7 +145,7 @@ Exposes error state signals for custom error display.
 
 | Input             | Type                                                                                                                                                                   | Description                                                                                                                                                         |
 | ----------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `field`           | `FieldTree` (optional)                                                                                                                                                 | The field to track. Omit when using `errorsOverride` or the host `connectFieldState()` bridge                                                                       |
+| `field`           | `FieldTree` (optional)                                                                                                                                                 | The field to track. Omit when supplying `errorsOverride`. `connectFieldState()` is package-internal and is stripped from published declarations.                    |
 | `fieldName`       | `string \| null` (optional, default `null`)                                                                                                                            | Field name for ID generation. Pass `null` (or omit) to disable id generation until a name resolves                                                                  |
 | `errorsOverride`  | `ReactiveOrStatic<readonly ValidationError[]>` (optional) — a plain array, a `Signal<readonly ValidationError[]>`, or a bare `() => readonly ValidationError[]` reader | Pre-aggregated errors that replace field-based extraction (e.g. for fieldsets). When provided, `field` is not required and `shouldShowErrors` always returns `true` |
 | `strategy`        | `ErrorDisplayStrategy`                                                                                                                                                 | Override for blocking errors (inherits from context)                                                                                                                |
@@ -161,6 +194,10 @@ Provides character count signals with progressive limit states.
 
 Signals: `currentLength()`, `resolvedMaxLength()`, `remaining()`, `limitState()` (`'ok' | 'warning' | 'danger' | 'exceeded'`), `hasLimit()`, `isExceeded()`, `percentUsed()`.
 
+Both this directive and `createCharacterCount()` require `maxLength`. Neither
+reads the limit from a validator; only the styled counter can infer that limit.
+`percentUsed()` can exceed 100; `remaining()` is clamped to zero.
+
 ### NgxHeadlessFieldset
 
 Selector: `[ngxHeadlessFieldset]` · Export: `fieldset`
@@ -187,13 +224,13 @@ Render `resolvedErrors()` / `resolvedWarnings()` (not `aggregatedErrors()[i].mes
 
 ```html
 <fieldset ngxHeadlessFieldset #fieldset="fieldset" [field]="form.address">
-  @if (fieldset.shouldShowErrors() && fieldset.hasErrors()) {
-  <div class="errors">
-    @for (error of fieldset.resolvedErrors(); track $index) {
+  <legend>Address</legend>
+  <div class="errors" role="alert">
+    @if (fieldset.shouldShowErrors() && fieldset.hasErrors()) { @for (error of
+    fieldset.resolvedErrors(); track $index) {
     <span>{{ error.message }}</span>
-    }
+    } }
   </div>
-  }
 </fieldset>
 ```
 
@@ -270,6 +307,12 @@ Options of note:
 
 For programmatic use without a directive:
 
+`createErrorState()` returns raw `errors()` and `warnings()`, not resolved
+display messages. Use `resolveValidationErrorMessage()` for copy or
+`createErrorMessageSignal()` for visibility-filtered entries. `fieldName` is
+required by the factory but can be `null` to suppress ID generation. Supply an
+`injector` outside an injection context.
+
 ```typescript
 // Error state without a directive
 const state = createErrorState({ field: form.email, fieldName: 'email' });
@@ -300,6 +343,18 @@ const reactive = createFieldOptionalitySummary(() => this.formTree()); // comput
 ### createFieldsetAggregation / createErrorSummaryEntries
 
 The pure pipelines behind `NgxHeadlessFieldset` and `NgxHeadlessErrorSummary` — reach for these when building a custom grouped surface. No injection context required, but both take pre-resolved `showErrors` and `showWarnings` signals, which you produce with your own `createErrorVisibility()` and `createWarningVisibility()` calls. Passing one signal for both re-couples the channels and defeats the warning cascade. See the source JSDoc for the option/result contracts.
+
+Pass a reader of the current field state, such as `() => form.address()` or
+`() => form()`. For aggregate warning timing, pass `hasWarnings: true` to
+`createWarningVisibility()` and let aggregation check warning presence. Do not
+pass form-wide `errorVisibility`; a blocker on one field must not hide a
+sibling's warning. These low-level visibility helpers accept `configDefault`
+explicitly rather than injecting provider configuration themselves.
+
+The summary factory reads descendant errors, filters hidden/disabled fields,
+deduplicates per field, and maps resolved messages to focusable entries. Orphan
+messages stay visible even though they cannot supply a focus target. The fieldset
+factory distinguishes omitted/null `fields` from `[]`, which aggregates nothing.
 
 ## ARIA Composition
 

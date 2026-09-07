@@ -1,12 +1,8 @@
----
-description: Core toolkit surface. Use when implementing form context, auto-ARIA, error timing, control semantics, configuration, or submission helpers.
----
-
 # Toolkit Core
 
 Implements the root `@ngx-signal-forms/toolkit` entry point.
 
-Read `../references/api.md` when you need the full export list, type signatures, or config interface details.
+Use the [source index](../references/api.md) for exports, signatures, and config contracts.
 
 ## Principle
 
@@ -77,7 +73,7 @@ import { NgxFormField } from '@ngx-signal-forms/toolkit/form-field';
   imports: [FormField, NgxSignalFormToolkit, NgxFormField],
   template: `
     <form [formRoot]="userForm" ngxSignalForm errorStrategy="on-submit">
-      <ngx-form-field-wrapper [formField]="userForm.email" appearance="outline">
+      <ngx-form-field-wrapper [formField]="userForm.email">
         <label for="email">Email</label>
         <input id="email" type="email" [formField]="userForm.email" />
       </ngx-form-field-wrapper>
@@ -142,7 +138,29 @@ import { warningError } from '@ngx-signal-forms/toolkit';
 return warningError('weak-password', 'Consider using 12+ characters');
 ```
 
-Use `canSubmitWithWarnings(form)` and `submitWithWarnings(form, callback)` when warnings should not block submission. Angular Signal Forms treats all `ValidationError`s as blockers by default. Both helpers also ignore pending async validators (matching Angular `submit()`'s default `ignoreValidators: 'pending'`) — only settled blocking errors gate. `submitWithWarnings` delegates to Angular `submit()` once its gate passes and returns the same `Promise<boolean>` shape.
+Use `canSubmitWithWarnings(form)` and `submitWithWarnings(form, callback)` when
+warnings should not block submission. Angular treats `warn:` errors as invalid
+and blocks ordinary submission. Both helpers ignore pending validators.
+`submitWithWarnings()` checks blocking errors in `errorSummary()` before
+delegating with `ignoreValidators: 'all'`; its microtask
+yield is not a wait for async validation. `canSubmitWithWarnings()` returns a
+signal; `submitWithWarnings()` returns `Promise<boolean>`. `true` means the
+callback completed normally, not independent confirmation of a server save.
+`false` means blocking errors refused the attempt or an overlapping call was
+dropped. A rejected callback rejects the promise.
+
+Use one native submit owner. Never call the helper from an already-running
+Angular submission action. For manual submit-only feedback, create
+`createSubmittedStatusTracker(form, submitAttempted)` in an injection context,
+record refused attempts with the writable signal, and pass the returned status
+to feedback. A refused helper call does not set `submitting()`; do not treat
+every `false` as an invalid attempt because overlap also returns `false`.
+
+Warnings have their own timing cascade and polite status hosts; changing error
+timing alone does not change warning timing. Keep alert/status hosts mounted
+before their content appears. Read [event wiring](../vest/guide.md#warnings-and-submission)
+and [testing](../testing/guide.md) before changing this flow. For deeper detail,
+see the [warning submission doc](https://github.com/ngx-signal-forms/ngx-signal-forms/blob/main/docs/WARNINGS_SUPPORT.md#form-submission-behavior).
 
 ## Immutable Array Helpers
 
@@ -167,11 +185,25 @@ patchState(store, (s) => ({
 - **Surface `aria-required` for Standard Schema (Zod) fields.** Fields validated only through `validateStandardSchema()` (Zod, Valibot, ArkType, …) never register Angular's `required()` metadata, so `FieldState.required()` stays `false` and neither auto-ARIA's `aria-required` nor the `'required'` auto-marker fires. Call `requiredFromStandardSchema(path.field, Schema)` once per field, next to the `validateStandardSchema()` call, to close that gap. Types: `StandardSchemaLike`, `StandardSchemaLikeIssue`, `StandardSchemaLikeResult`.
 - **Swap error/hint rendering.** `provideFormFieldErrorRenderer()` / `provideFormFieldHintRenderer()` (and their `*ForComponent` variants) replace how the wrapper renders error and hint content, injected through the `NGX_FORM_FIELD_ERROR_RENDERER` / `NGX_FORM_FIELD_HINT_RENDERER` tokens. See `../references/api.md` for the override signatures (`NgxFormFieldErrorRendererOverride`, `NgxFormFieldHintRendererOverride`, `NgxFormFieldErrorPlacement`).
 
-## Error Handling
+## Done
+
+- Each submit event has one owner. The action and pending policy match the
+  [Angular contract](../references/signal-forms.md#submission). Accepted and
+  blocked attempts, pending refusal and later deliberate retry, rejected saves,
+  overlapping attempts, and invalid focus/feedback have evidence where
+  submission changed. Assert cleanup and callback counts, not just button state.
+- Warning-aware flows test warning-only and descendant blocking errors, plus
+  clean, pending, rejected, and overlapping attempts and their boolean outcomes.
+  Manual submit-only feedback records refused attempts. Independent timing and
+  mounted alert/status hosts have evidence.
+- Each changed control has one ARIA writer, stable description targets, and
+  independent error/warning timing. Missing browser evidence is reported.
+
+## Troubleshooting
 
 - If `'on-submit'` errors don't appear: verify the form uses `form[formRoot][ngxSignalForm]`, or pass `submittedStatus` explicitly to standalone `createShowErrorsComputed()` callers.
 - If `aria-describedby` links are missing: ensure bound controls have a stable `id` attribute; for nested or dynamically identified controls inside wrappers, prefer an explicit `fieldName` on the wrapper.
 - If a switch does not receive auto-ARIA: confirm the actual bound element is `input[type="checkbox"][role="switch"]` and that the component rendering it imported the toolkit in its own standalone `imports`.
 - If ARIA attributes are duplicated: check for manual additions alongside auto-ARIA; remove the manual ones, or use `ngxSignalFormControlAria="manual"` to suppress auto management.
 - If wrapper layout is wrong for a custom control (e.g., outlined appearance on a slider, or inline layout on a composite): add `ngxSignalFormControl="slider"` (or the appropriate kind) to declare explicit semantics. For component-wide defaults, use `provideNgxSignalFormControlPresetsForComponent()`.
-- If warnings block submission: Angular treats `warn:` errors as invalid. Use `submitWithWarnings()` for a warning-aware submit path and `warningError()` to create the warning kind. Warning helpers intentionally allow warnings. See [Vest submission](../vest/SKILL.md#warnings-and-submission) for event wiring.
+- If warnings block submission: Angular treats `warn:` errors as invalid. Use `submitWithWarnings()` for a warning-aware submit path and `warningError()` to create the warning kind. Warning helpers intentionally allow warnings. See [Vest submission](../vest/guide.md#warnings-and-submission) for event wiring.

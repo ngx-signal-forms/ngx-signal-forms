@@ -1,16 +1,12 @@
----
-description: Form-field toolkit surface. Use when adding wrappers, fieldsets, field appearances, field markers, or custom-control layouts.
----
-
 # Toolkit Form Field
 
 Implements the `@ngx-signal-forms/toolkit/form-field` entry point.
 
-Read `../references/api.md` for the full export list and all component inputs.
+Use the [source index](../references/api.md) for public exports and component inputs.
 
 ## Principle
 
-The form-field entry point provides a pre-styled field shell (label + control + feedback) that eliminates repeated layout boilerplate. Use it when the design wants consistent field presentation without custom markup. Use [headless](../headless/SKILL.md) when complete DOM control is needed.
+The form-field entry point provides a pre-styled field shell (label + control + feedback) that eliminates repeated layout boilerplate. Use it when the design wants consistent field presentation without custom markup. Use [headless](../headless/guide.md) when complete DOM control is needed.
 
 ## Workflow
 
@@ -20,7 +16,7 @@ The form-field entry point provides a pre-styled field shell (label + control + 
 
 - Give the bound control a stable `id`, or set the wrapper's `fieldName` explicitly. Keep an accessible label association in either case.
 - For nested custom controls or dynamically identified inner controls, pass explicit `fieldName` on the wrapper instead of relying on implicit id discovery.
-- Set `appearance="outline"` for modern outlined inputs; `appearance="standard"` for label-above layout; `appearance="plain"` for minimal chrome; `appearance="inherit"` to follow parent config.
+- Omit `appearance` to inherit configuration, whose built-in default is `standard`. Use `outline` or `plain` only for an intentional exception; set shared defaults in a provider rather than on every wrapper.
 - `appearance="outline"` prints the label as a static caption inside the border. It does not float or animate, so it needs no `placeholder=" "` trick — write a real placeholder when the field wants one, or none at all.
 
 3. **Error placement:**
@@ -38,7 +34,7 @@ The form-field entry point provides a pre-styled field shell (label + control + 
 
 6. **Use `form[formRoot]` for the baseline wrapper path; add `ngxSignalForm` when the form needs shared context.** Wrapper and fieldset components can render with the default `'on-touch'` fallback even without `ngxSignalForm`. Add `ngxSignalForm` when grouped sections, summaries, or custom wrapper integrations need inherited `'on-submit'`, `submittedStatus`, or injected form context.
 
-7. **Custom controls:** Implement `FormValueControl<T>`, `FormCheckboxControl`, or `FormUiControl` from `@angular/forms/signals`. Give the host a stable `id` so the wrapper links correctly.
+7. **Custom controls:** Read the bundled [Angular control contract](../references/signal-forms.md#custom-controls) before implementation. For an existing widget, also read [value transformation](../references/signal-forms.md#value-transformation) and the deeper [widget adapter guide](https://github.com/ngx-signal-forms/ngx-signal-forms/blob/main/docs/CUSTOM_CONTROLS.md#adapting-an-existing-third-party-widget). Give the actual control a stable ID and label; use explicit wrapper `fieldName` for nested widgets.
 
 - Field-shaped custom controls (combobox, closed select that should look like a text field) are `input-like`. Keep the trigger naked so the wrapper owns border, focus, and invalid. Inner `role="combobox"` with an `id` infers `input-like`. A closed select without that role sets `ngxSignalFormControl="input-like"` on the host. There is no `select` kind. See the Angular Aria Combobox and Select guides.
 - Use `appearance="plain"` for widget-style controls (sliders, star-rating, switch rows) where outlined or standard default field chrome would look wrong. Do not restyle `composite` or `slider` as text fields.
@@ -103,35 +99,39 @@ The form-field entry point provides a pre-styled field shell (label + control + 
 
 ## Basic Usage
 
+This complete native form inherits appearance and default `on-touch` timing.
+Angular `FormRoot` owns submit and `novalidate`; no toolkit enhancer is needed.
+
 ```typescript
 import { Component, signal } from '@angular/core';
-import { form, FormField, required, email } from '@angular/forms/signals';
-import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit';
+import {
+  form,
+  FormField,
+  FormRoot,
+  required,
+  email,
+} from '@angular/forms/signals';
 import { NgxFormField } from '@ngx-signal-forms/toolkit/form-field';
 
 @Component({
   selector: 'app-profile-form',
-  imports: [FormField, NgxSignalFormToolkit, NgxFormField],
+  imports: [FormField, FormRoot, NgxFormField],
   template: `
-    <form [formRoot]="profileForm" ngxSignalForm errorStrategy="on-submit">
-      <ngx-form-field-wrapper
-        [formField]="profileForm.email"
-        appearance="outline"
-      >
+    <form [formRoot]="profileForm">
+      <ngx-form-field-wrapper [formField]="profileForm.email">
         <label for="email">Email</label>
         <input id="email" type="email" [formField]="profileForm.email" />
       </ngx-form-field-wrapper>
 
-      <ngx-form-field-wrapper
-        [formField]="profileForm.name"
-        appearance="outline"
-      >
+      <ngx-form-field-wrapper [formField]="profileForm.name">
         <label for="name">Full name</label>
         <input id="name" [formField]="profileForm.name" />
         <ngx-form-field-hint>As it appears on your ID</ngx-form-field-hint>
       </ngx-form-field-wrapper>
 
-      <button type="submit">Save</button>
+      <button type="submit" [disabled]="profileForm().submitting()">
+        Save
+      </button>
     </form>
   `,
 })
@@ -166,15 +166,12 @@ export class ProfileFormComponent {
 <ngx-form-fieldset [field]="form.address" fieldsetId="address">
   <legend>Address</legend>
 
-  <ngx-form-field-wrapper
-    [formField]="form.address.street"
-    appearance="outline"
-  >
+  <ngx-form-field-wrapper [formField]="form.address.street">
     <label for="street">Street</label>
     <input id="street" [formField]="form.address.street" />
   </ngx-form-field-wrapper>
 
-  <ngx-form-field-wrapper [formField]="form.address.city" appearance="outline">
+  <ngx-form-field-wrapper [formField]="form.address.city">
     <label for="city">City</label>
     <input id="city" [formField]="form.address.city" />
   </ngx-form-field-wrapper>
@@ -183,6 +180,34 @@ export class ProfileFormComponent {
 
 Use `includeNestedErrors` on the fieldset only when the overall summary must aggregate all child field errors into one list, e.g., for an accessibility-focused error summary at the top of the form.
 
+## Submit-only variation
+
+For the component above, add `NgxSignalForm` from the package root to its
+`imports` and change the form host to the following. Keep the same configured
+`submission.action`; do not add a second submit handler.
+
+```html
+<form [formRoot]="profileForm" ngxSignalForm errorStrategy="on-submit">
+  <!-- Keep the same labeled fields and submit button. -->
+</form>
+```
+
+This changes error timing only. Warnings keep their independent inherited
+timing unless `warningStrategy` is also set. For theme work, read the
+[theming guide](https://github.com/ngx-signal-forms/ngx-signal-forms/blob/main/packages/toolkit/form-field/THEMING.md) and
+[browser checks](../testing/guide.md#browser-state-checks).
+
+## Done
+
+- The wrapper has a bound field, an accessible label, and stable message
+  identity. Shared appearance defaults are not repeated as field exceptions.
+- Feedback and ARIA agree before touch, after touch, and after submit under
+  the chosen error and warning strategies.
+- Custom editable controls pass model/widget round-trip, invalid-input, reset,
+  focus forwarding, and composite focus-exit checks.
+- Theme changes have browser evidence for supported themes, keyboard focus,
+  and live-region transitions as well as axe. Report unperformed checks.
+
 ## Error Handling
 
 - If wrapper errors don't appear: confirm the bound control has an `id` attribute matching the field, or add explicit `fieldName` when the control is nested.
@@ -190,4 +215,4 @@ Use `includeNestedErrors` on the fieldset only when the overall summary must agg
 - If a switch row collapses or inherits text-input styling: make sure the bound control declares `ngxSignalFormControl="switch"` (in addition to `role="switch"` for a11y) so the wrapper uses switch-specific layout.
 - If a slider or composite control gets an outlined text-field shell: add `ngxSignalFormControl="slider"` (or `"composite"`) to the bound host so the wrapper picks up the correct layout. If a field-shaped combobox or closed select does **not** get the text-field shell, keep the trigger naked and join as `input-like` (combobox role + id, or explicit `ngxSignalFormControl="input-like"`). Do not add a `select` kind.
 - If auto-ARIA conflicts with a custom control's own ARIA attributes: add `ngxSignalFormControlAria="manual"` on the control host to suppress toolkit ARIA management. Use `buildAriaDescribedBy` to assemble the `aria-describedby` value manually.
-- For fully custom markup without wrapper assumptions, switch to [headless](../headless/SKILL.md).
+- For fully custom markup without wrapper assumptions, switch to [headless](../headless/guide.md).

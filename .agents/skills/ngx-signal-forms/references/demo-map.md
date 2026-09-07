@@ -1,76 +1,52 @@
-# Demo App Map
+# Online example map
 
-Repository paths in `apps/demo/src/app/` organized by the current live demo. Use these when working inside the `ngx-signal-forms` repository. All paths are optional — if unavailable, use installed package docs.
+Load only the example for the current task. These GitHub links are latest
+mutable source, not assumed local consumer files or proof of installed behavior.
+Apply the [source/version policy](sources.md). Bundled contracts and installed
+declarations remain available if these optional examples cannot be fetched.
 
-## 01 — Getting Started
+## Getting started and core
 
-- `01-getting-started/your-first-form/` — Intro demo for bundle import, `ngxSignalForm` form context, auto-ARIA, and inline errors
+- [First form](https://github.com/ngx-signal-forms/ngx-signal-forms/tree/main/apps/demo/src/app/01-getting-started/your-first-form): bundle imports, form context, auto-ARIA, inline errors.
+- [Error display modes](https://github.com/ngx-signal-forms/ngx-signal-forms/tree/main/apps/demo/src/app/02-toolkit-core/error-display-modes): immediate, touch, and submit timing.
+- [Warning support](https://github.com/ngx-signal-forms/ngx-signal-forms/tree/main/apps/demo/src/app/02-toolkit-core/warning-support): advisory versus blocking feedback and roles.
 
-## 02 — Toolkit Core
+## Headless
 
-- `02-toolkit-core/error-display-modes/` — `'immediate'`, `'on-touch'`, `'on-submit'` strategy comparison
-- `02-toolkit-core/warning-support/` — Non-blocking warnings vs blocking errors; warning ARIA (`role="status"` vs `role="alert"`)
+- [Fieldset form](https://github.com/ngx-signal-forms/ngx-signal-forms/blob/main/apps/demo/src/app/03-headless/fieldset-utilities/fieldset-utilities.form.ts) and [page](https://github.com/ngx-signal-forms/ngx-signal-forms/blob/main/apps/demo/src/app/03-headless/fieldset-utilities/fieldset-utilities.page.ts): aggregation, summaries, and state flags.
+- [Error message signal](https://github.com/ngx-signal-forms/ngx-signal-forms/tree/main/apps/demo/src/app/03-headless/error-message-signal): reactive message registry replacement.
 
-## 03 — Headless
+## Wrappers and controls
 
-- `03-headless/fieldset-utilities/fieldset-utilities.form.ts` — Aggregated group state, summary utilities, and state flags for custom markup
-- `03-headless/fieldset-utilities/fieldset-utilities.page.ts` — Headless UI patterns and grouped-state explanation
-- `03-headless/error-message-signal/` — `createErrorMessageSignal` with a swappable `errorMessages` registry that re-resolves blocking/warning messages reactively
+- [Complex forms](https://github.com/ngx-signal-forms/ngx-signal-forms/tree/main/apps/demo/src/app/04-form-field-wrapper/complex-forms): nested objects, arrays, and grouped fieldset summaries.
+- [Custom controls](https://github.com/ngx-signal-forms/ngx-signal-forms/tree/main/apps/demo/src/app/04-form-field-wrapper/custom-controls): editable controls, checkbox opt-in, manual slider ARIA, and component presets. For an existing widget, read the [adapter doc and its example caveat](https://github.com/ngx-signal-forms/ngx-signal-forms/blob/main/docs/CUSTOM_CONTROLS.md#adapting-an-existing-third-party-widget) first.
+- [Field marking](https://github.com/ngx-signal-forms/ngx-signal-forms/tree/main/apps/demo/src/app/04-form-field-wrapper/field-marking): required/optional markers and form legend.
+- [Fieldset appearance](https://github.com/ngx-signal-forms/ngx-signal-forms/tree/main/apps/demo/src/app/04-form-field-wrapper/fieldset-appearance): grouping, tone, and validation feedback.
+- [Labelless fields](https://github.com/ngx-signal-forms/ngx-signal-forms/tree/main/apps/demo/src/app/04-form-field-wrapper/labelless-fields): accessible names without redundant visible labels.
+- [Field identity](https://github.com/ngx-signal-forms/ngx-signal-forms/tree/main/apps/demo/src/app/04-form-field-wrapper/field-identity): custom identity provider and collapsed controls.
+- [Orientation toggle](https://github.com/ngx-signal-forms/ngx-signal-forms/tree/main/apps/demo/src/app/ui/orientation-toggle): shared horizontal orientation controls. Global `defaultFormFieldOrientation` supplies the default; wrapper `orientation` overrides it.
 
-## 04 — Form Field Wrapper
+## Advanced
 
-- `04-form-field-wrapper/complex-forms/` — Production-style nested objects, arrays, and dense layouts
-  - Includes a dedicated fieldset example (`fieldset.form.ts` / `fieldset.model.ts` / `fieldset.validations.ts`) demonstrating `NgxFormFieldset` grouped summaries
-- `04-form-field-wrapper/custom-controls/` — Wrapper integration with custom `FormValueControl` components, checkbox opt-in via `ngxSignalFormControl`, slider with manual ARIA and `buildAriaDescribedBy`, and component-scoped control presets via `provideNgxSignalFormControlPresetsForComponent`
-- `04-form-field-wrapper/field-marking/` — Required/optional marker config (`showMarkerWhen`, `requiredMarker`, `optionalMarker`) plus the `NgxFormMarkingLegend` form-level legend explaining the markers
-- `04-form-field-wrapper/fieldset-appearance/` — `NgxFormFieldset` appearance controls: `NgxFormFieldsetAppearance`, `NgxFormFieldsetFeedbackAppearance`, `NgxFormFieldsetSurfaceTone`, `NgxFormFieldsetValidationSurface`
-- `04-form-field-wrapper/labelless-fields/` — Wrappers for controls with no redundant `<label>` (accessible name via `aria-label` / `aria-labelledby`), compared with vs without label across appearances
-- `04-form-field-wrapper/field-identity/` — The only page not using the built-in wrapper: a custom one composing `NgxFieldIdentityProvider` so the field name is not the control's generated `id`, plus `aria-invalid` inside a collapsible `<details>`
+- [Global configuration](https://github.com/ngx-signal-forms/ngx-signal-forms/tree/main/apps/demo/src/app/05-advanced/global-configuration): app defaults.
+- [Submission patterns](https://github.com/ngx-signal-forms/ngx-signal-forms/tree/main/apps/demo/src/app/05-advanced/submission-patterns): lifecycle, invalid focus, and summaries.
+- [Advanced wizard](https://github.com/ngx-signal-forms/ngx-signal-forms/tree/main/apps/demo/src/app/05-advanced/advanced-wizard): multi-step flow with NgRx Signals and Zod.
+- [Async validation](https://github.com/ngx-signal-forms/ngx-signal-forms/tree/main/apps/demo/src/app/05-advanced/async-validation): remote/pending checks.
+- [Cross-field validation](https://github.com/ngx-signal-forms/ngx-signal-forms/tree/main/apps/demo/src/app/05-advanced/cross-field-validation): sibling dependencies.
+- [Field state](https://github.com/ngx-signal-forms/ngx-signal-forms/tree/main/apps/demo/src/app/05-advanced/field-state-patterns): touched/dirty and other signals.
+- [Store binding](https://github.com/ngx-signal-forms/ngx-signal-forms/tree/main/apps/demo/src/app/05-advanced/store-binding): writable form/store synchronization.
+- [Zod](https://github.com/ngx-signal-forms/ngx-signal-forms/tree/main/apps/demo/src/app/05-advanced/zod-validation), [Vest](https://github.com/ngx-signal-forms/ngx-signal-forms/tree/main/apps/demo/src/app/05-advanced/vest-validation), and [Zod with Vest](https://github.com/ngx-signal-forms/ngx-signal-forms/tree/main/apps/demo/src/app/05-advanced/zod-vest-validation): separate validation approaches, not a mandate to combine libraries.
 
-Horizontal `FormFieldOrientation` is exercised via the shared `ui/orientation-toggle` component wired into multiple 05-advanced demos — there's no dedicated page yet. `provideNgxSignalFormsConfig({ defaultFormFieldOrientation: 'horizontal' })` drives the default; per-wrapper `orientation="horizontal"` overrides it.
+## Deeper documentation
 
-## 05 — Advanced
+Use the [API index](api.md) for entry-point READMEs and source barrels.
+These task-specific docs add detail beyond the bundled guides:
 
-- `05-advanced/global-configuration/` — App-level defaults with `provideNgxSignalFormsConfig()`
-- `05-advanced/submission-patterns/` — Submission lifecycle, invalid handling, `focusFirstInvalid`, and `NgxFormFieldErrorSummary`
-- `05-advanced/advanced-wizard/` — Multi-step flow with NgRx Signals + Zod
-- `05-advanced/async-validation/` — Remote/pending validation flows
-- `05-advanced/cross-field-validation/` — Dependent sibling validation rules
-- `05-advanced/field-state-patterns/` — Choosing between `dirty`/`touched`/`pristine` and other field-state signals
-- `05-advanced/store-binding/` — Binding a form to an NgRx SignalStore (`linkedSignal({ source, computation, set })`)
-- `05-advanced/zod-validation/` — Zod-only baseline validation via `validateStandardSchema(path, schema)` (Standard Schema)
-- `05-advanced/vest-validation/` — Vest-only business validation
-- `05-advanced/zod-vest-validation/` — Structural validation plus business rules
-
-## Supporting Docs in Repository
-
-### Package READMEs
-
-- `packages/toolkit/README.md` — Full API reference with examples
-- `packages/toolkit/form-field/README.md` — Form field wrapper detailed docs
-- `packages/toolkit/form-field/THEMING.md` — CSS custom properties and control-aware styling hooks
-- `packages/toolkit/assistive/README.md` — Assistive component docs
-- `packages/toolkit/headless/README.md` — Headless primitive docs
-- `packages/toolkit/vest/README.md` — Vest adapter, suite lifecycle, `only()` selector
-- `packages/demo/debugger/README.md` — Debugger (internal/demo only), badges, production tree-shaking
-
-### Cross-cutting docs (`docs/`)
-
-- `docs/ANGULAR_VS_TOOLKIT.md` — Where Angular Signal Forms ends and the toolkit begins
-- `docs/VALIDATION_STRATEGY.md` — When to reach for Angular validators, Zod, or Vest
-- `docs/CUSTOM_CONTROLS.md` — Building `FormValueControl` / `FormCheckboxControl` / `FormUiControl` hosts
-- `docs/COMPLEX_NESTED_FORMS.md` — Nested objects, arrays, `apply`/`applyEach`/`applyWhenValue`
-- `docs/CSS_FRAMEWORK_INTEGRATION.md` — Bootstrap, Tailwind, Material setup
-- `docs/WARNINGS_SUPPORT.md` — Non-blocking validation end-to-end
-- `docs/PACKAGE_ARCHITECTURE.md` — Entry point layout and `@internal` policy
-- `docs/ANGULAR_PUBLIC_API_POLICY.md` — How public vs `@internal` exports are managed
-- `docs/migrations/README.md` — Version-to-version toolkit upgrade guides
-- `docs/MIGRATING_BETA_TO_V1.md` — Beta → current v1 API migration
-- `docs/MIGRATING_FROM_NGX_VEST_FORMS.md` — Migration from `ngx-vest-forms`
-- `docs/decisions/` — Architecture Decision Records (ADRs)
-- `docs/archive/NESTED_FORM_ARRAYS_PATTERN.md` — Dynamic nested array patterns (historical reference)
-
-### Instructions
-
-- `.github/instructions/ngx-signal-forms-toolkit.instructions.md` — Toolkit usage rules
-- Angular Signal Forms API reference: `angular-developer` skill, `references/signal-forms.md`
+- [Angular versus toolkit](https://github.com/ngx-signal-forms/ngx-signal-forms/blob/main/docs/ANGULAR_VS_TOOLKIT.md): ownership boundaries.
+- [Validation strategy](https://github.com/ngx-signal-forms/ngx-signal-forms/blob/main/docs/VALIDATION_STRATEGY.md): library choice.
+- [Nested forms](https://github.com/ngx-signal-forms/ngx-signal-forms/blob/main/docs/COMPLEX_NESTED_FORMS.md): reusable schemas and arrays.
+- [CSS integration](https://github.com/ngx-signal-forms/ngx-signal-forms/blob/main/docs/CSS_FRAMEWORK_INTEGRATION.md) and [theming](https://github.com/ngx-signal-forms/ngx-signal-forms/blob/main/packages/toolkit/form-field/THEMING.md): framework styles and toolkit tokens.
+- [Warnings](https://github.com/ngx-signal-forms/ngx-signal-forms/blob/main/docs/WARNINGS_SUPPORT.md): advisory feedback and submission.
+- [Package architecture](https://github.com/ngx-signal-forms/ngx-signal-forms/blob/main/docs/PACKAGE_ARCHITECTURE.md) and [public API policy](https://github.com/ngx-signal-forms/ngx-signal-forms/blob/main/docs/ANGULAR_PUBLIC_API_POLICY.md): export boundaries.
+- [Migration workflow](../migrations/guide.md): crossed-version guides. For a different source library, use [ngx-vest-forms migration](https://github.com/ngx-signal-forms/ngx-signal-forms/blob/main/docs/MIGRATING_FROM_NGX_VEST_FORMS.md).
+- [Internal debugger](https://github.com/ngx-signal-forms/ngx-signal-forms/blob/main/packages/demo/debugger/README.md): repository-only inspection, not a consumer package.

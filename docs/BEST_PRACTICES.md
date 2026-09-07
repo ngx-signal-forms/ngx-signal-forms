@@ -5,31 +5,30 @@ practice below states what to do, what to avoid, and why — with links to the
 guide that goes deeper. The [root README](../README.md#guides) carries
 the one-line version of this list.
 
-These aren't arbitrary style rules: each one follows from the toolkit's two
-design commitments — it is **additive** (Angular owns the form model,
-validation, and submit lifecycle; the toolkit only adds presentation and
-accessibility) and **cascade-driven** (every presentation setting resolves
-through one precedence chain).
+Angular owns the model, validation, and submit lifecycle. The toolkit adds
+presentation and accessibility, plus an explicit warning-aware submission
+policy. Presentation settings resolve through their own documented chains.
 
 ---
 
 ## 1. Configure at the highest tier that's true
 
-The settings cascade resolves every presentation option — error strategy,
-appearance, orientation, markers, control presets, renderers — through one
-chain, most specific wins:
+Each setting has its own chain, most specific first:
 
-```text
-field / component input
-  ?? form context (ngxSignalForm)
-  ?? component-scoped provider (…ForComponent)
-  ?? app-wide provider (provideNgxSignalForms…)
-  ?? built-in default
-```
+| Setting                                      | Resolution                                                                                        |
+| -------------------------------------------- | ------------------------------------------------------------------------------------------------- |
+| Error timing                                 | Field `strategy` → form `errorStrategy` → provider `defaultErrorStrategy` → `on-touch`            |
+| Warning timing                               | Field `warningStrategy` → form `warningStrategy` → provider `defaultWarningStrategy` → `on-touch` |
+| Submitted status                             | Explicit status → `ngxSignalForm` context → unsubmitted fallback                                  |
+| Wrapper appearance, orientation, and markers | Component input → provider config → built-in default                                              |
+| Control kind                                 | Explicit kind → DOM inference                                                                     |
+| Control layout and ARIA mode                 | Explicit values → resolved kind's preset → no resolved value                                      |
+| Error/hint renderer                          | Nearest renderer provider → inherited provider → built-in renderer                                |
 
-The `ngxSignalForm` tier carries only the form-owned settings — error strategy
-and submitted status. Appearance, orientation, markers, presets, and renderers
-skip it and resolve `input ?? provider config ?? default`.
+Component-scoped providers inherit app defaults per key. `ngxSignalForm`
+carries error strategy, warning strategy, and submitted status, not appearance
+or renderers. Low-level visibility factories accept `configDefault` explicitly;
+check their contracts rather than assuming every helper injects config.
 
 **Do**
 
@@ -49,8 +48,7 @@ skip it and resolve `input ?? provider config ?? default`.
   The merge is per-key (nullish `??`), so a partial override is the intended
   usage.
 
-**Why** — one precedence rule everywhere means any setting can be predicted by
-walking the chain, and a reader of your template knows that an explicit input
+**Why** — the setting's chain makes its value predictable, and an explicit input
 is an exception worth noticing. Explicit falsy values are respected:
 `requiredMarker: ''` clears the marker, while omitting the key inherits it.
 
@@ -66,23 +64,28 @@ See [how settings resolve](../README.md#how-settings-resolve-the-cascade) and
 - Own the model, validation, and submission with Angular's `form()`,
   `schema()`, validators, and `submit()` — exactly as you would without the
   toolkit.
-- Treat every toolkit API as presentation or accessibility around that core.
+- Keep presentation separate from validation and choose submission policy explicitly.
 - Use `warningError()` only for advice the user may legitimately ignore;
   anything that must hold before saving is a regular (blocking) error.
 
 **Don't**
 
-- Move blocking rules into warnings to "soften" the UX — warnings never block
-  `submit()`, so an ignored warning ships to your API. See
+- Move blocking rules into warnings to "soften" the UX. Ordinary Angular
+  `submit()` rejects `warn:` errors too, because they make the form invalid.
+  `submitWithWarnings()` permits them after checking for blocking errors. See
   [when a warning is the wrong tool](./WARNINGS_SUPPORT.md#when-a-warning-is-the-wrong-tool).
-- Hand-roll submit gating that `submitWithWarnings()` /
-  `canSubmitWithWarnings()` already implement (touch-all, settle, re-entrancy
-  guard).
+- Treat the warning helper's microtask yield as waiting for async validation.
+  It marks descendants touched, yields once, checks blocking errors in
+  `errorSummary()`, then delegates with `ignoreValidators: 'all'`. Pending
+  validators do not block it. Enforce any stricter pending policy in the submit
+  path, not only on the button.
+- Bypass Angular validators without that blocking-error gate, or invoke the
+  helper inside an already-running `submission.action`.
 
-**Why** — because the toolkit is additive, adopting or removing it never
-changes what your form _does_, only how it presents. That's also your test:
-if deleting a toolkit API would change the submitted data, it's being used on
-the wrong side of the boundary.
+**Why** — presentation leaves Angular's state intact, but choosing warning-aware
+submission changes eligibility. Removing that helper can change whether a form
+submits. Its callback settling means the action completed, not that pending
+validators finished or a server independently accepted the data.
 
 See [Angular vs toolkit](./ANGULAR_VS_TOOLKIT.md).
 
@@ -102,15 +105,16 @@ control's `id`, the control kind is inferred from the DOM, and auto-ARIA wires
 - Stay on plain `[formRoot]` and the default `'on-touch'` strategy until you
   actually need `'on-submit'` timing or submitted-status tracking — only then
   add `ngxSignalForm`.
-- Keep native HTML semantics (`type="email"`, `required`, `autocomplete`) on
+- Keep native HTML semantics (`type="email"`, `autocomplete`) on
   real controls; a native `input[type="checkbox"][role="switch"]` is
-  recognized as a switch with no directives at all.
+  recognized as a switch without an explicit semantics directive. Put required
+  constraints in the Angular schema so `[formField]` owns state synchronization.
 
 **Don't**
 
-- Add `ngxSignalFormControl` or `ngxSignalFormControlAria="manual"` to native
-  `<input>` / `<textarea>` / `<select>` — those APIs exist for the cases
-  inference can't reach (custom and third-party widgets).
+- Add control overrides to ordinary native fields without a reason. Explicit
+  checkbox/radio opt-in and a native control inside a library-owned ARIA system
+  are valid exceptions.
 - Skip the `id`: missing identity degrades gracefully (no crash) but silently
   costs you the `aria-describedby` linkage in production.
 
@@ -163,23 +167,21 @@ and [custom wrappers](./CUSTOM_WRAPPERS.md) for third-party design systems.
 
 **Do**
 
-- Keep small, field-local rules in Angular validators (`required`, `email`,
-  `minLength`, …).
-- Put shared contract/shape rules in Zod / OpenAPI Standard Schema via
-  `validateStandardSchema()`.
-- Express conditional business policy in Vest via `validateVest()`, and
-  advisory `warn()` guidance via
+- Start with Angular validators, including conditional, cross-field, and async
+  checks. These capabilities alone do not require another library.
+- Reuse an existing contract through `validateStandardSchema()` when useful.
+- Choose Vest for an existing suite or when its grouped business-policy rules
+  are easier to read and maintain. It can also supply advisory guidance via
   `validateVest(path, suite, { includeWarnings: true })` (or
   `validateVestWarnings()`).
 
 **Don't**
 
-- Over-centralize: piling business policy into Angular validators gets
-  verbose fast, and pushing simple `required` checks into Vest adds
-  abstraction for nothing.
+- Add Angular validators, Zod, and Vest to every form by default, or duplicate
+  the same rule across libraries.
 
-**Why** — the three layers are complementary, and each rule reads best in the
-layer built for it. They register side by side in the same schema callback.
+**Why** — layering is optional. Add a library for a specific reuse or readability
+benefit, not because the form has an async check or several dependent fields.
 
 See [validation strategies](./VALIDATION_STRATEGY.md).
 

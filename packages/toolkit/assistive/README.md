@@ -197,6 +197,11 @@ warning rather than being coerced or exposed in the diagnostic.
 
 The built-in announcement strings ("Approaching limit: N characters remaining.", etc.) are English-only. Bind `[announcementFormatter]` to a `(state, { current, max, remaining, over }) => string` function to localize them:
 
+The formatter receives only `warning`, `danger`, or `exceeded`, never `ok`.
+`remaining` and `over` are clamped to zero. Exported types are
+`NgxCharacterCountAnnouncementFormatter`, `NgxCharacterCountAnnouncementState`,
+and `NgxCharacterCountAnnouncementInfo`.
+
 ```typescript
 formatter = (
   state: 'warning' | 'danger' | 'exceeded',

@@ -1,72 +1,16 @@
 # Common Pitfalls
 
-Mistakes that recur when using Angular Signal Forms and `@ngx-signal-forms/toolkit`.
+This file owns toolkit mistakes. For Angular-only rules, read the bundled
+[Signal Forms reference](signal-forms.md):
+field-tree calls, touched/dirty flags, native submit ownership, reset semantics,
+immutable model updates, schema paths, and custom control contracts live there.
 
-## Signal Calls
+## Toolkit state versus Angular state
 
-| Wrong                          | Correct                      |
-| ------------------------------ | ---------------------------- |
-| `form.email.invalid()`         | `form.email().invalid()`     |
-| `form.email.touched()`         | `form.email().touched()`     |
-| `form().email.errors()`        | `form.email().errors()`      |
-| `debugger [formTree]="form()"` | `debugger [formTree]="form"` |
-
-Field accessors are signals — always call them: `form.email()` returns the field state, then `.invalid()` reads from it.
-
-## Signal Forms Has No `untouched()` or `pristine()`
-
-```typescript
-// Wrong
-form.email().untouched();
-form.email().pristine();
-
-// Correct
-!form.email().touched();
-!form.email().dirty();
-```
-
-## Submit Events — Use Native DOM Not ngSubmit
-
-```html
-<!-- Wrong -->
-<form (ngSubmit)="save()"></form>
-
-<!-- Correct with [formRoot] and configured submission.action -->
-<form [formRoot]="myForm"></form>
-
-<!-- Alternative without [formRoot]; save must prevent the default event -->
-<form (submit)="save($event)" novalidate></form>
-```
-
-With `[formRoot]`, configure submission in `form()` options. Without it, always call `event.preventDefault()`.
-
-## Value Resets
-
-The method is `form().reset(value?: TValue)`, called on the field state.
-Without an argument it clears touched/dirty state on the field and descendants
-without changing values. With a value it also replaces the model value:
-
-```typescript
-// Keep current values; clear interaction state.
-this.myForm().reset();
-
-// Restore an explicitly retained initial value and clear interaction state.
-this.myForm().reset(initialValue);
-```
-
-Angular does not retain an initial snapshot for this call. Toolkit submission
-history resets separately when its tracker observes touched change from true
-to false; `submittedStatus` is not an Angular reset field.
-
-## Immutable Array Updates
-
-```typescript
-// Wrong — mutates signal state directly
-this.#model().items.push(newItem);
-
-// Correct
-this.#model.update((d) => ({ ...d, items: [...d.items, newItem] }));
-```
+Pass the tree, not `form()`, to debugger and summary `formTree` inputs. The
+debugger is repository-internal. Toolkit submission history resets when its
+tracker observes touched change from true to false while not submitting;
+`submittedStatus` is not an Angular reset field.
 
 ## Import Location Mismatch
 
@@ -212,13 +156,19 @@ These were removed or are not public:
 | `isSubmitting()`               | Angular `form().submitting()` for in-flight state; toolkit `submittedStatus()` from `ngxSignalForm` for history |
 | `fieldNameResolver` config     | Control `id` or explicit wrapper `fieldName`                                                                    |
 | `strictFieldResolution` config | Removed — strict by default                                                                                     |
+| `injectFormConfig()`           | Inject public `NGX_SIGNAL_FORMS_CONFIG` for config, or `injectFormContext()` for form context                   |
 | `NgxFormFieldNotification`     | `NgxFormFieldError` with `presentation="panel"` + `[errors]`                                                    |
-| `toHintDescriptors()`          | Inline the two-line `computed()` — see `docs/CUSTOM_WRAPPERS.md`                                                |
-| `createErrorRendererInputs()`  | Inline the two-line `computed()` — see `docs/CUSTOM_WRAPPERS.md`                                                |
+| `toHintDescriptors()`          | Inline the descriptor `computed()`; see [wrapper channels](headless-composition.md#host-composition)            |
+| `createErrorRendererInputs()`  | Inline the input-map `computed()`; see [renderer contracts](headless-composition.md#renderer-overrides)         |
 | `resolveUnionInput()`          | Inline the union unwrap at the call site                                                                        |
 
 The notification fold also renamed the CSS hooks: `--ngx-signal-form-notification-*`
 became `--ngx-signal-form-error-panel-*` / `--ngx-signal-form-warning-panel-*`.
+
+Use current suffix-less public class names. `NgxSignalFormControlSemanticsDirective`
+keeps its suffix to distinguish it from the `NgxSignalFormControlSemantics`
+interface. For a version upgrade, the [crossed migration guides](https://github.com/ngx-signal-forms/ngx-signal-forms/blob/main/docs/migrations/README.md)
+are authoritative; this table is a quick lookup, not the upgrade checklist.
 
 ## Renamed — Update the Name, Same Behavior
 
@@ -252,21 +202,6 @@ The wrapper stylesheet has no `:placeholder-shown` rule, no transition and no
 keyframes on the label. Guides written for Material-style floating labels do
 not carry over.
 
-## Angular Template Binding — Prefer Static Attributes for Literal Strings
-
-```html
-<!-- Wrong — Angular parses this as an expression, not a string literal -->
-<ngx-form-field-wrapper [strategy]="on-submit">...</ngx-form-field-wrapper>
-
-<!-- Correct — use a plain attribute for literal values -->
-<ngx-form-field-wrapper strategy="on-submit">...</ngx-form-field-wrapper>
-```
-
-For literal string inputs, prefer the plain attribute form because it is shorter
-and easier to scan. Use property binding only when the value comes from a real
-template expression. In skill docs and examples, prefer the plain attribute form
-for static strings so the canonical pattern stays obvious.
-
 ## Switch Semantics — Use a Real Switch, Not Just Switch Styling
 
 ```html
@@ -297,21 +232,6 @@ semantics directive as well:
   ngxSignalFormControl="switch"
   [formField]="form.emailUpdates"
 />
-```
-
-## Standalone Imports — Parent Imports Do Not Flow Into Child Templates
-
-```typescript
-// Wrong mental model
-// Importing NgxSignalFormToolkit in the parent component does NOT make
-// NgxSignalFormAutoAria available inside a child custom control template.
-
-// Correct
-@Component({
-  imports: [FormField, NgxSignalFormToolkit],
-  template: `<input [formField]="field()" role="switch" type="checkbox" />`,
-})
-export class SwitchControlComponent {}
 ```
 
 ## Custom Controls — Declare Semantics to Avoid Layout Heuristics
@@ -404,9 +324,11 @@ Two rules travel with this:
   why `ngx-form-field-wrapper` gets away with it.
 
 The provider publishes the name channel only; hints and display timing keep
-resolving through their registries. Full contract: `docs/CUSTOM_WRAPPERS.md`.
+resolving through their registries. Read the bundled
+[channel contract](headless-composition.md#host-composition), or the deeper
+[wrapper doc](https://github.com/ngx-signal-forms/ngx-signal-forms/blob/main/docs/CUSTOM_WRAPPERS.md).
 
-## Error Strategy `'on-submit'` Without `[formRoot]`
+## Submit-only feedback without a status source
 
 ```html
 <!-- Wrong — no submitted status source, errors never show -->
@@ -440,6 +362,11 @@ The wrapper, auto-ARIA, and headless directives inherit `submittedStatus` from
 `form[formRoot][ngxSignalForm]`. A direct `createShowErrorsComputed()` call does
 not inject context. Always pass its status argument for `'on-submit'`, even
 inside that form's injection context.
+
+For a manual native submit handler, use
+`createSubmittedStatusTracker(form, submitAttempted)` and pass the returned
+status explicitly. See [warning submission](../vest/guide.md#warnings-and-submission).
+The enhancer is not required when the manual flow provides its own status.
 
 ## Vest — An Invalid Field Name Throws in Dev Mode
 
@@ -484,4 +411,4 @@ in that case.
 For SSR, create a suite and `createVestAdapter()` per request rather than share
 module-scope suite state or `sharedVestAdapter` across requests. Await a manual
 run's `settled()`, not `runResult`, which can be superseded and remain pending.
-See [Vest lifecycle](../vest/SKILL.md#suite-lifecycle) for the full contract.
+See [Vest lifecycle](../vest/guide.md#suite-lifecycle) for the full contract.
