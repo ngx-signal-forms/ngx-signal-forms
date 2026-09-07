@@ -310,8 +310,8 @@ Use Vest to reuse an existing suite, share policy outside Angular, or make a
 grouped business-policy rule set easier to read. Async or cross-field work alone
 is not a reason to add it.
 
-See [Choosing a validation strategy](../../../docs/VALIDATION_STRATEGY.md) for
-the decision table and optional layering. A form need not use three libraries.
+See [Choosing a validation strategy](https://github.com/ngx-signal-forms/ngx-signal-forms/blob/main/docs/VALIDATION_STRATEGY.md)
+for the decision table and optional layering. A form need not use three libraries.
 
 ## Suite lifecycle
 

@@ -11,13 +11,22 @@ function prose(markdown) {
   );
 }
 
+function stripTags(text) {
+  // Repeat until stable so nested/malformed markup (e.g. "<<script>>") can't survive a single pass.
+  let stripped = text;
+  let previous;
+  do {
+    previous = stripped;
+    stripped = previous.replaceAll(/<[^>]*>/gu, '');
+  } while (stripped !== previous);
+  return stripped;
+}
+
 function anchors(markdown) {
   const ids = new Set();
   const counts = new Map();
   for (const [, heading] of markdown.matchAll(/^#{1,6}\s+(.+)$/gmu)) {
-    const slug = heading
-      .replaceAll(/\[([^\]]+)\]\([^)]*\)/gu, '$1')
-      .replaceAll(/<[^>]*>/gu, '')
+    const slug = stripTags(heading.replaceAll(/\[([^\]]+)\]\([^)]*\)/gu, '$1'))
       .toLowerCase()
       .replaceAll(/[^\p{L}\p{N}\s_-]/gu, '')
       .replaceAll(/\s/gu, '-');
@@ -80,9 +89,14 @@ export async function checkSkillPackage(directory) {
     for (const link of links) {
       if (/^(?:https?:|mailto:)/iu.test(link)) continue;
       const [path, fragment] = link.split('#');
-      const target = path
-        ? resolve(dirname(file), decodeURIComponent(path))
-        : file;
+      let decodedPath;
+      try {
+        decodedPath = path ? decodeURIComponent(path) : '';
+      } catch {
+        errors.push(`Malformed link: ${label} -> ${link}`);
+        continue;
+      }
+      const target = path ? resolve(dirname(file), decodedPath) : file;
       if (target !== root && !target.startsWith(root + sep)) {
         errors.push(`Escaping link: ${label} -> ${link}`);
         continue;
@@ -92,13 +106,17 @@ export async function checkSkillPackage(directory) {
         continue;
       }
       edges.push(target);
-      if (
-        fragment &&
-        !anchors(prose(files.get(target) ?? '')).has(
-          decodeURIComponent(fragment),
-        )
-      ) {
-        errors.push(`Missing anchor: ${label} -> ${link}`);
+      if (fragment) {
+        let decodedFragment;
+        try {
+          decodedFragment = decodeURIComponent(fragment);
+        } catch {
+          errors.push(`Malformed link: ${label} -> ${link}`);
+          continue;
+        }
+        if (!anchors(prose(files.get(target) ?? '')).has(decodedFragment)) {
+          errors.push(`Missing anchor: ${label} -> ${link}`);
+        }
       }
     }
   }
