@@ -1,12 +1,8 @@
----
-description: Testing toolkit surface. Use when adding axe-core WCAG 2.2 AA assertions to a Vitest browser-mode specification.
----
-
 # Toolkit Testing
 
 Implements the `@ngx-signal-forms/toolkit/testing` entry point.
 
-Read `../references/api.md` for the full export list and exact signatures.
+Use the [source index](../references/api.md) for public exports and signatures.
 
 `axe-core` is an **optional peer dependency** — it is only required when you
 import from this entry point. Install it as a devDependency alongside your test
@@ -82,7 +78,49 @@ import {
    before message updates, then verify announcement behavior with a screen
    reader. An axe pass is not full WCAG conformance.
 
-## Example
+## Submission checks
+
+For changed submission behavior, use the consumer's existing test runner and
+service mocks. Test accepted and invalid attempts, pending refusal with a later
+deliberate retry, rejected saves, and overlapping attempts. Assert callback
+counts, `submitting()` cleanup, submit-only feedback, and the actual invalid
+focus destination. Pending refusal is not automatic wait-and-retry.
+
+For warning-aware flows, include clean, warning-only, descendant-blocking, and
+pending states. Assert `Promise<boolean>` outcomes and rejection separately.
+Check independent error/warning timing and mounted live-region hosts. See the
+[core contract](../core/guide.md#warning-helpers).
+
+## Browser-state checks
+
+Choose the checks for the changed behavior, not only an initial axe scan:
+
+- Inspect the actual element carrying `aria-invalid`, including relocated inner
+  inputs/comboboxes. Assert its value before collapse, while hidden, and after
+  reopening with changed validation state. A laid-out wrapper is not evidence
+  that its inner control is visible.
+- For a radio cluster, hide one option while a sibling remains visible. The
+  hidden option must lose `aria-invalid`; visible siblings keep the correct
+  value. Then hide the whole group and reopen it. Assert each actual carrier,
+  not only the group host or a cached identity visibility flag.
+- Check every `aria-describedby` token against an existing unique DOM ID.
+  Exercise error-only, warning-only, and mixed states with different strategies.
+- Assert live-region hosts exist before content appears. Update empty → warning
+  → blocking → clear without recreating the hosts. Verify actual announcements
+  with a screen reader; DOM assertions alone are not announcement evidence.
+- Drive custom controls with the keyboard, verify visible focus, move between
+  composite parts, then leave the control. Check summary focus destinations.
+- Apply the real supported themes for contrast, focus, and feedback checks.
+  Keep the full axe baseline; an unstyled fixture is not a reason to disable it.
+
+## Done
+
+The changed interaction has state-transition assertions and a themed browser
+axe result with its scope recorded. Keyboard/focus evidence and live-region
+checks accompany it. Report missing browser or screen-reader checks explicitly;
+an axe pass is not full WCAG evidence.
+
+## Example fixture
 
 ```typescript
 import { Component, signal } from '@angular/core';

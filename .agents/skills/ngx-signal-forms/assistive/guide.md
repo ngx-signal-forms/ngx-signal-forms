@@ -1,16 +1,12 @@
----
-description: Assistive toolkit surface. Use when adding standalone errors, grouped notifications, summaries, hints, counters, or marking legends.
----
-
 # Toolkit Assistive
 
 Implements the `@ngx-signal-forms/toolkit/assistive` entry point.
 
-Read `../references/api.md` for the full export list and component input signatures.
+Use the [source index](../references/api.md) for exports and component inputs.
 
 ## Principle
 
-The assistive entry point provides accessible feedback rendering that sits between raw Angular field state and the fully styled `form-field` wrapper. Use it when you want pre-built accessible components but full control over layout structure, including grouped notification blocks driven by aggregated `ValidationError[]`. Use [form-field](../form-field/SKILL.md) instead when a complete wrapper shell is acceptable.
+The assistive entry point provides accessible feedback rendering that sits between raw Angular field state and the fully styled `form-field` wrapper. Use it when you want pre-built accessible components but full control over layout structure, including grouped notification blocks driven by aggregated `ValidationError[]`. Use [form-field](../form-field/guide.md) instead when a complete wrapper shell is acceptable.
 
 ## Workflow
 
@@ -181,9 +177,19 @@ import {
 - If errors don't display: check that `fieldName` is provided when the component is used standalone.
 - If character count doesn't update or silently renders 0: verify the field value is a string and `[formField]` is bound. With no `maxLength` configured or auto-detected, an unsupported value type logs a one-shot dev-mode `console.warn` naming `NgxFormFieldCharacterCount` — watch the console.
 - If a property-bound hint id (`[id]="expr"`) doesn't reach `aria-describedby`: update the toolkit — older versions read the id once at construction and missed property bindings; current versions map both static `id` and `[id]` onto the hint's `id` input.
-- If hints don't appear in `aria-describedby`: use the wrapper's hint registry, or follow the explicit manual-ownership example in [headless](../headless/SKILL.md#manual-aria-example). `NgxHeadlessFieldName` supplies identity only; it does not register hints or compose their ARIA links.
+- If hints don't appear in `aria-describedby`: use the wrapper's hint registry, or follow the [manual-ownership example](../references/headless-composition.md#manual-aria-example). `NgxHeadlessFieldName` supplies identity only; it does not register hints or compose their ARIA links.
 - If a grouped notification announces with the wrong urgency: check the `[errors]` list you pass in — routing is content-driven, so a stray blocking error will force the assertive `role="alert"` container. There is no `tone` input to override it.
-- For grouped output you already aggregate yourself, use `NgxFormFieldError` with `presentation="panel"`. Switch to [form-field](../form-field/SKILL.md) for `NgxFormFieldset` when you also need the styled group shell and aggregation.
+- For grouped output you already aggregate yourself, use `NgxFormFieldError` with `presentation="panel"`. Switch to [form-field](../form-field/guide.md) for `NgxFormFieldset` when you also need the styled group shell and aggregation.
 - If error summary does not show: verify `ngxSignalForm` is applied to the `<form>` element so context is active, or provide `strategy` and `submittedStatus` explicitly.
 - If error summary entries don't focus controls on click: check the binding and focus target. Angular `FormField` registers native controls and normal custom `FormValueControl` components bound with `[formField]` automatically. A composite custom control may need a `focus()` method to forward focus to its inner control. `registerAsBinding()` is only for integrations that deliberately bypass `FormField`, not a requirement for ordinary custom controls. Without a usable binding, `focusBoundControl()` cannot move focus.
 - For warning entries in the summary, use `NgxHeadlessErrorSummary` from `@ngx-signal-forms/toolkit/headless`, or use `NgxFormFieldError` with `presentation="panel"` when you already have aggregated `ValidationError[]`.
+
+## Done
+
+- Standalone feedback IDs match their control's identity. Referenced hints
+  exist and multiple hints have unique IDs.
+- Error and warning gates work independently; grouped input arrays are already
+  visibility-filtered. Empty, warning-only, and blocking lists have the right
+  content and role without replacing live-region hosts.
+- Summary buttons reach the intended controls. Changed counters exercise limit
+  transitions under the real theme; report keyboard/announcement checks not run.

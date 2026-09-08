@@ -1,16 +1,20 @@
----
-description: Debugger toolkit surface. Use when adding dev-only form-tree inspection or debugger badge directives.
----
-
 # Toolkit Debugger (Internal/Demo Only)
 
 Implements the `@ngx-signal-forms/debugger` entry point for internal use.
 
 ## Principle
 
-The debugger is a **development-only** tool that makes invisible form state visible — field validity, touched/dirty state, error visibility with current strategy, warnings vs blockers, and live model values. Use it in dev builds, demo pages, and teaching examples. Never ship it in production UI.
+The debugger inspects field state, feedback timing, and live model values in
+repository demos and development tools. It can render in production demo builds;
+there is no automatic development guard. Exclude it from end-user production
+UI unless the requested product is the form-inspection demo itself.
 
 **Note:** This component is internal to the repository and not published as part of `@ngx-signal-forms/toolkit`.
+
+The workflow below applies only to an explicit toolkit maintenance checkout.
+Consumers should inspect Angular field state instead of adding this import.
+The [online debugger source](https://github.com/ngx-signal-forms/ngx-signal-forms/tree/main/packages/demo/debugger)
+is a reference example, not a package installation dependency.
 
 ## Workflow
 
@@ -34,7 +38,7 @@ The debugger is a **development-only** tool that makes invisible form state visi
 
 3. **Place the debugger alongside the form** — a side-by-side split layout works well for demos showing how error strategies, warnings, and submission state interact.
 
-4. **Guard rendering with `@if (isDevMode())`.** The debugger does not apply a production rendering guard itself. A host-template guard prevents production rendering, but does not guarantee removal of imported JavaScript or CSS. Keep debugger imports out of production entry paths when bundle exclusion is required, and verify the built output with bundle analysis. Do not promise fixed byte savings.
+4. **Guard rendering with `@if (isDevMode())` when it must be development-only.** A host-template guard prevents production rendering, but does not guarantee removal of imported JavaScript or CSS. Keep debugger imports out of production entry paths when bundle exclusion is required, and verify the built output with bundle analysis. Do not promise fixed byte savings.
 
 5. Use `errorStrategy` input on the debugger component to highlight a specific strategy in teaching contexts.
 
@@ -143,3 +147,10 @@ Dark mode is supported through `.dark` class context on an ancestor.
 - If submitted state doesn't show: place the debugger inside `form[formRoot][ngxSignalForm]` so it can inject the enhancer's context. A sibling debugger does not inherit that element-scoped context.
 - If strategy mismatch in debugger: set `[errorStrategy]` explicitly on the debugger component.
 - If the debugger ships in a production bundle: inspect production imports and the built output. A template `@if` controls rendering; it is not proof of bundle exclusion.
+
+## Done
+
+- The integration is repository-internal and receives the field tree, not its state.
+- Submission history resolves from the enhancer's ancestor context when needed.
+- Production rendering follows the requested policy. If bundle exclusion is
+  required, built-output evidence confirms it; a template guard is not enough.

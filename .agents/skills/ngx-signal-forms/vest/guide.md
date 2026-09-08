@@ -1,8 +1,3 @@
----
-name: vest
-description: Vest toolkit surface. Use when integrating Vest suites, warning validation, focused runs, or custom Vest adapter flows.
----
-
 # Toolkit Vest
 
 Implements the `@ngx-signal-forms/toolkit/vest` entry point.
@@ -11,14 +6,15 @@ Requires `vest@>=6.0.0`. Vest 5 and earlier are not supported.
 
 ## When to Use Vest vs Angular Validators
 
-| Use Angular validators (`required`, `email`, `minLength`, etc.) | Use Vest                                      |
-| --------------------------------------------------------------- | --------------------------------------------- |
-| Simple field rules from a schema or form spec                   | Complex business logic with conditional rules |
-| Structural/contract validation (Zod schema)                     | Cross-field policy checks                     |
-| Standard format checks                                          | Async server-backed validation                |
-| Most cases in small-to-medium forms                             | Enterprise forms with branching rules         |
+| Need                                                                      | Starting point                                                         |
+| ------------------------------------------------------------------------- | ---------------------------------------------------------------------- |
+| Field constraints, conditional or cross-field checks, async server checks | Angular validators, `validateTree`, `validateAsync`, or `validateHttp` |
+| An existing shared shape/API contract                                     | `validateStandardSchema()` with that schema                            |
+| Existing Vest suite or reusable policy rules maintained outside Angular   | Reuse Vest                                                             |
+| Many grouped business-policy rules that read more clearly as a suite      | Consider Vest for that readability benefit                             |
 
-> Prefer Angular Signal Forms validators for straightforward constraints. Reach for Vest when validation logic reads more like business policies than field rules.
+Async work and cross-field dependencies alone are not reasons to add Vest.
+Before choosing a library, read the bundled [validation choice](../references/signal-forms.md#validation-choice).
 
 ## API
 
@@ -48,8 +44,8 @@ inside a hand-rolled validator only when it must share the exact execution with
 `validateVest()`; pair an async-only custom flow with `validateVest()` or your
 own `validateAsync` phase. When awaiting a manual run's outcome, await the
 result's `settled()` — never `runResult`, which a later run on the same suite
-can supersede and leave pending forever. Read `../references/api.md` for the
-adapter's options and result contracts.
+can supersede and leave pending forever. Follow the [source index](../references/api.md)
+to the adapter's declarations and canonical contracts.
 
 ### `validateVest(path, suite, options?)`
 
@@ -235,7 +231,8 @@ form(model, (path) => {
 
 ## Vest + Zod Combination
 
-A strong pattern: use Zod for structural/API-contract validation, then layer Vest for business rules:
+Optional when both already serve distinct needs: reuse Zod for a shared contract
+and Vest for a readable business-policy suite. Assign each rule once:
 
 ```typescript
 import { validateStandardSchema } from '@angular/forms/signals';
@@ -340,8 +337,18 @@ Angular's `submitting()` signal.
 ## Error Handling
 
 - If Vest warnings appear as blocking errors: ensure `{ includeWarnings: true }` is passed to `validateVest()` and that the suite uses `warn()` before `enforce()`.
-- If Vest results don't update reactively: confirm the suite receives the reactive signal value — pass `signalModel()` not `signalModel`.
+- If Vest results do not update: bind `validateVest` to the schema path whose value matches the suite input. The adapter supplies current values; do not pass a model snapshot in place of the path.
 - If Vest v5 is installed: upgrade to `vest@^6.0.0` — v6+ implements the Standard Schema interface required by this adapter.
 - If stale errors appear on a second mount of a form using a module-scope suite: the adapter clears suite state on teardown by default — confirm `resetOnDestroy` has not been set to `false`. (Conversely, if you _want_ suite state to persist across mounts, pass `{ resetOnDestroy: false }`.)
 - If detecting Vest-origin errors in a custom strategy or test: import `VEST_ERROR_KIND_PREFIX` / `VEST_WARNING_KIND_PREFIX` and match against `error.kind` instead of hard-coding the string.
-- If a form throws in dev mode ("Vest field name ... does not resolve"): a Vest `test`/`warn` field name has a valid prefix but an invalid tail (e.g. `test('address.cityy', …)` when the bound path only has `address.city`) — fix the field name so it names a real child of the bound path. A field name whose FIRST segment doesn't resolve (e.g. `test('passwordMatch', …)`) is a legitimate **virtual** Vest field name and does not throw. Read the "Vest field-name resolution" section in the [Vest README](../../../../packages/toolkit/vest/README.md) and [pitfalls](../references/pitfalls.md).
+- If a form throws in dev mode ("Vest field name ... does not resolve"): a Vest `test`/`warn` field name has a valid prefix but an invalid tail (e.g. `test('address.cityy', …)` when the bound path only has `address.city`) — fix the field name so it names a real child of the bound path. A field name whose FIRST segment doesn't resolve (e.g. `test('passwordMatch', …)`) is a legitimate **virtual** Vest field name and does not throw. Read the "Vest field-name resolution" section in the [Vest README](https://github.com/ngx-signal-forms/ngx-signal-forms/blob/main/packages/toolkit/vest/README.md) and [pitfalls](../references/pitfalls.md).
+
+## Done
+
+- The bound path value matches the suite input, and field names resolve or are
+  intentional virtual errors. The library choice has a reuse/readability reason.
+- Changed async flows handle supersession and await `settled()` for manual
+  outcomes. Teardown and concurrent mounts preserve the supported lifecycle;
+  SSR uses request-local suites and adapters.
+- Warnings render independently and the chosen submit path tests warning-only,
+  blocking, and pending states. Name lifecycle or browser checks not run.

@@ -1,7 +1,7 @@
 # Warnings, timing, and message resolution
 
-This guide describes the current source. The independent warning cascade across
-all headless helpers is planned for RC.13. See the
+This guide describes the RC.13 source, including the independent warning cascade
+across headless helpers. See the
 [versioned migration guide](./migrations/v1.0.0-rc.13.md) for release scope.
 
 ## The `warn:` convention

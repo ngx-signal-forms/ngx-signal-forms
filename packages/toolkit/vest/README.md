@@ -6,7 +6,8 @@
 
 Angular Signal Forms already supports Standard Schema validators through `validateStandardSchema()`, and Vest 6 suites implement Standard Schema. This entry point adds a toolkit-branded adapter that maps Vest's richer suite results — including `warn()` guidance — into toolkit-native warning messages.
 
-Use it **together with** Angular validators and Standard Schema tools like Zod, not instead of them.
+Use it with Angular Signal Forms. Additional Angular validators or a Standard
+Schema library are optional; assign each rule to one source.
 
 ### Native `validateStandardSchema()` vs. the toolkit adapter
 
@@ -304,18 +305,13 @@ built-in `validateVest`/`validateVestWarnings` pipeline relies on internally.
 
 ## When to use Vest
 
-Use Angular Signal Forms validators for simple, field-local rules (`required`, `email`, `minLength`). Use Vest when validation reads more like business policy:
+Angular handles field-local, cross-field, conditional, and async validation.
+Use Vest to reuse an existing suite, share policy outside Angular, or make a
+grouped business-policy rule set easier to read. Async or cross-field work alone
+is not a reason to add it.
 
-- Eligibility rules that depend on multiple fields
-- Conditional rules driven by business state
-- Async checks like "username already taken"
-- Rules you want to reuse outside an Angular form
-
-For the full three-layer decision guide (Angular validators vs. Zod / OpenAPI
-Standard Schema vs. Vest), the recommended layering order, and a worked example
-combining all three, see
-[Choosing a validation strategy](https://github.com/ngx-signal-forms/ngx-signal-forms/blob/main/docs/VALIDATION_STRATEGY.md).
-Keep each layer focused — don't duplicate the same rule in multiple layers.
+See [Choosing a validation strategy](https://github.com/ngx-signal-forms/ngx-signal-forms/blob/main/docs/VALIDATION_STRATEGY.md)
+for the decision table and optional layering. A form need not use three libraries.
 
 ## Suite lifecycle
 
@@ -570,10 +566,11 @@ Angular treats every `ValidationError` as blocking. For forms that should allow 
 
 The Quick start example above hand-rolls this exact pattern. The toolkit also ships
 [`submitWithWarnings(form, action)`](../README.md#warning-support), a ready-made
-helper that marks the form touched, waits for validation to settle, and invokes
-`action` only when no blocking errors remain — reach for it directly (e.g. from a
-button click handler) instead of re-implementing the `ignoreValidators` /
-`hasOnlyWarnings` breakdown, unless you need that finer control.
+helper that marks descendants touched, yields one microtask, and checks blocking
+errors before delegating to Angular with `ignoreValidators: 'all'`. It does not
+wait for pending async validation. Use it from a single native-event owner,
+not inside an already-running `submission.action`. See the complete
+[warning submission contract](../../../docs/WARNINGS_SUPPORT.md#form-submission-behavior).
 
 ## Related documentation
 

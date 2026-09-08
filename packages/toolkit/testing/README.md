@@ -51,8 +51,7 @@ it('has no accessibility violations', async () => {
 ```
 
 Pass extra axe `RunOptions` as a second argument to merge over the WCAG 2.2
-AA defaults, e.g. to waive a rule for a fixture that intentionally renders
-unstyled controls. All keys are honored (`rules`, `resultTypes`, …) except
+AA defaults. All keys are honored (`rules`, `resultTypes`, …) except
 `runOnly`: the WCAG 2.2 AA tag set is the hard-fail baseline and is not
 overridable. `runOnly` is omitted from this parameter's type, so passing it
 in an object literal is a compile error — and because TypeScript only
@@ -60,15 +59,14 @@ enforces that omission on fresh literals, a `runOnly` smuggled in through a
 value widened to `axe.RunOptions` is overridden at runtime as well; the
 baseline always wins:
 
-```typescript
-await expectNoA11yViolations(container, {
-  rules: { 'color-contrast': { enabled: false } },
-});
-```
+Apply the intended theme and keep applicable rules enabled, including contrast.
+An unstyled fixture is not a reason to disable contrast. Any narrow waiver must
+explain why the rule is outside that fixture's scope and name the representative
+themed browser check that covers it without the waiver.
 
-> [!WARNING]
-> Keep waivers narrow and fixture-specific. If you disable a rule broadly,
-> you can accidentally hide regressions in production-facing components.
+Also verify keyboard operation, visible focus, summary focus destinations, and
+error/warning transitions. Live-region hosts must precede their first message;
+verify announcements with a screen reader. Axe alone is not full WCAG evidence.
 
 ## Scoping the tag baseline: `createA11yValidator(options?)`
 

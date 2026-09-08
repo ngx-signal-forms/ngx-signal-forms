@@ -4,6 +4,15 @@ Signal Forms are stable in Angular v22 and experimental in v21. Prefer them for 
 
 This repository owns this reference. The API details below were checked against installed Angular 22.1.4 declarations in `@angular/forms/types/signals.d.ts` and `_structure-chunk.d.ts`. Check the installed version before applying them elsewhere.
 
+## Task pointers
+
+- Reuse rules across forms or subtrees: read [reusable schemas](#reusable-schemas).
+- Narrow a discriminated union before attaching rules: read
+  [conditional validation](#conditional-validation), including `applyWhenValue`.
+- Target a cross-field error at a child: read [tree validation](#tree-validation).
+- Adapt a widget's raw value: read [value transformation](#value-transformation)
+  and the linked toolkit adapter example.
+
 ## Imports
 
 You can import the following from `@angular/forms/signals`:
@@ -188,6 +197,10 @@ protected readonly userForm = form(this.userModel, (schemaPath) => {
 
 Import `FormField` and use the `[formField]` directive.
 
+Use static attributes for literal string inputs and property bindings for
+expressions. For example, `label="First name"` passes a string;
+`[label]="labelText()"` reads an expression.
+
 ```ts
 import { FormField } from '@angular/forms/signals';
 ```
@@ -281,11 +294,20 @@ form.client.addresses.length;
 
 `field().reset()` clears touched/dirty state on that field and its descendants without changing the model value. `field().reset(value)` also sets the supplied value. Neither form implies restoring an initial snapshot; retain that snapshot explicitly if needed.
 
+There are no `untouched()` or `pristine()` methods. Read `!touched()` and
+`!dirty()` instead. Update array models immutably, for example
+`model.update(m => ({ ...m, items: [...m.items, newItem] }))`, rather than
+mutating the value returned by a signal.
+
 `valid()` is not the inverse of `invalid()`: while validation is pending with no errors, both are false.
 
 ## Submitting
 
 For native forms in v22, prefer `<form [formRoot]="userForm">` with `FormRoot` imported and `submission.action` configured in `form()` options. `FormRoot` sets `novalidate`, prevents native submission, and calls `submit()` using that configuration. Do not add a second `(submit)` handler to this pattern. The complete booking example below includes the configuration.
+
+Without `FormRoot`, use the native `(submit)` event, call
+`event.preventDefault()`, and set `novalidate` yourself. `(ngSubmit)` belongs to
+Angular's other form directives, not this Signal Forms pattern.
 
 `submit()` marks the submitted field tree as touched. Its action must return `Promise<TreeValidationResult>`, but the function does not need the literal `async` keyword. A resolved result can contain validation errors or indicate success with `null`, `undefined`, or `void`. Map service response payloads to that contract rather than returning arbitrary data.
 
@@ -535,6 +557,12 @@ userForm = form(this.userModel, (s) => {
 
 For a single rule, use its supported `{ when }` configuration. Use `applyWhen(path, condition, schemaFn)` to group rules. Its callback receives the path passed as the first argument, not an implicit parent.
 
+Use `applyWhenValue(path, predicate, schemaOrFn)` when the decision depends on
+that path's value. Its predicate receives the value, not a `FieldContext`.
+A type-guard predicate narrows the schema path for a discriminated-union branch.
+Use `applyWhen` with `valueOf` for sibling dependencies instead of casting a
+union path. Check the installed overloads before using version-specific types.
+
 ```ts
 import { signal } from '@angular/core';
 import { applyWhen, disabled, form, pattern, required } from '@angular/forms/signals';
@@ -559,6 +587,22 @@ protected readonly taxForm = form(this.model, (path) => {
   });
 });
 ```
+
+### Reusable schemas
+
+Define reusable rules with `schema<T>(path => { ... })`, then attach them with
+`apply(path.subtree, reusableSchema)`. `applyEach(path.items, itemSchema)` applies
+rules to every array item. Match the schema's value type to the target path.
+Schema paths are registration objects, not field trees or callable signals.
+
+### Tree validation
+
+Use `validateTree(path, context => result)` for a synchronous rule that can
+report errors on the path or its descendants. A returned error can include
+`fieldTree: context.fieldTree.child` to target that child; an untargeted error
+belongs to the validated path. Read sibling values with `valueOf` or the
+context's value. Use `validateAsync`/`validateHttp` for asynchronous work rather
+than returning a Promise from `validate` or `validateTree`.
 
 ## Common Pitfalls (DO NOT DO THESE)
 
@@ -591,7 +635,7 @@ protected readonly taxForm = form(this.model, (path) => {
 
 ## Custom controls
 
-Implement `FormValueControl<T>` with a `value` model, or `FormCheckboxControl` with a boolean `checked` model. Use one contract, not both. Emit `touch` on blur, not focus. Forward `focus(options)` to the actual interactive element.
+Implement `FormValueControl<T>` with a `value` model, or `FormCheckboxControl` with a boolean `checked` model. Use one contract, not both. `FormUiControl<T>` is their common optional-state base, not a third editable alternative. Emit `touch` on blur, not focus. Forward `focus(options)` to the actual interactive element.
 
 This standalone control implements the text-value contract. Its internal input has no `[formField]`, so the control must forward its value and supported state itself. The parent binds `[formField]` to the component.
 
@@ -644,6 +688,29 @@ export class TextControl implements FormValueControl<string> {
 ```
 
 For a checkbox control, declare `readonly checked = model(false)`, bind `[checked]="checked()"` on its internal checkbox, and update `checked` from the native `change` event. Optional state inputs only reach the internal control if the component forwards them. For composite controls, emit `touch` when focus leaves the whole control, not when it moves between internal elements.
+
+### Value transformation
+
+Use `transformedValue(valueModel, { parse, format })` inside a custom value
+control when raw widget input and the model use different types.
+
+- The returned writable signal holds raw UI input. Wire widget changes to its
+  `set()` or `update()`, and display its current value in the widget.
+- `parse(raw)` returns `ParseResult<T>`. `{ value }` updates the model;
+  omitting `value` leaves the model unchanged. `{ error }` reports one or more
+  parse errors; returning both updates the model and reports errors.
+- `format(modelValue)` converts model changes back to widget input. Invalid
+  raw text can remain visible without replacing the last parsed model value.
+- `rawValue.parseErrors()` exposes parse errors. In a Signal Forms field
+  context they also reach the nearest field automatically; without that
+  context, consume them explicitly.
+- In a bound control, field reset clears parse errors and reformats the
+  supplied reset value or the unchanged current model value. This is separate
+  from storing an initial snapshot for `field().reset(initialValue)`.
+
+Use the existing [toolkit widget-adapter example](../../../../docs/CUSTOM_CONTROLS.md#adapting-an-existing-third-party-widget)
+for round-trip conversion, focus exit, and ARIA passthrough. Verify both
+directions, invalid raw input, reset, and focus movement across the composite.
 
 ## Complete form example
 
@@ -917,163 +984,18 @@ export class App {
 
 ## Recovering from Build Errors
 
-If you encounter build errors, here are the most common fixes:
+Use the relevant contract above rather than copying another workaround:
 
-### `Property 'value' does not exist on type 'FieldTree'`
+| Diagnostic                                                                  | Check                                                                                          |
+| --------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| Missing `value`, flags, or `set` on `FieldTree`; missing `FormState` export | [Tree versus state](#fieldtree-fieldstate-and-formfield) and [model updates](#accessing-state) |
+| `string[]` cannot bind to `string` or `boolean`                             | [Binding](#binding): `select multiple` for arrays; boolean models for checkboxes               |
+| Forbidden `readonly`, `min`, `max`, or `value` binding                      | [Binding ownership](#binding); configure schema rules instead                                  |
+| Missing validator `when`, or wrong `applyWhen` arguments                    | [Conditional validation](#conditional-validation); check the installed version and import      |
+| Async validator params or missing `onError`                                 | [Async validation](#async-validation)                                                          |
+| `$parent` in nested loops                                                   | [Nested loops](#nested-for-loops): capture the outer index                                     |
 
-**Problem**: Accessing `.value()` directly on a field without calling it first.
-
-```ts
-// WRONG
-const val = this.form.field.value();
-// RIGHT
-const val = this.form.field().value();
-```
-
-### `Property 'set' does not exist on type 'FieldTree'`
-
-**Problem**: Trying to set values on the form tree. Signal Forms are model-driven.
-
-```ts
-// WRONG
-this.form.address.street.set('Main St');
-// RIGHT - update the model signal instead
-this.model.update((m) => ({
-  ...m,
-  address: { ...m.address, street: 'Main St' },
-}));
-```
-
-### `Type 'string[]' is not assignable to type 'string'`
-
-**Problem**: Binding `[formField]` to an array field with a single-value `<select>`.
-
-```html
-<!-- WRONG - assignees is string[], select expects string -->
-<select [formField]="form.assignees">
-  ...
-</select>
-
-<!-- RIGHT - Use select multiple for array fields -->
-<select multiple [formField]="form.assignees">
-  <option value="us">US</option>
-</select>
-```
-
-### `NG8022: Setting the 'readonly/min/max/value' attribute is not allowed`
-
-**Problem**: Conflict between HTML attributes and `[formField]` directive.
-
-```html
-<!-- WRONG -->
-<input [formField]="form.age" min="18" max="99" />
-<input [formField]="form.name" [value]="'John'" />
-
-<!-- RIGHT - Use rules in schema -->
-min(s.age, 18); max(s.age, 99); // Then just:
-<input [formField]="form.age" />
-```
-
-### `TS2322: Type 'string[]' is not assignable to type 'boolean'`
-
-**Problem**: Binding a checkbox to an array field instead of a boolean field.
-
-```html
-<!-- WRONG - tags is string[] -->
-<input type="checkbox" [formField]="form.tags" />
-
-<!-- RIGHT - Use select multiple for array values -->
-<select multiple [formField]="form.tags">
-  <option value="a">A</option>
-</select>
-
-<!-- OR - Map to boolean fields in the model -->
-protected readonly model = signal({ hasWifi: false, hasGym: false });
-<input type="checkbox" [formField]="form.hasWifi" />
-```
-
-### `'when' does not exist in type` for a validator
-
-Check the installed version and import source. Angular 22.1 standard validators support `when`; older declarations may differ. Use `applyWhen` to group rules or when the installed validator lacks the option.
-
-```ts
-pattern(s.ssn, /^\d{3}-\d{2}-\d{4}$/, {
-  when: ({ valueOf }) => valueOf(s.status) === 'joint',
-});
-
-// Alternative for grouping rules or older validator configurations.
-applyWhen(
-  s.ssn,
-  ({ valueOf }) => valueOf(s.status) === 'joint',
-  (ssnPath) => {
-    pattern(ssnPath, /^\d{3}-\d{2}-\d{4}$/);
-  },
-);
-```
-
-### `Expected 3 arguments, but got 2` for applyWhen
-
-**Problem**: Missing the path argument in `applyWhen`.
-
-```ts
-// WRONG
-applyWhen(isJoint, () => { ... });
-
-// RIGHT - applyWhen(path, condition, schemaFn)
-applyWhen(s.spouse, ({valueOf}) => valueOf(s.status) === 'joint', (spousePath) => {
-  required(spousePath.name);
-});
-```
-
-### `Module has no exported member 'FormState'`
-
-**Problem**: Importing a non-existent type.
-
-```ts
-// WRONG
-import { FormState } from '@angular/forms/signals';
-
-// FormState does not exist. If you need type access, the form
-// instance provides all necessary state through field().valid(), etc.
-```
-
-### `No pipe found with name 'number'` / `'json'` / `'date'`
-
-Import the matching standalone pipe from `@angular/common` and add it to the component's `imports`: `DecimalPipe` for `number`, `JsonPipe` for `json`, and `DatePipe` for `date`. Keep formatting in the template rather than replacing pipes with ad hoc string formatting.
-
-```ts
-import { DatePipe, DecimalPipe, JsonPipe } from '@angular/common';
-import { Component, signal } from '@angular/core';
-
-@Component({
-  selector: 'app-booking-summary',
-  imports: [DatePipe, DecimalPipe, JsonPipe],
-  template: `
-    <p>{{ totalPrice() | number: '1.2-2' }}</p>
-    <p>{{ launchDate() | date: 'mediumDate' }}</p>
-    <pre>{{ details() | json }}</pre>
-  `,
-})
-export class BookingSummary {
-  protected readonly totalPrice = signal(1234.5);
-  protected readonly launchDate = signal(new Date());
-  protected readonly details = signal({ destination: 'Mars' });
-}
-```
-
-### `$parent.$index` in nested @for loops
-
-**Problem**: Angular doesn't have `$parent`.
-
-```html
-<!-- WRONG -->
-@for (item of items; track $index) { @for (sub of item.subs; track $index) {
-<button (click)="remove($parent.$index, $index)">X</button>
-} }
-
-<!-- RIGHT -->
-@for (item of items; track item; let outerIdx = $index) { @for (sub of
-item.subs; track sub) {
-<button type="button" (click)="remove(outerIdx, $index)">Remove</button>
-} }
-```
+For a missing `number`, `json`, or `date` pipe, import `DecimalPipe`, `JsonPipe`,
+or `DatePipe` from `@angular/common` and add it to the declaring component's
+`imports`. Keep formatting in the template rather than replacing pipes with
+ad hoc string formatting.
