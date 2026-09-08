@@ -14,6 +14,11 @@ allowBuilds:
   simple-git-hooks: true
 autoInstallPeers: true
 catalogMode: 'prefer'
+# pnpm 11 defaults this to `install`, which runs an implicit `pnpm install`
+# before commands such as `pnpm nx ...`. That is unsafe in git worktrees where
+# `node_modules` may be symlinked to the main checkout, and CI should use the
+# explicit install step instead of command-time dependency repair.
+verifyDepsBeforeRun: false
 catalogs:
   analogjs:
     '@analogjs/vite-plugin-angular': '2.7.1'

@@ -18,7 +18,7 @@ async function fixture(t, files) {
   return root;
 }
 
-test('accepts a self-contained guide graph, remote docs, and repeated headings', async (t) => {
+void test('accepts a self-contained guide graph, remote docs, and repeated headings', async (t) => {
   const root = await fixture(t, {
     'SKILL.md':
       header +
@@ -29,7 +29,7 @@ test('accepts a self-contained guide graph, remote docs, and repeated headings',
   assert.deepEqual(await checkSkillPackage(root), []);
 });
 
-test('rejects sibling skills and repository-relative links', async (t) => {
+void test('rejects sibling skills and repository-relative links', async (t) => {
   const root = await fixture(t, {
     'SKILL.md':
       header +
@@ -42,7 +42,7 @@ test('rejects sibling skills and repository-relative links', async (t) => {
   );
 });
 
-test('rejects broken files, anchors, and orphan guides', async (t) => {
+void test('rejects broken files, anchors, and orphan guides', async (t) => {
   const root = await fixture(t, {
     'SKILL.md': header + '[Missing](missing.md)\n[Anchor](guide.md#missing)',
     'guide.md': '# Guide\n',
@@ -56,7 +56,7 @@ test('rejects broken files, anchors, and orphan guides', async (t) => {
   );
 });
 
-test('rejects nested installable skills and missing root metadata', async (t) => {
+void test('rejects nested installable skills and missing root metadata', async (t) => {
   const root = await fixture(t, {
     'SKILL.md': '# Toolkit\n[Child](core/SKILL.md)',
     'core/SKILL.md': header,
@@ -66,7 +66,7 @@ test('rejects nested installable skills and missing root metadata', async (t) =>
   assert.ok(errors.some((error) => error.startsWith('Nested skill:')));
 });
 
-test('rejects symlink dependencies and machine-specific paths', async (t) => {
+void test('rejects symlink dependencies and machine-specific paths', async (t) => {
   const root = await fixture(t, {
     'SKILL.md': header + 'Read /Users/example/private/guide.md',
   });
@@ -76,7 +76,7 @@ test('rejects symlink dependencies and machine-specific paths', async (t) => {
   assert.ok(errors.some((error) => error.startsWith('Machine path:')));
 });
 
-test('checks reference-style links and explicit HTML anchors', async (t) => {
+void test('checks reference-style links and explicit HTML anchors', async (t) => {
   const root = await fixture(t, {
     'SKILL.md': header + '[Guide][g]\n\n[g]: guide.md#custom\n',
     'guide.md': '# Guide\n<a id="custom"></a>\n',
