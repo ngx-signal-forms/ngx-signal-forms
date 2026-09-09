@@ -249,6 +249,14 @@ describe('secondary entry point configuration', () => {
   );
 });
 
+describe('form-field entry point surface', () => {
+  it('re-exports NgxFieldIdentityProvider used by wrapper hostDirectives', () => {
+    const formFieldEntryFile = readEntryFile(resolve(toolkitDir, 'form-field'));
+    const exportedNames = collectExportedNames(formFieldEntryFile);
+    expect(exportedNames.has('NgxFieldIdentityProvider')).toBe(true);
+  });
+});
+
 describe('COMPATIBILITY.md', () => {
   it('documents the same engines.node range as package.json', () => {
     const compatibilityMd = readFileSync(
