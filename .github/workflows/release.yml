@@ -260,15 +260,34 @@ jobs:
           fi
 
       - name: Preview Release Changelog
+        # This dry run is also the release pre-flight. It runs the changelog
+        # renderer, which requires `docs/migrations/v<version>.md`, before the
+        # real Release step binds the push token or writes a version. A failed
+        # dry run fails the job here with the renderer's own message, instead
+        # of failing later inside the real release with a partial log.
         run: |
           echo "## 📋 Release Preview" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "Running: \`nx release ${{ steps.version_cmd.outputs.cmd }} --skip-publish --dry-run ${{ steps.first_release_flag.outputs.flag }}\`" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          pnpm exec nx release ${{ steps.version_cmd.outputs.cmd }} --skip-publish --dry-run ${{ steps.first_release_flag.outputs.flag }} > /tmp/release-preview.txt 2>&1 || true
+          set +e
+          pnpm exec nx release ${{ steps.version_cmd.outputs.cmd }} --skip-publish --dry-run ${{ steps.first_release_flag.outputs.flag }} > /tmp/release-preview.txt 2>&1
+          STATUS=$?
+          set -e
           echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
-          head -100 /tmp/release-preview.txt >> $GITHUB_STEP_SUMMARY
+          head -n 100 /tmp/release-preview.txt >> $GITHUB_STEP_SUMMARY
           echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+
+          if [ "$STATUS" -ne 0 ]; then
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "❌ Release dry run failed with exit code $STATUS. Last lines:" >> $GITHUB_STEP_SUMMARY
+            echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+            tail -n 20 /tmp/release-preview.txt >> $GITHUB_STEP_SUMMARY
+            echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+            echo "❌ Release dry run failed with exit code $STATUS. The real release did not start." >&2
+            tail -n 20 /tmp/release-preview.txt >&2
+            exit "$STATUS"
+          fi
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 

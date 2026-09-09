@@ -55,6 +55,14 @@ jobs:
           path: ~/.cache/ms-playwright
           key: playwright-all-${{ runner.os }}-${{ hashFiles('**/pnpm-lock.yaml') }}
 
+      # The runner image ships Google's Chrome apt source. Playwright installs
+      # its own browsers and only needs Ubuntu's archives for system libraries,
+      # so drop the source before `install-deps` runs `apt-get update`. That
+      # third-party mirror has served a mismatched package index and broken
+      # every CI job that touched apt.
+      - name: Drop the Google Chrome apt source
+        run: sudo rm -f /etc/apt/sources.list.d/google-chrome.list /etc/apt/sources.list.d/google-chrome.sources
+
       - name: Install Playwright browsers
         run: pnpm exec playwright install --with-deps
         if: steps.playwright-cache.outputs.cache-hit != 'true'
@@ -183,6 +191,14 @@ jobs:
           path: ~/.cache/ms-playwright
           key: playwright-chromium-${{ runner.os }}-${{ hashFiles('**/pnpm-lock.yaml') }}
 
+      # The runner image ships Google's Chrome apt source. Playwright installs
+      # its own browsers and only needs Ubuntu's archives for system libraries,
+      # so drop the source before `install-deps` runs `apt-get update`. That
+      # third-party mirror has served a mismatched package index and broken
+      # every CI job that touched apt.
+      - name: Drop the Google Chrome apt source
+        run: sudo rm -f /etc/apt/sources.list.d/google-chrome.list /etc/apt/sources.list.d/google-chrome.sources
+
       - name: Install Playwright browsers
         run: pnpm exec playwright install --with-deps chromium
         if: steps.playwright-cache.outputs.cache-hit != 'true'
@@ -295,6 +311,14 @@ jobs:
         with:
           path: ~/.cache/ms-playwright
           key: playwright-chromium-firefox-${{ runner.os }}-${{ hashFiles('**/pnpm-lock.yaml') }}
+
+      # The runner image ships Google's Chrome apt source. Playwright installs
+      # its own browsers and only needs Ubuntu's archives for system libraries,
+      # so drop the source before `install-deps` runs `apt-get update`. That
+      # third-party mirror has served a mismatched package index and broken
+      # every CI job that touched apt.
+      - name: Drop the Google Chrome apt source
+        run: sudo rm -f /etc/apt/sources.list.d/google-chrome.list /etc/apt/sources.list.d/google-chrome.sources
 
       - name: Install Playwright browsers
         run: pnpm exec playwright install --with-deps chromium firefox
