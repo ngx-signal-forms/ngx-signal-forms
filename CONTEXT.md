@@ -68,20 +68,26 @@ ngx-signal-forms — an Angular toolkit for working with Signal Forms.
   API: its name and default are stable and a default change is a breaking
   change. Gap tokens are named for the layout area they belong to, never for
   the CSS property that implements them (`selection-group-gap`, not
-  `selection-group-column-gap`).
+  `selection-group-column-gap`). A property in the namespace that the theming
+  guide labels an internal coordination hook (for example
+  `--ngx-form-field-hint-display`) is not a public token.
 - **Private token** — a CSS custom property with the `--_` prefix. It is an
   implementation detail; consumers must not override it, and a public token
   is the only supported way to reach a value it carries.
-- **Selection row** — the wrapper-owned layout of one checkbox or switch and
-  its label. Synonym to avoid: "inline control row".
+- **Selection row** — the wrapper-owned layout of one single checkbox or
+  switch and its label. It does not apply to radios: a radio is always part
+  of a selection group. Synonym to avoid: "inline control row".
 - **Selection group** — the wrapper's surface for grouped radios or
-  checkboxes. The wrapper owns the surface and the gap between options; the
-  markup and spacing inside each option row are consumer-owned. Synonyms to
-  avoid: "selection cluster" (internal class name), "radio list".
-- **Container-owned spacing** — the rule that a form field contributes no
-  outer margin of its own; the space between fields belongs to the parent
-  layout (`gap`, grid, flex). A field owns only its inner rhythm, including
-  the assistive-row reservation. Synonym to avoid: "field margin".
+  checkboxes. The wrapper owns the surface and the gap between options. Each
+  option row, including the gap between its control and its label, is
+  consumer-owned markup. Synonyms to avoid: "selection cluster" (internal
+  class name), "radio list".
+- **Container-owned spacing** — the ownership rule for the space between
+  fields: it belongs to the parent layout (`gap`, grid, flex), not to the
+  field. A field owns only its inner rhythm, including the assistive-row
+  reservation. The public token `--ngx-form-field-margin` is the opt-in for a
+  field-owned outer margin; its default is `0` from RC.15. Synonym to avoid:
+  "field margin".
 
 ## Key concepts
 
