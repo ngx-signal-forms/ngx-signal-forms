@@ -47,7 +47,7 @@ const MAX_SUMMARY_ITEMS_PER_AREA = 2;
  * only, so the others leak into the release notes.
  */
 const BREAKING_CHANGE_TRAILER_LINE =
-  /^(?:(?:closes?|fix(?:es)?|resolves?|refs?|related|see)\s+(?:#|https?:\/\/)|[A-Z][A-Za-z]*(?:-[A-Za-z]+)+:\s)/iu;
+  /^(?:(?:closes?|fix(?:es)?|resolves?|refs?):?\s+(?:#|https?:\/\/)|[A-Z][A-Za-z]*(?:-[A-Za-z]+)+:\s)/iu;
 
 function isBreakingChangeTrailer(line: string): boolean {
   return BREAKING_CHANGE_TRAILER_LINE.test(line.trim());
@@ -118,9 +118,7 @@ export default class ProjectChangelogRenderer extends DefaultChangelogRenderer {
     }
 
     const lines = explanation.split('\n');
-    const firstTrailer = lines.findIndex(
-      (line, index) => index > 0 && isBreakingChangeTrailer(line),
-    );
+    const firstTrailer = lines.findIndex(isBreakingChangeTrailer);
     const kept = firstTrailer === -1 ? lines : lines.slice(0, firstTrailer);
     const trimmed = kept.join('\n').trim();
     return trimmed.length > 0 ? trimmed : null;
