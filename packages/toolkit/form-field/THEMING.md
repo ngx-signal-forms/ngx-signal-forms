@@ -610,6 +610,7 @@ The form field wrapper supports three appearance modes via the `appearance` inpu
 
 - Keeps wrapper semantics, labels, hints, and errors
 - Removes border and background chrome from the field container
+- Uses `--ngx-form-field-label-*` properties (same token set as standard)
 - Best for custom controls that draw their own focus or visual treatment
 
 ```html
@@ -648,7 +649,7 @@ The form field wrapper supports three appearance modes via the `appearance` inpu
 
 If the semantic colors aren't enough, you can override specific parts of the component.
 
-> **Layout-Specific Properties:** Properties prefixed with `--ngx-form-field-outline-*` only apply when `appearance="outline"`. Standard layout uses the non-prefixed variants (e.g., `--ngx-form-field-label-*` vs `--ngx-form-field-outline-label-*`).
+> **Layout-Specific Properties:** Properties prefixed with `--ngx-form-field-outline-*` only apply when `appearance="outline"`. Standard and plain layouts use the non-prefixed variants (e.g., `--ngx-form-field-label-*` vs `--ngx-form-field-outline-label-*`).
 >
 > The older `--ngx-form-field-outline-label-font-size` and `--ngx-form-field-outline-input-font-size` names still resolve as legacy aliases for the corresponding `-size` tokens. Prefer the `-size` names in new code.
 
@@ -724,7 +725,7 @@ relied on that.
 | `--ngx-form-field-prefix-color` | `var(--ngx-form-field-color-text-secondary)` | Prefix color                |
 | `--ngx-form-field-suffix-color` | `var(--ngx-form-field-color-text-secondary)` | Suffix color                |
 
-#### Labels (Standard Layout)
+#### Labels (Standard and Plain Layout)
 
 Known token limits: `--ngx-form-field-prefix-gap` has no active CSS consumer.
 Inline error padding is fixed to zero, so the declared
@@ -732,7 +733,7 @@ Inline error padding is fixed to zero, so the declared
 effect there. These names are not reliable customization controls in the
 current source; no runtime token behavior was changed by this guide.
 
-**Only applies when `appearance="standard"` (default).**
+**Applies when `appearance="standard"` (default) and `appearance="plain"`.**
 
 | Property                               | Default                                      | Description         |
 | :------------------------------------- | :------------------------------------------- | :------------------ |
@@ -983,6 +984,16 @@ above the 24px AA floor by default, that comes from the selection-cluster's
 own padding token, not from this touch-target contract; a consumer building
 a custom radio-group layout owns its row sizing directly, the same way the
 demo's own grouped-radio composition does.
+
+**Label tokens and the legend ownership boundary.** The wrapper's label
+slot (`ng-content select="label, [ngxFormFieldLabel]"`) accepts `<label>`
+and `[ngxFormFieldLabel]` elements. A bare `<legend>` does not match that
+selector, so it falls through to the default content slot — not the label
+div. `--ngx-form-field-label-*` and `--ngx-form-field-outline-label-*`
+tokens do not reach a projected `<legend>` element. A consumer who wants
+the legend to inherit the wrapper's label typography should apply those
+tokens at the app level or use `[ngxFormFieldLabel]` on the legend
+explicitly.
 
 ```css
 .compact-form {
