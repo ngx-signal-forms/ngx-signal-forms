@@ -118,7 +118,9 @@ export default class ProjectChangelogRenderer extends DefaultChangelogRenderer {
     }
 
     const lines = explanation.split('\n');
-    const firstTrailer = lines.findIndex(isBreakingChangeTrailer);
+    const firstTrailer = lines.findIndex((line) =>
+      isBreakingChangeTrailer(line),
+    );
     const kept = firstTrailer === -1 ? lines : lines.slice(0, firstTrailer);
     const trimmed = kept.join('\n').trim();
     return trimmed.length > 0 ? trimmed : null;
