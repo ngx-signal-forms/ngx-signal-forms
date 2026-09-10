@@ -10,6 +10,18 @@ import { render } from '@testing-library/angular';
 import { describe, expect, it } from 'vitest';
 import { NgxFormFieldWrapper } from '../../form-field/form-field-wrapper';
 
+/** Fail fast with a clear message when a fixture element is missing. */
+function requireElement<T extends Element>(
+  root: ParentNode,
+  selector: string,
+): T {
+  const element = root.querySelector<T>(selector);
+  if (!element) {
+    throw new Error(`Fixture is missing "${selector}"`);
+  }
+  return element;
+}
+
 /**
  * Regression coverage for issue #472: a native checkbox or radio infers a
  * wrapper kind (`checkbox` / `radio-group`), but auto-ARIA eligibility is a
@@ -55,8 +67,7 @@ describe('NgxSignalFormAutoAria — native checkbox/radio inference vs. eligibil
     fixture.componentInstance.testForm.agree().markAsTouched();
     await TestBed.inject(ApplicationRef).whenStable();
 
-    const input = container.querySelector<HTMLInputElement>('#agree');
-    expect(input).not.toBeNull();
+    const input = requireElement<HTMLInputElement>(container, '#agree');
     expect(fixture.componentInstance.testForm.agree().invalid()).toBe(true);
     expect(inferNgxSignalFormControlKind(input)).toBe('checkbox');
 
@@ -94,8 +105,7 @@ describe('NgxSignalFormAutoAria — native checkbox/radio inference vs. eligibil
     fixture.componentInstance.testForm.emailUpdates().markAsTouched();
     await TestBed.inject(ApplicationRef).whenStable();
 
-    const input = container.querySelector<HTMLInputElement>('#emailUpdates');
-    expect(input).not.toBeNull();
+    const input = requireElement<HTMLInputElement>(container, '#emailUpdates');
     expect(fixture.componentInstance.testForm.emailUpdates().invalid()).toBe(
       true,
     );
@@ -151,12 +161,14 @@ describe('NgxSignalFormAutoAria — native checkbox/radio inference vs. eligibil
     fixture.componentInstance.testForm.delivery().markAsTouched();
     await TestBed.inject(ApplicationRef).whenStable();
 
-    const standard =
-      container.querySelector<HTMLInputElement>('#delivery-standard');
-    const express =
-      container.querySelector<HTMLInputElement>('#delivery-express');
-    expect(standard).not.toBeNull();
-    expect(express).not.toBeNull();
+    const standard = requireElement<HTMLInputElement>(
+      container,
+      '#delivery-standard',
+    );
+    const express = requireElement<HTMLInputElement>(
+      container,
+      '#delivery-express',
+    );
     expect(fixture.componentInstance.testForm.delivery().invalid()).toBe(true);
     expect(inferNgxSignalFormControlKind(standard)).toBe('radio-group');
     expect(inferNgxSignalFormControlKind(express)).toBe('radio-group');
@@ -197,8 +209,7 @@ describe('NgxSignalFormAutoAria — native checkbox/radio inference vs. eligibil
     fixture.componentInstance.testForm.terms().markAsTouched();
     await TestBed.inject(ApplicationRef).whenStable();
 
-    const input = container.querySelector<HTMLInputElement>('#terms');
-    expect(input).not.toBeNull();
+    const input = requireElement<HTMLInputElement>(container, '#terms');
     expect(fixture.componentInstance.testForm.terms().invalid()).toBe(true);
     expect(input).toHaveAttribute(
       'data-ngx-signal-form-control-kind',
@@ -260,11 +271,18 @@ describe('NgxSignalFormAutoAria — native checkbox/radio inference vs. eligibil
     fixture.componentInstance.testForm.delivery().markAsTouched();
     await TestBed.inject(ApplicationRef).whenStable();
 
-    const wrapper = container.querySelector('ngx-form-field-wrapper');
-    const standard =
-      container.querySelector<HTMLInputElement>('#delivery-standard');
-    const express =
-      container.querySelector<HTMLInputElement>('#delivery-express');
+    const wrapper = requireElement<HTMLElement>(
+      container,
+      'ngx-form-field-wrapper',
+    );
+    const standard = requireElement<HTMLInputElement>(
+      container,
+      '#delivery-standard',
+    );
+    const express = requireElement<HTMLInputElement>(
+      container,
+      '#delivery-express',
+    );
 
     expect(fixture.componentInstance.testForm.delivery().invalid()).toBe(true);
 
