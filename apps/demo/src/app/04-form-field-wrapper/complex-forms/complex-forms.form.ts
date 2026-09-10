@@ -75,17 +75,24 @@ function createInitialComplexFormModel(): ComplexFormModel {
     }
 
     .complex-form-fieldset {
-      --ngx-signal-form-fieldset-gap: 0;
+      /* #471: the fieldset's own gap owns the rhythm between its fields now
+         that the field margin defaults to 0. */
       --ngx-signal-form-fieldset-padding: 0;
       --ngx-signal-form-fieldset-border-width: 0;
       --ngx-signal-form-fieldset-content-offset: 0.5rem;
     }
 
     .complex-array-fieldset {
+      /* The array rows own their own spacing via the
+         .array-entry-grid + .array-entry-grid rule below, not the
+         fieldset gap. */
       --ngx-signal-form-fieldset-gap: 0;
     }
 
     .complex-form-fieldset--credentials-summary {
+      /* The intro paragraph and fields grid here sit close together by
+         design, unrelated to #471. */
+      --ngx-signal-form-fieldset-gap: 0;
       --ngx-signal-form-fieldset-content-offset: 0;
       --ngx-signal-form-fieldset-message-inset-inline-start: 0.875rem;
       --ngx-signal-form-fieldset-message-padding-inline-start: 0;

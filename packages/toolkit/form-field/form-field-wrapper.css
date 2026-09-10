@@ -237,11 +237,12 @@
 :host {
   /* Layout */
   --_gap: var(--ngx-form-field-gap, var(--_field-space-3xs));
-  /* Default bottom rhythm so a column of stacked fields breathes without the
-     consumer having to add a container gap. Override with
-     `--ngx-form-field-margin` (e.g. set to 0 when a grid/flex `gap` already
-     owns the spacing between fields). */
-  --_margin-bottom: var(--ngx-form-field-margin, 1rem);
+  /* Container-owned spacing (see CONTEXT.md): the wrapper contributes no
+     outer margin of its own by default. The space between fields belongs to
+     the parent layout (`gap` on a grid or flex container). Consumers who
+     want the wrapper to own that space opt in with `--ngx-form-field-margin`
+     at whatever scope they choose. */
+  --_margin-bottom: var(--ngx-form-field-margin, 0);
 
   /* Prefix/Suffix */
   --_prefix-gap: var(--ngx-form-field-prefix-gap, var(--_field-space-md));

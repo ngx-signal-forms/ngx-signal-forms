@@ -82,6 +82,16 @@ import { labellessFieldsSchema } from './labelless-fields.validations';
        area -- rather than only the bordered content box, so long error text
        wraps into a narrower column instead of staying on one full-width
        line. */
+    /* Container-owned spacing (#471): these three fields used to get their
+       vertical rhythm "for free" from the field wrapper's own default
+       margin. Now that the wrapper's margin defaults to 0, this stack
+       supplies the gap itself. */
+    .narrow-inputs-stack {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
     .narrow-age ngx-form-field-wrapper,
     .narrow-zip ngx-form-field-wrapper {
       inline-size: fit-content;
