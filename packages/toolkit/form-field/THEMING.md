@@ -14,7 +14,7 @@ A comprehensive guide to styling `@ngx-signal-forms/toolkit` components using st
   [Assistive row](#assistive-row) · [Fieldset](#fieldset)
 - [3. Form field component](#3-form-field-component) —
   [Layout modes](#layout-modes-standard-outline-and-plain) · [Semantic color scale](#semantic-color-scale-the-knobs) ·
-  [Specific overrides](#specific-overrides) · [States & focus](#states--focus) ·
+  [Specific overrides](#specific-overrides) · [Container-owned spacing](#container-owned-spacing) · [States & focus](#states--focus) ·
   [Horizontal layout](#horizontal-layout) · [Selection groups](#wrapper-selection-groups) ·
   [Selection target size](#selection-target-size)
 - [4. Recipes & common scenarios](#4-recipes--common-scenarios)
@@ -656,15 +656,63 @@ If the semantic colors aren't enough, you can override specific parts of the com
 
 **Applies to both standard and outline layouts.**
 
-| Property                              | Default                                                                           | Description                                                                                                    |
-| :------------------------------------ | :-------------------------------------------------------------------------------- | :------------------------------------------------------------------------------------------------------------- |
-| `--ngx-form-field-padding-vertical`   | `0.25rem`                                                                         | Vertical padding inside the border                                                                             |
-| `--ngx-form-field-padding-horizontal` | `0.5rem`                                                                          | Horizontal padding inside the border                                                                           |
-| `--ngx-form-field-input-padding`      | `var(--ngx-form-field-padding-vertical) var(--ngx-form-field-padding-horizontal)` | Combined input padding                                                                                         |
-| `--ngx-form-field-radius`             | `0.25rem`                                                                         | Border radius                                                                                                  |
-| `--ngx-form-field-min-height`         | derived (`2.75rem` by default)                                                    | Minimum height of the outlined container: label line-height + label gap + input line-height + vertical padding |
-| `--ngx-form-field-gap`                | `0.125rem`                                                                        | Gap between label and input                                                                                    |
-| `--ngx-form-field-margin`             | `1rem`                                                                            | Bottom margin for field wrapper (set to `0` when a grid/flex `gap` already spaces fields)                      |
+| Property                              | Default                                                                           | Description                                                                                                                                                               |
+| :------------------------------------ | :-------------------------------------------------------------------------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `--ngx-form-field-padding-vertical`   | `0.25rem`                                                                         | Vertical padding inside the border                                                                                                                                        |
+| `--ngx-form-field-padding-horizontal` | `0.5rem`                                                                          | Horizontal padding inside the border                                                                                                                                      |
+| `--ngx-form-field-input-padding`      | `var(--ngx-form-field-padding-vertical) var(--ngx-form-field-padding-horizontal)` | Combined input padding                                                                                                                                                    |
+| `--ngx-form-field-radius`             | `0.25rem`                                                                         | Border radius                                                                                                                                                             |
+| `--ngx-form-field-min-height`         | derived (`2.75rem` by default)                                                    | Minimum height of the outlined container: label line-height + label gap + input line-height + vertical padding                                                            |
+| `--ngx-form-field-gap`                | `0.125rem`                                                                        | Gap between label and input                                                                                                                                               |
+| `--ngx-form-field-margin`             | `0`                                                                               | Bottom margin for field wrapper. `0` by default — [container-owned spacing](#container-owned-spacing) — set to a length to opt the wrapper back into its own outer margin |
+
+#### Container-owned spacing
+
+A field wrapper contributes no outer margin of its own by default. The space
+between fields belongs to the parent layout — a grid or flex container's
+`gap` — not to the field. A field still owns its own inner rhythm, including
+the [assistive row](#assistive-row) reservation for hints, errors, and
+warnings; only the space _between_ fields is container-owned.
+
+Give the parent a `gap` instead of relying on the wrapper's margin:
+
+```css
+.form-grid {
+  display: grid;
+  gap: 1rem;
+}
+```
+
+```html
+<form class="form-grid">
+  <ngx-form-field-wrapper [formField]="form.first">
+    <label for="first">First</label>
+    <input id="first" [formField]="form.first" />
+  </ngx-form-field-wrapper>
+
+  <ngx-form-field-wrapper [formField]="form.second">
+    <label for="second">Second</label>
+    <input id="second" [formField]="form.second" />
+  </ngx-form-field-wrapper>
+</form>
+```
+
+The same recipe works with `display: flex; flex-direction: column; gap: 1rem`.
+
+If a layout has no `gap` of its own — a bare column of stacked fields with no
+grid or flex parent — opt the wrapper back into its own margin instead:
+
+```css
+.compact-form ngx-form-field-wrapper {
+  --ngx-form-field-margin: 1rem;
+}
+```
+
+Before rc.15, `--ngx-form-field-margin` defaulted to `1rem`, so a form that
+set no `gap` still got spacing "for free" from the wrapper, including a
+trailing margin after the last field. See the
+[rc.15 migration guide](../../../docs/migrations/v1.0.0-rc.15.md) if you
+relied on that.
 
 #### Prefix & Suffix
 

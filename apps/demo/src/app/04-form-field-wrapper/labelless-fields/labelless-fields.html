@@ -142,54 +142,56 @@
   <section class="labelless-section" data-section="narrow-inputs">
     <h3>5. Narrow inputs (error text exceeds input width)</h3>
 
-    <div class="narrow-age">
-      <ngx-form-field-wrapper
-        [appearance]="appearance()"
-        [orientation]="orientation()"
-        [formField]="labellessForm.age"
-      >
-        <input
-          id="age"
-          type="number"
-          aria-label="Age (must be 18–120)"
-          placeholder="Age"
+    <div class="narrow-inputs-stack">
+      <div class="narrow-age">
+        <ngx-form-field-wrapper
+          [appearance]="appearance()"
+          [orientation]="orientation()"
           [formField]="labellessForm.age"
-        />
-      </ngx-form-field-wrapper>
-    </div>
+        >
+          <input
+            id="age"
+            type="number"
+            aria-label="Age (must be 18–120)"
+            placeholder="Age"
+            [formField]="labellessForm.age"
+          />
+        </ngx-form-field-wrapper>
+      </div>
 
-    <div class="narrow-zip">
-      <ngx-form-field-wrapper
-        [appearance]="appearance()"
-        [orientation]="orientation()"
-        [formField]="labellessForm.zipCode"
-      >
-        <input
-          id="zipCode"
-          type="text"
-          aria-label="Zip code"
-          placeholder="Zip"
+      <div class="narrow-zip">
+        <ngx-form-field-wrapper
+          [appearance]="appearance()"
+          [orientation]="orientation()"
           [formField]="labellessForm.zipCode"
-        />
-      </ngx-form-field-wrapper>
-    </div>
+        >
+          <input
+            id="zipCode"
+            type="text"
+            aria-label="Zip code"
+            placeholder="Zip"
+            [formField]="labellessForm.zipCode"
+          />
+        </ngx-form-field-wrapper>
+      </div>
 
-    <div>
-      <ngx-form-field-wrapper
-        [appearance]="appearance()"
-        [orientation]="orientation()"
-        [formField]="labellessForm.otp"
-      >
-        <input
-          id="otp"
-          type="text"
-          inputmode="numeric"
-          autocomplete="one-time-code"
-          aria-label="One-time passcode"
-          placeholder="One-time passcode"
+      <div>
+        <ngx-form-field-wrapper
+          [appearance]="appearance()"
+          [orientation]="orientation()"
           [formField]="labellessForm.otp"
-        />
-      </ngx-form-field-wrapper>
+        >
+          <input
+            id="otp"
+            type="text"
+            inputmode="numeric"
+            autocomplete="one-time-code"
+            aria-label="One-time passcode"
+            placeholder="One-time passcode"
+            [formField]="labellessForm.otp"
+          />
+        </ngx-form-field-wrapper>
+      </div>
     </div>
   </section>
 
