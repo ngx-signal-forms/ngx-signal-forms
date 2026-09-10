@@ -40,6 +40,19 @@ const AREA_ORDER: Area[] = ['toolkit', 'demo', 'shared', 'other'];
 const PRIMARY_TYPE_ORDER = ['feat', 'fix', 'refactor', 'docs'];
 const MAX_SUMMARY_ITEMS_PER_AREA = 2;
 
+/**
+ * A squash-merged PR body ends its `BREAKING CHANGE:` note with git-style
+ * trailers: issue references (`Closes #471`), `Co-authored-by:`, and
+ * hyphenated keys such as `Claude-Session:`. Nx stops at `Co-authored-by:`
+ * only, so the others leak into the release notes.
+ */
+const BREAKING_CHANGE_TRAILER_LINE =
+  /^(?:(?:closes?|fix(?:es)?|resolves?|refs?):?\s+(?:#|https?:\/\/)|[A-Z][A-Za-z]*(?:-[A-Za-z]+)+:\s)/iu;
+
+function isBreakingChangeTrailer(line: string): boolean {
+  return BREAKING_CHANGE_TRAILER_LINE.test(line.trim());
+}
+
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null;
 }
@@ -94,6 +107,23 @@ export default class ProjectChangelogRenderer extends DefaultChangelogRenderer {
       .map((section) => section.join('\n').trim())
       .join('\n\n')
       .trim();
+  }
+
+  protected override extractBreakingChangeExplanation(
+    message: string,
+  ): string | null {
+    const explanation = super.extractBreakingChangeExplanation(message);
+    if (explanation === null) {
+      return null;
+    }
+
+    const lines = explanation.split('\n');
+    const firstTrailer = lines.findIndex((line) =>
+      isBreakingChangeTrailer(line),
+    );
+    const kept = firstTrailer === -1 ? lines : lines.slice(0, firstTrailer);
+    const trimmed = kept.join('\n').trim();
+    return trimmed.length > 0 ? trimmed : null;
   }
 
   private renderHighlights(): string[] {
