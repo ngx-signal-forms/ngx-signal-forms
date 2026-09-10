@@ -12,6 +12,7 @@ Angular Signal Forms replaces the legacy `ControlValueAccessor` boilerplate with
 - `FormValueControl` interface — lightweight contract exposing value/touched signals in place of CVA.
 - `NgxFormField` wrapper — automatic label/error/hint linkage for custom components.
 - Field-shaped `input-like` — Angular Aria combobox infers this from inner `role="combobox"`; closed select sets `ngxSignalFormControl="input-like"` on the host. Both inherit `--ngx-form-field-input-*` / outline aliases / `--ngx-form-field-placeholder-color`.
+- `MockAutocompleteComponent` (Country) — a minimal mocked autocomplete binding `[formField]` to its own inner `role="combobox"` input, next to the Angular Aria combobox example. Demonstrates the padding-ownership recipe: a `[prefix]` icon and a `[suffix]` clear button contributed by the consuming template, and a popup anchored to the field shell's border rather than the padded input area. See [docs/CUSTOM_CONTROLS.md](../../../../../../docs/CUSTOM_CONTROLS.md#padding-ownership-recipe-for-field-shaped-autocomplete-adapters).
 - `ngxSignalFormControl="switch"` — native checkbox switch semantics (inline row layout).
 - `ngxSignalFormControl="checkbox"` — opt-in checkbox semantics for a standard checkbox.
 - `ngxSignalFormControl="slider"` — custom slider with `layout: 'custom'` and `ariaMode: 'manual'` so the control owns its own `aria-describedby` chain.
@@ -20,7 +21,7 @@ Angular Signal Forms replaces the legacy `ControlValueAccessor` boilerplate with
 
 ## Form model
 
-- Signal model: `signal<CustomControlsModel>({ productName, framework, frameworkSelect, rating, serviceRating, emailUpdates, shareReviewPublicly, accessibilityAudit })`.
+- Signal model: `signal<CustomControlsModel>({ productName, framework, frameworkSelect, rating, serviceRating, emailUpdates, shareReviewPublicly, accessibilityAudit, country })`.
 - Schema: `form(model, customControlsSchema)`.
 
 ## Validation rules
@@ -35,6 +36,7 @@ Angular Signal Forms replaces the legacy `ControlValueAccessor` boilerplate with
 - Email updates switch — required (must be toggled on).
 - Share-review checkbox — required.
 - Accessibility audit slider — required; min 1.
+- Country — required.
 
 ### Warnings
 
@@ -53,6 +55,7 @@ Angular Signal Forms replaces the legacy `ControlValueAccessor` boilerplate with
 - [custom-controls.html](custom-controls.html) — template with the three control semantics paths.
 - [custom-controls.validations.ts](custom-controls.validations.ts) — schema rules.
 - [custom-controls.legacy-datepicker.spec.ts](custom-controls.legacy-datepicker.spec.ts) — unit coverage for the third-party widget adapter (value round-trip, `parse` errors, composite touched hook, programmatic reset).
+- [mock-autocomplete.ts](mock-autocomplete.ts) — the minimal mocked autocomplete for the padding-ownership recipe.
 - `apps/demo/src/app/shared/controls/rating-control` — reusable star rating implementation.
 - `apps/demo/src/app/shared/controls/legacy-datepicker-widget` — the fake, self-contained "legacy" third-party datepicker widget (its own value/change API; no Signal Forms awareness).
 - `apps/demo/src/app/shared/controls/legacy-datepicker-adapter` — the `FormValueControl<Date | null>` adapter that bridges the widget above; see its class-level doc comment for the full design writeup.
@@ -68,6 +71,7 @@ Angular Signal Forms replaces the legacy `ControlValueAccessor` boilerplate with
 7. Toggle the email-updates switch to observe the inline-row preset applied at the app level.
 8. Type `not-a-date` into Date of Birth and tab out — a `parse` error renders; replace it with a real date to clear it.
 9. Click the 📅 button, pick a day from the popup, then click Reset — confirm the text field clears, proving the value round-trips through the adapter in both directions.
+10. Type into Country to filter the list, use arrow keys and Enter to select an option, or Escape to close the popup without selecting. Click the ✕ suffix button to clear the value — "Choose a country" reappears until a country is picked again.
 
 ## Related
 

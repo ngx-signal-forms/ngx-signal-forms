@@ -40,6 +40,15 @@ export interface CustomControlsModel {
    * `LegacyDatepickerAdapterComponent` for the adapter boundary itself.
    */
   birthDate: Date | null;
+
+  /**
+   * Country, edited through a minimal mocked autocomplete
+   * (`MockAutocompleteComponent`) that binds `[formField]` directly to its
+   * own inner `role="combobox"` input. Demonstrates the padding-ownership
+   * recipe (#475): a `[prefix]` icon, a `[suffix]` clear button, and a
+   * popup anchored to the field shell.
+   */
+  country: string;
 }
 
 /**
@@ -57,4 +66,5 @@ export const initialCustomControlsModel: CustomControlsModel = {
   accessibilityAudit: 0,
   feedback: '',
   birthDate: null,
+  country: '',
 };

@@ -44,6 +44,42 @@
       </ngx-form-field-hint>
     </ngx-form-field-wrapper>
 
+    <!-- Country - minimal mocked autocomplete demonstrating the padding-
+         ownership recipe (#475): a naked role="combobox" trigger, a
+         [prefix] icon, a [suffix] clear button, and a popup anchored to
+         the field shell. Forced to outline here so the recipe's border-
+         anchored popup positioning is always visible; see
+         docs/CUSTOM_CONTROLS.md and THEMING.md, "Padding ownership recipe
+         for field-shaped autocomplete adapters". -->
+    <ngx-form-field-wrapper
+      appearance="outline"
+      [orientation]="orientation()"
+      fieldName="country"
+      [formField]="reviewForm.country"
+    >
+      <label for="country">Country</label>
+      <span prefix aria-hidden="true">🌐</span>
+      <ngx-mock-autocomplete
+        #countryControl
+        inputId="country"
+        placeholder="Search a country"
+        [field]="reviewForm.country"
+      />
+      @if (reviewForm.country().value()) {
+      <button
+        suffix
+        type="button"
+        aria-label="Clear country"
+        (click)="countryControl.clear()"
+      >
+        ✕
+      </button>
+      }
+      <ngx-form-field-hint id="country-hint">
+        Type to filter, then choose a country with the mouse or keyboard.
+      </ngx-form-field-hint>
+    </ngx-form-field-wrapper>
+
     <!-- Framework - Angular Aria select as a separate non-editable control -->
     <ngx-form-field-wrapper
       [appearance]="appearance()"

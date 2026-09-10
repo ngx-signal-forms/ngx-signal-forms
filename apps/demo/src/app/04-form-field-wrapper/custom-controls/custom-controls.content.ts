@@ -32,6 +32,15 @@ export const CUSTOM_CONTROLS_CONTENT: ExampleCardConfig = {
         ],
       },
       {
+        title: 'Padding-ownership recipe (autocomplete)',
+        items: [
+          'Country uses a minimal mocked autocomplete (MockAutocompleteComponent) that binds [formField] to its own inner role="combobox" input',
+          'A [prefix] icon and a [suffix] clear button are contributed by the consuming template, not the control — those slots belong to the wrapper',
+          "The open popup anchors to the field shell's border, not the input's padded area, using the shell's existing position: relative",
+          'See docs/CUSTOM_CONTROLS.md and THEMING.md, "Padding ownership recipe for field-shaped autocomplete adapters" (#475)',
+        ],
+      },
+      {
         title: 'Adapting a third-party widget',
         items: [
           'LegacyDatepickerAdapterComponent implements <code>FormValueControl&lt;Date | null&gt;</code> around a self-contained fake "legacy" datepicker with its own value/change API — no toolkit or Signal Forms knowledge in the widget itself',
@@ -71,6 +80,7 @@ export const CUSTOM_CONTROLS_CONTENT: ExampleCardConfig = {
           '7. Fill <strong>Product Name</strong> and the remaining ratings → the footer flips to "✓ All fields valid"',
           '8. <strong>Date of Birth:</strong> type <code>not-a-date</code> and tab out → a <code>parse</code> error appears; replace it with <code>2026-02-30</code> → a different parse error ("not a real calendar date"); type a real date like <code>1990-05-17</code> → the error clears',
           '9. Click the 📅 button next to Date of Birth, pick a day → the text field updates and the popup closes; click <strong>Reset</strong> → the text field clears back to empty, proving the value change flows back through the adapter in both directions',
+          '10. <strong>Country:</strong> type into the field to filter the list, use the arrow keys and Enter to select an option, or Escape to close the popup → the ✕ suffix button clears the value and "Choose a country" appears until you pick one again',
         ],
       },
       {
