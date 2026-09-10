@@ -30,6 +30,7 @@ import {
   AriaAutocompleteComponent,
   AriaSelectComponent,
 } from '@ngx-signal-forms/demo-shared/ui';
+import { MockAutocompleteComponent } from './mock-autocomplete';
 import { initialCustomControlsModel } from './custom-controls.model';
 import { customControlsSchema } from './custom-controls.validations';
 
@@ -69,6 +70,7 @@ import { customControlsSchema } from './custom-controls.validations';
     AriaAutocompleteComponent,
     AriaSelectComponent,
     LegacyDatepickerAdapterComponent,
+    MockAutocompleteComponent,
     RatingControlComponent,
     SwitchControlComponent,
   ],

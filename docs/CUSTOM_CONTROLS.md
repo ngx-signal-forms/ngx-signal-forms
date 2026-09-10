@@ -335,6 +335,79 @@ For combobox and select behavior, follow the Angular Aria guides:
 To fully disable toolkit ARIA participation on a bespoke host, use
 `ngxSignalFormAutoAriaDisabled` on the control element instead of an `ariaMode` value.
 
+### Padding ownership recipe for field-shaped autocomplete adapters
+
+A field-shaped autocomplete (naked `role="combobox"` trigger, wrapper-owned
+outline) usually needs no extra work: the wrapper already strips the
+trigger's own border and padding and applies its public input tokens (see
+"Inherit public input tokens" above). Use this recipe when the adapter also
+renders a prefix icon, a suffix clear button, or a popup, and needs to state
+clearly who owns which inset — the wrapper (public token) or the adapter
+(private, unconfigurable, or adapter-authored CSS).
+
+1. **The outer field shell.** `--ngx-form-field-padding-horizontal` and
+   `--ngx-form-field-padding-vertical` are public tokens that size the
+   wrapper's bordered container
+   (`.ngx-signal-form-field-wrapper__content`). The wrapper always owns
+   this shell; an adapter never draws its own border or background around
+   the trigger.
+2. **Text, caption, and placeholder.** `--ngx-form-field-input-size`,
+   `--ngx-form-field-input-line-height`, `--ngx-form-field-input-color`,
+   `--ngx-form-field-input-font-family`, `--ngx-form-field-input-weight`
+   (plus the `--ngx-form-field-outline-input-*` aliases in outline
+   appearance) and `--ngx-form-field-placeholder-color` are public
+   tokens. They apply automatically to any element the wrapper infers as
+   `input-like` — a native input, or an inner `role="combobox"` trigger.
+   The adapter's own trigger markup must use `font: inherit` /
+   `line-height: inherit`, never a hardcoded size, so these tokens keep
+   winning.
+3. **When the adapter owns its own inset.** Most field-shaped adapters
+   never need this. Set `--ngx-form-field-padding-horizontal: 0` on the
+   wrapper (scoped with a class, not globally) only when the adapter's own
+   trigger already draws an inset that would otherwise double up with the
+   wrapper's — for example a third-party widget whose trigger cannot have
+   its padding stripped. When you do this, the adapter must apply the
+   equivalent padding itself (matching the wrapper's default), so the
+   caret, prefix, and suffix stay visually aligned. This is a deliberate
+   escape hatch for one adapter, not a rule the toolkit applies
+   automatically to every autocomplete.
+4. **Trigger, affixes, and popup.**
+   - The trigger itself never has its own padding or border on the
+     `input-like` path — the wrapper strips both.
+   - `[prefix]` / `[suffix]` are the adapter's affix slots. Their own
+     spacing is public: `--ngx-form-field-prefix-gap` and
+     `--ngx-form-field-suffix-gap` size the gap **between** multiple
+     affix children (an icon plus a spinner, say); `--ngx-form-field-prefix-color`
+     / `--ngx-form-field-suffix-color` set their text color. The gap
+     **between an affix and the field shell's border** is private and not
+     configurable — an adapter does not own or need to reproduce it.
+   - A popup (the open listbox) belongs to the adapter, not the wrapper.
+     `.ngx-signal-form-field-wrapper__content` is already
+     `position: relative`, so a popup rendered in the wrapper's default
+     slot uses it as a containing block for free. `inset-inline-start: 0`
+     lands on the shell's padding edge — one border-width inside the
+     visible outline — so an adapter that wants the popup's edge to align
+     with the field's visible border sets `inset-inline-start: -1px` (the
+     shell's fixed 1px border), not `0`. This holds under `dir="rtl"`
+     because `inset-inline-start` is a logical property.
+5. **`appearance="plain"` escape hatch.** A widget-shaped control (its own
+   full chrome — border, background, focus ring) should not fight the
+   wrapper's shell at all. Use `appearance="plain"` and let the widget own
+   every inset; none of the tokens above apply. This recipe is for
+   field-shaped controls only — see "Field-shaped vs widget-shaped custom
+   controls" above for that boundary.
+
+**Runnable reference:** the
+[`custom-controls`](../apps/demo/src/app/04-form-field-wrapper/custom-controls)
+page's mocked autocomplete, next to the `role="combobox"` Angular Aria
+example, applies this recipe: a naked trigger, a `[prefix]` icon, a
+`[suffix]` clear button, and a popup anchored to the field shell.
+
+Token tables and the geometry this recipe locks in: see "Padding ownership
+recipe for field-shaped autocomplete adapters" in
+[THEMING.md](../packages/toolkit/form-field/THEMING.md) and
+`packages/toolkit/form-field/form-field-wrapper.autocomplete-padding.browser.spec.ts`.
+
 ### Third-party component libraries
 
 #### Angular Material
