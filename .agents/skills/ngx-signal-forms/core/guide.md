@@ -20,6 +20,32 @@ The toolkit is an enhancement layer, not a replacement. Angular Signal Forms own
 
 3. **Use automatic ARIA by default.** `NgxSignalFormAutoAria`, bundled in `NgxSignalFormToolkit`, handles `aria-invalid`, `aria-required`, and `aria-describedby` for native input-like controls, custom `[formField]` hosts, and checkbox switches with `role="switch"`. Standard checkboxes and radios are excluded by default; explicit `ngxSignalFormControl` semantics opt them in. A control that owns these attributes must explicitly select `ngxSignalFormControlAria="manual"` or `ariaMode: 'manual'` through semantics or presets. Headless markup alone does not disable auto-ARIA.
 
+   **Inferred control kind and auto-ARIA eligibility are two decisions.**
+   Control-kind inference answers "which wrapper layout does this control
+   get". Auto-ARIA eligibility answers "does the toolkit own
+   `aria-invalid`, `aria-required`, and `aria-describedby` on this host".
+   The two do not always agree:
+
+   | Markup                                                      | Inferred kind                               | Auto-ARIA default      | How to opt in                                                                       |
+   | ----------------------------------------------------------- | ------------------------------------------- | ---------------------- | ----------------------------------------------------------------------------------- |
+   | `input[type="checkbox"]`                                    | `checkbox`                                  | Not eligible           | Add `ngxSignalFormControl="checkbox"`                                               |
+   | `input[type="checkbox"][role="switch"]`                     | `switch`                                    | Eligible automatically | None — works out of the box                                                         |
+   | `input[type="radio"]`                                       | `radio-group`                               | Not eligible           | Add `ngxSignalFormControl="radio-group"`                                            |
+   | `[role="combobox"]` element with a stable `id`              | `input-like`                                | Eligible automatically | None — works out of the box                                                         |
+   | Plain `input` / `select` / `textarea`                       | `input-like` / `standalone-field-like`      | Eligible automatically | None — works out of the box                                                         |
+   | Custom `[formField]` host (not `input`/`textarea`/`select`) | inferred from shape, or none until declared | Eligible automatically | Opt out with `ngxSignalFormAutoAriaDisabled` or `ngxSignalFormControlAria="manual"` |
+
+   A native checkbox or radio infers a wrapper kind (`checkbox` /
+   `radio-group`). It is **not** auto-ARIA eligible by default. In a
+   selection group, `ngx-form-field-wrapper` owns `role`, `aria-labelledby`,
+   `aria-describedby`, and `aria-required` on the group container. Writing
+   those same attributes on each grouped input would duplicate or
+   contradict the group-level values. A checkbox with `role="switch"` is
+   always a single control. It never joins a group, so it is eligible
+   automatically. `ariaMode` in a control preset only applies once a host
+   is already auto-ARIA eligible. It does not itself grant eligibility. See
+   [ADR-0001](https://github.com/ngx-signal-forms/ngx-signal-forms/blob/main/docs/decisions/0001-control-semantics-architecture.md#auto-aria-eligibility-boundary).
+
 4. **Remember that standalone imports are template-local.** Importing `NgxSignalFormToolkit` in a parent form component does not make `NgxSignalFormAutoAria` available inside a child component's template. If a custom control renders the actual `<input [formField]>` itself, import the toolkit bundle or the directive in that child component.
 
 5. **Declare control semantics for controls outside the default native field families.** `NgxSignalFormControlSemanticsDirective` (the directive class — included in `NgxSignalFormToolkit`; the suffix-less `NgxSignalFormControlSemantics` name is the matching public _interface_ in `core/types.ts`) writes stable `data-ngx-signal-form-control-*` attributes the wrapper and auto-ARIA use to pick correct layout and ARIA behavior instead of guessing from DOM heuristics.

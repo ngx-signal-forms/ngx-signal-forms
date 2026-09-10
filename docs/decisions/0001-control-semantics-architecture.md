@@ -150,6 +150,57 @@ host and does not use `role="combobox"`. Widget-shaped controls stay
 `slider` or `composite`. Explicit semantics are only needed when
 inference cannot reach the right answer.
 
+### Auto-ARIA eligibility boundary
+
+Control-kind inference and auto-ARIA eligibility are separate decisions, and
+they intentionally disagree for two native kinds:
+
+| Kind          | Inferred from                           | Auto-ARIA eligible by default?                        |
+| ------------- | --------------------------------------- | ----------------------------------------------------- |
+| `switch`      | `input[type="checkbox"][role="switch"]` | Yes                                                   |
+| `checkbox`    | `input[type="checkbox"]`                | No — opt in with `ngxSignalFormControl="checkbox"`    |
+| `radio-group` | `input[type="radio"]`                   | No — opt in with `ngxSignalFormControl="radio-group"` |
+
+`NgxSignalFormAutoAria`'s selector gates this. The `checkbox` / `radio-group`
+preset's `ariaMode` does not. Both presets already default to
+`ariaMode: 'auto'` (see the default-families table above). That value only
+takes effect once a host matches the auto-ARIA selector. A plain
+`input[type="checkbox"]` or `input[type="radio"]` does not match it. So the
+preset's `ariaMode` stays inert until the control opts in with explicit
+`ngxSignalFormControl` semantics. A checkbox carrying `role="switch"` always
+matches the selector. It is eligible with no opt-in.
+
+The reason is ownership, not an oversight. `NgxFormFieldWrapper` treats a
+`checkbox` or `radio-group` control as a **selection group**. It renders
+`role="group"` or `role="radiogroup"` on the group container itself, and
+also sets `aria-labelledby` and its own `aria-describedby` there — see
+`resolveClusterAriaAttrs()` in
+`packages/toolkit/form-field/form-field-cluster-aria.ts`. The group
+container carries `[formField]` too, so `NgxSignalFormAutoAria`'s generic
+`[formField]` branch also matches it directly, the same way it matches any
+other bound control. That is how `aria-required` reaches a `radiogroup`
+container: auto-ARIA writes it there, not `resolveClusterAriaAttrs()`. For
+a `group` container, auto-ARIA suppresses `aria-required` instead, because
+that role does not support it; only `radiogroup` does. The wrapper
+relocates required-ness into a visually-hidden hint in that case. If
+auto-ARIA also matched every grouped input, the per-input values would
+duplicate or contradict the group container's values. A screen reader
+could then announce the group's state twice: once correctly, and once
+either redundantly or divergently. A `switch` is a single, standalone
+control. It never joins a selection group, so that conflict cannot arise,
+and it stays eligible by default.
+
+Broadening this boundary is a separate compatibility decision, not a
+documentation fix. For example, making every checkbox and radio auto-ARIA
+eligible without an opt-in would change which element receives ARIA
+attributes in existing selection-group markup. It could duplicate
+attributes that a group container, a `ngx-form-fieldset`, or a third-party
+wrapper already owns. Such a change needs its own migration path. Do not
+change the default until that decision is made explicit.
+
+See `packages/toolkit/README.md`, `packages/toolkit/form-field/README.md`,
+and `docs/CUSTOM_CONTROLS.md` for the consumer-facing version of this table.
+
 ## Alternatives Considered
 
 ### A. Extend `NgxSignalFormsConfig` with per-control defaults
@@ -232,4 +283,8 @@ inference cannot reach the right answer.
 - `packages/toolkit/core/directives/control-semantics.ts` —
   directive implementation
 - `packages/toolkit/core/directives/auto-aria.ts` — consumer of
-  `NGX_SIGNAL_FORM_ARIA_MODE` and `NGX_SIGNAL_FORM_HINT_REGISTRY`
+  `NGX_SIGNAL_FORM_ARIA_MODE` and `NGX_SIGNAL_FORM_HINT_REGISTRY`; its
+  selector implements the auto-ARIA eligibility boundary above
+- `packages/toolkit/form-field/form-field-cluster-aria.ts` — resolves the
+  selection-group `role` / `aria-labelledby` / `aria-describedby` /
+  `aria-required` contract that the eligibility boundary protects
