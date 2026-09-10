@@ -16,7 +16,7 @@ A comprehensive guide to styling `@ngx-signal-forms/toolkit` components using st
   [Layout modes](#layout-modes-standard-outline-and-plain) · [Semantic color scale](#semantic-color-scale-the-knobs) ·
   [Specific overrides](#specific-overrides) · [Container-owned spacing](#container-owned-spacing) · [States & focus](#states--focus) ·
   [Horizontal layout](#horizontal-layout) · [Selection groups](#wrapper-selection-groups) ·
-  [Selection target size](#selection-target-size)
+  [Selection row gap](#selection-row-gap) · [Selection target size](#selection-target-size)
 - [4. Recipes & common scenarios](#4-recipes--common-scenarios)
 - [Rendering without a label](#rendering-without-a-label)
 
@@ -876,6 +876,7 @@ state for a surfaced background when invalid or warning.
 | Property                                      | Default                                                      | Description                                                                                   |
 | :-------------------------------------------- | :----------------------------------------------------------- | :-------------------------------------------------------------------------------------------- |
 | `--ngx-form-field-selection-group-gap`        | `0.75rem`                                                    | Vertical gap between grouped options                                                          |
+| `--ngx-form-field-selection-row-gap`          | `0.75rem`                                                    | Horizontal gap between a checkbox or switch and its label — see "Selection row gap" below     |
 | `--ngx-form-field-selection-group-padding`    | `0.75rem`                                                    | Inner padding of the grouped control surface                                                  |
 | `--ngx-form-field-selection-group-radius`     | `0.25rem`                                                    | Border radius of the grouped control surface                                                  |
 | `--ngx-form-field-selection-group-bg`         | `transparent`                                                | Base surface background                                                                       |
@@ -891,6 +892,45 @@ Example:
   --ngx-form-field-selection-group-invalid-bg: #fce2e2;
 }
 ```
+
+### Selection row gap
+
+`--ngx-form-field-selection-row-gap` controls the horizontal gap between one
+checkbox or switch and its label in a wrapper-owned selection row (#473).
+Default `0.75rem` (12px), shared by both the checkbox row and the switch
+row.
+
+```css
+.settings-form {
+  --ngx-form-field-selection-row-gap: 0.5rem;
+}
+```
+
+**Row versus group.** A selection row (one checkbox or switch and its
+label) and a selection group (a grouped radio or checkbox surface) are two
+different layout areas with two different tokens:
+
+- `--ngx-form-field-selection-row-gap` sets the inline gap inside one row —
+  between the control and its own label.
+- `--ngx-form-field-selection-group-gap` sets the vertical gap between
+  options inside a group's surface (see "Wrapper selection groups" above).
+
+Overriding one does not change the other.
+
+**Ownership boundary.** The wrapper owns the row: it renders the control
+and label through its own grid layout, so `--ngx-form-field-selection-row-gap`
+reaches every checkbox and switch row directly. Inside a selection group,
+the wrapper owns only the group surface and the gap between option rows;
+the markup and spacing inside each option row (the projected `<label>` plus
+control) are consumer-owned, the same ownership split documented for
+`--ngx-form-field-selection-group-gap` above.
+
+**Default change from RC.14.** The switch row's column gap used to resolve
+through a private token that defaulted to `0.5rem` (8px), one step lower on
+the internal spacing scale than the checkbox row's `0.75rem` (12px). Both
+rows now share the same public token and the same `0.75rem` default. A
+consumer that already depended on the tighter `0.5rem` switch gap restores
+it with the override above. See the RC.15 migration guide.
 
 ### Selection target size
 
