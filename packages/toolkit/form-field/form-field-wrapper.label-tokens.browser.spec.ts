@@ -5,6 +5,176 @@ import { describe, expect, it } from 'vitest';
 import { NgxFormFieldWrapper } from './form-field-wrapper';
 
 /**
+ * Regression coverage for #474.
+ *
+ * A consumer sets the public outline label tokens
+ * (`--ngx-form-field-outline-label-size`,
+ * `--ngx-form-field-outline-label-color`) on an ancestor. The consumer
+ * uses no descendant selector and no `!important`. Every projected label
+ * inside an outline-appearance wrapper must render with those values.
+ * This applies to a native `<label>` and to a `<span ngxFormFieldLabel>`.
+ *
+ * This already passes without a CSS change. The outline label rule in
+ * `form-field-wrapper.css` uses CSS nesting:
+ * `:host(.ngx-signal-forms-outline) .ngx-signal-form-field-wrapper__label {
+ * :is(label, [ngxFormFieldLabel]) { ... } }`.
+ *
+ * Angular's emulated encapsulation rewrites only the top-level selector of
+ * a rule. It does not rewrite a selector nested inside that rule with CSS
+ * nesting. So the outer selectors (`:host(...)`,
+ * `.ngx-signal-form-field-wrapper__label`) get the wrapper's content
+ * attribute, but the nested `:is(label, [ngxFormFieldLabel])` selector
+ * stays unscoped. An unscoped nested selector still matches any real
+ * descendant, including projected content.
+ *
+ * There is no `::ng-deep` bug to fix on this path. The spec guards
+ * against a future change that flattens the nesting and breaks that
+ * match.
+ */
+
+const mockField = () => {
+  const fieldState = {
+    invalid: signal(false),
+    touched: signal(false),
+    errors: signal([]),
+    valid: signal(true),
+    dirty: signal(false),
+    value: signal(''),
+    required: signal(false),
+  };
+  return signal(() => fieldState);
+};
+
+describe('NgxFormFieldWrapper — outline label tokens (#474)', () => {
+  const overrideSize = '20px'; // non-default (default caption size is 12px)
+  const overrideColor = 'rgb(120, 0, 80)'; // non-default (default is a translucent gray)
+
+  const applyAncestorTokens = (ancestor: HTMLElement) => {
+    ancestor.style.setProperty(
+      '--ngx-form-field-outline-label-size',
+      overrideSize,
+    );
+    ancestor.style.setProperty(
+      '--ngx-form-field-outline-label-color',
+      overrideColor,
+    );
+  };
+
+  it('applies the outline label tokens to a projected native <label>', async () => {
+    const { container } = await render(
+      `<ngx-form-field-wrapper [formField]="field" appearance="outline">
+        <label for="name">Name</label>
+        <input id="name" type="text" />
+      </ngx-form-field-wrapper>`,
+      {
+        imports: [NgxFormFieldWrapper],
+        componentProperties: { field: mockField() },
+      },
+    );
+
+    // The ancestor is the render fixture's root. It is a real ancestor of
+    // the projected light-DOM label. No descendant selector is involved.
+    applyAncestorTokens(container);
+
+    const label = container.querySelector<HTMLElement>('label[for="name"]');
+    expect(label).toBeTruthy();
+    const styles = getComputedStyle(label!);
+    expect(styles.fontSize).toBe(overrideSize);
+    expect(styles.color).toBe(overrideColor);
+  });
+
+  it('applies the outline label tokens to a projected [ngxFormFieldLabel]', async () => {
+    const { container } = await render(
+      `<ngx-form-field-wrapper [formField]="field" appearance="outline">
+        <span ngxFormFieldLabel>Name</span>
+        <input id="name-span" type="text" />
+      </ngx-form-field-wrapper>`,
+      {
+        imports: [NgxFormFieldWrapper],
+        componentProperties: { field: mockField() },
+      },
+    );
+
+    applyAncestorTokens(container);
+
+    const label = container.querySelector<HTMLElement>('[ngxFormFieldLabel]');
+    expect(label).toBeTruthy();
+    const styles = getComputedStyle(label!);
+    expect(styles.fontSize).toBe(overrideSize);
+    expect(styles.color).toBe(overrideColor);
+  });
+});
+
+/**
+ * Coverage for #474's checkbox/switch case.
+ *
+ * The selection-row label rule in `form-field-wrapper.selection.css` used
+ * to size and color the row label from the input tokens (`--_input-size`,
+ * `--_input-line-height`, `--_color-text`). It did not use the label
+ * tokens every other label rule consumes.
+ *
+ * It now reads `--_label-size`, `--_label-weight`,
+ * `--_label-font-family`, `--_label-line-height`, and `--_label-color`.
+ * These are the same `--ngx-form-field-label-*` tokens the
+ * standard-layout label uses. A consumer that themes labels globally now
+ * also reaches the checkbox and switch row label. See THEMING.md's
+ * "Checkbox and switch row label typography" note.
+ */
+describe('NgxFormFieldWrapper — checkbox/switch row label typography (#474)', () => {
+  const overrideSize = '22px'; // non-default (default label size is 12px)
+  const overrideColor = 'rgb(0, 120, 80)'; // non-default
+
+  const applyAncestorTokens = (ancestor: HTMLElement) => {
+    ancestor.style.setProperty('--ngx-form-field-label-size', overrideSize);
+    ancestor.style.setProperty('--ngx-form-field-label-color', overrideColor);
+  };
+
+  it('sizes and colors a checkbox row label from the label tokens', async () => {
+    const { container } = await render(
+      `<ngx-form-field-wrapper [formField]="field">
+        <label for="agree">I agree to the terms</label>
+        <input id="agree" type="checkbox" />
+      </ngx-form-field-wrapper>`,
+      {
+        imports: [NgxFormFieldWrapper],
+        componentProperties: { field: mockField() },
+      },
+    );
+
+    applyAncestorTokens(container);
+
+    const label = container.querySelector<HTMLElement>('label[for="agree"]');
+    expect(label).toBeTruthy();
+    const styles = getComputedStyle(label!);
+    expect(styles.fontSize).toBe(overrideSize);
+    expect(styles.color).toBe(overrideColor);
+  });
+
+  it('sizes and colors a switch row label from the label tokens', async () => {
+    const { container } = await render(
+      `<ngx-form-field-wrapper [formField]="field">
+        <label for="notifications">Enable notifications</label>
+        <input id="notifications" type="checkbox" role="switch" />
+      </ngx-form-field-wrapper>`,
+      {
+        imports: [NgxFormFieldWrapper],
+        componentProperties: { field: mockField() },
+      },
+    );
+
+    applyAncestorTokens(container);
+
+    const label = container.querySelector<HTMLElement>(
+      'label[for="notifications"]',
+    );
+    expect(label).toBeTruthy();
+    const styles = getComputedStyle(label!);
+    expect(styles.fontSize).toBe(overrideSize);
+    expect(styles.color).toBe(overrideColor);
+  });
+});
+
+/**
  * Computed-style regression coverage for public label tokens (#476).
  *
  * Issue #474 covered the outline-appearance projected label and the
@@ -24,20 +194,6 @@ import { NgxFormFieldWrapper } from './form-field-wrapper';
  * tokens are applied directly to `:is(label, [ngxFormFieldLabel])` inside
  * the div — already covered by #474.
  */
-
-const mockField = () => {
-  const fieldState = {
-    invalid: signal(false),
-    touched: signal(false),
-    errors: signal([]),
-    valid: signal(true),
-    dirty: signal(false),
-    value: signal(''),
-    required: signal(false),
-  };
-  return signal(() => fieldState);
-};
-
 describe('NgxFormFieldWrapper — label token coverage (#476)', () => {
   /**
    * Overrides all four asserted standard label tokens on the wrapper host
