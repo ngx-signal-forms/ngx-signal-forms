@@ -213,6 +213,39 @@ and the Angular Aria [Combobox](https://angular.dev/guide/aria/combobox) and
 
 A native `input[type="checkbox"][role="switch"]` is recognized as a switch automatically — no extra directives needed.
 
+#### Inferred kind vs. auto-ARIA eligibility
+
+**Inferred control kind and auto-ARIA eligibility are two decisions.**
+Control-kind inference answers "which wrapper layout does this control get".
+Auto-ARIA eligibility answers "does the toolkit own `aria-invalid`,
+`aria-required`, and `aria-describedby` on this host". The two do not always
+agree:
+
+| Markup                                                      | Inferred kind                               | Auto-ARIA default      | How to opt in                                                                       |
+| ----------------------------------------------------------- | ------------------------------------------- | ---------------------- | ----------------------------------------------------------------------------------- |
+| `input[type="checkbox"]`                                    | `checkbox`                                  | Not eligible           | Add `ngxSignalFormControl="checkbox"`                                               |
+| `input[type="checkbox"][role="switch"]`                     | `switch`                                    | Eligible automatically | None — works out of the box                                                         |
+| `input[type="radio"]`                                       | `radio-group`                               | Not eligible           | Add `ngxSignalFormControl="radio-group"`                                            |
+| `[role="combobox"]` element with a stable `id`              | `input-like`                                | Eligible automatically | None — works out of the box                                                         |
+| Plain `input` / `select` / `textarea`                       | `input-like` / `standalone-field-like`      | Eligible automatically | None — works out of the box                                                         |
+| Custom `[formField]` host (not `input`/`textarea`/`select`) | inferred from shape, or none until declared | Eligible automatically | Opt out with `ngxSignalFormAutoAriaDisabled` or `ngxSignalFormControlAria="manual"` |
+
+A native checkbox or radio infers a wrapper kind (`checkbox` /
+`radio-group`). It is **not** auto-ARIA eligible by default. In a selection
+group, `ngx-form-field-wrapper` owns `role`, `aria-labelledby`,
+`aria-describedby`, and `aria-required` on the group container. Writing
+those same attributes on each grouped input would duplicate or contradict
+the group-level values. A checkbox with `role="switch"` is always a single
+control. It never joins a group, so it is eligible automatically.
+
+`ariaMode` in a control preset (`'auto'` | `'manual'`) only applies once a
+host is already auto-ARIA eligible. Setting `ariaMode: 'auto'` on the
+`checkbox` preset does not make a plain checkbox eligible on its own. The
+auto-ARIA directive's selector gates eligibility first. Declare
+`ngxSignalFormControl="checkbox"` (or `"radio-group"`) to opt a control in.
+Then the preset's `ariaMode` governs ownership from there. See
+[ADR-0001](https://github.com/ngx-signal-forms/ngx-signal-forms/blob/main/docs/decisions/0001-control-semantics-architecture.md#auto-aria-eligibility-boundary).
+
 ### Warning support
 
 Warnings (errors with `kind` starting with `warn:`) display automatically:
