@@ -876,7 +876,7 @@ state for a surfaced background when invalid or warning.
 | Property                                      | Default                                                      | Description                                                                                   |
 | :-------------------------------------------- | :----------------------------------------------------------- | :-------------------------------------------------------------------------------------------- |
 | `--ngx-form-field-selection-group-gap`        | `0.75rem`                                                    | Vertical gap between grouped options                                                          |
-| `--ngx-form-field-selection-row-gap`          | `0.75rem`                                                    | Horizontal gap between a checkbox or switch and its label — see "Selection row gap" below     |
+| `--ngx-form-field-selection-row-gap`          | `0.75rem`                                                    | Inline gap between a checkbox or switch and its label — see "Selection row gap" below         |
 | `--ngx-form-field-selection-group-padding`    | `0.75rem`                                                    | Inner padding of the grouped control surface                                                  |
 | `--ngx-form-field-selection-group-radius`     | `0.25rem`                                                    | Border radius of the grouped control surface                                                  |
 | `--ngx-form-field-selection-group-bg`         | `transparent`                                                | Base surface background                                                                       |
