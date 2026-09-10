@@ -248,6 +248,9 @@ describe('NgxFormFieldWrapper — autocomplete padding-ownership recipe (#475)',
       `<div style="inline-size: 320px">
         <ngx-form-field-wrapper appearance="outline" [formField]="field">
           <label for="countryPopup">Country</label>
+          <!-- A block host like the demo autocomplete component: it must stay
+               position: static so the field shell is the popup's containing block. -->
+          <div style="display: block; inline-size: 100%">
           <input
             id="countryPopup"
             type="text"
@@ -275,6 +278,7 @@ describe('NgxFormFieldWrapper — autocomplete padding-ownership recipe (#475)',
           >
             <div role="option">Netherlands</div>
           </div>
+          </div>
         </ngx-form-field-wrapper>
       </div>`,
       {
@@ -300,6 +304,9 @@ describe('NgxFormFieldWrapper — autocomplete padding-ownership recipe (#475)',
       `<div dir="rtl" style="inline-size: 320px">
         <ngx-form-field-wrapper appearance="outline" [formField]="field">
           <label for="countryPopupRtl">בלד</label>
+          <!-- A block host like the demo autocomplete component: it must stay
+               position: static so the field shell is the popup's containing block. -->
+          <div style="display: block; inline-size: 100%">
           <input
             id="countryPopupRtl"
             type="text"
@@ -315,6 +322,7 @@ describe('NgxFormFieldWrapper — autocomplete padding-ownership recipe (#475)',
             style="position: absolute; inset-inline-start: -1px; inset-block-start: 100%"
           >
             <div role="option">הולנד</div>
+          </div>
           </div>
         </ngx-form-field-wrapper>
       </div>`,

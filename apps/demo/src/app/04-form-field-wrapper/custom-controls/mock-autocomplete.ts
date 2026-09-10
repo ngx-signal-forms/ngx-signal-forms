@@ -51,9 +51,13 @@ const DEFAULT_OPTIONS: readonly MockAutocompleteOption[] = [
   imports: [FormField, NgxSignalFormToolkit],
   host: { class: 'ngx-mock-autocomplete' },
   styles: `
+    /*
+     * The host stays position: static on purpose. The wrapper's field shell
+     * is the popup's containing block, so the popup aligns with the outline
+     * even when a prefix or suffix sits next to this host.
+     */
     :host {
       display: block;
-      position: relative;
       inline-size: 100%;
       min-inline-size: 0;
     }
