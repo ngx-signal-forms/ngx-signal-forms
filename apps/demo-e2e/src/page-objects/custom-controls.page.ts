@@ -20,6 +20,7 @@ export class CustomControlsPage extends BaseFormPage {
 
   // Native input fields
   readonly productNameInput: Locator;
+  readonly countryInput: Locator;
   readonly frameworkInput: Locator;
   readonly frameworkChevron: Locator;
   readonly frameworkSelectTrigger: Locator;
@@ -64,6 +65,7 @@ export class CustomControlsPage extends BaseFormPage {
 
     // Native inputs
     this.productNameInput = this.form.locator('#productName');
+    this.countryInput = this.form.locator('#country');
     this.frameworkInput = this.form.locator('#framework');
     this.frameworkChevron = this.form.locator(
       'ngx-aria-autocomplete .select__chevron',
@@ -240,6 +242,11 @@ export class CustomControlsPage extends BaseFormPage {
    */
   async fillValidForm(): Promise<void> {
     await this.productNameInput.fill('Test Product');
+    // Country is a required mocked autocomplete (#475): filter, then pick
+    // the first match through the keyboard path.
+    await this.countryInput.fill('Neth');
+    await this.countryInput.press('ArrowDown');
+    await this.countryInput.press('Enter');
     await this.frameworkInput.fill('Ang');
     await this.page.getByRole('option', { name: 'Angular' }).click();
     await this.frameworkSelectTrigger.click();
