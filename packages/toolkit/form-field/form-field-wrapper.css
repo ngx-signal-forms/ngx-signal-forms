@@ -421,6 +421,10 @@
     --ngx-form-field-selection-group-gap,
     var(--_field-space-sm)
   );
+  --_selection-row-gap: var(
+    --ngx-form-field-selection-row-gap,
+    var(--_field-space-sm)
+  );
   --_selection-cluster-padding: var(
     --ngx-form-field-selection-group-padding,
     var(--_field-space-lg)

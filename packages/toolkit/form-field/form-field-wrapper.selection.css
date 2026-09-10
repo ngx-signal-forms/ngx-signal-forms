@@ -174,7 +174,7 @@
   grid-template-areas:
     'control label'
     'assistive assistive';
-  column-gap: var(--_field-space-sm);
+  column-gap: var(--_selection-row-gap);
 }
 
 :host(.ngx-signal-form-field-wrapper--checkbox)
@@ -316,7 +316,7 @@
   grid-template-areas:
     'label control'
     'assistive .';
-  column-gap: var(--_field-space-md);
+  column-gap: var(--_selection-row-gap);
 }
 
 :host(.ngx-signal-form-field-wrapper--switch)
