@@ -63,6 +63,25 @@ ngx-signal-forms — an Angular toolkit for working with Signal Forms.
   field in the suite input, used to carry a form-level error
   (`test('passwordMatch', 'Passwords must match', …)`). It attaches to the bound
   field. Legitimate and silent — the toolkit must not treat it as an error.
+- **Public token** — a CSS custom property in the `--ngx-form-field-*` (or
+  `--ngx-signal-form-*`) namespace that the theming guide documents. It is
+  API: its name and default are stable and a default change is a breaking
+  change. Gap tokens are named for the layout area they belong to, never for
+  the CSS property that implements them (`selection-group-gap`, not
+  `selection-group-column-gap`).
+- **Private token** — a CSS custom property with the `--_` prefix. It is an
+  implementation detail; consumers must not override it, and a public token
+  is the only supported way to reach a value it carries.
+- **Selection row** — the wrapper-owned layout of one checkbox or switch and
+  its label. Synonym to avoid: "inline control row".
+- **Selection group** — the wrapper's surface for grouped radios or
+  checkboxes. The wrapper owns the surface and the gap between options; the
+  markup and spacing inside each option row are consumer-owned. Synonyms to
+  avoid: "selection cluster" (internal class name), "radio list".
+- **Container-owned spacing** — the rule that a form field contributes no
+  outer margin of its own; the space between fields belongs to the parent
+  layout (`gap`, grid, flex). A field owns only its inner rhythm, including
+  the assistive-row reservation. Synonym to avoid: "field margin".
 
 ## Key concepts
 
@@ -160,6 +179,17 @@ ngx-signal-forms — an Angular toolkit for working with Signal Forms.
   additionally drives the control element, visibility, hints, and resolved
   strategies in-package, because none of those can travel through an input.
   See ADR-0011.
+
+- **Inferred control kind and auto-ARIA eligibility are two decisions.**
+  Control-kind inference answers "which wrapper layout does this control
+  get"; auto-ARIA eligibility answers "does the toolkit own `aria-invalid`,
+  `aria-required`, and `aria-describedby` on this host". A native checkbox or
+  radio infers `checkbox` / `radio-group` but is **not** auto-ARIA eligible
+  unless it opts in with explicit control semantics, because in a selection
+  group the wrapper owns those attributes on the group container and
+  per-input ownership would duplicate or contradict them. A checkbox with
+  `role="switch"` is a single control, so it is eligible automatically. See
+  ADR-0001.
 
 - **`packages/toolkit/core` is not a public entry point.** It is a
   build-time-only secondary entry that sibling entries compile against;
