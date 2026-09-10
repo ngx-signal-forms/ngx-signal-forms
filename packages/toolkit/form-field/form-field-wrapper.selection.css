@@ -188,10 +188,11 @@
   margin: 0;
   min-block-size: var(--_selection-row-min-block-size);
   padding-block: var(--_selection-row-padding-block);
-  font-size: var(--_input-size);
-  font-weight: var(--_field-weight-normal);
-  line-height: var(--_input-line-height);
-  color: var(--_color-text);
+  font-size: var(--_label-size);
+  font-weight: var(--_label-weight);
+  font-family: var(--_label-font-family);
+  line-height: var(--_label-line-height);
+  color: var(--_label-color);
 }
 
 :host(.ngx-signal-form-field-wrapper--checkbox)

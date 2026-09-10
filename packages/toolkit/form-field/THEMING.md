@@ -14,9 +14,10 @@ A comprehensive guide to styling `@ngx-signal-forms/toolkit` components using st
   [Assistive row](#assistive-row) · [Fieldset](#fieldset)
 - [3. Form field component](#3-form-field-component) —
   [Layout modes](#layout-modes-standard-outline-and-plain) · [Semantic color scale](#semantic-color-scale-the-knobs) ·
-  [Specific overrides](#specific-overrides) · [Container-owned spacing](#container-owned-spacing) · [States & focus](#states--focus) ·
+  [Specific overrides](#specific-overrides) · [Cascade](#cascade) · [Container-owned spacing](#container-owned-spacing) · [States & focus](#states--focus) ·
   [Horizontal layout](#horizontal-layout) · [Selection groups](#wrapper-selection-groups) ·
-  [Selection row gap](#selection-row-gap) · [Selection target size](#selection-target-size)
+  [Checkbox/switch row label typography](#checkbox-and-switch-row-label-typography) · [Selection row gap](#selection-row-gap) ·
+  [Selection target size](#selection-target-size)
 - [4. Recipes & common scenarios](#4-recipes--common-scenarios)
 - [Rendering without a label](#rendering-without-a-label)
 
@@ -653,6 +654,35 @@ If the semantic colors aren't enough, you can override specific parts of the com
 >
 > The older `--ngx-form-field-outline-label-font-size` and `--ngx-form-field-outline-input-font-size` names still resolve as legacy aliases for the corresponding `-size` tokens. Prefer the `-size` names in new code.
 
+#### Cascade
+
+The public label tokens (`--ngx-form-field-label-*`,
+`--ngx-form-field-outline-label-*`) style the toolkit-owned label rule.
+This rule applies to the native `<label>` or `<span ngxFormFieldLabel>`
+you project.
+
+Normal CSS cascade rules still apply on top of that. An explicit `font`
+or `color` declaration on your own label element is a more specific,
+author-origin rule. It wins over the toolkit's token-driven rule. That is
+not a bug. It is the documented, higher-precedence integration point for
+a label that intentionally owns its own typography.
+
+The global-theme recipe is simple. Set the public tokens on any ancestor
+of the form field: a page, a layout region, or `:root`. No descendant
+selector is needed. No `!important` is needed. The tokens resolve on
+every `ngx-form-field-wrapper` beneath that ancestor. This works because
+custom properties inherit down the DOM. Angular's view-encapsulation
+boundaries do not block that inheritance.
+
+```css
+.app-shell {
+  --ngx-form-field-label-size: 0.875rem;
+  --ngx-form-field-label-color: #1f2937;
+  --ngx-form-field-outline-label-size: 0.875rem;
+  --ngx-form-field-outline-label-color: #1f2937;
+}
+```
+
 #### Layout & Spacing
 
 **Applies to both standard and outline layouts.**
@@ -893,6 +923,29 @@ Example:
   --ngx-form-field-selection-group-invalid-bg: #fce2e2;
 }
 ```
+
+#### Checkbox and switch row label typography
+
+A checkbox or switch row has a `<label>` next to the control, inside
+`ngx-form-field-wrapper`. This is not a fieldset legend. This label reads
+font size, weight, family, line height, and color from the
+`--ngx-form-field-label-*` tokens. These are the same tokens documented
+under ["Labels (Standard Layout)"](#labels-standard-layout). A plain
+text-field label uses the identical tokens.
+
+Before #474 this row read different tokens instead:
+`--ngx-form-field-input-size`, `--ngx-form-field-input-line-height`, and
+the `--ngx-form-field-color-text` input color. A theme that only set the
+label tokens missed the checkbox and switch row. That gap is closed now.
+A global `--ngx-form-field-label-*` override reaches every label,
+selection rows included.
+
+**Check contrast when you tint the row background.** The default label
+color is `--_color-text-secondary`. Its contrast against white is about
+4.97:1. WCAG 1.4.3 (AA) requires at least 4.5:1. That leaves little
+headroom. If you tint the selection row's background, check the contrast
+of the label text against the new background. Override
+`--ngx-form-field-label-color` if the contrast drops below 4.5:1.
 
 ### Selection row gap
 
