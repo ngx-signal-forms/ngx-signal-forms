@@ -1,7 +1,7 @@
 # Versioned migration guides
 
-RC.11, RC.12, and RC.13 are released guides. RC.14 documents the next
-release; its guide does not establish publication. Check the installed version
+RC.11 to RC.14 are released guides. RC.15 documents the next release; its
+guide does not establish publication. Check the installed version
 before applying a hop.
 
 Every published toolkit version must add `v<version>.md` in this directory
@@ -14,6 +14,7 @@ immediately preceding version to that release.
 | `v1.0.0-rc.11` | `v1.0.0-rc.12` | [Upgrade guide](./v1.0.0-rc.12.md) |
 | `v1.0.0-rc.12` | `v1.0.0-rc.13` | [Upgrade guide](./v1.0.0-rc.13.md) |
 | `v1.0.0-rc.13` | `v1.0.0-rc.14` | [Upgrade guide](./v1.0.0-rc.14.md) |
+| `v1.0.0-rc.14` | `v1.0.0-rc.15` | [Upgrade guide](./v1.0.0-rc.15.md) |
 
 > **Add the guide before you cut the release, not after.** A guide written
 > against a version number that is never published strands its content: readers

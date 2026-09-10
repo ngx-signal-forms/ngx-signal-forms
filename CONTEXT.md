@@ -63,6 +63,31 @@ ngx-signal-forms — an Angular toolkit for working with Signal Forms.
   field in the suite input, used to carry a form-level error
   (`test('passwordMatch', 'Passwords must match', …)`). It attaches to the bound
   field. Legitimate and silent — the toolkit must not treat it as an error.
+- **Public token** — a CSS custom property in the `--ngx-form-field-*` (or
+  `--ngx-signal-form-*`) namespace that the theming guide documents. It is
+  API: its name and default are stable and a default change is a breaking
+  change. Gap tokens are named for the layout area they belong to, never for
+  the CSS property that implements them (`selection-group-gap`, not
+  `selection-group-column-gap`). A property in the namespace that the theming
+  guide labels an internal coordination hook (for example
+  `--ngx-form-field-hint-display`) is not a public token.
+- **Private token** — a CSS custom property with the `--_` prefix. It is an
+  implementation detail; consumers must not override it, and a public token
+  is the only supported way to reach a value it carries.
+- **Selection row** — the wrapper-owned layout of one single checkbox or
+  switch and its label. It does not apply to radios: a radio is always part
+  of a selection group. Synonym to avoid: "inline control row".
+- **Selection group** — the wrapper's surface for grouped radios or
+  checkboxes. The wrapper owns the surface and the gap between options. Each
+  option row, including the gap between its control and its label, is
+  consumer-owned markup. Synonyms to avoid: "selection cluster" (internal
+  class name), "radio list".
+- **Container-owned spacing** — the ownership rule for the space between
+  fields: it belongs to the parent layout (`gap`, grid, flex), not to the
+  field. A field owns only its inner rhythm, including the assistive-row
+  reservation. The public token `--ngx-form-field-margin` is the opt-in for a
+  field-owned outer margin; its default is `0` from RC.15. Synonym to avoid:
+  "field margin".
 
 ## Key concepts
 
@@ -160,6 +185,17 @@ ngx-signal-forms — an Angular toolkit for working with Signal Forms.
   additionally drives the control element, visibility, hints, and resolved
   strategies in-package, because none of those can travel through an input.
   See ADR-0011.
+
+- **Inferred control kind and auto-ARIA eligibility are two decisions.**
+  Control-kind inference answers "which wrapper layout does this control
+  get"; auto-ARIA eligibility answers "does the toolkit own `aria-invalid`,
+  `aria-required`, and `aria-describedby` on this host". A native checkbox or
+  radio infers `checkbox` / `radio-group` but is **not** auto-ARIA eligible
+  unless it opts in with explicit control semantics, because in a selection
+  group the wrapper owns those attributes on the group container and
+  per-input ownership would duplicate or contradict them. A checkbox with
+  `role="switch"` is a single control, so it is eligible automatically. See
+  ADR-0001.
 
 - **`packages/toolkit/core` is not a public entry point.** It is a
   build-time-only secondary entry that sibling entries compile against;
