@@ -46,9 +46,9 @@ catalogs:
     '@schematics/angular': '22.1.7'
     ng-packagr: '22.1.1'
   angular-eslint:
-    '@angular-eslint/eslint-plugin': '22.4.0'
-    '@angular-eslint/eslint-plugin-template': '22.4.0'
-    '@angular-eslint/template-parser': '22.4.0'
+    '@angular-eslint/eslint-plugin': '22.5.0'
+    '@angular-eslint/eslint-plugin-template': '22.5.0'
+    '@angular-eslint/template-parser': '22.5.0'
   angular-material:
     '@angular/material': '22.1.5'
   ngrx:
