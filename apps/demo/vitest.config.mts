@@ -5,7 +5,7 @@ import { defineConfig } from 'vitest/config';
 import tsconfigPaths from 'vite-tsconfig-paths';
 
 export default defineConfig({
-  root: __dirname,
+  root: import.meta.dirname,
   cacheDir: '../../node_modules/.vite/apps/demo',
   plugins: [angular({ tsconfig: './tsconfig.spec.json' }), tsconfigPaths()],
   optimizeDeps: {

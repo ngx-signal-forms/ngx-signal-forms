@@ -4,10 +4,10 @@ import { resolve } from 'node:path';
 import angular from '@analogjs/vite-plugin-angular';
 import { defineConfig } from 'vitest/config';
 
-const distToolkit = resolve(__dirname, '../../dist/packages/toolkit');
+const distToolkit = resolve(import.meta.dirname, '../../dist/packages/toolkit');
 
 export default defineConfig({
-  root: __dirname,
+  root: import.meta.dirname,
   cacheDir: '../../node_modules/.vite/apps/demo-material',
   resolve: {
     // Smoke specs deliberately resolve `@ngx-signal-forms/toolkit/*` to the

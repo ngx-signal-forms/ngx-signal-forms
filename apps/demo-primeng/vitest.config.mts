@@ -5,7 +5,7 @@ import angular from '@analogjs/vite-plugin-angular';
 import { defineConfig } from 'vitest/config';
 import tsconfigPaths from 'vite-tsconfig-paths';
 
-const toolkitRoot = resolve(__dirname, '../../packages/toolkit');
+const toolkitRoot = resolve(import.meta.dirname, '../../packages/toolkit');
 
 // `toolkit/core` is intentionally aliased even though this app's source
 // never imports from it directly — the toolkit's root barrel
@@ -37,11 +37,11 @@ const toolkitEntryAliases = [
 ];
 
 export default defineConfig({
-  root: __dirname,
+  root: import.meta.dirname,
   cacheDir: '../../node_modules/.vite/apps/demo-primeng',
   plugins: [
     angular({
-      tsconfig: resolve(__dirname, 'tsconfig.spec.json'),
+      tsconfig: resolve(import.meta.dirname, 'tsconfig.spec.json'),
     }),
     tsconfigPaths(),
   ],
