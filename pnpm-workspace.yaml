@@ -21,28 +21,28 @@ catalogMode: 'prefer'
 verifyDepsBeforeRun: false
 catalogs:
   analogjs:
-    '@analogjs/vite-plugin-angular': '2.7.1'
-    '@analogjs/vitest-angular': '2.7.1'
+    '@analogjs/vite-plugin-angular': '2.7.2'
+    '@analogjs/vitest-angular': '2.7.2'
   axe:
     '@axe-core/playwright': '^4.13.0'
     axe-core: '^4.13.0'
   angular:
-    '@angular/animations': '22.1.5'
-    '@angular/aria': '22.1.5'
-    '@angular/cdk': '22.1.5'
-    '@angular/common': 22.1.5
-    '@angular/compiler': 22.1.5
-    '@angular/core': 22.1.5
-    '@angular/forms': 22.1.5
-    '@angular/platform-browser': 22.1.5
-    '@angular/router': 22.1.5
+    '@angular/animations': '22.1.6'
+    '@angular/aria': '22.1.6'
+    '@angular/cdk': '22.1.6'
+    '@angular/common': 22.1.6
+    '@angular/compiler': 22.1.6
+    '@angular/core': 22.1.6
+    '@angular/forms': 22.1.6
+    '@angular/platform-browser': 22.1.6
+    '@angular/router': 22.1.6
   angular-build:
-    '@angular-devkit/core': '22.1.7'
-    '@angular-devkit/schematics': '22.1.7'
-    '@angular/build': '22.1.7'
-    '@angular/cli': '22.1.7'
-    '@angular/compiler-cli': '22.1.5'
-    '@angular/language-service': '22.1.5'
+    '@angular-devkit/core': '22.1.8'
+    '@angular-devkit/schematics': '22.1.8'
+    '@angular/build': '22.1.8'
+    '@angular/cli': '22.1.8'
+    '@angular/compiler-cli': '22.1.6'
+    '@angular/language-service': '22.1.6'
     '@schematics/angular': '22.1.7'
     ng-packagr: '22.1.1'
   angular-eslint:
@@ -50,28 +50,28 @@ catalogs:
     '@angular-eslint/eslint-plugin-template': '22.5.0'
     '@angular-eslint/template-parser': '22.5.0'
   angular-material:
-    '@angular/material': '22.1.5'
+    '@angular/material': '22.1.6'
   ngrx:
     '@angular-architects/ngrx-toolkit': '21.0.1'
     '@ngrx/signals': '21.1.1'
   nx:
-    '@nx/angular': '23.2.0'
-    '@nx/devkit': '23.2.0'
-    '@nx/eslint-plugin': '23.2.0'
-    '@nx/js': '23.2.0'
-    '@nx/playwright': '23.2.0'
-    '@nx/vite': '23.2.0'
-    '@nx/vitest': '23.2.0'
-    '@nx/web': '23.2.0'
-    '@nx/workspace': '23.2.0'
+    '@nx/angular': '23.2.1'
+    '@nx/devkit': '23.2.1'
+    '@nx/eslint-plugin': '23.2.1'
+    '@nx/js': '23.2.1'
+    '@nx/playwright': '23.2.1'
+    '@nx/vite': '23.2.1'
+    '@nx/vitest': '23.2.1'
+    '@nx/web': '23.2.1'
+    '@nx/workspace': '23.2.1'
     nx: '23.2.0'
   playwright:
     '@playwright/test': '^1.63.0'
     eslint-plugin-playwright: '^2.11.0'
   primeng:
     '@primeuix/themes': '3.0.0'
-    primeicons: '8.0.0'
-    primeng: '22.1.0'
+    primeicons: '8.0.1'
+    primeng: '22.1.1'
   shiki:
     '@shikijs/core': '^4.4.3'
     '@shikijs/types': '^4.4.3'
@@ -92,7 +92,7 @@ catalogs:
   tailwind:
     '@tailwindcss/forms': '^0.5.11'
     '@tailwindcss/postcss': '^4.3.3'
-    autoprefixer: '^10.5.5'
+    autoprefixer: '^10.5.6'
     postcss: '^8.5.28'
     postcss-url: '~10.1.3'
     tailwindcss: '^4.3.3'
@@ -100,24 +100,24 @@ catalogs:
     jsdom: '~30.0.1'
     msw: '~2.15.0'
   testing-library:
-    '@testing-library/angular': '^19.4.2'
+    '@testing-library/angular': '^19.5.0'
     '@testing-library/dom': '^10.4.1'
     '@testing-library/jest-dom': '^7.0.1'
     '@testing-library/user-event': '^14.6.7'
   tooling:
     '@oxc-project/runtime': '^0.149.0'
     '@typescript/native': 'npm:typescript@~7.0.2'
-    '@types/node': '26.5.0'
+    '@types/node': '26.5.1'
     eslint: '^10.10.0'
     jiti: '2.7.0'
-    lint-staged: '^17.5.0'
+    lint-staged: '^17.5.1'
     oxfmt: '^0.67.0'
     oxlint: '^1.82.0'
     oxlint-tsgolint: '^7.0.2001'
     simple-git-hooks: '^2.14.0'
     typescript: 'npm:@typescript/typescript6@~6.0.2'
     verdaccio: '^6.10.3'
-    vite: '^8.2.2'
+    vite: '^8.3.0'
     vite-tsconfig-paths: '^6.1.1'
   utilities:
     rxjs: '~7.8.2'
