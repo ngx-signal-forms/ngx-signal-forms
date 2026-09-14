@@ -43,7 +43,7 @@ catalogs:
     '@angular/cli': '22.1.7'
     '@angular/compiler-cli': '22.1.5'
     '@angular/language-service': '22.1.5'
-    '@schematics/angular': '22.1.7'
+    '@schematics/angular': '22.1.8'
     ng-packagr: '22.1.1'
   angular-eslint:
     '@angular-eslint/eslint-plugin': '22.5.0'
