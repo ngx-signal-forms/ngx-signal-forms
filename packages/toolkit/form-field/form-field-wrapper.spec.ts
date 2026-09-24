@@ -1086,6 +1086,93 @@ describe('NgxSignalFormWrapperComponent', () => {
       expect(input).toHaveAttribute('aria-required', 'true');
     });
 
+    it('does not warn about a missing role on the wrapper host for a required text field (regression #496)', async () => {
+      // `ngx-form-field-wrapper` itself matches `NgxSignalFormAutoAria`'s
+      // `[formField]` selector and has no role outside a selection cluster.
+      // `aria-required` correctly lands on the projected control, not the
+      // wrapper — the wrapper must stay silent, because it is not itself
+      // the control the "add a role" warning is about.
+      const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+      @Component({
+        selector: 'ngx-test-wrapper-no-warn',
+        imports: [
+          NgxSignalFormWrapperComponent,
+          NgxSignalFormToolkit,
+          FormField,
+        ],
+        template: `
+          <ngx-form-field-wrapper [formField]="testForm.email">
+            <label for="email">Email</label>
+            <input id="email" type="email" [formField]="testForm.email" />
+          </ngx-form-field-wrapper>
+        `,
+      })
+      class Host {
+        protected readonly testForm = form(
+          signal({ email: '' }),
+          schema<{ email: string }>((p) => {
+            required(p.email);
+          }),
+        );
+      }
+
+      const { container } = await render(Host);
+
+      const wrapper = container.querySelector('ngx-form-field-wrapper');
+      const input = container.querySelector('#email');
+
+      expect(input).toHaveAttribute('aria-required', 'true');
+      expect(wrapper).not.toHaveAttribute('aria-required');
+      expect(warnSpy).not.toHaveBeenCalled();
+
+      warnSpy.mockRestore();
+    });
+
+    it('does not warn about a missing role on a required radiogroup wrapper (regression #496)', async () => {
+      // The radiogroup cluster wrapper binds `role="radiogroup"` itself once
+      // resolved, but on an early tick (before that binding lands) the host
+      // is transiently role-less while its radio-input descendants already
+      // exist. The wrapper is a container around real controls, not a
+      // control itself, so it must not warn in either state.
+      const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+      const invalidField = signal({
+        invalid: () => false,
+        touched: () => false,
+        errors: () => [],
+        required: () => true,
+      });
+
+      const { container } = await render(
+        `<ngx-form-field-wrapper [formField]="field" fieldName="delivery-method">
+          <span ngxFormFieldLabel>Delivery option</span>
+          <div>
+            <label>
+              <input id="delivery-standard" type="radio" value="standard" />
+              Standard
+            </label>
+            <label>
+              <input id="delivery-express" type="radio" value="express" />
+              Express
+            </label>
+          </div>
+        </ngx-form-field-wrapper>`,
+        {
+          imports: [NgxSignalFormWrapperComponent],
+          componentProperties: {
+            field: invalidField,
+          },
+        },
+      );
+
+      const wrapper = container.querySelector('ngx-form-field-wrapper');
+      expect(wrapper).toHaveAttribute('role', 'radiogroup');
+      expect(warnSpy).not.toHaveBeenCalled();
+
+      warnSpy.mockRestore();
+    });
+
     it('marks a Standard Schema (Zod-style) required field via requiredFromStandardSchema (regression #118)', async () => {
       // `validateStandardSchema` alone never surfaces required-ness (Standard
       // Schema has no runtime shape introspection), so the wrapper's
