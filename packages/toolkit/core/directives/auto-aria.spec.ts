@@ -666,7 +666,13 @@ describe('NgxSignalFormAutoAria', () => {
       expect(combobox).toHaveAttribute('aria-describedby', 'role-error');
     });
 
-    it('still sets aria-required="true" on a host with no role attribute', async () => {
+    it('does not set aria-required on a required host with no role, and warns once in dev mode', async () => {
+      // Regression test for #496: the generic role (a role-less custom host)
+      // does not support `aria-required` per WAI-ARIA 1.2, so AT would ignore
+      // it. Suppress the attribute and tell the author once, instead of
+      // silently writing ARIA screen readers cannot use.
+      const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
       @Component({
         template: '<div id="cluster" [formField]="clusterControl()"></div>',
         imports: [MockFormFieldDirective, NgxSignalFormAutoAria],
@@ -684,7 +690,147 @@ describe('NgxSignalFormAutoAria', () => {
       await TestBed.inject(ApplicationRef).whenStable();
 
       const group = container.querySelector('#cluster');
+      expect(group).not.toHaveAttribute('aria-required');
+      expect(warnSpy).toHaveBeenCalledTimes(1);
+      expect(warnSpy.mock.calls[0]?.[0]).toContain('no role');
+
+      warnSpy.mockRestore();
+    });
+
+    it('still warns when the only descendant role is decorative (role="img")', async () => {
+      // A decorative descendant (an icon, a status region) is not the
+      // host's own control. The missing-role warning must still fire —
+      // only a descendant whose role supports `aria-required` (or a native
+      // form control) counts as "this host is a container, not a control".
+      const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+      @Component({
+        template:
+          '<div id="cluster" [formField]="clusterControl()"><span role="img" aria-label="Warning"></span></div>',
+        imports: [MockFormFieldDirective, NgxSignalFormAutoAria],
+      })
+      class TestComponent {
+        clusterControl = createMockControl(
+          true,
+          true,
+          [{ kind: 'required', message: 'Field is required' }],
+          true,
+        );
+      }
+
+      const { container } = await render(TestComponent);
+      await TestBed.inject(ApplicationRef).whenStable();
+
+      const group = container.querySelector('#cluster');
+      expect(group).not.toHaveAttribute('aria-required');
+      expect(warnSpy).toHaveBeenCalledTimes(1);
+
+      warnSpy.mockRestore();
+    });
+
+    it('still sets aria-required="true" on a host with role="combobox"', async () => {
+      // Acceptance criterion from #496: a custom host that opts into a role
+      // supporting `aria-required` keeps getting the attribute.
+      @Component({
+        template:
+          '<div id="cluster" role="combobox" [formField]="clusterControl()"></div>',
+        imports: [MockFormFieldDirective, NgxSignalFormAutoAria],
+      })
+      class TestComponent {
+        clusterControl = createMockControl(
+          true,
+          true,
+          [{ kind: 'required', message: 'Field is required' }],
+          true,
+        );
+      }
+
+      const { container } = await render(TestComponent);
+      await TestBed.inject(ApplicationRef).whenStable();
+
+      const group = container.querySelector('#cluster');
       expect(group?.getAttribute('aria-required')).toBe('true');
+    });
+
+    it('treats role="Combobox" as case-insensitive and keeps aria-required', async () => {
+      // Browsers match ARIA role tokens case-insensitively, so a role
+      // authored with different casing must resolve the same way as its
+      // lowercase form.
+      @Component({
+        template:
+          '<div id="cluster" role="Combobox" [formField]="clusterControl()"></div>',
+        imports: [MockFormFieldDirective, NgxSignalFormAutoAria],
+      })
+      class TestComponent {
+        clusterControl = createMockControl(
+          true,
+          true,
+          [{ kind: 'required', message: 'Field is required' }],
+          true,
+        );
+      }
+
+      const { container } = await render(TestComponent);
+      await TestBed.inject(ApplicationRef).whenStable();
+
+      const group = container.querySelector('#cluster');
+      expect(group?.getAttribute('aria-required')).toBe('true');
+    });
+
+    it('resolves a space-separated role fallback list by its first token (supported first)', async () => {
+      // WAI-ARIA allows a space-separated list of fallback roles; only the
+      // first token is the element's role.
+      @Component({
+        template:
+          '<div id="cluster" role="combobox listbox" [formField]="clusterControl()"></div>',
+        imports: [MockFormFieldDirective, NgxSignalFormAutoAria],
+      })
+      class TestComponent {
+        clusterControl = createMockControl(
+          true,
+          true,
+          [{ kind: 'required', message: 'Field is required' }],
+          true,
+        );
+      }
+
+      const { container } = await render(TestComponent);
+      await TestBed.inject(ApplicationRef).whenStable();
+
+      const group = container.querySelector('#cluster');
+      expect(group?.getAttribute('aria-required')).toBe('true');
+    });
+
+    it('resolves a space-separated role fallback list by its first token (unsupported first)', async () => {
+      const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+      @Component({
+        template:
+          '<div id="cluster" role="slider textbox" [formField]="clusterControl()"></div>',
+        imports: [MockFormFieldDirective, NgxSignalFormAutoAria],
+      })
+      class TestComponent {
+        clusterControl = createMockControl(
+          true,
+          true,
+          [{ kind: 'required', message: 'Field is required' }],
+          true,
+        );
+      }
+
+      const { container } = await render(TestComponent);
+      await TestBed.inject(ApplicationRef).whenStable();
+
+      const group = container.querySelector('#cluster');
+      // `slider` wins as the first token and does not support
+      // `aria-required` — `textbox` further down the list never applies.
+      // The host has an explicit (unsupported) role, so the "add a role"
+      // warning does not fire either; that warning is only for a host with
+      // no role at all.
+      expect(group).not.toHaveAttribute('aria-required');
+      expect(warnSpy).not.toHaveBeenCalled();
+
+      warnSpy.mockRestore();
     });
   });
 
