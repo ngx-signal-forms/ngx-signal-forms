@@ -30,12 +30,12 @@ import {
   NGX_SIGNAL_FORM_FIELD_CONTEXT,
   NGX_SIGNAL_FORMS_CONFIG,
   createErrorVisibility,
+  createWarningVisibility,
   injectFormContext,
   isBlockingError,
   isFieldStateHidden,
   isWarningError,
   readDirectErrors,
-  shouldShowWarnings,
   type ResolvedNgxSignalFormControlSemantics,
   resolveStrategyFromContext,
   resolveWarningStrategyFromContext,
@@ -1102,6 +1102,21 @@ export class NgxFormFieldWrapper<TValue = unknown> {
     );
 
   /**
+   * Warning-channel counterpart to {@link #showErrorsByStrategy}, routed
+   * through the shared `createWarningVisibility()` seam (ADR-0006, ADR-0007)
+   * instead of hand-inlining `shouldShowWarnings()`.
+   *
+   * `effectiveWarningStrategy` / `submittedStatus` are already fully
+   * resolved (no `'inherit'`, no missing context), so — same as
+   * {@link #showErrorsByStrategy} — the seam's own cascade is a no-op
+   * pass-through here.
+   */
+  readonly #showWarningsByStrategy = createWarningVisibility(this.#fieldState, {
+    strategy: this.effectiveWarningStrategy,
+    submittedStatus: this.submittedStatus,
+  });
+
+  /**
    * Whether the error renderer should mount to show warnings, evaluated
    * independently of {@link shouldShowErrors}. Without this, a warnings-only
    * field would never render `NgxFormFieldError` at all when
@@ -1112,20 +1127,8 @@ export class NgxFormFieldWrapper<TValue = unknown> {
    */
   protected readonly shouldShowWarnings = computed(() => {
     if (this.isFieldHidden()) return false;
-
-    const hasWarnings = this.hasWarnings();
-    if (!hasWarnings) return false;
-
-    const isTouched = this.#fieldState()?.touched?.() ?? false;
-    const strategy = this.effectiveWarningStrategy();
-    const submittedStatus = this.submittedStatus() ?? 'unsubmitted';
-
-    return shouldShowWarnings(
-      hasWarnings,
-      isTouched,
-      strategy,
-      submittedStatus,
-    );
+    if (!this.hasWarnings()) return false;
+    return this.#showWarningsByStrategy();
   });
 
   /**

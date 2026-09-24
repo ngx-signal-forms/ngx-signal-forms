@@ -130,7 +130,8 @@ ngx-signal-forms — an Angular toolkit for working with Signal Forms.
   the same field suppresses them. Every warning-bearing surface routes
   through it: `NgxHeadlessErrorState`, `NgxHeadlessFieldset`,
   `NgxHeadlessErrorSummary` (and `NgxFormFieldErrorSummary` through it),
-  `createErrorState()` and `createErrorMessageSignal()`. Aggregate surfaces —
+  `createErrorState()`, `createErrorMessageSignal()`, `NgxFormFieldWrapper`,
+  and `NgxSignalFormAutoAria`. Aggregate surfaces —
   the fieldset and the summary — pass neither the presence check (their
   warnings live on member fields, and their aggregation applies that gate)
   nor a blocking-error visibility (an error on one member field must not
