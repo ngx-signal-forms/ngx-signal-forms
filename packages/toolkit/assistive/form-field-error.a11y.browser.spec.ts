@@ -448,6 +448,86 @@ describe('NgxFormFieldError — error/warning prefix (issue #498)', () => {
     await expectNoA11yViolations(container);
   });
 
+  it('renders a custom, localized prefix from NGX_SIGNAL_FORMS_CONFIG in the accessible description', async () => {
+    // Regression coverage for issue #300-style localization: earlier specs
+    // only asserted `errorPrefixText`/`warningPrefixText` at the config
+    // (provider) level — this renders both channels with non-default,
+    // non-English text and checks the *computed* accessible description,
+    // so a config value that never reaches the DOM, or reaches it in the
+    // wrong element, would fail here even though the provider test passes.
+    @Component({
+      selector: 'ngx-test-custom-prefix',
+      imports: [FormField, NgxFormFieldError],
+      providers: [
+        provideNgxSignalFormsConfigForComponent({
+          errorPrefixText: 'Fout:',
+          warningPrefixText: 'Waarschuwing:',
+        }),
+      ],
+      template: `
+        <form (submit)="$event.preventDefault()" novalidate>
+          <label for="email">Email</label>
+          <input
+            id="email"
+            [formField]="testForm.email"
+            aria-describedby="email-error"
+          />
+          <ngx-form-field-error
+            [formField]="testForm.email"
+            fieldName="email"
+            strategy="immediate"
+          />
+
+          <label for="password">Password</label>
+          <input
+            id="password"
+            [formField]="testForm.password"
+            aria-describedby="password-warning"
+          />
+          <ngx-form-field-error
+            [formField]="testForm.password"
+            fieldName="password"
+          />
+        </form>
+      `,
+    })
+    class TestComponent {
+      readonly #model = signal({ email: '', password: '' });
+      readonly testForm = form(
+        this.#model,
+        schema((path) => {
+          required(path.email, { message: 'Email is required' });
+          validate(path.password, (ctx) => {
+            const value = ctx.value();
+            if (value.length > 0 && value.length < 8) {
+              return {
+                kind: 'warn:weak-password',
+                message: 'Consider 8 or more characters',
+              };
+            }
+            return null;
+          });
+        }),
+      );
+    }
+
+    const { container } = await render(TestComponent);
+    const emailInput =
+      container.querySelector<HTMLInputElement>('input#email')!;
+    const passwordInput =
+      container.querySelector<HTMLInputElement>('input#password')!;
+    await userEvent.click(passwordInput);
+    await userEvent.type(passwordInput, 'abc');
+    await userEvent.tab();
+    await TestBed.inject(ApplicationRef).whenStable();
+
+    expect(emailInput).toHaveAccessibleDescription('Fout: Email is required');
+    expect(passwordInput).toHaveAccessibleDescription(
+      'Waarschuwing: Consider 8 or more characters',
+    );
+    await expectNoA11yViolations(container);
+  });
+
   it('includes the prefix in the panel presentation, same as inline', async () => {
     @Component({
       selector: 'ngx-test-error-prefix-panel',
