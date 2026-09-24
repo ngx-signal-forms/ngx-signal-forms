@@ -384,6 +384,55 @@
   }
 }
 
+/* Plain appearance: restore a focus indicator on the input itself. */
+/* The textual reset in `form-field-wrapper.css` removes the input's own */
+/* focus outline and relies on the container's `:focus-within` ring. The */
+/* plain rule above clears that ring, so a plain field had no focus */
+/* indicator (WCAG 2.2 SC 2.4.7). This rule has the same scope as the reset. */
+/* It carries one more class, so it wins regardless of stylesheet order. */
+:host(.ngx-signal-forms-plain.ngx-signal-form-field-wrapper--textual)
+  ::ng-deep
+  .ngx-signal-form-field-wrapper__main
+  :is(
+    input:not([type='radio']):not([type='checkbox']):not([role='switch']),
+    textarea,
+    select,
+    [role='combobox'],
+    [data-ngx-signal-form-control-kind='input-like']
+  ):focus-visible {
+  outline: 2px solid var(--_focus-color);
+  outline-offset: 2px;
+}
+
+/* Windows High Contrast (`forced-colors: active`): the shared focus rule */
+/* (`form-field-wrapper.css`) puts `outline: 2px solid Highlight` on the */
+/* container for every textual wrapper. The container also sets */
+/* `forced-color-adjust: none`, which the input inherits, so the input's */
+/* own outline above keeps its literal `--_focus-color` instead of adapting */
+/* to the system palette — two outlines, two colors. Make the input's */
+/* outline the sole focus signal for plain: drop the container outline and */
+/* point the input at the system `Highlight` color. */
+@media (forced-colors: active) {
+  :host(.ngx-signal-forms-plain.ngx-signal-form-field-wrapper--textual)
+    .ngx-signal-form-field-wrapper__content:focus-within {
+    outline: none;
+  }
+
+  :host(.ngx-signal-forms-plain.ngx-signal-form-field-wrapper--textual)
+    ::ng-deep
+    .ngx-signal-form-field-wrapper__main
+    :is(
+      input:not([type='radio']):not([type='checkbox']):not([role='switch']),
+      textarea,
+      select,
+      [role='combobox'],
+      [data-ngx-signal-form-control-kind='input-like']
+    ):focus-visible {
+    outline: 2px solid Highlight;
+    outline-offset: 2px;
+  }
+}
+
 /* Plain custom controls should still inherit the stacked field padding so they */
 /* align with regular inputs without consumer-side overrides. */
 :host(.ngx-signal-forms-plain.ngx-signal-form-field-wrapper--selection-group),
