@@ -334,11 +334,18 @@ export class NgxFormFieldErrorSummary {
 
   /**
    * The host's `aria-labelledby`, pointing at the label heading. `null`
-   * when `summaryLabel` is empty and no heading renders — the host then
-   * exposes no accessible name rather than pointing at a nonexistent id.
+   * whenever the heading is not actually in the DOM — either the summary
+   * itself is empty/hidden (`summary.shouldShow() && summary.hasErrors()`
+   * is `false`, e.g. before the first submit) or `summaryLabel` is empty.
+   * The heading only renders inside that same visibility condition (see
+   * the template), so this must match it exactly: pointing `aria-
+   * labelledby` at an id that is not yet in the DOM is an invalid ARIA
+   * reference.
    */
   protected readonly ariaLabelledBy = computed(() =>
-    this.summaryLabel() ? this.headingId : null,
+    this.summary.shouldShow() && this.summary.hasErrors() && this.summaryLabel()
+      ? this.headingId
+      : null,
   );
 
   /**

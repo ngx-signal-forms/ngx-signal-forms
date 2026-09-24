@@ -164,7 +164,7 @@ timing and suppression in that mode. Omitting a warning strategy and setting
 
 Selector: `[ngxHeadlessErrorSummary]` · Export: `errorSummary`
 
-Aggregates all errors from a form tree. Each entry has a `focus()` method that calls Angular's `focusBoundControl()`.
+Aggregates all errors from a form tree. Each entry has a `focus()` method that calls Angular's `focusBoundControl()`, and a `canFocus` flag. Render the entry as a button only when `canFocus` is `true`; otherwise render it as plain text — the error has no bound field, so `focus()` would do nothing.
 
 | Input             | Type                     | Description                                                              |
 | ----------------- | ------------------------ | ------------------------------------------------------------------------ |
@@ -352,9 +352,10 @@ sibling's warning. These low-level visibility helpers accept `configDefault`
 explicitly rather than injecting provider configuration themselves.
 
 The summary factory reads descendant errors, filters hidden/disabled fields,
-deduplicates per field, and maps resolved messages to focusable entries. Orphan
-messages stay visible even though they cannot supply a focus target. The fieldset
-factory distinguishes omitted/null `fields` from `[]`, which aggregates nothing.
+deduplicates per field, and maps resolved messages to entries. Orphan messages
+(no bound field) stay visible with `canFocus: false` rather than being dropped
+— render them as plain text, not a link or button. The fieldset factory
+distinguishes omitted/null `fields` from `[]`, which aggregates nothing.
 
 ## ARIA Composition
 
@@ -400,9 +401,9 @@ humanizeFieldPath('address.postalCode'); // 'Address / Postal code'
 createUniqueId('field'); // 'field-1', 'field-2', ...
 
 // Error-summary building blocks (what NgxHeadlessErrorSummary uses internally)
-toErrorSummaryEntry(error); // ValidationError → ErrorSummaryEntryData with focus()
+toErrorSummaryEntry(error); // ValidationError → ErrorSummaryEntryData with focus() and canFocus
 resolveFieldNameFromError(error); // ValidationError → human-readable field name
-focusBoundControlFromError(error); // focus the control bound to an error
+focusBoundControlFromError(error); // focus the control bound to an error (no-op when canFocus is false)
 ```
 
 ## Related documentation

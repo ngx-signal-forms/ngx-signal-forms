@@ -719,6 +719,44 @@ describe('NgxFormFieldErrorSummary', () => {
       const host = container.querySelector('ngx-form-field-error-summary');
       expect(host?.hasAttribute('aria-labelledby')).toBe(false);
     });
+
+    it('does not set aria-labelledby before the summary has anything to show', async () => {
+      // Regression test: `ariaLabelledBy` used to key off `summaryLabel()`
+      // alone. Before a failed submit the summary is empty and the heading
+      // is not rendered at all (it lives inside the same `@if` as the
+      // error list), so `role="group"` on the host pointed `aria-
+      // labelledby` at an id that did not exist in the DOM yet — an
+      // invalid ARIA reference (WCAG 1.3.1, 4.1.2).
+      @Component({
+        selector: 'ngx-test-error-summary-heading-before-submit',
+        imports: [FormField, NgxFormFieldErrorSummary],
+
+        template: `
+          <input id="email" [formField]="contactForm.email" />
+          <ngx-form-field-error-summary
+            [formTree]="contactForm"
+            strategy="on-submit"
+            [submittedStatus]="submittedStatus()"
+          />
+        `,
+      })
+      class TestComponent {
+        readonly #model = signal({ email: '' });
+        readonly contactForm = form(
+          this.#model,
+          schema((path) => {
+            required(path.email, { message: 'Email is required' });
+          }),
+        );
+        readonly submittedStatus = signal<SubmittedStatus>('unsubmitted');
+      }
+
+      const { container } = await render(TestComponent);
+
+      expect(screen.queryByRole('heading')).toBeNull();
+      const host = container.querySelector('ngx-form-field-error-summary');
+      expect(host?.hasAttribute('aria-labelledby')).toBe(false);
+    });
   });
 
   describe('non-focusable entries (#497)', () => {
