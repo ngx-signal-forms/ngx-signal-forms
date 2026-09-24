@@ -34,13 +34,12 @@ export type FormFieldControlKind =
  *   regardless of the requested orientation. True for the selection-control
  *   kinds (checkbox, switch, radio-group), whose rows don't read well
  *   side-by-side with their label.
- * - `clusterRole` — the ARIA role a *selection cluster* of this kind takes
- *   (`'radiogroup'` for radio-group, `'group'` for a multi-checkbox
- *   cluster), or `null` when the kind never forms a cluster. A cluster is
- *   still gated on more than the kind alone (see `isSelectionCluster` in
- *   `NgxFormFieldWrapper`, which also checks the projected control count
- *   for `'group'`) — this flag only says which role applies once a cluster
- *   is confirmed.
+ * - `clusterRole` — the ARIA role a *selection group* of this kind takes:
+ *   `'radiogroup'` for radio-group, `'group'` for a multi-checkbox group.
+ *   `null` means the kind never forms a group. The kind alone does not
+ *   decide whether a group forms. `NgxFormFieldWrapper`'s
+ *   `isSelectionCluster` also checks the projected control count for
+ *   `'group'`. This flag only names the role once a group is confirmed.
  */
 export interface ControlKindCapabilities {
   readonly textual: boolean;

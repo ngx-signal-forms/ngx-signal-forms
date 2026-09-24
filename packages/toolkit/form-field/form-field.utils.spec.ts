@@ -5,7 +5,10 @@ import {
 } from '@ngx-signal-forms/toolkit/core';
 import type { NgxSignalFormControlKind } from '@ngx-signal-forms/toolkit';
 import { readFormFieldWrapperDomSnapshot } from './form-field-dom-snapshot';
-import { capabilitiesFor } from './form-field.utils';
+import {
+  capabilitiesFor,
+  type ControlKindCapabilities,
+} from './form-field.utils';
 
 /**
  * Expected capability flags for each NgxSignalFormControlKind.
@@ -19,14 +22,7 @@ import { capabilitiesFor } from './form-field.utils';
  */
 const EXPECTED_CAPABILITIES: Record<
   NgxSignalFormControlKind,
-  {
-    textual: boolean;
-    supportsOutline: boolean;
-    selectionGroup: boolean;
-    paddedContent: boolean;
-    forcesVertical: boolean;
-    clusterRole: 'radiogroup' | 'group' | null;
-  }
+  ControlKindCapabilities
 > = {
   'input-like': {
     textual: true,
@@ -84,7 +80,7 @@ const EXPECTED_CAPABILITIES: Record<
     forcesVertical: false,
     clusterRole: null,
   },
-} satisfies Record<NgxSignalFormControlKind, object>;
+};
 
 describe('CONTROL_KIND_CAPABILITIES exhaustiveness', () => {
   it('should have a capability entry for every registered control kind', () => {

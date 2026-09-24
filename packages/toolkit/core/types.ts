@@ -189,7 +189,7 @@ export type NgxFormFieldErrorPlacement = 'top' | 'bottom';
  * 3. `CONTROL_KIND_CAPABILITIES` in
  *    `packages/toolkit/form-field/form-field.utils.ts` — the
  *    wrapper-layout capability flags (`textual`, `supportsOutline`,
- *    `selectionGroup`, `paddedContent`).
+ *    `selectionGroup`, `paddedContent`, `forcesVertical`, `clusterRole`).
  *
  * The `Record<NgxSignalFormControlKind, ...>` types on (2) and the
  * `satisfies` clause on (3) enforce exhaustiveness at compile time, so the
