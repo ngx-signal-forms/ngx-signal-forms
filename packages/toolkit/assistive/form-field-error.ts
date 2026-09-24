@@ -380,13 +380,13 @@ export class NgxFormFieldError {
     this.headless.connectFieldState(computed(() => this.formField()?.()));
 
     // Dev-only: this hook exists purely to fire the "missing field name"
-    // warning below, which `devWarnOnce` no-ops in production anyway. Skip
-    // registering it at all in production so every instance does not carry
-    // a live, unphased `afterEveryRender` hook for the rest of its life, and
-    // destroy it as soon as either outcome is settled — a name resolves, or
-    // the one-shot warning has fired — instead of leaving it running for
-    // every later render. Mirrors `NgxFormMarkingLegend`'s `isDevMode()`
-    // guard (`form-marking-legend.ts`).
+    // warning below. `devWarnOnce` no-ops in production anyway. Skip
+    // registering it at all in production. That way no instance carries a
+    // live, unphased `afterEveryRender` hook for its whole lifetime. Destroy
+    // the hook as soon as a name resolves or the one-shot warning has
+    // fired, instead of leaving it running on every later render. Uses the
+    // same `isDevMode()` guard as `NgxFormMarkingLegend`
+    // (`form-marking-legend.ts`).
     if (isDevMode()) {
       const missingNameHook = afterEveryRender(() => {
         if (this.#resolvedFieldName() !== null) {
@@ -399,9 +399,10 @@ export class NgxFormFieldError {
           'error',
           '[ngx-signal-forms] ngx-form-field-error requires an explicit `fieldName` input or a parent ngx-form-field-wrapper context. The component will render without id/aria-describedby linking until one is provided.',
         );
-        if (this.#warnedMissingName.current) {
-          missingNameHook.destroy();
-        }
+        // `devWarnOnce` above always sets `current` to `true` in dev mode
+        // (it only no-ops outside dev mode, which this branch already
+        // excludes), so the warning has fired exactly once by this point.
+        missingNameHook.destroy();
       });
     }
 

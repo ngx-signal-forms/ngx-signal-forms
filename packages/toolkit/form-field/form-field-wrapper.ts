@@ -622,13 +622,13 @@ export class NgxFormFieldWrapper<TValue = unknown> {
   readonly #boundControlElement = signal<HTMLElement | null>(null);
 
   /**
-   * Caches for the `__main` slot and the projected label element, mirroring
-   * `#boundControlElement`'s role for the bound control. Plain fields, not
-   * signals: nothing outside the `earlyRead`/`write` pair below reads them,
-   * so there is no reason to pay for change-detection tracking. Read and
-   * written only inside `afterEveryRender` — see
+   * Caches for the `__main` slot and the projected label element. They
+   * mirror `#boundControlElement`'s role for the bound control. Plain
+   * fields, not signals: nothing outside the `earlyRead`/`write` pair below
+   * reads them, so there is no reason to pay for change-detection tracking.
+   * Read and written only inside `afterEveryRender`. See
    * `readFormFieldWrapperDomSnapshot`'s cache-hit checks for why reusing
-   * these avoids a `querySelector` call on most renders.
+   * these skips a `querySelector` call on most renders.
    */
   #cachedMainSlot: HTMLElement | null = null;
   #cachedLabel: Element | null = null;
@@ -1227,11 +1227,14 @@ export class NgxFormFieldWrapper<TValue = unknown> {
     // - write: update signals only when values changed, then write data-signal-field
     //
     // `afterEveryRender` (not `afterNextRender`) is deliberate: the projected
-    // `[formField]` control can be swapped at any render — `@if` branch flips,
-    // `@for` reorder, or a dynamic component swap — and we need to re-resolve
-    // it each time. The `cacheHit` check at the top of `earlyRead` keeps the
-    // steady-state cost to a handful of DOM attribute reads when nothing has
-    // changed; only a real swap falls through to `findBoundControl`.
+    // `[formField]` control can be swapped at any render. An `@if` branch
+    // flip, an `@for` reorder, or a dynamic component swap all need a
+    // re-resolve. The cache checks in `readFormFieldWrapperDomSnapshot` skip
+    // `findBoundControl` when nothing changed. A real swap still falls
+    // through to it. The steady-state render still runs one
+    // `querySelectorAll` for the selection-control count, because an `@for`
+    // can add or remove radios without swapping the control itself, and one
+    // `checkVisibility()` call for the bound control.
     afterEveryRender({
       earlyRead: () => {
         // Resolves the host element, the bound control (native binding
@@ -1352,9 +1355,9 @@ export class NgxFormFieldWrapper<TValue = unknown> {
         // screen-reader correlation. Skip the write when no field name can
         // be resolved — the attribute would otherwise hold the string
         // `"null"` and mislead downstream DOM queries. Also skip the write
-        // when the attribute already holds the target value: `setAttribute`
-        // and `removeAttribute` mutate the DOM (and can trigger a
-        // `MutationObserver`) even when the value does not change.
+        // when the attribute already holds the target value. `setAttribute`
+        // and `removeAttribute` mutate the DOM even when the value does not
+        // change, and that can trigger a `MutationObserver`.
         if (inputEl) {
           const fieldName = this.resolvedFieldName();
           const currentFieldName = inputEl.getAttribute('data-signal-field');
@@ -1404,10 +1407,10 @@ export class NgxFormFieldWrapper<TValue = unknown> {
           this.effectiveStrategy(),
           this.effectiveWarningStrategy(),
         );
-        // `controlVisible` was already resolved in `earlyRead` (see
-        // `readFormFieldWrapperDomSnapshot`'s `controlVisible` field) so this
-        // read never runs a forced style recalculation after other
-        // wrappers' writes have mutated the DOM.
+        // `controlVisible` was already resolved in `earlyRead`. See
+        // `readFormFieldWrapperDomSnapshot`'s `controlVisible` field. This
+        // avoids a forced style recalculation after other wrappers' writes
+        // have mutated the DOM.
         this.#fieldIdentity.setControlVisible(controlVisible);
         this.#fieldIdentity.setHintIds(
           this.hintDescriptors()

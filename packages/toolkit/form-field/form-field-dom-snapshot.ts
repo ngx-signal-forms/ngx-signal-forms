@@ -49,18 +49,16 @@ export interface FormFieldWrapperDomSnapshot {
   readonly selectionControlCount: number;
   readonly label: Element | null;
   /**
-   * The resolved `__main` projected-content slot, returned so the caller can
-   * cache it across renders (see `mainSlot` param below) instead of
-   * re-running its `querySelector` every render.
+   * The resolved `__main` projected-content slot. Returned so the caller can
+   * cache it across renders and skip the `querySelector` call next time.
    */
   readonly mainSlot: HTMLElement | null;
   /**
-   * Whether `inputEl` currently has a CSS layout box, resolved here (in the
-   * `earlyRead` phase) rather than in the wrapper's `write` phase. Reading
-   * `checkVisibility()` after `write` has already mutated other wrappers'
-   * DOM would force a synchronous style recalculation for every wrapper on
-   * the page; resolving it alongside the rest of the snapshot keeps all
-   * reads together, before any writes happen.
+   * Whether `inputEl` currently has a CSS layout box. Resolved here, in the
+   * `earlyRead` phase, instead of in the wrapper's `write` phase. A `write`
+   * phase read would run after other wrappers already mutated the DOM. That
+   * forces a style recalculation this snapshot avoids by reading everything
+   * up front.
    */
   readonly controlVisible: boolean;
 }
@@ -110,11 +108,13 @@ export function readFormFieldWrapperDomSnapshot(
     hostEl.contains(cachedControl) &&
     cachedControl.hasAttribute('id');
 
-  // `mainSlot` and `label` are structural template slots: the wrapper never
-  // re-creates them without also detaching the whole host (an `@if` branch
-  // flip), so the same "still connected and still inside this host" check
-  // that guards `cachedControl` above lets steady-state renders reuse them
-  // without a `querySelector` call.
+  // `mainSlot` is a structural template slot. The wrapper never re-creates
+  // it without also detaching the whole host (an `@if` branch flip).
+  // `label` is consumer-projected content, so it can move independently.
+  // Both reuse the same `isConnected` + `hostEl.contains` guard as
+  // `cachedControl` above. The guard is what makes reuse safe, not any
+  // assumption about where the element comes from. It lets steady-state
+  // renders skip the `querySelector` call for both.
   // oxlint-disable-next-line @typescript-eslint/prefer-optional-chain -- see cacheHit above
   const mainSlot =
     cachedMainSlot?.isConnected && hostEl.contains(cachedMainSlot)
