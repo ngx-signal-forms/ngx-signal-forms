@@ -106,6 +106,7 @@ export {
   createFieldStateFlags,
   createUniqueId,
   dedupeValidationErrors,
+  errorHasFocusableTarget,
   focusBoundControlFromError,
   humanizeFieldPath,
   readDirectErrors,

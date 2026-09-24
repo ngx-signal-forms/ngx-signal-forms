@@ -1,4 +1,5 @@
-import { Component, signal } from '@angular/core';
+import { ChangeDetectorRef, Component, signal } from '@angular/core';
+import { By } from '@angular/platform-browser';
 import {
   email as signalEmail,
   form,
@@ -8,6 +9,7 @@ import {
   validate,
 } from '@angular/forms/signals';
 import type { SubmittedStatus } from '@ngx-signal-forms/toolkit';
+import { NgxHeadlessErrorSummary } from '@ngx-signal-forms/toolkit/headless';
 import { render, screen } from '@testing-library/angular';
 import { userEvent } from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -610,5 +612,196 @@ describe('NgxFormFieldErrorSummary', () => {
     expect(alert.getAttribute('role')).toBe('alert');
     expect(alert.hasAttribute('aria-live')).toBe(false);
     expect(alert.hasAttribute('aria-atomic')).toBe(false);
+  });
+
+  describe('heading and accessible name (#497)', () => {
+    it('renders the label as a level-2 heading by default, and names the focused host after it', async () => {
+      @Component({
+        selector: 'ngx-test-error-summary-heading-default',
+        imports: [FormField, NgxFormFieldErrorSummary],
+
+        template: `
+          <input id="email" [formField]="contactForm.email" />
+          <ngx-form-field-error-summary
+            [formTree]="contactForm"
+            strategy="immediate"
+            summaryLabel="Please fix the following errors:"
+          />
+        `,
+      })
+      class TestComponent {
+        readonly #model = signal({ email: '' });
+        readonly contactForm = form(
+          this.#model,
+          schema((path) => {
+            required(path.email, { message: 'Email is required' });
+          }),
+        );
+      }
+
+      const { container } = await render(TestComponent);
+
+      const heading = screen.getByRole('heading', { level: 2 });
+      expect(heading.textContent?.trim()).toBe(
+        'Please fix the following errors:',
+      );
+
+      // The focused host (tabindex="-1") must be named after the heading —
+      // otherwise a screen reader announces nothing when focus lands here
+      // on submit (WCAG 1.3.1, 2.4.6, 4.1.2).
+      const host = container.querySelector('ngx-form-field-error-summary');
+      expect(host?.getAttribute('aria-labelledby')).toBe(heading.id);
+      expect(heading.id).toBeTruthy();
+    });
+
+    it('renders the label at the configured heading level', async () => {
+      @Component({
+        selector: 'ngx-test-error-summary-heading-level',
+        imports: [FormField, NgxFormFieldErrorSummary],
+
+        template: `
+          <input id="email" [formField]="contactForm.email" />
+          <ngx-form-field-error-summary
+            [formTree]="contactForm"
+            strategy="immediate"
+            [headingLevel]="4"
+          />
+        `,
+      })
+      class TestComponent {
+        readonly #model = signal({ email: '' });
+        readonly contactForm = form(
+          this.#model,
+          schema((path) => {
+            required(path.email, { message: 'Email is required' });
+          }),
+        );
+      }
+
+      await render(TestComponent);
+
+      expect(screen.getByRole('heading', { level: 4 })).toBeTruthy();
+      expect(screen.queryByRole('heading', { level: 2 })).toBeNull();
+    });
+
+    it('renders no heading and no aria-labelledby when summaryLabel is empty', async () => {
+      @Component({
+        selector: 'ngx-test-error-summary-heading-empty-label',
+        imports: [FormField, NgxFormFieldErrorSummary],
+
+        template: `
+          <input id="email" [formField]="contactForm.email" />
+          <ngx-form-field-error-summary
+            [formTree]="contactForm"
+            strategy="immediate"
+            summaryLabel=""
+          />
+        `,
+      })
+      class TestComponent {
+        readonly #model = signal({ email: '' });
+        readonly contactForm = form(
+          this.#model,
+          schema((path) => {
+            required(path.email, { message: 'Email is required' });
+          }),
+        );
+      }
+
+      const { container } = await render(TestComponent);
+
+      expect(screen.queryByRole('heading')).toBeNull();
+      const host = container.querySelector('ngx-form-field-error-summary');
+      expect(host?.hasAttribute('aria-labelledby')).toBe(false);
+    });
+  });
+
+  describe('non-focusable entries (#497)', () => {
+    it('renders an entry with no bound control as plain text, not a link or button', async () => {
+      // `errorHasFocusableTarget` (headless) returns false for an error with
+      // no `fieldTree`. That case only arises from a malformed or
+      // third-party validator error — Angular's own `required`/`validate`
+      // schema functions always attach a fieldTree — so this test builds
+      // one directly rather than through the public form schema API. See
+      // `error-summary-utilities.spec.ts`/`utilities.spec.ts` for the
+      // headless-layer coverage of `errorHasFocusableTarget` itself.
+      @Component({
+        selector: 'ngx-test-error-summary-no-target',
+        imports: [FormField, NgxFormFieldErrorSummary],
+
+        template: `
+          <input id="email" [formField]="contactForm.email" />
+          <ngx-form-field-error-summary
+            [formTree]="contactForm"
+            strategy="immediate"
+          />
+        `,
+      })
+      class TestComponent {
+        readonly #model = signal({ email: '' });
+        readonly contactForm = form(
+          this.#model,
+          schema((path) => {
+            required(path.email, { message: 'Email is required' });
+          }),
+        );
+      }
+
+      const { fixture, container } = await render(TestComponent);
+
+      // The headless directive lives on `ngx-form-field-error-summary`
+      // itself (a hostDirective), not on the test root.
+      const summaryDebugElement = fixture.debugElement.query(
+        By.css('ngx-form-field-error-summary'),
+      );
+      const headlessSummary = summaryDebugElement.injector.get(
+        NgxHeadlessErrorSummary,
+      );
+
+      // Stub `entries()` to include one focusable and one non-focusable
+      // entry, exercising the template's canFocus branch without needing a
+      // real fieldTree-less error from the framework.
+      Object.defineProperty(headlessSummary, 'entries', {
+        configurable: true,
+        value: () => [
+          {
+            kind: 'required',
+            message: 'Email is required',
+            fieldName: 'Email',
+            canFocus: true,
+            focus: () => {
+              /* not exercised here */
+            },
+          },
+          {
+            kind: 'server',
+            message: 'Something went wrong',
+            fieldName: 'Server',
+            canFocus: false,
+            focus: () => {
+              /* no-op: no bound control */
+            },
+          },
+        ],
+      });
+      // OnPush: mutating the injected directive in place does not mark
+      // `NgxFormFieldErrorSummary`'s view dirty, so a plain
+      // `fixture.detectChanges()` would skip re-checking it. Force it.
+      summaryDebugElement.injector.get(ChangeDetectorRef).markForCheck();
+      fixture.detectChanges();
+
+      const button = screen.getByRole('button', {
+        name: /Email\s*:\s*Email is required/iu,
+      });
+      expect(button).toBeTruthy();
+
+      expect(
+        screen.queryByRole('button', { name: /Something went wrong/iu }),
+      ).toBeNull();
+      expect(
+        screen.queryByRole('link', { name: /Something went wrong/iu }),
+      ).toBeNull();
+      expect(container.textContent).toContain('Something went wrong');
+    });
   });
 });

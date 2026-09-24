@@ -32,6 +32,9 @@ export {
   type NgxFormFieldListStyle,
   type NgxFormFieldErrorListStyle,
 } from './form-field-error';
-export { NgxFormFieldErrorSummary } from './form-field-error-summary';
+export {
+  NgxFormFieldErrorSummary,
+  type NgxErrorSummaryHeadingLevel,
+} from './form-field-error-summary';
 export { NgxFormMarkingLegend } from './form-marking-legend';
 export { NgxFormFieldHint } from './hint';

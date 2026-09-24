@@ -2,13 +2,25 @@ import {
   afterRenderEffect,
   ChangeDetectionStrategy,
   Component,
+  computed,
   ElementRef,
   inject,
   input,
   untracked,
 } from '@angular/core';
-import { devWarnOnce, type WarnOnceRef } from '@ngx-signal-forms/toolkit/core';
+import {
+  createUniqueId,
+  devWarnOnce,
+  type WarnOnceRef,
+} from '@ngx-signal-forms/toolkit/core';
 import { NgxHeadlessErrorSummary } from '@ngx-signal-forms/toolkit/headless';
+
+/**
+ * Heading levels `NgxFormFieldErrorSummary` can render its label as.
+ *
+ * @group Directives
+ */
+export type NgxErrorSummaryHeadingLevel = 2 | 3 | 4 | 5 | 6;
 
 /**
  * Form-level error summary component with WCAG 2.2 compliance.
@@ -25,8 +37,19 @@ import { NgxHeadlessErrorSummary } from '@ngx-signal-forms/toolkit/headless';
  *   for immediate screen reader announcement — the explicit live/atomic
  *   attributes are intentionally omitted to avoid duplicate announcements
  *   on NVDA+Firefox.
+ * - The label renders with `role="heading"` and `aria-level` (default `2`,
+ *   configurable via `headingLevel`) so screen readers announce it as a
+ *   heading, matching WCAG 2.4.6. `aria-level` lets the level be a plain
+ *   number input instead of branching the template over six literal tag
+ *   names for `h2`–`h6`.
+ * - The summary host's `aria-labelledby` points at that heading, so
+ *   focusing the host (see below) announces the label as its accessible
+ *   name (WCAG 1.3.1, 2.4.6, 4.1.2).
  * - Error links are focusable buttons for keyboard navigation
  * - Each entry identifies the field and the error message
+ * - An entry whose error has no focusable bound control renders as plain
+ *   text instead of a button — a control that calls a no-op `focus()`
+ *   looks interactive but does nothing (WCAG 4.1.2).
  * - The summary host has `tabindex="-1"` and is **programmatically focused**
  *   the first time it appears with non-zero entries under the resolved
  *   `'on-submit'` strategy (GOV.UK / WAI tutorial pattern for WCAG 2.4.3 +
@@ -67,6 +90,11 @@ import { NgxHeadlessErrorSummary } from '@ngx-signal-forms/toolkit/headless';
     // injecting it into the natural Tab order. The `:focus-visible` outline
     // on individual error buttons is intentionally untouched.
     tabindex: '-1',
+    // Names the focused host after the heading, when one is rendered
+    // (WCAG 1.3.1, 2.4.6, 4.1.2). `null` removes the attribute rather than
+    // pointing at a heading that does not exist when `summaryLabel` is
+    // empty.
+    '[attr.aria-labelledby]': 'ariaLabelledBy()',
   },
   hostDirectives: [
     {
@@ -94,9 +122,14 @@ import { NgxHeadlessErrorSummary } from '@ngx-signal-forms/toolkit/headless';
     >
       @if (summary.shouldShow() && summary.hasErrors()) {
         @if (summaryLabel()) {
-          <p class="ngx-form-field-error-summary__label">
+          <div
+            [id]="headingId"
+            class="ngx-form-field-error-summary__label"
+            role="heading"
+            [attr.aria-level]="headingLevel()"
+          >
             {{ summaryLabel() }}
-          </p>
+          </div>
         }
         <ul class="ngx-form-field-error-summary__list" role="list">
           @for (
@@ -104,17 +137,27 @@ import { NgxHeadlessErrorSummary } from '@ngx-signal-forms/toolkit/headless';
             track entry.fieldName + '::' + entry.kind + '::' + entry.message
           ) {
             <li class="ngx-form-field-error-summary__item">
-              <button
-                type="button"
-                class="ngx-form-field-error-summary__link"
-                (click)="entry.focus()"
-              >
-                <span class="ngx-form-field-error-summary__field-name">{{
-                  entry.fieldName
-                }}</span
-                >:
-                {{ entry.message }}
-              </button>
+              @if (entry.canFocus) {
+                <button
+                  type="button"
+                  class="ngx-form-field-error-summary__link"
+                  (click)="entry.focus()"
+                >
+                  <span class="ngx-form-field-error-summary__field-name">{{
+                    entry.fieldName
+                  }}</span
+                  >:
+                  {{ entry.message }}
+                </button>
+              } @else {
+                <span class="ngx-form-field-error-summary__text">
+                  <span class="ngx-form-field-error-summary__field-name">{{
+                    entry.fieldName
+                  }}</span
+                  >:
+                  {{ entry.message }}
+                </span>
+              }
             </li>
           }
         </ul>
@@ -122,6 +165,14 @@ import { NgxHeadlessErrorSummary } from '@ngx-signal-forms/toolkit/headless';
     </div>
   `,
   styles: `
+    /* Without this, the host's default inline box does not contain the
+     * block content it wraps, so the focus-visible outline (and the
+     * programmatic-focus ring) draws around a zero-height inline box
+     * instead of the visible summary card. */
+    :host {
+      display: block;
+    }
+
     .ngx-form-field-error-summary {
       border: 2px solid var(--ngx-error-summary-border-color, #dc2626);
       border-radius: 0.375rem;
@@ -194,6 +245,16 @@ import { NgxHeadlessErrorSummary } from '@ngx-signal-forms/toolkit/headless';
     .ngx-form-field-error-summary__field-name {
       font-weight: 600;
     }
+
+    /* Non-focusable entry (no bound control): plain text at the same size
+     * as a link, but without the link's color, underline, or pointer
+     * cursor — it must not look interactive (WCAG 4.1.2). */
+    .ngx-form-field-error-summary__text {
+      display: inline-flex;
+      align-items: center;
+      padding-inline: var(--ngx-error-summary-link-padding-inline, 0.25rem);
+      font-size: 0.875rem;
+    }
   `,
 })
 export class NgxFormFieldErrorSummary {
@@ -210,10 +271,38 @@ export class NgxFormFieldErrorSummary {
   readonly #warnedFocusFailure: WarnOnceRef = { current: false };
 
   /**
+   * Stable id for the label heading, minted once in the injection context
+   * (class-field initializer — see `createUniqueId`'s SSR-safety notes).
+   * Used both as the heading's `id` and as the target of the host's
+   * `aria-labelledby`.
+   */
+  protected readonly headingId = createUniqueId(
+    'ngx-form-field-error-summary-heading',
+  );
+
+  /**
    * Label displayed above the error list.
    * @default 'Please fix the following errors:'
    */
   readonly summaryLabel = input('Please fix the following errors:');
+
+  /**
+   * Heading level the label renders as, exposed via `role="heading"` and
+   * `aria-level` rather than a literal `h2`–`h6` tag (see the class doc's
+   * Accessibility section for why).
+   *
+   * @default 2
+   */
+  readonly headingLevel = input<NgxErrorSummaryHeadingLevel>(2);
+
+  /**
+   * The host's `aria-labelledby`, pointing at the label heading. `null`
+   * when `summaryLabel` is empty and no heading renders — the host then
+   * exposes no accessible name rather than pointing at a nonexistent id.
+   */
+  protected readonly ariaLabelledBy = computed(() =>
+    this.summaryLabel() ? this.headingId : null,
+  );
 
   /**
    * Whether to programmatically focus the summary host the first time it

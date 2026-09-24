@@ -32,6 +32,16 @@ export interface ErrorSummaryEntryData {
   readonly message: string;
   readonly fieldName: string;
   readonly focus: () => void;
+  /**
+   * Whether {@link focus} can move focus to a real control.
+   *
+   * `false` for an error with no bound field (e.g. a custom validator that
+   * does not run through `error.fieldTree()`, or a field whose state does
+   * not expose `focusBoundControl()`). A consumer should render such an
+   * entry as plain text — a link or button that calls a no-op `focus()`
+   * looks interactive but does nothing, which fails WCAG 4.1.2.
+   */
+  readonly canFocus: boolean;
 }
 
 /**
@@ -138,6 +148,26 @@ export function focusBoundControlFromError(error: ValidationError): void {
 }
 
 /**
+ * Whether a `ValidationError` has a bound field that can actually receive
+ * focus via `focusBoundControlFromError()`.
+ *
+ * Mirrors the duck-typed checks {@link focusBoundControlFromError} performs
+ * before calling `focusBoundControl()`, so callers can decide up front
+ * whether an entry should render as an interactive control or as plain
+ * text.
+ *
+ * @public
+ * @group Utility Functions
+ */
+export function errorHasFocusableTarget(error: ValidationError): boolean {
+  const e = error as ValidationErrorWithFieldTree;
+  if (typeof e.fieldTree !== 'function') return false;
+
+  const fieldState = e.fieldTree();
+  return !!fieldState && typeof fieldState.focusBoundControl === 'function';
+}
+
+/**
  * Maps a `ValidationError` into an `ErrorSummaryEntryData` with resolved
  * message, field name, and focus callback.
  *
@@ -163,6 +193,7 @@ export function toErrorSummaryEntry(
     kind: error.kind,
     message,
     fieldName,
+    canFocus: errorHasFocusableTarget(error),
     focus: () => {
       focusBoundControlFromError(error);
     },
