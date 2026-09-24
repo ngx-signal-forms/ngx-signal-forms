@@ -3,8 +3,9 @@ import { TestBed } from '@angular/core/testing';
 import { FormField, form, required, schema } from '@angular/forms/signals';
 import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit';
 import { NgxFormField } from '@ngx-signal-forms/toolkit/form-field';
-import { render } from '@testing-library/angular';
+import { render, screen } from '@testing-library/angular';
 import { describe, expect, it } from 'vitest';
+import { userEvent } from 'vitest/browser';
 import { NgxFormFieldErrorSummary } from './form-field-error-summary';
 import {
   expectNoA11yViolations,
@@ -140,5 +141,125 @@ describe('NgxFormFieldErrorSummary — WCAG 2.2 AA conformance', () => {
     expect(summaryAlert?.textContent).toContain('Email is required');
 
     await expectNoA11yViolations(container);
+  });
+});
+
+/**
+ * Real-browser coverage for #497: the summary must have a heading and an
+ * accessible name, and clicking an entry must move focus onto the real
+ * field. jsdom's accessible-name computation and focus handling are close
+ * enough to a real browser for most specs, but a WCAG 1.3.1/2.4.3/2.4.6/4.1.2
+ * fix like this one is exactly the kind of thing that can pass in jsdom and
+ * fail in Chrome (or a real screen reader) — `form-field-error-summary.
+ * spec.ts` already covers the same contract in jsdom; this file is the real-
+ * browser twin. See `form-field-error-summary.spec.ts:260-358` for the
+ * jsdom-only focus-movement coverage this complements.
+ */
+describe('NgxFormFieldErrorSummary — heading, accessible name, and focus movement (#497)', () => {
+  it('renders the label as a level-2 heading and names the focused summary after it', async () => {
+    @Component({
+      selector: 'ngx-test-a11y-summary-heading',
+      imports: [
+        FormField,
+        NgxSignalFormToolkit,
+        NgxFormField,
+        NgxFormFieldErrorSummary,
+      ],
+      template: `
+        <form [formRoot]="testForm" ngxSignalForm errorStrategy="on-submit">
+          <ngx-form-field-error-summary
+            [formTree]="testForm"
+            [submittedStatus]="'submitted'"
+            summaryLabel="Please fix the following errors:"
+          />
+          <ngx-form-field-wrapper
+            [formField]="testForm.email"
+            fieldName="email"
+          >
+            <label for="email">Email address</label>
+            <input id="email" type="email" [formField]="testForm.email" />
+          </ngx-form-field-wrapper>
+        </form>
+      `,
+    })
+    class TestComponent {
+      readonly #model = signal({ email: '' });
+      readonly testForm = form(
+        this.#model,
+        schema((path) => {
+          required(path.email, { message: 'Email is required' });
+        }),
+      );
+    }
+
+    const { container } = await render(TestComponent);
+    await TestBed.inject(ApplicationRef).whenStable();
+
+    // A real heading element at the documented default level (WCAG 2.4.6).
+    const heading = screen.getByRole('heading', { level: 2 });
+    expect(heading.textContent?.trim()).toBe(
+      'Please fix the following errors:',
+    );
+    expect(heading.tagName.toLowerCase()).toBe('h2');
+    expect(heading.id).toBeTruthy();
+
+    // The summary auto-focuses itself on a failed submit (`autoFocus`
+    // defaults to `true`). The focused host must have `role="group"` (a
+    // role-less custom element computes to the generic role, which ARIA
+    // 1.2 forbids naming) and its *computed* accessible name — not just the
+    // `aria-labelledby` attribute — must resolve to the heading text in a
+    // real Chrome accessibility tree (WCAG 1.3.1, 2.4.6, 4.1.2).
+    const summaryHost = container.querySelector('ngx-form-field-error-summary');
+    expect(document.activeElement).toBe(summaryHost);
+    expect(summaryHost).toHaveRole('group');
+    expect(summaryHost).toHaveAccessibleName(
+      'Please fix the following errors:',
+    );
+  });
+
+  it('moves focus to the invalid field when its summary entry is activated', async () => {
+    @Component({
+      selector: 'ngx-test-a11y-summary-focus-movement',
+      imports: [
+        FormField,
+        NgxSignalFormToolkit,
+        NgxFormField,
+        NgxFormFieldErrorSummary,
+      ],
+      template: `
+        <form [formRoot]="testForm" ngxSignalForm errorStrategy="on-submit">
+          <ngx-form-field-error-summary
+            [formTree]="testForm"
+            [submittedStatus]="'submitted'"
+          />
+          <ngx-form-field-wrapper
+            [formField]="testForm.email"
+            fieldName="email"
+          >
+            <label for="email">Email address</label>
+            <input id="email" type="email" [formField]="testForm.email" />
+          </ngx-form-field-wrapper>
+        </form>
+      `,
+    })
+    class TestComponent {
+      readonly #model = signal({ email: '' });
+      readonly testForm = form(
+        this.#model,
+        schema((path) => {
+          required(path.email, { message: 'Email is required' });
+        }),
+      );
+    }
+
+    await render(TestComponent);
+    await TestBed.inject(ApplicationRef).whenStable();
+
+    const entry = screen.getByRole('button', {
+      name: /email\s*:\s*Email is required/iu,
+    });
+    await userEvent.click(entry);
+
+    expect(document.activeElement).toBe(screen.getByLabelText('Email address'));
   });
 });

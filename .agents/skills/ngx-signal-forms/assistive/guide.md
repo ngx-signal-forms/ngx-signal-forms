@@ -39,7 +39,8 @@ The assistive entry point provides accessible feedback rendering that sits betwe
    - `summaryLabel` defaults to `'Please fix the following errors:'`. Override with a meaningful label.
    - Renders blocking errors only (no warnings). For warnings, use `NgxHeadlessErrorSummary` instead.
    - Inherits `errorStrategy` and `submittedStatus` from `ngxSignalForm` context automatically — no extra wiring needed when used inside `form[formRoot][ngxSignalForm]`.
-   - Each entry is a focusable button that calls `focusBoundControl()` on click.
+   - An entry is a focusable button that calls `focusBoundControl()` on click only when its error has a focusable target; otherwise it renders as plain text (a control with a no-op `focus()` would look interactive but do nothing).
+   - The label renders as a native heading (`h2`–`h6`); `headingLevel` picks the level (default `2`).
 
 - Uses `role="alert"` and relies on the role's implicit live-region semantics (no explicit `aria-live` / `aria-atomic`).
 

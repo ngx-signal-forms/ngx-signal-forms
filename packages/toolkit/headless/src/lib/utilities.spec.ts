@@ -1358,5 +1358,48 @@ describe('Headless Utilities', () => {
       result.entries()[0]?.focus();
       expect(focused).toBe(true);
     });
+
+    it('marks an entry as canFocus: false when its error has no fieldTree', () => {
+      // Regression test for #497: a custom validator can emit a
+      // ValidationError with no `fieldTree` at all (not tied to any field).
+      // `isErrorOnInteractiveField` still lets it through (its default is
+      // "show, don't hide"), so the entry reaches the summary — but
+      // `focus()` on it is a silent no-op. A consumer must be able to tell
+      // these two cases apart so it does not render a button that looks
+      // interactive but does nothing (WCAG 4.1.2).
+      const error: ValidationError = {
+        kind: 'server',
+        message: 'Something went wrong',
+      };
+
+      const fieldState = signal({ errorSummary: () => [error] });
+
+      const result = createErrorSummaryEntries({
+        fieldState,
+        showErrors: signal(true),
+        showWarnings: signal(true),
+      });
+
+      expect(result.entries()).toHaveLength(1);
+      expect(result.entries()[0]?.canFocus).toBe(false);
+    });
+
+    it('marks an entry as canFocus: true when its error has a focusable fieldTree', () => {
+      const error: ValidationError = {
+        kind: 'required',
+        message: 'Required',
+        fieldTree: fieldTreeFor('email'),
+      } as ValidationError;
+
+      const fieldState = signal({ errorSummary: () => [error] });
+
+      const result = createErrorSummaryEntries({
+        fieldState,
+        showErrors: signal(true),
+        showWarnings: signal(true),
+      });
+
+      expect(result.entries()[0]?.canFocus).toBe(true);
+    });
   });
 });

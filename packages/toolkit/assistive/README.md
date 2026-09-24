@@ -122,13 +122,19 @@ Form-level error summary with clickable entries that focus the invalid control.
 />
 ```
 
-| Input             | Type                   | Description                                                                                             |
-| ----------------- | ---------------------- | ------------------------------------------------------------------------------------------------------- |
-| `formTree`        | `FieldTree` (required) | Root form to aggregate errors from                                                                      |
-| `summaryLabel`    | `string`               | Label above the error list                                                                              |
-| `strategy`        | `ErrorDisplayStrategy` | When to show errors                                                                                     |
-| `submittedStatus` | `SubmittedStatus`      | Manual override for `'on-submit'`                                                                       |
-| `autoFocus`       | `boolean`              | Auto-focus the summary on first appearance under `'on-submit'` (default `true`); set `false` to opt out |
+| Input             | Type                    | Description                                                                                             |
+| ----------------- | ----------------------- | ------------------------------------------------------------------------------------------------------- |
+| `formTree`        | `FieldTree` (required)  | Root form to aggregate errors from                                                                      |
+| `summaryLabel`    | `string`                | Label above the error list                                                                              |
+| `headingLevel`    | `2 \| 3 \| 4 \| 5 \| 6` | Heading level for the label — renders a native `h2`–`h6` (default `2`)                                  |
+| `strategy`        | `ErrorDisplayStrategy`  | When to show errors                                                                                     |
+| `submittedStatus` | `SubmittedStatus`       | Manual override for `'on-submit'`                                                                       |
+| `autoFocus`       | `boolean`               | Auto-focus the summary on first appearance under `'on-submit'` (default `true`); set `false` to opt out |
+
+The label is the summary's accessible name: focusing the summary (see
+`autoFocus` above) announces it via `aria-labelledby`. An entry whose error
+has no bound control (for example a custom validator not tied to a field)
+renders as plain text instead of a button, because it has nothing to focus.
 
 Override field names with `provideFieldLabels()` from `@ngx-signal-forms/toolkit`.
 
