@@ -124,13 +124,19 @@ describe('readFormFieldWrapperDomSnapshot — native-vs-fallback precedence', ()
     ...controls: readonly HTMLElement[]
   ): HTMLElement {
     const host = document.createElement('div');
+    // Mirrors the real template's structural `__layout` wrapper (#523) — see
+    // form-field-wrapper.ts and form-field-dom-snapshot.ts's
+    // `:scope > … > …` selectors.
+    const layout = document.createElement('div');
+    layout.className = 'ngx-signal-form-field-wrapper__layout';
     const content = document.createElement('div');
     content.className = 'ngx-signal-form-field-wrapper__content';
     const main = document.createElement('div');
     main.className = 'ngx-signal-form-field-wrapper__main';
     main.append(...controls);
     content.append(main);
-    host.append(content);
+    layout.append(content);
+    host.append(layout);
     return host;
   }
 
@@ -184,6 +190,12 @@ describe('readFormFieldWrapperDomSnapshot — native-vs-fallback precedence', ()
     // scoped to `__main` so only the real control can match.
     const host = document.createElement('div');
 
+    // The real template nests label/content one level deeper, inside the
+    // structural `__layout` wrapper (#523) — see form-field-wrapper.ts and
+    // form-field-dom-snapshot.ts's `:scope > … > …` selectors.
+    const layout = document.createElement('div');
+    layout.className = 'ngx-signal-form-field-wrapper__layout';
+
     const label = document.createElement('div');
     label.className = 'ngx-signal-form-field-wrapper__label';
     // A native <button type="button"> with an id satisfies
@@ -208,7 +220,8 @@ describe('readFormFieldWrapperDomSnapshot — native-vs-fallback precedence', ()
     main.append(realControl);
 
     content.append(prefix, main);
-    host.append(label, content);
+    layout.append(label, content);
+    host.append(layout);
 
     const snapshot = readFormFieldWrapperDomSnapshot(
       host,

@@ -41,8 +41,13 @@ function getMessagePlacement(
   fieldset: ReturnType<FormFieldWrapperComplexPage['getFieldsetByLegend']>,
 ): Promise<'top' | 'bottom' | 'missing'> {
   return fieldset.evaluate((host) => {
+    // A form-field-wrapper host (e.g. a radio-group cluster) nests its
+    // messages/content/assistive children one level deeper, inside a
+    // structural `__layout` wrapper (#523) — see form-field-wrapper.ts.
     const layoutRoot =
-      host.querySelector('.ngx-signal-form-fieldset__surface') ?? host;
+      host.querySelector('.ngx-signal-form-fieldset__surface') ??
+      host.querySelector(':scope > .ngx-signal-form-field-wrapper__layout') ??
+      host;
     const messageContainer = host.querySelector(
       '.ngx-signal-form-fieldset__messages, .ngx-signal-form-field-wrapper__messages, .ngx-signal-form-field-wrapper__assistive',
     );

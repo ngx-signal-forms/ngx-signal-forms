@@ -229,3 +229,28 @@ ngx-signal-forms — an Angular toolkit for working with Signal Forms.
   the unresolvable-Vest-field-name rule
   ([#291](https://github.com/ngx-signal-forms/ngx-signal-forms/issues/291))
   shipped in [#307](https://github.com/ngx-signal-forms/ngx-signal-forms/pull/307).
+
+- **The horizontal form-field layout's grid lives on a structural child, not
+  `:host`.** `ngx-form-field-wrapper` renders a `.ngx-signal-form-field-wrapper__layout`
+  div around label/messages/content/assistive. It is `display: contents` for
+  every appearance except horizontal, so it is invisible to layout and every
+  other appearance is unaffected. Horizontal turns it into the real CSS Grid
+  container and gives it `container-type: inline-size`, so a `@container`
+  query reacts to the wrapper's own rendered width instead of the viewport
+  (a wrapper can sit in a narrow column on a wide screen). The container
+  can't be `:host` itself, for two reasons: a `@container` size query cannot
+  restyle the same element that carries `container-type` (the grid and the
+  query source must be different elements), and `container-type` on `:host`
+  would risk zeroing its reported intrinsic size inside a _consumer's_ own
+  `auto`-sized flex/grid row. Below the threshold
+  (`--ngx-form-field-horizontal-stack-below`, default `20rem`), every grid
+  item spans the full width and gets an explicit row, stacking the label
+  above the control (WCAG 1.4.10, 1.4.4) instead of squeezing the control
+  under a fixed-width label column. A plain `@container` size query with a
+  literal `20rem` carries the fix on every toolkit-supported browser; a
+  `style()` query on a pre-computed 0/1 custom property is OR'd in beside it
+  so the public token can actually move the threshold, which needs newer
+  browsers (Chrome 111+, Safari 18+, Firefox 151+) than the toolkit's own
+  floor — `@container` size queries alone don't support reading a custom
+  property directly. See THEMING.md, "Horizontal Layout", and
+  [#523](https://github.com/ngx-signal-forms/ngx-signal-forms/issues/523).

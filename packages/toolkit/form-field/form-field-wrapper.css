@@ -443,6 +443,16 @@
     --ngx-form-field-horizontal-label-valign,
     center
   );
+  /* Container-query threshold (#523): below this inline size the horizontal
+     layout stacks (label above control) instead of squeezing the input
+     column. `rem`-based so it scales with the root font size the same way
+     the fixed-width label column does — see THEMING.md, "Horizontal
+     Layout". The comparison itself lives in
+     form-field-wrapper.selection.css. */
+  --_horizontal-stack-below: var(
+    --ngx-form-field-horizontal-stack-below,
+    20rem
+  );
 }
 
 /* ============================================================================ */
@@ -472,6 +482,16 @@
  */
 :host([hidden]) {
   display: none !important;
+}
+
+/* Structural wrapper around label/messages/content/assistive (#523).
+   `display: contents` drops it out of the box tree so every appearance
+   below keeps laying out its children directly against `:host`, exactly as
+   if the wrapper div didn't exist. Only the horizontal layout (see
+   form-field-wrapper.selection.css) gives it a real box, since that's the
+   one layout that needs an inline-size container query. */
+.ngx-signal-form-field-wrapper__layout {
+  display: contents;
 }
 
 :host(.ngx-signal-form-field-wrapper--selection-group) {
@@ -1024,14 +1044,17 @@
 /* textual non-plain wrappers so this mirrors the standard/outline rules */
 /* and cannot rewrite the grid on any non-textual host that might carry */
 /* the `--horizontal` class (today selection controls force vertical, but */
-/* the CSS should not rely on that invariant). */
+/* the CSS should not rely on that invariant). The grid itself lives on */
+/* `__layout`, not `:host` (see form-field-wrapper.selection.css, */
+/* "HORIZONTAL LAYOUT", #523), so these overrides target that div. */
 :host(
-  .ngx-signal-form-field-wrapper--textual.ngx-signal-form-field-wrapper--horizontal:not(
-      .ngx-signal-forms-plain
-    )
-):not(
-  :has(.ngx-signal-form-field-wrapper__label :is(label, [ngxFormFieldLabel]))
-) {
+    .ngx-signal-form-field-wrapper--textual.ngx-signal-form-field-wrapper--horizontal:not(
+        .ngx-signal-forms-plain
+      )
+  ):not(
+    :has(.ngx-signal-form-field-wrapper__label :is(label, [ngxFormFieldLabel]))
+  )
+  .ngx-signal-form-field-wrapper__layout {
   grid-template-columns: minmax(0, 1fr);
   grid-template-areas:
     'content'
@@ -1039,12 +1062,13 @@
 }
 
 :host(
-  .ngx-signal-form-field-wrapper--textual.ngx-signal-form-field-wrapper--horizontal.ngx-signal-form-field-wrapper--messages-top:not(
-      .ngx-signal-forms-plain
-    )
-):not(
-  :has(.ngx-signal-form-field-wrapper__label :is(label, [ngxFormFieldLabel]))
-) {
+    .ngx-signal-form-field-wrapper--textual.ngx-signal-form-field-wrapper--horizontal.ngx-signal-form-field-wrapper--messages-top:not(
+        .ngx-signal-forms-plain
+      )
+  ):not(
+    :has(.ngx-signal-form-field-wrapper__label :is(label, [ngxFormFieldLabel]))
+  )
+  .ngx-signal-form-field-wrapper__layout {
   grid-template-areas:
     'messages'
     'content'
