@@ -303,3 +303,16 @@ missing from the root barrel.
    shrink the wrapper; B (capabilities); C (character count).
 4. **Hardening (M):** API-extractor + publint + attw, version matrix,
    `size-limit`, blocking demo a11y job, release PAT isolation.
+
+## Tracking issues
+
+| Area | Issues |
+| --- | --- |
+| Accessibility | #493 plain focus, #494 dark-mode trigger, #495 focus ring and border contrast, #496 `aria-required` on role-less hosts, #497 error summary heading, #498 error/warning prefix, #499 character count describedby, #500 decisions (hint hiding, alert stacking, reflow), #501 a11y spec gaps |
+| Security / CI | #502 publish gate, #503 release token and workflow inputs |
+| Performance | #504 per-render DOM work |
+| Correctness | #505 field-name lookups and ids |
+| Architecture | #506 reference wrappers and cascade seams, #507 warning seam in-package, #508 field presentation and DOM sync, #509 capability table, #510 character-count model, #512 small cleanups |
+| Public API | #511 surface review before 1.0 final |
+| Testing / automation | #513 coverage and release gate, #514 API and tarball guard, #515 version matrix, #516 commit conventions, #517 blocking demo a11y job, #518 test hygiene |
+| Docs | #519 migration guides, #520 links, architecture notes, tokens, TSDoc |
