@@ -386,9 +386,10 @@ describe('NgxSignalFormWrapperComponent', () => {
       // Regression: `fieldName="x other-id"` used to leak raw into
       // `NgxFormFieldHint.resolvedFieldName()`, producing `x other-id-hint` —
       // two tokens in `aria-describedby`, the second one pointing at nothing.
-      // Routing `NgxFormFieldWrapper.resolvedFieldName` through
-      // `resolveFieldNameFromCandidates` (which now normalizes inner
-      // whitespace) keeps every published id a single token.
+      // `NgxFormFieldWrapper.resolvedFieldName` stays raw (path lookups and
+      // `controlId` need the exact characters); `generateErrorId` and the
+      // hint id builder sanitize inner whitespace at the point each id is
+      // built, keeping every published id a single token.
       @Component({
         selector: 'ngx-test-whitespace-hint',
         imports: [

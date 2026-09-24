@@ -391,12 +391,14 @@ describe('injectFieldControl', () => {
     interface RealFormModel {
       email: string;
       address: { city: string } | null;
+      'full name': string;
     }
 
     const makeRealForm = (): FieldTree<RealFormModel> => {
       const model = signal<RealFormModel>({
         email: 'ada@example.com',
         address: null,
+        'full name': 'Ada Lovelace',
       });
       return TestBed.runInInjectionContext(() =>
         form(
@@ -412,6 +414,27 @@ describe('injectFieldControl', () => {
       form: realForm,
       submittedStatus: signal<SubmittedStatus>('unsubmitted'),
       errorStrategy: signal('on-touch'),
+    });
+
+    it('resolves a form key with an inner space from an element id with the same space', () => {
+      // Regression: `resolveFieldName` used to hyphenate inner whitespace
+      // (round-2 fix for #505's ARIA id-generation bug), which broke path
+      // navigation for any field literally named with a space — the id
+      // would resolve to "full-name" and no such key exists on the form.
+      // Path navigation must use the RAW (trimmed-only) name; ARIA id
+      // sanitization happens at a different boundary now.
+      const realForm = makeRealForm();
+      const injector = Injector.create({
+        providers: [
+          { provide: NGX_SIGNAL_FORM_CONTEXT, useValue: contextFor(realForm) },
+        ],
+      });
+
+      const element = document.createElement('input');
+      element.setAttribute('id', 'full name');
+
+      const result = injectFieldControl(element, injector);
+      expect(result).toBe(realForm['full name']);
     });
 
     it.each(['constructor', '__proto__'])(

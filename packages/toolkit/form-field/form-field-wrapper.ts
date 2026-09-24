@@ -50,6 +50,7 @@ import {
   devWarnOnce,
   isFieldStateRequired,
   isHtmlElement,
+  sanitizeFieldNameForId,
   type WarnOnceRef,
 } from '@ngx-signal-forms/toolkit/core';
 import {
@@ -882,6 +883,13 @@ export class NgxFormFieldWrapper<TValue = unknown> {
    * (auto-ARIA, hint registry, projected error component) handle `null` by
    * skipping the `aria-describedby` wiring.
    *
+   * The returned name is raw (trimmed, not sanitized for inner whitespace)
+   * — the same value used for `data-signal-field` and for matching against
+   * `NGX_SIGNAL_FORM_FIELD_VISIBILITY_REGISTRY` entries. Whatever builds an
+   * `id` from it (`generateErrorId`, the hint id builder, the
+   * selection-cluster label id below) sanitizes at that point instead. See
+   * `sanitizeFieldNameForId`.
+   *
    * **Pure by design**: this computed performs no side effects. Projected
    * children (`NgxFormFieldHint`, `NgxFormFieldError`) read it via
    * `NGX_SIGNAL_FORM_FIELD_CONTEXT` during the *first* change-detection
@@ -1296,7 +1304,9 @@ export class NgxFormFieldWrapper<TValue = unknown> {
             ? existingLabelId
             : resolvedFieldName === null
               ? null
-              : `${resolvedFieldName}-label`;
+              : // Sanitize here, at the point the id is built — `resolvedFieldName`
+                // is the raw resolved name and may contain inner whitespace.
+                `${sanitizeFieldNameForId(resolvedFieldName)}-label`;
 
           if (nextLabelId !== null && existingLabelId.length === 0) {
             label.id = nextLabelId;

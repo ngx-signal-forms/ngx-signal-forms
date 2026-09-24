@@ -1,4 +1,8 @@
-import { generateRequiredHintId } from '@ngx-signal-forms/toolkit/core';
+import {
+  generateErrorId,
+  generateRequiredHintId,
+  generateWarningId,
+} from '@ngx-signal-forms/toolkit/core';
 import { capabilitiesFor, type FormFieldControlKind } from './form-field.utils';
 
 /**
@@ -125,10 +129,13 @@ export function resolveClusterAriaAttrs(
     }
 
     if (fieldName !== null) {
+      // `generateErrorId`/`generateWarningId` sanitize `fieldName` for
+      // inner whitespace themselves — `fieldName` here is the raw resolved
+      // name, so build through them rather than concatenating directly.
       if (showInvalidState) {
-        managedIds.push(`${fieldName}-error`);
+        managedIds.push(generateErrorId(fieldName));
       } else if (showWarningState && shouldShowWarnings) {
-        managedIds.push(`${fieldName}-warning`);
+        managedIds.push(generateWarningId(fieldName));
       }
     }
   }

@@ -5,18 +5,13 @@ import { createFieldNameResolver } from './create-field-name-resolver';
 
 describe('createFieldNameResolver', () => {
   let consoleErrorSpy: ReturnType<typeof vi.spyOn>;
-  let consoleWarnSpy: ReturnType<typeof vi.spyOn>;
 
   beforeEach(() => {
     consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-    // `normalizeFieldName` logs a one-shot dev warning when it replaces
-    // inner whitespace — silence it here so it doesn't clutter test output.
-    consoleWarnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
   });
 
   afterEach(() => {
     consoleErrorSpy.mockRestore();
-    consoleWarnSpy.mockRestore();
   });
 
   it('returns the explicit input when provided and non-empty', () => {
@@ -44,11 +39,14 @@ describe('createFieldNameResolver', () => {
     });
   });
 
-  it('replaces inner whitespace in the explicit input with a hyphen', () => {
-    // Regression: this resolver used to trim inline instead of calling
-    // `resolveFieldNameFromCandidates` (which normalizes inner whitespace),
-    // so a data-driven `fieldName` like "x other-id" leaked a raw space into
-    // every id generated from it.
+  it('leaves inner whitespace in the explicit input untouched — id builders sanitize separately', () => {
+    // This resolver calls `resolveFieldNameFromCandidates` (trim/null-collapse
+    // only, no whitespace sanitization) — the same primitive
+    // `injectFieldControl` and `NgxFieldIdentity.controlId` rely on. A
+    // wrapper author who binds this resolved name straight to `[id]` (as the
+    // `NgxHeadlessFieldName` docs show) needs the raw characters; whatever
+    // builds an ARIA id from it (`generateErrorId` and friends) sanitizes at
+    // that point instead.
     TestBed.runInInjectionContext(() => {
       const resolver = createFieldNameResolver({
         explicit: signal<string | undefined>('x other-id'),
@@ -56,11 +54,11 @@ describe('createFieldNameResolver', () => {
         wrapperName: 'test-wrapper',
       });
 
-      expect(resolver()).toBe('x-other-id');
+      expect(resolver()).toBe('x other-id');
     });
   });
 
-  it('replaces inner whitespace in the bound-control id with a hyphen', () => {
+  it('leaves inner whitespace in the bound-control id untouched', () => {
     TestBed.runInInjectionContext(() => {
       const element = document.createElement('input');
       element.id = 'x other-id';
@@ -71,7 +69,7 @@ describe('createFieldNameResolver', () => {
         wrapperName: 'test-wrapper',
       });
 
-      expect(resolver()).toBe('x-other-id');
+      expect(resolver()).toBe('x other-id');
     });
   });
 

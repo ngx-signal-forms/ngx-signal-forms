@@ -63,10 +63,15 @@ export interface CreateFieldNameResolverOptions {
  * form-field wrapper. Mirrors the priority cascade in the canonical
  * `NgxFormFieldWrapper`:
  *
- *   1. Explicit consumer input (trimmed; non-empty; inner whitespace becomes `-`).
- *   2. Optional label `for=` attribute reader (same trim/whitespace rule).
- *   3. Bound control's `id` attribute (same trim/whitespace rule).
+ *   1. Explicit consumer input (trimmed; non-empty).
+ *   2. Optional label `for=` attribute reader (same trim rule).
+ *   3. Bound control's `id` attribute (same trim rule).
  *   4. `null` (auto-ARIA gracefully no-ops; emits a one-shot dev warning).
+ *
+ * The resolved name is raw — trimmed, but not sanitized for inner
+ * whitespace — matching {@link resolveFieldNameFromCandidates}. Whoever
+ * turns this into an `id` (`generateErrorId` and friends) sanitizes at
+ * that point instead; see `sanitizeFieldNameForId`.
  *
  * The dev-mode warning latches on the first miss and stays silent for
  * every subsequent recomputation (hit or miss) for the resolver's
