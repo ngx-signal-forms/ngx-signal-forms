@@ -1,4 +1,4 @@
-import { ApplicationRef, Component, signal } from '@angular/core';
+import { ApplicationRef, Component, input, signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import {
   FormField,
@@ -10,6 +10,7 @@ import {
 import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit';
 import {
   NgxFormFieldCharacterCount,
+  NgxFormFieldErrorSummary,
   NgxFormMarkingLegend,
 } from '@ngx-signal-forms/toolkit/assistive';
 import { expectNoA11yViolations } from '@ngx-signal-forms/toolkit/testing';
@@ -37,7 +38,8 @@ declare module 'vitest/browser' {
  * `color-scheme` that the app declares, and nothing else. These specs cover
  * the three setups that THEMING.md documents, and run axe (which includes
  * the WCAG 1.4.3 contrast rule) over the wrapper, error, warning, hint,
- * character count and marking legend in each one.
+ * character count, marking legend, fieldset (with its invalid surface and
+ * grouped error) and error summary in each one.
  */
 
 const LIGHT_ERROR = 'rgb(219, 24, 24)'; // #db1818
@@ -50,14 +52,52 @@ const DARK_ERROR = 'rgb(252, 165, 165)'; // #fca5a5
     NgxSignalFormToolkit,
     NgxFormField,
     NgxFormFieldCharacterCount,
+    NgxFormFieldErrorSummary,
     NgxFormMarkingLegend,
   ],
   template: `
     <form [formRoot]="testForm" ngxSignalForm errorStrategy="immediate">
+      <ngx-form-field-error-summary
+        [formTree]="testForm"
+        [submittedStatus]="'submitted'"
+        [autoFocus]="false"
+        summaryLabel="Please fix the following errors:"
+      />
+
       <ngx-form-marking-legend
         [formTree]="testForm"
         showMarkerWhen="required"
       />
+
+      <fieldset
+        ngxFormFieldset
+        [field]="testForm.passwords"
+        [validationSurface]="tintInvalidSurface() ? 'always' : 'never'"
+      >
+        <legend>Passwords</legend>
+        <ngx-form-field-wrapper
+          [formField]="testForm.passwords.password"
+          fieldName="password"
+        >
+          <label for="password">Password</label>
+          <input
+            id="password"
+            type="password"
+            [formField]="testForm.passwords.password"
+          />
+        </ngx-form-field-wrapper>
+        <ngx-form-field-wrapper
+          [formField]="testForm.passwords.confirm"
+          fieldName="confirm"
+        >
+          <label for="confirm">Confirm password</label>
+          <input
+            id="confirm"
+            type="password"
+            [formField]="testForm.passwords.confirm"
+          />
+        </ngx-form-field-wrapper>
+      </fieldset>
 
       <ngx-form-field-wrapper [formField]="testForm.name" fieldName="name">
         <label for="name">Full name</label>
@@ -108,6 +148,13 @@ const DARK_ERROR = 'rgb(252, 165, 165)'; // #fca5a5
   `,
 })
 class ColorSchemeFixtureComponent {
+  /**
+   * Tints the invalid fieldset surface. Off for the light-scheme scans: the
+   * light tint (#fbdddd, unchanged by #494) puts wrapper labels at 4.35:1,
+   * a known light-mode gap that #494 does not change (#db1818 text on it is
+   * 3.97:1). It needs a design decision and is tracked separately.
+   */
+  readonly tintInvalidSurface = input(false);
   readonly testForm = form(
     signal({
       name: '',
@@ -117,9 +164,16 @@ class ColorSchemeFixtureComponent {
       motto: 'Carpe die',
       // Past the limit: the "exceeded" color.
       tagline: 'Way past the ten character limit',
+      passwords: { password: 'hunter2', confirm: 'hunter3' },
     }),
     schema((path) => {
       required(path.name, { message: 'Full name is required' });
+      validate(path.passwords, (ctx) => {
+        const { password, confirm } = ctx.value();
+        return password === confirm
+          ? null
+          : { kind: 'passwordMismatch', message: 'Passwords must match' };
+      });
       validate(path.username, (ctx) =>
         ctx.value().length < 3
           ? { kind: 'warn:short-username', message: 'Consider 3+ characters' }
@@ -135,9 +189,12 @@ class ColorSchemeFixtureComponent {
  * axe reads the background from the element tree, so the surface must paint
  * one for the contrast check to measure the right pair.
  */
-async function renderFixture(surfaceStyle: string): Promise<HTMLElement> {
+async function renderFixture(
+  surfaceStyle: string,
+  { tintInvalidSurface = false } = {},
+): Promise<HTMLElement> {
   const { container } = await render(
-    `<div id="surface" style="${surfaceStyle}; padding: 1rem;"><ngx-test-color-scheme-fixture /></div>`,
+    `<div id="surface" style="${surfaceStyle}; padding: 1rem;"><ngx-test-color-scheme-fixture [tintInvalidSurface]="${tintInvalidSurface}" /></div>`,
     { imports: [ColorSchemeFixtureComponent] },
   );
   // Warnings show once the field is touched.
@@ -156,6 +213,17 @@ async function renderFixture(surfaceStyle: string): Promise<HTMLElement> {
   expect(container.querySelector('.ngx-form-marking-legend')).toBeTruthy();
   expect(container.querySelector('[data-limit-state="exceeded"]')).toBeTruthy();
   expect(container.querySelector('[data-limit-state="warning"]')).toBeTruthy();
+  // The fieldset shows its group error (and tints its surface when asked),
+  // and the summary lists the field errors.
+  expect(
+    Boolean(
+      container.querySelector('.ngx-signal-form-fieldset--surface-invalid'),
+    ),
+  ).toBe(tintInvalidSurface);
+  expect(container.textContent).toContain('Passwords must match');
+  expect(
+    container.querySelector('.ngx-form-field-error-summary__link'),
+  ).toBeVisible();
 
   return container.querySelector<HTMLElement>('#surface')!;
 }
@@ -176,9 +244,16 @@ async function switchOsScheme(colorScheme: 'light' | 'dark'): Promise<void> {
     .toBe(0);
 }
 
-const errorColor = (surface: HTMLElement): string =>
-  getComputedStyle(surface.querySelector('.ngx-form-field-error--error')!)
-    .color;
+/** Color of the inline "Full name" error (the fieldset's panel has its own). */
+const errorColor = (surface: HTMLElement): string => {
+  const inlineError = Array.from(
+    surface.querySelectorAll<HTMLElement>('.ngx-form-field-error--error'),
+  ).find((element) => element.textContent?.includes('Full name is required'));
+  if (!inlineError) {
+    throw new Error('Expected the inline "Full name" error to render.');
+  }
+  return getComputedStyle(inlineError).color;
+};
 
 describe('toolkit colors follow the inherited color-scheme (#494)', () => {
   afterEach(async () => {
@@ -206,6 +281,7 @@ describe('toolkit colors follow the inherited color-scheme (#494)', () => {
     // every toolkit color.
     const surface = await renderFixture(
       'color-scheme: dark; background-color: #1f2937; color: #f9fafb',
+      { tintInvalidSurface: true },
     );
 
     expect(errorColor(surface)).toBe(DARK_ERROR);
@@ -226,6 +302,18 @@ describe('toolkit colors follow the inherited color-scheme (#494)', () => {
 
     await switchOsScheme('light');
     expect(errorColor(surface)).toBe(LIGHT_ERROR);
+    await expectNoA11yViolations(surface);
+  });
+
+  it('keeps the tinted invalid fieldset surface readable when :root follows a dark OS', async () => {
+    document.documentElement.style.setProperty('color-scheme', 'light dark');
+    await commands.emulateColorScheme('dark');
+    const surface = await renderFixture(
+      'background-color: Canvas; color: CanvasText',
+      { tintInvalidSurface: true },
+    );
+
+    expect(errorColor(surface)).toBe(DARK_ERROR);
     await expectNoA11yViolations(surface);
   });
 });
