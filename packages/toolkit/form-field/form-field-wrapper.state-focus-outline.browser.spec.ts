@@ -181,14 +181,19 @@ describe('NgxFormFieldWrapper — state focus outline contrast (#495)', () => {
     await tabIntoInput(container);
     expect(document.activeElement).toBe(input.element());
 
-    const outlineColor = getComputedStyle(contentOf(container)).outlineColor;
+    const contentStyles = getComputedStyle(contentOf(container));
+    // A missing outline (`outlineStyle: 'none'`) still reports a computed
+    // `outlineColor` — asserting the contrast ratio alone would pass even if
+    // the outline never rendered. Assert presence first.
+    expect(contentStyles.outlineStyle).not.toBe('none');
+
     const pageBackground = getComputedStyle(
       container.querySelector<HTMLElement>('#page')!,
     ).backgroundColor;
 
-    expect(contrastRatio(outlineColor, pageBackground)).toBeGreaterThanOrEqual(
-      3,
-    );
+    expect(
+      contrastRatio(contentStyles.outlineColor, pageBackground),
+    ).toBeGreaterThanOrEqual(3);
   });
 
   it('draws the same solid outline on a focused warning field', async () => {
