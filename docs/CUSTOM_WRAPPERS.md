@@ -964,6 +964,12 @@ dev warning`.
   the toolkit composition with `register*` IDs. Provide it via
   `useFactory`/`useClass` at the wrapper's component-level injector.
 
+The root entry point adds `createFieldPresentation(fieldState, options?)`:
+the error and warning state of one field (resolved strategies, what shows
+now, and when to mount the renderer). `NgxFormFieldWrapper` and the three
+reference wrappers use it. See the
+[toolkit README](../packages/toolkit/README.md#field-presentation-for-custom-wrappers).
+
 These keep every reference wrapper on a single canonical primitive so a
 behaviour change in one place takes effect everywhere — and they give
 new wrappers a consistent look so consumers reading any reference

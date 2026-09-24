@@ -471,6 +471,59 @@ provideFieldLabels(() => {
 | `shouldShowWarnings(hasWarnings, touched, strategy, status)` | Pure boolean warning-timing counterpart to `shouldShowErrors`                               |
 | `combineShowErrors(signals)`                                 | Combines an array of visibility signals, e.g. `combineShowErrors([sigA, sigB])`             |
 | `readDirectErrors(state)`                                    | Direct `errors()` of a field/group only — excludes nested-field errors                      |
+| `createFieldPresentation(field, opts?)`                      | Both channels for one field surface, as a custom form-field wrapper needs them. See below   |
+
+#### Field presentation for custom wrappers
+
+`createFieldPresentation()` gives a custom form-field wrapper the same error
+and warning state that `NgxFormFieldWrapper` uses. Your wrapper then shows
+messages at the same moments as the built-in one.
+
+```typescript
+import {
+  createFieldPresentation,
+  NgxFieldIdentity,
+  type ErrorDisplayStrategy,
+  type WarningDisplayStrategy,
+} from '@ngx-signal-forms/toolkit';
+
+export class AppFormField {
+  readonly formField = input.required<FieldTree<unknown>>();
+  readonly strategy = input<ErrorDisplayStrategy | null>(null);
+  readonly warningStrategy = input<WarningDisplayStrategy | null>(null);
+
+  protected readonly presentation = createFieldPresentation(
+    computed(() => this.formField()()),
+    {
+      strategy: this.strategy,
+      warningStrategy: this.warningStrategy,
+      // Only when your wrapper provides an identity (NgxFieldIdentityProvider).
+      identity: inject(NgxFieldIdentity),
+    },
+  );
+}
+```
+
+It returns read-only signals:
+
+| Signal                                           | Meaning                                                                |
+| ------------------------------------------------ | ---------------------------------------------------------------------- |
+| `errors` / `warnings`                            | The field's own blocking errors and warnings                           |
+| `hasErrors` / `hasWarnings`                      | Whether each list is non-empty                                         |
+| `showErrors`                                     | A blocking error shows now. Use it for invalid styling                 |
+| `showWarnings`                                   | A warning shows now. `false` while a blocking error shows              |
+| `renderMessageSlot`                              | Mount the message renderer. The renderer picks which messages to print |
+| `effectiveStrategy` / `effectiveWarningStrategy` | The resolved strategies. Pass them to your renderer                    |
+
+The two strategies resolve through separate cascades, so a form that holds
+errors until submit still shows warnings on touch. A visible blocking error
+hides the warning. A warning alone never hides itself, even though Angular
+marks a warning-only field `invalid()`. A hidden field (`hidden()`) shows no
+messages; pass `hidden` to use your own signal instead.
+
+With `identity`, the factory publishes both resolved strategies to that
+`NgxFieldIdentity`. `NgxSignalFormAutoAria` reads them, so `aria-describedby`
+follows your field-level overrides.
 
 ### Strategy & context resolution
 
