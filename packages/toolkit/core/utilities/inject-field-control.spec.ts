@@ -347,6 +347,15 @@ describe('injectFieldControl', () => {
       // prototype-chain keys like `constructor` and `__proto__` even though
       // the form object never owns them. `Object.hasOwn` rejects both, so the
       // walk fails the same way it would for any other unknown field.
+      //
+      // Asserts the path-walk guard's own message ("Could not access
+      // property …"), not just the generic "not found in form" wording —
+      // `constructor` and `__proto__` both resolve (under the old `in`
+      // check) to a callable value that also fails the later
+      // `isFieldTreeLike` check, whose error message ALSO contains "not
+      // found in form". A regex matching only that shared wording passes
+      // whether the fix is in place or `in` has been reinstated, so it
+      // never catches a regression here.
       const mockForm = createRootWithMalformedChildren({});
       const mockContext: NgxSignalFormContext = {
         form: mockForm,
@@ -364,7 +373,7 @@ describe('injectFieldControl', () => {
 
       expect(() => {
         injectFieldControl(element, injector);
-      }).toThrow(new RegExp(`Field "${segment}" not found in form`, 'i'));
+      }).toThrow(`Could not access property "${segment}"`);
     },
   );
 
@@ -420,9 +429,12 @@ describe('injectFieldControl', () => {
         const element = document.createElement('input');
         element.setAttribute('id', segment);
 
+        // Same reasoning as the mock-based version above: assert the
+        // path-walk guard's own message, not the generic "not found in
+        // form" wording the later `isFieldTreeLike` failure also produces.
         expect(() => {
           injectFieldControl(element, injector);
-        }).toThrow(new RegExp(`Field "${segment}" not found in form`, 'i'));
+        }).toThrow(`Could not access property "${segment}"`);
       },
     );
 
@@ -441,6 +453,9 @@ describe('injectFieldControl', () => {
 
       expect(() => {
         injectFieldControl(element, injector);
+      }).not.toThrow(TypeError);
+      expect(() => {
+        injectFieldControl(element, injector);
       }).toThrow(/Field "email\.foo" not found in form/i);
     });
 
@@ -457,6 +472,9 @@ describe('injectFieldControl', () => {
       const element = document.createElement('input');
       element.setAttribute('id', 'address.city');
 
+      expect(() => {
+        injectFieldControl(element, injector);
+      }).not.toThrow(TypeError);
       expect(() => {
         injectFieldControl(element, injector);
       }).toThrow(/Field "address\.city" not found in form/i);
