@@ -20,7 +20,7 @@ import { NgxFormField } from './index';
 
 declare module 'vitest/browser' {
   interface BrowserCommands {
-    emulateColorScheme: (colorScheme: 'light' | 'dark') => Promise<void>;
+    emulateColorScheme: (colorScheme: 'light' | 'dark' | null) => Promise<void>;
   }
 }
 
@@ -30,10 +30,10 @@ declare module 'vitest/browser' {
  * The wrapper and the feedback components used different dark-mode
  * triggers. The wrapper looked for a `.dark` class, the error component
  * looked at the OS setting, and the hint, character count and legend had no
- * dark colours. In a light app on a dark OS, error text was 1.90:1 on white.
+ * dark colors. In a light app on a dark OS, error text was 1.90:1 on white.
  * In a `.dark` app, hint text was 1.29:1.
  *
- * All toolkit colours now come from `light-dark()` pairs. They follow the
+ * All toolkit colors now come from `light-dark()` pairs. They follow the
  * `color-scheme` that the app declares, and nothing else. These specs cover
  * the three setups that THEMING.md documents, and run axe (which includes
  * the WCAG 1.4.3 contrast rule) over the wrapper, error, warning, hint,
@@ -115,7 +115,7 @@ class ColorSchemeFixtureComponent {
       bio: 'Short bio',
       // 9/10 = 90%: crosses the 80% warning threshold.
       motto: 'Carpe die',
-      // Past the limit: the "exceeded" colour.
+      // Past the limit: the "exceeded" color.
       tagline: 'Way past the ten character limit',
     }),
     schema((path) => {
@@ -161,8 +161,8 @@ async function renderFixture(surfaceStyle: string): Promise<HTMLElement> {
 }
 
 /**
- * Switches the emulated OS scheme, then waits for the components' colour
- * transitions to end so axe measures the final colours.
+ * Switches the emulated OS scheme, then waits for the components' color
+ * transitions to end so axe measures the final colors.
  */
 async function switchOsScheme(colorScheme: 'light' | 'dark'): Promise<void> {
   await commands.emulateColorScheme(colorScheme);
@@ -180,10 +180,11 @@ const errorColor = (surface: HTMLElement): string =>
   getComputedStyle(surface.querySelector('.ngx-form-field-error--error')!)
     .color;
 
-describe('toolkit colours follow the inherited color-scheme (#494)', () => {
+describe('toolkit colors follow the inherited color-scheme (#494)', () => {
   afterEach(async () => {
     document.documentElement.style.removeProperty('color-scheme');
-    await commands.emulateColorScheme('light');
+    // `null` clears the emulation instead of forcing light.
+    await commands.emulateColorScheme(null);
   });
 
   it('stays light and readable on a white page when the app declares no color-scheme and the OS is dark', async () => {
@@ -200,9 +201,9 @@ describe('toolkit colours follow the inherited color-scheme (#494)', () => {
     await expectNoA11yViolations(surface);
   });
 
-  it('switches to dark colours under an ancestor with color-scheme: dark, with no class or OS signal', async () => {
+  it('switches to dark colors under an ancestor with color-scheme: dark, with no class or OS signal', async () => {
     // The OS stays light: the ancestor's color-scheme alone must switch
-    // every toolkit colour.
+    // every toolkit color.
     const surface = await renderFixture(
       'color-scheme: dark; background-color: #1f2937; color: #f9fafb',
     );

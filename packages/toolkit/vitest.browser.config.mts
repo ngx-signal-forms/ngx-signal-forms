@@ -9,12 +9,12 @@ import {
 } from './vitest.shared.mts';
 
 /**
- * Sets the emulated OS colour scheme (`prefers-color-scheme`) for the test
- * page. Vitest's `page` API has no media emulation, so specs call this
+ * Sets the emulated OS color scheme (`prefers-color-scheme`) for the test
+ * page. `null` clears the emulation. Vitest's `page` API has no media emulation, so specs call this
  * through `commands.emulateColorScheme(...)`. It runs in Node, where the
  * Playwright page is available.
  */
-const emulateColorScheme: BrowserCommand<['light' | 'dark']> = async (
+const emulateColorScheme: BrowserCommand<['light' | 'dark' | null]> = async (
   context,
   colorScheme,
 ) => {

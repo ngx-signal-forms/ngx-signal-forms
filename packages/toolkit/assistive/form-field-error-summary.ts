@@ -210,8 +210,8 @@ export type NgxErrorSummaryHeadingLevel = 2 | 3 | 4 | 5 | 6;
     /* Default colors are light-dark() pairs that follow the inherited
      * color-scheme (see THEMING.md, "Scenario C: Dark Mode"). Dark side, WCAG 1.4.3 on
      * the #450a0a summary background: label #fecaca 11.16:1, link #fca5a5
-     * 8.51:1. Non-text (1.4.11): focus ring #60a5fa 6.35:1, border
-     * #f87171 5.31:1 on the #1f2937 dark surface. */
+     * 8.51:1. Non-text (1.4.11): focus ring #60a5fa 6.35:1 on #450a0a;
+     * border #f87171 5.31:1 on the #1f2937 dark surface. */
     .ngx-form-field-error-summary {
       border: 2px solid
         var(--ngx-error-summary-border-color, light-dark(#dc2626, #f87171));
