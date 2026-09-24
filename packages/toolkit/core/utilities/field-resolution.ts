@@ -156,11 +156,12 @@ export function resolveFieldNameFromCandidates(
  * - Reads `getAttribute('id')` first, then the `element.id` property as a
  *   fallback. The two are equivalent for normal HTML hosts; the property
  *   read covers attribute-less / detached cases.
- * - Whitespace is trimmed. `"  email  "` → `"email"`. Whitespace-only and
- *   empty strings collapse to `null`, treated as "no id".
+ * - Leading and trailing whitespace is trimmed. `"  email  "` → `"email"`.
+ *   Whitespace-only and empty strings collapse to `null`, treated as "no
+ *   id". Inner whitespace becomes `-`. `"x other-id"` → `"x-other-id"`.
  *
  * @param element - The HTML element to resolve the field name from
- * @returns The trimmed `id`, or `null` if the element has no usable id
+ * @returns The normalized `id`, or `null` if the element has no usable id
  */
 export function resolveFieldName(element: HTMLElement): string | null {
   return resolveFieldNameFromCandidates(element.getAttribute('id'), element.id);

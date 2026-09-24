@@ -63,9 +63,9 @@ export interface CreateFieldNameResolverOptions {
  * form-field wrapper. Mirrors the priority cascade in the canonical
  * `NgxFormFieldWrapper`:
  *
- *   1. Explicit consumer input (trimmed; non-empty).
- *   2. Optional label `for=` attribute reader (trimmed; non-empty).
- *   3. Bound control's `id` attribute.
+ *   1. Explicit consumer input (trimmed; non-empty; inner whitespace becomes `-`).
+ *   2. Optional label `for=` attribute reader (same trim/whitespace rule).
+ *   3. Bound control's `id` attribute (same trim/whitespace rule).
  *   4. `null` (auto-ARIA gracefully no-ops; emits a one-shot dev warning).
  *
  * The dev-mode warning latches on the first miss and stays silent for

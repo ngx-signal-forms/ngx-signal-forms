@@ -5,13 +5,18 @@ import { createFieldNameResolver } from './create-field-name-resolver';
 
 describe('createFieldNameResolver', () => {
   let consoleErrorSpy: ReturnType<typeof vi.spyOn>;
+  let consoleWarnSpy: ReturnType<typeof vi.spyOn>;
 
   beforeEach(() => {
     consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    // `normalizeFieldName` logs a one-shot dev warning when it replaces
+    // inner whitespace — silence it here so it doesn't clutter test output.
+    consoleWarnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
   });
 
   afterEach(() => {
     consoleErrorSpy.mockRestore();
+    consoleWarnSpy.mockRestore();
   });
 
   it('returns the explicit input when provided and non-empty', () => {
@@ -36,6 +41,37 @@ describe('createFieldNameResolver', () => {
       });
 
       expect(resolver()).toBe('email');
+    });
+  });
+
+  it('replaces inner whitespace in the explicit input with a hyphen', () => {
+    // Regression: this resolver used to trim inline instead of calling
+    // `resolveFieldNameFromCandidates` (which normalizes inner whitespace),
+    // so a data-driven `fieldName` like "x other-id" leaked a raw space into
+    // every id generated from it.
+    TestBed.runInInjectionContext(() => {
+      const resolver = createFieldNameResolver({
+        explicit: signal<string | undefined>('x other-id'),
+        boundControl: () => null,
+        wrapperName: 'test-wrapper',
+      });
+
+      expect(resolver()).toBe('x-other-id');
+    });
+  });
+
+  it('replaces inner whitespace in the bound-control id with a hyphen', () => {
+    TestBed.runInInjectionContext(() => {
+      const element = document.createElement('input');
+      element.id = 'x other-id';
+
+      const resolver = createFieldNameResolver({
+        explicit: signal<string | undefined>(undefined),
+        boundControl: () => element,
+        wrapperName: 'test-wrapper',
+      });
+
+      expect(resolver()).toBe('x-other-id');
     });
   });
 

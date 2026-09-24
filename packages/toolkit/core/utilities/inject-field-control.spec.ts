@@ -1,5 +1,6 @@
 import { ElementRef, Injector, signal } from '@angular/core';
-import type { FieldTree } from '@angular/forms/signals';
+import { TestBed } from '@angular/core/testing';
+import { form, schema, type FieldTree } from '@angular/forms/signals';
 import { describe, expect, it } from 'vitest';
 import type { SubmittedStatus } from '../types';
 import type { NgxSignalFormContext } from '../directives/ngx-signal-form';
@@ -366,6 +367,101 @@ describe('injectFieldControl', () => {
       }).toThrow(new RegExp(`Field "${segment}" not found in form`, 'i'));
     },
   );
+
+  describe('path navigation against a real Signal Forms FieldTree', () => {
+    // A real `FieldTree` node is backed by a Proxy whose
+    // `getOwnPropertyDescriptor` trap forwards to the underlying model
+    // value. `Object.hasOwn` invokes that trap, so calling it on a node
+    // whose value is a primitive or `null` — the shape a mistyped path
+    // produces, e.g. `email.foo` where `email` is a string, or
+    // `address.city` where `address` is `null` — throws a raw `TypeError`
+    // (`Reflect.getOwnPropertyDescriptor` requires an object target)
+    // instead of the toolkit's own "not found" error. The mocks above
+    // never exercised this because a hand-built mock's underlying value is
+    // never read by `Object.hasOwn`.
+    interface RealFormModel {
+      email: string;
+      address: { city: string } | null;
+    }
+
+    const makeRealForm = (): FieldTree<RealFormModel> => {
+      const model = signal<RealFormModel>({
+        email: 'ada@example.com',
+        address: null,
+      });
+      return TestBed.runInInjectionContext(() =>
+        form(
+          model,
+          schema<RealFormModel>(() => undefined),
+        ),
+      );
+    };
+
+    const contextFor = (
+      realForm: FieldTree<RealFormModel>,
+    ): NgxSignalFormContext => ({
+      form: realForm,
+      submittedStatus: signal<SubmittedStatus>('unsubmitted'),
+      errorStrategy: signal('on-touch'),
+    });
+
+    it.each(['constructor', '__proto__'])(
+      'throws "not found" for prototype-chain path segment "%s" on the real form root',
+      (segment) => {
+        const injector = Injector.create({
+          providers: [
+            {
+              provide: NGX_SIGNAL_FORM_CONTEXT,
+              useValue: contextFor(makeRealForm()),
+            },
+          ],
+        });
+
+        const element = document.createElement('input');
+        element.setAttribute('id', segment);
+
+        expect(() => {
+          injectFieldControl(element, injector);
+        }).toThrow(new RegExp(`Field "${segment}" not found in form`, 'i'));
+      },
+    );
+
+    it('throws "not found" instead of a TypeError for a primitive middle segment (email.foo)', () => {
+      const injector = Injector.create({
+        providers: [
+          {
+            provide: NGX_SIGNAL_FORM_CONTEXT,
+            useValue: contextFor(makeRealForm()),
+          },
+        ],
+      });
+
+      const element = document.createElement('input');
+      element.setAttribute('id', 'email.foo');
+
+      expect(() => {
+        injectFieldControl(element, injector);
+      }).toThrow(/Field "email\.foo" not found in form/i);
+    });
+
+    it('throws "not found" instead of a TypeError for a null middle segment (address.city)', () => {
+      const injector = Injector.create({
+        providers: [
+          {
+            provide: NGX_SIGNAL_FORM_CONTEXT,
+            useValue: contextFor(makeRealForm()),
+          },
+        ],
+      });
+
+      const element = document.createElement('input');
+      element.setAttribute('id', 'address.city');
+
+      expect(() => {
+        injectFieldControl(element, injector);
+      }).toThrow(/Field "address\.city" not found in form/i);
+    });
+  });
 
   it('should throw when the resolved value is callable but does not satisfy the FieldState contract', () => {
     // A callable property (e.g. a plain function living on the form object)
