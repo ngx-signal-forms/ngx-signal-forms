@@ -231,7 +231,7 @@ export type NgxErrorSummaryHeadingLevel = 2 | 3 | 4 | 5 | 6;
      * regardless of level -- the class, not the tag, controls its look. */
     .ngx-form-field-error-summary__label {
       margin: 0 0 0.5rem;
-      font-size: inherit;
+      font: inherit;
       font-weight: 600;
       color: var(--ngx-error-summary-label-color, #991b1b);
     }
