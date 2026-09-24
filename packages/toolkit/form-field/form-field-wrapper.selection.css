@@ -390,9 +390,12 @@
 /* the container's `:focus-within` ring instead. The plain rule above clears */
 /* that container ring (`border-color: transparent; box-shadow: none`), so a */
 /* plain field showed no focus indicator at all (#493, WCAG 2.2 SC 2.4.7). */
+/* Scoped to `.ngx-signal-form-field-wrapper--textual` too, matching the */
+/* reset's own scope exactly — it never touched non-textual plain controls */
+/* (selection groups, switches), so this does not need to reach them either. */
 /* This rule has the same selector specificity as the reset it overrides; it */
 /* wins because this file loads after `form-field-wrapper.css`. */
-:host(.ngx-signal-forms-plain)
+:host(.ngx-signal-forms-plain.ngx-signal-form-field-wrapper--textual)
   ::ng-deep
   .ngx-signal-form-field-wrapper__main
   :is(
@@ -404,6 +407,35 @@
   ):focus-visible {
   outline: 2px solid var(--_focus-color);
   outline-offset: 2px;
+}
+
+/* Windows High Contrast (`forced-colors: active`): the shared focus rule */
+/* (`form-field-wrapper.css`) puts `outline: 2px solid Highlight` on the */
+/* container for every textual wrapper. The container also sets */
+/* `forced-color-adjust: none`, which the input inherits, so the input's */
+/* own outline above keeps its literal `--_focus-color` instead of adapting */
+/* to the system palette — two outlines, two colors. Make the input's */
+/* outline the sole focus signal for plain: drop the container outline and */
+/* point the input at the system `Highlight` color. */
+@media (forced-colors: active) {
+  :host(.ngx-signal-forms-plain.ngx-signal-form-field-wrapper--textual)
+    .ngx-signal-form-field-wrapper__content:focus-within {
+    outline: none;
+  }
+
+  :host(.ngx-signal-forms-plain.ngx-signal-form-field-wrapper--textual)
+    ::ng-deep
+    .ngx-signal-form-field-wrapper__main
+    :is(
+      input:not([type='radio']):not([type='checkbox']):not([role='switch']),
+      textarea,
+      select,
+      [role='combobox'],
+      [data-ngx-signal-form-control-kind='input-like']
+    ):focus-visible {
+    outline: 2px solid Highlight;
+    outline-offset: 2px;
+  }
 }
 
 /* Plain custom controls should still inherit the stacked field padding so they */
