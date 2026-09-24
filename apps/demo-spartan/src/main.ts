@@ -21,6 +21,9 @@ void (async () => {
       provideZonelessChangeDetection(),
       provideNgxSignalFormsConfig({
         defaultErrorStrategy: 'on-touch',
+        // Warnings are informational, so this demo shows them immediately
+        // instead of waiting for the ADR-0007 terminal default (`'on-touch'`).
+        defaultWarningStrategy: 'immediate',
         autoAria: true,
       }),
       // Single bootstrap entry point for the Spartan reference renderers.

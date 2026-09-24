@@ -6,6 +6,7 @@ import {
   NGX_SIGNAL_FORM_FIELD_CONTEXT,
   type ResolvedErrorDisplayStrategy,
   type SubmittedStatus,
+  type WarningDisplayStrategy,
 } from '@ngx-signal-forms/toolkit';
 import { createErrorMessageSignal } from '@ngx-signal-forms/toolkit/headless';
 
@@ -89,9 +90,17 @@ export class NgxSpartanFormFieldError {
 
   /**
    * Submission status forwarded from the wrapper. Required for the
-   * `'on-submit'` strategy.
+   * `'on-submit'` strategy on either channel.
    */
   readonly submittedStatus = input<SubmittedStatus | undefined>();
+
+  /**
+   * Warning strategy resolved by the parent wrapper, forwarded to
+   * `createErrorMessageSignal`'s `warningStrategy` option so the warning
+   * channel runs its own independent cascade (ADR-0007) instead of
+   * borrowing the blocking-error one.
+   */
+  readonly warningStrategy = input<WarningDisplayStrategy | undefined>();
 
   /**
    * Field name from the surrounding wrapper context. Used to generate the
@@ -118,14 +127,20 @@ export class NgxSpartanFormFieldError {
   );
 
   /**
-   * Warnings surface immediately (matching `NgxFormFieldError`'s default
-   * `warningStrategy: 'immediate'`) — they are informational and not gated by
-   * the blocking-error strategy.
+   * Warnings, timed by {@link warningStrategy}'s own cascade
+   * (ADR-0007) — independent of the blocking-error `strategy` above. The
+   * previous version passed the *blocking-error* `strategy` option here
+   * (`'immediate'`), which does not gate a warnings-only list at all
+   * (`createErrorMessageSignal` ignores that option once
+   * `includeWarnings: 'only'` is set) — the warning was already, silently,
+   * always following the ambient on-touch default. Forwarding the real
+   * `warningStrategy` input makes that intentional and overridable.
    */
   readonly #resolvedWarnings = createErrorMessageSignal(
     this.#fieldStateAccessor,
     {
-      strategy: 'immediate',
+      warningStrategy: this.warningStrategy,
+      submittedStatus: this.submittedStatus,
       includeWarnings: 'only',
     },
   );

@@ -19,9 +19,10 @@ import {
 } from '@ngx-signal-forms/toolkit';
 import { HlmInput } from '@spartan-ng/helm/input';
 import { HlmLabel } from '@spartan-ng/helm/label';
-import { render, waitFor } from '@testing-library/angular';
+import { render, screen, waitFor } from '@testing-library/angular';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it } from 'vitest';
+import { provideNgxSpartanForms } from './index';
 import {
   NgxSpartanFormBundle,
   NgxSpartanFormField,
@@ -121,5 +122,83 @@ describe('NgxSpartanFormField warning timing (#506)', () => {
     await waitFor(() => {
       expect(wrapper.warningVisible()).toBe(true);
     });
+  });
+});
+
+/**
+ * Host harness mounting the real `NgxSpartanFormFieldError` renderer (via
+ * `provideNgxSpartanForms()`), with the app-level `defaultWarningStrategy`
+ * set to `'immediate'` (matching `main.ts`) and one field overriding it to
+ * `'on-touch'` — proving the wrapper's resolved `warningStrategy` actually
+ * reaches the rendered DOM, not just the wrapper's own escape-hatch signal.
+ */
+@Component({
+  selector: 'ngx-renderer-warning-timing-host',
+  imports: [
+    FormField,
+    FormRoot,
+    NgxSignalForm,
+    NgxSignalFormAutoAria,
+    NgxSpartanFormBundle,
+    HlmInput,
+    HlmLabel,
+  ],
+  template: `
+    <form [formRoot]="nicknameForm" ngxSignalForm>
+      <spartan-form-field
+        [ngxSpartanFormField]="nicknameForm.nickname"
+        fieldName="nickname"
+        warningStrategy="on-touch"
+      >
+        <label hlmLabel for="nickname">Nickname</label>
+        <input
+          hlmInput
+          id="nickname"
+          type="text"
+          [formField]="nicknameForm.nickname"
+          ngxSignalFormControl="input-like"
+        />
+      </spartan-form-field>
+    </form>
+  `,
+})
+class RendererWarningTimingHostComponent {
+  protected readonly model = signal<WarningTimingModel>({ nickname: '' });
+  readonly nicknameForm = form<WarningTimingModel>(
+    this.model,
+    warningTimingSchema,
+  );
+}
+
+describe('NgxSpartanFormFieldError follows the wrapper-resolved warningStrategy (#506)', () => {
+  it('does not show the warning after typing only, and shows it after blur, under warningStrategy="on-touch"', async () => {
+    const user = userEvent.setup();
+    await render(RendererWarningTimingHostComponent, {
+      providers: [
+        provideZonelessChangeDetection(),
+        provideNgxSignalFormsConfig({
+          defaultErrorStrategy: 'on-touch',
+          // App default is 'immediate' (mirrors main.ts) — this field's
+          // explicit warningStrategy="on-touch" must still win, proving the
+          // wrapper's resolved value reaches the renderer rather than the
+          // renderer re-deciding warning timing on its own.
+          defaultWarningStrategy: 'immediate',
+          autoAria: true,
+        }),
+        ...provideNgxSpartanForms(),
+      ],
+    });
+
+    const nicknameInput = screen.getByLabelText(/nickname/i);
+
+    await user.type(nicknameInput, 'Al');
+    expect(
+      screen.queryByText(/short nicknames are easy to confuse/i),
+    ).toBeNull();
+
+    await user.tab();
+    expect(
+      await screen.findByText(/short nicknames are easy to confuse/i),
+    ).toBeTruthy();
   });
 });

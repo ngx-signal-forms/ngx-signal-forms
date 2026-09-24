@@ -356,6 +356,7 @@ export class PrimeFormFieldComponent<TValue = unknown> {
       formField: this.formField(),
       strategy: this.effectiveStrategy(),
       submittedStatus: this.submittedStatus(),
+      warningStrategy: this.effectiveWarningStrategy(),
     }),
   );
 
@@ -388,10 +389,12 @@ export class PrimeFormFieldComponent<TValue = unknown> {
    * `#showByStrategy` as `errorVisibility` means a visible blocking error
    * still suppresses the warning.
    *
-   * `PrimeFieldErrorComponent` (the default renderer) times its own warning
-   * copy independently — this is the wrapper-side escape hatch for
-   * consumers who swap in a custom renderer, mirroring the Material
-   * reference's `warningVisible`.
+   * `PrimeFieldErrorComponent` (the default renderer) is also fed
+   * `effectiveWarningStrategy` directly through `errorRendererInputs`, so
+   * this computed and the rendered `<small class="p-warn">` agree by
+   * construction. This is the wrapper-side escape hatch for consumers who
+   * swap in a custom renderer, mirroring the Material reference's
+   * `warningVisible`.
    */
   readonly #showWarningsByStrategy = createWarningVisibility(
     this.#fieldStateSignal,
