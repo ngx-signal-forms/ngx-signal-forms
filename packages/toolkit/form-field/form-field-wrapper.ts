@@ -56,13 +56,7 @@ import {
   NgxFormFieldHint,
 } from '@ngx-signal-forms/toolkit/assistive';
 import { captureFormFieldWrapperDomSnapshot } from './form-field-dom-snapshot';
-import {
-  hasPaddedControlContent,
-  isSelectionGroupKind,
-  isTextualControlKind,
-  supportsOutlinedAppearance,
-  type FormFieldControlKind,
-} from './form-field.utils';
+import { capabilitiesFor, type FormFieldControlKind } from './form-field.utils';
 import { resolveClusterAriaAttrs } from './form-field-cluster-aria';
 import { resolveUnionInput } from './utilities/resolve-union-input';
 
@@ -692,7 +686,7 @@ export class NgxFormFieldWrapper<TValue = unknown> {
       return false;
     }
     const controlKind = this.#controlKind();
-    if (!supportsOutlinedAppearance(controlKind)) {
+    if (!capabilitiesFor(controlKind).supportsOutline) {
       return false;
     }
 
@@ -735,9 +729,7 @@ export class NgxFormFieldWrapper<TValue = unknown> {
 
       if (
         this.resolvedAppearance() === 'outline' ||
-        controlKind === 'checkbox' ||
-        controlKind === 'switch' ||
-        controlKind === 'radio-group'
+        capabilitiesFor(controlKind).forcesVertical
       ) {
         return 'vertical';
       }
@@ -839,7 +831,7 @@ export class NgxFormFieldWrapper<TValue = unknown> {
   });
 
   protected readonly isTextualControl = computed(() => {
-    return isTextualControlKind(this.#controlKind());
+    return capabilitiesFor(this.#controlKind()).textual;
   });
 
   protected readonly isCheckboxControl = computed(() => {
@@ -847,7 +839,7 @@ export class NgxFormFieldWrapper<TValue = unknown> {
   });
 
   protected readonly isSelectionGroupControl = computed(() => {
-    return isSelectionGroupKind(this.#controlKind());
+    return capabilitiesFor(this.#controlKind()).selectionGroup;
   });
 
   protected readonly isSelectionCluster = computed(() => {
@@ -859,7 +851,7 @@ export class NgxFormFieldWrapper<TValue = unknown> {
   });
 
   protected readonly hasPaddedContentControl = computed(() => {
-    return hasPaddedControlContent(this.#controlKind());
+    return capabilitiesFor(this.#controlKind()).paddedContent;
   });
 
   protected readonly resolvedControlLayout = computed(() => {
@@ -1293,9 +1285,10 @@ export class NgxFormFieldWrapper<TValue = unknown> {
           this.#boundControlIsRequired.set(isRequired);
         }
 
+        const clusterRole = capabilitiesFor(semantics.kind).clusterRole;
         const isSelectionCluster =
-          semantics.kind === 'radio-group' ||
-          (semantics.kind === 'checkbox' && selectionControlCount > 1);
+          clusterRole === 'radiogroup' ||
+          (clusterRole === 'group' && selectionControlCount > 1);
         if (isSelectionCluster !== this.#isSelectionCluster()) {
           this.#isSelectionCluster.set(isSelectionCluster);
         }
