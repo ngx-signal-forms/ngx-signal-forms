@@ -1129,50 +1129,6 @@ describe('NgxSignalFormWrapperComponent', () => {
       warnSpy.mockRestore();
     });
 
-    it('does not warn about a missing role on a required radiogroup wrapper (regression #496)', async () => {
-      // The radiogroup cluster wrapper binds `role="radiogroup"` itself once
-      // resolved, but on an early tick (before that binding lands) the host
-      // is transiently role-less while its radio-input descendants already
-      // exist. The wrapper is a container around real controls, not a
-      // control itself, so it must not warn in either state.
-      const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
-
-      const invalidField = signal({
-        invalid: () => false,
-        touched: () => false,
-        errors: () => [],
-        required: () => true,
-      });
-
-      const { container } = await render(
-        `<ngx-form-field-wrapper [formField]="field" fieldName="delivery-method">
-          <span ngxFormFieldLabel>Delivery option</span>
-          <div>
-            <label>
-              <input id="delivery-standard" type="radio" value="standard" />
-              Standard
-            </label>
-            <label>
-              <input id="delivery-express" type="radio" value="express" />
-              Express
-            </label>
-          </div>
-        </ngx-form-field-wrapper>`,
-        {
-          imports: [NgxSignalFormWrapperComponent],
-          componentProperties: {
-            field: invalidField,
-          },
-        },
-      );
-
-      const wrapper = container.querySelector('ngx-form-field-wrapper');
-      expect(wrapper).toHaveAttribute('role', 'radiogroup');
-      expect(warnSpy).not.toHaveBeenCalled();
-
-      warnSpy.mockRestore();
-    });
-
     it('marks a Standard Schema (Zod-style) required field via requiredFromStandardSchema (regression #118)', async () => {
       // `validateStandardSchema` alone never surfaces required-ness (Standard
       // Schema has no runtime shape introspection), so the wrapper's

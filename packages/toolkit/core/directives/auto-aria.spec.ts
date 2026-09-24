@@ -697,6 +697,37 @@ describe('NgxSignalFormAutoAria', () => {
       warnSpy.mockRestore();
     });
 
+    it('still warns when the only descendant role is decorative (role="img")', async () => {
+      // A decorative descendant (an icon, a status region) is not the
+      // host's own control. The missing-role warning must still fire —
+      // only a descendant whose role supports `aria-required` (or a native
+      // form control) counts as "this host is a container, not a control".
+      const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+      @Component({
+        template:
+          '<div id="cluster" [formField]="clusterControl()"><span role="img" aria-label="Warning"></span></div>',
+        imports: [MockFormFieldDirective, NgxSignalFormAutoAria],
+      })
+      class TestComponent {
+        clusterControl = createMockControl(
+          true,
+          true,
+          [{ kind: 'required', message: 'Field is required' }],
+          true,
+        );
+      }
+
+      const { container } = await render(TestComponent);
+      await TestBed.inject(ApplicationRef).whenStable();
+
+      const group = container.querySelector('#cluster');
+      expect(group).not.toHaveAttribute('aria-required');
+      expect(warnSpy).toHaveBeenCalledTimes(1);
+
+      warnSpy.mockRestore();
+    });
+
     it('still sets aria-required="true" on a host with role="combobox"', async () => {
       // Acceptance criterion from #496: a custom host that opts into a role
       // supporting `aria-required` keeps getting the attribute.

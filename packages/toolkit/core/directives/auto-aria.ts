@@ -96,6 +96,19 @@ const ARIA_REQUIRED_SUPPORTED_ROLES = new Set([
 const NATIVE_FORM_CONTROL_TAGS = new Set(['INPUT', 'SELECT', 'TEXTAREA']);
 
 /**
+ * CSS selector matching a descendant that looks like its own bound control:
+ * a native form control, or an element with a role that supports
+ * `aria-required` (see {@link ARIA_REQUIRED_SUPPORTED_ROLES}). Deliberately
+ * narrower than "any `[role]`" — a decorative `role="img"` or a status
+ * region inside a role-less host is not a control, so it must not hide the
+ * missing-role warning.
+ */
+const DESCENDANT_CONTROL_SELECTOR = [
+  ...[...NATIVE_FORM_CONTROL_TAGS].map((tag) => tag.toLowerCase()),
+  ...[...ARIA_REQUIRED_SUPPORTED_ROLES].map((role) => `[role="${role}"]`),
+].join(', ');
+
+/**
  * Automatically manages ARIA attributes for Signal Forms controls.
  *
  * Adds:
@@ -533,7 +546,9 @@ export class NgxSignalFormAutoAria {
 
   /**
    * Whether the ARIA target has a descendant that looks like its own bound
-   * control (a native form control, or any element with an explicit role).
+   * control: a native form control, or an element whose role supports
+   * `aria-required` (see {@link DESCENDANT_CONTROL_SELECTOR}). A decorative
+   * role such as `img`, `presentation`, or `status` does not count.
    *
    * A role-less host with such a descendant is a container — for example
    * `ngx-form-field-wrapper`, which matches this directive's `[formField]`
@@ -546,8 +561,7 @@ export class NgxSignalFormAutoAria {
    */
   #hasDescendantControl(): boolean {
     return (
-      this.#ariaTarget().querySelector('input, select, textarea, [role]') !==
-      null
+      this.#ariaTarget().querySelector(DESCENDANT_CONTROL_SELECTOR) !== null
     );
   }
 
