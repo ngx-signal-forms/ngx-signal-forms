@@ -201,9 +201,11 @@ ngx-signal-forms — an Angular toolkit for working with Signal Forms.
   `NgxFieldIdentityProvider` as a host directive, the built-in
   `NgxFormFieldWrapper` included, so the public seam and the internal one are
   the same seam. The provider publishes the name channel only; the wrapper
-  additionally drives the control element, visibility, hints, and resolved
-  strategies in-package, because none of those can travel through an input.
-  See ADR-0011.
+  additionally drives the control element, visibility and hints in-package,
+  because none of those can travel through an input. The resolved strategies
+  come from `createFieldPresentation({ identity })`, the one public route to
+  that channel; it publishes cascade-resolved values and the `set*` writers
+  stay internal. See ADR-0011 and its #508 amendment.
 
 - **Inferred control kind and auto-ARIA eligibility are two decisions.**
   Control-kind inference answers "which wrapper layout does this control

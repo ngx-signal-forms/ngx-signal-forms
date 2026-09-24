@@ -497,8 +497,9 @@ export class AppFormField {
     {
       strategy: this.strategy,
       warningStrategy: this.warningStrategy,
-      // Only when your wrapper provides an identity (NgxFieldIdentityProvider).
-      identity: inject(NgxFieldIdentity),
+      // Present when the wrapper composes NgxFieldIdentityProvider as a
+      // host directive; `null` otherwise, and nothing is published.
+      identity: inject(NgxFieldIdentity, { optional: true }),
     },
   );
 }
