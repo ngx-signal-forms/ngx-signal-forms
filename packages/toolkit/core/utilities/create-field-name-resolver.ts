@@ -1,5 +1,6 @@
 import { computed, type Signal } from '@angular/core';
 import { createDevWarnOnce } from './dev-warn-once';
+import { resolveFieldNameFromCandidates } from './field-resolution';
 
 /**
  * Reactive reader of the bound control's host element. Returns `null` when
@@ -92,21 +93,13 @@ export function createFieldNameResolver(
   const warnOnce = createDevWarnOnce();
 
   return computed<string | null>(() => {
-    const explicitValue = explicit()?.trim();
-    if (explicitValue !== undefined && explicitValue.length > 0) {
-      return explicitValue;
-    }
-
-    if (labelFor) {
-      const target = labelFor()?.trim();
-      if (target !== undefined && target.length > 0) {
-        return target;
-      }
-    }
-
-    const boundId = boundControl()?.id;
-    if (boundId && boundId.length > 0) {
-      return boundId;
+    const resolved = resolveFieldNameFromCandidates(
+      explicit(),
+      labelFor?.(),
+      boundControl()?.id,
+    );
+    if (resolved !== null) {
+      return resolved;
     }
 
     warnOnce(

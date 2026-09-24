@@ -381,6 +381,113 @@ describe('NgxSignalFormWrapperComponent', () => {
     });
   });
 
+  describe('Field-name hardening (#505): inner whitespace stays a single id token', () => {
+    it('keeps every aria-describedby token on a hinted control whitespace-free and resolvable', async () => {
+      // Regression: `fieldName="x other-id"` used to leak raw into
+      // `NgxFormFieldHint.resolvedFieldName()`, producing `x other-id-hint` —
+      // two tokens in `aria-describedby`, the second one pointing at nothing.
+      // Routing `NgxFormFieldWrapper.resolvedFieldName` through
+      // `resolveFieldNameFromCandidates` (which now normalizes inner
+      // whitespace) keeps every published id a single token.
+      @Component({
+        selector: 'ngx-test-whitespace-hint',
+        imports: [
+          NgxSignalFormWrapperComponent,
+          NgxSignalFormToolkit,
+          NgxFormFieldHint,
+          FormField,
+        ],
+        template: `
+          <ngx-form-field-wrapper
+            [formField]="testForm.email"
+            fieldName="x other-id"
+          >
+            <label for="email-control">Email</label>
+            <input
+              id="email-control"
+              type="email"
+              [formField]="testForm.email"
+            />
+            <ngx-form-field-hint>Use your work email</ngx-form-field-hint>
+          </ngx-form-field-wrapper>
+        `,
+      })
+      class Host {
+        protected readonly testForm = form(
+          signal({ email: '' }),
+          schema<{ email: string }>((p) => {
+            required(p.email, { message: 'Email is required' });
+          }),
+        );
+      }
+
+      const { container, fixture } = await render(Host);
+      fixture.componentInstance.testForm.email().markAsTouched();
+      fixture.detectChanges();
+      await fixture.whenStable();
+
+      const input = container.querySelector('#email-control');
+      const describedBy = input?.getAttribute('aria-describedby');
+      expect(describedBy).toBeTruthy();
+
+      const tokens = (describedBy ?? '').split(' ');
+      // The hint and the now-visible required error both contribute a token —
+      // guards against a false pass where only one happened to be present.
+      expect(tokens.length).toBeGreaterThan(1);
+      for (const token of tokens) {
+        expect(token).not.toMatch(/\s/);
+        expect(container.querySelector(`#${token}`)).toBeTruthy();
+      }
+    });
+
+    it('keeps a selection cluster’s aria-labelledby and aria-describedby tokens whitespace-free and resolvable', async () => {
+      // Same regression, cluster path: the wrapper writes `${resolvedFieldName}-label`
+      // straight onto the projected legend and reads the same name for the
+      // required-hint / error ids that feed `aria-describedby` — see
+      // `form-field-wrapper.ts`'s selection-cluster wiring.
+      const invalidField = signal({
+        invalid: () => true,
+        touched: () => true,
+        errors: () => [{ kind: 'required', message: 'Pick a delivery option' }],
+      });
+
+      const { container } = await render(
+        `<ngx-form-field-wrapper [formField]="field" fieldName="x other-id">
+          <span ngxFormFieldLabel>Delivery option *</span>
+          <div>
+            <label>
+              <input id="delivery-standard" type="radio" value="standard" />
+              Standard
+            </label>
+            <label>
+              <input id="delivery-express" type="radio" value="express" />
+              Express
+            </label>
+          </div>
+        </ngx-form-field-wrapper>`,
+        {
+          imports: [NgxSignalFormWrapperComponent],
+          componentProperties: {
+            field: invalidField,
+          },
+        },
+      );
+
+      const wrapper = container.querySelector('ngx-form-field-wrapper');
+      const labelledBy = wrapper?.getAttribute('aria-labelledby');
+      const describedBy = wrapper?.getAttribute('aria-describedby');
+      expect(labelledBy).toBeTruthy();
+      expect(describedBy).toBeTruthy();
+
+      for (const idList of [labelledBy, describedBy]) {
+        for (const token of (idList ?? '').split(' ')) {
+          expect(token).not.toMatch(/\s/);
+          expect(container.querySelector(`#${token}`)).toBeTruthy();
+        }
+      }
+    });
+  });
+
   describe('Auto-resolution of field names from input elements', () => {
     it('should auto-resolve fieldName from input element id attribute', async () => {
       // The wrapper auto-resolves fieldName from the projected input element's id attribute.

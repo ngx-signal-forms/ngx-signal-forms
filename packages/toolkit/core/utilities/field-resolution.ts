@@ -1,11 +1,11 @@
 import { computed, type Signal } from '@angular/core';
-import { devWarnOnce, type WarnOnceRef } from './dev-warn-once';
+import { createDevWarnOnce } from './dev-warn-once';
 
 // Module-scoped, process-lifetime latch: a data-driven field name with inner
 // whitespace is a one-off authoring smell, not a per-field condition worth
 // repeating the diagnostic for. See `devWarnOnce` for the "flip once, never
 // reset" contract this relies on.
-const warnedInnerWhitespace: WarnOnceRef = { current: false };
+const warnInnerWhitespace = createDevWarnOnce();
 
 /**
  * Normalize a potential field name into the deterministic v1 identity form.
@@ -35,6 +35,10 @@ const warnedInnerWhitespace: WarnOnceRef = { current: false };
  * normalizeFieldName(null);          // null
  * normalizeFieldName(undefined);     // null
  * ```
+ *
+ * `'a b'` and `'a-b'` normalize to the same id (`'a-b'`) — a data source
+ * that mixes both spellings for the same logical field collides on one
+ * generated id, by design.
  */
 export function normalizeFieldName(
   fieldName: string | null | undefined,
@@ -49,12 +53,15 @@ export function normalizeFieldName(
   }
 
   if (/\s/.test(trimmed)) {
-    devWarnOnce(
-      warnedInnerWhitespace,
+    // The raw name may carry user-entered data — pass it as an extra arg
+    // (see `devWarnOnce`'s contract) instead of interpolating it into the
+    // message string.
+    warnInnerWhitespace(
       'warn',
       '[ngx-signal-forms] normalizeFieldName: field name contains inner ' +
-        `whitespace ("${trimmed}"). Replacing it with "-" so generated ` +
-        '`id` and `aria-describedby` values stay a single token.',
+        'whitespace. Replacing it with "-" so generated `id` and ' +
+        '`aria-describedby` values stay a single token.',
+      trimmed,
     );
     return trimmed.replaceAll(/\s+/g, '-');
   }
@@ -76,10 +83,10 @@ export function normalizeFieldName(
  * ## The canonical field-name cascade
  *
  * This is the toolkit's canonical statement of the field-name precedence
- * contract. `NgxFormFieldError` and `NgxHeadlessFieldName` call this
- * primitive directly; `NgxFormFieldWrapper.resolvedFieldName` and
- * `createFieldNameResolver` implement the same cascade semantics inline
- * (same trim/empty-collapse rules) rather than calling it. Reading top to
+ * contract. `NgxFormFieldError`, `NgxHeadlessFieldName`,
+ * `NgxFormFieldWrapper.resolvedFieldName`, and `createFieldNameResolver`
+ * all call this primitive directly, so every wrapper-authoring surface
+ * gets the same trim/empty-collapse/inner-whitespace rules. Reading top to
  * bottom, later tiers only run when every earlier tier resolved to `null`:
  *
  * 1. **Explicit input** — a `fieldName` (or equivalent) input the consumer

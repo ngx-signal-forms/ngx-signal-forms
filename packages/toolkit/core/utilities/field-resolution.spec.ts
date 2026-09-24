@@ -89,9 +89,15 @@ describe('field-resolution', () => {
       isolated.normalizeFieldName('c d');
 
       expect(consoleWarnSpy).toHaveBeenCalledTimes(1);
+      // The message names the utility but never interpolates the (possibly
+      // user-entered) field name into it — see `dev-warn-once.ts`'s
+      // contract that caller data goes in `...args`, not the message.
       expect(consoleWarnSpy).toHaveBeenCalledWith(
         expect.stringContaining('normalizeFieldName'),
+        'a b',
       );
+      const [message] = consoleWarnSpy.mock.calls[0] as [string];
+      expect(message).not.toContain('a b');
     });
   });
 

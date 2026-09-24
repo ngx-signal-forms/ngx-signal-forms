@@ -36,6 +36,7 @@ import {
   isFieldStateHidden,
   isWarningError,
   readDirectErrors,
+  resolveFieldNameFromCandidates,
   type ResolvedNgxSignalFormControlSemantics,
   resolveStrategyFromContext,
   resolveWarningStrategyFromContext,
@@ -897,28 +898,18 @@ export class NgxFormFieldWrapper<TValue = unknown> {
    * This signal is public to allow child components to access the resolved field name
    * via the `NGX_SIGNAL_FORM_FIELD_CONTEXT` injection token.
    */
-  readonly resolvedFieldName = computed<string | null>(() => {
-    // Priority 1: Explicit fieldName input
-    const explicit = this.fieldName();
-    if (explicit !== undefined) {
-      const trimmed = explicit.trim();
-      if (trimmed.length > 0) {
-        return trimmed;
-      }
-    }
-
-    // Priority 2: Derive from input element's id attribute (signal updated by
-    // afterEveryRender). This is the correct reactive path — the DOM is never
-    // queried synchronously inside a computed() to avoid SSR crashes
-    // (requireHostElement throws TypeError when nativeElement is not HTMLElement)
-    // and to keep the dependency graph fully reactive.
-    const idFromInput = this.#inputElementId();
-    if (idFromInput) {
-      return idFromInput;
-    }
-
-    return null;
-  });
+  readonly resolvedFieldName = computed<string | null>(() =>
+    resolveFieldNameFromCandidates(
+      // Priority 1: Explicit fieldName input
+      this.fieldName(),
+      // Priority 2: Derive from input element's id attribute (signal updated
+      // by afterEveryRender). This is the correct reactive path — the DOM is
+      // never queried synchronously inside a computed() to avoid SSR crashes
+      // (requireHostElement throws TypeError when nativeElement is not
+      // HTMLElement) and to keep the dependency graph fully reactive.
+      this.#inputElementId(),
+    ),
+  );
 
   /**
    * Hint children projected into this wrapper. Used to expose a
