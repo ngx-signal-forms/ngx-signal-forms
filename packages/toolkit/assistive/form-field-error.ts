@@ -576,14 +576,19 @@ export class NgxFormFieldError {
   );
 
   /**
-   * Joined kinds and messages of the visible blocking errors. A change means
-   * the user hears something new, so the errors must go through the live
-   * region again.
+   * Kinds and messages of the visible blocking errors, encoded as one
+   * string. A change means the user hears something new, so the errors must
+   * go through the live region again.
+   *
+   * JSON of `[kind, message]` tuples, not a `kind:message` join: a join is
+   * not collision-free (`('a', 'b:c')` and `('a:b', 'c')` both give
+   * `a:b:c`), and a missed change would keep a new message out of the live
+   * region.
    */
   readonly #errorContent = computed(() =>
-    this.resolvedErrors()
-      .map((error) => `${error.kind}:${error.message}`)
-      .join('\n'),
+    JSON.stringify(
+      this.resolvedErrors().map((error) => [error.kind, error.message]),
+    ),
   );
 
   /**

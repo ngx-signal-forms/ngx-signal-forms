@@ -6,6 +6,7 @@ import {
   form,
   required,
   schema,
+  validate,
 } from '@angular/forms/signals';
 import {
   NgxSignalFormToolkit,
@@ -226,6 +227,43 @@ class SwitchOffComponent extends TestFormBase {}
 })
 class StandaloneErrorComponent extends TestFormBase {}
 
+/**
+ * A validator whose two outputs collide under a naive `${kind}:${message}`
+ * join: ('a', 'b:c') and ('a:b', 'c') both read "a:b:c".
+ */
+@Component({
+  selector: 'ngx-test-summary-colliding-errors',
+  imports: [
+    FormField,
+    NgxSignalFormToolkit,
+    NgxFormField,
+    NgxFormFieldErrorSummary,
+  ],
+  template: `
+    <form [formRoot]="testForm" ngxSignalForm errorStrategy="on-submit">
+      <ngx-form-field-error-summary [formTree]="testForm" />
+      <ngx-form-field-wrapper [formField]="testForm.code" fieldName="code">
+        <label for="code">Code</label>
+        <input id="code" type="text" [formField]="testForm.code" />
+      </ngx-form-field-wrapper>
+      <button type="submit">Submit</button>
+    </form>
+  `,
+})
+class CollidingErrorsComponent {
+  readonly #model = signal({ code: '' });
+  readonly testForm = form(
+    this.#model,
+    schema((path) => {
+      validate(path.code, ({ value }) =>
+        value() === ''
+          ? { kind: 'a', message: 'b:c' }
+          : { kind: 'a:b', message: 'c' },
+      );
+    }),
+  );
+}
+
 async function renderForm(component: Type<unknown>): Promise<HTMLElement> {
   const { container } = await render(component);
   await TestBed.inject(ApplicationRef).whenStable();
@@ -315,6 +353,27 @@ describe('NgxFormFieldErrorSummary — the summary announces alone after a submi
 
     // The untouched field keeps its unchanged error out of the live region.
     expect(changed.has(fieldLiveRegion(container, 'name'))).toBe(false);
+  });
+
+  it('after a submit, an error change that a joined kind:message string cannot see still updates the field live region', async () => {
+    const container = await renderForm(CollidingErrorsComponent);
+    await submit(container);
+    await TestBed.inject(ApplicationRef).whenStable();
+    expect(fieldLiveRegion(container, 'code').textContent?.trim()).toBe('');
+
+    const codeInput = container.querySelector<HTMLInputElement>('#code');
+    if (!codeInput) throw new Error('no #code input');
+
+    // ('a', 'b:c') becomes ('a:b', 'c'): a different error with a different
+    // message. The user must hear it, so it must enter the live region.
+    const changed = await liveRegionsChangedBy(container, () =>
+      userEvent.type(codeInput, 'x'),
+    );
+
+    const codeRegion = fieldLiveRegion(container, 'code');
+    expect(changed.has(codeRegion)).toBe(true);
+    expect(codeRegion.textContent?.trim()).toBe('Error: c');
+    expect(codeRegion.id).toBe('code-error');
   });
 
   it('after a submit, fixing a field and then breaking it again announces the new error', async () => {
