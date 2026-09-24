@@ -384,6 +384,28 @@
   }
 }
 
+/* Plain appearance: restore a focus indicator on the input itself. */
+/* The textual input reset in `form-field-wrapper.css` removes the input's */
+/* own `:focus`/`:focus-visible` outline for every appearance and relies on */
+/* the container's `:focus-within` ring instead. The plain rule above clears */
+/* that container ring (`border-color: transparent; box-shadow: none`), so a */
+/* plain field showed no focus indicator at all (#493, WCAG 2.2 SC 2.4.7). */
+/* This rule has the same selector specificity as the reset it overrides; it */
+/* wins because this file loads after `form-field-wrapper.css`. */
+:host(.ngx-signal-forms-plain)
+  ::ng-deep
+  .ngx-signal-form-field-wrapper__main
+  :is(
+    input:not([type='radio']):not([type='checkbox']):not([role='switch']),
+    textarea,
+    select,
+    [role='combobox'],
+    [data-ngx-signal-form-control-kind='input-like']
+  ):focus-visible {
+  outline: 2px solid var(--_focus-color);
+  outline-offset: 2px;
+}
+
 /* Plain custom controls should still inherit the stacked field padding so they */
 /* align with regular inputs without consumer-side overrides. */
 :host(.ngx-signal-forms-plain.ngx-signal-form-field-wrapper--selection-group),
