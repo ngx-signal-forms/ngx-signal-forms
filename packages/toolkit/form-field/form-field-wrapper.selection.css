@@ -385,16 +385,11 @@
 }
 
 /* Plain appearance: restore a focus indicator on the input itself. */
-/* The textual input reset in `form-field-wrapper.css` removes the input's */
-/* own `:focus`/`:focus-visible` outline for every appearance and relies on */
-/* the container's `:focus-within` ring instead. The plain rule above clears */
-/* that container ring (`border-color: transparent; box-shadow: none`), so a */
-/* plain field showed no focus indicator at all (#493, WCAG 2.2 SC 2.4.7). */
-/* Scoped to `.ngx-signal-form-field-wrapper--textual` too, matching the */
-/* reset's own scope exactly — it never touched non-textual plain controls */
-/* (selection groups, switches), so this does not need to reach them either. */
-/* This rule has the same selector specificity as the reset it overrides; it */
-/* wins because this file loads after `form-field-wrapper.css`. */
+/* The textual reset in `form-field-wrapper.css` removes the input's own */
+/* focus outline and relies on the container's `:focus-within` ring. The */
+/* plain rule above clears that ring, so a plain field had no focus */
+/* indicator (WCAG 2.2 SC 2.4.7). This rule has the same scope as the reset. */
+/* It carries one more class, so it wins regardless of stylesheet order. */
 :host(.ngx-signal-forms-plain.ngx-signal-form-field-wrapper--textual)
   ::ng-deep
   .ngx-signal-form-field-wrapper__main

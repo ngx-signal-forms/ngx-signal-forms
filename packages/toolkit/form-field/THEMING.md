@@ -613,8 +613,8 @@ The form field wrapper supports three appearance modes via the `appearance` inpu
 - Removes border and background chrome from the field container
 - Uses `--ngx-form-field-label-*` properties (same token set as standard)
 - Draws a focus outline on native text inputs (2px, 2px offset, colored by
-  `--ngx-form-field-focus-color`). Custom controls still draw their own focus
-  treatment.
+  `--ngx-form-field-focus-color`). Selection controls (checkbox, radio,
+  switch) and non-textual custom controls still draw their own.
 
 ```html
 <!-- Standard (default) -->
