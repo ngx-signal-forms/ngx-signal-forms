@@ -20,11 +20,14 @@ import { NgxHeadlessFieldset } from '@ngx-signal-forms/toolkit/headless';
 
 import {
   NGX_FORM_FIELD_ERROR_RENDERER,
+  generateErrorId,
+  generateWarningId,
   type NgxFormFieldErrorPlacement,
 } from '@ngx-signal-forms/toolkit';
 import {
   devWarnOnce,
   isHtmlElement,
+  sanitizeFieldNameForId,
   type WarnOnceRef,
 } from '@ngx-signal-forms/toolkit/core';
 import { resolveUnionInput } from './utilities/resolve-union-input';
@@ -537,17 +540,24 @@ export class NgxFormFieldset {
 
     const fieldsetId = this.fieldset.resolvedFieldsetId();
 
+    // Build through `generateErrorId`/`generateWarningId` rather than
+    // concatenating the raw `fieldsetId` directly — the rendered
+    // `<ngx-form-field-error [fieldName]="fieldset.resolvedFieldsetId()">`
+    // (above) generates its own id the same way, so a `fieldsetId` with
+    // inner whitespace still resolves to the same, single-token id here as
+    // what is actually in the DOM.
+    //
     // Errors suppress warnings in the rendered notification (see
     // `filteredErrorsSignal`), so only reference the id that is actually in
     // the DOM.
     if (this.fieldset.shouldShowErrors()) {
-      return initial ? `${initial} ${fieldsetId}-error` : `${fieldsetId}-error`;
+      const errorId = generateErrorId(fieldsetId);
+      return initial ? `${initial} ${errorId}` : errorId;
     }
 
     if (this.fieldset.shouldShowWarnings()) {
-      return initial
-        ? `${initial} ${fieldsetId}-warning`
-        : `${fieldsetId}-warning`;
+      const warningId = generateWarningId(fieldsetId);
+      return initial ? `${initial} ${warningId}` : warningId;
     }
 
     return initial;
@@ -567,7 +577,11 @@ export class NgxFormFieldset {
       },
       write: ({ legend, legendId }) => {
         if (legend && !legendId) {
-          const assigned = `${this.fieldset.resolvedFieldsetId()}-legend`;
+          // Sanitize here, at the point the id is built and assigned to the
+          // DOM — `resolvedFieldsetId()` is the raw resolved name and may
+          // contain inner whitespace. This id also feeds `aria-labelledby`
+          // (see `legendLabelId` below), which splits on whitespace.
+          const assigned = `${sanitizeFieldNameForId(this.fieldset.resolvedFieldsetId())}-legend`;
           legend.id = assigned;
           this.#legendId.set(assigned);
         } else if (legendId !== this.#legendId()) {

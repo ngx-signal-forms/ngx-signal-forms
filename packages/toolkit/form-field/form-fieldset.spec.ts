@@ -702,6 +702,45 @@ describe('NgxFormFieldset', () => {
     expect(host).toHaveAttribute('aria-labelledby', 'personal-info-legend');
   });
 
+  it('keeps every aria-describedby / aria-labelledby token whitespace-free and resolvable when fieldsetId has inner whitespace (#505)', async () => {
+    // Regression: `${fieldsetId}-error` / `-warning` and `${fieldsetId}-legend`
+    // were built by hand from the raw `resolvedFieldsetId()`, while the
+    // fieldset's own `<ngx-form-field-error [fieldName]="…">` renders a
+    // sanitized id — a `fieldsetId` with inner whitespace made the
+    // hand-rolled ids diverge from what was actually in the DOM, and
+    // `aria-labelledby`/`aria-describedby` split each raw-space id into two
+    // tokens, the second one dangling.
+    const fieldset = createFieldsetState({
+      errors: () => [{ kind: 'required', message: 'Required' }],
+      errorSummary: () => [{ kind: 'required', message: 'Required' }],
+    });
+
+    const { container } = await render(
+      `<ngx-form-fieldset [field]="fieldset" fieldsetId="billing address">
+        <legend>Billing address</legend>
+        <div>Content</div>
+      </ngx-form-fieldset>`,
+      {
+        imports: [NgxFormFieldset],
+        componentProperties: { fieldset },
+      },
+    );
+
+    const host = container.querySelector('ngx-form-fieldset');
+    const describedBy = host?.getAttribute('aria-describedby');
+    const labelledBy = host?.getAttribute('aria-labelledby');
+
+    expect(describedBy).toBeTruthy();
+    expect(labelledBy).toBeTruthy();
+
+    for (const idList of [describedBy, labelledBy]) {
+      for (const token of (idList ?? '').split(' ')) {
+        expect(token).not.toMatch(/\s/);
+        expect(container.querySelector(`#${token}`)).toBeTruthy();
+      }
+    }
+  });
+
   it('leaves native <fieldset> hosts to use their intrinsic group semantics', async () => {
     const fieldset = createFieldsetState();
 

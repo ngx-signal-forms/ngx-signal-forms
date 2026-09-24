@@ -210,7 +210,8 @@ export function resolveFieldName(element: HTMLElement): string | null {
  * IDs interoperate without the call site re-deriving the format.
  *
  * Applies {@link sanitizeFieldNameForId} to `fieldName` first, so a name
- * with inner whitespace still produces a single-token id.
+ * with inner whitespace still produces a single-token id. Logs a one-time
+ * dev-mode warning when it does.
  *
  * @param fieldName - The field name
  * @param kind - Optional error kind (e.g. `'required'`); appended after the
@@ -319,7 +320,8 @@ export function buildAriaDescribedBy(
  * Generates a warning ID for a field, following WCAG best practices.
  *
  * Applies {@link sanitizeFieldNameForId} to `fieldName` first, so a name
- * with inner whitespace still produces a single-token id.
+ * with inner whitespace still produces a single-token id. Logs a one-time
+ * dev-mode warning when it does.
  *
  * @param fieldName - The field name
  * @returns The warning ID in format: `{fieldName}-warning`
