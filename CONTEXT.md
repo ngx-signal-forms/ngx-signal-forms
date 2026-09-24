@@ -254,7 +254,10 @@ ngx-signal-forms — an Angular toolkit for working with Signal Forms.
   neither an unregistered nor an `@property`-registered custom property is
   readable from a size-query condition, and `100cqi` inside the same element
   that also declares `container-type` resolves against the next ancestor
-  container, not itself). Consumers who need a different breakpoint override
-  `.ngx-signal-form-field-wrapper__layout`'s `grid-template-columns` and the
-  `@container` rule directly. See THEMING.md, "Horizontal Layout", and
+  container, not itself). The toolkit's own styles are view-encapsulated, so
+  a consumer cannot edit this `@container` rule directly; a different
+  breakpoint needs global CSS with higher specificity that resets
+  `grid-row`/`grid-column` on `.ngx-signal-form-field-wrapper__label`,
+  `__content`, `__assistive` and `__messages` at whatever width the
+  consumer wants instead. See THEMING.md, "Horizontal Layout", and
   [#523](https://github.com/ngx-signal-forms/ngx-signal-forms/issues/523).

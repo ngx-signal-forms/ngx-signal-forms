@@ -612,8 +612,21 @@
      collects a `row-gap` above the control, the same empty-row regression
      the fixed-appearance rules avoid. The extra `:not(:has(...))` makes
      these more specific than the rules above, so they win regardless of
-     source order. */
-  :host(.ngx-signal-form-field-wrapper--horizontal):not(
+     source order.
+
+     Scoped to `--textual:not(.ngx-signal-forms-plain)`, matching exactly
+     the scope of the rule that actually hides `.label` (see
+     form-field-wrapper.css, "LABEL-LESS LAYOUT"). A labelless field outside
+     that scope — plain appearance, a slider, a composite control — still
+     renders a visible `.label` div (it can carry a required/optional
+     marker even with no projected `<label>`), so it must keep its own row;
+     shifting `.content` up unconditionally put it on row 1 directly under
+     that still-visible marker. */
+  :host(
+      .ngx-signal-form-field-wrapper--textual.ngx-signal-form-field-wrapper--horizontal:not(
+          .ngx-signal-forms-plain
+        )
+    ):not(
       :has(
         .ngx-signal-form-field-wrapper__label :is(label, [ngxFormFieldLabel])
       )
@@ -622,7 +635,11 @@
     grid-row: 1;
   }
 
-  :host(.ngx-signal-form-field-wrapper--horizontal):not(
+  :host(
+      .ngx-signal-form-field-wrapper--textual.ngx-signal-form-field-wrapper--horizontal:not(
+          .ngx-signal-forms-plain
+        )
+    ):not(
       :has(
         .ngx-signal-form-field-wrapper__label :is(label, [ngxFormFieldLabel])
       )
@@ -632,7 +649,9 @@
   }
 
   :host(
-      .ngx-signal-form-field-wrapper--horizontal.ngx-signal-form-field-wrapper--messages-top
+      .ngx-signal-form-field-wrapper--textual.ngx-signal-form-field-wrapper--horizontal.ngx-signal-form-field-wrapper--messages-top:not(
+          .ngx-signal-forms-plain
+        )
     ):not(
       :has(
         .ngx-signal-form-field-wrapper__label :is(label, [ngxFormFieldLabel])
@@ -643,7 +662,9 @@
   }
 
   :host(
-      .ngx-signal-form-field-wrapper--horizontal.ngx-signal-form-field-wrapper--messages-top
+      .ngx-signal-form-field-wrapper--textual.ngx-signal-form-field-wrapper--horizontal.ngx-signal-form-field-wrapper--messages-top:not(
+          .ngx-signal-forms-plain
+        )
     ):not(
       :has(
         .ngx-signal-form-field-wrapper__label :is(label, [ngxFormFieldLabel])

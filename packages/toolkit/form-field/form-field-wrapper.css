@@ -995,10 +995,16 @@
 /* Selection controls (checkbox/switch/radio-group) require labels for */
 /* accessibility and intentionally keep their own layout. */
 
-/* Standard vertical: hide the empty label div. Flex gap only applies */
-/* between rendered children, so removing the div removes the gap too. */
-/* Plain appearance is a non-goal (it already strips label chrome), so */
-/* exclude it explicitly to keep the spec and the CSS in sync. */
+/* Hide the empty label div. The selector isn't scoped to an orientation, so
+   this also covers horizontal (see form-field-wrapper.selection.css,
+   "HORIZONTAL LAYOUT", #523): without it, a labelless horizontal field
+   would still occupy the orphaned 'label' grid-area target via
+   auto-placement, and — once the narrow `@container` query gives every
+   item an explicit row — reserve a whole empty row plus a `row-gap` sliver
+   above the control for nothing. In the vertical layout, flex gap only
+   applies between rendered children, so removing the div removes that gap
+   too. Plain appearance is a non-goal (it already strips label chrome), so
+   exclude it explicitly to keep the spec and the CSS in sync. */
 :host(.ngx-signal-form-field-wrapper--textual:not(.ngx-signal-forms-plain)):not(
     :has(.ngx-signal-form-field-wrapper__label :is(label, [ngxFormFieldLabel]))
   )
@@ -1049,26 +1055,6 @@
   grid-template-areas:
     'content'
     'assistive';
-}
-
-/* Hide the empty label div (mirrors the standard/outline rules above).
-   Without this it still occupies the orphaned 'label' grid-area target via
-   auto-placement, and — once the narrow `@container` query in
-   form-field-wrapper.selection.css gives every item an explicit row — it
-   would reserve a whole empty row plus a `row-gap` sliver above the control
-   for nothing (#523). Written as its own flat rule, not nested inside the
-   block above: Angular's emulated ViewEncapsulation does not scope
-   natively-nested selectors with its `[_ngcontent-*]` attribute, which would
-   silently drop this rule's specificity below other `.label` rules. */
-:host(
-    .ngx-signal-form-field-wrapper--textual.ngx-signal-form-field-wrapper--horizontal:not(
-        .ngx-signal-forms-plain
-      )
-  ):not(
-    :has(.ngx-signal-form-field-wrapper__label :is(label, [ngxFormFieldLabel]))
-  )
-  .ngx-signal-form-field-wrapper__label {
-  display: none;
 }
 
 :host(

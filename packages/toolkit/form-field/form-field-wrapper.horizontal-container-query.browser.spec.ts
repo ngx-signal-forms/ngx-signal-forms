@@ -14,18 +14,16 @@ import { NgxFormFieldWrapper } from './form-field-wrapper';
  * LAYOUT", for why that threshold isn't a public, overridable token).
  */
 describe('NgxFormFieldWrapper — horizontal layout container query (#523)', () => {
-  const mockField = () => {
-    const fieldState = {
-      invalid: signal(false),
-      touched: signal(false),
-      errors: signal([]),
-      valid: signal(true),
-      dirty: signal(false),
-      value: signal(''),
-      required: signal(false),
-    };
-    return signal(() => fieldState);
-  };
+  const mockField = () =>
+    signal({
+      invalid: () => false,
+      touched: () => false,
+      errors: () => [],
+      valid: () => true,
+      dirty: () => false,
+      value: () => '',
+      required: () => false,
+    });
 
   afterEach(() => {
     document.documentElement.style.fontSize = '';
@@ -120,5 +118,90 @@ describe('NgxFormFieldWrapper — horizontal layout container query (#523)', () 
     const wrapperTop = wrapper.getBoundingClientRect().top;
     const contentTop = content.getBoundingClientRect().top;
     expect(contentTop - wrapperTop).toBe(0);
+  });
+
+  it('does not overlap a still-visible required marker with the control in a narrow plain labelless field', async () => {
+    // Plain appearance never hides the `.label` div for a labelless field
+    // (form-field-wrapper.css's labelless rules are scoped to
+    // `--textual:not(.ngx-signal-forms-plain)`), so it keeps rendering the
+    // required marker even with no projected `<label>`. The narrow-stacking
+    // row-shift must not assume every labelless field has a hidden `.label`
+    // — doing so put `.content` on row 1 directly under the still-visible
+    // marker.
+    const { container } = await render(
+      `<div style="width: 200px;">
+        <ngx-form-field-wrapper [formField]="field" orientation="horizontal" appearance="plain">
+          <input id="plain-required-input" type="text" required />
+        </ngx-form-field-wrapper>
+      </div>`,
+      {
+        imports: [NgxFormFieldWrapper],
+        componentProperties: { field: mockField() },
+      },
+    );
+
+    const label = container.querySelector<HTMLElement>(
+      '.ngx-signal-form-field-wrapper__label',
+    )!;
+    const marker = container.querySelector<HTMLElement>(
+      '.ngx-signal-form-field-wrapper__required-marker',
+    )!;
+    const input = container.querySelector<HTMLInputElement>(
+      '#plain-required-input',
+    )!;
+
+    expect(getComputedStyle(label).display).not.toBe('none');
+    expect(marker).toBeTruthy();
+    const labelRect = label.getBoundingClientRect();
+    const inputRect = input.getBoundingClientRect();
+
+    // The marker sits above the control, not on top of it.
+    expect(inputRect.top).toBeGreaterThanOrEqual(labelRect.bottom);
+  });
+
+  it('keeps a messages-top labelless field free of an empty label row in a narrow container', async () => {
+    const invalidTouchedField = () =>
+      signal({
+        invalid: () => true,
+        touched: () => true,
+        errors: () => [{ kind: 'required', message: 'Required' }],
+        valid: () => false,
+        dirty: () => true,
+        value: () => '',
+        required: () => true,
+      });
+
+    const { container } = await render(
+      `<div style="width: 200px;">
+        <ngx-form-field-wrapper [formField]="field" orientation="horizontal" errorPlacement="top">
+          <input id="messages-top-labelless-input" type="text" />
+        </ngx-form-field-wrapper>
+      </div>`,
+      {
+        imports: [NgxFormFieldWrapper],
+        componentProperties: { field: invalidTouchedField() },
+      },
+    );
+
+    const wrapper = container.querySelector<HTMLElement>(
+      'ngx-form-field-wrapper',
+    )!;
+    const messages = container.querySelector<HTMLElement>(
+      '.ngx-signal-form-field-wrapper__messages',
+    )!;
+    const content = container.querySelector<HTMLElement>(
+      '.ngx-signal-form-field-wrapper__content',
+    )!;
+
+    // The messages row renders above the control with no empty label row (or
+    // its row-gap) in between.
+    expect(messages).toBeTruthy();
+    const wrapperTop = wrapper.getBoundingClientRect().top;
+    const messagesTop = messages.getBoundingClientRect().top;
+    const contentTop = content.getBoundingClientRect().top;
+    expect(messagesTop - wrapperTop).toBe(0);
+    expect(contentTop).toBeGreaterThanOrEqual(
+      messages.getBoundingClientRect().bottom,
+    );
   });
 });
