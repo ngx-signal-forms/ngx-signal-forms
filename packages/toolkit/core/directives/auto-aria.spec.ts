@@ -751,6 +751,87 @@ describe('NgxSignalFormAutoAria', () => {
       const group = container.querySelector('#cluster');
       expect(group?.getAttribute('aria-required')).toBe('true');
     });
+
+    it('treats role="Combobox" as case-insensitive and keeps aria-required', async () => {
+      // Browsers match ARIA role tokens case-insensitively, so a role
+      // authored with different casing must resolve the same way as its
+      // lowercase form.
+      @Component({
+        template:
+          '<div id="cluster" role="Combobox" [formField]="clusterControl()"></div>',
+        imports: [MockFormFieldDirective, NgxSignalFormAutoAria],
+      })
+      class TestComponent {
+        clusterControl = createMockControl(
+          true,
+          true,
+          [{ kind: 'required', message: 'Field is required' }],
+          true,
+        );
+      }
+
+      const { container } = await render(TestComponent);
+      await TestBed.inject(ApplicationRef).whenStable();
+
+      const group = container.querySelector('#cluster');
+      expect(group?.getAttribute('aria-required')).toBe('true');
+    });
+
+    it('resolves a space-separated role fallback list by its first token (supported first)', async () => {
+      // WAI-ARIA allows a space-separated list of fallback roles; only the
+      // first token is the element's role.
+      @Component({
+        template:
+          '<div id="cluster" role="combobox listbox" [formField]="clusterControl()"></div>',
+        imports: [MockFormFieldDirective, NgxSignalFormAutoAria],
+      })
+      class TestComponent {
+        clusterControl = createMockControl(
+          true,
+          true,
+          [{ kind: 'required', message: 'Field is required' }],
+          true,
+        );
+      }
+
+      const { container } = await render(TestComponent);
+      await TestBed.inject(ApplicationRef).whenStable();
+
+      const group = container.querySelector('#cluster');
+      expect(group?.getAttribute('aria-required')).toBe('true');
+    });
+
+    it('resolves a space-separated role fallback list by its first token (unsupported first)', async () => {
+      const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+      @Component({
+        template:
+          '<div id="cluster" role="slider textbox" [formField]="clusterControl()"></div>',
+        imports: [MockFormFieldDirective, NgxSignalFormAutoAria],
+      })
+      class TestComponent {
+        clusterControl = createMockControl(
+          true,
+          true,
+          [{ kind: 'required', message: 'Field is required' }],
+          true,
+        );
+      }
+
+      const { container } = await render(TestComponent);
+      await TestBed.inject(ApplicationRef).whenStable();
+
+      const group = container.querySelector('#cluster');
+      // `slider` wins as the first token and does not support
+      // `aria-required` — `textbox` further down the list never applies.
+      // The host has an explicit (unsupported) role, so the "add a role"
+      // warning does not fire either; that warning is only for a host with
+      // no role at all.
+      expect(group).not.toHaveAttribute('aria-required');
+      expect(warnSpy).not.toHaveBeenCalled();
+
+      warnSpy.mockRestore();
+    });
   });
 
   describe('ARIA Invalid Attribute', () => {

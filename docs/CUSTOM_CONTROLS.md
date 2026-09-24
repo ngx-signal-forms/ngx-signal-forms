@@ -129,9 +129,13 @@ those same attributes on each grouped input would duplicate or contradict
 the group-level values. A checkbox with `role="switch"` is always a single
 control. It never joins a group, so it is eligible automatically.
 
-A custom `[formField]` host also needs a role that supports `aria-required`
-(for example `combobox`, `textbox`, or `radiogroup`) — a role-less host gets
-no `aria-required` at all, because the generic role does not support it.
+The element that receives auto-ARIA's managed attributes also needs a role
+that supports `aria-required` (for example `combobox`, `textbox`, or
+`radiogroup`) — a role-less element gets no `aria-required` at all, because
+the generic role does not support it. That element is usually the
+`[formField]` host itself. It is the inner `role="combobox"` trigger instead
+when auto-ARIA relocates managed attributes there (see "Combobox inference"
+below) — the host can stay role-less in that case.
 
 `ariaMode` in a control preset (`'auto'` | `'manual'`) only applies once a
 host is already auto-ARIA eligible. Setting `ariaMode: 'auto'` on the

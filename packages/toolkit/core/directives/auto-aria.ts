@@ -96,6 +96,18 @@ const ARIA_REQUIRED_SUPPORTED_ROLES = new Set([
 const NATIVE_FORM_CONTROL_TAGS = new Set(['INPUT', 'SELECT', 'TEXTAREA']);
 
 /**
+ * Resolves the effective ARIA role from a raw `role` attribute value.
+ *
+ * WAI-ARIA allows a space-separated list of fallback roles — only the first
+ * token is the element's role, and browsers match role tokens
+ * case-insensitively. Returns `null` for a `null`/empty/whitespace-only
+ * attribute, which callers treat the same as "no role".
+ */
+function resolveEffectiveRole(rawRole: string | null): string | null {
+  return rawRole?.trim().split(/\s+/)[0]?.toLowerCase() || null;
+}
+
+/**
  * CSS selector matching a descendant that looks like its own bound control:
  * a native form control, or an element with a role that supports
  * `aria-required` (see {@link ARIA_REQUIRED_SUPPORTED_ROLES}). Deliberately
@@ -490,10 +502,12 @@ export class NgxSignalFormAutoAria {
    *   gets the attribute — it carries no explicit role.
    * - A native `<button>` never gets it. Its implicit role is not in the DOM
    *   `role` attribute, so it needs its own check.
-   * - An explicit role gets the attribute only if that role supports
-   *   `aria-required` per WAI-ARIA 1.2 (see
+   * - An explicit role gets the attribute only if its effective role
+   *   supports `aria-required` per WAI-ARIA 1.2 (see
    *   {@link ARIA_REQUIRED_SUPPORTED_ROLES}). `group` and `button` are two
-   *   roles that do not.
+   *   roles that do not. {@link resolveEffectiveRole} takes the first token
+   *   of a space-separated fallback list and lowercases it, matching how
+   *   browsers resolve the `role` attribute.
    * - A role-less custom host (for example a bare `<div formField>`) never
    *   gets the attribute — the generic role does not support it. If the
    *   field is required, this also warns once in dev mode, unless the host
@@ -510,7 +524,8 @@ export class NgxSignalFormAutoAria {
       return this.#domSnapshot().ariaRequired;
     }
 
-    const { role, tagName } = this.#domSnapshot();
+    const { role: rawRole, tagName } = this.#domSnapshot();
+    const role = resolveEffectiveRole(rawRole);
 
     if (role) {
       return ARIA_REQUIRED_SUPPORTED_ROLES.has(role)
