@@ -298,15 +298,10 @@ import { resolveUnionInput } from './utilities/resolve-union-input';
       content and assistive nodes stay direct grid/flex participants of the
       host exactly as before.
 
-      Horizontal layout turns it into the real CSS Grid container instead of
-      \`:host\` itself, and gives it \`container-type: inline-size\` so a
-      \`@container\` query can react to the wrapper's own rendered width
-      (#523). The container has to live on a descendant, not \`:host\`:
-      \`:host\` is also the box a *consumer* places in their own flex/grid
-      layout, and \`container-type\` can zero out an element's reported
-      intrinsic size for that ancestor's track/flex-basis sizing — this
-      inner div is a plain, always-100%-width block, so it carries no such
-      risk.
+      Horizontal layout turns it into the real CSS Grid container and gives
+      it \`container-type: inline-size\` instead of putting either on
+      \`:host\` itself — see CONTEXT.md, "The horizontal form-field layout's
+      grid lives on a structural child, not \`:host\`", for why (#523).
     -->
     <div class="ngx-signal-form-field-wrapper__layout">
       <!-- Label slot (outside bordered container for standard layout, visually inside for outline via CSS) -->

@@ -467,19 +467,8 @@
 /* */
 /* The grid lives on `__layout` (a structural child of `:host`, see */
 /* form-field-wrapper.ts and form-field-wrapper.css), not on `:host` itself */
-/* (#523). Two reasons: */
-/* 1. `__layout` also carries `container-type: inline-size` below, so a */
-/*    `@container` query can react to its own rendered width. A container */
-/*    can't restyle its own `grid-template-*` from inside that same query */
-/*    (self-referencing size queries are not evaluated) — the grid and its */
-/*    query source have to be different elements. */
-/* 2. `:host` is the box a *consumer* places into their own flex/grid row. */
-/*    `container-type: inline-size` can make an element report a zero */
-/*    intrinsic size to whatever sizes it (a real "container query breaks */
-/*    my page" footgun for `auto`/`minmax(min-content, …)` tracks). */
-/*    `__layout` is a plain, always-100%-width block inside a plain */
-/*    (non-flex, non-grid, non-contained) `:host`, so it never needs an */
-/*    intrinsic size of its own — nothing upstream can collapse. */
+/* (#523) — see CONTEXT.md, "The horizontal form-field layout's grid lives */
+/* on a structural child, not `:host`", for why. */
 
 :host(.ngx-signal-form-field-wrapper--horizontal) {
   display: block;
@@ -497,21 +486,6 @@
     '.     assistive';
   column-gap: var(--_horizontal-gap);
   row-gap: var(--_gap);
-  /* Progressive-enhancement narrow flag (see the `@container … style(…)` */
-  /* branch below): 1 once the container's own inline size (`100cqi`) drops */
-  /* below `--_horizontal-stack-below`, else 0. A `@container` size query */
-  /* can't read a custom property directly — comparisons need a literal */
-  /* length — so this pre-computes the comparison into a plain 0/1 number */
-  /* that a *style* query can read instead, letting the public */
-  /* `--ngx-form-field-horizontal-stack-below` token actually change the */
-  /* threshold rather than only documenting one. `* 999` collapses the */
-  /* handful-of-pixels transition zone `clamp()` would otherwise leave */
-  /* between 0 and 1 down to a fraction of a pixel. */
-  --_horizontal-narrow: clamp(
-    0,
-    ((var(--_horizontal-stack-below) - 100cqi) / 1rem) * 999,
-    1
-  );
 }
 
 :host(
@@ -552,28 +526,30 @@
 /* and gets an explicit row, so the label ends up above the control instead */
 /* of squeezed beside it (WCAG 1.4.10, 1.4.4; #523). This restyles the grid */
 /* *items* (genuine descendants of the `__layout` container), never */
-/* `__layout`'s own `grid-template-columns` — so the reliable, */
-/* universally-supported size-query branch below can safely run against */
-/* `__layout` while the `style()` branch runs against `__layout` itself */
-/* (allowed for style queries; only size queries forbid a container from */
-/* restyling itself). */
+/* `__layout`'s own `grid-template-columns` — a container can't restyle */
+/* itself from inside its own size query (see the "HORIZONTAL LAYOUT" */
+/* comment above). */
 /* */
-/* The two comma-separated conditions are an OR: */
-/* - `(width < 20rem)` is the literal default threshold, baked in so the */
-/*   fix always applies, on every browser this toolkit supports (see */
-/*   THEMING.md, "Browser support") — `@container` size queries alone */
-/*   are broadly supported down to Chrome 105 / Firefox 110 / Safari 16, */
-/*   under the toolkit's own floor. */
-/* - `style(--_horizontal-narrow: 1)` is what actually honors a consumer's */
-/*   `--ngx-form-field-horizontal-stack-below` override, since the literal */
-/*   branch can't reference a custom property. Container style queries for */
-/*   *custom properties* need Chrome 111, Safari 18, or Firefox 151 — newer */
-/*   than the toolkit's floor for this one enhancement. On an older but */
-/*   still-supported browser the override is ignored and the field still */
-/*   stacks at the fixed 20rem default (same trade-off already made for */
-/*   `--_assistive-empty-behavior` in form-field-wrapper.css). */
-@container ngx-form-field-horizontal (width < 20rem),
-  ngx-form-field-horizontal style(--_horizontal-narrow: 1) {
+/* The threshold is a fixed `20rem`, not a public token: `@container` size */
+/* queries can't read a custom property in their condition (only a literal */
+/* length), so there is no way to make this number consumer-overridable yet */
+/* — see THEMING.md, "Horizontal Layout". */
+/* */
+/* A labelless field's `.label` div is `display: none` (see */
+/* form-field-wrapper.css, "LABEL-LESS LAYOUT"), so it drops out of the grid */
+/* entirely here too — it never reserves a row or a `row-gap` sliver above */
+/* the control. */
+/* */
+/* Deliberately NOT nested under a single `:host(...) { ... }` block (unlike */
+/* the outline layout above): Angular's emulated ViewEncapsulation does not */
+/* add its `[_ngcontent-*]` scoping attribute to selectors nested via native */
+/* CSS nesting — only to a rule's own top-level selector — which drops these */
+/* rules below the unconditional `grid-area` rules' specificity and silently */
+/* loses the cascade fight (verified against the compiled stylesheet in */
+/* Chromium). Each selector below is written out in full so it carries the */
+/* same `[_ngcontent-*]` attribute, and therefore the same specificity, as */
+/* the rules it needs to override. */
+@container ngx-form-field-horizontal (width < 20rem) {
   :host(.ngx-signal-form-field-wrapper--horizontal)
     .ngx-signal-form-field-wrapper__label,
   :host(.ngx-signal-form-field-wrapper--horizontal)
@@ -628,5 +604,52 @@
     )
     .ngx-signal-form-field-wrapper__assistive {
     grid-row: 4;
+  }
+
+  /* Labelless: the hidden `.label` div (see form-field-wrapper.css,
+     "LABEL-LESS LAYOUT") never occupies row 1 above, so pull `.content` and
+     `.assistive` up by one row each — otherwise row 1 sits empty but still
+     collects a `row-gap` above the control, the same empty-row regression
+     the fixed-appearance rules avoid. The extra `:not(:has(...))` makes
+     these more specific than the rules above, so they win regardless of
+     source order. */
+  :host(.ngx-signal-form-field-wrapper--horizontal):not(
+      :has(
+        .ngx-signal-form-field-wrapper__label :is(label, [ngxFormFieldLabel])
+      )
+    )
+    .ngx-signal-form-field-wrapper__content {
+    grid-row: 1;
+  }
+
+  :host(.ngx-signal-form-field-wrapper--horizontal):not(
+      :has(
+        .ngx-signal-form-field-wrapper__label :is(label, [ngxFormFieldLabel])
+      )
+    )
+    .ngx-signal-form-field-wrapper__assistive {
+    grid-row: 2;
+  }
+
+  :host(
+      .ngx-signal-form-field-wrapper--horizontal.ngx-signal-form-field-wrapper--messages-top
+    ):not(
+      :has(
+        .ngx-signal-form-field-wrapper__label :is(label, [ngxFormFieldLabel])
+      )
+    )
+    .ngx-signal-form-field-wrapper__content {
+    grid-row: 2;
+  }
+
+  :host(
+      .ngx-signal-form-field-wrapper--horizontal.ngx-signal-form-field-wrapper--messages-top
+    ):not(
+      :has(
+        .ngx-signal-form-field-wrapper__label :is(label, [ngxFormFieldLabel])
+      )
+    )
+    .ngx-signal-form-field-wrapper__assistive {
+    grid-row: 3;
   }
 }

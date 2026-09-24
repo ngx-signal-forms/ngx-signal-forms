@@ -910,13 +910,12 @@ always resolves back to vertical because its label caption sits inside the
 outlined container, above the control. Selection controls (checkbox,
 switch, radio-group) are also excluded and keep their inline layout.
 
-| Property                                   | Default   | Description                                                         |
-| :----------------------------------------- | :-------- | :------------------------------------------------------------------ |
-| `--ngx-form-field-horizontal-gap`          | `0.75rem` | Gap between label column and input column                           |
-| `--ngx-form-field-label-width`             | `8rem`    | Shared width of the label column in horizontal layouts              |
-| `--ngx-form-field-horizontal-label-align`  | `start`   | Horizontal text alignment of the label (`start`, `center`, `end`)   |
-| `--ngx-form-field-horizontal-label-valign` | `center`  | Vertical alignment of the label (`start`, `center`, `end`)          |
-| `--ngx-form-field-horizontal-stack-below`  | `20rem`   | Container width below which the layout stacks (label above control) |
+| Property                                   | Default   | Description                                                       |
+| :----------------------------------------- | :-------- | :---------------------------------------------------------------- |
+| `--ngx-form-field-horizontal-gap`          | `0.75rem` | Gap between label column and input column                         |
+| `--ngx-form-field-label-width`             | `8rem`    | Shared width of the label column in horizontal layouts            |
+| `--ngx-form-field-horizontal-label-align`  | `start`   | Horizontal text alignment of the label (`start`, `center`, `end`) |
+| `--ngx-form-field-horizontal-label-valign` | `center`  | Vertical alignment of the label (`start`, `center`, `end`)        |
 
 A `data-orientation` attribute (`vertical` | `horizontal`) is also exposed for
 custom CSS hooks.
@@ -925,21 +924,18 @@ custom CSS hooks.
 
 A horizontal wrapper measures its own rendered width with a `@container`
 query, not the viewport, because the same wrapper can sit in a narrow column
-on an otherwise wide screen. Once that width drops below
-`--ngx-form-field-horizontal-stack-below`, the layout switches to stacked
-(label above the control) so the control never gets squeezed thinner than
-the label column — the failure mode at small viewports and high text zoom
-(WCAG 1.4.10, 1.4.4). Selection controls keep their own grid and are
-unaffected.
+on an otherwise wide screen. Once that width drops below a fixed `20rem`,
+the layout switches to stacked (label above the control) so the control
+never gets squeezed thinner than the label column — the failure mode at
+small viewports and high text zoom (WCAG 1.4.10, 1.4.4). Selection controls
+keep their own grid and are unaffected.
 
-`--ngx-form-field-horizontal-stack-below` is `rem`-based, so raising the
-root font size (browser zoom) reaches the threshold at a smaller physical
-width, the same way the fixed-width label column already does. Overriding
-this token works in Chrome/Edge 111+ and Safari 18+. On an older browser
-within the toolkit's own floor (Safari 17.5, Firefox 121) the override is
-ignored and the field still stacks at the built-in `20rem` default — only
-the custom threshold is unavailable there, not the stacking behavior
-itself.
+The `20rem` threshold is not a configurable token: a `@container` size
+query's condition can only compare against a literal length, not a CSS
+custom property, so there is currently no way to make this number
+consumer-overridable. It is `rem`-based so raising the root font size
+(browser zoom) reaches it at a smaller physical width, the same way the
+fixed-width label column already does.
 
 Horizontal wrappers now default to a compact shared label column so the field
 controls line up out of the box without wasting horizontal space. Override the

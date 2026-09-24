@@ -231,7 +231,9 @@ ngx-signal-forms — an Angular toolkit for working with Signal Forms.
   shipped in [#307](https://github.com/ngx-signal-forms/ngx-signal-forms/pull/307).
 
 - **The horizontal form-field layout's grid lives on a structural child, not
-  `:host`.** `ngx-form-field-wrapper` renders a `.ngx-signal-form-field-wrapper__layout`
+  `:host`.** (Canonical explanation — form-field-wrapper.ts and
+  form-field-wrapper.selection.css both point here instead of repeating it.)
+  `ngx-form-field-wrapper` renders a `.ngx-signal-form-field-wrapper__layout`
   div around label/messages/content/assistive. It is `display: contents` for
   every appearance except horizontal, so it is invisible to layout and every
   other appearance is unaffected. Horizontal turns it into the real CSS Grid
@@ -242,15 +244,17 @@ ngx-signal-forms — an Angular toolkit for working with Signal Forms.
   restyle the same element that carries `container-type` (the grid and the
   query source must be different elements), and `container-type` on `:host`
   would risk zeroing its reported intrinsic size inside a _consumer's_ own
-  `auto`-sized flex/grid row. Below the threshold
-  (`--ngx-form-field-horizontal-stack-below`, default `20rem`), every grid
+  `auto`-sized flex/grid row. Below a fixed `20rem` threshold, every grid
   item spans the full width and gets an explicit row, stacking the label
   above the control (WCAG 1.4.10, 1.4.4) instead of squeezing the control
-  under a fixed-width label column. A plain `@container` size query with a
-  literal `20rem` carries the fix on every toolkit-supported browser; a
-  `style()` query on a pre-computed 0/1 custom property is OR'd in beside it
-  so the public token can actually move the threshold, which needs newer
-  browsers (Chrome 111+, Safari 18+, Firefox 151+) than the toolkit's own
-  floor — `@container` size queries alone don't support reading a custom
-  property directly. See THEMING.md, "Horizontal Layout", and
+  under a fixed-width label column. The threshold is not a public,
+  overridable token: `@container` size queries can only compare against a
+  literal length, not a CSS custom property, so there is no way to make this
+  number consumer-configurable with current CSS (verified against Chromium —
+  neither an unregistered nor an `@property`-registered custom property is
+  readable from a size-query condition, and `100cqi` inside the same element
+  that also declares `container-type` resolves against the next ancestor
+  container, not itself). Consumers who need a different breakpoint override
+  `.ngx-signal-form-field-wrapper__layout`'s `grid-template-columns` and the
+  `@container` rule directly. See THEMING.md, "Horizontal Layout", and
   [#523](https://github.com/ngx-signal-forms/ngx-signal-forms/issues/523).

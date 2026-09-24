@@ -9,8 +9,9 @@ import { NgxFormFieldWrapper } from './form-field-wrapper';
  * text zoom (WCAG 1.4.10, 1.4.4). A `@container` query on the wrapper's own
  * rendered width — not a viewport media query, since a horizontal wrapper
  * can also sit in a narrow column on a wide screen — switches the layout to
- * stacked (label above control) once that width drops below
- * `--ngx-form-field-horizontal-stack-below` (default `20rem`).
+ * stacked (label above control) once that width drops below the fixed
+ * `20rem` threshold (see form-field-wrapper.selection.css, "HORIZONTAL
+ * LAYOUT", for why that threshold isn't a public, overridable token).
  */
 describe('NgxFormFieldWrapper — horizontal layout container query (#523)', () => {
   const mockField = () => {
@@ -85,5 +86,39 @@ describe('NgxFormFieldWrapper — horizontal layout container query (#523)', () 
     // Side by side: same row, control to the right of the label.
     expect(Math.abs(inputRect.top - labelRect.top)).toBeLessThan(4);
     expect(inputRect.left).toBeGreaterThan(labelRect.right);
+  });
+
+  it('does not reserve an empty label row above a labelless control in a narrow container', async () => {
+    const { container } = await render(
+      `<div style="width: 200px;">
+        <ngx-form-field-wrapper [formField]="field" orientation="horizontal">
+          <input id="narrow-labelless-input" type="text" />
+        </ngx-form-field-wrapper>
+      </div>`,
+      {
+        imports: [NgxFormFieldWrapper],
+        componentProperties: { field: mockField() },
+      },
+    );
+
+    const wrapper = container.querySelector<HTMLElement>(
+      'ngx-form-field-wrapper',
+    )!;
+    const label = container.querySelector<HTMLElement>(
+      '.ngx-signal-form-field-wrapper__label',
+    )!;
+    const content = container.querySelector<HTMLElement>(
+      '.ngx-signal-form-field-wrapper__content',
+    )!;
+
+    // The empty label div is hidden, so it never reserves a grid row (or
+    // the row-gap above it) once the narrow query stacks every item onto
+    // its own row (#523). Measured against `.content` itself (the grid
+    // item), not the projected `<input>`, so the assertion isn't muddied by
+    // `.content`'s own border/padding chrome above the input.
+    expect(getComputedStyle(label).display).toBe('none');
+    const wrapperTop = wrapper.getBoundingClientRect().top;
+    const contentTop = content.getBoundingClientRect().top;
+    expect(contentTop - wrapperTop).toBe(0);
   });
 });

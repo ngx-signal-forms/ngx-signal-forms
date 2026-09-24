@@ -443,16 +443,6 @@
     --ngx-form-field-horizontal-label-valign,
     center
   );
-  /* Container-query threshold (#523): below this inline size the horizontal
-     layout stacks (label above control) instead of squeezing the input
-     column. `rem`-based so it scales with the root font size the same way
-     the fixed-width label column does — see THEMING.md, "Horizontal
-     Layout". The comparison itself lives in
-     form-field-wrapper.selection.css. */
-  --_horizontal-stack-below: var(
-    --ngx-form-field-horizontal-stack-below,
-    20rem
-  );
 }
 
 /* ============================================================================ */
@@ -1059,6 +1049,26 @@
   grid-template-areas:
     'content'
     'assistive';
+}
+
+/* Hide the empty label div (mirrors the standard/outline rules above).
+   Without this it still occupies the orphaned 'label' grid-area target via
+   auto-placement, and — once the narrow `@container` query in
+   form-field-wrapper.selection.css gives every item an explicit row — it
+   would reserve a whole empty row plus a `row-gap` sliver above the control
+   for nothing (#523). Written as its own flat rule, not nested inside the
+   block above: Angular's emulated ViewEncapsulation does not scope
+   natively-nested selectors with its `[_ngcontent-*]` attribute, which would
+   silently drop this rule's specificity below other `.label` rules. */
+:host(
+    .ngx-signal-form-field-wrapper--textual.ngx-signal-form-field-wrapper--horizontal:not(
+        .ngx-signal-forms-plain
+      )
+  ):not(
+    :has(.ngx-signal-form-field-wrapper__label :is(label, [ngxFormFieldLabel]))
+  )
+  .ngx-signal-form-field-wrapper__label {
+  display: none;
 }
 
 :host(
