@@ -1,5 +1,5 @@
 import { generateRequiredHintId } from '@ngx-signal-forms/toolkit/core';
-import type { FormFieldControlKind } from './form-field.utils';
+import { capabilitiesFor, type FormFieldControlKind } from './form-field.utils';
 
 /**
  * Raw inputs `NgxFormFieldWrapper` collects across several of its own
@@ -104,9 +104,7 @@ export function resolveClusterAriaAttrs(
   } = inputs;
 
   const role: ClusterAriaAttrs['role'] = isSelectionCluster
-    ? controlKind === 'radio-group'
-      ? 'radiogroup'
-      : 'group'
+    ? capabilitiesFor(controlKind).clusterRole
     : null;
 
   const groupRequiredHintId =

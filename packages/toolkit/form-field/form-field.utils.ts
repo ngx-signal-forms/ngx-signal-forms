@@ -30,12 +30,25 @@ export type FormFieldControlKind =
  *   around the control. True for controls whose host is a widget that
  *   benefits from the wrapper's padding (slider, composite) rather than
  *   managing its own.
+ * - `forcesVertical` — the wrapper should force `'vertical'` layout
+ *   regardless of the requested orientation. True for the selection-control
+ *   kinds (checkbox, switch, radio-group), whose rows don't read well
+ *   side-by-side with their label.
+ * - `clusterRole` — the ARIA role a *selection cluster* of this kind takes
+ *   (`'radiogroup'` for radio-group, `'group'` for a multi-checkbox
+ *   cluster), or `null` when the kind never forms a cluster. A cluster is
+ *   still gated on more than the kind alone (see `isSelectionCluster` in
+ *   `NgxFormFieldWrapper`, which also checks the projected control count
+ *   for `'group'`) — this flag only says which role applies once a cluster
+ *   is confirmed.
  */
-interface ControlKindCapabilities {
+export interface ControlKindCapabilities {
   readonly textual: boolean;
   readonly supportsOutline: boolean;
   readonly selectionGroup: boolean;
   readonly paddedContent: boolean;
+  readonly forcesVertical: boolean;
+  readonly clusterRole: 'radiogroup' | 'group' | null;
 }
 
 /**
@@ -59,7 +72,7 @@ interface ControlKindCapabilities {
  * 3. Add a default preset (layout + ariaMode) to
  *    `DEFAULT_NGX_SIGNAL_FORM_CONTROL_PRESETS` in
  *    `packages/toolkit/core/tokens.ts`.
- * 4. Add a row here with the four capability flags for the new kind.
+ * 4. Add a row here with all six capability flags for the new kind.
  *
  * TypeScript will surface each missing edit in turn. Ship a test covering
  * the wrapper chrome for the new kind (see the existing slider/composite
@@ -68,7 +81,7 @@ interface ControlKindCapabilities {
  * ## Why consumers can't add kinds from user code
  *
  * The closed union is intentional: wrapper chrome decisions depend on all
- * four capability flags, and a consumer-supplied kind could not be
+ * of the capability flags, and a consumer-supplied kind could not be
  * classified by `supportsOutline` / `selectionGroup` without leaking that
  * internal taxonomy. For custom widgets that don't fit any existing kind,
  * use `composite` + `appearance="plain"` + `ariaMode="manual"` — that
@@ -82,42 +95,56 @@ const CONTROL_KIND_CAPABILITIES = {
     supportsOutline: true,
     selectionGroup: false,
     paddedContent: false,
+    forcesVertical: false,
+    clusterRole: null,
   },
   'standalone-field-like': {
     textual: true,
     supportsOutline: true,
     selectionGroup: false,
     paddedContent: false,
+    forcesVertical: false,
+    clusterRole: null,
   },
   switch: {
     textual: false,
     supportsOutline: false,
     selectionGroup: false,
     paddedContent: false,
+    forcesVertical: true,
+    clusterRole: null,
   },
   checkbox: {
     textual: false,
     supportsOutline: false,
     selectionGroup: true,
     paddedContent: false,
+    forcesVertical: true,
+    clusterRole: 'group',
   },
   'radio-group': {
     textual: false,
     supportsOutline: false,
     selectionGroup: true,
     paddedContent: false,
+    forcesVertical: true,
+    clusterRole: 'radiogroup',
   },
   slider: {
     textual: false,
     supportsOutline: true,
     selectionGroup: false,
     paddedContent: true,
+    forcesVertical: false,
+    clusterRole: null,
   },
   composite: {
     textual: false,
     supportsOutline: true,
     selectionGroup: false,
     paddedContent: true,
+    forcesVertical: false,
+    clusterRole: null,
   },
 } as const satisfies Record<NgxSignalFormControlKind, ControlKindCapabilities>;
 
@@ -131,51 +158,20 @@ const UNKNOWN_CONTROL_CAPABILITIES: ControlKindCapabilities = {
   supportsOutline: true,
   selectionGroup: false,
   paddedContent: false,
+  forcesVertical: false,
+  clusterRole: null,
 };
 
-function capabilitiesFor(
+/**
+ * Looks up the capability flags for a control kind. `null` (unresolved
+ * control kind) falls back to {@link UNKNOWN_CONTROL_CAPABILITIES} so legacy
+ * markup and custom controls without registered semantics keep rendering
+ * with the default textual field shell.
+ */
+export function capabilitiesFor(
   controlKind: FormFieldControlKind,
 ): ControlKindCapabilities {
   return controlKind === null
     ? UNKNOWN_CONTROL_CAPABILITIES
     : CONTROL_KIND_CAPABILITIES[controlKind];
-}
-
-/**
- * Determines whether a control family can safely render with outline chrome.
- */
-export function supportsOutlinedAppearance(
-  controlKind: FormFieldControlKind,
-): boolean {
-  return capabilitiesFor(controlKind).supportsOutline;
-}
-
-/**
- * Determines whether a control family uses the standard textual field shell.
- *
- * Unresolved (`null`) control kinds fall back to textual chrome so legacy
- * markup keeps rendering with the default field shell.
- */
-export function isTextualControlKind(
-  controlKind: FormFieldControlKind,
-): boolean {
-  return capabilitiesFor(controlKind).textual;
-}
-
-/**
- * Determines whether a control family should use grouped selection-row layout.
- */
-export function isSelectionGroupKind(
-  controlKind: FormFieldControlKind,
-): boolean {
-  return capabilitiesFor(controlKind).selectionGroup;
-}
-
-/**
- * Determines whether the wrapper should keep shared padding around the control.
- */
-export function hasPaddedControlContent(
-  controlKind: FormFieldControlKind,
-): boolean {
-  return capabilitiesFor(controlKind).paddedContent;
 }
