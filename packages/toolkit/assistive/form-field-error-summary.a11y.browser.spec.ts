@@ -195,21 +195,26 @@ describe('NgxFormFieldErrorSummary — heading, accessible name, and focus movem
     const { container } = await render(TestComponent);
     await TestBed.inject(ApplicationRef).whenStable();
 
-    // A real heading role at the documented default level (WCAG 2.4.6).
+    // A real heading element at the documented default level (WCAG 2.4.6).
     const heading = screen.getByRole('heading', { level: 2 });
     expect(heading.textContent?.trim()).toBe(
       'Please fix the following errors:',
     );
+    expect(heading.tagName.toLowerCase()).toBe('h2');
     expect(heading.id).toBeTruthy();
 
     // The summary auto-focuses itself on a failed submit (`autoFocus`
-    // defaults to `true`). The focused host must be *named* after that
-    // heading via `aria-labelledby` (WCAG 1.3.1, 2.4.6, 4.1.2) — a real
-    // Chrome accessibility tree, not just jsdom, is what actually resolves
-    // this reference into an accessible name for a screen reader.
+    // defaults to `true`). The focused host must have `role="group"` (a
+    // role-less custom element computes to the generic role, which ARIA
+    // 1.2 forbids naming) and its *computed* accessible name — not just the
+    // `aria-labelledby` attribute — must resolve to the heading text in a
+    // real Chrome accessibility tree (WCAG 1.3.1, 2.4.6, 4.1.2).
     const summaryHost = container.querySelector('ngx-form-field-error-summary');
     expect(document.activeElement).toBe(summaryHost);
-    expect(summaryHost?.getAttribute('aria-labelledby')).toBe(heading.id);
+    expect(summaryHost).toHaveRole('group');
+    expect(summaryHost).toHaveAccessibleName(
+      'Please fix the following errors:',
+    );
   });
 
   it('moves focus to the invalid field when its summary entry is activated', async () => {

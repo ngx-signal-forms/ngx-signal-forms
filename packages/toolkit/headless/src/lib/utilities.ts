@@ -41,7 +41,6 @@ import {
 } from './error-summary-utilities';
 export {
   dedupeValidationErrorsByField,
-  errorHasFocusableTarget,
   focusBoundControlFromError,
   resolveFieldNameFromError,
   toErrorSummaryEntry,

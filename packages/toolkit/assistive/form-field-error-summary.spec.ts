@@ -645,6 +645,10 @@ describe('NgxFormFieldErrorSummary', () => {
       expect(heading.textContent?.trim()).toBe(
         'Please fix the following errors:',
       );
+      // A native heading element, not `role="heading"` on a generic
+      // element — native elements are what the a11y rules prefer, and
+      // they get heading-navigation (NVDA/JAWS "H" key) for free.
+      expect(heading.tagName.toLowerCase()).toBe('h2');
 
       // The focused host (tabindex="-1") must be named after the heading —
       // otherwise a screen reader announces nothing when focus lands here
@@ -680,7 +684,8 @@ describe('NgxFormFieldErrorSummary', () => {
 
       await render(TestComponent);
 
-      expect(screen.getByRole('heading', { level: 4 })).toBeTruthy();
+      const heading = screen.getByRole('heading', { level: 4 });
+      expect(heading.tagName.toLowerCase()).toBe('h4');
       expect(screen.queryByRole('heading', { level: 2 })).toBeNull();
     });
 

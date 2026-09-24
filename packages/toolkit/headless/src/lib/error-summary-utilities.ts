@@ -40,6 +40,13 @@ export interface ErrorSummaryEntryData {
    * not expose `focusBoundControl()`). A consumer should render such an
    * entry as plain text — a link or button that calls a no-op `focus()`
    * looks interactive but does nothing, which fails WCAG 4.1.2.
+   *
+   * **Limit**: this only checks that `focusBoundControl` exists as a
+   * function, not that it actually moves focus. A real field whose control
+   * was never bound in the DOM (no `[formField]` rendered for it) still has
+   * a working `fieldTree()`/`focusBoundControl()`, so `canFocus` is `true`
+   * even though calling `focus()` is a silent no-op in that case. This
+   * `false` path only catches errors with no `fieldTree` at all.
    */
   readonly canFocus: boolean;
 }
@@ -130,34 +137,15 @@ export function resolveFieldNameFromError(
 }
 
 /**
- * Focus the form control bound to the field that produced a validation error.
- *
- * Uses duck-typed access to `error.fieldTree().focusBoundControl()`.
- *
- * @public
- * @group Utility Functions
- */
-export function focusBoundControlFromError(error: ValidationError): void {
-  const e = error as ValidationErrorWithFieldTree;
-  if (typeof e.fieldTree === 'function') {
-    const fieldState = e.fieldTree();
-    if (fieldState && typeof fieldState.focusBoundControl === 'function') {
-      fieldState.focusBoundControl();
-    }
-  }
-}
-
-/**
  * Whether a `ValidationError` has a bound field that can actually receive
  * focus via `focusBoundControlFromError()`.
  *
- * Mirrors the duck-typed checks {@link focusBoundControlFromError} performs
- * before calling `focusBoundControl()`, so callers can decide up front
- * whether an entry should render as an interactive control or as plain
- * text.
+ * {@link focusBoundControlFromError} calls this itself before touching
+ * `fieldTree()`, so the two checks cannot drift apart. Kept internal:
+ * `canFocus` on `ErrorSummaryEntryData` is the public surface consumers
+ * should read instead of re-deriving this themselves.
  *
- * @public
- * @group Utility Functions
+ * @internal
  */
 export function errorHasFocusableTarget(error: ValidationError): boolean {
   const e = error as ValidationErrorWithFieldTree;
@@ -165,6 +153,23 @@ export function errorHasFocusableTarget(error: ValidationError): boolean {
 
   const fieldState = e.fieldTree();
   return !!fieldState && typeof fieldState.focusBoundControl === 'function';
+}
+
+/**
+ * Focus the form control bound to the field that produced a validation error.
+ *
+ * Uses duck-typed access to `error.fieldTree().focusBoundControl()`, guarded
+ * by {@link errorHasFocusableTarget} so the two never disagree about
+ * whether an error has a focusable target.
+ *
+ * @public
+ * @group Utility Functions
+ */
+export function focusBoundControlFromError(error: ValidationError): void {
+  if (!errorHasFocusableTarget(error)) return;
+
+  const e = error as ValidationErrorWithFieldTree;
+  e.fieldTree?.()?.focusBoundControl?.();
 }
 
 /**

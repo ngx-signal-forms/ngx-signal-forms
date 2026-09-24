@@ -1,3 +1,4 @@
+import { NgTemplateOutlet } from '@angular/common';
 import {
   afterRenderEffect,
   ChangeDetectionStrategy,
@@ -37,12 +38,17 @@ export type NgxErrorSummaryHeadingLevel = 2 | 3 | 4 | 5 | 6;
  *   for immediate screen reader announcement — the explicit live/atomic
  *   attributes are intentionally omitted to avoid duplicate announcements
  *   on NVDA+Firefox.
- * - The label renders with `role="heading"` and `aria-level` (default `2`,
- *   configurable via `headingLevel`) so screen readers announce it as a
- *   heading, matching WCAG 2.4.6. `aria-level` lets the level be a plain
- *   number input instead of branching the template over six literal tag
- *   names for `h2`–`h6`.
- * - The summary host's `aria-labelledby` points at that heading, so
+ * - The label renders as a native heading (`h2`–`h6`, default `h2`,
+ *   configurable via `headingLevel`), matching WCAG 2.4.6. Native elements
+ *   are preferred over `role="heading"` + `aria-level` — they get
+ *   heading-navigation (NVDA/JAWS "H" key) without relying on ARIA.
+ * - The summary host has `role="group"` — a role-less custom element
+ *   computes to the generic role, and ARIA 1.2 forbids naming a generic
+ *   element, so the host needs a namable role for its `aria-labelledby`
+ *   (below) to be valid. Not `role="region"`: a region is a page landmark,
+ *   and one per form-level error summary would be landmark noise most
+ *   forms don't want.
+ * - The summary host's `aria-labelledby` points at the heading, so
  *   focusing the host (see below) announces the label as its accessible
  *   name (WCAG 1.3.1, 2.4.6, 4.1.2).
  * - Error links are focusable buttons for keyboard navigation
@@ -90,6 +96,13 @@ export type NgxErrorSummaryHeadingLevel = 2 | 3 | 4 | 5 | 6;
     // injecting it into the natural Tab order. The `:focus-visible` outline
     // on individual error buttons is intentionally untouched.
     tabindex: '-1',
+    // `aria-labelledby` on a role-less custom element is invalid ARIA — a
+    // custom element with no role computes to the generic role, and ARIA
+    // 1.2 prohibits naming a generic element. `role="group"` gives the host
+    // a namable role. Not `role="region"`: a region is a page landmark, and
+    // one per form-level error summary would add landmark noise most forms
+    // don't want.
+    role: 'group',
     // Names the focused host after the heading, when one is rendered
     // (WCAG 1.3.1, 2.4.6, 4.1.2). `null` removes the attribute rather than
     // pointing at a heading that does not exist when `summaryLabel` is
@@ -102,6 +115,7 @@ export type NgxErrorSummaryHeadingLevel = 2 | 3 | 4 | 5 | 6;
       inputs: ['formTree', 'strategy', 'warningStrategy', 'submittedStatus'],
     },
   ],
+  imports: [NgTemplateOutlet],
   template: `
     <!--
       The role="alert" container is rendered UNCONDITIONALLY (even when
@@ -122,14 +136,34 @@ export type NgxErrorSummaryHeadingLevel = 2 | 3 | 4 | 5 | 6;
     >
       @if (summary.shouldShow() && summary.hasErrors()) {
         @if (summaryLabel()) {
-          <div
-            [id]="headingId"
-            class="ngx-form-field-error-summary__label"
-            role="heading"
-            [attr.aria-level]="headingLevel()"
-          >
-            {{ summaryLabel() }}
-          </div>
+          <ng-template #labelText>{{ summaryLabel() }}</ng-template>
+          @switch (headingLevel()) {
+            @case (2) {
+              <h2 [id]="headingId" class="ngx-form-field-error-summary__label">
+                <ng-container [ngTemplateOutlet]="labelText" />
+              </h2>
+            }
+            @case (3) {
+              <h3 [id]="headingId" class="ngx-form-field-error-summary__label">
+                <ng-container [ngTemplateOutlet]="labelText" />
+              </h3>
+            }
+            @case (4) {
+              <h4 [id]="headingId" class="ngx-form-field-error-summary__label">
+                <ng-container [ngTemplateOutlet]="labelText" />
+              </h4>
+            }
+            @case (5) {
+              <h5 [id]="headingId" class="ngx-form-field-error-summary__label">
+                <ng-container [ngTemplateOutlet]="labelText" />
+              </h5>
+            }
+            @default {
+              <h6 [id]="headingId" class="ngx-form-field-error-summary__label">
+                <ng-container [ngTemplateOutlet]="labelText" />
+              </h6>
+            }
+          }
         }
         <ul class="ngx-form-field-error-summary__list" role="list">
           @for (
@@ -191,9 +225,14 @@ export type NgxErrorSummaryHeadingLevel = 2 | 3 | 4 | 5 | 6;
       margin-block: 0;
     }
 
+    /* Applied to a native h2-h6, whichever headingLevel resolves to.
+     * Reset the user-agent heading defaults (larger font-size, bold
+     * weight, margin on both block ends) so the label looks the same
+     * regardless of level -- the class, not the tag, controls its look. */
     .ngx-form-field-error-summary__label {
+      margin: 0 0 0.5rem;
+      font-size: inherit;
       font-weight: 600;
-      margin-block-end: 0.5rem;
       color: var(--ngx-error-summary-label-color, #991b1b);
     }
 
@@ -287,9 +326,7 @@ export class NgxFormFieldErrorSummary {
   readonly summaryLabel = input('Please fix the following errors:');
 
   /**
-   * Heading level the label renders as, exposed via `role="heading"` and
-   * `aria-level` rather than a literal `h2`–`h6` tag (see the class doc's
-   * Accessibility section for why).
+   * Heading level the label renders as (a native `h2`–`h6` element).
    *
    * @default 2
    */
