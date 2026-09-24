@@ -6,6 +6,7 @@ import {
   effect,
   inject,
   input,
+  isDevMode,
 } from '@angular/core';
 import type { FieldTree } from '@angular/forms/signals';
 import {
@@ -378,15 +379,31 @@ export class NgxFormFieldError {
     // to apply to this component, losing the `passThroughInput` guard.
     this.headless.connectFieldState(computed(() => this.formField()?.()));
 
-    afterEveryRender(() => {
-      if (this.#resolvedFieldName() === null) {
+    // Dev-only: this hook exists purely to fire the "missing field name"
+    // warning below, which `devWarnOnce` no-ops in production anyway. Skip
+    // registering it at all in production so every instance does not carry
+    // a live, unphased `afterEveryRender` hook for the rest of its life, and
+    // destroy it as soon as either outcome is settled — a name resolves, or
+    // the one-shot warning has fired — instead of leaving it running for
+    // every later render. Mirrors `NgxFormMarkingLegend`'s `isDevMode()`
+    // guard (`form-marking-legend.ts`).
+    if (isDevMode()) {
+      const missingNameHook = afterEveryRender(() => {
+        if (this.#resolvedFieldName() !== null) {
+          missingNameHook.destroy();
+          return;
+        }
+
         devWarnOnce(
           this.#warnedMissingName,
           'error',
           '[ngx-signal-forms] ngx-form-field-error requires an explicit `fieldName` input or a parent ngx-form-field-wrapper context. The component will render without id/aria-describedby linking until one is provided.',
         );
-      }
-    });
+        if (this.#warnedMissingName.current) {
+          missingNameHook.destroy();
+        }
+      });
+    }
 
     // Publishes this instance's resolved visibility into
     // `NGX_SIGNAL_FORM_FIELD_VISIBILITY_REGISTRY` whenever the resolved
