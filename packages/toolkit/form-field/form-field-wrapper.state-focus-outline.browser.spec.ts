@@ -63,6 +63,31 @@ const contrastRatio = (foreground: string, background: string): number => {
   return (lighter + 0.05) / (darker + 0.05);
 };
 
+/**
+ * The default border color has an alpha channel
+ * (`--ngx-form-field-color-border: rgba(50, 65, 85, 0.7)`), so
+ * `getComputedStyle` reports the un-blended `rgba(...)` value, not the pixel
+ * color a viewer actually sees. Blend it over the surface it paints on top
+ * of (border-color paints over the element's own background, since
+ * `background-clip` defaults to `border-box`) to get the rendered color
+ * before measuring contrast.
+ */
+const blendOverSurface = (rgbaOrRgb: string, surfaceRgb: string): string => {
+  const fg = /rgba?\((\d+), (\d+), (\d+)(?:, ([\d.]+))?\)/u.exec(rgbaOrRgb);
+  const bg = /rgba?\((\d+), (\d+), (\d+)/u.exec(surfaceRgb);
+  if (!fg || !bg) {
+    throw new Error(
+      `Expected computed "rgb(a)(...)" colors, got "${rgbaOrRgb}" over "${surfaceRgb}".`,
+    );
+  }
+  const alpha = fg[4] === undefined ? 1 : Number(fg[4]);
+  const [fr, fg2, fb] = [fg[1], fg[2], fg[3]].map(Number);
+  const [br, bgG, bb] = [bg[1], bg[2], bg[3]].map(Number);
+  const blend = (f: number, b: number) =>
+    Math.round(alpha * f + (1 - alpha) * b);
+  return `rgb(${blend(fr!, br!)}, ${blend(fg2!, bgG!)}, ${blend(fb!, bb!)})`;
+};
+
 describe('NgxFormFieldWrapper — state focus outline contrast (#495)', () => {
   const focusColor = 'rgb(120, 0, 80)'; // non-default, so a match proves the token is used
 
@@ -216,5 +241,58 @@ describe('NgxFormFieldWrapper — state focus outline contrast (#495)', () => {
     expect(styles.outlineStyle).not.toBe('none');
     expect(styles.outlineWidth).not.toBe('0px');
     expect(styles.outlineColor).toBe(focusColor);
+  });
+});
+
+/**
+ * Regression coverage for #495: the default border, unfocused.
+ *
+ * `--ngx-form-field-color-border` defaulted to `rgba(50, 65, 85, 0.25)`,
+ * which blends to 1.55:1 against the field's white surface — the only
+ * visible edge of an otherwise-borderless text input, below the WCAG 2.2
+ * SC 1.4.11 (Non-text contrast) 3:1 floor. This covers the enabled,
+ * unfocused, valid field only: SC 1.4.11 exempts disabled controls, and the
+ * focused/invalid/warning cases are covered above.
+ */
+describe('NgxFormFieldWrapper — default border contrast (#495)', () => {
+  @Component({
+    selector: 'ngx-test-default-border-contrast',
+    imports: [NgxFormFieldWrapper, FormField],
+    template: `
+      <div id="page" style="background-color: #ffffff; padding: 1rem;">
+        <ngx-form-field-wrapper appearance="outline" [formField]="field.name">
+          <label for="name">Name</label>
+          <input id="name" [formField]="field.name" />
+        </ngx-form-field-wrapper>
+      </div>
+    `,
+  })
+  class DefaultBorderContrastComponent {
+    protected readonly field = form(signal({ name: '' }));
+  }
+
+  it('meets 3:1 border contrast against the field surface and the page, with default tokens', async () => {
+    const { container } = await render(DefaultBorderContrastComponent);
+
+    const content = contentOf(container);
+    const contentStyles = getComputedStyle(content);
+    // A field with no validators and no interaction is enabled, valid, and
+    // unfocused — exactly the state the default border must cover.
+    expect(
+      container
+        .querySelector('ngx-form-field-wrapper')!
+        .classList.contains('ngx-signal-form-field-wrapper--invalid'),
+    ).toBe(false);
+
+    const surface = contentStyles.backgroundColor;
+    const pageBackground = getComputedStyle(
+      container.querySelector<HTMLElement>('#page')!,
+    ).backgroundColor;
+    const renderedBorder = blendOverSurface(contentStyles.borderColor, surface);
+
+    expect(contrastRatio(renderedBorder, surface)).toBeGreaterThanOrEqual(3);
+    expect(
+      contrastRatio(renderedBorder, pageBackground),
+    ).toBeGreaterThanOrEqual(3);
   });
 });

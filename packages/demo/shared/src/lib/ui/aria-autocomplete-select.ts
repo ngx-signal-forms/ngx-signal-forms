@@ -104,7 +104,7 @@ const DEFAULT_OPTIONS: readonly AriaAutocompleteOption[] = [
       margin-block-start: 0.35rem;
       padding: 0.25rem;
       border: 1px solid
-        var(--ngx-form-field-color-border, rgba(50, 65, 85, 0.25));
+        var(--ngx-form-field-color-border, rgba(50, 65, 85, 0.7));
       border-radius: var(--ngx-form-field-radius, 0.25rem);
       background-color: var(--ngx-form-field-color-surface, #ffffff);
       box-shadow: 0 0.5rem 1.5rem
