@@ -36,11 +36,12 @@ const warningTimingSchema = schema<WarningTimingModel>((path) => {
 });
 
 /**
- * Host harness with `strategy="on-submit"` (blocking-error timing) and
- * `warningStrategy="immediate"` (warning timing) both explicit, so the two
+ * Host harness with the form's blocking-error strategy set to `on-submit`
+ * (`PrimeFormFieldComponent` has no `strategy` input of its own — the
+ * wrapper only resolves it from the ambient `[ngxSignalForm]` context) and
+ * the field's own `warningStrategy="immediate"` explicit, so the two
  * cascades can only agree by chance — never because one reads the other
- * (the ADR-0007 requirement `createWarningVisibility` restores at the
- * wrapper level, see issue #506).
+ * (ADR-0007; see issue #506).
  */
 @Component({
   selector: 'ngx-warning-timing-host',
@@ -52,7 +53,7 @@ const warningTimingSchema = schema<WarningTimingModel>((path) => {
     InputTextModule,
   ],
   template: `
-    <form [formRoot]="nicknameForm" ngxSignalForm>
+    <form [formRoot]="nicknameForm" ngxSignalForm errorStrategy="on-submit">
       <prime-form-field
         [ngxPrimeFormField]="nicknameForm.nickname"
         fieldName="nickname"
@@ -81,7 +82,7 @@ class WarningTimingHostComponent {
 }
 
 describe('PrimeFormFieldComponent warning timing (#506)', () => {
-  it('shows the warning before submit under warningStrategy="immediate" even though the blocking-error strategy defaults to "on-touch"', async () => {
+  it('shows the warning before submit under warningStrategy="immediate" even though the form-level blocking-error strategy is "on-submit"', async () => {
     const user = userEvent.setup();
     const view = await render(WarningTimingHostComponent, {
       providers: [
@@ -97,15 +98,14 @@ describe('PrimeFormFieldComponent warning timing (#506)', () => {
     const nicknameInput = view.getByLabelText(/nickname/i);
 
     // Type a warning-triggering value without blurring or submitting. The
-    // field has no blocking error, so the error strategy never gates
-    // anything here — this isolates the warning cascade.
+    // field has no blocking error, so the form's on-submit error strategy
+    // never gates anything here — this isolates the warning cascade.
     await user.type(nicknameInput, 'Al');
 
-    // Before the fix, the wrapper had no warning-visibility computed at
-    // all — `createWarningVisibility()` was never called, so
-    // `warningStrategy` had no wrapper-level effect. This pins the
-    // seam now resolving `warningStrategy="immediate"` independently of
-    // the blocking-error cascade (ADR-0007).
+    // `warningVisible` is computed via `createWarningVisibility()`, timed by
+    // `effectiveWarningStrategy` — independent of the blocking-error
+    // cascade (ADR-0007). It resolves `warningStrategy="immediate"` and
+    // shows before submit regardless of the form's on-submit error timing.
     await waitFor(() => {
       expect(wrapper.warningVisible()).toBe(true);
     });
@@ -185,5 +185,78 @@ describe('PrimeFieldErrorComponent follows the wrapper-resolved warningStrategy 
     expect(
       await screen.findByText(/short nicknames are easy to confuse/i),
     ).toBeTruthy();
+  });
+});
+
+/**
+ * Host harness with no explicit strategy overrides — both channels resolve
+ * to the toolkit default, `'on-touch'`. Used to pin the C2 regression: a
+ * `warn:`-only field is still `invalid()` (Angular's validation pipeline has
+ * no non-invalidating channel), so a naive `errorVisibility` gate built from
+ * `createErrorVisibility()` alone reads "blocking error visible" as soon as
+ * the field is touched — even though there is no blocking error — and would
+ * suppress the field's own warning.
+ */
+@Component({
+  selector: 'ngx-warning-only-touch-host',
+  imports: [
+    FormField,
+    NgxSignalFormToolkit,
+    PrimeFormFieldComponent,
+    NgxSignalFormControlSemanticsDirective,
+    InputTextModule,
+  ],
+  template: `
+    <form [formRoot]="nicknameForm" ngxSignalForm>
+      <prime-form-field
+        [ngxPrimeFormField]="nicknameForm.nickname"
+        fieldName="nickname"
+      >
+        <label for="nickname">Nickname</label>
+        <input
+          id="nickname"
+          type="text"
+          pInputText
+          [formField]="nicknameForm.nickname"
+          ngxSignalFormControl="input-like"
+        />
+      </prime-form-field>
+    </form>
+  `,
+})
+class WarningOnlyTouchHostComponent {
+  protected readonly model = signal<WarningTimingModel>({ nickname: '' });
+  readonly nicknameForm = form<WarningTimingModel>(
+    this.model,
+    warningTimingSchema,
+  );
+
+  readonly wrapper = viewChild.required(PrimeFormFieldComponent<string>);
+}
+
+describe('PrimeFormFieldComponent does not suppress a warning-only field (#506 C2)', () => {
+  it('shows the warning after touch when the field has a warning and no blocking error', async () => {
+    const user = userEvent.setup();
+    const view = await render(WarningOnlyTouchHostComponent, {
+      providers: [
+        provideZonelessChangeDetection(),
+        provideNgxSignalFormsConfig({
+          defaultErrorStrategy: 'on-touch',
+          autoAria: true,
+        }),
+      ],
+    });
+
+    const wrapper = view.fixture.componentInstance.wrapper();
+    const nicknameInput = view.getByLabelText(/nickname/i);
+
+    // Touching a field that is invalid() only because of a `warn:` error —
+    // never a real blocking error — must not suppress the warning.
+    await user.type(nicknameInput, 'Al');
+    await user.tab();
+
+    await waitFor(() => {
+      expect(wrapper.warningVisible()).toBe(true);
+    });
   });
 });

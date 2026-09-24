@@ -127,14 +127,11 @@ export class NgxSpartanFormFieldError {
   );
 
   /**
-   * Warnings, timed by {@link warningStrategy}'s own cascade
-   * (ADR-0007) — independent of the blocking-error `strategy` above. The
-   * previous version passed the *blocking-error* `strategy` option here
-   * (`'immediate'`), which does not gate a warnings-only list at all
-   * (`createErrorMessageSignal` ignores that option once
-   * `includeWarnings: 'only'` is set) — the warning was already, silently,
-   * always following the ambient on-touch default. Forwarding the real
-   * `warningStrategy` input makes that intentional and overridable.
+   * Warnings, timed by {@link warningStrategy}'s own cascade (ADR-0007) —
+   * independent of the blocking-error `strategy` above. `strategy` has no
+   * effect here: `createErrorMessageSignal` ignores that option once
+   * `includeWarnings: 'only'` is set, so only `warningStrategy` (and its
+   * own context/config cascade) decides whether this list is non-empty.
    */
   readonly #resolvedWarnings = createErrorMessageSignal(
     this.#fieldStateAccessor,

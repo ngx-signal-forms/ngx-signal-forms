@@ -158,6 +158,15 @@ export class MatFormFieldWrapper<TValue = unknown> {
    * wrapper's `warningStrategy` input). Resolved independently of
    * {@link strategy} — the warning cascade never reads the error one
    * (ADR-0007).
+   *
+   * **Only feeds {@link warningVisible}**, the wrapper-side escape hatch —
+   * it does not reach `<mat-hint>` rendered through `*ngxMatHintSlot`. That
+   * slot directive resolves its own `warningStrategy` from its own
+   * `ngxMatHintSlotWarningStrategy` microsyntax input, independent of this
+   * one (see `slot-directives.ts`). Consumers using the slot directives
+   * (the norm in this demo) must set the strategy on `*ngxMatHintSlot`
+   * itself; this input only matters for a custom renderer reading
+   * `warningVisible` directly.
    */
   readonly warningStrategy = input<WarningDisplayStrategy | null>(null);
 

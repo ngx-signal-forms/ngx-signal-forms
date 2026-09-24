@@ -18,11 +18,13 @@ import {
   createErrorVisibility,
   createWarningVisibility,
   injectFormContext,
+  isBlockingError,
   NGX_FORM_FIELD_ERROR_RENDERER,
   NGX_SIGNAL_FORM_FIELD_CONTEXT,
   NGX_SIGNAL_FORM_HINT_REGISTRY,
   NGX_SIGNAL_FORMS_CONFIG,
   NgxSignalFormControlSemanticsDirective,
+  readDirectErrors,
   resolveStrategyFromContext,
   resolveWarningStrategyFromContext,
   type WarningDisplayStrategy,
@@ -383,11 +385,28 @@ export class PrimeFormFieldComponent<TValue = unknown> {
   });
 
   /**
+   * Whether a *blocking* error is visible. `#showByStrategy` alone is not
+   * enough here: `createErrorVisibility()` gates on `invalid()`, and a
+   * `warn:`-only field is also `invalid()` (Angular's validation pipeline
+   * has no non-invalidating channel — see ADR-0007). Without this extra
+   * check, a touched warning-only field would suppress its own warning by
+   * "colliding" with itself through {@link #showWarningsByStrategy}'s
+   * `errorVisibility` gate. Mirrors the same gate the Material reference
+   * and `NgxHeadlessErrorState` apply.
+   */
+  readonly #hasVisibleBlockingError = computed(
+    () =>
+      this.#showByStrategy() &&
+      readDirectErrors(this.#fieldStateSignal()).some(isBlockingError),
+  );
+
+  /**
    * Warning-channel counterpart to {@link #showByStrategy}, routed through
    * the shared `createWarningVisibility()` seam (ADR-0006, ADR-0007) instead
    * of leaving the warning channel unaddressed at the wrapper level. Passing
-   * `#showByStrategy` as `errorVisibility` means a visible blocking error
-   * still suppresses the warning.
+   * `#hasVisibleBlockingError` as `errorVisibility` means a visible blocking
+   * error still suppresses the warning, without a warning-only field
+   * suppressing itself.
    *
    * `PrimeFieldErrorComponent` (the default renderer) is also fed
    * `effectiveWarningStrategy` directly through `errorRendererInputs`, so
@@ -401,7 +420,7 @@ export class PrimeFormFieldComponent<TValue = unknown> {
     {
       strategy: this.effectiveWarningStrategy,
       submittedStatus: this.submittedStatus,
-      errorVisibility: this.#showByStrategy,
+      errorVisibility: this.#hasVisibleBlockingError,
     },
   );
 
