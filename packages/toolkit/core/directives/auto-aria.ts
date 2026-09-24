@@ -69,6 +69,33 @@ const INITIAL_DOM_SNAPSHOT: AutoAriaDomSnapshot = {
 };
 
 /**
+ * Explicit ARIA roles that WAI-ARIA 1.2 lists as supporting `aria-required`
+ * (directly or through role inheritance):
+ * https://w3c.github.io/aria/#aria-required
+ *
+ * A custom host with a role outside this set — or with no role at all — does
+ * not get `aria-required`; native form controls (`<input>`, `<select>`,
+ * `<textarea>`) are handled separately since they carry no explicit `role`.
+ */
+const ARIA_REQUIRED_SUPPORTED_ROLES = new Set([
+  'checkbox',
+  'combobox',
+  'columnheader',
+  'gridcell',
+  'listbox',
+  'radiogroup',
+  'rowheader',
+  'searchbox',
+  'spinbutton',
+  'switch',
+  'textbox',
+  'tree',
+  'treegrid',
+]);
+
+const NATIVE_FORM_CONTROL_TAGS = new Set(['INPUT', 'SELECT', 'TEXTAREA']);
+
+/**
  * Automatically manages ARIA attributes for Signal Forms controls.
  *
  * Adds:
@@ -192,6 +219,13 @@ export class NgxSignalFormAutoAria {
    * the author about.
    */
   readonly #describedByRelocationWarned: WarnOnceRef = { current: false };
+
+  /**
+   * One-shot dev-mode diagnostic flag for the {@link ariaRequired} role
+   * check — warns once per instance when a custom host has no role that
+   * supports `aria-required`.
+   */
+  readonly #ariaRequiredRoleWarned: WarnOnceRef = { current: false };
 
   readonly #isManualAriaMode = computed(() => {
     return this.#ariaModeSignal?.() === 'manual';
@@ -443,12 +477,17 @@ export class NgxSignalFormAutoAria {
    * - manual-mode opt-out — when `ngxSignalFormControlAria='manual'`, the
    *   consumer's DOM value wins.
    * - role-aware suppression — `aria-required` is only valid ARIA on a
-   *   handful of roles (`radiogroup`, `combobox`, `textbox`, …) plus native
-   *   form controls with no explicit role. Explicit roles that do not permit
-   *   it, such as `group` and `button`, must not receive the attribute. The
-   *   native `<button>` case is gated separately because its implicit role is
-   *   not present in the DOM `role` attribute. See
-   *   https://github.com/ngx-signal-forms/ngx-signal-forms/issues/300.
+   *   handful of roles (`radiogroup`, `combobox`, `textbox`, …, see
+   *   {@link ARIA_REQUIRED_SUPPORTED_ROLES}) plus native form controls
+   *   (`<input>`, `<select>`, `<textarea>`), which carry no explicit role. A
+   *   custom host with an explicit role outside that set (`group`, `button`,
+   *   …) or with no role at all does not get the attribute — a role-less
+   *   custom host has the generic role, which does not support
+   *   `aria-required`, so it gets a one-shot dev warning instead. The native
+   *   `<button>` case is gated separately because its implicit role is not
+   *   present in the DOM `role` attribute. See
+   *   https://github.com/ngx-signal-forms/ngx-signal-forms/issues/300 and
+   *   https://github.com/ngx-signal-forms/ngx-signal-forms/issues/496.
    */
   protected readonly ariaRequired = computed(() => {
     if (this.#isManualAriaMode()) {
@@ -456,15 +495,37 @@ export class NgxSignalFormAutoAria {
     }
 
     const { role, tagName } = this.#domSnapshot();
-    if (
-      role === 'group' ||
-      role === 'button' ||
-      (!role && tagName === 'BUTTON')
-    ) {
+
+    if (role) {
+      return ARIA_REQUIRED_SUPPORTED_ROLES.has(role)
+        ? this.#ariaRequiredFromFactory()
+        : null;
+    }
+
+    if (tagName === 'BUTTON') {
       return null;
     }
 
-    return this.#ariaRequiredFromFactory();
+    if (NATIVE_FORM_CONTROL_TAGS.has(tagName)) {
+      return this.#ariaRequiredFromFactory();
+    }
+
+    // Role-less custom host: `aria-required` has nothing to attach to (the
+    // generic role does not support it), so only warn when the field is
+    // actually required — an optional field loses nothing by staying silent.
+    const wouldHaveBeenRequired = this.#ariaRequiredFromFactory();
+    if (wouldHaveBeenRequired) {
+      devWarnOnce(
+        this.#ariaRequiredRoleWarned,
+        'warn',
+        '[ngx-signal-forms] NgxSignalFormAutoAria: this custom host has no ' +
+          'role, so `aria-required` was not set. Add a role that supports ' +
+          'it, for example "combobox", "textbox", or "radiogroup".',
+        this.#element.nativeElement,
+      );
+    }
+
+    return null;
   });
 
   /**
