@@ -8,6 +8,7 @@ import {
   FormField,
   FormRoot,
   form,
+  required,
   schema,
   validate,
 } from '@angular/forms/signals';
@@ -332,5 +333,113 @@ describe('NgxSpartanFormField toolkitAriaDescribedBy tracks the warning region (
     await view.fixture.whenStable();
     expect(wrapper.warningVisible()).toBe(true);
     expect(wrapper.toolkitAriaDescribedBy()).toContain('nickname-warning');
+  });
+});
+
+interface ErrorAndWarningModel {
+  nickname: string;
+}
+
+/**
+ * `required` (blocking) plus a warning that fires whenever the trimmed
+ * value is under 5 characters — including the empty string, so a blank,
+ * touched field carries both a visible blocking error and a warning at
+ * once. That overlap is exactly the case Copilot review flagged: the
+ * renderer must apply blocking-error precedence itself
+ * (`NgxSpartanFormFieldError.firstWarning`), because
+ * `createErrorMessageSignal`'s own warning cascade times presence and
+ * strategy but not that precedence.
+ */
+const errorAndWarningSchema = schema<ErrorAndWarningModel>((path) => {
+  required(path.nickname, { message: 'Nickname is required' });
+  validate(path.nickname, (ctx) => {
+    const trimmed = (ctx.value() ?? '').trim();
+    if (trimmed.length < 5) {
+      return warningError(
+        'short-nickname',
+        'Nicknames under 5 characters are easy to confuse.',
+      );
+    }
+    return null;
+  });
+});
+
+@Component({
+  selector: 'ngx-error-and-warning-host',
+  imports: [
+    FormField,
+    FormRoot,
+    NgxSignalForm,
+    NgxSignalFormAutoAria,
+    NgxSpartanFormBundle,
+    HlmInput,
+    HlmLabel,
+  ],
+  template: `
+    <form [formRoot]="nicknameForm" ngxSignalForm>
+      <spartan-form-field
+        [ngxSpartanFormField]="nicknameForm.nickname"
+        fieldName="nickname"
+      >
+        <label hlmLabel for="nickname">Nickname</label>
+        <input
+          hlmInput
+          id="nickname"
+          type="text"
+          [formField]="nicknameForm.nickname"
+          ngxSignalFormControl="input-like"
+        />
+      </spartan-form-field>
+    </form>
+  `,
+})
+class ErrorAndWarningHostComponent {
+  protected readonly model = signal<ErrorAndWarningModel>({ nickname: '' });
+  readonly nicknameForm = form<ErrorAndWarningModel>(
+    this.model,
+    errorAndWarningSchema,
+  );
+}
+
+describe('NgxSpartanFormFieldError applies blocking-error precedence to the rendered warning', () => {
+  it('renders only the error (and its id) while a blocking error is visible, then swaps to the warning once the error clears', async () => {
+    const user = userEvent.setup();
+    const { fixture } = await render(ErrorAndWarningHostComponent, {
+      providers: [
+        provideZonelessChangeDetection(),
+        provideNgxSignalFormsConfig({
+          defaultErrorStrategy: 'on-touch',
+          autoAria: true,
+        }),
+        ...provideNgxSpartanForms(),
+      ],
+    });
+
+    const nicknameInput = screen.getByLabelText(/nickname/i);
+
+    // Touch an empty field: `required` fails (blocking, visible on-touch)
+    // and the warning condition (`trimmed.length < 5`) is also true.
+    await user.click(nicknameInput);
+    await user.tab();
+    await fixture.whenStable();
+
+    expect(screen.getByText(/nickname is required/i)).toBeTruthy();
+    expect(screen.queryByText(/easy to confuse/i)).toBeNull();
+    const describedByWithError =
+      nicknameInput.getAttribute('aria-describedby') ?? '';
+    expect(describedByWithError).toContain('nickname-error');
+    expect(describedByWithError).not.toContain('nickname-warning');
+
+    // Fix the blocking error ("Al" satisfies `required`) without clearing
+    // the warning condition (2 chars is still under 5).
+    await user.type(nicknameInput, 'Al');
+    await fixture.whenStable();
+
+    expect(screen.queryByText(/nickname is required/i)).toBeNull();
+    expect(screen.getByText(/easy to confuse/i)).toBeTruthy();
+    const describedByWithWarning =
+      nicknameInput.getAttribute('aria-describedby') ?? '';
+    expect(describedByWithWarning).not.toContain('nickname-error');
+    expect(describedByWithWarning).toContain('nickname-warning');
   });
 });

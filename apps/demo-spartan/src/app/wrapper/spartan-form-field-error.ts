@@ -143,7 +143,25 @@ export class NgxSpartanFormFieldError {
   );
 
   protected readonly firstError = computed(() => this.#resolvedErrors()[0]);
-  protected readonly firstWarning = computed(() => this.#resolvedWarnings()[0]);
+
+  /**
+   * First warning to render, gated by blocking-error precedence: a visible
+   * blocking error owns the message region, so the warning waits (ADR-0007).
+   * `#resolvedWarnings` alone does not apply this — `createErrorMessageSignal`
+   * times the warning through its own independent cascade and deliberately
+   * does not fold in the blocking-error gate, because it returns a list, not
+   * a single message region (see its own docs on `errorVisibility`). This
+   * component renders one region for warnings, so it applies the priority
+   * itself, the same way `NgxHeadlessErrorState.shouldShowWarnings` does for
+   * the PrimeNG reference. `firstError()` is non-empty exactly when a
+   * blocking error is both present and currently visible per strategy — the
+   * same "visible blocking error" signal the wrapper's own
+   * `#hasVisibleBlockingError` computes for `aria-describedby`.
+   */
+  protected readonly firstWarning = computed(() => {
+    if (this.firstError()) return undefined;
+    return this.#resolvedWarnings()[0];
+  });
 
   /**
    * Container IDs use the kind-less `generateErrorId(name)` /
