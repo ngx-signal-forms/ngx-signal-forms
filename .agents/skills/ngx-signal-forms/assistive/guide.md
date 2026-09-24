@@ -173,7 +173,7 @@ import {
 
 `NgxFormFieldError`'s `presentation="panel"` mode follows the same separation at the grouped level, automatically and content-driven (no `tone` input): any blocking error routes to the assertive `role="alert"` container, a warning-only list to the polite `role="status"` container, and an empty list hides both. This prevents accidentally downgrading real errors or over-announcing non-blocking guidance.
 
-Each message also carries a visually hidden "Error:" / "Warning:" prefix, so the accessible description tells the two channels apart without relying on colour. Configure the text through `NGX_SIGNAL_FORMS_CONFIG`'s `errorPrefixText` / `warningPrefixText` (default `'Error:'` / `'Warning:'`); pass `''` to disable a channel's prefix. Suppressed when `title` is set. Not applied by `NgxFormFieldErrorSummary` or headless consumers. See the `/assistive` README for the CSS hook that adds a visible icon.
+Each message also carries a visually hidden "Error:" / "Warning:" prefix, so the accessible description tells the two channels apart without relying on colour. Configure the text through `NGX_SIGNAL_FORMS_CONFIG`'s `errorPrefixText` / `warningPrefixText` (default `'Error:'` / `'Warning:'`); pass `''` to disable a channel's prefix. Rendered even when `title` is set, since a title names the group, not a given message's channel. Not applied by `NgxFormFieldErrorSummary` or headless consumers. See "Telling errors and warnings apart without colour" in the `/assistive` README for the CSS hook that adds a visible icon.
 
 ## Error Handling
 

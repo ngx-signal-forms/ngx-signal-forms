@@ -121,16 +121,19 @@ relying on colour alone (WCAG 1.4.1, 1.3.1).
 - Configure the text through `NgxSignalFormsConfig.errorPrefixText` /
   `warningPrefixText` (default `'Error:'` / `'Warning:'`), the same seam as
   `requiredHintText`. Pass `''` to disable a channel's prefix.
-- The prefix is suppressed when `title` is set — the title already tells
-  the two channels apart, so repeating it on every message would duplicate
-  it.
+- Rendered even when `title` is set — a title names the group (e.g.
+  "Delivery notes"), not the channel of a given message, so it cannot stand
+  in for the per-message prefix. `NgxFormFieldset` passes a title to both
+  the error and warning container; without the per-message prefix, a
+  titled warning would be colour-only again.
 - Not applied by `NgxFormFieldErrorSummary` (it renders only blocking
   errors) or by headless consumers, who render their own markup.
 - `error.message` never contains the prefix: it is rendered as a separate
   span, so validators and message registries stay prefix-free.
 
 To add a visible icon (none ships by default), set one of these custom
-properties — they feed a `content` value on the message's `::before`:
+properties — they feed a `content` value on the message's `::before` (see
+the [Theming guide](../form-field/THEMING.md) for the full token list):
 
 ```css
 ngx-form-field-error {
@@ -138,6 +141,11 @@ ngx-form-field-error {
   --ngx-signal-form-warning-icon: '⚠';
 }
 ```
+
+Once set, the glyph is generated `::before` content, exposed to assistive
+tech the same as any other CSS-generated content — keep it a supplementary
+visual cue. The accessible distinction always comes from the visually
+hidden prefix above, not from this icon.
 
 ### NgxFormFieldErrorSummary
 

@@ -142,24 +142,38 @@ Override public `--ngx-signal-form-*` variables, not internal `--_*` aliases.
 
 > **Note:** The default `--ngx-signal-form-warning-color` was `#f59e0b` prior to v1.0; it was changed to `#a16207` (Tailwind amber-700) to meet WCAG 2.2 SC 1.4.3 Contrast (Minimum), Level AA, on white backgrounds.
 
-| Property                                            | Default                                                             | Description                        |
-| :-------------------------------------------------- | :------------------------------------------------------------------ | :--------------------------------- |
-| `--ngx-signal-form-error-color`                     | `#db1818`                                                           | Text color for errors              |
-| `--ngx-signal-form-error-bg`                        | `transparent`                                                       | Error background color             |
-| `--ngx-signal-form-error-border-color`              | `transparent`                                                       | Error border color                 |
-| `--ngx-signal-form-warning-color`                   | `#a16207`                                                           | Text color for warnings            |
-| `--ngx-signal-form-warning-bg`                      | `transparent`                                                       | Warning background color           |
-| `--ngx-signal-form-warning-border-color`            | `transparent`                                                       | Warning border color               |
-| `--ngx-signal-form-error-font-size`                 | `var(--...feedback...)`                                             | Text size                          |
-| `--ngx-signal-form-error-line-height`               | `var(--...feedback...)`                                             | Line height                        |
-| `--ngx-signal-form-error-margin-top`                | `var(--...feedback...)`                                             | Spacing from input                 |
-| `--ngx-signal-form-error-message-spacing`           | `0.25rem`                                                           | Spacing between messages           |
-| `--ngx-signal-form-error-border-width`              | `0`                                                                 | Border width                       |
-| `--ngx-signal-form-error-border-radius`             | `0`                                                                 | Border radius                      |
-| `--ngx-signal-form-error-padding`                   | `0`                                                                 | Container padding                  |
-| `--ngx-signal-form-error-animation`                 | `ngx-status-slide-in 300ms cubic-bezier(0.2, 0.8, 0.2, 1) forwards` | Entry animation                    |
-| `--ngx-signal-form-error-list-style`                | `var(--...feedback...)`                                             | `list-style` shorthand for bullets |
-| `--ngx-signal-form-error-list-padding-inline-start` | `var(--...feedback...)`                                             | Indent for bulleted summaries      |
+| Property                                            | Default                                                             | Description                                             |
+| :-------------------------------------------------- | :------------------------------------------------------------------ | :------------------------------------------------------ |
+| `--ngx-signal-form-error-color`                     | `#db1818`                                                           | Text color for errors                                   |
+| `--ngx-signal-form-error-bg`                        | `transparent`                                                       | Error background color                                  |
+| `--ngx-signal-form-error-border-color`              | `transparent`                                                       | Error border color                                      |
+| `--ngx-signal-form-warning-color`                   | `#a16207`                                                           | Text color for warnings                                 |
+| `--ngx-signal-form-warning-bg`                      | `transparent`                                                       | Warning background color                                |
+| `--ngx-signal-form-warning-border-color`            | `transparent`                                                       | Warning border color                                    |
+| `--ngx-signal-form-error-font-size`                 | `var(--...feedback...)`                                             | Text size                                               |
+| `--ngx-signal-form-error-line-height`               | `var(--...feedback...)`                                             | Line height                                             |
+| `--ngx-signal-form-error-margin-top`                | `var(--...feedback...)`                                             | Spacing from input                                      |
+| `--ngx-signal-form-error-message-spacing`           | `0.25rem`                                                           | Spacing between messages                                |
+| `--ngx-signal-form-error-border-width`              | `0`                                                                 | Border width                                            |
+| `--ngx-signal-form-error-border-radius`             | `0`                                                                 | Border radius                                           |
+| `--ngx-signal-form-error-padding`                   | `0`                                                                 | Container padding                                       |
+| `--ngx-signal-form-error-animation`                 | `ngx-status-slide-in 300ms cubic-bezier(0.2, 0.8, 0.2, 1) forwards` | Entry animation                                         |
+| `--ngx-signal-form-error-list-style`                | `var(--...feedback...)`                                             | `list-style` shorthand for bullets                      |
+| `--ngx-signal-form-error-list-padding-inline-start` | `var(--...feedback...)`                                             | Indent for bulleted summaries                           |
+| `--ngx-signal-form-error-icon`                      | `none`                                                              | `content` for a visible icon on `::before` (issue #498) |
+| `--ngx-signal-form-warning-icon`                    | `none`                                                              | `content` for a visible icon on `::before` (issue #498) |
+
+Each message also carries a visually hidden "Error:"/"Warning:" prefix — not
+a theming token, but configured through `NGX_SIGNAL_FORMS_CONFIG.errorPrefixText`
+/ `warningPrefixText`. See "Telling errors and warnings apart without
+colour" in `../assistive/README.md`.
+
+The `--ngx-signal-form-error-icon` / `--ngx-signal-form-warning-icon` hook
+is a plain `content` value, not the `content: <value> / "<alt-text>"` form:
+once a consumer sets a real icon glyph, it is exposed to assistive tech as
+generated content (a normal characteristic of CSS `::before`/`::after`, not
+something this hook suppresses). The prefix above always carries the
+accessible distinction — keep any custom icon a supplementary visual cue.
 
 ### Hints
 

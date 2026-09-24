@@ -335,31 +335,64 @@ describe('NgxFormFieldError — error/warning prefix (issue #498)', () => {
     await expectNoA11yViolations(container);
   });
 
-  it('does not repeat the prefix when a title is shown, to avoid duplicating it', async () => {
+  it('still shows the prefix when a title is set, so a titled warning is not colour-only', async () => {
+    // A `title` describes the group ("Delivery notes"); it never says which
+    // channel a given message belongs to, so a titled warning would be
+    // colour-only without its own per-message prefix — the same SC 1.4.1 /
+    // 1.3.1 gap this issue exists to close. NgxFormFieldset passes a title
+    // to both the error and warning container, so this is not a rare case.
     @Component({
-      selector: 'ngx-test-error-prefix-title',
-      imports: [NgxFormFieldError],
+      selector: 'ngx-test-warning-prefix-title',
+      imports: [FormField, NgxFormFieldError],
       template: `
-        <ngx-form-field-error
-          [errors]="errors"
-          fieldName="shipping"
-          title="Shipping address errors"
-        />
+        <form (submit)="$event.preventDefault()" novalidate>
+          <label for="password">Password</label>
+          <input
+            id="password"
+            [formField]="testForm.password"
+            aria-describedby="password-warning"
+          />
+          <ngx-form-field-error
+            [formField]="testForm.password"
+            fieldName="password"
+            title="Password notes"
+          />
+        </form>
       `,
     })
     class TestComponent {
-      readonly errors = signal<readonly ValidationError[]>([
-        { kind: 'required', message: 'Street is required' },
-      ]);
+      readonly #model = signal({ password: '' });
+      readonly testForm = form(
+        this.#model,
+        schema((path) => {
+          validate(path.password, (ctx) => {
+            const value = ctx.value();
+            if (value.length > 0 && value.length < 8) {
+              return {
+                kind: 'warn:weak-password',
+                message: 'Consider 8 or more characters',
+              };
+            }
+            return null;
+          });
+        }),
+      );
     }
 
     const { container } = await render(TestComponent);
+    const input = container.querySelector<HTMLInputElement>('input#password')!;
+    await userEvent.click(input);
+    await userEvent.type(input, 'abc');
+    await userEvent.tab();
     await TestBed.inject(ApplicationRef).whenStable();
 
-    const alert = container.querySelector('[role="alert"]');
-    expect(alert?.textContent).not.toContain('Error:');
-    expect(alert?.textContent).toContain('Shipping address errors');
-    expect(alert?.textContent).toContain('Street is required');
+    // The title ("Password notes") is part of the same accessible
+    // description, since it renders inside the container `aria-describedby`
+    // points to — but the message itself must still carry its own
+    // "Warning:" prefix rather than relying on the title alone.
+    expect(input).toHaveAccessibleDescription(
+      /Warning: Consider 8 or more characters/u,
+    );
     await expectNoA11yViolations(container);
   });
 
@@ -385,6 +418,59 @@ describe('NgxFormFieldError — error/warning prefix (issue #498)', () => {
 
     const alert = container.querySelector('[role="alert"]');
     expect(alert?.textContent?.trim()).toBe('Street is required');
+    expect(alert?.getAttribute('role')).toBe('alert');
+    await expectNoA11yViolations(container);
+  });
+
+  it('lets a consumer disable the warning prefix per channel with an empty string', async () => {
+    @Component({
+      selector: 'ngx-test-warning-prefix-disabled',
+      imports: [NgxFormFieldError],
+      providers: [
+        provideNgxSignalFormsConfigForComponent({ warningPrefixText: '' }),
+      ],
+      template: `
+        <ngx-form-field-error [errors]="warnings" fieldName="shipping" />
+      `,
+    })
+    class TestComponent {
+      readonly warnings = signal<readonly ValidationError[]>([
+        { kind: 'warn:po-box', message: 'PO boxes may delay delivery' },
+      ]);
+    }
+
+    const { container } = await render(TestComponent);
+    await TestBed.inject(ApplicationRef).whenStable();
+
+    const status = container.querySelector('[role="status"]');
+    expect(status?.textContent?.trim()).toBe('PO boxes may delay delivery');
+    expect(status?.getAttribute('role')).toBe('status');
+    await expectNoA11yViolations(container);
+  });
+
+  it('includes the prefix in the panel presentation, same as inline', async () => {
+    @Component({
+      selector: 'ngx-test-error-prefix-panel',
+      imports: [NgxFormFieldError],
+      template: `
+        <ngx-form-field-error
+          [errors]="errors"
+          fieldName="shipping"
+          presentation="panel"
+        />
+      `,
+    })
+    class TestComponent {
+      readonly errors = signal<readonly ValidationError[]>([
+        { kind: 'required', message: 'Street is required' },
+      ]);
+    }
+
+    const { container } = await render(TestComponent);
+    await TestBed.inject(ApplicationRef).whenStable();
+
+    const alert = container.querySelector('[role="alert"]');
+    expect(alert?.textContent).toContain('Error: Street is required');
     await expectNoA11yViolations(container);
   });
 });

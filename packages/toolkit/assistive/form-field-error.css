@@ -181,8 +181,11 @@
  * tech through `aria-describedby`, hidden from sighted users. Standard
  * clip-rect technique (not `display: none` / `visibility: hidden`, which
  * screen readers also skip) — same pattern as
- * `ngx-signal-form-field-wrapper__visually-hidden`, kept local here because
- * `/assistive` and `/form-field` do not share CSS across entry points. */
+ * `ngx-signal-form-field-wrapper__visually-hidden`. Both entry points already
+ * share `core/feedback-tokens.css`, but that class lives in
+ * `form-field-wrapper.css`, not the shared file, so reaching into it here
+ * would add a new cross-entry-point dependency neither needs — the pattern
+ * is duplicated locally instead. */
 .ngx-form-field-error__prefix {
   position: absolute;
   width: 1px;
@@ -196,13 +199,25 @@
   border: 0;
 }
 
-/* Visible-icon hook (documented in README.md's Theming section): empty by
- * default, so no icon ships out of the box. Consumers who want a channel
+/* Visible-icon hook (documented under "Telling errors and warnings apart
+ * without colour" in this entry point's `README.md`, and listed in the
+ * form-field entry point's theming guide): `none` by default, so no
+ * pseudo-element is generated and no icon ships out of the box. Consumers
+ * who want a channel
  * distinguishable by more than colour set
  * `--ngx-signal-form-error-icon`/`--ngx-signal-form-warning-icon` to a CSS
- * `content` value (e.g. a Unicode glyph or `url(...)`). Generated content
- * is decorative only; the accessible distinction comes from the
- * visually-hidden prefix above, not from this pseudo-element. */
+ * `content` value (e.g. a Unicode glyph or `url(...)`).
+ *
+ * This is deliberately NOT the `content: <value> / '<alt-text>'` form: an
+ * empty alt string on an otherwise-empty default value made the browser's
+ * accessible-description computation surface a literal `" / "` token (a
+ * `dom-accessibility-api`/browser quirk, reproduced in this package's own
+ * a11y specs), which is worse than the plain form. Generated content IS
+ * exposed to assistive tech once a consumer sets a real icon glyph — that
+ * is a known characteristic of CSS `::before`/`::after` content, not
+ * something this hook can suppress from the outside. Keep any custom icon
+ * a supplementary visual cue: the accessible distinction always comes from
+ * the visually-hidden prefix above, never from this pseudo-element. */
 .ngx-form-field-error__message--error::before {
   content: var(--ngx-signal-form-error-icon, none);
 }
