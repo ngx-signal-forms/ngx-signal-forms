@@ -15,18 +15,12 @@ import {
 import type { FieldState, FieldTree } from '@angular/forms/signals';
 import {
   createControlVisibilitySignal,
-  createErrorVisibility,
-  createWarningVisibility,
+  createFieldPresentation,
   injectFormContext,
-  isBlockingError,
   NGX_FORM_FIELD_ERROR_RENDERER,
   NGX_SIGNAL_FORM_FIELD_CONTEXT,
   NGX_SIGNAL_FORM_HINT_REGISTRY,
-  NGX_SIGNAL_FORMS_CONFIG,
   NgxSignalFormControlSemanticsDirective,
-  readDirectErrors,
-  resolveStrategyFromContext,
-  resolveWarningStrategyFromContext,
   type WarningDisplayStrategy,
 } from '@ngx-signal-forms/toolkit';
 import {
@@ -305,39 +299,28 @@ export class PrimeFormFieldComponent<TValue = unknown> {
 
   // ── Strategy / submission state plumbing ──────────────────────────────
 
-  readonly #config = inject(NGX_SIGNAL_FORMS_CONFIG);
   readonly #formContext = injectFormContext();
   readonly #injector = inject(Injector);
 
-  /**
-   * Strategy resolved against the global config and any form-level
-   * override, via the shared `resolveStrategyFromContext` helper (the
-   * strategy-resolution half of the ADR-0006 seam) — same primitive the
-   * canonical `NgxFormFieldWrapper`, `NgxSignalFormAutoAria`, and the
-   * Spartan/Material refs use, so a strategy change anywhere takes effect
-   * everywhere.
-   */
-  readonly effectiveStrategy = computed(() =>
-    resolveStrategyFromContext(
-      undefined,
-      this.#formContext,
-      this.#config.defaultErrorStrategy,
-    ),
+  readonly #fieldStateSignal = computed<FieldState<TValue> | null>(() =>
+    this.formField()(),
   );
 
   /**
-   * Warning-channel counterpart to {@link effectiveStrategy}. Stays entirely
-   * inside the warning channel: explicit input → form context
-   * `warningStrategy()` → config `defaultWarningStrategy` → `'on-touch'`. No
-   * tier consults `defaultErrorStrategy` (ADR-0007).
+   * Error and warning state, from the same `createFieldPresentation()` the
+   * canonical `NgxFormFieldWrapper` uses, so a strategy change anywhere
+   * takes effect everywhere. Both strategies resolve through their own
+   * cascades (ADR-0006, ADR-0007). A visible *blocking* error hides the
+   * warning, and a warning-only field never hides its own warning.
    */
-  readonly effectiveWarningStrategy = computed(() =>
-    resolveWarningStrategyFromContext(
-      this.warningStrategy() ?? undefined,
-      this.#formContext,
-      this.#config.defaultWarningStrategy,
-    ),
-  );
+  readonly #presentation = createFieldPresentation(this.#fieldStateSignal, {
+    warningStrategy: this.warningStrategy,
+  });
+
+  readonly effectiveStrategy = this.#presentation.effectiveStrategy;
+
+  readonly effectiveWarningStrategy =
+    this.#presentation.effectiveWarningStrategy;
 
   protected readonly submittedStatus = computed(() =>
     this.#formContext ? this.#formContext.submittedStatus() : 'unsubmitted',
@@ -368,63 +351,14 @@ export class PrimeFormFieldComponent<TValue = unknown> {
   // use, so the "wrapper view of validity" never drifts from what auto-ARIA
   // would write on the bound control.
 
-  readonly #fieldStateSignal = computed<FieldState<TValue> | null>(() =>
-    this.formField()(),
-  );
-
   /**
-   * Strategy-aware visibility timing, routed through the shared
-   * `createErrorVisibility()` seam (ADR-0006) instead of hand-inlining
-   * `createShowErrorsComputed`. Same helper the canonical `NgxFormFieldWrapper`
-   * and `NgxSignalFormAutoAria` use — keeping every surface in lockstep means
-   * a strategy change in one place takes effect everywhere.
+   * The wrapper-side warning visibility, for consumers who swap in a custom
+   * renderer. `PrimeFieldErrorComponent` (the default renderer) gets
+   * `effectiveWarningStrategy` through `errorRendererInputs`, so this and
+   * the rendered `<small class="p-warn">` agree by construction. Mirrors
+   * the Material reference's `warningVisible`.
    */
-  readonly #showByStrategy = createErrorVisibility(this.#fieldStateSignal, {
-    strategy: this.effectiveStrategy,
-    submittedStatus: this.submittedStatus,
-  });
-
-  /**
-   * Whether a *blocking* error is visible. `#showByStrategy` alone is not
-   * enough here: `createErrorVisibility()` gates on `invalid()`, and a
-   * `warn:`-only field is also `invalid()` (Angular's validation pipeline
-   * has no non-invalidating channel — see ADR-0007). Without this extra
-   * check, a touched warning-only field would suppress its own warning by
-   * "colliding" with itself through {@link #showWarningsByStrategy}'s
-   * `errorVisibility` gate. Mirrors the same gate the Material reference
-   * and `NgxHeadlessErrorState` apply.
-   */
-  readonly #hasVisibleBlockingError = computed(
-    () =>
-      this.#showByStrategy() &&
-      readDirectErrors(this.#fieldStateSignal()).some(isBlockingError),
-  );
-
-  /**
-   * Warning-channel counterpart to {@link #showByStrategy}, routed through
-   * the shared `createWarningVisibility()` seam (ADR-0006, ADR-0007) instead
-   * of leaving the warning channel unaddressed at the wrapper level. Passing
-   * `#hasVisibleBlockingError` as `errorVisibility` means a visible blocking
-   * error still suppresses the warning, without a warning-only field
-   * suppressing itself.
-   *
-   * `PrimeFieldErrorComponent` (the default renderer) is also fed
-   * `effectiveWarningStrategy` directly through `errorRendererInputs`, so
-   * this computed and the rendered `<small class="p-warn">` agree by
-   * construction. This is the wrapper-side escape hatch for consumers who
-   * swap in a custom renderer, mirroring the Material reference's
-   * `warningVisible`.
-   */
-  readonly #showWarningsByStrategy = createWarningVisibility(
-    this.#fieldStateSignal,
-    {
-      strategy: this.effectiveWarningStrategy,
-      submittedStatus: this.submittedStatus,
-      errorVisibility: this.#hasVisibleBlockingError,
-    },
-  );
-
-  readonly warningVisible = computed(() => this.#showWarningsByStrategy());
+  readonly warningVisible = this.#presentation.showWarnings;
 
   /**
    * Layout probe for the bound control — the element `aria-invalid` actually
@@ -440,7 +374,7 @@ export class PrimeFormFieldComponent<TValue = unknown> {
 
   readonly ariaInvalidValue = createAriaInvalidSignal(
     this.#fieldStateSignal,
-    this.#showByStrategy,
+    this.#presentation.showErrors,
     this.#isControlVisible,
   );
 
