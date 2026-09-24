@@ -1,22 +1,39 @@
 import { computed, type Signal } from '@angular/core';
+import { devWarnOnce, type WarnOnceRef } from './dev-warn-once';
+
+// Module-scoped, process-lifetime latch: a data-driven field name with inner
+// whitespace is a one-off authoring smell, not a per-field condition worth
+// repeating the diagnostic for. See `devWarnOnce` for the "flip once, never
+// reset" contract this relies on.
+const warnedInnerWhitespace: WarnOnceRef = { current: false };
 
 /**
  * Normalize a potential field name into the deterministic v1 identity form.
  *
- * Returns `null` for nullish or whitespace-only inputs, and trims leading
- * and trailing whitespace everywhere else. This is the single source of
- * truth for "is this a usable field name?" — wrappers, headless directives,
- * and consumer-built field-identity surfaces should call it before using
- * a name as the basis for an `id` or `aria-describedby` chain.
+ * Returns `null` for nullish or whitespace-only inputs, trims leading and
+ * trailing whitespace, and collapses every remaining run of inner whitespace
+ * into a single `-`. This is the single source of truth for "is this a
+ * usable field name?" — wrappers, headless directives, and consumer-built
+ * field-identity surfaces should call it before using a name as the basis
+ * for an `id` or `aria-describedby` chain.
+ *
+ * Inner whitespace is replaced, not rejected, because field names can come
+ * from data (for example `@for` over user-supplied keys) and a thrown error
+ * would break rendering. `aria-describedby` is a space-separated id list, so
+ * a raw space inside a generated id would make it two tokens — the second
+ * one pointing at an unrelated element. Replacing keeps `id=` and
+ * `aria-describedby` referring to the same single token. Emits a one-shot
+ * dev-mode warning so the authoring smell stays visible.
  *
  * @example
  * ```typescript
- * normalizeFieldName('email');      // 'email'
- * normalizeFieldName('  email  ');  // 'email'
- * normalizeFieldName('   ');        // null
- * normalizeFieldName('');           // null
- * normalizeFieldName(null);         // null
- * normalizeFieldName(undefined);    // null
+ * normalizeFieldName('email');       // 'email'
+ * normalizeFieldName('  email  ');   // 'email'
+ * normalizeFieldName('x other-id');  // 'x-other-id'
+ * normalizeFieldName('   ');         // null
+ * normalizeFieldName('');            // null
+ * normalizeFieldName(null);          // null
+ * normalizeFieldName(undefined);     // null
  * ```
  */
 export function normalizeFieldName(
@@ -27,7 +44,22 @@ export function normalizeFieldName(
   }
 
   const trimmed = fieldName.trim();
-  return trimmed.length > 0 ? trimmed : null;
+  if (trimmed.length === 0) {
+    return null;
+  }
+
+  if (/\s/.test(trimmed)) {
+    devWarnOnce(
+      warnedInnerWhitespace,
+      'warn',
+      '[ngx-signal-forms] normalizeFieldName: field name contains inner ' +
+        `whitespace ("${trimmed}"). Replacing it with "-" so generated ` +
+        '`id` and `aria-describedby` values stay a single token.',
+    );
+    return trimmed.replaceAll(/\s+/g, '-');
+  }
+
+  return trimmed;
 }
 
 /**

@@ -339,6 +339,34 @@ describe('injectFieldControl', () => {
     }).toThrow(/Field "metadata".*not.*(FieldTree|found)/is);
   });
 
+  it.each(['constructor', '__proto__'])(
+    'should throw "not found" instead of walking the prototype chain for path segment "%s"',
+    (segment) => {
+      // Regression: path navigation used `part in control`, which is true for
+      // prototype-chain keys like `constructor` and `__proto__` even though
+      // the form object never owns them. `Object.hasOwn` rejects both, so the
+      // walk fails the same way it would for any other unknown field.
+      const mockForm = createRootWithMalformedChildren({});
+      const mockContext: NgxSignalFormContext = {
+        form: mockForm,
+        submittedStatus: signal<SubmittedStatus>('unsubmitted'),
+        errorStrategy: signal('on-touch'),
+      };
+      const injector = Injector.create({
+        providers: [
+          { provide: NGX_SIGNAL_FORM_CONTEXT, useValue: mockContext },
+        ],
+      });
+
+      const element = document.createElement('input');
+      element.setAttribute('id', segment);
+
+      expect(() => {
+        injectFieldControl(element, injector);
+      }).toThrow(new RegExp(`Field "${segment}" not found in form`, 'i'));
+    },
+  );
+
   it('should throw when the resolved value is callable but does not satisfy the FieldState contract', () => {
     // A callable property (e.g. a plain function living on the form object)
     // passes a naive "is it a function" check but is not a real FieldTree —

@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   buildAriaDescribedBy,
   createFieldMessageIdSignals,
@@ -44,12 +44,54 @@ describe('field-resolution', () => {
   });
 
   describe('normalizeFieldName', () => {
+    let consoleWarnSpy: ReturnType<typeof vi.spyOn>;
+
+    beforeEach(() => {
+      consoleWarnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    });
+
+    afterEach(() => {
+      consoleWarnSpy.mockRestore();
+    });
+
     it('should trim non-empty values', () => {
       expect(normalizeFieldName('  email  ')).toBe('email');
     });
 
     it('should return null for blank values', () => {
       expect(normalizeFieldName('   ')).toBeNull();
+    });
+
+    it('should replace inner whitespace with a single hyphen so the name stays one id token', () => {
+      // Regression: `generateErrorId('x other-id')` used to produce
+      // `x other-id-error`, and `aria-describedby` splits on whitespace —
+      // the rendered attribute pointed at two ids, the second one
+      // (`other-id-error`) unrelated to the field. A single-token name keeps
+      // `id=` and the generated `aria-describedby` token identical.
+      const name = normalizeFieldName('x other-id');
+      expect(name).toBe('x-other-id');
+      expect(name?.split(/\s/)).toHaveLength(1);
+      expect(generateErrorId(name ?? '').split(/\s/)).toHaveLength(1);
+    });
+
+    it('should collapse multiple inner whitespace characters into one hyphen', () => {
+      expect(normalizeFieldName('foo   bar\tbaz')).toBe('foo-bar-baz');
+    });
+
+    it('should warn once in dev mode when inner whitespace is replaced', async () => {
+      // The one-shot latch is module-scoped (process lifetime), so it must
+      // start unflipped for this test regardless of what earlier tests in
+      // this file already triggered — hence the isolated re-import.
+      vi.resetModules();
+      const isolated = await import('./field-resolution');
+
+      isolated.normalizeFieldName('a b');
+      isolated.normalizeFieldName('c d');
+
+      expect(consoleWarnSpy).toHaveBeenCalledTimes(1);
+      expect(consoleWarnSpy).toHaveBeenCalledWith(
+        expect.stringContaining('normalizeFieldName'),
+      );
     });
   });
 

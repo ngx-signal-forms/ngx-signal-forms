@@ -96,7 +96,7 @@ export function injectFieldControl<TValue = unknown>(
     let control: unknown = formInstance;
 
     for (const part of pathParts) {
-      if (!isNavigable(control) || !(part in control)) {
+      if (!isNavigable(control) || !Object.hasOwn(control, part)) {
         throw new Error(
           `[ngx-signal-forms] Field "${fieldName}" not found in form. ` +
             `Could not access property "${part}".`,
