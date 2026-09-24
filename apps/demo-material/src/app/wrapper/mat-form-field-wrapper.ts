@@ -12,7 +12,8 @@ import {
 import type { FieldState, FieldTree } from '@angular/forms/signals';
 import {
   createControlVisibilitySignal,
-  createShowErrorsComputed,
+  createErrorVisibility,
+  createWarningVisibility,
   injectFormContext,
   isBlockingError,
   isWarningError,
@@ -21,8 +22,10 @@ import {
   NGX_SIGNAL_FORMS_CONFIG,
   NgxSignalFormControlSemanticsDirective,
   readDirectErrors,
-  resolveErrorDisplayStrategy,
+  resolveStrategyFromContext,
+  resolveWarningStrategyFromContext,
   type ErrorDisplayStrategy,
+  type WarningDisplayStrategy,
 } from '@ngx-signal-forms/toolkit';
 import { NgxFormFieldHint } from '@ngx-signal-forms/toolkit/assistive';
 import {
@@ -150,17 +153,45 @@ export class MatFormFieldWrapper<TValue = unknown> {
   /** Optional per-field strategy override (mirrors the toolkit wrapper). */
   readonly strategy = input<ErrorDisplayStrategy | null>(null);
 
+  /**
+   * Optional per-field warning-strategy override (mirrors the toolkit
+   * wrapper's `warningStrategy` input). Resolved independently of
+   * {@link strategy} — the warning cascade never reads the error one
+   * (ADR-0007).
+   */
+  readonly warningStrategy = input<WarningDisplayStrategy | null>(null);
+
   // ── DI / state plumbing ───────────────────────────────────────────────
 
   readonly #config = inject(NGX_SIGNAL_FORMS_CONFIG);
   readonly #formContext = injectFormContext();
   readonly #injector = inject(Injector);
 
+  /**
+   * Routes through the shared `resolveStrategyFromContext` helper (the
+   * strategy-resolution half of the ADR-0006 seam) instead of reading
+   * `formContext.errorStrategy()` and calling `resolveErrorDisplayStrategy`
+   * directly — same cascade, one fewer hand-rolled null-context guard.
+   */
   readonly effectiveStrategy = computed(() =>
-    resolveErrorDisplayStrategy(
-      this.strategy(),
-      this.#formContext ? this.#formContext.errorStrategy() : undefined,
+    resolveStrategyFromContext(
+      this.strategy() ?? undefined,
+      this.#formContext,
       this.#config.defaultErrorStrategy,
+    ),
+  );
+
+  /**
+   * Warning-channel counterpart to {@link effectiveStrategy}. Stays entirely
+   * inside the warning channel: explicit input → form context
+   * `warningStrategy()` → config `defaultWarningStrategy` → `'on-touch'`. No
+   * tier consults `defaultErrorStrategy` (ADR-0007).
+   */
+  readonly effectiveWarningStrategy = computed(() =>
+    resolveWarningStrategyFromContext(
+      this.warningStrategy() ?? undefined,
+      this.#formContext,
+      this.#config.defaultWarningStrategy,
     ),
   );
 
@@ -188,16 +219,17 @@ export class MatFormFieldWrapper<TValue = unknown> {
   );
 
   /**
-   * Strategy-aware visibility timing. Same helper the toolkit's own wrapper
+   * Strategy-aware visibility timing, routed through the shared
+   * `createErrorVisibility()` seam (ADR-0006) instead of hand-inlining
+   * `createShowErrorsComputed`. Same helper the toolkit's own wrapper
    * (`NgxFormFieldWrapper.#showErrorsByStrategy`) and `NgxSignalFormAutoAria`
    * use — keeping every surface in lockstep means a strategy change in one
    * place takes effect everywhere.
    */
-  readonly #showByStrategy = createShowErrorsComputed(
-    this.#fieldStateSignal,
-    this.effectiveStrategy,
-    this.submittedStatus,
-  );
+  readonly #showByStrategy = createErrorVisibility(this.#fieldStateSignal, {
+    strategy: this.effectiveStrategy,
+    submittedStatus: this.submittedStatus,
+  });
 
   /**
    * Drives `<mat-error>` rendering for consumers that opt out of the slot
@@ -208,10 +240,26 @@ export class MatFormFieldWrapper<TValue = unknown> {
     () => this.hasErrors() && this.#showByStrategy(),
   );
 
-  /** Same idea for warning content rendered inside `<mat-hint>`. */
-  readonly warningVisible = computed(
-    () => this.hasWarnings() && this.#showByStrategy() && !this.errorVisible(),
+  /**
+   * Warning-channel counterpart to {@link errorVisible}, routed through the
+   * shared `createWarningVisibility()` seam (ADR-0006, ADR-0007) instead of
+   * timing the warning off the *error* cascade (`#showByStrategy`). Passing
+   * `errorVisible` as `errorVisibility` keeps the previous suppression rule —
+   * a visible blocking error still hides the warning — but the timing itself
+   * now follows `effectiveWarningStrategy`, so `warningStrategy` is honoured
+   * instead of silently ignored.
+   */
+  readonly #showWarningsByStrategy = createWarningVisibility(
+    this.#fieldStateSignal,
+    {
+      strategy: this.effectiveWarningStrategy,
+      submittedStatus: this.submittedStatus,
+      errorVisibility: this.errorVisible,
+    },
   );
+
+  /** Same idea as {@link errorVisible} for warning content rendered inside `<mat-hint>`. */
+  readonly warningVisible = computed(() => this.#showWarningsByStrategy());
 
   // ── Bound-control discovery via contentChildren ───────────────────────
   //
