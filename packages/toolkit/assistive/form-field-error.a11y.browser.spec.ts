@@ -12,6 +12,7 @@ import { render } from '@testing-library/angular';
 import { userEvent } from 'vitest/browser';
 import { describe, expect, it } from 'vitest';
 import { NgxFormFieldError } from './form-field-error';
+import { provideNgxSignalFormsConfigForComponent } from '@ngx-signal-forms/toolkit';
 import { expectNoA11yViolations } from '@ngx-signal-forms/toolkit/testing';
 
 /**
@@ -229,6 +230,161 @@ describe('NgxFormFieldError (presentation="panel") — WCAG 2.2 AA conformance',
 
     const status = container.querySelector('[role="status"]');
     expect(status?.textContent).toContain('PO boxes may delay delivery');
+    await expectNoA11yViolations(container);
+  });
+});
+
+/**
+ * Issue #498: a blocking error and a warning render with the same markup
+ * except for colour (`#db1818` against `#a16207`), which users with
+ * deuteranopia find hard to tell apart (WCAG 1.4.1). Each message now
+ * carries a visually hidden "Error:" / "Warning:" prefix inside the element
+ * `aria-describedby` points to, so the accessible description tells the two
+ * channels apart on its own. Asserted here as the computed accessible
+ * description (`toHaveAccessibleDescription`), not `textContent`, because a
+ * sighted-only check would pass even if the prefix were `aria-hidden` and
+ * never reached assistive tech.
+ */
+describe('NgxFormFieldError — error/warning prefix (issue #498)', () => {
+  it('gives a field with a blocking error an accessible description starting with "Error:"', async () => {
+    @Component({
+      selector: 'ngx-test-error-prefix',
+      imports: [FormField, NgxFormFieldError],
+      template: `
+        <form (submit)="$event.preventDefault()" novalidate>
+          <label for="email">Email</label>
+          <input
+            id="email"
+            [formField]="testForm.email"
+            aria-describedby="email-error"
+          />
+          <ngx-form-field-error
+            [formField]="testForm.email"
+            fieldName="email"
+            strategy="immediate"
+          />
+        </form>
+      `,
+    })
+    class TestComponent {
+      readonly #model = signal({ email: '' });
+      readonly testForm = form(
+        this.#model,
+        schema((path) => {
+          required(path.email, { message: 'Email is required' });
+        }),
+      );
+    }
+
+    const { container } = await render(TestComponent);
+    await TestBed.inject(ApplicationRef).whenStable();
+
+    const input = container.querySelector<HTMLInputElement>('input#email')!;
+    expect(input).toHaveAccessibleDescription('Error: Email is required');
+    await expectNoA11yViolations(container);
+  });
+
+  it('gives a field with a warning an accessible description starting with "Warning:"', async () => {
+    @Component({
+      selector: 'ngx-test-warning-prefix',
+      imports: [FormField, NgxFormFieldError],
+      template: `
+        <form (submit)="$event.preventDefault()" novalidate>
+          <label for="password">Password</label>
+          <input
+            id="password"
+            [formField]="testForm.password"
+            aria-describedby="password-warning"
+          />
+          <ngx-form-field-error
+            [formField]="testForm.password"
+            fieldName="password"
+          />
+        </form>
+      `,
+    })
+    class TestComponent {
+      readonly #model = signal({ password: '' });
+      readonly testForm = form(
+        this.#model,
+        schema((path) => {
+          validate(path.password, (ctx) => {
+            const value = ctx.value();
+            if (value.length > 0 && value.length < 8) {
+              return {
+                kind: 'warn:weak-password',
+                message: 'Consider 8 or more characters',
+              };
+            }
+            return null;
+          });
+        }),
+      );
+    }
+
+    const { container } = await render(TestComponent);
+    const input = container.querySelector<HTMLInputElement>('input#password')!;
+    await userEvent.click(input);
+    await userEvent.type(input, 'abc');
+    await userEvent.tab();
+    await TestBed.inject(ApplicationRef).whenStable();
+
+    expect(input).toHaveAccessibleDescription(
+      'Warning: Consider 8 or more characters',
+    );
+    await expectNoA11yViolations(container);
+  });
+
+  it('does not repeat the prefix when a title is shown, to avoid duplicating it', async () => {
+    @Component({
+      selector: 'ngx-test-error-prefix-title',
+      imports: [NgxFormFieldError],
+      template: `
+        <ngx-form-field-error
+          [errors]="errors"
+          fieldName="shipping"
+          title="Shipping address errors"
+        />
+      `,
+    })
+    class TestComponent {
+      readonly errors = signal<readonly ValidationError[]>([
+        { kind: 'required', message: 'Street is required' },
+      ]);
+    }
+
+    const { container } = await render(TestComponent);
+    await TestBed.inject(ApplicationRef).whenStable();
+
+    const alert = container.querySelector('[role="alert"]');
+    expect(alert?.textContent).not.toContain('Error:');
+    expect(alert?.textContent).toContain('Shipping address errors');
+    expect(alert?.textContent).toContain('Street is required');
+    await expectNoA11yViolations(container);
+  });
+
+  it('lets a consumer disable the error prefix per channel with an empty string', async () => {
+    @Component({
+      selector: 'ngx-test-error-prefix-disabled',
+      imports: [NgxFormFieldError],
+      providers: [
+        provideNgxSignalFormsConfigForComponent({ errorPrefixText: '' }),
+      ],
+      template: `
+        <ngx-form-field-error [errors]="errors" fieldName="shipping" />
+      `,
+    })
+    class TestComponent {
+      readonly errors = signal<readonly ValidationError[]>([
+        { kind: 'required', message: 'Street is required' },
+      ]);
+    }
+
+    const { container } = await render(TestComponent);
+    await TestBed.inject(ApplicationRef).whenStable();
+
+    const alert = container.querySelector('[role="alert"]');
+    expect(alert?.textContent?.trim()).toBe('Street is required');
     await expectNoA11yViolations(container);
   });
 });

@@ -176,6 +176,41 @@
   margin: 0;
 }
 
+/* Visually hidden "Error:" / "Warning:" prefix (see form-field-error.ts
+ * `resolvedErrorPrefix` / `resolvedWarningPrefix`): perceivable to assistive
+ * tech through `aria-describedby`, hidden from sighted users. Standard
+ * clip-rect technique (not `display: none` / `visibility: hidden`, which
+ * screen readers also skip) — same pattern as
+ * `ngx-signal-form-field-wrapper__visually-hidden`, kept local here because
+ * `/assistive` and `/form-field` do not share CSS across entry points. */
+.ngx-form-field-error__prefix {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Visible-icon hook (documented in README.md's Theming section): empty by
+ * default, so no icon ships out of the box. Consumers who want a channel
+ * distinguishable by more than colour set
+ * `--ngx-signal-form-error-icon`/`--ngx-signal-form-warning-icon` to a CSS
+ * `content` value (e.g. a Unicode glyph or `url(...)`). Generated content
+ * is decorative only; the accessible distinction comes from the
+ * visually-hidden prefix above, not from this pseudo-element. */
+.ngx-form-field-error__message--error::before {
+  content: var(--ngx-signal-form-error-icon, none);
+}
+
+.ngx-form-field-error__message--warning::before {
+  content: var(--ngx-signal-form-warning-icon, none);
+}
+
 .ngx-form-field-error__title {
   margin: 0;
   color: var(--_error-title-color);

@@ -111,6 +111,34 @@ presentations share this one component:
 
 Use `ngxSignalForm` alongside `[formRoot]` when relying on the `'on-submit'` strategy so assistive components can inherit submission state automatically.
 
+#### Telling errors and warnings apart without colour
+
+Each message carries a visually hidden prefix — "Error:" for blocking
+errors, "Warning:" for warnings — inside the element `aria-describedby`
+points to. A screen reader announces "Error: …" or "Warning: …" instead of
+relying on colour alone (WCAG 1.4.1, 1.3.1).
+
+- Configure the text through `NgxSignalFormsConfig.errorPrefixText` /
+  `warningPrefixText` (default `'Error:'` / `'Warning:'`), the same seam as
+  `requiredHintText`. Pass `''` to disable a channel's prefix.
+- The prefix is suppressed when `title` is set — the title already tells
+  the two channels apart, so repeating it on every message would duplicate
+  it.
+- Not applied by `NgxFormFieldErrorSummary` (it renders only blocking
+  errors) or by headless consumers, who render their own markup.
+- `error.message` never contains the prefix: it is rendered as a separate
+  span, so validators and message registries stay prefix-free.
+
+To add a visible icon (none ships by default), set one of these custom
+properties — they feed a `content` value on the message's `::before`:
+
+```css
+ngx-form-field-error {
+  --ngx-signal-form-error-icon: '⛔';
+  --ngx-signal-form-warning-icon: '⚠';
+}
+```
+
 ### NgxFormFieldErrorSummary
 
 Form-level error summary with clickable entries that focus the invalid control.
