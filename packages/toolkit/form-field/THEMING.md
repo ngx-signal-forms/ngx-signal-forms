@@ -168,12 +168,17 @@ a theming token, but configured through `NGX_SIGNAL_FORMS_CONFIG.errorPrefixText
 / `warningPrefixText`. See "Telling errors and warnings apart without
 colour" in `../assistive/README.md`.
 
-The `--ngx-signal-form-error-icon` / `--ngx-signal-form-warning-icon` hook
-is a plain `content` value, not the `content: <value> / "<alt-text>"` form:
-once a consumer sets a real icon glyph, it is exposed to assistive tech as
-generated content (a normal characteristic of CSS `::before`/`::after`, not
-something this hook suppresses). The prefix above always carries the
-accessible distinction — keep any custom icon a supplementary visual cue.
+Once a consumer sets a real icon glyph, it is exposed to assistive tech as
+generated content — a normal characteristic of CSS `::before`/`::after`,
+not something this hook suppresses. The prefix above always carries the
+accessible distinction, so keep any custom icon a supplementary visual
+cue. To make a specific icon decorative, add empty alt text inside the
+variable's own value: `--ngx-signal-form-error-icon: '⛔' / '';`. The
+toolkit's own hook stays the plain `content: var(--icon, none)` form (no
+alt text) because `dom-accessibility-api` — the library behind this
+package's `toHaveAccessibleDescription` specs — mis-parses `content:
+<value> / ''` and reports a stray `" / "` token that real Chromium never
+announces.
 
 ### Hints
 

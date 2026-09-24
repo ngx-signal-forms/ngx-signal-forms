@@ -147,6 +147,20 @@ tech the same as any other CSS-generated content — keep it a supplementary
 visual cue. The accessible distinction always comes from the visually
 hidden prefix above, not from this icon.
 
+To make a specific icon decorative, add empty alt text inside the
+variable's own value instead:
+
+```css
+ngx-form-field-error {
+  --ngx-signal-form-error-icon: '⛔' / '';
+}
+```
+
+The toolkit's own hook stays the plain `content: var(--icon, none)` form
+(no alt text). Its accessible-description test suite runs through
+`dom-accessibility-api`, which mis-parses `content: <value> / ''` and
+reports a stray `" / "` token that real Chromium never announces.
+
 ### NgxFormFieldErrorSummary
 
 Form-level error summary with clickable entries that focus the invalid control.
