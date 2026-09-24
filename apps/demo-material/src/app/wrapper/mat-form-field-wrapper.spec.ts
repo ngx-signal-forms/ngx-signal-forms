@@ -340,8 +340,13 @@ describe('MatFormFieldWrapper warning timing (#506)', () => {
     // so it stayed `false` until submit regardless of `warningStrategy`.
     // With the independent warning cascade (ADR-0007), `warningStrategy`
     // alone decides this, so the warning appears immediately.
-    await waitFor(() => {
-      expect(wrapper.warningVisible()).toBe(true);
-    });
+    //
+    // `waitFor` re-runs change detection on every poll, and this wrapper
+    // writes attributes on every render — under a reverted fix that keeps
+    // `warningVisible()` permanently `false`, that combination starves the
+    // event loop and `waitFor` never times out (not even `--testTimeout`).
+    // A single `whenStable()` + direct assertion fails fast instead.
+    await view.fixture.whenStable();
+    expect(wrapper.warningVisible()).toBe(true);
   });
 });

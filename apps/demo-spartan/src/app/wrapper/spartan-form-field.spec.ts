@@ -19,7 +19,7 @@ import {
 } from '@ngx-signal-forms/toolkit';
 import { HlmInput } from '@spartan-ng/helm/input';
 import { HlmLabel } from '@spartan-ng/helm/label';
-import { render, screen, waitFor } from '@testing-library/angular';
+import { render, screen } from '@testing-library/angular';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it } from 'vitest';
 import { provideNgxSpartanForms } from './index';
@@ -118,9 +118,14 @@ describe('NgxSpartanFormField warning timing (#506)', () => {
     // `effectiveWarningStrategy` — independent of the blocking-error
     // cascade (ADR-0007). It resolves `warningStrategy="immediate"` and
     // shows before submit regardless of the form's on-submit error timing.
-    await waitFor(() => {
-      expect(wrapper.warningVisible()).toBe(true);
-    });
+    //
+    // `waitFor` re-runs change detection on every poll, and this wrapper
+    // writes attributes on every render — under a reverted fix that keeps
+    // `warningVisible()` permanently `false`, that combination starves the
+    // event loop and `waitFor` never times out (not even `--testTimeout`).
+    // A single `whenStable()` + direct assertion fails fast instead.
+    await view.fixture.whenStable();
+    expect(wrapper.warningVisible()).toBe(true);
   });
 });
 
@@ -273,9 +278,14 @@ describe('NgxSpartanFormField does not suppress a warning-only field (#506 C2)',
     await user.type(nicknameInput, 'Al');
     await user.tab();
 
-    await waitFor(() => {
-      expect(wrapper.warningVisible()).toBe(true);
-    });
+    // `waitFor` re-runs change detection on every poll, and this wrapper
+    // writes attributes on every render — under a reverted fix that keeps
+    // `warningVisible()` permanently `false` (the warning suppressing
+    // itself), that combination starves the event loop and `waitFor`
+    // never times out (not even `--testTimeout`). A single `whenStable()`
+    // + direct assertion fails fast instead.
+    await view.fixture.whenStable();
+    expect(wrapper.warningVisible()).toBe(true);
   });
 });
 
@@ -314,9 +324,13 @@ describe('NgxSpartanFormField toolkitAriaDescribedBy tracks the warning region (
     // false (errorStrategy="on-submit", unsubmitted).
     await user.type(nicknameInput, 'Al');
 
-    await waitFor(() => {
-      expect(wrapper.warningVisible()).toBe(true);
-      expect(wrapper.toolkitAriaDescribedBy()).toContain('nickname-warning');
-    });
+    // `waitFor` re-runs change detection on every poll, and this wrapper
+    // writes attributes on every render — under a reverted fix that keeps
+    // the composed id permanently missing, that combination starves the
+    // event loop and `waitFor` never times out (not even `--testTimeout`).
+    // A single `whenStable()` + direct assertions fail fast instead.
+    await view.fixture.whenStable();
+    expect(wrapper.warningVisible()).toBe(true);
+    expect(wrapper.toolkitAriaDescribedBy()).toContain('nickname-warning');
   });
 });
