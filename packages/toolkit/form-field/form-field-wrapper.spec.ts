@@ -4577,7 +4577,9 @@ describe('NgxSignalFormWrapperComponent', () => {
       // Locking in the darker default in the CSS source protects consumers
       // who do not override `--ngx-form-field-color-warning` themselves.
       // Runtime resolution is covered by the browser-mode and e2e suites.
-      expect(wrapperCssSource).toMatch(/--_field-clr-warning:\s*#a16207\b/);
+      expect(wrapperCssSource).toMatch(
+        /--_field-clr-warning:\s*light-dark\(\s*#a16207\b/,
+      );
     });
   });
 

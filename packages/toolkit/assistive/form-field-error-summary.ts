@@ -207,12 +207,18 @@ export type NgxErrorSummaryHeadingLevel = 2 | 3 | 4 | 5 | 6;
       display: block;
     }
 
+    /* Default colors are light-dark() pairs that follow the inherited
+     * color-scheme (see THEMING.md, "Scenario C: Dark Mode"). Dark side, WCAG 1.4.3 on
+     * the #450a0a summary background: label #fecaca 11.16:1, link #fca5a5
+     * 8.51:1. Non-text (1.4.11): focus ring #60a5fa 6.35:1, border
+     * #f87171 5.31:1 on the #1f2937 dark surface. */
     .ngx-form-field-error-summary {
-      border: 2px solid var(--ngx-error-summary-border-color, #dc2626);
+      border: 2px solid
+        var(--ngx-error-summary-border-color, light-dark(#dc2626, #f87171));
       border-radius: 0.375rem;
       padding: 1rem;
       margin-block: 1rem;
-      background: var(--ngx-error-summary-bg, #fef2f2);
+      background: var(--ngx-error-summary-bg, light-dark(#fef2f2, #450a0a));
     }
 
     /* Empty live-region shell: the @if in the template guarantees zero
@@ -233,7 +239,7 @@ export type NgxErrorSummaryHeadingLevel = 2 | 3 | 4 | 5 | 6;
       margin: 0 0 0.5rem;
       font: inherit;
       font-weight: 600;
-      color: var(--ngx-error-summary-label-color, #991b1b);
+      color: var(--ngx-error-summary-label-color, light-dark(#991b1b, #fecaca));
     }
 
     .ngx-form-field-error-summary__list {
@@ -266,16 +272,20 @@ export type NgxErrorSummaryHeadingLevel = 2 | 3 | 4 | 5 | 6;
       /* #b91c1c (Tailwind red-700) on the #fef2f2 summary background
        * resolves to ~5.9:1, clearing the WCAG 1.4.3 AA minimum of 4.5:1 for
        * this 14px text -- the previous #dc2626 default only reached ~4.4:1. */
-      color: var(--ngx-error-summary-link-color, #b91c1c);
+      color: var(--ngx-error-summary-link-color, light-dark(#b91c1c, #fca5a5));
       text-decoration: underline;
       font-size: 0.875rem;
 
       &:hover {
-        color: var(--ngx-error-summary-link-hover-color, #991b1b);
+        color: var(
+          --ngx-error-summary-link-hover-color,
+          light-dark(#991b1b, #fecaca)
+        );
       }
 
       &:focus-visible {
-        outline: 2px solid var(--ngx-error-summary-focus-color, #2563eb);
+        outline: 2px solid
+          var(--ngx-error-summary-focus-color, light-dark(#2563eb, #60a5fa));
         outline-offset: 2px;
         border-radius: 2px;
       }

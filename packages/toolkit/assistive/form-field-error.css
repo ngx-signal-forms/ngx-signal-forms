@@ -15,11 +15,12 @@
   --_error-space-0: 0;
   --_error-space-2xs: 0.25rem;
 
-  /* WCAG 1.4.3 (AA): #a16207 keeps warning text >= 4.5:1 on white. */
-  --_error-clr-danger: #db1818;
-  --_error-clr-warning: #a16207;
-  --_error-clr-danger-dark: #fca5a5;
-  --_error-clr-warning-dark: #fcd34d;
+  /* light-dark(<light>, <dark>) pairs follow the element's used */
+  /* `color-scheme` (see THEMING.md, "Scenario C: Dark Mode"). WCAG 1.4.3 (AA): */
+  /* #db1818 is 5.05:1 and #a16207 is 4.92:1 on white; #fca5a5 is 7.73:1 */
+  /* and #fcd34d is 10.18:1 on the dark surface (#1f2937). */
+  --_error-clr-danger: light-dark(#db1818, #fca5a5);
+  --_error-clr-warning: light-dark(#a16207, #fcd34d);
 
   --_error-token-transparent: transparent;
   --_error-border-width-default: 0;
@@ -108,22 +109,6 @@
  * documented on the template. */
 :host(.ngx-form-field-error-host--empty) {
   margin-top: 0;
-}
-
-/* Dark-mode defaults are driven by `prefers-color-scheme` only. An earlier
- * revision also tried to special-case a `.dark` class ancestor via
- * `:host-context()`, but that selector is non-standard and unsupported in
- * Firefox and Safari — the three engines disagreed on the resulting colors
- * (see the v1.0.0 accessibility audit), risking WCAG 1.4.3 contrast
- * failures. Class-based ("`.dark` on `<html>`/`<body>`") theming strategies
- * are not detectable in plain CSS without `:host-context()`; apps using that
- * strategy must override the public `--ngx-signal-form-error-color` /
- * `--ngx-signal-form-warning-color` custom properties directly (see README). */
-@media (prefers-color-scheme: dark) {
-  :host {
-    --_error-clr-danger: var(--_error-clr-danger-dark);
-    --_error-clr-warning: var(--_error-clr-warning-dark);
-  }
 }
 
 .ngx-form-field-error {
@@ -268,14 +253,11 @@
 :host([data-presentation='panel']) {
   --_error-panel-space-2xs: 0.25rem;
   --_error-panel-space-lg: 1rem;
-  --_error-panel-clr-danger-soft: #fdebeb;
-  --_error-panel-clr-danger-soft-dark: rgb(127 29 29 / 0.32);
-  --_error-panel-clr-warning-soft: color-mix(
-    in srgb,
-    var(--_error-clr-warning) 10%,
-    white
+  --_error-panel-clr-danger-soft: light-dark(#fdebeb, rgb(127 29 29 / 0.32));
+  --_error-panel-clr-warning-soft: light-dark(
+    color-mix(in srgb, #a16207 10%, white),
+    rgb(120 53 15 / 0.28)
   );
-  --_error-panel-clr-warning-soft-dark: rgb(120 53 15 / 0.28);
   --_error-panel-motion-duration: 180ms;
   --_error-panel-motion-easing: cubic-bezier(0.2, 0.8, 0.2, 1);
   --_error-panel-motion-distance: 0.25rem;
@@ -315,9 +297,11 @@
 
   /* Panel text needs its own, darker tone colors: the inline defaults
      (#db1818 / #a16207) meet WCAG 1.4.3 on the page background but land
-     just under 4.5:1 on the panel's tinted soft backgrounds. */
-  --_error-panel-clr-danger-strong: #b91c1c;
-  --_error-panel-clr-warning-strong: #92400e;
+     just under 4.5:1 on the panel's tinted soft backgrounds. The dark
+     side reuses the inline dark colors: #fca5a5 is 7.33:1 and #fcd34d is
+     9.28:1 on the dark soft backgrounds over #1f2937. */
+  --_error-panel-clr-danger-strong: light-dark(#b91c1c, #fca5a5);
+  --_error-panel-clr-warning-strong: light-dark(#92400e, #fcd34d);
   --_error-color: var(
     --ngx-signal-form-error-panel-color,
     var(--_error-panel-clr-danger-strong)
@@ -326,15 +310,6 @@
     --ngx-signal-form-warning-panel-color,
     var(--_error-panel-clr-warning-strong)
   );
-}
-
-@media (prefers-color-scheme: dark) {
-  :host([data-presentation='panel']) {
-    --_error-panel-clr-danger-soft: var(--_error-panel-clr-danger-soft-dark);
-    --_error-panel-clr-warning-soft: var(--_error-panel-clr-warning-soft-dark);
-    --_error-panel-clr-danger-strong: var(--_error-clr-danger-dark);
-    --_error-panel-clr-warning-strong: var(--_error-clr-warning-dark);
-  }
 }
 
 :host([data-presentation='panel']) .ngx-form-field-error {

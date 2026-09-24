@@ -58,30 +58,38 @@
 /* Use semantic names without framework-specific terminology. */
 
 :host {
-  /* Color tokens */
-  --_field-clr-primary: #007bc7; /* Focus/interactive states */
-  --_field-clr-danger: #db1818; /* Error/invalid states */
+  /* Color tokens: light-dark(<light>, <dark>) pairs. The browser picks the */
+  /* side that matches the element's used `color-scheme`, which the app */
+  /* declares (see THEMING.md, "Scenario C: Dark Mode"). No declaration means light. */
+  /* Dark values are measured against the dark surface (#1f2937). */
+  --_field-clr-primary: light-dark(
+    #007bc7,
+    #60a5fa
+  ); /* Focus/interactive states (4.51:1 on white, 5.77:1 on #1f2937) */
+  --_field-clr-danger: light-dark(
+    #db1818,
+    #fca5a5
+  ); /* Error/invalid states (5.05:1 on white, 7.73:1 on #1f2937) */
   /* Tailwind amber-700 (#a16207) — chosen over the previous #f59e0b (amber-500, */
   /* 2.16:1 on white) so warning text meets WCAG 2.2 AA contrast (4.5:1 on */
   /* white). Borders/icons would have been fine at the lighter shade, but this */
-  /* token also drives warning message text. ~5.17:1 on #ffffff. */
-  --_field-clr-warning: #a16207; /* Warning states (amber-700, AA contrast) */
-  --_field-clr-text: #324155; /* Primary text color */
-  --_field-clr-text-secondary: rgba(
-    50,
-    65,
-    85,
-    0.75
-  ); /* Labels, hints, placeholders */
-  --_field-clr-surface: #ffffff; /* Input background */
-  --_field-clr-border: rgba(
-    50,
-    65,
-    85,
-    0.7
-  ); /* Default border (>= 3:1 on white, #f9fafb, #f3f4f6, #e5e7eb) */
-  --_field-clr-border-hover: #324155; /* Hover border */
-  --_field-clr-disabled: #f3f4f6; /* Disabled background */
+  /* token also drives warning message text. ~4.92:1 on #ffffff. */
+  --_field-clr-warning: light-dark(
+    #a16207,
+    #fcd34d
+  ); /* Warning states (10.18:1 on #1f2937) */
+  --_field-clr-text: light-dark(#324155, #f9fafb); /* Primary text color */
+  --_field-clr-text-secondary: light-dark(
+    rgba(50, 65, 85, 0.75),
+    rgba(249, 250, 251, 0.75)
+  ); /* Labels, hints, placeholders (4.99:1 on white, 8.54:1 on #1f2937) */
+  --_field-clr-surface: light-dark(#ffffff, #1f2937); /* Input background */
+  --_field-clr-border: light-dark(
+    rgba(50, 65, 85, 0.7),
+    rgba(249, 250, 251, 0.4)
+  ); /* Default border (>= 3:1 on white, #f9fafb, #f3f4f6, #e5e7eb; 3.51:1 on #1f2937) */
+  --_field-clr-border-hover: light-dark(#324155, #f9fafb); /* Hover border */
+  --_field-clr-disabled: light-dark(#f3f4f6, #111827); /* Disabled background */
 
   /* Spacing scale (rem for accessibility) */
   --_field-space-3xs: 0.125rem; /* 2px - tight gaps */
@@ -125,71 +133,6 @@
   --_field-line-height-m: var(--_field-line-height-body);
   --_field-clr-text-muted: var(--_field-clr-text-secondary);
   --_field-clr-text-subtle: var(--_field-clr-text-secondary);
-}
-
-/* Dark mode overrides (respects system preference) */
-@media (prefers-color-scheme: dark) {
-  :host {
-    --_field-clr-primary: #60a5fa; /* Lighter blue for dark bg */
-    --_field-clr-danger: #fca5a5; /* Lighter red for dark bg */
-    --_field-clr-warning: #fcd34d; /* Lighter amber for dark bg */
-    --_field-clr-text: #f9fafb; /* Almost white - main text */
-    --_field-clr-text-secondary: rgba(
-      249,
-      250,
-      251,
-      0.75
-    ); /* Light text/secondary */
-    --_field-clr-surface: #1f2937; /* Dark gray - backgrounds */
-    --_field-clr-border: rgba(
-      249,
-      250,
-      251,
-      0.4
-    ); /* Light border (>= 3:1 on dark surface) */
-    --_field-clr-border-hover: #f9fafb;
-    --_field-clr-disabled: #111827;
-  }
-}
-
-/* Light mode override (when app explicitly sets light theme against OS dark preference) */
-@media (prefers-color-scheme: dark) {
-  :host-context(:root:not(.dark)) {
-    --_field-clr-primary: #007bc7;
-    --_field-clr-danger: #db1818;
-    /* Mirror the light-mode :host default (amber-700) for AA-on-white contrast. */
-    --_field-clr-warning: #a16207;
-    --_field-clr-text: #324155;
-    --_field-clr-text-secondary: rgba(50, 65, 85, 0.75);
-    --_field-clr-surface: #ffffff;
-    --_field-clr-border: rgba(50, 65, 85, 0.7);
-    --_field-clr-border-hover: #324155;
-    --_field-clr-disabled: #f3f4f6;
-  }
-}
-
-/* Explicit dark theme override (activated by the demo theme switcher) */
-/* Kept separate from prefers-color-scheme so manual theme selection wins. */
-:host-context(.dark) {
-  --_field-clr-primary: #60a5fa; /* Lighter blue for dark bg */
-  --_field-clr-danger: #fca5a5; /* Lighter red for dark bg */
-  --_field-clr-warning: #fcd34d; /* Lighter amber for dark bg */
-  --_field-clr-text: #f9fafb; /* Almost white - main text */
-  --_field-clr-text-secondary: rgba(
-    249,
-    250,
-    251,
-    0.75
-  ); /* Light text/secondary */
-  --_field-clr-surface: #1f2937; /* Dark gray - backgrounds */
-  --_field-clr-border: rgba(
-    249,
-    250,
-    251,
-    0.4
-  ); /* Light border (>= 3:1 on dark surface) */
-  --_field-clr-border-hover: #f9fafb;
-  --_field-clr-disabled: #111827;
 }
 
 /* ============================================================================ */
