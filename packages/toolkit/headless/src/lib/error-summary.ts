@@ -80,7 +80,9 @@ export interface ErrorSummarySignals {
  * ## Features
  *
  * - **Angular-native**: Uses `errorSummary()` — never reimplements validation traversal
- * - **Click-to-focus**: Each entry exposes a `focus()` method via `focusBoundControl()`
+ * - **Click-to-focus**: Each entry exposes a `focus()` method via `focusBoundControl()`,
+ *   and a `canFocus` flag — `false` when the error has no bound field, so `focus()`
+ *   would be a silent no-op. Render such an entry as plain text, not a button.
  * - **Strategy-aware**: Respects error display strategy from form context
  * - **Warning support**: Separates blocking errors from warnings
  * - **Message resolution**: 3-tier message priority (validator, registry, default)
@@ -103,9 +105,13 @@ export interface ErrorSummarySignals {
  *     @if (summary.shouldShow() && summary.hasErrors()) {
  *       @for (entry of summary.entries(); track entry.kind + entry.fieldName) {
  *         <li>
- *           <button type="button" (click)="entry.focus()">
- *             {{ entry.fieldName }}: {{ entry.message }}
- *           </button>
+ *           @if (entry.canFocus) {
+ *             <button type="button" (click)="entry.focus()">
+ *               {{ entry.fieldName }}: {{ entry.message }}
+ *             </button>
+ *           } @else {
+ *             <span>{{ entry.fieldName }}: {{ entry.message }}</span>
+ *           }
  *         </li>
  *       }
  *     }

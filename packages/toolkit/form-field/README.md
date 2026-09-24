@@ -511,7 +511,7 @@ Quick example:
 ```css
 :root {
   --ngx-form-field-focus-color: #007bc7;
-  --ngx-form-field-color-border: rgba(50, 65, 85, 0.25);
+  --ngx-form-field-color-border: rgba(50, 65, 85, 0.7);
   --ngx-signal-form-error-color: #db1818;
   --ngx-signal-form-feedback-font-size: 0.75rem;
 }
