@@ -37,6 +37,32 @@ const contentOf = (container: Element): HTMLElement => {
   return content;
 };
 
+/**
+ * WCAG relative luminance and contrast ratio (the same formula the toolkit's
+ * own design comments use to justify its color defaults). Takes a computed
+ * `rgb(r, g, b)` string, as `getComputedStyle` returns it.
+ */
+const relativeLuminance = (rgb: string): number => {
+  const match = /rgb\((\d+), (\d+), (\d+)\)/u.exec(rgb);
+  if (!match) {
+    throw new Error(`Expected a computed "rgb(r, g, b)" color, got "${rgb}".`);
+  }
+  const [r, g, b] = [match[1], match[2], match[3]].map((channel) => {
+    const fraction = Number(channel) / 255;
+    return fraction <= 0.03928
+      ? fraction / 12.92
+      : ((fraction + 0.055) / 1.055) ** 2.4;
+  });
+  return 0.2126 * r! + 0.7152 * g! + 0.0722 * b!;
+};
+
+const contrastRatio = (foreground: string, background: string): number => {
+  const l1 = relativeLuminance(foreground);
+  const l2 = relativeLuminance(background);
+  const [lighter, darker] = l1 > l2 ? [l1, l2] : [l2, l1];
+  return (lighter + 0.05) / (darker + 0.05);
+};
+
 describe('NgxFormFieldWrapper — state focus outline contrast (#495)', () => {
   const focusColor = 'rgb(120, 0, 80)'; // non-default, so a match proves the token is used
 
@@ -44,15 +70,21 @@ describe('NgxFormFieldWrapper — state focus outline contrast (#495)', () => {
     selector: 'ngx-test-invalid-focus-outline',
     imports: [NgxFormFieldWrapper, NgxFormFieldError, FormField],
     template: `
-      <button type="button" id="anchor">Before</button>
-      <ngx-form-field-wrapper
-        appearance="outline"
-        [formField]="field.username"
-        fieldName="username"
-      >
-        <label for="username">Username</label>
-        <input id="username" [formField]="field.username" />
-      </ngx-form-field-wrapper>
+      <div id="page" style="background-color: #ffffff; padding: 1rem;">
+        <button type="button" id="anchor">Before</button>
+        <ngx-form-field-wrapper
+          appearance="outline"
+          [formField]="field.username"
+          fieldName="username"
+        >
+          <label for="username">Username</label>
+          <input id="username" [formField]="field.username" />
+          <ngx-form-field-error
+            [formField]="field.username"
+            fieldName="username"
+          />
+        </ngx-form-field-wrapper>
+      </div>
     `,
   })
   class InvalidFocusOutlineComponent {
@@ -76,6 +108,10 @@ describe('NgxFormFieldWrapper — state focus outline contrast (#495)', () => {
       >
         <label for="username">Username</label>
         <input id="username" [formField]="field.username" />
+        <ngx-form-field-error
+          [formField]="field.username"
+          fieldName="username"
+        />
       </ngx-form-field-wrapper>
     `,
   })
@@ -131,6 +167,28 @@ describe('NgxFormFieldWrapper — state focus outline contrast (#495)', () => {
     // The border keeps signaling the invalid state — the outline is an
     // additional, higher-contrast focus signal, not a replacement for it.
     expect(styles.borderColor).not.toBe(focusColor);
+  });
+
+  it('meets 3:1 outline contrast against the page background with the default focus color', async () => {
+    const { container } = await render(InvalidFocusOutlineComponent);
+    // No `--ngx-form-field-focus-color` override here — this exercises the
+    // shipped default (`#007bc7`), not a test-only stand-in.
+
+    const input = page.getByRole('textbox', { name: 'Username' });
+    await userEvent.click(input.element());
+    await userEvent.tab();
+
+    await tabIntoInput(container);
+    expect(document.activeElement).toBe(input.element());
+
+    const outlineColor = getComputedStyle(contentOf(container)).outlineColor;
+    const pageBackground = getComputedStyle(
+      container.querySelector<HTMLElement>('#page')!,
+    ).backgroundColor;
+
+    expect(contrastRatio(outlineColor, pageBackground)).toBeGreaterThanOrEqual(
+      3,
+    );
   });
 
   it('draws the same solid outline on a focused warning field', async () => {

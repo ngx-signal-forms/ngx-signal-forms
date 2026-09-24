@@ -639,17 +639,17 @@ The form field wrapper supports three appearance modes via the `appearance` inpu
 
 **Start here.** Changing these variables will automatically update focus rings, borders, text, and backgrounds across all states.
 
-| Property                                | Default                  | Used For                                                          |
-| :-------------------------------------- | :----------------------- | :---------------------------------------------------------------- |
-| `--ngx-form-field-color-primary`        | `#007bc7`                | Focus states, active borders                                      |
-| `--ngx-form-field-color-error`          | `#db1818`                | Invalid states, required markers                                  |
-| `--ngx-form-field-color-warning`        | `#a16207`                | Warning states                                                    |
-| `--ngx-form-field-color-text`           | `#324155`                | Input text                                                        |
-| `--ngx-form-field-color-text-secondary` | `rgba(50, 65, 85, 0.75)` | Labels, placeholders, hints                                       |
-| `--ngx-form-field-color-surface`        | `#ffffff`                | Input background                                                  |
-| `--ngx-form-field-color-border`         | `rgba(50, 65, 85, 0.6)`  | Default borders (>= 3:1 on the field surface and page background) |
-| `--ngx-form-field-color-border-hover`   | `#324155`                | Hover borders                                                     |
-| `--ngx-form-field-color-disabled`       | `#f3f4f6`                | Disabled background                                               |
+| Property                                | Default                  | Used For                                                                                                                                              |
+| :-------------------------------------- | :----------------------- | :---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `--ngx-form-field-color-primary`        | `#007bc7`                | Focus states, active borders                                                                                                                          |
+| `--ngx-form-field-color-error`          | `#db1818`                | Invalid states, required markers                                                                                                                      |
+| `--ngx-form-field-color-warning`        | `#a16207`                | Warning states                                                                                                                                        |
+| `--ngx-form-field-color-text`           | `#324155`                | Input text                                                                                                                                            |
+| `--ngx-form-field-color-text-secondary` | `rgba(50, 65, 85, 0.75)` | Labels, placeholders, hints                                                                                                                           |
+| `--ngx-form-field-color-surface`        | `#ffffff`                | Input background                                                                                                                                      |
+| `--ngx-form-field-color-border`         | `rgba(50, 65, 85, 0.7)`  | Default borders (>= 3:1 against white, `#f9fafb`, `#f3f4f6`, and `#e5e7eb` — the input surface and the page/card backgrounds it was measured against) |
+| `--ngx-form-field-color-border-hover`   | `#324155`                | Hover borders                                                                                                                                         |
+| `--ngx-form-field-color-disabled`       | `#f3f4f6`                | Disabled background                                                                                                                                   |
 
 ### Specific Overrides
 
@@ -843,16 +843,20 @@ A focused textual field draws a solid, offset outline in the focus color on
 the container, for every state (valid, invalid, warning). This is the
 field's guaranteed-contrast focus signal (WCAG 2.2 SC 1.4.11, SC 2.4.7). The
 2px offset keeps the outline clear of the state-colored border, so its
-contrast is measured against the page background (>= 3:1 with the default
-focus color), not against the adjacent border color. The plain layout
+contrast is measured against the page background — with the default focus
+color (`#007bc7`), 4.51:1 against white, dropping to 3.64:1 against a
+darker background such as `#e5e7eb` — not against the adjacent border
+color. The plain layout
 suppresses this container outline and relies on its own input-level outline
 instead (see [Plain layout](#plain-layout-appearanceplain)), so a plain
 field never shows two outlines at once.
 
-The invalid and warning states also keep a box-shadow ring token for
-backward compatibility, but it now defaults to `none`. Left on, it would
-double up with the new outline. Set `--ngx-form-field-invalid-box-shadow` or
-`--ngx-form-field-warning-box-shadow` to bring the ring back.
+The invalid and warning states also have their own box-shadow ring token —
+`--ngx-form-field-invalid-box-shadow` (new) and
+`--ngx-form-field-warning-box-shadow` (existing, default changed) — but both
+default to `none`. Left at their old low-opacity default, the ring would
+double up visually with the new outline. Set either token to bring the ring
+back.
 
 | Property                                | Default                                                             | Description                                                                                  |
 | :-------------------------------------- | :------------------------------------------------------------------ | :------------------------------------------------------------------------------------------- |

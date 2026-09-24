@@ -13,7 +13,7 @@
 /* - Creates a clean API without exposing internal token names */
 /* - Allows consumers to override specific values while preserving defaults */
 /* Design token reference values (light mode): */
-/* - Border: rgba(50, 65, 85, 0.6) (>= 3:1 on white), hover: #324155 */
+/* - Border: rgba(50, 65, 85, 0.7) (>= 3:1 on white, #f9fafb, #f3f4f6, #e5e7eb), hover: #324155 */
 /* - Focus: #007bc7 with 4px spread */
 /* - Error: #db1818 */
 /* - Text primary: #324155, secondary: rgba(50, 65, 85, 0.75) */
@@ -78,8 +78,8 @@
     50,
     65,
     85,
-    0.6
-  ); /* Default border (>= 3:1 on white, #495) */
+    0.7
+  ); /* Default border (>= 3:1 on white, #f9fafb, #f3f4f6, #e5e7eb) */
   --_field-clr-border-hover: #324155; /* Hover border */
   --_field-clr-disabled: #f3f4f6; /* Disabled background */
 
@@ -146,7 +146,7 @@
       250,
       251,
       0.4
-    ); /* Light border (>= 3:1 on dark surface, #495) */
+    ); /* Light border (>= 3:1 on dark surface) */
     --_field-clr-border-hover: #f9fafb;
     --_field-clr-disabled: #111827;
   }
@@ -162,7 +162,7 @@
     --_field-clr-text: #324155;
     --_field-clr-text-secondary: rgba(50, 65, 85, 0.75);
     --_field-clr-surface: #ffffff;
-    --_field-clr-border: rgba(50, 65, 85, 0.6);
+    --_field-clr-border: rgba(50, 65, 85, 0.7);
     --_field-clr-border-hover: #324155;
     --_field-clr-disabled: #f3f4f6;
   }
@@ -187,7 +187,7 @@
     250,
     251,
     0.4
-  ); /* Light border (>= 3:1 on dark surface, #495) */
+  ); /* Light border (>= 3:1 on dark surface) */
   --_field-clr-border-hover: #f9fafb;
   --_field-clr-disabled: #111827;
 }
@@ -401,14 +401,14 @@
   /* Focused invalid/warning fields draw a solid outline (below) instead of
      this soft ring — see the outline tokens further down. The ring tokens
      default to `none` so the two focus signals don't overlap, but they stay
-     public and overridable for consumers who want the ring back (#495). */
+     public and overridable for consumers who want the ring back. */
   --_invalid-color: var(--ngx-form-field-invalid-color, var(--_color-error));
   --_invalid-box-shadow: var(--ngx-form-field-invalid-box-shadow, none);
   --_warning-color: var(--ngx-form-field-warning-color, var(--_color-warning));
   --_warning-box-shadow: var(--ngx-form-field-warning-box-shadow, none);
-  /* Solid focus outline (#495): the sole guaranteed-contrast focus signal
-     for valid, invalid and warning textual fields. Offset keeps it clear of
-     the state-colored border so its contrast is measured against the page
+  /* Solid focus outline: the sole guaranteed-contrast focus signal for
+     valid, invalid and warning textual fields. Offset keeps it clear of the
+     state-colored border so its contrast is measured against the page
      background, not the adjacent border color. */
   --_focus-outline-width: var(--ngx-form-field-focus-outline-width, 2px);
   --_focus-outline-offset: var(--ngx-form-field-focus-outline-offset, 2px);
@@ -577,11 +577,13 @@
   &:focus-within {
     border-color: var(--_focus-color);
     box-shadow: var(--_focus-box-shadow);
-    /* Solid outline (#495): the state-color border (invalid/warning) stays
+    /* Solid outline: the state-color border (invalid/warning) stays
        unfocused-looking on its own, so the outline is what actually shows
-       the field is focused. It applies to every state — this rule is the
-       only one that sets `outline` for standard/outline textual fields;
-       invalid/warning don't override it. */
+       the field is focused. It applies to every state — the invalid and
+       warning rules below don't set `outline`, so this declaration reaches
+       them unchanged. The plain appearance is the one exception: it
+       overrides `outline` back to `none` in `form-field-wrapper.selection.css`
+       and relies on its own input-level outline instead (see `#493`). */
     outline: var(--_focus-outline-width) solid var(--_focus-color);
     outline-offset: var(--_focus-outline-offset);
   }

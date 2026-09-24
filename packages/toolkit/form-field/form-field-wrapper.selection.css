@@ -380,9 +380,9 @@
     &:focus-within {
       border-color: transparent;
       box-shadow: none;
-      /* The shared focus rule in `form-field-wrapper.css` (#495) puts a
-         solid outline on every textual field's container. Plain already
-         draws its own outline on the input itself (#493) — drop the
+      /* The shared focus rule in `form-field-wrapper.css` puts a solid
+         outline on every textual field's container. Plain already draws
+         its own outline on the input itself (`#493`) — drop the
          container's copy so a plain field doesn't show two outlines. */
       outline: none;
     }
