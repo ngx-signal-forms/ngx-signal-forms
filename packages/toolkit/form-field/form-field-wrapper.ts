@@ -47,7 +47,6 @@ import {
   NgxFieldIdentity,
   NgxFieldIdentityProvider,
   devWarnOnce,
-  isElementCssVisible,
   isFieldStateRequired,
   isHtmlElement,
   type WarnOnceRef,
@@ -621,6 +620,18 @@ export class NgxFormFieldWrapper<TValue = unknown> {
    */
   readonly #inputElementId = signal<string | null>(null);
   readonly #boundControlElement = signal<HTMLElement | null>(null);
+
+  /**
+   * Caches for the `__main` slot and the projected label element. They
+   * mirror `#boundControlElement`'s role for the bound control. Plain
+   * fields, not signals: nothing outside the `earlyRead`/`write` pair below
+   * reads them, so there is no reason to pay for change-detection tracking.
+   * Read and written only inside `afterEveryRender`. See
+   * `readFormFieldWrapperDomSnapshot`'s cache-hit checks for why reusing
+   * these skips a `querySelector` call on most renders.
+   */
+  #cachedMainSlot: HTMLElement | null = null;
+  #cachedLabel: Element | null = null;
 
   /**
    * Tracks whether the bound control is required, mirroring what the previous
@@ -1216,11 +1227,14 @@ export class NgxFormFieldWrapper<TValue = unknown> {
     // - write: update signals only when values changed, then write data-signal-field
     //
     // `afterEveryRender` (not `afterNextRender`) is deliberate: the projected
-    // `[formField]` control can be swapped at any render — `@if` branch flips,
-    // `@for` reorder, or a dynamic component swap — and we need to re-resolve
-    // it each time. The `cacheHit` check at the top of `earlyRead` keeps the
-    // steady-state cost to a handful of DOM attribute reads when nothing has
-    // changed; only a real swap falls through to `findBoundControl`.
+    // `[formField]` control can be swapped at any render. An `@if` branch
+    // flip, an `@for` reorder, or a dynamic component swap all need a
+    // re-resolve. The cache checks in `readFormFieldWrapperDomSnapshot` skip
+    // `findBoundControl` when nothing changed. A real swap still falls
+    // through to it. The steady-state render still runs one
+    // `querySelectorAll` for the selection-control count, because an `@for`
+    // can add or remove radios without swapping the control itself, and one
+    // `checkVisibility()` call for the bound control.
     afterEveryRender({
       earlyRead: () => {
         // Resolves the host element, the bound control (native binding
@@ -1232,12 +1246,23 @@ export class NgxFormFieldWrapper<TValue = unknown> {
           this.#boundControlElement(),
           this.#controlPresets,
           this.#fieldState(),
+          this.#cachedMainSlot,
+          this.#cachedLabel,
         );
       },
       // oxlint-disable-next-line @typescript-eslint/prefer-readonly-parameter-types -- afterEveryRender passes DOM-backed render state with mutable HTMLElement references.
       write: (renderState) => {
-        const { inputEl, inputId, semantics, selectionControlCount, label } =
-          renderState;
+        const {
+          inputEl,
+          inputId,
+          semantics,
+          selectionControlCount,
+          label,
+          mainSlot,
+          controlVisible,
+        } = renderState;
+        this.#cachedMainSlot = mainSlot;
+        this.#cachedLabel = label;
         const previousBoundControl = this.#boundControlElement();
 
         if (previousBoundControl !== inputEl) {
@@ -1329,19 +1354,25 @@ export class NgxFormFieldWrapper<TValue = unknown> {
         // selector), test discovery, and the assistive hint component for
         // screen-reader correlation. Skip the write when no field name can
         // be resolved — the attribute would otherwise hold the string
-        // `"null"` and mislead downstream DOM queries.
+        // `"null"` and mislead downstream DOM queries. Also skip the write
+        // when the attribute already holds the target value. `setAttribute`
+        // and `removeAttribute` mutate the DOM even when the value does not
+        // change, and that can trigger a `MutationObserver`.
         if (inputEl) {
           const fieldName = this.resolvedFieldName();
+          const currentFieldName = inputEl.getAttribute('data-signal-field');
           if (fieldName === null) {
-            inputEl.removeAttribute('data-signal-field');
-          } else {
+            if (currentFieldName !== null) {
+              inputEl.removeAttribute('data-signal-field');
+            }
+          } else if (currentFieldName !== fieldName) {
             inputEl.setAttribute('data-signal-field', fieldName);
           }
         }
 
         // Sync the shared NgxFieldIdentity service so auto-aria and any other
         // consumer always see the same field name, resolved strategies and
-        // hint ids. Auto-aria does NOT read the visibility flag written
+        // hint ids. Auto-aria does NOT read the visibility flag published
         // below — it probes its own host element in its own `earlyRead`
         // phase (ADR-0011 §4), which is more correct for a multi-control
         // cluster where one published flag cannot speak for every control.
@@ -1376,9 +1407,11 @@ export class NgxFormFieldWrapper<TValue = unknown> {
           this.effectiveStrategy(),
           this.effectiveWarningStrategy(),
         );
-        this.#fieldIdentity.setControlVisible(
-          inputEl ? isElementCssVisible(inputEl) : true,
-        );
+        // `controlVisible` was already resolved in `earlyRead`. See
+        // `readFormFieldWrapperDomSnapshot`'s `controlVisible` field. This
+        // avoids a forced style recalculation after other wrappers' writes
+        // have mutated the DOM.
+        this.#fieldIdentity.setControlVisible(controlVisible);
         this.#fieldIdentity.setHintIds(
           this.hintDescriptors()
             .filter(
