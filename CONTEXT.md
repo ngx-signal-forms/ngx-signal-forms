@@ -130,11 +130,16 @@ ngx-signal-forms — an Angular toolkit for working with Signal Forms.
   the same field suppresses them. Every warning-bearing surface routes
   through it: `NgxHeadlessErrorState`, `NgxHeadlessFieldset`,
   `NgxHeadlessErrorSummary` (and `NgxFormFieldErrorSummary` through it),
-  `createErrorState()` and `createErrorMessageSignal()`. Aggregate surfaces —
+  `createErrorState()`, `createErrorMessageSignal()`, `NgxFormFieldWrapper`,
+  and `NgxSignalFormAutoAria`. Aggregate surfaces —
   the fieldset and the summary — pass neither the presence check (their
   warnings live on member fields, and their aggregation applies that gate)
   nor a blocking-error visibility (an error on one member field must not
-  silence a warning on a sibling). The pure pipelines
+  silence a warning on a sibling). `NgxFormFieldWrapper` and
+  `NgxSignalFormAutoAria` also pass no blocking-error visibility, because
+  they suppress downstream: the wrapper's renderer through
+  `createErrorState()`, and auto-aria through its own blocking-error guard on
+  `aria-describedby`. Do not add it at those two call sites. The pure pipelines
   `createFieldsetAggregation()` and `createErrorSummaryEntries()` take
   `showErrors` and `showWarnings` as two separate pre-resolved signals for
   the same reason. The single cascade fixed the drift where

@@ -16,12 +16,6 @@ import {
   NGX_SIGNAL_FORM_HINT_REGISTRY,
   NGX_SIGNAL_FORMS_CONFIG,
 } from '../tokens';
-import { shouldShowWarnings } from '../utilities/error-strategies';
-import { injectFormContext } from '../utilities/inject-form-context';
-import {
-  resolveSubmittedStatusFromContext,
-  resolveWarningStrategyFromContext,
-} from '../utilities/resolve-strategy';
 import { createAriaInvalidSignal } from '../utilities/aria/create-aria-invalid-signal';
 import {
   generateErrorId,
@@ -30,9 +24,10 @@ import {
 } from '../utilities/field-resolution';
 import { devWarnOnce, type WarnOnceRef } from '../utilities/dev-warn-once';
 import { createErrorVisibility } from '../utilities/create-error-visibility';
+import { createWarningVisibility } from '../utilities/create-warning-visibility';
 import { createAriaDescribedBySignal } from '../utilities/aria/create-aria-described-by-signal';
 import { createHintIdsSignal } from '../utilities/aria/create-hint-ids-signal';
-import { isBlockingError, isWarningError } from '../utilities/warning-error';
+import { isBlockingError } from '../utilities/warning-error';
 import {
   isElementCssVisible,
   NgxFieldIdentity,
@@ -340,7 +335,6 @@ export class NgxSignalFormAutoAria {
     },
   );
 
-  readonly #formContext = injectFormContext();
   readonly #config =
     inject(NGX_SIGNAL_FORMS_CONFIG, { optional: true }) ??
     DEFAULT_NGX_SIGNAL_FORMS_CONFIG;
@@ -377,22 +371,28 @@ export class NgxSignalFormAutoAria {
       if (registryEntry) return registryEntry.warningContainerVisible();
     }
 
-    const fieldState = this.#resolveFieldState();
-    if (!fieldState) return false;
-
-    return shouldShowWarnings(
-      fieldState.errors().some(isWarningError),
-      fieldState.touched(),
-      publishedWarningStrategy ??
-        resolveWarningStrategyFromContext(
-          undefined,
-          this.#formContext,
-          this.#config.defaultWarningStrategy,
-        ),
-      resolveSubmittedStatusFromContext(undefined, this.#formContext) ??
-        'unsubmitted',
-    );
+    // `#ownWarningVisibilityByStrategy` already reads the published strategy
+    // and falls back to the ambient form context when it is null, so it
+    // covers both remaining branches.
+    return this.#ownWarningVisibilityByStrategy();
   });
+
+  /**
+   * Warning-channel counterpart to {@link #ownVisibilityByStrategy}. Routes
+   * through the shared `createWarningVisibility()` seam (ADR-0006, ADR-0007)
+   * instead of hand-inlining `resolveWarningStrategyFromContext` →
+   * `shouldShowWarnings`, keeping this directive's warning presence check on
+   * `readDirectErrors` rather than reading `fieldState.errors()` directly.
+   */
+  readonly #ownWarningVisibilityByStrategy = createWarningVisibility(
+    () => this.#resolveFieldState(),
+    {
+      strategy: computed(
+        () => this.#fieldIdentity?.resolvedWarningStrategy() ?? undefined,
+      ),
+      configDefault: this.#config.defaultWarningStrategy,
+    },
+  );
 
   /**
    * Hint IDs from the identity service when available, falling back to the
