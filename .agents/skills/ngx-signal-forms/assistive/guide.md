@@ -41,6 +41,9 @@ The assistive entry point provides accessible feedback rendering that sits betwe
    - Inherits `errorStrategy` and `submittedStatus` from `ngxSignalForm` context automatically — no extra wiring needed when used inside `form[formRoot][ngxSignalForm]`.
    - An entry is a focusable button that calls `focusBoundControl()` on click only when its error has a focusable target; otherwise it renders as plain text (a control with a no-op `focus()` would look interactive but do nothing).
    - The label renders as a native heading (`h2`–`h6`); `headingLevel` picks the level (default `2`).
+   - Inside `form[formRoot][ngxSignalForm]`, the summary announces alone after a submit. Field errors that the submit reveals render outside their `role="alert"` region, with the same id and look. Later edits announce through the field as usual.
+   - Place the summary inside the `<form>` for this. In e2e tests, find a submit-revealed field error by its `${fieldName}-error` id, not by `[role="alert"]`.
+   - Opt out with `errorSummaryAnnouncesAlone: false` in `NGX_SIGNAL_FORMS_CONFIG` (ADR-0012).
 
 - Uses `role="alert"` and relies on the role's implicit live-region semantics (no explicit `aria-live` / `aria-atomic`).
 

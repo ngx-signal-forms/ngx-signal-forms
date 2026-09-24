@@ -186,6 +186,26 @@ The label is the summary's accessible name: focusing the summary (see
 has no bound control (for example a custom validator not tied to a field)
 renders as plain text instead of a button, because it has nothing to focus.
 
+#### One announcement per submit
+
+The summary and each `ngx-form-field-error` are `role="alert"` regions. So
+one submit that reveals five field errors would fire six assertive
+announcements at once, and NVDA and JAWS then cut speech off, stack it, or
+read errors twice. Inside a `[ngxSignalForm]` form, the summary therefore
+announces alone:
+
+- A field error that a submit reveals shows outside its own live region. It
+  looks the same and keeps its `${fieldName}-error` id, so the control's
+  `aria-describedby` still reads it. It only skips the announcement.
+- When the user edits the field and its error changes, the new error goes
+  into the field's live region and announces as usual.
+- Forms without a summary, or with the summary outside the `<form>`, do not
+  change.
+- Turn it off with `provideNgxSignalFormsConfig({ errorSummaryAnnouncesAlone: false })`.
+
+Warnings (`role="status"`) and `NgxHeadlessErrorSummary` are not part of
+this. See [ADR-0012](../../../docs/decisions/0012-error-summary-announces-alone.md).
+
 Override field names with `provideFieldLabels()` from `@ngx-signal-forms/toolkit`.
 
 ### NgxFormFieldHint

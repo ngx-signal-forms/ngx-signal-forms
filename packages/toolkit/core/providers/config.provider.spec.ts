@@ -199,4 +199,23 @@ describe('provideNgxSignalFormsConfigForComponent', () => {
     expect(resolved.errorPrefixText).toBe('Fout:');
     expect(resolved.warningPrefixText).toBe('');
   });
+
+  it('keeps errorSummaryAnnouncesAlone: false instead of falling back to the true default (issue #522 opt-out)', () => {
+    // The opt-out is a falsy value. A `||`-based merge would drop it and
+    // silently keep field errors quiet on submit for a consumer who asked
+    // for the old behaviour.
+    const defaults = createInjectorFromEnvProviders([
+      provideNgxSignalFormsConfig({}),
+    ]);
+    expect(
+      defaults.get(NGX_SIGNAL_FORMS_CONFIG).errorSummaryAnnouncesAlone,
+    ).toBe(true);
+
+    const optedOut = createInjectorFromEnvProviders([
+      provideNgxSignalFormsConfig({ errorSummaryAnnouncesAlone: false }),
+    ]);
+    expect(
+      optedOut.get(NGX_SIGNAL_FORMS_CONFIG).errorSummaryAnnouncesAlone,
+    ).toBe(false);
+  });
 });

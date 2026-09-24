@@ -179,6 +179,17 @@ ngx-signal-forms — an Angular toolkit for working with Signal Forms.
   reads, the deliberate `focus-first-invalid` policy asymmetry — merging is the
   bug, and those are marked in place as intentional.
 
+- **With an error summary, a submit announces once.** A field error that a
+  submit reveals renders in a non-live container with the same id and look,
+  not in its `role="alert"` region, while an `NgxFormFieldErrorSummary` of
+  the same form shows errors. The field's live region stays mounted and
+  empty, so a later change caused by an edit is inserted into it and
+  announces. The summary and the field errors meet through
+  `NgxSubmitAnnouncements`, provided per form by `NgxSignalForm`, never a
+  global. Move content out of a live region; do not toggle its role.
+  `errorSummaryAnnouncesAlone: false` turns it off. See
+  [ADR-0012](docs/decisions/0012-error-summary-announces-alone.md).
+
 - **A field's name is owned by whoever provides its identity.** Auto-aria
   derives a field name from the bound control's `id` unless an ancestor
   provides an `NgxFieldIdentity`, in which case that service owns the name

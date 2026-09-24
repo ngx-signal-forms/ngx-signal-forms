@@ -248,6 +248,7 @@ provideNgxSignalFormsConfig({
   requiredHintText: 'required', // visually-hidden required hint for role="group" clusters
   errorPrefixText: 'Error:', // visually-hidden prefix on NgxFormFieldError blocking-error messages
   warningPrefixText: 'Warning:', // visually-hidden prefix on NgxFormFieldError warning messages
+  errorSummaryAnnouncesAlone: true, // with an error summary, a submit announces through the summary only
 });
 ```
 

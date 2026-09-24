@@ -4,6 +4,7 @@ import {
   ChangeDetectionStrategy,
   Component,
   computed,
+  DestroyRef,
   ElementRef,
   inject,
   input,
@@ -12,6 +13,7 @@ import {
 import {
   createUniqueId,
   devWarnOnce,
+  NgxSubmitAnnouncements,
   type WarnOnceRef,
 } from '@ngx-signal-forms/toolkit/core';
 import { NgxHeadlessErrorSummary } from '@ngx-signal-forms/toolkit/headless';
@@ -67,6 +69,12 @@ export type NgxErrorSummaryHeadingLevel = 2 | 3 | 4 | 5 | 6;
  *   then would be an unexpected mid-fill context change (WCAG 3.2.1/3.2.2),
  *   not the documented "arrive after a failed submit" contract. Opt out of
  *   the on-submit auto-focus with `[autoFocus]="false"`.
+ * - Inside a `[ngxSignalForm]` form, the summary is the only live region
+ *   that announces after a submit: field errors revealed by that submit
+ *   show outside their own live regions, so one submit makes one
+ *   announcement instead of one per field. Later edits announce through
+ *   the field as usual. Turn this off with
+ *   `NgxSignalFormsConfig.errorSummaryAnnouncesAlone: false` (ADR-0012).
  *
  * ## Usage
  *
@@ -381,6 +389,19 @@ export class NgxFormFieldErrorSummary {
   readonly autoFocus = input(true);
 
   constructor() {
+    // Tell the field errors of this form that a summary speaks for them on
+    // submit (ADR-0012). No channel outside a `[ngxSignalForm]` form.
+    const submitAnnouncements = inject(NgxSubmitAnnouncements, {
+      optional: true,
+    });
+    if (submitAnnouncements) {
+      inject(DestroyRef).onDestroy(
+        submitAnnouncements.registerSummary(
+          computed(() => this.summary.shouldShow() && this.summary.hasErrors()),
+        ),
+      );
+    }
+
     /**
      * Track whether we have already moved focus into the summary so that
      * subsequent entry-list mutations (a new error appearing while the

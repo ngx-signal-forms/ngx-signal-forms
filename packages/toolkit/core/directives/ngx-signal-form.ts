@@ -13,6 +13,7 @@ import {
   NGX_SIGNAL_FORMS_CONFIG,
 } from '../tokens';
 import { NgxFieldVisibilityRegistry } from '../services/field-visibility-registry';
+import { NgxSubmitAnnouncements } from '../services/submit-announcements';
 import type {
   ResolvedErrorDisplayStrategy,
   ResolvedWarningDisplayStrategy,
@@ -149,11 +150,18 @@ export interface NgxSignalFormContext {
       provide: NGX_SIGNAL_FORM_FIELD_VISIBILITY_REGISTRY,
       useClass: NgxFieldVisibilityRegistry,
     },
+    // One submit-announcement channel per form, so an error summary and
+    // the field errors of the same form find each other and a submit
+    // announces through the summary alone (ADR-0012).
+    NgxSubmitAnnouncements,
   ],
 })
 export class NgxSignalForm {
   readonly #config = inject(NGX_SIGNAL_FORMS_CONFIG);
   readonly #angularFormRoot = inject(FormRoot);
+  readonly #submitAnnouncements = inject(NgxSubmitAnnouncements, {
+    self: true,
+  });
 
   /**
    * The Angular Signal Forms instance owned by Angular's public `FormRoot`.
@@ -247,5 +255,6 @@ export class NgxSignalForm {
 
   protected onSubmitAttempt(): void {
     this.#submitAttempted.set(true);
+    this.#submitAnnouncements.notifySubmitAttempt();
   }
 }
