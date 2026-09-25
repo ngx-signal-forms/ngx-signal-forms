@@ -10,7 +10,6 @@ import {
 import type { FieldTree } from '@angular/forms/signals';
 import { NGX_SIGNAL_FORM_FIELD_CONTEXT } from '@ngx-signal-forms/toolkit';
 import {
-  DEFAULT_NGX_SIGNAL_FORMS_CONFIG,
   devWarnOnce,
   generateCharacterCountLimitId,
   NGX_SIGNAL_FORMS_CONFIG,
@@ -405,9 +404,11 @@ export class NgxFormFieldCharacterCount {
     optional: true,
   });
 
-  readonly #config =
-    inject(NGX_SIGNAL_FORMS_CONFIG, { optional: true }) ??
-    DEFAULT_NGX_SIGNAL_FORMS_CONFIG;
+  // No `{ optional: true } ?? DEFAULT_NGX_SIGNAL_FORMS_CONFIG` fallback:
+  // `NGX_SIGNAL_FORMS_CONFIG` has a root `factory` (see `core/tokens.ts`), so
+  // plain `inject()` always resolves — the optional form's fallback branch
+  // never ran.
+  readonly #config = inject(NGX_SIGNAL_FORMS_CONFIG);
 
   readonly #warnedMissingMaxPlaceholder: WarnOnceRef = { current: false };
 
