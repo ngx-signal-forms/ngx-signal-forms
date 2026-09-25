@@ -7,6 +7,10 @@ import {
 } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { form, maxLength as signalMaxLength } from '@angular/forms/signals';
+import {
+  NGX_SIGNAL_FORM_FIELD_CONTEXT,
+  provideNgxSignalFormsConfig,
+} from '@ngx-signal-forms/toolkit';
 import { render, screen } from '@testing-library/angular';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { NgxFormFieldCharacterCount } from './character-count';
@@ -542,6 +546,162 @@ describe('NgxFormFieldCharacterCount', () => {
       expect(liveRegion).toHaveTextContent(
         '[warning] restants: 20, dépassement: 0',
       );
+    });
+  });
+
+  describe('Limit description linked via aria-describedby (issue #499)', () => {
+    // The wrapper-mediated linking itself (id registered through
+    // NGX_SIGNAL_FORM_HINT_REGISTRY, ordering after hints) is covered end to
+    // end in form-field-wrapper.spec.ts. These specs cover the component's
+    // own contract: the visible count is hidden from AT only once the
+    // limit-description link exists, and the hidden limit element only
+    // appears once a field name AND a limit both resolve.
+
+    it('hides the visible "n/max" text from the accessibility tree once the limit description is linked', async () => {
+      const { container } = await render(TestWrapperComponent, {
+        componentInputs: { textModel: 'test', maxLength: 100 },
+        providers: [
+          {
+            provide: NGX_SIGNAL_FORM_FIELD_CONTEXT,
+            useValue: { fieldName: signal('bio') },
+          },
+        ],
+      });
+
+      const visibleText = container.querySelector(
+        '.ngx-signal-form-field-char-count__text',
+      );
+      expect(visibleText).toHaveAttribute('aria-hidden', 'true');
+    });
+
+    it('keeps the visible "n/max" text exposed to AT for a bare count (no field context, nothing else describes it)', async () => {
+      // No NGX_SIGNAL_FORM_FIELD_CONTEXT provider here, matching the
+      // documented "Basic character count" usage: a count placed next to a
+      // control with no wrapper. Hiding the visible text unconditionally
+      // would leave the count silent to screen readers, since no limit
+      // description is ever registered to replace it (regression guard).
+      const { container } = await render(TestWrapperComponent, {
+        componentInputs: { textModel: 'test', maxLength: 100 },
+      });
+
+      const visibleText = container.querySelector(
+        '.ngx-signal-form-field-char-count__text',
+      );
+      expect(visibleText).not.toHaveAttribute('aria-hidden');
+    });
+
+    it('renders no hidden limit element outside a wrapper (no field name to build an id from)', async () => {
+      // No NGX_SIGNAL_FORM_FIELD_CONTEXT provider here, matching how the
+      // component is used in the CSS-threshold and colour specs above.
+      const { container } = await render(TestWrapperComponent, {
+        componentInputs: { textModel: 'test', maxLength: 100 },
+      });
+
+      expect(
+        container.querySelector('.ngx-signal-form-field-char-count__limit'),
+      ).toBeNull();
+    });
+
+    it('renders no hidden limit element when no limit is resolved, even with a field name', async () => {
+      const { container } = await render(
+        UnsupportedValueNoMaxLengthWrapperComponent,
+        {
+          providers: [
+            {
+              provide: NGX_SIGNAL_FORM_FIELD_CONTEXT,
+              useValue: { fieldName: signal('data') },
+            },
+          ],
+        },
+      );
+
+      expect(
+        container.querySelector('.ngx-signal-form-field-char-count__limit'),
+      ).toBeNull();
+    });
+
+    it('renders the default limit text with the {max} placeholder substituted', async () => {
+      const { container } = await render(TestWrapperComponent, {
+        componentInputs: { textModel: 'test', maxLength: 200 },
+        providers: [
+          {
+            provide: NGX_SIGNAL_FORM_FIELD_CONTEXT,
+            useValue: { fieldName: signal('bio') },
+          },
+        ],
+      });
+
+      const limitEl = container.querySelector(
+        '.ngx-signal-form-field-char-count__limit',
+      );
+      expect(limitEl).toHaveAttribute('id', 'bio-char-count-limit');
+      expect(limitEl).toHaveTextContent('Up to 200 characters');
+    });
+
+    it('renders a config-provided characterCountLimitText instead of the English default', async () => {
+      const { container } = await render(TestWrapperComponent, {
+        componentInputs: { textModel: 'test', maxLength: 200 },
+        providers: [
+          {
+            provide: NGX_SIGNAL_FORM_FIELD_CONTEXT,
+            useValue: { fieldName: signal('bio') },
+          },
+          provideNgxSignalFormsConfig({
+            characterCountLimitText: 'Maximaal {max} tekens',
+          }),
+        ],
+      });
+
+      const limitEl = container.querySelector(
+        '.ngx-signal-form-field-char-count__limit',
+      );
+      expect(limitEl).toHaveTextContent('Maximaal 200 tekens');
+    });
+
+    it('updates the limit text when maxLength changes after first render', async () => {
+      const { container, rerender } = await render(TestWrapperComponent, {
+        componentInputs: { textModel: 'test', maxLength: 100 },
+        providers: [
+          {
+            provide: NGX_SIGNAL_FORM_FIELD_CONTEXT,
+            useValue: { fieldName: signal('bio') },
+          },
+        ],
+      });
+
+      const limitEl = () =>
+        container.querySelector('.ngx-signal-form-field-char-count__limit');
+      expect(limitEl()).toHaveTextContent('Up to 100 characters');
+
+      await rerender({
+        componentInputs: { textModel: 'test', maxLength: 280 },
+      });
+      await TestBed.inject(ApplicationRef).whenStable();
+
+      expect(limitEl()).toHaveTextContent('Up to 280 characters');
+    });
+
+    it('warns once in dev mode when characterCountLimitText has no {max} placeholder', async () => {
+      const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+      await render(TestWrapperComponent, {
+        componentInputs: { textModel: 'test', maxLength: 100 },
+        providers: [
+          {
+            provide: NGX_SIGNAL_FORM_FIELD_CONTEXT,
+            useValue: { fieldName: signal('bio') },
+          },
+          provideNgxSignalFormsConfig({
+            characterCountLimitText: 'No placeholder here',
+          }),
+        ],
+      });
+
+      expect(warnSpy).toHaveBeenCalledWith(
+        expect.stringContaining('characterCountLimitText'),
+      );
+
+      warnSpy.mockRestore();
     });
   });
 

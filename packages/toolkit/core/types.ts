@@ -412,6 +412,16 @@ export interface NgxSignalFormsConfig {
    * @default 'Warning:'
    */
   warningPrefixText: string;
+
+  /**
+   * Visually hidden text describing a character count's limit, exposed to
+   * assistive technology through `aria-describedby`. `NgxFormFieldCharacterCount`
+   * renders this instead of the running count — the running and remaining
+   * count stays in the `[liveAnnounce]` live region. The literal token
+   * `{max}` is replaced with the resolved `maxLength`.
+   * @default 'Up to {max} characters'
+   */
+  characterCountLimitText: string;
 }
 
 /**
@@ -469,4 +479,9 @@ export interface NgxSignalFormsUserConfig {
    * disable it.
    */
   warningPrefixText?: string | undefined;
+  /**
+   * Override the character-count limit text. Must contain the `{max}`
+   * placeholder for the resolved `maxLength` to appear.
+   */
+  characterCountLimitText?: string | undefined;
 }
