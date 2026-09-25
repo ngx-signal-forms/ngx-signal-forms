@@ -25,8 +25,8 @@
  *   --update-baseline  Rewrite each app's a11y-baseline.json to exactly the
  *                      current violation set. Run locally to accept the current
  *                      state (e.g. `pnpm a11y:baseline`).
- *   --check            Exit 1 if any NEW violations were found. Used on PRs for
- *                      visibility (the CI job is non-blocking).
+ *   --check            Exit 1 if any NEW violations were found. Used on PRs,
+ *                      which fails the job (see ADR-0013).
  */
 
 import { execFileSync } from 'node:child_process';
@@ -146,31 +146,30 @@ function issueBody(app, v) {
   ].join('\n');
 }
 
-/** Avoid duplicate issues: returns true if an open issue with this title exists. */
-function issueExists(title) {
-  try {
-    const out = execFileSync(
-      'gh',
-      [
-        'issue',
-        'list',
-        '--state',
-        'open',
-        '--search',
-        title,
-        '--json',
-        'title',
-        '--limit',
-        '50',
-      ],
-      { cwd: WORKSPACE_ROOT, encoding: 'utf8' },
-    );
-    const issues = JSON.parse(out);
-    return issues.some((issue) => issue.title === title);
-  } catch (error) {
-    console.warn(`  ! could not query existing issues: ${error.message}`);
-    return false;
-  }
+/**
+ * Avoid duplicate issues: returns true if an open issue with this title
+ * exists. Throws if the search itself fails, so a `gh` outage cannot be
+ * mistaken for "no issue found" and create a duplicate.
+ */
+export function issueExists(title) {
+  const out = execFileSync(
+    'gh',
+    [
+      'issue',
+      'list',
+      '--state',
+      'open',
+      '--search',
+      title,
+      '--json',
+      'title',
+      '--limit',
+      '50',
+    ],
+    { cwd: WORKSPACE_ROOT, encoding: 'utf8' },
+  );
+  const issues = JSON.parse(out);
+  return issues.some((issue) => issue.title === title);
 }
 
 function createIssue(app, v) {
@@ -198,7 +197,7 @@ function createIssue(app, v) {
   console.log(`  + opened issue: ${title}`);
 }
 
-function main() {
+export function main() {
   const apps = discoverApps();
   if (apps.length === 0) {
     console.log(
@@ -266,4 +265,6 @@ function main() {
   }
 }
 
-main();
+if (process.argv[1] && resolve(process.argv[1]) === import.meta.filename) {
+  main();
+}
