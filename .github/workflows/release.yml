@@ -225,7 +225,9 @@ jobs:
         run: pnpm install --frozen-lockfile --filter "@ngx-signal-forms/toolkit..."
 
       - name: Build toolkit in isolation
-        run: pnpm exec nx build toolkit
+        # Skip the cache: the earlier build step already cached this hash, and
+        # a cache hit would never build against the pruned node_modules.
+        run: pnpm exec nx build toolkit --skip-nx-cache
 
       - name: Restore full workspace install
         run: pnpm install --frozen-lockfile
