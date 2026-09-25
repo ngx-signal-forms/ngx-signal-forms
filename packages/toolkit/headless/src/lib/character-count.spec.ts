@@ -7,8 +7,10 @@ import {
 import { render, screen } from '@testing-library/angular';
 import { userEvent } from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { NgxHeadlessCharacterCount } from './character-count';
-import { createCharacterCount } from './utilities';
+import {
+  createCharacterCount,
+  NgxHeadlessCharacterCount,
+} from './character-count';
 
 describe('NgxHeadlessCharacterCount', () => {
   describe('character count signals', () => {
