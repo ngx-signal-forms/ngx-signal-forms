@@ -44,7 +44,7 @@ export {
   DEFAULT_WARNING_THRESHOLD,
   NgxHeadlessCharacterCount,
   type CharacterCountLimitState,
-  type CharacterCountStateSignals,
+  type CharacterCountState,
 } from './lib/character-count';
 
 export {
@@ -114,7 +114,6 @@ export {
   resolveFieldNameFromError,
   toErrorSummaryEntry,
   type BooleanStateKey,
-  type CharacterCountResult,
   type CharacterCountValue,
   type CreateCharacterCountOptions,
   type CreateErrorStateOptions,

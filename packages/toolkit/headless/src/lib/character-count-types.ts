@@ -10,6 +10,8 @@
  * this module is the one-way source both sides depend on instead.
  */
 
+import type { Signal } from '@angular/core';
+
 /**
  * Value types supported by the character-count utilities.
  *
@@ -49,3 +51,36 @@ export const DEFAULT_WARNING_THRESHOLD = 0.8;
  * @group Directives
  */
 export const DEFAULT_DANGER_THRESHOLD = 0.95;
+
+/**
+ * Character count state shared by `createCharacterCount()`,
+ * `NgxHeadlessCharacterCount`, and `NgxFormFieldCharacterCount`.
+ *
+ * Replaces the former `CharacterCountResult` (factory) and
+ * `CharacterCountStateSignals` (directive) types, which had identical
+ * fields — one shared shape for one shared algorithm (issue #510).
+ *
+ * `resolvedMaxLength` is `null` when no limit is configured and none is
+ * auto-detected from the field's `maxLength` validator — check `hasLimit`
+ * first. The other signals stay non-nullable with neutral values in that
+ * case: `remaining` is `0`, `isExceeded` is `false`, `percentUsed` is `0`,
+ * and `limitState` is `'ok'`.
+ *
+ * @group Directives
+ */
+export interface CharacterCountState {
+  /** Current value length. */
+  readonly currentLength: Signal<number>;
+  /** Resolved maximum length, or `null` when no limit applies. */
+  readonly resolvedMaxLength: Signal<number | null>;
+  /** Remaining characters until limit. `0` when no limit applies. */
+  readonly remaining: Signal<number>;
+  /** Current limit state. `'ok'` when no limit applies. */
+  readonly limitState: Signal<CharacterCountLimitState>;
+  /** Whether a limit is configured or auto-detected. */
+  readonly hasLimit: Signal<boolean>;
+  /** Whether the limit has been exceeded. `false` when no limit applies. */
+  readonly isExceeded: Signal<boolean>;
+  /** Percentage of limit used (0-100+). `0` when no limit applies. */
+  readonly percentUsed: Signal<number>;
+}

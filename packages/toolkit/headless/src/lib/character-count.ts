@@ -1,9 +1,10 @@
-import { Directive, input, type Signal } from '@angular/core';
+import { Directive, input } from '@angular/core';
 import type { FieldTree } from '@angular/forms/signals';
 import {
   DEFAULT_DANGER_THRESHOLD,
   DEFAULT_WARNING_THRESHOLD,
   type CharacterCountLimitState,
+  type CharacterCountState,
   type CharacterCountValue,
 } from './character-count-types';
 import { createCharacterCount } from './utilities';
@@ -16,33 +17,8 @@ export {
   DEFAULT_DANGER_THRESHOLD,
   DEFAULT_WARNING_THRESHOLD,
   type CharacterCountLimitState,
+  type CharacterCountState,
 };
-
-/**
- * Character count state signals exposed by the headless directive.
- *
- * The directive requires a `maxLength` input, so the resolved numeric
- * signals are always non-nullable. `hasLimit` is retained for template
- * ergonomics and future extensibility.
- *
- * @group Directives
- */
-export interface CharacterCountStateSignals {
-  /** Current value length */
-  readonly currentLength: Signal<number>;
-  /** Resolved maximum length */
-  readonly resolvedMaxLength: Signal<number>;
-  /** Remaining characters until limit */
-  readonly remaining: Signal<number>;
-  /** Current limit state */
-  readonly limitState: Signal<CharacterCountLimitState>;
-  /** Whether a limit is configured */
-  readonly hasLimit: Signal<boolean>;
-  /** Whether the limit has been exceeded */
-  readonly isExceeded: Signal<boolean>;
-  /** Percentage of limit used (0-100+) */
-  readonly percentUsed: Signal<number>;
-}
 
 /**
  * Headless character count directive for form field length tracking.
@@ -102,7 +78,7 @@ export interface CharacterCountStateSignals {
   selector: '[ngxHeadlessCharacterCount]',
   exportAs: 'characterCount',
 })
-export class NgxHeadlessCharacterCount implements CharacterCountStateSignals {
+export class NgxHeadlessCharacterCount implements CharacterCountState {
   /**
    * The form field to track character count.
    */
@@ -159,9 +135,10 @@ export class NgxHeadlessCharacterCount implements CharacterCountStateSignals {
   /**
    * Whether a limit is configured.
    *
-   * The directive requires a `maxLength` input, so this is always `true`.
-   * Retained as a signal for API symmetry with `createCharacterCount()` and
-   * for consumer templates that may swap directive/factory wiring.
+   * The directive requires a `maxLength` input, so this always resolves to
+   * `true`. Retained as a signal for API symmetry with
+   * `createCharacterCount()` and for consumer templates that may swap
+   * directive/factory wiring.
    */
   readonly hasLimit = this.#result.hasLimit;
 

@@ -29,6 +29,7 @@ import {
   DEFAULT_DANGER_THRESHOLD,
   DEFAULT_WARNING_THRESHOLD,
   type CharacterCountLimitState,
+  type CharacterCountState,
   type CharacterCountValue,
 } from './character-count-types';
 // Error-summary mapping utilities live in their own module (issue #354);
@@ -400,8 +401,21 @@ function createErrorStateInternal<TValue = unknown>(
 export interface CreateCharacterCountOptions {
   /** Form field producing a {@link CharacterCountValue}. */
   readonly field: FieldTree<CharacterCountValue>;
-  /** Maximum length for the character count */
-  readonly maxLength: ReactiveOrStatic<number>;
+  /**
+   * Maximum length for the character count. `undefined`, `null`, or
+   * omitted means "no explicit limit" — see `useValidatorMaxLength` for the
+   * fallback that applies in that case.
+   */
+  readonly maxLength?: ReactiveOrStatic<number | null>;
+  /**
+   * When `maxLength` resolves to no explicit limit, fall back to the
+   * field's own `maxLength` validator signal (when present and a positive
+   * number). Lets a caller auto-detect the limit from the form schema
+   * instead of requiring an explicit `maxLength`.
+   *
+   * @default false
+   */
+  readonly useValidatorMaxLength?: boolean;
   /** Warning threshold (0-1), default 0.8 */
   readonly warningThreshold?: ReactiveOrStatic<number>;
   /** Danger threshold (0-1), default 0.95 */
@@ -409,9 +423,9 @@ export interface CreateCharacterCountOptions {
   /**
    * Name reported in the unsupported-value-type dev warning, e.g.
    * `[ngx-signal-forms] <component>: unsupported value type — …`. Lets a
-   * delegating caller (`NgxHeadlessCharacterCount`) report its own name
-   * instead of `'createCharacterCount'`, since the message text is asserted
-   * in specs on both sides.
+   * delegating caller (`NgxHeadlessCharacterCount`, `NgxFormFieldCharacterCount`)
+   * report its own name instead of `'createCharacterCount'`, since the
+   * message text is asserted in specs on both sides.
    *
    * @default 'createCharacterCount'
    */
@@ -419,27 +433,28 @@ export interface CreateCharacterCountOptions {
 }
 
 /**
- * Character count signals returned by createCharacterCount.
+ * Reads a positive `maxLength` off a field's validator state, if present.
  *
- * @group Reactive Primitives
+ * `FieldState.maxLength` is a signal Angular Signal Forms adds only when a
+ * `maxLength()` schema validator applies to the field — it's absent
+ * otherwise, hence the structural check. Any other shape (missing, `0`,
+ * negative, non-numeric) is treated as "no validator limit declared".
  */
-export interface CharacterCountResult {
-  /** Current value length */
-  readonly currentLength: Signal<number>;
-  /** Resolved maximum length */
-  readonly resolvedMaxLength: Signal<number>;
-  /** Remaining characters until limit */
-  readonly remaining: Signal<number>;
-  /** Current limit state */
-  readonly limitState: Signal<CharacterCountLimitState>;
-  /** Whether a limit is configured. `maxLength` is required, so this is
-   * always `true` — retained for API symmetry with
-   * `NgxHeadlessCharacterCount.hasLimit`. */
-  readonly hasLimit: Signal<boolean>;
-  /** Whether the limit has been exceeded */
-  readonly isExceeded: Signal<boolean>;
-  /** Percentage of limit used (0-100+) */
-  readonly percentUsed: Signal<number>;
+function readValidatorMaxLength(fieldState: unknown): number | null {
+  if (
+    typeof fieldState !== 'object' ||
+    fieldState === null ||
+    !('maxLength' in fieldState) ||
+    typeof fieldState.maxLength !== 'function'
+  ) {
+    return null;
+  }
+
+  const validatorMax = (fieldState as { maxLength: () => unknown }).maxLength();
+
+  return typeof validatorMax === 'number' && validatorMax > 0
+    ? validatorMax
+    : null;
 }
 
 /**
@@ -475,10 +490,11 @@ export interface CharacterCountResult {
  */
 export function createCharacterCount(
   options: Readonly<CreateCharacterCountOptions>,
-): CharacterCountResult {
+): CharacterCountState {
   const {
     field,
     maxLength,
+    useValidatorMaxLength = false,
     warningThreshold = DEFAULT_WARNING_THRESHOLD,
     dangerThreshold = DEFAULT_DANGER_THRESHOLD,
     component = 'createCharacterCount',
@@ -491,11 +507,31 @@ export function createCharacterCount(
     component,
   );
 
-  const resolvedMaxLength = computed(() => unwrapValue(maxLength));
+  // Priority: an explicit `maxLength` (any number, including `0` or
+  // negative — see the non-positive handling below) wins outright. Falling
+  // back to the field's own validator only applies when `maxLength` itself
+  // resolves to no explicit limit (`null`/`undefined`), and only when the
+  // caller opted in via `useValidatorMaxLength`.
+  const resolvedMaxLength = computed<number | null>(() => {
+    const explicit = maxLength === undefined ? null : unwrapValue(maxLength);
+    if (typeof explicit === 'number') return explicit;
 
-  const remaining = computed(() => resolvedMaxLength() - currentLength());
+    if (useValidatorMaxLength) {
+      const validatorMax = readValidatorMaxLength(fieldState());
+      if (validatorMax !== null) return validatorMax;
+    }
 
-  const isExceeded = computed(() => remaining() < 0);
+    return null;
+  });
+
+  const hasLimit = computed(() => resolvedMaxLength() !== null);
+
+  const remaining = computed(() => {
+    const max = resolvedMaxLength();
+    return max === null ? 0 : max - currentLength();
+  });
+
+  const isExceeded = computed(() => hasLimit() && remaining() < 0);
 
   // A non-positive limit ("no characters allowed") is handled identically here
   // to NgxHeadlessCharacterCount so the factory and directive return the same
@@ -504,12 +540,15 @@ export function createCharacterCount(
   // disagree with isExceeded — both visible bugs in consumer UIs.
   const percentUsed = computed(() => {
     const max = resolvedMaxLength();
+    if (max === null) return 0;
     if (max <= 0) return currentLength() > 0 ? 100 : 0;
     return (currentLength() / max) * 100;
   });
 
   const limitState = computed<CharacterCountLimitState>(() => {
     const max = resolvedMaxLength();
+    if (max === null) return 'ok';
+
     const current = currentLength();
 
     if (max <= 0) {
@@ -528,10 +567,6 @@ export function createCharacterCount(
 
     return 'ok';
   });
-
-  // `maxLength` is a required option, so a limit is always configured.
-  // See the `hasLimit` doc above for why this member exists at all.
-  const hasLimit = computed(() => true);
 
   return {
     currentLength,
