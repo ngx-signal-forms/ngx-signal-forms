@@ -15,14 +15,19 @@ import {
 import type { FieldState, FieldTree } from '@angular/forms/signals';
 import {
   createControlVisibilitySignal,
-  createShowErrorsComputed,
+  createErrorVisibility,
+  createWarningVisibility,
   injectFormContext,
+  isBlockingError,
   NGX_FORM_FIELD_ERROR_RENDERER,
   NGX_SIGNAL_FORM_FIELD_CONTEXT,
   NGX_SIGNAL_FORM_HINT_REGISTRY,
   NGX_SIGNAL_FORMS_CONFIG,
   NgxSignalFormControlSemanticsDirective,
-  resolveErrorDisplayStrategy,
+  readDirectErrors,
+  resolveStrategyFromContext,
+  resolveWarningStrategyFromContext,
+  type WarningDisplayStrategy,
 } from '@ngx-signal-forms/toolkit';
 import {
   NgxFormFieldError,
@@ -239,6 +244,13 @@ export class PrimeFormFieldComponent<TValue = unknown> {
    */
   readonly showRequiredMarker = input(false, { transform: booleanAttribute });
 
+  /**
+   * Optional per-field warning-strategy override (mirrors the toolkit
+   * wrapper's `warningStrategy` input). Resolved independently of the error
+   * strategy — the warning cascade never reads the error one (ADR-0007).
+   */
+  readonly warningStrategy = input<WarningDisplayStrategy | null>(null);
+
   // ── Bound-control discovery via contentChildren ───────────────────────
   //
   // Mirrors the Spartan / Material reference wrappers. Every PrimeNG
@@ -299,15 +311,31 @@ export class PrimeFormFieldComponent<TValue = unknown> {
 
   /**
    * Strategy resolved against the global config and any form-level
-   * override — same primitive the canonical `NgxFormFieldWrapper`,
-   * `NgxSignalFormAutoAria`, and the Spartan/Material refs use, so
-   * a strategy change anywhere takes effect everywhere.
+   * override, via the shared `resolveStrategyFromContext` helper (the
+   * strategy-resolution half of the ADR-0006 seam) — same primitive the
+   * canonical `NgxFormFieldWrapper`, `NgxSignalFormAutoAria`, and the
+   * Spartan/Material refs use, so a strategy change anywhere takes effect
+   * everywhere.
    */
   readonly effectiveStrategy = computed(() =>
-    resolveErrorDisplayStrategy(
-      null,
-      this.#formContext ? this.#formContext.errorStrategy() : undefined,
+    resolveStrategyFromContext(
+      undefined,
+      this.#formContext,
       this.#config.defaultErrorStrategy,
+    ),
+  );
+
+  /**
+   * Warning-channel counterpart to {@link effectiveStrategy}. Stays entirely
+   * inside the warning channel: explicit input → form context
+   * `warningStrategy()` → config `defaultWarningStrategy` → `'on-touch'`. No
+   * tier consults `defaultErrorStrategy` (ADR-0007).
+   */
+  readonly effectiveWarningStrategy = computed(() =>
+    resolveWarningStrategyFromContext(
+      this.warningStrategy() ?? undefined,
+      this.#formContext,
+      this.#config.defaultWarningStrategy,
     ),
   );
 
@@ -330,6 +358,7 @@ export class PrimeFormFieldComponent<TValue = unknown> {
       formField: this.formField(),
       strategy: this.effectiveStrategy(),
       submittedStatus: this.submittedStatus(),
+      warningStrategy: this.effectiveWarningStrategy(),
     }),
   );
 
@@ -343,11 +372,59 @@ export class PrimeFormFieldComponent<TValue = unknown> {
     this.formField()(),
   );
 
-  readonly #showByStrategy = createShowErrorsComputed(
-    this.#fieldStateSignal,
-    this.effectiveStrategy,
-    this.submittedStatus,
+  /**
+   * Strategy-aware visibility timing, routed through the shared
+   * `createErrorVisibility()` seam (ADR-0006) instead of hand-inlining
+   * `createShowErrorsComputed`. Same helper the canonical `NgxFormFieldWrapper`
+   * and `NgxSignalFormAutoAria` use — keeping every surface in lockstep means
+   * a strategy change in one place takes effect everywhere.
+   */
+  readonly #showByStrategy = createErrorVisibility(this.#fieldStateSignal, {
+    strategy: this.effectiveStrategy,
+    submittedStatus: this.submittedStatus,
+  });
+
+  /**
+   * Whether a *blocking* error is visible. `#showByStrategy` alone is not
+   * enough here: `createErrorVisibility()` gates on `invalid()`, and a
+   * `warn:`-only field is also `invalid()` (Angular's validation pipeline
+   * has no non-invalidating channel — see ADR-0007). Without this extra
+   * check, a touched warning-only field would suppress its own warning by
+   * "colliding" with itself through {@link #showWarningsByStrategy}'s
+   * `errorVisibility` gate. Mirrors the same gate the Material reference
+   * and `NgxHeadlessErrorState` apply.
+   */
+  readonly #hasVisibleBlockingError = computed(
+    () =>
+      this.#showByStrategy() &&
+      readDirectErrors(this.#fieldStateSignal()).some(isBlockingError),
   );
+
+  /**
+   * Warning-channel counterpart to {@link #showByStrategy}, routed through
+   * the shared `createWarningVisibility()` seam (ADR-0006, ADR-0007) instead
+   * of leaving the warning channel unaddressed at the wrapper level. Passing
+   * `#hasVisibleBlockingError` as `errorVisibility` means a visible blocking
+   * error still suppresses the warning, without a warning-only field
+   * suppressing itself.
+   *
+   * `PrimeFieldErrorComponent` (the default renderer) is also fed
+   * `effectiveWarningStrategy` directly through `errorRendererInputs`, so
+   * this computed and the rendered `<small class="p-warn">` agree by
+   * construction. This is the wrapper-side escape hatch for consumers who
+   * swap in a custom renderer, mirroring the Material reference's
+   * `warningVisible`.
+   */
+  readonly #showWarningsByStrategy = createWarningVisibility(
+    this.#fieldStateSignal,
+    {
+      strategy: this.effectiveWarningStrategy,
+      submittedStatus: this.submittedStatus,
+      errorVisibility: this.#hasVisibleBlockingError,
+    },
+  );
+
+  readonly warningVisible = computed(() => this.#showWarningsByStrategy());
 
   /**
    * Layout probe for the bound control — the element `aria-invalid` actually

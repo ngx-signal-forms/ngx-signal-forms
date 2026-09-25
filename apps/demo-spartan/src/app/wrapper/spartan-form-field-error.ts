@@ -6,6 +6,7 @@ import {
   NGX_SIGNAL_FORM_FIELD_CONTEXT,
   type ResolvedErrorDisplayStrategy,
   type SubmittedStatus,
+  type WarningDisplayStrategy,
 } from '@ngx-signal-forms/toolkit';
 import { createErrorMessageSignal } from '@ngx-signal-forms/toolkit/headless';
 
@@ -89,9 +90,17 @@ export class NgxSpartanFormFieldError {
 
   /**
    * Submission status forwarded from the wrapper. Required for the
-   * `'on-submit'` strategy.
+   * `'on-submit'` strategy on either channel.
    */
   readonly submittedStatus = input<SubmittedStatus | undefined>();
+
+  /**
+   * Warning strategy resolved by the parent wrapper, forwarded to
+   * `createErrorMessageSignal`'s `warningStrategy` option so the warning
+   * channel runs its own independent cascade (ADR-0007) instead of
+   * borrowing the blocking-error one.
+   */
+  readonly warningStrategy = input<WarningDisplayStrategy | undefined>();
 
   /**
    * Field name from the surrounding wrapper context. Used to generate the
@@ -118,20 +127,41 @@ export class NgxSpartanFormFieldError {
   );
 
   /**
-   * Warnings surface immediately (matching `NgxFormFieldError`'s default
-   * `warningStrategy: 'immediate'`) — they are informational and not gated by
-   * the blocking-error strategy.
+   * Warnings, timed by {@link warningStrategy}'s own cascade (ADR-0007) —
+   * independent of the blocking-error `strategy` above. `strategy` has no
+   * effect here: `createErrorMessageSignal` ignores that option once
+   * `includeWarnings: 'only'` is set, so only `warningStrategy` (and its
+   * own context/config cascade) decides whether this list is non-empty.
    */
   readonly #resolvedWarnings = createErrorMessageSignal(
     this.#fieldStateAccessor,
     {
-      strategy: 'immediate',
+      warningStrategy: this.warningStrategy,
+      submittedStatus: this.submittedStatus,
       includeWarnings: 'only',
     },
   );
 
   protected readonly firstError = computed(() => this.#resolvedErrors()[0]);
-  protected readonly firstWarning = computed(() => this.#resolvedWarnings()[0]);
+
+  /**
+   * First warning to render, gated by blocking-error precedence: a visible
+   * blocking error owns the message region, so the warning waits (ADR-0007).
+   * `#resolvedWarnings` alone does not apply this — `createErrorMessageSignal`
+   * times the warning through its own independent cascade and deliberately
+   * does not fold in the blocking-error gate, because it returns a list, not
+   * a single message region (see its own docs on `errorVisibility`). This
+   * component renders one region for warnings, so it applies the priority
+   * itself, the same way `NgxHeadlessErrorState.shouldShowWarnings` does for
+   * the PrimeNG reference. `firstError()` is non-empty exactly when a
+   * blocking error is both present and currently visible per strategy — the
+   * same "visible blocking error" signal the wrapper's own
+   * `#hasVisibleBlockingError` computes for `aria-describedby`.
+   */
+  protected readonly firstWarning = computed(() => {
+    if (this.firstError()) return undefined;
+    return this.#resolvedWarnings()[0];
+  });
 
   /**
    * Container IDs use the kind-less `generateErrorId(name)` /

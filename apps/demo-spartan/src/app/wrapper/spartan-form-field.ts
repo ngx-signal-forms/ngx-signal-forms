@@ -16,14 +16,18 @@ import { BrnLabel } from '@spartan-ng/brain/label';
 import {
   createControlVisibilitySignal,
   createErrorVisibility,
-  createShowErrorsComputed,
+  createWarningVisibility,
   injectFormContext,
+  isBlockingError,
   NGX_FORM_FIELD_ERROR_RENDERER,
   NGX_SIGNAL_FORM_FIELD_CONTEXT,
   NGX_SIGNAL_FORM_HINT_REGISTRY,
   NGX_SIGNAL_FORMS_CONFIG,
   NgxSignalFormControlSemanticsDirective,
-  resolveErrorDisplayStrategy,
+  readDirectErrors,
+  resolveStrategyFromContext,
+  resolveWarningStrategyFromContext,
+  type WarningDisplayStrategy,
 } from '@ngx-signal-forms/toolkit';
 import { NgxFormFieldHint } from '@ngx-signal-forms/toolkit/assistive';
 import {
@@ -288,6 +292,13 @@ export class NgxSpartanFormField<TValue = unknown> {
   readonly fieldName = input<string>();
 
   /**
+   * Optional per-field warning-strategy override (mirrors the toolkit
+   * wrapper's `warningStrategy` input). Resolved independently of the error
+   * strategy — the warning cascade never reads the error one (ADR-0007).
+   */
+  readonly warningStrategy = input<WarningDisplayStrategy | null>(null);
+
+  /**
    * Optional projected `<brn-label>` association. Spartan's `BrnLabel`
    * inside `BrnField` provides labelable id wiring; the toolkit's
    * `aria-describedby` chain still flows through the field-name signal,
@@ -389,10 +400,24 @@ export class NgxSpartanFormField<TValue = unknown> {
   readonly #injector = inject(Injector);
 
   protected readonly effectiveStrategy = computed(() =>
-    resolveErrorDisplayStrategy(
-      null,
-      this.#formContext ? this.#formContext.errorStrategy() : undefined,
+    resolveStrategyFromContext(
+      undefined,
+      this.#formContext,
       this.#config.defaultErrorStrategy,
+    ),
+  );
+
+  /**
+   * Warning-channel counterpart to {@link effectiveStrategy}. Stays entirely
+   * inside the warning channel: explicit input → form context
+   * `warningStrategy()` → config `defaultWarningStrategy` → `'on-touch'`. No
+   * tier consults `defaultErrorStrategy` (ADR-0007).
+   */
+  protected readonly effectiveWarningStrategy = computed(() =>
+    resolveWarningStrategyFromContext(
+      this.warningStrategy() ?? undefined,
+      this.#formContext,
+      this.#config.defaultWarningStrategy,
     ),
   );
 
@@ -410,6 +435,7 @@ export class NgxSpartanFormField<TValue = unknown> {
     formField: this.formField(),
     strategy: this.effectiveStrategy(),
     submittedStatus: this.submittedStatus(),
+    warningStrategy: this.effectiveWarningStrategy(),
   }));
 
   /**
@@ -422,18 +448,57 @@ export class NgxSpartanFormField<TValue = unknown> {
   );
 
   /**
-   * Strategy-aware visibility timing. `createErrorVisibility` (auto-aria's
-   * cascade) drives the bridge composition; `createShowErrorsComputed`
-   * (strategy + submission state) is the same primitive used by the
-   * canonical `NgxFormFieldWrapper`. Wrapper-side state stays in lockstep
-   * with what auto-aria would write if it were active.
+   * Strategy-aware visibility timing, routed through the shared
+   * `createErrorVisibility()` seam (ADR-0006). A single call feeds both the
+   * `aria-describedby` composition below and `ariaInvalidValue`, so the two
+   * can never diverge from `effectiveStrategy`. Wrapper-side state stays in
+   * lockstep with what auto-aria would write if it were active.
    */
-  readonly #visibility = createErrorVisibility(this.#fieldStateSignal);
-  readonly #showByStrategy = createShowErrorsComputed(
-    this.#fieldStateSignal,
-    this.effectiveStrategy,
-    this.submittedStatus,
+  readonly #showByStrategy = createErrorVisibility(this.#fieldStateSignal, {
+    strategy: this.effectiveStrategy,
+    submittedStatus: this.submittedStatus,
+  });
+
+  /**
+   * Whether a *blocking* error is visible. `#showByStrategy` alone is not
+   * enough here: `createErrorVisibility()` gates on `invalid()`, and a
+   * `warn:`-only field is also `invalid()` (Angular's validation pipeline
+   * has no non-invalidating channel — see ADR-0007). Without this extra
+   * check, a touched warning-only field would suppress its own warning by
+   * "colliding" with itself through {@link #showWarningsByStrategy}'s
+   * `errorVisibility` gate. Mirrors the same gate the Material reference
+   * and `NgxHeadlessErrorState` apply.
+   */
+  readonly #hasVisibleBlockingError = computed(
+    () =>
+      this.#showByStrategy() &&
+      readDirectErrors(this.#fieldStateSignal()).some(isBlockingError),
   );
+
+  /**
+   * Warning-channel counterpart to {@link #showByStrategy}, routed through
+   * the shared `createWarningVisibility()` seam (ADR-0006, ADR-0007) instead
+   * of leaving the warning channel unaddressed at the wrapper level. Passing
+   * `#hasVisibleBlockingError` as `errorVisibility` means a visible blocking
+   * error still suppresses the warning, without a warning-only field
+   * suppressing itself.
+   *
+   * `NgxSpartanFormFieldError` (the default renderer) is also fed
+   * `effectiveWarningStrategy` directly through `errorInputs`, so this
+   * computed and the rendered warning `<p>` agree by construction. This is
+   * the wrapper-side escape hatch for consumers who swap in a custom
+   * renderer, mirroring the Material reference's `warningVisible`.
+   */
+  readonly #showWarningsByStrategy = createWarningVisibility(
+    this.#fieldStateSignal,
+    {
+      strategy: this.effectiveWarningStrategy,
+      submittedStatus: this.submittedStatus,
+      errorVisibility: this.#hasVisibleBlockingError,
+    },
+  );
+
+  readonly warningVisible = computed(() => this.#showWarningsByStrategy());
 
   // ── ARIA primitive factories ──────────────────────────────────────────
   // The four factories from `@ngx-signal-forms/toolkit/headless` drive
@@ -476,11 +541,19 @@ export class NgxSpartanFormField<TValue = unknown> {
    * value the bound control's `aria-describedby` ultimately receives —
    * there is no upstream DOM-resident list to preserve. Hints + error/
    * warning IDs come from the bound `FieldState` and the hint registry.
+   *
+   * `warningVisibility` is explicit rather than left to default to
+   * `visibility` (the blocking-error signal): the warning channel now runs
+   * its own independent cascade (`#showWarningsByStrategy`), so without
+   * this the composed `${fieldName}-warning` id could disagree with
+   * whether `NgxSpartanFormFieldError` actually renders the warning —
+   * either a missing reference (WCAG 1.3.1) or a dangling one.
    */
   readonly toolkitAriaDescribedBy = createAriaDescribedBySignal({
     fieldState: this.#fieldStateSignal,
     hintIds: this.hintIds,
-    visibility: this.#visibility,
+    visibility: this.#showByStrategy,
+    warningVisibility: this.#showWarningsByStrategy,
     preservedIds: () => null,
     fieldName: () => this.resolvedFieldName(),
   });

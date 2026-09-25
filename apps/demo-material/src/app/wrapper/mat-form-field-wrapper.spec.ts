@@ -10,12 +10,14 @@ import {
   schema,
   email,
   required,
+  validate,
 } from '@angular/forms/signals';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import {
   NgxSignalFormToolkit,
   provideNgxSignalFormsConfig,
+  warningError,
 } from '@ngx-signal-forms/toolkit';
 import { NgxFormFieldHint } from '@ngx-signal-forms/toolkit/assistive';
 import { render, waitFor } from '@testing-library/angular';
@@ -248,5 +250,103 @@ describe('MatFormFieldWrapper dev-mode missing-control assertion', () => {
     expect(message).toContain('No NgxMatBoundControl directive matched');
     expect(message).toContain('contact-email');
     expect(message).toContain('ngxMatTextControl');
+  });
+});
+
+interface WarningTimingModel {
+  nickname: string;
+}
+
+const warningTimingSchema = schema<WarningTimingModel>((path) => {
+  validate(path.nickname, (ctx) => {
+    const trimmed = (ctx.value() ?? '').trim();
+    if (trimmed.length > 0 && trimmed.length < 3) {
+      return warningError(
+        'short-nickname',
+        'Short nicknames are easy to confuse.',
+      );
+    }
+    return null;
+  });
+});
+
+/**
+ * Host harness with `strategy="on-submit"` (blocking-error timing) and
+ * `warningStrategy="immediate"` (warning timing) both explicit, so the two
+ * cascades can only agree by chance — never because one reads the other.
+ */
+@Component({
+  selector: 'ngx-warning-timing-host',
+  imports: [
+    FormField,
+    NgxSignalFormToolkit,
+    NgxMatFormBundle,
+    MatFormFieldModule,
+    MatInputModule,
+  ],
+  template: `
+    <form [formRoot]="nicknameForm" ngxSignalForm>
+      <mat-form-field
+        [ngxMatFormField]="nicknameForm.nickname"
+        fieldName="nickname"
+        strategy="on-submit"
+        warningStrategy="immediate"
+      >
+        <mat-label>Nickname</mat-label>
+        <input
+          matInput
+          id="nickname"
+          type="text"
+          [formField]="nicknameForm.nickname"
+          ngxMatTextControl
+        />
+      </mat-form-field>
+    </form>
+  `,
+})
+class WarningTimingHostComponent {
+  protected readonly model = signal<WarningTimingModel>({ nickname: '' });
+  readonly nicknameForm = form<WarningTimingModel>(
+    this.model,
+    warningTimingSchema,
+  );
+
+  readonly wrapper = viewChild.required(MatFormFieldWrapper<string>);
+}
+
+describe('MatFormFieldWrapper warning timing (#506)', () => {
+  it('shows the warning before submit under warningStrategy="immediate" even though the blocking-error strategy is "on-submit"', async () => {
+    const user = userEvent.setup();
+    const view = await render(WarningTimingHostComponent, {
+      providers: [
+        provideZonelessChangeDetection(),
+        provideNgxSignalFormsConfig({
+          defaultErrorStrategy: 'on-touch',
+          autoAria: true,
+        }),
+      ],
+    });
+
+    const wrapper = view.fixture.componentInstance.wrapper();
+    const nicknameInput = view.getByLabelText(/nickname/i);
+
+    // Type a warning-triggering value without blurring or submitting. The
+    // field has no blocking error, so `strategy="on-submit"` never gates
+    // anything here — this isolates the warning cascade.
+    await user.type(nicknameInput, 'Al');
+
+    // Before the fix, `warningVisible` was computed off the *error*
+    // cascade (`#showByStrategy`, resolved from `strategy="on-submit"`),
+    // so it stayed `false` until submit regardless of `warningStrategy`.
+    // With the independent warning cascade (ADR-0007), `warningStrategy`
+    // alone decides this, so the warning appears immediately.
+    //
+    // `waitFor` re-runs change detection on every poll, and this wrapper
+    // writes attributes on every render — under a reverted fix that keeps
+    // `warningVisible()` permanently `false`, that combination starves the
+    // event loop and `waitFor` never times out (not even `--testTimeout`).
+    // A single `whenStable()` + direct assertion fails fast instead.
+    await view.fixture.whenStable();
+    expect(wrapper.warningVisible()).toBe(true);
   });
 });
