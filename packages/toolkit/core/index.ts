@@ -20,6 +20,7 @@ export * from './services/control-preset-registry';
 export * from './services/control-visibility-signal';
 export * from './services/field-identity';
 export * from './services/field-visibility-registry';
+export * from './services/submit-announcements';
 
 // Directives
 export * from './directives/auto-aria';

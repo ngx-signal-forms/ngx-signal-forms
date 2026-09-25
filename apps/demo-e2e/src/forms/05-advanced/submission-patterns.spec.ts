@@ -68,12 +68,14 @@ test.describe('Advanced - Submission Patterns', () => {
       // Trigger validation by trying to submit the empty form
       await page.submitButton.click();
 
-      // After submit, error message should be visible
-      const errorMessage = page.page
-        .locator('[role="alert"]')
-        .filter({ hasText: 'Username is required' })
-        .first();
+      // After submit, the field error should be visible. This page renders
+      // an error summary, so the submit-revealed field error sits outside
+      // its role="alert" region (ADR-0012). Find it by the id the input's
+      // aria-describedby points to, not by role, which would also match the
+      // summary.
+      const errorMessage = page.page.locator('#username-error');
       await expect(errorMessage).toBeVisible();
+      await expect(errorMessage).toContainText('Username is required');
     });
 
     test('should focus first invalid field on submit (WCAG 2.2 focus order)', async () => {

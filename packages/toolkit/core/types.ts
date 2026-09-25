@@ -412,6 +412,22 @@ export interface NgxSignalFormsConfig {
    * @default 'Warning:'
    */
   warningPrefixText: string;
+
+  /**
+   * When the form renders an `NgxFormFieldErrorSummary`, let the summary be
+   * the only live region that announces after a submit.
+   *
+   * The summary and each `NgxFormFieldError` are `role="alert"` regions. One
+   * submit that reveals N field errors would otherwise fire N + 1 assertive
+   * announcements at once, which screen readers cut off, stack, or repeat.
+   * With this on, a field error revealed by a submit shows outside its live
+   * region. A later change to that error, while the user edits the field,
+   * announces as usual. Forms without a summary are not affected.
+   *
+   * Set `false` to let every field error announce on submit too.
+   * @default true
+   */
+  errorSummaryAnnouncesAlone: boolean;
 }
 
 /**
@@ -469,4 +485,9 @@ export interface NgxSignalFormsUserConfig {
    * disable it.
    */
   warningPrefixText?: string | undefined;
+  /**
+   * Set `false` to let field errors announce on submit even when the form
+   * renders an error summary.
+   */
+  errorSummaryAnnouncesAlone?: boolean | undefined;
 }

@@ -65,6 +65,7 @@ export const DEFAULT_NGX_SIGNAL_FORMS_CONFIG = {
   requiredHintText: 'required',
   errorPrefixText: 'Error:',
   warningPrefixText: 'Warning:',
+  errorSummaryAnnouncesAlone: true,
 } as const satisfies NgxSignalFormsConfig;
 
 /**
