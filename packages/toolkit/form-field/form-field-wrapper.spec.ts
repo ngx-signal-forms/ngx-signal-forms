@@ -4977,5 +4977,60 @@ describe('NgxSignalFormWrapperComponent', () => {
         container.querySelector('#bio-char-count-limit'),
       ).toHaveTextContent('Maximaal 50 tekens');
     });
+
+    it('keeps the visible "n/max" text exposed to AT when the control opts out via ngxSignalFormControlAria="manual" (PR #540 review)', async () => {
+      // Regression: a `manual`-mode control's `aria-describedby` is entirely
+      // author-owned (`NgxSignalFormAutoAria.ariaDescribedBy` never appends
+      // registry ids to it), so the wrapper still registers the count's
+      // limit id, but nothing ever adds it to the DOM attribute. Hiding the
+      // visible "n/max" text in that case — as `limitId() !== null` alone
+      // would say to do — silences the count for assistive technology.
+      @Component({
+        selector: 'ngx-test-char-count-manual-aria',
+        imports: [
+          NgxSignalFormWrapperComponent,
+          NgxSignalFormToolkit,
+          NgxSignalFormControlSemanticsDirective,
+          NgxFormFieldCharacterCount,
+          FormField,
+        ],
+        template: `
+          <ngx-form-field-wrapper [formField]="testForm.bio">
+            <label for="bio">Bio</label>
+            <textarea
+              id="bio"
+              [formField]="testForm.bio"
+              ngxSignalFormControlAria="manual"
+            ></textarea>
+            <ngx-form-field-character-count
+              [formField]="testForm.bio"
+              [maxLength]="200"
+            />
+          </ngx-form-field-wrapper>
+        `,
+      })
+      class Host {
+        readonly testForm = form(signal({ bio: '' }));
+      }
+
+      const { container } = await render(Host);
+
+      const wrapper = container.querySelector('ngx-form-field-wrapper');
+      expect(wrapper).toHaveAttribute(
+        'data-ngx-signal-form-control-aria-mode',
+        'manual',
+      );
+
+      // The limit description still registers and renders — only whether it
+      // is safe to hide the visible count is gated on aria ownership.
+      expect(
+        container.querySelector('#bio-char-count-limit'),
+      ).toHaveTextContent('Up to 200 characters');
+
+      const visibleText = container.querySelector(
+        '.ngx-signal-form-field-char-count__text',
+      );
+      expect(visibleText).not.toHaveAttribute('aria-hidden');
+    });
   });
 });

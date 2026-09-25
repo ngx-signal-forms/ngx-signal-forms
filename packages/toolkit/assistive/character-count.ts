@@ -193,15 +193,18 @@ export type NgxCharacterCountAnnouncementFormatter = (
  *   for screen reader users; restyling `-warning-threshold` /
  *   `-danger-threshold` only shifts when the *color* changes, never when the
  *   announcement fires.
- * - Inside a wrapper, a resolved limit renders a visually-hidden element
+ * - Inside a wrapper whose bound control's `aria-describedby` auto-aria
+ *   actually manages, a resolved limit renders a visually-hidden element
  *   stating the limit (e.g. "Up to 200 characters") and links it into the
  *   control's `aria-describedby`, so a screen reader user hears the limit on
  *   focus even with `liveAnnounce` off (issue #499). The visible "n/max"
  *   text becomes `aria-hidden` **only once that link exists** — it is not
- *   read twice, and never as "n slash max". A bare count with no field
- *   context (no wrapper, no `NGX_SIGNAL_FORM_FIELD_CONTEXT`) keeps its
- *   visible text exposed to assistive technology, because nothing else
- *   describes it in that case.
+ *   read twice, and never as "n slash max". The visible text stays exposed
+ *   to assistive technology in two cases: a bare count with no field context
+ *   (no wrapper, no `NGX_SIGNAL_FORM_FIELD_CONTEXT`), and a wrapped control
+ *   with `ngxSignalFormControlAria="manual"` — auto-aria never writes to a
+ *   manually-owned `aria-describedby`, so hiding the visible text there
+ *   would silence the count entirely.
  *
  * @see {@link createCharacterCount} for the underlying headless utility
  */
@@ -212,7 +215,7 @@ export type NgxCharacterCountAnnouncementFormatter = (
   template: `
     <span
       class="ngx-signal-form-field-char-count__text"
-      [attr.aria-hidden]="limitId() ? 'true' : null"
+      [attr.aria-hidden]="hidesVisibleText() ? 'true' : null"
     >
       {{ characterCountText() }}
     </span>
@@ -534,6 +537,28 @@ export class NgxFormFieldCharacterCount {
     if (fieldName === null || max === null) return null;
 
     return generateCharacterCountLimitId(fieldName);
+  });
+
+  /**
+   * Whether it is safe to hide the visible "n/max" text from assistive
+   * technology, i.e. whether the limit description {@link limitId} mints
+   * will actually reach the control's `aria-describedby`.
+   *
+   * `limitId` only proves an id *can* be minted — a wrapper's bound control
+   * with `ngxSignalFormControlAria="manual"` leaves `aria-describedby`
+   * entirely author-owned, so `NgxSignalFormAutoAria` never appends a
+   * registry id there even though the wrapper still registers it (see
+   * `NgxSignalFormFieldContext.isControlDescribedByManaged`). Hiding the
+   * visible text in that case would silence the count for assistive
+   * technology with nothing replacing it — the exact regression this
+   * signal exists to prevent. `NgxFormFieldHint` has no equivalent gate
+   * because its content stays directly visible either way.
+   */
+  protected readonly hidesVisibleText = computed(() => {
+    return (
+      this.limitId() !== null &&
+      (this.#fieldContext?.isControlDescribedByManaged?.() ?? true)
+    );
   });
 
   /**

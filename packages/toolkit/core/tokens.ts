@@ -40,6 +40,29 @@ export interface NgxSignalFormFieldContext {
    * position must still resolve to the unsuffixed `${fieldName}-hint`.
    */
   readonly hintOrdinal?: (hint: object) => number;
+
+  /**
+   * Whether the wrapper's bound control has its `aria-describedby` composed
+   * by `NgxSignalFormAutoAria` — `true` unless the control opts out via
+   * `ngxSignalFormControlAria="manual"`. In manual mode, auto-aria leaves
+   * `aria-describedby` entirely author-owned (see
+   * `NgxSignalFormAutoAria.ariaDescribedBy`), so an id registered through
+   * `NGX_SIGNAL_FORM_HINT_REGISTRY` — a hint's, or a character count's limit
+   * description — never reaches the DOM attribute even though the id was
+   * successfully minted.
+   *
+   * This does not affect `NgxFormFieldHint`: its content stays directly
+   * visible whether or not its id is referenced, so an unlinked hint is
+   * still readable. `NgxFormFieldCharacterCount` reads this signal because
+   * it does the opposite — it hides its own visible "n/max" text once a
+   * limit description exists to replace it — and hiding that text without a
+   * working link would silence the count for assistive technology (issue
+   * #499 hardening).
+   *
+   * Omitted by contexts that don't track control ARIA ownership; callers
+   * default to `true` (the common, auto-managed case) when this is absent.
+   */
+  readonly isControlDescribedByManaged?: () => boolean;
 }
 
 /**

@@ -242,6 +242,14 @@ import { resolveUnionInput } from './utilities/resolve-union-input';
             const ordinal = candidates.indexOf(hint as NgxFormFieldHint);
             return ordinal === -1 ? 0 : ordinal;
           },
+          // `resolvedControlAriaMode()` is `null` when the projected control
+          // never opted into explicit semantics — auto-aria then owns
+          // `aria-describedby` for it, the same default this signal exposes
+          // as `true`. Only an explicit `ngxSignalFormControlAria="manual"`
+          // flips it (see `NgxSignalFormFieldContext.isControlDescribedByManaged`
+          // for why `NgxFormFieldCharacterCount` needs this).
+          isControlDescribedByManaged: () =>
+            component.resolvedControlAriaMode() !== 'manual',
         };
       },
     },
