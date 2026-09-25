@@ -108,7 +108,7 @@ describe('createSubmittedStatusTracker', () => {
     expect(status()).toBe('submitted');
   });
 
-  it('resets to "unsubmitted" and clears submitAttempted when touched returns to false', async () => {
+  it('resets to "unsubmitted" after touched returns to false, even with a stale submitAttempted flag', async () => {
     const submittingState = signal(false);
     const touchedState = signal(false);
     const submitAttempted: WritableSignal<boolean> = signal(false);
@@ -121,20 +121,24 @@ describe('createSubmittedStatusTracker', () => {
       createSubmittedStatusTracker(mockForm, submitAttempted),
     );
 
-    // Drive a full submit cycle.
+    // Drive a full submit cycle, then flag an additional invalid attempt.
     submittingState.set(true);
     touchedState.set(true);
     await flush();
     submittingState.set(false);
     await flush();
+    submitAttempted.set(true);
+    await flush();
     expect(status()).toBe('submitted');
 
-    // Reset: form.reset() flips touched back to false. Tracker must roll
-    // back to 'unsubmitted' AND clear the external submitAttempted signal.
+    // Reset: form.reset() flips touched back to false. The tracker's reset
+    // check runs before it looks at `submitAttempted`, so the status rolls
+    // back to 'unsubmitted' even though the caller's flag is still `true` —
+    // the tracker only reads that signal, it never writes to it.
     touchedState.set(false);
     await flush();
     expect(status()).toBe('unsubmitted');
-    expect(submitAttempted()).toBe(false);
+    expect(submitAttempted()).toBe(true);
   });
 
   it("should not reset to 'unsubmitted' when touched flips false during in-flight submission", async () => {

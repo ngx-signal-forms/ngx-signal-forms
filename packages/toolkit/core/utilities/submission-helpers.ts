@@ -36,8 +36,12 @@ import { isFieldTreeLike } from './walk-field-tree';
  *   `true` when an invalid-form submit attempt would otherwise leave native
  *   `submitting()` flat (Angular's `submit()` short-circuits on invalid forms
  *   without ever flipping the signal). The tracker treats a `true` value as
- *   evidence of a completed attempt and reports `'submitted'`. The signal is
- *   cleared automatically when `touched()` returns to `false` (form reset).
+ *   evidence of a completed attempt and reports `'submitted'`, and folds it
+ *   into the same reset check as `submitting()`/`touched()` — a `touched()`
+ *   `true` → `false` transition still reports `'unsubmitted'` regardless of
+ *   a stale `submitAttempted` value. The tracker only reads this signal; it
+ *   never writes to it, so a caller that needs the flag itself to go back to
+ *   `false` after reset must clear it another way.
  * @returns Signal with the current `SubmittedStatus`
  *
  * @remarks
@@ -62,8 +66,15 @@ export function createSubmittedStatusTracker(
     resolve();
   }
 
+  // One linkedSignal over the full `{ submitting, touched, attempted }`
+  // source, replacing the old pair of effects (one that only re-read
+  // `submittedHistory()` to keep it live, one that wrote `submitAttempted`
+  // back to `false` on reset). Folding `submitAttempted` into the source
+  // moves the reset-vs-attempted precedence into this one `computation`, so
+  // the tracker no longer needs to write to the caller's signal at all — see
+  // the `submitAttempted` param doc above.
   const submittedHistory = linkedSignal<
-    { submitting: boolean; touched: boolean },
+    { submitting: boolean; touched: boolean; attempted: boolean },
     boolean
   >({
     source: () => {
@@ -71,11 +82,15 @@ export function createSubmittedStatusTracker(
       return {
         submitting: state.submitting(),
         touched: state.touched(),
+        attempted: submitAttempted?.() ?? false,
       };
     },
     computation: (curr, prev) => {
       const previousSource = prev?.source;
 
+      // Reset takes priority over a stale `attempted` flag: a form.reset()
+      // must report 'unsubmitted' even if a caller never clears its own
+      // `submitAttempted` signal.
       if (
         previousSource?.touched === true &&
         !curr.touched &&
@@ -88,28 +103,28 @@ export function createSubmittedStatusTracker(
         return true;
       }
 
+      if (curr.attempted) {
+        return true;
+      }
+
       return prev?.value ?? false;
     },
   });
 
+  // Keeps `submittedHistory` live independent of whether the returned
+  // `computed()` below happens to read it: that computed short-circuits to
+  // `'submitting'` without reading `submittedHistory()` at all while a
+  // submission is in flight, so nothing would otherwise force the
+  // linkedSignal to observe the `submitting: true` source value — its
+  // `computation` needs to see that value as `prev.source` once
+  // `submitting` flips back to `false`, or the true → false transition it
+  // is watching for goes unnoticed. A `computed()`/`linkedSignal()` only
+  // recomputes when read; only `effect()` is "always live" in Angular's
+  // reactive graph, so this one effect is the one place that requirement
+  // still needs it.
   effect(() => {
     submittedHistory();
   });
-
-  if (submitAttempted !== undefined) {
-    let previousTouched = false;
-    effect(() => {
-      const state = resolve()();
-      const touched = state.touched();
-      const submitting = state.submitting();
-      const wasTouched = previousTouched;
-      previousTouched = touched;
-
-      if (wasTouched && !touched && !submitting && submitAttempted()) {
-        submitAttempted.set(false);
-      }
-    });
-  }
 
   return computed(() => {
     const state = resolve()();
@@ -117,9 +132,7 @@ export function createSubmittedStatusTracker(
       return 'submitting';
     }
 
-    return submittedHistory() || (submitAttempted?.() ?? false)
-      ? 'submitted'
-      : 'unsubmitted';
+    return submittedHistory() ? 'submitted' : 'unsubmitted';
   });
 }
 /* oxlint-enable @typescript-eslint/prefer-readonly-parameter-types */
