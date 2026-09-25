@@ -16,6 +16,7 @@ import {
   provideNgxSignalFormControlPresets,
   provideNgxSignalFormControlPresetsForComponent,
   provideNgxSignalFormsConfig,
+  provideNgxSignalFormsConfigForComponent,
   requiredFromStandardSchema,
 } from '@ngx-signal-forms/toolkit';
 import { DEFAULT_NGX_SIGNAL_FORMS_CONFIG } from '@ngx-signal-forms/toolkit/core';
@@ -4857,6 +4858,124 @@ describe('NgxSignalFormWrapperComponent', () => {
       expect(idFor('Outer hint one')).toBe('outer-hint');
       expect(idFor('Outer hint two')).toBe('outer-hint-2');
       expect(idFor('Inner hint')).toBe('inner-hint');
+    });
+  });
+
+  describe('character-count limit linked into aria-describedby (issue #499)', () => {
+    it('links the control to the count’s limit description, ordered after a hint and before an error', async () => {
+      // Order contract: author ids, hints, count, then error or warning.
+      // `bio` gets a `required` error once touched, so this exercises all
+      // three managed segments in one chain.
+      @Component({
+        selector: 'ngx-test-char-count-describedby-order',
+        imports: [
+          NgxSignalFormWrapperComponent,
+          NgxSignalFormToolkit,
+          NgxFormFieldHint,
+          NgxFormFieldCharacterCount,
+          FormField,
+        ],
+        template: `
+          <ngx-form-field-wrapper [formField]="testForm.bio">
+            <label for="bio">Bio</label>
+            <textarea id="bio" [formField]="testForm.bio"></textarea>
+            <ngx-form-field-hint>Keep it short</ngx-form-field-hint>
+            <ngx-form-field-character-count
+              [formField]="testForm.bio"
+              [maxLength]="200"
+            />
+          </ngx-form-field-wrapper>
+        `,
+      })
+      class Host {
+        readonly testForm = form(
+          signal({ bio: '' }),
+          schema<{ bio: string }>((p) => {
+            required(p.bio, { message: 'Bio is required' });
+          }),
+        );
+      }
+
+      const { container, fixture } = await render(Host);
+      fixture.componentInstance.testForm.bio().markAsTouched();
+      fixture.detectChanges();
+      await fixture.whenStable();
+
+      const textarea = container.querySelector('#bio');
+      const describedBy = textarea?.getAttribute('aria-describedby');
+      expect(describedBy).toBe('bio-hint bio-char-count-limit bio-error');
+
+      const limitEl = container.querySelector('#bio-char-count-limit');
+      expect(limitEl).toHaveTextContent('Up to 200 characters');
+      // Rendered by the visually-hidden limit element only — the visible
+      // "n/200" text stays out of the accessible name/description chain.
+      expect(limitEl?.textContent).not.toContain('/200');
+    });
+
+    it('registers no id when the field has no maxLength', async () => {
+      @Component({
+        selector: 'ngx-test-char-count-no-limit',
+        imports: [
+          NgxSignalFormWrapperComponent,
+          NgxSignalFormToolkit,
+          NgxFormFieldCharacterCount,
+          FormField,
+        ],
+        template: `
+          <ngx-form-field-wrapper [formField]="testForm.bio">
+            <label for="bio">Bio</label>
+            <textarea id="bio" [formField]="testForm.bio"></textarea>
+            <ngx-form-field-character-count [formField]="testForm.bio" />
+          </ngx-form-field-wrapper>
+        `,
+      })
+      class Host {
+        readonly testForm = form(signal({ bio: '' }));
+      }
+
+      const { container } = await render(Host);
+
+      const textarea = container.querySelector('#bio');
+      expect(textarea).not.toHaveAttribute('aria-describedby');
+      expect(
+        container.querySelector('.ngx-signal-form-field-char-count__limit'),
+      ).toBeNull();
+    });
+
+    it('honours a config-provided characterCountLimitText override', async () => {
+      @Component({
+        selector: 'ngx-test-char-count-config-override',
+        imports: [
+          NgxSignalFormWrapperComponent,
+          NgxSignalFormToolkit,
+          NgxFormFieldCharacterCount,
+          FormField,
+        ],
+        providers: [
+          provideNgxSignalFormsConfigForComponent({
+            characterCountLimitText: 'Maximaal {max} tekens',
+          }),
+        ],
+        template: `
+          <ngx-form-field-wrapper [formField]="testForm.bio">
+            <label for="bio">Bio</label>
+            <textarea id="bio" [formField]="testForm.bio"></textarea>
+            <ngx-form-field-character-count
+              [formField]="testForm.bio"
+              [maxLength]="50"
+            />
+          </ngx-form-field-wrapper>
+        `,
+      })
+      class Host {
+        readonly testForm = form(signal({ bio: '' }));
+      }
+
+      const { container } = await render(Host);
+
+      expect(
+        container.querySelector('#bio-char-count-limit'),
+      ).toHaveTextContent('Maximaal 50 tekens');
     });
   });
 });

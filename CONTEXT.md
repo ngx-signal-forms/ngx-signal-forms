@@ -179,6 +179,19 @@ ngx-signal-forms — an Angular toolkit for working with Signal Forms.
   reads, the deliberate `focus-first-invalid` policy asymmetry — merging is the
   bug, and those are marked in place as intentional.
 
+- **`aria-describedby` has one fixed segment order: author ids, hints, count,
+  then error or warning.** `createAriaDescribedBySignal` preserves
+  author-written ids first, appends every id from the `hintIds` signal next,
+  then a blocking-error or warning id last. `NgxFormFieldCharacterCount`'s
+  limit description (issue #499) rides the `hintIds` segment rather than
+  getting a channel of its own: `NgxFormFieldWrapper.hintDescriptors` appends
+  the count's `limitId()` _after_ the hint descriptors, so it registers
+  through the same `NGX_SIGNAL_FORM_HINT_REGISTRY` path
+  `NgxFormFieldHint` uses. This is why the toolkit never added a second
+  describedby channel for the count — the hint segment already has the right
+  position in the order, and a new channel would need its own ordering
+  decision relative to hints and errors.
+
 - **A field's name is owned by whoever provides its identity.** Auto-aria
   derives a field name from the bound control's `id` unless an ancestor
   provides an `NgxFieldIdentity`, in which case that service owns the name

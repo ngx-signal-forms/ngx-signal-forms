@@ -248,6 +248,7 @@ provideNgxSignalFormsConfig({
   requiredHintText: 'required', // visually-hidden required hint for role="group" clusters
   errorPrefixText: 'Error:', // visually-hidden prefix on NgxFormFieldError blocking-error messages
   warningPrefixText: 'Warning:', // visually-hidden prefix on NgxFormFieldError warning messages
+  characterCountLimitText: 'Up to {max} characters', // visually-hidden limit description linked via aria-describedby
 });
 ```
 

@@ -99,6 +99,11 @@ function createConfigFactory(
         configDefault: parentOrNull?.warningPrefixText,
         fallback: DEFAULT_NGX_SIGNAL_FORMS_CONFIG.warningPrefixText,
       }),
+      characterCountLimitText: createCascadingResolver({
+        input: userConfig.characterCountLimitText,
+        configDefault: parentOrNull?.characterCountLimitText,
+        fallback: DEFAULT_NGX_SIGNAL_FORMS_CONFIG.characterCountLimitText,
+      }),
     };
   };
 }

@@ -1,6 +1,7 @@
 import { ApplicationRef, Component, signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
-import { FormField, form, maxLength } from '@angular/forms/signals';
+import { FormField, form, maxLength, required } from '@angular/forms/signals';
+import { NgxFormField } from '@ngx-signal-forms/toolkit/form-field';
 import { render } from '@testing-library/angular';
 import { userEvent } from 'vitest/browser';
 import { describe, expect, it } from 'vitest';
@@ -72,6 +73,54 @@ describe('NgxFormFieldCharacterCount — WCAG 2.2 AA conformance', () => {
     await TestBed.inject(ApplicationRef).whenStable();
 
     expect(container.textContent).toContain('/10');
+    await expectNoA11yViolations(container);
+  });
+});
+
+/**
+ * WCAG 2.2 AA conformance gate for the count's limit description, linked
+ * into the bound control's `aria-describedby` through
+ * `NgxFormFieldWrapper` (issue #499). Rendered through the wrapper — unlike
+ * the standalone fixtures above — because the link only exists once a field
+ * name is available, and only the wrapper publishes one.
+ */
+describe('NgxFormFieldCharacterCount — limit description linked via aria-describedby (issue #499)', () => {
+  it('links the limit description into aria-describedby, ordered after a hint and before an error, with no violations', async () => {
+    @Component({
+      selector: 'ngx-test-a11y-char-count-describedby',
+      imports: [FormField, NgxFormField],
+      template: `
+        <ngx-form-field-wrapper [formField]="testForm.bio">
+          <label for="bio">Bio</label>
+          <textarea id="bio" [formField]="testForm.bio"></textarea>
+          <ngx-form-field-hint>Keep it short</ngx-form-field-hint>
+          <ngx-form-field-character-count
+            [formField]="testForm.bio"
+            [maxLength]="200"
+          />
+        </ngx-form-field-wrapper>
+      `,
+    })
+    class TestComponent {
+      readonly #model = signal({ bio: '' });
+      readonly testForm = form(this.#model, (path) => {
+        required(path.bio, { message: 'Bio is required' });
+      });
+    }
+
+    const { container, fixture } = await render(TestComponent);
+    fixture.componentInstance.testForm.bio().markAsTouched();
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    const textarea = container.querySelector('#bio');
+    expect(textarea?.getAttribute('aria-describedby')).toBe(
+      'bio-hint bio-char-count-limit bio-error',
+    );
+    expect(container.querySelector('#bio-char-count-limit')).toHaveTextContent(
+      'Up to 200 characters',
+    );
+
     await expectNoA11yViolations(container);
   });
 });
