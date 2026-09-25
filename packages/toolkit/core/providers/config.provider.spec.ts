@@ -181,4 +181,22 @@ describe('provideNgxSignalFormsConfigForComponent', () => {
       'obligatoire',
     );
   });
+
+  it('flows custom errorPrefixText / warningPrefixText overrides through to the resolved config (issue #498 localization)', () => {
+    // `errorPrefixText` / `warningPrefixText` drive the visually-hidden
+    // "Error:" / "Warning:" prefix NgxFormFieldError renders on each message
+    // (see form-field-error.ts `resolvedErrorPrefix` /
+    // `resolvedWarningPrefix`) — config-driven for the same localization
+    // reason as `requiredHintText`, and an empty string must disable the
+    // prefix for that channel rather than falling back to the default.
+    const providers = provideNgxSignalFormsConfig({
+      errorPrefixText: 'Fout:',
+      warningPrefixText: '',
+    });
+    const injector = createInjectorFromEnvProviders([providers]);
+    const resolved = injector.get(NGX_SIGNAL_FORMS_CONFIG);
+
+    expect(resolved.errorPrefixText).toBe('Fout:');
+    expect(resolved.warningPrefixText).toBe('');
+  });
 });

@@ -144,12 +144,14 @@ describe('NgxFormFieldWrapper + @angular/forms/signals/compat', () => {
       expect(
         screen.queryByText(SCHEMA_VALIDATOR_SHOULD_NOT_SURFACE_MESSAGE),
       ).toBeNull();
-      expect(screen.getByText('This field is required')).toBeTruthy();
+      expect(screen.getByText(/This field is required/)).toBeTruthy();
       const describedBy = input.getAttribute('aria-describedby');
       expect(describedBy).toBe('last-name-error');
+      // The visually-hidden "Error:" prefix (issue #498) is part of this
+      // element's text content, since `aria-describedby` must expose it.
       expect(
         container.querySelector(`#${describedBy}`)?.textContent?.trim(),
-      ).toBe('This field is required');
+      ).toBe('Error: This field is required');
     });
   });
 

@@ -12,6 +12,7 @@ import type { FieldTree } from '@angular/forms/signals';
 import {
   NGX_SIGNAL_FORM_FIELD_CONTEXT,
   NGX_SIGNAL_FORM_FIELD_VISIBILITY_REGISTRY,
+  NGX_SIGNAL_FORMS_CONFIG,
 } from '@ngx-signal-forms/toolkit';
 import {
   createFieldMessageIdSignals,
@@ -108,6 +109,14 @@ export type NgxFormFieldErrorPresentation = 'inline' | 'panel';
  * Features:
  * - **Errors**: `role="alert"` (implies `aria-live="assertive"` + `aria-atomic="true"`)
  * - **Warnings**: `role="status"` (implies `aria-live="polite"` + `aria-atomic="true"`)
+ * - Each message carries a visually hidden "Error:" / "Warning:" prefix, so
+ *   the accessible description tells the two channels apart without relying
+ *   on colour (WCAG 1.4.1, 1.3.1). Configure the text through
+ *   `NgxSignalFormsConfig.errorPrefixText` / `warningPrefixText`; pass `''`
+ *   to disable a channel's prefix. Rendered even when `title` is set — the
+ *   title names the group, not a given message's channel. See "Telling
+ *   errors and warnings apart without colour" in the assistive `README.md`
+ *   for the CSS hook that adds a visible icon.
  * - Strategy-aware error/warning display — warnings follow their own cascade
  *   so informational feedback stays visible; override via `warningStrategy`
  * - Structured rendering from Signal Forms
@@ -187,7 +196,10 @@ export type NgxFormFieldErrorPresentation = 'inline' | 'panel';
               <li
                 class="ngx-form-field-error__message ngx-form-field-error__message--error"
               >
-                {{ error.message }}
+                <span class="ngx-form-field-error__prefix">{{
+                  resolvedErrorPrefix()
+                }}</span
+                >{{ error.message }}
               </li>
             }
           </ul>
@@ -199,7 +211,10 @@ export type NgxFormFieldErrorPresentation = 'inline' | 'panel';
             <p
               class="ngx-form-field-error__message ngx-form-field-error__message--error"
             >
-              {{ error.message }}
+              <span class="ngx-form-field-error__prefix">{{
+                resolvedErrorPrefix()
+              }}</span
+              >{{ error.message }}
             </p>
           }
         }
@@ -232,7 +247,10 @@ export type NgxFormFieldErrorPresentation = 'inline' | 'panel';
               <li
                 class="ngx-form-field-error__message ngx-form-field-error__message--warning"
               >
-                {{ warning.message }}
+                <span class="ngx-form-field-error__prefix">{{
+                  resolvedWarningPrefix()
+                }}</span
+                >{{ warning.message }}
               </li>
             }
           </ul>
@@ -244,7 +262,10 @@ export type NgxFormFieldErrorPresentation = 'inline' | 'panel';
             <p
               class="ngx-form-field-error__message ngx-form-field-error__message--warning"
             >
-              {{ warning.message }}
+              <span class="ngx-form-field-error__prefix">{{
+                resolvedWarningPrefix()
+              }}</span
+              >{{ warning.message }}
             </p>
           }
         }
@@ -268,6 +289,12 @@ export class NgxFormFieldError {
   readonly #fieldContext = inject(NGX_SIGNAL_FORM_FIELD_CONTEXT, {
     optional: true,
   });
+
+  /**
+   * Global config, read for {@link resolvedErrorPrefix} and
+   * {@link resolvedWarningPrefix}.
+   */
+  readonly #config = inject(NGX_SIGNAL_FORMS_CONFIG);
 
   /**
    * Field-visibility registry contributed by the nearest `[ngxSignalForm]`
@@ -343,6 +370,48 @@ export class NgxFormFieldError {
    */
   protected readonly resolvedErrors = this.headless.resolvedErrors;
   protected readonly resolvedWarnings = this.headless.resolvedWarnings;
+
+  /**
+   * Visually hidden "Error:" prefix rendered inside each blocking-error
+   * message, sourced from `NgxSignalFormsConfig.errorPrefixText`. It sits
+   * inside the same element `aria-describedby` points to, so a screen
+   * reader announces "Error: …" instead of relying on colour to tell an
+   * error apart from a warning (WCAG 1.4.1, 1.3.1).
+   *
+   * Carries its own trailing separator space so the rendered text reads
+   * "Error: message" with exactly one space, with no reliance on HTML
+   * whitespace between the `<span>` and `{{ error.message }}` (which
+   * Angular's template compiler collapses to a single space, or trims
+   * entirely at a block edge) or on an `&#32;` entity (which decodes to a
+   * plain space before that same trimming pass runs, so it gets swept up
+   * as if it were source whitespace too — both confirmed empirically
+   * against this file's own a11y specs, including after a `pnpm format`
+   * reflow). A literal space *inside* an interpolated binding's string
+   * value is never trimmed, regardless of surrounding source formatting.
+   * The template renders the `<span>` unconditionally (no `@if`) and glues
+   * its closing `>` directly to `{{ error.message }}` for the same reason:
+   * an empty string collapses the visually-hidden span to nothing.
+   *
+   * Empty only when `errorPrefixText` is `''` (per-channel opt-out).
+   * Rendered even when a `title` is shown: the title names the group (e.g.
+   * "Delivery notes"), not the channel of a given message, so it cannot
+   * stand in for the per-message prefix — `NgxFormFieldset` passes a title
+   * to both the error and warning container, and a titled warning would
+   * otherwise be colour-only again (WCAG 1.4.1, 1.3.1).
+   */
+  protected readonly resolvedErrorPrefix = computed(() => {
+    const text = this.#config.errorPrefixText;
+    return text ? `${text} ` : '';
+  });
+
+  /**
+   * Same as {@link resolvedErrorPrefix}, for warning messages, sourced from
+   * `NgxSignalFormsConfig.warningPrefixText`.
+   */
+  protected readonly resolvedWarningPrefix = computed(() => {
+    const text = this.#config.warningPrefixText;
+    return text ? `${text} ` : '';
+  });
 
   // ── Field name / ID resolution ────────────────────────────────────────
   //

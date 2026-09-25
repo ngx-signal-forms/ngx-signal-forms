@@ -246,6 +246,8 @@ provideNgxSignalFormsConfig({
   requiredLegendText: '{marker} indicates a required field',
   optionalLegendText: 'All fields are required unless marked {marker}',
   requiredHintText: 'required', // visually-hidden required hint for role="group" clusters
+  errorPrefixText: 'Error:', // visually-hidden prefix on NgxFormFieldError blocking-error messages
+  warningPrefixText: 'Warning:', // visually-hidden prefix on NgxFormFieldError warning messages
 });
 ```
 

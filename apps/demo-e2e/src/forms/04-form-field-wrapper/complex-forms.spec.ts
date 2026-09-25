@@ -7,7 +7,7 @@ const contactMethodFieldsetTopAriaSnapshot = `
 - radiogroup "Preferred contact method *":
   - text: Preferred contact method *
   - alert:
-    - paragraph: Preferred contact method is required
+    - paragraph: "Error: Preferred contact method is required"
   - radio "Email"
   - text: Email
   - radio "SMS"
@@ -26,7 +26,7 @@ const contactMethodFieldsetBottomAriaSnapshot = `
   - radio "Phone"
   - text: Phone
   - alert:
-    - paragraph: Preferred contact method is required
+    - paragraph: "Error: Preferred contact method is required"
 `;
 
 function requireValue<T>(value: T | null, label: string): T {
@@ -522,19 +522,19 @@ test.describe('Form Field Wrapper - Complex Forms', () => {
           - text: 👤 Personal Information First Name
           - textbox "First Name"
           - alert:
-            - paragraph: First name is required
+            - paragraph: "Error: First name is required"
           - text: Last Name
           - textbox "Last Name"
           - alert:
-            - paragraph: Last name is required
+            - paragraph: "Error: Last name is required"
           - text: Email
           - textbox "Email"
           - alert:
-            - paragraph: Email is required
+            - paragraph: "Error: Email is required"
           - text: Age
           - spinbutton "Age": "0"
           - alert:
-            - paragraph: Must be 18 or older
+            - paragraph: "Error: Must be 18 or older"
       `);
     });
 
