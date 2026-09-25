@@ -590,6 +590,39 @@ describe('NgxFormFieldCharacterCount', () => {
       expect(visibleText).not.toHaveAttribute('aria-hidden');
     });
 
+    it('keeps the visible "n/max" text exposed to AT when the field context reports manual ARIA ownership', async () => {
+      // Regression guard (PR #540 review): a field name resolves and a
+      // limit id CAN be minted, but the wrapper's bound control has opted
+      // out of auto-aria (`ngxSignalFormControlAria="manual"`), so nothing
+      // ever appends the limit id to `aria-describedby`. Hiding the visible
+      // text here — as `limitId() !== null` alone would say to do — leaves
+      // the count silent to assistive technology.
+      const { container } = await render(TestWrapperComponent, {
+        componentInputs: { textModel: 'test', maxLength: 100 },
+        providers: [
+          {
+            provide: NGX_SIGNAL_FORM_FIELD_CONTEXT,
+            useValue: {
+              fieldName: signal('bio'),
+              isControlDescribedByManaged: () => false,
+            },
+          },
+        ],
+      });
+
+      const visibleText = container.querySelector(
+        '.ngx-signal-form-field-char-count__text',
+      );
+      expect(visibleText).not.toHaveAttribute('aria-hidden');
+      // The limit element itself still renders — only the visible-text
+      // hiding is gated. It simply never gets referenced from
+      // `aria-describedby` in manual mode, the same way an unlinked hint id
+      // is registered but unused.
+      expect(
+        container.querySelector('#bio-char-count-limit'),
+      ).toHaveTextContent('Up to 100 characters');
+    });
+
     it('renders no hidden limit element outside a wrapper (no field name to build an id from)', async () => {
       // No NGX_SIGNAL_FORM_FIELD_CONTEXT provider here, matching how the
       // component is used in the CSS-threshold and colour specs above.
