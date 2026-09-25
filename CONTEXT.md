@@ -240,3 +240,35 @@ ngx-signal-forms — an Angular toolkit for working with Signal Forms.
   the unresolvable-Vest-field-name rule
   ([#291](https://github.com/ngx-signal-forms/ngx-signal-forms/issues/291))
   shipped in [#307](https://github.com/ngx-signal-forms/ngx-signal-forms/pull/307).
+
+- **The horizontal form-field layout's grid lives on a structural child, not
+  `:host`.** (Canonical explanation — form-field-wrapper.ts and
+  form-field-wrapper.selection.css both point here instead of repeating it.)
+  `ngx-form-field-wrapper` renders a `.ngx-signal-form-field-wrapper__layout`
+  div around label/messages/content/assistive. It is `display: contents` for
+  every appearance except horizontal, so it is invisible to layout and every
+  other appearance is unaffected. Horizontal turns it into the real CSS Grid
+  container and gives it `container-type: inline-size`, so a `@container`
+  query reacts to the wrapper's own rendered width instead of the viewport
+  (a wrapper can sit in a narrow column on a wide screen). The container
+  can't be `:host` itself, for two reasons: a `@container` size query cannot
+  restyle the same element that carries `container-type` (the grid and the
+  query source must be different elements), and `container-type` on `:host`
+  would risk zeroing its reported intrinsic size inside a _consumer's_ own
+  `auto`-sized flex/grid row. Below a fixed `20rem` threshold, every grid
+  item spans the full width and gets an explicit row, stacking the label
+  above the control (WCAG 1.4.10, 1.4.4) instead of squeezing the control
+  under a fixed-width label column. The threshold is not a public,
+  overridable token: `@container` size queries can only compare against a
+  literal length, not a CSS custom property, so there is no way to make this
+  number consumer-configurable with current CSS (verified against Chromium —
+  neither an unregistered nor an `@property`-registered custom property is
+  readable from a size-query condition, and `100cqi` inside the same element
+  that also declares `container-type` resolves against the next ancestor
+  container, not itself). The toolkit's own styles are view-encapsulated, so
+  a consumer cannot edit this `@container` rule directly; a different
+  breakpoint needs global CSS with higher specificity that resets
+  `grid-row`/`grid-column` on `.ngx-signal-form-field-wrapper__label`,
+  `__content`, `__assistive` and `__messages` at whatever width the
+  consumer wants instead. See THEMING.md, "Horizontal Layout", and
+  [#523](https://github.com/ngx-signal-forms/ngx-signal-forms/issues/523).

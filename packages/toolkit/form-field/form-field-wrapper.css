@@ -474,6 +474,16 @@
   display: none !important;
 }
 
+/* Structural wrapper around label/messages/content/assistive (#523).
+   `display: contents` drops it out of the box tree so every appearance
+   below keeps laying out its children directly against `:host`, exactly as
+   if the wrapper div didn't exist. Only the horizontal layout (see
+   form-field-wrapper.selection.css) gives it a real box, since that's the
+   one layout that needs an inline-size container query. */
+.ngx-signal-form-field-wrapper__layout {
+  display: contents;
+}
+
 :host(.ngx-signal-form-field-wrapper--selection-group) {
   --_gap: var(--_field-space-xs);
 }
@@ -985,10 +995,16 @@
 /* Selection controls (checkbox/switch/radio-group) require labels for */
 /* accessibility and intentionally keep their own layout. */
 
-/* Standard vertical: hide the empty label div. Flex gap only applies */
-/* between rendered children, so removing the div removes the gap too. */
-/* Plain appearance is a non-goal (it already strips label chrome), so */
-/* exclude it explicitly to keep the spec and the CSS in sync. */
+/* Hide the empty label div. The selector isn't scoped to an orientation, so
+   this also covers horizontal (see form-field-wrapper.selection.css,
+   "HORIZONTAL LAYOUT", #523): without it, a labelless horizontal field
+   would still occupy the orphaned 'label' grid-area target via
+   auto-placement, and — once the narrow `@container` query gives every
+   item an explicit row — reserve a whole empty row plus a `row-gap` sliver
+   above the control for nothing. In the vertical layout, flex gap only
+   applies between rendered children, so removing the div removes that gap
+   too. Plain appearance is a non-goal (it already strips label chrome), so
+   exclude it explicitly to keep the spec and the CSS in sync. */
 :host(.ngx-signal-form-field-wrapper--textual:not(.ngx-signal-forms-plain)):not(
     :has(.ngx-signal-form-field-wrapper__label :is(label, [ngxFormFieldLabel]))
   )
@@ -1024,14 +1040,17 @@
 /* textual non-plain wrappers so this mirrors the standard/outline rules */
 /* and cannot rewrite the grid on any non-textual host that might carry */
 /* the `--horizontal` class (today selection controls force vertical, but */
-/* the CSS should not rely on that invariant). */
+/* the CSS should not rely on that invariant). The grid itself lives on */
+/* `__layout`, not `:host` (see form-field-wrapper.selection.css, */
+/* "HORIZONTAL LAYOUT", #523), so these overrides target that div. */
 :host(
-  .ngx-signal-form-field-wrapper--textual.ngx-signal-form-field-wrapper--horizontal:not(
-      .ngx-signal-forms-plain
-    )
-):not(
-  :has(.ngx-signal-form-field-wrapper__label :is(label, [ngxFormFieldLabel]))
-) {
+    .ngx-signal-form-field-wrapper--textual.ngx-signal-form-field-wrapper--horizontal:not(
+        .ngx-signal-forms-plain
+      )
+  ):not(
+    :has(.ngx-signal-form-field-wrapper__label :is(label, [ngxFormFieldLabel]))
+  )
+  .ngx-signal-form-field-wrapper__layout {
   grid-template-columns: minmax(0, 1fr);
   grid-template-areas:
     'content'
@@ -1039,12 +1058,13 @@
 }
 
 :host(
-  .ngx-signal-form-field-wrapper--textual.ngx-signal-form-field-wrapper--horizontal.ngx-signal-form-field-wrapper--messages-top:not(
-      .ngx-signal-forms-plain
-    )
-):not(
-  :has(.ngx-signal-form-field-wrapper__label :is(label, [ngxFormFieldLabel]))
-) {
+    .ngx-signal-form-field-wrapper--textual.ngx-signal-form-field-wrapper--horizontal.ngx-signal-form-field-wrapper--messages-top:not(
+        .ngx-signal-forms-plain
+      )
+  ):not(
+    :has(.ngx-signal-form-field-wrapper__label :is(label, [ngxFormFieldLabel]))
+  )
+  .ngx-signal-form-field-wrapper__layout {
   grid-template-areas:
     'messages'
     'content'

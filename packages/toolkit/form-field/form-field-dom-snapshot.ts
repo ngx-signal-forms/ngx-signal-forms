@@ -115,6 +115,12 @@ export function readFormFieldWrapperDomSnapshot(
   // `cachedControl` above. The guard is what makes reuse safe, not any
   // assumption about where the element comes from. It lets steady-state
   // renders skip the `querySelector` call for both.
+  // `> .ngx-signal-form-field-wrapper__layout >` accounts for the structural
+  // wrapper the template renders around `__content`/`__label` (#523): it
+  // stays `display: contents` for every non-horizontal appearance, so it
+  // never appears in the *rendered* box tree, but it is still a real DOM
+  // node one level below `hostEl`, and `:scope >` is a DOM-structure
+  // combinator that `display` cannot change.
   // oxlint-disable-next-line @typescript-eslint/prefer-optional-chain -- see cacheHit above
   const mainSlot =
     cachedMainSlot?.isConnected && hostEl.contains(cachedMainSlot)
@@ -130,14 +136,14 @@ export function readFormFieldWrapperDomSnapshot(
           // the real control in `__main` — `__label` renders before
           // `__content` in the template, and `__prefix` before `__main`
           // inside it, so both slots are checked first in document order.
-          ':scope > .ngx-signal-form-field-wrapper__content > .ngx-signal-form-field-wrapper__main',
+          ':scope > .ngx-signal-form-field-wrapper__layout > .ngx-signal-form-field-wrapper__content > .ngx-signal-form-field-wrapper__main',
         );
   // oxlint-disable-next-line @typescript-eslint/prefer-optional-chain -- see cacheHit above
   const label =
     cachedLabel?.isConnected && hostEl.contains(cachedLabel)
       ? cachedLabel
       : hostEl.querySelector(
-          ':scope > .ngx-signal-form-field-wrapper__label :is(label, [ngxFormFieldLabel])',
+          ':scope > .ngx-signal-form-field-wrapper__layout > .ngx-signal-form-field-wrapper__label :is(label, [ngxFormFieldLabel])',
         );
 
   // `nativeControl` wins when present, and a `cachedControl` hit means the

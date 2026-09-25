@@ -464,9 +464,21 @@
 /* vertical. */
 /* Selection controls (checkbox, switch, radio-group) are excluded in the */
 /* component and keep their own grid templates. */
+/* */
+/* The grid lives on `__layout` (a structural child of `:host`, see */
+/* form-field-wrapper.ts and form-field-wrapper.css), not on `:host` itself */
+/* (#523) — see CONTEXT.md, "The horizontal form-field layout's grid lives */
+/* on a structural child, not `:host`", for why. */
 
 :host(.ngx-signal-form-field-wrapper--horizontal) {
+  display: block;
+}
+
+:host(.ngx-signal-form-field-wrapper--horizontal)
+  .ngx-signal-form-field-wrapper__layout {
   display: grid;
+  container-type: inline-size;
+  container-name: ngx-form-field-horizontal;
   grid-template-columns: var(--_horizontal-label-width) minmax(0, 1fr);
   grid-template-rows: auto auto;
   grid-template-areas:
@@ -477,8 +489,9 @@
 }
 
 :host(
-  .ngx-signal-form-field-wrapper--horizontal.ngx-signal-form-field-wrapper--messages-top
-) {
+    .ngx-signal-form-field-wrapper--horizontal.ngx-signal-form-field-wrapper--messages-top
+  )
+  .ngx-signal-form-field-wrapper__layout {
   grid-template-rows: auto auto auto;
   grid-template-areas:
     '.     messages'
@@ -507,4 +520,157 @@
 :host(.ngx-signal-form-field-wrapper--horizontal)
   .ngx-signal-form-field-wrapper__assistive {
   grid-area: assistive;
+}
+
+/* Stack below the threshold: every grid item spans the full inline size */
+/* and gets an explicit row, so the label ends up above the control instead */
+/* of squeezed beside it (WCAG 1.4.10, 1.4.4; #523). This restyles the grid */
+/* *items* (genuine descendants of the `__layout` container), never */
+/* `__layout`'s own `grid-template-columns` — a container can't restyle */
+/* itself from inside its own size query (see the "HORIZONTAL LAYOUT" */
+/* comment above). */
+/* */
+/* The threshold is a fixed `20rem`, not a public token: `@container` size */
+/* queries can't read a custom property in their condition (only a literal */
+/* length), so there is no way to make this number consumer-overridable yet */
+/* — see THEMING.md, "Horizontal Layout". */
+/* */
+/* A labelless field's `.label` div is `display: none` (see */
+/* form-field-wrapper.css, "LABEL-LESS LAYOUT"), so it drops out of the grid */
+/* entirely here too — it never reserves a row or a `row-gap` sliver above */
+/* the control. */
+/* */
+/* Deliberately NOT nested under a single `:host(...) { ... }` block (unlike */
+/* the outline layout above): Angular's emulated ViewEncapsulation does not */
+/* add its `[_ngcontent-*]` scoping attribute to selectors nested via native */
+/* CSS nesting — only to a rule's own top-level selector — which drops these */
+/* rules below the unconditional `grid-area` rules' specificity and silently */
+/* loses the cascade fight (verified against the compiled stylesheet in */
+/* Chromium). Each selector below is written out in full so it carries the */
+/* same `[_ngcontent-*]` attribute, and therefore the same specificity, as */
+/* the rules it needs to override. */
+@container ngx-form-field-horizontal (width < 20rem) {
+  :host(.ngx-signal-form-field-wrapper--horizontal)
+    .ngx-signal-form-field-wrapper__label,
+  :host(.ngx-signal-form-field-wrapper--horizontal)
+    .ngx-signal-form-field-wrapper__content,
+  :host(.ngx-signal-form-field-wrapper--horizontal)
+    .ngx-signal-form-field-wrapper__assistive,
+  :host(.ngx-signal-form-field-wrapper--horizontal)
+    .ngx-signal-form-field-wrapper__messages {
+    grid-column: 1 / -1;
+  }
+
+  :host(.ngx-signal-form-field-wrapper--horizontal)
+    .ngx-signal-form-field-wrapper__label {
+    grid-row: 1;
+    text-align: start;
+    align-self: start;
+  }
+
+  :host(.ngx-signal-form-field-wrapper--horizontal)
+    .ngx-signal-form-field-wrapper__content {
+    grid-row: 2;
+  }
+
+  :host(.ngx-signal-form-field-wrapper--horizontal)
+    .ngx-signal-form-field-wrapper__assistive {
+    grid-row: 3;
+  }
+
+  :host(
+      .ngx-signal-form-field-wrapper--horizontal.ngx-signal-form-field-wrapper--messages-top
+    )
+    .ngx-signal-form-field-wrapper__messages {
+    grid-row: 1;
+  }
+
+  :host(
+      .ngx-signal-form-field-wrapper--horizontal.ngx-signal-form-field-wrapper--messages-top
+    )
+    .ngx-signal-form-field-wrapper__label {
+    grid-row: 2;
+  }
+
+  :host(
+      .ngx-signal-form-field-wrapper--horizontal.ngx-signal-form-field-wrapper--messages-top
+    )
+    .ngx-signal-form-field-wrapper__content {
+    grid-row: 3;
+  }
+
+  :host(
+      .ngx-signal-form-field-wrapper--horizontal.ngx-signal-form-field-wrapper--messages-top
+    )
+    .ngx-signal-form-field-wrapper__assistive {
+    grid-row: 4;
+  }
+
+  /* Labelless: the hidden `.label` div (see form-field-wrapper.css,
+     "LABEL-LESS LAYOUT") never occupies row 1 above, so pull `.content` and
+     `.assistive` up by one row each — otherwise row 1 sits empty but still
+     collects a `row-gap` above the control, the same empty-row regression
+     the fixed-appearance rules avoid. The extra `:not(:has(...))` makes
+     these more specific than the rules above, so they win regardless of
+     source order.
+
+     Scoped to `--textual:not(.ngx-signal-forms-plain)`, matching exactly
+     the scope of the rule that actually hides `.label` (see
+     form-field-wrapper.css, "LABEL-LESS LAYOUT"). A labelless field outside
+     that scope — plain appearance, a slider, a composite control — still
+     renders a visible `.label` div (it can carry a required/optional
+     marker even with no projected `<label>`), so it must keep its own row;
+     shifting `.content` up unconditionally put it on row 1 directly under
+     that still-visible marker. */
+  :host(
+      .ngx-signal-form-field-wrapper--textual.ngx-signal-form-field-wrapper--horizontal:not(
+          .ngx-signal-forms-plain
+        )
+    ):not(
+      :has(
+        .ngx-signal-form-field-wrapper__label :is(label, [ngxFormFieldLabel])
+      )
+    )
+    .ngx-signal-form-field-wrapper__content {
+    grid-row: 1;
+  }
+
+  :host(
+      .ngx-signal-form-field-wrapper--textual.ngx-signal-form-field-wrapper--horizontal:not(
+          .ngx-signal-forms-plain
+        )
+    ):not(
+      :has(
+        .ngx-signal-form-field-wrapper__label :is(label, [ngxFormFieldLabel])
+      )
+    )
+    .ngx-signal-form-field-wrapper__assistive {
+    grid-row: 2;
+  }
+
+  :host(
+      .ngx-signal-form-field-wrapper--textual.ngx-signal-form-field-wrapper--horizontal.ngx-signal-form-field-wrapper--messages-top:not(
+          .ngx-signal-forms-plain
+        )
+    ):not(
+      :has(
+        .ngx-signal-form-field-wrapper__label :is(label, [ngxFormFieldLabel])
+      )
+    )
+    .ngx-signal-form-field-wrapper__content {
+    grid-row: 2;
+  }
+
+  :host(
+      .ngx-signal-form-field-wrapper--textual.ngx-signal-form-field-wrapper--horizontal.ngx-signal-form-field-wrapper--messages-top:not(
+          .ngx-signal-forms-plain
+        )
+    ):not(
+      :has(
+        .ngx-signal-form-field-wrapper__label :is(label, [ngxFormFieldLabel])
+      )
+    )
+    .ngx-signal-form-field-wrapper__assistive {
+    grid-row: 3;
+  }
 }

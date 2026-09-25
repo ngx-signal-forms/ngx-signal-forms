@@ -290,93 +290,110 @@ import { resolveUnionInput } from './utilities/resolve-union-input';
     '[attr.aria-describedby]': 'selectionClusterDescribedBy()',
   },
   template: `
-    <!-- Label slot (outside bordered container for standard layout, visually inside for outline via CSS) -->
-    <div class="ngx-signal-form-field-wrapper__label">
-      <ng-content select="label, [ngxFormFieldLabel]" />
-      @if (resolvedMarker(); as marker) {
-        <!--
-          Required/optional marker rendered in the template (not via CSS
-          ::after content) so screen readers do not double-announce alongside
-          the control's own \`aria-required\` attribute. \`aria-hidden="true"\`
-          keeps the marker purely visual (WCAG 1.3.1, 4.1.2).
-        -->
-        <span
-          class="ngx-signal-form-field-wrapper__marker"
-          [class.ngx-signal-form-field-wrapper__required-marker]="
-            marker.kind === 'required'
-          "
-          [class.ngx-signal-form-field-wrapper__optional-marker]="
-            marker.kind === 'optional'
-          "
-          aria-hidden="true"
-          >{{ marker.text }}</span
-        >
-      }
-      @if (groupRequiredHintId(); as requiredHintId) {
-        <!--
-          Relocated required-state announcement for a \`group\`-role selection
-          cluster (see \`groupRequiredHintId\` doc comment): \`aria-required\`
-          isn't valid ARIA on \`group\`, so this visually-hidden (NOT
-          aria-hidden) node carries the text instead, wired into
-          \`aria-describedby\` on the host. WCAG 1.3.1 / 4.1.2.
-        -->
-        <span
-          [id]="requiredHintId"
-          class="ngx-signal-form-field-wrapper__visually-hidden"
-          >{{ resolvedRequiredHintText() }}</span
-        >
-      }
-    </div>
+    <!--
+      Structural wrapper around every slot below. \`display: contents\` in
+      every appearance except horizontal (see form-field-wrapper.selection.css,
+      "HORIZONTAL LAYOUT"), so it drops out of the box tree and changes
+      nothing for standard/outline/plain/selection layouts — the label,
+      content and assistive nodes stay direct grid/flex participants of the
+      host exactly as before.
 
-    @if (isTopPlacement() && shouldRenderErrorSlot()) {
-      <div class="ngx-signal-form-field-wrapper__messages">
-        <ng-container
-          *ngComponentOutlet="
-            errorRendererComponent();
-            inputs: errorRendererInputs()
-          "
-        />
-      </div>
-    }
-
-    <!-- Bordered input container with prefix/suffix integrated -->
-    <div class="ngx-signal-form-field-wrapper__content">
-      <!-- Prefix slot (icons, text, etc.) -->
-      <div class="ngx-signal-form-field-wrapper__prefix">
-        <ng-content select="[prefix]" />
+      Horizontal layout turns it into the real CSS Grid container and gives
+      it \`container-type: inline-size\` instead of putting either on
+      \`:host\` itself — see CONTEXT.md, "The horizontal form-field layout's
+      grid lives on a structural child, not \`:host\`", for why (#523).
+    -->
+    <div class="ngx-signal-form-field-wrapper__layout">
+      <!-- Label slot (outside bordered container for standard layout, visually inside for outline via CSS) -->
+      <div class="ngx-signal-form-field-wrapper__label">
+        <ng-content select="label, [ngxFormFieldLabel]" />
+        @if (resolvedMarker(); as marker) {
+          <!--
+            Required/optional marker rendered in the template (not via CSS
+            ::after content) so screen readers do not double-announce alongside
+            the control's own \`aria-required\` attribute. \`aria-hidden="true"\`
+            keeps the marker purely visual (WCAG 1.3.1, 4.1.2).
+          -->
+          <span
+            class="ngx-signal-form-field-wrapper__marker"
+            [class.ngx-signal-form-field-wrapper__required-marker]="
+              marker.kind === 'required'
+            "
+            [class.ngx-signal-form-field-wrapper__optional-marker]="
+              marker.kind === 'optional'
+            "
+            aria-hidden="true"
+            >{{ marker.text }}</span
+          >
+        }
+        @if (groupRequiredHintId(); as requiredHintId) {
+          <!--
+            Relocated required-state announcement for a \`group\`-role selection
+            cluster (see \`groupRequiredHintId\` doc comment): \`aria-required\`
+            isn't valid ARIA on \`group\`, so this visually-hidden (NOT
+            aria-hidden) node carries the text instead, wired into
+            \`aria-describedby\` on the host. WCAG 1.3.1 / 4.1.2.
+          -->
+          <span
+            [id]="requiredHintId"
+            class="ngx-signal-form-field-wrapper__visually-hidden"
+            >{{ resolvedRequiredHintText() }}</span
+          >
+        }
       </div>
 
-      <!-- Main content (input) -->
-      <div class="ngx-signal-form-field-wrapper__main">
-        <ng-content />
-      </div>
-
-      <!-- Suffix slot (buttons, icons, etc.) -->
-      <div class="ngx-signal-form-field-wrapper__suffix">
-        <ng-content select="[suffix]" />
-      </div>
-    </div>
-
-    <!-- Assistive row: fixed-height container prevents layout shift -->
-    <div class="ngx-signal-form-field-wrapper__assistive">
-      <div class="ngx-signal-form-field-wrapper__assistive-left">
-        @if (!isTopPlacement() && shouldRenderErrorSlot()) {
+      @if (isTopPlacement() && shouldRenderErrorSlot()) {
+        <div class="ngx-signal-form-field-wrapper__messages">
           <ng-container
             *ngComponentOutlet="
               errorRendererComponent();
               inputs: errorRendererInputs()
             "
           />
-        }
-        <div
-          class="ngx-signal-form-field-wrapper__hint-slot"
-          [style.display]="shouldRenderErrorSlot() ? 'none' : 'contents'"
-        >
-          <ng-content select="ngx-form-field-hint" />
+        </div>
+      }
+
+      <!-- Bordered input container with prefix/suffix integrated -->
+      <div class="ngx-signal-form-field-wrapper__content">
+        <!-- Prefix slot (icons, text, etc.) -->
+        <div class="ngx-signal-form-field-wrapper__prefix">
+          <ng-content select="[prefix]" />
+        </div>
+
+        <!-- Main content (input) -->
+        <div class="ngx-signal-form-field-wrapper__main">
+          <ng-content />
+        </div>
+
+        <!-- Suffix slot (buttons, icons, etc.) -->
+        <div class="ngx-signal-form-field-wrapper__suffix">
+          <ng-content select="[suffix]" />
         </div>
       </div>
-      <div class="ngx-signal-form-field-wrapper__assistive-right">
-        <ng-content select="ngx-form-field-character-count, [characterCount]" />
+
+      <!-- Assistive row: fixed-height container prevents layout shift -->
+      <div class="ngx-signal-form-field-wrapper__assistive">
+        <div class="ngx-signal-form-field-wrapper__assistive-left">
+          @if (!isTopPlacement() && shouldRenderErrorSlot()) {
+            <ng-container
+              *ngComponentOutlet="
+                errorRendererComponent();
+                inputs: errorRendererInputs()
+              "
+            />
+          }
+          <div
+            class="ngx-signal-form-field-wrapper__hint-slot"
+            [style.display]="shouldRenderErrorSlot() ? 'none' : 'contents'"
+          >
+            <ng-content select="ngx-form-field-hint" />
+          </div>
+        </div>
+        <div class="ngx-signal-form-field-wrapper__assistive-right">
+          <ng-content
+            select="ngx-form-field-character-count, [characterCount]"
+          />
+        </div>
       </div>
     </div>
   `,

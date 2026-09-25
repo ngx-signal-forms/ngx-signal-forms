@@ -920,6 +920,23 @@ switch, radio-group) are also excluded and keep their inline layout.
 A `data-orientation` attribute (`vertical` | `horizontal`) is also exposed for
 custom CSS hooks.
 
+#### Stacking in narrow containers
+
+A horizontal wrapper measures its own rendered width with a `@container`
+query, not the viewport, because the same wrapper can sit in a narrow column
+on an otherwise wide screen. Once that width drops below a fixed `20rem`,
+the layout switches to stacked (label above the control) so the control
+never gets squeezed thinner than the label column — the failure mode at
+small viewports and high text zoom (WCAG 1.4.10, 1.4.4). Selection controls
+keep their own grid and are unaffected.
+
+The `20rem` threshold is not a configurable token: a `@container` size
+query's condition can only compare against a literal length, not a CSS
+custom property, so there is currently no way to make this number
+consumer-overridable. It is `rem`-based so raising the root font size
+(browser zoom) reaches it at a smaller physical width, the same way the
+fixed-width label column already does.
+
 Horizontal wrappers now default to a compact shared label column so the field
 controls line up out of the box without wasting horizontal space. Override the
 width when a tighter or wider column fits your form better.
