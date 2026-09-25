@@ -183,6 +183,9 @@ export class MatFormFieldWrapper<TValue = unknown> {
   readonly #presentation = createFieldPresentation(this.#fieldStateSignal, {
     strategy: this.strategy,
     warningStrategy: this.warningStrategy,
+    // The message renderers here do not gate on hidden(), so the wrapper
+    // must not either, or aria-invalid would disagree with them.
+    hidden: () => false,
   });
 
   readonly effectiveStrategy = this.#presentation.effectiveStrategy;

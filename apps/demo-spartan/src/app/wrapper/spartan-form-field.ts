@@ -404,6 +404,9 @@ export class NgxSpartanFormField<TValue = unknown> {
    */
   readonly #presentation = createFieldPresentation(this.#fieldStateSignal, {
     warningStrategy: this.warningStrategy,
+    // The message renderers here do not gate on hidden(), so the wrapper
+    // must not either, or aria-invalid would disagree with them.
+    hidden: () => false,
   });
 
   protected readonly effectiveStrategy = this.#presentation.effectiveStrategy;
