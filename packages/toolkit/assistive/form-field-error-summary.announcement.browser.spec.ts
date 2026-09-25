@@ -89,12 +89,30 @@ function isContent(node: Node): boolean {
 /**
  * The field's element markup, with Angular's anchor comments and
  * per-compilation `_ngcontent`/`_nghost` attributes removed, so two renders
- * of the same state compare equal.
+ * of the same state compare equal. Works on a DOM clone, not on the markup
+ * string, so no string sanitization is involved.
  */
 function elementMarkup(element: Element): string {
-  return element.outerHTML
-    .replaceAll(/<!--[\s\S]*?-->/gu, '')
-    .replaceAll(/ _ng(?:content|host)-[\w-]+=""/gu, '');
+  const clone = element.cloneNode(true) as Element;
+
+  const comments: Comment[] = [];
+  const walker = document.createTreeWalker(clone, NodeFilter.SHOW_COMMENT);
+  while (walker.nextNode()) {
+    comments.push(walker.currentNode as Comment);
+  }
+  for (const comment of comments) {
+    comment.remove();
+  }
+
+  for (const node of [clone, ...clone.querySelectorAll('*')]) {
+    for (const name of node.getAttributeNames()) {
+      if (name.startsWith('_ngcontent-') || name.startsWith('_nghost-')) {
+        node.removeAttribute(name);
+      }
+    }
+  }
+
+  return clone.outerHTML;
 }
 
 function fieldError(container: HTMLElement, name: string): HTMLElement {
