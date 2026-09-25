@@ -82,6 +82,15 @@ so hint IDs flow into `aria-describedby` purely through DI. The descriptor
 shape is the public wire format — see `NgxSignalFormHintDescriptor` in
 `@ngx-signal-forms/toolkit`.
 
+`NgxFormFieldCharacterCount` (issue #499) has no dedicated registry of its
+own — a custom wrapper that projects it must query it too (e.g.
+`contentChildren(NgxFormFieldCharacterCount)`) and append its `limitId()` to
+the same `hints` array, **after** the hint descriptors, so the required
+`aria-describedby` order (author ids, hints, count, then error or warning)
+holds. `limitId()` is `null` when the count has no resolved limit or no
+field name yet — filter those out before appending, the way
+`NgxFormFieldWrapper.hintDescriptors` does.
+
 ### 3. `NGX_FORM_FIELD_ERROR_RENDERER` and `NGX_FORM_FIELD_HINT_RENDERER`
 
 Inject the error renderer token with `{ optional: true }`, fall back to

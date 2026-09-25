@@ -66,6 +66,7 @@ export const DEFAULT_NGX_SIGNAL_FORMS_CONFIG = {
   errorPrefixText: 'Error:',
   warningPrefixText: 'Warning:',
   errorSummaryAnnouncesAlone: true,
+  characterCountLimitText: 'Up to {max} characters',
 } as const satisfies NgxSignalFormsConfig;
 
 /**

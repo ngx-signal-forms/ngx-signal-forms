@@ -53,11 +53,20 @@ import {
 form-field wrapper (or your own `NGX_SIGNAL_FORM_HINT_REGISTRY` provider)
 registers it. Next to a bare control, as shown above, it stays visual-only.
 
-`ngx-form-field-character-count` is never referenced from `aria-describedby`,
-inside a wrapper or not: it carries no id and nothing registers it. Set
-`[liveAnnounce]="true"` to give it its own polite live region, which speaks
-only on a threshold change, not on every keystroke. State the limit in a hint
-when the user needs it before typing.
+`ngx-form-field-character-count` needs the same two things as the hint — a
+resolved field name (`NGX_SIGNAL_FORM_FIELD_CONTEXT`) and a wrapper that
+queries it and registers its id — before it links anything. When both are
+present, it renders a visually-hidden element stating the limit (e.g. "Up to
+500 characters") and links it into `aria-describedby`, right after any
+hints, so a screen reader user hears the limit on focus even with
+`[liveAnnounce]` off; the visible "n/max" text then becomes hidden from
+assistive technology, since the hidden element already describes it. Next to
+a bare control, as shown above, nothing links it, so the visible "n/max"
+text stays exposed to assistive technology instead of going silent.
+Override the limit text through `NgxSignalFormsConfig.characterCountLimitText`
+(`{max}` placeholder). Set `[liveAnnounce]="true"` to also give the running
+count its own polite live region, which speaks only on a threshold change,
+not on every keystroke.
 
 ## Components
 
