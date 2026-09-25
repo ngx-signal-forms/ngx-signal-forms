@@ -245,6 +245,28 @@ class SwitchOffComponent extends TestFormBase {}
 })
 class StandaloneErrorComponent extends TestFormBase {}
 
+/** The summary can be removed after the submit, through `showSummary`. */
+@Component({
+  selector: 'ngx-test-summary-removable',
+  imports: [
+    FormField,
+    NgxSignalFormToolkit,
+    NgxFormField,
+    NgxFormFieldErrorSummary,
+  ],
+  template: `
+    <form [formRoot]="testForm" ngxSignalForm errorStrategy="on-submit">
+      @if (showSummary()) {
+        <ngx-form-field-error-summary [formTree]="testForm" />
+      }
+      ${FIELDS}
+    </form>
+  `,
+})
+class RemovableSummaryComponent extends TestFormBase {
+  readonly showSummary = signal(true);
+}
+
 /**
  * A validator whose two outputs collide under a naive `${kind}:${message}`
  * join: ('a', 'b:c') and ('a:b', 'c') both read "a:b:c".
@@ -392,6 +414,26 @@ describe('NgxFormFieldErrorSummary — the summary announces alone after a submi
     expect(changed.has(codeRegion)).toBe(true);
     expect(codeRegion.textContent?.trim()).toBe('Error: c');
     expect(codeRegion.id).toBe('code-error');
+  });
+
+  it('when the summary goes away after a submit, the field errors move into their live regions', async () => {
+    const { container, fixture } = await render(RemovableSummaryComponent);
+    await TestBed.inject(ApplicationRef).whenStable();
+    await submit(container);
+    await TestBed.inject(ApplicationRef).whenStable();
+    expect(fieldLiveRegion(container, 'email').textContent?.trim()).toBe('');
+
+    // No summary speaks for the errors any more, so the fields must.
+    const changed = await liveRegionsChangedBy(container, async () => {
+      fixture.componentInstance.showSummary.set(false);
+    });
+
+    const nameRegion = fieldLiveRegion(container, 'name');
+    const emailRegion = fieldLiveRegion(container, 'email');
+    expect(changed).toEqual(new Set([nameRegion, emailRegion]));
+    expect(emailRegion.textContent).toContain('Error: Email is required');
+    expect(emailRegion.id).toBe('email-error');
+    expect(container.querySelectorAll('#email-error')).toHaveLength(1);
   });
 
   it('after a submit, fixing a field and then breaking it again announces the new error', async () => {

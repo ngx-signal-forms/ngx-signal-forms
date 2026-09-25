@@ -602,24 +602,35 @@ export class NgxFormFieldError {
    * render (the wrapper mounts its error slot only while messages show). It
    * ends when the errors change or hide, so the next error the user causes
    * by editing enters the always-mounted live region and announces as
-   * usual. Without a summary, outside a
+   * usual. It also ends when no summary of the form shows errors any more
+   * (the summary was removed or hid), because nothing else announces them. Without a summary, outside a
    * `[ngxSignalForm]` form, or with `errorSummaryAnnouncesAlone: false`, it
    * is never true and the component renders exactly as before.
    */
   protected readonly errorsQuiet = linkedSignal<
-    { readonly visible: boolean; readonly content: string },
+    {
+      readonly visible: boolean;
+      readonly content: string;
+      readonly summaryShowsErrors: boolean;
+    },
     boolean
   >({
     source: () => ({
       visible: this.errorContainerVisible(),
       content: this.#errorContent(),
+      // Tracked: when no registered summary shows errors any more (it was
+      // removed, or it hid), nothing speaks for quiet errors, so they must
+      // move back into the live region.
+      summaryShowsErrors:
+        this.#submitAnnouncements?.summaryShowsErrors() ?? false,
     }),
     computation: (current, previous) => {
       const announcements = this.#submitAnnouncements;
       if (
         !announcements ||
         !this.#config.errorSummaryAnnouncesAlone ||
-        !current.visible
+        !current.visible ||
+        !current.summaryShowsErrors
       ) {
         return false;
       }
@@ -630,13 +641,9 @@ export class NgxFormFieldError {
       if (!errorsChanged) {
         return previous.value;
       }
-      // Sampled, not tracked: only a change of this field's own errors
-      // decides whether they move in or out of the live region.
-      return untracked(
-        () =>
-          announcements.isSubmitRenderPending() &&
-          announcements.summaryShowsErrors(),
-      );
+      // Sampled, not tracked: the submit window only matters at the moment
+      // this field's own errors appear or change.
+      return untracked(() => announcements.isSubmitRenderPending());
     },
   });
 

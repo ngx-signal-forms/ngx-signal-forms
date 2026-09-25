@@ -30,7 +30,7 @@ The errors go into this quiet container when both of these are true:
 1. They appear or change in the render that follows a submit attempt.
 2. An `NgxFormFieldErrorSummary` of the same form shows errors.
 
-The quiet state ends when the errors change or hide. The next error the user causes by editing then goes into the always-mounted `role="alert"` region, which is an insertion into an existing live region, so it announces. The summary is unchanged: it announces and takes focus as before.
+The quiet state ends when the errors change or hide, or when no summary of the form shows errors any more (it was removed or hid), because nothing else announces them then. The next error the user causes by editing then goes into the always-mounted `role="alert"` region, which is an insertion into an existing live region, so it announces. The summary is unchanged: it announces and takes focus as before.
 
 We move the content, not the role. Removing `role="alert"` for one render and adding it back later changes the element's role while it holds content. Browsers rebuild the accessibility node on a role change, and some screen reader and browser pairs announce an alert that gets its role while it has content. That is the announcement we want to prevent. A non-live sibling has no such edge case: content in an element that is not a live region never announces.
 
