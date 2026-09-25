@@ -176,6 +176,57 @@
   margin: 0;
 }
 
+/* Visually hidden "Error:" / "Warning:" prefix (see form-field-error.ts
+ * `resolvedErrorPrefix` / `resolvedWarningPrefix`): perceivable to assistive
+ * tech through `aria-describedby`, hidden from sighted users. Standard
+ * clip-rect technique (not `display: none` / `visibility: hidden`, which
+ * screen readers also skip) — same pattern as
+ * `ngx-signal-form-field-wrapper__visually-hidden`. Both entry points already
+ * share `core/feedback-tokens.css`, but that class lives in
+ * `form-field-wrapper.css`, not the shared file, so reaching into it here
+ * would add a new cross-entry-point dependency neither needs — the pattern
+ * is duplicated locally instead. */
+.ngx-form-field-error__prefix {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Visible-icon hook (documented under "Telling errors and warnings apart
+ * without colour" in this entry point's `README.md`, and listed in the
+ * form-field entry point's theming guide): `none` by default, so no
+ * pseudo-element is generated and no icon ships out of the box. Consumers
+ * who want a channel distinguishable by more than colour set
+ * `--ngx-signal-form-error-icon`/`--ngx-signal-form-warning-icon` to a CSS
+ * `content` value (e.g. a Unicode glyph or `url(...)`).
+ *
+ * A configured glyph is exposed to assistive tech, the same as any other
+ * CSS `::before`/`::after` content — the accessible distinction still
+ * comes from the visually-hidden prefix above, so keep any custom icon a
+ * supplementary visual cue. To make a specific icon decorative, add empty
+ * alt text inside the variable's own value instead of here:
+ * `--ngx-signal-form-error-icon: '⛔' / '';`. The toolkit keeps this hook
+ * as the plain `content: var(--icon, none)` form (no alt text) because
+ * `dom-accessibility-api` — the library behind this package's own
+ * `toHaveAccessibleDescription` specs — mis-parses `content: <value> /
+ * ''` and reports a stray `" / "` token that real Chromium never
+ * announces; using the alt-text form here would make the toolkit's own
+ * test suite lie about what a screen reader hears. */
+.ngx-form-field-error__message--error::before {
+  content: var(--ngx-signal-form-error-icon, none);
+}
+
+.ngx-form-field-error__message--warning::before {
+  content: var(--ngx-signal-form-warning-icon, none);
+}
+
 .ngx-form-field-error__title {
   margin: 0;
   color: var(--_error-title-color);

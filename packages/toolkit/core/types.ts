@@ -392,6 +392,26 @@ export interface NgxSignalFormsConfig {
    * @default 'required'
    */
   requiredHintText: string;
+
+  /**
+   * Visually hidden prefix for each blocking error message rendered by
+   * `NgxFormFieldError`, exposed to assistive technology through
+   * `aria-describedby`. Lets screen reader users tell an error apart from a
+   * warning without relying on colour (WCAG 1.4.1, 1.3.1). Pass `''` to
+   * disable the prefix.
+   *
+   * Not applied by `NgxFormFieldErrorSummary` or headless consumers.
+   * @default 'Error:'
+   */
+  errorPrefixText: string;
+
+  /**
+   * Visually hidden prefix for each warning message rendered by
+   * `NgxFormFieldError`. See {@link errorPrefixText}. Pass `''` to disable
+   * the prefix.
+   * @default 'Warning:'
+   */
+  warningPrefixText: string;
 }
 
 /**
@@ -439,4 +459,14 @@ export interface NgxSignalFormsUserConfig {
    * rather than pointing the description at an empty element.
    */
   requiredHintText?: string | undefined;
+  /**
+   * Override the visually hidden error-message prefix. Pass `''` to
+   * disable it.
+   */
+  errorPrefixText?: string | undefined;
+  /**
+   * Override the visually hidden warning-message prefix. Pass `''` to
+   * disable it.
+   */
+  warningPrefixText?: string | undefined;
 }
