@@ -24,6 +24,7 @@ export {
   NGX_SIGNAL_FORM_FIELD_VISIBILITY_REGISTRY,
   NGX_SIGNAL_FORM_HINT_REGISTRY,
   NGX_SIGNAL_FORMS_CONFIG,
+  WARN_KIND_PREFIX,
   NgxControlPresetRegistry,
   NgxFieldIdentity,
   NgxFieldIdentityProvider,

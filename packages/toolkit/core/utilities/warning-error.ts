@@ -1,6 +1,20 @@
 import type { ValidationError } from '@angular/forms/signals';
 
 /**
+ * The `kind` prefix that marks a `ValidationError` as a non-blocking warning
+ * rather than a blocking error (see {@link warningError}). Exported so other
+ * adapters that build their own warning kinds — e.g. the `vest` entry
+ * point's `warn:vest:` prefix — derive from one source instead of
+ * hard-coding the string.
+ *
+ * **Stability**: part of the toolkit's public v1 contract. Changing it is a
+ * major version bump — see {@link warningError}'s stability note.
+ *
+ * @public
+ */
+export const WARN_KIND_PREFIX = 'warn:';
+
+/**
  * Type guard to check if a validation error is a warning.
  * Warnings are errors with `kind` starting with `'warn:'`.
  *
@@ -17,7 +31,9 @@ import type { ValidationError } from '@angular/forms/signals';
  * ```
  */
 export function isWarningError(error: ValidationError): boolean {
-  return typeof error.kind === 'string' && error.kind.startsWith('warn:');
+  return (
+    typeof error.kind === 'string' && error.kind.startsWith(WARN_KIND_PREFIX)
+  );
 }
 
 /**
@@ -140,10 +156,12 @@ export function splitByKind(errors: readonly ValidationError[]): SplitErrors {
  * @see {@link https://angular.dev/api/forms/signals/ValidationError | ValidationError API}
  */
 export function warningError(kind: string, message?: string): ValidationError {
-  const normalizedKind = kind.startsWith('warn:') ? kind.slice(5) : kind;
+  const normalizedKind = kind.startsWith(WARN_KIND_PREFIX)
+    ? kind.slice(WARN_KIND_PREFIX.length)
+    : kind;
 
   return {
-    kind: `warn:${normalizedKind}`,
+    kind: `${WARN_KIND_PREFIX}${normalizedKind}`,
     ...(message !== undefined && { message }),
   };
 }
