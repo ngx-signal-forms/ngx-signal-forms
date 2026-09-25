@@ -18,10 +18,10 @@ documents the upcoming hop from rc.15.
 hosts now infer `input-like` instead of `composite`. See that hop guide if
 you already sit on rc.12.
 
-`v1.0.0-rc.14` adds no breaking change. `v1.0.0-rc.15` changes three CSS
-custom-property defaults instead of any TypeScript API — see
-[`v1.0.0-rc.15`](./migrations/v1.0.0-rc.15.md) and
-[`MIGRATING_CSS_VARS.md`](./MIGRATING_CSS_VARS.md#rc15-upgrade-from-rc14)
+[`v1.0.0-rc.14`](./migrations/v1.0.0-rc.14.md) adds no breaking change.
+`v1.0.0-rc.15` changes three CSS custom-property defaults instead of any
+TypeScript API. See [`v1.0.0-rc.15`](./migrations/v1.0.0-rc.15.md) and
+[`MIGRATING_CSS_VARS.md`](./MIGRATING_CSS_VARS.md#6-rc15-upgrade-from-rc14)
 for the details.
 
 The toolkit follows semver strictly from `1.0.0` onward. Future 1.x
