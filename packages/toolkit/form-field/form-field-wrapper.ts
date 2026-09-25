@@ -36,6 +36,7 @@ import {
   isFieldStateHidden,
   isWarningError,
   readDirectErrors,
+  resolveFieldNameFromCandidates,
   type ResolvedNgxSignalFormControlSemantics,
   resolveStrategyFromContext,
   resolveWarningStrategyFromContext,
@@ -49,6 +50,7 @@ import {
   devWarnOnce,
   isFieldStateRequired,
   isHtmlElement,
+  sanitizeFieldNameForId,
   type WarnOnceRef,
 } from '@ngx-signal-forms/toolkit/core';
 import {
@@ -881,6 +883,13 @@ export class NgxFormFieldWrapper<TValue = unknown> {
    * (auto-ARIA, hint registry, projected error component) handle `null` by
    * skipping the `aria-describedby` wiring.
    *
+   * The returned name is raw (trimmed, not sanitized for inner whitespace)
+   * — the same value used for `data-signal-field` and for matching against
+   * `NGX_SIGNAL_FORM_FIELD_VISIBILITY_REGISTRY` entries. Whatever builds an
+   * `id` from it (`generateErrorId`, the hint id builder, the
+   * selection-cluster label id below) sanitizes at that point instead. See
+   * `sanitizeFieldNameForId`.
+   *
    * **Pure by design**: this computed performs no side effects. Projected
    * children (`NgxFormFieldHint`, `NgxFormFieldError`) read it via
    * `NGX_SIGNAL_FORM_FIELD_CONTEXT` during the *first* change-detection
@@ -897,28 +906,18 @@ export class NgxFormFieldWrapper<TValue = unknown> {
    * This signal is public to allow child components to access the resolved field name
    * via the `NGX_SIGNAL_FORM_FIELD_CONTEXT` injection token.
    */
-  readonly resolvedFieldName = computed<string | null>(() => {
-    // Priority 1: Explicit fieldName input
-    const explicit = this.fieldName();
-    if (explicit !== undefined) {
-      const trimmed = explicit.trim();
-      if (trimmed.length > 0) {
-        return trimmed;
-      }
-    }
-
-    // Priority 2: Derive from input element's id attribute (signal updated by
-    // afterEveryRender). This is the correct reactive path — the DOM is never
-    // queried synchronously inside a computed() to avoid SSR crashes
-    // (requireHostElement throws TypeError when nativeElement is not HTMLElement)
-    // and to keep the dependency graph fully reactive.
-    const idFromInput = this.#inputElementId();
-    if (idFromInput) {
-      return idFromInput;
-    }
-
-    return null;
-  });
+  readonly resolvedFieldName = computed<string | null>(() =>
+    resolveFieldNameFromCandidates(
+      // Priority 1: Explicit fieldName input
+      this.fieldName(),
+      // Priority 2: Derive from input element's id attribute (signal updated
+      // by afterEveryRender). This is the correct reactive path — the DOM is
+      // never queried synchronously inside a computed() to avoid SSR crashes
+      // (requireHostElement throws TypeError when nativeElement is not
+      // HTMLElement) and to keep the dependency graph fully reactive.
+      this.#inputElementId(),
+    ),
+  );
 
   /**
    * Hint children projected into this wrapper. Used to expose a
@@ -1305,7 +1304,9 @@ export class NgxFormFieldWrapper<TValue = unknown> {
             ? existingLabelId
             : resolvedFieldName === null
               ? null
-              : `${resolvedFieldName}-label`;
+              : // Sanitize here, at the point the id is built — `resolvedFieldName`
+                // is the raw resolved name and may contain inner whitespace.
+                `${sanitizeFieldNameForId(resolvedFieldName)}-label`;
 
           if (nextLabelId !== null && existingLabelId.length === 0) {
             label.id = nextLabelId;

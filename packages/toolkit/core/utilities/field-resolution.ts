@@ -1,4 +1,5 @@
 import { computed, type Signal } from '@angular/core';
+import { createDevWarnOnce } from './dev-warn-once';
 
 /**
  * Normalize a potential field name into the deterministic v1 identity form.
@@ -8,6 +9,15 @@ import { computed, type Signal } from '@angular/core';
  * truth for "is this a usable field name?" — wrappers, headless directives,
  * and consumer-built field-identity surfaces should call it before using
  * a name as the basis for an `id` or `aria-describedby` chain.
+ *
+ * Deliberately does NOT touch inner whitespace. This is also the primitive
+ * that path navigation (`injectFieldControl`) and DOM-id reporting
+ * (`NgxFieldIdentity.controlId`) rely on, so the returned string must
+ * round-trip a data-driven name exactly — a field literally named
+ * `"x other-id"` must still be injectable, and a control's reported id must
+ * still match its actual DOM `id` attribute. See
+ * {@link sanitizeFieldNameForId} for the separate transform ARIA-id
+ * generators apply.
  *
  * @example
  * ```typescript
@@ -30,6 +40,58 @@ export function normalizeFieldName(
   return trimmed.length > 0 ? trimmed : null;
 }
 
+// Module-scoped, process-lifetime latch: a data-driven field name with inner
+// whitespace is a one-off authoring smell, not a per-field condition worth
+// repeating the diagnostic for. See `devWarnOnce` for the "flip once, never
+// reset" contract this relies on.
+const warnInnerWhitespace = createDevWarnOnce();
+
+/**
+ * Sanitizes an already-resolved field name into an id-safe token by
+ * replacing every run of inner whitespace with a single `-`.
+ *
+ * Call this ONLY at the point a `${fieldName}-…` ARIA id is built —
+ * {@link generateErrorId}, {@link generateWarningId},
+ * {@link generateRequiredHintId}, and the hint / selection-cluster-label id
+ * builders all apply it internally. Everything that resolves or looks up a
+ * field name ({@link normalizeFieldName}, {@link resolveFieldName},
+ * {@link resolveFieldNameFromCandidates}, `injectFieldControl`,
+ * `NgxFieldIdentity.controlId`) deliberately stays raw, because those
+ * consumers need the exact characters the form model or the DOM `id`
+ * attribute carries.
+ *
+ * `aria-describedby` is a space-separated id list, so a raw space inside a
+ * generated id would make it two tokens — the second one pointing at an
+ * unrelated element. Replacing keeps a generated id a single token.
+ * `'a b'` and `'a-b'` therefore produce the same generated id, by design.
+ * Emits a one-shot dev-mode warning so the authoring smell stays visible.
+ *
+ * @example
+ * ```typescript
+ * sanitizeFieldNameForId('email');      // 'email'
+ * sanitizeFieldNameForId('x other-id'); // 'x-other-id'
+ * ```
+ *
+ * @internal
+ */
+export function sanitizeFieldNameForId(fieldName: string): string {
+  if (!/\s/.test(fieldName)) {
+    return fieldName;
+  }
+
+  // The raw name may carry user-entered data — pass it as an extra arg
+  // (see `devWarnOnce`'s contract) instead of interpolating it into the
+  // message string.
+  warnInnerWhitespace(
+    'warn',
+    '[ngx-signal-forms] sanitizeFieldNameForId: field name contains inner ' +
+      'whitespace. Replacing it with "-" so the generated id stays a ' +
+      'single `aria-describedby` token.',
+    fieldName,
+  );
+  return fieldName.replaceAll(/\s+/g, '-');
+}
+
 /**
  * Resolve the first usable field name from a list of candidates.
  *
@@ -44,11 +106,13 @@ export function normalizeFieldName(
  * ## The canonical field-name cascade
  *
  * This is the toolkit's canonical statement of the field-name precedence
- * contract. `NgxFormFieldError` and `NgxHeadlessFieldName` call this
- * primitive directly; `NgxFormFieldWrapper.resolvedFieldName` and
- * `createFieldNameResolver` implement the same cascade semantics inline
- * (same trim/empty-collapse rules) rather than calling it. Reading top to
- * bottom, later tiers only run when every earlier tier resolved to `null`:
+ * contract. `NgxFormFieldError`, `NgxHeadlessFieldName`,
+ * `NgxFormFieldWrapper.resolvedFieldName`, and `createFieldNameResolver`
+ * all call this primitive directly, so every wrapper-authoring surface
+ * gets the same trim/empty-collapse rules. The result is the raw resolved
+ * name — id builders that consume it (`generateErrorId` and friends) apply
+ * {@link sanitizeFieldNameForId} themselves. Reading top to bottom, later
+ * tiers only run when every earlier tier resolved to `null`:
  *
  * 1. **Explicit input** — a `fieldName` (or equivalent) input the consumer
  *    bound directly on *this* component/directive. Always wins when
@@ -120,6 +184,13 @@ export function resolveFieldNameFromCandidates(
  * - Whitespace is trimmed. `"  email  "` → `"email"`. Whitespace-only and
  *   empty strings collapse to `null`, treated as "no id".
  *
+ * Returns the raw (trimmed-only) id, unchanged otherwise — this is the
+ * primitive `injectFieldControl` walks form paths with and
+ * `NgxFieldIdentity.controlId` reports, so it must match the DOM `id`
+ * attribute and the form model's own key exactly. ARIA id generation
+ * applies {@link sanitizeFieldNameForId} separately, at the point an id is
+ * built, not here.
+ *
  * @param element - The HTML element to resolve the field name from
  * @returns The trimmed `id`, or `null` if the element has no usable id
  */
@@ -138,6 +209,10 @@ export function resolveFieldName(element: HTMLElement): string | null {
  * own. Both forms remain stable so wrapper-rendered and headless-rendered
  * IDs interoperate without the call site re-deriving the format.
  *
+ * Applies {@link sanitizeFieldNameForId} to `fieldName` first, so a name
+ * with inner whitespace still produces a single-token id. Logs a one-time
+ * dev-mode warning when it does.
+ *
  * @param fieldName - The field name
  * @param kind - Optional error kind (e.g. `'required'`); appended after the
  *   `-error` suffix when present
@@ -152,9 +227,10 @@ export function resolveFieldName(element: HTMLElement): string | null {
  * ```
  */
 export function generateErrorId(fieldName: string, kind?: string): string {
+  const safeFieldName = sanitizeFieldNameForId(fieldName);
   return kind === undefined
-    ? `${fieldName}-error`
-    : `${fieldName}-error-${kind}`;
+    ? `${safeFieldName}-error`
+    : `${safeFieldName}-error-${kind}`;
 }
 
 /**
@@ -243,6 +319,10 @@ export function buildAriaDescribedBy(
 /**
  * Generates a warning ID for a field, following WCAG best practices.
  *
+ * Applies {@link sanitizeFieldNameForId} to `fieldName` first, so a name
+ * with inner whitespace still produces a single-token id. Logs a one-time
+ * dev-mode warning when it does.
+ *
  * @param fieldName - The field name
  * @returns The warning ID in format: `{fieldName}-warning`
  *
@@ -253,7 +333,7 @@ export function buildAriaDescribedBy(
  * ```
  */
 export function generateWarningId(fieldName: string): string {
-  return `${fieldName}-warning`;
+  return `${sanitizeFieldNameForId(fieldName)}-warning`;
 }
 
 /**
@@ -265,6 +345,9 @@ export function generateWarningId(fieldName: string): string {
  * state — see
  * https://github.com/ngx-signal-forms/ngx-signal-forms/issues/300.
  *
+ * Applies {@link sanitizeFieldNameForId} to `fieldName` first, so a name
+ * with inner whitespace still produces a single-token id.
+ *
  * @param fieldName - The field name
  * @returns The required-hint ID in format: `{fieldName}-required-hint`
  *
@@ -274,5 +357,5 @@ export function generateWarningId(fieldName: string): string {
  * ```
  */
 export function generateRequiredHintId(fieldName: string): string {
-  return `${fieldName}-required-hint`;
+  return `${sanitizeFieldNameForId(fieldName)}-required-hint`;
 }

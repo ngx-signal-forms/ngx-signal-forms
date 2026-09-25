@@ -702,6 +702,72 @@ describe('NgxFormFieldset', () => {
     expect(host).toHaveAttribute('aria-labelledby', 'personal-info-legend');
   });
 
+  it.each([
+    {
+      shape: 'blocking error',
+      errors: [{ kind: 'required', message: 'Required' }],
+      expectedSuffix: '-error',
+    },
+    {
+      shape: 'warning only',
+      errors: [{ kind: 'warn:optional', message: 'Optional' }],
+      expectedSuffix: '-warning',
+    },
+  ])(
+    'keeps every aria-describedby / aria-labelledby token whitespace-free and resolvable when fieldsetId has inner whitespace ($shape) (#505)',
+    async ({ errors, expectedSuffix }) => {
+      // Regression: `${fieldsetId}-error` / `-warning` and `${fieldsetId}-legend`
+      // were built by hand from the raw `resolvedFieldsetId()`, while the
+      // fieldset's own `<ngx-form-field-error [fieldName]="…">` renders a
+      // sanitized id — a `fieldsetId` with inner whitespace made the
+      // hand-rolled ids diverge from what was actually in the DOM, and
+      // `aria-labelledby`/`aria-describedby` split each raw-space id into two
+      // tokens, the second one dangling. The warning-only shape is required
+      // here too: `generateErrorId`/`generateWarningId` are separate call
+      // sites, and a blocking error alone (`shouldShowErrors()`) never
+      // exercises the warning branch (`shouldShowWarnings()`) — reverting
+      // `generateWarningId(fieldsetId)` back to raw concatenation left the
+      // blocking-error-only version of this test green.
+      const fieldset = createFieldsetState({
+        errors: () => errors,
+        errorSummary: () => errors,
+      });
+
+      const { container } = await render(
+        `<ngx-form-fieldset [field]="fieldset" fieldsetId="billing address">
+        <legend>Billing address</legend>
+        <div>Content</div>
+      </ngx-form-fieldset>`,
+        {
+          imports: [NgxFormFieldset],
+          componentProperties: { fieldset },
+        },
+      );
+
+      const host = container.querySelector('ngx-form-fieldset');
+      const describedBy = host?.getAttribute('aria-describedby');
+      const labelledBy = host?.getAttribute('aria-labelledby');
+
+      expect(describedBy).toBeTruthy();
+      expect(labelledBy).toBeTruthy();
+
+      // Sanity check: the expected id is actually present as a single
+      // token, not just "some token happens to resolve" — otherwise a
+      // reverted implementation that drops the id entirely would also pass
+      // the loop below.
+      expect(describedBy?.split(' ')).toContain(
+        `billing-address${expectedSuffix}`,
+      );
+
+      for (const idList of [describedBy, labelledBy]) {
+        for (const token of (idList ?? '').split(' ')) {
+          expect(token).not.toMatch(/\s/);
+          expect(container.querySelector(`#${token}`)).toBeTruthy();
+        }
+      }
+    },
+  );
+
   it('leaves native <fieldset> hosts to use their intrinsic group semantics', async () => {
     const fieldset = createFieldsetState();
 

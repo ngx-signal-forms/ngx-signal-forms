@@ -15,6 +15,25 @@ import { isFieldTreeLike } from './walk-field-tree';
 const isNavigable = (value: unknown): value is Record<string, unknown> =>
   (typeof value === 'object' || typeof value === 'function') && value !== null;
 
+// A real `FieldTree` node is a Proxy whose `getOwnPropertyDescriptor` trap
+// forwards to the underlying model value. `Object.hasOwn` invokes that trap,
+// so calling it on a node whose value is a primitive or `null` — exactly the
+// shape a mistyped path segment produces, e.g. `email.foo` where `email` is
+// a string, or `address.city` where `address` is `null` — makes
+// `Reflect.getOwnPropertyDescriptor` throw a raw `TypeError` (it requires an
+// object target) instead of letting the walk fail with the toolkit's own
+// "not found" error. Treat that throw the same as "the field isn't there".
+const hasOwnField = (
+  control: Record<string, unknown>,
+  part: string,
+): boolean => {
+  try {
+    return Object.hasOwn(control, part);
+  } catch {
+    return false;
+  }
+};
+
 /**
  * Custom Inject Function (CIF) for retrieving a specific field control from the form.
  * Works both inside and outside Angular injection context when an injector is provided.
@@ -96,7 +115,7 @@ export function injectFieldControl<TValue = unknown>(
     let control: unknown = formInstance;
 
     for (const part of pathParts) {
-      if (!isNavigable(control) || !(part in control)) {
+      if (!isNavigable(control) || !hasOwnField(control, part)) {
         throw new Error(
           `[ngx-signal-forms] Field "${fieldName}" not found in form. ` +
             `Could not access property "${part}".`,

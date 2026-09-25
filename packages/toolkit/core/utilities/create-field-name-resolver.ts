@@ -1,5 +1,6 @@
 import { computed, type Signal } from '@angular/core';
 import { createDevWarnOnce } from './dev-warn-once';
+import { resolveFieldNameFromCandidates } from './field-resolution';
 
 /**
  * Reactive reader of the bound control's host element. Returns `null` when
@@ -63,9 +64,14 @@ export interface CreateFieldNameResolverOptions {
  * `NgxFormFieldWrapper`:
  *
  *   1. Explicit consumer input (trimmed; non-empty).
- *   2. Optional label `for=` attribute reader (trimmed; non-empty).
- *   3. Bound control's `id` attribute.
+ *   2. Optional label `for=` attribute reader (same trim rule).
+ *   3. Bound control's `id` attribute (same trim rule).
  *   4. `null` (auto-ARIA gracefully no-ops; emits a one-shot dev warning).
+ *
+ * The resolved name is raw — trimmed, but not sanitized for inner
+ * whitespace — matching {@link resolveFieldNameFromCandidates}. Whoever
+ * turns this into an `id` (`generateErrorId` and friends) sanitizes at
+ * that point instead; see `sanitizeFieldNameForId`.
  *
  * The dev-mode warning latches on the first miss and stays silent for
  * every subsequent recomputation (hit or miss) for the resolver's
@@ -92,21 +98,13 @@ export function createFieldNameResolver(
   const warnOnce = createDevWarnOnce();
 
   return computed<string | null>(() => {
-    const explicitValue = explicit()?.trim();
-    if (explicitValue !== undefined && explicitValue.length > 0) {
-      return explicitValue;
-    }
-
-    if (labelFor) {
-      const target = labelFor()?.trim();
-      if (target !== undefined && target.length > 0) {
-        return target;
-      }
-    }
-
-    const boundId = boundControl()?.id;
-    if (boundId && boundId.length > 0) {
-      return boundId;
+    const resolved = resolveFieldNameFromCandidates(
+      explicit(),
+      labelFor?.(),
+      boundControl()?.id,
+    );
+    if (resolved !== null) {
+      return resolved;
     }
 
     warnOnce(
