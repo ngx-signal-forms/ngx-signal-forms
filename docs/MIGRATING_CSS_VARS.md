@@ -164,6 +164,34 @@ rg --type css --type ts --type html -g '*.scss' -- \
 
 Any hits in consumer code need the corresponding rename above.
 
+## RC.15: upgrade from RC.14
+
+`1.0.0-rc.15` changed three wrapper defaults. The token names did not
+change — only their default values did. See
+[`docs/migrations/v1.0.0-rc.15.md`](./migrations/v1.0.0-rc.15.md) for the
+full before/after detail.
+
+- **`--ngx-form-field-margin`** — default changed from `1rem` to `0`.
+  Spacing between fields is now container-owned: give the parent layout a
+  `gap` instead of relying on the wrapper's own margin.
+- **Switch row gap** — the switch row's control-to-label gap now resolves
+  through the public `--ngx-form-field-selection-row-gap` token. Its
+  default changed from `0.5rem` to `0.75rem`, matching the checkbox row.
+- **Checkbox and switch row labels** — the projected `<label>` now reads
+  the label tokens (`--ngx-form-field-label-size`,
+  `-line-height`, `-color`, …) instead of the input tokens. A default
+  install renders these labels smaller and in the secondary text color.
+
+## RC.16: upgrade from RC.15 (pending release)
+
+`1.0.0-rc.16` changes several wrapper and feedback color defaults:
+the border color, the warning box-shadow, and the dark-mode defaults
+(now driven by `light-dark()` instead of `.dark` or the OS query). None of
+these are renames — only default values change. See
+[`docs/migrations/v1.0.0-rc.16.md`](./migrations/v1.0.0-rc.16.md) for the
+full before/after detail. `v1.0.0-rc.16` has not shipped yet; check the
+installed version before applying this section.
+
 ## 5. Why these changes
 
 The toolkit crossed 200+ public CSS vars during the rc cycle, with three
