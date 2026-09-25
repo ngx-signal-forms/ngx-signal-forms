@@ -402,16 +402,22 @@ export interface CreateCharacterCountOptions {
   /** Form field producing a {@link CharacterCountValue}. */
   readonly field: FieldTree<CharacterCountValue>;
   /**
-   * Maximum length for the character count. `undefined`, `null`, or
-   * omitted means "no explicit limit" — see `useValidatorMaxLength` for the
-   * fallback that applies in that case.
+   * Maximum length for the character count.
+   *
+   * `0` and negative numbers count as an explicit limit too. They are real
+   * values, not "no limit" — see {@link createCharacterCount}'s non-positive
+   * `maxLength` handling. An explicit value, of any sign, always wins and
+   * blocks the `useValidatorMaxLength` fallback below.
+   *
+   * `undefined`, `null`, or omitting the option means "no explicit limit".
+   * See `useValidatorMaxLength` for the fallback that applies then.
    */
   readonly maxLength?: ReactiveOrStatic<number | null>;
   /**
-   * When `maxLength` resolves to no explicit limit, fall back to the
-   * field's own `maxLength` validator signal (when present and a positive
-   * number). Lets a caller auto-detect the limit from the form schema
-   * instead of requiring an explicit `maxLength`.
+   * Falls back to the field's own `maxLength` validator signal when
+   * `maxLength` resolves to no explicit limit. Only a present, positive
+   * validator value counts. Lets a caller auto-detect the limit from the
+   * form schema instead of passing an explicit `maxLength`.
    *
    * @default false
    */

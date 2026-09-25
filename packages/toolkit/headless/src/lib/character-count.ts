@@ -1,4 +1,4 @@
-import { Directive, input } from '@angular/core';
+import { Directive, input, type Signal } from '@angular/core';
 import type { FieldTree } from '@angular/forms/signals';
 import {
   DEFAULT_DANGER_THRESHOLD,
@@ -129,8 +129,16 @@ export class NgxHeadlessCharacterCount implements CharacterCountState {
 
   /**
    * Resolved maximum length.
+   *
+   * The directive requires a `maxLength` input, so `createCharacterCount()`
+   * always resolves a real limit here — never `null`. Narrowed back to
+   * `Signal<number>`, unlike `CharacterCountState.resolvedMaxLength` (which
+   * is nullable for callers that allow no limit), so directive consumers
+   * see no type change from before `createCharacterCount()` started
+   * supporting an optional `maxLength`.
    */
-  readonly resolvedMaxLength = this.#result.resolvedMaxLength;
+  readonly resolvedMaxLength: Signal<number> = this.#result
+    .resolvedMaxLength as Signal<number>;
 
   /**
    * Whether a limit is configured.

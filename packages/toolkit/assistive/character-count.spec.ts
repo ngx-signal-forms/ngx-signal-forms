@@ -148,6 +148,49 @@ describe('NgxFormFieldCharacterCount', () => {
     });
   });
 
+  describe('maxLength rebinding after init (issue #510)', () => {
+    // `createCharacterCount()` is built once as an instance field, not
+    // recreated inside a `computed()` on every `maxLength` change (the bug
+    // #510 fixed). These specs pin that the component still reacts
+    // correctly when `[maxLength]` is rebound after the first render,
+    // including switching between an explicit limit and no limit.
+
+    it('updates the displayed count and limit state when maxLength changes to a new positive value', async () => {
+      const { container, rerender } = await render(TestWrapperComponent, {
+        componentInputs: { textModel: 'a'.repeat(50), maxLength: 100 },
+      });
+
+      const host = container.querySelector('ngx-form-field-character-count');
+      expect(screen.getByText('50/100')).toBeInTheDocument();
+      expect(host).toHaveAttribute('data-limit-state', 'ok');
+
+      await rerender({
+        componentInputs: { textModel: 'a'.repeat(50), maxLength: 60 },
+      });
+      await TestBed.inject(ApplicationRef).whenStable();
+
+      expect(screen.getByText('50/60')).toBeInTheDocument();
+      expect(host).toHaveAttribute('data-limit-state', 'warning');
+    });
+
+    it('falls back to a plain count once maxLength is rebound to a non-positive value', async () => {
+      const { container, rerender } = await render(TestWrapperComponent, {
+        componentInputs: { textModel: 'a'.repeat(4), maxLength: 100 },
+      });
+
+      expect(screen.getByText('4/100')).toBeInTheDocument();
+
+      await rerender({
+        componentInputs: { textModel: 'a'.repeat(4), maxLength: 0 },
+      });
+      await TestBed.inject(ApplicationRef).whenStable();
+
+      const host = container.querySelector('ngx-form-field-character-count');
+      expect(screen.getByText('4')).toBeInTheDocument();
+      expect(host).toHaveAttribute('data-limit-state', 'disabled');
+    });
+  });
+
   describe('Position attribute', () => {
     it('should default to right position', async () => {
       const { container } = await render(TestWrapperComponent, {

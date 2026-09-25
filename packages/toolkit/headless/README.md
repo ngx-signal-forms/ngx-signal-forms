@@ -192,11 +192,19 @@ Provides character count signals with progressive limit states.
 | `warningThreshold` | `number`                         | `0.8`    | Warning at 80%                                           |
 | `dangerThreshold`  | `number`                         | `0.95`   | Danger at 95%                                            |
 
-Signals: `currentLength()`, `resolvedMaxLength()`, `remaining()`, `limitState()` (`'ok' | 'warning' | 'danger' | 'exceeded'`), `hasLimit()`, `isExceeded()`, `percentUsed()`.
+Signals (type `CharacterCountState`): `currentLength()`, `resolvedMaxLength()`,
+`remaining()`, `limitState()` (`'ok' | 'warning' | 'danger' | 'exceeded'`),
+`hasLimit()`, `isExceeded()`, `percentUsed()`.
 
-Both this directive and `createCharacterCount()` require `maxLength`. Neither
-reads the limit from a validator; only the styled counter can infer that limit.
-`percentUsed()` can exceed 100; `remaining()` is clamped to zero.
+This directive requires `maxLength`. `createCharacterCount()` does not —
+its `maxLength` option is optional, and a `useValidatorMaxLength: true`
+option makes it fall back to the field's own `maxLength` schema validator
+(default `false`, no fallback). `resolvedMaxLength()` is `number | null`;
+`null` means no limit — check `hasLimit()` first. `remaining()`,
+`isExceeded()`, `percentUsed()`, and `limitState()` stay non-nullable, with
+neutral values (`0`, `false`, `0`, `'ok'`) when there is no limit.
+`percentUsed()` can exceed 100. `remaining()` goes negative once the limit
+is exceeded — it is not clamped to zero.
 
 ### NgxHeadlessFieldset
 

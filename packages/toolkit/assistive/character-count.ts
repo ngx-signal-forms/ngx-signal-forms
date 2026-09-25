@@ -672,26 +672,31 @@ export class NgxFormFieldCharacterCount {
   });
 
   /**
-   * Last-announced state. A plain `computed` is enough: reading it as the
-   * sole dependency of `announcementText()` already gives "recompute only on
-   * an actual state change" — `computed()` skips notifying consumers when
-   * its result is referentially equal to the previous one, which a string
-   * value already is across renders that don't change the state. The
-   * `linkedSignal` this replaced kept a `previous` value only to return
+   * State to announce, or `null` when there is nothing to announce.
+   *
+   * A plain `computed` is enough here. Reading it as the sole dependency of
+   * `announcementText()` already gives "recompute only on an actual state
+   * change": `computed()` skips notifying consumers when its result is
+   * referentially equal to the previous one, and a string value already is
+   * equal across renders that don't change the state. The `linkedSignal`
+   * this replaced kept a `previous` value only to return
    * `state === prev ? prev : state`, which is just `state` (issue #510).
+   *
+   * No separate "no limit" check is needed: `displayLimitState()` already
+   * returns `'disabled'` when `hasLimit()` is `false`, and the `'disabled'`
+   * branch below covers that case.
    */
-  readonly #lastAnnouncedState = computed<
+  readonly #announceableState = computed<
     CharacterCountLimitState | 'disabled' | null
   >(() => {
     if (!this.liveAnnounce()) return null;
-    if (this.#charCountState.resolvedMaxLength() === null) return null;
 
     const state = this.displayLimitState();
     return state === 'disabled' ? null : state;
   });
 
   /**
-   * Computed announcement text. Reads `#lastAnnouncedState` as the
+   * Computed announcement text. Reads `#announceableState` as the
    * change-trigger and produces a string per limit state. Unlike the
    * previous `effect()` + `signal.set` loop, this stays pure and
    * side-effect-free — Angular 21 idiom.
@@ -702,10 +707,10 @@ export class NgxFormFieldCharacterCount {
     const max = this.#charCountState.resolvedMaxLength();
     if (max === null) return '';
 
-    const state = this.#lastAnnouncedState();
+    const state = this.#announceableState();
     if (state === null || state === 'disabled' || state === 'ok') return '';
 
-    // Snapshot the current length *without* subscribing. `#lastAnnouncedState`
+    // Snapshot the current length *without* subscribing. `#announceableState`
     // only changes value on an actual state transition (see its own doc
     // above), so this computed only re-runs then. Reading
     // `currentLength()` reactively would instead re-fire the aria-live region
