@@ -6,7 +6,7 @@ description: Import, merge, or combine repositories into an Nx workspace using n
 ## Quick Start
 
 - `pnpm nx import` brings code from a source repository or folder into the current workspace, preserving commit history.
-- After nx `22.6.0`, `nx import` responds with .ndjson outputs and follow-up questions. For earlier versions, always run with `--no-interactive` and specify all flags directly.
+- `nx import` responds with .ndjson outputs and follow-up questions. If it waits on a prompt, run it again with `--no-interactive` and specify all flags directly.
 - Run `pnpm nx import --help` for available options.
 - Make sure the destination directory is empty before importing.
   EXAMPLE: target has `libs/utils` and `libs/models`; source has `libs/ui` and `libs/data-access` — you cannot import `libs/` into `libs/` directly. Import each source library individually.
