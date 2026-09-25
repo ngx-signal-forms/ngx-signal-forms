@@ -241,7 +241,7 @@ export type NgxCharacterCountAnnouncementFormatter = (
        * scattering var(--ngx-form-field-char-count-*-threshold, …) calls
        * through every downstream expression.
        *
-       * Default: Tailwind amber-700 (#a16207) for warning — ~5.17:1 on
+       * Default: Tailwind amber-700 (#a16207) for warning — ~4.92:1 on
        * white meets WCAG 1.4.3 AA for normal text (#f59e0b previously used
        * was 2.16:1). Kept consistent with the warning color in
        * form-field-error.css.
@@ -253,6 +253,30 @@ export type NgxCharacterCountAnnouncementFormatter = (
       --_char-count-danger-threshold: var(
         --ngx-form-field-char-count-danger-threshold,
         95
+      );
+
+      /*
+       * Resolved colors. Each default is a light-dark() pair that follows
+       * the inherited color-scheme (see THEMING.md, "Scenario C: Dark Mode"). WCAG
+       * 1.4.3 contrast, light on white / dark on #1f2937: ok 4.99:1 /
+       * 8.54:1, warning 4.92:1 / 10.18:1, danger 5.05:1 / 7.73:1,
+       * exceeded 8.31:1 / 5.31:1.
+       */
+      --_char-count-color-ok: var(
+        --ngx-form-field-char-count-color-ok,
+        light-dark(rgba(50, 65, 85, 0.75), rgba(249, 250, 251, 0.75))
+      );
+      --_char-count-color-warning: var(
+        --ngx-form-field-char-count-color-warning,
+        light-dark(#a16207, #fcd34d)
+      );
+      --_char-count-color-danger: var(
+        --ngx-form-field-char-count-color-danger,
+        light-dark(#db1818, #fca5a5)
+      );
+      --_char-count-color-exceeded: var(
+        --ngx-form-field-char-count-color-exceeded,
+        light-dark(#991b1b, #f87171)
       );
 
       /*
@@ -289,13 +313,13 @@ export type NgxCharacterCountAnnouncementFormatter = (
        */
       color: color-mix(
         in srgb,
-        var(--ngx-form-field-char-count-color-danger, #db1818)
+        var(--_char-count-color-danger)
           calc(var(--_char-count-is-danger) * 100%),
         color-mix(
           in srgb,
-          var(--ngx-form-field-char-count-color-warning, #a16207)
+          var(--_char-count-color-warning)
             calc(var(--_char-count-is-warning) * 100%),
-          var(--ngx-form-field-char-count-color-ok, rgba(50, 65, 85, 0.75))
+          var(--_char-count-color-ok)
         )
       );
     }
@@ -316,12 +340,12 @@ export type NgxCharacterCountAnnouncementFormatter = (
      * neutral color regardless of percent-used.
      */
     :host([data-limit-state='exceeded']) {
-      color: var(--ngx-form-field-char-count-color-exceeded, #991b1b);
+      color: var(--_char-count-color-exceeded);
       font-weight: var(--ngx-form-field-char-count-weight-exceeded, 600);
     }
 
     :host([data-limit-state='disabled']) {
-      color: var(--ngx-form-field-char-count-color-ok, rgba(50, 65, 85, 0.75));
+      color: var(--_char-count-color-ok);
     }
 
     .ngx-signal-form-field-char-count__sr {

@@ -106,10 +106,11 @@ export class NgxThemeSwitcherComponent implements OnInit, OnDestroy {
     const theme = this.effectiveTheme();
     const root = document.documentElement;
 
-    // Apply/remove dark class
+    // The `.dark` class drives the demo's own Tailwind `dark:` styles.
     root.classList.toggle('dark', theme === 'dark');
 
-    // Force color-scheme for better DevTools compatibility
+    // The toolkit's colors follow `color-scheme` (light-dark()), not the
+    // class, so the switcher sets it explicitly.
     root.style.colorScheme = theme === 'dark' ? 'dark' : 'light';
   });
 

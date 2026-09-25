@@ -89,7 +89,10 @@ const DEFAULT_OPTIONS: readonly AriaSelectOption[] = [
         --_placeholder-color,
         var(
           --ngx-form-field-placeholder-color,
-          var(--ngx-form-field-color-text-secondary, rgba(50, 65, 85, 0.75))
+          var(
+            --ngx-form-field-color-text-secondary,
+            light-dark(rgba(50, 65, 85, 0.75), rgba(249, 250, 251, 0.75))
+          )
         )
       );
     }
@@ -100,9 +103,15 @@ const DEFAULT_OPTIONS: readonly AriaSelectOption[] = [
       inline-size: 0.5rem;
       block-size: 0.5rem;
       border-inline-end: 2px solid
-        var(--ngx-form-field-color-text-secondary, rgba(50, 65, 85, 0.75));
+        var(
+          --ngx-form-field-color-text-secondary,
+          light-dark(rgba(50, 65, 85, 0.75), rgba(249, 250, 251, 0.75))
+        );
       border-block-end: 2px solid
-        var(--ngx-form-field-color-text-secondary, rgba(50, 65, 85, 0.75));
+        var(
+          --ngx-form-field-color-text-secondary,
+          light-dark(rgba(50, 65, 85, 0.75), rgba(249, 250, 251, 0.75))
+        );
       transform: translateY(-65%) rotate(45deg);
       pointer-events: none;
     }
@@ -117,16 +126,22 @@ const DEFAULT_OPTIONS: readonly AriaSelectOption[] = [
       margin-block-start: 0.35rem;
       padding: 0.25rem;
       border: 1px solid
-        var(--ngx-form-field-color-border, rgba(50, 65, 85, 0.7));
+        var(
+          --ngx-form-field-color-border,
+          light-dark(rgba(50, 65, 85, 0.7), rgba(249, 250, 251, 0.4))
+        );
       border-radius: var(--ngx-form-field-radius, 0.25rem);
-      background-color: var(--ngx-form-field-color-surface, #ffffff);
+      background-color: var(
+        --ngx-form-field-color-surface,
+        light-dark(#ffffff, #1f2937)
+      );
       box-shadow: 0 0.5rem 1.5rem
         color-mix(
           in srgb,
-          var(--ngx-form-field-color-text, #324155) 18%,
+          var(--ngx-form-field-color-text, light-dark(#324155, #f9fafb)) 18%,
           transparent
         );
-      color: var(--ngx-form-field-color-text, #324155);
+      color: var(--ngx-form-field-color-text, light-dark(#324155, #f9fafb));
       font-family: var(--ngx-form-field-input-font-family, inherit);
       font-size: var(--ngx-form-field-input-size, 0.875rem);
       font-weight: var(--ngx-form-field-input-weight, 400);
@@ -156,14 +171,14 @@ const DEFAULT_OPTIONS: readonly AriaSelectOption[] = [
     .select__option[data-active='true'] {
       background: color-mix(
         in srgb,
-        var(--ngx-form-field-color-primary, #007bc7) 10%,
+        var(--ngx-form-field-color-primary, light-dark(#007bc7, #60a5fa)) 10%,
         transparent
       );
     }
     .select__option[aria-selected='true'] {
       background: color-mix(
         in srgb,
-        var(--ngx-form-field-color-primary, #007bc7) 18%,
+        var(--ngx-form-field-color-primary, light-dark(#007bc7, #60a5fa)) 18%,
         transparent
       );
       font-weight: 600;

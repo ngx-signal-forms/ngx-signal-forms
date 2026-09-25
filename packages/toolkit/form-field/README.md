@@ -510,9 +510,12 @@ Quick example:
 
 ```css
 :root {
-  --ngx-form-field-focus-color: #007bc7;
-  --ngx-form-field-color-border: rgba(50, 65, 85, 0.7);
-  --ngx-signal-form-error-color: #db1818;
+  --ngx-form-field-focus-color: light-dark(#007bc7, #60a5fa);
+  --ngx-form-field-color-border: light-dark(
+    rgba(50, 65, 85, 0.7),
+    rgba(249, 250, 251, 0.4)
+  );
+  --ngx-signal-form-error-color: light-dark(#db1818, #fca5a5);
   --ngx-signal-form-feedback-font-size: 0.75rem;
 }
 ```

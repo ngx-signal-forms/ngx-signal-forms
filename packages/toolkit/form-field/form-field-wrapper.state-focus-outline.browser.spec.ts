@@ -296,3 +296,52 @@ describe('NgxFormFieldWrapper — default border contrast (#495)', () => {
     ).toBeGreaterThanOrEqual(3);
   });
 });
+
+/**
+ * Dark side of the default border (#494). With `color-scheme: dark` on an
+ * ancestor, the `light-dark()` border default resolves to
+ * `rgba(249, 250, 251, 0.4)` over the dark field surface `#1f2937`. That
+ * blends to 3.51:1 against the surface and 4.25:1 against a `#111827` page.
+ * No class and no OS signal is involved: the ancestor's `color-scheme` alone
+ * selects the dark pair.
+ */
+describe('NgxFormFieldWrapper — default border contrast in dark mode (#494)', () => {
+  @Component({
+    selector: 'ngx-test-default-border-contrast-dark',
+    imports: [NgxFormFieldWrapper, FormField],
+    template: `
+      <div
+        id="page"
+        style="color-scheme: dark; background-color: #111827; padding: 1rem;"
+      >
+        <ngx-form-field-wrapper appearance="outline" [formField]="field.name">
+          <label for="name">Name</label>
+          <input id="name" [formField]="field.name" />
+        </ngx-form-field-wrapper>
+      </div>
+    `,
+  })
+  class DarkDefaultBorderContrastComponent {
+    protected readonly field = form(signal({ name: '' }));
+  }
+
+  it('meets 3:1 border contrast against the dark field surface and the page, with default tokens', async () => {
+    const { container } = await render(DarkDefaultBorderContrastComponent);
+
+    const contentStyles = getComputedStyle(contentOf(container));
+    const surface = contentStyles.backgroundColor;
+    // The dark surface proves the dark side of the pair is in use; without
+    // it the check below would re-measure the light border.
+    expect(surface).toBe('rgb(31, 41, 55)');
+
+    const pageBackground = getComputedStyle(
+      container.querySelector<HTMLElement>('#page')!,
+    ).backgroundColor;
+    const renderedBorder = blendOverSurface(contentStyles.borderColor, surface);
+
+    expect(contrastRatio(renderedBorder, surface)).toBeGreaterThanOrEqual(3);
+    expect(
+      contrastRatio(renderedBorder, pageBackground),
+    ).toBeGreaterThanOrEqual(3);
+  });
+});

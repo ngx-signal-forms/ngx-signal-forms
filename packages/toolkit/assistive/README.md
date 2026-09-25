@@ -325,7 +325,7 @@ while consumers override only the public `--ngx-*` properties.
 
 See the [Theming guide](../form-field/THEMING.md) for the complete list of
 `--ngx-*` custom properties (error/warning/error-panel/hint/char-count
-tokens, dark-mode overrides, and the fieldset-level
+tokens, dark mode through `color-scheme`, and the fieldset-level
 `--ngx-signal-form-fieldset-notification-inset-*` positioning tokens).
 
 ## Related documentation
