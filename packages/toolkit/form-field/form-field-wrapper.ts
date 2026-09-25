@@ -21,7 +21,6 @@ import type {
   FormFieldOrientationInput,
   NgxFormFieldErrorPlacement,
   ResolvedMarker,
-  ResolvedWarningDisplayStrategy,
   WarningDisplayStrategy,
 } from '@ngx-signal-forms/toolkit';
 import {
@@ -29,17 +28,11 @@ import {
   NGX_SIGNAL_FORM_CONTROL_PRESETS,
   NGX_SIGNAL_FORM_FIELD_CONTEXT,
   NGX_SIGNAL_FORMS_CONFIG,
-  createErrorVisibility,
-  createWarningVisibility,
+  createFieldPresentation,
   injectFormContext,
-  isBlockingError,
   isFieldStateHidden,
-  isWarningError,
-  readDirectErrors,
   resolveFieldNameFromCandidates,
   type ResolvedNgxSignalFormControlSemantics,
-  resolveStrategyFromContext,
-  resolveWarningStrategyFromContext,
 } from '@ngx-signal-forms/toolkit';
 import {
   FORM_FIELD_APPEARANCE_VALUES,
@@ -47,10 +40,7 @@ import {
   NGX_SIGNAL_FORM_HINT_REGISTRY,
   NgxFieldIdentity,
   NgxFieldIdentityProvider,
-  devWarnOnce,
   isFieldStateRequired,
-  isHtmlElement,
-  sanitizeFieldNameForId,
   type WarnOnceRef,
 } from '@ngx-signal-forms/toolkit/core';
 import {
@@ -58,7 +48,11 @@ import {
   NgxFormFieldHint,
 } from '@ngx-signal-forms/toolkit/assistive';
 import { captureFormFieldWrapperDomSnapshot } from './form-field-dom-snapshot';
-import { capabilitiesFor, type FormFieldControlKind } from './form-field.utils';
+import {
+  applyWrapperDomSnapshot,
+  type WrapperDomState,
+} from './form-field-dom-sync';
+import { capabilitiesFor } from './form-field.utils';
 import { resolveClusterAriaAttrs } from './form-field-cluster-aria';
 import { resolveUnionInput } from './utilities/resolve-union-input';
 
@@ -261,11 +255,11 @@ import { resolveUnionInput } from './utilities/resolve-union-input';
     // duplicating it here would either be ignored by assistive tech or, worse,
     // cause confusing double-announcements (WCAG 4.1.2).
     '[attr.hidden]': 'isFieldHidden() ? "" : null',
-    '[attr.data-ngx-signal-form-control-aria-mode]':
-      'resolvedControlAriaMode()',
-    '[attr.data-ngx-signal-form-control-kind]': 'resolvedControlKind()',
-    '[attr.data-ngx-signal-form-control-layout]': 'resolvedControlLayout()',
-    '[class.ngx-signal-form-field-wrapper--invalid]': 'showInvalidState()',
+    '[attr.data-ngx-signal-form-control-aria-mode]': 'dom.semantics().ariaMode',
+    '[attr.data-ngx-signal-form-control-kind]': 'dom.semantics().kind',
+    '[attr.data-ngx-signal-form-control-layout]': 'dom.semantics().layout',
+    '[class.ngx-signal-form-field-wrapper--invalid]':
+      'presentation.showErrors()',
     '[class.ngx-signal-form-field-wrapper--warning]': 'showWarningState()',
     '[class.ngx-signal-form-field-wrapper--messages-top]': 'isTopPlacement()',
     '[class.ngx-signal-form-field-wrapper--messages-bottom]':
@@ -275,7 +269,7 @@ import { resolveUnionInput } from './utilities/resolve-union-input';
     '[class.ngx-signal-form-field-wrapper--selection-group]':
       'isSelectionGroupControl()',
     '[class.ngx-signal-form-field-wrapper--selection-cluster]':
-      'isSelectionCluster()',
+      'dom.selectionCluster()',
     '[class.ngx-signal-form-field-wrapper--switch]': 'isSwitchControl()',
     '[class.ngx-signal-form-field-wrapper--padded-control]':
       'hasPaddedContentControl()',
@@ -285,9 +279,9 @@ import { resolveUnionInput } from './utilities/resolve-union-input';
     '[attr.data-orientation]': 'resolvedOrientation()',
     '[attr.data-error-placement]': 'errorPlacement()',
     '[attr.data-marker]': 'resolvedMarker()?.kind ?? null',
-    '[attr.role]': 'selectionClusterRole()',
-    '[attr.aria-labelledby]': 'selectionClusterLabelledBy()',
-    '[attr.aria-describedby]': 'selectionClusterDescribedBy()',
+    '[attr.role]': 'clusterAria().role',
+    '[attr.aria-labelledby]': 'clusterAria().labelledBy',
+    '[attr.aria-describedby]': 'clusterAria().describedBy',
   },
   template: `
     <!--
@@ -326,10 +320,10 @@ import { resolveUnionInput } from './utilities/resolve-union-input';
             >{{ marker.text }}</span
           >
         }
-        @if (groupRequiredHintId(); as requiredHintId) {
+        @if (clusterAria().groupRequiredHintId; as requiredHintId) {
           <!--
             Relocated required-state announcement for a \`group\`-role selection
-            cluster (see \`groupRequiredHintId\` doc comment): \`aria-required\`
+            cluster (see \`resolveClusterAriaAttrs\`): \`aria-required\`
             isn't valid ARIA on \`group\`, so this visually-hidden (NOT
             aria-hidden) node carries the text instead, wired into
             \`aria-describedby\` on the host. WCAG 1.3.1 / 4.1.2.
@@ -337,12 +331,12 @@ import { resolveUnionInput } from './utilities/resolve-union-input';
           <span
             [id]="requiredHintId"
             class="ngx-signal-form-field-wrapper__visually-hidden"
-            >{{ resolvedRequiredHintText() }}</span
+            >{{ config.requiredHintText }}</span
           >
         }
       </div>
 
-      @if (isTopPlacement() && shouldRenderErrorSlot()) {
+      @if (isTopPlacement() && presentation.renderMessageSlot()) {
         <div class="ngx-signal-form-field-wrapper__messages">
           <ng-container
             *ngComponentOutlet="
@@ -374,7 +368,7 @@ import { resolveUnionInput } from './utilities/resolve-union-input';
       <!-- Assistive row: fixed-height container prevents layout shift -->
       <div class="ngx-signal-form-field-wrapper__assistive">
         <div class="ngx-signal-form-field-wrapper__assistive-left">
-          @if (!isTopPlacement() && shouldRenderErrorSlot()) {
+          @if (!isTopPlacement() && presentation.renderMessageSlot()) {
             <ng-container
               *ngComponentOutlet="
                 errorRendererComponent();
@@ -384,7 +378,9 @@ import { resolveUnionInput } from './utilities/resolve-union-input';
           }
           <div
             class="ngx-signal-form-field-wrapper__hint-slot"
-            [style.display]="shouldRenderErrorSlot() ? 'none' : 'contents'"
+            [style.display]="
+              presentation.renderMessageSlot() ? 'none' : 'contents'
+            "
           >
             <ng-content select="ngx-form-field-hint" />
           </div>
@@ -545,9 +541,10 @@ export class NgxFormFieldWrapper<TValue = unknown> {
   readonly optionalMarker = input<string | undefined>();
 
   /**
-   * Toolkit configuration for default appearance.
+   * Toolkit configuration for default appearance, markers and the required
+   * hint text.
    */
-  readonly #config = inject(NGX_SIGNAL_FORMS_CONFIG);
+  protected readonly config = inject(NGX_SIGNAL_FORMS_CONFIG);
 
   readonly #controlPresets = inject(NGX_SIGNAL_FORM_CONTROL_PRESETS);
 
@@ -582,21 +579,27 @@ export class NgxFormFieldWrapper<TValue = unknown> {
    * `${fieldName}-error` / `${fieldName}-warning` id contract (see
    * `NgxFormFieldErrorRenderer`) without needing to inject
    * `NGX_SIGNAL_FORM_FIELD_CONTEXT` itself.
+   *
+   * `submittedStatus` is `undefined` without a form context, not a made-up
+   * `'unsubmitted'`. That keeps the dev-mode warning for
+   * `strategy="on-submit"` without a form context, which a default would
+   * hide.
    */
   protected readonly errorRendererInputs = computed<Record<string, unknown>>(
     () => ({
       formField: this.formField(),
-      strategy: this.effectiveStrategy(),
-      submittedStatus: this.submittedStatus(),
+      strategy: this.presentation.effectiveStrategy(),
+      submittedStatus: this.#formContext?.submittedStatus(),
       warningStrategy: this.warningStrategy(),
       fieldName: this.resolvedFieldName(),
     }),
   );
 
   /**
-   * Shared field-identity service. Provided by this component so auto-aria
-   * and future surfaces can read field name, error / warning IDs, and the
-   * bound control element through a single, centralized source of truth.
+   * Shared field-identity service, provided by the `NgxFieldIdentityProvider`
+   * host directive. The render write phase publishes the name, the bound
+   * control, its visibility and the hint ids. `createFieldPresentation()`
+   * publishes the resolved strategies.
    */
   readonly #fieldIdentity = inject(NgxFieldIdentity);
 
@@ -612,8 +615,8 @@ export class NgxFormFieldWrapper<TValue = unknown> {
 
   /**
    * Author-supplied `aria-labelledby` / `aria-describedby`, captured at
-   * construction. `selectionClusterLabelledBy` / `selectionClusterDescribedBy`
-   * below return `null` for non-cluster wrappers (the vast majority), and
+   * construction. The cluster ARIA attributes return `null` for non-cluster
+   * wrappers (the vast majority), and
    * `[attr.aria-labelledby]` / `[attr.aria-describedby]` on the host would
    * otherwise strip any value an author bound directly on
    * `<ngx-form-field-wrapper aria-describedby="…">` — the host bindings are
@@ -628,44 +631,42 @@ export class NgxFormFieldWrapper<TValue = unknown> {
     this.#elementRef.nativeElement.getAttribute('aria-describedby');
 
   /**
-   * Signal holding the input element's ID attribute.
-   * Updated from the post-render DOM inspection after content projection settles.
-   */
-  readonly #inputElementId = signal<string | null>(null);
-  readonly #boundControlElement = signal<HTMLElement | null>(null);
-
-  /**
-   * Caches for the `__main` slot and the projected label element. They
-   * mirror `#boundControlElement`'s role for the bound control. Plain
-   * fields, not signals: nothing outside the `earlyRead`/`write` pair below
-   * reads them, so there is no reason to pay for change-detection tracking.
-   * Read and written only inside `afterEveryRender`. See
-   * `readFormFieldWrapperDomSnapshot`'s cache-hit checks for why reusing
-   * these skips a `querySelector` call on most renders.
+   * Caches for the `__main` slot and the projected label element. Plain
+   * fields, not signals: only the `earlyRead`/`write` pair below reads
+   * them. See `readFormFieldWrapperDomSnapshot`'s cache-hit checks for why
+   * reusing these skips a `querySelector` call on most renders.
    */
   #cachedMainSlot: HTMLElement | null = null;
   #cachedLabel: Element | null = null;
 
   /**
-   * Tracks whether the bound control is required, mirroring what the previous
-   * `:has([required])` / `:has([aria-required='true'])` CSS selectors detected.
-   * Updated in the post-render `write` callback so the template-rendered
-   * required marker stays in sync with the projected control's attributes.
+   * Cached field state signal. Every downstream computed reads this one
+   * node instead of re-reading `this.formField()()`, which matters on forms
+   * with dozens of wrappers reacting to the same change-detection cycle.
    */
-  readonly #boundControlIsRequired = signal(false);
-  readonly #isSelectionCluster = signal(false);
-  readonly #selectionClusterLabelId = signal<string | null>(null);
+  readonly #fieldState = computed(() => this.formField()());
 
-  readonly #controlSemantics = signal<ResolvedNgxSignalFormControlSemantics>({
-    kind: null,
-    layout: null,
-    ariaMode: null,
-  });
-  readonly #warnedUnresolvedKind: WarnOnceRef = { current: false };
-
-  readonly #controlKind = computed<FormFieldControlKind>(
-    () => this.#controlSemantics().kind,
-  );
+  /**
+   * State the render write phase derives from the projected control. See
+   * `applyWrapperDomSnapshot` for what each signal holds and when it
+   * changes.
+   */
+  protected readonly dom: WrapperDomState = {
+    boundControl: signal<HTMLElement | null>(null),
+    inputId: signal<string | null>(null),
+    required: signal(false),
+    selectionCluster: signal(false),
+    selectionClusterLabelId: signal<string | null>(null),
+    semantics: signal<ResolvedNgxSignalFormControlSemantics>({
+      kind: null,
+      layout: null,
+      ariaMode: null,
+    }),
+    resolvedFieldName: () => this.resolvedFieldName(),
+    fieldRequired: () => isFieldStateRequired(this.#fieldState()),
+    warnedUnresolvedKind: { current: false },
+    warnedUnresolvedFieldName: { current: false },
+  };
 
   readonly #warnedInvalidAppearance: WarnOnceRef = { current: false };
 
@@ -673,13 +674,13 @@ export class NgxFormFieldWrapper<TValue = unknown> {
     const appearance = this.appearance();
 
     if (appearance === 'inherit') {
-      return this.#config.defaultFormFieldAppearance;
+      return this.config.defaultFormFieldAppearance;
     }
 
     const raw = appearance as string;
     const hint =
       raw === 'stacked'
-        ? ` The legacy 'stacked' appearance alias resolves to the configured default ('${this.#config.defaultFormFieldAppearance}').`
+        ? ` The legacy 'stacked' appearance alias resolves to the configured default ('${this.config.defaultFormFieldAppearance}').`
         : raw === 'bare'
           ? " The 'bare' appearance was renamed to 'plain' in v1 rc.1."
           : undefined;
@@ -687,7 +688,7 @@ export class NgxFormFieldWrapper<TValue = unknown> {
     return resolveUnionInput(raw, FORM_FIELD_APPEARANCE_VALUES, {
       component: 'NgxFormFieldWrapper',
       prop: 'appearance',
-      fallback: this.#config.defaultFormFieldAppearance,
+      fallback: this.config.defaultFormFieldAppearance,
       fallbackLabel: 'the global default',
       expectedLabel: "'standard' | 'outline' | 'plain' | 'inherit'",
       hint,
@@ -701,11 +702,10 @@ export class NgxFormFieldWrapper<TValue = unknown> {
   protected readonly isOutline = computed(() => {
     // Defer outline until the projected control is discovered so selection
     // controls never flash outline chrome on the first render frame.
-    if (this.#boundControlElement() === null) {
+    if (this.dom.boundControl() === null) {
       return false;
     }
-    const controlKind = this.#controlKind();
-    if (!capabilitiesFor(controlKind).supportsOutline) {
+    if (!capabilitiesFor(this.dom.semantics().kind).supportsOutline) {
       return false;
     }
 
@@ -724,7 +724,7 @@ export class NgxFormFieldWrapper<TValue = unknown> {
    * Outline appearance and selection-control rows force vertical layout.
    *
    * Gated the same way as its siblings `isOutline` and `resolvedMarker`
-   * (each returns its own pre-resolution value): `#controlKind()` has not
+   * (each returns its own pre-resolution value): the control kind has not
    * settled before the projected control is discovered, so forcing on it
    * here would report the raw *requested* orientation for a frame before
    * snapping to the forced `'vertical'` once a checkbox / switch /
@@ -740,15 +740,13 @@ export class NgxFormFieldWrapper<TValue = unknown> {
       const orientation = this.orientation();
       const requestedOrientation = this.#resolveOrientationInput(orientation);
 
-      if (this.#boundControlElement() === null) {
-        return this.#config.defaultFormFieldOrientation;
+      if (this.dom.boundControl() === null) {
+        return this.config.defaultFormFieldOrientation;
       }
-
-      const controlKind = this.#controlKind();
 
       if (
         this.resolvedAppearance() === 'outline' ||
-        capabilitiesFor(controlKind).forcesVertical
+        capabilitiesFor(this.dom.semantics().kind).forcesVertical
       ) {
         return 'vertical';
       }
@@ -761,13 +759,13 @@ export class NgxFormFieldWrapper<TValue = unknown> {
     orientation: FormFieldOrientationInput,
   ): FormFieldOrientation {
     if (orientation === 'inherit') {
-      return this.#config.defaultFormFieldOrientation;
+      return this.config.defaultFormFieldOrientation;
     }
 
     return resolveUnionInput(orientation, FORM_FIELD_ORIENTATION_VALUES, {
       component: 'NgxFormFieldWrapper',
       prop: 'orientation',
-      fallback: this.#config.defaultFormFieldOrientation,
+      fallback: this.config.defaultFormFieldOrientation,
       fallbackLabel: 'the global default',
       expectedLabel: "'vertical' | 'horizontal' | 'inherit'",
       warned: this.#warnedInvalidOrientation,
@@ -785,21 +783,21 @@ export class NgxFormFieldWrapper<TValue = unknown> {
    * Resolved marking mode with input override.
    */
   protected readonly resolvedMarkerMode = computed<FieldMarkingMode>(() => {
-    return this.showMarkerWhen() ?? this.#config.showMarkerWhen;
+    return this.showMarkerWhen() ?? this.config.showMarkerWhen;
   });
 
   /**
    * Resolved required marker text with input override.
    */
   protected readonly resolvedRequiredMarker = computed(() => {
-    return this.requiredMarker() ?? this.#config.requiredMarker;
+    return this.requiredMarker() ?? this.config.requiredMarker;
   });
 
   /**
    * Resolved optional marker text with input override.
    */
   protected readonly resolvedOptionalMarker = computed(() => {
-    return this.optionalMarker() ?? this.#config.optionalMarker;
+    return this.optionalMarker() ?? this.config.optionalMarker;
   });
 
   /**
@@ -822,7 +820,7 @@ export class NgxFormFieldWrapper<TValue = unknown> {
    * NVDA/VoiceOver (WCAG 1.3.1, 4.1.2).
    */
   protected readonly resolvedMarker = computed<ResolvedMarker | null>(() => {
-    if (this.#boundControlElement() === null) {
+    if (this.dom.boundControl() === null) {
       return null;
     }
 
@@ -831,7 +829,7 @@ export class NgxFormFieldWrapper<TValue = unknown> {
       return null;
     }
 
-    const isRequired = this.#boundControlIsRequired();
+    const isRequired = this.dom.required();
 
     if (mode === 'required') {
       return isRequired
@@ -845,43 +843,25 @@ export class NgxFormFieldWrapper<TValue = unknown> {
       : { kind: 'optional', text: this.resolvedOptionalMarker() };
   });
 
-  protected readonly resolvedControlKind = computed(() => {
-    return this.#controlKind();
-  });
-
   protected readonly isTextualControl = computed(() => {
-    return capabilitiesFor(this.#controlKind()).textual;
+    return capabilitiesFor(this.dom.semantics().kind).textual;
   });
 
   protected readonly isCheckboxControl = computed(() => {
-    return this.#controlKind() === 'checkbox';
+    return this.dom.semantics().kind === 'checkbox';
   });
 
   protected readonly isSelectionGroupControl = computed(() => {
-    return capabilitiesFor(this.#controlKind()).selectionGroup;
-  });
-
-  protected readonly isSelectionCluster = computed(() => {
-    return this.#isSelectionCluster();
+    return capabilitiesFor(this.dom.semantics().kind).selectionGroup;
   });
 
   protected readonly isSwitchControl = computed(() => {
-    return this.#controlKind() === 'switch';
+    return this.dom.semantics().kind === 'switch';
   });
 
   protected readonly hasPaddedContentControl = computed(() => {
-    return capabilitiesFor(this.#controlKind()).paddedContent;
+    return capabilitiesFor(this.dom.semantics().kind).paddedContent;
   });
-
-  protected readonly resolvedControlLayout = computed(() => {
-    return this.#controlSemantics().layout;
-  });
-
-  protected readonly resolvedControlAriaMode = computed(() => {
-    return this.#controlSemantics().ariaMode;
-  });
-
-  readonly #warnedUnresolvedFieldName: WarnOnceRef = { current: false };
 
   /**
    * Resolved field name computed from two sources (in priority order):
@@ -904,20 +884,17 @@ export class NgxFormFieldWrapper<TValue = unknown> {
    * — the same value used for `data-signal-field` and for matching against
    * `NGX_SIGNAL_FORM_FIELD_VISIBILITY_REGISTRY` entries. Whatever builds an
    * `id` from it (`generateErrorId`, the hint id builder, the
-   * selection-cluster label id below) sanitizes at that point instead. See
-   * `sanitizeFieldNameForId`.
+   * selection-cluster label id in `applyWrapperDomSnapshot`) sanitizes at
+   * that point instead. See `sanitizeFieldNameForId`.
    *
    * **Pure by design**: this computed performs no side effects. Projected
    * children (`NgxFormFieldHint`, `NgxFormFieldError`) read it via
    * `NGX_SIGNAL_FORM_FIELD_CONTEXT` during the *first* change-detection
-   * pass — before `#inputElementId` is populated by the `afterEveryRender`
-   * write phase below — so a `console.error` fired from in here would fire
-   * once, permanently, on every correctly configured field (id set, no
-   * `fieldName` input) purely because of that one-render race. The
-   * unresolved-name diagnostic instead lives in the `afterEveryRender`
-   * write callback, which runs after the DOM snapshot for the current
-   * render has been applied — i.e. only once the state has actually
-   * settled.
+   * pass — before the render write phase fills in the control `id` — so a
+   * `console.error` fired from in here would fire once, permanently, on
+   * every correctly configured field (id set, no `fieldName` input) purely
+   * because of that one-render race. `applyWrapperDomSnapshot` owns the
+   * unresolved-name diagnostic instead, after the state has settled.
    *
    * @remarks
    * This signal is public to allow child components to access the resolved field name
@@ -927,12 +904,10 @@ export class NgxFormFieldWrapper<TValue = unknown> {
     resolveFieldNameFromCandidates(
       // Priority 1: Explicit fieldName input
       this.fieldName(),
-      // Priority 2: Derive from input element's id attribute (signal updated
-      // by afterEveryRender). This is the correct reactive path — the DOM is
-      // never queried synchronously inside a computed() to avoid SSR crashes
-      // (requireHostElement throws TypeError when nativeElement is not
-      // HTMLElement) and to keep the dependency graph fully reactive.
-      this.#inputElementId(),
+      // Priority 2: the bound control's `id`, written by the render write
+      // phase. The DOM is never queried inside a computed: that would crash
+      // on the server and hide the dependency from the signal graph.
+      this.dom.inputId(),
     ),
   );
 
@@ -970,80 +945,6 @@ export class NgxFormFieldWrapper<TValue = unknown> {
   );
 
   /**
-   * Effective error display strategy combining component input and form context defaults.
-   *
-   * Routes through the shared `resolveStrategyFromContext` helper (the
-   * strategy-resolution half of the ADR-0006 seam; `createErrorVisibility()`
-   * is the seam itself) rather than reading `formContext.errorStrategy()`
-   * and calling `resolveErrorDisplayStrategy` directly — same cascade, one
-   * fewer hand-rolled copy of the null-context guard.
-   */
-  protected readonly effectiveStrategy = computed(() =>
-    resolveStrategyFromContext(
-      this.strategy() ?? undefined,
-      this.#formContext,
-      this.#config.defaultErrorStrategy,
-    ),
-  );
-
-  /**
-   * Computed signal for submission status.
-   * Gets Angular's SubmittedStatus from the form provider context if available.
-   *
-   * Returns `undefined` (rather than manufacturing an `'unsubmitted'`
-   * default) when there is no form context. `createShowErrorsComputed`
-   * already falls back to `'unsubmitted'` internally when it sees
-   * `undefined`, so behavior is unchanged — but passing `undefined` through
-   * lets its one-shot dev-mode warning fire for `strategy="on-submit"`
-   * without a form context. A manufactured `'unsubmitted'` default here
-   * would mask that miswiring: the primitive would see a defined status and
-   * never suspect the field can't possibly know when the form was
-   * submitted, silently defeating the strategy with no diagnostic.
-   */
-  protected readonly submittedStatus = computed(() => {
-    const formContext = this.#formContext;
-
-    return formContext ? formContext.submittedStatus() : undefined;
-  });
-
-  /**
-   * Cached field state signal. Every downstream computed
-   * (`#allMessages`, `isFieldHidden`, `#showErrorsByStrategy`, and the
-   * `resolvedControlSemantics` effects) used to re-read `this.formField()()`
-   * independently. With a single cache the signal graph collapses those
-   * reads into one dependency node, which matters on forms with dozens of
-   * wrappers all reacting to the same change-detection cycle.
-   */
-  readonly #fieldState = computed(() => this.formField()());
-
-  readonly #allMessages = computed(() => readDirectErrors(this.#fieldState()));
-
-  /**
-   * Whether field has blocking errors.
-   * Uses shared `isBlockingError` utility from headless.
-   */
-  protected readonly hasErrors = computed(() =>
-    this.#allMessages().some(isBlockingError),
-  );
-
-  /**
-   * Whether field has warnings.
-   * Uses shared `isWarningError` utility from headless.
-   */
-  protected readonly hasWarnings = computed(() =>
-    this.#allMessages().some(isWarningError),
-  );
-
-  /**
-   * Whether the wrapper should render its invalid visual state.
-   * Mirrors the same timing rules as automatic error display so native inputs
-   * and custom FormValueControl hosts share one consistent border treatment.
-   */
-  protected readonly showInvalidState = computed(() => {
-    return this.hasErrors() && this.shouldShowErrors();
-  });
-
-  /**
    * Whether the bound field is currently hidden via Angular's `hidden()`
    * schema logic. When `true` we suppress error/warning rendering and mark
    * the host element with the `hidden` attribute so screen readers skip it
@@ -1051,126 +952,42 @@ export class NgxFormFieldWrapper<TValue = unknown> {
    * (`@if`), but the wrapper stays safe even if the consumer forgets.
    *
    * **Why no `disabled()` check here**: disabled fields are excluded from
-   * Angular's validation entirely, so `errors().length === 0` already
-   * short-circuits `shouldShowErrors()`. A disabled field is also still
-   * visually present, so tagging the wrapper `[attr.hidden]` would be
-   * wrong. `focusFirstInvalid` and the error summary (which can aggregate
-   * across subtrees) do check both; this component only needs `hidden()`.
+   * Angular's validation entirely, so they have no errors to show. A
+   * disabled field is also still visually present, so tagging the wrapper
+   * `[attr.hidden]` would be wrong. `focusFirstInvalid` and the error
+   * summary (which can aggregate across subtrees) do check both; this
+   * component only needs `hidden()`.
    */
   protected readonly isFieldHidden = computed(() => {
     return isFieldStateHidden(this.#fieldState());
   });
 
   /**
-   * Visibility-timing computed shared with `createErrorVisibility()`,
-   * auto-aria, and the error component. Reads `invalid()` / `touched()` off
-   * the field state and runs the same strategy logic — keeping every
-   * surface in lockstep.
-   *
-   * `effectiveStrategy` / `submittedStatus` are already fully resolved (no
-   * `'inherit'`, no missing context) by the time they reach here, so
-   * `createErrorVisibility`'s own cascade is a no-op pass-through — this
-   * routes through the shared seam (ADR-0006) for consistency with the
-   * other four surfaces rather than for any behavior difference.
+   * Error and warning state of this field: strategies, visibility timing
+   * and whether the message renderer mounts. Shared with custom wrappers
+   * through the public `createFieldPresentation()`, which also publishes the
+   * resolved strategies to the field identity so auto-aria gates
+   * `aria-describedby` on this wrapper's field-level overrides.
    */
-  readonly #showErrorsByStrategy = createErrorVisibility(this.#fieldState, {
-    strategy: this.effectiveStrategy,
-    submittedStatus: this.submittedStatus,
-  });
-
-  /**
-   * Whether to actually display errors based on current strategy and field state.
-   * This controls when the error component replaces the hint.
-   *
-   * Short-circuits on `hidden()` and empty-error cases before consulting the
-   * shared visibility-timing helper.
-   */
-  protected readonly shouldShowErrors = computed(() => {
-    if (this.isFieldHidden()) return false;
-    if (this.#allMessages().length === 0) return false;
-    return this.#showErrorsByStrategy();
-  });
-
-  /**
-   * Effective warning display strategy. Parallels {@link effectiveStrategy}
-   * but stays entirely inside the warning channel:
-   * explicit input → form context `warningStrategy()` → config
-   * `defaultWarningStrategy` → `'on-touch'`.
-   *
-   * No tier consults `defaultErrorStrategy`, so a form gated to
-   * `'on-submit'` for blocking errors does not also gate its warnings.
-   */
-  protected readonly effectiveWarningStrategy =
-    computed<ResolvedWarningDisplayStrategy>(() =>
-      resolveWarningStrategyFromContext(
-        this.warningStrategy(),
-        this.#formContext,
-        this.#config.defaultWarningStrategy,
-      ),
-    );
-
-  /**
-   * Warning-channel counterpart to {@link #showErrorsByStrategy}, routed
-   * through the shared `createWarningVisibility()` seam (ADR-0006, ADR-0007)
-   * instead of hand-inlining `shouldShowWarnings()`.
-   *
-   * `effectiveWarningStrategy` / `submittedStatus` are already fully
-   * resolved (no `'inherit'`, no missing context), so — same as
-   * {@link #showErrorsByStrategy} — the seam's own cascade is a no-op
-   * pass-through here.
-   */
-  readonly #showWarningsByStrategy = createWarningVisibility(this.#fieldState, {
-    strategy: this.effectiveWarningStrategy,
-    submittedStatus: this.submittedStatus,
-  });
-
-  /**
-   * Whether the error renderer should mount to show warnings, evaluated
-   * independently of {@link shouldShowErrors}. Without this, a warnings-only
-   * field would never render `NgxFormFieldError` at all when
-   * {@link effectiveStrategy} (e.g. `'on-submit'`) gates the blocking-error
-   * timing — the renderer's own warning cascade never gets a chance to run
-   * because the `@if` around the outlet in the template never mounts it.
-   * See README "Warning support".
-   */
-  protected readonly shouldShowWarnings = computed(() => {
-    if (this.isFieldHidden()) return false;
-    if (!this.hasWarnings()) return false;
-    return this.#showWarningsByStrategy();
-  });
-
-  /**
-   * Whether the projected error renderer should be mounted at all — either
-   * because blocking errors should show, or because warnings should show
-   * under their own (independent) strategy timing.
-   */
-  protected readonly shouldRenderErrorSlot = computed(() => {
-    return this.shouldShowErrors() || this.shouldShowWarnings();
+  protected readonly presentation = createFieldPresentation(this.#fieldState, {
+    strategy: this.strategy,
+    warningStrategy: this.warningStrategy,
+    hidden: this.isFieldHidden,
+    identity: this.#fieldIdentity,
   });
 
   /**
    * Whether to apply warning styling to the form field container.
    * Warning styling is shown only when:
    * 1. Field has warnings
-   * 2. Field has NO errors (errors take visual priority)
+   * 2. Field has NO visible errors (errors take visual priority)
    */
   protected readonly showWarningState = computed(() => {
-    return this.hasWarnings() && !this.showInvalidState();
+    return this.presentation.hasWarnings() && !this.presentation.showErrors();
   });
 
   protected readonly isTopPlacement = computed(() => {
     return this.errorPlacement() === 'top';
-  });
-
-  /**
-   * Resolved text for {@link groupRequiredHintId}'s visually-hidden node.
-   * Sourced from `NgxSignalFormsConfig.requiredHintText` — the same
-   * config-driven text seam as {@link resolvedRequiredMarker} and
-   * `NgxFormMarkingLegend`'s `requiredLegendText` — so a non-English app can
-   * localize it instead of announcing a hardcoded English word.
-   */
-  protected readonly resolvedRequiredHintText = computed(() => {
-    return this.#config.requiredHintText;
   });
 
   /**
@@ -1179,63 +996,33 @@ export class NgxFormFieldWrapper<TValue = unknown> {
    * together by the pure {@link resolveClusterAriaAttrs} — see that
    * function's doc comment for the accessibility rationale (WCAG 1.3.1 /
    * 4.1.2, https://github.com/ngx-signal-forms/ngx-signal-forms/issues/300)
-   * and for why these four outputs are computed as one unit instead of four
-   * separately-guarded computeds that used to re-derive `isSelectionCluster`
-   * checks and quietly depend on read order.
+   * and for why these four outputs are computed as one unit.
+   *
+   * `labelledBy` falls back to (never replaces) the author's own
+   * `aria-labelledby`, and `describedBy` merges with the author's own
+   * `aria-describedby` — see `#initialAriaLabelledby` for why the host
+   * bindings cannot simply be left unbound instead.
    */
-  readonly #clusterAria = computed(() =>
+  protected readonly clusterAria = computed(() =>
     resolveClusterAriaAttrs({
-      isSelectionCluster: this.isSelectionCluster(),
-      controlKind: this.#controlKind(),
-      boundControlIsRequired: this.#boundControlIsRequired(),
-      requiredHintText: this.resolvedRequiredHintText(),
+      isSelectionCluster: this.dom.selectionCluster(),
+      controlKind: this.dom.semantics().kind,
+      boundControlIsRequired: this.dom.required(),
+      requiredHintText: this.config.requiredHintText,
       fieldName: this.resolvedFieldName(),
-      selectionClusterLabelId: this.#selectionClusterLabelId(),
+      selectionClusterLabelId: this.dom.selectionClusterLabelId(),
       initialAriaLabelledby: this.#initialAriaLabelledby,
       initialAriaDescribedby: this.#initialAriaDescribedby,
-      showInvalidState: this.showInvalidState(),
+      showInvalidState: this.presentation.showErrors(),
       showWarningState: this.showWarningState(),
-      shouldShowWarnings: this.shouldShowWarnings(),
+      shouldShowWarnings: this.presentation.showWarnings(),
     }),
   );
 
-  protected readonly selectionClusterRole = computed(
-    () => this.#clusterAria().role,
-  );
-
-  /**
-   * ID of the visually-hidden required hint for a `group`-role cluster, or
-   * `null` when it doesn't apply. See {@link resolveClusterAriaAttrs} for
-   * the full accessibility rationale.
-   */
-  protected readonly groupRequiredHintId = computed(
-    () => this.#clusterAria().groupRequiredHintId,
-  );
-
-  /**
-   * Falls back to (never replaces) `#initialAriaLabelledby` for non-cluster
-   * wrappers — see the field doc comment on `#initialAriaLabelledby` for why
-   * the host binding can't simply be left unbound instead.
-   */
-  protected readonly selectionClusterLabelledBy = computed(
-    () => this.#clusterAria().labelledBy,
-  );
-
-  /**
-   * Merges the author-supplied `#initialAriaDescribedby` with the
-   * cluster-managed required-hint/error/warning ids rather than replacing
-   * it — same preservation rule auto-aria already applies to the bound
-   * control itself. See {@link resolveClusterAriaAttrs} for the merge order
-   * and the `shouldShowWarnings` dangling-reference guard.
-   */
-  protected readonly selectionClusterDescribedBy = computed(
-    () => this.#clusterAria().describedBy,
-  );
-
   constructor() {
-    // Single afterEveryRender with proper phased callbacks:
-    // - earlyRead: read projected control metadata from the DOM before writes
-    // - write: update signals only when values changed, then write data-signal-field
+    // One `afterEveryRender` with phased callbacks:
+    // - earlyRead: read the projected control's metadata before any writes
+    // - write: turn that snapshot into state (`applyWrapperDomSnapshot`)
     //
     // `afterEveryRender` (not `afterNextRender`) is deliberate: the projected
     // `[formField]` control can be swapped at any render. An `@if` branch
@@ -1247,192 +1034,28 @@ export class NgxFormFieldWrapper<TValue = unknown> {
     // can add or remove radios without swapping the control itself, and one
     // `checkVisibility()` call for the bound control.
     afterEveryRender({
-      earlyRead: () => {
+      earlyRead: () =>
         // Resolves the host element, the bound control (native binding
         // registry first, DOM-probe fallback second — see
         // `captureFormFieldWrapperDomSnapshot`'s doc comment), and the rest
         // of the DOM snapshot in one call.
-        return captureFormFieldWrapperDomSnapshot(
+        captureFormFieldWrapperDomSnapshot(
           this.#elementRef,
-          this.#boundControlElement(),
+          this.dom.boundControl(),
           this.#controlPresets,
           this.#fieldState(),
           this.#cachedMainSlot,
           this.#cachedLabel,
-        );
-      },
+        ),
       // oxlint-disable-next-line @typescript-eslint/prefer-readonly-parameter-types -- afterEveryRender passes DOM-backed render state with mutable HTMLElement references.
-      write: (renderState) => {
-        const {
-          inputEl,
-          inputId,
-          semantics,
-          selectionControlCount,
-          label,
-          mainSlot,
-          controlVisible,
-        } = renderState;
-        this.#cachedMainSlot = mainSlot;
-        this.#cachedLabel = label;
-        const previousBoundControl = this.#boundControlElement();
-
-        if (previousBoundControl !== inputEl) {
-          previousBoundControl?.removeAttribute('data-signal-field');
-          this.#boundControlElement.set(inputEl);
-        }
-
-        if (inputId !== this.#inputElementId()) {
-          this.#inputElementId.set(inputId);
-        }
-
-        // Replaces the previous CSS `:has([required])` /
-        // `:has([aria-required='true'])` detection. Read each render so the
-        // marker reacts to dynamic schema changes (auto-aria toggles
-        // `aria-required` whenever the field's required state flips).
-        // Reads the typed `required` signal through the core helper (which
-        // states the `Pick<FieldState, 'required'>` contract) instead of
-        // casting the field state to a hand-written `{ required?: … }` shape.
-        const isRequired =
-          inputEl !== null &&
-          (inputEl.hasAttribute('required') ||
-            inputEl.getAttribute('aria-required') === 'true' ||
-            isFieldStateRequired(this.#fieldState()));
-        if (isRequired !== this.#boundControlIsRequired()) {
-          this.#boundControlIsRequired.set(isRequired);
-        }
-
-        const clusterRole = capabilitiesFor(semantics.kind).clusterRole;
-        const isSelectionCluster =
-          clusterRole === 'radiogroup' ||
-          (clusterRole === 'group' && selectionControlCount > 1);
-        if (isSelectionCluster !== this.#isSelectionCluster()) {
-          this.#isSelectionCluster.set(isSelectionCluster);
-        }
-
-        if (isHtmlElement(label) && isSelectionCluster) {
-          const existingLabelId = label.id.trim();
-          const resolvedFieldName = this.resolvedFieldName();
-          // Two unnamed selection clusters on one page would otherwise
-          // collide on the same fallback id and misroute `aria-labelledby`
-          // to the wrong legend. Skip wiring instead — `resolvedFieldName`
-          // already emits a one-shot dev error pointing authors at the
-          // missing `fieldName` input.
-          const nextLabelId = existingLabelId
-            ? existingLabelId
-            : resolvedFieldName === null
-              ? null
-              : // Sanitize here, at the point the id is built — `resolvedFieldName`
-                // is the raw resolved name and may contain inner whitespace.
-                `${sanitizeFieldNameForId(resolvedFieldName)}-label`;
-
-          if (nextLabelId !== null && existingLabelId.length === 0) {
-            label.id = nextLabelId;
-          }
-
-          if (nextLabelId !== this.#selectionClusterLabelId()) {
-            this.#selectionClusterLabelId.set(nextLabelId);
-          }
-        } else if (this.#selectionClusterLabelId() !== null) {
-          this.#selectionClusterLabelId.set(null);
-        }
-
-        const current = this.#controlSemantics();
-        if (
-          current.kind !== semantics.kind ||
-          current.layout !== semantics.layout ||
-          current.ariaMode !== semantics.ariaMode
-        ) {
-          this.#controlSemantics.set(semantics);
-        }
-
-        // A bound control whose semantics couldn't be resolved renders with
-        // default textual chrome silently — authors typically discover this
-        // only when outlined appearance or selection-group layout doesn't
-        // apply to their custom control. Fire a one-shot dev warning so the
-        // mis-wiring is visible without spamming change detection.
-        if (inputEl && semantics.kind === null) {
-          devWarnOnce(
-            this.#warnedUnresolvedKind,
-            'warn',
-            '[ngx-signal-forms] Form-field wrapper could not infer a control ' +
-              'kind for its bound control and will render with default textual ' +
-              'chrome. Declare semantics via `ngxSignalFormControl="..."` on the ' +
-              'control host (or register a preset) to opt into the right layout ' +
-              'and ARIA wiring.',
-            inputEl,
-          );
-        }
-
-        // `data-signal-field` is a stable runtime contract keyed off by
-        // custom controls (as a `:host([data-signal-field]:focus-visible)`
-        // selector), test discovery, and the assistive hint component for
-        // screen-reader correlation. Skip the write when no field name can
-        // be resolved — the attribute would otherwise hold the string
-        // `"null"` and mislead downstream DOM queries. Also skip the write
-        // when the attribute already holds the target value. `setAttribute`
-        // and `removeAttribute` mutate the DOM even when the value does not
-        // change, and that can trigger a `MutationObserver`.
-        if (inputEl) {
-          const fieldName = this.resolvedFieldName();
-          const currentFieldName = inputEl.getAttribute('data-signal-field');
-          if (fieldName === null) {
-            if (currentFieldName !== null) {
-              inputEl.removeAttribute('data-signal-field');
-            }
-          } else if (currentFieldName !== fieldName) {
-            inputEl.setAttribute('data-signal-field', fieldName);
-          }
-        }
-
-        // Sync the shared NgxFieldIdentity service so auto-aria and any other
-        // consumer always see the same field name, resolved strategies and
-        // hint ids. Auto-aria does NOT read the visibility flag published
-        // below — it probes its own host element in its own `earlyRead`
-        // phase (ADR-0011 §4), which is more correct for a multi-control
-        // cluster where one published flag cannot speak for every control.
-        // The flag stays for consumers that read the identity directly.
-        // Keep order: name → element → visible → hints.
-        const resolvedFieldName = this.resolvedFieldName();
-
-        // Fire the unresolved-name diagnostic here — after the DOM snapshot
-        // for *this* render has already been written to `#inputElementId`
-        // above — rather than inside the `resolvedFieldName` computed. By
-        // this point the state has genuinely settled: either the bound
-        // control still has no `id` (and no explicit `fieldName` was given)
-        // or no control was found at all. Checking post-write avoids the
-        // false positive where projected content (`NgxFormFieldHint`,
-        // `NgxFormFieldError`) reads `resolvedFieldName()` through
-        // `NGX_SIGNAL_FORM_FIELD_CONTEXT` on the first change-detection
-        // pass, before this write phase has ever run.
-        if (resolvedFieldName === null) {
-          devWarnOnce(
-            this.#warnedUnresolvedFieldName,
-            'error',
-            '[ngx-signal-forms] Could not resolve a deterministic field name for ngx-form-field-wrapper. Add an explicit `fieldName` input or an `id` attribute to the bound control. ARIA wiring will be skipped until a name is available.',
-          );
-        }
-
-        this.#fieldIdentity.setFieldName(resolvedFieldName);
-        this.#fieldIdentity.setControlElement(inputEl);
-        // Publish both resolved strategies so `NgxSignalFormAutoAria` gates
-        // `aria-describedby` on this wrapper's field-level overrides rather
-        // than only on the ambient form context.
-        this.#fieldIdentity.setResolvedStrategies(
-          this.effectiveStrategy(),
-          this.effectiveWarningStrategy(),
-        );
-        // `controlVisible` was already resolved in `earlyRead`. See
-        // `readFormFieldWrapperDomSnapshot`'s `controlVisible` field. This
-        // avoids a forced style recalculation after other wrappers' writes
-        // have mutated the DOM.
-        this.#fieldIdentity.setControlVisible(controlVisible);
-        this.#fieldIdentity.setHintIds(
-          this.hintDescriptors()
-            .filter(
-              (hint) =>
-                hint.fieldName === null || hint.fieldName === resolvedFieldName,
-            )
-            .map((hint) => hint.id),
+      write: (snapshot) => {
+        this.#cachedMainSlot = snapshot.mainSlot;
+        this.#cachedLabel = snapshot.label;
+        applyWrapperDomSnapshot(
+          snapshot,
+          this.dom,
+          this.#fieldIdentity,
+          this.hintDescriptors(),
         );
       },
     });

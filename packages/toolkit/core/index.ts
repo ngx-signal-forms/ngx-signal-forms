@@ -60,6 +60,7 @@ export { assertInjector } from './utilities/assert-injector';
 export * from './utilities/cascading-resolver';
 export { createCharacterCountLengthSignal } from './utilities/character-count-length';
 export * from './utilities/create-error-visibility';
+export * from './utilities/create-field-presentation';
 export * from './utilities/create-warning-visibility';
 export {
   createFieldNameResolver,

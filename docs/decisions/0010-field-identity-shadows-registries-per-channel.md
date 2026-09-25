@@ -42,7 +42,7 @@ Each channel therefore needs a state that means "never published", distinct from
 
 The error and warning channels resolve **independently of each other**, per [ADR-0007](0007-warning-display-timing-cascade.md). An identity that publishes an error strategy but not a warning strategy leaves warnings to the registry. Deciding both from one test would reintroduce the cross-channel coupling ADR-0007 removed.
 
-The `set*` writers stay `@internal` and stay stripped from the published `.d.ts`. This ADR is about how _readers_ resolve, not about who is allowed to write.
+The `set*` writers stay `@internal` and stay stripped from the published `.d.ts`. This ADR is about how _readers_ resolve, not about who is allowed to write. (Since #508, third parties can fill the strategy channels through `createFieldPresentation({ identity })`; see the ADR-0011 amendment.)
 
 ## Consequences
 

@@ -123,8 +123,11 @@ export interface ControlVisibilitySignal extends Signal<boolean> {
  * instance keyed on its own DOM subtree.
  *
  * The class is part of the public API; the `set*` writer methods are tagged
- * `@internal` and must not be called from outside this package — consumers
- * read the resolved signals, they do not drive them.
+ * `@internal` and must not be called from outside this package. Consumers
+ * never call them directly. They read the resolved signals, and publish
+ * through the toolkit's own drivers: `NgxFieldIdentityProvider` for the
+ * name, and `createFieldPresentation({ identity })` for the resolved
+ * strategies.
  *
  * @public
  */
@@ -191,7 +194,8 @@ export class NgxFieldIdentity {
    * element the wrapper never rendered (a dangling id — axe
    * `aria-valid-attr-value`), or omit one it did.
    *
-   * Updated by `NgxFormFieldWrapper` via `setResolvedStrategies`.
+   * Published by `createFieldPresentation()` when it gets this identity: the
+   * built-in wrapper does, and so can any custom wrapper.
    */
   readonly resolvedErrorStrategy = this.#resolvedErrorStrategy.asReadonly();
 

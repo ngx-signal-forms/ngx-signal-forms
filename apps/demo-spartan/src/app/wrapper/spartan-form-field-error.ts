@@ -155,8 +155,8 @@ export class NgxSpartanFormFieldError {
    * itself, the same way `NgxHeadlessErrorState.shouldShowWarnings` does for
    * the PrimeNG reference. `firstError()` is non-empty exactly when a
    * blocking error is both present and currently visible per strategy — the
-   * same "visible blocking error" signal the wrapper's own
-   * `#hasVisibleBlockingError` computes for `aria-describedby`.
+   * same "visible blocking error" signal the wrapper's
+   * `createFieldPresentation().showErrors` feeds into `aria-describedby`.
    */
   protected readonly firstWarning = computed(() => {
     if (this.firstError()) return undefined;
