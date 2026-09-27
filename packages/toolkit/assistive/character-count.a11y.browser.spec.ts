@@ -6,7 +6,7 @@ import { render } from '@testing-library/angular';
 import { userEvent } from 'vitest/browser';
 import { describe, expect, it } from 'vitest';
 import { NgxFormFieldCharacterCount } from './character-count';
-import { expectNoA11yViolations } from '@ngx-signal-forms/toolkit/testing';
+import { expectNoA11yViolations } from '../testing/a11y-internal';
 
 /**
  * WCAG 2.2 AA conformance gate for `NgxFormFieldCharacterCount`.
