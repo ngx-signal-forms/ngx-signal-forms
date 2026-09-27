@@ -62,7 +62,9 @@ packages/toolkit/
 ├── core/                               # Internal implementation (not public import path)
 │   ├── directives/
 │   ├── providers/
+│   ├── services/                       # Field identity, visibility and control-preset registries
 │   ├── utilities/                      # Includes warning-error.ts (public helpers via root)
+│   ├── feedback-tokens.css
 │   ├── tokens.ts
 │   └── types.ts
 ├── assistive/
@@ -73,6 +75,10 @@ packages/toolkit/
 │   ├── hint.ts
 │   └── index.ts
 ├── form-field/
+│   ├── utilities/                      # form-field-scoped helpers (resolve-union-input.ts)
+│   ├── form-field-cluster-aria.ts      # ARIA wiring for radio/checkbox clusters
+│   ├── form-field-dom-snapshot.ts      # reads the wrapper's rendered DOM once per change
+│   ├── form-field-dom-sync.ts          # keeps the DOM snapshot in sync with field state
 │   ├── form-field-wrapper.ts
 │   ├── form-field.utils.ts
 │   ├── form-fieldset.ts
@@ -81,12 +87,16 @@ packages/toolkit/
 │   ├── src/
 │   │   ├── index.ts
 │   │   └── lib/
+│   │       ├── build-headless-context.ts
+│   │       ├── character-count-types.ts
 │   │       ├── character-count.ts
 │   │       ├── create-error-message-signal.ts
 │   │       ├── error-state.ts
+│   │       ├── error-summary-utilities.ts
 │   │       ├── error-summary.ts
 │   │       ├── field-name.ts
 │   │       ├── field-optionality.ts
+│   │       ├── field-state-utilities.ts
 │   │       ├── fieldset.ts
 │   │       ├── notification.ts
 │   │       └── utilities.ts
@@ -101,7 +111,10 @@ packages/toolkit/
 │   ├── ng-package.json
 │   └── README.md
 ├── scripts/
-│   └── strip-internal-exports.mjs      # post-build: hides /core from the exports map
+│   ├── documentation-starter.mjs       # scaffolds a new TSDoc block
+│   ├── generate-readme.mjs             # rewrites the root README's relative links for npm
+│   ├── strip-internal-exports.mjs      # post-build: hides /core from the exports map
+│   └── strip-internal-members.mjs      # post-build: strips @internal class/interface members
 ├── testing/
 │   ├── a11y.ts                         # axe-core a11y test helpers
 │   ├── index.ts
@@ -113,8 +126,14 @@ packages/toolkit/
 
 Only the six public entry points above ship to npm. `core/` exists in source
 but is not in the published exports map, and `docs/` (repo root) is not part
-of the package at all — which is why the package READMEs link to GitHub with
-absolute URLs.
+of the package at all. Only one README ships: `scripts/generate-readme.mjs`
+reads the **repo-root** `README.md` (not `packages/toolkit/README.md`),
+rewrites its relative links to absolute GitHub URLs pinned to the commit
+being published, and writes the result to `dist/packages/toolkit/README.md`
+during `post-build`. The secondary entry points' own READMEs
+(`headless/README.md`, `vest/README.md`, `testing/README.md`,
+`form-field/README.md`, `assistive/README.md`) stay in the repo only —
+`ng-packagr` never copies them into the published package.
 
 ### Import examples
 
@@ -130,6 +149,7 @@ import { validateVest } from '@ngx-signal-forms/toolkit/vest';
 
 ```text
 @angular/core (peer)
+@angular/common (peer)
 @angular/forms/signals (peer)
 vest ^6 (optional peer for /vest)
 axe-core (optional peer for /testing; range in package.json)
@@ -154,6 +174,8 @@ lives in `packages/demo/debugger` for internal/demo usage and is consumed via
 
 ### Publishing notes
 
-- Package follows semantic versioning.
-- Breaking changes are released in major versions.
+- Package follows semantic versioning once it reaches `1.0.0`. Today it is
+  pre-1.0 (`1.0.0-rc.*`), and v1.0.0 has never shipped — every release to
+  date is a release candidate, so an RC can still break (see ADR-0007's
+  "Consequences" section for an example).
 - `core/` remains internal even though it exists in source.

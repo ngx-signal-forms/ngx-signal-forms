@@ -106,7 +106,7 @@ The system works in layers to ensure consistency while allowing deep customizati
 1. **Layer 1: Design Tokens** `(--_field-clr-primary)` / `(--_fieldset-clr-text)`
    - Internal defaults. Do not override these.
 2. **Layer 2: Shared Feedback (Base)** `(--ngx-signal-form-feedback-font-size)`
-   - **Public API.** Controls the "micro-copy" typography and spacing across Errors, Warnings, Notifications, Hints, and Character Counts. Defined in `core/feedback-tokens.css` and pulled into each consuming component's `styleUrls` alongside its own CSS, so the resolved `--_feedback-*` variables are visible on every feedback host — whether it is nested inside `ngx-form-field-wrapper` or used standalone.
+   - **Public API.** Controls the "micro-copy" typography and spacing for Errors and Warnings. Defined in `core/feedback-tokens.css` and pulled into `form-field-error.ts` and `form-fieldset.ts`'s `styleUrls` alongside their own CSS, so the resolved `--_feedback-*` variables are visible on every feedback host — whether it is nested inside `ngx-form-field-wrapper` or used standalone. Hints and Character Counts render without their own CSS file and do not load this token file.
 3. **Layer 3: Semantic Colors** `(--ngx-form-field-color-primary)`
    - **Public API.** The main integration point. Maps abstract roles (Primary, Error) to concrete colors.
 4. **Layer 4: Component Properties** `(--ngx-form-field-focus-color)`
@@ -168,6 +168,15 @@ Each message also carries a visually hidden "Error:"/"Warning:" prefix — not
 a theming token, but configured through `NGX_SIGNAL_FORMS_CONFIG.errorPrefixText`
 / `warningPrefixText`. See "Telling errors and warnings apart without
 colour" in `../assistive/README.md`.
+
+The wrapper's checkbox/switch rows and `ngx-form-fieldset` set
+`--ngx-signal-form-error-padding-inline-start` and `-end` contextually, to
+align the error's inline padding with the row's control padding or the
+fieldset's message tier (`form-field-wrapper.selection.css`,
+`form-fieldset.css`). Treat these two variables as an internal coordination
+hook, not a theming knob — same status as `--ngx-form-field-hint-display`
+under "Hints". They are documented here for transparency, not as something
+to set directly.
 
 Once a consumer sets a real icon glyph, it is exposed to assistive tech as
 generated content — a normal characteristic of CSS `::before`/`::after`,
@@ -1012,7 +1021,7 @@ A checkbox or switch row has a `<label>` next to the control, inside
 `ngx-form-field-wrapper`. This is not a fieldset legend. This label reads
 font size, weight, family, line height, and color from the
 `--ngx-form-field-label-*` tokens. These are the same tokens documented
-under ["Labels (Standard Layout)"](#labels-standard-layout). A plain
+under ["Labels (Standard and Plain Layout)"](#labels-standard-and-plain-layout). A plain
 text-field label uses the identical tokens.
 
 Before #474 this row read different tokens instead:

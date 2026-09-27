@@ -2211,6 +2211,11 @@ import { NgxFormFieldWrapper } from '@ngx-signal-forms/toolkit/form-field';
 
 ### 2. Use showErrors and Error Strategies
 
+> **Archived API name.** This snippet's `showErrors()` / `combineShowErrors()`
+> names predate a rename. The current toolkit exports
+> `createShowErrorsComputed()`. See the top-of-file archive notice — this
+> page is not maintained, so check the live API before copying code from it.
+
 Your toolkit provides `showErrors()` utility - use it instead of manual checks:
 
 ```typescript

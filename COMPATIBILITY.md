@@ -3,6 +3,8 @@
 This document describes the compatibility contract for
 `@ngx-signal-forms/toolkit`.
 
+Per-version changes ship as [GitHub Releases](https://github.com/ngx-signal-forms/ngx-signal-forms/releases) — the project keeps no separate `CHANGELOG.md`.
+
 ## Current package contract
 
 - Package: `@ngx-signal-forms/toolkit`
