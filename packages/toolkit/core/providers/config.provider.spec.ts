@@ -169,7 +169,7 @@ describe('provideNgxSignalFormsConfigForComponent', () => {
   it('flows a custom requiredHintText override through to the resolved config (issue #300 localization)', () => {
     // `requiredHintText` drives the visually-hidden required-state hint
     // NgxFormFieldWrapper renders for a `role="group"` selection cluster
-    // (see form-field-wrapper.ts `resolvedRequiredHintText`) — it must be
+    // (see the `config.requiredHintText` binding in form-field-wrapper.ts) — it must be
     // config-driven, not a hardcoded English word, so a non-English app can
     // localize it through the same provider seam as `requiredLegendText`.
     const providers = provideNgxSignalFormsConfig({
@@ -180,5 +180,42 @@ describe('provideNgxSignalFormsConfigForComponent', () => {
     expect(injector.get(NGX_SIGNAL_FORMS_CONFIG).requiredHintText).toBe(
       'obligatoire',
     );
+  });
+
+  it('flows custom errorPrefixText / warningPrefixText overrides through to the resolved config (issue #498 localization)', () => {
+    // `errorPrefixText` / `warningPrefixText` drive the visually-hidden
+    // "Error:" / "Warning:" prefix NgxFormFieldError renders on each message
+    // (see form-field-error.ts `resolvedErrorPrefix` /
+    // `resolvedWarningPrefix`) — config-driven for the same localization
+    // reason as `requiredHintText`, and an empty string must disable the
+    // prefix for that channel rather than falling back to the default.
+    const providers = provideNgxSignalFormsConfig({
+      errorPrefixText: 'Fout:',
+      warningPrefixText: '',
+    });
+    const injector = createInjectorFromEnvProviders([providers]);
+    const resolved = injector.get(NGX_SIGNAL_FORMS_CONFIG);
+
+    expect(resolved.errorPrefixText).toBe('Fout:');
+    expect(resolved.warningPrefixText).toBe('');
+  });
+
+  it('keeps errorSummaryAnnouncesAlone: false instead of falling back to the true default (issue #522 opt-out)', () => {
+    // The opt-out is a falsy value. A `||`-based merge would drop it and
+    // silently keep field errors quiet on submit for a consumer who asked
+    // for the old behaviour.
+    const defaults = createInjectorFromEnvProviders([
+      provideNgxSignalFormsConfig({}),
+    ]);
+    expect(
+      defaults.get(NGX_SIGNAL_FORMS_CONFIG).errorSummaryAnnouncesAlone,
+    ).toBe(true);
+
+    const optedOut = createInjectorFromEnvProviders([
+      provideNgxSignalFormsConfig({ errorSummaryAnnouncesAlone: false }),
+    ]);
+    expect(
+      optedOut.get(NGX_SIGNAL_FORMS_CONFIG).errorSummaryAnnouncesAlone,
+    ).toBe(false);
   });
 });

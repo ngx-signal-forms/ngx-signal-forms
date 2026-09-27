@@ -7,7 +7,7 @@ import {
   inferNgxSignalFormControlKind,
 } from '@ngx-signal-forms/toolkit';
 import { render } from '@testing-library/angular';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { NgxFormFieldWrapper } from '../../form-field/form-field-wrapper';
 
 /** Fail fast with a clear message when a fixture element is missing. */
@@ -222,6 +222,13 @@ describe('NgxSignalFormAutoAria — native checkbox/radio inference vs. eligibil
   });
 
   it('(e) a grouped radio wrapper owns group-level ARIA and per-input attributes stay absent', async () => {
+    // Also covers the #496 regression: the wrapper matches `[formField]`
+    // too and is transiently role-less before its `role="radiogroup"`
+    // binding lands, while its radio-input descendants already exist. It
+    // must never trigger the "custom host has no role" dev warning — it is
+    // a container around real controls, not a bare control itself.
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
     @Component({
       selector: 'ngx-test-grouped-radio-wrapper',
       imports: [FormField, NgxSignalFormToolkit, NgxFormFieldWrapper],
@@ -318,5 +325,9 @@ describe('NgxSignalFormAutoAria — native checkbox/radio inference vs. eligibil
       expect(radio).not.toHaveAttribute('aria-required');
       expect(radio).not.toHaveAttribute('aria-describedby');
     }
+
+    expect(warnSpy).not.toHaveBeenCalled();
+
+    warnSpy.mockRestore();
   });
 });

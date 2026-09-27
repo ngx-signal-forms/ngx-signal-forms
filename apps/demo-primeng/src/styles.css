@@ -26,6 +26,9 @@
 }
 
 :root {
+  /* Matches PrimeNG's `darkModeSelector: 'system'`: the toolkit's colors
+   * follow the OS through color-scheme. */
+  color-scheme: light dark;
   --demo-ink: #1d2433;
   --demo-muted: #5f6675;
   --demo-paper: rgb(248 242 233 / 0.96);

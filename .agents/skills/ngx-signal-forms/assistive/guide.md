@@ -39,7 +39,11 @@ The assistive entry point provides accessible feedback rendering that sits betwe
    - `summaryLabel` defaults to `'Please fix the following errors:'`. Override with a meaningful label.
    - Renders blocking errors only (no warnings). For warnings, use `NgxHeadlessErrorSummary` instead.
    - Inherits `errorStrategy` and `submittedStatus` from `ngxSignalForm` context automatically — no extra wiring needed when used inside `form[formRoot][ngxSignalForm]`.
-   - Each entry is a focusable button that calls `focusBoundControl()` on click.
+   - An entry is a focusable button that calls `focusBoundControl()` on click only when its error has a focusable target; otherwise it renders as plain text (a control with a no-op `focus()` would look interactive but do nothing).
+   - The label renders as a native heading (`h2`–`h6`); `headingLevel` picks the level (default `2`).
+   - Inside `form[formRoot][ngxSignalForm]`, the summary announces alone after a submit. Field errors that the submit reveals render outside their `role="alert"` region, with the same id and look. Later edits announce through the field as usual.
+   - Place the summary inside the `<form>` for this. In e2e tests, find a submit-revealed field error by its `${fieldName}-error` id, not by `[role="alert"]`.
+   - Opt out with `errorSummaryAnnouncesAlone: false` in `NGX_SIGNAL_FORMS_CONFIG` (ADR-0012).
 
 - Uses `role="alert"` and relies on the role's implicit live-region semantics (no explicit `aria-live` / `aria-atomic`).
 
@@ -171,6 +175,8 @@ import {
 `NgxFormFieldError` automatically renders warnings with `role="status"` — no manual ARIA needed.
 
 `NgxFormFieldError`'s `presentation="panel"` mode follows the same separation at the grouped level, automatically and content-driven (no `tone` input): any blocking error routes to the assertive `role="alert"` container, a warning-only list to the polite `role="status"` container, and an empty list hides both. This prevents accidentally downgrading real errors or over-announcing non-blocking guidance.
+
+Each message also carries a visually hidden "Error:" / "Warning:" prefix, so the accessible description tells the two channels apart without relying on colour. Configure the text through `NGX_SIGNAL_FORMS_CONFIG`'s `errorPrefixText` / `warningPrefixText` (default `'Error:'` / `'Warning:'`); pass `''` to disable a channel's prefix. Rendered even when `title` is set, since a title names the group, not a given message's channel. Not applied by `NgxFormFieldErrorSummary` or headless consumers. See "Telling errors and warnings apart without colour" in the `/assistive` README for the CSS hook that adds a visible icon.
 
 ## Error Handling
 

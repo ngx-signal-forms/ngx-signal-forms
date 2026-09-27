@@ -40,6 +40,35 @@ export interface NgxSignalFormFieldContext {
    * position must still resolve to the unsuffixed `${fieldName}-hint`.
    */
   readonly hintOrdinal?: (hint: object) => number;
+
+  /**
+   * Whether the wrapper's bound control has its `aria-describedby` composed
+   * by `NgxSignalFormAutoAria` — `true` unless the control opts out via
+   * `ngxSignalFormControlAria="manual"`. In manual mode, auto-aria leaves
+   * `aria-describedby` entirely author-owned (see
+   * `NgxSignalFormAutoAria.ariaDescribedBy`), so an id registered through
+   * `NGX_SIGNAL_FORM_HINT_REGISTRY` — a hint's, or a character count's limit
+   * description — never reaches the DOM attribute even though the id was
+   * successfully minted.
+   *
+   * This does not affect `NgxFormFieldHint`: its content stays directly
+   * visible whether or not its id is referenced, so an unlinked hint is
+   * still readable. `NgxFormFieldCharacterCount` reads this signal because
+   * it does the opposite — it hides its own visible "n/max" text once a
+   * limit description exists to replace it — and hiding that text without a
+   * working link would silence the count for assistive technology (issue
+   * #499 hardening).
+   *
+   * Omitted by contexts that don't track control ARIA ownership. Callers
+   * default to `false` when this is absent — a context that cannot confirm
+   * the link is safest treated as "not linked", not as the common case.
+   * `NgxFormFieldWrapper` always publishes it (`true` unless the bound
+   * control opts into `ngxSignalFormControlAria="manual"`); a custom
+   * wrapper that provides its own `NGX_SIGNAL_FORM_FIELD_CONTEXT` without
+   * this member gets the safe default instead of silently promising a link
+   * it never registers (see `docs/CUSTOM_WRAPPERS.md`).
+   */
+  readonly isControlDescribedByManaged?: () => boolean;
 }
 
 /**
@@ -63,6 +92,10 @@ export const DEFAULT_NGX_SIGNAL_FORMS_CONFIG = {
   requiredLegendText: '{marker} indicates a required field',
   optionalLegendText: 'All fields are required unless marked {marker}',
   requiredHintText: 'required',
+  errorPrefixText: 'Error:',
+  warningPrefixText: 'Warning:',
+  errorSummaryAnnouncesAlone: true,
+  characterCountLimitText: 'Up to {max} characters',
 } as const satisfies NgxSignalFormsConfig;
 
 /**

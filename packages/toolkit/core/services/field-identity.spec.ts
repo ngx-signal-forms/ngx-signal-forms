@@ -119,6 +119,20 @@ describe('NgxFieldIdentity', () => {
         expect(svc.resolveControlElement()).toBe(el);
       });
 
+      it('controlId equals the DOM id verbatim, even with inner whitespace', () => {
+        // Regression: `resolveFieldName` used to hyphenate inner whitespace
+        // for ARIA id generation. `controlId` reports the bound control's
+        // actual `id` attribute and must match it exactly — sanitization for
+        // generated ids happens at a different boundary (`generateErrorId`
+        // and friends), not here.
+        const svc = createService();
+        const el = document.createElement('input');
+        el.id = 'x other-id';
+        svc.setControlElement(el);
+        expect(svc.controlId()).toBe(el.id);
+        expect(svc.controlId()).toBe('x other-id');
+      });
+
       it('controlId is null when element has no id', () => {
         const svc = createService();
         const el = document.createElement('input');

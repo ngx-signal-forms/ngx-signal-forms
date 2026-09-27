@@ -3,8 +3,9 @@
 //
 // The toolkit uses a build-time-only `/core` secondary entry point to hold
 // `@internal` plumbing (ARIA tokens, hint registry, error-message registry,
-// etc.) that the `form-field`, `assistive`, `headless`, and `debugger`
-// entries need at compile time but that consumers must never reach.
+// etc.) that the `form-field`, `assistive`, and `headless` entries — and
+// `packages/demo/debugger` — need at compile time but that consumers must
+// never reach.
 //
 // ng-packagr emits `/core` as a normal secondary entry — including adding
 // `"./core"` to the published `package.json` `exports` map and leaving

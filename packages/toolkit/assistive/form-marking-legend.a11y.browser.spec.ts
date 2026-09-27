@@ -6,7 +6,7 @@ import { NgxFormField } from '@ngx-signal-forms/toolkit/form-field';
 import { render } from '@testing-library/angular';
 import { describe, expect, it } from 'vitest';
 import { NgxFormMarkingLegend } from './form-marking-legend';
-import { expectNoA11yViolations } from '@ngx-signal-forms/toolkit/testing';
+import { expectNoA11yViolations } from '../testing/a11y-internal';
 
 /**
  * WCAG 2.2 AA conformance gate for `NgxFormMarkingLegend`.

@@ -246,6 +246,10 @@ provideNgxSignalFormsConfig({
   requiredLegendText: '{marker} indicates a required field',
   optionalLegendText: 'All fields are required unless marked {marker}',
   requiredHintText: 'required', // visually-hidden required hint for role="group" clusters
+  errorPrefixText: 'Error:', // visually-hidden prefix on NgxFormFieldError blocking-error messages
+  warningPrefixText: 'Warning:', // visually-hidden prefix on NgxFormFieldError warning messages
+  errorSummaryAnnouncesAlone: true, // with an error summary, a submit announces through the summary only
+  characterCountLimitText: 'Up to {max} characters', // visually-hidden limit description linked via aria-describedby
 });
 ```
 
@@ -468,6 +472,60 @@ provideFieldLabels(() => {
 | `shouldShowWarnings(hasWarnings, touched, strategy, status)` | Pure boolean warning-timing counterpart to `shouldShowErrors`                               |
 | `combineShowErrors(signals)`                                 | Combines an array of visibility signals, e.g. `combineShowErrors([sigA, sigB])`             |
 | `readDirectErrors(state)`                                    | Direct `errors()` of a field/group only — excludes nested-field errors                      |
+| `createFieldPresentation(field, opts?)`                      | Both channels for one field surface, as a custom form-field wrapper needs them. See below   |
+
+#### Field presentation for custom wrappers
+
+`createFieldPresentation()` gives a custom form-field wrapper the same error
+and warning state that `NgxFormFieldWrapper` uses. Your wrapper then shows
+messages at the same moments as the built-in one.
+
+```typescript
+import {
+  createFieldPresentation,
+  NgxFieldIdentity,
+  type ErrorDisplayStrategy,
+  type WarningDisplayStrategy,
+} from '@ngx-signal-forms/toolkit';
+
+export class AppFormField {
+  readonly formField = input.required<FieldTree<unknown>>();
+  readonly strategy = input<ErrorDisplayStrategy | null>(null);
+  readonly warningStrategy = input<WarningDisplayStrategy | null>(null);
+
+  protected readonly presentation = createFieldPresentation(
+    computed(() => this.formField()()),
+    {
+      strategy: this.strategy,
+      warningStrategy: this.warningStrategy,
+      // Present when the wrapper composes NgxFieldIdentityProvider as a
+      // host directive; `null` otherwise, and nothing is published.
+      identity: inject(NgxFieldIdentity, { optional: true }),
+    },
+  );
+}
+```
+
+It returns read-only signals:
+
+| Signal                                           | Meaning                                                                |
+| ------------------------------------------------ | ---------------------------------------------------------------------- |
+| `errors` / `warnings`                            | The field's own blocking errors and warnings                           |
+| `hasErrors` / `hasWarnings`                      | Whether each list is non-empty                                         |
+| `showErrors`                                     | A blocking error shows now. Use it for invalid styling                 |
+| `showWarnings`                                   | A warning shows now. `false` while a blocking error shows              |
+| `renderMessageSlot`                              | Mount the message renderer. The renderer picks which messages to print |
+| `effectiveStrategy` / `effectiveWarningStrategy` | The resolved strategies. Pass them to your renderer                    |
+
+The two strategies resolve through separate cascades, so a form that holds
+errors until submit still shows warnings on touch. A visible blocking error
+hides the warning. A warning alone never hides itself, even though Angular
+marks a warning-only field `invalid()`. A hidden field (`hidden()`) shows no
+messages; pass `hidden` to use your own signal instead.
+
+With `identity`, the factory publishes both resolved strategies to that
+`NgxFieldIdentity`. `NgxSignalFormAutoAria` reads them, so `aria-describedby`
+follows your field-level overrides.
 
 ### Strategy & context resolution
 
@@ -504,6 +562,7 @@ Building blocks for custom wrappers and headless UIs that want to join the
 | ------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `warningError(kind, message)`        | Creates a non-blocking warning                                                                                                                                                                                          |
 | `isWarningError(error)`              | `true` if kind starts with `warn:`                                                                                                                                                                                      |
+| `WARN_KIND_PREFIX`                   | The `'warn:'` prefix itself, as a constant                                                                                                                                                                              |
 | `isBlockingError(error)`             | `true` if not a warning                                                                                                                                                                                                 |
 | `splitByKind(errors)`                | Partition into `blocking` and `warnings`                                                                                                                                                                                |
 | `hasOnlyWarnings(errors)`            | `true` when no blocking errors are present                                                                                                                                                                              |
@@ -527,16 +586,16 @@ Building blocks for custom wrappers and headless UIs that want to join the
 
 ### ARIA and identity
 
-| Function                                                  | Description                                                                                                           |
-| --------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
-| `buildAriaDescribedBy(fieldName, options)`                | Assemble `aria-describedby` for manual ARIA controls                                                                  |
-| `normalizeFieldName(value)`                               | Trim and null-collapse a candidate name into the v1 identity form                                                     |
-| `resolveFieldName(element)`                               | Read a usable field name from an element's `id` (trimmed, with `element.id` fallback)                                 |
-| `resolveFieldNameFromCandidates(...candidates)`           | Pick the first non-blank field name from a precedence chain (explicit → host id → context)                            |
-| `generateErrorId(fieldName, kind?)`                       | Derive `{fieldName}-error` (container) or `{fieldName}-error-{kind}` (per-error) element id                           |
-| `generateWarningId(fieldName)`                            | Derive the `{fieldName}-warning` element id used for `aria-describedby`                                               |
-| `isElementCssVisible(element)`                            | CSS-visibility test via `Element.checkVisibility()`; reports `true` on runtimes without it                            |
-| `createControlVisibilitySignal(resolveElement, injector)` | Reactive layout probe for `createAriaInvalidSignal`'s third argument; registers one `afterEveryRender` and fails open |
+| Function                                                  | Description                                                                                                                                                                                                                              |
+| --------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `buildAriaDescribedBy(fieldName, options)`                | Assemble `aria-describedby` for manual ARIA controls                                                                                                                                                                                     |
+| `normalizeFieldName(value)`                               | Trim and null-collapse a candidate name into the v1 identity form                                                                                                                                                                        |
+| `resolveFieldName(element)`                               | Read a usable field name from an element's `id` (trimmed, with `element.id` fallback)                                                                                                                                                    |
+| `resolveFieldNameFromCandidates(...candidates)`           | Pick the first non-blank field name from a precedence chain (explicit → host id → context)                                                                                                                                               |
+| `generateErrorId(fieldName, kind?)`                       | Derive `{fieldName}-error` (container) or `{fieldName}-error-{kind}` (per-error) element id. Turns inner whitespace in `fieldName` into `-`, so the id stays one `aria-describedby` token, and logs a one-time dev warning when it does. |
+| `generateWarningId(fieldName)`                            | Derive the `{fieldName}-warning` element id used for `aria-describedby`. Turns inner whitespace in `fieldName` into `-` and logs a one-time dev warning when it does.                                                                    |
+| `isElementCssVisible(element)`                            | CSS-visibility test via `Element.checkVisibility()`; reports `true` on runtimes without it                                                                                                                                               |
+| `createControlVisibilitySignal(resolveElement, injector)` | Reactive layout probe for `createAriaInvalidSignal`'s third argument; registers one `afterEveryRender` and fails open                                                                                                                    |
 
 ### Field identity service
 

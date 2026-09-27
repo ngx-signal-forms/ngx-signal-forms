@@ -189,7 +189,7 @@ export type NgxFormFieldErrorPlacement = 'top' | 'bottom';
  * 3. `CONTROL_KIND_CAPABILITIES` in
  *    `packages/toolkit/form-field/form-field.utils.ts` — the
  *    wrapper-layout capability flags (`textual`, `supportsOutline`,
- *    `selectionGroup`, `paddedContent`).
+ *    `selectionGroup`, `paddedContent`, `forcesVertical`, `clusterRole`).
  *
  * The `Record<NgxSignalFormControlKind, ...>` types on (2) and the
  * `satisfies` clause on (3) enforce exhaustiveness at compile time, so the
@@ -392,6 +392,52 @@ export interface NgxSignalFormsConfig {
    * @default 'required'
    */
   requiredHintText: string;
+
+  /**
+   * Visually hidden prefix for each blocking error message rendered by
+   * `NgxFormFieldError`, exposed to assistive technology through
+   * `aria-describedby`. Lets screen reader users tell an error apart from a
+   * warning without relying on colour (WCAG 1.4.1, 1.3.1). Pass `''` to
+   * disable the prefix.
+   *
+   * Not applied by `NgxFormFieldErrorSummary` or headless consumers.
+   * @default 'Error:'
+   */
+  errorPrefixText: string;
+
+  /**
+   * Visually hidden prefix for each warning message rendered by
+   * `NgxFormFieldError`. See {@link errorPrefixText}. Pass `''` to disable
+   * the prefix.
+   * @default 'Warning:'
+   */
+  warningPrefixText: string;
+
+  /**
+   * When the form renders an `NgxFormFieldErrorSummary`, let the summary be
+   * the only live region that announces after a submit.
+   *
+   * The summary and each `NgxFormFieldError` are `role="alert"` regions. One
+   * submit that reveals N field errors would otherwise fire N + 1 assertive
+   * announcements at once, which screen readers cut off, stack, or repeat.
+   * With this on, a field error revealed by a submit shows outside its live
+   * region. A later change to that error, while the user edits the field,
+   * announces as usual. Forms without a summary are not affected.
+   *
+   * Set `false` to let every field error announce on submit too.
+   * @default true
+   */
+  errorSummaryAnnouncesAlone: boolean;
+
+  /**
+   * Visually hidden text describing a character count's limit, exposed to
+   * assistive technology through `aria-describedby`. `NgxFormFieldCharacterCount`
+   * renders this instead of the running count — the running and remaining
+   * count stays in the `[liveAnnounce]` live region. The literal token
+   * `{max}` is replaced with the resolved `maxLength`.
+   * @default 'Up to {max} characters'
+   */
+  characterCountLimitText: string;
 }
 
 /**
@@ -439,4 +485,24 @@ export interface NgxSignalFormsUserConfig {
    * rather than pointing the description at an empty element.
    */
   requiredHintText?: string | undefined;
+  /**
+   * Override the visually hidden error-message prefix. Pass `''` to
+   * disable it.
+   */
+  errorPrefixText?: string | undefined;
+  /**
+   * Override the visually hidden warning-message prefix. Pass `''` to
+   * disable it.
+   */
+  warningPrefixText?: string | undefined;
+  /**
+   * Set `false` to let field errors announce on submit even when the form
+   * renders an error summary.
+   */
+  errorSummaryAnnouncesAlone?: boolean | undefined;
+  /**
+   * Override the character-count limit text. Must contain the `{max}`
+   * placeholder for the resolved `maxLength` to appear.
+   */
+  characterCountLimitText?: string | undefined;
 }

@@ -1,5 +1,6 @@
 import { ElementRef, Injector, signal } from '@angular/core';
-import type { FieldTree } from '@angular/forms/signals';
+import { TestBed } from '@angular/core/testing';
+import { form, schema, type FieldTree } from '@angular/forms/signals';
 import { describe, expect, it } from 'vitest';
 import type { SubmittedStatus } from '../types';
 import type { NgxSignalFormContext } from '../directives/ngx-signal-form';
@@ -337,6 +338,170 @@ describe('injectFieldControl', () => {
     expect(() => {
       injectFieldControl(element, injector);
     }).toThrow(/Field "metadata".*not.*(FieldTree|found)/is);
+  });
+
+  it.each(['constructor', '__proto__'])(
+    'should throw "not found" instead of walking the prototype chain for path segment "%s"',
+    (segment) => {
+      // Regression: path navigation used `part in control`, which is true for
+      // prototype-chain keys like `constructor` and `__proto__` even though
+      // the form object never owns them. `Object.hasOwn` rejects both, so the
+      // walk fails the same way it would for any other unknown field.
+      //
+      // Asserts the path-walk guard's own message ("Could not access
+      // property …"), not just the generic "not found in form" wording —
+      // `constructor` and `__proto__` both resolve (under the old `in`
+      // check) to a callable value that also fails the later
+      // `isFieldTreeLike` check, whose error message ALSO contains "not
+      // found in form". A regex matching only that shared wording passes
+      // whether the fix is in place or `in` has been reinstated, so it
+      // never catches a regression here.
+      const mockForm = createRootWithMalformedChildren({});
+      const mockContext: NgxSignalFormContext = {
+        form: mockForm,
+        submittedStatus: signal<SubmittedStatus>('unsubmitted'),
+        errorStrategy: signal('on-touch'),
+      };
+      const injector = Injector.create({
+        providers: [
+          { provide: NGX_SIGNAL_FORM_CONTEXT, useValue: mockContext },
+        ],
+      });
+
+      const element = document.createElement('input');
+      element.setAttribute('id', segment);
+
+      expect(() => {
+        injectFieldControl(element, injector);
+      }).toThrow(`Could not access property "${segment}"`);
+    },
+  );
+
+  describe('path navigation against a real Signal Forms FieldTree', () => {
+    // A real `FieldTree` node is backed by a Proxy whose
+    // `getOwnPropertyDescriptor` trap forwards to the underlying model
+    // value. `Object.hasOwn` invokes that trap, so calling it on a node
+    // whose value is a primitive or `null` — the shape a mistyped path
+    // produces, e.g. `email.foo` where `email` is a string, or
+    // `address.city` where `address` is `null` — throws a raw `TypeError`
+    // (`Reflect.getOwnPropertyDescriptor` requires an object target)
+    // instead of the toolkit's own "not found" error. The mocks above
+    // never exercised this because a hand-built mock's underlying value is
+    // never read by `Object.hasOwn`.
+    interface RealFormModel {
+      email: string;
+      address: { city: string } | null;
+      'full name': string;
+    }
+
+    const makeRealForm = (): FieldTree<RealFormModel> => {
+      const model = signal<RealFormModel>({
+        email: 'ada@example.com',
+        address: null,
+        'full name': 'Ada Lovelace',
+      });
+      return TestBed.runInInjectionContext(() =>
+        form(
+          model,
+          schema<RealFormModel>(() => undefined),
+        ),
+      );
+    };
+
+    const contextFor = (
+      realForm: FieldTree<RealFormModel>,
+    ): NgxSignalFormContext => ({
+      form: realForm,
+      submittedStatus: signal<SubmittedStatus>('unsubmitted'),
+      errorStrategy: signal('on-touch'),
+    });
+
+    it('resolves a form key with an inner space from an element id with the same space', () => {
+      // Regression: `resolveFieldName` used to hyphenate inner whitespace
+      // (round-2 fix for #505's ARIA id-generation bug), which broke path
+      // navigation for any field literally named with a space — the id
+      // would resolve to "full-name" and no such key exists on the form.
+      // Path navigation must use the RAW (trimmed-only) name; ARIA id
+      // sanitization happens at a different boundary now.
+      const realForm = makeRealForm();
+      const injector = Injector.create({
+        providers: [
+          { provide: NGX_SIGNAL_FORM_CONTEXT, useValue: contextFor(realForm) },
+        ],
+      });
+
+      const element = document.createElement('input');
+      element.setAttribute('id', 'full name');
+
+      const result = injectFieldControl(element, injector);
+      expect(result).toBe(realForm['full name']);
+    });
+
+    it.each(['constructor', '__proto__'])(
+      'throws "not found" for prototype-chain path segment "%s" on the real form root',
+      (segment) => {
+        const injector = Injector.create({
+          providers: [
+            {
+              provide: NGX_SIGNAL_FORM_CONTEXT,
+              useValue: contextFor(makeRealForm()),
+            },
+          ],
+        });
+
+        const element = document.createElement('input');
+        element.setAttribute('id', segment);
+
+        // Same reasoning as the mock-based version above: assert the
+        // path-walk guard's own message, not the generic "not found in
+        // form" wording the later `isFieldTreeLike` failure also produces.
+        expect(() => {
+          injectFieldControl(element, injector);
+        }).toThrow(`Could not access property "${segment}"`);
+      },
+    );
+
+    it('throws "not found" instead of a TypeError for a primitive middle segment (email.foo)', () => {
+      const injector = Injector.create({
+        providers: [
+          {
+            provide: NGX_SIGNAL_FORM_CONTEXT,
+            useValue: contextFor(makeRealForm()),
+          },
+        ],
+      });
+
+      const element = document.createElement('input');
+      element.setAttribute('id', 'email.foo');
+
+      expect(() => {
+        injectFieldControl(element, injector);
+      }).not.toThrow(TypeError);
+      expect(() => {
+        injectFieldControl(element, injector);
+      }).toThrow(/Field "email\.foo" not found in form/i);
+    });
+
+    it('throws "not found" instead of a TypeError for a null middle segment (address.city)', () => {
+      const injector = Injector.create({
+        providers: [
+          {
+            provide: NGX_SIGNAL_FORM_CONTEXT,
+            useValue: contextFor(makeRealForm()),
+          },
+        ],
+      });
+
+      const element = document.createElement('input');
+      element.setAttribute('id', 'address.city');
+
+      expect(() => {
+        injectFieldControl(element, injector);
+      }).not.toThrow(TypeError);
+      expect(() => {
+        injectFieldControl(element, injector);
+      }).toThrow(/Field "address\.city" not found in form/i);
+    });
   });
 
   it('should throw when the resolved value is callable but does not satisfy the FieldState contract', () => {

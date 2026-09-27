@@ -15,14 +15,13 @@ import {
 import type { FieldState, FieldTree } from '@angular/forms/signals';
 import {
   createControlVisibilitySignal,
-  createShowErrorsComputed,
+  createFieldPresentation,
   injectFormContext,
   NGX_FORM_FIELD_ERROR_RENDERER,
   NGX_SIGNAL_FORM_FIELD_CONTEXT,
   NGX_SIGNAL_FORM_HINT_REGISTRY,
-  NGX_SIGNAL_FORMS_CONFIG,
   NgxSignalFormControlSemanticsDirective,
-  resolveErrorDisplayStrategy,
+  type WarningDisplayStrategy,
 } from '@ngx-signal-forms/toolkit';
 import {
   NgxFormFieldError,
@@ -239,6 +238,13 @@ export class PrimeFormFieldComponent<TValue = unknown> {
    */
   readonly showRequiredMarker = input(false, { transform: booleanAttribute });
 
+  /**
+   * Optional per-field warning-strategy override (mirrors the toolkit
+   * wrapper's `warningStrategy` input). Resolved independently of the error
+   * strategy — the warning cascade never reads the error one (ADR-0007).
+   */
+  readonly warningStrategy = input<WarningDisplayStrategy | null>(null);
+
   // ── Bound-control discovery via contentChildren ───────────────────────
   //
   // Mirrors the Spartan / Material reference wrappers. Every PrimeNG
@@ -293,23 +299,31 @@ export class PrimeFormFieldComponent<TValue = unknown> {
 
   // ── Strategy / submission state plumbing ──────────────────────────────
 
-  readonly #config = inject(NGX_SIGNAL_FORMS_CONFIG);
   readonly #formContext = injectFormContext();
   readonly #injector = inject(Injector);
 
-  /**
-   * Strategy resolved against the global config and any form-level
-   * override — same primitive the canonical `NgxFormFieldWrapper`,
-   * `NgxSignalFormAutoAria`, and the Spartan/Material refs use, so
-   * a strategy change anywhere takes effect everywhere.
-   */
-  readonly effectiveStrategy = computed(() =>
-    resolveErrorDisplayStrategy(
-      null,
-      this.#formContext ? this.#formContext.errorStrategy() : undefined,
-      this.#config.defaultErrorStrategy,
-    ),
+  readonly #fieldStateSignal = computed<FieldState<TValue> | null>(() =>
+    this.formField()(),
   );
+
+  /**
+   * Error and warning state, from the same `createFieldPresentation()` the
+   * canonical `NgxFormFieldWrapper` uses, so a strategy change anywhere
+   * takes effect everywhere. Both strategies resolve through their own
+   * cascades (ADR-0006, ADR-0007). A visible *blocking* error hides the
+   * warning, and a warning-only field never hides its own warning.
+   */
+  readonly #presentation = createFieldPresentation(this.#fieldStateSignal, {
+    warningStrategy: this.warningStrategy,
+    // The message renderers here do not gate on hidden(), so the wrapper
+    // must not either, or aria-invalid would disagree with them.
+    hidden: () => false,
+  });
+
+  readonly effectiveStrategy = this.#presentation.effectiveStrategy;
+
+  readonly effectiveWarningStrategy =
+    this.#presentation.effectiveWarningStrategy;
 
   protected readonly submittedStatus = computed(() =>
     this.#formContext ? this.#formContext.submittedStatus() : 'unsubmitted',
@@ -330,6 +344,7 @@ export class PrimeFormFieldComponent<TValue = unknown> {
       formField: this.formField(),
       strategy: this.effectiveStrategy(),
       submittedStatus: this.submittedStatus(),
+      warningStrategy: this.effectiveWarningStrategy(),
     }),
   );
 
@@ -339,15 +354,14 @@ export class PrimeFormFieldComponent<TValue = unknown> {
   // use, so the "wrapper view of validity" never drifts from what auto-ARIA
   // would write on the bound control.
 
-  readonly #fieldStateSignal = computed<FieldState<TValue> | null>(() =>
-    this.formField()(),
-  );
-
-  readonly #showByStrategy = createShowErrorsComputed(
-    this.#fieldStateSignal,
-    this.effectiveStrategy,
-    this.submittedStatus,
-  );
+  /**
+   * The wrapper-side warning visibility, for consumers who swap in a custom
+   * renderer. `PrimeFieldErrorComponent` (the default renderer) gets
+   * `effectiveWarningStrategy` through `errorRendererInputs`, so this and
+   * the rendered `<small class="p-warn">` agree by construction. Mirrors
+   * the Material reference's `warningVisible`.
+   */
+  readonly warningVisible = this.#presentation.showWarnings;
 
   /**
    * Layout probe for the bound control — the element `aria-invalid` actually
@@ -363,7 +377,7 @@ export class PrimeFormFieldComponent<TValue = unknown> {
 
   readonly ariaInvalidValue = createAriaInvalidSignal(
     this.#fieldStateSignal,
-    this.#showByStrategy,
+    this.#presentation.showErrors,
     this.#isControlVisible,
   );
 

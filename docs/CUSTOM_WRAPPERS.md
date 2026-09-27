@@ -82,6 +82,23 @@ so hint IDs flow into `aria-describedby` purely through DI. The descriptor
 shape is the public wire format — see `NgxSignalFormHintDescriptor` in
 `@ngx-signal-forms/toolkit`.
 
+`NgxFormFieldCharacterCount` (issue #499) has no dedicated registry of its
+own — a custom wrapper that projects it must query it too (e.g.
+`contentChildren(NgxFormFieldCharacterCount)`) and append its `limitId()` to
+the same `hints` array, **after** the hint descriptors, so the required
+`aria-describedby` order (author ids, hints, count, then error or warning)
+holds. `limitId()` is `null` when the count has no resolved limit or no
+field name yet — filter those out before appending, the way
+`NgxFormFieldWrapper.hintDescriptors` does.
+
+Also publish `isControlDescribedByManaged` (§1) alongside this
+registration, not instead of it. The count reads that signal to decide
+whether it is safe to hide its own visible "n/max" text — a context that
+resolves a field name but skips the registration above must still leave
+`isControlDescribedByManaged` unset (or `false`), or the count hides its
+only visible text while nothing actually links the limit description into
+`aria-describedby`.
+
 ### 3. `NGX_FORM_FIELD_ERROR_RENDERER` and `NGX_FORM_FIELD_HINT_RENDERER`
 
 Inject the error renderer token with `{ optional: true }`, fall back to
@@ -963,6 +980,12 @@ dev warning`.
   matching `AriaDescribedByBridge` whose `describedBy` signal merges
   the toolkit composition with `register*` IDs. Provide it via
   `useFactory`/`useClass` at the wrapper's component-level injector.
+
+The root entry point adds `createFieldPresentation(fieldState, options?)`:
+the error and warning state of one field (resolved strategies, what shows
+now, and when to mount the renderer). `NgxFormFieldWrapper` and the three
+reference wrappers use it. See the
+[toolkit README](../packages/toolkit/README.md#field-presentation-for-custom-wrappers).
 
 These keep every reference wrapper on a single canonical primitive so a
 behaviour change in one place takes effect everywhere — and they give

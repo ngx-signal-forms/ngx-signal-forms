@@ -1,7 +1,7 @@
 import { ApplicationRef, Component, input, signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { FormField, form, minLength, schema } from '@angular/forms/signals';
-import { expectNoA11yViolations } from '@ngx-signal-forms/toolkit/testing';
+import { expectNoA11yViolations } from '../../testing/a11y-internal';
 import { render } from '@testing-library/angular';
 import { describe, expect, it } from 'vitest';
 import { NgxFormFieldError } from '../../assistive/form-field-error';

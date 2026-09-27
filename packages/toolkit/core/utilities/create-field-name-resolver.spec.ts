@@ -39,6 +39,40 @@ describe('createFieldNameResolver', () => {
     });
   });
 
+  it('leaves inner whitespace in the explicit input untouched — id builders sanitize separately', () => {
+    // This resolver calls `resolveFieldNameFromCandidates` (trim/null-collapse
+    // only, no whitespace sanitization) — the same primitive
+    // `injectFieldControl` and `NgxFieldIdentity.controlId` rely on. A
+    // wrapper author who binds this resolved name straight to `[id]` (as the
+    // `NgxHeadlessFieldName` docs show) needs the raw characters; whatever
+    // builds an ARIA id from it (`generateErrorId` and friends) sanitizes at
+    // that point instead.
+    TestBed.runInInjectionContext(() => {
+      const resolver = createFieldNameResolver({
+        explicit: signal<string | undefined>('x other-id'),
+        boundControl: () => null,
+        wrapperName: 'test-wrapper',
+      });
+
+      expect(resolver()).toBe('x other-id');
+    });
+  });
+
+  it('leaves inner whitespace in the bound-control id untouched', () => {
+    TestBed.runInInjectionContext(() => {
+      const element = document.createElement('input');
+      element.id = 'x other-id';
+
+      const resolver = createFieldNameResolver({
+        explicit: signal<string | undefined>(undefined),
+        boundControl: () => element,
+        wrapperName: 'test-wrapper',
+      });
+
+      expect(resolver()).toBe('x other-id');
+    });
+  });
+
   it('falls back to labelFor when explicit is undefined', () => {
     TestBed.runInInjectionContext(() => {
       const resolver = createFieldNameResolver({
