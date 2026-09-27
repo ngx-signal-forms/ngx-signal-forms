@@ -13,15 +13,18 @@ import {
   viewChild,
 } from '@angular/core';
 import {
+  NavigationCancel,
   NavigationEnd,
+  NavigationError,
+  NavigationStart,
   Router,
   RouterLink,
   RouterOutlet,
 } from '@angular/router';
 import { Title } from '@angular/platform-browser';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { filter, map } from 'rxjs';
-import { getRouteTitle } from '@ngx-signal-forms/demo-shared';
+import { filter, map, of, switchMap, timer } from 'rxjs';
+import { getRouteTitle, SITE_NAME } from '@ngx-signal-forms/demo-shared';
 import { NavTreeComponent } from './ui/nav-tree';
 import { RightRailComponent } from './ui/right-rail';
 import { NgxThemeSwitcherComponent } from './ui/theme-switcher/theme-switcher';
@@ -38,6 +41,9 @@ import { PageControlsService } from './ui/page-controls';
     RightRailComponent,
     NgxThemeSwitcherComponent,
   ],
+  host: {
+    '(document:keydown.escape)': 'closeNav()',
+  },
   styles: `
     :host {
       display: block;
@@ -69,8 +75,6 @@ import { PageControlsService } from './ui/page-controls';
       height: 100%;
       background: rgb(255 255 255);
       border-right: 1px solid rgb(226 232 240);
-      overflow-y: auto;
-      scrollbar-gutter: stable;
     }
 
     :host-context(.dark) .shell__nav {
@@ -121,6 +125,10 @@ import { PageControlsService } from './ui/page-controls';
       animation: navBackdropIn 160ms ease;
     }
 
+    .shell__nav-backdrop.is-leaving {
+      animation: navBackdropIn 160ms ease reverse forwards;
+    }
+
     @keyframes navBackdropIn {
       from {
         opacity: 0;
@@ -157,8 +165,8 @@ import { PageControlsService } from './ui/page-controls';
       display: flex;
       align-items: center;
       justify-content: center;
-      width: 2.25rem;
-      height: 2.25rem;
+      width: 2.75rem;
+      height: 2.75rem;
       flex-shrink: 0;
       border: 1px solid rgb(226 232 240);
       border-radius: 0.5rem;
@@ -211,8 +219,8 @@ import { PageControlsService } from './ui/page-controls';
         display: flex;
         align-items: center;
         justify-content: center;
-        width: 2rem;
-        height: 2rem;
+        width: 2.75rem;
+        height: 2.75rem;
         flex-shrink: 0;
         border: none;
         border-radius: 0.5rem;
@@ -244,12 +252,23 @@ import { PageControlsService } from './ui/page-controls';
 
     .shell__brand {
       display: inline-block;
-      font-size: 1.65rem;
+      font-size: 1.375rem;
       font-weight: 800;
-      line-height: 1;
-      letter-spacing: -0.055em;
+      line-height: 1.1;
+      letter-spacing: -0.04em;
       text-decoration: none;
       white-space: nowrap;
+    }
+
+    .shell__tagline {
+      margin-top: 0.375rem;
+      font-size: 0.8125rem;
+      line-height: 1.35;
+      color: rgb(71 85 105);
+    }
+
+    :host-context(.dark) .shell__tagline {
+      color: rgb(148 163 184);
     }
 
     .shell__brand:focus-visible {
@@ -264,6 +283,7 @@ import { PageControlsService } from './ui/page-controls';
 
     .shell__nav-tree {
       flex: 1;
+      min-height: 0;
       padding: 0.2rem 0 0.75rem;
       overflow-y: auto;
     }
@@ -273,7 +293,7 @@ import { PageControlsService } from './ui/page-controls';
       border-top: 1px solid rgb(226 232 240);
       display: flex;
       align-items: center;
-      gap: 0.65rem;
+      gap: 0.25rem;
       flex-shrink: 0;
     }
 
@@ -284,6 +304,10 @@ import { PageControlsService } from './ui/page-controls';
     .shell__footer-link {
       display: inline-flex;
       align-items: center;
+      justify-content: center;
+      min-width: 2rem;
+      height: 2rem;
+      border-radius: 0.375rem;
       color: rgb(79 70 229);
       transition: color 140ms ease;
     }
@@ -388,6 +412,12 @@ import { PageControlsService } from './ui/page-controls';
       }
     }
 
+    @media (width < 900px) {
+      .shell__pin {
+        top: 0.25rem;
+      }
+    }
+
     /* Visibility: shown only while the panel is hidden.
        Narrow (default): visible unless the slide-over is open. */
     .shell__pin.is-slideover-open {
@@ -417,8 +447,14 @@ import { PageControlsService } from './ui/page-controls';
     .shell__scroll {
       flex: 1;
       overflow-y: auto;
-      scrollbar-gutter: stable;
-      padding: 1.75rem 2rem 2rem;
+      padding: 1.5rem 16px 2rem;
+    }
+
+    @media (width >= 640px) {
+      .shell__scroll {
+        scrollbar-gutter: stable;
+        padding: 1.75rem 2rem 2rem;
+      }
     }
 
     @media (width >= 1024px) {
@@ -432,6 +468,28 @@ import { PageControlsService } from './ui/page-controls';
       width: 100%;
       max-width: 72rem;
       margin-inline: auto;
+    }
+
+    /* Thin bar while a lazy route loads; only shown after a short delay so
+       fast navigations don't flash it. */
+    .shell__progress {
+      position: fixed;
+      inset-inline: 0;
+      top: 0;
+      z-index: 80;
+      height: 3px;
+      background: var(--gradient-brand);
+      transform-origin: left;
+      animation: shellProgress 1.2s ease-out forwards;
+    }
+
+    @keyframes shellProgress {
+      from {
+        transform: scaleX(0.05);
+      }
+      to {
+        transform: scaleX(0.85);
+      }
     }
 
     /* ── Right rail ── */
@@ -462,8 +520,17 @@ import { PageControlsService } from './ui/page-controls';
     }
   `,
   template: `
+    @if (navigating()) {
+      <div class="shell__progress" aria-hidden="true"></div>
+    }
+
+    <!-- The href is a fallback only: with <base href> a bare fragment link
+         resolves against the base URL and leaves the page, so the click
+         handler moves focus instead. -->
     <a
       href="#maincontent"
+      [attr.inert]="drawerModal() ? '' : null"
+      (click)="skipToMain($event)"
       class="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-50 focus:rounded focus:bg-white focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:text-gray-900 focus:shadow focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:outline-none dark:focus:bg-gray-900 dark:focus:text-gray-100"
     >
       Skip to main content
@@ -476,30 +543,35 @@ import { PageControlsService } from './ui/page-controls';
       <div
         class="shell__nav-backdrop"
         aria-hidden="true"
+        animate.leave="is-leaving"
         (click)="closeNav()"
       ></div>
     }
 
     <div class="shell text-gray-900 dark:text-gray-100">
-      <!-- ── Left nav ── -->
-      <nav
+      <!-- ── Left nav ── (a plain container: the tree inside is the
+           navigation landmark, so landmarks don't nest) -->
+      <div
         #siteNav
         id="site-nav"
         class="shell__nav"
-        aria-label="Site navigation"
         [class.is-nav-open]="navOpen()"
         [attr.inert]="navInert() ? '' : null"
-        (keydown.escape)="closeNav()"
         (click)="onNavAreaClick($event)"
       >
         <div class="shell__nav-header">
-          <a
-            [routerLink]="'/getting-started/your-first-form'"
-            class="shell__brand brand-gradient"
-            aria-label="ngx-signal-forms home"
-          >
-            ngx-signal-forms
-          </a>
+          <div>
+            <a
+              [routerLink]="'/getting-started/your-first-form'"
+              class="shell__brand brand-gradient"
+              aria-label="ngx-signal-forms home"
+            >
+              ngx-signal-forms
+            </a>
+            <p class="shell__tagline">
+              Accessible errors and fields for Angular Signal Forms.
+            </p>
+          </div>
           <button
             #navCloseButton
             type="button"
@@ -576,10 +648,17 @@ import { PageControlsService } from './ui/page-controls';
 
           <ngx-theme-switcher class="ml-auto" />
         </div>
-      </nav>
+      </div>
 
       <!-- ── Main content ── -->
-      <main id="maincontent" tabindex="-1" class="shell__main">
+      <main
+        #mainContent
+        id="maincontent"
+        tabindex="-1"
+        class="shell__main"
+        [attr.aria-busy]="navigating() ? 'true' : null"
+        [attr.inert]="drawerModal() ? '' : null"
+      >
         <!-- Only visible below 900px — opens the nav drawer above. -->
         <div class="shell__mobile-bar">
           <button
@@ -608,7 +687,43 @@ import { PageControlsService } from './ui/page-controls';
             ngx-signal-forms
           </span>
         </div>
-        <div class="shell__scroll">
+        <!-- Floating pin — reopens the controls panel (wide: expands the rail,
+             narrow: opens the slide-over). Hidden while the panel is visible. -->
+        <button
+          #pinButton
+          type="button"
+          class="shell__pin"
+          [class.is-rail-collapsed]="railCollapsed()"
+          [class.is-slideover-open]="panelOpen()"
+          aria-label="Open display controls"
+          [attr.aria-controls]="pinControls()"
+          (click)="reopenPanel()"
+        >
+          <svg
+            class="shell__pin-icon"
+            viewBox="0 0 16 16"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.5"
+            stroke-linecap="round"
+            aria-hidden="true"
+          >
+            <line x1="2.5" y1="4.5" x2="13.5" y2="4.5" />
+            <circle cx="6" cy="4.5" r="1.7" fill="currentColor" stroke="none" />
+            <line x1="2.5" y1="11.5" x2="13.5" y2="11.5" />
+            <circle
+              cx="10.5"
+              cy="11.5"
+              r="1.7"
+              fill="currentColor"
+              stroke="none"
+            />
+          </svg>
+          <span class="shell__pin-label" aria-hidden="true"
+            >Display Controls</span
+          >
+        </button>
+        <div #scrollContainer class="shell__scroll">
           <div class="shell__container">
             <router-outlet />
           </div>
@@ -619,41 +734,13 @@ import { PageControlsService } from './ui/page-controls';
       <aside
         id="right-panel"
         class="shell__rail"
+        [attr.inert]="drawerModal() ? '' : null"
         [class.shell__rail--collapsed]="railCollapsed()"
         aria-label="Page configuration"
       >
         <ngx-right-rail variant="rail" />
       </aside>
     </div>
-
-    <!-- Floating pin — reopens the controls panel (wide: expands the rail,
-         narrow: opens the slide-over). Hidden while the panel is visible. -->
-    <button
-      #pinButton
-      type="button"
-      class="shell__pin"
-      [class.is-rail-collapsed]="railCollapsed()"
-      [class.is-slideover-open]="panelOpen()"
-      aria-label="Open display controls"
-      aria-controls="right-panel"
-      (click)="reopenPanel()"
-    >
-      <svg
-        class="shell__pin-icon"
-        viewBox="0 0 16 16"
-        fill="none"
-        stroke="currentColor"
-        stroke-width="1.5"
-        stroke-linecap="round"
-        aria-hidden="true"
-      >
-        <line x1="2.5" y1="4.5" x2="13.5" y2="4.5" />
-        <circle cx="6" cy="4.5" r="1.7" fill="currentColor" stroke="none" />
-        <line x1="2.5" y1="11.5" x2="13.5" y2="11.5" />
-        <circle cx="10.5" cy="11.5" r="1.7" fill="currentColor" stroke="none" />
-      </svg>
-      <span class="shell__pin-label" aria-hidden="true">Display Controls</span>
-    </button>
 
     <!-- Slide-over (< xl) — outside the shell so it is never inside a
          display:none container; renders only while the panel is open. -->
@@ -677,6 +764,33 @@ export class AppComponent {
   // toolchain and throw a nonsensical runtime error.
   private readonly pinButton =
     viewChild<ElementRef<HTMLButtonElement>>('pinButton');
+  private readonly mainContent =
+    viewChild<ElementRef<HTMLElement>>('mainContent');
+  private readonly scrollContainer =
+    viewChild<ElementRef<HTMLElement>>('scrollContainer');
+
+  /**
+   * True while a navigation is in flight for longer than 150ms — lazy
+   * routes load their chunk first, and without a cue a nav click on a slow
+   * network looks like it did nothing.
+   */
+  protected readonly navigating = toSignal(
+    this.#router.events.pipe(
+      filter(
+        (e) =>
+          e instanceof NavigationStart ||
+          e instanceof NavigationEnd ||
+          e instanceof NavigationCancel ||
+          e instanceof NavigationError,
+      ),
+      switchMap((e) =>
+        e instanceof NavigationStart
+          ? timer(150).pipe(map(() => true))
+          : of(false),
+      ),
+    ),
+    { initialValue: false },
+  );
 
   readonly #currentPath = toSignal(
     this.#router.events.pipe(
@@ -692,7 +806,57 @@ export class AppComponent {
   readonly #syncRouteTitleEffect = effect(() => {
     const path = this.#currentPath();
     const t = getRouteTitle(path);
-    if (t) this.#title.setTitle(t);
+    // Unknown paths keep the title their own route set (the not-found page).
+    if (t !== SITE_NAME) this.#title.setTitle(t);
+  });
+
+  /**
+   * The page scrolls inside `.shell__scroll`, not the window, so the
+   * router's own scroll reset never reaches it. Reset it on every path
+   * change, and close the mobile drawer (covers Back/Forward too, not only
+   * link clicks inside the drawer).
+   */
+  // oxlint-disable-next-line no-unused-private-class-members -- EffectRef is intentionally kept as a named field to document the side effect.
+  readonly #onPathChangeEffect = effect(() => {
+    this.#currentPath();
+    this.navOpen.set(false);
+    const scroller = this.scrollContainer()?.nativeElement;
+    if (scroller) scroller.scrollTop = 0;
+  });
+
+  /** Skip link: focus `<main>` in place instead of following the fragment
+   * href, which `<base href>` would resolve to another page. */
+  protected skipToMain(event: Event): void {
+    event.preventDefault();
+    const main = this.mainContent()?.nativeElement;
+    main?.focus();
+    main?.scrollIntoView({ block: 'start' });
+  }
+
+  /**
+   * Keep focus on a visible control when the wide rail collapses or
+   * expands: the button that was pressed disappears in both cases.
+   */
+  #wasRailCollapsed = this.railCollapsed();
+  // oxlint-disable-next-line no-unused-private-class-members -- EffectRef is intentionally kept as a named field to document the side effect.
+  readonly #railFocusEffect = effect(() => {
+    const collapsed = this.railCollapsed();
+    if (collapsed === this.#wasRailCollapsed) return;
+    this.#wasRailCollapsed = collapsed;
+    if (!this.#wideViewport()) return;
+
+    afterNextRender(
+      () => {
+        if (collapsed) {
+          this.pinButton()?.nativeElement.focus();
+        } else {
+          this.#document
+            .querySelector<HTMLButtonElement>('#right-panel .panel__close')
+            ?.focus();
+        }
+      },
+      { injector: this.#injector },
+    );
   });
 
   /**
@@ -730,8 +894,7 @@ export class AppComponent {
    * slide-over below.
    */
   protected reopenPanel(): void {
-    const wide = window?.matchMedia?.('(min-width: 1280px)')?.matches;
-    if (wide) {
+    if (this.#wideViewport()) {
       this.#pageControls.expandRail();
     } else {
       this.#pageControls.openPanel();
@@ -742,30 +905,48 @@ export class AppComponent {
   // Mobile nav drawer (<900px) — see the ".shell__nav" media query above.
   // Unlike the display-controls slide-over this isn't a native <dialog>
   // (it shares markup with the always-visible ≥900px nav, so swapping in a
-  // <dialog> would mean two templates), so focus-in/focus-out and Escape
-  // are wired up by hand below instead of coming for free.
+  // <dialog> would mean two templates), so focus-in/focus-out, Escape (a
+  // document listener in `host`) and the inert background are wired up by
+  // hand instead of coming for free.
   // ══════════════════════════════════════════════════════════════════════
 
   protected readonly navOpen = signal(false);
   readonly #narrowViewport = signal(false);
+  readonly #wideViewport = signal(false);
   protected readonly navInert = computed(
     () => this.#narrowViewport() && !this.navOpen(),
   );
+  /** While the drawer is open everything behind it is inert, which keeps
+   * Tab inside the drawer the way a modal dialog would. */
+  protected readonly drawerModal = computed(
+    () => this.#narrowViewport() && this.navOpen(),
+  );
+  /** The pin opens the rail on wide screens and the slide-over dialog below. */
+  protected readonly pinControls = computed(() =>
+    this.#wideViewport() ? 'right-panel' : 'display-controls-dialog',
+  );
 
   constructor() {
-    const mediaQuery =
-      this.#document.defaultView?.matchMedia('(width < 900px)');
-    if (!mediaQuery) {
+    const view = this.#document.defaultView;
+    const narrowQuery = view?.matchMedia('(width < 900px)');
+    const wideQuery = view?.matchMedia('(width >= 1280px)');
+    if (!narrowQuery || !wideQuery) {
       return;
     }
 
-    this.#narrowViewport.set(mediaQuery.matches);
     const updateViewport = (): void => {
-      this.#narrowViewport.set(mediaQuery.matches);
+      this.#narrowViewport.set(narrowQuery.matches);
+      this.#wideViewport.set(wideQuery.matches);
+      // The drawer only exists below 900px; don't leave its backdrop
+      // covering the page after a resize past the breakpoint.
+      if (!narrowQuery.matches) this.navOpen.set(false);
     };
-    mediaQuery.addEventListener('change', updateViewport);
+    updateViewport();
+    narrowQuery.addEventListener('change', updateViewport);
+    wideQuery.addEventListener('change', updateViewport);
     this.#destroyRef.onDestroy(() => {
-      mediaQuery.removeEventListener('change', updateViewport);
+      narrowQuery.removeEventListener('change', updateViewport);
+      wideQuery.removeEventListener('change', updateViewport);
     });
   }
 

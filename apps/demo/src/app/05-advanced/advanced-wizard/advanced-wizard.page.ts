@@ -54,7 +54,7 @@ import { WizardContainerComponent } from './components/wizard-container';
     </ng-template>
 
     <ngx-page-header
-      title="Travel Booking Wizard (@ngrx/signals + Zod)"
+      title="Advanced Wizard (@ngrx/signals + Zod)"
       subtitle="Multi-step booking wizard with @ngrx/signals state management and Zod-driven validation"
     />
 

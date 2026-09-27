@@ -89,7 +89,7 @@ import { SubmissionPatternsComponent } from './submission-patterns.form';
     </ng-template>
 
     <ngx-page-header
-      title="Form Submission Patterns"
+      title="Submission Patterns"
       subtitle="Async operations, server errors, and WCAG 2.2 compliance"
     />
 

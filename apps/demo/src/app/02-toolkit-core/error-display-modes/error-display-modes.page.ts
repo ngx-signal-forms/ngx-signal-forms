@@ -51,7 +51,7 @@ import { ErrorDisplayModesFormComponent } from './error-display-modes.form';
     </ng-template>
 
     <ngx-page-header
-      title="Error Display Strategies"
+      title="Error Display Modes"
       subtitle="Explore how different error display timing affects user experience"
     />
 

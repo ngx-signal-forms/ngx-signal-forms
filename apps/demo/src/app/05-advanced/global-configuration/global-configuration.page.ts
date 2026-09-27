@@ -89,7 +89,7 @@ import { GlobalConfigurationComponent } from './global-configuration.form';
     </ng-template>
 
     <ngx-page-header
-      title="Global Toolkit Configuration"
+      title="Global Configuration"
       subtitle="Configure global toolkit defaults and app-level control presets from the demo bootstrap layer"
     />
 

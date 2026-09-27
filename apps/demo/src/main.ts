@@ -1,3 +1,4 @@
+import '@fontsource-variable/inter/wght.css';
 import { provideHttpClient } from '@angular/common/http';
 import {
   importProvidersFrom,

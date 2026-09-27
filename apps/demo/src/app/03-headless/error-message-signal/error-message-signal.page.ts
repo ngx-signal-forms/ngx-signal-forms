@@ -28,8 +28,8 @@ import { ErrorMessageSignalComponent } from './error-message-signal.form';
   ],
   template: `
     <ngx-page-header
-      title="createErrorMessageSignal"
-      subtitle="Flat error iteration with visibility gating, message resolution, and stable ARIA IDs"
+      title="Error Message Signal"
+      subtitle="createErrorMessageSignal(): flat error iteration with visibility gating, message resolution, and stable ARIA IDs"
     />
 
     <ngx-example-cards
