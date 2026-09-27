@@ -128,6 +128,13 @@ jobs:
       - name: Check README starter
         run: pnpm exec nx run toolkit:check-documentation-starter --outputStyle=static
 
+      # Same reasoning as the README starter check above: this script is not
+      # a build/lint/test target, so `nx affected` never picks it up on its
+      # own. It exercises the `gh`-failure path of
+      # tools/scripts/a11y-report-violations.mjs (see ADR-0013).
+      - name: Check a11y report script
+        run: pnpm exec nx run workspace:check-a11y-report-violations --outputStyle=static
+
       - name: Generate lint report
         if: ${{ always() }}
         run: pnpm exec oxlint . --format=json > lint-report.json || true
@@ -332,18 +339,20 @@ jobs:
           retention-days: 14
 
   # WCAG 2.2 AA accessibility scan of the demo apps. Runs in parallel with the
-  # main job. On pull requests, a violation that is not already in the app's
-  # baseline fails this job (ADR-0013) — a maintainer accepts a known
-  # third-party or scaffolding violation by adding it to the baseline in a
-  # reviewed diff, not by this job going green anyway. The toolkit's own WCAG
-  # conformance is a hard gate in the main job's `test-browser` task. On push
-  # to main this job opens a GitHub issue per new violation instead of
-  # failing; that step keeps `continue-on-error` so a `gh` outage cannot fail
-  # the main branch build.
+  # `main` build job (see that job above). On a pull request, a violation
+  # that is not already in the app's baseline fails this job (ADR-0013) — a
+  # maintainer accepts a known third-party or scaffolding violation by adding
+  # it to the baseline in a reviewed diff, not by this job going green
+  # anyway. The toolkit's own WCAG conformance is a hard gate in the `main`
+  # job's `test-browser` task. On a push to the `main` branch this job stays
+  # non-blocking end to end (job-level `continue-on-error`, unchanged from
+  # before ADR-0013): it opens a GitHub issue per new violation instead of
+  # failing, and a `gh` outage there cannot fail the `main` branch build.
   a11y:
     name: Accessibility (WCAG 2.2 AA demo scan)
     runs-on: ubuntu-latest
     timeout-minutes: 25
+    continue-on-error: ${{ github.event_name != 'pull_request' }}
     permissions:
       contents: read
       issues: write
@@ -389,10 +398,12 @@ jobs:
       - name: Install Playwright browsers
         run: pnpm exec playwright install --with-deps chromium firefox
         if: steps.playwright-cache.outputs.cache-hit != 'true'
+        timeout-minutes: 10
 
       - name: Install Playwright system dependencies
         run: pnpm exec playwright install-deps chromium firefox
         if: steps.playwright-cache.outputs.cache-hit == 'true'
+        timeout-minutes: 10
 
       - uses: nrwl/nx-set-shas@afb73a62d26e41464e9254689e1fd6122ee683c1
 
@@ -412,11 +423,10 @@ jobs:
         run: node tools/scripts/a11y-report-violations.mjs --check
 
       # main: ensure the triage labels exist, then open an issue per new
-      # violation (deduped by title inside the script). Non-blocking: a `gh`
-      # outage here must not fail the main branch build.
+      # violation (deduped by title inside the script). The job-level
+      # `continue-on-error` above already keeps this non-blocking on push.
       - name: Open issues for new violations (push)
         if: ${{ github.event_name != 'pull_request' && !cancelled() }}
-        continue-on-error: true
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |

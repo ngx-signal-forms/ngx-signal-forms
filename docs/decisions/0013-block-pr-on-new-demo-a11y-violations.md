@@ -24,13 +24,13 @@ That reasoning no longer matches the repository:
 
 ## Decision
 
-**The PR `--check` step blocks the job.** `.github/workflows/ci.yml`'s `a11y` job drops its job-level `continue-on-error`. On a pull request, a violation not already in the target app's baseline fails the job. A violation the baseline covers still passes.
+**The job's `continue-on-error` is now conditional on the event, not a blanket `true`.** `.github/workflows/ci.yml`'s `a11y` job sets `continue-on-error: ${{ github.event_name != 'pull_request' }}`. On a pull request that evaluates to `false`: a violation not already in the target app's baseline fails the job, and so does any other step failure (setup, scan). A violation the baseline covers still passes. On a push to `main` it evaluates to `true`, unchanged from before this ADR.
 
 **The baseline stays the accepted-violation mechanism.** A maintainer who wants to accept a violation (third-party, scaffolding, or otherwise) adds it to `apps/<app>/a11y-baseline.json` in a reviewed diff (`pnpm a11y:baseline` regenerates the file locally). This is unchanged from ADR-0004.
 
-**The main branch step stays non-blocking.** The "Open issues for new violations (push)" step keeps `continue-on-error: true`, so a `gh` outage cannot fail the main branch build. It also now creates the `needs-triage` label (`--force`), not just `a11y`, before opening any issue — `gh issue create` fails if a listed label does not exist.
+**The main branch path is unchanged.** The job-level `continue-on-error` covers the "Open issues for new violations (push)" step the same way it always did, so a `gh` outage still cannot fail the `main` branch build. That step now also creates the `needs-triage` label (`--force`), not just `a11y`, before opening any issue — `gh issue create` fails if a listed label does not exist.
 
-**A failed issue search fails loudly.** `a11y-report-violations.mjs`'s `issueExists` used to catch a failed `gh issue list` and return `false`, which read as "no issue found" and could create a duplicate issue. It now lets the error propagate, so a broken search stops issue creation instead of silently creating one anyway.
+**A failed issue search fails loudly.** `a11y-report-violations.mjs`'s `issueExists` used to catch a failed `gh issue list` and return `false`, which read as "no issue found" and could create a duplicate issue. It now lets the error propagate, so a broken search stops issue creation instead of silently creating one anyway. `issueExists` is the module's only export needed for this; `main` is not exported and runs only when the file is executed directly (`import.meta.main`), so importing the module for a test has no side effect.
 
 **Making the check a required status check is a repository ruleset change**, made outside this repository's files (GitHub branch protection / rulesets UI or API). This ADR does not perform that change; a maintainer must add the `a11y` job as a required check.
 
@@ -45,7 +45,8 @@ That reasoning no longer matches the repository:
 ## Consequences
 
 - A PR that adds a violation not in the baseline now fails CI. To land it, the author either fixes the violation or adds it to the baseline in the same PR.
-- `a11y-report-violations.mjs`'s `issueExists` and `main` are now named exports, guarded from running on import, so `tools/scripts/a11y-report-violations.spec.mjs` (`node --test`, wired to the `check-a11y-report-violations` Nx target) can exercise the failure path without a real `gh` CLI.
+- The a11y scan runs Chromium and Firefox (ADR-0004). A violation that only Firefox catches now fails a pull request the same way a Chromium-only one does, unless it is in the baseline. ADR-0004's browser-matrix rationale ("Firefox is scoped to the non-blocking scan") is superseded; see the note added there.
+- `a11y-report-violations.mjs`'s `issueExists` is now a named export, so `tools/scripts/a11y-report-violations.spec.mjs` (`node --test`, wired to the `check-a11y-report-violations` Nx target) can exercise the failure path without a real `gh` CLI. `main` stays unexported and runs only when the file is executed directly.
 - The `a11y` job creates both `a11y` and `needs-triage` labels (`--force`) before it opens an issue on `main`.
-- ADR-0004's non-blocking PR clause and "5 known violations" claim are superseded by this ADR; see the note added there.
+- ADR-0004's non-blocking PR clause and "5 known violations" claim are superseded by this ADR; see the notes added there.
 - A maintainer still needs to mark the `a11y` job a required check in the repository's ruleset — this repository's files cannot do that.

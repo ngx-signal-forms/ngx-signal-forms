@@ -197,7 +197,7 @@ function createIssue(app, v) {
   console.log(`  + opened issue: ${title}`);
 }
 
-export function main() {
+function main() {
   const apps = discoverApps();
   if (apps.length === 0) {
     console.log(
@@ -265,6 +265,6 @@ export function main() {
   }
 }
 
-if (process.argv[1] && resolve(process.argv[1]) === import.meta.filename) {
+if (import.meta.main) {
   main();
 }
