@@ -105,9 +105,13 @@ catalogs:
     '@testing-library/jest-dom': '^7.0.1'
     '@testing-library/user-event': '^14.6.7'
   tooling:
+    '@arethetypeswrong/cli': '^0.18.5'
     '@commitlint/cli': '^21.2.3'
     '@commitlint/config-conventional': '^21.2.3'
     '@oxc-project/runtime': '^0.150.0'
+    # Exact pin: 14.1.x is newer than pnpm's minimum release age. Move both
+    # size-limit entries to ^14 once 14.1 passes it.
+    '@size-limit/file': '14.0.0'
     '@typescript/native': 'npm:typescript@~7.0.2'
     '@types/node': '26.6.2'
     eslint: '^10.11.0'
@@ -116,7 +120,9 @@ catalogs:
     oxfmt: '^0.68.0'
     oxlint: '^1.83.0'
     oxlint-tsgolint: '^7.0.2002'
+    publint: '^0.3.24'
     simple-git-hooks: '^2.14.0'
+    size-limit: '14.0.0'
     typescript: 'npm:@typescript/typescript6@~6.0.2'
     verdaccio: '^6.10.3'
     vite: '^8.3.0'

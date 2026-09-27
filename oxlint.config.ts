@@ -78,6 +78,9 @@ export default defineConfig({
     '**/dist',
     '**/tmp',
     '**/node_modules',
+    // Committed baseline snapshots of built `.d.ts` output (#514) — generated
+    // files, not source to lint. Same reasoning as `**/dist` above.
+    'packages/toolkit/api-reports',
     '**/vite.config.*.timestamp*',
     '**/vitest.config.*.timestamp*',
     '**/mockServiceWorker.js',

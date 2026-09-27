@@ -45,12 +45,9 @@ The constraint that bites hardest:
 
 ## Demo app bundle size
 
-There is currently no automated bundle-size budget for the toolkit package or
-for any `apps/demo-*` app — `packages/toolkit/ng-package.json` only configures
-the `ng-packagr` output path and entry file, and
-`packages/toolkit/tsconfig.lib.prod.json` only sets compiler options; neither
-enforces a size limit, and no workflow or `project.json` in the repo declares
-a `budgets` block.
+There is currently no automated bundle-size budget for any `apps/demo-*` app.
+The toolkit package itself is covered — see
+[Published package guardrails](#published-package-guardrails) below.
 
 `apps/demo-material`, `apps/demo-primeng`, and `apps/demo-spartan` are the
 existing reference demo apps (tracked by #40). Their `build` targets use
@@ -59,9 +56,62 @@ Angular CLI application builder, so the builder's
 `configurations.production.budgets` option has no effect in this workspace —
 adding one to a demo app's `project.json` would be silently ignored.
 
-If you want to add bundle-size guardrails for a demo app or for the toolkit
-itself, it needs to be a Vite-based mechanism (e.g. a `rollup-plugin-visualizer`
-report or a custom size-check script), not an Angular CLI budgets block.
+If you want to add bundle-size guardrails for a demo app, it needs to be a
+Vite-based mechanism (e.g. a `rollup-plugin-visualizer` report or a custom
+size-check script), not an Angular CLI budgets block.
+
+## Published package guardrails
+
+Three CI checks guard the toolkit's PUBLISHED package (`dist/packages/toolkit`,
+after `toolkit:post-build` runs the `@internal`/`/core` strip scripts) —
+`packages/toolkit/scripts/packaging.spec.ts` only reads checked-in source and
+never opens `dist/`, so none of this overlaps with it:
+
+1. **Public API surface + tarball contents** —
+   `pnpm nx run toolkit:check-published-package` (script at
+   [`packages/toolkit/scripts/check-published-package.mjs`](../packages/toolkit/scripts/check-published-package.mjs))
+   diffs every built `.d.ts` in `dist/packages/toolkit/types/` — every entry in
+   the published `exports` map, plus the build-time-only `/core` entry under
+   the name `core.internal` (it ships no `exports` entry, but every published
+   entry imports its types via a relative specifier, so a breaking change
+   there — see #551 — can slip past a guard that only reads published
+   entries) — and the file list `npm pack` would publish, against the
+   committed baseline in
+   [`packages/toolkit/api-reports/`](../packages/toolkit/api-reports). A
+   surface or tarball-structure change without a baseline update fails CI
+   with a capped diff and the exact command to run.
+
+   To update the baseline after an intentional change: review the failing
+   diff, then run
+
+   ```sh
+   pnpm nx run toolkit:post-build
+   pnpm run check:toolkit-published-package -- --update
+   ```
+
+   and commit the updated files under `packages/toolkit/api-reports/`.
+
+2. **Package shape** — `pnpm nx run toolkit:check-package-shape` runs
+   [`publint`](https://publint.dev) and
+   [`@arethetypeswrong/cli`](https://arethetypeswrong.github.io) (`--profile
+esm-only`, since the toolkit ships no CommonJS entry) against the built
+   package, catching a broken `exports` map, a `types` condition pointing at
+   the wrong file, or a subpath that resolves to nothing.
+
+3. **Bundle size budget** — `pnpm nx run toolkit:check-size` runs
+   [`size-limit`](https://github.com/ai/size-limit) against the FESM output of
+   each entry point, configured in
+   [`packages/toolkit/.size-limit.cjs`](../packages/toolkit/.size-limit.cjs),
+   and prints the result as a Markdown table
+   ([`packages/toolkit/scripts/size-report.mjs`](../packages/toolkit/scripts/size-report.mjs))
+   that `ci.yml` also appends to the job summary, so a size change is visible
+   on the PR. Each budget is the entry's built (brotli) size plus roughly 25%
+   headroom; the config file's header comment has the exact steps to raise a
+   budget after an intentional size increase.
+
+None of these three are `lint`, `test`, or `build` targets, so `nx affected -t
+lint test build` never runs them on its own — `ci.yml` and `release.yml` call
+them directly instead, unaffected by what changed.
 
 ## Toolkit isolation guarantees
 
