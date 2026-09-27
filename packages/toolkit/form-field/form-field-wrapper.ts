@@ -20,6 +20,7 @@ import type {
   FormFieldOrientation,
   FormFieldOrientationInput,
   NgxFormFieldErrorPlacement,
+  NgxSignalFormHintDescriptor,
   ResolvedMarker,
   WarningDisplayStrategy,
 } from '@ngx-signal-forms/toolkit';
@@ -44,6 +45,7 @@ import {
   type WarnOnceRef,
 } from '@ngx-signal-forms/toolkit/core';
 import {
+  NgxFormFieldCharacterCount,
   NgxFormFieldError,
   NgxFormFieldHint,
 } from '@ngx-signal-forms/toolkit/assistive';
@@ -234,6 +236,14 @@ import { resolveUnionInput } from './utilities/resolve-union-input';
             const ordinal = candidates.indexOf(hint as NgxFormFieldHint);
             return ordinal === -1 ? 0 : ordinal;
           },
+          // `dom.semantics().ariaMode` is `null` when the projected control
+          // never opted into explicit semantics — auto-aria then owns
+          // `aria-describedby` for it, the same default this signal exposes
+          // as `true`. Only an explicit `ngxSignalFormControlAria="manual"`
+          // flips it (see `NgxSignalFormFieldContext.isControlDescribedByManaged`
+          // for why `NgxFormFieldCharacterCount` needs this).
+          isControlDescribedByManaged: () =>
+            component.dom.semantics().ariaMode !== 'manual',
         };
       },
     },
@@ -926,8 +936,28 @@ export class NgxFormFieldWrapper<TValue = unknown> {
   });
 
   /**
+   * Character-count children projected into this wrapper. Queried
+   * separately from {@link hintChildren} — `NgxFormFieldCharacterCount` is
+   * its own component, not an `NgxFormFieldHint` — but its resolved limit id
+   * joins the same `NGX_SIGNAL_FORM_HINT_REGISTRY` channel (issue #499), so
+   * auto-aria never needs a second describedby path.
+   *
+   * @internal
+   */
+  protected readonly characterCountChildren = contentChildren(
+    NgxFormFieldCharacterCount,
+    { descendants: true },
+  );
+
+  /**
    * Reactive view of the projected hints, shaped for the
    * `NGX_SIGNAL_FORM_HINT_REGISTRY` contract in the core package.
+   *
+   * Character-count limit ids are appended *after* the hint ids — required
+   * `aria-describedby` order is author ids, hints, count, then error or
+   * warning (issue #499) — and filtered to drop `null` (no limit resolved,
+   * or no field name yet), so a field with no `maxLength` registers nothing
+   * for its count.
    *
    * Exposed so this component can provide itself into the hint registry via
    * a decorator-level `useFactory` (TypeScript access modifiers would block
@@ -937,12 +967,21 @@ export class NgxFormFieldWrapper<TValue = unknown> {
    *
    * @internal
    */
-  readonly hintDescriptors = computed(() =>
-    this.hintChildren().map((hint) => ({
+  readonly hintDescriptors = computed(() => [
+    ...this.hintChildren().map((hint) => ({
       id: hint.resolvedId(),
       fieldName: hint.resolvedFieldName(),
     })),
-  );
+    ...this.characterCountChildren()
+      .map((count) => ({
+        id: count.limitId(),
+        fieldName: count.resolvedFieldName(),
+      }))
+      .filter(
+        (descriptor): descriptor is NgxSignalFormHintDescriptor =>
+          descriptor.id !== null,
+      ),
+  ]);
 
   /**
    * Whether the bound field is currently hidden via Angular's `hidden()`
