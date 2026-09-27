@@ -213,11 +213,20 @@ jobs:
         run: pnpm exec nx run toolkit:check-documentation-starter --outputStyle=static
 
       # Same isolation check as ci.yml's `toolkit-isolation` job: prove the
-      # published toolkit stays design-system-free. `pnpm install --filter`
-      # prunes node_modules to the toolkit's own transitive deps, so the
-      # build after it fails if a demo design-system package leaked in. The
-      # plain reinstall afterward restores the full workspace for the e2e
-      # and release steps that follow.
+      # published toolkit stays design-system-free.
+      #
+      # Unlike that job, this one already ran a full `pnpm install` above, so
+      # this filtered install is a no-op ("Already up to date") and does not
+      # remove any package the full install added. The check still catches a
+      # leak, because pnpm's default (non-hoisted) linker only symlinks a
+      # project's own declared dependencies into that project's own
+      # node_modules folder. A demo app's design-system package (for example
+      # apps/demo-material/node_modules/@angular/material) is never linked
+      # into packages/toolkit/node_modules or the workspace root, so an
+      # accidental `import` of it from toolkit source still fails to resolve
+      # at build time, confirmed by reproducing the leak locally. `pnpm
+      # check:toolkit-peer-deps` covers the other case, a design-system
+      # package declared in the toolkit's own package.json.
       - name: Assert toolkit declares no design-system deps
         run: pnpm check:toolkit-peer-deps
 
