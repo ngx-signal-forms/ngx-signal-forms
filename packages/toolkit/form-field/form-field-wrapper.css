@@ -747,18 +747,28 @@
     align-items: flex-start;
     pointer-events: none;
     padding: var(--_field-space-2xs) var(--_field-space-xs) 0;
-
-    :is(label, [ngxFormFieldLabel]) {
-      /* Caption typography: smaller, lighter for inline labels */
-      font-size: var(--_label-outline-size);
-      line-height: var(--_label-outline-line-height);
-      font-weight: var(--_label-outline-weight);
-      font-family: var(--_label-outline-font-family);
-      color: var(--_label-outline-color);
-      cursor: text;
-      pointer-events: auto;
-    }
   }
+}
+
+/* `::ng-deep` is required: the label is projected, so it carries the */
+/* consumer's content attribute, not this component's. A selector nested */
+/* under `:host(...)` would get scoped to this component's own attribute */
+/* on Angular 22.2+ and stop matching (#552) — `::ng-deep` keeps the match */
+/* on every Angular version. Put `::ng-deep` directly after `:host(...)`, */
+/* with no selector between them, and never inside a nested block (22.1 */
+/* leaves it as literal text). */
+:host(.ngx-signal-forms-outline)
+  ::ng-deep
+  .ngx-signal-form-field-wrapper__label
+  :is(label, [ngxFormFieldLabel]) {
+  /* Caption typography: smaller, lighter for inline labels */
+  font-size: var(--_label-outline-size);
+  line-height: var(--_label-outline-line-height);
+  font-weight: var(--_label-outline-weight);
+  font-family: var(--_label-outline-font-family);
+  color: var(--_label-outline-color);
+  cursor: text;
+  pointer-events: auto;
 }
 
 :host(.ngx-signal-forms-outline.ngx-signal-form-field-wrapper--messages-top) {

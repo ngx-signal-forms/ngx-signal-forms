@@ -882,22 +882,22 @@ default to `none`. Left at their old low-opacity default, the ring would
 double up visually with the new outline. Set either token to bring the ring
 back.
 
-| Property                                | Default                                                             | Description                                                                                  |
-| :-------------------------------------- | :------------------------------------------------------------------ | :------------------------------------------------------------------------------------------- |
-| `--ngx-form-field-focus-color`          | `var(--ngx-form-field-color-primary)`                               | Focus border and outline color                                                               |
-| `--ngx-form-field-focus-box-shadow`     | `0 0 0 4px color-mix(in srgb, var(--focus-color) 25%, transparent)` | Focus ring (valid state)                                                                     |
-| `--ngx-form-field-focus-outline-width`  | `2px`                                                               | Width of the solid focus outline                                                             |
-| `--ngx-form-field-focus-outline-offset` | `2px`                                                               | Offset of the solid focus outline from the border                                            |
-| `--ngx-form-field-hover-border-color`   | `var(--ngx-form-field-color-border-hover)`                          | Hover border color                                                                           |
-| `--ngx-form-field-invalid-color`        | `var(--ngx-form-field-color-error)`                                 | Invalid border color                                                                         |
-| `--ngx-form-field-invalid-box-shadow`   | `none`                                                              | Invalid ring (off by default — the solid outline is the focus signal)                        |
-| `--ngx-form-field-warning-color`        | `var(--ngx-form-field-color-warning)`                               | Warning border color                                                                         |
-| `--ngx-form-field-warning-box-shadow`   | `none`                                                              | Warning ring (off by default — the solid outline is the focus signal)                        |
-| `--ngx-form-field-disabled-bg`          | `var(--ngx-form-field-color-disabled)`                              | Disabled background                                                                          |
-| `--ngx-form-field-disabled-opacity`     | `0.6`                                                               | Disabled opacity                                                                             |
-| `--ngx-form-field-state-ring-opacity`   | `25%`                                                               | Opacity used by `--ngx-form-field-focus-box-shadow`'s color-mix (registered via `@property`) |
-| `--ngx-form-field-hover-state-opacity`  | `6%`                                                                | Hover tint on interactive prefix/suffix buttons (registered via `@property`)                 |
-| `--ngx-form-field-active-state-opacity` | `10%`                                                               | Active/pressed tint on interactive prefix/suffix buttons (registered via `@property`)        |
+| Property                                | Default                                                             | Description                                                                                   |
+| :-------------------------------------- | :------------------------------------------------------------------ | :-------------------------------------------------------------------------------------------- |
+| `--ngx-form-field-focus-color`          | `var(--ngx-form-field-color-primary)`                               | Focus border and outline color                                                                |
+| `--ngx-form-field-focus-box-shadow`     | `0 0 0 4px color-mix(in srgb, var(--focus-color) 25%, transparent)` | Focus ring (valid state)                                                                      |
+| `--ngx-form-field-focus-outline-width`  | `2px`                                                               | Width of the solid focus outline                                                              |
+| `--ngx-form-field-focus-outline-offset` | `2px`                                                               | Offset of the solid focus outline from the border                                             |
+| `--ngx-form-field-hover-border-color`   | `var(--ngx-form-field-color-border-hover)`                          | Hover border color                                                                            |
+| `--ngx-form-field-invalid-color`        | `var(--ngx-form-field-color-error)`                                 | Invalid border color; also the checkbox and switch row label color while the field is invalid |
+| `--ngx-form-field-invalid-box-shadow`   | `none`                                                              | Invalid ring (off by default — the solid outline is the focus signal)                         |
+| `--ngx-form-field-warning-color`        | `var(--ngx-form-field-color-warning)`                               | Warning border color                                                                          |
+| `--ngx-form-field-warning-box-shadow`   | `none`                                                              | Warning ring (off by default — the solid outline is the focus signal)                         |
+| `--ngx-form-field-disabled-bg`          | `var(--ngx-form-field-color-disabled)`                              | Disabled background                                                                           |
+| `--ngx-form-field-disabled-opacity`     | `0.6`                                                               | Disabled opacity                                                                              |
+| `--ngx-form-field-state-ring-opacity`   | `25%`                                                               | Opacity used by `--ngx-form-field-focus-box-shadow`'s color-mix (registered via `@property`)  |
+| `--ngx-form-field-hover-state-opacity`  | `6%`                                                                | Hover tint on interactive prefix/suffix buttons (registered via `@property`)                  |
+| `--ngx-form-field-active-state-opacity` | `10%`                                                               | Active/pressed tint on interactive prefix/suffix buttons (registered via `@property`)         |
 
 ### Horizontal Layout
 
@@ -1015,6 +1015,10 @@ color is `--_color-text-secondary`. Its contrast against white is about
 headroom. If you tint the selection row's background, check the contrast
 of the label text against the new background. Override
 `--ngx-form-field-label-color` if the contrast drops below 4.5:1.
+
+While the field is invalid, `--ngx-form-field-invalid-color` overrides
+`--ngx-form-field-label-color` on the row label, even one you colored
+yourself.
 
 ### Selection row gap
 

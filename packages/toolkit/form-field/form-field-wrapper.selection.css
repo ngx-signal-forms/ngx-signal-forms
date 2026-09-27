@@ -260,6 +260,11 @@
   padding-inline: 0;
 }
 
+/* `::ng-deep` on the second selector is required: the label is projected, */
+/* so it carries the consumer's content attribute, not this component's. */
+/* Without it this selector requires this component's own attribute on the */
+/* label element, which a projected label never carries — it has never */
+/* matched, on any Angular version (#552). */
 :host(
     .ngx-signal-form-field-wrapper--invalid.ngx-signal-form-field-wrapper--checkbox
   )
@@ -267,6 +272,7 @@
 :host(
     .ngx-signal-form-field-wrapper--invalid.ngx-signal-form-field-wrapper--checkbox
   )
+  ::ng-deep
   .ngx-signal-form-field-wrapper__label
   label {
   color: var(--_invalid-color);
@@ -339,13 +345,22 @@
   justify-content: flex-end;
 }
 
+/* `::ng-deep` on the second selector is required: the label is projected, */
+/* so it carries the consumer's content attribute, not this component's. A */
+/* nested selector gets scoped to this component's own attribute on */
+/* Angular 22.2+ and stops matching (#552) — `::ng-deep` keeps the match on */
+/* every Angular version. */
 :host(
-  .ngx-signal-form-field-wrapper--invalid.ngx-signal-form-field-wrapper--switch
-) {
+    .ngx-signal-form-field-wrapper--invalid.ngx-signal-form-field-wrapper--switch
+  )
   .ngx-signal-form-field-wrapper__label,
-  .ngx-signal-form-field-wrapper__label label {
-    color: var(--_invalid-color);
-  }
+:host(
+    .ngx-signal-form-field-wrapper--invalid.ngx-signal-form-field-wrapper--switch
+  )
+  ::ng-deep
+  .ngx-signal-form-field-wrapper__label
+  label {
+  color: var(--_invalid-color);
 }
 
 :host(
@@ -540,15 +555,17 @@
 /* entirely here too — it never reserves a row or a `row-gap` sliver above */
 /* the control. */
 /* */
-/* Deliberately NOT nested under a single `:host(...) { ... }` block (unlike */
-/* the outline layout above): Angular's emulated ViewEncapsulation does not */
-/* add its `[_ngcontent-*]` scoping attribute to selectors nested via native */
-/* CSS nesting — only to a rule's own top-level selector — which drops these */
-/* rules below the unconditional `grid-area` rules' specificity and silently */
-/* loses the cascade fight (verified against the compiled stylesheet in */
-/* Chromium). Each selector below is written out in full so it carries the */
-/* same `[_ngcontent-*]` attribute, and therefore the same specificity, as */
-/* the rules it needs to override. */
+/* Deliberately NOT nested under a single `:host(...) { ... }` block. On */
+/* Angular 22.1 and earlier, emulated ViewEncapsulation added its */
+/* `[_ngcontent-*]` scoping attribute only to a rule's own top-level */
+/* selector, never to a selector nested via native CSS nesting. A nested */
+/* rule here would drop below the unconditional `grid-area` rules' */
+/* specificity and silently lose the cascade fight (verified against the */
+/* compiled stylesheet in Chromium; Angular 22.2 scopes nested rules too, */
+/* see angular/angular#69885, but the toolkit still supports 22.0 and 22.1). */
+/* Each selector below is written out in full so it carries the same */
+/* `[_ngcontent-*]` attribute, and therefore the same specificity, as the */
+/* rules it needs to override. */
 @container ngx-form-field-horizontal (width < 20rem) {
   :host(.ngx-signal-form-field-wrapper--horizontal)
     .ngx-signal-form-field-wrapper__label,

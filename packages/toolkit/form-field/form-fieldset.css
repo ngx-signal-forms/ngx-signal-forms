@@ -360,7 +360,15 @@
   transition: var(--_fieldset-transition-chrome);
 }
 
-:host > legend {
+/* `::ng-deep` is required: `<legend>` is projected (`<ng-content select= */
+/* "legend" />` in `form-fieldset.ts`), so it carries the consumer's */
+/* content attribute, not this component's. Without it this selector */
+/* requires this component's own attribute on the `<legend>` element, */
+/* which a projected legend never carries — it has never matched, on any */
+/* Angular version (#552). Put `::ng-deep` directly after `:host(...)`, */
+/* with no selector between them, and never inside a nested block (22.1 */
+/* leaves it as literal text). */
+:host ::ng-deep > legend {
   max-inline-size: 100%;
   margin-inline-start: var(--_fieldset-legend-inset-inline-start);
   padding: var(--_fieldset-legend-padding);
@@ -383,12 +391,14 @@
   border-color: var(--_fieldset-warning-border);
 }
 
-:host(.ngx-signal-form-fieldset--invalid) > legend {
+/* `::ng-deep` required for the same reason as `:host > legend` above. */
+:host(.ngx-signal-form-fieldset--invalid) ::ng-deep > legend {
   color: var(--_fieldset-invalid-legend-color);
   background: var(--_fieldset-invalid-legend-bg);
 }
 
-:host(.ngx-signal-form-fieldset--warning) > legend {
+/* `::ng-deep` required for the same reason as `:host > legend` above. */
+:host(.ngx-signal-form-fieldset--warning) ::ng-deep > legend {
   color: var(--_fieldset-warning-legend-color);
   background: var(--_fieldset-warning-legend-bg);
 }
