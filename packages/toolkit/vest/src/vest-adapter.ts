@@ -868,6 +868,15 @@ export function createVestAdapter(
  * `validateVest` / `validateVestWarnings` entry points. Exposed so advanced
  * consumers can run a suite through {@link VestSuiteAdapter.runVestSuite} and
  * reuse the SAME cached execution that the built-in validators consume.
+ *
+ * @example
+ * ```typescript
+ * const result = sharedVestAdapter.runVestSuite({
+ *   suite: contactSuite,
+ *   fieldTree: contactForm.email,
+ *   value: contactForm.email().value(),
+ * });
+ * ```
  */
 export const sharedVestAdapter: VestSuiteAdapter = createVestAdapter();
 

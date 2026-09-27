@@ -104,6 +104,17 @@ export interface FieldsetAggregationResult {
  *
  * @remarks Does not require an injection context.
  *
+ * @example
+ * ```typescript
+ * const aggregation = createFieldsetAggregation({
+ *   fieldState: () => addressForm()(),
+ *   showErrors: shouldShowErrors,
+ *   showWarnings: shouldShowWarnings,
+ * });
+ *
+ * aggregation.aggregatedErrors(); // deduplicated blocking errors
+ * ```
+ *
  * @group Reactive Primitives
  */
 export function createFieldsetAggregation(

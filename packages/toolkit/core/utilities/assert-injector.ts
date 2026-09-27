@@ -37,6 +37,8 @@ type InjectionContextDebugFn = Function;
  *   });
  * }
  * ```
+ *
+ * @internal
  */
 export function assertInjector<Runner extends () => unknown>(
   // Passed through to Angular's assertInInjectionContext for diagnostics only.

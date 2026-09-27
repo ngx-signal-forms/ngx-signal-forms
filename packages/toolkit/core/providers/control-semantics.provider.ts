@@ -95,6 +95,15 @@ function createPresetFactory(
  * `ngxSignalFormControlAria` on every matching control.
  *
  * Explicit directive inputs still win over provider defaults.
+ *
+ * @example
+ * ```typescript
+ * providers: [
+ *   provideNgxSignalFormControlPresets({
+ *     checkbox: { layout: 'group' },
+ *   }),
+ * ];
+ * ```
  */
 export function provideNgxSignalFormControlPresets(
   presets: NgxSignalFormControlPresetOverrides,
@@ -112,6 +121,15 @@ export function provideNgxSignalFormControlPresets(
  *
  * This is useful for demos, feature shells, or isolated subtrees that need a
  * different semantic default without changing application-wide behavior.
+ *
+ * @example
+ * ```typescript
+ * providers: [
+ *   ...provideNgxSignalFormControlPresetsForComponent({
+ *     checkbox: { layout: 'group' },
+ *   }),
+ * ];
+ * ```
  */
 export function provideNgxSignalFormControlPresetsForComponent(
   presets: NgxSignalFormControlPresetOverrides,

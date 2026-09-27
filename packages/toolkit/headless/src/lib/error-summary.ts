@@ -93,6 +93,17 @@ export interface ErrorSummaryEntriesResult {
  *
  * @remarks Does not require an injection context.
  *
+ * @example
+ * ```typescript
+ * const summary = createErrorSummaryEntries({
+ *   fieldState: () => contactForm()(),
+ *   showErrors: shouldShowErrors,
+ *   showWarnings: shouldShowWarnings,
+ * });
+ *
+ * summary.entries(); // focusable error entries, ready to render
+ * ```
+ *
  * @group Reactive Primitives
  */
 export function createErrorSummaryEntries(

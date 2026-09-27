@@ -176,8 +176,7 @@ export interface ErrorStateResult {
  * `form[formRoot][ngxSignalForm]`) and falls back to `'on-touch'`. The same
  * precedence applies to `submittedStatus`.
  *
- * ## Usage
- *
+ * @example
  * ```typescript
  * const formData = signal({ email: '' });
  * const contactForm = form(

@@ -22,6 +22,8 @@ import { createDevWarnOnce } from './dev-warn-once';
  *   `[ngx-signal-forms] <component>: unsupported value type — …`. Required
  *   rather than defaulted — every current caller passes its own name so the
  *   warning always points at the component the misconfiguration lives in.
+ *
+ * @internal
  */
 export function createCharacterCountLengthSignal(
   value: () => unknown,
