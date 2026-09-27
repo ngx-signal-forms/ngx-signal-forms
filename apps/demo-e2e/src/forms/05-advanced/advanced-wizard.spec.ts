@@ -528,13 +528,17 @@ test.describe('Advanced Wizard Demo', () => {
 
       // The buggy implementation set `currentStep` synchronously (before the
       // container's `await`-based validation resolved), so the DOM briefly
-      // *still* shows Traveler right after the click and only flips to Trip
-      // Details once the async validation's (too-late) `preventDefault()`
-      // has already been ignored. Give that microtask/render race a moment
-      // to fully settle before asserting the final state below — asserting
-      // immediately after the click can catch the transient pre-flip frame
-      // and produce a false pass.
-      await page.waitForTimeout(300);
+      // *still* showed Traveler right after the click and only flipped to
+      // Trip Details once the async validation's (too-late)
+      // `preventDefault()` had already been ignored. Web-first assertions
+      // alone do not catch that: they pass on the first correct frame, and
+      // the bug produced a correct frame first that flipped wrong later.
+      // `TravelerStep.validateAndFocus()` calls `focusFirstInvalid()` only
+      // after its `await submitWithWarnings(...)` resolves, so waiting for
+      // the invalid "First Name" field to actually receive focus is a real
+      // signal that validation has finished — asserting before the flip
+      // would still be possible would then correctly fail.
+      await expect(page.getByLabel('First Name')).toBeFocused();
     });
 
     await test.step('Wizard stays on the invalid Traveler step instead of navigating away', async () => {

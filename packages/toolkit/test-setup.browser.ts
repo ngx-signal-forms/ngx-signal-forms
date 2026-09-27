@@ -4,5 +4,5 @@ import '@analogjs/vitest-angular/setup-serializers';
 import { setupTestBed } from '@analogjs/vitest-angular/setup-testbed';
 
 setupTestBed({
-  teardown: { destroyAfterEach: false },
+  teardown: { destroyAfterEach: true },
 });
