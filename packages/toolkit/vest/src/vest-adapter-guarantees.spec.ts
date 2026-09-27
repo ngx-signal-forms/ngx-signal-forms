@@ -367,13 +367,18 @@ describe('VestSuiteAdapter — exported-interface guarantees', () => {
         expect(firstSettled).toBe(true);
       });
 
-      // Give the microtask/macrotask queue a chance to flush before asserting
-      // the negative -- this is what distinguishes "genuinely never settles"
-      // from "just hasn't settled yet". A fake timer flushes deterministically
-      // instead of racing a real 20ms wall-clock wait.
-      vi.useFakeTimers();
-      await vi.advanceTimersByTimeAsync(20);
-      vi.useRealTimers();
+      // Positive control instead of a fixed wait: `second.runResult` is
+      // driven by the SAME suite resolver that superseded `first`'s, so
+      // awaiting it proves the suite's tests have actually finished and every
+      // microtask that could flip `firstRunResultSettled` has had its chance
+      // to run. One more macrotask turn (a real, zero-delay `setTimeout`)
+      // flushes anything left, and only THEN is "genuinely never settles"
+      // distinguishable from "just hasn't settled yet" -- without racing a
+      // fixed wall-clock duration.
+      await second.runResult;
+      await new Promise<void>((resolve) => {
+        setTimeout(resolve, 0);
+      });
       expect(firstRunResultSettled).toBe(false);
     });
   });
