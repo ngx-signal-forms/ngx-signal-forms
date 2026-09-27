@@ -57,12 +57,17 @@ documented public entry points only.
 
 ### Package layout
 
+A curated overview, not an exhaustive listing — it groups files by role and
+calls out the ones contributors ask about most. Run `find packages/toolkit`
+for the full tree.
+
 ```bash
 packages/toolkit/
 ├── core/                               # Internal implementation (not public import path)
 │   ├── directives/
 │   ├── providers/
-│   ├── services/                       # Field identity, visibility and control-preset registries
+│   ├── services/                       # Field identity, visibility, control-preset registries,
+│   │                                   # submit-announcements.ts, control-visibility-signal.ts
 │   ├── utilities/                      # Includes warning-error.ts (public helpers via root)
 │   ├── feedback-tokens.css
 │   ├── tokens.ts
@@ -73,16 +78,18 @@ packages/toolkit/
 │   ├── form-field-error-summary.ts
 │   ├── form-marking-legend.ts
 │   ├── hint.ts
-│   └── index.ts
+│   ├── index.ts
+│   └── README.md
 ├── form-field/
 │   ├── utilities/                      # form-field-scoped helpers (resolve-union-input.ts)
 │   ├── form-field-cluster-aria.ts      # ARIA wiring for radio/checkbox clusters
-│   ├── form-field-dom-snapshot.ts      # reads the wrapper's rendered DOM once per change
-│   ├── form-field-dom-sync.ts          # keeps the DOM snapshot in sync with field state
+│   ├── form-field-dom-snapshot.ts      # reads the wrapper's rendered DOM once per render
+│   ├── form-field-dom-sync.ts          # applies the snapshot to the wrapper's own signals
 │   ├── form-field-wrapper.ts
 │   ├── form-field.utils.ts
 │   ├── form-fieldset.ts
-│   └── index.ts
+│   ├── index.ts
+│   └── README.md
 ├── headless/
 │   ├── src/
 │   │   ├── index.ts
@@ -107,18 +114,25 @@ packages/toolkit/
 │   │   ├── index.ts
 │   │   ├── validate-vest.ts
 │   │   ├── vest-adapter.ts             # createVestAdapter() + VestSuiteAdapter contract
+│   │   ├── vest-result-mapper.ts       # maps a Vest run result to ValidationError[]
 │   │   └── vest-run-coordinator.ts     # cache, contention detection, FIFO queue, settlement (ADR-0009)
 │   ├── ng-package.json
 │   └── README.md
 ├── scripts/
-│   ├── documentation-starter.mjs       # scaffolds a new TSDoc block
+│   ├── check-published-package.mjs     # guards the public API + tarball against api-reports/
+│   ├── documentation-starter.mjs       # extracts the README's marked TypeScript starter so
+│   │                                   # check-documentation-starter.mjs can typecheck it
 │   ├── generate-readme.mjs             # rewrites the root README's relative links for npm
+│   ├── size-report.mjs                 # reports brotli bundle size per entry against budgets
 │   ├── strip-internal-exports.mjs      # post-build: hides /core from the exports map
 │   └── strip-internal-members.mjs      # post-build: strips @internal class/interface members
+├── api-reports/                        # committed baseline .d.ts + tarball-manifest.json (#514)
 ├── testing/
 │   ├── a11y.ts                         # axe-core a11y test helpers
+│   ├── a11y-internal.ts                # internal-only defaults (e.g. incomplete: 'warn')
 │   ├── index.ts
-│   └── ng-package.json                 # published secondary entry point (/testing)
+│   ├── ng-package.json                 # published secondary entry point (/testing)
+│   └── README.md
 ├── index.ts
 ├── README.md
 └── package.json
@@ -126,14 +140,21 @@ packages/toolkit/
 
 Only the six public entry points above ship to npm. `core/` exists in source
 but is not in the published exports map, and `docs/` (repo root) is not part
-of the package at all. Only one README ships: `scripts/generate-readme.mjs`
-reads the **repo-root** `README.md` (not `packages/toolkit/README.md`),
-rewrites its relative links to absolute GitHub URLs pinned to the commit
-being published, and writes the result to `dist/packages/toolkit/README.md`
-during `post-build`. The secondary entry points' own READMEs
-(`headless/README.md`, `vest/README.md`, `testing/README.md`,
-`form-field/README.md`, `assistive/README.md`) stay in the repo only —
-`ng-packagr` never copies them into the published package.
+of the package at all.
+
+Every entry point's README ships: ng-packagr's `copyAssets` copies each
+entry's `README.md` into its own output folder, and
+`packages/toolkit/api-reports/tarball-manifest.json` lists all six
+(`README.md`, `assistive/README.md`, `form-field/README.md`,
+`headless/README.md`, `testing/README.md`, `vest/README.md`). Only the root
+one gets rewritten: `scripts/generate-readme.mjs` reads the **repo-root**
+`README.md` (not `packages/toolkit/README.md`), rewrites its relative links
+to absolute GitHub URLs pinned to the commit being published, and writes the
+result to `dist/packages/toolkit/README.md` during `post-build`. The five
+secondary READMEs ship as-is, with their relative links unrewritten — a link
+to a repo-only file (e.g. `../../CONTEXT.md`) resolves on GitHub but not on
+npm. See [issue #568](https://github.com/ngx-signal-forms/ngx-signal-forms/issues/568)
+for the follow-up to rewrite them too.
 
 ### Import examples
 
