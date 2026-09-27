@@ -64,7 +64,6 @@ export const toolkitSharedConfig = {
       '@analogjs/vitest-angular/setup-snapshots',
       '@angular/compiler',
       '@angular/platform-browser/testing',
-      '@testing-library/jest-dom/vitest',
     ],
   },
   test: {
