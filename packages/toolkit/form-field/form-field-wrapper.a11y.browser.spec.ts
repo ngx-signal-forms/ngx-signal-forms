@@ -25,13 +25,11 @@ import { commands, page, userEvent } from 'vitest/browser';
 import { afterEach, describe, expect, it } from 'vitest';
 import { NgxFormField } from './index';
 import { NgxFormFieldWrapper } from './form-field-wrapper';
-import {
-  ColorSchemeFixtureComponent,
-  renderFixture as renderColorSchemeFixture,
-} from './form-field-wrapper.color-scheme.a11y.browser.spec';
+import { renderFixture as renderColorSchemeFixture } from './form-field-wrapper.color-scheme.fixture';
 import {
   expectNoA11yViolations,
   expectVisibleFocusIndicator,
+  findAlertContaining,
 } from '../testing/a11y-internal';
 
 declare module 'vitest/browser' {
@@ -838,11 +836,16 @@ describe('form-field wrapper — additional variant coverage (#501)', () => {
         ),
     );
 
-    const { container } = await render(TestComponent);
+    const { container, fixture } = await render(TestComponent);
 
-    const select = page.getByRole('combobox', { name: 'Country' });
-    await userEvent.click(select.element());
-    await userEvent.tab();
+    // Mark touched programmatically instead of click+tab: a headless
+    // Chromium `<select>` does not reliably blur on `userEvent.tab()` in CI
+    // (a different browser channel than a local run), so the field never
+    // actually reached its touched, invalid state there and the error never
+    // rendered — same convention the single-checkbox/switch fixtures below
+    // already use for the same reason.
+    fixture.componentInstance.testForm.country().markAsTouched();
+    await TestBed.inject(ApplicationRef).whenStable();
 
     await expect
       .element(page.getByRole('alert'))
@@ -1086,20 +1089,32 @@ describe('form-field wrapper — additional variant coverage (#501)', () => {
           signal({ amount: 0, password: '' }),
           schema((path) => {
             required(path.password, { message: 'Password is required' });
+            validate(path.amount, (ctx) =>
+              ctx.value() > 0
+                ? null
+                : { kind: 'required', message: 'Amount is required' },
+            );
           }),
         ),
     );
 
-    const { container } = await render(TestComponent);
+    const { container, fixture } = await render(TestComponent);
 
+    // The amount field (behind the prefix button) needs its own invalid
+    // state too — mark it touched programmatically rather than tabbing
+    // through the prefix button, so this doesn't depend on where a
+    // `<button prefix>` sits in the tab order.
+    fixture.componentInstance.testForm.amount().markAsTouched();
     await userEvent.click(page.getByRole('textbox', { name: 'Password' }));
     await userEvent.tab();
 
     expect(container.querySelector('[prefix]')).toBeTruthy();
     expect(container.querySelector('[suffix]')).toBeTruthy();
-    await expect
-      .element(page.getByRole('alert'))
-      .toHaveTextContent('Password is required');
+    // Scoped to the entries actually carrying text: a bare `getByRole('alert')`
+    // is ambiguous here — the mounted-but-empty alert shells for other,
+    // still-valid fields in this fixture also match `role="alert"`.
+    expect(findAlertContaining(container, 'Amount is required')).toBeTruthy();
+    expect(findAlertContaining(container, 'Password is required')).toBeTruthy();
     await expectNoA11yViolations(container);
   });
 
@@ -1162,7 +1177,17 @@ describe('form-field wrapper — additional variant coverage (#501)', () => {
     await expect
       .element(page.getByRole('alert'))
       .toHaveTextContent('Choose a rating');
-    expect(container.querySelector('#rating')).not.toHaveAttribute('role');
+
+    // Confirm auto-ARIA actually wired the role-less host up before trusting
+    // the axe scan below to prove it: `aria-invalid` reflects the invalid
+    // state, and `aria-describedby` links to the rendered error.
+    const rating = container.querySelector('#rating');
+    expect(rating).not.toHaveAttribute('role');
+    expect(rating).toHaveAttribute('aria-invalid', 'true');
+    expect(rating?.getAttribute('aria-describedby')?.split(/\s+/u)).toContain(
+      'rating-error',
+    );
+
     await expectNoA11yViolations(container);
   });
 
@@ -1354,12 +1379,12 @@ describe('form-field wrapper — additional variant coverage (#501)', () => {
     });
 
     /**
-     * Reuses `form-field-wrapper.color-scheme.a11y.browser.spec.ts`'s own
-     * fixture and `renderFixture` helper: it already mounts the error
-     * summary, marking legend, character count, hint, warning, and the
-     * fieldset's panel error presentation in one render, so this covers the
-     * assistive components the toolkit audit named without re-declaring a
-     * narrower fixture.
+     * Reuses `form-field-wrapper.color-scheme.fixture.ts`'s shared fixture
+     * and `renderFixture` helper: it already mounts the error summary,
+     * marking legend, character count, hint, warning, and the fieldset's
+     * panel error presentation in one render, so this covers the assistive
+     * components the toolkit audit named without re-declaring a narrower
+     * fixture.
      */
     it('has no WCAG 2.2 AA violations across the wrapper and assistive components under forced-colors: active', async () => {
       await commands.emulateForcedColors('active');
@@ -1793,10 +1818,13 @@ describe('form-field wrapper — additional variant coverage (#501)', () => {
           ),
       );
 
-      const { container } = await render(TestComponent);
+      const { container, fixture } = await render(TestComponent);
 
-      await userEvent.click(page.getByRole('combobox', { name: 'Country' }));
-      await userEvent.tab();
+      // See the equivalent fixture above: a headless Chromium `<select>`
+      // does not reliably blur on `userEvent.tab()` in CI, so mark touched
+      // programmatically instead.
+      fixture.componentInstance.testForm.country().markAsTouched();
+      await TestBed.inject(ApplicationRef).whenStable();
 
       await expect
         .element(page.getByRole('alert'))
