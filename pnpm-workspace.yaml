@@ -78,7 +78,7 @@ catalogs:
     shiki: '^4.4.3'
   spartan:
     '@ng-icons/core': '36.0.0'
-    '@ng-icons/lucide': '35.1.0'
+    '@ng-icons/lucide': '36.0.0'
     '@spartan-ng/brain': '1.4.1'
     '@spartan-ng/cli': '1.4.1'
     class-variance-authority: '^0.7.1'

@@ -9,23 +9,160 @@ import type { FieldTree, ValidationError } from '@angular/forms/signals';
 import {
   createErrorVisibility,
   createWarningVisibility,
+  readDirectErrors,
   resolveStrategyFromContext,
   resolveSubmittedStatusFromContext,
   resolveWarningStrategyFromContext,
+  splitByKind,
+  unwrapValue,
   type ErrorDisplayStrategy,
+  type ReactiveOrStatic,
   type ResolvedErrorDisplayStrategy,
   type ResolvedWarningDisplayStrategy,
+  type SignalLike,
   type SubmittedStatus,
   type WarningDisplayStrategy,
 } from '@ngx-signal-forms/toolkit';
+import type { ErrorMessageRegistry } from '@ngx-signal-forms/toolkit/core';
 
 import { buildHeadlessContext } from './build-headless-context';
+import { readErrors } from './field-state-utilities';
 import {
-  createFieldsetAggregation,
   createFieldStateFlags,
   createUniqueId,
+  dedupeValidationErrors,
+  resolveErrorMessage,
   type ResolvedError,
 } from './utilities';
+
+/**
+ * Options for {@link createFieldsetAggregation}.
+ *
+ * `showErrors`/`showWarnings` are pre-resolved visibility signals, not raw
+ * strategy inputs — per ADR-0005 (factories take DI-resolved values as
+ * inputs and never call `inject()` themselves). `NgxHeadlessFieldset` keeps
+ * owning the single `createErrorVisibility()`/`createShowErrorsComputed()`
+ * seam call (ADR-0006) and threads the results in here; this factory only
+ * combines them with the (visibility-independent) presence check.
+ *
+ * @group Reactive Primitives
+ */
+export interface CreateFieldsetAggregationOptions {
+  /** Reactive reader for the fieldset's own field state (from `field()()`). */
+  readonly fieldState: SignalLike<unknown>;
+  /**
+   * Explicit field-list override. `null`/omitted means "not provided" —
+   * aggregate `fieldState`'s own errors. See `NgxHeadlessFieldset.fields`
+   * for the "not provided" vs "explicitly empty" distinction this preserves.
+   */
+  readonly fields?: ReactiveOrStatic<readonly FieldTree<unknown>[] | null>;
+  /** Whether to aggregate nested field errors (`errorSummary()`) instead of direct ones (`errors()`). */
+  readonly includeNestedErrors?: ReactiveOrStatic<boolean>;
+  /** Pre-resolved blocking-error visibility (from the caller's own visibility seam call). */
+  readonly showErrors: SignalLike<boolean>;
+  /** Pre-resolved warning visibility, timed independently of {@link showErrors}. */
+  readonly showWarnings: SignalLike<boolean>;
+  /** Error message registry for 3-tier message resolution. */
+  readonly errorMessages?: Readonly<ErrorMessageRegistry> | null;
+}
+
+/**
+ * Fieldset error/warning aggregation result.
+ *
+ * @group Reactive Primitives
+ */
+export interface FieldsetAggregationResult {
+  /** Aggregated and deduplicated blocking errors. */
+  readonly aggregatedErrors: Signal<readonly ValidationError[]>;
+  /** Aggregated and deduplicated warnings. */
+  readonly aggregatedWarnings: Signal<readonly ValidationError[]>;
+  /** {@link aggregatedErrors}, resolved to display messages. */
+  readonly resolvedErrors: Signal<readonly ResolvedError[]>;
+  /** {@link aggregatedWarnings}, resolved to display messages. */
+  readonly resolvedWarnings: Signal<readonly ResolvedError[]>;
+  /** Whether there are blocking errors. */
+  readonly hasErrors: Signal<boolean>;
+  /** Whether there are warnings. */
+  readonly hasWarnings: Signal<boolean>;
+  /** `showErrors() && hasErrors()`. */
+  readonly shouldShowErrors: Signal<boolean>;
+  /** `showWarnings() && hasWarnings()`. */
+  readonly shouldShowWarnings: Signal<boolean>;
+}
+
+/**
+ * Aggregates, deduplicates, and resolves field/warning errors for a
+ * fieldset-shaped surface.
+ *
+ * Extracted from `NgxHeadlessFieldset`, which used to inline this pipeline
+ * (issue #351). Deliberately pure — no `inject()` calls — so it is testable
+ * with plain signal mocks and no `TestBed`, matching the other headless
+ * factories (`createFieldStateFlags`, `createCharacterCount`). Visibility
+ * timing is NOT resolved here; callers pass already-resolved `showErrors`/
+ * `showWarnings` signals from their own `createErrorVisibility()` /
+ * `createShowErrorsComputed()` call (ADR-0006's single seam).
+ *
+ * @remarks Does not require an injection context.
+ *
+ * @group Reactive Primitives
+ */
+export function createFieldsetAggregation(
+  options: Readonly<CreateFieldsetAggregationOptions>,
+): FieldsetAggregationResult {
+  const {
+    fieldState,
+    fields,
+    includeNestedErrors,
+    showErrors,
+    showWarnings,
+    errorMessages,
+  } = options;
+
+  const allMessages = computed(() => {
+    const override = fields === undefined ? null : unwrapValue(fields);
+    const readFn = unwrapValue(includeNestedErrors ?? false)
+      ? readErrors
+      : readDirectErrors;
+
+    // `null` means "not provided" → aggregate `fieldState`'s own errors. An
+    // explicitly bound `[]` means "provided but empty" → aggregate nothing.
+    if (override !== null) {
+      const messages = override.flatMap((field) => readFn(field()));
+      return dedupeValidationErrors(messages);
+    }
+
+    return dedupeValidationErrors(readFn(fieldState()));
+  });
+
+  const split = computed(() => splitByKind(allMessages()));
+
+  const aggregatedErrors = computed(() => split().blocking);
+  const aggregatedWarnings = computed(() => split().warnings);
+  const hasErrors = computed(() => split().blocking.length > 0);
+  const hasWarnings = computed(() => split().warnings.length > 0);
+
+  const toResolved = (error: ValidationError): ResolvedError => ({
+    kind: error.kind,
+    message: resolveErrorMessage(error, errorMessages),
+  });
+
+  const resolvedErrors = computed(() => aggregatedErrors().map(toResolved));
+  const resolvedWarnings = computed(() => aggregatedWarnings().map(toResolved));
+
+  const shouldShowErrors = computed(() => showErrors() && hasErrors());
+  const shouldShowWarnings = computed(() => showWarnings() && hasWarnings());
+
+  return {
+    aggregatedErrors,
+    aggregatedWarnings,
+    resolvedErrors,
+    resolvedWarnings,
+    hasErrors,
+    hasWarnings,
+    shouldShowErrors,
+    shouldShowWarnings,
+  };
+}
 
 /**
  * Fieldset state signals exposed by the headless directive.
