@@ -1,3 +1,8 @@
+import {
+  generateErrorId,
+  generateRequiredHintId,
+  generateWarningId,
+} from '@ngx-signal-forms/toolkit/core';
 import { describe, expect, it } from 'vitest';
 import {
   resolveClusterAriaAttrs,
@@ -75,7 +80,9 @@ describe('resolveClusterAriaAttrs', () => {
           fieldName: 'topping',
         }),
       );
-      expect(result.groupRequiredHintId).not.toBeNull();
+      expect(result.groupRequiredHintId).toBe(
+        generateRequiredHintId('topping'),
+      );
     });
 
     it('is null for a "radiogroup"-role cluster — aria-required is valid there instead', () => {
@@ -178,7 +185,7 @@ describe('resolveClusterAriaAttrs', () => {
           showInvalidState: true,
         }),
       );
-      expect(result.describedBy).toContain('topping');
+      expect(result.describedBy).toBe(generateErrorId('topping'));
     });
 
     it('appends the warning id when the warning state is shown and warnings are enabled', () => {
@@ -191,7 +198,7 @@ describe('resolveClusterAriaAttrs', () => {
           shouldShowWarnings: true,
         }),
       );
-      expect(result.describedBy).toContain('topping');
+      expect(result.describedBy).toBe(generateWarningId('topping'));
     });
 
     it('does not append a warning id when warnings are shown but shouldShowWarnings is false', () => {
@@ -229,13 +236,9 @@ describe('resolveClusterAriaAttrs', () => {
           shouldShowWarnings: true,
         }),
       );
-      // Both must produce SOME managed id, but they must not be identical —
-      // the error branch wins and never also appends the warning id.
-      expect(errorOnly.describedBy).not.toBeNull();
-      expect(warningOnly.describedBy).not.toBeNull();
-      expect(errorOnly.describedBy?.split(' ')).toHaveLength(
-        warningOnly.describedBy?.split(' ').length ?? 0,
-      );
+      // The error branch wins and never also appends the warning id.
+      expect(errorOnly.describedBy).toBe(generateErrorId('topping'));
+      expect(warningOnly.describedBy).toBe(generateWarningId('topping'));
     });
 
     it('merges the required-hint id and an error id with an author-supplied aria-describedby', () => {
@@ -250,11 +253,12 @@ describe('resolveClusterAriaAttrs', () => {
           showInvalidState: true,
         }),
       );
-      const ids = result.describedBy?.split(' ') ?? [];
-      expect(ids[0]).toBe('author-hint');
-      expect(ids).toHaveLength(3); // author-hint, groupRequiredHintId, error id
-      expect(result.groupRequiredHintId).not.toBeNull();
-      expect(ids).toContain(result.groupRequiredHintId);
+      expect(result.groupRequiredHintId).toBe(
+        generateRequiredHintId('topping'),
+      );
+      expect(result.describedBy).toBe(
+        `author-hint ${generateRequiredHintId('topping')} ${generateErrorId('topping')}`,
+      );
     });
 
     it('returns the initial aria-describedby unchanged when there is nothing to manage', () => {
