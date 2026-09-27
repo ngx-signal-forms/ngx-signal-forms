@@ -2,6 +2,7 @@ import { existsSync } from 'node:fs';
 import _DefaultChangelogRendererImport, {
   type ChangelogChange,
 } from 'nx/release/changelog-renderer/index.js';
+import { CODE_SPAN_OR_FENCE } from '../commitlint/code-span.cjs';
 
 type DefaultChangelogRendererClass = typeof _DefaultChangelogRendererImport;
 
@@ -65,17 +66,32 @@ function isRecord(value: unknown): value is Record<string, unknown> {
  * (`formatBreakingChangeBase`, `extractBreakingChangeExplanation`) below —
  * not `renderAuthors`, whose ` @username` is a deliberate GitHub mention.
  *
- * Matches `@scope/pkg` as one unit (so a dependency bump like
- * `@ng-icons/core` escapes cleanly) and skips a `@` preceded by a word
- * character or a backtick, so an email address (`me@example.com`) and an
- * already-backticked mention are left alone.
+ * A name segment is a run of word characters with internal (not trailing)
+ * hyphens, so a sentence dash right after a mention (`cc @foo - reviewer`)
+ * is not swallowed. Matches `@scope/pkg` and `@scope/pkg.ext` as one unit
+ * (so a dependency bump like `@ng-icons/core` escapes cleanly, and a
+ * sentence-final `bump @ng-icons/core.` keeps its trailing period outside
+ * the match), and skips a `@` preceded by a word character or a backtick,
+ * so an email address (`me@example.com`) and an already-backticked mention
+ * are left alone.
  */
-const BARE_MENTION = /(?<![\w`])@[\w-]+(?:\/[\w.-]+)?/gu;
+const NAME_SEGMENT = /[\w]+(?:-[\w]+)*/u.source;
+const BARE_MENTION = new RegExp(
+  `(?<![\\w\`])@${NAME_SEGMENT}(?:/${NAME_SEGMENT}(?:\\.${NAME_SEGMENT})*)?`,
+  'gu',
+);
 
-/** Matches an inline code span or a fenced code block, backtick-length aware. */
-const CODE_SPAN_OR_FENCE = /(`+)[\s\S]*?\1/gu;
+export function escapeBareMentions(text: string): string;
+export function escapeBareMentions(
+  text: string | null | undefined,
+): string | null | undefined;
+export function escapeBareMentions(
+  text: string | null | undefined,
+): string | null | undefined {
+  if (text === null || text === undefined) {
+    return text;
+  }
 
-export function escapeBareMentions(text: string): string {
   let result = '';
   let cursor = 0;
 

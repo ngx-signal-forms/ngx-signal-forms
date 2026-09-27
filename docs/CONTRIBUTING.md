@@ -105,8 +105,7 @@ A `commit-msg` git hook checks every commit with
 `body-max-line-length`, `header-max-length`, and `subject-case` from
 `@commitlint/config-conventional` — history already has long single-line
 `BREAKING CHANGE:` footers and bodies, subjects over 100 characters, and one
-non-lower-case subject, and Rule 11 (match the codebase) says live with that
-rather than rewrite old commits to fit.
+non-lower-case subject, and rewriting old commits to fit is not worth it.
 
 `pnpm install` installs the hook through `simple-git-hooks` (see
 [`tools/simple-git-hooks-worktree.cjs`](../tools/simple-git-hooks-worktree.cjs),

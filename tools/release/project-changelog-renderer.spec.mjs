@@ -65,6 +65,36 @@ void test('leaves a @word inside a fenced code block untouched', () => {
   assert.equal(escapeBareMentions(text), text);
 });
 
+void test('leaves a @word inside a double-backtick code span untouched', () => {
+  assert.equal(
+    escapeBareMentions('fix: handle ``@a`` ok'),
+    'fix: handle ``@a`` ok',
+  );
+});
+
+void test('keeps a sentence-final period outside a scoped mention', () => {
+  assert.equal(escapeBareMentions('see @a/b.'), 'see `@a/b`.');
+});
+
+void test('keeps a sentence-final period outside @scope/pkg', () => {
+  assert.equal(
+    escapeBareMentions('bump @ng-icons/core.'),
+    'bump `@ng-icons/core`.',
+  );
+});
+
+void test('does not swallow a dash right after a mention', () => {
+  assert.equal(
+    escapeBareMentions('cc @foo - reviewer'),
+    'cc `@foo` - reviewer',
+  );
+});
+
+void test('tolerates null and undefined input', () => {
+  assert.equal(escapeBareMentions(null), null);
+  assert.equal(escapeBareMentions(undefined), undefined);
+});
+
 // Render-level coverage: the escaping must reach the actual changelog output,
 // not just the pure helper. This is the case the previous version of this
 // spec missed - `toSingleLine` (the Highlights summary) escaped a bare

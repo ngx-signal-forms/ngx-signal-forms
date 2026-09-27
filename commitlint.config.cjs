@@ -21,8 +21,9 @@ module.exports = {
     // and scopes push some past it). Off to match; PR titles are still
     // capped by GitHub's own UI limit regardless.
     'header-max-length': [0],
-    // History has at least one non-lower-case subject ("Docs/documentation
-    // audit (#456)"). Off rather than rewriting old commits to fit.
+    // History has at least one non-lower-case subject ("refactor(headless):
+    // NgxHeadlessCharacterCount delegates to createCharacterCount (audit
+    // C2) (#328)"). Off rather than rewriting old commits to fit.
     'subject-case': [0],
   },
 };
