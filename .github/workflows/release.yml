@@ -217,6 +217,19 @@ jobs:
       - name: Check README starter
         run: pnpm exec nx run toolkit:check-documentation-starter --outputStyle=static
 
+      # Guards the PUBLISHED package (dist/packages/toolkit), same as the
+      # matching ci.yml steps: an unreviewed public API/tarball change, a
+      # broken exports map/types condition, or a bundle-size regression must
+      # block a release, not just a PR (#514). See docs/CONTRIBUTING.md
+      # "Published package guardrails" for how to update a baseline. Run via
+      # `run-many` so `toolkit:post-build` (their shared dependency) runs
+      # once instead of once per `nx run`.
+      - name: Check published API surface, tarball contents, and package shape
+        run: pnpm exec nx run-many -t check-published-package check-package-shape -p toolkit --outputStyle=static
+
+      - name: Check bundle size budget
+        run: pnpm exec nx run toolkit:check-size --outputStyle=static
+
       # Same isolation check as ci.yml's `toolkit-isolation` job: prove the
       # published toolkit stays design-system-free.
       #

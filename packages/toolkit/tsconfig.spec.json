@@ -34,5 +34,11 @@
     "./**/*.spec.jsx",
     "./**/*.d.ts"
   ],
+  "exclude": [
+    // Committed baseline snapshots of built `.d.ts` output (#514) — raw
+    // build output, not source; `./**/*.d.ts` above would otherwise pull
+    // them into the spec program.
+    "./api-reports/**"
+  ],
   "files": ["test-setup.ts", "test-setup.browser.ts"]
 }

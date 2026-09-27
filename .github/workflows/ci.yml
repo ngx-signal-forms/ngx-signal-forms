@@ -147,6 +147,30 @@ jobs:
       - name: Check no-bare-mention rule
         run: pnpm exec nx run workspace:check-no-bare-mention --outputStyle=static
 
+      # Same reasoning as the README starter check above: neither is a
+      # build/lint/test target, so `nx affected` never picks it up on its
+      # own. Each guards a different part of the published toolkit package
+      # (#514): the public `.d.ts` surface and tarball file list, and the
+      # `publint` + `attw` package-shape checks. Run together via
+      # `run-many` so `toolkit:post-build` (their shared dependency) runs
+      # once for both instead of once per `nx run`.
+      - name: Check published API surface, tarball contents, and package shape
+        run: pnpm exec nx run-many -t check-published-package check-package-shape -p toolkit --outputStyle=static
+
+      # Separate step: the bundle-size budget is the one guard #514 asks to
+      # report as a change on the PR, not just pass/fail in the log, so this
+      # also appends a Markdown table to the job summary.
+      - name: Check bundle size budget
+        run: |
+          pnpm exec nx run toolkit:post-build --outputStyle=static
+          set +e
+          node packages/toolkit/scripts/size-report.mjs > "$RUNNER_TEMP/size-limit-summary.md"
+          status=$?
+          set -e
+          cat "$RUNNER_TEMP/size-limit-summary.md"
+          cat "$RUNNER_TEMP/size-limit-summary.md" >> "$GITHUB_STEP_SUMMARY"
+          exit "$status"
+
       - name: Generate lint report
         if: ${{ always() }}
         run: pnpm exec oxlint . --format=json > lint-report.json || true
