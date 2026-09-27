@@ -8,6 +8,12 @@
         "command": "node --test tools/scripts/check-skill-package.spec.mjs && node tools/scripts/check-skill-package.mjs"
       }
     },
+    "check-changelog-renderer": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "node --experimental-strip-types --test tools/release/project-changelog-renderer.spec.mjs"
+      }
+    },
     "lint": {
       "executor": "nx:run-commands",
       "options": {

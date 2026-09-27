@@ -1,0 +1,56 @@
+name: PR Title
+
+# Squash merges use the PR title as the commit subject, so this checks it
+# against the same commitlint rules the commit-msg hook enforces locally
+# (see commitlint.config.cjs): Conventional Commits, plus every `@word`
+# backticked so GitHub does not render it as a mention (AGENTS.md).
+#
+# Dependabot titles (e.g. `build(deps): bump @ng-icons/core from 1 to 2`)
+# contain a bare `@word` by construction - Dependabot cannot backtick it.
+# `build` commits already have `changelog: false` in nx.json, and
+# tools/release/project-changelog-renderer.ts escapes any bare `@word` that
+# still reaches a release note as a second guard. So Dependabot PRs are
+# exempt here rather than blocked, matching dependabot-auto-merge.yml.
+#
+# Uses `pull_request` (not `pull_request_target`): no checkout, no secrets,
+# read-only permissions. The title is passed through an env var, never
+# interpolated into `run:`.
+
+on:
+  pull_request:
+    types: [opened, edited, reopened, synchronize]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pr-title-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  lint:
+    if: ${{ github.actor != 'dependabot[bot]' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          filter: tree:0
+          persist-credentials: false
+
+      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413
+        name: Install pnpm
+        with:
+          run_install: false
+
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version-file: '.node-version'
+          cache: 'pnpm'
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Lint PR title
+        env:
+          PR_TITLE: ${{ github.event.pull_request.title }}
+        run: echo "$PR_TITLE" | pnpm exec commitlint

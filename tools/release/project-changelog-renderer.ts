@@ -57,6 +57,20 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null;
 }
 
+/**
+ * A second guard behind the commitlint `no-bare-mention` rule: escape any
+ * `@word` this renderer emits that a commit description left bare, so
+ * GitHub never renders it as a mention of a stranger's account.
+ */
+const BARE_MENTION = /(^|[^`])@([\w-]+)/gu;
+
+export function escapeBareMentions(text: string): string {
+  return text.replace(
+    BARE_MENTION,
+    (_match, before: string, word: string) => `${before}\`@${word}\``,
+  );
+}
+
 export default class ProjectChangelogRenderer extends DefaultChangelogRenderer {
   override async render(): Promise<string> {
     if (this.project === null) {
@@ -285,7 +299,7 @@ export default class ProjectChangelogRenderer extends DefaultChangelogRenderer {
   }
 
   private toSingleLine(text: string): string {
-    return text.split('\n')[0]?.trim() ?? '';
+    return escapeBareMentions(text.split('\n')[0]?.trim() ?? '');
   }
 
   private groupAreaChangesByType(

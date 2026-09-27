@@ -68,6 +68,8 @@
     "@angular/compiler-cli": "catalog:angular-build",
     "@angular/language-service": "catalog:angular-build",
     "@axe-core/playwright": "catalog:axe",
+    "@commitlint/cli": "catalog:tooling",
+    "@commitlint/config-conventional": "catalog:tooling",
     "@nx/angular": "catalog:nx",
     "@nx/devkit": "catalog:nx",
     "@nx/eslint-plugin": "catalog:nx",
@@ -91,8 +93,8 @@
     "@testing-library/dom": "catalog:testing-library",
     "@testing-library/jest-dom": "catalog:testing-library",
     "@testing-library/user-event": "catalog:testing-library",
-    "@typescript/native": "catalog:tooling",
     "@types/node": "catalog:tooling",
+    "@typescript/native": "catalog:tooling",
     "@vitest/browser-playwright": "catalog:vitest",
     "@vitest/coverage-v8": "catalog:vitest",
     "@vitest/ui": "catalog:vitest",
@@ -123,7 +125,8 @@
     "vitest": "catalog:vitest"
   },
   "simple-git-hooks": {
-    "pre-commit": "pnpm exec lint-staged"
+    "pre-commit": "pnpm exec lint-staged",
+    "commit-msg": "pnpm exec commitlint --edit \"$1\""
   },
   "nx": {
     "includedScripts": []
