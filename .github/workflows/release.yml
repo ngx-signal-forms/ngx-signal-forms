@@ -203,16 +203,56 @@ jobs:
           NX_DAEMON: 'false'
         run: pnpm run format:check
 
-      - name: Verify Quality (Lint, Test, Build, E2E)
-        # Using affected ensures we only verify what changed, but caching handles the rest.
-        # We target all projects to ensure workspace health before release.
-        # Use the non-atomized `e2e` target, never `e2e-ci`. The Playwright
-        # plugin's `ciTargetName: e2e-ci` (nx.json) splits each suite into
-        # per-spec tasks that Nx refuses to run without Nx Agents, and this
-        # workspace stopped distributing in #252. ci.yml was switched at the
-        # same time; this gate was missed and broke for any release whose
-        # affected set contains an e2e project.
-        run: pnpm exec nx affected -t lint test test-browser build e2e --outputStyle=static
+      - name: Verify toolkit quality (lint, test, test-browser, build)
+        # A release must prove the full toolkit suite passes at the tagged
+        # commit, not just the projects `nx affected` thinks changed against
+        # main. Runs every toolkit target directly with `run-many -p toolkit`.
+        run: pnpm exec nx run-many -t lint test test-browser build -p toolkit --outputStyle=static
+
+      - name: Enforce coverage thresholds
+        # A release is dispatched by hand and does not wait for ci.yml's
+        # `coverage` job, so check the thresholds here too.
+        run: pnpm exec nx run workspace:coverage --outputStyle=static
+
+      - name: Check README starter
+        run: pnpm exec nx run toolkit:check-documentation-starter --outputStyle=static
+
+      # Same isolation check as ci.yml's `toolkit-isolation` job: prove the
+      # published toolkit stays design-system-free.
+      #
+      # Unlike that job, this one already ran a full `pnpm install` above, so
+      # this filtered install is a no-op ("Already up to date") and does not
+      # remove any package the full install added. The check still catches a
+      # leak, because pnpm's default (non-hoisted) linker only symlinks a
+      # project's own declared dependencies into that project's own
+      # node_modules folder. A demo app's design-system package (for example
+      # apps/demo-material/node_modules/@angular/material) is never linked
+      # into packages/toolkit/node_modules or the workspace root, so an
+      # accidental `import` of it from toolkit source still fails to resolve
+      # at build time, confirmed by reproducing the leak locally. `pnpm
+      # check:toolkit-peer-deps` covers the other case, a design-system
+      # package declared in the toolkit's own package.json. Gap: a package
+      # the workspace ROOT declares (today `@spartan-ng/brain`) resolves from
+      # the toolkit in every install, here and in ci.yml. Tracked in #547.
+      - name: Assert toolkit declares no design-system deps
+        run: pnpm check:toolkit-peer-deps
+
+      - name: Install only toolkit + its dependencies
+        run: pnpm install --frozen-lockfile --filter "@ngx-signal-forms/toolkit..."
+
+      - name: Build toolkit in isolation
+        # Skip the cache: the earlier build step already cached this hash, and
+        # a cache hit would never build against the pruned node_modules.
+        run: pnpm exec nx build toolkit --skip-nx-cache
+
+      - name: Restore full workspace install
+        run: pnpm install --frozen-lockfile
+
+      - name: Verify e2e (affected)
+        # e2e suites are slow; keep this one affected so release run time
+        # does not regress. The rest of the quality gate above always runs
+        # in full, unaffected by what changed.
+        run: pnpm exec nx affected -t e2e --outputStyle=static
 
       - name: Validate release inputs
         env:
