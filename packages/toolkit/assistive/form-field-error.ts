@@ -1,3 +1,4 @@
+import { NgTemplateOutlet } from '@angular/common';
 import {
   afterEveryRender,
   ChangeDetectionStrategy,
@@ -7,6 +8,8 @@ import {
   inject,
   input,
   isDevMode,
+  linkedSignal,
+  untracked,
 } from '@angular/core';
 import type { FieldTree } from '@angular/forms/signals';
 import {
@@ -17,6 +20,7 @@ import {
 import {
   createFieldMessageIdSignals,
   devWarnOnce,
+  NgxSubmitAnnouncements,
   resolveFieldNameFromCandidates,
   type WarnOnceRef,
 } from '@ngx-signal-forms/toolkit/core';
@@ -109,6 +113,10 @@ export type NgxFormFieldErrorPresentation = 'inline' | 'panel';
  * Features:
  * - **Errors**: `role="alert"` (implies `aria-live="assertive"` + `aria-atomic="true"`)
  * - **Warnings**: `role="status"` (implies `aria-live="polite"` + `aria-atomic="true"`)
+ * - With an `NgxFormFieldErrorSummary` in the same `[ngxSignalForm]` form,
+ *   errors revealed by a submit render outside the `role="alert"` region, so
+ *   only the summary announces. See {@link NgxFormFieldError.errorsQuiet}
+ *   and ADR-0012.
  * - Each message carries a visually hidden "Error:" / "Warning:" prefix, so
  *   the accessible description tells the two channels apart without relying
  *   on colour (WCAG 1.4.1, 1.3.1). Configure the text through
@@ -155,7 +163,25 @@ export type NgxFormFieldErrorPresentation = 'inline' | 'panel';
       ],
     },
   ],
+  imports: [NgTemplateOutlet],
   template: `
+    <!--
+      Blocking errors revealed by a submit while an error summary speaks for
+      the form (ADR-0012): the same messages, with the same id and look, but
+      OUTSIDE the role="alert" region below, so they reach the user through
+      aria-describedby and sight without a second announcement. This element
+      is not a live region, so mounting it on demand is safe. A later change
+      to the errors moves them into the live region, which announces them.
+    -->
+    @if (quietErrorsVisible()) {
+      <div
+        [attr.id]="errorId()"
+        class="ngx-form-field-error ngx-form-field-error--error"
+      >
+        <ng-container [ngTemplateOutlet]="errorMessages" />
+      </div>
+    }
+
     <!--
       Blocking Errors: role="alert" already implies aria-live="assertive"
       and aria-atomic="true". Setting them explicitly causes duplicate
@@ -177,47 +203,13 @@ export type NgxFormFieldErrorPresentation = 'inline' | 'panel';
       class alone.
     -->
     <div
-      [attr.id]="errorContainerVisible() ? errorId() : null"
+      [attr.id]="liveErrorsVisible() ? errorId() : null"
       class="ngx-form-field-error ngx-form-field-error--error"
-      [class.ngx-form-field-error--empty]="!errorContainerVisible()"
+      [class.ngx-form-field-error--empty]="!liveErrorsVisible()"
       role="alert"
     >
-      @if (errorContainerVisible()) {
-        @if (title()) {
-          <p class="ngx-form-field-error__title">{{ title() }}</p>
-        }
-
-        @if (usesBulletList()) {
-          <ul class="ngx-form-field-error__list" role="list">
-            @for (
-              error of resolvedErrors();
-              track \`\${error.kind}:\${$index}\`
-            ) {
-              <li
-                class="ngx-form-field-error__message ngx-form-field-error__message--error"
-              >
-                <span class="ngx-form-field-error__prefix">{{
-                  resolvedErrorPrefix()
-                }}</span
-                >{{ error.message }}
-              </li>
-            }
-          </ul>
-        } @else {
-          @for (
-            error of resolvedErrors();
-            track \`\${error.kind}:\${$index}\`
-          ) {
-            <p
-              class="ngx-form-field-error__message ngx-form-field-error__message--error"
-            >
-              <span class="ngx-form-field-error__prefix">{{
-                resolvedErrorPrefix()
-              }}</span
-              >{{ error.message }}
-            </p>
-          }
-        }
+      @if (liveErrorsVisible()) {
+        <ng-container [ngTemplateOutlet]="errorMessages" />
       }
     </div>
 
@@ -271,6 +263,42 @@ export type NgxFormFieldErrorPresentation = 'inline' | 'panel';
         }
       }
     </div>
+
+    <!-- Blocking-error messages, shared by both error containers above. -->
+    <ng-template #errorMessages>
+      @if (title()) {
+        <p class="ngx-form-field-error__title">{{ title() }}</p>
+      }
+
+      @if (usesBulletList()) {
+        <ul class="ngx-form-field-error__list" role="list">
+          @for (
+            error of resolvedErrors();
+            track \`\${error.kind}:\${$index}\`
+          ) {
+            <li
+              class="ngx-form-field-error__message ngx-form-field-error__message--error"
+            >
+              <span class="ngx-form-field-error__prefix">{{
+                resolvedErrorPrefix()
+              }}</span
+              >{{ error.message }}
+            </li>
+          }
+        </ul>
+      } @else {
+        @for (error of resolvedErrors(); track \`\${error.kind}:\${$index}\`) {
+          <p
+            class="ngx-form-field-error__message ngx-form-field-error__message--error"
+          >
+            <span class="ngx-form-field-error__prefix">{{
+              resolvedErrorPrefix()
+            }}</span
+            >{{ error.message }}
+          </p>
+        }
+      }
+    </ng-template>
   `,
   styleUrls: ['../core/feedback-tokens.css', './form-field-error.css'],
 })
@@ -310,6 +338,15 @@ export class NgxFormFieldError {
     NGX_SIGNAL_FORM_FIELD_VISIBILITY_REGISTRY,
     { optional: true },
   );
+
+  /**
+   * Per-form channel to the error summary, provided by the nearest
+   * `[ngxSignalForm]` host. `null` outside such a form, where field errors
+   * always announce as before. See {@link errorsQuiet}.
+   */
+  readonly #submitAnnouncements = inject(NgxSubmitAnnouncements, {
+    optional: true,
+  });
 
   /**
    * One-shot guard so the "missing field name" dev error fires at most once
@@ -529,12 +566,100 @@ export class NgxFormFieldError {
   );
 
   /**
-   * True when the role="alert" container should expose its content.
-   * The container always stays in the DOM for WCAG 4.1.3 live-region
-   * first-insertion semantics.
+   * True when the blocking errors are on screen, in the role="alert"
+   * container or, after a submit with a summary, in the quiet container
+   * (see {@link errorsQuiet}). The role="alert" container always stays in
+   * the DOM for WCAG 4.1.3 live-region first-insertion semantics.
    */
   protected readonly errorContainerVisible = computed(
     () => this.headless.shouldShowErrors() && this.headless.hasErrors(),
+  );
+
+  /**
+   * Kinds and messages of the visible blocking errors, encoded as one
+   * string. A change means the user hears something new, so the errors must
+   * go through the live region again.
+   *
+   * JSON of `[kind, message]` tuples, not a `kind:message` join: a join is
+   * not collision-free (`('a', 'b:c')` and `('a:b', 'c')` both give
+   * `a:b:c`), and a missed change would keep a new message out of the live
+   * region.
+   */
+  readonly #errorContent = computed(() =>
+    JSON.stringify(
+      this.resolvedErrors().map((error) => [error.kind, error.message]),
+    ),
+  );
+
+  /**
+   * True while the visible blocking errors were revealed by a submit and an
+   * error summary on the same form announces them (ADR-0012). The errors
+   * then render outside the `role="alert"` region, so one submit makes one
+   * announcement, the summary's, instead of one per field.
+   *
+   * The state starts when the errors appear or change in the render that
+   * follows a submit attempt, including when this component mounts in that
+   * render (the wrapper mounts its error slot only while messages show). It
+   * ends when the errors change or hide, so the next error the user causes
+   * by editing enters the always-mounted live region and announces as
+   * usual. It also ends when no summary of the form shows errors any more
+   * (the summary was removed or hid), because nothing else announces them. Without a summary, outside a
+   * `[ngxSignalForm]` form, or with `errorSummaryAnnouncesAlone: false`, it
+   * is never true and the component renders exactly as before.
+   */
+  protected readonly errorsQuiet = linkedSignal<
+    {
+      readonly visible: boolean;
+      readonly content: string;
+      readonly summaryShowsErrors: boolean;
+    },
+    boolean
+  >({
+    source: () => ({
+      visible: this.errorContainerVisible(),
+      content: this.#errorContent(),
+      // Tracked: when no registered summary shows errors any more (it was
+      // removed, or it hid), nothing speaks for quiet errors, so they must
+      // move back into the live region.
+      summaryShowsErrors:
+        this.#submitAnnouncements?.summaryShowsErrors() ?? false,
+    }),
+    computation: (current, previous) => {
+      const announcements = this.#submitAnnouncements;
+      if (
+        !announcements ||
+        !this.#config.errorSummaryAnnouncesAlone ||
+        !current.visible ||
+        !current.summaryShowsErrors
+      ) {
+        return false;
+      }
+      const errorsChanged =
+        previous === undefined ||
+        !previous.source.visible ||
+        current.content !== previous.source.content;
+      if (!errorsChanged) {
+        return previous.value;
+      }
+      // Sampled, not tracked: the submit window only matters at the moment
+      // this field's own errors appear or change.
+      return untracked(() => announcements.isSubmitRenderPending());
+    },
+  });
+
+  // Both read `errorsQuiet()` first, on every evaluation: a linked signal
+  // compares against its previous source, so it must also compute while
+  // the errors are hidden. Short-circuiting on `errorContainerVisible()`
+  // would skip the pre-submit state and lose the transition.
+
+  /** Errors render inside the `role="alert"` region and announce. */
+  protected readonly liveErrorsVisible = computed(
+    () => !this.errorsQuiet() && this.errorContainerVisible(),
+  );
+
+  /** Errors render outside the live region. See {@link errorsQuiet}. */
+  protected readonly quietErrorsVisible = computed(
+    () => this.errorsQuiet() && this.errorContainerVisible(),
   );
 
   /**

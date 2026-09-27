@@ -7,7 +7,7 @@ import {
 } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { FORM_FIELD } from '@angular/forms/signals';
-import { expectNoA11yViolations } from '@ngx-signal-forms/toolkit/testing';
+import { expectNoA11yViolations } from '../../testing/a11y-internal';
 import { render } from '@testing-library/angular';
 import { describe, expect, it, vi } from 'vitest';
 import { page } from 'vitest/browser';

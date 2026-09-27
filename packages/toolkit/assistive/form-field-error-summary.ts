@@ -4,6 +4,7 @@ import {
   ChangeDetectionStrategy,
   Component,
   computed,
+  DestroyRef,
   ElementRef,
   inject,
   input,
@@ -12,6 +13,7 @@ import {
 import {
   createUniqueId,
   devWarnOnce,
+  NgxSubmitAnnouncements,
   type WarnOnceRef,
 } from '@ngx-signal-forms/toolkit/core';
 import { NgxHeadlessErrorSummary } from '@ngx-signal-forms/toolkit/headless';
@@ -67,6 +69,12 @@ export type NgxErrorSummaryHeadingLevel = 2 | 3 | 4 | 5 | 6;
  *   then would be an unexpected mid-fill context change (WCAG 3.2.1/3.2.2),
  *   not the documented "arrive after a failed submit" contract. Opt out of
  *   the on-submit auto-focus with `[autoFocus]="false"`.
+ * - Inside a `[ngxSignalForm]` form, the summary is the only live region
+ *   that announces after a submit: field errors revealed by that submit
+ *   show outside their own live regions, so one submit makes one
+ *   announcement instead of one per field. Later edits announce through
+ *   the field as usual. Turn this off with
+ *   `NgxSignalFormsConfig.errorSummaryAnnouncesAlone: false` (ADR-0012).
  *
  * ## Usage
  *
@@ -207,12 +215,18 @@ export type NgxErrorSummaryHeadingLevel = 2 | 3 | 4 | 5 | 6;
       display: block;
     }
 
+    /* Default colors are light-dark() pairs that follow the inherited
+     * color-scheme (see THEMING.md, "Scenario C: Dark Mode"). Dark side, WCAG 1.4.3 on
+     * the #450a0a summary background: label #fecaca 11.16:1, link #fca5a5
+     * 8.51:1. Non-text (1.4.11): focus ring #60a5fa 6.35:1 on #450a0a;
+     * border #f87171 5.31:1 on the #1f2937 dark surface. */
     .ngx-form-field-error-summary {
-      border: 2px solid var(--ngx-error-summary-border-color, #dc2626);
+      border: 2px solid
+        var(--ngx-error-summary-border-color, light-dark(#dc2626, #f87171));
       border-radius: 0.375rem;
       padding: 1rem;
       margin-block: 1rem;
-      background: var(--ngx-error-summary-bg, #fef2f2);
+      background: var(--ngx-error-summary-bg, light-dark(#fef2f2, #450a0a));
     }
 
     /* Empty live-region shell: the @if in the template guarantees zero
@@ -233,7 +247,7 @@ export type NgxErrorSummaryHeadingLevel = 2 | 3 | 4 | 5 | 6;
       margin: 0 0 0.5rem;
       font: inherit;
       font-weight: 600;
-      color: var(--ngx-error-summary-label-color, #991b1b);
+      color: var(--ngx-error-summary-label-color, light-dark(#991b1b, #fecaca));
     }
 
     .ngx-form-field-error-summary__list {
@@ -266,16 +280,20 @@ export type NgxErrorSummaryHeadingLevel = 2 | 3 | 4 | 5 | 6;
       /* #b91c1c (Tailwind red-700) on the #fef2f2 summary background
        * resolves to ~5.9:1, clearing the WCAG 1.4.3 AA minimum of 4.5:1 for
        * this 14px text -- the previous #dc2626 default only reached ~4.4:1. */
-      color: var(--ngx-error-summary-link-color, #b91c1c);
+      color: var(--ngx-error-summary-link-color, light-dark(#b91c1c, #fca5a5));
       text-decoration: underline;
       font-size: 0.875rem;
 
       &:hover {
-        color: var(--ngx-error-summary-link-hover-color, #991b1b);
+        color: var(
+          --ngx-error-summary-link-hover-color,
+          light-dark(#991b1b, #fecaca)
+        );
       }
 
       &:focus-visible {
-        outline: 2px solid var(--ngx-error-summary-focus-color, #2563eb);
+        outline: 2px solid
+          var(--ngx-error-summary-focus-color, light-dark(#2563eb, #60a5fa));
         outline-offset: 2px;
         border-radius: 2px;
       }
@@ -371,6 +389,19 @@ export class NgxFormFieldErrorSummary {
   readonly autoFocus = input(true);
 
   constructor() {
+    // Tell the field errors of this form that a summary speaks for them on
+    // submit (ADR-0012). No channel outside a `[ngxSignalForm]` form.
+    const submitAnnouncements = inject(NgxSubmitAnnouncements, {
+      optional: true,
+    });
+    if (submitAnnouncements) {
+      inject(DestroyRef).onDestroy(
+        submitAnnouncements.registerSummary(
+          computed(() => this.summary.shouldShow() && this.summary.hasErrors()),
+        ),
+      );
+    }
+
     /**
      * Track whether we have already moved focus into the summary so that
      * subsequent entry-list mutations (a new error appearing while the

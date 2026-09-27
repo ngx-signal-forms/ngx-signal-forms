@@ -37,12 +37,15 @@ ngx-signal-forms — an Angular toolkit for working with Signal Forms.
   error".
 - **WCAG 2.2 AA** — the accessibility conformance level this project targets.
   Toolkit components must satisfy it unconditionally (hard fail in Vitest browser
-  specs). Demo apps track compliance against a versioned baseline; deviations
-  create GitHub issues but do not block PRs.
+  specs). Demo apps track compliance against a versioned baseline: a new
+  violation not in the baseline blocks the PR (ADR-0013); on `main` it opens a
+  GitHub issue instead. A maintainer accepts a known violation by adding it to
+  the baseline in a reviewed diff.
 - **a11y baseline** — a per-demo-app JSON file (`a11y-baseline.json`) that
-  records known axe violations. The CI `a11y` job diffs the current run against
-  this file; new violations trigger auto-issue creation and a baseline update.
-  Synonym to avoid: "known violations list" (ambiguous — use "a11y baseline").
+  records known axe violations. The CI `a11y` job diffs the current run
+  against this file: on a pull request a new violation fails the job; on
+  `main` it opens an issue. Synonym to avoid: "known violations list"
+  (ambiguous — use "a11y baseline").
 - **Bound path** — the `SchemaPath` a Vest registration is attached to
   (`validateVest(path.address, suite)` → the bound path is `path.address`). It
   fixes two things at once: where the resulting errors attach, and what the
@@ -135,11 +138,14 @@ ngx-signal-forms — an Angular toolkit for working with Signal Forms.
   the fieldset and the summary — pass neither the presence check (their
   warnings live on member fields, and their aggregation applies that gate)
   nor a blocking-error visibility (an error on one member field must not
-  silence a warning on a sibling). `NgxFormFieldWrapper` and
-  `NgxSignalFormAutoAria` also pass no blocking-error visibility, because
-  they suppress downstream: the wrapper's renderer through
-  `createErrorState()`, and auto-aria through its own blocking-error guard on
-  `aria-describedby`. Do not add it at those two call sites. The pure pipelines
+  silence a warning on a sibling). `NgxSignalFormAutoAria` also passes no
+  blocking-error visibility, because it suppresses downstream through its own
+  blocking-error guard on `aria-describedby`. Do not add it there.
+  `createFieldPresentation()`, which `NgxFormFieldWrapper` and the reference
+  wrappers use, does pass one: the visible _blocking_ error (`showErrors`),
+  never the raw error timing. That timing is open on a warning-only field, so
+  the field would suppress its own warning. The wrapper's renderer still
+  suppresses again through `createErrorState()`. The pure pipelines
   `createFieldsetAggregation()` and `createErrorSummaryEntries()` take
   `showErrors` and `showWarnings` as two separate pre-resolved signals for
   the same reason. The single cascade fixed the drift where
@@ -179,6 +185,30 @@ ngx-signal-forms — an Angular toolkit for working with Signal Forms.
   reads, the deliberate `focus-first-invalid` policy asymmetry — merging is the
   bug, and those are marked in place as intentional.
 
+- **With an error summary, a submit announces once.** A field error that a
+  submit reveals renders in a non-live container with the same id and look,
+  not in its `role="alert"` region, while an `NgxFormFieldErrorSummary` of
+  the same form shows errors. The field's live region stays mounted and
+  empty, so a later change caused by an edit is inserted into it and
+  announces. The summary and the field errors meet through
+  `NgxSubmitAnnouncements`, provided per form by `NgxSignalForm`, never a
+  global. Move content out of a live region; do not toggle its role.
+  `errorSummaryAnnouncesAlone: false` turns it off. See
+  [ADR-0012](docs/decisions/0012-error-summary-announces-alone.md).
+
+- **`aria-describedby` has one fixed segment order: author ids, hints, count,
+  then error or warning.** `createAriaDescribedBySignal` preserves
+  author-written ids first, appends every id from the `hintIds` signal next,
+  then a blocking-error or warning id last. `NgxFormFieldCharacterCount`'s
+  limit description (issue #499) rides the `hintIds` segment rather than
+  getting a channel of its own: `NgxFormFieldWrapper.hintDescriptors` appends
+  the count's `limitId()` _after_ the hint descriptors, so it registers
+  through the same `NGX_SIGNAL_FORM_HINT_REGISTRY` path
+  `NgxFormFieldHint` uses. This is why the toolkit never added a second
+  describedby channel for the count — the hint segment already has the right
+  position in the order, and a new channel would need its own ordering
+  decision relative to hints and errors.
+
 - **A field's name is owned by whoever provides its identity.** Auto-aria
   derives a field name from the bound control's `id` unless an ancestor
   provides an `NgxFieldIdentity`, in which case that service owns the name
@@ -187,9 +217,11 @@ ngx-signal-forms — an Angular toolkit for working with Signal Forms.
   `NgxFieldIdentityProvider` as a host directive, the built-in
   `NgxFormFieldWrapper` included, so the public seam and the internal one are
   the same seam. The provider publishes the name channel only; the wrapper
-  additionally drives the control element, visibility, hints, and resolved
-  strategies in-package, because none of those can travel through an input.
-  See ADR-0011.
+  additionally drives the control element, visibility and hints in-package,
+  because none of those can travel through an input. The resolved strategies
+  come from `createFieldPresentation({ identity })`, the one public route to
+  that channel; it publishes cascade-resolved values and the `set*` writers
+  stay internal. See ADR-0011 and its #508 amendment.
 
 - **Inferred control kind and auto-ARIA eligibility are two decisions.**
   Control-kind inference answers "which wrapper layout does this control
@@ -229,3 +261,35 @@ ngx-signal-forms — an Angular toolkit for working with Signal Forms.
   the unresolvable-Vest-field-name rule
   ([#291](https://github.com/ngx-signal-forms/ngx-signal-forms/issues/291))
   shipped in [#307](https://github.com/ngx-signal-forms/ngx-signal-forms/pull/307).
+
+- **The horizontal form-field layout's grid lives on a structural child, not
+  `:host`.** (Canonical explanation — form-field-wrapper.ts and
+  form-field-wrapper.selection.css both point here instead of repeating it.)
+  `ngx-form-field-wrapper` renders a `.ngx-signal-form-field-wrapper__layout`
+  div around label/messages/content/assistive. It is `display: contents` for
+  every appearance except horizontal, so it is invisible to layout and every
+  other appearance is unaffected. Horizontal turns it into the real CSS Grid
+  container and gives it `container-type: inline-size`, so a `@container`
+  query reacts to the wrapper's own rendered width instead of the viewport
+  (a wrapper can sit in a narrow column on a wide screen). The container
+  can't be `:host` itself, for two reasons: a `@container` size query cannot
+  restyle the same element that carries `container-type` (the grid and the
+  query source must be different elements), and `container-type` on `:host`
+  would risk zeroing its reported intrinsic size inside a _consumer's_ own
+  `auto`-sized flex/grid row. Below a fixed `20rem` threshold, every grid
+  item spans the full width and gets an explicit row, stacking the label
+  above the control (WCAG 1.4.10, 1.4.4) instead of squeezing the control
+  under a fixed-width label column. The threshold is not a public,
+  overridable token: `@container` size queries can only compare against a
+  literal length, not a CSS custom property, so there is no way to make this
+  number consumer-configurable with current CSS (verified against Chromium —
+  neither an unregistered nor an `@property`-registered custom property is
+  readable from a size-query condition, and `100cqi` inside the same element
+  that also declares `container-type` resolves against the next ancestor
+  container, not itself). The toolkit's own styles are view-encapsulated, so
+  a consumer cannot edit this `@container` rule directly; a different
+  breakpoint needs global CSS with higher specificity that resets
+  `grid-row`/`grid-column` on `.ngx-signal-form-field-wrapper__label`,
+  `__content`, `__assistive` and `__messages` at whatever width the
+  consumer wants instead. See THEMING.md, "Horizontal Layout", and
+  [#523](https://github.com/ngx-signal-forms/ngx-signal-forms/issues/523).

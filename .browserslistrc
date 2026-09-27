@@ -3,8 +3,9 @@
 # Targets the last 2 major versions of the four main evergreen browsers,
 # matching Angular's own browser support policy.
 #
-# Runtime minimum for full visual fidelity (CSS nesting, color-mix, :has):
-#   Chrome/Edge 112+, Firefox 121+, Safari 16.5+
+# Runtime minimum for full visual fidelity (CSS nesting, color-mix, :has,
+# light-dark):
+#   Chrome/Edge 123+, Firefox 121+, Safari 17.5+
 #
 # Run `npx browserslist` to see the resolved list.
 last 2 Chrome versions

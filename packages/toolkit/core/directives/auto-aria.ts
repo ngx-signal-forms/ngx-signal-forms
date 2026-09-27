@@ -10,7 +10,6 @@ import {
 import { FORM_FIELD, type FieldState } from '@angular/forms/signals';
 import { createAriaRequiredSignal } from '../utilities/aria/create-aria-required-signal';
 import {
-  DEFAULT_NGX_SIGNAL_FORMS_CONFIG,
   NGX_SIGNAL_FORM_ARIA_MODE,
   NGX_SIGNAL_FORM_FIELD_VISIBILITY_REGISTRY,
   NGX_SIGNAL_FORM_HINT_REGISTRY,
@@ -335,9 +334,9 @@ export class NgxSignalFormAutoAria {
     },
   );
 
-  readonly #config =
-    inject(NGX_SIGNAL_FORMS_CONFIG, { optional: true }) ??
-    DEFAULT_NGX_SIGNAL_FORMS_CONFIG;
+  // `NGX_SIGNAL_FORMS_CONFIG` has a root `factory` (see `../tokens.ts`), so
+  // `inject()` always resolves a value here — no `{ optional: true }` needed.
+  readonly #config = inject(NGX_SIGNAL_FORMS_CONFIG);
 
   /**
    * Warning-visibility timing, resolved through the **warning** cascade

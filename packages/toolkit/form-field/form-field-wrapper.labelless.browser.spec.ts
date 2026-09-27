@@ -160,8 +160,13 @@ describe('NgxFormFieldWrapper — without a label', () => {
     const inputLeft = input!.getBoundingClientRect().left;
     expect(inputLeft - hostLeft).toBeLessThan(24);
     // The grid should carry the messages-top area so errors render above
-    // the content row rather than below.
-    const gridTemplateAreas = getComputedStyle(host!).gridTemplateAreas;
+    // the content row rather than below. The grid itself lives on the
+    // structural `__layout` child, not the host (#523) — see
+    // form-field-wrapper.selection.css, "HORIZONTAL LAYOUT".
+    const layout = container.querySelector<HTMLElement>(
+      '.ngx-signal-form-field-wrapper__layout',
+    );
+    const gridTemplateAreas = getComputedStyle(layout!).gridTemplateAreas;
     expect(gridTemplateAreas).toMatch(/messages/);
   });
 

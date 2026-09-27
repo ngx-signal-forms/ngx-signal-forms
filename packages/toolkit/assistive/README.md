@@ -53,11 +53,20 @@ import {
 form-field wrapper (or your own `NGX_SIGNAL_FORM_HINT_REGISTRY` provider)
 registers it. Next to a bare control, as shown above, it stays visual-only.
 
-`ngx-form-field-character-count` is never referenced from `aria-describedby`,
-inside a wrapper or not: it carries no id and nothing registers it. Set
-`[liveAnnounce]="true"` to give it its own polite live region, which speaks
-only on a threshold change, not on every keystroke. State the limit in a hint
-when the user needs it before typing.
+`ngx-form-field-character-count` needs the same two things as the hint — a
+resolved field name (`NGX_SIGNAL_FORM_FIELD_CONTEXT`) and a wrapper that
+queries it and registers its id — before it links anything. When both are
+present, it renders a visually-hidden element stating the limit (e.g. "Up to
+500 characters") and links it into `aria-describedby`, right after any
+hints, so a screen reader user hears the limit on focus even with
+`[liveAnnounce]` off; the visible "n/max" text then becomes hidden from
+assistive technology, since the hidden element already describes it. Next to
+a bare control, as shown above, nothing links it, so the visible "n/max"
+text stays exposed to assistive technology instead of going silent.
+Override the limit text through `NgxSignalFormsConfig.characterCountLimitText`
+(`{max}` placeholder). Set `[liveAnnounce]="true"` to also give the running
+count its own polite live region, which speaks only on a threshold change,
+not on every keystroke.
 
 ## Components
 
@@ -185,6 +194,26 @@ The label is the summary's accessible name: focusing the summary (see
 `autoFocus` above) announces it via `aria-labelledby`. An entry whose error
 has no bound control (for example a custom validator not tied to a field)
 renders as plain text instead of a button, because it has nothing to focus.
+
+#### One announcement per submit
+
+The summary and each `ngx-form-field-error` are `role="alert"` regions. So
+one submit that reveals five field errors would fire six assertive
+announcements at once, and NVDA and JAWS then cut speech off, stack it, or
+read errors twice. Inside a `[ngxSignalForm]` form, the summary therefore
+announces alone:
+
+- A field error that a submit reveals shows outside its own live region. It
+  looks the same and keeps its `${fieldName}-error` id, so the control's
+  `aria-describedby` still reads it. It only skips the announcement.
+- When the user edits the field and its error changes, the new error goes
+  into the field's live region and announces as usual.
+- Forms without a summary, or with the summary outside the `<form>`, do not
+  change.
+- Turn it off with `provideNgxSignalFormsConfig({ errorSummaryAnnouncesAlone: false })`.
+
+Warnings (`role="status"`) and `NgxHeadlessErrorSummary` are not part of
+this. See [ADR-0012](../../../docs/decisions/0012-error-summary-announces-alone.md).
 
 Override field names with `provideFieldLabels()` from `@ngx-signal-forms/toolkit`.
 
@@ -325,7 +354,7 @@ while consumers override only the public `--ngx-*` properties.
 
 See the [Theming guide](../form-field/THEMING.md) for the complete list of
 `--ngx-*` custom properties (error/warning/error-panel/hint/char-count
-tokens, dark-mode overrides, and the fieldset-level
+tokens, dark mode through `color-scheme`, and the fieldset-level
 `--ngx-signal-form-fieldset-notification-inset-*` positioning tokens).
 
 ## Related documentation

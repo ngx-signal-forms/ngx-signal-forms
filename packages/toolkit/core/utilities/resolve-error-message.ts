@@ -3,6 +3,7 @@ import type {
   ValidationError,
 } from '@angular/forms/signals';
 import type { ErrorMessageRegistry } from '../providers/error-messages.provider';
+import { WARN_KIND_PREFIX } from './warning-error';
 
 /**
  * Options accepted by {@link resolveValidationErrorMessage} and
@@ -101,7 +102,9 @@ function humanizeCustomKind(
   options?: ResolveErrorMessageOptions,
 ): string {
   const normalizedKind = options?.stripWarningPrefix
-    ? kind.replace(/^warn:/u, '')
+    ? kind.startsWith(WARN_KIND_PREFIX)
+      ? kind.slice(WARN_KIND_PREFIX.length)
+      : kind
     : kind;
   return normalizedKind.replaceAll('_', ' ');
 }

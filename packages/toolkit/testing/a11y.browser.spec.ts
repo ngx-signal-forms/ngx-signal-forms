@@ -2,12 +2,15 @@ import { ApplicationRef, Component, signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { FormField, form, required, schema } from '@angular/forms/signals';
 import { render } from '@testing-library/angular';
+import axeCore from 'axe-core';
 import type axe from 'axe-core';
-import { afterEach, describe, expect, expectTypeOf, it } from 'vitest';
+import { afterEach, describe, expect, expectTypeOf, it, vi } from 'vitest';
+import { userEvent } from 'vitest/browser';
 import { NgxFormFieldError } from '@ngx-signal-forms/toolkit/assistive';
 import {
   createA11yValidator,
   expectNoA11yViolations,
+  expectVisibleFocusIndicator,
   WCAG_22_AA_TAGS,
 } from './a11y';
 import type { WCAG_22_AA_TAG } from './a11y';
@@ -400,5 +403,380 @@ describe('createA11yValidator', () => {
     expect(() => createA11yValidator({ tags: [] })).toThrow(
       /createA11yValidator: tags must not be empty/u,
     );
+  });
+});
+
+/**
+ * `incomplete` result handling (issue #501).
+ *
+ * `expectNoA11yViolations` used to run axe with `resultTypes: ['violations']`
+ * only, so any `incomplete` result — axe found something it could not fully
+ * resolve, such as a contrast check it could not compute over a background it
+ * cannot read a single color from — was dropped silently, with no report at
+ * all. The `incomplete` option (see `IncompleteResultMode` in `a11y.ts`) now
+ * makes that behavior explicit and optional:
+ *
+ * - `'ignore'` (the default): unchanged pre-#501 behavior. Not even a second
+ *   `axe.run` call happens.
+ * - `'warn'`: logs every incomplete result, still never fails.
+ * - `'fail'`: same logging, plus throws if `color-contrast` itself is
+ *   incomplete (see `logIncompleteResults`'s own doc for why that one rule
+ *   is not the toolkit's own default: it surfaced exactly one false
+ *   positive across the whole suite, from a transparent `<input>`
+ *   background axe cannot trace to a flat color).
+ *
+ * These specs mock `axe.run` rather than hunting for a real fixture that
+ * reproduces "incomplete" — axe's own heuristics for when a check goes
+ * incomplete are an implementation detail, and pinning the toolkit's
+ * handling of a canned `AxeResults` shape is the stable contract to test.
+ */
+describe('expectNoA11yViolations — incomplete result handling (#501)', () => {
+  const mockResult = (id: string): axe.Result => ({
+    id,
+    help: `${id} help text`,
+    helpUrl: `https://example.test/${id}`,
+    description: `${id} description`,
+    impact: 'serious',
+    tags: [],
+    nodes: [
+      {
+        html: '<div></div>',
+        target: ['div'],
+        any: [],
+        all: [],
+        none: [],
+      },
+    ],
+  });
+
+  const mockAxeResults = (
+    violations: axe.Result[],
+    incomplete: axe.Result[],
+  ): axe.AxeResults =>
+    ({
+      violations,
+      incomplete,
+      passes: [],
+      inapplicable: [],
+    }) as unknown as axe.AxeResults;
+
+  it('ignores incomplete results by default, without a second axe.run call', async () => {
+    const runSpy = vi
+      .spyOn(axeCore, 'run')
+      .mockResolvedValueOnce(mockAxeResults([], []));
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+    try {
+      await expectNoA11yViolations(document.body);
+      // `incomplete: 'ignore'` skips the dedicated incomplete-results pass
+      // entirely — only the one `resultTypes: ['violations']` call happens,
+      // matching the toolkit's pre-#501 behavior byte-for-byte.
+      expect(runSpy).toHaveBeenCalledTimes(1);
+      expect(warnSpy).not.toHaveBeenCalled();
+    } finally {
+      runSpy.mockRestore();
+      warnSpy.mockRestore();
+    }
+  });
+
+  it.each(['color-contrast', 'link-in-text-block'])(
+    'with incomplete: "warn", logs an incomplete %s result without failing',
+    async (ruleId) => {
+      const runSpy = vi
+        .spyOn(axeCore, 'run')
+        .mockResolvedValueOnce(mockAxeResults([], []))
+        .mockResolvedValueOnce(mockAxeResults([], [mockResult(ruleId)]));
+      const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+      try {
+        await expect(
+          expectNoA11yViolations(document.body, { incomplete: 'warn' }),
+        ).resolves.toBeUndefined();
+        expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining(ruleId));
+      } finally {
+        runSpy.mockRestore();
+        warnSpy.mockRestore();
+      }
+    },
+  );
+
+  it('with incomplete: "warn", does not log when there are no incomplete results', async () => {
+    const runSpy = vi
+      .spyOn(axeCore, 'run')
+      .mockResolvedValueOnce(mockAxeResults([], []))
+      .mockResolvedValueOnce(mockAxeResults([], []));
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+    try {
+      await expectNoA11yViolations(document.body, { incomplete: 'warn' });
+      expect(warnSpy).not.toHaveBeenCalled();
+    } finally {
+      runSpy.mockRestore();
+      warnSpy.mockRestore();
+    }
+  });
+
+  it('with incomplete: "fail", throws on an incomplete color-contrast result', async () => {
+    const runSpy = vi
+      .spyOn(axeCore, 'run')
+      .mockResolvedValueOnce(mockAxeResults([], []))
+      .mockResolvedValueOnce(
+        mockAxeResults([], [mockResult('color-contrast')]),
+      );
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+    try {
+      await expect(
+        expectNoA11yViolations(document.body, { incomplete: 'fail' }),
+      ).rejects.toThrow(/color-contrast/u);
+    } finally {
+      runSpy.mockRestore();
+      warnSpy.mockRestore();
+    }
+  });
+
+  it('with incomplete: "fail", logs but does not fail on an incomplete result for a rule other than color-contrast', async () => {
+    const runSpy = vi
+      .spyOn(axeCore, 'run')
+      .mockResolvedValueOnce(mockAxeResults([], []))
+      .mockResolvedValueOnce(
+        mockAxeResults([], [mockResult('link-in-text-block')]),
+      );
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+    try {
+      await expect(
+        expectNoA11yViolations(document.body, { incomplete: 'fail' }),
+      ).resolves.toBeUndefined();
+      expect(warnSpy).toHaveBeenCalledWith(
+        expect.stringContaining('link-in-text-block'),
+      );
+    } finally {
+      runSpy.mockRestore();
+      warnSpy.mockRestore();
+    }
+  });
+
+  it('still fails on a real violation alongside a logged incomplete result', async () => {
+    const runSpy = vi
+      .spyOn(axeCore, 'run')
+      .mockResolvedValueOnce(mockAxeResults([mockResult('image-alt')], []))
+      .mockResolvedValueOnce(
+        mockAxeResults([], [mockResult('link-in-text-block')]),
+      );
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+    try {
+      await expect(
+        expectNoA11yViolations(document.body, { incomplete: 'warn' }),
+      ).rejects.toThrow(/image-alt/u);
+      expect(warnSpy).toHaveBeenCalledWith(
+        expect.stringContaining('link-in-text-block'),
+      );
+    } finally {
+      runSpy.mockRestore();
+      warnSpy.mockRestore();
+    }
+  });
+});
+
+/**
+ * `expectVisibleFocusIndicator` — the shared focus-visibility helper
+ * (issue #501). Toolkit regressions #493 and #495 were both a missing or
+ * too-faint focus indicator that no axe rule catches, since axe only scans
+ * the resting DOM. This pins the helper's own pass/fail contract in
+ * isolation, independent of any one wrapper fixture. Every positive/negative
+ * fixture below is tabbed into with a real keyboard interaction (matching
+ * `form-field-wrapper.plain-focus-indicator.browser.spec.ts`'s own
+ * `tabIntoInput` convention) — the helper now requires the element to
+ * actually be the current `:focus-visible`/`:focus-within` target, so a
+ * fixture that is never focused must fail regardless of its resting style.
+ */
+describe('expectVisibleFocusIndicator', () => {
+  /** Clicks the anchor button, then tabs into the element right after it. */
+  const tabInto = async (anchorId: string): Promise<HTMLElement> => {
+    await userEvent.click(
+      document.querySelector<HTMLButtonElement>(`#${anchorId}`)!,
+    );
+    await userEvent.tab();
+    return document.activeElement as HTMLElement;
+  };
+
+  it('does not throw for a focused element with a visible outline', async () => {
+    mount(`
+      <button type="button" id="ngx-a11y-focus-outline-anchor">Before</button>
+      <input
+        id="ngx-a11y-focus-outline-target"
+        style="outline: 2px solid black; outline-offset: 2px;"
+      />
+    `);
+
+    const target = await tabInto('ngx-a11y-focus-outline-anchor');
+    expect(target.id).toBe('ngx-a11y-focus-outline-target');
+    expect(() => {
+      expectVisibleFocusIndicator(target);
+    }).not.toThrow();
+  });
+
+  it('does not throw for a focused element with a visible box-shadow and no outline', async () => {
+    mount(`
+      <button type="button" id="ngx-a11y-focus-shadow-anchor">Before</button>
+      <input
+        id="ngx-a11y-focus-shadow-target"
+        style="outline: none; box-shadow: 0 0 0 2px black;"
+      />
+    `);
+
+    const target = await tabInto('ngx-a11y-focus-shadow-anchor');
+    expect(() => {
+      expectVisibleFocusIndicator(target);
+    }).not.toThrow();
+  });
+
+  it('throws for a focused element with neither an outline nor a box-shadow', async () => {
+    mount(`
+      <button type="button" id="ngx-a11y-focus-none-anchor">Before</button>
+      <input
+        id="ngx-a11y-focus-none-target"
+        style="outline: none; box-shadow: none;"
+      />
+    `);
+
+    const target = await tabInto('ngx-a11y-focus-none-anchor');
+    expect(() => {
+      expectVisibleFocusIndicator(target);
+    }).toThrow(/visible focus indicator/u);
+  });
+
+  it('throws for a focused zero-width outline, which paints nothing despite a non-none style', async () => {
+    mount(`
+      <button type="button" id="ngx-a11y-focus-zero-width-anchor">Before</button>
+      <input
+        id="ngx-a11y-focus-zero-width-target"
+        style="outline: 0px solid black; box-shadow: none;"
+      />
+    `);
+
+    const target = await tabInto('ngx-a11y-focus-zero-width-anchor');
+    expect(() => {
+      expectVisibleFocusIndicator(target);
+    }).toThrow(/visible focus indicator/u);
+  });
+
+  it('throws for a focused outline whose color has zero alpha', async () => {
+    mount(`
+      <button type="button" id="ngx-a11y-focus-transparent-outline-anchor">Before</button>
+      <input
+        id="ngx-a11y-focus-transparent-outline-target"
+        style="outline: 2px solid rgba(0, 0, 0, 0); box-shadow: none;"
+      />
+    `);
+
+    const target = await tabInto('ngx-a11y-focus-transparent-outline-anchor');
+    expect(() => {
+      expectVisibleFocusIndicator(target);
+    }).toThrow(/visible focus indicator/u);
+  });
+
+  it('throws for a focused box-shadow with a transparent color even though blur and spread are nonzero', async () => {
+    mount(`
+      <button type="button" id="ngx-a11y-focus-transparent-shadow-anchor">Before</button>
+      <input
+        id="ngx-a11y-focus-transparent-shadow-target"
+        style="outline: none; box-shadow: 0 0 4px 4px rgba(0, 0, 0, 0);"
+      />
+    `);
+
+    const target = await tabInto('ngx-a11y-focus-transparent-shadow-anchor');
+    expect(() => {
+      expectVisibleFocusIndicator(target);
+    }).toThrow(/visible focus indicator/u);
+  });
+
+  it('throws for a focused box-shadow with zero blur and zero spread even though the color is opaque', async () => {
+    mount(`
+      <button type="button" id="ngx-a11y-focus-flat-shadow-anchor">Before</button>
+      <input
+        id="ngx-a11y-focus-flat-shadow-target"
+        style="outline: none; box-shadow: 0 0 0 0 black;"
+      />
+    `);
+
+    const target = await tabInto('ngx-a11y-focus-flat-shadow-anchor');
+    expect(() => {
+      expectVisibleFocusIndicator(target);
+    }).toThrow(/visible focus indicator/u);
+  });
+
+  // Negative control: an element with a resting-state outline that has
+  // never received keyboard focus must throw the ":focus-visible" error,
+  // not silently pass because its unfocused style happens to look right.
+  it('throws before the element has been focused, even if its resting style already paints an outline', () => {
+    const host = mount(
+      `<input id="ngx-a11y-focus-unfocused-target" style="outline: 2px solid black;" />`,
+    );
+    const target = host.querySelector<HTMLElement>(
+      '#ngx-a11y-focus-unfocused-target',
+    )!;
+
+    expect(document.activeElement).not.toBe(target);
+    expect(() => {
+      expectVisibleFocusIndicator(target);
+    }).toThrow(/:focus-visible/u);
+  });
+
+  /**
+   * Regression coverage: Chromium never serializes a computed color as the
+   * literal `color-mix()`/`oklch()` author syntax — it resolves to
+   * `color(srgb ...)`, `oklab(...)`, or a plain `rgb(...)`, depending on the
+   * color space involved. `colorAlpha`/`hasVisibleBoxShadow` used to only
+   * recognize `rgba?()`/`hsla?()`, so these forms fell through unmatched:
+   * `colorAlpha` silently returned the "opaque" default, and for
+   * `box-shadow`, the unmatched color function's own numbers (including its
+   * alpha) leaked into the blur/spread parse.
+   */
+  it('throws for a focused, fully transparent color-mix() outline', async () => {
+    mount(`
+      <button type="button" id="ngx-a11y-focus-color-mix-outline-anchor">Before</button>
+      <input
+        id="ngx-a11y-focus-color-mix-outline-target"
+        style="outline: 2px solid color-mix(in srgb, black 0%, transparent); box-shadow: none;"
+      />
+    `);
+
+    const target = await tabInto('ngx-a11y-focus-color-mix-outline-anchor');
+    expect(() => {
+      expectVisibleFocusIndicator(target);
+    }).toThrow(/visible focus indicator/u);
+  });
+
+  it('throws for a focused box-shadow with a fully transparent color-mix() color', async () => {
+    mount(`
+      <button type="button" id="ngx-a11y-focus-color-mix-shadow-anchor">Before</button>
+      <input
+        id="ngx-a11y-focus-color-mix-shadow-target"
+        style="outline: none; box-shadow: 0 0 4px 4px color-mix(in srgb, black 0%, transparent);"
+      />
+    `);
+
+    const target = await tabInto('ngx-a11y-focus-color-mix-shadow-anchor');
+    expect(() => {
+      expectVisibleFocusIndicator(target);
+    }).toThrow(/visible focus indicator/u);
+  });
+
+  it('throws for a focused box-shadow with a fully transparent oklch() color', async () => {
+    mount(`
+      <button type="button" id="ngx-a11y-focus-oklch-shadow-anchor">Before</button>
+      <input
+        id="ngx-a11y-focus-oklch-shadow-target"
+        style="outline: none; box-shadow: 0 0 4px 4px oklch(0 0 0 / 0);"
+      />
+    `);
+
+    const target = await tabInto('ngx-a11y-focus-oklch-shadow-anchor');
+    expect(() => {
+      expectVisibleFocusIndicator(target);
+    }).toThrow(/visible focus indicator/u);
   });
 });

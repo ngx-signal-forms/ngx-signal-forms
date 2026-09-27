@@ -99,6 +99,21 @@ function createConfigFactory(
         configDefault: parentOrNull?.warningPrefixText,
         fallback: DEFAULT_NGX_SIGNAL_FORMS_CONFIG.warningPrefixText,
       }),
+      errorSummaryAnnouncesAlone: createCascadingResolver({
+        input: userConfig.errorSummaryAnnouncesAlone,
+        configDefault: parentOrNull?.errorSummaryAnnouncesAlone,
+        fallback: DEFAULT_NGX_SIGNAL_FORMS_CONFIG.errorSummaryAnnouncesAlone,
+      }),
+      characterCountLimitText: createCascadingResolver({
+        input: userConfig.characterCountLimitText,
+        configDefault: parentOrNull?.characterCountLimitText,
+        fallback: DEFAULT_NGX_SIGNAL_FORMS_CONFIG.characterCountLimitText,
+      }),
+      hideHintOnError: createCascadingResolver({
+        input: userConfig.hideHintOnError,
+        configDefault: parentOrNull?.hideHintOnError,
+        fallback: DEFAULT_NGX_SIGNAL_FORMS_CONFIG.hideHintOnError,
+      }),
     };
   };
 }

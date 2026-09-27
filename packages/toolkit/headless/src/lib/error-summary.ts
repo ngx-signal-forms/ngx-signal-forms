@@ -1,22 +1,30 @@
 import { computed, Directive, input, type Signal } from '@angular/core';
-import type { FieldTree } from '@angular/forms/signals';
+import type { FieldTree, ValidationError } from '@angular/forms/signals';
 import {
   createErrorVisibility,
   createWarningVisibility,
   resolveStrategyFromContext,
   resolveWarningStrategyFromContext,
+  splitByKind,
   type ErrorDisplayStrategy,
   type ResolvedErrorDisplayStrategy,
   type ResolvedWarningDisplayStrategy,
+  type SignalLike,
   type SubmittedStatus,
   type WarningDisplayStrategy,
 } from '@ngx-signal-forms/toolkit';
+import type {
+  ErrorMessageRegistry,
+  FieldLabelResolver,
+} from '@ngx-signal-forms/toolkit/core';
 
 import { buildHeadlessContext } from './build-headless-context';
 import {
-  createErrorSummaryEntries,
+  dedupeValidationErrorsByField,
+  toErrorSummaryEntry,
   type ErrorSummaryEntryData,
-} from './utilities';
+} from './error-summary-utilities';
+import { isErrorOnInteractiveField, readErrors } from './field-state-utilities';
 
 /**
  * A resolved error-summary entry with kind, message, and focus capability.
@@ -24,6 +32,114 @@ import {
  * @group Directives
  */
 export type ErrorSummaryEntry = ErrorSummaryEntryData;
+
+const STRIP_WARNING_PREFIX_OPTION = { stripWarningPrefix: true } as const;
+
+/**
+ * Options for {@link createErrorSummaryEntries}.
+ *
+ * `showErrors`/`showWarnings` are pre-resolved visibility signals, not raw
+ * strategy inputs — mirrors {@link CreateFieldsetAggregationOptions}'s
+ * contract (ADR-0005: factories take DI-resolved values as inputs, never
+ * `inject()` themselves). Callers supply them from their own
+ * `createErrorVisibility()` / `createWarningVisibility()` calls, which is
+ * what keeps the two channels independently timed (ADR-0007).
+ *
+ * @group Reactive Primitives
+ */
+export interface CreateErrorSummaryEntriesOptions {
+  /** Reactive reader for the root field state (from `formTree()()`). */
+  readonly fieldState: SignalLike<unknown>;
+  /** Pre-resolved blocking-error visibility. */
+  readonly showErrors: SignalLike<boolean>;
+  /** Pre-resolved warning visibility, timed independently of {@link showErrors}. */
+  readonly showWarnings: SignalLike<boolean>;
+  /** Error message registry for 3-tier message resolution. */
+  readonly errorMessages?: Readonly<ErrorMessageRegistry> | null;
+  /** Optional field-label resolver; falls back to `humanizeFieldPath`. */
+  readonly labelResolver?: FieldLabelResolver | null;
+}
+
+/**
+ * Error-summary entry-mapping result.
+ *
+ * @group Reactive Primitives
+ */
+export interface ErrorSummaryEntriesResult {
+  /** Resolved blocking error entries ready for rendering. */
+  readonly entries: Signal<readonly ErrorSummaryEntryData[]>;
+  /** Resolved warning entries. */
+  readonly warningEntries: Signal<readonly ErrorSummaryEntryData[]>;
+  /** Whether there are any blocking errors. */
+  readonly hasErrors: Signal<boolean>;
+  /** Whether there are any warnings. */
+  readonly hasWarnings: Signal<boolean>;
+  /** `showErrors() && hasErrors()`. */
+  readonly shouldShow: Signal<boolean>;
+  /** `showWarnings() && hasWarnings()`. */
+  readonly shouldShowWarnings: Signal<boolean>;
+}
+
+/**
+ * Builds the `errorSummary()` entry-mapping pipeline: read → filter out
+ * non-interactive (hidden/disabled) fields → dedupe per field → split by
+ * kind → map to focusable {@link ErrorSummaryEntryData} entries.
+ *
+ * Extracted from `NgxHeadlessErrorSummary`, which used to inline this
+ * pipeline (issue #351). Deliberately pure — no `inject()` calls — so it is
+ * testable with plain signal mocks and no `TestBed`, matching the other
+ * headless factories (`createFieldStateFlags`, `createCharacterCount`,
+ * `createFieldsetAggregation`).
+ *
+ * @remarks Does not require an injection context.
+ *
+ * @group Reactive Primitives
+ */
+export function createErrorSummaryEntries(
+  options: Readonly<CreateErrorSummaryEntriesOptions>,
+): ErrorSummaryEntriesResult {
+  const { fieldState, showErrors, showWarnings, errorMessages, labelResolver } =
+    options;
+
+  const split = computed(() => {
+    const visibleErrors = readErrors(fieldState()).filter(
+      (error: ValidationError) => isErrorOnInteractiveField(error),
+    );
+    return splitByKind(dedupeValidationErrorsByField(visibleErrors));
+  });
+
+  const entries = computed(() =>
+    split().blocking.map((error) =>
+      toErrorSummaryEntry(error, errorMessages, undefined, labelResolver),
+    ),
+  );
+
+  const warningEntries = computed(() =>
+    split().warnings.map((error) =>
+      toErrorSummaryEntry(
+        error,
+        errorMessages,
+        STRIP_WARNING_PREFIX_OPTION,
+        labelResolver,
+      ),
+    ),
+  );
+
+  const hasErrors = computed(() => split().blocking.length > 0);
+  const hasWarnings = computed(() => split().warnings.length > 0);
+
+  const shouldShow = computed(() => showErrors() && hasErrors());
+  const shouldShowWarnings = computed(() => showWarnings() && hasWarnings());
+
+  return {
+    entries,
+    warningEntries,
+    hasErrors,
+    hasWarnings,
+    shouldShow,
+    shouldShowWarnings,
+  };
+}
 
 /**
  * Error summary signals exposed by the headless directive.

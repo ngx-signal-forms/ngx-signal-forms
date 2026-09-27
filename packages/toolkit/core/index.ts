@@ -20,6 +20,7 @@ export * from './services/control-preset-registry';
 export * from './services/control-visibility-signal';
 export * from './services/field-identity';
 export * from './services/field-visibility-registry';
+export * from './services/submit-announcements';
 
 // Directives
 export * from './directives/auto-aria';
@@ -59,6 +60,7 @@ export { assertInjector } from './utilities/assert-injector';
 export * from './utilities/cascading-resolver';
 export { createCharacterCountLengthSignal } from './utilities/character-count-length';
 export * from './utilities/create-error-visibility';
+export * from './utilities/create-field-presentation';
 export * from './utilities/create-warning-visibility';
 export {
   createFieldNameResolver,
@@ -136,6 +138,7 @@ export {
   isBlockingError,
   isWarningError,
   splitByKind,
+  WARN_KIND_PREFIX,
   type SplitErrors,
   warningError,
 } from './utilities/warning-error';

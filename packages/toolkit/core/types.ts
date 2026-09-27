@@ -412,6 +412,45 @@ export interface NgxSignalFormsConfig {
    * @default 'Warning:'
    */
   warningPrefixText: string;
+
+  /**
+   * Hide a field's hint while it shows a blocking error or warning.
+   *
+   * The hint id stays in `aria-describedby` either way, so a screen reader
+   * always hears it. This setting only controls whether sighted users can
+   * also see it. Off by default (WCAG 2.2 SC 3.3.2): a sighted user keeps
+   * the format instructions exactly when the error tells them the value was
+   * wrong.
+   *
+   * @default false
+   */
+  hideHintOnError: boolean;
+
+  /**
+   * When the form renders an `NgxFormFieldErrorSummary`, let the summary be
+   * the only live region that announces after a submit.
+   *
+   * The summary and each `NgxFormFieldError` are `role="alert"` regions. One
+   * submit that reveals N field errors would otherwise fire N + 1 assertive
+   * announcements at once, which screen readers cut off, stack, or repeat.
+   * With this on, a field error revealed by a submit shows outside its live
+   * region. A later change to that error, while the user edits the field,
+   * announces as usual. Forms without a summary are not affected.
+   *
+   * Set `false` to let every field error announce on submit too.
+   * @default true
+   */
+  errorSummaryAnnouncesAlone: boolean;
+
+  /**
+   * Visually hidden text describing a character count's limit, exposed to
+   * assistive technology through `aria-describedby`. `NgxFormFieldCharacterCount`
+   * renders this instead of the running count — the running and remaining
+   * count stays in the `[liveAnnounce]` live region. The literal token
+   * `{max}` is replaced with the resolved `maxLength`.
+   * @default 'Up to {max} characters'
+   */
+  characterCountLimitText: string;
 }
 
 /**
@@ -469,4 +508,19 @@ export interface NgxSignalFormsUserConfig {
    * disable it.
    */
   warningPrefixText?: string | undefined;
+  /**
+   * Set `false` to let field errors announce on submit even when the form
+   * renders an error summary.
+   */
+  errorSummaryAnnouncesAlone?: boolean | undefined;
+  /**
+   * Override the character-count limit text. Must contain the `{max}`
+   * placeholder for the resolved `maxLength` to appear.
+   */
+  characterCountLimitText?: string | undefined;
+  /**
+   * Set `true` to hide a field's hint while it shows a blocking error or
+   * warning. See {@link NgxSignalFormsConfig.hideHintOnError}.
+   */
+  hideHintOnError?: boolean | undefined;
 }

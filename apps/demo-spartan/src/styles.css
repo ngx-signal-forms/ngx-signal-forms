@@ -63,22 +63,11 @@
   --border: oklch(0.92 0.004 286.32);
   --input: oklch(0.92 0.004 286.32);
   --ring: oklch(0.705 0.015 286.067);
-
-  /* Signal-forms error/warning colors.
-   *
-   * The toolkit drives its dark-mode error colors from `prefers-color-scheme`
-   * only; it does not detect a `.dark` ancestor class (that relied on the
-   * non-standard `:host-context()`, unsupported in Firefox/Safari — see the
-   * v1.0.0 accessibility audit). Because this demo themes via a `.dark` class
-   * toggled independently of the OS preference, it must set the public
-   * `--ngx-signal-form-error-color` / `--ngx-signal-form-warning-color`
-   * custom properties per theme, otherwise an explicit-light UI on an
-   * OS-prefers-dark machine would show dark-mode error colors. */
-  --ngx-signal-form-error-color: #db1818;
-  --ngx-signal-form-warning-color: #a16207;
 }
 
 .dark {
+  /* The toolkit picks its light or dark colors from color-scheme. */
+  color-scheme: dark;
   --background: oklch(0.141 0.005 285.823);
   --foreground: oklch(0.985 0 0);
   --card: oklch(0.21 0.006 285.885);
@@ -98,8 +87,6 @@
   --border: oklch(1 0 0 / 10%);
   --input: oklch(1 0 0 / 15%);
   --ring: oklch(0.552 0.016 285.938);
-  --ngx-signal-form-error-color: #fca5a5;
-  --ngx-signal-form-warning-color: #fcd34d;
 }
 
 @layer base {

@@ -1,6 +1,7 @@
 import { ApplicationRef, Component, signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { FormField, form, required, schema } from '@angular/forms/signals';
+import type { SubmittedStatus } from '@ngx-signal-forms/toolkit';
 import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit';
 import { NgxFormField } from '@ngx-signal-forms/toolkit/form-field';
 import { render, screen } from '@testing-library/angular';
@@ -10,7 +11,7 @@ import { NgxFormFieldErrorSummary } from './form-field-error-summary';
 import {
   expectNoA11yViolations,
   findAlertContaining,
-} from '@ngx-signal-forms/toolkit/testing';
+} from '../testing/a11y-internal';
 
 /**
  * WCAG 2.2 AA conformance gate for `NgxFormFieldErrorSummary`.
@@ -261,5 +262,239 @@ describe('NgxFormFieldErrorSummary — heading, accessible name, and focus movem
     await userEvent.click(entry);
 
     expect(document.activeElement).toBe(screen.getByLabelText('Email address'));
+  });
+
+  /**
+   * Browser twin of `form-field-error-summary.spec.ts`'s "moves focus to the
+   * summary host the first time entries appear" (issue #501 — moving that
+   * jsdom-only focus-movement coverage to a real browser). Same GOV.UK / WAI
+   * error-summary pattern as #497 above: focus should move to the summary
+   * host the first time it gains entries, and NOT be stolen again on a later
+   * update — jsdom's focus handling is close enough to Chrome for most
+   * specs, but this exact contract already shipped one regression (#497)
+   * that jsdom alone did not catch.
+   *
+   * The "not again" half needs an update that actually *changes* the entry
+   * list — fixing one of two invalid fields, so the summary re-renders with
+   * one fewer entry — not a no-op re-render. A no-op update can't fail this
+   * assertion regardless of whether the "only focus once" guard works, since
+   * nothing would trigger a refocus attempt either way; the fix below moves
+   * focus into the very field the user is correcting, so a stolen-focus
+   * regression is directly observable as focus landing back on the summary
+   * instead of staying in the input.
+   */
+  it('moves focus to the summary host the first time entries appear, and not again when the entry list changes on a later update', async () => {
+    @Component({
+      selector: 'ngx-test-a11y-summary-first-appearance',
+      imports: [
+        FormField,
+        NgxSignalFormToolkit,
+        NgxFormField,
+        NgxFormFieldErrorSummary,
+      ],
+      template: `
+        <form [formRoot]="testForm" ngxSignalForm errorStrategy="on-submit">
+          <ngx-form-field-error-summary
+            [formTree]="testForm"
+            [submittedStatus]="submittedStatus()"
+          />
+          <ngx-form-field-wrapper [formField]="testForm.name" fieldName="name">
+            <label for="name">Full name</label>
+            <input id="name" type="text" [formField]="testForm.name" />
+          </ngx-form-field-wrapper>
+          <ngx-form-field-wrapper
+            [formField]="testForm.email"
+            fieldName="email"
+          >
+            <label for="email">Email address</label>
+            <input id="email" type="email" [formField]="testForm.email" />
+          </ngx-form-field-wrapper>
+        </form>
+      `,
+    })
+    class TestComponent {
+      readonly #model = signal({ name: '', email: '' });
+      readonly testForm = form(
+        this.#model,
+        schema((path) => {
+          required(path.name, { message: 'Name is required' });
+          required(path.email, { message: 'Email is required' });
+        }),
+      );
+      readonly submittedStatus = signal<SubmittedStatus>('unsubmitted');
+    }
+
+    const { container, fixture } = await render(TestComponent);
+    await TestBed.inject(ApplicationRef).whenStable();
+
+    // Before submit, the summary shell is mounted but empty (WCAG 4.1.3),
+    // and focus stays wherever the harness left it.
+    expect(
+      container
+        .querySelector('ngx-form-field-error-summary [role="alert"]')
+        ?.textContent?.trim() ?? '',
+    ).toBe('');
+
+    fixture.componentInstance.submittedStatus.set('submitted');
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    const summaryHost = container.querySelector('ngx-form-field-error-summary');
+    expect(document.activeElement).toBe(summaryHost);
+    // The focus target is the documented programmatic-focus contract, not
+    // just an incidental `role="group"` element: `tabindex="-1"` is what
+    // makes a non-interactive host focusable via script in the first place.
+    expect(summaryHost).toHaveAttribute('tabindex', '-1');
+
+    // Fix the email field: the entry list genuinely shrinks from two entries
+    // to one, a real update to the (already-populated) list — not a no-op.
+    const emailInput = container.querySelector<HTMLInputElement>('#email')!;
+    await userEvent.type(emailInput, 'ada@example.com');
+    await fixture.whenStable();
+
+    // Focus stayed with the user's typing; the summary's re-render did not
+    // steal it back.
+    expect(document.activeElement).toBe(emailInput);
+    expect(document.activeElement).not.toBe(summaryHost);
+  });
+
+  /**
+   * The component's own doc comment on its focus latch (`form-field-error-
+   * summary.ts`): "We re-arm the latch when the summary disappears so the
+   * next '0 → N' transition focuses again." The spec above only ever
+   * proves the "not again while still visible" half; it never drives
+   * `hasErrors()` back to `false`, so it can't tell a working re-arm from a
+   * latch that never resets at all. This drives the full promised cycle:
+   * 0 errors → N errors (first focus) → back to 0 (latch re-arms) → N again
+   * (must focus a second time).
+   */
+  it('re-focuses the summary host on a second 0 → N transition after all errors clear', async () => {
+    @Component({
+      selector: 'ngx-test-a11y-summary-latch-rearm',
+      imports: [
+        FormField,
+        NgxSignalFormToolkit,
+        NgxFormField,
+        NgxFormFieldErrorSummary,
+      ],
+      template: `
+        <form [formRoot]="testForm" ngxSignalForm errorStrategy="on-submit">
+          <ngx-form-field-error-summary
+            [formTree]="testForm"
+            [submittedStatus]="submittedStatus()"
+          />
+          <ngx-form-field-wrapper [formField]="testForm.name" fieldName="name">
+            <label for="name">Full name</label>
+            <input id="name" type="text" [formField]="testForm.name" />
+          </ngx-form-field-wrapper>
+        </form>
+      `,
+    })
+    class TestComponent {
+      readonly #model = signal({ name: '' });
+      readonly testForm = form(
+        this.#model,
+        schema((path) => {
+          required(path.name, { message: 'Name is required' });
+        }),
+      );
+      readonly submittedStatus = signal<SubmittedStatus>('unsubmitted');
+    }
+
+    const { container, fixture } = await render(TestComponent);
+    await TestBed.inject(ApplicationRef).whenStable();
+
+    const nameInput = container.querySelector<HTMLInputElement>('#name')!;
+    const summaryHost = container.querySelector(
+      'ngx-form-field-error-summary',
+    )!;
+
+    // 0 → N (first appearance): focuses the summary.
+    fixture.componentInstance.submittedStatus.set('submitted');
+    fixture.detectChanges();
+    await fixture.whenStable();
+    expect(document.activeElement).toBe(summaryHost);
+
+    // N → 0: fixing the only invalid field clears `hasErrors()`, so the
+    // summary hides and the component's own doc says the latch re-arms.
+    await userEvent.type(nameInput, 'Ada');
+    await fixture.whenStable();
+    expect(
+      container
+        .querySelector('ngx-form-field-error-summary [role="alert"]')
+        ?.textContent?.trim() ?? '',
+    ).toBe('');
+    expect(document.activeElement).toBe(nameInput);
+
+    // 0 → N again: a re-armed latch must focus the summary a second time,
+    // exactly as it did on the first appearance.
+    await userEvent.clear(nameInput);
+    await fixture.whenStable();
+
+    expect(
+      container
+        .querySelector('ngx-form-field-error-summary [role="alert"]')
+        ?.textContent?.trim(),
+    ).toContain('Name is required');
+    expect(document.activeElement).toBe(summaryHost);
+  });
+
+  /**
+   * Browser twin of `form-field-error-summary.spec.ts`'s "focuses the bound
+   * control when an entry is activated via keyboard" (issue #501). Native
+   * `<button>` Enter/Space activation is close enough in jsdom for most
+   * specs, but this file exists precisely because "close enough" has missed
+   * real focus-movement bugs before (#497) — pin the keyboard path here too.
+   */
+  it('focuses the bound control when a summary entry is activated with Enter or Space', async () => {
+    @Component({
+      selector: 'ngx-test-a11y-summary-keyboard',
+      imports: [
+        FormField,
+        NgxSignalFormToolkit,
+        NgxFormField,
+        NgxFormFieldErrorSummary,
+      ],
+      template: `
+        <form [formRoot]="testForm" ngxSignalForm errorStrategy="on-submit">
+          <ngx-form-field-error-summary
+            [formTree]="testForm"
+            [submittedStatus]="'submitted'"
+          />
+          <ngx-form-field-wrapper
+            [formField]="testForm.email"
+            fieldName="email"
+          >
+            <label for="email">Email address</label>
+            <input id="email" type="email" [formField]="testForm.email" />
+          </ngx-form-field-wrapper>
+        </form>
+      `,
+    })
+    class TestComponent {
+      readonly #model = signal({ email: '' });
+      readonly testForm = form(
+        this.#model,
+        schema((path) => {
+          required(path.email, { message: 'Email is required' });
+        }),
+      );
+    }
+
+    await render(TestComponent);
+    await TestBed.inject(ApplicationRef).whenStable();
+
+    const entry = screen.getByRole('button', {
+      name: /email\s*:\s*Email is required/iu,
+    });
+    const emailInput = screen.getByLabelText('Email address');
+
+    entry.focus();
+    await userEvent.keyboard('{Enter}');
+    expect(document.activeElement).toBe(emailInput);
+
+    entry.focus();
+    await userEvent.keyboard(' ');
+    expect(document.activeElement).toBe(emailInput);
   });
 });

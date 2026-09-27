@@ -550,7 +550,9 @@ describe('NgxFormFieldset', () => {
     // source keeps the contrast contract documented; runtime resolution is
     // covered in browser-mode and e2e specs (jsdom can't compute custom
     // properties from emulated component stylesheets).
-    expect(fieldsetCssSource).toMatch(/--_fieldset-clr-danger:\s*#db1818\b/);
+    expect(fieldsetCssSource).toMatch(
+      /--_fieldset-clr-danger:\s*light-dark\(\s*#db1818\b/,
+    );
     expect(fieldsetCssSource).toMatch(
       /--_fieldset-notification-error-bg:[^;]*--ngx-signal-form-error-panel-bg/,
     );

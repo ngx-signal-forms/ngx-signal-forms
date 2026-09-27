@@ -101,17 +101,23 @@ const DEFAULT_OPTIONS: readonly MockAutocompleteOption[] = [
       padding: 0.25rem;
       list-style: none;
       border: 1px solid
-        var(--ngx-form-field-color-border, rgba(50, 65, 85, 0.7));
+        var(
+          --ngx-form-field-color-border,
+          light-dark(rgba(50, 65, 85, 0.7), rgba(249, 250, 251, 0.4))
+        );
       border-radius: var(--ngx-form-field-radius, 0.25rem);
-      background-color: var(--ngx-form-field-color-surface, #ffffff);
+      background-color: var(
+        --ngx-form-field-color-surface,
+        light-dark(#ffffff, #1f2937)
+      );
       box-shadow: 0 0.5rem 1.5rem
         color-mix(
           in srgb,
-          var(--ngx-form-field-color-text, #324155) 18%,
+          var(--ngx-form-field-color-text, light-dark(#324155, #f9fafb)) 18%,
           transparent
         );
       font: inherit;
-      color: var(--ngx-form-field-color-text, #324155);
+      color: var(--ngx-form-field-color-text, light-dark(#324155, #f9fafb));
     }
 
     .ngx-mock-autocomplete__option {
@@ -124,7 +130,7 @@ const DEFAULT_OPTIONS: readonly MockAutocompleteOption[] = [
     .ngx-mock-autocomplete__option--active {
       background: color-mix(
         in srgb,
-        var(--ngx-form-field-color-primary, #007bc7) 10%,
+        var(--ngx-form-field-color-primary, light-dark(#007bc7, #60a5fa)) 10%,
         transparent
       );
     }
