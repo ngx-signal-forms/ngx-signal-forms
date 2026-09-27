@@ -81,3 +81,49 @@ Two CI mechanisms keep the toolkit publishable and design-system-free:
 
 If either check fails, the right fix is almost never to relax the check —
 move the offending dep into the demo app that needs it.
+
+## Commit messages and PR titles
+
+Commit subjects follow [Conventional Commits](https://www.conventionalcommits.org/).
+`nx release` reads the subject to pick the version bump, and the subject
+lands verbatim in the GitHub release notes (see [`AGENTS.md`](../AGENTS.md)).
+
+A `commit-msg` git hook checks every commit with
+[commitlint](https://commitlint.js.org/), configured in
+[`commitlint.config.cjs`](../commitlint.config.cjs):
+
+- The type must be one of the [Conventional Commits](https://www.conventionalcommits.org/)
+  types (`feat`, `fix`, `docs`, `refactor`, and so on).
+- Every `@word` in the subject must be backticked — write `` `@group` ``,
+  not `@group`. A bare `@word` renders as a GitHub mention of a stranger's
+  account. This rule lives in
+  [`tools/commitlint/no-bare-mention.cjs`](../tools/commitlint/no-bare-mention.cjs),
+  strips code spans before checking, and does not flag an email's local part
+  (`me@example.com`).
+
+`commitlint.config.cjs` turns off `footer-max-line-length`,
+`body-max-line-length`, `header-max-length`, and `subject-case` from
+`@commitlint/config-conventional` — history already has long single-line
+`BREAKING CHANGE:` footers and bodies, subjects over 100 characters, and one
+non-lower-case subject, and rewriting old commits to fit is not worth it.
+
+`pnpm install` installs the hook through `simple-git-hooks` (see
+[`tools/simple-git-hooks-worktree.cjs`](../tools/simple-git-hooks-worktree.cjs),
+which points the hook at the shared `.git/hooks` directory so it also runs in
+git worktrees). If a commit fails the check, fix the subject and commit
+again — the hook does not rewrite the message for you. In a worktree that
+predates this hook (no `commitlint` installed, no `commitlint.config.cjs`),
+the hook prints a warning and skips the check instead of blocking the
+commit — run `pnpm install` to pick up the check there too.
+
+A squash merge uses the PR title as the commit subject, so the `PR Title`
+workflow ([`.github/workflows/pr-title.yml`](../.github/workflows/pr-title.yml))
+runs the same commitlint check against every PR title, except for Dependabot
+PRs (their titles can contain a bare `@word` from a package name, and
+`build` commits do not reach the changelog anyway).
+
+As a second guard, `tools/release/project-changelog-renderer.ts` escapes a
+bare `@word` in the change-list line (`formatChange`) and the
+breaking-change line and explanation (`formatBreakingChangeBase`,
+`extractBreakingChangeExplanation`) it renders for each commit. It does not
+touch `renderAuthors`, whose ` @username` is a deliberate GitHub mention.

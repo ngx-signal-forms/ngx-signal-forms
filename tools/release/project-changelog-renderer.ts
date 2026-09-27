@@ -2,6 +2,7 @@ import { existsSync } from 'node:fs';
 import _DefaultChangelogRendererImport, {
   type ChangelogChange,
 } from 'nx/release/changelog-renderer/index.js';
+import { CODE_SPAN_OR_FENCE } from '../commitlint/code-span.cjs';
 
 type DefaultChangelogRendererClass = typeof _DefaultChangelogRendererImport;
 
@@ -55,6 +56,78 @@ function isBreakingChangeTrailer(line: string): boolean {
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null;
+}
+
+/**
+ * A second guard behind the commitlint `no-bare-mention` rule: escape a bare
+ * `@word` in a change description, scope, or breaking-change explanation, so
+ * GitHub never renders it as a mention of a stranger's account. This covers
+ * the change-list lines (`formatChange`) and the breaking-change lines
+ * (`formatBreakingChangeBase`, `extractBreakingChangeExplanation`) below —
+ * not `renderAuthors`, whose ` @username` is a deliberate GitHub mention.
+ *
+ * A name segment is a run of word characters with internal (not trailing)
+ * hyphens, so a sentence dash right after a mention (`cc @foo - reviewer`)
+ * is not swallowed. Matches `@scope/pkg` and `@scope/pkg.ext` as one unit
+ * (so a dependency bump like `@ng-icons/core` escapes cleanly, and a
+ * sentence-final `bump @ng-icons/core.` keeps its trailing period outside
+ * the match), and skips a `@` preceded by a word character or a `/`, so an
+ * email address (`me@example.com`) and a scoped package inside a URL
+ * (`https://www.npmjs.com/package/@ng-icons/core`) are left alone - GitHub
+ * does not mention-link an `@` inside a URL either, and wrapping it there
+ * would break the autolink or the `[text](url)` target. This regex only
+ * ever runs on text outside a matched code span (`escapeBareMentions`
+ * below carves those out first and copies them through untouched), so its
+ * lookbehind does not treat a backtick specially — doing so would let an
+ * UNMATCHED backtick (e.g. `` `@foo `` with no closing backtick) shield a
+ * real mention from this check. `escapeOutsideCode` below
+ * backslash-escapes any such stray backtick before wrapping the mention,
+ * so the result stays valid markdown.
+ */
+const NAME_SEGMENT = /[\w]+(?:-[\w]+)*/u.source;
+const BARE_MENTION = new RegExp(
+  `(?<![\\w/])@${NAME_SEGMENT}(?:/${NAME_SEGMENT}(?:\\.${NAME_SEGMENT})*)?`,
+  'gu',
+);
+
+export function escapeBareMentions(text: string): string;
+export function escapeBareMentions(
+  text: string | null | undefined,
+): string | null | undefined;
+export function escapeBareMentions(
+  text: string | null | undefined,
+): string | null | undefined {
+  if (text === null || text === undefined) {
+    return text;
+  }
+
+  let result = '';
+  let cursor = 0;
+
+  for (const match of text.matchAll(CODE_SPAN_OR_FENCE)) {
+    const start = match.index;
+    result += escapeOutsideCode(text.slice(cursor, start));
+    result += match[0];
+    cursor = start + match[0].length;
+  }
+
+  result += escapeOutsideCode(text.slice(cursor));
+  return result;
+}
+
+function escapeOutsideCode(text: string): string {
+  // Any backtick reaching this point is unmatched (a real code span was
+  // already carved out above), so it is not markdown code-span syntax.
+  // Backslash-escape it before wrapping a mention: otherwise a stray
+  // backtick right before one (`` `@foo ``) combines with the wrapping
+  // backtick we add into a two-backtick run with no matching close, which
+  // CommonMark then renders as literal text - leaving `@foo` un-fenced and
+  // still a real GitHub mention.
+  const withEscapedBackticks = text.replaceAll('`', '\\`');
+  return withEscapedBackticks.replace(
+    BARE_MENTION,
+    (mention) => `\`${mention}\``,
+  );
 }
 
 export default class ProjectChangelogRenderer extends DefaultChangelogRenderer {
@@ -123,7 +196,23 @@ export default class ProjectChangelogRenderer extends DefaultChangelogRenderer {
     );
     const kept = firstTrailer === -1 ? lines : lines.slice(0, firstTrailer);
     const trimmed = kept.join('\n').trim();
-    return trimmed.length > 0 ? trimmed : null;
+    return trimmed.length > 0 ? escapeBareMentions(trimmed) : null;
+  }
+
+  protected override formatChange(change: ChangelogChange): string {
+    return super.formatChange({
+      ...change,
+      scope: escapeBareMentions(change.scope),
+      description: escapeBareMentions(change.description),
+    });
+  }
+
+  protected override formatBreakingChangeBase(change: ChangelogChange): string {
+    return super.formatBreakingChangeBase({
+      ...change,
+      scope: escapeBareMentions(change.scope),
+      description: escapeBareMentions(change.description),
+    });
   }
 
   private renderHighlights(): string[] {
@@ -285,7 +374,7 @@ export default class ProjectChangelogRenderer extends DefaultChangelogRenderer {
   }
 
   private toSingleLine(text: string): string {
-    return text.split('\n')[0]?.trim() ?? '';
+    return escapeBareMentions(text.split('\n')[0]?.trim() ?? '');
   }
 
   private groupAreaChangesByType(

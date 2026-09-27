@@ -68,6 +68,8 @@
     "@angular/compiler-cli": "catalog:angular-build",
     "@angular/language-service": "catalog:angular-build",
     "@axe-core/playwright": "catalog:axe",
+    "@commitlint/cli": "catalog:tooling",
+    "@commitlint/config-conventional": "catalog:tooling",
     "@nx/angular": "catalog:nx",
     "@nx/devkit": "catalog:nx",
     "@nx/eslint-plugin": "catalog:nx",
@@ -123,7 +125,8 @@
     "vitest": "catalog:vitest"
   },
   "simple-git-hooks": {
-    "pre-commit": "pnpm exec lint-staged"
+    "pre-commit": "pnpm exec lint-staged",
+    "commit-msg": "if [ -x node_modules/.bin/commitlint ] && [ -f commitlint.config.cjs ]; then node_modules/.bin/commitlint --edit \"$1\"; else echo '[commit-msg] commitlint not set up in this worktree; skipping' >&2; fi"
   },
   "nx": {
     "includedScripts": []

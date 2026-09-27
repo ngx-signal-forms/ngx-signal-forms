@@ -135,6 +135,18 @@ jobs:
       - name: Check a11y report script
         run: pnpm exec nx run workspace:check-a11y-report-violations --outputStyle=static
 
+      # Same reasoning as the checks above: this spec covers a release-time
+      # script, not a build/lint/test target, so `nx affected` never picks
+      # it up on its own.
+      - name: Check changelog renderer
+        run: pnpm exec nx run workspace:check-changelog-renderer --outputStyle=static
+
+      # Same reasoning as the checks above: this spec covers a commitlint
+      # rule, not a build/lint/test target, so `nx affected` never picks it
+      # up on its own.
+      - name: Check no-bare-mention rule
+        run: pnpm exec nx run workspace:check-no-bare-mention --outputStyle=static
+
       - name: Generate lint report
         if: ${{ always() }}
         run: pnpm exec oxlint . --format=json > lint-report.json || true
