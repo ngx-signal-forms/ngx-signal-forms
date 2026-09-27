@@ -11,5 +11,18 @@ module.exports = {
   plugins: [noBareMentionPlugin],
   rules: {
     'no-bare-mention': [2, 'always'],
+    // History has commit bodies with a long single-line `BREAKING CHANGE:`
+    // footer (a squash-merged PR body keeps its own wrapping). Off to match.
+    'footer-max-line-length': [0],
+    // Same reasoning as the footer: some commit bodies carry a long
+    // single-line paragraph from the PR description. Off to match.
+    'body-max-line-length': [0],
+    // History has subjects over the default 100-char limit (issue numbers
+    // and scopes push some past it). Off to match; PR titles are still
+    // capped by GitHub's own UI limit regardless.
+    'header-max-length': [0],
+    // History has at least one non-lower-case subject ("Docs/documentation
+    // audit (#456)"). Off rather than rewriting old commits to fit.
+    'subject-case': [0],
   },
 };

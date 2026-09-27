@@ -58,17 +58,40 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 }
 
 /**
- * A second guard behind the commitlint `no-bare-mention` rule: escape any
- * `@word` this renderer emits that a commit description left bare, so
- * GitHub never renders it as a mention of a stranger's account.
+ * A second guard behind the commitlint `no-bare-mention` rule: escape a bare
+ * `@word` in a change description, scope, or breaking-change explanation, so
+ * GitHub never renders it as a mention of a stranger's account. This covers
+ * the change-list lines (`formatChange`) and the breaking-change lines
+ * (`formatBreakingChangeBase`, `extractBreakingChangeExplanation`) below —
+ * not `renderAuthors`, whose ` @username` is a deliberate GitHub mention.
+ *
+ * Matches `@scope/pkg` as one unit (so a dependency bump like
+ * `@ng-icons/core` escapes cleanly) and skips a `@` preceded by a word
+ * character or a backtick, so an email address (`me@example.com`) and an
+ * already-backticked mention are left alone.
  */
-const BARE_MENTION = /(^|[^`])@([\w-]+)/gu;
+const BARE_MENTION = /(?<![\w`])@[\w-]+(?:\/[\w.-]+)?/gu;
+
+/** Matches an inline code span or a fenced code block, backtick-length aware. */
+const CODE_SPAN_OR_FENCE = /(`+)[\s\S]*?\1/gu;
 
 export function escapeBareMentions(text: string): string {
-  return text.replace(
-    BARE_MENTION,
-    (_match, before: string, word: string) => `${before}\`@${word}\``,
-  );
+  let result = '';
+  let cursor = 0;
+
+  for (const match of text.matchAll(CODE_SPAN_OR_FENCE)) {
+    const start = match.index;
+    result += escapeOutsideCode(text.slice(cursor, start));
+    result += match[0];
+    cursor = start + match[0].length;
+  }
+
+  result += escapeOutsideCode(text.slice(cursor));
+  return result;
+}
+
+function escapeOutsideCode(text: string): string {
+  return text.replace(BARE_MENTION, (mention) => `\`${mention}\``);
 }
 
 export default class ProjectChangelogRenderer extends DefaultChangelogRenderer {
@@ -137,7 +160,23 @@ export default class ProjectChangelogRenderer extends DefaultChangelogRenderer {
     );
     const kept = firstTrailer === -1 ? lines : lines.slice(0, firstTrailer);
     const trimmed = kept.join('\n').trim();
-    return trimmed.length > 0 ? trimmed : null;
+    return trimmed.length > 0 ? escapeBareMentions(trimmed) : null;
+  }
+
+  protected override formatChange(change: ChangelogChange): string {
+    return super.formatChange({
+      ...change,
+      scope: escapeBareMentions(change.scope),
+      description: escapeBareMentions(change.description),
+    });
+  }
+
+  protected override formatBreakingChangeBase(change: ChangelogChange): string {
+    return super.formatBreakingChangeBase({
+      ...change,
+      scope: escapeBareMentions(change.scope),
+      description: escapeBareMentions(change.description),
+    });
   }
 
   private renderHighlights(): string[] {

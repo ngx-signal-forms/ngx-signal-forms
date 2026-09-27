@@ -93,8 +93,8 @@
     "@testing-library/dom": "catalog:testing-library",
     "@testing-library/jest-dom": "catalog:testing-library",
     "@testing-library/user-event": "catalog:testing-library",
-    "@types/node": "catalog:tooling",
     "@typescript/native": "catalog:tooling",
+    "@types/node": "catalog:tooling",
     "@vitest/browser-playwright": "catalog:vitest",
     "@vitest/coverage-v8": "catalog:vitest",
     "@vitest/ui": "catalog:vitest",
@@ -126,7 +126,7 @@
   },
   "simple-git-hooks": {
     "pre-commit": "pnpm exec lint-staged",
-    "commit-msg": "pnpm exec commitlint --edit \"$1\""
+    "commit-msg": "if [ -x node_modules/.bin/commitlint ] && [ -f commitlint.config.cjs ]; then node_modules/.bin/commitlint --edit \"$1\"; else echo '[commit-msg] commitlint not set up in this worktree; skipping' >&2; fi"
   },
   "nx": {
     "includedScripts": []

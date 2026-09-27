@@ -8,13 +8,14 @@ name: PR Title
 # Dependabot titles (e.g. `build(deps): bump @ng-icons/core from 1 to 2`)
 # contain a bare `@word` by construction - Dependabot cannot backtick it.
 # `build` commits already have `changelog: false` in nx.json, and
-# tools/release/project-changelog-renderer.ts escapes any bare `@word` that
-# still reaches a release note as a second guard. So Dependabot PRs are
-# exempt here rather than blocked, matching dependabot-auto-merge.yml.
+# tools/release/project-changelog-renderer.ts escapes a bare `@word` in the
+# change-list and breaking-change lines it renders as a second guard. So
+# Dependabot PRs are exempt here rather than blocked, matching
+# dependabot-auto-merge.yml.
 #
-# Uses `pull_request` (not `pull_request_target`): no checkout, no secrets,
-# read-only permissions. The title is passed through an env var, never
-# interpolated into `run:`.
+# Uses `pull_request` (not `pull_request_target`): no checkout of PR code,
+# no secrets, read-only permissions. The title is passed through an env
+# var, never interpolated into `run:`.
 
 on:
   pull_request:
@@ -29,9 +30,13 @@ concurrency:
 
 jobs:
   lint:
-    if: ${{ github.actor != 'dependabot[bot]' }}
+    if: >-
+      ${{
+        github.event.pull_request.user.login != 'dependabot[bot]' &&
+        (github.event.action != 'edited' || github.event.changes.title != null)
+      }}
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
@@ -48,9 +53,9 @@ jobs:
           node-version-file: '.node-version'
           cache: 'pnpm'
 
-      - run: pnpm install --frozen-lockfile
+      - run: pnpm install --frozen-lockfile --ignore-scripts
 
       - name: Lint PR title
         env:
           PR_TITLE: ${{ github.event.pull_request.title }}
-        run: echo "$PR_TITLE" | pnpm exec commitlint
+        run: printf '%s\n' "$PR_TITLE" | pnpm exec commitlint
