@@ -13,7 +13,7 @@ const mockField = () => {
     value: signal(''),
     required: signal(false),
   };
-  return signal(() => fieldState);
+  return signal(fieldState);
 };
 
 describe('NgxFormFieldWrapper — without a label', () => {

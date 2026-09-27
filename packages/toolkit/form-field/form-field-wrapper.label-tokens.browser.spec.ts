@@ -44,7 +44,7 @@ const mockField = () => {
     value: signal(''),
     required: signal(false),
   };
-  return signal(() => fieldState);
+  return signal(fieldState);
 };
 
 describe('NgxFormFieldWrapper — outline label tokens (#474)', () => {
