@@ -13,9 +13,9 @@ name: PR Title
 # Dependabot PRs are exempt here rather than blocked, matching
 # dependabot-auto-merge.yml.
 #
-# Uses `pull_request` (not `pull_request_target`): no checkout of PR code,
-# no secrets, read-only permissions. The title is passed through an env
-# var, never interpolated into `run:`.
+# Uses `pull_request` (not `pull_request_target`): no secrets, read-only
+# permissions. The title is passed through an env var, never interpolated
+# into `run:`.
 
 on:
   pull_request:
@@ -34,8 +34,16 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
+      # Check out the base branch's own SHA, not the default merge ref.
+      # `pull_request`'s default checkout is the PR's merge commit, which
+      # includes the PR's own changes - a PR could edit
+      # commitlint.config.cjs, the no-bare-mention rule, or the lockfile to
+      # loosen the very check running against it. The base SHA is the last
+      # commit on the target branch before this PR, so the check always
+      # runs the trusted, already-reviewed rules.
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
+          ref: ${{ github.event.pull_request.base.sha }}
           filter: tree:0
           persist-credentials: false
 

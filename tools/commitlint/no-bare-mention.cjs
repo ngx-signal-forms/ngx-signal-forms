@@ -12,10 +12,13 @@ const { CODE_SPAN_OR_FENCE } = require('./code-span.cjs');
 // lines.
 //
 // A `@` preceded by a word character is an email's local part
-// (`me@example.com`), not a mention, so it is not flagged. Code spans are
-// stripped before the check, so `` `foo @bar` `` or double-backtick spans
-// like ``@a`` do not trip it.
-const BARE_MENTION = /(?<![\w`])@\w/u;
+// (`me@example.com`), not a mention, so it is not flagged. Matched code
+// spans (single- or double-backtick, or a fenced block) are stripped
+// before the check, so `` `foo @bar` `` or ``@a`` do not trip it. The
+// lookbehind excludes only word characters, not a backtick: an UNMATCHED
+// backtick (e.g. `` `@foo `` with no closing backtick) is not a code span
+// and must not shield the mention that follows it.
+const BARE_MENTION = /(?<!\w)@\w/u;
 
 /** @type {import('@commitlint/types').Plugin} */
 module.exports = {

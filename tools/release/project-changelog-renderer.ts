@@ -71,13 +71,16 @@ function isRecord(value: unknown): value is Record<string, unknown> {
  * is not swallowed. Matches `@scope/pkg` and `@scope/pkg.ext` as one unit
  * (so a dependency bump like `@ng-icons/core` escapes cleanly, and a
  * sentence-final `bump @ng-icons/core.` keeps its trailing period outside
- * the match), and skips a `@` preceded by a word character or a backtick,
- * so an email address (`me@example.com`) and an already-backticked mention
- * are left alone.
+ * the match), and skips a `@` preceded by a word character, so an email
+ * address (`me@example.com`) is left alone. This regex only ever runs on
+ * text outside a matched code span (`escapeBareMentions` below carves those
+ * out first and copies them through untouched), so it does not need to
+ * treat a backtick specially — doing so would let an UNMATCHED backtick
+ * (e.g. `` `@foo `` with no closing backtick) shield a real mention.
  */
 const NAME_SEGMENT = /[\w]+(?:-[\w]+)*/u.source;
 const BARE_MENTION = new RegExp(
-  `(?<![\\w\`])@${NAME_SEGMENT}(?:/${NAME_SEGMENT}(?:\\.${NAME_SEGMENT})*)?`,
+  `(?<!\\w)@${NAME_SEGMENT}(?:/${NAME_SEGMENT}(?:\\.${NAME_SEGMENT})*)?`,
   'gu',
 );
 

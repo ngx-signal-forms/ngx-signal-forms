@@ -95,6 +95,17 @@ void test('tolerates null and undefined input', () => {
   assert.equal(escapeBareMentions(undefined), undefined);
 });
 
+void test('escapes a mention preceded by an unmatched backtick', () => {
+  // No closing backtick, so this is not a real code span. GitHub still
+  // renders `@foo` as a mention, so the stray backtick must not shield it.
+  assert.equal(escapeBareMentions('fix: `@foo'), 'fix: ``@foo`');
+});
+
+void test('does not double-wrap a mention already inside a matched code span', () => {
+  const text = 'see `@foo` here';
+  assert.equal(escapeBareMentions(text), text);
+});
+
 // Render-level coverage: the escaping must reach the actual changelog output,
 // not just the pure helper. This is the case the previous version of this
 // spec missed - `toSingleLine` (the Highlights summary) escaped a bare

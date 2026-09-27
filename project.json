@@ -14,6 +14,12 @@
         "command": "node --experimental-strip-types --test tools/release/project-changelog-renderer.spec.mjs"
       }
     },
+    "check-no-bare-mention": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "node --test tools/commitlint/no-bare-mention.spec.mjs"
+      }
+    },
     "lint": {
       "executor": "nx:run-commands",
       "options": {
