@@ -87,6 +87,7 @@ export interface ValidateVestOptions<
  *
  * @example
  * ```typescript
+ * import { signal } from '@angular/core';
  * import { form } from '@angular/forms/signals';
  * import { create, enforce, only, test, warn } from 'vest';
  * import { validateVestWarnings } from '@ngx-signal-forms/toolkit/vest';
@@ -162,6 +163,7 @@ export function validateVestWarnings<TValue, F extends string = string>(
  *
  * @example
  * ```typescript
+ * import { signal } from '@angular/core';
  * import { form } from '@angular/forms/signals';
  * import { create, enforce, only, test } from 'vest';
  * import { validateVest } from '@ngx-signal-forms/toolkit/vest';

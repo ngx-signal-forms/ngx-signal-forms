@@ -874,14 +874,21 @@ interface ErrorSummaryEntriesResult {
  * headless factories (`createFieldStateFlags`, `createCharacterCount`,
  * `createFieldsetAggregation`).
  *
- * @remarks Does not require an injection context.
+ * @remarks Does not require an injection context — `fieldState`,
+ * `showErrors`, and `showWarnings` must already be resolved. Building
+ * `showErrors` / `showWarnings` with {@link createErrorVisibility} /
+ * {@link createWarningVisibility} does need one.
  *
  * @example
  * ```typescript
+ * import { createErrorVisibility, createWarningVisibility } from '@ngx-signal-forms/toolkit';
+ * import { createErrorSummaryEntries } from '@ngx-signal-forms/toolkit/headless';
+ *
+ * // Called inside an injection context, e.g. a component field initializer.
  * const summary = createErrorSummaryEntries({
- *   fieldState: () => contactForm()(),
- *   showErrors: shouldShowErrors,
- *   showWarnings: shouldShowWarnings,
+ *   fieldState: contactForm,
+ *   showErrors: createErrorVisibility(contactForm),
+ *   showWarnings: createWarningVisibility(contactForm),
  * });
  *
  * summary.entries(); // focusable error entries, ready to render
@@ -1211,14 +1218,21 @@ interface FieldsetAggregationResult {
  * `showWarnings` signals from their own `createErrorVisibility()` /
  * `createShowErrorsComputed()` call (ADR-0006's single seam).
  *
- * @remarks Does not require an injection context.
+ * @remarks Does not require an injection context — `fieldState`,
+ * `showErrors`, and `showWarnings` must already be resolved. Building
+ * `showErrors` / `showWarnings` with {@link createErrorVisibility} /
+ * {@link createWarningVisibility} does need one.
  *
  * @example
  * ```typescript
+ * import { createErrorVisibility, createWarningVisibility } from '@ngx-signal-forms/toolkit';
+ * import { createFieldsetAggregation } from '@ngx-signal-forms/toolkit/headless';
+ *
+ * // Called inside an injection context, e.g. a component field initializer.
  * const aggregation = createFieldsetAggregation({
- *   fieldState: () => addressForm()(),
- *   showErrors: shouldShowErrors,
- *   showWarnings: shouldShowWarnings,
+ *   fieldState: addressForm,
+ *   showErrors: createErrorVisibility(addressForm),
+ *   showWarnings: createWarningVisibility(addressForm),
  * });
  *
  * aggregation.aggregatedErrors(); // deduplicated blocking errors
@@ -1557,7 +1571,7 @@ declare class NgxHeadlessNotification implements NotificationStateSignals {
      */
     readonly fieldName: _angular_core.InputSignal<string | null | undefined>;
     readonly hasMessages: Signal<boolean>;
-    readonly resolvedTone: Signal<"warning" | "error">;
+    readonly resolvedTone: Signal<"error" | "warning">;
     readonly showErrorContainer: Signal<boolean>;
     readonly showWarningContainer: Signal<boolean>;
     readonly errorContainerId: Signal<string | null>;

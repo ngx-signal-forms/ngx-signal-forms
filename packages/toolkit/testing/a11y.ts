@@ -143,7 +143,7 @@ export type A11yValidator = (
  *   tags: ['wcag2a', 'wcag2aa'],
  * });
  *
- * await expectBaselineOnly(fixture.nativeElement);
+ * await expectBaselineOnly(document.body);
  * ```
  */
 export function createA11yValidator(

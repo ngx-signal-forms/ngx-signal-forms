@@ -118,7 +118,7 @@ type A11yValidator = (context?: axe.ElementContext, options?: A11yCheckOptions) 
  *   tags: ['wcag2a', 'wcag2aa'],
  * });
  *
- * await expectBaselineOnly(fixture.nativeElement);
+ * await expectBaselineOnly(document.body);
  * ```
  */
 declare function createA11yValidator(options?: {

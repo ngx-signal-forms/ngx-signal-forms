@@ -100,7 +100,7 @@ function createPresetFactory(
  * ```typescript
  * providers: [
  *   provideNgxSignalFormControlPresets({
- *     checkbox: { layout: 'group' },
+ *     slider: { layout: 'custom', ariaMode: 'manual' },
  *   }),
  * ];
  * ```
@@ -126,7 +126,7 @@ export function provideNgxSignalFormControlPresets(
  * ```typescript
  * providers: [
  *   ...provideNgxSignalFormControlPresetsForComponent({
- *     checkbox: { layout: 'group' },
+ *     slider: { layout: 'custom', ariaMode: 'manual' },
  *   }),
  * ];
  * ```

@@ -128,7 +128,7 @@ const hintRendererProviders = createRendererProviders(
  * @example
  * ```typescript
  * providers: [
- *   provideFormFieldErrorRenderer({ component: MaterialFeedbackRenderer }),
+ *   provideFormFieldErrorRenderer({ component: MyErrorRenderer }),
  * ];
  * ```
  *
@@ -147,7 +147,7 @@ export function provideFormFieldErrorRenderer(
  * ```typescript
  * providers: [
  *   ...provideFormFieldErrorRendererForComponent({
- *     component: MaterialFeedbackRenderer,
+ *     component: MyErrorRenderer,
  *   }),
  * ];
  * ```
@@ -166,7 +166,7 @@ export function provideFormFieldErrorRendererForComponent(
  * @example
  * ```typescript
  * providers: [
- *   provideFormFieldHintRenderer({ component: MaterialHintRenderer }),
+ *   provideFormFieldHintRenderer({ component: MyHintRenderer }),
  * ];
  * ```
  *
@@ -185,7 +185,7 @@ export function provideFormFieldHintRenderer(
  * ```typescript
  * providers: [
  *   ...provideFormFieldHintRendererForComponent({
- *     component: MaterialHintRenderer,
+ *     component: MyHintRenderer,
  *   }),
  * ];
  * ```

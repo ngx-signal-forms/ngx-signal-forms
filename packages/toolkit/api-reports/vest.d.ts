@@ -353,10 +353,23 @@ declare function createVestAdapter(options?: VestAdapterOptions): VestSuiteAdapt
  *
  * @example
  * ```typescript
+ * import { signal } from '@angular/core';
+ * import { form } from '@angular/forms/signals';
+ * import { create, enforce, test } from 'vest';
+ * import { sharedVestAdapter } from '@ngx-signal-forms/toolkit/vest';
+ *
+ * const contactSuite = create((data: { email: string }) => {
+ *   test('email', 'Email is required', () => {
+ *     enforce(data.email).isNotBlank();
+ *   });
+ * });
+ *
+ * const contactForm = form(signal({ email: '' }));
+ *
  * const result = sharedVestAdapter.runVestSuite({
  *   suite: contactSuite,
- *   fieldTree: contactForm.email,
- *   value: contactForm.email().value(),
+ *   fieldTree: contactForm,
+ *   value: contactForm().value(),
  * });
  * ```
  */
@@ -433,6 +446,7 @@ interface ValidateVestOptions<TValue = unknown, F extends string = string> {
  *
  * @example
  * ```typescript
+ * import { signal } from '@angular/core';
  * import { form } from '@angular/forms/signals';
  * import { create, enforce, only, test, warn } from 'vest';
  * import { validateVestWarnings } from '@ngx-signal-forms/toolkit/vest';
@@ -496,6 +510,7 @@ declare function validateVestWarnings<TValue, F extends string = string>(path: V
  *
  * @example
  * ```typescript
+ * import { signal } from '@angular/core';
  * import { form } from '@angular/forms/signals';
  * import { create, enforce, only, test } from 'vest';
  * import { validateVest } from '@ngx-signal-forms/toolkit/vest';

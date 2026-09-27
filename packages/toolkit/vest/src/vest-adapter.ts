@@ -871,10 +871,23 @@ export function createVestAdapter(
  *
  * @example
  * ```typescript
+ * import { signal } from '@angular/core';
+ * import { form } from '@angular/forms/signals';
+ * import { create, enforce, test } from 'vest';
+ * import { sharedVestAdapter } from '@ngx-signal-forms/toolkit/vest';
+ *
+ * const contactSuite = create((data: { email: string }) => {
+ *   test('email', 'Email is required', () => {
+ *     enforce(data.email).isNotBlank();
+ *   });
+ * });
+ *
+ * const contactForm = form(signal({ email: '' }));
+ *
  * const result = sharedVestAdapter.runVestSuite({
  *   suite: contactSuite,
- *   fieldTree: contactForm.email,
- *   value: contactForm.email().value(),
+ *   fieldTree: contactForm,
+ *   value: contactForm().value(),
  * });
  * ```
  */

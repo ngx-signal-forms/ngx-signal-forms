@@ -1070,7 +1070,7 @@ declare function mergeNgxSignalFormControlPresets(parentPresetsOrNull: NgxSignal
  * ```typescript
  * providers: [
  *   provideNgxSignalFormControlPresets({
- *     checkbox: { layout: 'group' },
+ *     slider: { layout: 'custom', ariaMode: 'manual' },
  *   }),
  * ];
  * ```
@@ -1086,7 +1086,7 @@ declare function provideNgxSignalFormControlPresets(presets: NgxSignalFormContro
  * ```typescript
  * providers: [
  *   ...provideNgxSignalFormControlPresetsForComponent({
- *     checkbox: { layout: 'group' },
+ *     slider: { layout: 'custom', ariaMode: 'manual' },
  *   }),
  * ];
  * ```
@@ -1549,7 +1549,7 @@ interface NgxFormFieldHintRendererOverride {
  * @example
  * ```typescript
  * providers: [
- *   provideFormFieldErrorRenderer({ component: MaterialFeedbackRenderer }),
+ *   provideFormFieldErrorRenderer({ component: MyErrorRenderer }),
  * ];
  * ```
  *
@@ -1563,7 +1563,7 @@ declare function provideFormFieldErrorRenderer(override: NgxFormFieldErrorRender
  * ```typescript
  * providers: [
  *   ...provideFormFieldErrorRendererForComponent({
- *     component: MaterialFeedbackRenderer,
+ *     component: MyErrorRenderer,
  *   }),
  * ];
  * ```
@@ -1577,7 +1577,7 @@ declare function provideFormFieldErrorRendererForComponent(override: NgxFormFiel
  * @example
  * ```typescript
  * providers: [
- *   provideFormFieldHintRenderer({ component: MaterialHintRenderer }),
+ *   provideFormFieldHintRenderer({ component: MyHintRenderer }),
  * ];
  * ```
  *
@@ -1591,7 +1591,7 @@ declare function provideFormFieldHintRenderer(override: NgxFormFieldHintRenderer
  * ```typescript
  * providers: [
  *   ...provideFormFieldHintRendererForComponent({
- *     component: MaterialHintRenderer,
+ *     component: MyHintRenderer,
  *   }),
  * ];
  * ```
