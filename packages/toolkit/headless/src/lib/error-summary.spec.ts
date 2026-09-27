@@ -8,12 +8,16 @@ import {
   required,
   schema,
   validate,
+  type ValidationError,
 } from '@angular/forms/signals';
 import { provideNgxSignalFormsConfig } from '@ngx-signal-forms/toolkit';
 import { render, screen } from '@testing-library/angular';
 import { userEvent } from '@testing-library/user-event';
 import { describe, expect, it } from 'vitest';
-import { NgxHeadlessErrorSummary } from './error-summary';
+import {
+  createErrorSummaryEntries,
+  NgxHeadlessErrorSummary,
+} from './error-summary';
 
 describe('NgxHeadlessErrorSummary', () => {
   describe('basic error summary', () => {
@@ -627,6 +631,244 @@ describe('NgxHeadlessErrorSummary', () => {
 
       expect(screen.queryByText('Email is required')).toBeTruthy();
       expect(screen.queryByText('Token is required')).toBeNull();
+    });
+  });
+
+  // ============================================================================
+  // createErrorSummaryEntries — extracted from NgxHeadlessErrorSummary (#351)
+  // ============================================================================
+
+  describe('createErrorSummaryEntries', () => {
+    // Pure function: no `inject()` calls, so plain signal mocks exercise the
+    // full contract without TestBed/injection context (ADR-0005).
+
+    function fieldTreeFor(
+      name: string,
+      overrides: Readonly<{ hidden?: boolean; disabled?: boolean }> = {},
+    ) {
+      return () => ({
+        name: () => name,
+        hidden: () => overrides.hidden ?? false,
+        disabled: () => overrides.disabled ?? false,
+        focusBoundControl: () => {
+          /* no-op for spec */
+        },
+      });
+    }
+
+    it('maps blocking errors to focusable entries with resolved messages and field names', () => {
+      const error: ValidationError = {
+        kind: 'required',
+        message: 'Required',
+        fieldTree: fieldTreeFor('email'),
+      } as ValidationError;
+
+      const fieldState = signal({ errorSummary: () => [error] });
+
+      const result = createErrorSummaryEntries({
+        fieldState,
+        showErrors: signal(true),
+        showWarnings: signal(true),
+      });
+
+      expect(result.entries()).toHaveLength(1);
+      expect(result.entries()[0]?.kind).toBe('required');
+      expect(result.entries()[0]?.message).toBe('Required');
+      expect(result.hasErrors()).toBe(true);
+    });
+
+    it('separates warn:-prefixed entries into warningEntries', () => {
+      const warning: ValidationError = {
+        kind: 'warn:street-optional',
+        message: 'Street can be left blank',
+        fieldTree: fieldTreeFor('street'),
+      } as ValidationError;
+
+      const fieldState = signal({ errorSummary: () => [warning] });
+
+      const result = createErrorSummaryEntries({
+        fieldState,
+        showErrors: signal(true),
+        showWarnings: signal(true),
+      });
+
+      expect(result.entries()).toHaveLength(0);
+      expect(result.warningEntries()).toHaveLength(1);
+      expect(result.hasWarnings()).toBe(true);
+    });
+
+    it('omits entries for hidden or disabled fields', () => {
+      const hiddenError: ValidationError = {
+        kind: 'required',
+        message: 'Secret required',
+        fieldTree: fieldTreeFor('secret', { hidden: true }),
+      } as ValidationError;
+      const disabledError: ValidationError = {
+        kind: 'required',
+        message: 'Token required',
+        fieldTree: fieldTreeFor('token', { disabled: true }),
+      } as ValidationError;
+      const visibleError: ValidationError = {
+        kind: 'required',
+        message: 'Email required',
+        fieldTree: fieldTreeFor('email'),
+      } as ValidationError;
+
+      const fieldState = signal({
+        errorSummary: () => [hiddenError, disabledError, visibleError],
+      });
+
+      const result = createErrorSummaryEntries({
+        fieldState,
+        showErrors: signal(true),
+        showWarnings: signal(true),
+      });
+
+      expect(result.entries().map((entry) => entry.fieldName)).toEqual([
+        'Email',
+      ]);
+    });
+
+    it('keeps a separate entry per field when two fields share kind and a message-less error', () => {
+      const first: ValidationError = {
+        kind: 'required',
+        fieldTree: fieldTreeFor('email'),
+      } as ValidationError;
+      const second: ValidationError = {
+        kind: 'required',
+        fieldTree: fieldTreeFor('name'),
+      } as ValidationError;
+
+      const fieldState = signal({ errorSummary: () => [first, second] });
+
+      const result = createErrorSummaryEntries({
+        fieldState,
+        showErrors: signal(true),
+        showWarnings: signal(true),
+      });
+
+      expect(result.entries()).toHaveLength(2);
+    });
+
+    it('gates shouldShow on the caller-supplied showErrors signal', () => {
+      const error: ValidationError = {
+        kind: 'required',
+        message: 'Required',
+        fieldTree: fieldTreeFor('email'),
+      } as ValidationError;
+
+      const fieldState = signal({ errorSummary: () => [error] });
+      const showErrors = signal(false);
+
+      const result = createErrorSummaryEntries({
+        fieldState,
+        showErrors,
+        showWarnings: signal(true),
+      });
+
+      expect(result.hasErrors()).toBe(true);
+      expect(result.shouldShow()).toBe(false);
+
+      showErrors.set(true);
+
+      expect(result.shouldShow()).toBe(true);
+    });
+
+    it('gates shouldShowWarnings on showWarnings, not on showErrors', () => {
+      const warning: ValidationError = {
+        kind: 'warn:street-optional',
+        message: 'Street can be left blank',
+        fieldTree: fieldTreeFor('street'),
+      } as ValidationError;
+
+      const fieldState = signal({ errorSummary: () => [warning] });
+      const showErrors = signal(false);
+      const showWarnings = signal(true);
+
+      const result = createErrorSummaryEntries({
+        fieldState,
+        showErrors,
+        showWarnings,
+      });
+
+      // The error channel is closed (e.g. an on-submit form before submit);
+      // the warning list is timed separately and still shows (ADR-0007).
+      expect(result.shouldShow()).toBe(false);
+      expect(result.shouldShowWarnings()).toBe(true);
+
+      showWarnings.set(false);
+
+      expect(result.shouldShowWarnings()).toBe(false);
+    });
+
+    it("focus() on an entry calls the field's focusBoundControl()", () => {
+      let focused = false;
+      const error: ValidationError = {
+        kind: 'required',
+        message: 'Required',
+        fieldTree: () => ({
+          name: () => 'email',
+          hidden: () => false,
+          disabled: () => false,
+          focusBoundControl: () => {
+            focused = true;
+          },
+        }),
+      } as ValidationError;
+
+      const fieldState = signal({ errorSummary: () => [error] });
+
+      const result = createErrorSummaryEntries({
+        fieldState,
+        showErrors: signal(true),
+        showWarnings: signal(true),
+      });
+
+      result.entries()[0]?.focus();
+      expect(focused).toBe(true);
+    });
+
+    it('marks an entry as canFocus: false when its error has no fieldTree', () => {
+      // Regression test for #497: a custom validator can emit a
+      // ValidationError with no `fieldTree` at all (not tied to any field).
+      // `isErrorOnInteractiveField` still lets it through (its default is
+      // "show, don't hide"), so the entry reaches the summary — but
+      // `focus()` on it is a silent no-op. A consumer must be able to tell
+      // these two cases apart so it does not render a button that looks
+      // interactive but does nothing (WCAG 4.1.2).
+      const error: ValidationError = {
+        kind: 'server',
+        message: 'Something went wrong',
+      };
+
+      const fieldState = signal({ errorSummary: () => [error] });
+
+      const result = createErrorSummaryEntries({
+        fieldState,
+        showErrors: signal(true),
+        showWarnings: signal(true),
+      });
+
+      expect(result.entries()).toHaveLength(1);
+      expect(result.entries()[0]?.canFocus).toBe(false);
+    });
+
+    it('marks an entry as canFocus: true when its error has a focusable fieldTree', () => {
+      const error: ValidationError = {
+        kind: 'required',
+        message: 'Required',
+        fieldTree: fieldTreeFor('email'),
+      } as ValidationError;
+
+      const fieldState = signal({ errorSummary: () => [error] });
+
+      const result = createErrorSummaryEntries({
+        fieldState,
+        showErrors: signal(true),
+        showWarnings: signal(true),
+      });
+
+      expect(result.entries()[0]?.canFocus).toBe(true);
     });
   });
 });

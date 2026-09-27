@@ -138,6 +138,7 @@ export {
   isBlockingError,
   isWarningError,
   splitByKind,
+  WARN_KIND_PREFIX,
   type SplitErrors,
   warningError,
 } from './utilities/warning-error';

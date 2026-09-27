@@ -11,7 +11,7 @@ import {
 import { NgxSignalForm } from '@ngx-signal-forms/toolkit';
 import { render, screen } from '@testing-library/angular';
 import { describe, expect, it } from 'vitest';
-import { NgxHeadlessFieldset } from './fieldset';
+import { createFieldsetAggregation, NgxHeadlessFieldset } from './fieldset';
 
 describe('NgxHeadlessFieldset', () => {
   it('aggregates and deduplicates field errors from nested fields when includeNestedErrors is true', async () => {
@@ -641,6 +641,146 @@ describe('NgxHeadlessFieldset', () => {
       expect(screen.getByTestId('show-errors')).toHaveTextContent('true');
       expect(screen.getByTestId('show-warnings')).toHaveTextContent('true');
       expect(screen.getByTestId('warning-count')).toHaveTextContent('1');
+    });
+  });
+
+  // ============================================================================
+  // createFieldsetAggregation — extracted from NgxHeadlessFieldset (#351)
+  // ============================================================================
+
+  describe('createFieldsetAggregation', () => {
+    // Pure function: no `inject()` calls, so plain signal mocks exercise the
+    // full contract without TestBed/injection context (ADR-0005).
+
+    it('aggregates direct errors by default and resolves display messages', () => {
+      const fieldState = signal({
+        errors: () => [{ kind: 'required', message: 'Required' }],
+      });
+      const showErrors = signal(true);
+      const showWarnings = signal(true);
+
+      const result = createFieldsetAggregation({
+        fieldState,
+        showErrors,
+        showWarnings,
+      });
+
+      expect(result.aggregatedErrors()).toEqual([
+        { kind: 'required', message: 'Required' },
+      ]);
+      expect(result.resolvedErrors()).toEqual([
+        { kind: 'required', message: 'Required' },
+      ]);
+      expect(result.hasErrors()).toBe(true);
+      expect(result.shouldShowErrors()).toBe(true);
+    });
+
+    it('aggregates nested errors via errorSummary() when includeNestedErrors is true', () => {
+      const fieldState = signal({
+        errors: () => [],
+        errorSummary: () => [
+          { kind: 'required', message: 'Street required' },
+          { kind: 'required', message: 'City required' },
+        ],
+      });
+
+      const result = createFieldsetAggregation({
+        fieldState,
+        includeNestedErrors: true,
+        showErrors: signal(true),
+        showWarnings: signal(true),
+      });
+
+      expect(result.aggregatedErrors()).toHaveLength(2);
+    });
+
+    it('dedupes aggregated messages by kind + message', () => {
+      const fieldState = signal({
+        errorSummary: () => [
+          { kind: 'required', message: 'Required' },
+          { kind: 'required', message: 'Required' },
+        ],
+      });
+
+      const result = createFieldsetAggregation({
+        fieldState,
+        includeNestedErrors: true,
+        showErrors: signal(true),
+        showWarnings: signal(true),
+      });
+
+      expect(result.aggregatedErrors()).toHaveLength(1);
+    });
+
+    it('splits blocking errors from warn:-prefixed warnings', () => {
+      const fieldState = signal({
+        errors: () => [
+          { kind: 'required', message: 'Required' },
+          { kind: 'warn:optional', message: 'Consider filling this in' },
+        ],
+      });
+
+      const result = createFieldsetAggregation({
+        fieldState,
+        showErrors: signal(true),
+        showWarnings: signal(true),
+      });
+
+      expect(result.aggregatedErrors()).toEqual([
+        { kind: 'required', message: 'Required' },
+      ]);
+      expect(result.aggregatedWarnings()).toEqual([
+        { kind: 'warn:optional', message: 'Consider filling this in' },
+      ]);
+      expect(result.hasWarnings()).toBe(true);
+    });
+
+    it('treats an explicitly bound empty `fields` override as "aggregate nothing", not "not provided"', () => {
+      const fieldState = signal({
+        errors: () => [{ kind: 'required', message: 'Own error' }],
+      });
+
+      const result = createFieldsetAggregation({
+        fieldState,
+        fields: signal([]),
+        showErrors: signal(true),
+        showWarnings: signal(true),
+      });
+
+      expect(result.aggregatedErrors()).toEqual([]);
+    });
+
+    it('aggregates from an explicit `fields` override when provided', () => {
+      const fieldState = signal({ errors: () => [] });
+      const overrideField = (() => ({
+        errors: () => [{ kind: 'required', message: 'Field required' }],
+      })) as unknown as FieldTree<unknown>;
+
+      const result = createFieldsetAggregation({
+        fieldState,
+        fields: signal([overrideField]),
+        showErrors: signal(true),
+        showWarnings: signal(true),
+      });
+
+      expect(result.aggregatedErrors()).toEqual([
+        { kind: 'required', message: 'Field required' },
+      ]);
+    });
+
+    it('gates shouldShowErrors/shouldShowWarnings on the caller-supplied visibility signals', () => {
+      const fieldState = signal({
+        errors: () => [{ kind: 'required', message: 'Required' }],
+      });
+
+      const result = createFieldsetAggregation({
+        fieldState,
+        showErrors: signal(false),
+        showWarnings: signal(false),
+      });
+
+      expect(result.hasErrors()).toBe(true);
+      expect(result.shouldShowErrors()).toBe(false);
     });
   });
 });

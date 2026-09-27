@@ -3,6 +3,7 @@ import {
   Component,
   computed,
   inject,
+  Injector,
   isSignal,
   signal,
   viewChild,
@@ -23,10 +24,11 @@ import {
   type ErrorReadableState,
   type SubmittedStatus,
 } from '@ngx-signal-forms/toolkit';
+import { NGX_SIGNAL_FORM_CONTEXT } from '@ngx-signal-forms/toolkit/core';
 import { render, screen } from '@testing-library/angular';
 import { userEvent } from '@testing-library/user-event';
 import { describe, expect, it } from 'vitest';
-import { NgxHeadlessErrorState } from './error-state';
+import { createErrorState, NgxHeadlessErrorState } from './error-state';
 
 describe('NgxHeadlessErrorState', () => {
   describe('error state signals', () => {
@@ -749,6 +751,343 @@ describe('NgxHeadlessErrorState', () => {
 
       expect(screen.getByTestId('has-errors')).toHaveTextContent('false');
       expect(screen.getByTestId('show-warnings')).toHaveTextContent('true');
+    });
+  });
+
+  // ============================================================================
+  // Warning display cascade (ADR-0007, issue #439)
+  // ============================================================================
+
+  describe('warning display cascade (createErrorState)', () => {
+    // `createErrorState()` used to alias `shouldShowWarnings: showErrorsSignal`,
+    // which made an ambient `'on-submit'` error strategy hold warnings back
+    // until submit — the rejected "warnings inherit the error strategy"
+    // alternative in ADR-0007. Warnings now run their own cascade.
+    //
+    // The first test stays a *contract* against Angular: it pins the reason
+    // the split cannot key off `invalid()`.
+
+    function buildWarningOnlyForm() {
+      const model = signal({ password: 'short' });
+      return TestBed.runInInjectionContext(() =>
+        form(
+          model,
+          schema((path) => {
+            validate(path.password, (ctx) => {
+              return ctx.value().length < 12
+                ? {
+                    kind: 'warn:weak-password',
+                    message: 'Consider a stronger password',
+                  }
+                : null;
+            });
+          }),
+        ),
+      );
+    }
+
+    it('Angular marks a warning-only field as invalid()', () => {
+      const passwordForm = buildWarningOnlyForm();
+      const passwordState = passwordForm.password();
+
+      // Contract: Angular does not distinguish warnings from errors, so the
+      // toolkit gates warnings on `warn:` presence, not on `invalid()`.
+      expect(passwordState.errors().length).toBeGreaterThan(0);
+      expect(passwordState.invalid()).toBe(true);
+    });
+
+    it('surfaces warning-only fields after touch', () => {
+      const passwordForm = buildWarningOnlyForm();
+
+      const errorState = TestBed.runInInjectionContext(() =>
+        createErrorState({
+          field: passwordForm.password,
+          fieldName: 'password',
+        }),
+      );
+
+      expect(errorState.shouldShowWarnings()).toBe(false);
+
+      passwordForm.password().markAsTouched();
+
+      expect(errorState.hasWarnings()).toBe(true);
+      expect(errorState.hasErrors()).toBe(false);
+      expect(errorState.shouldShowWarnings()).toBe(true);
+    });
+
+    it('shows the warning on touch while an on-submit form context still hides errors', () => {
+      const submittedStatus = signal<
+        'unsubmitted' | 'submitting' | 'submitted'
+      >('unsubmitted');
+
+      TestBed.configureTestingModule({
+        providers: [
+          {
+            provide: NGX_SIGNAL_FORM_CONTEXT,
+            useValue: {
+              errorStrategy: signal('on-submit'),
+              // The context publishes both channels; only the error one is
+              // set here, which is exactly the shape that used to hold
+              // warnings back until submit.
+              warningStrategy: signal(undefined),
+              submittedStatus,
+              form: {},
+            },
+          },
+        ],
+      });
+
+      const passwordForm = buildWarningOnlyForm();
+      const errorState = TestBed.runInInjectionContext(() =>
+        createErrorState({
+          field: passwordForm.password,
+          fieldName: 'password',
+        }),
+      );
+
+      passwordForm.password().markAsTouched();
+
+      // The error channel waits for submit; the warning channel does not.
+      expect(errorState.shouldShowErrors()).toBe(false);
+      expect(errorState.shouldShowWarnings()).toBe(true);
+    });
+
+    it('falls back to defaultWarningStrategy, never to defaultErrorStrategy', () => {
+      TestBed.configureTestingModule({
+        providers: [
+          provideNgxSignalFormsConfig({
+            defaultErrorStrategy: 'immediate',
+            defaultWarningStrategy: 'on-submit',
+          }),
+        ],
+      });
+
+      const passwordForm = buildWarningOnlyForm();
+      const errorState = TestBed.runInInjectionContext(() =>
+        createErrorState({
+          field: passwordForm.password,
+          fieldName: 'password',
+        }),
+      );
+
+      passwordForm.password().markAsTouched();
+
+      // `'immediate'` governs blocking errors only; warnings wait for submit.
+      expect(errorState.hasWarnings()).toBe(true);
+      expect(errorState.shouldShowWarnings()).toBe(false);
+    });
+
+    it('lets the warningStrategy option override the config default', () => {
+      TestBed.configureTestingModule({
+        providers: [
+          provideNgxSignalFormsConfig({ defaultWarningStrategy: 'on-submit' }),
+        ],
+      });
+
+      const passwordForm = buildWarningOnlyForm();
+      const errorState = TestBed.runInInjectionContext(() =>
+        createErrorState({
+          field: passwordForm.password,
+          fieldName: 'password',
+          warningStrategy: 'immediate',
+        }),
+      );
+
+      expect(errorState.shouldShowWarnings()).toBe(true);
+    });
+
+    it('hides the warning while a blocking error on the same field is visible', () => {
+      const model = signal({ password: '' });
+      const passwordForm = TestBed.runInInjectionContext(() =>
+        form(
+          model,
+          schema((path) => {
+            validate(path.password, (ctx) =>
+              ctx.value() ? null : { kind: 'required', message: 'Required' },
+            );
+            validate(path.password, (ctx) =>
+              ctx.value().length < 12
+                ? { kind: 'warn:weak-password', message: 'Too weak' }
+                : null,
+            );
+          }),
+        ),
+      );
+
+      const errorState = TestBed.runInInjectionContext(() =>
+        createErrorState({
+          field: passwordForm.password,
+          fieldName: 'password',
+        }),
+      );
+
+      passwordForm.password().markAsTouched();
+
+      expect(errorState.shouldShowErrors()).toBe(true);
+      expect(errorState.hasWarnings()).toBe(true);
+      expect(errorState.shouldShowWarnings()).toBe(false);
+    });
+  });
+
+  // ============================================================================
+  // createErrorState — form context inheritance (regression for Bug 2 / #73)
+  // ============================================================================
+
+  describe('createErrorState — on-submit strategy inherited from form context', () => {
+    // Regression for Bug 2 (issue #73): createErrorState was not calling
+    // injectFormContext(), so it always fell back to 'on-touch' even inside an
+    // on-submit form. The fix captures formContext at factory call time and
+    // passes it to resolveStrategyFromContext / resolveSubmittedStatusFromContext.
+
+    it('hides errors before submission when the form context uses on-submit strategy', () => {
+      const submittedStatus = signal<
+        'unsubmitted' | 'submitting' | 'submitted'
+      >('unsubmitted');
+
+      TestBed.configureTestingModule({
+        providers: [
+          {
+            provide: NGX_SIGNAL_FORM_CONTEXT,
+            useValue: {
+              errorStrategy: signal('on-submit'),
+              submittedStatus,
+              form: {},
+            },
+          },
+        ],
+      });
+
+      const model = signal({ email: '' });
+      const emailForm = TestBed.runInInjectionContext(() =>
+        form(
+          model,
+          schema((path) => {
+            validate(path.email, (ctx) =>
+              ctx.value() ? null : { kind: 'required', message: 'Required' },
+            );
+          }),
+        ),
+      );
+
+      const errorState = TestBed.runInInjectionContext(() =>
+        createErrorState({
+          field: emailForm.email,
+          fieldName: 'email',
+        }),
+      );
+
+      // on-submit strategy: field is invalid and touched, but errors are hidden
+      // until the form has been submitted.
+      emailForm.email().markAsTouched();
+      expect(errorState.hasErrors()).toBe(true);
+      expect(errorState.shouldShowErrors()).toBe(false);
+
+      // After submission the errors become visible.
+      submittedStatus.set('submitted');
+      expect(errorState.shouldShowErrors()).toBe(true);
+    });
+
+    it('falls back to on-touch when no form context is present', () => {
+      // Callers outside a form boundary (tests, standalone) must still work.
+      const model = signal({ email: '' });
+      const emailForm = TestBed.runInInjectionContext(() =>
+        form(
+          model,
+          schema((path) => {
+            validate(path.email, (ctx) =>
+              ctx.value() ? null : { kind: 'required', message: 'Required' },
+            );
+          }),
+        ),
+      );
+
+      const errorState = TestBed.runInInjectionContext(() =>
+        createErrorState({
+          field: emailForm.email,
+          fieldName: 'email',
+        }),
+      );
+
+      // Before touch: hidden.
+      expect(errorState.shouldShowErrors()).toBe(false);
+
+      // After touch: visible (on-touch fallback).
+      emailForm.email().markAsTouched();
+      expect(errorState.hasErrors()).toBe(true);
+      expect(errorState.shouldShowErrors()).toBe(true);
+    });
+  });
+
+  // ============================================================================
+  // createErrorState — global config default cascade (symmetry with
+  // NgxHeadlessFieldset.resolvedStrategy)
+  // ============================================================================
+
+  describe('createErrorState — honors NGX_SIGNAL_FORMS_CONFIG.defaultErrorStrategy', () => {
+    it('uses the global config default when no strategy input or form context is present', () => {
+      TestBed.configureTestingModule({
+        providers: [
+          provideNgxSignalFormsConfig({ defaultErrorStrategy: 'immediate' }),
+        ],
+      });
+
+      const model = signal({ email: '' });
+      const emailForm = TestBed.runInInjectionContext(() =>
+        form(
+          model,
+          schema((path) => {
+            validate(path.email, (ctx) =>
+              ctx.value() ? null : { kind: 'required', message: 'Required' },
+            );
+          }),
+        ),
+      );
+
+      const errorState = TestBed.runInInjectionContext(() =>
+        createErrorState({
+          field: emailForm.email,
+          fieldName: 'email',
+        }),
+      );
+
+      // 'immediate' from the global config: errors show without touch.
+      expect(errorState.hasErrors()).toBe(true);
+      expect(errorState.shouldShowErrors()).toBe(true);
+    });
+  });
+
+  // ============================================================================
+  // createErrorState — injector option (parity with createErrorVisibility /
+  // createErrorMessageSignal)
+  // ============================================================================
+
+  describe('createErrorState — injector option', () => {
+    it('accepts an explicit injector without requiring an ambient injection context', () => {
+      const model = signal({ email: '' });
+      const emailForm = TestBed.runInInjectionContext(() =>
+        form(
+          model,
+          schema((path) => {
+            validate(path.email, (ctx) =>
+              ctx.value() ? null : { kind: 'required', message: 'Required' },
+            );
+          }),
+        ),
+      );
+
+      const injector = TestBed.inject(Injector);
+
+      // Called directly, with no runInInjectionContext wrapper — would throw
+      // NG0203 without the injector option.
+      const errorState = createErrorState({
+        field: emailForm.email,
+        fieldName: 'email',
+        injector,
+      });
+
+      emailForm.email().markAsTouched();
+      expect(errorState.hasErrors()).toBe(true);
+      expect(errorState.shouldShowErrors()).toBe(true);
     });
   });
 });
