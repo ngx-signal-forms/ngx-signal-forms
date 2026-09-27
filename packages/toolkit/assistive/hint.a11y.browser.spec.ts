@@ -4,7 +4,7 @@ import { FormField, form } from '@angular/forms/signals';
 import { render } from '@testing-library/angular';
 import { describe, expect, it } from 'vitest';
 import { NgxFormFieldHint } from './hint';
-import { expectNoA11yViolations } from '@ngx-signal-forms/toolkit/testing';
+import { expectNoA11yViolations } from '../testing/a11y-internal';
 
 /**
  * WCAG 2.2 AA conformance gate for `NgxFormFieldHint`.

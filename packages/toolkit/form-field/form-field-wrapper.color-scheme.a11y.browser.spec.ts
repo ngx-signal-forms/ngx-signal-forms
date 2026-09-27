@@ -13,7 +13,7 @@ import {
   NgxFormFieldErrorSummary,
   NgxFormMarkingLegend,
 } from '@ngx-signal-forms/toolkit/assistive';
-import { expectNoA11yViolations } from '@ngx-signal-forms/toolkit/testing';
+import { expectNoA11yViolations } from '../testing/a11y-internal';
 import { render } from '@testing-library/angular';
 import { commands, userEvent } from 'vitest/browser';
 import { afterEach, describe, expect, it } from 'vitest';
@@ -147,7 +147,7 @@ const DARK_ERROR = 'rgb(252, 165, 165)'; // #fca5a5
     </form>
   `,
 })
-class ColorSchemeFixtureComponent {
+export class ColorSchemeFixtureComponent {
   /**
    * Tints the invalid fieldset surface. Off for the light-scheme scans: the
    * light tint (#fbdddd, unchanged by #494) puts wrapper labels at 4.35:1,
@@ -188,8 +188,14 @@ class ColorSchemeFixtureComponent {
  * background (and, for an ancestor-scoped scheme, the `color-scheme`).
  * axe reads the background from the element tree, so the surface must paint
  * one for the contrast check to measure the right pair.
+ *
+ * Exported so other browser specs (e.g. the `forced-colors: active` run in
+ * `form-field-wrapper.a11y.browser.spec.ts`) can reuse the same rich fixture
+ * — it already mounts the error summary, marking legend, character count,
+ * hint, warning, fieldset (with its panel error presentation), and the
+ * wrapper itself in one render — instead of re-declaring a narrower one.
  */
-async function renderFixture(
+export async function renderFixture(
   surfaceStyle: string,
   { tintInvalidSurface = false } = {},
 ): Promise<HTMLElement> {

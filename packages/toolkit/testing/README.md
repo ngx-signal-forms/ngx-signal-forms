@@ -28,6 +28,7 @@ npm install --save-dev axe-core@^4.5.0
 import {
   createA11yValidator,
   expectNoA11yViolations,
+  expectVisibleFocusIndicator,
   findAlertContaining,
   WCAG_22_AA_TAGS,
 } from '@ngx-signal-forms/toolkit/testing';
@@ -106,7 +107,64 @@ handing back a validator that would silently pass every scan. Omit `tags`
 behaves exactly like `expectNoA11yViolations` — the full baseline is the
 default, not a special case.
 
+## Reporting axe `incomplete` results
+
+axe marks a check `incomplete` — rather than pass or fail — when it needs a
+human to confirm the result, most often `color-contrast` over a background it
+cannot resolve to one flat color. `expectNoA11yViolations` and
+`createA11yValidator`'s returned validator accept an `incomplete` option:
+
+```typescript
+await expectNoA11yViolations(container, { incomplete: 'warn' });
+```
+
+- `'ignore'` (the default): incomplete results are not inspected at all — a
+  bare call behaves exactly as it did before this option existed.
+- `'warn'`: every incomplete result is logged via `console.warn` for manual
+  review, without failing the scan.
+- `'fail'`: same logging, and additionally throws if any `color-contrast`
+  result is incomplete. Every other rule's incomplete results are still only
+  logged.
+
+`color-contrast` incomplete results are never turned into a hard failure by
+this package's own default, even though that is the rule most likely to hide
+a real WCAG 1.4.3 violation: every toolkit textual control paints a
+**transparent** `background-color` so its border can show through, and axe's
+static contrast algorithm cannot always trace a transparent-background
+element back to the color it actually renders over. Trying `'fail'` across
+the toolkit's own suite surfaced exactly one case — the outlined, invalid
+email field — and it was a false positive, not a real defect:
+`form-field-wrapper.state-focus-outline.browser.spec.ts` already proves the
+same field's contrast is compliant with manual `blendOverSurface`/
+`contrastRatio` math, for exactly this reason.
+
 ## Utilities
+
+### `expectVisibleFocusIndicator(element)`
+
+Asserts that `element` is the current keyboard focus target (or a
+`:focus-within` ancestor of it) and that its computed style paints a visible
+focus indicator — WCAG 2.2 SC 2.4.7 (Focus Visible). No axe rule performs
+this check: axe only scans the resting, unfocused DOM. Move focus with a real
+keyboard interaction first:
+
+```typescript
+import { expectVisibleFocusIndicator } from '@ngx-signal-forms/toolkit/testing';
+import { userEvent } from 'vitest/browser';
+
+await userEvent.click(anchor); // a preceding, focusable element
+await userEvent.tab();
+
+expectVisibleFocusIndicator(document.activeElement!);
+```
+
+This is a **presence** check only — it confirms an outline or box-shadow
+renders with a non-transparent color and a nonzero width/blur/spread, not
+that it is legible against its background. It does not measure contrast, so
+it is not a substitute for WCAG 1.4.11 (Non-text Contrast) coverage; see
+`form-field-wrapper.state-focus-outline.browser.spec.ts` in the toolkit's own
+suite for a fixture that also proves its focus indicator clears the 3:1
+contrast floor.
 
 ### `findAlertContaining(container, text)`
 

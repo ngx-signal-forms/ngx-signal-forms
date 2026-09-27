@@ -11,4 +11,9 @@ export {
   findAlertContaining,
   WCAG_22_AA_TAGS,
 } from './a11y';
-export type { A11yValidator, WCAG_22_AA_TAG } from './a11y';
+export type {
+  A11yCheckOptions,
+  A11yValidator,
+  IncompleteResultMode,
+  WCAG_22_AA_TAG,
+} from './a11y';

@@ -11,7 +11,7 @@ import { NgxFormFieldErrorSummary } from './form-field-error-summary';
 import {
   expectNoA11yViolations,
   findAlertContaining,
-} from '@ngx-signal-forms/toolkit/testing';
+} from '../testing/a11y-internal';
 
 /**
  * WCAG 2.2 AA conformance gate for `NgxFormFieldErrorSummary`.
@@ -273,8 +273,17 @@ describe('NgxFormFieldErrorSummary — heading, accessible name, and focus movem
    * update — jsdom's focus handling is close enough to Chrome for most
    * specs, but this exact contract already shipped one regression (#497)
    * that jsdom alone did not catch.
+   *
+   * The "not again" half needs an update that actually *changes* the entry
+   * list — fixing one of two invalid fields, so the summary re-renders with
+   * one fewer entry — not a no-op re-render. A no-op update can't fail this
+   * assertion regardless of whether the "only focus once" guard works, since
+   * nothing would trigger a refocus attempt either way; the fix below moves
+   * focus into the very field the user is correcting, so a stolen-focus
+   * regression is directly observable as focus landing back on the summary
+   * instead of staying in the input.
    */
-  it('moves focus to the summary host the first time entries appear, and not again on a later update', async () => {
+  it('moves focus to the summary host the first time entries appear, and not again when the entry list changes on a later update', async () => {
     @Component({
       selector: 'ngx-test-a11y-summary-first-appearance',
       imports: [
@@ -293,15 +302,23 @@ describe('NgxFormFieldErrorSummary — heading, accessible name, and focus movem
             <label for="name">Full name</label>
             <input id="name" type="text" [formField]="testForm.name" />
           </ngx-form-field-wrapper>
+          <ngx-form-field-wrapper
+            [formField]="testForm.email"
+            fieldName="email"
+          >
+            <label for="email">Email address</label>
+            <input id="email" type="email" [formField]="testForm.email" />
+          </ngx-form-field-wrapper>
         </form>
       `,
     })
     class TestComponent {
-      readonly #model = signal({ name: '' });
+      readonly #model = signal({ name: '', email: '' });
       readonly testForm = form(
         this.#model,
         schema((path) => {
           required(path.name, { message: 'Name is required' });
+          required(path.email, { message: 'Email is required' });
         }),
       );
       readonly submittedStatus = signal<SubmittedStatus>('unsubmitted');
@@ -324,14 +341,20 @@ describe('NgxFormFieldErrorSummary — heading, accessible name, and focus movem
 
     const summaryHost = container.querySelector('ngx-form-field-error-summary');
     expect(document.activeElement).toBe(summaryHost);
+    // The focus target is the documented programmatic-focus contract, not
+    // just an incidental `role="group"` element: `tabindex="-1"` is what
+    // makes a non-interactive host focusable via script in the first place.
+    expect(summaryHost).toHaveAttribute('tabindex', '-1');
 
-    // Move focus away, then trigger another change-detection pass with the
-    // same entries. A second mutation of the (already-populated) list must
-    // not steal focus back.
-    container.querySelector('#name')?.focus();
-    fixture.detectChanges();
+    // Fix the email field: the entry list genuinely shrinks from two entries
+    // to one, a real update to the (already-populated) list — not a no-op.
+    const emailInput = container.querySelector<HTMLInputElement>('#email')!;
+    await userEvent.type(emailInput, 'ada@example.com');
     await fixture.whenStable();
 
+    // Focus stayed with the user's typing; the summary's re-render did not
+    // steal it back.
+    expect(document.activeElement).toBe(emailInput);
     expect(document.activeElement).not.toBe(summaryHost);
   });
 
