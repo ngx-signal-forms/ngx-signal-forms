@@ -49,6 +49,19 @@ export interface HeadlessContext {
  * simply ignore the properties they don't use — resolving an unused
  * optional token costs nothing observable.
  *
+ * `NGX_SIGNAL_FORMS_CONFIG` keeps the `{ optional: true } ?? DEFAULT`
+ * fallback here, unlike `NgxSignalFormAutoAria`/`NgxFormFieldCharacterCount`
+ * (which drop it, since the token's root `factory` always resolves for a
+ * directive or component instantiated through Angular's own injector
+ * hierarchy). `buildHeadlessContext()` is also called through
+ * `assertInjector()`-wrapped factories (`createErrorState()`,
+ * `createErrorMessageSignal()`) that explicitly support running against a
+ * caller-supplied, parent-less `Injector.create({...})` — that standalone
+ * injector never resolves a tree-shakable/root-factory token, so plain
+ * `inject()` here would throw `NG0201` for a real, supported call shape
+ * (see the fixtures in `create-error-message-signal.spec.ts`). Do not drop
+ * this fallback without re-checking that usage.
+ *
  * Must be called synchronously within an Angular injection context (a
  * directive/component constructor or field initializer, or inside an
  * `assertInjector`-wrapped callback that already established one) — it

@@ -37,7 +37,10 @@ import { isFieldTreeLike } from './walk-field-tree';
  *   `submitting()` flat (Angular's `submit()` short-circuits on invalid forms
  *   without ever flipping the signal). The tracker treats a `true` value as
  *   evidence of a completed attempt and reports `'submitted'`. The signal is
- *   cleared automatically when `touched()` returns to `false` (form reset).
+ *   cleared automatically when `touched()` returns to `false` (form reset) —
+ *   without that clear, the next touched: `false` → `true` transition (the
+ *   user simply touching a field again, with no new submit) would see the
+ *   stale `true` and resurrect `'submitted'`.
  * @returns Signal with the current `SubmittedStatus`
  *
  * @remarks
@@ -62,6 +65,15 @@ export function createSubmittedStatusTracker(
     resolve();
   }
 
+  // One linkedSignal over `{ submitting, touched }` derives the
+  // completed-once history. `submitAttempted` deliberately stays OUT of this
+  // source: it is not part of the reset-detection transition, it is a
+  // separate, always-current signal the exposed `computed()` below ORs in
+  // directly. Folding it into the source would make its effect depend on
+  // when the linkedSignal last recomputed rather than on its live value —
+  // observable as: caller sets `submitAttempted` back to `false` with no
+  // form reset, and status should follow it back to `'unsubmitted'`
+  // immediately, not stay stuck at `'submitted'`.
   const submittedHistory = linkedSignal<
     { submitting: boolean; touched: boolean },
     boolean
@@ -92,24 +104,45 @@ export function createSubmittedStatusTracker(
     },
   });
 
+  // One effect does two jobs:
+  //
+  // 1. Keeps `submittedHistory` live independent of whether the returned
+  //    `computed()` below happens to read it: that computed short-circuits
+  //    to `'submitting'` without reading `submittedHistory()` at all while a
+  //    submission is in flight, so nothing would otherwise force the
+  //    linkedSignal to observe the `submitting: true` source value — its
+  //    `computation` needs to see that value as `prev.source` once
+  //    `submitting` flips back to `false`, or the true → false transition it
+  //    is watching for goes unnoticed. A `computed()`/`linkedSignal()` only
+  //    recomputes when read; only `effect()` is "always live" in Angular's
+  //    reactive graph, so this is the one place that requirement needs it.
+  // 2. Clears the caller's `submitAttempted` signal on the same reset
+  //    transition `submittedHistory`'s own `computation` checks
+  //    (`touched()` `true` → `false`, not `submitting()`). Writing a signal
+  //    is only legal from an effect — `computed()`/`linkedSignal()`
+  //    computations throw if they try — so this can't move into the
+  //    `computation` above. Without this clear, `submitAttempted` stays
+  //    stale `true` after reset, and the very next touched: `false` → `true`
+  //    transition (the user touching a field again, no new submit) would
+  //    read that stale flag and resurrect `'submitted'`.
+  let previousTouched = false;
   effect(() => {
     submittedHistory();
+
+    if (submitAttempted === undefined) {
+      return;
+    }
+
+    const state = resolve()();
+    const touched = state.touched();
+    const submitting = state.submitting();
+    const wasTouched = previousTouched;
+    previousTouched = touched;
+
+    if (wasTouched && !touched && !submitting && submitAttempted()) {
+      submitAttempted.set(false);
+    }
   });
-
-  if (submitAttempted !== undefined) {
-    let previousTouched = false;
-    effect(() => {
-      const state = resolve()();
-      const touched = state.touched();
-      const submitting = state.submitting();
-      const wasTouched = previousTouched;
-      previousTouched = touched;
-
-      if (wasTouched && !touched && !submitting && submitAttempted()) {
-        submitAttempted.set(false);
-      }
-    });
-  }
 
   return computed(() => {
     const state = resolve()();

@@ -18,10 +18,8 @@
 //    build time. `/core` is already hidden from external consumers by
 //    `strip-internal-exports.mjs`, which deletes `"./core"` from the
 //    published `exports` map — so these are *already* unreachable from
-//    outside the package. Stripping them here would break the legitimate
-//    cross-entry/cross-project use case (see AGENTS.md note on
-//    `packages/demo/debugger` consuming `/core` internals), so this script leaves
-//    them alone.
+//    outside the package. Stripping them here would break that legitimate
+//    cross-entry/cross-project use case, so this script leaves them alone.
 // 2. `@internal`-tagged *members* on an otherwise-public class, interface,
 //    or namespace (e.g. `NgxFieldIdentity.setFieldName`) — the container
 //    itself is re-exported to real consumers (the root barrel re-exports
