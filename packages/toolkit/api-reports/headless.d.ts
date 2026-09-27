@@ -1571,7 +1571,7 @@ declare class NgxHeadlessNotification implements NotificationStateSignals {
      */
     readonly fieldName: _angular_core.InputSignal<string | null | undefined>;
     readonly hasMessages: Signal<boolean>;
-    readonly resolvedTone: Signal<"error" | "warning">;
+    readonly resolvedTone: Signal<"warning" | "error">;
     readonly showErrorContainer: Signal<boolean>;
     readonly showWarningContainer: Signal<boolean>;
     readonly errorContainerId: Signal<string | null>;
