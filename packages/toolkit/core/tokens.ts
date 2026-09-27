@@ -59,8 +59,14 @@ export interface NgxSignalFormFieldContext {
    * working link would silence the count for assistive technology (issue
    * #499 hardening).
    *
-   * Omitted by contexts that don't track control ARIA ownership; callers
-   * default to `true` (the common, auto-managed case) when this is absent.
+   * Omitted by contexts that don't track control ARIA ownership. Callers
+   * default to `false` when this is absent — a context that cannot confirm
+   * the link is safest treated as "not linked", not as the common case.
+   * `NgxFormFieldWrapper` always publishes it (`true` unless the bound
+   * control opts into `ngxSignalFormControlAria="manual"`); a custom
+   * wrapper that provides its own `NGX_SIGNAL_FORM_FIELD_CONTEXT` without
+   * this member gets the safe default instead of silently promising a link
+   * it never registers (see `docs/CUSTOM_WRAPPERS.md`).
    */
   readonly isControlDescribedByManaged?: () => boolean;
 }

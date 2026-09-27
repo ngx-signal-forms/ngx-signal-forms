@@ -91,6 +91,14 @@ holds. `limitId()` is `null` when the count has no resolved limit or no
 field name yet — filter those out before appending, the way
 `NgxFormFieldWrapper.hintDescriptors` does.
 
+Also publish `isControlDescribedByManaged` (§1) alongside this
+registration, not instead of it. The count reads that signal to decide
+whether it is safe to hide its own visible "n/max" text — a context that
+resolves a field name but skips the registration above must still leave
+`isControlDescribedByManaged` unset (or `false`), or the count hides its
+only visible text while nothing actually links the limit description into
+`aria-describedby`.
+
 ### 3. `NGX_FORM_FIELD_ERROR_RENDERER` and `NGX_FORM_FIELD_HINT_RENDERER`
 
 Inject the error renderer token with `{ optional: true }`, fall back to

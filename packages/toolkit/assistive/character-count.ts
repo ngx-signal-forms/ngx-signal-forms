@@ -200,11 +200,16 @@ export type NgxCharacterCountAnnouncementFormatter = (
  *   focus even with `liveAnnounce` off (issue #499). The visible "n/max"
  *   text becomes `aria-hidden` **only once that link exists** — it is not
  *   read twice, and never as "n slash max". The visible text stays exposed
- *   to assistive technology in two cases: a bare count with no field context
- *   (no wrapper, no `NGX_SIGNAL_FORM_FIELD_CONTEXT`), and a wrapped control
- *   with `ngxSignalFormControlAria="manual"` — auto-aria never writes to a
- *   manually-owned `aria-describedby`, so hiding the visible text there
- *   would silence the count entirely.
+ *   to assistive technology unless the field context explicitly confirms
+ *   the link (`NgxSignalFormFieldContext.isControlDescribedByManaged`
+ *   returning `true`) — a missing confirmation defaults to "not hidden",
+ *   not the other way round. This covers three cases: a bare count with no
+ *   field context (no wrapper, no `NGX_SIGNAL_FORM_FIELD_CONTEXT`); a
+ *   wrapped control with `ngxSignalFormControlAria="manual"`, where
+ *   auto-aria never writes to the manually-owned `aria-describedby`; and a
+ *   custom wrapper's context that resolves a field name but never
+ *   registers `limitId()` into its own `NGX_SIGNAL_FORM_HINT_REGISTRY` (see
+ *   `docs/CUSTOM_WRAPPERS.md`).
  *
  * @see {@link createCharacterCount} for the underlying headless utility
  */
@@ -577,11 +582,20 @@ export class NgxFormFieldCharacterCount {
    * technology with nothing replacing it — the exact regression this
    * signal exists to prevent. `NgxFormFieldHint` has no equivalent gate
    * because its content stays directly visible either way.
+   *
+   * Missing `isControlDescribedByManaged` (a context that doesn't publish
+   * it) defaults to `false`, not `true`. `NgxFormFieldWrapper` always
+   * publishes it, so the only contexts that omit it are custom wrappers —
+   * `docs/CUSTOM_WRAPPERS.md` requires them to opt in by registering
+   * `limitId()` into their `NGX_SIGNAL_FORM_HINT_REGISTRY` themselves, a
+   * step nothing forces them to add. A wrapper that resolves a field name
+   * but skips that registration would otherwise get "safe to hide" for
+   * free — silencing the count exactly like the manual-ARIA case above.
    */
   protected readonly hidesVisibleText = computed(() => {
     return (
       this.limitId() !== null &&
-      (this.#fieldContext?.isControlDescribedByManaged?.() ?? true)
+      (this.#fieldContext?.isControlDescribedByManaged?.() ?? false)
     );
   });
 

@@ -563,7 +563,10 @@ describe('NgxFormFieldCharacterCount', () => {
         providers: [
           {
             provide: NGX_SIGNAL_FORM_FIELD_CONTEXT,
-            useValue: { fieldName: signal('bio') },
+            useValue: {
+              fieldName: signal('bio'),
+              isControlDescribedByManaged: () => true,
+            },
           },
         ],
       });
@@ -572,6 +575,31 @@ describe('NgxFormFieldCharacterCount', () => {
         '.ngx-signal-form-field-char-count__text',
       );
       expect(visibleText).toHaveAttribute('aria-hidden', 'true');
+    });
+
+    it('keeps the visible "n/max" text exposed to AT when the field context omits isControlDescribedByManaged (CodeRabbit review)', async () => {
+      // Regression guard: a custom wrapper's own NGX_SIGNAL_FORM_FIELD_CONTEXT
+      // resolves a field name (so limitId() mints an id) but never registers
+      // that id into its NGX_SIGNAL_FORM_HINT_REGISTRY — a manual step
+      // docs/CUSTOM_WRAPPERS.md requires wrapper authors to add themselves.
+      // `isControlDescribedByManaged` must default to "not linked" here, not
+      // "linked" — the opposite default would hide the visible text for
+      // every third-party wrapper that hasn't done that registration step,
+      // silencing the count exactly like the manual-ARIA case above.
+      const { container } = await render(TestWrapperComponent, {
+        componentInputs: { textModel: 'test', maxLength: 100 },
+        providers: [
+          {
+            provide: NGX_SIGNAL_FORM_FIELD_CONTEXT,
+            useValue: { fieldName: signal('bio') },
+          },
+        ],
+      });
+
+      const visibleText = container.querySelector(
+        '.ngx-signal-form-field-char-count__text',
+      );
+      expect(visibleText).not.toHaveAttribute('aria-hidden');
     });
 
     it('keeps the visible "n/max" text exposed to AT for a bare count (no field context, nothing else describes it)', async () => {
