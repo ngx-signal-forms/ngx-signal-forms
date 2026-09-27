@@ -9,7 +9,7 @@ import {
 } from '@angular/forms/signals';
 import { render, screen } from '@testing-library/angular';
 import userEvent from '@testing-library/user-event';
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
   DEFAULT_NGX_SIGNAL_FORMS_CONFIG,
   NGX_SIGNAL_FORM_CONTEXT,
@@ -38,6 +38,13 @@ const createTestConfig = (
  * - Avoid accessing directive methods or internal state directly
  */
 describe('NgxSignalForm', () => {
+  // Safety net for the fake-timer specs below: a test that fails or throws
+  // between `vi.useFakeTimers()` and its own `vi.useRealTimers()` would
+  // otherwise leak fake timers into every later test in the file.
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
   /**
    * Helper component that displays form context values.
    * This is what users "see" - the observable state.
@@ -262,6 +269,9 @@ describe('NgxSignalForm', () => {
       const submitButton = screen.getByRole('button', { name: /submit/i });
       await user.click(submitButton);
       await vi.advanceTimersByTimeAsync(50);
+      // Flush any fake-timer-scheduled change-detection work before handing
+      // control back to real timers, so pending CD ticks are not dropped.
+      await vi.runAllTimersAsync();
       vi.useRealTimers();
 
       // After completion, should show submitted
@@ -332,6 +342,9 @@ describe('NgxSignalForm', () => {
       // stay faked for every interaction it drives, not just the submit.
       const resetButton = screen.getByRole('button', { name: /reset/i });
       await user.click(resetButton);
+      // Flush any fake-timer-scheduled change-detection work before handing
+      // control back to real timers, so pending CD ticks are not dropped.
+      await vi.runAllTimersAsync();
       vi.useRealTimers();
 
       await vi.waitFor(() => {
@@ -392,6 +405,10 @@ describe('NgxSignalForm', () => {
         const submitButton = screen.getByRole('button', { name: /submit/i });
         await user.click(submitButton);
         await vi.advanceTimersByTimeAsync(50);
+        // Flush any fake-timer-scheduled change-detection work before
+        // handing control back to real timers, so pending CD ticks are not
+        // dropped.
+        await vi.runAllTimersAsync();
         vi.useRealTimers();
 
         // Verify submission lifecycle completes
