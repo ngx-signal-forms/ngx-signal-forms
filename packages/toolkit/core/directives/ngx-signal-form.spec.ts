@@ -242,7 +242,7 @@ describe('NgxSignalForm', () => {
         handleSubmit(event: Event): void {
           event.preventDefault();
           void submit(this.contactForm, async () => {
-            // Simulate async operation
+            // Simulate async operation — a fake timer, not a real 50ms wait.
             await new Promise<void>((resolve) => {
               setTimeout(resolve, 50);
             });
@@ -256,20 +256,20 @@ describe('NgxSignalForm', () => {
         /^unsubmitted$/,
       );
 
-      const user = userEvent.setup();
+      vi.useFakeTimers();
+      const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
       // User submits the form
       const submitButton = screen.getByRole('button', { name: /submit/i });
       await user.click(submitButton);
+      await vi.advanceTimersByTimeAsync(50);
+      vi.useRealTimers();
 
       // After completion, should show submitted
-      await vi.waitFor(
-        () => {
-          expect(screen.getByTestId('submitted-status')).toHaveTextContent(
-            /^submitted$/,
-          );
-        },
-        { timeout: 2000 },
-      );
+      await vi.waitFor(() => {
+        expect(screen.getByTestId('submitted-status')).toHaveTextContent(
+          /^submitted$/,
+        );
+      });
     });
 
     it('should reset submission state when form is reset', async () => {
@@ -300,6 +300,7 @@ describe('NgxSignalForm', () => {
         handleSubmit(event: Event): void {
           event.preventDefault();
           void submit(this.contactForm, async () => {
+            // Simulate async operation — a fake timer, not a real 50ms wait.
             await new Promise<void>((resolve) => {
               setTimeout(resolve, 50);
             });
@@ -314,10 +315,12 @@ describe('NgxSignalForm', () => {
 
       await render(TestComponent);
 
-      const user = userEvent.setup();
+      vi.useFakeTimers();
+      const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
       // Submit form
       const submitButton = screen.getByRole('button', { name: /submit/i });
       await user.click(submitButton);
+      await vi.advanceTimersByTimeAsync(50);
 
       await vi.waitFor(() => {
         expect(screen.getByTestId('submitted-status')).toHaveTextContent(
@@ -325,9 +328,11 @@ describe('NgxSignalForm', () => {
         );
       });
 
-      // Reset form
+      // Reset form. `user` keeps its `advanceTimers` config, so timers must
+      // stay faked for every interaction it drives, not just the submit.
       const resetButton = screen.getByRole('button', { name: /reset/i });
       await user.click(resetButton);
+      vi.useRealTimers();
 
       await vi.waitFor(() => {
         expect(screen.getByTestId('submitted-status')).toHaveTextContent(
@@ -369,6 +374,7 @@ describe('NgxSignalForm', () => {
           onSubmit(event: Event): void {
             event.preventDefault();
             void submit(this.contactForm, async () => {
+              // Simulate async operation — a fake timer, not a real 50ms wait.
               await new Promise<void>((resolve) => {
                 setTimeout(resolve, 50);
               });
@@ -378,20 +384,22 @@ describe('NgxSignalForm', () => {
 
         await render(TestComponent);
 
-        const user = userEvent.setup();
+        vi.useFakeTimers();
+        const user = userEvent.setup({
+          advanceTimers: vi.advanceTimersByTime,
+        });
         // Simulate valid form submission
         const submitButton = screen.getByRole('button', { name: /submit/i });
         await user.click(submitButton);
+        await vi.advanceTimersByTimeAsync(50);
+        vi.useRealTimers();
 
         // Verify submission lifecycle completes
-        await vi.waitFor(
-          () => {
-            expect(screen.getByTestId('submitted-status')).toHaveTextContent(
-              'submitted',
-            );
-          },
-          { timeout: 2000 },
-        );
+        await vi.waitFor(() => {
+          expect(screen.getByTestId('submitted-status')).toHaveTextContent(
+            'submitted',
+          );
+        });
       });
 
       it('should show submitted status for invalid form (submit attempt without submitting transition)', async () => {

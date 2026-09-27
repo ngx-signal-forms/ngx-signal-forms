@@ -367,10 +367,13 @@ describe('VestSuiteAdapter — exported-interface guarantees', () => {
         expect(firstSettled).toBe(true);
       });
 
-      // Give the microtask/macrotask queue a real chance to flush before
-      // asserting the negative -- this is what distinguishes "genuinely never
-      // settles" from "just hasn't settled yet".
-      await new Promise((resolve) => setTimeout(resolve, 20));
+      // Give the microtask/macrotask queue a chance to flush before asserting
+      // the negative -- this is what distinguishes "genuinely never settles"
+      // from "just hasn't settled yet". A fake timer flushes deterministically
+      // instead of racing a real 20ms wall-clock wait.
+      vi.useFakeTimers();
+      await vi.advanceTimersByTimeAsync(20);
+      vi.useRealTimers();
       expect(firstRunResultSettled).toBe(false);
     });
   });
