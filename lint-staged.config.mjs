@@ -7,7 +7,15 @@ const toPosixPath = (filePath) => filePath.replaceAll('\\', '/');
 const toCommandArguments = (filePaths) =>
   filePaths.map((filePath) => JSON.stringify(filePath)).join(' ');
 
-const oxlintIgnoredPathPrefixes = ['.agents/', '.github/skills/', '.opencode/'];
+const oxlintIgnoredPathPrefixes = [
+  '.agents/',
+  '.github/skills/',
+  '.opencode/',
+  // Committed baseline snapshots of built `.d.ts` output (#514) — generated
+  // files, oxlint ignores them (see `oxlint.config.ts`), and passing them
+  // through anyway makes oxlint exit 1 with "No files found to lint".
+  'packages/toolkit/api-reports/',
+];
 
 const oxlintIgnoredFilePaths = new Set([
   'apps/demo/public/mockServiceWorker.js',

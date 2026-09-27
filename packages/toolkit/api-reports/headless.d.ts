@@ -582,8 +582,7 @@ interface ErrorStateResult {
  * `form[formRoot][ngxSignalForm]`) and falls back to `'on-touch'`. The same
  * precedence applies to `submittedStatus`.
  *
- * ## Usage
- *
+ * @example
  * ```typescript
  * const formData = signal({ email: '' });
  * const contactForm = form(
@@ -876,6 +875,17 @@ interface ErrorSummaryEntriesResult {
  * `createFieldsetAggregation`).
  *
  * @remarks Does not require an injection context.
+ *
+ * @example
+ * ```typescript
+ * const summary = createErrorSummaryEntries({
+ *   fieldState: () => contactForm()(),
+ *   showErrors: shouldShowErrors,
+ *   showWarnings: shouldShowWarnings,
+ * });
+ *
+ * summary.entries(); // focusable error entries, ready to render
+ * ```
  *
  * @group Reactive Primitives
  */
@@ -1202,6 +1212,17 @@ interface FieldsetAggregationResult {
  * `createShowErrorsComputed()` call (ADR-0006's single seam).
  *
  * @remarks Does not require an injection context.
+ *
+ * @example
+ * ```typescript
+ * const aggregation = createFieldsetAggregation({
+ *   fieldState: () => addressForm()(),
+ *   showErrors: shouldShowErrors,
+ *   showWarnings: shouldShowWarnings,
+ * });
+ *
+ * aggregation.aggregatedErrors(); // deduplicated blocking errors
+ * ```
  *
  * @group Reactive Primitives
  */
