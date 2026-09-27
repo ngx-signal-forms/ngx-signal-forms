@@ -537,13 +537,10 @@ export function createCharacterCount(
     return max === null ? 0 : max - currentLength();
   });
 
-  const isExceeded = computed(() => hasLimit() && remaining() < 0);
-
   // A non-positive limit ("no characters allowed") is handled identically here
   // to NgxHeadlessCharacterCount so the factory and directive return the same
   // values for the same inputs. Without this guard, percentUsed would go
-  // negative (when max < 0) or NaN (when max === 0), and limitState would
-  // disagree with isExceeded — both visible bugs in consumer UIs.
+  // negative (when max < 0) or NaN (when max === 0).
   const percentUsed = computed(() => {
     const max = resolvedMaxLength();
     if (max === null) return 0;
@@ -573,6 +570,16 @@ export function createCharacterCount(
 
     return 'ok';
   });
+
+  // Derived from `limitState()`, not from `remaining() < 0`, so the two
+  // never disagree. For a non-positive `maxLength`, `remaining` can be
+  // negative even for an empty value (e.g. `max = -5` gives `remaining =
+  // -5` at `currentLength = 0`), while `limitState` — correctly — reports
+  // `'ok'` there (no characters typed, none can be, so nothing is
+  // "exceeded" yet). `remaining() < 0` would have called that `isExceeded`.
+  // For a positive `maxLength`, `ratio > 1` (limitState's rule) and
+  // `remaining < 0` are the same condition, so this changes nothing there.
+  const isExceeded = computed(() => limitState() === 'exceeded');
 
   return {
     currentLength,

@@ -698,6 +698,47 @@ describe('createCharacterCount (factory)', () => {
     expect(screen.getByTestId('limit-state').textContent).toBe('ok');
   });
 
+  it('agrees isExceeded with limitState for a negative maxLength (PR #544 review)', async () => {
+    // Regression guard: for a negative `maxLength`, `remaining` goes
+    // negative even for an EMPTY value (e.g. `max = -5` gives `remaining =
+    // -5` at `currentLength = 0`). A naive `isExceeded = remaining() < 0`
+    // would report `true` there, while `limitState` correctly reports
+    // `'ok'` (nothing has been typed, so nothing is "exceeded" yet) — the
+    // two would disagree. `isExceeded` must be derived from `limitState()`
+    // instead, so they can never disagree.
+    @Component({
+      selector: 'ngx-test-factory-negative-max-agreement',
+      imports: [FormField],
+      template: `
+        <input [formField]="titleForm.title" />
+        <span data-testid="is-exceeded">{{ count.isExceeded() }}</span>
+        <span data-testid="limit-state">{{ count.limitState() }}</span>
+      `,
+    })
+    class TestComponent {
+      readonly model = signal({ title: '' });
+      readonly titleForm = form(this.model);
+      readonly count = createCharacterCount({
+        field: this.titleForm.title,
+        maxLength: -5,
+      });
+    }
+
+    const { fixture } = await render(TestComponent);
+
+    // Empty value: agree on 'ok' / not exceeded.
+    expect(screen.getByTestId('is-exceeded').textContent).toBe('false');
+    expect(screen.getByTestId('limit-state').textContent).toBe('ok');
+
+    fixture.componentInstance.model.set({ title: 'a' });
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    // With a value: agree on 'exceeded' / exceeded.
+    expect(screen.getByTestId('is-exceeded').textContent).toBe('true');
+    expect(screen.getByTestId('limit-state').textContent).toBe('exceeded');
+  });
+
   it('falls back to the field maxLength validator when useValidatorMaxLength is true', async () => {
     @Component({
       selector: 'ngx-test-factory-validator-fallback',
