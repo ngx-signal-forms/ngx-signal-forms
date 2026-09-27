@@ -527,25 +527,30 @@
     border-color: var(--_hover-border-color);
   }
 
-  &:focus-within {
-    border-color: var(--_focus-color);
-    box-shadow: var(--_focus-box-shadow);
-    /* Solid outline: the state-color border (invalid/warning) stays
-       unfocused-looking on its own, so the outline is what actually shows
-       the field is focused. It applies to every state — the invalid and
-       warning rules below don't set `outline`, so this declaration reaches
-       them unchanged. The plain appearance is the one exception: it
-       overrides `outline` back to `none` in `form-field-wrapper.selection.css`
-       and relies on its own input-level outline instead (see `#493`). */
-    outline: var(--_focus-outline-width) solid var(--_focus-color);
-    outline-offset: var(--_focus-outline-offset);
-  }
-
   &:has(:is(input, textarea, select):disabled) {
     background-color: var(--_disabled-bg);
     opacity: var(--_disabled-opacity);
     cursor: not-allowed;
   }
+}
+
+/* Keep this focus rule flat. Angular 22.2 adds a scoping attribute to */
+/* nested `&` rules, which raises their specificity. The forced-colors focus */
+/* rule at the end of this file has the same specificity as this flat rule */
+/* and wins by source order. A nested copy of this rule would beat it (#556). */
+:host(.ngx-signal-form-field-wrapper--textual)
+  .ngx-signal-form-field-wrapper__content:focus-within {
+  border-color: var(--_focus-color);
+  box-shadow: var(--_focus-box-shadow);
+  /* Solid outline: the state-color border (invalid/warning) stays
+     unfocused-looking on its own, so the outline is what actually shows
+     the field is focused. It applies to every state — the invalid and
+     warning rules below don't set `outline`, so this declaration reaches
+     them unchanged. The plain appearance is the one exception: it
+     overrides `outline` back to `none` in `form-field-wrapper.selection.css`
+     and relies on its own input-level outline instead (see `#493`). */
+  outline: var(--_focus-outline-width) solid var(--_focus-color);
+  outline-offset: var(--_focus-outline-offset);
 }
 
 .ngx-signal-form-field-wrapper__main {
