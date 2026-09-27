@@ -1255,14 +1255,16 @@ describe('form-field wrapper — additional variant coverage (#501)', () => {
     });
 
     it('applies the emulation and repaints the textual border from a forced-colors-only system color', async () => {
-      // Default (not "outline") appearance: outline appearance's own border
-      // rule (`:host(.ngx-signal-forms-outline.ngx-signal-form-field-wrapper--textual)`,
-      // two classes) is more specific than the generic forced-colors
-      // `--textual` rule (one class), so it would win over it regardless of
-      // source order. The default appearance's border rule has the same,
+      // Default (not "outline") appearance only. Outline appearance's own
+      // border rule (`:host(.ngx-signal-forms-outline.ngx-signal-form-field-
+      // wrapper--textual) .content`, two classes) out-specifies the generic
+      // forced-colors `--textual` rule (one class) regardless of source
+      // order, so an outlined field never gets remapped at all — a real
+      // defect, tracked as #550 and covered by its own `it.fails` twin
+      // below. The default appearance's border rule has the same
       // single-class specificity as the forced-colors override, so source
-      // order (the media block comes later in the stylesheet) decides —
-      // this is the variant the `forced-colors` rule actually reaches.
+      // order (the media block comes later in the stylesheet) decides in
+      // its favor there — this test covers that unaffected variant.
       const TestComponent = defineFixtureComponent(
         'ngx-test-a11y-forced-colors-border',
         `
@@ -1302,6 +1304,56 @@ describe('form-field wrapper — additional variant coverage (#501)', () => {
     });
 
     /**
+     * #550: `appearance="outline"`'s own border rule
+     * (`:host(.ngx-signal-forms-outline.ngx-signal-form-field-wrapper--textual)
+     * .content`, two classes in the `:host()` compound — form-field-
+     * wrapper.css around line 777) out-specifies the generic forced-colors
+     * `--textual` border rule (one class, around line 1225) regardless of
+     * source order. `forced-color-adjust: none` on that losing rule also
+     * never applies, so Chromium keeps remapping the field on its own —
+     * but the *border itself* stays the un-forced 1px author `color-mix()`
+     * value instead of the intended 2px system-color one. An outlined
+     * field is therefore the one appearance forced-colors mode does not
+     * actually harden.
+     */
+    it.fails('appearance="outline" keeps its 1px author border under forced-colors: active instead of the intended 2px system color — known failure. Tracked in #550', async () => {
+      const TestComponent = defineFixtureComponent(
+        'ngx-test-a11y-forced-colors-outline-border',
+        `
+          <form [formRoot]="testForm" ngxSignalForm>
+            <ngx-form-field-wrapper
+              [formField]="testForm.name"
+              fieldName="name"
+              appearance="outline"
+            >
+              <label for="forced-colors-outline-border-name">Full name</label>
+              <input
+                id="forced-colors-outline-border-name"
+                type="text"
+                [formField]="testForm.name"
+              />
+            </ngx-form-field-wrapper>
+          </form>
+        `,
+        () => form(signal({ name: '' })),
+      );
+
+      const { container } = await render(TestComponent);
+
+      await commands.emulateForcedColors('active');
+      await TestBed.inject(ApplicationRef).whenStable();
+
+      expect(window.matchMedia('(forced-colors: active)').matches).toBe(true);
+
+      const content = container.querySelector<HTMLElement>(
+        '.ngx-signal-form-field-wrapper__content',
+      )!;
+      const styles = getComputedStyle(content);
+      expect(styles.borderStyle).toBe('solid');
+      expect(styles.borderWidth).toBe('2px');
+    });
+
+    /**
      * Reuses `form-field-wrapper.color-scheme.a11y.browser.spec.ts`'s own
      * fixture and `renderFixture` helper: it already mounts the error
      * summary, marking legend, character count, hint, warning, and the
@@ -1322,10 +1374,12 @@ describe('form-field wrapper — additional variant coverage (#501)', () => {
     });
 
     it('shows a solid 2px system-color focus outline under forced-colors: active, with no box-shadow', async () => {
-      // Default appearance, for the same specificity reason as the border
-      // test above — the forced-colors focus rule is scoped to the
-      // single-class `--textual` selector, which the two-class outline
-      // appearance focus rule would otherwise out-specify.
+      // Default appearance only, for the same specificity reason as the
+      // border test above — the forced-colors focus rule
+      // (`:host(.--textual) .content:focus-within`, one class) loses to
+      // outline appearance's own two-class focus-within rule regardless of
+      // source order. That's #550, covered by its own `it.fails` twin below;
+      // this test covers the unaffected default-appearance variant.
       const TestComponent = defineFixtureComponent(
         'ngx-test-a11y-forced-colors-focus',
         `
@@ -1363,6 +1417,57 @@ describe('form-field wrapper — additional variant coverage (#501)', () => {
       // the sole focus signal in this mode.
       expect(styles.outlineStyle).toBe('solid');
       expect(styles.outlineWidth).toBe('2px');
+      expect(styles.boxShadow).toBe('none');
+    });
+
+    /**
+     * #550: outline appearance's own `:focus-within` rule (two classes in
+     * the `:host()` compound, around form-field-wrapper.css line 800)
+     * out-specifies the generic forced-colors focus rule's `box-shadow`
+     * and `border-color` declarations (one class, around line 1260),
+     * regardless of source order — only the generic rule's `outline`
+     * property itself survives uncontested, since the outline-appearance
+     * rule never sets that property. The result: an outlined field's
+     * ordinary `color-mix()` box-shadow ring stays visible under forced
+     * colors instead of being neutralized to `none`.
+     */
+    it.fails('appearance="outline" keeps its ordinary box-shadow ring under forced-colors: active instead of neutralizing it to none — known failure. Tracked in #550', async () => {
+      const TestComponent = defineFixtureComponent(
+        'ngx-test-a11y-forced-colors-outline-focus',
+        `
+          <button type="button" id="forced-colors-outline-focus-anchor">Before</button>
+          <form [formRoot]="testForm" ngxSignalForm>
+            <ngx-form-field-wrapper
+              [formField]="testForm.name"
+              fieldName="name"
+              appearance="outline"
+            >
+              <label for="forced-colors-outline-focus-name">Full name</label>
+              <input
+                id="forced-colors-outline-focus-name"
+                type="text"
+                [formField]="testForm.name"
+              />
+            </ngx-form-field-wrapper>
+          </form>
+        `,
+        () => form(signal({ name: '' })),
+      );
+
+      const { container } = await render(TestComponent);
+      await commands.emulateForcedColors('active');
+
+      await userEvent.click(
+        container.querySelector<HTMLButtonElement>(
+          '#forced-colors-outline-focus-anchor',
+        )!,
+      );
+      await userEvent.tab();
+
+      const content = container.querySelector<HTMLElement>(
+        '.ngx-signal-form-field-wrapper__content',
+      )!;
+      const styles = getComputedStyle(content);
       expect(styles.boxShadow).toBe('none');
     });
   });

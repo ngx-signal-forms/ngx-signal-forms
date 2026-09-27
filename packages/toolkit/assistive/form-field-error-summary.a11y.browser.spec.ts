@@ -359,6 +359,87 @@ describe('NgxFormFieldErrorSummary — heading, accessible name, and focus movem
   });
 
   /**
+   * The component's own doc comment on its focus latch (`form-field-error-
+   * summary.ts`): "We re-arm the latch when the summary disappears so the
+   * next '0 → N' transition focuses again." The spec above only ever
+   * proves the "not again while still visible" half; it never drives
+   * `hasErrors()` back to `false`, so it can't tell a working re-arm from a
+   * latch that never resets at all. This drives the full promised cycle:
+   * 0 errors → N errors (first focus) → back to 0 (latch re-arms) → N again
+   * (must focus a second time).
+   */
+  it('re-focuses the summary host on a second 0 → N transition after all errors clear', async () => {
+    @Component({
+      selector: 'ngx-test-a11y-summary-latch-rearm',
+      imports: [
+        FormField,
+        NgxSignalFormToolkit,
+        NgxFormField,
+        NgxFormFieldErrorSummary,
+      ],
+      template: `
+        <form [formRoot]="testForm" ngxSignalForm errorStrategy="on-submit">
+          <ngx-form-field-error-summary
+            [formTree]="testForm"
+            [submittedStatus]="submittedStatus()"
+          />
+          <ngx-form-field-wrapper [formField]="testForm.name" fieldName="name">
+            <label for="name">Full name</label>
+            <input id="name" type="text" [formField]="testForm.name" />
+          </ngx-form-field-wrapper>
+        </form>
+      `,
+    })
+    class TestComponent {
+      readonly #model = signal({ name: '' });
+      readonly testForm = form(
+        this.#model,
+        schema((path) => {
+          required(path.name, { message: 'Name is required' });
+        }),
+      );
+      readonly submittedStatus = signal<SubmittedStatus>('unsubmitted');
+    }
+
+    const { container, fixture } = await render(TestComponent);
+    await TestBed.inject(ApplicationRef).whenStable();
+
+    const nameInput = container.querySelector<HTMLInputElement>('#name')!;
+    const summaryHost = container.querySelector(
+      'ngx-form-field-error-summary',
+    )!;
+
+    // 0 → N (first appearance): focuses the summary.
+    fixture.componentInstance.submittedStatus.set('submitted');
+    fixture.detectChanges();
+    await fixture.whenStable();
+    expect(document.activeElement).toBe(summaryHost);
+
+    // N → 0: fixing the only invalid field clears `hasErrors()`, so the
+    // summary hides and the component's own doc says the latch re-arms.
+    await userEvent.type(nameInput, 'Ada');
+    await fixture.whenStable();
+    expect(
+      container
+        .querySelector('ngx-form-field-error-summary [role="alert"]')
+        ?.textContent?.trim() ?? '',
+    ).toBe('');
+    expect(document.activeElement).toBe(nameInput);
+
+    // 0 → N again: a re-armed latch must focus the summary a second time,
+    // exactly as it did on the first appearance.
+    await userEvent.clear(nameInput);
+    await fixture.whenStable();
+
+    expect(
+      container
+        .querySelector('ngx-form-field-error-summary [role="alert"]')
+        ?.textContent?.trim(),
+    ).toContain('Name is required');
+    expect(document.activeElement).toBe(summaryHost);
+  });
+
+  /**
    * Browser twin of `form-field-error-summary.spec.ts`'s "focuses the bound
    * control when an entry is activated via keyboard" (issue #501). Native
    * `<button>` Enter/Space activation is close enough in jsdom for most

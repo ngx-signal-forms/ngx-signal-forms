@@ -282,10 +282,33 @@ function logIncompleteResults(incomplete: readonly axe.Result[]): void {
   );
 }
 
-/** A parsed `rgb()`/`rgba()` color's alpha channel, or `1` if unspecified. */
+/**
+ * A parsed CSS color function's alpha channel, or `1` if unspecified.
+ * `color` must be a single color function call with no nested parentheses
+ * (e.g. `rgb(0, 0, 0, 0.5)`, `rgb(0 0 0 / 50%)`, `oklab(0 0 0 / 0)`,
+ * `color(srgb 0 0.482 0.78 / 0.4)`) — the exact shape `getComputedStyle`
+ * returns for a resolved color, regardless of how it was authored (Chromium
+ * serializes a `color-mix()` result as `color(srgb ...)`, not as
+ * `color-mix()` itself).
+ *
+ * Tries the modern slash syntax first (`/ <alpha>` or `/ <alpha>%`, right
+ * before the closing paren), then falls back to the legacy 4-argument comma
+ * form (`rgba(r, g, b, a)` / `hsla(h, s, l, a)`) by checking whether the
+ * function actually has 4 comma-separated arguments — not just "does the
+ * string end in a comma and a number", which would misread a 3-argument
+ * `rgb(0, 0, 0)`'s blue channel as if it were alpha.
+ */
 function colorAlpha(color: string): number {
-  const match = /rgba?\((?:[^,]+,){3}\s*([\d.]+)\s*\)/u.exec(color);
-  return match?.[1] === undefined ? 1 : Number(match[1]);
+  const inner = /\(([^)]*)\)/u.exec(color)?.[1] ?? '';
+
+  const slashMatch = /\/\s*([\d.]+)(%)?\s*$/u.exec(inner.trim());
+  if (slashMatch) {
+    const value = Number(slashMatch[1]);
+    return slashMatch[2] ? value / 100 : value;
+  }
+
+  const commaArgs = inner.split(',').map((arg) => arg.trim());
+  return commaArgs.length === 4 ? Number(commaArgs[3]) : 1;
 }
 
 /**
@@ -330,7 +353,13 @@ function hasVisibleBoxShadow(boxShadow: string): boolean {
   }
 
   return splitTopLevelCommas(boxShadow).some((layer) => {
-    const colorMatch = /rgba?\([^)]*\)|hsla?\([^)]*\)/u.exec(layer);
+    // Any color function, not just `rgb(a)`/`hsl(a)`: Chromium can also
+    // serialize a computed box-shadow color as `oklch(...)`, `oklab(...)`,
+    // or `color(srgb ...)` (e.g. a resolved `color-mix()`). Missing one of
+    // those left its numbers in `layer` for the length parse below to
+    // misread — a `color(srgb 0 0.48 0.78 / 0.4)` color's `0.4` alpha, read
+    // as if it were a length, could pass this check for the wrong reason.
+    const colorMatch = /\w+\([^()]*\)/u.exec(layer);
     const alpha = colorMatch ? colorAlpha(colorMatch[0]) : 1;
     if (alpha <= 0) {
       return false;
@@ -369,19 +398,30 @@ function hasVisibleBoxShadow(boxShadow: string): boolean {
  * interaction (`await userEvent.tab()` from `vitest/browser`) rather than
  * `element.focus()` — Chromium's `:focus-visible` heuristic only matches
  * keyboard-driven focus, so a programmatic `.focus()` call can under-report
- * an outline that a real Tab press would show. The `:focus-visible` /
- * `:focus-within` check below fails loudly if that convention isn't
- * followed, rather than silently asserting on a resting, unfocused style.
+ * an outline that a real Tab press would show.
+ *
+ * The precondition below is stricter than "either pseudo-class matches":
+ * when `element` **is** `document.activeElement`, only `:focus-visible` is
+ * accepted — `:focus-within` also matches an element on itself (not just its
+ * ancestors), so accepting it here for the direct target would let a
+ * genuine `:focus-visible` miss (a real, catchable bug) slip through as a
+ * false pass. `:focus-within` is checked only when `element` is *not* the
+ * active element itself, for the documented ancestor-container case.
  *
  * @param element The element expected to carry the focus indicator — either
- *   the focused control itself (`:focus-visible`), or a `:focus-within`
- *   ancestor that renders the ring instead (see
+ *   the focused control itself (must be `:focus-visible`), or a
+ *   `:focus-within` ancestor that renders the ring instead (see
  *   `form-field-wrapper.state-focus-outline.browser.spec.ts`).
  */
 export function expectVisibleFocusIndicator(element: Element): void {
-  if (!element.matches(':focus-visible, :focus-within')) {
+  const isFocusedDirectly = element === document.activeElement;
+  const isValidFocusTarget = isFocusedDirectly
+    ? element.matches(':focus-visible')
+    : element.matches(':focus-within');
+
+  if (!isValidFocusTarget) {
     throw new Error(
-      `Expected <${element.tagName.toLowerCase()}> to be the current :focus-visible element (or a :focus-within ancestor of it), but it was neither. Move focus with a real keyboard interaction (e.g. await userEvent.tab()) before calling expectVisibleFocusIndicator.`,
+      `Expected <${element.tagName.toLowerCase()}> to be the current :focus-visible element, or a :focus-within ancestor of it, but it was neither. Move focus onto or into it with a real keyboard interaction (e.g. await userEvent.tab()) before calling expectVisibleFocusIndicator.`,
     );
   }
 

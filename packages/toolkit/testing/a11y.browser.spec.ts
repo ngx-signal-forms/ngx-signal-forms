@@ -724,4 +724,59 @@ describe('expectVisibleFocusIndicator', () => {
       expectVisibleFocusIndicator(target);
     }).toThrow(/:focus-visible/u);
   });
+
+  /**
+   * Regression coverage: Chromium never serializes a computed color as the
+   * literal `color-mix()`/`oklch()` author syntax — it resolves to
+   * `color(srgb ...)`, `oklab(...)`, or a plain `rgb(...)`, depending on the
+   * color space involved. `colorAlpha`/`hasVisibleBoxShadow` used to only
+   * recognize `rgba?()`/`hsla?()`, so these forms fell through unmatched:
+   * `colorAlpha` silently returned the "opaque" default, and for
+   * `box-shadow`, the unmatched color function's own numbers (including its
+   * alpha) leaked into the blur/spread parse.
+   */
+  it('throws for a focused, fully transparent color-mix() outline', async () => {
+    mount(`
+      <button type="button" id="ngx-a11y-focus-color-mix-outline-anchor">Before</button>
+      <input
+        id="ngx-a11y-focus-color-mix-outline-target"
+        style="outline: 2px solid color-mix(in srgb, black 0%, transparent); box-shadow: none;"
+      />
+    `);
+
+    const target = await tabInto('ngx-a11y-focus-color-mix-outline-anchor');
+    expect(() => {
+      expectVisibleFocusIndicator(target);
+    }).toThrow(/visible focus indicator/u);
+  });
+
+  it('throws for a focused box-shadow with a fully transparent color-mix() color', async () => {
+    mount(`
+      <button type="button" id="ngx-a11y-focus-color-mix-shadow-anchor">Before</button>
+      <input
+        id="ngx-a11y-focus-color-mix-shadow-target"
+        style="outline: none; box-shadow: 0 0 4px 4px color-mix(in srgb, black 0%, transparent);"
+      />
+    `);
+
+    const target = await tabInto('ngx-a11y-focus-color-mix-shadow-anchor');
+    expect(() => {
+      expectVisibleFocusIndicator(target);
+    }).toThrow(/visible focus indicator/u);
+  });
+
+  it('throws for a focused box-shadow with a fully transparent oklch() color', async () => {
+    mount(`
+      <button type="button" id="ngx-a11y-focus-oklch-shadow-anchor">Before</button>
+      <input
+        id="ngx-a11y-focus-oklch-shadow-target"
+        style="outline: none; box-shadow: 0 0 4px 4px oklch(0 0 0 / 0);"
+      />
+    `);
+
+    const target = await tabInto('ngx-a11y-focus-oklch-shadow-anchor');
+    expect(() => {
+      expectVisibleFocusIndicator(target);
+    }).toThrow(/visible focus indicator/u);
+  });
 });

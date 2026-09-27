@@ -133,10 +133,9 @@ a real WCAG 1.4.3 violation: every toolkit textual control paints a
 static contrast algorithm cannot always trace a transparent-background
 element back to the color it actually renders over. Trying `'fail'` across
 the toolkit's own suite surfaced exactly one case — the outlined, invalid
-email field — and it was a false positive, not a real defect:
-`form-field-wrapper.state-focus-outline.browser.spec.ts` already proves the
-same field's contrast is compliant with manual `blendOverSurface`/
-`contrastRatio` math, for exactly this reason.
+email field — and it was a false positive, not a real defect: the toolkit's
+own specs already prove that field's contrast is compliant, with manual
+color-blending math, for exactly this reason.
 
 ## Utilities
 
@@ -161,10 +160,9 @@ expectVisibleFocusIndicator(document.activeElement!);
 This is a **presence** check only — it confirms an outline or box-shadow
 renders with a non-transparent color and a nonzero width/blur/spread, not
 that it is legible against its background. It does not measure contrast, so
-it is not a substitute for WCAG 1.4.11 (Non-text Contrast) coverage; see
-`form-field-wrapper.state-focus-outline.browser.spec.ts` in the toolkit's own
-suite for a fixture that also proves its focus indicator clears the 3:1
-contrast floor.
+it is not a substitute for WCAG 1.4.11 (Non-text Contrast) coverage; the
+toolkit's own specs pair it with manual contrast math where a fixture needs
+to prove its focus indicator also clears the 3:1 floor.
 
 ### `findAlertContaining(container, text)`
 
