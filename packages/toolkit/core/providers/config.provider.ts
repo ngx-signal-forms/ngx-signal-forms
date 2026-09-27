@@ -89,6 +89,26 @@ function createConfigFactory(
         configDefault: parentOrNull?.requiredHintText,
         fallback: DEFAULT_NGX_SIGNAL_FORMS_CONFIG.requiredHintText,
       }),
+      errorPrefixText: createCascadingResolver({
+        input: userConfig.errorPrefixText,
+        configDefault: parentOrNull?.errorPrefixText,
+        fallback: DEFAULT_NGX_SIGNAL_FORMS_CONFIG.errorPrefixText,
+      }),
+      warningPrefixText: createCascadingResolver({
+        input: userConfig.warningPrefixText,
+        configDefault: parentOrNull?.warningPrefixText,
+        fallback: DEFAULT_NGX_SIGNAL_FORMS_CONFIG.warningPrefixText,
+      }),
+      errorSummaryAnnouncesAlone: createCascadingResolver({
+        input: userConfig.errorSummaryAnnouncesAlone,
+        configDefault: parentOrNull?.errorSummaryAnnouncesAlone,
+        fallback: DEFAULT_NGX_SIGNAL_FORMS_CONFIG.errorSummaryAnnouncesAlone,
+      }),
+      characterCountLimitText: createCascadingResolver({
+        input: userConfig.characterCountLimitText,
+        configDefault: parentOrNull?.characterCountLimitText,
+        fallback: DEFAULT_NGX_SIGNAL_FORMS_CONFIG.characterCountLimitText,
+      }),
     };
   };
 }

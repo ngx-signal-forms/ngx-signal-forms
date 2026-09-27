@@ -1,9 +1,16 @@
 import { Component, signal } from '@angular/core';
-import { form, FormField } from '@angular/forms/signals';
+import {
+  form,
+  FormField,
+  maxLength as signalMaxLength,
+} from '@angular/forms/signals';
 import { render, screen } from '@testing-library/angular';
 import { userEvent } from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { NgxHeadlessCharacterCount } from './character-count';
+import {
+  createCharacterCount,
+  NgxHeadlessCharacterCount,
+} from './character-count';
 
 describe('NgxHeadlessCharacterCount', () => {
   describe('character count signals', () => {
@@ -652,5 +659,164 @@ describe('NgxHeadlessCharacterCount', () => {
 
       expect(screen.getByTestId('current-length').textContent).toBe('11');
     });
+  });
+});
+
+describe('createCharacterCount (factory)', () => {
+  // NgxHeadlessCharacterCount always passes an explicit `maxLength` (its
+  // input is required), so the suite above never exercises the "no limit"
+  // or validator-fallback paths. These specs call the factory directly, the
+  // way a programmatic consumer (or `NgxFormFieldCharacterCount`) does.
+
+  it('reports no limit and neutral defaults when maxLength is omitted', async () => {
+    @Component({
+      selector: 'ngx-test-factory-no-limit',
+      imports: [FormField],
+      template: `
+        <textarea [formField]="contactForm.bio"></textarea>
+        <span data-testid="has-limit">{{ count.hasLimit() }}</span>
+        <span data-testid="resolved-max">{{ count.resolvedMaxLength() }}</span>
+        <span data-testid="remaining">{{ count.remaining() }}</span>
+        <span data-testid="is-exceeded">{{ count.isExceeded() }}</span>
+        <span data-testid="percent-used">{{ count.percentUsed() }}</span>
+        <span data-testid="limit-state">{{ count.limitState() }}</span>
+      `,
+    })
+    class TestComponent {
+      readonly #model = signal({ bio: 'Hello World' });
+      readonly contactForm = form(this.#model);
+      // No `maxLength`, no `useValidatorMaxLength` — nothing to resolve a
+      // limit from.
+      readonly count = createCharacterCount({ field: this.contactForm.bio });
+    }
+
+    await render(TestComponent);
+
+    expect(screen.getByTestId('has-limit').textContent).toBe('false');
+    expect(screen.getByTestId('resolved-max').textContent).toBe('');
+    expect(screen.getByTestId('remaining').textContent).toBe('0');
+    expect(screen.getByTestId('is-exceeded').textContent).toBe('false');
+    expect(screen.getByTestId('percent-used').textContent).toBe('0');
+    expect(screen.getByTestId('limit-state').textContent).toBe('ok');
+  });
+
+  it('agrees isExceeded with limitState for a negative maxLength (PR #544 review)', async () => {
+    // Regression guard: for a negative `maxLength`, `remaining` goes
+    // negative even for an EMPTY value (e.g. `max = -5` gives `remaining =
+    // -5` at `currentLength = 0`). A naive `isExceeded = remaining() < 0`
+    // would report `true` there, while `limitState` correctly reports
+    // `'ok'` (nothing has been typed, so nothing is "exceeded" yet) — the
+    // two would disagree. `isExceeded` must be derived from `limitState()`
+    // instead, so they can never disagree.
+    @Component({
+      selector: 'ngx-test-factory-negative-max-agreement',
+      imports: [FormField],
+      template: `
+        <input [formField]="titleForm.title" />
+        <span data-testid="is-exceeded">{{ count.isExceeded() }}</span>
+        <span data-testid="limit-state">{{ count.limitState() }}</span>
+      `,
+    })
+    class TestComponent {
+      readonly model = signal({ title: '' });
+      readonly titleForm = form(this.model);
+      readonly count = createCharacterCount({
+        field: this.titleForm.title,
+        maxLength: -5,
+      });
+    }
+
+    const { fixture } = await render(TestComponent);
+
+    // Empty value: agree on 'ok' / not exceeded.
+    expect(screen.getByTestId('is-exceeded').textContent).toBe('false');
+    expect(screen.getByTestId('limit-state').textContent).toBe('ok');
+
+    fixture.componentInstance.model.set({ title: 'a' });
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    // With a value: agree on 'exceeded' / exceeded.
+    expect(screen.getByTestId('is-exceeded').textContent).toBe('true');
+    expect(screen.getByTestId('limit-state').textContent).toBe('exceeded');
+  });
+
+  it('falls back to the field maxLength validator when useValidatorMaxLength is true', async () => {
+    @Component({
+      selector: 'ngx-test-factory-validator-fallback',
+      imports: [FormField],
+      template: `
+        <textarea [formField]="contactForm.bio"></textarea>
+        <span data-testid="has-limit">{{ count.hasLimit() }}</span>
+        <span data-testid="resolved-max">{{ count.resolvedMaxLength() }}</span>
+      `,
+    })
+    class TestComponent {
+      readonly #model = signal({ bio: 'a'.repeat(10) });
+      readonly contactForm = form(this.#model, (path) => {
+        signalMaxLength(path.bio, 50);
+      });
+      readonly count = createCharacterCount({
+        field: this.contactForm.bio,
+        useValidatorMaxLength: true,
+      });
+    }
+
+    await render(TestComponent);
+
+    expect(screen.getByTestId('has-limit').textContent).toBe('true');
+    expect(screen.getByTestId('resolved-max').textContent).toBe('50');
+  });
+
+  it('prefers an explicit maxLength over the field validator', async () => {
+    @Component({
+      selector: 'ngx-test-factory-explicit-wins',
+      imports: [FormField],
+      template: `
+        <textarea [formField]="contactForm.bio"></textarea>
+        <span data-testid="resolved-max">{{ count.resolvedMaxLength() }}</span>
+      `,
+    })
+    class TestComponent {
+      readonly #model = signal({ bio: 'a'.repeat(10) });
+      readonly contactForm = form(this.#model, (path) => {
+        signalMaxLength(path.bio, 50);
+      });
+      readonly count = createCharacterCount({
+        field: this.contactForm.bio,
+        maxLength: 20,
+        useValidatorMaxLength: true,
+      });
+    }
+
+    await render(TestComponent);
+
+    expect(screen.getByTestId('resolved-max').textContent).toBe('20');
+  });
+
+  it('does not fall back to the validator when useValidatorMaxLength is false (the default)', async () => {
+    @Component({
+      selector: 'ngx-test-factory-no-fallback',
+      imports: [FormField],
+      template: `
+        <textarea [formField]="contactForm.bio"></textarea>
+        <span data-testid="has-limit">{{ count.hasLimit() }}</span>
+        <span data-testid="resolved-max">{{ count.resolvedMaxLength() }}</span>
+      `,
+    })
+    class TestComponent {
+      readonly #model = signal({ bio: 'a'.repeat(10) });
+      readonly contactForm = form(this.#model, (path) => {
+        signalMaxLength(path.bio, 50);
+      });
+      // `useValidatorMaxLength` omitted — defaults to `false`, so the
+      // validator's maxLength(50) must be ignored.
+      readonly count = createCharacterCount({ field: this.contactForm.bio });
+    }
+
+    await render(TestComponent);
+
+    expect(screen.getByTestId('has-limit').textContent).toBe('false');
+    expect(screen.getByTestId('resolved-max').textContent).toBe('');
   });
 });

@@ -416,7 +416,11 @@ like a single field with wrapper-owned inline feedback.
 Use a normal `<label for="..."></label>` for single controls. For grouped
 radio/checkbox wrappers, project a neutral heading element such as
 `<span ngxFormFieldLabel>` instead of an HTML `<label>` because the wrapper is
-labelling the group container (`radiogroup`/`group`), not a single input.
+labelling the group container (`radiogroup`/`group`), not a single input. A
+projected `<ngx-form-field-hint>`'s id reaches the group's `aria-describedby`
+through `NgxSignalFormAutoAria` running on the wrapper host itself (it also
+matches `[formField]` hosts that aren't `input`/`textarea`/`select`) — a setup
+that disables or excludes auto-aria on the wrapper loses that hint link too.
 
 When the wrapper detects a grouped radio or checkbox cluster, it uses a surfaced
 background on the wrapper content instead of a text-field border. The feedback
@@ -510,9 +514,12 @@ Quick example:
 
 ```css
 :root {
-  --ngx-form-field-focus-color: #007bc7;
-  --ngx-form-field-color-border: rgba(50, 65, 85, 0.25);
-  --ngx-signal-form-error-color: #db1818;
+  --ngx-form-field-focus-color: light-dark(#007bc7, #60a5fa);
+  --ngx-form-field-color-border: light-dark(
+    rgba(50, 65, 85, 0.7),
+    rgba(249, 250, 251, 0.4)
+  );
+  --ngx-signal-form-error-color: light-dark(#db1818, #fca5a5);
   --ngx-signal-form-feedback-font-size: 0.75rem;
 }
 ```

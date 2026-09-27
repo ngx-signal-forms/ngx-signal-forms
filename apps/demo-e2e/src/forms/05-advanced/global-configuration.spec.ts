@@ -193,11 +193,16 @@ test.describe('Advanced - Global Configuration', () => {
       await acceptTerms.focus();
       await acceptTerms.blur();
 
-      const wrapper = acceptTerms.locator(
-        'xpath=ancestor::ngx-form-field-wrapper',
+      // This form renders an error summary, so the submit-revealed field
+      // error shows outside its role="alert" region and only the summary
+      // announces (ADR-0012). Find the error by the id the switch's
+      // aria-describedby points to instead.
+      const error = playwrightPage.locator('#acceptTerms-error');
+      await expect(error).toBeVisible({ timeout: 3000 });
+      await expect(acceptTerms).toHaveAttribute(
+        'aria-describedby',
+        /\bacceptTerms-error\b/u,
       );
-      const errors = wrapper.locator(ROLE_ALERT_SELECTOR);
-      await expect(errors.first()).toBeVisible({ timeout: 3000 });
     });
   });
 });

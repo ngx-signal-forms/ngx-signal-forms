@@ -5,7 +5,6 @@ import {
   generateWarningId,
   NGX_SIGNAL_FORM_FIELD_CONTEXT,
   resolveFieldNameFromCandidates,
-  createShowErrorsComputed,
 } from '@ngx-signal-forms/toolkit';
 import { NgxHeadlessErrorState } from '@ngx-signal-forms/toolkit/headless';
 
@@ -19,12 +18,16 @@ import { NgxHeadlessErrorState } from '@ngx-signal-forms/toolkit/headless';
  * The component composes `NgxHeadlessErrorState` via `hostDirectives` to
  * get strategy resolution, error / warning splitting, and visibility timing
  * for free — exactly what the toolkit's first-party `NgxFormFieldError`
- * does, just without the toolkit's default markup.
+ * does, just without the toolkit's default markup. `NgxHeadlessErrorState`
+ * already runs the warning channel through its own independent
+ * `warningStrategy` cascade (ADR-0007), so this renderer forwards the
+ * wrapper's resolved `warningStrategy` straight through rather than
+ * re-deciding warning timing itself.
  *
  * Inputs match the `NGX_FORM_FIELD_ERROR_RENDERER` contract documented in
  * `docs/CUSTOM_WRAPPERS.md`. The wrapper that instantiates this renderer
  * (PrimeFormFieldComponent) binds `formField`, `strategy`, `submittedStatus`,
- * and `fieldName` through `*ngComponentOutlet`.
+ * `warningStrategy`, and `fieldName` through `*ngComponentOutlet`.
  */
 @Component({
   selector: 'prime-field-error',
@@ -32,7 +35,12 @@ import { NgxHeadlessErrorState } from '@ngx-signal-forms/toolkit/headless';
   hostDirectives: [
     {
       directive: NgxHeadlessErrorState,
-      inputs: ['strategy', 'submittedStatus', 'errorsOverride: errors'],
+      inputs: [
+        'strategy',
+        'warningStrategy',
+        'submittedStatus',
+        'errorsOverride: errors',
+      ],
     },
   ],
   styles: `
@@ -109,24 +117,28 @@ import { NgxHeadlessErrorState } from '@ngx-signal-forms/toolkit/headless';
     <!--
       role="status" — implicit aria-live="polite" + aria-atomic="true".
       Same always-mounted live-region pattern as the error container above.
-      Warning visibility is independent of the blocking-error strategy: the
-      'immediate' showWarnings signal lights up while the user is still
-      editing, mirroring NgxFormFieldError's warningStrategy default.
+      headless.shouldShowWarnings() times this off warningStrategy
+      (forwarded from the wrapper), independent of the blocking-error
+      strategy (ADR-0007) — no strategy re-decided in this component.
     -->
     <small
-      [id]="showWarnings() && headless.hasWarnings() ? warningId() : null"
+      [id]="
+        headless.shouldShowWarnings() && headless.hasWarnings()
+          ? warningId()
+          : null
+      "
       class="p-warn"
       [class.prime-feedback--empty]="
-        !(showWarnings() && headless.hasWarnings())
+        !(headless.shouldShowWarnings() && headless.hasWarnings())
       "
       role="status"
       [attr.aria-hidden]="
-        showWarnings() && headless.hasWarnings() ? null : 'true'
+        headless.shouldShowWarnings() && headless.hasWarnings() ? null : 'true'
       "
-      [hidden]="!(showWarnings() && headless.hasWarnings())"
+      [hidden]="!(headless.shouldShowWarnings() && headless.hasWarnings())"
       data-testid="prime-warning"
     >
-      @if (showWarnings() && headless.hasWarnings()) {
+      @if (headless.shouldShowWarnings() && headless.hasWarnings()) {
         @for (
           warning of headless.resolvedWarnings();
           track warning.kind + ':' + warning.message + ':' + $index
@@ -159,31 +171,15 @@ export class PrimeFieldErrorComponent {
    * Listed explicitly so the renderer's TypeScript signature matches the
    * `NGX_FORM_FIELD_ERROR_RENDERER` contract.
    *
-   * `strategy` and `submittedStatus` are intentionally NOT redeclared here —
-   * they are exposed on this component's input surface via the
-   * `hostDirectives.inputs` mapping above, which forwards them straight to
-   * `NgxHeadlessErrorState`. Declaring duplicates would shadow the
-   * forwarding and prevent the strategy/submission status from reaching the
-   * headless directive.
+   * `strategy`, `warningStrategy`, and `submittedStatus` are intentionally
+   * NOT redeclared here — they are exposed on this component's input
+   * surface via the `hostDirectives.inputs` mapping above, which forwards
+   * them straight to `NgxHeadlessErrorState`. Declaring duplicates would
+   * shadow the forwarding and prevent the strategy/submission status from
+   * reaching the headless directive.
    */
   readonly formField = input<FieldTree<unknown>>();
   readonly fieldName = input<string | null | undefined>();
-
-  readonly #fieldState = computed(() => this.formField()?.() ?? null);
-
-  /**
-   * Warning visibility uses an `immediate` strategy independent of the
-   * blocking-error strategy — informational warnings should land while the
-   * user is still editing, even when blocking errors are gated until touch
-   * or submit. Mirrors `NgxFormFieldError`'s `warningStrategy` default
-   * (see `packages/toolkit/assistive/form-field-error.ts`) and the Spartan
-   * reference (`firstWarning = #firstWarning`, no strategy gate).
-   */
-  protected readonly showWarnings = createShowErrorsComputed(
-    this.#fieldState,
-    computed(() => 'immediate' as const),
-    this.headless.resolvedSubmittedStatus,
-  );
 
   protected readonly resolvedFieldName = computed<string | null>(() => {
     const explicit = this.fieldName();

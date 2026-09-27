@@ -47,10 +47,11 @@ specific.
 
 The wrapper composes the toolkit's headless primitives directly
 (`createFieldNameResolver`, `createAriaInvalidSignal`,
-`createAriaRequiredSignal`, `createShowErrorsComputed`) so the seam never
-drifts from the canonical `NgxFormFieldWrapper` as the toolkit evolves. Hint
-descriptors and the error-renderer inputs map are each a single inline
-`computed()` (see `docs/CUSTOM_WRAPPERS.md`) rather than a shared helper.
+`createAriaRequiredSignal`, `createErrorVisibility`,
+`createWarningVisibility`) so the seam never drifts from the canonical
+`NgxFormFieldWrapper` as the toolkit evolves (ADR-0006). Hint descriptors
+and the error-renderer inputs map are each a single inline `computed()`
+(see `docs/CUSTOM_WRAPPERS.md`) rather than a shared helper.
 
 ## Quick start
 

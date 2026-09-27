@@ -32,23 +32,38 @@ export { type ErrorMessageRegistry } from '@ngx-signal-forms/toolkit';
 
 // Directives
 export {
+  createErrorState,
   NgxHeadlessErrorState,
+  type CreateErrorStateOptions,
+  type ErrorStateResult,
   type ErrorStateSignals,
   type ResolvedError,
 } from './lib/error-state';
 
-export { NgxHeadlessFieldset, type FieldsetStateSignals } from './lib/fieldset';
+export {
+  createFieldsetAggregation,
+  NgxHeadlessFieldset,
+  type CreateFieldsetAggregationOptions,
+  type FieldsetAggregationResult,
+  type FieldsetStateSignals,
+} from './lib/fieldset';
 
 export {
+  createCharacterCount,
   DEFAULT_DANGER_THRESHOLD,
   DEFAULT_WARNING_THRESHOLD,
   NgxHeadlessCharacterCount,
   type CharacterCountLimitState,
-  type CharacterCountStateSignals,
+  type CharacterCountState,
+  type CharacterCountValue,
+  type CreateCharacterCountOptions,
 } from './lib/character-count';
 
 export {
+  createErrorSummaryEntries,
   NgxHeadlessErrorSummary,
+  type CreateErrorSummaryEntriesOptions,
+  type ErrorSummaryEntriesResult,
   type ErrorSummaryEntry,
   type ErrorSummarySignals,
 } from './lib/error-summary';
@@ -99,10 +114,6 @@ export {
 
 // Utility functions
 export {
-  createCharacterCount,
-  createErrorState,
-  createErrorSummaryEntries,
-  createFieldsetAggregation,
   createFieldStateFlags,
   createUniqueId,
   dedupeValidationErrors,
@@ -114,16 +125,7 @@ export {
   resolveFieldNameFromError,
   toErrorSummaryEntry,
   type BooleanStateKey,
-  type CharacterCountResult,
-  type CharacterCountValue,
-  type CreateCharacterCountOptions,
-  type CreateErrorStateOptions,
-  type CreateErrorSummaryEntriesOptions,
-  type CreateFieldsetAggregationOptions,
-  type ErrorStateResult,
-  type ErrorSummaryEntriesResult,
   type ErrorSummaryEntryData,
-  type FieldsetAggregationResult,
   type FieldStateLike,
   type FieldStateFlags,
 } from './lib/utilities';

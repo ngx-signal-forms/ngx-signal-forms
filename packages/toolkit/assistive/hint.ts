@@ -16,6 +16,7 @@ import {
   NGX_FORM_FIELD_HINT_RENDERER,
   NGX_SIGNAL_FORM_FIELD_CONTEXT,
 } from '@ngx-signal-forms/toolkit';
+import { sanitizeFieldNameForId } from '@ngx-signal-forms/toolkit/core';
 
 /**
  * Form field hint component for displaying helper text.
@@ -105,7 +106,12 @@ import {
         --ngx-form-field-hint-line-height,
         var(--ngx-signal-form-feedback-line-height, 1rem)
       );
-      color: var(--ngx-form-field-hint-color, rgba(50, 65, 85, 0.75));
+      /* light-dark() follows the inherited color-scheme: 4.99:1 on white,
+       * 8.54:1 on the dark surface (#1f2937). */
+      color: var(
+        --ngx-form-field-hint-color,
+        light-dark(rgba(50, 65, 85, 0.75), rgba(249, 250, 251, 0.75))
+      );
       /*
        * Hint shares the input's border-left edge (no padding offset) and reads
        * from the start by default, vertically in line with the label above and
@@ -237,10 +243,14 @@ export class NgxFormFieldHint {
       // working; later hints get a unique numbered suffix (WCAG 1.3.1).
       // Contexts that don't track hints (e.g. no wrapper) omit
       // `hintOrdinal`, so every such hint resolves to ordinal 0.
+      // `fieldName` is the raw resolved name (may contain inner whitespace
+      // from a data-driven `fieldName` input) — sanitize it here, at the
+      // point the id is built, so the generated id stays one token.
+      const safeFieldName = sanitizeFieldNameForId(fieldName);
       const ordinal = this.#fieldContext?.hintOrdinal?.(this) ?? 0;
       return ordinal > 0
-        ? `${fieldName}-hint-${ordinal + 1}`
-        : `${fieldName}-hint`;
+        ? `${safeFieldName}-hint-${ordinal + 1}`
+        : `${safeFieldName}-hint`;
     }
 
     return this.#generatedId;

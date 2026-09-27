@@ -1,12 +1,14 @@
-import { describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   buildAriaDescribedBy,
   createFieldMessageIdSignals,
   generateErrorId,
+  generateRequiredHintId,
   generateWarningId,
   normalizeFieldName,
   resolveFieldName,
   resolveFieldNameFromCandidates,
+  sanitizeFieldNameForId,
 } from './field-resolution';
 
 describe('field-resolution', () => {
@@ -41,6 +43,19 @@ describe('field-resolution', () => {
       const fieldName = resolveFieldName(element);
       expect(fieldName).toBe('email');
     });
+
+    it('does not touch inner whitespace — path lookups and controlId reporting need the raw id', () => {
+      // Regression: `resolveFieldName` used to hyphenate inner whitespace,
+      // which broke two callers that need the exact DOM/model characters:
+      // `injectFieldControl` (walks a form path built from this string) and
+      // `NgxFieldIdentity.controlId` (must match the control's actual `id`
+      // attribute). ARIA id generation sanitizes separately, at the point
+      // an id is built — see `sanitizeFieldNameForId`.
+      const element = document.createElement('input');
+      element.setAttribute('id', 'x other-id');
+
+      expect(resolveFieldName(element)).toBe('x other-id');
+    });
   });
 
   describe('normalizeFieldName', () => {
@@ -50,6 +65,64 @@ describe('field-resolution', () => {
 
     it('should return null for blank values', () => {
       expect(normalizeFieldName('   ')).toBeNull();
+    });
+
+    it('does not touch inner whitespace', () => {
+      expect(normalizeFieldName('x other-id')).toBe('x other-id');
+    });
+  });
+
+  describe('sanitizeFieldNameForId', () => {
+    let consoleWarnSpy: ReturnType<typeof vi.spyOn>;
+
+    beforeEach(() => {
+      consoleWarnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    });
+
+    afterEach(() => {
+      consoleWarnSpy.mockRestore();
+    });
+
+    it('returns the name unchanged when it has no inner whitespace', () => {
+      expect(sanitizeFieldNameForId('email')).toBe('email');
+    });
+
+    it('replaces inner whitespace with a single hyphen so the name stays one id token', () => {
+      // Regression: `generateErrorId('x other-id')` used to produce
+      // `x other-id-error`, and `aria-describedby` splits on whitespace —
+      // the rendered attribute pointed at two ids, the second one
+      // (`other-id-error`) unrelated to the field. A single-token name keeps
+      // `id=` and the generated `aria-describedby` token identical.
+      const name = sanitizeFieldNameForId('x other-id');
+      expect(name).toBe('x-other-id');
+      expect(name.split(/\s/)).toHaveLength(1);
+      expect(generateErrorId(name).split(/\s/)).toHaveLength(1);
+    });
+
+    it('collapses multiple inner whitespace characters into one hyphen', () => {
+      expect(sanitizeFieldNameForId('foo   bar\tbaz')).toBe('foo-bar-baz');
+    });
+
+    it('warns once in dev mode when inner whitespace is replaced', async () => {
+      // The one-shot latch is module-scoped (process lifetime), so it must
+      // start unflipped for this test regardless of what earlier tests in
+      // this file already triggered — hence the isolated re-import.
+      vi.resetModules();
+      const isolated = await import('./field-resolution');
+
+      isolated.sanitizeFieldNameForId('a b');
+      isolated.sanitizeFieldNameForId('c d');
+
+      expect(consoleWarnSpy).toHaveBeenCalledTimes(1);
+      // The message names the utility but never interpolates the (possibly
+      // user-entered) field name into it — see `dev-warn-once.ts`'s
+      // contract that caller data goes in `...args`, not the message.
+      expect(consoleWarnSpy).toHaveBeenCalledWith(
+        expect.stringContaining('sanitizeFieldNameForId'),
+        'a b',
+      );
+      const [message] = consoleWarnSpy.mock.calls[0] as [string];
+      expect(message).not.toContain('a b');
     });
   });
 
@@ -154,11 +227,43 @@ describe('field-resolution', () => {
     it('should treat empty-string kind as a literal suffix', () => {
       expect(generateErrorId('email', '')).toBe('email-error-');
     });
+
+    it('sanitizes inner whitespace in fieldName so the id stays one token', () => {
+      const consoleWarnSpy = vi
+        .spyOn(console, 'warn')
+        .mockImplementation(() => {});
+      expect(generateErrorId('x other-id')).toBe('x-other-id-error');
+      consoleWarnSpy.mockRestore();
+    });
   });
 
   describe('generateWarningId', () => {
     it('should generate warning ID for a field name', () => {
       expect(generateWarningId('email')).toBe('email-warning');
+    });
+
+    it('sanitizes inner whitespace in fieldName so the id stays one token', () => {
+      const consoleWarnSpy = vi
+        .spyOn(console, 'warn')
+        .mockImplementation(() => {});
+      expect(generateWarningId('x other-id')).toBe('x-other-id-warning');
+      consoleWarnSpy.mockRestore();
+    });
+  });
+
+  describe('generateRequiredHintId', () => {
+    it('should generate the required-hint ID for a field name', () => {
+      expect(generateRequiredHintId('consent')).toBe('consent-required-hint');
+    });
+
+    it('sanitizes inner whitespace in fieldName so the id stays one token', () => {
+      const consoleWarnSpy = vi
+        .spyOn(console, 'warn')
+        .mockImplementation(() => {});
+      expect(generateRequiredHintId('x other-id')).toBe(
+        'x-other-id-required-hint',
+      );
+      consoleWarnSpy.mockRestore();
     });
   });
 

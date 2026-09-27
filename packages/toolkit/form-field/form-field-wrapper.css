@@ -13,7 +13,7 @@
 /* - Creates a clean API without exposing internal token names */
 /* - Allows consumers to override specific values while preserving defaults */
 /* Design token reference values (light mode): */
-/* - Border: rgba(50, 65, 85, 0.25), hover: #324155 */
+/* - Border: rgba(50, 65, 85, 0.7) (>= 3:1 on white, #f9fafb, #f3f4f6, #e5e7eb), hover: #324155 */
 /* - Focus: #007bc7 with 4px spread */
 /* - Error: #db1818 */
 /* - Text primary: #324155, secondary: rgba(50, 65, 85, 0.75) */
@@ -58,25 +58,38 @@
 /* Use semantic names without framework-specific terminology. */
 
 :host {
-  /* Color tokens */
-  --_field-clr-primary: #007bc7; /* Focus/interactive states */
-  --_field-clr-danger: #db1818; /* Error/invalid states */
+  /* Color tokens: light-dark(<light>, <dark>) pairs. The browser picks the */
+  /* side that matches the element's used `color-scheme`, which the app */
+  /* declares (see THEMING.md, "Scenario C: Dark Mode"). No declaration means light. */
+  /* Dark values are measured against the dark surface (#1f2937). */
+  --_field-clr-primary: light-dark(
+    #007bc7,
+    #60a5fa
+  ); /* Focus/interactive states (4.51:1 on white, 5.77:1 on #1f2937) */
+  --_field-clr-danger: light-dark(
+    #db1818,
+    #fca5a5
+  ); /* Error/invalid states (5.05:1 on white, 7.73:1 on #1f2937) */
   /* Tailwind amber-700 (#a16207) — chosen over the previous #f59e0b (amber-500, */
   /* 2.16:1 on white) so warning text meets WCAG 2.2 AA contrast (4.5:1 on */
   /* white). Borders/icons would have been fine at the lighter shade, but this */
-  /* token also drives warning message text. ~5.17:1 on #ffffff. */
-  --_field-clr-warning: #a16207; /* Warning states (amber-700, AA contrast) */
-  --_field-clr-text: #324155; /* Primary text color */
-  --_field-clr-text-secondary: rgba(
-    50,
-    65,
-    85,
-    0.75
-  ); /* Labels, hints, placeholders */
-  --_field-clr-surface: #ffffff; /* Input background */
-  --_field-clr-border: rgba(50, 65, 85, 0.25); /* Default border */
-  --_field-clr-border-hover: #324155; /* Hover border */
-  --_field-clr-disabled: #f3f4f6; /* Disabled background */
+  /* token also drives warning message text. ~4.92:1 on #ffffff. */
+  --_field-clr-warning: light-dark(
+    #a16207,
+    #fcd34d
+  ); /* Warning states (10.18:1 on #1f2937) */
+  --_field-clr-text: light-dark(#324155, #f9fafb); /* Primary text color */
+  --_field-clr-text-secondary: light-dark(
+    rgba(50, 65, 85, 0.75),
+    rgba(249, 250, 251, 0.75)
+  ); /* Labels, hints, placeholders (4.99:1 on white, 8.54:1 on #1f2937) */
+  --_field-clr-surface: light-dark(#ffffff, #1f2937); /* Input background */
+  --_field-clr-border: light-dark(
+    rgba(50, 65, 85, 0.7),
+    rgba(249, 250, 251, 0.4)
+  ); /* Default border (>= 3:1 on white, #f9fafb, #f3f4f6, #e5e7eb; 3.51:1 on #1f2937) */
+  --_field-clr-border-hover: light-dark(#324155, #f9fafb); /* Hover border */
+  --_field-clr-disabled: light-dark(#f3f4f6, #111827); /* Disabled background */
 
   /* Spacing scale (rem for accessibility) */
   --_field-space-3xs: 0.125rem; /* 2px - tight gaps */
@@ -120,61 +133,6 @@
   --_field-line-height-m: var(--_field-line-height-body);
   --_field-clr-text-muted: var(--_field-clr-text-secondary);
   --_field-clr-text-subtle: var(--_field-clr-text-secondary);
-}
-
-/* Dark mode overrides (respects system preference) */
-@media (prefers-color-scheme: dark) {
-  :host {
-    --_field-clr-primary: #60a5fa; /* Lighter blue for dark bg */
-    --_field-clr-danger: #fca5a5; /* Lighter red for dark bg */
-    --_field-clr-warning: #fcd34d; /* Lighter amber for dark bg */
-    --_field-clr-text: #f9fafb; /* Almost white - main text */
-    --_field-clr-text-secondary: rgba(
-      249,
-      250,
-      251,
-      0.75
-    ); /* Light text/secondary */
-    --_field-clr-surface: #1f2937; /* Dark gray - backgrounds */
-    --_field-clr-border: rgba(249, 250, 251, 0.25); /* Light border */
-    --_field-clr-border-hover: #f9fafb;
-    --_field-clr-disabled: #111827;
-  }
-}
-
-/* Light mode override (when app explicitly sets light theme against OS dark preference) */
-@media (prefers-color-scheme: dark) {
-  :host-context(:root:not(.dark)) {
-    --_field-clr-primary: #007bc7;
-    --_field-clr-danger: #db1818;
-    /* Mirror the light-mode :host default (amber-700) for AA-on-white contrast. */
-    --_field-clr-warning: #a16207;
-    --_field-clr-text: #324155;
-    --_field-clr-text-secondary: rgba(50, 65, 85, 0.75);
-    --_field-clr-surface: #ffffff;
-    --_field-clr-border: rgba(50, 65, 85, 0.25);
-    --_field-clr-border-hover: #324155;
-    --_field-clr-disabled: #f3f4f6;
-  }
-}
-
-/* Explicit dark theme override (activated by the demo theme switcher) */
-/* Kept separate from prefers-color-scheme so manual theme selection wins. */
-:host-context(.dark) {
-  --_field-clr-primary: #60a5fa; /* Lighter blue for dark bg */
-  --_field-clr-danger: #fca5a5; /* Lighter red for dark bg */
-  --_field-clr-warning: #fcd34d; /* Lighter amber for dark bg */
-  --_field-clr-text: #f9fafb; /* Almost white - main text */
-  --_field-clr-text-secondary: rgba(
-    249,
-    250,
-    251,
-    0.75
-  ); /* Light text/secondary */
-  --_field-clr-surface: #1f2937; /* Dark gray - backgrounds */
-  --_field-clr-border: rgba(249, 250, 251, 0.25); /* Light border */
-  --_field-clr-border-hover: #f9fafb;
-  --_field-clr-disabled: #111827;
 }
 
 /* ============================================================================ */
@@ -383,22 +341,20 @@
     --ngx-form-field-hover-border-color,
     var(--_color-border-hover)
   );
+  /* Focused invalid/warning fields draw a solid outline (below) instead of
+     this soft ring — see the outline tokens further down. The ring tokens
+     default to `none` so the two focus signals don't overlap, but they stay
+     public and overridable for consumers who want the ring back. */
   --_invalid-color: var(--ngx-form-field-invalid-color, var(--_color-error));
-  --_invalid-ring-color: color-mix(
-    in srgb,
-    var(--_invalid-color) var(--_state-ring-opacity),
-    transparent
-  );
+  --_invalid-box-shadow: var(--ngx-form-field-invalid-box-shadow, none);
   --_warning-color: var(--ngx-form-field-warning-color, var(--_color-warning));
-  --_warning-ring-color: color-mix(
-    in srgb,
-    var(--_warning-color) var(--_state-ring-opacity),
-    transparent
-  );
-  --_warning-box-shadow: var(
-    --ngx-form-field-warning-box-shadow,
-    0 0 0 var(--_field-focus-spread) var(--_warning-ring-color)
-  );
+  --_warning-box-shadow: var(--ngx-form-field-warning-box-shadow, none);
+  /* Solid focus outline: the sole guaranteed-contrast focus signal for
+     valid, invalid and warning textual fields. Offset keeps it clear of the
+     state-colored border so its contrast is measured against the page
+     background, not the adjacent border color. */
+  --_focus-outline-width: var(--ngx-form-field-focus-outline-width, 2px);
+  --_focus-outline-offset: var(--ngx-form-field-focus-outline-offset, 2px);
   --_disabled-bg: var(--ngx-form-field-disabled-bg, var(--_color-disabled));
   --_disabled-opacity: var(
     --ngx-form-field-disabled-opacity,
@@ -518,6 +474,16 @@
   display: none !important;
 }
 
+/* Structural wrapper around label/messages/content/assistive (#523).
+   `display: contents` drops it out of the box tree so every appearance
+   below keeps laying out its children directly against `:host`, exactly as
+   if the wrapper div didn't exist. Only the horizontal layout (see
+   form-field-wrapper.selection.css) gives it a real box, since that's the
+   one layout that needs an inline-size container query. */
+.ngx-signal-form-field-wrapper__layout {
+  display: contents;
+}
+
 :host(.ngx-signal-form-field-wrapper--selection-group) {
   --_gap: var(--_field-space-xs);
 }
@@ -564,7 +530,15 @@
   &:focus-within {
     border-color: var(--_focus-color);
     box-shadow: var(--_focus-box-shadow);
-    outline: none;
+    /* Solid outline: the state-color border (invalid/warning) stays
+       unfocused-looking on its own, so the outline is what actually shows
+       the field is focused. It applies to every state — the invalid and
+       warning rules below don't set `outline`, so this declaration reaches
+       them unchanged. The plain appearance is the one exception: it
+       overrides `outline` back to `none` in `form-field-wrapper.selection.css`
+       and relies on its own input-level outline instead (see `#493`). */
+    outline: var(--_focus-outline-width) solid var(--_focus-color);
+    outline-offset: var(--_focus-outline-offset);
   }
 
   &:has(:is(input, textarea, select):disabled) {
@@ -973,7 +947,7 @@
 
   &:focus-within {
     border-color: var(--_invalid-color);
-    box-shadow: 0 0 0 var(--_field-focus-spread) var(--_invalid-ring-color);
+    box-shadow: var(--_invalid-box-shadow);
   }
 }
 
@@ -1021,10 +995,16 @@
 /* Selection controls (checkbox/switch/radio-group) require labels for */
 /* accessibility and intentionally keep their own layout. */
 
-/* Standard vertical: hide the empty label div. Flex gap only applies */
-/* between rendered children, so removing the div removes the gap too. */
-/* Plain appearance is a non-goal (it already strips label chrome), so */
-/* exclude it explicitly to keep the spec and the CSS in sync. */
+/* Hide the empty label div. The selector isn't scoped to an orientation, so
+   this also covers horizontal (see form-field-wrapper.selection.css,
+   "HORIZONTAL LAYOUT", #523): without it, a labelless horizontal field
+   would still occupy the orphaned 'label' grid-area target via
+   auto-placement, and — once the narrow `@container` query gives every
+   item an explicit row — reserve a whole empty row plus a `row-gap` sliver
+   above the control for nothing. In the vertical layout, flex gap only
+   applies between rendered children, so removing the div removes that gap
+   too. Plain appearance is a non-goal (it already strips label chrome), so
+   exclude it explicitly to keep the spec and the CSS in sync. */
 :host(.ngx-signal-form-field-wrapper--textual:not(.ngx-signal-forms-plain)):not(
     :has(.ngx-signal-form-field-wrapper__label :is(label, [ngxFormFieldLabel]))
   )
@@ -1060,14 +1040,17 @@
 /* textual non-plain wrappers so this mirrors the standard/outline rules */
 /* and cannot rewrite the grid on any non-textual host that might carry */
 /* the `--horizontal` class (today selection controls force vertical, but */
-/* the CSS should not rely on that invariant). */
+/* the CSS should not rely on that invariant). The grid itself lives on */
+/* `__layout`, not `:host` (see form-field-wrapper.selection.css, */
+/* "HORIZONTAL LAYOUT", #523), so these overrides target that div. */
 :host(
-  .ngx-signal-form-field-wrapper--textual.ngx-signal-form-field-wrapper--horizontal:not(
-      .ngx-signal-forms-plain
-    )
-):not(
-  :has(.ngx-signal-form-field-wrapper__label :is(label, [ngxFormFieldLabel]))
-) {
+    .ngx-signal-form-field-wrapper--textual.ngx-signal-form-field-wrapper--horizontal:not(
+        .ngx-signal-forms-plain
+      )
+  ):not(
+    :has(.ngx-signal-form-field-wrapper__label :is(label, [ngxFormFieldLabel]))
+  )
+  .ngx-signal-form-field-wrapper__layout {
   grid-template-columns: minmax(0, 1fr);
   grid-template-areas:
     'content'
@@ -1075,12 +1058,13 @@
 }
 
 :host(
-  .ngx-signal-form-field-wrapper--textual.ngx-signal-form-field-wrapper--horizontal.ngx-signal-form-field-wrapper--messages-top:not(
-      .ngx-signal-forms-plain
-    )
-):not(
-  :has(.ngx-signal-form-field-wrapper__label :is(label, [ngxFormFieldLabel]))
-) {
+    .ngx-signal-form-field-wrapper--textual.ngx-signal-form-field-wrapper--horizontal.ngx-signal-form-field-wrapper--messages-top:not(
+        .ngx-signal-forms-plain
+      )
+  ):not(
+    :has(.ngx-signal-form-field-wrapper__label :is(label, [ngxFormFieldLabel]))
+  )
+  .ngx-signal-form-field-wrapper__layout {
   grid-template-areas:
     'messages'
     'content'

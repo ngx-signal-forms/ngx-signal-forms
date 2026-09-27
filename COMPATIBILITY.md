@@ -71,13 +71,13 @@ version:
 
 The toolkit targets the **last 2 major versions of the four main evergreen browsers**, matching Angular's own browser support policy. This is codified in [`.browserslistrc`](./.browserslistrc) at the repo root and consumed by ng-packagr (autoprefixer) during library builds.
 
-| Browser | Support policy  | Runtime minimum for full visual fidelity    |
-| ------- | --------------- | ------------------------------------------- |
-| Chrome  | Last 2 versions | 112+ (CSS nesting, `color-mix()`, `:has()`) |
-| Edge    | Last 2 versions | 112+ (same Chromium engine as Chrome)       |
-| Firefox | Last 2 versions | 121+ (`:has()` landed in Firefox 121)       |
-| Safari  | Last 2 versions | 16.5+ (CSS nesting landed in Safari 16.5)   |
+| Browser | Support policy  | Runtime minimum for full visual fidelity     |
+| ------- | --------------- | -------------------------------------------- |
+| Chrome  | Last 2 versions | 123+ (`light-dark()` landed in Chrome 123)   |
+| Edge    | Last 2 versions | 123+ (same Chromium engine as Chrome)        |
+| Firefox | Last 2 versions | 121+ (`:has()` landed in Firefox 121)        |
+| Safari  | Last 2 versions | 17.5+ (`light-dark()` landed in Safari 17.5) |
 
-The **runtime minimum** is the oldest version where all CSS features used by the toolkit resolve correctly. Older evergreen builds may render a flattened approximation (design tokens still resolve; nested selectors, hover/invalid overrides, and the outline appearance degrade). See the [theming guide](./packages/toolkit/form-field/THEMING.md#browser-support) for the per-feature breakdown.
+The **runtime minimum** is the oldest version where all CSS features used by the toolkit resolve correctly. Older evergreen builds may render a flattened approximation: default colors resolve as if unset without `light-dark()`, and nested selectors, hover/invalid overrides, and the outline appearance degrade. See the [theming guide](./packages/toolkit/form-field/THEMING.md#browser-support) for the per-feature breakdown.
 
 The demo and end-to-end suite validate behavior through Playwright's Chromium project. Run `npx browserslist` in the repo root to see the current resolved browser list.

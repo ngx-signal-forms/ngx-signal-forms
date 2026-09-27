@@ -106,9 +106,13 @@ describe('NgxFormFieldError', () => {
       // via `var(--ngx-…, var(--_error-clr-…))`. Asserting on the source keeps
       // the WCAG-AA contrast contract documented and prevents accidental
       // overrides — runtime resolution is covered in browser-mode specs.
-      expect(errorCssSource).toMatch(/--_error-clr-danger:\s*#db1818\b/);
+      expect(errorCssSource).toMatch(
+        /--_error-clr-danger:\s*light-dark\(\s*#db1818\b/,
+      );
       expect(errorCssSource).toMatch(/--_error-color:[^;]*--_error-clr-danger/);
-      expect(errorCssSource).toMatch(/--_error-clr-warning:\s*#a16207\b/);
+      expect(errorCssSource).toMatch(
+        /--_error-clr-warning:\s*light-dark\(\s*#a16207\b/,
+      );
       expect(errorCssSource).toMatch(
         /--_warning-color:[^;]*--_error-clr-warning/,
       );
@@ -1555,7 +1559,7 @@ describe('NgxFormFieldError', () => {
       // e2e snapshots; jsdom can't compute custom properties from emulated
       // component stylesheets.
       expect(errorCssSource).toMatch(
-        /--_error-panel-clr-danger-soft:\s*#fdebeb\b/,
+        /--_error-panel-clr-danger-soft:\s*light-dark\(\s*#fdebeb\b/,
       );
       expect(errorCssSource).toMatch(
         /--_error-bg:[^;]*--ngx-signal-form-error-panel-bg[^;]*--_error-panel-clr-danger-soft/,

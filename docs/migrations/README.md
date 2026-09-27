@@ -1,6 +1,6 @@
 # Versioned migration guides
 
-RC.11 to RC.14 are released guides. RC.15 documents the next release; its
+RC.11 to RC.15 are released guides. RC.16 documents the next release; its
 guide does not establish publication. Check the installed version
 before applying a hop.
 
@@ -15,6 +15,7 @@ immediately preceding version to that release.
 | `v1.0.0-rc.12` | `v1.0.0-rc.13` | [Upgrade guide](./v1.0.0-rc.13.md) |
 | `v1.0.0-rc.13` | `v1.0.0-rc.14` | [Upgrade guide](./v1.0.0-rc.14.md) |
 | `v1.0.0-rc.14` | `v1.0.0-rc.15` | [Upgrade guide](./v1.0.0-rc.15.md) |
+| `v1.0.0-rc.15` | `v1.0.0-rc.16` | [Upgrade guide](./v1.0.0-rc.16.md) |
 
 > **Add the guide before you cut the release, not after.** A guide written
 > against a version number that is never published strands its content: readers

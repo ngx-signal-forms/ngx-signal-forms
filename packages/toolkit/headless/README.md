@@ -164,7 +164,7 @@ timing and suppression in that mode. Omitting a warning strategy and setting
 
 Selector: `[ngxHeadlessErrorSummary]` · Export: `errorSummary`
 
-Aggregates all errors from a form tree. Each entry has a `focus()` method that calls Angular's `focusBoundControl()`.
+Aggregates all errors from a form tree. Each entry has a `focus()` method that calls Angular's `focusBoundControl()`, and a `canFocus` flag. Render the entry as a button only when `canFocus` is `true`; otherwise render it as plain text — the error has no bound field, so `focus()` would do nothing.
 
 | Input             | Type                     | Description                                                              |
 | ----------------- | ------------------------ | ------------------------------------------------------------------------ |
@@ -192,11 +192,19 @@ Provides character count signals with progressive limit states.
 | `warningThreshold` | `number`                         | `0.8`    | Warning at 80%                                           |
 | `dangerThreshold`  | `number`                         | `0.95`   | Danger at 95%                                            |
 
-Signals: `currentLength()`, `resolvedMaxLength()`, `remaining()`, `limitState()` (`'ok' | 'warning' | 'danger' | 'exceeded'`), `hasLimit()`, `isExceeded()`, `percentUsed()`.
+Signals (type `CharacterCountState`): `currentLength()`, `resolvedMaxLength()`,
+`remaining()`, `limitState()` (`'ok' | 'warning' | 'danger' | 'exceeded'`),
+`hasLimit()`, `isExceeded()`, `percentUsed()`.
 
-Both this directive and `createCharacterCount()` require `maxLength`. Neither
-reads the limit from a validator; only the styled counter can infer that limit.
-`percentUsed()` can exceed 100; `remaining()` is clamped to zero.
+This directive requires `maxLength`. `createCharacterCount()` does not —
+its `maxLength` option is optional, and a `useValidatorMaxLength: true`
+option makes it fall back to the field's own `maxLength` schema validator
+(default `false`, no fallback). `resolvedMaxLength()` is `number | null`;
+`null` means no limit — check `hasLimit()` first. `remaining()`,
+`isExceeded()`, `percentUsed()`, and `limitState()` stay non-nullable, with
+neutral values (`0`, `false`, `0`, `'ok'`) when there is no limit.
+`percentUsed()` can exceed 100. `remaining()` goes negative once the limit
+is exceeded — it is not clamped to zero.
 
 ### NgxHeadlessFieldset
 
@@ -352,9 +360,10 @@ sibling's warning. These low-level visibility helpers accept `configDefault`
 explicitly rather than injecting provider configuration themselves.
 
 The summary factory reads descendant errors, filters hidden/disabled fields,
-deduplicates per field, and maps resolved messages to focusable entries. Orphan
-messages stay visible even though they cannot supply a focus target. The fieldset
-factory distinguishes omitted/null `fields` from `[]`, which aggregates nothing.
+deduplicates per field, and maps resolved messages to entries. Orphan messages
+(no bound field) stay visible with `canFocus: false` rather than being dropped
+— render them as plain text, not a link or button. The fieldset factory
+distinguishes omitted/null `fields` from `[]`, which aggregates nothing.
 
 ## ARIA Composition
 
@@ -400,9 +409,9 @@ humanizeFieldPath('address.postalCode'); // 'Address / Postal code'
 createUniqueId('field'); // 'field-1', 'field-2', ...
 
 // Error-summary building blocks (what NgxHeadlessErrorSummary uses internally)
-toErrorSummaryEntry(error); // ValidationError → ErrorSummaryEntryData with focus()
+toErrorSummaryEntry(error); // ValidationError → ErrorSummaryEntryData with focus() and canFocus
 resolveFieldNameFromError(error); // ValidationError → human-readable field name
-focusBoundControlFromError(error); // focus the control bound to an error
+focusBoundControlFromError(error); // focus the control bound to an error (no-op when canFocus is false)
 ```
 
 ## Related documentation

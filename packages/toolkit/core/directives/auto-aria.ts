@@ -10,18 +10,11 @@ import {
 import { FORM_FIELD, type FieldState } from '@angular/forms/signals';
 import { createAriaRequiredSignal } from '../utilities/aria/create-aria-required-signal';
 import {
-  DEFAULT_NGX_SIGNAL_FORMS_CONFIG,
   NGX_SIGNAL_FORM_ARIA_MODE,
   NGX_SIGNAL_FORM_FIELD_VISIBILITY_REGISTRY,
   NGX_SIGNAL_FORM_HINT_REGISTRY,
   NGX_SIGNAL_FORMS_CONFIG,
 } from '../tokens';
-import { shouldShowWarnings } from '../utilities/error-strategies';
-import { injectFormContext } from '../utilities/inject-form-context';
-import {
-  resolveSubmittedStatusFromContext,
-  resolveWarningStrategyFromContext,
-} from '../utilities/resolve-strategy';
 import { createAriaInvalidSignal } from '../utilities/aria/create-aria-invalid-signal';
 import {
   generateErrorId,
@@ -30,9 +23,10 @@ import {
 } from '../utilities/field-resolution';
 import { devWarnOnce, type WarnOnceRef } from '../utilities/dev-warn-once';
 import { createErrorVisibility } from '../utilities/create-error-visibility';
+import { createWarningVisibility } from '../utilities/create-warning-visibility';
 import { createAriaDescribedBySignal } from '../utilities/aria/create-aria-described-by-signal';
 import { createHintIdsSignal } from '../utilities/aria/create-hint-ids-signal';
-import { isBlockingError, isWarningError } from '../utilities/warning-error';
+import { isBlockingError } from '../utilities/warning-error';
 import {
   isElementCssVisible,
   NgxFieldIdentity,
@@ -67,6 +61,58 @@ const INITIAL_DOM_SNAPSHOT: AutoAriaDomSnapshot = {
   // stripped on the strength of a pre-layout probe.
   isControlVisible: true,
 };
+
+/**
+ * Explicit ARIA roles that WAI-ARIA 1.2 lists as supporting `aria-required`
+ * (directly or through role inheritance):
+ * https://w3c.github.io/aria/#aria-required
+ *
+ * A custom host with a role outside this set — or with no role at all — does
+ * not get `aria-required`; native form controls (`<input>`, `<select>`,
+ * `<textarea>`) are handled separately since they carry no explicit `role`.
+ */
+const ARIA_REQUIRED_SUPPORTED_ROLES = new Set([
+  'checkbox',
+  'combobox',
+  'columnheader',
+  'gridcell',
+  'listbox',
+  'radiogroup',
+  'rowheader',
+  'searchbox',
+  'spinbutton',
+  'switch',
+  'textbox',
+  'tree',
+  'treegrid',
+]);
+
+const NATIVE_FORM_CONTROL_TAGS = new Set(['INPUT', 'SELECT', 'TEXTAREA']);
+
+/**
+ * Resolves the effective ARIA role from a raw `role` attribute value.
+ *
+ * WAI-ARIA allows a space-separated list of fallback roles — only the first
+ * token is the element's role, and browsers match role tokens
+ * case-insensitively. Returns `null` for a `null`/empty/whitespace-only
+ * attribute, which callers treat the same as "no role".
+ */
+function resolveEffectiveRole(rawRole: string | null): string | null {
+  return rawRole?.trim().split(/\s+/)[0]?.toLowerCase() || null;
+}
+
+/**
+ * CSS selector matching a descendant that looks like its own bound control:
+ * a native form control, or an element with a role that supports
+ * `aria-required` (see {@link ARIA_REQUIRED_SUPPORTED_ROLES}). Deliberately
+ * narrower than "any `[role]`" — a decorative `role="img"` or a status
+ * region inside a role-less host is not a control, so it must not hide the
+ * missing-role warning.
+ */
+const DESCENDANT_CONTROL_SELECTOR = [
+  ...[...NATIVE_FORM_CONTROL_TAGS].map((tag) => tag.toLowerCase()),
+  ...[...ARIA_REQUIRED_SUPPORTED_ROLES].map((role) => `[role="${role}"]`),
+].join(', ');
 
 /**
  * Automatically manages ARIA attributes for Signal Forms controls.
@@ -193,6 +239,13 @@ export class NgxSignalFormAutoAria {
    */
   readonly #describedByRelocationWarned: WarnOnceRef = { current: false };
 
+  /**
+   * One-shot dev-mode diagnostic flag for the {@link ariaRequired} role
+   * check — warns once per instance when a custom host has no role that
+   * supports `aria-required`.
+   */
+  readonly #ariaRequiredRoleWarned: WarnOnceRef = { current: false };
+
   readonly #isManualAriaMode = computed(() => {
     return this.#ariaModeSignal?.() === 'manual';
   });
@@ -281,10 +334,9 @@ export class NgxSignalFormAutoAria {
     },
   );
 
-  readonly #formContext = injectFormContext();
-  readonly #config =
-    inject(NGX_SIGNAL_FORMS_CONFIG, { optional: true }) ??
-    DEFAULT_NGX_SIGNAL_FORMS_CONFIG;
+  // `NGX_SIGNAL_FORMS_CONFIG` has a root `factory` (see `../tokens.ts`), so
+  // `inject()` always resolves a value here — no `{ optional: true }` needed.
+  readonly #config = inject(NGX_SIGNAL_FORMS_CONFIG);
 
   /**
    * Warning-visibility timing, resolved through the **warning** cascade
@@ -318,22 +370,28 @@ export class NgxSignalFormAutoAria {
       if (registryEntry) return registryEntry.warningContainerVisible();
     }
 
-    const fieldState = this.#resolveFieldState();
-    if (!fieldState) return false;
-
-    return shouldShowWarnings(
-      fieldState.errors().some(isWarningError),
-      fieldState.touched(),
-      publishedWarningStrategy ??
-        resolveWarningStrategyFromContext(
-          undefined,
-          this.#formContext,
-          this.#config.defaultWarningStrategy,
-        ),
-      resolveSubmittedStatusFromContext(undefined, this.#formContext) ??
-        'unsubmitted',
-    );
+    // `#ownWarningVisibilityByStrategy` already reads the published strategy
+    // and falls back to the ambient form context when it is null, so it
+    // covers both remaining branches.
+    return this.#ownWarningVisibilityByStrategy();
   });
+
+  /**
+   * Warning-channel counterpart to {@link #ownVisibilityByStrategy}. Routes
+   * through the shared `createWarningVisibility()` seam (ADR-0006, ADR-0007)
+   * instead of hand-inlining `resolveWarningStrategyFromContext` →
+   * `shouldShowWarnings`, keeping this directive's warning presence check on
+   * `readDirectErrors` rather than reading `fieldState.errors()` directly.
+   */
+  readonly #ownWarningVisibilityByStrategy = createWarningVisibility(
+    () => this.#resolveFieldState(),
+    {
+      strategy: computed(
+        () => this.#fieldIdentity?.resolvedWarningStrategy() ?? undefined,
+      ),
+      configDefault: this.#config.defaultWarningStrategy,
+    },
+  );
 
   /**
    * Hint IDs from the identity service when available, falling back to the
@@ -433,39 +491,93 @@ export class NgxSignalFormAutoAria {
   );
 
   /**
-   * Computed ARIA required state.
-   * Returns 'true' | null based on the field's `required()` signal.
+   * Computed ARIA required state. Returns `'true'` or `null`.
    *
-   * Delegates to {@link createAriaRequiredSignal} for the actual resolution.
-   * The directive shell owns two branches on top of that unconditional
-   * factory:
+   * {@link createAriaRequiredSignal} resolves the raw value from
+   * `FieldState.required()`. This computed adds role-awareness on top:
    *
-   * - manual-mode opt-out — when `ngxSignalFormControlAria='manual'`, the
-   *   consumer's DOM value wins.
-   * - role-aware suppression — `aria-required` is only valid ARIA on a
-   *   handful of roles (`radiogroup`, `combobox`, `textbox`, …) plus native
-   *   form controls with no explicit role. Explicit roles that do not permit
-   *   it, such as `group` and `button`, must not receive the attribute. The
-   *   native `<button>` case is gated separately because its implicit role is
-   *   not present in the DOM `role` attribute. See
-   *   https://github.com/ngx-signal-forms/ngx-signal-forms/issues/300.
+   * - Manual mode: the consumer's own DOM value wins.
+   * - A native form control (`<input>`, `<select>`, `<textarea>`) always
+   *   gets the attribute — it carries no explicit role.
+   * - A native `<button>` never gets it. Its implicit role is not in the DOM
+   *   `role` attribute, so it needs its own check.
+   * - An explicit role gets the attribute only if its effective role
+   *   supports `aria-required` per WAI-ARIA 1.2 (see
+   *   {@link ARIA_REQUIRED_SUPPORTED_ROLES}). `group` and `button` are two
+   *   roles that do not. {@link resolveEffectiveRole} takes the first token
+   *   of a space-separated fallback list and lowercases it, matching how
+   *   browsers resolve the `role` attribute.
+   * - A role-less custom host (for example a bare `<div formField>`) never
+   *   gets the attribute — the generic role does not support it. If the
+   *   field is required, this also warns once in dev mode, unless the host
+   *   contains a descendant control. A wrapper component matches this
+   *   directive's selector too, but it is not itself the control — its
+   *   projected control already gets its own `aria-required` from its own
+   *   directive instance, so the wrapper must stay silent.
+   *
+   * See https://github.com/ngx-signal-forms/ngx-signal-forms/issues/300 and
+   * https://github.com/ngx-signal-forms/ngx-signal-forms/issues/496.
    */
   protected readonly ariaRequired = computed(() => {
     if (this.#isManualAriaMode()) {
       return this.#domSnapshot().ariaRequired;
     }
 
-    const { role, tagName } = this.#domSnapshot();
-    if (
-      role === 'group' ||
-      role === 'button' ||
-      (!role && tagName === 'BUTTON')
-    ) {
+    const { role: rawRole, tagName } = this.#domSnapshot();
+    const role = resolveEffectiveRole(rawRole);
+
+    if (role) {
+      return ARIA_REQUIRED_SUPPORTED_ROLES.has(role)
+        ? this.#ariaRequiredFromFactory()
+        : null;
+    }
+
+    if (tagName === 'BUTTON') {
       return null;
     }
 
-    return this.#ariaRequiredFromFactory();
+    if (NATIVE_FORM_CONTROL_TAGS.has(tagName)) {
+      return this.#ariaRequiredFromFactory();
+    }
+
+    // Role-less custom host: `aria-required` has nothing to attach to (the
+    // generic role does not support it), so only warn when the field is
+    // actually required — an optional field loses nothing by staying silent.
+    const wouldHaveBeenRequired = this.#ariaRequiredFromFactory();
+    if (wouldHaveBeenRequired && !this.#hasDescendantControl()) {
+      devWarnOnce(
+        this.#ariaRequiredRoleWarned,
+        'warn',
+        '[ngx-signal-forms] NgxSignalFormAutoAria: this custom host has no ' +
+          'role, so `aria-required` was not set. Add a role that supports ' +
+          'it, for example "combobox", "textbox", or "radiogroup".',
+        this.#element.nativeElement,
+      );
+    }
+
+    return null;
   });
+
+  /**
+   * Whether the ARIA target has a descendant that looks like its own bound
+   * control: a native form control, or an element whose role supports
+   * `aria-required` (see {@link DESCENDANT_CONTROL_SELECTOR}). A decorative
+   * role such as `img`, `presentation`, or `status` does not count.
+   *
+   * A role-less host with such a descendant is a container — for example
+   * `ngx-form-field-wrapper`, which matches this directive's `[formField]`
+   * selector on its own host but wraps the real control. Its own instance
+   * of this directive must not warn about the missing role: the projected
+   * control has its own `NgxSignalFormAutoAria` instance and its own role
+   * check, and a radiogroup wrapper is transiently role-less before its
+   * `role="radiogroup"` binding lands even though it is never a bare
+   * control.
+   */
+  #hasDescendantControl(): boolean {
+    return (
+      this.#ariaTarget().querySelector(DESCENDANT_CONTROL_SELECTOR) !== null
+    );
+  }
 
   /**
    * Computed ARIA describedby attribute.
