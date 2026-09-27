@@ -16,6 +16,7 @@ import {
   provideNgxSignalFormControlPresets,
   provideNgxSignalFormControlPresetsForComponent,
   provideNgxSignalFormsConfig,
+  provideNgxSignalFormsConfigForComponent,
   requiredFromStandardSchema,
 } from '@ngx-signal-forms/toolkit';
 import { DEFAULT_NGX_SIGNAL_FORMS_CONFIG } from '@ngx-signal-forms/toolkit/core';
@@ -1383,7 +1384,7 @@ describe('NgxSignalFormWrapperComponent', () => {
     });
 
     it("renders no marker before a control is projected, even in 'optional' mode (no flash)", async () => {
-      // resolvedMarker short-circuits to null while #boundControlElement() is
+      // resolvedMarker short-circuits to null while dom.boundControl() is
       // null, so the optional marker never flashes before required-ness is
       // known. With no projected control the guard is the only thing keeping
       // the (default-non-required) optional marker from rendering.
@@ -2878,13 +2879,13 @@ describe('NgxSignalFormWrapperComponent', () => {
 
   describe('Warning-only fields render independently of the blocking-error strategy', () => {
     // Regression coverage: the wrapper used to gate mounting the projected
-    // error renderer entirely on `shouldShowErrors()`, which runs the
+    // error renderer entirely on the blocking-error timing, which runs the
     // blocking-error strategy (default 'on-touch') even when the field's
     // only messages are warnings. A warnings-only, UNTOUCHED field would
     // therefore never mount `NgxFormFieldError` at all, so its own
     // `warningStrategy` never got a chance to run — the README's documented
     // "warning timing is independent of error timing" was unreachable through
-    // the wrapper. `shouldRenderErrorSlot` now mounts the renderer whenever
+    // the wrapper. `createFieldPresentation().renderMessageSlot` now mounts the renderer whenever
     // errors OR warnings should show.
     //
     // `warningStrategy="immediate"` is set explicitly here: the default is
@@ -4246,15 +4247,15 @@ describe('NgxSignalFormWrapperComponent', () => {
 
     describe('pre-resolution state (bound control not yet resolved)', () => {
       // `resolvedOrientation` now gates its forcing logic on
-      // `#boundControlElement() === null`, the same way its siblings
+      // `dom.boundControl() === null`, the same way its siblings
       // `isOutline` and `resolvedMarker` do (each returns its own
       // pre-resolution value). Before the projected control is discovered,
-      // `#controlKind()` has not settled, so — without the gate — a
+      // `dom.semantics().kind` has not settled, so — without the gate — a
       // checkbox/switch/radio-group field requesting 'horizontal' would
       // report the raw requested orientation instead of the forced
       // 'vertical': a `data-orientation` flash. Mirroring the sibling
       // `resolvedMarker` spec above, this exercises the guard with no
-      // control ever projected, so `#boundControlElement()` never resolves
+      // control ever projected, so `dom.boundControl()` never resolves
       // and the pre-resolution branch is the only one that ever runs.
       //
       // The configured default ('horizontal', set below) is deliberately
@@ -4503,10 +4504,10 @@ describe('NgxSignalFormWrapperComponent', () => {
     // children (`NgxFormFieldHint`, `NgxFormFieldError`) read that computed
     // via `NGX_SIGNAL_FORM_FIELD_CONTEXT` during the wrapper's FIRST
     // change-detection pass — before `afterEveryRender`'s write phase has
-    // ever populated `#inputElementId` — so the diagnostic fired even for
+    // ever populated `dom.inputId` — so the diagnostic fired even for
     // correctly configured fields (input WITH an id). See
-    // form-field-wrapper.ts `resolvedFieldName` for the fix (diagnostic
-    // moved to the write phase).
+    // `applyWrapperDomSnapshot` in form-field-dom-sync.ts for the fix
+    // (diagnostic moved to the write phase).
     let consoleErrorSpy: ReturnType<typeof vi.spyOn>;
 
     beforeEach(() => {
@@ -4859,6 +4860,179 @@ describe('NgxSignalFormWrapperComponent', () => {
       expect(idFor('Outer hint one')).toBe('outer-hint');
       expect(idFor('Outer hint two')).toBe('outer-hint-2');
       expect(idFor('Inner hint')).toBe('inner-hint');
+    });
+  });
+
+  describe('character-count limit linked into aria-describedby (issue #499)', () => {
+    it('links the control to the count’s limit description, ordered after a hint and before an error', async () => {
+      // Order contract: author ids, hints, count, then error or warning.
+      // `bio` gets a `required` error once touched, so this exercises all
+      // three managed segments in one chain.
+      @Component({
+        selector: 'ngx-test-char-count-describedby-order',
+        imports: [
+          NgxSignalFormWrapperComponent,
+          NgxSignalFormToolkit,
+          NgxFormFieldHint,
+          NgxFormFieldCharacterCount,
+          FormField,
+        ],
+        template: `
+          <ngx-form-field-wrapper [formField]="testForm.bio">
+            <label for="bio">Bio</label>
+            <textarea id="bio" [formField]="testForm.bio"></textarea>
+            <ngx-form-field-hint>Keep it short</ngx-form-field-hint>
+            <ngx-form-field-character-count
+              [formField]="testForm.bio"
+              [maxLength]="200"
+            />
+          </ngx-form-field-wrapper>
+        `,
+      })
+      class Host {
+        readonly testForm = form(
+          signal({ bio: '' }),
+          schema<{ bio: string }>((p) => {
+            required(p.bio, { message: 'Bio is required' });
+          }),
+        );
+      }
+
+      const { container, fixture } = await render(Host);
+      fixture.componentInstance.testForm.bio().markAsTouched();
+      fixture.detectChanges();
+      await fixture.whenStable();
+
+      const textarea = container.querySelector('#bio');
+      const describedBy = textarea?.getAttribute('aria-describedby');
+      expect(describedBy).toBe('bio-hint bio-char-count-limit bio-error');
+
+      const limitEl = container.querySelector('#bio-char-count-limit');
+      expect(limitEl).toHaveTextContent('Up to 200 characters');
+      // Rendered by the visually-hidden limit element only — the visible
+      // "n/200" text stays out of the accessible name/description chain.
+      expect(limitEl?.textContent).not.toContain('/200');
+    });
+
+    it('registers no id when the field has no maxLength', async () => {
+      @Component({
+        selector: 'ngx-test-char-count-no-limit',
+        imports: [
+          NgxSignalFormWrapperComponent,
+          NgxSignalFormToolkit,
+          NgxFormFieldCharacterCount,
+          FormField,
+        ],
+        template: `
+          <ngx-form-field-wrapper [formField]="testForm.bio">
+            <label for="bio">Bio</label>
+            <textarea id="bio" [formField]="testForm.bio"></textarea>
+            <ngx-form-field-character-count [formField]="testForm.bio" />
+          </ngx-form-field-wrapper>
+        `,
+      })
+      class Host {
+        readonly testForm = form(signal({ bio: '' }));
+      }
+
+      const { container } = await render(Host);
+
+      const textarea = container.querySelector('#bio');
+      expect(textarea).not.toHaveAttribute('aria-describedby');
+      expect(
+        container.querySelector('.ngx-signal-form-field-char-count__limit'),
+      ).toBeNull();
+    });
+
+    it('honours a config-provided characterCountLimitText override', async () => {
+      @Component({
+        selector: 'ngx-test-char-count-config-override',
+        imports: [
+          NgxSignalFormWrapperComponent,
+          NgxSignalFormToolkit,
+          NgxFormFieldCharacterCount,
+          FormField,
+        ],
+        providers: [
+          provideNgxSignalFormsConfigForComponent({
+            characterCountLimitText: 'Maximaal {max} tekens',
+          }),
+        ],
+        template: `
+          <ngx-form-field-wrapper [formField]="testForm.bio">
+            <label for="bio">Bio</label>
+            <textarea id="bio" [formField]="testForm.bio"></textarea>
+            <ngx-form-field-character-count
+              [formField]="testForm.bio"
+              [maxLength]="50"
+            />
+          </ngx-form-field-wrapper>
+        `,
+      })
+      class Host {
+        readonly testForm = form(signal({ bio: '' }));
+      }
+
+      const { container } = await render(Host);
+
+      expect(
+        container.querySelector('#bio-char-count-limit'),
+      ).toHaveTextContent('Maximaal 50 tekens');
+    });
+
+    it('keeps the visible "n/max" text exposed to AT when the control opts out via ngxSignalFormControlAria="manual" (PR #540 review)', async () => {
+      // Regression: a `manual`-mode control's `aria-describedby` is entirely
+      // author-owned (`NgxSignalFormAutoAria.ariaDescribedBy` never appends
+      // registry ids to it), so the wrapper still registers the count's
+      // limit id, but nothing ever adds it to the DOM attribute. Hiding the
+      // visible "n/max" text in that case — as `limitId() !== null` alone
+      // would say to do — silences the count for assistive technology.
+      @Component({
+        selector: 'ngx-test-char-count-manual-aria',
+        imports: [
+          NgxSignalFormWrapperComponent,
+          NgxSignalFormToolkit,
+          NgxSignalFormControlSemanticsDirective,
+          NgxFormFieldCharacterCount,
+          FormField,
+        ],
+        template: `
+          <ngx-form-field-wrapper [formField]="testForm.bio">
+            <label for="bio">Bio</label>
+            <textarea
+              id="bio"
+              [formField]="testForm.bio"
+              ngxSignalFormControlAria="manual"
+            ></textarea>
+            <ngx-form-field-character-count
+              [formField]="testForm.bio"
+              [maxLength]="200"
+            />
+          </ngx-form-field-wrapper>
+        `,
+      })
+      class Host {
+        readonly testForm = form(signal({ bio: '' }));
+      }
+
+      const { container } = await render(Host);
+
+      const wrapper = container.querySelector('ngx-form-field-wrapper');
+      expect(wrapper).toHaveAttribute(
+        'data-ngx-signal-form-control-aria-mode',
+        'manual',
+      );
+
+      // The limit description still registers and renders — only whether it
+      // is safe to hide the visible count is gated on aria ownership.
+      expect(
+        container.querySelector('#bio-char-count-limit'),
+      ).toHaveTextContent('Up to 200 characters');
+
+      const visibleText = container.querySelector(
+        '.ngx-signal-form-field-char-count__text',
+      );
+      expect(visibleText).not.toHaveAttribute('aria-hidden');
     });
   });
 });

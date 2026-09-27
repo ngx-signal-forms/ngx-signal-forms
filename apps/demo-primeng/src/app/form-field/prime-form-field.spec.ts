@@ -4,7 +4,13 @@ import {
   signal,
   viewChild,
 } from '@angular/core';
-import { FormField, form, schema, validate } from '@angular/forms/signals';
+import {
+  FormField,
+  form,
+  schema,
+  validate,
+  type FieldTree,
+} from '@angular/forms/signals';
 import {
   NgxSignalFormControlSemanticsDirective,
   NgxSignalFormToolkit,
@@ -268,5 +274,79 @@ describe('PrimeFormFieldComponent does not suppress a warning-only field (#506 C
     // + direct assertion fails fast instead.
     await view.fixture.whenStable();
     expect(wrapper.warningVisible()).toBe(true);
+  });
+});
+
+/**
+ * A touched field with a blocking error whose `hidden()` is true.
+ *
+ * A real Angular form skips validation and touch on a hidden field, so it
+ * never reaches this state. A custom control or a partial field state can,
+ * and then the wrapper and its renderer must still agree.
+ */
+const hiddenInvalidField = () => ({
+  value: signal(''),
+  invalid: signal(true),
+  valid: signal(false),
+  touched: signal(true),
+  dirty: signal(true),
+  pending: signal(false),
+  hidden: signal(true),
+  disabled: signal(false),
+  readonly: signal(false),
+  required: signal(true),
+  errors: signal([{ kind: 'required', message: 'Nickname is required.' }]),
+  errorSummary: signal([
+    { kind: 'required', message: 'Nickname is required.' },
+  ]),
+});
+
+/**
+ * Host harness for a field whose `hidden()` is true while the wrapper stays
+ * mounted (the consumer forgot the `@if`). `PrimeFormFieldComponent` does
+ * not set `[hidden]`, so the control stays on screen.
+ */
+@Component({
+  selector: 'ngx-hidden-field-host',
+  imports: [
+    PrimeFormFieldComponent,
+    NgxSignalFormControlSemanticsDirective,
+    InputTextModule,
+  ],
+  template: `
+    <prime-form-field [ngxPrimeFormField]="field" fieldName="nickname">
+      <label for="nickname">Nickname</label>
+      <input
+        id="nickname"
+        type="text"
+        pInputText
+        ngxSignalFormControl="input-like"
+      />
+    </prime-form-field>
+  `,
+})
+class HiddenFieldHostComponent {
+  protected readonly field = hiddenInvalidField as unknown as FieldTree<string>;
+
+  readonly wrapper = viewChild.required(PrimeFormFieldComponent<string>);
+}
+
+describe('PrimeFormFieldComponent on a hidden() field (#508)', () => {
+  it('keeps aria-invalid and the rendered error in agreement', async () => {
+    // The renderer does not gate on hidden(), so the wrapper must not
+    // either. Otherwise the error shows on screen while the wrapper reports
+    // the field as valid.
+    const view = await render(HiddenFieldHostComponent, {
+      providers: [
+        provideZonelessChangeDetection(),
+        provideNgxSignalFormsConfig({ defaultErrorStrategy: 'on-touch' }),
+        ...provideNgxPrimeForms(),
+      ],
+    });
+    await view.fixture.whenStable();
+
+    const wrapper = view.fixture.componentInstance.wrapper();
+    expect(screen.getByText('Nickname is required.')).toBeTruthy();
+    expect(wrapper.ariaInvalidValue()).toBe('true');
   });
 });

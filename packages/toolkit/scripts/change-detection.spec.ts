@@ -34,7 +34,10 @@ function* walkSourceFiles(directory: string): Generator<string> {
       continue;
     }
 
-    if (entry.name.endsWith('.ts') && !/\.(spec|test)\.ts$/u.test(entry.name)) {
+    if (
+      entry.name.endsWith('.ts') &&
+      !/\.(spec|test|fixture)\.ts$/u.test(entry.name)
+    ) {
       yield path;
     }
   }
