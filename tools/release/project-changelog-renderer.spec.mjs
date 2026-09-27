@@ -120,6 +120,17 @@ void test('does not double-wrap a mention already inside a matched code span', (
   assert.equal(escapeBareMentions(text), text);
 });
 
+void test('leaves a scoped package inside a bare URL untouched', () => {
+  const text = 'see https://www.npmjs.com/package/@ng-icons/core for details';
+  assert.equal(escapeBareMentions(text), text);
+});
+
+void test('leaves a scoped package inside a markdown link target untouched', () => {
+  const text =
+    'see [the package](https://www.npmjs.com/package/@ng-icons/core) for details';
+  assert.equal(escapeBareMentions(text), text);
+});
+
 // Render-level coverage: the escaping must reach the actual changelog output,
 // not just the pure helper. This is the case the previous version of this
 // spec missed - `toSingleLine` (the Highlights summary) escaped a bare

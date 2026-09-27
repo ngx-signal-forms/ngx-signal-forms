@@ -13,12 +13,33 @@ name: PR Title
 # Dependabot PRs are exempt here rather than blocked, matching
 # dependabot-auto-merge.yml.
 #
-# Uses `pull_request` (not `pull_request_target`): no secrets, read-only
-# permissions. The title is passed through an env var, never interpolated
-# into `run:`.
+# Uses `pull_request_target`, not `pull_request`: with `pull_request`,
+# GitHub runs the WORKFLOW DEFINITION from the PR's own merge ref, so a PR
+# could edit this file itself into a no-op - the base-SHA checkout below
+# only protects the commitlint config and rule, not the workflow that runs
+# them. `pull_request_target` runs the workflow definition from the base
+# branch instead, so a PR cannot disarm its own title check.
+#
+# This is only safe because the job never checks out or executes PR head
+# code: the checkout below is pinned to the base SHA (which
+# `actions/checkout` defaults to under `pull_request_target` regardless,
+# but pinning it explicitly keeps the intent obvious and matches the
+# `pull_request` behavior this replaced), install uses `--ignore-scripts`
+# so a base-branch `package.json` cannot run arbitrary lifecycle scripts,
+# the PR title is passed through `env` and never interpolated into `run:`,
+# `persist-credentials` stays `false`, and `permissions` grants only
+# `contents: read` - no secrets, no write access. See GitHub's guidance on
+# securely using `pull_request_target`:
+# https://securitylab.github.com/resources/github-actions-preventing-pwn-requests/
+#
+# Heads-up: `pull_request_target` workflows run using the workflow file
+# version on the BASE branch, not the PR branch. Until this file is merged
+# to main, it does not exist there yet, so this check will not run on the
+# PR that introduces it (including #549 itself). Expected - it starts
+# running on the next PR opened after this one merges.
 
 on:
-  pull_request:
+  pull_request_target:
     types: [opened, edited, reopened, synchronize]
 
 permissions:
@@ -34,13 +55,8 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      # Check out the base branch's own SHA, not the default merge ref.
-      # `pull_request`'s default checkout is the PR's merge commit, which
-      # includes the PR's own changes - a PR could edit
-      # commitlint.config.cjs, the no-bare-mention rule, or the lockfile to
-      # loosen the very check running against it. The base SHA is the last
-      # commit on the target branch before this PR, so the check always
-      # runs the trusted, already-reviewed rules.
+      # Pin the checkout to the base SHA (see the top-of-file note on
+      # `pull_request_target` safety) - never the PR head.
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           ref: ${{ github.event.pull_request.base.sha }}

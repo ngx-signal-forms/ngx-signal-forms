@@ -36,3 +36,18 @@ void test('rejects a mention preceded by an unmatched backtick', () => {
   const [valid] = rule({ header: 'fix: `@foo' });
   assert.equal(valid, false);
 });
+
+void test('accepts a scoped package inside a bare URL', () => {
+  const [valid] = rule({
+    header: 'docs: link https://www.npmjs.com/package/@ng-icons/core',
+  });
+  assert.equal(valid, true);
+});
+
+void test('accepts a scoped package inside a markdown link target', () => {
+  const [valid] = rule({
+    header:
+      'docs: see [the package](https://www.npmjs.com/package/@ng-icons/core)',
+  });
+  assert.equal(valid, true);
+});

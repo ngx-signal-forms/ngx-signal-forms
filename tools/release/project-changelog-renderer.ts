@@ -71,18 +71,22 @@ function isRecord(value: unknown): value is Record<string, unknown> {
  * is not swallowed. Matches `@scope/pkg` and `@scope/pkg.ext` as one unit
  * (so a dependency bump like `@ng-icons/core` escapes cleanly, and a
  * sentence-final `bump @ng-icons/core.` keeps its trailing period outside
- * the match), and skips a `@` preceded by a word character, so an email
- * address (`me@example.com`) is left alone. This regex only ever runs on
- * text outside a matched code span (`escapeBareMentions` below carves those
- * out first and copies them through untouched), so its lookbehind does not
- * treat a backtick specially — doing so would let an UNMATCHED backtick
- * (e.g. `` `@foo `` with no closing backtick) shield a real mention from
- * this check. `escapeOutsideCode` below backslash-escapes any such stray
- * backtick before wrapping the mention, so the result stays valid markdown.
+ * the match), and skips a `@` preceded by a word character or a `/`, so an
+ * email address (`me@example.com`) and a scoped package inside a URL
+ * (`https://www.npmjs.com/package/@ng-icons/core`) are left alone - GitHub
+ * does not mention-link an `@` inside a URL either, and wrapping it there
+ * would break the autolink or the `[text](url)` target. This regex only
+ * ever runs on text outside a matched code span (`escapeBareMentions`
+ * below carves those out first and copies them through untouched), so its
+ * lookbehind does not treat a backtick specially — doing so would let an
+ * UNMATCHED backtick (e.g. `` `@foo `` with no closing backtick) shield a
+ * real mention from this check. `escapeOutsideCode` below
+ * backslash-escapes any such stray backtick before wrapping the mention,
+ * so the result stays valid markdown.
  */
 const NAME_SEGMENT = /[\w]+(?:-[\w]+)*/u.source;
 const BARE_MENTION = new RegExp(
-  `(?<!\\w)@${NAME_SEGMENT}(?:/${NAME_SEGMENT}(?:\\.${NAME_SEGMENT})*)?`,
+  `(?<![\\w/])@${NAME_SEGMENT}(?:/${NAME_SEGMENT}(?:\\.${NAME_SEGMENT})*)?`,
   'gu',
 );
 
