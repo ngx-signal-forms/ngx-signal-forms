@@ -218,4 +218,16 @@ describe('provideNgxSignalFormsConfigForComponent', () => {
       optedOut.get(NGX_SIGNAL_FORMS_CONFIG).errorSummaryAnnouncesAlone,
     ).toBe(false);
   });
+
+  it('defaults hideHintOnError to false and honors an explicit true override (issue #521)', () => {
+    const defaults = createInjectorFromEnvProviders([
+      provideNgxSignalFormsConfig({}),
+    ]);
+    expect(defaults.get(NGX_SIGNAL_FORMS_CONFIG).hideHintOnError).toBe(false);
+
+    const optedIn = createInjectorFromEnvProviders([
+      provideNgxSignalFormsConfig({ hideHintOnError: true }),
+    ]);
+    expect(optedIn.get(NGX_SIGNAL_FORMS_CONFIG).hideHintOnError).toBe(true);
+  });
 });

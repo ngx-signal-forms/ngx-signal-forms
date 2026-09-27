@@ -78,15 +78,14 @@ test.describe('ARIA Strategy Integration', () => {
       await ratingInput.blur();
 
       /// After blur, auto-ARIA merges the error container id into
-      /// aria-describedby alongside the toolkit-managed hint id — the hint
-      /// id is retained even though the wrapper hides the hint slot while
-      /// the error renders (the toolkit's designed hint/error swap).
+      /// aria-describedby alongside the toolkit-managed hint id. The hint
+      /// stays visible next to the error by default (issue #521) — hiding
+      /// it is opt-in through `hideHintOnError`.
       await expect(ratingInput).toHaveAttribute(
         'aria-describedby',
         'rating-hint overallRating-error',
       );
-      await expect(page.locator('#rating-hint')).toBeAttached();
-      await expect(page.locator('#rating-hint')).not.toBeVisible();
+      await expect(page.locator('#rating-hint')).toBeVisible();
     });
   });
 

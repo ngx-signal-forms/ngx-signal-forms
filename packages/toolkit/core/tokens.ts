@@ -96,6 +96,7 @@ export const DEFAULT_NGX_SIGNAL_FORMS_CONFIG = {
   warningPrefixText: 'Warning:',
   errorSummaryAnnouncesAlone: true,
   characterCountLimitText: 'Up to {max} characters',
+  hideHintOnError: false,
 } as const satisfies NgxSignalFormsConfig;
 
 /**
