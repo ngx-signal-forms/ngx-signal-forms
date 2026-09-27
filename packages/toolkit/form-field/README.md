@@ -123,6 +123,7 @@ export class ContactFormComponent {
 | `showMarkerWhen`  | `'required' \| 'optional' \| 'none'`              | Config      | Which fields carry a visual marker                           |
 | `requiredMarker`  | `string`                                          | Config      | Marker text for required fields                              |
 | `optionalMarker`  | `string`                                          | Config      | Marker text for optional fields                              |
+| `hideHintOnError` | `boolean`                                         | Config      | Hide the hint while a blocking error or warning shows        |
 
 Only `formField` is required. Every "Inherited" / "Config" default resolves
 through the toolkit's settings cascade (field input → form context →

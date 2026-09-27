@@ -109,6 +109,11 @@ function createConfigFactory(
         configDefault: parentOrNull?.characterCountLimitText,
         fallback: DEFAULT_NGX_SIGNAL_FORMS_CONFIG.characterCountLimitText,
       }),
+      hideHintOnError: createCascadingResolver({
+        input: userConfig.hideHintOnError,
+        configDefault: parentOrNull?.hideHintOnError,
+        fallback: DEFAULT_NGX_SIGNAL_FORMS_CONFIG.hideHintOnError,
+      }),
     };
   };
 }

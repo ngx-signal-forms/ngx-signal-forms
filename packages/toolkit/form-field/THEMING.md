@@ -197,10 +197,23 @@ Provides context or instructions for a field.
 | `--ngx-form-field-hint-padding-inline-end`   | `0`                                                             | End-edge padding            |
 
 Checkbox and switch wrapper rows override both padding tokens so the hint
-aligns with the row's control padding. The wrapper also sets the contextual
-`--ngx-form-field-hint-display: none` while the field is invalid or carries a
-warning, so a hint never competes with blocking feedback — treat that variable
-as an internal coordination hook, not a theming knob.
+aligns with the row's control padding.
+
+By default, a hint stays visible next to a blocking error or warning (WCAG
+2.2 SC 3.3.2). Pass `hideHintOnError` on `ngx-form-field-wrapper`, or set
+`NgxSignalFormsConfig.hideHintOnError`, to hide the hint while the error or
+warning shows instead. The hint's id stays in `aria-describedby` either way,
+so a screen reader always hears it — only sighted visibility changes.
+
+Under the hood, opting in drives two mechanisms together: the wrapper sets
+the contextual `--ngx-form-field-hint-display: none` on the host (which
+`ngx-form-field-hint` reads for its own `display`), and it also collapses
+the hint's projection slot directly with an inline `display: none`. Both
+are gated on the same condition (the opt-in, and the error/warning actually
+being visible). Treat `--ngx-form-field-hint-display` as an internal
+coordination hook, not a theming knob. The Angular Material reference
+wrapper keeps Material's own `<mat-hint>`/`<mat-error>` swap independent of
+this setting.
 
 ### Grouped Panel Feedback (panel presentation)
 

@@ -1,6 +1,7 @@
 import { NgComponentOutlet } from '@angular/common';
 import {
   afterEveryRender,
+  booleanAttribute,
   ChangeDetectionStrategy,
   Component,
   computed,
@@ -271,6 +272,8 @@ import { resolveUnionInput } from './utilities/resolve-union-input';
     '[class.ngx-signal-form-field-wrapper--invalid]':
       'presentation.showErrors()',
     '[class.ngx-signal-form-field-wrapper--warning]': 'showWarningState()',
+    '[class.ngx-signal-form-field-wrapper--hide-hint-on-error]':
+      'resolvedHideHintOnError() && (presentation.showErrors() || presentation.showWarnings())',
     '[class.ngx-signal-form-field-wrapper--messages-top]': 'isTopPlacement()',
     '[class.ngx-signal-form-field-wrapper--messages-bottom]':
       '!isTopPlacement()',
@@ -389,7 +392,10 @@ import { resolveUnionInput } from './utilities/resolve-union-input';
           <div
             class="ngx-signal-form-field-wrapper__hint-slot"
             [style.display]="
-              presentation.renderMessageSlot() ? 'none' : 'contents'
+              resolvedHideHintOnError() &&
+              (presentation.showErrors() || presentation.showWarnings())
+                ? 'none'
+                : 'contents'
             "
           >
             <ng-content select="ngx-form-field-hint" />
@@ -549,6 +555,26 @@ export class NgxFormFieldWrapper<TValue = unknown> {
    * Falls back to `NgxSignalFormsConfig.optionalMarker` when unset.
    */
   readonly optionalMarker = input<string | undefined>();
+
+  /**
+   * Hide this field's hint while it shows a blocking error or warning.
+   * Falls back to `NgxSignalFormsConfig.hideHintOnError` when unset.
+   *
+   * The hint id stays in `aria-describedby` either way, so a screen reader
+   * always hears it. This only controls whether sighted users also see it.
+   *
+   * Accepts a bare attribute (`hideHintOnError`) or a bound value
+   * (`[hideHintOnError]="true"`). Leaving it unbound keeps it `undefined`, so
+   * the config fallback below still applies — a plain `booleanAttribute`
+   * transform would coerce an absent attribute to `false` and mask that
+   * fallback.
+   *
+   * @default false
+   */
+  readonly hideHintOnError = input<boolean | undefined, unknown>(undefined, {
+    transform: (value: unknown): boolean | undefined =>
+      value === undefined ? undefined : booleanAttribute(value),
+  });
 
   /**
    * Toolkit configuration for default appearance, markers and the required
@@ -794,6 +820,14 @@ export class NgxFormFieldWrapper<TValue = unknown> {
    */
   protected readonly resolvedMarkerMode = computed<FieldMarkingMode>(() => {
     return this.showMarkerWhen() ?? this.config.showMarkerWhen;
+  });
+
+  /**
+   * Resolved hint-on-error visibility with input override. See
+   * `hideHintOnError` and `NgxSignalFormsConfig.hideHintOnError`.
+   */
+  protected readonly resolvedHideHintOnError = computed<boolean>(() => {
+    return this.hideHintOnError() ?? this.config.hideHintOnError;
   });
 
   /**

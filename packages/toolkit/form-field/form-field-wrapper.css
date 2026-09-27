@@ -1096,8 +1096,9 @@
   gap: var(--ngx-form-field-assistive-gap, 0.5rem);
   /*
    * The row is always reserved (never collapsed) so a field does not shift when
-   * a hint is swapped for an error or warning. The reservation is exactly one
-   * caption line — the feedback line-height a hint/message renders at — so a
+   * an error or warning appears (by default, alongside the hint; with
+   * `hideHintOnError`, in its place). The reservation is exactly one caption
+   * line — the feedback line-height a hint/message renders at — so a
    * single-line message fits without leaving dead space below every field
    * (#246). Multi-line messages grow the row, which is the accepted shift.
    */
@@ -1201,20 +1202,37 @@
 }
 
 /* ============================================================================ */
-/* HINT/ERROR VISIBILITY: Show either hint OR error (not both) */
+/* HINT/ERROR VISIBILITY: hint stays visible by default; hiding is opt-in */
 /* ============================================================================ */
-/* Per modern web guidance (required-field-feedback pattern), hints should
- * disappear when errors appear to avoid visual clutter and focus user
- * attention on the blocking error message.
+/* WCAG 2.2 SC 3.3.2 (Labels or Instructions): a sighted user needs format
+ * instructions most while an error tells them the value was wrong, so the
+ * hint stays visible next to the error by default. The `hideHintOnError`
+ * wrapper input / `NgxSignalFormsConfig.hideHintOnError` restores the old
+ * hide-on-error behavior for consumers who want it.
+ *
+ * The `--hide-hint-on-error` host class (form-field-wrapper.ts) is already
+ * true only while the opt-in is set AND `presentation.showErrors() ||
+ * presentation.showWarnings()` is true — i.e. a message is actually
+ * visible, not merely present-but-not-yet-shown by its own display
+ * strategy. `renderMessageSlot()` is deliberately NOT used here: it also
+ * opens the renderer while an error strategy allows messages on a field
+ * that only has warnings, so a warning-only field with, say,
+ * `warningStrategy="on-submit"` would otherwise hide its hint before
+ * submit even though nothing is shown yet. The `:is(--invalid, --warning)`
+ * check below is a coarser match on the same states (`--warning` itself
+ * has no timing gate), narrowed to the actually-visible case by the AND
+ * with the host class above.
  *
  * Implementation uses CSS custom properties (no ::ng-deep) so that
  * ngx-form-field-hint reads --ngx-form-field-hint-display from its host
- * context. This respects Angular's view encapsulation boundary.
+ * context. This respects Angular's view encapsulation boundary. The
+ * wrapper's template additionally collapses the hint's own projection slot
+ * the same way, for consumers who never touch this CSS variable at all.
  */
 
-/* Hide hints when field has blocking errors or warnings */
+/* Hide hints when field has blocking errors or warnings, opt-in only */
 :host(
-  :is(
+  .ngx-signal-form-field-wrapper--hide-hint-on-error:is(
     .ngx-signal-form-field-wrapper--invalid,
     .ngx-signal-form-field-wrapper--warning
   )

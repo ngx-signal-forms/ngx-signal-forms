@@ -414,6 +414,19 @@ export interface NgxSignalFormsConfig {
   warningPrefixText: string;
 
   /**
+   * Hide a field's hint while it shows a blocking error or warning.
+   *
+   * The hint id stays in `aria-describedby` either way, so a screen reader
+   * always hears it. This setting only controls whether sighted users can
+   * also see it. Off by default (WCAG 2.2 SC 3.3.2): a sighted user keeps
+   * the format instructions exactly when the error tells them the value was
+   * wrong.
+   *
+   * @default false
+   */
+  hideHintOnError: boolean;
+
+  /**
    * When the form renders an `NgxFormFieldErrorSummary`, let the summary be
    * the only live region that announces after a submit.
    *
@@ -505,4 +518,9 @@ export interface NgxSignalFormsUserConfig {
    * placeholder for the resolved `maxLength` to appear.
    */
   characterCountLimitText?: string | undefined;
+  /**
+   * Set `true` to hide a field's hint while it shows a blocking error or
+   * warning. See {@link NgxSignalFormsConfig.hideHintOnError}.
+   */
+  hideHintOnError?: boolean | undefined;
 }
