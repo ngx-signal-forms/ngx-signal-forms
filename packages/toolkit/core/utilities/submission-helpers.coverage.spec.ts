@@ -108,7 +108,7 @@ describe('createSubmittedStatusTracker', () => {
     expect(status()).toBe('submitted');
   });
 
-  it('resets to "unsubmitted" after touched returns to false, even with a stale submitAttempted flag', async () => {
+  it('resets to "unsubmitted" and clears submitAttempted when touched returns to false', async () => {
     const submittingState = signal(false);
     const touchedState = signal(false);
     const submitAttempted: WritableSignal<boolean> = signal(false);
@@ -121,24 +121,58 @@ describe('createSubmittedStatusTracker', () => {
       createSubmittedStatusTracker(mockForm, submitAttempted),
     );
 
-    // Drive a full submit cycle, then flag an additional invalid attempt.
+    // Drive a full submit cycle.
     submittingState.set(true);
     touchedState.set(true);
     await flush();
     submittingState.set(false);
     await flush();
+    expect(status()).toBe('submitted');
+
+    // Reset: form.reset() flips touched back to false. Tracker must roll
+    // back to 'unsubmitted' AND clear the external submitAttempted signal.
+    touchedState.set(false);
+    await flush();
+    expect(status()).toBe('unsubmitted');
+    expect(submitAttempted()).toBe(false);
+  });
+
+  it('does not resurrect "submitted" from a stale submitAttempted flag after the user touches the form again post-reset', async () => {
+    // Regression guard: an invalid-submit attempt sets `submitAttempted`,
+    // then a reset must clear it — not just roll `status` back to
+    // 'unsubmitted' for one tick. If the clear were skipped, the next
+    // touched: false → true transition (the user simply re-focusing a
+    // field, with no new submit) would see `attempted` still `true` and
+    // flip `status` straight back to 'submitted' — an `'on-submit'`
+    // consumer would show stale errors on a form nobody resubmitted.
+    const submittingState = signal(false);
+    const touchedState = signal(false);
+    const submitAttempted: WritableSignal<boolean> = signal(false);
+    const mockForm = makeMockForm(
+      () => submittingState(),
+      () => touchedState(),
+    );
+
+    const status = TestBed.runInInjectionContext(() =>
+      createSubmittedStatusTracker(mockForm, submitAttempted),
+    );
+
+    // Invalid submit attempt: submitting() never flips, only the flag does.
+    touchedState.set(true);
     submitAttempted.set(true);
     await flush();
     expect(status()).toBe('submitted');
 
-    // Reset: form.reset() flips touched back to false. The tracker's reset
-    // check runs before it looks at `submitAttempted`, so the status rolls
-    // back to 'unsubmitted' even though the caller's flag is still `true` —
-    // the tracker only reads that signal, it never writes to it.
+    // Reset.
     touchedState.set(false);
     await flush();
     expect(status()).toBe('unsubmitted');
-    expect(submitAttempted()).toBe(true);
+    expect(submitAttempted()).toBe(false);
+
+    // The user touches a field again — no submit attempt this time.
+    touchedState.set(true);
+    await flush();
+    expect(status()).toBe('unsubmitted');
   });
 
   it("should not reset to 'unsubmitted' when touched flips false during in-flight submission", async () => {

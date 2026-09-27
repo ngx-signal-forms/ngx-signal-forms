@@ -404,10 +404,8 @@ export class NgxFormFieldCharacterCount {
     optional: true,
   });
 
-  // No `{ optional: true } ?? DEFAULT_NGX_SIGNAL_FORMS_CONFIG` fallback:
   // `NGX_SIGNAL_FORMS_CONFIG` has a root `factory` (see `core/tokens.ts`), so
-  // plain `inject()` always resolves — the optional form's fallback branch
-  // never ran.
+  // `inject()` always resolves a value here — no `{ optional: true }` needed.
   readonly #config = inject(NGX_SIGNAL_FORMS_CONFIG);
 
   readonly #warnedMissingMaxPlaceholder: WarnOnceRef = { current: false };

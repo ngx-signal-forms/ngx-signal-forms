@@ -1,13 +1,9 @@
 /**
  * Shared types and defaults for the character-count pair
- * (`NgxHeadlessCharacterCount` / `createCharacterCount`).
- *
- * Split out so `character-count.ts` (the directive) and `utilities.ts` (the
- * factory, plus other unrelated headless utilities) can both import these
- * without a runtime-value import cycle between them: `character-count.ts`
- * delegates to `createCharacterCount()` from `utilities.ts`, so the reverse
- * edge (`utilities.ts` importing from `character-count.ts`) can't exist —
- * this module is the one-way source both sides depend on instead.
+ * (`NgxHeadlessCharacterCount` / `createCharacterCount`), both defined in
+ * `character-count.ts`. Split out into their own module so other headless
+ * and assistive files that only need the shape (not the directive or the
+ * factory) can import these without pulling in `character-count.ts` itself.
  */
 
 import type { Signal } from '@angular/core';

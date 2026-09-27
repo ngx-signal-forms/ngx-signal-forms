@@ -231,10 +231,8 @@ export class NgxSignalForm {
    * only sets `submitting()` to `true` when the form is valid. Without this flag,
    * errors would never appear for invalid forms with `'on-submit'` strategy.
    *
-   * `createSubmittedStatusTracker` only reads this signal — it never resets
-   * it. It stays `true` after a form reset, but that is harmless: the
-   * tracker's own reset check (`touched()` `true` → `false`) runs before it
-   * looks at this flag, so `submittedStatus` still reports `'unsubmitted'`.
+   * Reset lifecycle is owned by `createSubmittedStatusTracker`, which clears
+   * this signal when `touched()` transitions from `true` to `false` (form reset).
    */
   readonly #submitAttempted = signal(false);
 
