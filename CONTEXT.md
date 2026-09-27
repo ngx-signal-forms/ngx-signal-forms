@@ -37,12 +37,15 @@ ngx-signal-forms — an Angular toolkit for working with Signal Forms.
   error".
 - **WCAG 2.2 AA** — the accessibility conformance level this project targets.
   Toolkit components must satisfy it unconditionally (hard fail in Vitest browser
-  specs). Demo apps track compliance against a versioned baseline; deviations
-  create GitHub issues but do not block PRs.
+  specs). Demo apps track compliance against a versioned baseline: a new
+  violation not in the baseline blocks the PR (ADR-0013); on `main` it opens a
+  GitHub issue instead. A maintainer accepts a known violation by adding it to
+  the baseline in a reviewed diff.
 - **a11y baseline** — a per-demo-app JSON file (`a11y-baseline.json`) that
-  records known axe violations. The CI `a11y` job diffs the current run against
-  this file; new violations trigger auto-issue creation and a baseline update.
-  Synonym to avoid: "known violations list" (ambiguous — use "a11y baseline").
+  records known axe violations. The CI `a11y` job diffs the current run
+  against this file: on a pull request a new violation fails the job; on
+  `main` it opens an issue. Synonym to avoid: "known violations list"
+  (ambiguous — use "a11y baseline").
 - **Bound path** — the `SchemaPath` a Vest registration is attached to
   (`validateVest(path.address, suite)` → the bound path is `path.address`). It
   fixes two things at once: where the resulting errors attach, and what the

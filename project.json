@@ -58,6 +58,12 @@
         "cwd": "{workspaceRoot}"
       }
     },
+    "check-a11y-report-violations": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "node --test tools/scripts/a11y-report-violations.spec.mjs"
+      }
+    },
     "a11y-report": {
       "executor": "nx:run-commands",
       "cache": false,
