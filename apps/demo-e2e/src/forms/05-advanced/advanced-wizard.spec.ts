@@ -525,19 +525,17 @@ test.describe('Advanced Wizard Demo', () => {
         .locator('.wizard-step-button')
         .filter({ hasText: 'Trip Details' })
         .click();
-
-      // The buggy implementation set `currentStep` synchronously (before the
-      // container's `await`-based validation resolved), so the DOM briefly
-      // *still* shows Traveler right after the click and only flips to Trip
-      // Details once the async validation's (too-late) `preventDefault()`
-      // has already been ignored. Give that microtask/render race a moment
-      // to fully settle before asserting the final state below — asserting
-      // immediately after the click can catch the transient pre-flip frame
-      // and produce a false pass.
-      await page.waitForTimeout(300);
     });
 
     await test.step('Wizard stays on the invalid Traveler step instead of navigating away', async () => {
+      // The buggy implementation set `currentStep` synchronously (before the
+      // container's `await`-based validation resolved), so the DOM briefly
+      // *still* showed Traveler right after the click and only flipped to
+      // Trip Details once the async validation's (too-late)
+      // `preventDefault()` had already been ignored. These are web-first
+      // assertions: Playwright retries each one until it holds or the
+      // assertion timeout elapses, so the transient pre-flip frame does not
+      // produce a false pass the way asserting once, immediately, would.
       await expect(
         page.getByRole('heading', { name: 'Traveler Information' }),
       ).toBeVisible();
