@@ -33,9 +33,11 @@ Choose state before markup:
   Omitted/undefined means empty; use `[]`, not `null`, for no messages. A blocking
   error selects the alert container; a warning-only list selects status. There
   is no `tone` input.
-- Headless counters require both `field` and `maxLength`; they do not read the
-  validator limit. `createCharacterCount()` uses fractional thresholds, while
-  styled counters expose percent-based CSS thresholds.
+- `NgxHeadlessCharacterCount` requires `field` and `maxLength`. `createCharacterCount()`
+  requires only `field` — pass `useValidatorMaxLength: true` to read the
+  field's own `maxLength` validator when no explicit `maxLength` is given.
+  `createCharacterCount()` uses fractional thresholds, while styled counters
+  expose percent-based CSS thresholds.
 - `summarizeFieldOptionality()` and `createFieldOptionalitySummary()` report
   required/optional leaves. A mixed form can set both flags; an empty form sets
   neither. Use them for custom legends instead of traversing the tree again.

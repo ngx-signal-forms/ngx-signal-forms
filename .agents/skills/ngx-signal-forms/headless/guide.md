@@ -29,7 +29,9 @@ Use `@ngx-signal-forms/toolkit/headless` when you own the markup. Use
 | Fieldsets, summaries, or notification cards                  | [Aggregation and templates](../references/headless-composition.md#visibility-and-aggregation); deeper [nested forms](https://github.com/ngx-signal-forms/ngx-signal-forms/blob/main/docs/COMPLEX_NESTED_FORMS.md)                     |
 | Programmatic messages, counters, flags, or marking legends   | [Bundled contracts](../references/headless-composition.md#visibility-and-aggregation); deeper [reactive APIs](https://github.com/ngx-signal-forms/ngx-signal-forms/blob/main/packages/toolkit/headless/README.md#reactive-primitives) |
 
-`NgxHeadlessCharacterCount` and `createCharacterCount()` require `maxLength`.
+`NgxHeadlessCharacterCount` requires `maxLength`. `createCharacterCount()`
+does not — pass `useValidatorMaxLength: true` to fall back to the field's
+own `maxLength` schema validator instead.
 `createErrorState()` needs an injection context or explicit `injector` and
 returns raw errors. `errorsOverride` on `NgxHeadlessErrorState` bypasses timing;
 its caller owns filtering and blocking-error precedence. `connectFieldState()`

@@ -5,13 +5,11 @@ import {
   computed,
   inject,
   input,
-  linkedSignal,
   untracked,
 } from '@angular/core';
 import type { FieldTree } from '@angular/forms/signals';
 import { NGX_SIGNAL_FORM_FIELD_CONTEXT } from '@ngx-signal-forms/toolkit';
 import {
-  createCharacterCountLengthSignal,
   DEFAULT_NGX_SIGNAL_FORMS_CONFIG,
   devWarnOnce,
   generateCharacterCountLimitId,
@@ -498,39 +496,19 @@ export class NgxFormFieldCharacterCount {
     input<NgxCharacterCountAnnouncementFormatter>();
 
   /**
-   * Resolved maximum length.
+   * Explicit `maxLength` input, sanitized to a positive number or `null`.
    *
-   * Priority:
-   * 1. Explicit `maxLength` input when it is a positive number
-   * 2. `fieldState.maxLength()` when present AND numeric AND > 0
-   * 3. `null` — no limit detected. Display falls back to a plain count
-   *    (no `/max`) and color progression is disabled.
-   *
-   * `null` is the single sentinel for "no limit." `0`, negatives, and
-   * non-numeric values all fall through to `null` so downstream computeds
-   * never need to differentiate "zero-limit" from "unknown-limit" — the
-   * styled wrapper treats both as the plain-count display.
+   * Only a positive number counts as an explicit override — `0`, negative,
+   * and non-numeric values fall through to `null`, which tells
+   * {@link createCharacterCount} (via `useValidatorMaxLength` below) to try
+   * the field's own `maxLength` validator instead. `null` is the single
+   * sentinel for "no explicit override" so downstream signals never need to
+   * differentiate "zero-limit" from "unset" — see `#charCountState`'s
+   * `resolvedMaxLength`/`hasLimit` for the final, fully-resolved limit.
    */
-  readonly #resolvedMaxLength = computed<number | null>(() => {
+  readonly #explicitMaxLength = computed<number | null>(() => {
     const manualMax = this.maxLength();
-
-    if (typeof manualMax === 'number' && manualMax > 0) {
-      return manualMax;
-    }
-
-    const fieldState = this.formField()();
-    if (this.#hasMaxLengthSignal(fieldState)) {
-      const validatorMax = fieldState.maxLength();
-      // Structural narrowing only guarantees the call succeeds; the
-      // returned value must still be a positive number we can use.
-      if (typeof validatorMax === 'number' && validatorMax > 0) {
-        return validatorMax;
-      }
-      // Any other shape (undefined, null, string, NaN, negative, 0) is
-      // treated as "no limit declared" — do not silently coerce to 0.
-    }
-
-    return null;
+    return typeof manualMax === 'number' && manualMax > 0 ? manualMax : null;
   });
 
   /**
@@ -562,7 +540,7 @@ export class NgxFormFieldCharacterCount {
    */
   readonly limitId = computed(() => {
     const fieldName = this.resolvedFieldName();
-    const max = this.#resolvedMaxLength();
+    const max = this.#charCountState.resolvedMaxLength();
     if (fieldName === null || max === null) return null;
 
     return generateCharacterCountLimitId(fieldName);
@@ -610,7 +588,7 @@ export class NgxFormFieldCharacterCount {
    * silently never state a number.
    */
   protected readonly limitText = computed(() => {
-    const max = this.#resolvedMaxLength();
+    const max = this.#charCountState.resolvedMaxLength();
     if (max === null) return '';
 
     const template = this.#config.characterCountLimitText;
@@ -628,8 +606,18 @@ export class NgxFormFieldCharacterCount {
   });
 
   /**
-   * Headless character count state from the toolkit.
-   * Re-created when `maxLength` changes (rare).
+   * Headless character count state from the toolkit. Created once as an
+   * instance field, not inside a `computed` — `createCharacterCount()`
+   * builds its own internal signal graph, so recreating it on every
+   * `maxLength` change would tear that graph down and rebuild it instead of
+   * letting it react on its own (issue #510).
+   *
+   * The `field` and `maxLength` options are trampoline closures (same
+   * pattern as `NgxHeadlessCharacterCount`) so the factory stays reactive to
+   * rebound inputs without being recreated. `useValidatorMaxLength` lets the
+   * factory itself fall back to the field's `maxLength` validator when
+   * `#explicitMaxLength` resolves to `null` — the auto-detection this
+   * component used to duplicate.
    *
    * Uses `createCharacterCount()`'s own default thresholds (80%/95%) — the
    * component no longer accepts a `colorThresholds` input (removed pre-v1,
@@ -640,46 +628,14 @@ export class NgxFormFieldCharacterCount {
    * `--ngx-form-field-char-count-warning-threshold` /
    * `-danger-threshold` CSS custom properties — see the class docblock.
    */
-  readonly #charCountState = computed(() => {
-    const max = this.#resolvedMaxLength();
-    if (max === null) return null;
-
-    return createCharacterCount({
-      field: this.formField(),
-      maxLength: max,
-      // Without this, the unsupported-value dev warning would report the
-      // factory's own default name ('createCharacterCount') instead of the
-      // component the misconfigured `formField` binding actually lives on —
-      // diverging from the `#fallbackLength` warning below for the exact
-      // same misconfiguration.
-      component: 'NgxFormFieldCharacterCount',
-    });
+  readonly #charCountState = createCharacterCount({
+    field: () => this.formField()(),
+    maxLength: this.#explicitMaxLength,
+    useValidatorMaxLength: true,
+    component: 'NgxFormFieldCharacterCount',
   });
 
-  /**
-   * Length signal used when `#charCountState` is `null` (no `maxLength`
-   * configured or auto-detected), so `createCharacterCount` is never
-   * invoked. Created once as an instance field — not inline inside
-   * `currentLength` — so its one-shot unsupported-value dev warning fires at
-   * most once per directive instance rather than once per
-   * `#charCountState()` recomputation.
-   *
-   * Shares its length logic (and dev warning) with `createCharacterCount`
-   * via {@link createCharacterCountLengthSignal} so an unsupported
-   * `formField` value warns identically whether or not `maxLength` happens
-   * to be set.
-   */
-  readonly #fallbackLength = createCharacterCountLengthSignal(
-    () => this.formField()().value(),
-    'NgxFormFieldCharacterCount',
-  );
-
-  protected readonly currentLength = computed(() => {
-    const state = this.#charCountState();
-    if (state) return state.currentLength();
-
-    return this.#fallbackLength();
-  });
+  protected readonly currentLength = this.#charCountState.currentLength;
 
   /**
    * Percentage of `maxLength` used (0-100+), published as the
@@ -690,17 +646,14 @@ export class NgxFormFieldCharacterCount {
    * case, so this value never actually feeds the color-mix() expression
    * for "no limit configured" fields.
    */
-  protected readonly percentUsed = computed(() => {
-    const state = this.#charCountState();
-    return state ? state.percentUsed() : 0;
-  });
+  protected readonly percentUsed = this.#charCountState.percentUsed;
 
   /**
    * Formatted character count text (e.g., "42/500").
    */
   protected readonly characterCountText = computed(() => {
     const current = this.currentLength();
-    const max = this.#resolvedMaxLength();
+    const max = this.#charCountState.resolvedMaxLength();
 
     if (max === null) return `${current}`;
     return `${current}/${max}`;
@@ -713,55 +666,37 @@ export class NgxFormFieldCharacterCount {
     CharacterCountLimitState | 'disabled'
   >(() => {
     if (!this.showLimitColors()) return 'disabled';
+    if (!this.#charCountState.hasLimit()) return 'disabled';
 
-    const state = this.#charCountState();
-    if (!state) return 'disabled';
-
-    return state.limitState();
+    return this.#charCountState.limitState();
   });
 
-  #hasMaxLengthSignal(
-    fieldState: unknown,
-  ): fieldState is { maxLength: () => unknown } {
-    return (
-      typeof fieldState === 'object' &&
-      fieldState !== null &&
-      'maxLength' in fieldState &&
-      typeof fieldState.maxLength === 'function'
-    );
-  }
-
   /**
-   * Last-announced state, exposed through `linkedSignal` so it resets
-   * automatically whenever live-announce is disabled or the field loses
-   * its maxLength (the source-based computation re-seeds to `null`).
+   * State to announce, or `null` when there is nothing to announce.
+   *
+   * A plain `computed` is enough here. Reading it as the sole dependency of
+   * `announcementText()` already gives "recompute only on an actual state
+   * change": `computed()` skips notifying consumers when its result is
+   * referentially equal to the previous one, and a string value already is
+   * equal across renders that don't change the state. The `linkedSignal`
+   * this replaced kept a `previous` value only to return
+   * `state === prev ? prev : state`, which is just `state` (issue #510).
+   *
+   * No separate "no limit" check is needed: `displayLimitState()` already
+   * returns `'disabled'` when `hasLimit()` is `false`, and the `'disabled'`
+   * branch below covers that case.
    */
-  readonly #lastAnnouncedState = linkedSignal<
-    {
-      liveAnnounce: boolean;
-      max: number | null;
-      state: CharacterCountLimitState | 'disabled';
-    },
+  readonly #announceableState = computed<
     CharacterCountLimitState | 'disabled' | null
-  >({
-    source: () => ({
-      liveAnnounce: this.liveAnnounce(),
-      max: this.#resolvedMaxLength(),
-      state: this.displayLimitState(),
-    }),
-    computation: (source, previous) => {
-      if (!source.liveAnnounce) return null;
-      if (source.max === null || source.state === 'disabled') return null;
+  >(() => {
+    if (!this.liveAnnounce()) return null;
 
-      const prev = previous?.value ?? null;
-      // When the state hasn't changed we keep the prior memory so
-      // `announcementText()` doesn't re-announce on unrelated renders.
-      return source.state === prev ? prev : source.state;
-    },
+    const state = this.displayLimitState();
+    return state === 'disabled' ? null : state;
   });
 
   /**
-   * Computed announcement text. Reads `#lastAnnouncedState` as the
+   * Computed announcement text. Reads `#announceableState` as the
    * change-trigger and produces a string per limit state. Unlike the
    * previous `effect()` + `signal.set` loop, this stays pure and
    * side-effect-free — Angular 21 idiom.
@@ -769,15 +704,15 @@ export class NgxFormFieldCharacterCount {
   protected readonly announcementText = computed(() => {
     if (!this.liveAnnounce()) return '';
 
-    const max = this.#resolvedMaxLength();
+    const max = this.#charCountState.resolvedMaxLength();
     if (max === null) return '';
 
-    const state = this.#lastAnnouncedState();
+    const state = this.#announceableState();
     if (state === null || state === 'disabled' || state === 'ok') return '';
 
-    // Snapshot the current length *without* subscribing. `#lastAnnouncedState`
-    // is reference-stable inside a bucket (see `linkedSignal.computation`
-    // above), so this computed only re-runs on state transitions. Reading
+    // Snapshot the current length *without* subscribing. `#announceableState`
+    // only changes value on an actual state transition (see its own doc
+    // above), so this computed only re-runs then. Reading
     // `currentLength()` reactively would instead re-fire the aria-live region
     // on every keystroke — screen readers would re-announce the new remaining
     // count each character, defeating the "announce on transition" UX.
