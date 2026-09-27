@@ -14,22 +14,24 @@ import { NgxFormFieldWrapper } from './form-field-wrapper';
  * inside an outline-appearance wrapper must render with those values.
  * This applies to a native `<label>` and to a `<span ngxFormFieldLabel>`.
  *
- * This already passes without a CSS change. The outline label rule in
- * `form-field-wrapper.css` uses CSS nesting:
- * `:host(.ngx-signal-forms-outline) .ngx-signal-form-field-wrapper__label {
- * :is(label, [ngxFormFieldLabel]) { ... } }`.
+ * On Angular 22.1 and earlier, this passed even without `::ng-deep`: emulated
+ * encapsulation rewrote only a rule's top-level selector, so a nested
+ * `:is(label, [ngxFormFieldLabel])` selector stayed unscoped and still
+ * matched the projected label.
  *
- * Angular's emulated encapsulation rewrites only the top-level selector of
- * a rule. It does not rewrite a selector nested inside that rule with CSS
- * nesting. So the outer selectors (`:host(...)`,
- * `.ngx-signal-form-field-wrapper__label`) get the wrapper's content
- * attribute, but the nested `:is(label, [ngxFormFieldLabel])` selector
- * stays unscoped. An unscoped nested selector still matches any real
- * descendant, including projected content.
+ * Angular 22.2 changed that (angular/angular#69885): nested rules are now
+ * scoped too. A plain nested selector then requires the wrapper's own
+ * content attribute, which a projected label never carries — it carries the
+ * consumer's attribute instead. See #552.
  *
- * There is no `::ng-deep` bug to fix on this path. The spec guards
- * against a future change that flattens the nesting and breaks that
- * match.
+ * The outline label rule in `form-field-wrapper.css` avoids this by moving
+ * the projected-element selector out of the nesting and marking it
+ * `::ng-deep`, right after `:host(...)`:
+ * `:host(.ngx-signal-forms-outline) ::ng-deep
+ * .ngx-signal-form-field-wrapper__label :is(label, [ngxFormFieldLabel])`.
+ * `::ng-deep` drops encapsulation for everything after it, so the rule keeps
+ * matching the projected label on every Angular version. This spec guards
+ * that match.
  */
 
 const mockField = () => {
@@ -342,5 +344,110 @@ describe('NgxFormFieldWrapper — label token coverage (#476)', () => {
     expect(label).toBeTruthy();
 
     assertStandardLabelTokens(label, wrapper);
+  });
+});
+
+/**
+ * Regression coverage for #552.
+ *
+ * The invalid checkbox and switch row label rules in
+ * `form-field-wrapper.selection.css` set `color: var(--_invalid-color)` on
+ * the projected label. The switch rule used CSS nesting and broke on
+ * Angular 22.2 for the same reason as #474's outline rule. The checkbox
+ * rule never used nesting, but its selector still required the wrapper's
+ * own content attribute on the label element — an attribute a projected
+ * label never carries — so it never matched, on any Angular version.
+ *
+ * Both rules must win a real cascade fight: a consumer style that sets a
+ * label colour at ordinary (single-class) specificity must not override
+ * the invalid colour.
+ */
+describe('NgxFormFieldWrapper — invalid selection-row label color (#552)', () => {
+  const invalidTouchedField = () =>
+    signal({
+      invalid: () => true,
+      touched: () => true,
+      errors: () => [{ kind: 'required', message: 'You must agree' }],
+    });
+
+  /** Reads the wrapper's `--_invalid-color` the same way the label rule does. */
+  const resolveInvalidColor = (host: HTMLElement) => {
+    const probe = document.createElement('span');
+    probe.style.color = 'var(--_invalid-color)';
+    host.append(probe);
+    const color = getComputedStyle(probe).color;
+    probe.remove();
+    return color;
+  };
+
+  /** A consumer global stylesheet rule, at ordinary single-class specificity. */
+  const withConsumerLabelColor = () => {
+    const style = document.createElement('style');
+    style.textContent = '.consumer-label { color: rgb(0, 0, 255); }';
+    document.head.append(style);
+    return style;
+  };
+
+  it('keeps the invalid color on a projected switch label when a consumer style sets a label colour', async () => {
+    const consumerStyle = withConsumerLabelColor();
+    try {
+      const { container } = await render(
+        `<ngx-form-field-wrapper [formField]="field">
+          <label class="consumer-label" for="notifications">Enable notifications</label>
+          <input id="notifications" type="checkbox" role="switch" />
+        </ngx-form-field-wrapper>`,
+        {
+          imports: [NgxFormFieldWrapper],
+          componentProperties: { field: invalidTouchedField() },
+        },
+      );
+
+      const wrapper = container.querySelector<HTMLElement>(
+        'ngx-form-field-wrapper',
+      )!;
+      const label = container.querySelector<HTMLLabelElement>(
+        'label[for="notifications"]',
+      )!;
+      const expected = resolveInvalidColor(wrapper);
+      // Guards against a token that silently resolves to the consumer's
+      // colour, which would make the assertion below pass for the wrong
+      // reason.
+      expect(expected).not.toBe('rgb(0, 0, 255)');
+
+      expect(getComputedStyle(label).color).toBe(expected);
+    } finally {
+      consumerStyle.remove();
+    }
+  });
+
+  it('keeps the invalid color on a projected checkbox label when a consumer style sets a label colour', async () => {
+    const consumerStyle = withConsumerLabelColor();
+    try {
+      const { container } = await render(
+        `<ngx-form-field-wrapper [formField]="field">
+          <label class="consumer-label" for="agree">I agree to the terms</label>
+          <input id="agree" type="checkbox" />
+        </ngx-form-field-wrapper>`,
+        {
+          imports: [NgxFormFieldWrapper],
+          componentProperties: { field: invalidTouchedField() },
+        },
+      );
+
+      const wrapper = container.querySelector<HTMLElement>(
+        'ngx-form-field-wrapper',
+      )!;
+      const label =
+        container.querySelector<HTMLLabelElement>('label[for="agree"]')!;
+      const expected = resolveInvalidColor(wrapper);
+      // Guards against a token that silently resolves to the consumer's
+      // colour, which would make the assertion below pass for the wrong
+      // reason.
+      expect(expected).not.toBe('rgb(0, 0, 255)');
+
+      expect(getComputedStyle(label).color).toBe(expected);
+    } finally {
+      consumerStyle.remove();
+    }
   });
 });
