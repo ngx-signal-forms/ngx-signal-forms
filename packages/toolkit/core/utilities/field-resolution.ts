@@ -359,3 +359,29 @@ export function generateWarningId(fieldName: string): string {
 export function generateRequiredHintId(fieldName: string): string {
   return `${sanitizeFieldNameForId(fieldName)}-required-hint`;
 }
+
+/**
+ * Generates the ID for a character count's visually-hidden limit
+ * description (issue #499).
+ *
+ * `NgxFormFieldCharacterCount` renders an element with this id whenever a
+ * limit is resolved, and registers it through `NGX_SIGNAL_FORM_HINT_REGISTRY`
+ * so `NgxSignalFormAutoAria` links it into `aria-describedby`, right after
+ * any hint ids. The element's text states the limit (e.g. "Up to 200
+ * characters") — the running count stays in the `[liveAnnounce]` live
+ * region.
+ *
+ * Applies {@link sanitizeFieldNameForId} to `fieldName` first, so a name
+ * with inner whitespace still produces a single-token id.
+ *
+ * @param fieldName - The field name
+ * @returns The limit-description ID in format: `{fieldName}-char-count-limit`
+ *
+ * @example
+ * ```typescript
+ * generateCharacterCountLimitId('bio'); // Returns: 'bio-char-count-limit'
+ * ```
+ */
+export function generateCharacterCountLimitId(fieldName: string): string {
+  return `${sanitizeFieldNameForId(fieldName)}-char-count-limit`;
+}

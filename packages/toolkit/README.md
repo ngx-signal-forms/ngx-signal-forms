@@ -249,6 +249,7 @@ provideNgxSignalFormsConfig({
   errorPrefixText: 'Error:', // visually-hidden prefix on NgxFormFieldError blocking-error messages
   warningPrefixText: 'Warning:', // visually-hidden prefix on NgxFormFieldError warning messages
   errorSummaryAnnouncesAlone: true, // with an error summary, a submit announces through the summary only
+  characterCountLimitText: 'Up to {max} characters', // visually-hidden limit description linked via aria-describedby
 });
 ```
 
