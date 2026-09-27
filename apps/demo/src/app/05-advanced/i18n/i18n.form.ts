@@ -127,8 +127,6 @@ import { SubmitStatusComponent } from '../../ui/submit-status/submit-status';
           }
         </div>
 
-        <ngx-submit-status [message]="successMessage()" />
-
         <form
           [formRoot]="demoForm"
           ngxSignalForm
@@ -179,6 +177,8 @@ import { SubmitStatusComponent } from '../../ui/submit-status/submit-status';
             </button>
           </div>
         </form>
+
+        <ngx-submit-status [message]="successMessage()" />
       </div>
     </div>
   `,

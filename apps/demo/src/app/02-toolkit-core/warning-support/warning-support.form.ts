@@ -31,8 +31,6 @@ import { SubmitStatusComponent } from '../../ui/submit-status/submit-status';
     class: 'block max-w-xl mx-auto',
   },
   template: `
-    <ngx-submit-status [message]="successMessage()" />
-
     <form
       [formRoot]="passwordForm"
       ngxSignalForm
@@ -96,6 +94,8 @@ import { SubmitStatusComponent } from '../../ui/submit-status/submit-status';
         </button>
       </div>
     </form>
+
+    <ngx-submit-status [message]="successMessage()" />
   `,
 })
 export class WarningsSupportFormComponent {

@@ -113,6 +113,11 @@ function createInitialComplexFormModel(): ComplexFormModel {
     }
 
     .choice-group-field__label {
+      color: #324155;
+    }
+
+    /* #324155 is 1.94:1 on the dark surface */
+    :host-context(.dark) .choice-group-field__label {
       color: var(--color-text-muted);
     }
 

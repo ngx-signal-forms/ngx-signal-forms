@@ -130,7 +130,7 @@
         Step {{ stepNumber }} of {{ stepCount }}: Review your order
       </h2>
 
-      <div role="status" aria-live="polite" aria-atomic="true">
+      <div role="status" aria-atomic="true">
         @if (orderConfirmed()) {
         <div class="success-message">
           <p>Order confirmed! A confirmation email is on its way.</p>
@@ -140,7 +140,7 @@
         </div>
         }
       </div>
-      @else {
+      @if (!orderConfirmed()) {
       <dl class="order-summary">
         <div>
           <dt>Name</dt>

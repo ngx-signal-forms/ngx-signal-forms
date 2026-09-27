@@ -85,8 +85,6 @@ const bookingSchema = schema<Booking>((path) => {
         Demonstrates validation rules that depend on multiple fields.
       </p>
 
-      <ngx-submit-status [message]="successMessage()" />
-
       <form
         [formRoot]="bookingForm"
         ngxSignalForm
@@ -160,6 +158,8 @@ const bookingSchema = schema<Booking>((path) => {
           </button>
         </div>
       </form>
+
+      <ngx-submit-status [message]="successMessage()" />
     </div>
   `,
 })

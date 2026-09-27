@@ -22,8 +22,6 @@ import { SubmitStatusComponent } from '../../ui/submit-status/submit-status';
   imports: [
     SubmitStatusComponent,FormField, NgxSignalFormToolkit, NgxFormFieldError],
   template: `
-    <ngx-submit-status [message]="successMessage()" />
-
     <form
       [formRoot]="contactForm"
       ngxSignalForm
@@ -103,6 +101,8 @@ import { SubmitStatusComponent } from '../../ui/submit-status/submit-status';
         </button>
       </div>
     </form>
+
+    <ngx-submit-status [message]="successMessage()" />
   `,
 })
 export class YourFirstFormComponent {

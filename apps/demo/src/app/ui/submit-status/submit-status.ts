@@ -17,7 +17,7 @@ import { Component, input } from '@angular/core';
     <div role="status">
       @if (message(); as text) {
         <p
-          class="mb-4 flex items-start gap-2 rounded-lg border border-green-200 bg-green-50 p-4 text-sm text-green-800 dark:border-green-800 dark:bg-green-950 dark:text-green-200"
+          class="mt-4 flex items-start gap-2 rounded-lg border border-green-200 bg-green-50 p-4 text-sm text-green-800 dark:border-green-800 dark:bg-green-950 dark:text-green-200"
         >
           <span aria-hidden="true">✓</span>
           <span>{{ text }}</span>
