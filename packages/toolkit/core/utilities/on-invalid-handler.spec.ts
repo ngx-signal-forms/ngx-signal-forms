@@ -18,20 +18,28 @@ function createMockFieldTree(
  * A single required-field error whose `focusBoundControl()` calls the given
  * spy — enough for `createOnInvalidHandler`'s focus-then-`afterInvalid`
  * ordering tests, which only care that focus was attempted.
+ *
+ * Builds the mock field tree ONCE and reuses it as `fieldTree` directly,
+ * rather than a `() => createMockFieldTreeShared(...)()` factory that would
+ * mint a brand-new `FieldState` (with its own new `fieldTree` back-
+ * reference) on every call — breaking the `state.fieldTree === fieldTree`
+ * identity the walker relies on if `error.fieldTree()` is ever read more
+ * than once.
  */
 function createMockError(
   focusBoundControl: () => void,
 ): ValidationError.WithFieldTree {
+  const fieldTree = createMockFieldTreeShared({
+    value: '',
+    invalid: true,
+    valid: false,
+    focusBoundControl,
+  });
+
   return {
     kind: 'required',
     message: 'Required',
-    fieldTree: () =>
-      createMockFieldTreeShared({
-        value: '',
-        invalid: true,
-        valid: false,
-        focusBoundControl,
-      })(),
+    fieldTree,
   } satisfies ValidationError.WithFieldTree;
 }
 
@@ -42,14 +50,13 @@ describe('createOnInvalidHandler', () => {
   });
 
   it('should call focusFirstInvalid by default', () => {
-    const mockFieldTree = createMockFieldTree([createMockError(vi.fn())]);
+    const focusSpy = vi.fn();
+    const mockFieldTree = createMockFieldTree([createMockError(focusSpy)]);
 
     const handler = createOnInvalidHandler();
+    handler(mockFieldTree);
 
-    // Should not throw
-    expect(() => {
-      handler(mockFieldTree);
-    }).not.toThrow();
+    expect(focusSpy).toHaveBeenCalledOnce();
   });
 
   it('should not throw when focusFirstInvalid is disabled', () => {
