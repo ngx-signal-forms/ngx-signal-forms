@@ -175,6 +175,37 @@ describe('createSubmittedStatusTracker', () => {
     expect(status()).toBe('unsubmitted');
   });
 
+  it('follows submitAttempted back to false immediately when the caller clears it without a form reset', async () => {
+    // Regression guard: `submitAttempted` is a live signal the exposed
+    // status ORs in directly (`submittedHistory() || submitAttempted()`),
+    // not a value folded into the linkedSignal's own source. A caller can
+    // clear the flag on its own — e.g. after handling the invalid attempt —
+    // with no `touched()` transition at all, and `status` must follow that
+    // clear on the very next read, not stay stuck at `'submitted'` waiting
+    // for a reset that never comes.
+    const submittingState = signal(false);
+    const touchedState = signal(true);
+    const submitAttempted: WritableSignal<boolean> = signal(false);
+    const mockForm = makeMockForm(
+      () => submittingState(),
+      () => touchedState(),
+    );
+
+    const status = TestBed.runInInjectionContext(() =>
+      createSubmittedStatusTracker(mockForm, submitAttempted),
+    );
+
+    // Touched, then an invalid submit attempt: submitting() never flips.
+    submitAttempted.set(true);
+    await flush();
+    expect(status()).toBe('submitted');
+
+    // Caller clears the flag directly — no reset, touched() stays true.
+    submitAttempted.set(false);
+    await flush();
+    expect(status()).toBe('unsubmitted');
+  });
+
   it("should not reset to 'unsubmitted' when touched flips false during in-flight submission", async () => {
     // Pins the WCAG-equivalent invariant: the `!curr.submitting` guard at
     // submission-helpers.ts protects against mid-submit rollback so users

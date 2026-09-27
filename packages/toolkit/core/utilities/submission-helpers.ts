@@ -65,11 +65,17 @@ export function createSubmittedStatusTracker(
     resolve();
   }
 
-  // One linkedSignal over the full `{ submitting, touched, attempted }`
-  // source: the reset-vs-attempted precedence (a form.reset() wins over a
-  // stale `attempted`) lives entirely in this one `computation`.
+  // One linkedSignal over `{ submitting, touched }` derives the
+  // completed-once history. `submitAttempted` deliberately stays OUT of this
+  // source: it is not part of the reset-detection transition, it is a
+  // separate, always-current signal the exposed `computed()` below ORs in
+  // directly. Folding it into the source would make its effect depend on
+  // when the linkedSignal last recomputed rather than on its live value —
+  // observable as: caller sets `submitAttempted` back to `false` with no
+  // form reset, and status should follow it back to `'unsubmitted'`
+  // immediately, not stay stuck at `'submitted'`.
   const submittedHistory = linkedSignal<
-    { submitting: boolean; touched: boolean; attempted: boolean },
+    { submitting: boolean; touched: boolean },
     boolean
   >({
     source: () => {
@@ -77,15 +83,11 @@ export function createSubmittedStatusTracker(
       return {
         submitting: state.submitting(),
         touched: state.touched(),
-        attempted: submitAttempted?.() ?? false,
       };
     },
     computation: (curr, prev) => {
       const previousSource = prev?.source;
 
-      // Reset takes priority over a stale `attempted` flag: a form.reset()
-      // must report 'unsubmitted' even if a caller never clears its own
-      // `submitAttempted` signal.
       if (
         previousSource?.touched === true &&
         !curr.touched &&
@@ -95,10 +97,6 @@ export function createSubmittedStatusTracker(
       }
 
       if (previousSource?.submitting === true && !curr.submitting) {
-        return true;
-      }
-
-      if (curr.attempted) {
         return true;
       }
 
@@ -152,7 +150,9 @@ export function createSubmittedStatusTracker(
       return 'submitting';
     }
 
-    return submittedHistory() ? 'submitted' : 'unsubmitted';
+    return submittedHistory() || (submitAttempted?.() ?? false)
+      ? 'submitted'
+      : 'unsubmitted';
   });
 }
 /* oxlint-enable @typescript-eslint/prefer-readonly-parameter-types */

@@ -1,9 +1,12 @@
 /**
- * Shared types and defaults for the character-count pair
+ * Types and defaults for the character-count pair
  * (`NgxHeadlessCharacterCount` / `createCharacterCount`), both defined in
- * `character-count.ts`. Split out into their own module so other headless
- * and assistive files that only need the shape (not the directive or the
- * factory) can import these without pulling in `character-count.ts` itself.
+ * `character-count.ts`, which is the only file that imports this module
+ * directly (everything else — `assistive/character-count.ts` included —
+ * imports the re-exported names from `character-count.ts` or the public
+ * `@ngx-signal-forms/toolkit/headless` barrel instead). Kept in its own file
+ * to give these declarations one self-contained definition, separate from
+ * the directive and the factory that consume them.
  */
 
 import type { Signal } from '@angular/core';
