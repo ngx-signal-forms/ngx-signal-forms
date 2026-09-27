@@ -328,7 +328,7 @@ jobs:
         with:
           name: coverage-${{ github.run_id }}-${{ github.run_attempt }}
           path: coverage/lcov.info
-          if-no-files-found: warn
+          if-no-files-found: error
           retention-days: 14
 
   # WCAG 2.2 AA accessibility scan of the demo apps. Runs in parallel with the

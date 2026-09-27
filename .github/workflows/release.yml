@@ -209,6 +209,11 @@ jobs:
         # main. Runs every toolkit target directly with `run-many -p toolkit`.
         run: pnpm exec nx run-many -t lint test test-browser build -p toolkit --outputStyle=static
 
+      - name: Enforce coverage thresholds
+        # A release is dispatched by hand and does not wait for ci.yml's
+        # `coverage` job, so check the thresholds here too.
+        run: pnpm exec nx run workspace:coverage --outputStyle=static
+
       - name: Check README starter
         run: pnpm exec nx run toolkit:check-documentation-starter --outputStyle=static
 
@@ -226,7 +231,9 @@ jobs:
       # accidental `import` of it from toolkit source still fails to resolve
       # at build time, confirmed by reproducing the leak locally. `pnpm
       # check:toolkit-peer-deps` covers the other case, a design-system
-      # package declared in the toolkit's own package.json.
+      # package declared in the toolkit's own package.json. Gap: a package
+      # the workspace ROOT declares (today `@spartan-ng/brain`) resolves from
+      # the toolkit in every install, here and in ci.yml. Tracked in #547.
       - name: Assert toolkit declares no design-system deps
         run: pnpm check:toolkit-peer-deps
 
