@@ -10,11 +10,13 @@
  *   - RESOLVED violation (in baseline, not in results) → drop from baseline
  *
  * The baseline is then rewritten to exactly the current violation set, so the
- * file diff in a PR shows precisely what changed. Demo apps showcase the
- * toolkit and may inherit violations from page scaffolding or third-party UI
- * layers, so this is a tracking gate, not a hard fail — the toolkit's own
- * Vitest browser specs (packages/toolkit/.../*.a11y.browser.spec.ts) are the
- * hard WCAG 2.2 AA gate.
+ * file diff in a PR shows precisely what changed. On pull requests this is a
+ * blocking gate: `--check` fails the job on any violation the baseline does
+ * not list, and a reviewed baseline diff is the only way to accept one (see
+ * ADR-0013). On pushes to main the job does not block, so the auto-issue flow
+ * still runs. The toolkit's own Vitest browser specs
+ * (packages/toolkit/.../*.a11y.browser.spec.ts) remain the WCAG 2.2 AA gate
+ * for the components themselves.
  *
  * Usage:
  *   node tools/scripts/a11y-report-violations.mjs [flags]
