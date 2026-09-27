@@ -19,10 +19,6 @@ export interface MockFieldTreeOptions<TValue> {
   readonly errors?: readonly ValidationError.WithFieldTree[];
   readonly valid?: boolean;
   readonly invalid?: boolean;
-  readonly touched?: boolean;
-  readonly dirty?: boolean;
-  readonly pending?: boolean;
-  readonly submitting?: boolean;
   readonly hidden?: boolean;
   readonly disabled?: boolean;
   readonly isReadonly?: boolean;
@@ -32,9 +28,6 @@ export interface MockFieldTreeOptions<TValue> {
   readonly omitFocusBoundControl?: boolean;
   /** Elements exposed via `fieldState.formFieldBindings()`. */
   readonly formFieldBindings?: readonly HTMLElement[];
-  readonly markAsTouched?: () => void;
-  readonly markAsDirty?: () => void;
-  readonly reset?: (value?: TValue) => void;
 }
 
 /**
@@ -62,19 +55,12 @@ export function createMockFieldTree<TValue>(
     errors = [],
     valid = true,
     invalid = false,
-    touched = false,
-    dirty = false,
-    pending = false,
-    submitting = false,
     hidden = false,
     disabled = false,
     isReadonly = false,
     focusBoundControl,
     omitFocusBoundControl = false,
     formFieldBindings = [],
-    markAsTouched = (): void => undefined,
-    markAsDirty = (): void => undefined,
-    reset = (): void => undefined,
   } = options;
 
   let fieldTree!: FieldTree<TValue>;
@@ -92,11 +78,11 @@ export function createMockFieldTree<TValue>(
     controlValue: valueSignal,
     disabled: signal(disabled),
     disabledReasons: signal<DisabledReason[]>([]),
-    dirty: signal(dirty),
+    dirty: signal(false),
     errorSummary: errorSignal,
     errors: errorSignal,
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- test-only partial FormField shape; only `element` is read by production code.
     formFieldBindings: signal(
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- test-only partial FormField shape; only `element` is read by production code.
       formFieldBindings.map((element) => ({ element }) as FormField<unknown>),
     ),
     hidden: signal(hidden),
@@ -108,21 +94,21 @@ export function createMockFieldTree<TValue>(
     minLength: signal<number | undefined>(undefined),
     name: signal('root'),
     pattern: signal<readonly RegExp[]>([]),
-    pending: signal(pending),
+    pending: signal(false),
     readonly: signal(isReadonly),
     required: signal(false),
-    submitting: signal(submitting),
-    touched: signal(touched),
+    submitting: signal(false),
+    touched: signal(false),
     valid: signal(valid),
     focusBoundControl: focusBoundControlFn,
-    markAsDirty,
-    markAsTouched,
+    markAsDirty: (): void => undefined,
+    markAsTouched: (): void => undefined,
     metadata: <M>(_key: MetadataKey<M, unknown, unknown>): M | undefined =>
       undefined,
     hasMetadata: (_key: MetadataKey<unknown, unknown, unknown>): boolean =>
       false,
     getError: (_kind: string): undefined => undefined,
-    reset,
+    reset: (): void => undefined,
     reloadValidation: (): void => undefined,
   };
 

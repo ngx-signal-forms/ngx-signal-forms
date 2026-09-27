@@ -11,6 +11,7 @@
   },
   "exclude": [
     "./**/*.spec.ts",
+    "./core/utilities/testing/**",
     "./test-setup.ts",
     "jest.config.ts",
     "./**/*.test.ts",

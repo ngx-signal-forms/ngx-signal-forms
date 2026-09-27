@@ -189,6 +189,9 @@ export default defineConfig({
         '**/*.test.tsx',
         '**/*.spec.js',
         '**/*.test.js',
+        // Shared test-only helpers, not specs themselves — same relaxed
+        // rules apply (they exist purely to build spec fixtures).
+        'packages/toolkit/core/utilities/testing/**/*.ts',
       ],
       globals: {
         describe: 'readonly',
@@ -210,7 +213,8 @@ export default defineConfig({
         // A focused/disabled test that reaches main silently drops coverage
         // (`.only` skips every other test in the file; `.skip` skips itself).
         // No specs currently use either — the deliberate exceptions are
-        // `.skipIf`/`.fails` (issue #550), which these rules do not flag.
+        // `.skipIf` (dev-mode-only gates) and `.fails` (issue #550's known-
+        // failure twins), neither of which these two rules flag.
         'vitest/no-focused-tests': 'error',
         'vitest/no-disabled-tests': 'error',
       },
