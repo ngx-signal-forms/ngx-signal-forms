@@ -1383,7 +1383,7 @@ describe('NgxSignalFormWrapperComponent', () => {
     });
 
     it("renders no marker before a control is projected, even in 'optional' mode (no flash)", async () => {
-      // resolvedMarker short-circuits to null while #boundControlElement() is
+      // resolvedMarker short-circuits to null while dom.boundControl() is
       // null, so the optional marker never flashes before required-ness is
       // known. With no projected control the guard is the only thing keeping
       // the (default-non-required) optional marker from rendering.
@@ -2878,13 +2878,13 @@ describe('NgxSignalFormWrapperComponent', () => {
 
   describe('Warning-only fields render independently of the blocking-error strategy', () => {
     // Regression coverage: the wrapper used to gate mounting the projected
-    // error renderer entirely on `shouldShowErrors()`, which runs the
+    // error renderer entirely on the blocking-error timing, which runs the
     // blocking-error strategy (default 'on-touch') even when the field's
     // only messages are warnings. A warnings-only, UNTOUCHED field would
     // therefore never mount `NgxFormFieldError` at all, so its own
     // `warningStrategy` never got a chance to run — the README's documented
     // "warning timing is independent of error timing" was unreachable through
-    // the wrapper. `shouldRenderErrorSlot` now mounts the renderer whenever
+    // the wrapper. `createFieldPresentation().renderMessageSlot` now mounts the renderer whenever
     // errors OR warnings should show.
     //
     // `warningStrategy="immediate"` is set explicitly here: the default is
@@ -4246,15 +4246,15 @@ describe('NgxSignalFormWrapperComponent', () => {
 
     describe('pre-resolution state (bound control not yet resolved)', () => {
       // `resolvedOrientation` now gates its forcing logic on
-      // `#boundControlElement() === null`, the same way its siblings
+      // `dom.boundControl() === null`, the same way its siblings
       // `isOutline` and `resolvedMarker` do (each returns its own
       // pre-resolution value). Before the projected control is discovered,
-      // `#controlKind()` has not settled, so — without the gate — a
+      // `dom.semantics().kind` has not settled, so — without the gate — a
       // checkbox/switch/radio-group field requesting 'horizontal' would
       // report the raw requested orientation instead of the forced
       // 'vertical': a `data-orientation` flash. Mirroring the sibling
       // `resolvedMarker` spec above, this exercises the guard with no
-      // control ever projected, so `#boundControlElement()` never resolves
+      // control ever projected, so `dom.boundControl()` never resolves
       // and the pre-resolution branch is the only one that ever runs.
       //
       // The configured default ('horizontal', set below) is deliberately
@@ -4503,10 +4503,10 @@ describe('NgxSignalFormWrapperComponent', () => {
     // children (`NgxFormFieldHint`, `NgxFormFieldError`) read that computed
     // via `NGX_SIGNAL_FORM_FIELD_CONTEXT` during the wrapper's FIRST
     // change-detection pass — before `afterEveryRender`'s write phase has
-    // ever populated `#inputElementId` — so the diagnostic fired even for
+    // ever populated `dom.inputId` — so the diagnostic fired even for
     // correctly configured fields (input WITH an id). See
-    // form-field-wrapper.ts `resolvedFieldName` for the fix (diagnostic
-    // moved to the write phase).
+    // `applyWrapperDomSnapshot` in form-field-dom-sync.ts for the fix
+    // (diagnostic moved to the write phase).
     let consoleErrorSpy: ReturnType<typeof vi.spyOn>;
 
     beforeEach(() => {

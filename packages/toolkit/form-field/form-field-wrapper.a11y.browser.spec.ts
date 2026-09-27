@@ -146,7 +146,7 @@ describe('form-field wrapper — WCAG 2.2 AA conformance', () => {
    * generates the projected legend's id, and composes `aria-describedby`
    * from the error/warning ids itself — including a guard against emitting
    * a dangling `${fieldName}-warning` reference (see
-   * `selectionClusterDescribedBy` in `form-field-wrapper.ts`) that was
+   * `resolveClusterAriaAttrs` in `form-field-cluster-aria.ts`) that was
    * asserted by nothing before this suite.
    */
   describe('selection clusters', () => {
@@ -344,7 +344,7 @@ describe('form-field wrapper — WCAG 2.2 AA conformance', () => {
       // simply dropped, though — the issue asked for it to be relocated, so
       // it stays perceivable via a visually-hidden node wired into
       // `aria-describedby` (see `groupRequiredHintId` in
-      // form-field-wrapper.ts) instead of the disallowed ARIA state.
+      // form-field-cluster-aria.ts) instead of the disallowed ARIA state.
       const wrapper = container.querySelector('ngx-form-field-wrapper');
       expect(wrapper).toHaveAttribute('role', 'group');
       expect(wrapper).not.toHaveAttribute('aria-required');
@@ -460,7 +460,7 @@ describe('form-field wrapper — WCAG 2.2 AA conformance', () => {
   });
 
   /**
-   * `selectionClusterDescribedBy` composes the cluster's `aria-describedby`
+   * `resolveClusterAriaAttrs` composes the cluster's `aria-describedby`
    * itself rather than delegating to auto-aria, and its comment names the
    * exact axe rule (`aria-valid-attr-value`) a dangling `${fieldName}-warning`
    * reference would violate. These two fixtures exercise the guard in both

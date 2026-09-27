@@ -12,18 +12,10 @@ import {
 import type { FieldState, FieldTree } from '@angular/forms/signals';
 import {
   createControlVisibilitySignal,
-  createErrorVisibility,
-  createWarningVisibility,
-  injectFormContext,
-  isBlockingError,
-  isWarningError,
+  createFieldPresentation,
   NGX_SIGNAL_FORM_FIELD_CONTEXT,
   NGX_SIGNAL_FORM_HINT_REGISTRY,
-  NGX_SIGNAL_FORMS_CONFIG,
   NgxSignalFormControlSemanticsDirective,
-  readDirectErrors,
-  resolveStrategyFromContext,
-  resolveWarningStrategyFromContext,
   type ErrorDisplayStrategy,
   type WarningDisplayStrategy,
 } from '@ngx-signal-forms/toolkit';
@@ -172,41 +164,7 @@ export class MatFormFieldWrapper<TValue = unknown> {
 
   // ── DI / state plumbing ───────────────────────────────────────────────
 
-  readonly #config = inject(NGX_SIGNAL_FORMS_CONFIG);
-  readonly #formContext = injectFormContext();
   readonly #injector = inject(Injector);
-
-  /**
-   * Routes through the shared `resolveStrategyFromContext` helper (the
-   * strategy-resolution half of the ADR-0006 seam) instead of reading
-   * `formContext.errorStrategy()` and calling `resolveErrorDisplayStrategy`
-   * directly — same cascade, one fewer hand-rolled null-context guard.
-   */
-  readonly effectiveStrategy = computed(() =>
-    resolveStrategyFromContext(
-      this.strategy() ?? undefined,
-      this.#formContext,
-      this.#config.defaultErrorStrategy,
-    ),
-  );
-
-  /**
-   * Warning-channel counterpart to {@link effectiveStrategy}. Stays entirely
-   * inside the warning channel: explicit input → form context
-   * `warningStrategy()` → config `defaultWarningStrategy` → `'on-touch'`. No
-   * tier consults `defaultErrorStrategy` (ADR-0007).
-   */
-  readonly effectiveWarningStrategy = computed(() =>
-    resolveWarningStrategyFromContext(
-      this.warningStrategy() ?? undefined,
-      this.#formContext,
-      this.#config.defaultWarningStrategy,
-    ),
-  );
-
-  readonly submittedStatus = computed(() =>
-    this.#formContext ? this.#formContext.submittedStatus() : 'unsubmitted',
-  );
 
   /**
    * Bridges the `InputSignal<FieldTree>` to the underlying `FieldState`.
@@ -215,60 +173,43 @@ export class MatFormFieldWrapper<TValue = unknown> {
    */
   readonly #fieldStateSignal = computed(() => this.formField()());
 
-  readonly #allMessages = computed(() =>
-    readDirectErrors(this.#fieldStateSignal()),
-  );
-
-  readonly hasErrors = computed(() =>
-    this.#allMessages().some(isBlockingError),
-  );
-
-  readonly hasWarnings = computed(() =>
-    this.#allMessages().some(isWarningError),
-  );
-
   /**
-   * Strategy-aware visibility timing, routed through the shared
-   * `createErrorVisibility()` seam (ADR-0006) instead of hand-inlining
-   * `createShowErrorsComputed`. Same helper the toolkit's own wrapper
-   * (`NgxFormFieldWrapper.#showErrorsByStrategy`) and `NgxSignalFormAutoAria`
-   * use — keeping every surface in lockstep means a strategy change in one
-   * place takes effect everywhere.
+   * Error and warning state, from the same `createFieldPresentation()` the
+   * toolkit's own `NgxFormFieldWrapper` uses. Both strategies resolve
+   * through their own cascades (ADR-0006, ADR-0007), and a visible blocking
+   * error hides the warning. No `identity`: this wrapper provides no
+   * `NgxFieldIdentity`, and Material owns the control's ARIA.
    */
-  readonly #showByStrategy = createErrorVisibility(this.#fieldStateSignal, {
-    strategy: this.effectiveStrategy,
-    submittedStatus: this.submittedStatus,
+  readonly #presentation = createFieldPresentation(this.#fieldStateSignal, {
+    strategy: this.strategy,
+    warningStrategy: this.warningStrategy,
+    // The message renderers here do not gate on hidden(), so the wrapper
+    // must not either, or aria-invalid would disagree with them.
+    hidden: () => false,
   });
+
+  readonly effectiveStrategy = this.#presentation.effectiveStrategy;
+
+  readonly effectiveWarningStrategy =
+    this.#presentation.effectiveWarningStrategy;
+
+  readonly hasErrors = this.#presentation.hasErrors;
+
+  readonly hasWarnings = this.#presentation.hasWarnings;
 
   /**
    * Drives `<mat-error>` rendering for consumers that opt out of the slot
    * directives and still want a wrapper-side visibility computed (the
    * documented "Extending the error slot" escape hatch in `README`).
    */
-  readonly errorVisible = computed(
-    () => this.hasErrors() && this.#showByStrategy(),
-  );
+  readonly errorVisible = this.#presentation.showErrors;
 
   /**
-   * Warning-channel counterpart to {@link errorVisible}, routed through the
-   * shared `createWarningVisibility()` seam (ADR-0006, ADR-0007) instead of
-   * timing the warning off the *error* cascade (`#showByStrategy`). Passing
-   * `errorVisible` as `errorVisibility` keeps the previous suppression rule —
-   * a visible blocking error still hides the warning — but the timing itself
-   * now follows `effectiveWarningStrategy`, so `warningStrategy` is honoured
-   * instead of silently ignored.
+   * Same idea as {@link errorVisible} for warning content rendered inside
+   * `<mat-hint>`. Timed by `effectiveWarningStrategy`, so `warningStrategy`
+   * is honoured, and hidden while a blocking error shows.
    */
-  readonly #showWarningsByStrategy = createWarningVisibility(
-    this.#fieldStateSignal,
-    {
-      strategy: this.effectiveWarningStrategy,
-      submittedStatus: this.submittedStatus,
-      errorVisibility: this.errorVisible,
-    },
-  );
-
-  /** Same idea as {@link errorVisible} for warning content rendered inside `<mat-hint>`. */
-  readonly warningVisible = computed(() => this.#showWarningsByStrategy());
+  readonly warningVisible = this.#presentation.showWarnings;
 
   // ── Bound-control discovery via contentChildren ───────────────────────
   //
@@ -375,7 +316,7 @@ export class MatFormFieldWrapper<TValue = unknown> {
 
   readonly ariaInvalidValue = createAriaInvalidSignal(
     this.#fieldStateSignal,
-    this.#showByStrategy,
+    this.errorVisible,
     this.#isControlVisible,
   );
 
@@ -417,7 +358,7 @@ export class MatFormFieldWrapper<TValue = unknown> {
   readonly toolkitAriaDescribedBy = createAriaDescribedBySignal({
     fieldState: computed<FieldState<unknown> | null>(() => null),
     hintIds: this.#hintIds,
-    visibility: this.#showByStrategy,
+    visibility: this.errorVisible,
     preservedIds: () => this.#preservedAriaDescribedBy(),
     fieldName: () => this.resolvedFieldName(),
   });

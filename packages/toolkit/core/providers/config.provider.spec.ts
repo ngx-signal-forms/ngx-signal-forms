@@ -169,7 +169,7 @@ describe('provideNgxSignalFormsConfigForComponent', () => {
   it('flows a custom requiredHintText override through to the resolved config (issue #300 localization)', () => {
     // `requiredHintText` drives the visually-hidden required-state hint
     // NgxFormFieldWrapper renders for a `role="group"` selection cluster
-    // (see form-field-wrapper.ts `resolvedRequiredHintText`) — it must be
+    // (see the `config.requiredHintText` binding in form-field-wrapper.ts) — it must be
     // config-driven, not a hardcoded English word, so a non-English app can
     // localize it through the same provider seam as `requiredLegendText`.
     const providers = provideNgxSignalFormsConfig({

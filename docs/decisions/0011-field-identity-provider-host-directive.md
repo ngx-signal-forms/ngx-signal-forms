@@ -50,7 +50,7 @@ The wrapper still drives the identity itself, because the input cannot carry eve
 
 - **Tier 1 of the name cascade** — an explicitly bound `fieldName` — now travels through the directive.
 - **Tier 2** — the bound control's `id` — cannot. It is only known in the wrapper's `afterEveryRender` write phase, strictly after inputs are set. The directive stays inert (its input is unbound) and the wrapper writes the resolved name itself.
-- **Every non-name channel** — control element, visibility, hints, resolved strategies — has no channel on the directive at all and stays with the wrapper.
+- **Every non-name channel** — control element, visibility, hints, resolved strategies — has no channel on the directive at all and stays with the wrapper. The resolved strategies later moved to `createFieldPresentation()`; see the amendment below.
 
 The two writers do not contend. Effects flush before render hooks, so within a tick the directive publishes first and the wrapper's write phase follows with the fully-resolved cascade, which subsumes it.
 
@@ -90,6 +90,15 @@ The old fallback for runtimes without `Element.checkVisibility()` was `offsetPar
 **Give the directive a `controlElement` input, or invert DI so auto-aria registers itself upward.** Rejected as unnecessary. Nothing reads the shared control element, and the only reader of the cached visibility flag now self-probes. Inversion stays additive if a future consumer needs it.
 
 **Replace auto-aria's imperative writes with `host: { '[attr.aria-describedby]': '…' }`.** Rejected. A host binding owns the attribute outright, and auto-aria merges consumer-authored `aria-describedby` ids with generated ones. Manual ARIA mode also needs read-then-passthrough, which a host binding cannot express. The imperative read/write phase is what buys that merge.
+
+## Amendment (#508, 2026-09-24)
+
+Issue [#508](https://github.com/ngx-signal-forms/ngx-signal-forms/issues/508) added the public `createFieldPresentation()` factory. With the `identity` option it publishes both resolved strategies to that `NgxFieldIdentity`. `NgxFormFieldWrapper` uses it, so a custom wrapper can now reach the strategy channel too. This narrows the rejection in "Promote the five `set*` writers" but does not reverse it:
+
+- **One route only.** A third party reaches the strategy channel only through `createFieldPresentation({ identity })`. No other public surface writes it.
+- **Resolved values only.** The factory publishes what the toolkit's own cascade already resolved (field input, then form context, then config default, then `'on-touch'`, per channel). A consumer cannot publish an arbitrary strategy that disagrees with the regions the factory's own signals render.
+- **No protocol.** The factory writes from an idempotent `effect()`. It has no ordering dependency on the name, element or hint channels, so none of the ordering hazards that sank the promoted writers apply.
+- **Writers stay internal.** `setResolvedStrategies` and the other `set*` writers stay `@internal`. `strip-internal-members.mjs` still strips them and needs no carve-out.
 
 ## Related
 
