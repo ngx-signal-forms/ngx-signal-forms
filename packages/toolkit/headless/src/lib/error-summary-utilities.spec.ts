@@ -56,7 +56,11 @@ describe('dedupeValidationErrorsByField', () => {
 
     const result = dedupeValidationErrorsByField([first, second]);
 
-    expect(result).toEqual([first]);
+    // `toBe`, not `toEqual`: proves the survivor is the SAME object as
+    // `first` (the actual "kept the first occurrence" claim), not merely a
+    // structurally-equal copy that could have come from `second`.
+    expect(result).toHaveLength(1);
+    expect(result[0]).toBe(first);
   });
 
   it('treats two different messages on the same field as distinct entries', () => {
@@ -129,9 +133,21 @@ describe('focusBoundControlFromError', () => {
   });
 
   it('does nothing when the error has no focusable target', () => {
-    // Would throw if it called through blindly, since there is no
-    // `focusBoundControl` to call — this proves the two functions agree.
-    const error = errorWithFieldTree({ focusBoundControl: null });
+    // `focusBoundControl` here is a non-function truthy value, not merely
+    // absent: `?.()` optional chaining alone would NOT protect a blind call
+    // against this (it only guards a nullish callee, not a non-callable
+    // one) — that call would throw "focusBoundControl is not a function".
+    // Not throwing here proves `focusBoundControlFromError` actually checks
+    // `errorHasFocusableTarget` first, agreeing with it, rather than calling
+    // through unconditionally.
+    const error = {
+      kind: 'required',
+      message: 'Required',
+      fieldTree: () => ({
+        name: () => 'email',
+        focusBoundControl: 'not-a-function',
+      }),
+    } as unknown as ValidationError.WithFieldTree;
 
     expect(() => {
       focusBoundControlFromError(error);
