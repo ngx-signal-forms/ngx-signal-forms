@@ -98,7 +98,21 @@ void test('tolerates null and undefined input', () => {
 void test('escapes a mention preceded by an unmatched backtick', () => {
   // No closing backtick, so this is not a real code span. GitHub still
   // renders `@foo` as a mention, so the stray backtick must not shield it.
-  assert.equal(escapeBareMentions('fix: `@foo'), 'fix: ``@foo`');
+  // The stray backtick is itself backslash-escaped so it cannot combine
+  // with the wrapping backtick we add into a spurious two-backtick run:
+  // CommonMark reads `\`` `@foo` `` as a literal backtick followed by a
+  // real code span, not as an unterminated double-backtick opener (which
+  // would render `@foo` as plain text - still a real GitHub mention).
+  // Verified against `marked` (a CommonMark-compliant renderer):
+  //   <p>fix: `<code>@foo</code></p>
+  assert.equal(escapeBareMentions('fix: `@foo'), 'fix: \\``@foo`');
+});
+
+void test('escapes a stray backtick with no adjacent mention', () => {
+  assert.equal(
+    escapeBareMentions('a stray ` backtick with no mention nearby'),
+    'a stray \\` backtick with no mention nearby',
+  );
 });
 
 void test('does not double-wrap a mention already inside a matched code span', () => {

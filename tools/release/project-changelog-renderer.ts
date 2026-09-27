@@ -74,9 +74,11 @@ function isRecord(value: unknown): value is Record<string, unknown> {
  * the match), and skips a `@` preceded by a word character, so an email
  * address (`me@example.com`) is left alone. This regex only ever runs on
  * text outside a matched code span (`escapeBareMentions` below carves those
- * out first and copies them through untouched), so it does not need to
+ * out first and copies them through untouched), so its lookbehind does not
  * treat a backtick specially — doing so would let an UNMATCHED backtick
- * (e.g. `` `@foo `` with no closing backtick) shield a real mention.
+ * (e.g. `` `@foo `` with no closing backtick) shield a real mention from
+ * this check. `escapeOutsideCode` below backslash-escapes any such stray
+ * backtick before wrapping the mention, so the result stays valid markdown.
  */
 const NAME_SEGMENT = /[\w]+(?:-[\w]+)*/u.source;
 const BARE_MENTION = new RegExp(
@@ -110,7 +112,18 @@ export function escapeBareMentions(
 }
 
 function escapeOutsideCode(text: string): string {
-  return text.replace(BARE_MENTION, (mention) => `\`${mention}\``);
+  // Any backtick reaching this point is unmatched (a real code span was
+  // already carved out above), so it is not markdown code-span syntax.
+  // Backslash-escape it before wrapping a mention: otherwise a stray
+  // backtick right before one (`` `@foo ``) combines with the wrapping
+  // backtick we add into a two-backtick run with no matching close, which
+  // CommonMark then renders as literal text - leaving `@foo` un-fenced and
+  // still a real GitHub mention.
+  const withEscapedBackticks = text.replaceAll('`', '\\`');
+  return withEscapedBackticks.replace(
+    BARE_MENTION,
+    (mention) => `\`${mention}\``,
+  );
 }
 
 export default class ProjectChangelogRenderer extends DefaultChangelogRenderer {
