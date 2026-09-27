@@ -57,14 +57,14 @@ import { StoreBindingFormComponent } from './store-binding.form';
       >
         <ngx-display-controls-section
           display-controls-primary
-          title="🎨 Wrapper appearance"
+          title="Wrapper appearance"
           description="The delegated-write model is an ordinary WritableSignal, so the wrappers render it normally."
         >
           <ngx-appearance-toggle [(value)]="selectedAppearance" />
         </ngx-display-controls-section>
 
         <ngx-display-controls-section
-          title="↔️ Label orientation"
+          title="Label orientation"
           description="Compare vertical and horizontal label columns for the non-outline appearances."
         >
           <ngx-orientation-toggle
@@ -93,7 +93,15 @@ import { StoreBindingFormComponent } from './store-binding.form';
 
         @if (formRef(); as form) {
           <div right>
-            <ngx-signal-form-debugger [formTree]="form.settingsForm" />
+            @defer (on idle) {
+              <ngx-signal-form-debugger [formTree]="form.settingsForm" />
+            } @placeholder {
+              <div class="debugger-placeholder" aria-hidden="true"></div>
+            } @error {
+              <p class="debugger-placeholder">
+                The form debugger failed to load.
+              </p>
+            }
           </div>
         }
       </ngx-split-layout>

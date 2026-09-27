@@ -71,13 +71,13 @@ import { GlobalConfigurationComponent } from './global-configuration.form';
           class="block min-w-0"
         />
         <ngx-display-controls-section
-          title="🎨 Appearance override"
+          title="Appearance override"
           description="Swap the wrapper treatment to show that visual defaults can diverge from the globally configured baseline without changing the underlying validation rules."
         >
           <ngx-appearance-toggle [(value)]="selectedAppearance" />
         </ngx-display-controls-section>
         <ngx-display-controls-section
-          title="↔️ Label orientation"
+          title="Label orientation"
           description="Override the global layout locally so you can compare a vertical form against a horizontal label column without touching the app bootstrap config."
         >
           <ngx-orientation-toggle
@@ -107,7 +107,15 @@ import { GlobalConfigurationComponent } from './global-configuration.form';
 
         @if (formRef(); as form) {
           <div right>
-            <ngx-signal-form-debugger [formTree]="form.configForm" />
+            @defer (on idle) {
+              <ngx-signal-form-debugger [formTree]="form.configForm" />
+            } @placeholder {
+              <div class="debugger-placeholder" aria-hidden="true"></div>
+            } @error {
+              <p class="debugger-placeholder">
+                The form debugger failed to load.
+              </p>
+            }
           </div>
         }
       </ngx-split-layout>

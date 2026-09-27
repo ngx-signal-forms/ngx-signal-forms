@@ -34,7 +34,7 @@ export const LABELLESS_FIELDS_CONTENT: ExampleCardConfig = {
     title: 'Accessibility reminder',
     sections: [
       {
-        title: '🧪 Try This (On Touch mode)',
+        title: 'Try This (On Touch mode)',
         items: [
           '1. Inspect the <strong>Search</strong> input (DevTools → Accessibility pane or a screen reader) → its accessible name "Search" comes from <code>aria-label</code>, not the placeholder, even though no &lt;label&gt; is rendered',
           '2. Type <code>555</code> in the middle <strong>phone number</strong> field → Tab away → "Phone number must be at least 7 digits" renders under the labelless wrapper; leave the country code empty and Tab through it → "Country code is required"',

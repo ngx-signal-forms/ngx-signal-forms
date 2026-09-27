@@ -65,14 +65,14 @@ import { LabellessFieldsFormComponent } from './labelless-fields.form';
         />
 
         <ngx-display-controls-section
-          title="🎨 Wrapper styling"
+          title="Wrapper styling"
           description="Switch appearance to verify standard, outline, and plain all cope with missing labels."
         >
           <ngx-appearance-toggle [(value)]="selectedAppearance" />
         </ngx-display-controls-section>
 
         <ngx-display-controls-section
-          title="↔️ Label orientation"
+          title="Label orientation"
           description="Horizontal layout collapses the label column when no label is projected."
         >
           <ngx-orientation-toggle
@@ -102,9 +102,17 @@ import { LabellessFieldsFormComponent } from './labelless-fields.form';
         />
         @if (formComponent) {
           <div right>
-            <ngx-signal-form-debugger
-              [formTree]="formComponent.labellessForm"
-            />
+            @defer (on idle) {
+              <ngx-signal-form-debugger
+                [formTree]="formComponent.labellessForm"
+              />
+            } @placeholder {
+              <div class="debugger-placeholder" aria-hidden="true"></div>
+            } @error {
+              <p class="debugger-placeholder">
+                The form debugger failed to load.
+              </p>
+            }
           </div>
         }
       </ngx-split-layout>

@@ -36,7 +36,7 @@ export const GLOBAL_CONFIG_CONTENT = {
     title: 'Configuration Best Practices',
     sections: [
       {
-        title: '🧪 Try This (global default is on-touch)',
+        title: 'Try This (global default is on-touch)',
         items: [
           '1. Click <strong>Email Address</strong> → Tab away empty → See the component-scoped required message: <em>"This field is required — we use it to personalise your experience."</em> (from <code>provideErrorMessages()</code>, not the global default)',
           '2. Type <code>not-an-email</code> → Tab away → Error: <em>"Invalid email format"</em>',

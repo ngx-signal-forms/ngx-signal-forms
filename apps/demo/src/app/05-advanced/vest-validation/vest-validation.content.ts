@@ -27,7 +27,7 @@ export const VEST_VALIDATION_CONTENT = {
     title: 'When Vest is a good fit',
     sections: [
       {
-        title: '🧪 Try This (Errors vs Warnings)',
+        title: 'Try This (Errors vs Warnings)',
         items: [
           '1. Set <strong>Account type</strong> to <code>Personal</code> and <strong>Team size</strong> to <code>11</code> → blocking error: "Personal accounts support up to 10 seats"',
           '2. Switch <strong>Account type</strong> to <code>Business</code> → Company name becomes required; pick <strong>Billing country</strong> <code>Germany</code>, <code>Netherlands</code>, or <code>Belgium</code> → VAT number is required too',

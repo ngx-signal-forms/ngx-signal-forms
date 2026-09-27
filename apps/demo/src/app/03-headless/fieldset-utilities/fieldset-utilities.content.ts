@@ -51,7 +51,7 @@ export const HEADLESS_FIELDSET_UTILITIES_CONTENT = {
     title: 'When to choose headless tools',
     sections: [
       {
-        title: '🧪 Try This (Headless fieldset + utilities)',
+        title: 'Try This (Headless fieldset + utilities)',
         items: [
           '1. <strong>Contact email:</strong> type <code>test</code> → Tab away → "Enter a valid email address" rendered by your own <code>ngxHeadlessErrorState</code> markup',
           '2. <strong>Street:</strong> type <code>ab</code> → Tab away → "Street must be at least 3 characters"; the fieldset flags flip (<code>touched: true</code>, <code>invalid: true</code>) and the error aggregates into the Shipping address alert',

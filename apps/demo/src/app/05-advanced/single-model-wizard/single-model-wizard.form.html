@@ -130,23 +130,17 @@
         Step {{ stepNumber }} of {{ stepCount }}: Review your order
       </h2>
 
-      @if (orderConfirmed()) {
-      <div
-        class="success-message"
-        role="status"
-        aria-live="polite"
-        aria-atomic="true"
-      >
-        <p>Order confirmed! A confirmation email is on its way.</p>
-        <button
-          type="button"
-          class="btn btn-secondary"
-          (click)="startNewOrder()"
-        >
-          Start a new order
-        </button>
+      <div role="status" aria-live="polite" aria-atomic="true">
+        @if (orderConfirmed()) {
+        <div class="success-message">
+          <p>Order confirmed! A confirmation email is on its way.</p>
+          <button type="button" class="btn-secondary" (click)="startNewOrder()">
+            Start a new order
+          </button>
+        </div>
+        }
       </div>
-      } @else {
+      @else {
       <dl class="order-summary">
         <div>
           <dt>Name</dt>
@@ -173,11 +167,14 @@
         </div>
       </dl>
 
-      @if (submitAttempted() && wizardForm().invalid()) {
-      <p class="review-error" role="alert">
-        Some details still need attention — check the earlier steps.
-      </p>
-      } }
+      <div role="alert">
+        @if (submitAttempted() && wizardForm().invalid()) {
+        <p class="review-error">
+          Some details still need attention — check the earlier steps.
+        </p>
+        }
+      </div>
+      }
     </ng-template>
   </ngx-wizard>
 </form>

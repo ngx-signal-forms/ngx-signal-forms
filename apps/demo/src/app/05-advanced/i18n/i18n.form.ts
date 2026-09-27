@@ -27,6 +27,7 @@ import {
 } from './i18n.language';
 import { ERROR_MESSAGES, FIELD_LABELS, UI_STRINGS } from './i18n.translations';
 import { i18nDemoSchema } from './i18n.validations';
+import { SubmitStatusComponent } from '../../ui/submit-status/submit-status';
 
 /**
  * i18n Demo Component
@@ -76,6 +77,7 @@ import { i18nDemoSchema } from './i18n.validations';
   ],
 
   imports: [
+    SubmitStatusComponent,
     FormField,
     NgxSignalFormToolkit,
     NgxFormField,
@@ -124,6 +126,8 @@ import { i18nDemoSchema } from './i18n.validations';
             </button>
           }
         </div>
+
+        <ngx-submit-status [message]="successMessage()" />
 
         <form
           [formRoot]="demoForm"
@@ -193,9 +197,11 @@ export class I18nDemoComponent {
   readonly demoForm = form(this.#model, i18nDemoSchema, {
     submission: {
       action: async () => {
+        this.successMessage.set('');
         await new Promise<void>((resolve) => {
           setTimeout(resolve, 500);
         });
+        this.successMessage.set('Form submitted. The fields were reset.');
         this.#model.set(createInitialI18nDemoModel());
         this.demoForm().reset();
       },
@@ -227,7 +233,10 @@ export class I18nDemoComponent {
     return UI_STRINGS[this.langService.lang()];
   }
 
+  protected readonly successMessage = signal('');
+
   protected resetForm(): void {
+    this.successMessage.set('');
     this.demoForm().reset();
     this.#model.set(createInitialI18nDemoModel());
   }

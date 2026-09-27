@@ -35,7 +35,7 @@ export const FIELD_IDENTITY_CONTENT: ExampleCardConfig = {
     title: 'Reading the page',
     sections: [
       {
-        title: '🧪 Try This',
+        title: 'Try This',
         items: [
           '1. Look at the readout under the <strong>Email address</strong> field → <code>control id</code> is a generated <code>demo-widget-N</code>, but <code>aria-describedby</code> lists <code>emailAddress-hint</code> and <code>emailAddress-error</code>',
           '2. Every id in the readout is green with a ✓ — it resolves to an element that exists. A red ✗ would mean a dangling reference a screen reader announces as nothing',

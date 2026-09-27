@@ -57,7 +57,7 @@ export const YOUR_FIRST_FORM_CONTENT = {
     title: 'Interactive Testing Guide',
     sections: [
       {
-        title: '🧪 Try This (On Touch Strategy)',
+        title: 'Try This (On Touch Strategy)',
         items: [
           '1. Click the Name field → Tab away → See error appear: "Name is required"',
           '2. Type "A" → Error: "Name must be at least 2 characters"',
@@ -67,7 +67,7 @@ export const YOUR_FIRST_FORM_CONTENT = {
         ],
       },
       {
-        title: '✨ What toolkit automates',
+        title: 'What toolkit automates',
         items: [
           '<strong>0 manual ARIA bindings</strong> for the showcased fields',
           '<strong>No per-field visibility helpers</strong> for standard error timing',
@@ -77,7 +77,7 @@ export const YOUR_FIRST_FORM_CONTENT = {
         ],
       },
       {
-        title: '📊 Baseline-to-toolkit framing',
+        title: 'Baseline-to-toolkit framing',
         items: [
           '<strong>Without toolkit:</strong> Manual ARIA/error plumbing scales linearly with field count',
           '<strong>With this setup:</strong> Form context + error component cover core accessibility behavior',

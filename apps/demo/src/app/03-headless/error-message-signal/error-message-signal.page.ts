@@ -41,7 +41,15 @@ import { ErrorMessageSignalComponent } from './error-message-signal.form';
 
         @if (formRef) {
           <div right>
-            <ngx-signal-form-debugger [formTree]="formRef.passwordForm" />
+            @defer (on idle) {
+              <ngx-signal-form-debugger [formTree]="formRef.passwordForm" />
+            } @placeholder {
+              <div class="debugger-placeholder" aria-hidden="true"></div>
+            } @error {
+              <p class="debugger-placeholder">
+                The form debugger failed to load.
+              </p>
+            }
           </div>
         }
       </ngx-split-layout>

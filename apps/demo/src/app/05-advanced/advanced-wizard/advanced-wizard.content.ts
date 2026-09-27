@@ -33,7 +33,7 @@ export const ADVANCED_WIZARD_CONTENT = {
     title: 'Angular 22 Patterns',
     sections: [
       {
-        title: '🧪 Try This (Step-by-Step)',
+        title: 'Try This (Step-by-Step)',
         items: [
           '1. On the empty <strong>Traveler Info</strong> step, click <strong>Next</strong> → navigation is blocked, errors like "First name required" appear, and focus jumps to the first invalid field',
           '2. Enter <code>test</code> as <strong>Email</strong> → "Valid email required"; enter <code>ABC12</code> (5 chars) as <strong>Passport Number</strong> → "Passport number required" (minimum 6 characters)',

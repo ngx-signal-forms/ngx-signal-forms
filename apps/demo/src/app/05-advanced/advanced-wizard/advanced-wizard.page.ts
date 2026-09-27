@@ -68,7 +68,7 @@ import { WizardContainerComponent } from './components/wizard-container';
       />
 
       <footer class="page-footer mt-8 border-t pt-4">
-        <details class="text-sm text-gray-500">
+        <details class="text-sm text-gray-500 dark:text-gray-400">
           <summary class="cursor-pointer hover:text-gray-700">
             Technical Details
           </summary>

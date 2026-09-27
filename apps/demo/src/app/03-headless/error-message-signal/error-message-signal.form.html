@@ -5,6 +5,8 @@
     resolution, and stable per-error DOM IDs — without a directive.
   </p>
 
+  <ngx-submit-status [message]="successMessage()" />
+
   <form [formRoot]="passwordForm" class="max-w-xl space-y-6">
     <!-- ── Registry toggle ───────────────────────────────────────── -->
     <div
@@ -150,7 +152,7 @@
       <button
         type="submit"
         class="btn-primary"
-        [disabled]="passwordForm().submitting()"
+        [ngxBusy]="passwordForm().submitting()"
       >
         @if (passwordForm().submitting()) { Submitting... } @else { Submit }
       </button>

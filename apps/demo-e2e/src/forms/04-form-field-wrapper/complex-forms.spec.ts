@@ -523,8 +523,8 @@ test.describe('Form Field Wrapper - Complex Forms', () => {
       // the legend because it is also rendered visually inside the host —
       // they are labels for sibling controls, not the group's own name.
       await expect(page.personalInfoFieldset).toMatchAriaSnapshot(`
-        - group "👤 Personal Information":
-          - text: 👤 Personal Information First Name
+        - group "Personal Information":
+          - text: Personal Information First Name
           - textbox "First Name"
           - alert:
             - paragraph: "Error: First name is required"

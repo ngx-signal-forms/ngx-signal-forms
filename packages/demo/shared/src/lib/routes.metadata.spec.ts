@@ -17,7 +17,7 @@ describe('routes.metadata', () => {
 
     for (const path of registeredPaths) {
       expect(getRouteTitle(path)).not.toBe(SITE_NAME);
-      expect(getRouteTitle(path)).toMatch(/ · ngx-signal-forms$/);
+      expect(getRouteTitle(path)).toMatch(/ · ngx-signal-forms$/u);
     }
   });
 

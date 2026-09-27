@@ -18,6 +18,8 @@ import {
   createErrorMessageSignal,
   type ResolvedFieldError,
 } from '@ngx-signal-forms/toolkit/headless';
+import { BusyButtonDirective } from '../../shared/busy-button.directive';
+import { SubmitStatusComponent } from '../../ui/submit-status/submit-status';
 
 interface PasswordModel {
   password: string;
@@ -76,7 +78,7 @@ function ariaDescribedBy(errors: readonly ResolvedFieldError[]): string | null {
   selector: 'ngx-error-message-signal',
   changeDetection: ChangeDetectionStrategy.OnPush,
 
-  imports: [FormField, FormRoot],
+  imports: [SubmitStatusComponent, BusyButtonDirective, FormField, FormRoot],
   templateUrl: './error-message-signal.form.html',
   styleUrl: './error-message-signal.form.scss',
 })
@@ -86,11 +88,12 @@ export class ErrorMessageSignalComponent {
 
   readonly passwordForm = form(this.#model, passwordSchema, {
     submission: {
-      action: async (field) => {
+      action: async () => {
+        this.successMessage.set('');
         await new Promise<void>((resolve) => {
           setTimeout(resolve, 400);
         });
-        console.log('Submitted:', field().value());
+        this.successMessage.set('Password accepted.');
       },
       onInvalid: createOnInvalidHandler(),
     },
@@ -138,7 +141,10 @@ export class ErrorMessageSignalComponent {
     this.verboseRegistry.update((v) => !v);
   }
 
+  protected readonly successMessage = signal('');
+
   protected reset(): void {
+    this.successMessage.set('');
     this.passwordForm().reset();
     this.#model.set(this.#initialData);
   }

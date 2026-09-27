@@ -21,6 +21,8 @@ import {
   NgxSignalFormToolkit,
 } from '@ngx-signal-forms/toolkit';
 import { NgxFormField } from '@ngx-signal-forms/toolkit/form-field';
+import { BusyButtonDirective } from '../../shared/busy-button.directive';
+import { SubmitStatusComponent } from '../../ui/submit-status/submit-status';
 
 interface Booking {
   checkIn: string;
@@ -69,7 +71,13 @@ const bookingSchema = schema<Booking>((path) => {
   selector: 'ngx-cross-field-validation',
   changeDetection: ChangeDetectionStrategy.OnPush,
 
-  imports: [FormField, NgxSignalFormToolkit, NgxFormField],
+  imports: [
+    SubmitStatusComponent,
+    BusyButtonDirective,
+    FormField,
+    NgxSignalFormToolkit,
+    NgxFormField,
+  ],
   template: `
     <div class="px-6 pt-0 pb-6">
       <h2 class="mb-4 text-2xl font-bold">Cross-Field Validation</h2>
@@ -77,13 +85,15 @@ const bookingSchema = schema<Booking>((path) => {
         Demonstrates validation rules that depend on multiple fields.
       </p>
 
+      <ngx-submit-status [message]="successMessage()" />
+
       <form
         [formRoot]="bookingForm"
         ngxSignalForm
         [errorStrategy]="errorDisplayMode()"
         class="max-w-md space-y-6"
       >
-        <div class="grid grid-cols-2 gap-4">
+        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <ngx-form-field-wrapper
             [formField]="bookingForm.checkIn"
             [appearance]="appearance()"
@@ -136,7 +146,7 @@ const bookingSchema = schema<Booking>((path) => {
           <button
             type="submit"
             class="btn-primary"
-            [disabled]="bookingForm().submitting()"
+            [ngxBusy]="bookingForm().submitting()"
           >
             @if (bookingForm().submitting()) {
               Booking...
@@ -168,16 +178,23 @@ export class CrossFieldValidationComponent {
   readonly bookingForm = form(this.#model, bookingSchema, {
     submission: {
       action: async (field) => {
+        this.successMessage.set('');
         await new Promise<void>((resolve) => {
           setTimeout(resolve, 1000);
         });
-        console.log('Booking Confirmed:', field().value());
+        const { checkIn, checkOut } = field().value();
+        this.successMessage.set(
+          `Booking confirmed from ${checkIn} to ${checkOut}.`,
+        );
       },
       onInvalid: createOnInvalidHandler(),
     },
   });
 
+  protected readonly successMessage = signal('');
+
   protected resetForm(): void {
+    this.successMessage.set('');
     this.bookingForm().reset();
     this.#model.set({
       checkIn: '',

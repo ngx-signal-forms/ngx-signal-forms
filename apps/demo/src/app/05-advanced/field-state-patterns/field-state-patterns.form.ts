@@ -84,7 +84,7 @@ const fieldStatePatternsSchema = schema<FieldStatePatternsModel>((path) => {
         unchanged.
       </p>
 
-      <div class="mb-6 grid gap-4">
+      <div class="mb-6 grid grid-cols-1 gap-4">
         <section
           class="rounded-lg border border-sky-200 bg-sky-50 p-4 text-sm text-sky-950 dark:border-sky-900/60 dark:bg-sky-950/30 dark:text-sky-100"
         >

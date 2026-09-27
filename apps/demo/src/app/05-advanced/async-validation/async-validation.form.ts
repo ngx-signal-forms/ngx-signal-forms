@@ -24,6 +24,7 @@ import {
   warningError,
 } from '@ngx-signal-forms/toolkit';
 import { NgxFormField } from '@ngx-signal-forms/toolkit/form-field';
+import { BusyButtonDirective } from '../../shared/busy-button.directive';
 
 interface Registration {
   username: string;
@@ -101,7 +102,13 @@ const registrationSchema = schema<Registration>((path) => {
   selector: 'ngx-async-validation',
   changeDetection: ChangeDetectionStrategy.OnPush,
 
-  imports: [FormField, NgxSignalFormToolkit, NgxFormField, JsonPipe],
+  imports: [
+    BusyButtonDirective,
+    FormField,
+    NgxSignalFormToolkit,
+    NgxFormField,
+    JsonPipe,
+  ],
   template: `
     <div class="px-6 pt-0 pb-6">
       <h2 class="mb-4 text-2xl font-bold">Async Validation Demo</h2>
@@ -162,7 +169,10 @@ const registrationSchema = schema<Registration>((path) => {
 
           <!-- Custom suffix for loading state -->
           @if (regForm.username().pending()) {
-            <span suffix class="animate-pulse text-sm text-gray-500">
+            <span
+              suffix
+              class="animate-pulse text-sm text-gray-500 dark:text-gray-400"
+            >
               Checking...
             </span>
           }
@@ -186,7 +196,10 @@ const registrationSchema = schema<Registration>((path) => {
           />
 
           @if (regForm.usernameOnBlur().pending()) {
-            <span suffix class="animate-pulse text-sm text-gray-500">
+            <span
+              suffix
+              class="animate-pulse text-sm text-gray-500 dark:text-gray-400"
+            >
               Checking...
             </span>
           }
@@ -196,11 +209,11 @@ const registrationSchema = schema<Registration>((path) => {
           </ngx-form-field-hint>
         </ngx-form-field-wrapper>
 
-        <div class="flex gap-4">
+        <div class="flex flex-wrap gap-4">
           <button
             type="submit"
             class="btn-primary"
-            [disabled]="regForm().submitting() || regForm().pending()"
+            [ngxBusy]="regForm().submitting() || regForm().pending()"
           >
             @if (regForm().submitting()) {
               Registering...
@@ -225,25 +238,27 @@ const registrationSchema = schema<Registration>((path) => {
           </button>
         </div>
 
-        @if (usernameTakenMessage(); as usernameTakenMessage) {
-          <div
-            class="rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-950 dark:border-amber-900/60 dark:bg-amber-950/30 dark:text-amber-100"
-            role="status"
-          >
-            Typing debounce async error via <code>getError()</code>:
-            {{ usernameTakenMessage }}
-          </div>
-        }
+        <div role="status" class="empty:mb-0">
+          @if (usernameTakenMessage(); as usernameTakenMessage) {
+            <div
+              class="rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-950 dark:border-amber-900/60 dark:bg-amber-950/30 dark:text-amber-100"
+            >
+              Typing debounce async error via <code>getError()</code>:
+              {{ usernameTakenMessage }}
+            </div>
+          }
+        </div>
 
-        @if (usernameTakenOnBlurMessage(); as usernameTakenOnBlurMessage) {
-          <div
-            class="rounded-lg border border-indigo-200 bg-indigo-50 p-4 text-sm text-indigo-950 dark:border-indigo-900/60 dark:bg-indigo-950/30 dark:text-indigo-100"
-            role="status"
-          >
-            Blur debounce async error via <code>getError()</code>:
-            {{ usernameTakenOnBlurMessage }}
-          </div>
-        }
+        <div role="status" class="empty:mb-0">
+          @if (usernameTakenOnBlurMessage(); as usernameTakenOnBlurMessage) {
+            <div
+              class="rounded-lg border border-indigo-200 bg-indigo-50 p-4 text-sm text-indigo-950 dark:border-indigo-900/60 dark:bg-indigo-950/30 dark:text-indigo-100"
+            >
+              Blur debounce async error via <code>getError()</code>:
+              {{ usernameTakenOnBlurMessage }}
+            </div>
+          }
+        </div>
 
         <!-- State Debugger -->
         <div

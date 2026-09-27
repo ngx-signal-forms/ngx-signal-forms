@@ -28,6 +28,7 @@ import { WizardStepInterface } from '../wizard-step.interface';
 import { ReviewStepComponent } from './review-step';
 import { TravelerStepComponent } from './traveler-step';
 import { TripStepComponent } from './trip-step';
+import { BusyButtonDirective } from '../../../shared/busy-button.directive';
 
 /**
  * Shows saving indicator only after delay, and ensures minimum display time.
@@ -41,6 +42,7 @@ const MIN_DISPLAY_MS = 500;
   changeDetection: ChangeDetectionStrategy.OnPush,
 
   imports: [
+    BusyButtonDirective,
     DatePipe,
     WizardComponent,
     WizardStepDirective,
@@ -180,7 +182,11 @@ export class WizardContainerComponent {
   }
 
   protected async nextStep(): Promise<void> {
-    if (this.store.hasConfirmedBooking()) {
+    if (
+      this.store.hasConfirmedBooking() ||
+      this.store.isLoading() ||
+      this.store.isSubmitting()
+    ) {
       return;
     }
 
@@ -204,7 +210,11 @@ export class WizardContainerComponent {
   }
 
   protected async submit(): Promise<void> {
-    if (this.store.hasConfirmedBooking()) {
+    if (
+      this.store.hasConfirmedBooking() ||
+      this.store.isLoading() ||
+      this.store.isSubmitting()
+    ) {
       return;
     }
 

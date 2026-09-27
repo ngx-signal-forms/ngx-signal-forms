@@ -41,7 +41,7 @@ export const WARNING_SUPPORT_CONTENT = {
     title: 'Interactive Warning Testing',
     sections: [
       {
-        title: '🧪 Try This',
+        title: 'Try This',
         items: [
           '1. Leave fields empty → Submit → See blocking errors prevent submission',
           '2. Enter username "abcd" (4 chars) → Warning appears: "Consider using 6+ characters for better security"',
@@ -51,7 +51,7 @@ export const WARNING_SUPPORT_CONTENT = {
         ],
       },
       {
-        title: '📊 When to Use Each',
+        title: 'When to Use Each',
         items: [
           '<strong>Blocking Errors:</strong> Required fields, invalid format, business rules',
           '<strong>Warnings:</strong> Password strength, recommendations, best practices',
@@ -60,7 +60,7 @@ export const WARNING_SUPPORT_CONTENT = {
         ],
       },
       {
-        title: '🎯 Implementation Pattern',
+        title: 'Implementation Pattern',
         items: [
           'Use a <code>ValidationError</code> whose <code>kind</code> starts with <code>warn:</code>',
           'Toolkit automatically separates errors from warnings',

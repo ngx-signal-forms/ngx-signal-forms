@@ -29,6 +29,7 @@ import {
   type ProfileFormModel,
 } from './server-integration.model';
 import { profileSchema } from './server-integration.validations';
+import { BusyButtonDirective } from '../../shared/busy-button.directive';
 
 /**
  * Explicit, statically-typed key list for `ProfileFormModel` — used to walk
@@ -54,7 +55,7 @@ const PROFILE_FIELD_KEYS: readonly (keyof ProfileFormModel)[] = [
   selector: 'ngx-server-integration',
   changeDetection: ChangeDetectionStrategy.OnPush,
 
-  imports: [FormField, NgxSignalFormToolkit, NgxFormField],
+  imports: [BusyButtonDirective, FormField, NgxSignalFormToolkit, NgxFormField],
   template: `
     <div class="px-6 pt-0 pb-6">
       <h2 class="mb-4 text-2xl font-bold">Server Integration Demo</h2>
@@ -114,51 +115,55 @@ const PROFILE_FIELD_KEYS: readonly (keyof ProfileFormModel)[] = [
           class="max-w-md space-y-6"
         >
           <!-- Success banner -->
-          @if (saveSucceeded()) {
-            <div
-              role="status"
-              class="rounded-lg border border-green-200 bg-green-50 p-4 dark:border-green-800 dark:bg-green-950"
-            >
-              <div class="flex items-start gap-3">
-                <span class="text-2xl">✅</span>
-                <div>
-                  <h3
-                    class="mb-1 font-semibold text-green-900 dark:text-green-100"
-                  >
-                    Profile saved
-                  </h3>
-                  <p class="text-sm text-green-800 dark:text-green-200">
-                    The server accepted the update.
-                    <code>reset(value)</code> cleared <code>dirty</code>/<code
-                      >touched</code
+          <div role="status" class="empty:mb-0">
+            @if (saveSucceeded()) {
+              <div
+                class="rounded-lg border border-green-200 bg-green-50 p-4 dark:border-green-800 dark:bg-green-950"
+              >
+                <div class="flex items-start gap-3">
+                  <span class="text-2xl" aria-hidden="true">✅</span>
+                  <div>
+                    <h3
+                      class="mb-1 font-semibold text-green-900 dark:text-green-100"
                     >
-                    without clearing the fields.
-                  </p>
+                      Profile saved
+                    </h3>
+                    <p class="text-sm text-green-800 dark:text-green-200">
+                      The server accepted the update.
+                      <code>reset(value)</code> cleared <code>dirty</code>/<code
+                        >touched</code
+                      >
+                      without clearing the fields.
+                    </p>
+                  </div>
                 </div>
               </div>
-            </div>
-          }
+            }
+          </div>
 
           <!-- Form-level banner: the "formError" half of the rejected save,
                attached to the root field (no fieldTree on the returned error). -->
-          @if (formLevelError(); as formLevelErrorMessage) {
-            <div
-              role="alert"
-              class="rounded-lg border border-red-200 bg-red-50 p-4 dark:border-red-800 dark:bg-red-950"
-            >
-              <div class="flex items-start gap-3">
-                <span class="text-2xl">⚠️</span>
-                <div>
-                  <h3 class="mb-1 font-semibold text-red-900 dark:text-red-100">
-                    Could not save profile
-                  </h3>
-                  <p class="text-sm text-red-800 dark:text-red-200">
-                    {{ formLevelErrorMessage }}
-                  </p>
+          <div role="alert" class="empty:mb-0">
+            @if (formLevelError(); as formLevelErrorMessage) {
+              <div
+                class="rounded-lg border border-red-200 bg-red-50 p-4 dark:border-red-800 dark:bg-red-950"
+              >
+                <div class="flex items-start gap-3">
+                  <span class="text-2xl" aria-hidden="true">⚠️</span>
+                  <div>
+                    <h3
+                      class="mb-1 font-semibold text-red-900 dark:text-red-100"
+                    >
+                      Could not save profile
+                    </h3>
+                    <p class="text-sm text-red-800 dark:text-red-200">
+                      {{ formLevelErrorMessage }}
+                    </p>
+                  </div>
                 </div>
               </div>
-            </div>
-          }
+            }
+          </div>
 
           <ngx-form-field-wrapper
             [formField]="profileForm.name"
@@ -206,7 +211,8 @@ const PROFILE_FIELD_KEYS: readonly (keyof ProfileFormModel)[] = [
             <button
               type="submit"
               class="btn-primary"
-              [disabled]="profileForm().invalid() || profileForm().submitting()"
+              [disabled]="profileForm().invalid()"
+              [ngxBusy]="profileForm().submitting()"
             >
               @if (profileForm().submitting()) {
                 Saving…
@@ -218,7 +224,7 @@ const PROFILE_FIELD_KEYS: readonly (keyof ProfileFormModel)[] = [
             <button
               type="button"
               class="btn-secondary"
-              [disabled]="profileForm().submitting()"
+              [ngxBusy]="profileForm().submitting()"
               (click)="resetForm()"
             >
               Reset

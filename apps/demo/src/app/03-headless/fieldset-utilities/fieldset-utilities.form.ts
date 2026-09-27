@@ -28,6 +28,7 @@ import {
   NgxHeadlessToolkit,
 } from '@ngx-signal-forms/toolkit/headless';
 import { NgxFormFieldCharacterCount } from '@ngx-signal-forms/toolkit/assistive';
+import { SubmitStatusComponent } from '../../ui/submit-status/submit-status';
 
 interface HeadlessDeliveryModel {
   contactEmail: string;
@@ -90,6 +91,7 @@ const deliverySchema = schema<HeadlessDeliveryModel>((path) => {
   changeDetection: ChangeDetectionStrategy.OnPush,
 
   imports: [
+    SubmitStatusComponent,
     FormField,
     FormRoot,
     NgxSignalForm,
@@ -122,11 +124,12 @@ export class HeadlessFieldsetUtilitiesComponent {
   readonly #model = signal(this.#initialData);
   readonly deliveryForm = form(this.#model, deliverySchema, {
     submission: {
-      action: async (field) => {
+      action: async () => {
+        this.successMessage.set('');
         await new Promise<void>((resolve) => {
           setTimeout(resolve, 600);
         });
-        console.log('Delivery request submitted:', field().value());
+        this.successMessage.set('Delivery request submitted.');
       },
       onInvalid: createOnInvalidHandler(),
     },
@@ -168,7 +171,10 @@ export class HeadlessFieldsetUtilitiesComponent {
     return ids.join(' ');
   });
 
+  protected readonly successMessage = signal('');
+
   protected reset(): void {
+    this.successMessage.set('');
     this.deliveryForm().reset();
     this.#model.set(this.#initialData);
   }

@@ -36,10 +36,12 @@ import { WizardStepInterface } from '../wizard-step.interface';
         <div
           class="empty-state rounded-lg border-2 border-dashed p-8 text-center"
         >
-          <p class="mb-4 text-gray-500">No destinations added yet.</p>
+          <p class="mb-4 text-gray-500 dark:text-gray-400">
+            No destinations added yet.
+          </p>
           <button
             type="button"
-            class="btn btn-primary"
+            class="btn-primary"
             (click)="store.addDestination()"
             #addDestinationButton
           >
@@ -69,7 +71,7 @@ import { WizardStepInterface } from '../wizard-step.interface';
             </button>
           </div>
 
-          <div class="mb-4 grid grid-cols-2 gap-4">
+          <div class="mb-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
             <!-- Country -->
             <ngx-form-field-wrapper
               [formField]="tripForm.destinations[destIdx].country"
@@ -99,7 +101,7 @@ import { WizardStepInterface } from '../wizard-step.interface';
             </ngx-form-field-wrapper>
           </div>
 
-          <div class="mb-4 grid grid-cols-2 gap-4">
+          <div class="mb-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
             <!-- Arrival Date -->
             <ngx-form-field-wrapper
               [formField]="tripForm.destinations[destIdx].arrivalDate"
@@ -172,7 +174,7 @@ import { WizardStepInterface } from '../wizard-step.interface';
             ) {
               <div class="activity-card mb-3 rounded bg-gray-50 p-3">
                 <div class="mb-2 flex items-start justify-between">
-                  <span class="text-sm text-gray-600"
+                  <span class="text-sm text-gray-600 dark:text-gray-300"
                     >Activity {{ actIdx + 1 }}</span
                   >
                   <button
@@ -267,7 +269,9 @@ import { WizardStepInterface } from '../wizard-step.interface';
                   class="requirements-section mt-2 border-l border-gray-300 pl-3"
                 >
                   <div class="mb-2 flex items-center justify-between">
-                    <span class="text-xs text-gray-500">Requirements</span>
+                    <span class="text-xs text-gray-500 dark:text-gray-400"
+                      >Requirements</span
+                    >
                     <button
                       type="button"
                       class="text-xs text-blue-400 hover:text-blue-600"
@@ -356,10 +360,10 @@ import { WizardStepInterface } from '../wizard-step.interface';
                   }
                 </div>
               </div>
-            }
-
-            @if (destination.activities.length === 0) {
-              <p class="text-sm text-gray-400 italic">No activities added</p>
+            } @empty {
+              <p class="text-sm text-gray-500 italic dark:text-gray-400">
+                No activities added
+              </p>
             }
           </div>
         </fieldset>
@@ -368,7 +372,7 @@ import { WizardStepInterface } from '../wizard-step.interface';
       @if (hasDestinations()) {
         <button
           type="button"
-          class="btn btn-secondary w-full"
+          class="btn-secondary w-full"
           (click)="store.addDestination()"
         >
           + Add Another Destination
@@ -383,42 +387,20 @@ import { WizardStepInterface } from '../wizard-step.interface';
 
     .form-input-xs {
       padding: 0.25rem 0.375rem;
-      border: 1px solid #d1d5db;
+      border: 1px solid var(--color-border);
       border-radius: 0.25rem;
+      background: var(--color-bg-elevated);
+      color: var(--color-text);
       font-size: 0.75rem;
     }
 
-    .form-input-xs:focus {
-      outline: none;
-      border-color: var(--color-primary, #3b82f6);
-      box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+    .form-input-xs:focus-visible {
+      outline: 2px solid var(--color-border-focus);
+      outline-offset: 1px;
     }
 
     .form-input-xs[aria-invalid='true'] {
-      border-color: #ef4444;
-    }
-
-    .btn {
-      padding: 0.5rem 1rem;
-      border-radius: 0.375rem;
-      font-weight: 500;
-      cursor: pointer;
-    }
-
-    .btn-primary {
-      background-color: var(--color-primary, #3b82f6);
-      color: white;
-      border: none;
-    }
-
-    .btn-secondary {
-      background-color: #f3f4f6;
-      color: #374151;
-      border: 1px solid #d1d5db;
-    }
-
-    .btn-secondary:hover {
-      background-color: #e5e7eb;
+      border-color: var(--color-error);
     }
   `,
 })
