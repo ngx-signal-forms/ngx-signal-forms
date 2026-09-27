@@ -9,14 +9,28 @@ import {
   validate,
 } from '@angular/forms/signals';
 import {
+  NgxSignalFormControlSemanticsDirective,
   NgxSignalFormToolkit,
   provideNgxSignalFormsConfig,
 } from '@ngx-signal-forms/toolkit';
+import { NgxFormFieldHint } from '@ngx-signal-forms/toolkit/assistive';
 import { render } from '@testing-library/angular';
-import { page, userEvent } from 'vitest/browser';
-import { describe, expect, it } from 'vitest';
+import { commands, page, userEvent } from 'vitest/browser';
+import { afterEach, describe, expect, it } from 'vitest';
 import { NgxFormField } from './index';
-import { expectNoA11yViolations } from '@ngx-signal-forms/toolkit/testing';
+import { NgxFormFieldWrapper } from './form-field-wrapper';
+import {
+  expectNoA11yViolations,
+  expectVisibleFocusIndicator,
+} from '@ngx-signal-forms/toolkit/testing';
+
+declare module 'vitest/browser' {
+  interface BrowserCommands {
+    emulateForcedColors: (
+      forcedColors: 'active' | 'none' | null,
+    ) => Promise<void>;
+  }
+}
 
 /**
  * Builds a standalone test component for a fixture below. Every fixture
@@ -770,3 +784,518 @@ describe('form-field wrapper — WCAG 2.2 AA conformance', () => {
     });
   });
 });
+
+/**
+ * Additional wrapper variants with no prior a11y coverage (issue #501, toolkit
+ * audit §1.3). The suite above only ever scanned a labelled text input, the
+ * two selection-cluster shapes, and a handful of layout/appearance
+ * combinations built on top of a text input — every other control kind and
+ * chrome combination the wrapper renders (`<select>`, `<textarea>`, a single
+ * checkbox/switch, `appearance="plain"`, the horizontal layout, prefix/suffix
+ * content, and a role-less custom control) went unscanned. A new `describe`
+ * block, kept separate from the suite above (rather than interleaved into it)
+ * so a parallel lane editing this file's existing fixtures rebases cleanly.
+ */
+describe('form-field wrapper — additional variant coverage (#501)', () => {
+  afterEach(async () => {
+    await commands.emulateForcedColors(null);
+  });
+
+  it('a <select> control in its invalid state has no violations', async () => {
+    const TestComponent = defineFixtureComponent(
+      'ngx-test-a11y-select',
+      `
+        <form [formRoot]="testForm" ngxSignalForm errorStrategy="on-touch">
+          <ngx-form-field-wrapper
+            [formField]="testForm.country"
+            fieldName="country"
+          >
+            <label for="country">Country</label>
+            <select id="country" [formField]="testForm.country">
+              <option value="">Select…</option>
+              <option value="us">United States</option>
+              <option value="ca">Canada</option>
+            </select>
+          </ngx-form-field-wrapper>
+        </form>
+      `,
+      () =>
+        form(
+          signal({ country: '' }),
+          schema((path) => {
+            required(path.country, { message: 'Country is required' });
+          }),
+        ),
+    );
+
+    const { container } = await render(TestComponent);
+
+    const select = page.getByRole('combobox', { name: 'Country' });
+    await userEvent.click(select.element());
+    await userEvent.tab();
+
+    await expect
+      .element(page.getByRole('alert'))
+      .toHaveTextContent('Country is required');
+    await expectNoA11yViolations(container);
+  });
+
+  it('a <textarea> control in its invalid state has no violations', async () => {
+    const TestComponent = defineFixtureComponent(
+      'ngx-test-a11y-textarea',
+      `
+        <form [formRoot]="testForm" ngxSignalForm errorStrategy="on-touch">
+          <ngx-form-field-wrapper [formField]="testForm.bio" fieldName="bio">
+            <label for="bio">Bio</label>
+            <textarea id="bio" [formField]="testForm.bio"></textarea>
+          </ngx-form-field-wrapper>
+        </form>
+      `,
+      () =>
+        form(
+          signal({ bio: '' }),
+          schema((path) => {
+            required(path.bio, { message: 'Bio is required' });
+          }),
+        ),
+    );
+
+    const { container } = await render(TestComponent);
+
+    await userEvent.click(page.getByRole('textbox', { name: 'Bio' }));
+    await userEvent.tab();
+
+    await expect
+      .element(page.getByRole('alert'))
+      .toHaveTextContent('Bio is required');
+    await expectNoA11yViolations(container);
+  });
+
+  it('a single required checkbox (not a cluster) in its invalid state has no violations', async () => {
+    const TestComponent = defineFixtureComponent(
+      'ngx-test-a11y-single-checkbox',
+      `
+        <form [formRoot]="testForm" ngxSignalForm errorStrategy="on-touch">
+          <ngx-form-field-wrapper
+            [formField]="testForm.agree"
+            fieldName="agree"
+          >
+            <label for="agree">
+              <input id="agree" type="checkbox" [formField]="testForm.agree" />
+              I agree to the terms
+            </label>
+          </ngx-form-field-wrapper>
+        </form>
+      `,
+      () =>
+        form(
+          signal({ agree: false }),
+          schema((path) => {
+            required(path.agree, { message: 'You must agree to the terms' });
+          }),
+        ),
+    );
+
+    const { container, fixture } = await render(TestComponent);
+
+    // A single unchecked checkbox is not itself tabbable away from without
+    // toggling it, so mark touched programmatically (same convention as the
+    // cluster fixtures above) rather than via keyboard.
+    fixture.componentInstance.testForm.agree().markAsTouched();
+    await TestBed.inject(ApplicationRef).whenStable();
+
+    await expect
+      .element(page.getByRole('alert'))
+      .toHaveTextContent('You must agree to the terms');
+    await expectNoA11yViolations(container);
+  });
+
+  it('a switch (checkbox with role="switch") in its invalid state has no violations', async () => {
+    const TestComponent = defineFixtureComponent(
+      'ngx-test-a11y-switch',
+      `
+        <form [formRoot]="testForm" ngxSignalForm errorStrategy="on-touch">
+          <ngx-form-field-wrapper
+            [formField]="testForm.updates"
+            fieldName="updates"
+          >
+            <label for="updates">Email updates</label>
+            <input
+              id="updates"
+              type="checkbox"
+              role="switch"
+              [formField]="testForm.updates"
+            />
+          </ngx-form-field-wrapper>
+        </form>
+      `,
+      () =>
+        form(
+          signal({ updates: false }),
+          schema((path) => {
+            required(path.updates, { message: 'Choose a preference' });
+          }),
+        ),
+    );
+
+    const { container, fixture } = await render(TestComponent);
+
+    fixture.componentInstance.testForm.updates().markAsTouched();
+    await TestBed.inject(ApplicationRef).whenStable();
+
+    await expect
+      .element(page.getByRole('alert'))
+      .toHaveTextContent('Choose a preference');
+    await expectNoA11yViolations(container);
+  });
+
+  it('appearance="plain" in its invalid state has no violations', async () => {
+    const TestComponent = defineFixtureComponent(
+      'ngx-test-a11y-plain',
+      `
+        <form [formRoot]="testForm" ngxSignalForm errorStrategy="on-touch">
+          <ngx-form-field-wrapper
+            [formField]="testForm.nickname"
+            fieldName="nickname"
+            appearance="plain"
+          >
+            <label for="nickname">Nickname</label>
+            <input id="nickname" type="text" [formField]="testForm.nickname" />
+          </ngx-form-field-wrapper>
+        </form>
+      `,
+      () =>
+        form(
+          signal({ nickname: '' }),
+          schema((path) => {
+            required(path.nickname, { message: 'Nickname is required' });
+          }),
+        ),
+    );
+
+    const { container } = await render(TestComponent);
+
+    await userEvent.click(page.getByRole('textbox', { name: 'Nickname' }));
+    await userEvent.tab();
+
+    await expect
+      .element(page.getByRole('alert'))
+      .toHaveTextContent('Nickname is required');
+    await expectNoA11yViolations(container);
+  });
+
+  it('orientation="horizontal" in its invalid state has no violations', async () => {
+    const TestComponent = defineFixtureComponent(
+      'ngx-test-a11y-horizontal',
+      `
+        <form [formRoot]="testForm" ngxSignalForm errorStrategy="on-touch">
+          <ngx-form-field-wrapper
+            [formField]="testForm.city"
+            fieldName="city"
+            orientation="horizontal"
+          >
+            <label for="city">City</label>
+            <input id="city" type="text" [formField]="testForm.city" />
+          </ngx-form-field-wrapper>
+        </form>
+      `,
+      () =>
+        form(
+          signal({ city: '' }),
+          schema((path) => {
+            required(path.city, { message: 'City is required' });
+          }),
+        ),
+    );
+
+    const { container } = await render(TestComponent);
+
+    await userEvent.click(page.getByRole('textbox', { name: 'City' }));
+    await userEvent.tab();
+
+    await expect
+      .element(page.getByRole('alert'))
+      .toHaveTextContent('City is required');
+    await expectNoA11yViolations(container);
+  });
+
+  it('prefix and suffix content around the control has no violations', async () => {
+    const TestComponent = defineFixtureComponent(
+      'ngx-test-a11y-prefix-suffix',
+      `
+        <form [formRoot]="testForm" ngxSignalForm>
+          <ngx-form-field-wrapper
+            [formField]="testForm.amount"
+            fieldName="amount"
+          >
+            <span prefix aria-hidden="true">$</span>
+            <label for="amount">Amount</label>
+            <input id="amount" type="number" [formField]="testForm.amount" />
+            <span suffix aria-hidden="true">.00</span>
+          </ngx-form-field-wrapper>
+          <ngx-form-field-wrapper
+            [formField]="testForm.password"
+            fieldName="password"
+          >
+            <label for="password">Password</label>
+            <input
+              id="password"
+              type="password"
+              [formField]="testForm.password"
+            />
+            <button suffix type="button">Show</button>
+          </ngx-form-field-wrapper>
+        </form>
+      `,
+      () => form(signal({ amount: 0, password: '' })),
+    );
+
+    const { container } = await render(TestComponent);
+    await TestBed.inject(ApplicationRef).whenStable();
+
+    expect(container.querySelector('[prefix]')).toBeTruthy();
+    expect(container.querySelector('[suffix]')).toBeTruthy();
+    await expectNoA11yViolations(container);
+  });
+
+  it('a role-less composite custom control in its invalid state has no violations', async () => {
+    @Component({
+      selector: 'ngx-test-a11y-composite',
+      imports: [
+        FormField,
+        NgxSignalFormToolkit,
+        NgxFormField,
+        NgxSignalFormControlSemanticsDirective,
+      ],
+      template: `
+        <form [formRoot]="testForm" ngxSignalForm errorStrategy="on-touch">
+          <ngx-form-field-wrapper
+            [formField]="testForm.rating"
+            fieldName="rating"
+            appearance="plain"
+          >
+            <label id="rating-label">Rating</label>
+            <div
+              id="rating"
+              tabindex="0"
+              ngxSignalFormControl="composite"
+              ngxSignalFormControlAria="manual"
+              aria-labelledby="rating-label"
+            >
+              ★★★☆☆
+            </div>
+          </ngx-form-field-wrapper>
+        </form>
+      `,
+    })
+    class CompositeControlComponent {
+      readonly testForm = form(
+        signal({ rating: 0 }),
+        schema((path) => {
+          validate(path.rating, (ctx) =>
+            ctx.value() > 0
+              ? null
+              : { kind: 'required', message: 'Choose a rating' },
+          );
+        }),
+      );
+    }
+
+    const { container, fixture } = await render(CompositeControlComponent);
+
+    fixture.componentInstance.testForm.rating().markAsTouched();
+    await TestBed.inject(ApplicationRef).whenStable();
+
+    expect(container.querySelector('#rating')).toHaveAttribute(
+      'data-ngx-signal-form-control-kind',
+      'composite',
+    );
+    await expectNoA11yViolations(container);
+  });
+
+  describe('shared focus-visibility helper', () => {
+    it('shows a visible focus indicator when a <select> is tabbed into', async () => {
+      const { container } = await render(
+        `<button type="button" id="select-anchor">Before</button>
+        <ngx-form-field-wrapper [formField]="field" appearance="outline">
+          <label for="country-focus">Country</label>
+          <select id="country-focus">
+            <option value="us">United States</option>
+          </select>
+        </ngx-form-field-wrapper>`,
+        {
+          imports: [NgxFormFieldWrapper],
+          componentProperties: { field: mockField() },
+        },
+      );
+
+      await userEvent.click(
+        container.querySelector<HTMLButtonElement>('#select-anchor')!,
+      );
+      await userEvent.tab();
+
+      const content = container.querySelector<HTMLElement>(
+        '.ngx-signal-form-field-wrapper__content',
+      );
+      expect(content).toBeTruthy();
+      expectVisibleFocusIndicator(content!);
+    });
+
+    it('shows a visible focus indicator when a <textarea> is tabbed into', async () => {
+      const { container } = await render(
+        `<button type="button" id="textarea-anchor">Before</button>
+        <ngx-form-field-wrapper [formField]="field" appearance="outline">
+          <label for="bio-focus">Bio</label>
+          <textarea id="bio-focus"></textarea>
+        </ngx-form-field-wrapper>`,
+        {
+          imports: [NgxFormFieldWrapper],
+          componentProperties: { field: mockField() },
+        },
+      );
+
+      await userEvent.click(
+        container.querySelector<HTMLButtonElement>('#textarea-anchor')!,
+      );
+      await userEvent.tab();
+
+      const content = container.querySelector<HTMLElement>(
+        '.ngx-signal-form-field-wrapper__content',
+      );
+      expect(content).toBeTruthy();
+      expectVisibleFocusIndicator(content!);
+    });
+  });
+
+  /**
+   * `forced-colors: active` (Windows High Contrast Mode) run for the wrapper
+   * plus the assistive components it composes with. Chromium repaints every
+   * author color to a small OS palette under forced colors, which can hide
+   * borders and focus rings that rely on a specific author color rather than
+   * a system color keyword — a real fixture exercised the same way as the
+   * dark-mode matrix (`form-field-wrapper.color-scheme.a11y.browser.spec.ts`)
+   * is the only way to catch that.
+   */
+  it('has no WCAG 2.2 AA violations under forced-colors: active', async () => {
+    const TestComponent = defineFixtureComponent(
+      'ngx-test-a11y-forced-colors',
+      `
+        <form [formRoot]="testForm" ngxSignalForm errorStrategy="on-touch">
+          <ngx-form-field-wrapper
+            [formField]="testForm.name"
+            fieldName="name"
+            appearance="outline"
+          >
+            <label for="forced-colors-name">Full name</label>
+            <input
+              id="forced-colors-name"
+              type="text"
+              [formField]="testForm.name"
+            />
+            <ngx-form-field-hint id="forced-colors-name-hint"
+              >As it appears on your ID.</ngx-form-field-hint
+            >
+          </ngx-form-field-wrapper>
+        </form>
+      `,
+      () =>
+        form(
+          signal({ name: '' }),
+          schema((path) => {
+            required(path.name, { message: 'Full name is required' });
+          }),
+        ),
+    );
+
+    const { container } = await render(TestComponent, {
+      imports: [NgxFormFieldHint],
+    });
+
+    await commands.emulateForcedColors('active');
+    await userEvent.click(page.getByRole('textbox', { name: 'Full name' }));
+    await userEvent.tab();
+    await TestBed.inject(ApplicationRef).whenStable();
+
+    await expect
+      .element(page.getByRole('alert'))
+      .toHaveTextContent('Full name is required');
+    await expectNoA11yViolations(container);
+  });
+
+  /**
+   * Issue #501: the toolkit audit suspected that hint ids from
+   * `<ngx-form-field-hint>` never reach a radio group's `aria-describedby` —
+   * `resolveClusterAriaAttrs` (`form-field-cluster-aria.ts`) only ever
+   * composes the group's required-hint, error, and warning ids into
+   * `aria-describedby`, never a projected hint's id, and native `<input
+   * type="radio">` controls are not eligible for auto-ARIA's own per-control
+   * `aria-describedby` wiring (`auto-aria.ts`'s selector list excludes bare
+   * radio inputs). A hint placed inside a radio cluster wrapper would then be
+   * visible on screen but never announced as the group's description.
+   */
+  it.fails('exposes a hint placed inside a radio cluster through the group aria-describedby — known failure: hint ids never reach the cluster describedby. Tracked in #TBD-radio-cluster-hint-describedby', async () => {
+    const TestComponent = defineFixtureComponent(
+      'ngx-test-a11y-cluster-hint-describedby',
+      `
+          <form [formRoot]="testForm" ngxSignalForm>
+            <ngx-form-field-wrapper
+              [formField]="testForm.deliveryMethod"
+              fieldName="delivery-method"
+            >
+              <span ngxFormFieldLabel>Delivery method</span>
+              <div>
+                <label>
+                  <input
+                    id="delivery-standard-hint-test"
+                    type="radio"
+                    [formField]="testForm.deliveryMethod"
+                    value="standard"
+                  />
+                  Standard
+                </label>
+                <label>
+                  <input
+                    id="delivery-express-hint-test"
+                    type="radio"
+                    [formField]="testForm.deliveryMethod"
+                    value="express"
+                  />
+                  Express
+                </label>
+              </div>
+              <ngx-form-field-hint
+                >Choose the option that best fits your timeline.</ngx-form-field-hint
+              >
+            </ngx-form-field-wrapper>
+          </form>
+        `,
+      () => form(signal({ deliveryMethod: 'standard' })),
+    );
+
+    const { container } = await render(TestComponent, {
+      imports: [NgxFormFieldHint],
+    });
+    await TestBed.inject(ApplicationRef).whenStable();
+
+    const wrapper = container.querySelector('ngx-form-field-wrapper');
+    const hint = container.querySelector('ngx-form-field-hint [id]');
+    expect(hint).toBeTruthy();
+
+    const describedBy = wrapper?.getAttribute('aria-describedby') ?? '';
+    expect(describedBy.split(/\s+/u)).toContain(hint!.getAttribute('id'));
+  });
+});
+
+/** Minimal mock field state, matching the plain-focus-indicator spec's own. */
+function mockField() {
+  const fieldState = {
+    invalid: signal(false),
+    touched: signal(false),
+    errors: signal([]),
+    valid: signal(true),
+    dirty: signal(false),
+    value: signal(''),
+    required: signal(false),
+  };
+  return signal(() => fieldState);
+}

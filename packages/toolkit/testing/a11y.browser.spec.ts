@@ -2,12 +2,14 @@ import { ApplicationRef, Component, signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { FormField, form, required, schema } from '@angular/forms/signals';
 import { render } from '@testing-library/angular';
+import axeCore from 'axe-core';
 import type axe from 'axe-core';
-import { afterEach, describe, expect, expectTypeOf, it } from 'vitest';
+import { afterEach, describe, expect, expectTypeOf, it, vi } from 'vitest';
 import { NgxFormFieldError } from '@ngx-signal-forms/toolkit/assistive';
 import {
   createA11yValidator,
   expectNoA11yViolations,
+  expectVisibleFocusIndicator,
   WCAG_22_AA_TAGS,
 } from './a11y';
 import type { WCAG_22_AA_TAG } from './a11y';
@@ -400,5 +402,176 @@ describe('createA11yValidator', () => {
     expect(() => createA11yValidator({ tags: [] })).toThrow(
       /createA11yValidator: tags must not be empty/u,
     );
+  });
+});
+
+/**
+ * `incomplete` result handling (issue #501).
+ *
+ * `expectNoA11yViolations` used to run axe with `resultTypes: ['violations']`,
+ * so any `incomplete` result — axe found something it could not fully
+ * resolve, such as a contrast check it could not compute over a background it
+ * cannot read a single color from — was dropped silently, with no report at
+ * all. `incomplete` results are now logged (see `logIncompleteResults`'s own
+ * doc for why they are logged rather than failed: trying `color-contrast`
+ * incomplete as a hard failure surfaced exactly one false positive in the
+ * whole suite, from a transparent `<input>` background axe cannot trace).
+ *
+ * These specs mock `axe.run` rather than hunting for a real fixture that
+ * reproduces "incomplete" — axe's own heuristics for when a check goes
+ * incomplete are an implementation detail, and pinning the toolkit's
+ * handling of a canned `AxeResults` shape is the stable contract to test.
+ */
+describe('expectNoA11yViolations — incomplete result handling (#501)', () => {
+  const incompleteResult = (id: string): axe.Result => ({
+    id,
+    help: `${id} help text`,
+    helpUrl: `https://example.test/${id}`,
+    description: `${id} description`,
+    impact: 'serious',
+    tags: [],
+    nodes: [
+      {
+        html: '<div></div>',
+        target: ['div'],
+        any: [],
+        all: [],
+        none: [],
+      },
+    ],
+  });
+
+  const mockAxeResults = (incomplete: axe.Result[]): axe.AxeResults =>
+    ({
+      violations: [],
+      incomplete,
+      passes: [],
+      inapplicable: [],
+    }) as unknown as axe.AxeResults;
+
+  it('logs an incomplete color-contrast result instead of failing (transparent-background false positives)', async () => {
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const runSpy = vi
+      .spyOn(axeCore, 'run')
+      .mockResolvedValueOnce(
+        mockAxeResults([incompleteResult('color-contrast')]),
+      );
+
+    try {
+      await expect(
+        expectNoA11yViolations(document.body),
+      ).resolves.toBeUndefined();
+      expect(warnSpy).toHaveBeenCalledWith(
+        expect.stringContaining('color-contrast'),
+      );
+    } finally {
+      runSpy.mockRestore();
+      warnSpy.mockRestore();
+    }
+  });
+
+  it('logs, but does not fail on, an incomplete result for a rule other than color-contrast', async () => {
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const runSpy = vi
+      .spyOn(axeCore, 'run')
+      .mockResolvedValueOnce(
+        mockAxeResults([incompleteResult('link-in-text-block')]),
+      );
+
+    try {
+      await expect(
+        expectNoA11yViolations(document.body),
+      ).resolves.toBeUndefined();
+      expect(warnSpy).toHaveBeenCalledWith(
+        expect.stringContaining('link-in-text-block'),
+      );
+    } finally {
+      runSpy.mockRestore();
+      warnSpy.mockRestore();
+    }
+  });
+
+  it('does not log when there are no incomplete results', async () => {
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const runSpy = vi
+      .spyOn(axeCore, 'run')
+      .mockResolvedValueOnce(mockAxeResults([]));
+
+    try {
+      await expectNoA11yViolations(document.body);
+      expect(warnSpy).not.toHaveBeenCalled();
+    } finally {
+      runSpy.mockRestore();
+      warnSpy.mockRestore();
+    }
+  });
+
+  it('still fails on a real violation alongside a logged incomplete result', async () => {
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const fixture = document.createElement('img');
+    fixture.setAttribute('src', 'data:,');
+    document.body.append(fixture);
+
+    try {
+      await expect(expectNoA11yViolations(fixture)).rejects.toThrow(
+        /image-alt/u,
+      );
+    } finally {
+      fixture.remove();
+      warnSpy.mockRestore();
+    }
+  });
+});
+
+/**
+ * `expectVisibleFocusIndicator` — the shared focus-visibility helper
+ * (issue #501). Toolkit regressions #493 and #495 were both a missing or
+ * too-faint focus indicator that no axe rule catches, since axe only scans
+ * the resting DOM. This pins the helper's own pass/fail contract in
+ * isolation, independent of any one wrapper fixture.
+ */
+describe('expectVisibleFocusIndicator', () => {
+  afterEach(() => {
+    document.querySelector('#ngx-focus-indicator-fixture')?.remove();
+  });
+
+  const mount = (style: string): HTMLElement => {
+    const el = document.createElement('div');
+    el.id = 'ngx-focus-indicator-fixture';
+    el.setAttribute('style', style);
+    document.body.append(el);
+    return el;
+  };
+
+  it('does not throw for an element with a visible outline', () => {
+    const el = mount('outline: 2px solid black; outline-offset: 2px;');
+
+    expect(() => {
+      expectVisibleFocusIndicator(el);
+    }).not.toThrow();
+  });
+
+  it('does not throw for an element with a visible box-shadow and no outline', () => {
+    const el = mount('outline: none; box-shadow: 0 0 0 2px black;');
+
+    expect(() => {
+      expectVisibleFocusIndicator(el);
+    }).not.toThrow();
+  });
+
+  it('throws for an element with neither an outline nor a box-shadow', () => {
+    const el = mount('outline: none; box-shadow: none;');
+
+    expect(() => {
+      expectVisibleFocusIndicator(el);
+    }).toThrow(/visible focus indicator/u);
+  });
+
+  it('throws for a zero-width outline, which paints nothing despite a non-none style', () => {
+    const el = mount('outline: 0px solid black; box-shadow: none;');
+
+    expect(() => {
+      expectVisibleFocusIndicator(el);
+    }).toThrow(/visible focus indicator/u);
   });
 });

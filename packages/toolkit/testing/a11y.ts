@@ -133,7 +133,12 @@ async function runA11yCheck(
 ): Promise<void> {
   const results = await axe.run(context, {
     // `resultTypes` before `...options` so callers can still override it.
-    resultTypes: ['violations'],
+    // `incomplete` is requested alongside `violations` so this helper can
+    // report what axe could not resolve on its own (see
+    // `logIncompleteResults`) — see that function's doc for why those
+    // results are logged rather than folded into the hard-fail `violations`
+    // check below.
+    resultTypes: ['violations', 'incomplete'],
     ...options,
     // `runOnly` last: TypeScript's excess-property check only rejects
     // `runOnly` on fresh object literals, so a caller could still widen a
@@ -144,6 +149,8 @@ async function runA11yCheck(
     // above) is bypassed this way.
     runOnly: { type: 'tag', values: [...tags] },
   });
+
+  logIncompleteResults(results.incomplete);
 
   if (results.violations.length === 0) {
     return;
@@ -165,6 +172,84 @@ async function runA11yCheck(
   throw new Error(
     `${describeViolations(results.violations.length)}\n${report}`,
   );
+}
+
+/**
+ * Logs every `incomplete` result axe could not resolve on its own. axe marks
+ * a check `incomplete` — rather than pass or fail — when it needs a human to
+ * confirm the result, most commonly `color-contrast` over a background it
+ * cannot resolve to one color.
+ *
+ * `color-contrast` incomplete results are logged, not failed, even though
+ * that is the rule most likely to hide a real WCAG 1.4.3 violation: every
+ * toolkit textual control paints a **transparent** `background-color`
+ * (`form-field-wrapper.css`, "Transparent - container has background") so
+ * its content-box border can show through, and axe's static contrast
+ * algorithm cannot always trace a transparent-background element back to the
+ * flat color it actually renders over — the same alpha-channel limitation
+ * `form-field-wrapper.state-focus-outline.browser.spec.ts` already works
+ * around with its own manual `blendOverSurface`/`contrastRatio` math instead
+ * of axe. Trying `color-contrast` incomplete as a hard failure surfaced
+ * exactly one case in the whole suite (the outlined, invalid email field, a
+ * fixture already covered — and passing — by the dedicated contrast math in
+ * that other spec): a false positive from the transparency, not a new
+ * defect. Logging keeps every incomplete result visible for manual review
+ * without failing the suite on a case axe itself cannot confirm.
+ */
+function logIncompleteResults(incomplete: readonly axe.Result[]): void {
+  if (incomplete.length === 0) {
+    return;
+  }
+
+  const report = incomplete
+    .map((result) => {
+      const nodes = result.nodes
+        .map((node) => `      - ${node.target.join(' ')}`)
+        .join('\n');
+      return [`  • ${result.id}: ${result.help}`, nodes].join('\n');
+    })
+    .join('\n');
+
+  console.warn(
+    `[ngx-signal-forms] axe reported ${incomplete.length} incomplete result(s) it could not resolve on its own — review manually:\n${report}`,
+  );
+}
+
+/**
+ * Asserts that `element`'s current computed style paints a visible focus
+ * indicator — a non-`none` `outline`, or a non-`none` `box-shadow` — and
+ * throws a descriptive error otherwise.
+ *
+ * WCAG 2.2 SC 2.4.7 (Focus Visible) needs a real DOM check: no axe rule
+ * verifies that a keyboard focus indicator renders, because axe only ever
+ * scans the resting (unfocused) DOM. Toolkit regressions #493 and #495 were
+ * both "tab into the control and look" bugs — a suppressed `outline` and a
+ * too-faint `box-shadow` — that a violations-only axe scan could not have
+ * caught. This helper standardizes that resting-state check so every browser
+ * spec asserts the same "outline or box-shadow, not neither" contract
+ * instead of re-deriving it per fixture.
+ *
+ * Caller is responsible for moving focus first, with a real keyboard
+ * interaction (`await userEvent.tab()` from `vitest/browser`) rather than
+ * `element.focus()` — Chromium's `:focus-visible` heuristic only matches
+ * keyboard-driven focus, so a programmatic `.focus()` call can under-report
+ * an outline that a real Tab press would show.
+ *
+ * @param element The element expected to carry the focus indicator — either
+ *   the focused control itself, or a `:focus-within` ancestor that renders
+ *   the ring instead (see `form-field-wrapper.state-focus-outline.browser.spec.ts`).
+ */
+export function expectVisibleFocusIndicator(element: Element): void {
+  const styles = getComputedStyle(element);
+  const hasOutline =
+    styles.outlineStyle !== 'none' && styles.outlineWidth !== '0px';
+  const hasBoxShadow = styles.boxShadow !== 'none';
+
+  if (!hasOutline && !hasBoxShadow) {
+    throw new Error(
+      `Expected a visible focus indicator (outline or box-shadow) on <${element.tagName.toLowerCase()}>, but found neither.`,
+    );
+  }
 }
 
 /**

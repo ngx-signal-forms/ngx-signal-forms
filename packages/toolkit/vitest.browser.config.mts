@@ -21,6 +21,28 @@ const emulateColorScheme: BrowserCommand<['light' | 'dark' | null]> = async (
   await context.page.emulateMedia({ colorScheme });
 };
 
+/**
+ * Sets the emulated `forced-colors` media feature. `null` clears the
+ * emulation. Same rationale as {@link emulateColorScheme}: Vitest's `page`
+ * API has no media emulation of its own.
+ */
+const emulateForcedColors: BrowserCommand<['active' | 'none' | null]> = async (
+  context,
+  forcedColors,
+) => {
+  await context.page.emulateMedia({ forcedColors });
+};
+
+/**
+ * Sets the emulated `prefers-reduced-motion` media feature. `null` clears
+ * the emulation.
+ */
+const emulateReducedMotion: BrowserCommand<
+  ['reduce' | 'no-preference' | null]
+> = async (context, reducedMotion) => {
+  await context.page.emulateMedia({ reducedMotion });
+};
+
 export default defineConfig({
   ...toolkitSharedConfig,
   test: {
@@ -34,7 +56,11 @@ export default defineConfig({
       headless: Boolean(process.env.CI),
       screenshotDirectory: '__screenshots__',
       screenshotFailures: true,
-      commands: { emulateColorScheme },
+      commands: {
+        emulateColorScheme,
+        emulateForcedColors,
+        emulateReducedMotion,
+      },
       instances: [
         {
           browser: 'chromium',

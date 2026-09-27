@@ -1,6 +1,7 @@
 import { ApplicationRef, Component, signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { FormField, form, required, schema } from '@angular/forms/signals';
+import type { SubmittedStatus } from '@ngx-signal-forms/toolkit';
 import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit';
 import { NgxFormField } from '@ngx-signal-forms/toolkit/form-field';
 import { render, screen } from '@testing-library/angular';
@@ -261,5 +262,135 @@ describe('NgxFormFieldErrorSummary — heading, accessible name, and focus movem
     await userEvent.click(entry);
 
     expect(document.activeElement).toBe(screen.getByLabelText('Email address'));
+  });
+
+  /**
+   * Browser twin of `form-field-error-summary.spec.ts`'s "moves focus to the
+   * summary host the first time entries appear" (issue #501 — moving that
+   * jsdom-only focus-movement coverage to a real browser). Same GOV.UK / WAI
+   * error-summary pattern as #497 above: focus should move to the summary
+   * host the first time it gains entries, and NOT be stolen again on a later
+   * update — jsdom's focus handling is close enough to Chrome for most
+   * specs, but this exact contract already shipped one regression (#497)
+   * that jsdom alone did not catch.
+   */
+  it('moves focus to the summary host the first time entries appear, and not again on a later update', async () => {
+    @Component({
+      selector: 'ngx-test-a11y-summary-first-appearance',
+      imports: [
+        FormField,
+        NgxSignalFormToolkit,
+        NgxFormField,
+        NgxFormFieldErrorSummary,
+      ],
+      template: `
+        <form [formRoot]="testForm" ngxSignalForm errorStrategy="on-submit">
+          <ngx-form-field-error-summary
+            [formTree]="testForm"
+            [submittedStatus]="submittedStatus()"
+          />
+          <ngx-form-field-wrapper [formField]="testForm.name" fieldName="name">
+            <label for="name">Full name</label>
+            <input id="name" type="text" [formField]="testForm.name" />
+          </ngx-form-field-wrapper>
+        </form>
+      `,
+    })
+    class TestComponent {
+      readonly #model = signal({ name: '' });
+      readonly testForm = form(
+        this.#model,
+        schema((path) => {
+          required(path.name, { message: 'Name is required' });
+        }),
+      );
+      readonly submittedStatus = signal<SubmittedStatus>('unsubmitted');
+    }
+
+    const { container, fixture } = await render(TestComponent);
+    await TestBed.inject(ApplicationRef).whenStable();
+
+    // Before submit, the summary shell is mounted but empty (WCAG 4.1.3),
+    // and focus stays wherever the harness left it.
+    expect(
+      container
+        .querySelector('ngx-form-field-error-summary [role="alert"]')
+        ?.textContent?.trim() ?? '',
+    ).toBe('');
+
+    fixture.componentInstance.submittedStatus.set('submitted');
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    const summaryHost = container.querySelector('ngx-form-field-error-summary');
+    expect(document.activeElement).toBe(summaryHost);
+
+    // Move focus away, then trigger another change-detection pass with the
+    // same entries. A second mutation of the (already-populated) list must
+    // not steal focus back.
+    container.querySelector('#name')?.focus();
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    expect(document.activeElement).not.toBe(summaryHost);
+  });
+
+  /**
+   * Browser twin of `form-field-error-summary.spec.ts`'s "focuses the bound
+   * control when an entry is activated via keyboard" (issue #501). Native
+   * `<button>` Enter/Space activation is close enough in jsdom for most
+   * specs, but this file exists precisely because "close enough" has missed
+   * real focus-movement bugs before (#497) — pin the keyboard path here too.
+   */
+  it('focuses the bound control when a summary entry is activated with Enter or Space', async () => {
+    @Component({
+      selector: 'ngx-test-a11y-summary-keyboard',
+      imports: [
+        FormField,
+        NgxSignalFormToolkit,
+        NgxFormField,
+        NgxFormFieldErrorSummary,
+      ],
+      template: `
+        <form [formRoot]="testForm" ngxSignalForm errorStrategy="on-submit">
+          <ngx-form-field-error-summary
+            [formTree]="testForm"
+            [submittedStatus]="'submitted'"
+          />
+          <ngx-form-field-wrapper
+            [formField]="testForm.email"
+            fieldName="email"
+          >
+            <label for="email">Email address</label>
+            <input id="email" type="email" [formField]="testForm.email" />
+          </ngx-form-field-wrapper>
+        </form>
+      `,
+    })
+    class TestComponent {
+      readonly #model = signal({ email: '' });
+      readonly testForm = form(
+        this.#model,
+        schema((path) => {
+          required(path.email, { message: 'Email is required' });
+        }),
+      );
+    }
+
+    await render(TestComponent);
+    await TestBed.inject(ApplicationRef).whenStable();
+
+    const entry = screen.getByRole('button', {
+      name: /email\s*:\s*Email is required/iu,
+    });
+    const emailInput = screen.getByLabelText('Email address');
+
+    entry.focus();
+    await userEvent.keyboard('{Enter}');
+    expect(document.activeElement).toBe(emailInput);
+
+    entry.focus();
+    await userEvent.keyboard(' ');
+    expect(document.activeElement).toBe(emailInput);
   });
 });
