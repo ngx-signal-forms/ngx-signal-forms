@@ -71,13 +71,13 @@ import { FieldStatePatternsComponent } from './field-state-patterns.form';
           class="block min-w-0"
         />
         <ngx-display-controls-section
-          title="🎨 Wrapper appearance"
+          title="Wrapper appearance"
           description="Switch the wrapper treatment to confirm that state cues remain understandable across outline, standard, and plain surfaces."
         >
           <ngx-appearance-toggle [(value)]="selectedAppearance" />
         </ngx-display-controls-section>
         <ngx-display-controls-section
-          title="↔️ Label orientation"
+          title="Label orientation"
           description="Check whether disabled and readonly cues still read clearly when labels shift into a horizontal layout. Outline stays vertical on purpose."
         >
           <ngx-orientation-toggle
@@ -107,7 +107,15 @@ import { FieldStatePatternsComponent } from './field-state-patterns.form';
 
         @if (formRef(); as form) {
           <div right>
-            <ngx-signal-form-debugger [formTree]="form.stateForm" />
+            @defer (on idle) {
+              <ngx-signal-form-debugger [formTree]="form.stateForm" />
+            } @placeholder {
+              <div class="debugger-placeholder" aria-hidden="true"></div>
+            } @error {
+              <p class="debugger-placeholder">
+                The form debugger failed to load.
+              </p>
+            }
           </div>
         }
       </ngx-split-layout>

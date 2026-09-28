@@ -36,7 +36,7 @@ test.describe('Demo app navigation tree', () => {
       );
       await expect(
         page.getByRole('heading', {
-          name: 'Global Toolkit Configuration',
+          name: 'Global Configuration',
           level: 1,
         }),
       ).toBeVisible();

@@ -71,13 +71,13 @@ import { AsyncValidationComponent } from './async-validation.form';
           class="block min-w-0"
         />
         <ngx-display-controls-section
-          title="🎨 Pending-state framing"
+          title="Pending-state framing"
           description="Switch the wrapper treatment while testing the loading and unavailable states so you can judge whether the feedback remains legible during network latency."
         >
           <ngx-appearance-toggle [(value)]="selectedAppearance" />
         </ngx-display-controls-section>
         <ngx-display-controls-section
-          title="↔️ Label orientation"
+          title="Label orientation"
           description="Check whether async loading and unavailable feedback still reads clearly when labels move into a horizontal column. Outline stays vertical."
         >
           <ngx-orientation-toggle
@@ -107,7 +107,15 @@ import { AsyncValidationComponent } from './async-validation.form';
 
         @if (formRef(); as form) {
           <div right>
-            <ngx-signal-form-debugger [formTree]="form.regForm" />
+            @defer (on idle) {
+              <ngx-signal-form-debugger [formTree]="form.regForm" />
+            } @placeholder {
+              <div class="debugger-placeholder" aria-hidden="true"></div>
+            } @error {
+              <p class="debugger-placeholder">
+                The form debugger failed to load.
+              </p>
+            }
           </div>
         }
       </ngx-split-layout>

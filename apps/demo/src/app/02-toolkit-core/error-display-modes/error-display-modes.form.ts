@@ -23,6 +23,7 @@ import {
   productFeedbackSchema,
   type ProductFeedbackModel,
 } from './error-display-modes.validations';
+import { BusyButtonDirective } from '../../shared/busy-button.directive';
 
 const INITIAL_MODEL: ProductFeedbackModel = {
   name: '',
@@ -158,6 +159,7 @@ export class ErrorDisplayHelpersComponent {
   changeDetection: ChangeDetectionStrategy.OnPush,
 
   imports: [
+    BusyButtonDirective,
     ErrorDisplayHelpersComponent,
     FormField,
     NgxSignalFormToolkit,
@@ -193,7 +195,7 @@ export class ErrorDisplayHelpersComponent {
           appearance="plain"
           [formField]="productForm.name"
         >
-          <label class="form-label" for="name">Full Name *</label>
+          <label for="name">Full Name</label>
           <input
             class="form-input"
             id="name"
@@ -213,14 +215,14 @@ export class ErrorDisplayHelpersComponent {
           appearance="plain"
           [formField]="productForm.email"
         >
-          <label class="form-label" for="email">Email Address *</label>
+          <label for="email">Email Address</label>
           <input
             class="form-input"
             id="email"
             type="email"
             autocomplete="email"
             [formField]="productForm.email"
-            placeholder="your.email@company.com"
+            placeholder="your.email@example.com"
           />
           <ngx-form-field-hint id="email-hint">
             For follow-up questions (we respect your privacy)
@@ -233,7 +235,7 @@ export class ErrorDisplayHelpersComponent {
           appearance="plain"
           [formField]="productForm.company"
         >
-          <label class="form-label" for="company">Company</label>
+          <label for="company">Company</label>
           <input
             class="form-input"
             id="company"
@@ -262,9 +264,7 @@ export class ErrorDisplayHelpersComponent {
           appearance="plain"
           [formField]="productForm.productUsed"
         >
-          <label class="form-label" for="productUsed"
-            >Which product did you use? *</label
-          >
+          <label for="productUsed">Which product did you use?</label>
           <select
             class="form-input"
             id="productUsed"
@@ -288,7 +288,7 @@ export class ErrorDisplayHelpersComponent {
           appearance="plain"
           [formField]="productForm.overallRating"
         >
-          <label class="form-label" for="overallRating">Overall Rating *</label>
+          <label for="overallRating">Overall Rating</label>
           <input
             class="form-input"
             id="overallRating"
@@ -308,9 +308,7 @@ export class ErrorDisplayHelpersComponent {
             appearance="plain"
             [formField]="productForm.improvementSuggestions"
           >
-            <label class="form-label" for="improvementSuggestions">
-              What could we improve? *
-            </label>
+            <label for="improvementSuggestions"> What could we improve? </label>
             <textarea
               class="form-input"
               id="improvementSuggestions"
@@ -339,9 +337,7 @@ export class ErrorDisplayHelpersComponent {
           appearance="plain"
           [formField]="productForm.detailedFeedback"
         >
-          <label class="form-label" for="detailedFeedback">
-            Additional Comments
-          </label>
+          <label for="detailedFeedback"> Additional Comments </label>
           <textarea
             class="form-input"
             id="detailedFeedback"
@@ -369,7 +365,7 @@ export class ErrorDisplayHelpersComponent {
         <legend
           class="mb-4 text-lg font-semibold text-gray-900 dark:text-gray-100"
         >
-          ⚙️ Preferences
+          Preferences
         </legend>
 
         <!-- Allow Follow Up -->
@@ -467,7 +463,7 @@ export class ErrorDisplayHelpersComponent {
         <button
           type="submit"
           class="btn-primary"
-          [disabled]="productForm().submitting()"
+          [ngxBusy]="productForm().submitting()"
           [attr.aria-describedby]="
             helpers.submittedStatus() === 'submitted' && productForm().invalid()
               ? 'submission-error'

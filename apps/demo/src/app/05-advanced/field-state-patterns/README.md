@@ -17,7 +17,7 @@ Angular 22 made `{ when }` the consistent shape for driving dynamic field state 
 ## Form model
 
 - Signal model: `signal<FieldStatePatternsModel>()` with `workEmail`, `contactPreference` (`'email' | 'sms'`), `mobileNumber`, `inviteOnly`, `inviteCode`, `managedByIdentityProvider`.
-- Initial state: `workEmail` prefilled (`ada@company.com`), `contactPreference` set to `'email'`, all other fields empty/`false`.
+- Initial state: `workEmail` prefilled (`ada@example.com`), `contactPreference` set to `'email'`, all other fields empty/`false`.
 - Schema: `form(model, fieldStatePatternsSchema, { submission })`.
 
 ## Validation rules

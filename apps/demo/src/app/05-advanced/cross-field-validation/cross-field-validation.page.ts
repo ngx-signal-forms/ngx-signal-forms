@@ -71,13 +71,13 @@ import { CrossFieldValidationComponent } from './cross-field-validation.form';
           class="block min-w-0"
         />
         <ngx-display-controls-section
-          title="🎨 Dependency framing"
+          title="Dependency framing"
           description="Compare wrapper treatments to see which one makes dependent errors easier to read when the problem spans more than one control."
         >
           <ngx-appearance-toggle [(value)]="selectedAppearance" />
         </ngx-display-controls-section>
         <ngx-display-controls-section
-          title="↔️ Label orientation"
+          title="Label orientation"
           description="Compare vertical and horizontal label placement while one field invalidates another. Outline remains vertical so its floating label stays intact."
         >
           <ngx-orientation-toggle
@@ -107,7 +107,15 @@ import { CrossFieldValidationComponent } from './cross-field-validation.form';
 
         @if (formRef(); as form) {
           <div right>
-            <ngx-signal-form-debugger [formTree]="form.bookingForm" />
+            @defer (on idle) {
+              <ngx-signal-form-debugger [formTree]="form.bookingForm" />
+            } @placeholder {
+              <div class="debugger-placeholder" aria-hidden="true"></div>
+            } @error {
+              <p class="debugger-placeholder">
+                The form debugger failed to load.
+              </p>
+            }
           </div>
         }
       </ngx-split-layout>

@@ -2,13 +2,19 @@
   display: block;
 }
 
+/* Colors come from the global theme tokens (styles.scss), so light and dark
+   mode both work without per-mode rules here. */
+
 .wizard-progress {
   margin-bottom: 1.5rem;
 }
 
+/* Wraps on narrow screens instead of pushing the page sideways. */
 .wizard-steps {
   display: flex;
+  flex-wrap: wrap;
   justify-content: space-between;
+  gap: 0.25rem;
   list-style: none;
   margin: 0 0 0.5rem;
   padding: 0;
@@ -19,33 +25,47 @@
   flex-direction: column;
   align-items: center;
   gap: 0.25rem;
-  padding: 0.5rem 1rem;
+  min-height: 2.75rem;
+  padding: 0.5rem;
   border: none;
+  border-radius: 0.5rem;
   background: transparent;
+  color: var(--color-text);
   cursor: pointer;
-  transition: opacity 0.2s;
+  transition:
+    opacity 0.2s,
+    background-color 0.2s;
+
+  &:hover:not(:disabled) {
+    background: color-mix(in srgb, var(--color-text) 6%, transparent);
+  }
 
   &.disabled {
-    opacity: 0.5;
+    opacity: 0.55;
     cursor: not-allowed;
   }
 
   &.active .wizard-step-number {
-    background-color: var(--wizard-color-primary, #2563eb);
-    color: white;
+    border-color: var(--wizard-color-primary, var(--color-brand-strong));
+    background-color: var(--wizard-color-primary, var(--color-brand-strong));
+    color: #fff;
   }
 
+  /* green-700: white digits at 5.0:1 */
   &.completed .wizard-step-number {
-    background-color: var(--wizard-color-success, #22c55e);
-    color: white;
+    border-color: var(--wizard-color-success, #15803d);
+    background-color: var(--wizard-color-success, #15803d);
+    color: #fff;
   }
 }
 
 .wizard-step-number {
   width: 2rem;
   height: 2rem;
+  border: 1px solid var(--color-border);
   border-radius: 50%;
-  background-color: #e5e7eb;
+  background-color: var(--color-bg-elevated);
+  color: var(--color-text);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -54,19 +74,25 @@
 
 .wizard-step-label {
   font-size: 0.875rem;
-  color: #6b7280;
+  color: var(--color-text-muted);
+  text-align: center;
+}
+
+.wizard-step-button.active .wizard-step-label {
+  color: var(--color-text);
+  font-weight: 600;
 }
 
 .wizard-progress-bar {
   height: 4px;
-  background-color: #e5e7eb;
+  background-color: var(--color-border);
   border-radius: 2px;
   overflow: hidden;
 }
 
 .wizard-progress-fill {
   height: 100%;
-  background-color: var(--wizard-color-primary, #2563eb);
+  background: var(--wizard-color-primary, var(--gradient-brand));
   transition: width 0.3s ease;
 }
 
@@ -76,41 +102,12 @@
 
 .wizard-navigation {
   display: flex;
+  flex-wrap: wrap;
   justify-content: space-between;
+  gap: 0.75rem;
   margin-top: 1.5rem;
   padding-top: 1rem;
-  border-top: 1px solid #e5e7eb;
-}
-
-.wizard-btn {
-  padding: 0.5rem 1.5rem;
-  border-radius: 0.375rem;
-  font-weight: 500;
-  transition: background-color 0.2s;
-  cursor: pointer;
-
-  &:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-  }
-
-  &-primary {
-    background-color: var(--wizard-color-primary, #2563eb);
-    color: white;
-    border: none;
-  }
-
-  &-secondary {
-    background-color: #e5e7eb;
-    color: #374151;
-    border: none;
-  }
-
-  &-success {
-    background-color: var(--wizard-color-success, #22c55e);
-    color: white;
-    border: none;
-  }
+  border-top: 1px solid var(--color-border);
 }
 
 .sr-only {

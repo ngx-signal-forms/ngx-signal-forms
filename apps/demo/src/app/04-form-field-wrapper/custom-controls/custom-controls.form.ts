@@ -33,6 +33,7 @@ import {
 import { MockAutocompleteComponent } from './mock-autocomplete';
 import { initialCustomControlsModel } from './custom-controls.model';
 import { customControlsSchema } from './custom-controls.validations';
+import { BusyButtonDirective } from '../../shared/busy-button.directive';
 
 /**
  * Custom Controls Demo Form
@@ -64,6 +65,7 @@ import { customControlsSchema } from './custom-controls.validations';
     }),
   ],
   imports: [
+    BusyButtonDirective,
     FormField,
     NgxSignalFormToolkit,
     NgxFormField,

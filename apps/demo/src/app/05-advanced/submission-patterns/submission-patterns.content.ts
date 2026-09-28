@@ -38,7 +38,7 @@ export const SUBMISSION_PATTERNS_CONTENT = {
     title: 'Best Practices & Patterns',
     sections: [
       {
-        title: '🧪 Try This (watch the Submission State panel)',
+        title: 'Try This (watch the Submission State panel)',
         items: [
           '1. Type <code>ab</code> in <strong>Username</strong> → Tab away → Error: <em>"Username must be at least 3 characters"</em>; type <code>ab!</code> → <em>"Username can only contain letters, numbers, and underscores"</em>',
           '2. Type a 7-character password like <code>short12</code> → Error: <em>"Password must be at least 8 characters"</em>',

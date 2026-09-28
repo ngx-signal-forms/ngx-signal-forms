@@ -54,7 +54,7 @@ import { WizardContainerComponent } from './components/wizard-container';
     </ng-template>
 
     <ngx-page-header
-      title="Travel Booking Wizard (@ngrx/signals + Zod)"
+      title="Advanced Wizard (@ngrx/signals + Zod)"
       subtitle="Multi-step booking wizard with @ngrx/signals state management and Zod-driven validation"
     />
 
@@ -68,7 +68,7 @@ import { WizardContainerComponent } from './components/wizard-container';
       />
 
       <footer class="page-footer mt-8 border-t pt-4">
-        <details class="text-sm text-gray-500">
+        <details class="text-sm text-gray-500 dark:text-gray-400">
           <summary class="cursor-pointer hover:text-gray-700">
             Technical Details
           </summary>

@@ -117,7 +117,7 @@ test.describe('Advanced Scenarios - Field State Patterns', () => {
   }) => {
     // Fill valid work email and submit.
     const workEmailInput = page.locator('#field-state-work-email');
-    await workEmailInput.fill('ada@company.com');
+    await workEmailInput.fill('ada@example.com');
 
     await page.getByRole('button', { name: /save preferences/i }).click();
 

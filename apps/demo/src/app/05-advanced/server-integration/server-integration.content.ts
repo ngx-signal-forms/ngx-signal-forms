@@ -35,7 +35,7 @@ export const SERVER_INTEGRATION_CONTENT = {
     title: 'Best Practices & Patterns',
     sections: [
       {
-        title: '🧪 Try This',
+        title: 'Try This',
         items: [
           '1. Watch the page load — a "Loading profile from server…" indicator shows while the initial <code>resource()</code> fetch is in flight (~400ms), then the form appears prefilled with <strong>Grace Hopper</strong>.',
           '2. Clear the <strong>Name</strong> field → the submit button disables (<code>form().invalid()</code> is <code>true</code>).',

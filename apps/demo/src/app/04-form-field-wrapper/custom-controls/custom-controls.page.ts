@@ -65,14 +65,14 @@ import { CustomControlsFormComponent } from './custom-controls.form';
         />
 
         <ngx-display-controls-section
-          title="🎨 Wrapper styling"
+          title="Wrapper styling"
           description="Change the wrapper treatment without changing the custom control contract, so labels, hints, and errors can be evaluated independently from the rating UI itself."
         >
           <ngx-appearance-toggle [(value)]="selectedAppearance" />
         </ngx-display-controls-section>
 
         <ngx-display-controls-section
-          title="↔️ Label orientation"
+          title="Label orientation"
           description="Compare vertical and horizontal labels for the non-outline wrappers. Outline stays vertical because its floating-label treatment depends on the label living inside the field chrome."
         >
           <ngx-orientation-toggle
@@ -102,7 +102,15 @@ import { CustomControlsFormComponent } from './custom-controls.form';
         />
         @if (formComponent) {
           <div right>
-            <ngx-signal-form-debugger [formTree]="formComponent.reviewForm" />
+            @defer (on idle) {
+              <ngx-signal-form-debugger [formTree]="formComponent.reviewForm" />
+            } @placeholder {
+              <div class="debugger-placeholder" aria-hidden="true"></div>
+            } @error {
+              <p class="debugger-placeholder">
+                The form debugger failed to load.
+              </p>
+            }
           </div>
         }
       </ngx-split-layout>

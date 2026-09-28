@@ -65,7 +65,7 @@ export const TravelerSchema = z
     id: z.uuid(),
     firstName: z.string().min(1, 'First name required'),
     lastName: z.string().min(1, 'Last name required'),
-    email: z.email('Valid email required'),
+    email: z.email('Enter a valid email address'),
     phone: z.string().optional(),
     dateOfBirth: z.string().optional(),
     passportNumber: z.string().min(6, 'Passport number required'),

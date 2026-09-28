@@ -25,7 +25,7 @@ export const SINGLE_MODEL_WIZARD_CONTENT = {
     title: 'Wizard Patterns',
     sections: [
       {
-        title: '🧪 Try This',
+        title: 'Try This',
         items: [
           '1. Click <strong>Next</strong> on the empty <strong>Account</strong> step → navigation is blocked, "Full name is required" and "Email is required" appear, and focus jumps to the first invalid field',
           '2. Fill in a personal email like <code>you@gmail.com</code> and advance to <strong>Shipping</strong>',

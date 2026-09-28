@@ -660,7 +660,7 @@
     <button
       class="btn-primary"
       type="submit"
-      [disabled]="fieldsetForm().submitting()"
+      [ngxBusy]="fieldsetForm().submitting()"
     >
       @if (fieldsetForm().submitting()) { Saving... } @else { Submit Order }
     </button>

@@ -19,6 +19,7 @@ import {
 import { NgxFormFieldErrorSummary } from '@ngx-signal-forms/toolkit/assistive';
 import { NgxFormField } from '@ngx-signal-forms/toolkit/form-field';
 import { globalConfigSchema } from './global-configuration.validations';
+import { BusyButtonDirective } from '../../shared/busy-button.directive';
 
 /**
  * Global Configuration Component
@@ -60,6 +61,7 @@ import { globalConfigSchema } from './global-configuration.validations';
     }),
   ],
   imports: [
+    BusyButtonDirective,
     FormField,
     NgxSignalFormToolkit,
     NgxFormField,
@@ -186,7 +188,7 @@ import { globalConfigSchema } from './global-configuration.validations';
         <button
           type="submit"
           class="btn-primary"
-          [disabled]="configForm().submitting()"
+          [ngxBusy]="configForm().submitting()"
         >
           @if (configForm().submitting()) {
             Saving...

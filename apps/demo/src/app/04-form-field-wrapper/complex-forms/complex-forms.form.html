@@ -11,7 +11,7 @@
     class="complex-form-fieldset"
   >
     <legend class="px-2 text-lg font-semibold text-gray-900 dark:text-gray-100">
-      👤 Personal Information
+      Personal Information
     </legend>
 
     <div [class]="personalInfoGridClass()">
@@ -49,7 +49,7 @@
         <svg
           prefix
           aria-hidden="true"
-          class="size-5 text-gray-400"
+          class="size-5 text-gray-500 dark:text-gray-400"
           fill="none"
           viewBox="0 0 24 24"
           stroke-width="1.5"
@@ -81,7 +81,10 @@
           inputmode="numeric"
           [formField]="complexForm.personalInfo.age"
         />
-        <span suffix aria-hidden="true" class="text-sm text-gray-400"
+        <span
+          suffix
+          aria-hidden="true"
+          class="text-sm text-gray-500 dark:text-gray-400"
           >years</span
         >
       </ngx-form-field-wrapper>
@@ -96,7 +99,7 @@
     class="complex-form-fieldset mb-8"
   >
     <legend class="px-2 text-lg font-semibold text-gray-900 dark:text-gray-100">
-      🏠 Address Information
+      Address Information
     </legend>
 
     <div class="grid grid-cols-1 gap-y-4">
@@ -108,7 +111,7 @@
         <svg
           prefix
           aria-hidden="true"
-          class="size-5 text-gray-400"
+          class="size-5 text-gray-500 dark:text-gray-400"
           fill="none"
           viewBox="0 0 24 24"
           stroke-width="1.5"
@@ -188,12 +191,12 @@
     class="complex-form-fieldset complex-array-fieldset mb-8"
   >
     <legend class="px-2 text-lg font-semibold text-gray-900 dark:text-gray-100">
-      🎯 Skills
+      Skills
     </legend>
 
     @for (skill of complexForm.skills; track skill; let i = $index) {
     <div
-      class="array-entry-grid grid grid-cols-1 items-start gap-x-4 gap-y-4 md:grid-cols-[1fr,150px]"
+      class="array-entry-grid grid grid-cols-1 items-start gap-x-4 gap-y-4 md:grid-cols-[1fr_150px]"
     >
       <ngx-form-field-wrapper
         [appearance]="appearance()"
@@ -211,10 +214,11 @@
         <button
           suffix
           type="button"
+          class="field-remove-button"
           (click)="removeSkill(i)"
           [attr.aria-label]="'Remove skill ' + (i + 1)"
         >
-          ✕
+          <span aria-hidden="true">✕</span>
         </button>
       </ngx-form-field-wrapper>
 
@@ -233,9 +237,16 @@
         />
       </ngx-form-field-wrapper>
     </div>
+    } @empty {
+    <p class="array-empty">No skills added yet.</p>
     }
 
-    <button type="button" (click)="addSkill()" class="add-array-button">
+    <button
+      #addSkillButton
+      type="button"
+      (click)="addSkill()"
+      class="add-array-button"
+    >
       <span class="add-array-button__icon" aria-hidden="true">+</span>
       <span>Add Skill</span>
     </button>
@@ -249,12 +260,12 @@
     class="complex-form-fieldset complex-array-fieldset mb-8"
   >
     <legend class="px-2 text-lg font-semibold text-gray-900 dark:text-gray-100">
-      📞 Contact Methods
+      Contact Methods
     </legend>
 
     @for (contact of complexForm.contacts; track contact; let i = $index) {
     <div
-      class="array-entry-grid grid grid-cols-1 items-start gap-x-4 gap-y-4 md:grid-cols-[150px,1fr]"
+      class="array-entry-grid grid grid-cols-1 items-start gap-x-4 gap-y-4 md:grid-cols-[150px_1fr]"
     >
       <ngx-form-field-wrapper
         [appearance]="appearance()"
@@ -284,7 +295,7 @@
         <svg
           prefix
           aria-hidden="true"
-          class="size-5 text-gray-400"
+          class="size-5 text-gray-500 dark:text-gray-400"
           fill="none"
           viewBox="0 0 24 24"
           stroke-width="1.5"
@@ -300,7 +311,7 @@
         <svg
           prefix
           aria-hidden="true"
-          class="size-5 text-gray-400"
+          class="size-5 text-gray-500 dark:text-gray-400"
           fill="none"
           viewBox="0 0 24 24"
           stroke-width="1.5"
@@ -327,16 +338,24 @@
         <button
           suffix
           type="button"
+          class="field-remove-button"
           (click)="removeContact(i)"
           [attr.aria-label]="'Remove contact ' + (i + 1)"
         >
-          ✕
+          <span aria-hidden="true">✕</span>
         </button>
       </ngx-form-field-wrapper>
     </div>
+    } @empty {
+    <p class="array-empty">No contact methods added yet.</p>
     }
 
-    <button type="button" (click)="addContact()" class="add-array-button">
+    <button
+      #addContactButton
+      type="button"
+      (click)="addContact()"
+      class="add-array-button"
+    >
       <span class="add-array-button__icon" aria-hidden="true">+</span>
       <span>Add Contact</span>
     </button>
@@ -350,7 +369,7 @@
     class="complex-form-fieldset complex-form-fieldset--credentials-summary mb-8"
   >
     <legend class="px-2 text-lg font-semibold text-gray-900 dark:text-gray-100">
-      🔐 Account Credentials
+      Account Credentials
     </legend>
 
     <p class="mb-4 text-sm text-gray-600 dark:text-gray-400">
@@ -400,7 +419,7 @@
     class="complex-form-fieldset mb-8"
   >
     <legend class="px-2 text-lg font-semibold text-gray-900 dark:text-gray-100">
-      ⚙️ Preferences
+      Preferences
     </legend>
 
     <div class="preferences-stack">
@@ -494,7 +513,7 @@
     <button
       type="submit"
       class="btn-primary"
-      [disabled]="complexForm().submitting()"
+      [ngxBusy]="complexForm().submitting()"
     >
       @if (complexForm().submitting()) { Submitting... } @else { Submit
       Application }

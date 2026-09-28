@@ -108,7 +108,7 @@ type ReadonlyDestination = Readonly<Omit<Destination, 'activities'>> & {
         <div class="mt-4 border-t pt-4">
           <h3 class="mb-3 text-lg font-medium">Passport Information</h3>
 
-          <div class="grid grid-cols-2 gap-4">
+          <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <!-- Passport Number -->
             <ngx-form-field-wrapper
               [formField]="travelerForm.passportNumber"

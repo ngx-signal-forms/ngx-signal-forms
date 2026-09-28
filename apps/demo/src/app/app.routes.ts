@@ -1,5 +1,5 @@
 import { Routes } from '@angular/router';
-import { getRouteTitle } from '@ngx-signal-forms/demo-shared';
+import { getRouteTitle, SITE_NAME } from '@ngx-signal-forms/demo-shared';
 
 /**
  * Demo Application Routes
@@ -285,6 +285,11 @@ export const appRoutes: Routes = [
     ],
   },
 
-  // Fallback route
-  { path: '**', redirectTo: 'getting-started/your-first-form' },
+  // Unknown URL: say so instead of silently showing the first example
+  {
+    path: '**',
+    loadComponent: () =>
+      import('./not-found/not-found.page').then((m) => m.NotFoundPageComponent),
+    title: `Page not found · ${SITE_NAME}`,
+  },
 ];

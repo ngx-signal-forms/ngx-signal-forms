@@ -7,6 +7,7 @@ import {
 } from '@ngx-signal-forms/toolkit';
 import { NgxFormFieldError } from '@ngx-signal-forms/toolkit/assistive';
 import { contactFormSchema } from './your-first-form.validations';
+import { SubmitStatusComponent } from '../../ui/submit-status/submit-status';
 
 /**
  * Your First Form - Contact Form Component
@@ -18,7 +19,8 @@ import { contactFormSchema } from './your-first-form.validations';
 
   selector: 'ngx-your-first-form',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormField, NgxSignalFormToolkit, NgxFormFieldError],
+  imports: [
+    SubmitStatusComponent,FormField, NgxSignalFormToolkit, NgxFormFieldError],
   template: `
     <form
       [formRoot]="contactForm"
@@ -99,6 +101,8 @@ import { contactFormSchema } from './your-first-form.validations';
         </button>
       </div>
     </form>
+
+    <ngx-submit-status [message]="successMessage()" />
   `,
 })
 export class YourFirstFormComponent {
@@ -116,9 +120,12 @@ export class YourFirstFormComponent {
   readonly contactForm = form(this.#model, contactFormSchema, {
     submission: {
       action: async () => {
+        this.successMessage.set('');
+        const name = this.#model().name;
         await new Promise<void>((resolve) => {
           setTimeout(resolve, 1500);
         });
+        this.successMessage.set(`Message sent. Thanks, ${name}.`);
         this.#model.set({ name: '', email: '', message: '' });
         this.contactForm().reset();
       },
@@ -126,7 +133,10 @@ export class YourFirstFormComponent {
     },
   });
 
+  protected readonly successMessage = signal('');
+
   protected resetForm(): void {
+    this.successMessage.set('');
     this.#model.set({ name: '', email: '', message: '' });
     this.contactForm().reset();
   }

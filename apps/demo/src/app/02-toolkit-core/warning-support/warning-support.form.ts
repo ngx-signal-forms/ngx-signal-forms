@@ -13,26 +13,24 @@ import {
 } from '@ngx-signal-forms/toolkit';
 import { NgxFormField } from '@ngx-signal-forms/toolkit/form-field';
 import { passwordFormSchema } from './warning-support.validations';
+import { BusyButtonDirective } from '../../shared/busy-button.directive';
+import { SubmitStatusComponent } from '../../ui/submit-status/submit-status';
 
 @Component({
   selector: 'ngx-warning-support-form',
   changeDetection: ChangeDetectionStrategy.OnPush,
 
-  imports: [FormField, NgxSignalFormToolkit, NgxFormField],
+  imports: [
+    BusyButtonDirective,
+    SubmitStatusComponent,
+    FormField,
+    NgxSignalFormToolkit,
+    NgxFormField,
+  ],
   host: {
     class: 'block max-w-xl mx-auto',
   },
   template: `
-    @if (successMessage()) {
-      <div
-        class="mb-4 rounded-lg bg-green-50 p-4 text-green-800 dark:bg-green-900/20 dark:text-green-200"
-        role="status"
-        aria-live="polite"
-      >
-        {{ successMessage() }}
-      </div>
-    }
-
     <form
       [formRoot]="passwordForm"
       ngxSignalForm
@@ -86,7 +84,7 @@ import { passwordFormSchema } from './warning-support.validations';
         <button
           type="submit"
           class="btn-primary"
-          [disabled]="passwordForm().submitting()"
+          [ngxBusy]="passwordForm().submitting()"
         >
           @if (passwordForm().submitting()) {
             Creating Account...
@@ -96,6 +94,8 @@ import { passwordFormSchema } from './warning-support.validations';
         </button>
       </div>
     </form>
+
+    <ngx-submit-status [message]="successMessage()" />
   `,
 })
 export class WarningsSupportFormComponent {
@@ -133,7 +133,7 @@ export class WarningsSupportFormComponent {
         });
 
         this.successMessage.set(
-          '✓ Account created successfully! Notice how warnings did not block submission.',
+          'Account created successfully! Notice how warnings did not block submission.',
         );
 
         setTimeout(() => {

@@ -26,7 +26,7 @@ export const FIELD_STATE_PATTERNS_CONTENT = {
     title: 'Choosing the right state',
     sections: [
       {
-        title: '🧪 Try This (watch the state readout under the form)',
+        title: 'Try This (watch the state readout under the form)',
         items: [
           '1. Switch <strong>Notification preference</strong> from <code>Email</code> to <code>SMS</code> → Mobile number becomes editable and <code>mobileNumber.disabled()</code> flips to <code>false</code>',
           '2. Keep SMS selected, leave Mobile number empty, click <strong>Save preferences</strong> → Error: <em>"SMS notifications need a mobile number"</em>',

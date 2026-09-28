@@ -116,7 +116,7 @@ test.describe('Validation - Zod + Vest Validation', () => {
     });
 
     await test.step('Correct the business rules and verify the errors clear', async () => {
-      await page.getByLabel('Email', { exact: true }).fill('arjen@company.com');
+      await page.getByLabel('Email', { exact: true }).fill('arjen@example.com');
       await page
         .getByLabel('Password', { exact: true })
         .fill('secure-pass-1234');
@@ -137,7 +137,7 @@ test.describe('Validation - Zod + Vest Validation', () => {
     await test.step('Fill the form so only warning-level Vest rules fail', async () => {
       await page.getByLabel('First name', { exact: true }).fill('Arjen');
       await page.getByLabel('Last name', { exact: true }).fill('Althoff');
-      await page.getByLabel('Email', { exact: true }).fill('arjen@company.com');
+      await page.getByLabel('Email', { exact: true }).fill('arjen@example.com');
       await page.getByLabel('Password', { exact: true }).fill('securepass1234');
       await page
         .getByLabel('Account type', { exact: true })

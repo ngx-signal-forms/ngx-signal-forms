@@ -31,6 +31,7 @@ import {
 
 import type { FieldsetDemoModel } from './fieldset.model';
 import { fieldsetDemoSchema } from './fieldset.validations';
+import { BusyButtonDirective } from '../../shared/busy-button.directive';
 
 interface PlacementPreviewModel {
   email: string;
@@ -108,7 +109,7 @@ const placementDesignPreviewSchema = schema<PlacementDesignPreviewModel>(
   selector: 'ngx-fieldset-form',
   changeDetection: ChangeDetectionStrategy.OnPush,
 
-  imports: [FormField, NgxSignalFormToolkit, NgxFormField],
+  imports: [BusyButtonDirective, FormField, NgxSignalFormToolkit, NgxFormField],
   templateUrl: './fieldset.form.html',
   styleUrls: ['./fieldset.form.scss'],
 })

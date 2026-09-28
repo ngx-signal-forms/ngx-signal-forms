@@ -49,11 +49,11 @@ fieldset + fieldset {
 
 .playground-reference-grid,
 .playground-preview-grid {
-  grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(16rem, 100%), 1fr));
 }
 
 .playground-selector-grid {
-  grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(13rem, 100%), 1fr));
 }
 
 .playground-preview-card,
@@ -99,7 +99,7 @@ fieldset + fieldset {
 }
 
 .playground-option:hover {
-  color: #324155;
+  color: var(--color-text);
 }
 
 .playground-option[data-active='true'] {

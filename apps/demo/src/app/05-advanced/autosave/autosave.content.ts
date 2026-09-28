@@ -42,7 +42,7 @@ export const AUTOSAVE_CONTENT = {
     title: 'Best Practices & Patterns',
     sections: [
       {
-        title: '🧪 Try This',
+        title: 'Try This',
         items: [
           '1. Edit <strong>Display name</strong> and stop typing — after ~500ms the status region reads <em>Saving…</em>, then <em>All changes saved.</em> after the fake ~400ms PATCH resolves.',
           "2. Watch the state panel: <code>dirty()</code> flips back to <code>false</code> the instant the save resolves, via that field's own <code>reset()</code>.",

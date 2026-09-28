@@ -121,9 +121,9 @@ export const ERROR_DISPLAY_MODES: ErrorDisplayModeConfig[] = [
       <div class="mb-4">
         <fieldset>
           <legend
-            class="mb-3 text-lg font-semibold text-gray-900 dark:text-gray-100"
+            class="mb-3 text-sm font-semibold text-gray-900 dark:text-gray-100"
           >
-            🎛️ Error Display Mode
+            Error Display Mode
           </legend>
           <div class="flex flex-wrap gap-4">
             @for (modeConfig of errorDisplayModes(); track modeConfig.mode) {

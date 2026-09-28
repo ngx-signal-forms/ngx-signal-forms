@@ -261,12 +261,16 @@ test.describe('Demo Application - Theme Switching', () => {
 test.describe('Demo Application - Route Handling', () => {
   test('should handle invalid routes gracefully', async ({ page }) => {
     await test.step('Navigate to non-existent route', async () => {
-      // Navigate to invalid route - Angular will redirect or show 404
+      // Navigate to invalid route - the app shows a not-found page in place
       await page.goto(`/invalid-route-that-does-not-exist`, {
         waitUntil: 'domcontentloaded',
       });
 
-      await expect(page).toHaveURL(/\/getting-started\/your-first-form$/);
+      await expect(page).toHaveURL(/\/invalid-route-that-does-not-exist$/);
+      await expect(
+        page.getByRole('heading', { name: 'Page not found', level: 1 }),
+      ).toBeVisible();
+      await expect(page).toHaveTitle('Page not found · ngx-signal-forms');
 
       // Verify app shell is still present (navigation and basic structure)
       const navTree = page.getByLabel('Documentation sections');
@@ -276,6 +280,22 @@ test.describe('Demo Application - Route Handling', () => {
       const main = page.getByRole('main');
       await expect(main).toBeVisible();
     });
+  });
+
+  test('should show the current path when moving between unknown URLs', async ({
+    page,
+  }) => {
+    await page.goto('/first-miss');
+    await expect(page.locator('main code')).toHaveText('/first-miss');
+
+    // Same wildcard route, so Angular reuses the not-found component.
+    await page.evaluate(() => {
+      history.pushState({}, '', '/second-miss');
+      dispatchEvent(new PopStateEvent('popstate'));
+    });
+
+    await expect(page).toHaveURL(/\/second-miss$/u);
+    await expect(page.locator('main code')).toHaveText('/second-miss');
   });
 
   test('should preserve query parameters during navigation', async ({

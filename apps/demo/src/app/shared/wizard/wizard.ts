@@ -88,6 +88,19 @@ export interface WizardSubmitEvent {
  * </ngx-wizard>
  * ```
  */
+/**
+ * Input types where Enter should advance the wizard. Other types (date,
+ * number, range, color, checkbox, …) keep their native Enter behaviour.
+ */
+const TEXT_LIKE_INPUT_TYPES = new Set([
+  'email',
+  'password',
+  'search',
+  'tel',
+  'text',
+  'url',
+]);
+
 @Component({
   selector: 'ngx-wizard',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -153,6 +166,13 @@ export class WizardComponent {
 
   /** Emitted when the submit button is clicked on the last step. */
   readonly wizardSubmit = output<WizardSubmitEvent>();
+
+  /**
+   * Emitted when Enter is pressed in a step's text input while the built-in
+   * navigation is hidden (`showNavigation` false), so a host with its own
+   * buttons can run its own Next/Submit.
+   */
+  readonly enterPress = output();
 
   // ══════════════════════════════════════════════════════════════════════════
   // Internal State
@@ -251,6 +271,33 @@ export class WizardComponent {
     const prevIndex = this.currentStepIndex() - 1;
     if (prevIndex >= 0) {
       await this.#navigateToStep(allSteps[prevIndex].stepId());
+    }
+  }
+
+  /**
+   * Enter in a text input goes to the next step, or submits on the last one,
+   * like Enter in a single-page form. Steps have no submit button, so the
+   * browser's implicit submission never fires on its own.
+   */
+  protected onContentEnter(event: KeyboardEvent): void {
+    const target = event.target;
+    if (event.isComposing || !(target instanceof HTMLInputElement)) return;
+    if (!TEXT_LIKE_INPUT_TYPES.has(target.type)) return;
+    // An open combobox owns Enter: it picks the active option.
+    if (
+      target.getAttribute('role') === 'combobox' &&
+      target.getAttribute('aria-expanded') === 'true'
+    ) {
+      return;
+    }
+
+    event.preventDefault();
+    if (!this.showNavigation()) {
+      this.enterPress.emit();
+    } else if (this.isLastStep()) {
+      this.submit();
+    } else {
+      void this.next();
     }
   }
 
