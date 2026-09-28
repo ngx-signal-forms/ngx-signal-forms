@@ -325,4 +325,40 @@ describe('AutosaveComponent (#366 — settled-value autosave)', () => {
     fixture.detectChanges();
     httpMock.expectNone(AUTOSAVE_ENDPOINT);
   });
+
+  it('does not announce "All changes saved." for a save that resolves after Reset demo', async () => {
+    const { fixture } = await setup();
+    const component = fixture.componentInstance;
+
+    const bio = screen.getByLabelText(/bio/i) as HTMLTextAreaElement;
+    fireEvent.input(bio, { target: { value: 'Saved, then reset.' } });
+    fixture.detectChanges();
+    await vi.advanceTimersByTimeAsync(500);
+    fixture.detectChanges();
+    const req = httpMock.expectOne(AUTOSAVE_ENDPOINT);
+
+    fireEvent.click(screen.getByRole('button', { name: /reset demo/i }));
+    fixture.detectChanges();
+
+    // The PATCH sent before the reset resolves afterwards. The form now shows
+    // the initial values, so the live region must not claim they are saved.
+    req.flush({ savedAt: new Date().toISOString() });
+    await vi.advanceTimersByTimeAsync(0);
+    fixture.detectChanges();
+
+    expect(screen.queryByText('All changes saved.')).not.toBeInTheDocument();
+    expect(bio.value.startsWith('Mathematician and writer')).toBe(true);
+    expect(component.profileForm.bio().dirty()).toBe(false);
+
+    // The one-at-a-time queue still works after the stale response.
+    fireEvent.input(bio, { target: { value: 'A fresh edit.' } });
+    fixture.detectChanges();
+    await vi.advanceTimersByTimeAsync(500);
+    fixture.detectChanges();
+    const next = httpMock.expectOne(AUTOSAVE_ENDPOINT);
+    expect(next.request.body).toEqual({ bio: 'A fresh edit.' });
+    next.flush({ savedAt: new Date().toISOString() });
+    await vi.advanceTimersByTimeAsync(0);
+    fixture.detectChanges();
+  });
 });

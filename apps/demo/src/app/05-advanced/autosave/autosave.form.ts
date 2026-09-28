@@ -280,6 +280,13 @@ export class AutosaveComponent {
   /** Set when the patch changed during a save; sent once that save settles. */
   #saveQueued = false;
 
+  /**
+   * Incremented by `resetDemo()`. A save records it when it starts, and a
+   * save that settles after a reset leaves the status and the form alone:
+   * it describes values the form no longer shows.
+   */
+  #resetGeneration = 0;
+
   constructor() {
     /// Save whenever the dirty+valid patch changes. `untracked` keeps the
     /// signals the save writes (`saveStatus`, and each field's `reset()` on
@@ -311,18 +318,23 @@ export class AutosaveComponent {
   }
 
   #save(patch: Partial<AutosaveProfileModel>): void {
+    const generation = this.#resetGeneration;
     this.#saveInFlight = true;
     this.saveStatus.set('saving');
     this.#http
       .patch<AutosavePatchResponse>(AUTOSAVE_ENDPOINT, patch)
       .subscribe({
         next: () => {
-          this.saveStatus.set('saved');
-          this.#reconcileAfterSave(patch);
+          if (generation === this.#resetGeneration) {
+            this.saveStatus.set('saved');
+            this.#reconcileAfterSave(patch);
+          }
           this.#onSaveSettled();
         },
         error: () => {
-          this.saveStatus.set('error');
+          if (generation === this.#resetGeneration) {
+            this.saveStatus.set('error');
+          }
           this.#onSaveSettled();
         },
       });
@@ -391,6 +403,7 @@ export class AutosaveComponent {
   /** Restores the initial value and clears dirty/touched in one `reset(value)` call. */
   protected resetDemo(): void {
     this.profileForm().reset(createInitialAutosaveProfile());
+    this.#resetGeneration += 1;
     this.saveStatus.set('idle');
   }
 }
