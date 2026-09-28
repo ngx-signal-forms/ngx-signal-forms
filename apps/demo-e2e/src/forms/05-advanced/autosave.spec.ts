@@ -26,19 +26,6 @@ import { AutosavePage } from '../../page-objects/autosave.page';
  * fixed sleep — every wait is keyed off an observable transition (a network
  * request/response event or a live-region text change), matching this repo's
  * `async-validation.spec.ts` conventions.
- *
- * NOTE on the polite "All changes saved." message: this suite deliberately
- * never asserts on it. `AutosaveComponent`'s post-save reconciliation effect
- * (`#reconcileAfterSave()`) resets the just-saved field the moment
- * `saveResource.status()` becomes `'resolved'`, which synchronously clears
- * `dirtyValidPatch()` and pauses the resource back to `'idle'` before Angular
- * ever paints the intermediate `'resolved'` frame. A `MutationObserver` probe
- * against the live status region confirmed the DOM transitions straight from
- * "Saving…" to "" — "All changes saved." never actually renders. This
- * contradicts the demo README's documented behavior; it is a real demo
- * discrepancy, not a test issue, and per this task's scope it is reported
- * rather than patched around here. `dirty()` clearing and the PATCH network
- * traffic are asserted directly instead, since those are genuinely observable.
  */
 
 const AUTOSAVE_ENDPOINT = '/api/autosave/profile';
@@ -90,6 +77,10 @@ test.describe('Advanced - Autosave', () => {
     await expect(autosave.displayNameStateReadout).toContainText(
       'dirty()=false',
     );
+    // The polite region must confirm the save. Clearing the saved field's
+    // dirty() must not drop the status back to idle (the old httpResource
+    // version did, so this message never rendered).
+    await expect(autosave.saveStatusRegion).toHaveText('All changes saved.');
     // Bio was never touched — it stays pristine, unaffected by displayName's save.
     await expect(autosave.bioStateReadout).toContainText('dirty()=false');
   });
@@ -155,9 +146,9 @@ test.describe('Advanced - Autosave', () => {
     );
     await expect(autosave.retryButton).toBeVisible();
 
-    // Click Retry save without changing the value. `retrySave()` calls
-    // `saveResource.reload()`, which re-issues `dirtyValidPatch()` as it
-    // currently stands — still the failing value, since nothing was edited.
+    // Click Retry save without changing the value. `retrySave()` sends
+    // `dirtyValidPatch()` as it currently stands — still the failing value,
+    // since nothing was edited.
     // The reissued PATCH must carry that same (still-failing) body, and the
     // failure region must persist rather than clear prematurely.
     const retryPatch = page.waitForRequest(isAutosavePatch);

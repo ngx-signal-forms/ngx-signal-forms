@@ -35,7 +35,6 @@
   },
   "private": true,
   "dependencies": {
-    "@angular-architects/ngrx-toolkit": "catalog:ngrx",
     "@angular/aria": "catalog:angular",
     "@angular/cdk": "catalog:angular",
     "@angular/common": "catalog:angular",
@@ -47,6 +46,7 @@
     "@fontsource-variable/inter": "catalog:fonts",
     "@ng-icons/core": "catalog:spartan",
     "@ng-icons/lucide": "catalog:spartan",
+    "@ngrx-toolkit/core": "catalog:ngrx",
     "@ngrx/signals": "catalog:ngrx",
     "@shikijs/core": "catalog:shiki",
     "@spartan-ng/brain": "catalog:spartan",
