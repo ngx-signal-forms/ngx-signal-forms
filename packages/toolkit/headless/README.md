@@ -48,9 +48,11 @@ You do this yourself:
   `role="status"`, and the ids from the directive.
 - Use a `fieldName` that equals the control's `id`, so auto-ARIA and your
   elements agree on the ids.
-- Set error timing on the form (`ngxSignalForm errorStrategy="…"`) or in the
-  app config. Auto-ARIA does not see a `strategy` input on a headless
-  directive, so the ARIA would change at a different time than your message.
+- Add `ngxSignalForm` to the form and set error timing there
+  (`errorStrategy="…"`). Auto-ARIA does not see a `strategy` input on a
+  headless directive, and without `ngxSignalForm` it ignores the app config
+  and uses `on-touch`. Either way, the ARIA would change at a different time
+  than your message.
 - Link hints yourself: give the hint an `id` and add it to the control's
   `aria-describedby`. Auto-ARIA keeps ids that you write.
 - Style everything.
@@ -210,9 +212,9 @@ export class MyFieldFeedback {
 This component is complete for feedback when:
 
 - `fieldName` equals the control's `id`.
-- You set timing on the form or in the app config. The component does not
-  forward `strategy` or `warningStrategy`, because auto-ARIA would not see
-  them.
+- The form has `ngxSignalForm`, and you set timing there. The component does
+  not forward `strategy` or `warningStrategy`, because auto-ARIA would not
+  see them.
 
 For a component that also owns the label, the control, and the hints, build a
 full wrapper. See [custom wrappers](../../../docs/CUSTOM_WRAPPERS.md).

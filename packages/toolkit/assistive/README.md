@@ -203,9 +203,10 @@ Behavior:
   field.
 - With `errors` bound, the content sets the role: one blocking error makes the
   group an alert. A list of only warnings is a status.
-- Without a wrapper, a field-level `strategy` or `warningStrategy` reaches
-  auto-ARIA only inside an `ngxSignalForm` form. Outside one, set the timing on
-  the app config so the message and the ARIA stay in step.
+- Without a wrapper, add `ngxSignalForm` to the form to keep the message and
+  the ARIA in step. Set the timing there or on this component. Without
+  `ngxSignalForm`, `aria-invalid` always uses `on-touch`, whatever the app
+  config says.
 - If no `fieldName` resolves, the component renders without ids and logs a
   warning in development mode.
 
