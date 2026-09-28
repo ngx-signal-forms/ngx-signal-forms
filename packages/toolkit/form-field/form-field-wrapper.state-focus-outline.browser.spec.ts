@@ -21,11 +21,11 @@ import { NgxFormFieldWrapper } from './form-field-wrapper';
  * contrast) 3:1 floor. A keyboard user tabbing from the error summary into
  * an invalid field could not see where focus landed (SC 2.4.7).
  *
- * The fix adds a solid, offset outline in the focus color on
- * `:focus-within`, for every textual state (valid, invalid, warning). The
- * state-colored border and the low-contrast ring are unchanged in shape,
- * but the ring's default box-shadow is now `none` so it does not visually
- * collide with the new outline.
+ * The fix adds a solid, offset outline on `:focus-within`, for every
+ * textual state (valid, invalid, warning). Invalid and warning fields draw
+ * it in their state color, so focusing a field repeats its state instead of
+ * hiding it behind the brand color. The ring's default box-shadow is now
+ * `none` so it does not visually collide with the outline.
  */
 const contentOf = (container: Element): HTMLElement => {
   const content = container.querySelector<HTMLElement>(
@@ -89,7 +89,10 @@ const blendOverSurface = (rgbaOrRgb: string, surfaceRgb: string): string => {
 };
 
 describe('NgxFormFieldWrapper — state focus outline contrast (#495)', () => {
-  const focusColor = 'rgb(120, 0, 80)'; // non-default, so a match proves the token is used
+  // Non-default colors, so a match proves which token drives the outline.
+  const focusColor = 'rgb(120, 0, 80)';
+  const invalidColor = 'rgb(170, 0, 0)';
+  const warningColor = 'rgb(140, 70, 0)';
 
   @Component({
     selector: 'ngx-test-invalid-focus-outline',
@@ -165,13 +168,14 @@ describe('NgxFormFieldWrapper — state focus outline contrast (#495)', () => {
     await userEvent.tab();
   };
 
-  it('shows the field as invalid, then draws a solid outline on the container when focused', async () => {
+  it('draws the focus outline in the invalid color, not the focus color', async () => {
     const { container } = await render(InvalidFocusOutlineComponent);
 
     const wrapper = container.querySelector<HTMLElement>(
       'ngx-form-field-wrapper',
     )!;
     wrapper.style.setProperty('--ngx-form-field-focus-color', focusColor);
+    wrapper.style.setProperty('--ngx-form-field-invalid-color', invalidColor);
 
     const input = page.getByRole('textbox', { name: 'Username' });
     // Touch and blur without typing, so the required error shows (on-touch).
@@ -188,16 +192,15 @@ describe('NgxFormFieldWrapper — state focus outline contrast (#495)', () => {
     const styles = getComputedStyle(contentOf(container));
     expect(styles.outlineStyle).not.toBe('none');
     expect(styles.outlineWidth).not.toBe('0px');
-    expect(styles.outlineColor).toBe(focusColor);
-    // The border keeps signaling the invalid state — the outline is an
-    // additional, higher-contrast focus signal, not a replacement for it.
-    expect(styles.borderColor).not.toBe(focusColor);
+    // A brand-colored outline next to a red border reads as "focused, fine".
+    // The outline must keep saying "invalid" while the user edits the field.
+    expect(styles.outlineColor).toBe(invalidColor);
   });
 
-  it('meets 3:1 outline contrast against the page background with the default focus color', async () => {
+  it('meets 3:1 outline contrast against the page background with the default invalid color', async () => {
     const { container } = await render(InvalidFocusOutlineComponent);
-    // No `--ngx-form-field-focus-color` override here — this exercises the
-    // shipped default (`#007bc7`), not a test-only stand-in.
+    // No color override here — this exercises the shipped default, not a
+    // test-only stand-in.
 
     const input = page.getByRole('textbox', { name: 'Username' });
     await userEvent.click(input.element());
@@ -221,13 +224,14 @@ describe('NgxFormFieldWrapper — state focus outline contrast (#495)', () => {
     ).toBeGreaterThanOrEqual(3);
   });
 
-  it('draws the same solid outline on a focused warning field', async () => {
+  it('draws the focus outline in the warning color on a warning field', async () => {
     const { container } = await render(WarningFocusOutlineComponent);
 
     const wrapper = container.querySelector<HTMLElement>(
       'ngx-form-field-wrapper',
     )!;
     wrapper.style.setProperty('--ngx-form-field-focus-color', focusColor);
+    wrapper.style.setProperty('--ngx-form-field-warning-color', warningColor);
 
     const input = page.getByRole('textbox', { name: 'Username' });
     await userEvent.click(input.element());
@@ -240,7 +244,20 @@ describe('NgxFormFieldWrapper — state focus outline contrast (#495)', () => {
     const styles = getComputedStyle(contentOf(container));
     expect(styles.outlineStyle).not.toBe('none');
     expect(styles.outlineWidth).not.toBe('0px');
-    expect(styles.outlineColor).toBe(focusColor);
+    expect(styles.outlineColor).toBe(warningColor);
+  });
+
+  it('meets 3:1 outline contrast on a warning field with the default warning color', async () => {
+    const { container } = await render(WarningFocusOutlineComponent);
+
+    await userEvent.click(page.getByRole('textbox', { name: 'Username' }));
+
+    const outline = getComputedStyle(contentOf(container));
+    expect(outline.outlineStyle).not.toBe('none');
+    // The warning fixture sits on the default white test page.
+    expect(
+      contrastRatio(outline.outlineColor, 'rgb(255, 255, 255)'),
+    ).toBeGreaterThanOrEqual(3);
   });
 });
 
