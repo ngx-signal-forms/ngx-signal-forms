@@ -16,23 +16,19 @@
   flex-direction: column;
   min-height: 0;
   overflow: hidden;
-  border: 1px solid rgba(99, 102, 241, 0.18);
+  border: 1px solid var(--color-accent-border);
   background:
     radial-gradient(
       circle at top right,
-      rgba(99, 102, 241, 0.1),
+      color-mix(in srgb, var(--color-accent) 12%, transparent),
       transparent 42%
     ),
     radial-gradient(
       circle at bottom left,
-      rgba(14, 165, 233, 0.08),
+      color-mix(in srgb, var(--color-info) 8%, transparent),
       transparent 38%
     ),
-    linear-gradient(
-      180deg,
-      rgba(255, 255, 255, 0.99) 0%,
-      rgba(248, 250, 252, 0.97) 100%
-    );
+    var(--color-bg-chrome);
 
   /* faint diagonal weave for texture */
   &::after {
@@ -44,8 +40,8 @@
       135deg,
       transparent 0,
       transparent 17px,
-      rgba(99, 102, 241, 0.025) 17px,
-      rgba(99, 102, 241, 0.025) 18px
+      color-mix(in srgb, var(--color-accent) 2.5%, transparent) 17px,
+      color-mix(in srgb, var(--color-accent) 2.5%, transparent) 18px
     );
   }
 }
@@ -75,7 +71,8 @@
   width: min(26rem, 94vw);
   border-right: 0;
   border-radius: 1.25rem 0 0 1.25rem;
-  box-shadow: -10px 0 44px -18px rgba(15, 23, 42, 0.32);
+  box-shadow: -10px 0 44px -18px
+    color-mix(in srgb, var(--color-shadow) 32%, transparent);
   animation: slideIn 220ms cubic-bezier(0.16, 1, 0.3, 1);
 
   /* The shared `.panel` rule above sets `display: flex` unconditionally,
@@ -90,35 +87,10 @@
   /* Replaces the old hand-rolled `.panel-backdrop` div — shown
      automatically while the dialog is open modally. */
   &::backdrop {
-    background: rgb(15 23 42 / 0.4);
+    background: var(--color-backdrop);
     backdrop-filter: blur(2px);
     animation: fadeIn 180ms ease;
   }
-}
-
-:host-context(.dark) .panel {
-  border-color: rgba(129, 140, 248, 0.24);
-  background:
-    radial-gradient(
-      circle at top right,
-      rgba(79, 70, 229, 0.18),
-      transparent 42%
-    ),
-    radial-gradient(
-      circle at bottom left,
-      rgba(8, 145, 178, 0.14),
-      transparent 38%
-    ),
-    linear-gradient(
-      180deg,
-      rgba(15, 23, 42, 0.97) 0%,
-      rgba(12, 18, 33, 0.96) 100%
-    );
-  box-shadow: 0 24px 56px -38px rgba(0, 0, 0, 0.85);
-}
-
-:host-context(.dark) .panel--slideover {
-  box-shadow: -10px 0 48px -18px rgba(0, 0, 0, 0.7);
 }
 
 /* ── Pinned header ─────────────────────────────────────── */
@@ -131,20 +103,11 @@
   justify-content: space-between;
   gap: 0.5rem;
   padding: 0.95rem 1rem 0.7rem;
-  border-bottom: 1px solid rgba(99, 102, 241, 0.14);
+  border-bottom: 1px solid var(--color-accent-border);
   background: linear-gradient(
     180deg,
-    rgba(255, 255, 255, 0.6),
-    rgba(255, 255, 255, 0)
-  );
-}
-
-:host-context(.dark) .panel__header {
-  border-bottom-color: rgba(129, 140, 248, 0.22);
-  background: linear-gradient(
-    180deg,
-    rgba(255, 255, 255, 0.03),
-    rgba(255, 255, 255, 0)
+    color-mix(in srgb, var(--color-bg-chrome) 60%, transparent),
+    transparent
   );
 }
 
@@ -156,16 +119,12 @@
   font-weight: 700;
   letter-spacing: 0.11em;
   text-transform: uppercase;
-  color: #5b6fb3;
+  color: var(--color-accent-text);
 
   svg {
     width: 0.9rem;
     height: 0.9rem;
   }
-}
-
-:host-context(.dark) .panel__eyebrow {
-  color: #a5b4fc;
 }
 
 .panel__actions {
@@ -180,15 +139,15 @@
   align-items: center;
   gap: 0.3rem;
   padding: 0.28rem 0.55rem;
-  border: 1px solid rgba(99, 102, 241, 0.28);
+  border: 1px solid color-mix(in srgb, var(--color-accent) 30%, transparent);
   border-radius: 9999px;
-  background: rgba(255, 255, 255, 0.6);
+  background: color-mix(in srgb, var(--color-bg-chrome) 60%, transparent);
   cursor: pointer;
   font-size: 0.66rem;
   font-weight: 600;
   letter-spacing: 0.04em;
   text-transform: uppercase;
-  color: #5b6fb3;
+  color: var(--color-accent-text);
   transition:
     background 120ms ease,
     border-color 120ms ease,
@@ -200,35 +159,19 @@
   }
 
   &:hover {
-    border-color: rgba(99, 102, 241, 0.5);
-    background: rgba(238, 242, 255, 0.9);
+    border-color: color-mix(in srgb, var(--color-accent) 50%, transparent);
+    background: var(--color-accent-soft);
   }
 
   &.is-on {
-    background: rgb(79 70 229);
-    border-color: rgb(79 70 229);
-    color: #fff;
+    background: var(--color-brand-strong);
+    border-color: var(--color-brand-strong);
+    color: var(--color-on-brand);
   }
 
   &:focus-visible {
-    outline: 2px solid rgb(99 102 241);
+    outline: 2px solid var(--color-border-focus);
     outline-offset: 2px;
-  }
-}
-
-:host-context(.dark) .panel__help {
-  background: rgba(15, 23, 42, 0.5);
-  border-color: rgba(129, 140, 248, 0.35);
-  color: #a5b4fc;
-
-  &:hover {
-    background: rgba(49, 46, 129, 0.4);
-  }
-
-  &.is-on {
-    background: rgb(99 102 241);
-    border-color: rgb(99 102 241);
-    color: #fff;
   }
 }
 
@@ -242,25 +185,20 @@
   border-radius: 0.5rem;
   background: none;
   cursor: pointer;
-  color: rgb(100 116 139);
+  color: var(--color-text-muted);
   transition:
     background 120ms ease,
     color 120ms ease;
 
   &:hover {
-    background: rgb(241 245 249);
-    color: rgb(15 23 42);
+    background: var(--color-surface-hover);
+    color: var(--color-text);
   }
 
   &:focus-visible {
-    outline: 2px solid rgb(99 102 241);
+    outline: 2px solid var(--color-border-focus);
     outline-offset: 2px;
   }
-}
-
-:host-context(.dark) .panel__close:hover {
-  background: rgb(30 41 59);
-  color: rgb(226 232 240);
 }
 
 /* ── Scrolling body ────────────────────────────────────── */
@@ -286,7 +224,7 @@
   svg {
     width: 1.6rem;
     height: 1.6rem;
-    color: rgb(148 163 184);
+    color: var(--color-icon-muted);
     opacity: 0.7;
   }
 }
@@ -294,17 +232,14 @@
 .panel__empty-title {
   font-size: 0.85rem;
   font-weight: 600;
-  color: rgb(71 85 105);
-}
-
-:host-context(.dark) .panel__empty-title {
-  color: rgb(203 213 225);
+  color: var(--color-text-muted);
 }
 
 .panel__empty-text {
   font-size: 0.8rem;
   line-height: 1.5;
-  color: rgb(148 163 184);
+  /* gray-600 / gray-400: the old slate-400 was 2.56:1 on white. */
+  color: var(--color-text-muted);
   max-width: 22ch;
 }
 

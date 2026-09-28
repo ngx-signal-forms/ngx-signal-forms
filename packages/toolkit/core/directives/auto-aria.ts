@@ -128,6 +128,10 @@ const DESCENDANT_CONTROL_SELECTOR = [
  * with `role="switch"`, and explicit control semantics can opt checkbox/radio hosts in
  * without relying on native-role heuristics.
  *
+ * A standalone `<ngx-form-field-error [formField]>` also takes `[formField]`,
+ * but it is feedback, not a control. The catch-all selector excludes it, so
+ * its host gets no `aria-invalid` and no missing-role warning (#566).
+ *
  * **Ownership model**:
  * - default: toolkit owns `aria-invalid`, `aria-required`, and `aria-describedby`
  * - `ngxSignalFormControlAria="manual"`: the control owns those ARIA attributes
@@ -153,7 +157,7 @@ const DESCENDANT_CONTROL_SELECTOR = [
     input[formField]:not([ngxSignalFormAutoAriaDisabled]):not([type="radio"]):not([type="checkbox"]),
     textarea[formField]:not([ngxSignalFormAutoAriaDisabled]),
     select[formField]:not([ngxSignalFormAutoAriaDisabled]),
-    [formField]:not(input):not(textarea):not(select):not([ngxSignalFormAutoAriaDisabled])
+    [formField]:not(input):not(textarea):not(select):not(ngx-form-field-error):not([ngxSignalFormAutoAriaDisabled])
   `,
 })
 export class NgxSignalFormAutoAria {
@@ -574,8 +578,17 @@ export class NgxSignalFormAutoAria {
    * control.
    */
   #hasDescendantControl(): boolean {
+    const target = this.#ariaTarget();
+    if (target.querySelector(DESCENDANT_CONTROL_SELECTOR) !== null) return true;
+
+    // A wrapper publishes the control it wraps. That control may carry a
+    // role that does not support `aria-required` (`slider`, `button`), so
+    // the selector above misses it, but the host is still a container.
+    const boundControl = this.#fieldIdentity?.resolveControlElement() ?? null;
     return (
-      this.#ariaTarget().querySelector(DESCENDANT_CONTROL_SELECTOR) !== null
+      boundControl !== null &&
+      boundControl !== target &&
+      target.contains(boundControl)
     );
   }
 

@@ -2010,6 +2010,10 @@ declare class NgxSubmitAnnouncements {
  * with `role="switch"`, and explicit control semantics can opt checkbox/radio hosts in
  * without relying on native-role heuristics.
  *
+ * A standalone `<ngx-form-field-error [formField]>` also takes `[formField]`,
+ * but it is feedback, not a control. The catch-all selector excludes it, so
+ * its host gets no `aria-invalid` and no missing-role warning (#566).
+ *
  * **Ownership model**:
  * - default: toolkit owns `aria-invalid`, `aria-required`, and `aria-describedby`
  * - `ngxSignalFormControlAria="manual"`: the control owns those ARIA attributes
@@ -2082,7 +2086,7 @@ declare class NgxSignalFormAutoAria {
     protected readonly ariaDescribedBy: i0.Signal<string | null>;
     constructor();
     static ɵfac: i0.ɵɵFactoryDeclaration<NgxSignalFormAutoAria, never>;
-    static ɵdir: i0.ɵɵDirectiveDeclaration<NgxSignalFormAutoAria, "    input[type=\"checkbox\"][ngxSignalFormControl][formField]:not([ngxSignalFormAutoAriaDisabled]),    input[type=\"radio\"][ngxSignalFormControl][formField]:not([ngxSignalFormAutoAriaDisabled]),    input[type=\"checkbox\"][role=\"switch\"][formField]:not([ngxSignalFormAutoAriaDisabled]),    input[formField]:not([ngxSignalFormAutoAriaDisabled]):not([type=\"radio\"]):not([type=\"checkbox\"]),    textarea[formField]:not([ngxSignalFormAutoAriaDisabled]),    select[formField]:not([ngxSignalFormAutoAriaDisabled]),    [formField]:not(input):not(textarea):not(select):not([ngxSignalFormAutoAriaDisabled])  ", never, {}, {}, never, never, true, never>;
+    static ɵdir: i0.ɵɵDirectiveDeclaration<NgxSignalFormAutoAria, "    input[type=\"checkbox\"][ngxSignalFormControl][formField]:not([ngxSignalFormAutoAriaDisabled]),    input[type=\"radio\"][ngxSignalFormControl][formField]:not([ngxSignalFormAutoAriaDisabled]),    input[type=\"checkbox\"][role=\"switch\"][formField]:not([ngxSignalFormAutoAriaDisabled]),    input[formField]:not([ngxSignalFormAutoAriaDisabled]):not([type=\"radio\"]):not([type=\"checkbox\"]),    textarea[formField]:not([ngxSignalFormAutoAriaDisabled]),    select[formField]:not([ngxSignalFormAutoAriaDisabled]),    [formField]:not(input):not(textarea):not(select):not(ngx-form-field-error):not([ngxSignalFormAutoAriaDisabled])  ", never, {}, {}, never, never, true, never>;
 }
 
 /**

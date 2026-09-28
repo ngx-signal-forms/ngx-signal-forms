@@ -86,6 +86,30 @@
   --spacing-12: 3rem;
 }
 
+/* App chrome tokens: shell, nav tree, right rail, toggles. One neutral
+   family (gray), so each value needs no dark-mode rule of its own; the dark
+   values live in `.dark` below. `static` makes Tailwind emit every token,
+   including the ones only component SCSS reads (it does not scan SCSS). */
+@theme static {
+  --color-bg-chrome: #ffffff; /* nav, mobile bar, rail */
+  --color-surface-hover: var(--color-gray-100); /* hover fill, count pill */
+  --color-border-strong: var(--color-gray-300); /* hover border */
+  --color-icon-muted: var(--color-gray-400); /* chevrons, decorative glyphs */
+  --color-on-brand: #ffffff; /* text on a brand fill */
+  --color-brand-deep: #4338ca; /* indigo-700: end stop of the pin button */
+  --color-accent: #6366f1; /* indigo-500: active borders and icons */
+  --color-accent-text: #4338ca; /* indigo-700: active nav text, 7.9:1 on white */
+  --color-accent-soft: #eef2ff; /* indigo-50: active nav fill */
+  --color-accent-border: rgb(99 102 241 / 0.2); /* panel borders, dividers */
+  --color-link: var(--color-brand-strong);
+  --color-link-hover: #3730a3; /* indigo-800 */
+  --color-warning-border: rgb(245 158 11 / 0.38); /* amber-500 divider */
+  --color-selected: #e8f4fb; /* selected segmented-toggle option */
+  --color-on-selected: #005d96; /* 6.2:1 on --color-selected */
+  --color-backdrop: rgb(17 24 39 / 0.4); /* gray-900 scrim */
+  --color-shadow: rgb(17 24 39); /* mix with transparent for shadows */
+}
+
 /* Dark theme variable overrides (activated via .dark class) */
 .dark {
   --color-bg: var(--color-gray-900);
@@ -95,6 +119,20 @@
   --color-placeholder: var(--color-gray-400);
   --color-border: var(--color-gray-700);
   --color-border-focus: #a78bfa; /* violet-400 */
+  --color-bg-chrome: var(--color-gray-900);
+  --color-surface-hover: var(--color-gray-800);
+  --color-border-strong: var(--color-gray-600);
+  --color-icon-muted: var(--color-gray-500);
+  --color-accent: #818cf8; /* indigo-400 */
+  --color-accent-text: #c7d2fe; /* indigo-200: 11.9:1 on gray-900 */
+  --color-accent-soft: rgb(49 46 129 / 0.32); /* indigo-900 */
+  --color-accent-border: rgb(129 140 248 / 0.25);
+  --color-link: #c4b5fd; /* violet-300 */
+  --color-link-hover: #eef2ff;
+  --color-warning-border: rgb(251 191 36 / 0.34); /* amber-400 */
+  --color-selected: var(--color-gray-700);
+  --color-on-selected: #93c5fd; /* blue-300: 5.7:1 on gray-700 */
+  --color-shadow: #000000;
   --color-success: #86efac;
   --color-warning: #fcd34d;
   --color-error: #fca5a5;

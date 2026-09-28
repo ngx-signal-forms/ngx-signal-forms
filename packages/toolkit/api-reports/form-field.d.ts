@@ -2,7 +2,7 @@ import * as _ngx_signal_forms_toolkit from '@ngx-signal-forms/toolkit';
 import { ResolvedNgxSignalFormControlSemantics, ErrorDisplayStrategy, WarningDisplayStrategy, NgxFormFieldErrorPlacement, FormFieldAppearanceInput, FormFieldOrientationInput, FieldMarkingMode, FormFieldAppearance, FormFieldOrientation, ResolvedMarker, NgxSignalFormHintDescriptor, NgxSignalFormAutoAria, NgxSignalFormControlSemanticsDirective } from '@ngx-signal-forms/toolkit';
 export { NgxFieldIdentityProvider, NgxFormFieldErrorPlacement } from '@ngx-signal-forms/toolkit';
 import * as _angular_core from '@angular/core';
-import { WritableSignal, Type } from '@angular/core';
+import { WritableSignal, Type, ElementRef } from '@angular/core';
 import * as _angular_forms_signals from '@angular/forms/signals';
 import { FieldTree } from '@angular/forms/signals';
 import { NgxFormFieldHint, NgxFormFieldCharacterCount, NgxFormFieldListStyle, NgxFormFieldError } from '@ngx-signal-forms/toolkit/assistive';
@@ -435,6 +435,30 @@ declare class NgxFormFieldWrapper<TValue = unknown> {
      */
     protected readonly resolvedMarker: _angular_core.Signal<ResolvedMarker | null>;
     protected readonly isTextualControl: _angular_core.Signal<boolean>;
+    /**
+     * The bordered field box (`__content`) that wraps prefix, control and
+     * suffix. `protected`, not `#`: Angular 22.1 does not allow signal queries
+     * on ES private fields.
+     */
+    protected readonly fieldBox: _angular_core.Signal<ElementRef<HTMLElement>>;
+    /**
+     * Focuses the bound control when the user clicks the field box outside it.
+     *
+     * A textual field draws a box of about 32–44px, but the control inside it
+     * is only one line tall. Without this handler a click on the box padding
+     * does nothing, so the real target is much smaller than the one the user
+     * sees (#567, WCAG 2.5.8).
+     *
+     * The handler does nothing when:
+     * - the field is not textual (selection rows manage their own clicks),
+     * - the click lands on an interactive element (the control itself, a
+     *   prefix or suffix button, a link, a label),
+     * - the click belongs to a nested wrapper's field box.
+     *
+     * It is a pointer convenience only. Keyboard users already reach the
+     * control with Tab, so the host needs no key handler.
+     */
+    protected focusControlFromFieldBox(event: MouseEvent): void;
     protected readonly isCheckboxControl: _angular_core.Signal<boolean>;
     protected readonly isSelectionGroupControl: _angular_core.Signal<boolean>;
     protected readonly isSwitchControl: _angular_core.Signal<boolean>;

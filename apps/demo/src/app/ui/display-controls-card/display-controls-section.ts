@@ -18,35 +18,21 @@ import { PanelHelpService } from './panel-help.service';
 
     :host + :host {
       padding-top: 0.8rem;
-      border-top: 1px solid rgba(148, 163, 184, 0.18);
+      border-top: 1px solid var(--color-border);
     }
 
     .control-panel__title {
       margin: 0;
       font-size: 0.86rem;
       font-weight: 600;
-      color: #22314d;
+      color: var(--color-text);
     }
 
     .control-panel__description {
       margin: -0.1rem 0 0.1rem;
       font-size: 0.8rem;
       line-height: 1.5;
-      color: #5a6b84;
-    }
-
-    :host-context(.dark) {
-      :host + :host {
-        border-top-color: rgba(148, 163, 184, 0.16);
-      }
-
-      .control-panel__title {
-        color: #f8fafc;
-      }
-
-      .control-panel__description {
-        color: #cbd5e1;
-      }
+      color: var(--color-text-muted);
     }
   `,
   template: `
