@@ -71,13 +71,13 @@ import { I18nDemoComponent } from './i18n.form';
           class="block min-w-0"
         />
         <ngx-display-controls-section
-          title="🎨 Wrapper appearance"
+          title="Wrapper appearance"
           description="Switch the wrapper treatment to confirm translated labels and errors render correctly under every appearance."
         >
           <ngx-appearance-toggle [(value)]="selectedAppearance" />
         </ngx-display-controls-section>
         <ngx-display-controls-section
-          title="↔️ Label orientation"
+          title="Label orientation"
           description="Compare vertical and horizontal label columns while switching language."
         >
           <ngx-orientation-toggle
@@ -107,7 +107,15 @@ import { I18nDemoComponent } from './i18n.form';
 
         @if (formRef(); as form) {
           <div right>
-            <ngx-signal-form-debugger [formTree]="form.demoForm" />
+            @defer (on idle) {
+              <ngx-signal-form-debugger [formTree]="form.demoForm" />
+            } @placeholder {
+              <div class="debugger-placeholder" aria-hidden="true"></div>
+            } @error {
+              <p class="debugger-placeholder">
+                The form debugger failed to load.
+              </p>
+            }
           </div>
         }
       </ngx-split-layout>

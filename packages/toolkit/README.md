@@ -40,7 +40,9 @@ You always import the core entry point. The other entry points add UI components
 
 ## First 60 seconds (core)
 
-If you only need the core behavior layer first, copy/paste this:
+This rendering-only excerpt shows core imports. It has no submission action
+or error renderer. For a complete working form, use the
+[tested root starter](../../README.md#quick-start).
 
 ```typescript
 import { Component, signal } from '@angular/core';
@@ -53,7 +55,6 @@ import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit';
     <form [formRoot]="form" ngxSignalForm errorStrategy="on-submit">
       <label for="email">Email</label>
       <input id="email" [formField]="form.email" />
-      <button type="submit">Submit</button>
     </form>
   `,
 })
@@ -168,6 +169,39 @@ Covers native `<input>`, `<textarea>`, `<select>`, and custom `[formField]` host
 - Disable per control with `ngxSignalFormAutoAriaDisabled`
 - Use `ngxSignalFormControlAria="manual"` when a control already owns its ARIA attributes
 
+#### Inferred kind vs. auto-ARIA eligibility
+
+**Inferred control kind and auto-ARIA eligibility are two decisions.**
+Control-kind inference answers "which wrapper layout does this control get".
+Auto-ARIA eligibility answers "does the toolkit own `aria-invalid`,
+`aria-required`, and `aria-describedby` on this host". The two do not always
+agree:
+
+| Markup                                                      | Inferred kind                               | Auto-ARIA default      | How to opt in                                                                       |
+| ----------------------------------------------------------- | ------------------------------------------- | ---------------------- | ----------------------------------------------------------------------------------- |
+| `input[type="checkbox"]`                                    | `checkbox`                                  | Not eligible           | Add `ngxSignalFormControl="checkbox"`                                               |
+| `input[type="checkbox"][role="switch"]`                     | `switch`                                    | Eligible automatically | None — works out of the box                                                         |
+| `input[type="radio"]`                                       | `radio-group`                               | Not eligible           | Add `ngxSignalFormControl="radio-group"`                                            |
+| `[role="combobox"]` element with a stable `id`              | `input-like`                                | Eligible automatically | None — works out of the box                                                         |
+| Plain `input` / `select` / `textarea`                       | `input-like` / `standalone-field-like`      | Eligible automatically | None — works out of the box                                                         |
+| Custom `[formField]` host (not `input`/`textarea`/`select`) | inferred from shape, or none until declared | Eligible automatically | Opt out with `ngxSignalFormAutoAriaDisabled` or `ngxSignalFormControlAria="manual"` |
+
+A native checkbox or radio infers a wrapper kind (`checkbox` /
+`radio-group`). It is **not** auto-ARIA eligible by default. In a selection
+group, `ngx-form-field-wrapper` owns `role`, `aria-labelledby`,
+`aria-describedby`, and `aria-required` on the group container. Writing
+those same attributes on each grouped input would duplicate or contradict
+the group-level values. A checkbox with `role="switch"` is always a single
+control. It never joins a group, so it is eligible automatically.
+
+`ariaMode` in a control preset (`'auto'` | `'manual'`) only applies once a
+host is already auto-ARIA eligible. Setting `ariaMode: 'auto'` on the
+`checkbox` preset does not make a plain checkbox eligible on its own. The
+auto-ARIA directive's selector gates eligibility first. Declare
+`ngxSignalFormControl="checkbox"` (or `"radio-group"`) to opt a control in.
+Then the preset's `ariaMode` governs ownership from there. See
+[ADR-0001](https://github.com/ngx-signal-forms/ngx-signal-forms/blob/main/docs/decisions/0001-control-semantics-architecture.md#auto-aria-eligibility-boundary).
+
 ### NgxSignalFormControlSemanticsDirective
 
 Declares a control's family for wrapper layout and auto-ARIA classification.
@@ -212,14 +246,23 @@ provideNgxSignalFormsConfig({
   requiredLegendText: '{marker} indicates a required field',
   optionalLegendText: 'All fields are required unless marked {marker}',
   requiredHintText: 'required', // visually-hidden required hint for role="group" clusters
+  errorPrefixText: 'Error:', // visually-hidden prefix on NgxFormFieldError blocking-error messages
+  warningPrefixText: 'Warning:', // visually-hidden prefix on NgxFormFieldError warning messages
+  errorSummaryAnnouncesAlone: true, // with an error summary, a submit announces through the summary only
+  characterCountLimitText: 'Up to {max} characters', // visually-hidden limit description linked via aria-describedby
+  hideHintOnError: false, // hide a field's hint while it shows a blocking error or warning
 });
 ```
 
 This is the canonical list of configuration keys and their defaults.
 
+Known limit R01: `autoAria: false` is stored but is not consumed by the current
+auto-ARIA directive. Use per-control `ngxSignalFormControlAria="manual"` for
+implemented ownership exclusion. This remains a runtime defect to test and fix.
+
 ### How settings resolve (the cascade)
 
-Every presentation setting — error strategy, appearance, orientation, markers,
+Every presentation setting — error strategy, warning strategy, appearance, orientation, markers,
 control presets, renderers — resolves through **one precedence chain, most
 specific wins**:
 
@@ -235,6 +278,12 @@ See the
 [root README](https://github.com/ngx-signal-forms/ngx-signal-forms#how-settings-resolve-the-cascade)
 for the full walkthrough (per-tier details, nullish-merge semantics). Every
 "you can override this" in the sections below is a link in this chain.
+
+Only error timing, warning timing, and submitted status use form context.
+Visual settings skip that tier. `on-touch` is a built-in fallback, not an
+unconditional standalone setting. See the
+[shared timing contract](../../docs/WARNINGS_SUPPORT.md#timing-and-configuration)
+for standalone auto-ARIA and override-mode exceptions.
 
 ### Field marking
 
@@ -393,7 +442,7 @@ Use a factory for dynamic resolvers (ngx-translate, Transloco, etc.). The
 resolver it returns runs on every render, so a runtime language switch works
 only if the resolver reads a reactive language signal — `$localize` is
 build-time only and can't do this; see
-[`WARNINGS_SUPPORT.md`](https://github.com/ngx-signal-forms/ngx-signal-forms/blob/main/docs/WARNINGS_SUPPORT.md#the-i18n-contract-string-vs-function-entries)
+[`WARNINGS_SUPPORT.md`](../../docs/WARNINGS_SUPPORT.md#runtime-language-changes)
 for the full contract:
 
 ```typescript
@@ -413,16 +462,71 @@ provideFieldLabels(() => {
 
 ## Utilities
 
-### Error visibility
+### Error and warning visibility
 
-| Function                                                     | Description                                                                                |
-| ------------------------------------------------------------ | ------------------------------------------------------------------------------------------ |
-| `createErrorVisibility(field, opts?)`                        | One call: `Signal<boolean>` with strategy + submitted status auto-read from the DI context |
-| `createShowErrorsComputed(field, strategy, status?)`         | `Signal<boolean>` — whether errors should show now                                         |
-| `shouldShowErrors(invalid, touched, strategy, status)`       | Pure boolean strategy helper — not reactive; use `createShowErrorsComputed` for a signal   |
-| `shouldShowWarnings(hasWarnings, touched, strategy, status)` | Pure boolean warning-timing counterpart to `shouldShowErrors`                              |
-| `combineShowErrors(signals)`                                 | Combines an array of visibility signals, e.g. `combineShowErrors([sigA, sigB])`            |
-| `readDirectErrors(state)`                                    | Direct `errors()` of a field/group only — excludes nested-field errors                     |
+| Function                                                     | Description                                                                                 |
+| ------------------------------------------------------------ | ------------------------------------------------------------------------------------------- |
+| `createErrorVisibility(field, opts?)`                        | One call: `Signal<boolean>` with strategy + submitted status auto-read from the DI context  |
+| `createWarningVisibility(field, opts?)`                      | The warning channel's counterpart — same tiers, plus warning presence and error suppression |
+| `createShowErrorsComputed(field, strategy, status?)`         | `Signal<boolean>` — whether errors should show now                                          |
+| `shouldShowErrors(invalid, touched, strategy, status)`       | Pure boolean strategy helper — not reactive; use `createShowErrorsComputed` for a signal    |
+| `shouldShowWarnings(hasWarnings, touched, strategy, status)` | Pure boolean warning-timing counterpart to `shouldShowErrors`                               |
+| `combineShowErrors(signals)`                                 | Combines an array of visibility signals, e.g. `combineShowErrors([sigA, sigB])`             |
+| `readDirectErrors(state)`                                    | Direct `errors()` of a field/group only — excludes nested-field errors                      |
+| `createFieldPresentation(field, opts?)`                      | Both channels for one field surface, as a custom form-field wrapper needs them. See below   |
+
+#### Field presentation for custom wrappers
+
+`createFieldPresentation()` gives a custom form-field wrapper the same error
+and warning state that `NgxFormFieldWrapper` uses. Your wrapper then shows
+messages at the same moments as the built-in one.
+
+```typescript
+import {
+  createFieldPresentation,
+  NgxFieldIdentity,
+  type ErrorDisplayStrategy,
+  type WarningDisplayStrategy,
+} from '@ngx-signal-forms/toolkit';
+
+export class AppFormField {
+  readonly formField = input.required<FieldTree<unknown>>();
+  readonly strategy = input<ErrorDisplayStrategy | null>(null);
+  readonly warningStrategy = input<WarningDisplayStrategy | null>(null);
+
+  protected readonly presentation = createFieldPresentation(
+    computed(() => this.formField()()),
+    {
+      strategy: this.strategy,
+      warningStrategy: this.warningStrategy,
+      // Present when the wrapper composes NgxFieldIdentityProvider as a
+      // host directive; `null` otherwise, and nothing is published.
+      identity: inject(NgxFieldIdentity, { optional: true }),
+    },
+  );
+}
+```
+
+It returns read-only signals:
+
+| Signal                                           | Meaning                                                                |
+| ------------------------------------------------ | ---------------------------------------------------------------------- |
+| `errors` / `warnings`                            | The field's own blocking errors and warnings                           |
+| `hasErrors` / `hasWarnings`                      | Whether each list is non-empty                                         |
+| `showErrors`                                     | A blocking error shows now. Use it for invalid styling                 |
+| `showWarnings`                                   | A warning shows now. `false` while a blocking error shows              |
+| `renderMessageSlot`                              | Mount the message renderer. The renderer picks which messages to print |
+| `effectiveStrategy` / `effectiveWarningStrategy` | The resolved strategies. Pass them to your renderer                    |
+
+The two strategies resolve through separate cascades, so a form that holds
+errors until submit still shows warnings on touch. A visible blocking error
+hides the warning. A warning alone never hides itself, even though Angular
+marks a warning-only field `invalid()`. A hidden field (`hidden()`) shows no
+messages; pass `hidden` to use your own signal instead.
+
+With `identity`, the factory publishes both resolved strategies to that
+`NgxFieldIdentity`. `NgxSignalFormAutoAria` reads them, so `aria-describedby`
+follows your field-level overrides.
 
 ### Strategy & context resolution
 
@@ -455,16 +559,17 @@ Building blocks for custom wrappers and headless UIs that want to join the
 
 ### Warning support
 
-| Function                             | Description                                   |
-| ------------------------------------ | --------------------------------------------- |
-| `warningError(kind, message)`        | Creates a non-blocking warning                |
-| `isWarningError(error)`              | `true` if kind starts with `warn:`            |
-| `isBlockingError(error)`             | `true` if not a warning                       |
-| `splitByKind(errors)`                | Partition into `blocking` and `warnings`      |
-| `hasOnlyWarnings(errors)`            | `true` when no blocking errors are present    |
-| `getBlockingErrors(errors)`          | Filters out warning-only messages             |
-| `canSubmitWithWarnings(form)`        | Allows submission when only warnings remain   |
-| `submitWithWarnings(form, callback)` | Submit helper that blocks only on real errors |
+| Function                             | Description                                                                                                                                                                                                             |
+| ------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `warningError(kind, message)`        | Creates a non-blocking warning                                                                                                                                                                                          |
+| `isWarningError(error)`              | `true` if kind starts with `warn:`                                                                                                                                                                                      |
+| `WARN_KIND_PREFIX`                   | The `'warn:'` prefix itself, as a constant                                                                                                                                                                              |
+| `isBlockingError(error)`             | `true` if not a warning                                                                                                                                                                                                 |
+| `splitByKind(errors)`                | Partition into `blocking` and `warnings`                                                                                                                                                                                |
+| `hasOnlyWarnings(errors)`            | `true` when no blocking errors are present                                                                                                                                                                              |
+| `getBlockingErrors(errors)`          | Filters out warning-only messages                                                                                                                                                                                       |
+| `canSubmitWithWarnings(form)`        | Allows submission when only warnings remain, even while a validator is still pending                                                                                                                                    |
+| `submitWithWarnings(form, callback)` | Delegates to Angular `submit()`; blocks only on settled blocking errors, not warnings or pending validators; returns `Promise<boolean>` (`true` once the callback has run and settled, `false` when refused or dropped) |
 
 > Warning **display timing** is controlled separately from error timing via the
 > `warningStrategy` input on `NgxFormFieldError` (default:
@@ -482,16 +587,16 @@ Building blocks for custom wrappers and headless UIs that want to join the
 
 ### ARIA and identity
 
-| Function                                                  | Description                                                                                                           |
-| --------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
-| `buildAriaDescribedBy(fieldName, options)`                | Assemble `aria-describedby` for manual ARIA controls                                                                  |
-| `normalizeFieldName(value)`                               | Trim and null-collapse a candidate name into the v1 identity form                                                     |
-| `resolveFieldName(element)`                               | Read a usable field name from an element's `id` (trimmed, with `element.id` fallback)                                 |
-| `resolveFieldNameFromCandidates(...candidates)`           | Pick the first non-blank field name from a precedence chain (explicit → host id → context)                            |
-| `generateErrorId(fieldName, kind?)`                       | Derive `{fieldName}-error` (container) or `{fieldName}-error-{kind}` (per-error) element id                           |
-| `generateWarningId(fieldName)`                            | Derive the `{fieldName}-warning` element id used for `aria-describedby`                                               |
-| `isElementCssVisible(element)`                            | CSS-visibility test via `Element.checkVisibility()`; reports `true` on runtimes without it                            |
-| `createControlVisibilitySignal(resolveElement, injector)` | Reactive layout probe for `createAriaInvalidSignal`'s third argument; registers one `afterEveryRender` and fails open |
+| Function                                                  | Description                                                                                                                                                                                                                              |
+| --------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `buildAriaDescribedBy(fieldName, options)`                | Assemble `aria-describedby` for manual ARIA controls                                                                                                                                                                                     |
+| `normalizeFieldName(value)`                               | Trim and null-collapse a candidate name into the v1 identity form                                                                                                                                                                        |
+| `resolveFieldName(element)`                               | Read a usable field name from an element's `id` (trimmed, with `element.id` fallback)                                                                                                                                                    |
+| `resolveFieldNameFromCandidates(...candidates)`           | Pick the first non-blank field name from a precedence chain (explicit → host id → context)                                                                                                                                               |
+| `generateErrorId(fieldName, kind?)`                       | Derive `{fieldName}-error` (container) or `{fieldName}-error-{kind}` (per-error) element id. Turns inner whitespace in `fieldName` into `-`, so the id stays one `aria-describedby` token, and logs a one-time dev warning when it does. |
+| `generateWarningId(fieldName)`                            | Derive the `{fieldName}-warning` element id used for `aria-describedby`. Turns inner whitespace in `fieldName` into `-` and logs a one-time dev warning when it does.                                                                    |
+| `isElementCssVisible(element)`                            | CSS-visibility test via `Element.checkVisibility()`; reports `true` on runtimes without it                                                                                                                                               |
+| `createControlVisibilitySignal(resolveElement, injector)` | Reactive layout probe for `createAriaInvalidSignal`'s third argument; registers one `afterEveryRender` and fails open                                                                                                                    |
 
 ### Field identity service
 

@@ -17,18 +17,21 @@ import { warningError } from './warning-error';
 /**
  * Drift guard for `submitWithWarnings`.
  *
- * `submitWithWarnings` mirrors Angular's submission flow in user land:
- * mark-all-touched → wait a microtask → filter `errorSummary()` down to
- * blocking errors → run the action. If Angular's `submit()` semantics change
- * in a future release (e.g. it stops marking fields touched on an invalid
- * short-circuit, or the `errorSummary()` shape shifts), the toolkit helper
- * drifts silently in production unless a test is exercising a **real**
- * Angular signal form rather than a hand-rolled mock.
+ * `submitWithWarnings` gates in user land, then delegates to Angular's own
+ * `submit()`: mark-all-touched → wait a microtask → filter `errorSummary()`
+ * down to blocking errors → if none remain, call native `submit(form, {
+ * action, ignoreValidators: 'all' })`. If Angular's `submit()` semantics
+ * change in a future release (e.g. it stops marking fields touched on an
+ * invalid short-circuit, the `errorSummary()` shape shifts, or the return
+ * value stops being a plain boolean), the toolkit helper drifts silently in
+ * production unless a test is exercising a **real** Angular signal form
+ * rather than a hand-rolled mock.
  *
  * These tests therefore pin equivalence (or deliberate divergence) across
- * three scenarios: invalid short-circuit on blocking errors, warning-only
- * divergence (native blocks, toolkit runs), and valid submission. When one
- * of them fails after an Angular upgrade, treat it as a signal to re-read
+ * several scenarios: invalid short-circuit on blocking errors, warning-only
+ * divergence (native blocks, toolkit runs), still-pending async validators
+ * (neither helper blocks on them), and valid submission. When one of them
+ * fails after an Angular upgrade, treat it as a signal to re-read
  * `submission-helpers.ts` and realign before updating the assertion.
  *
  * @see ./submission-helpers.spec.ts — unit tests against mock field trees
@@ -253,11 +256,14 @@ describe('submitWithWarnings — Angular submit() drift guard', () => {
     expect(workingAction).toHaveBeenCalledOnce();
   });
 
-  it('skips the action while an async validator is still pending', async () => {
-    // Pins the `pending()` guard inside `submitWithWarnings`: if an async
-    // validator has not yet resolved when `submitWithWarnings` runs, the
-    // action must NOT be invoked. Once the validator settles to "valid", a
-    // second `submitWithWarnings` call should proceed normally.
+  it('invokes the action while an async validator is still pending (matches Angular submit() default)', async () => {
+    // Pins the reversed pending() behavior from issue #437: Angular
+    // `submit()`'s default `ignoreValidators: 'pending'` does not wait for
+    // in-flight async validators — a pending validator is not a reason to
+    // refuse submission. `submitWithWarnings` now delegates to native
+    // `submit()` on its success path, so it must agree: a still-pending
+    // validator with no *settled* blocking errors must NOT silently drop the
+    // submit attempt.
     //
     // `validateAsync` (stable since Angular 22.0.0) requires a `resource()`
     // factory. We hold the resource in its loading state by giving it a
@@ -308,19 +314,112 @@ describe('submitWithWarnings — Angular submit() drift guard', () => {
 
     const action = vi.fn(async () => {});
 
-    // submitWithWarnings must NOT call action while pending() is true.
-    await submitWithWarnings(asyncForm, action);
-    expect(action).not.toHaveBeenCalled();
+    // submitWithWarnings must call action even while pending() is true.
+    const result = await submitWithWarnings(asyncForm, action);
+    expect(action).toHaveBeenCalledOnce();
+    expect(result).toBe(true);
 
-    // Unblock the async validator and let it fully settle.
+    // Unblock the async validator so the resource settles cleanly (avoids
+    // leaking a pending gate into a later test / teardown).
     resolveValidation();
     await TestBed.inject(ApplicationRef).whenStable();
-
-    // The form should no longer be pending.
     expect(asyncForm().pending()).toBe(false);
+  });
 
-    // Now submitWithWarnings should invoke the action (no blocking errors, not pending).
-    await submitWithWarnings(asyncForm, action);
+  it('submits a warning-only form even while an async validator is pending (acceptance: #437)', async () => {
+    // Direct acceptance-criteria coverage: "A form with only warnings and a
+    // pending async validator submits; the action receives the form value."
+    interface SignupModel {
+      username: string;
+      password: string;
+    }
+
+    let resolveValidation!: () => void;
+    const validationGate = new Promise<void>((res) => {
+      resolveValidation = res;
+    });
+
+    const model = signal<SignupModel>({
+      username: 'ada',
+      password: 'short',
+    });
+
+    const signupForm: FieldTree<SignupModel> = TestBed.runInInjectionContext(
+      () =>
+        form(
+          model,
+          schema<SignupModel>((path) => {
+            // Warning only — must never block submission.
+            validate(path.password, (ctx) => {
+              const value = ctx.value();
+              if (value && value.length < 12) {
+                return warningError(
+                  'short-password',
+                  'Consider using 12+ characters',
+                );
+              }
+              return null;
+            });
+            // Still-pending async validator on a different field.
+            validateAsync(path.username, {
+              params: (ctx) => ctx.value(),
+              factory: (params) =>
+                resource({
+                  params,
+                  loader: async () => {
+                    await validationGate;
+                    return 'valid';
+                  },
+                }),
+              onSuccess: (_result, _ctx) => null,
+              onError: (_error, _ctx) => null,
+            });
+          }),
+        ),
+    );
+
+    await vi.waitFor(() => {
+      expect(signupForm().pending()).toBe(true);
+    });
+
+    let receivedValue: SignupModel | undefined;
+    const action = vi.fn(async () => {
+      receivedValue = signupForm().value();
+    });
+
+    const result = await submitWithWarnings(signupForm, action);
+
     expect(action).toHaveBeenCalledOnce();
+    expect(result).toBe(true);
+    expect(receivedValue).toEqual({ username: 'ada', password: 'short' });
+
+    resolveValidation();
+    await TestBed.inject(ApplicationRef).whenStable();
+  });
+
+  it('returns the same boolean result as Angular submit() on both outcomes', async () => {
+    const nativeForm = makeContactForm();
+    const nativeResult = await submit(nativeForm, async () => {});
+    expect(nativeResult).toBe(false); // blocking errors present
+
+    const toolkitForm = makeContactForm();
+    const toolkitRefusedResult = await submitWithWarnings(
+      toolkitForm,
+      async () => {},
+    );
+    expect(toolkitRefusedResult).toBe(false);
+
+    const fillValidValues = (f: FieldTree<ContactModel>): void => {
+      f.email().value.set('user@example.com');
+      f.name().value.set('Ada Lovelace');
+    };
+
+    const validForm = makeContactForm();
+    fillValidValues(validForm);
+    const toolkitSuccessResult = await submitWithWarnings(
+      validForm,
+      async () => {},
+    );
+    expect(toolkitSuccessResult).toBe(true);
   });
 });

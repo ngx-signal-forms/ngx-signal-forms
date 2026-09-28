@@ -1,0 +1,4 @@
+# Committed baseline snapshots of built `.d.ts` output (#514). Force LF so a
+# contributor on Windows (core.autocrlf=true) can't introduce a CRLF diff
+# that the check-published-package guard reports as a spurious API change.
+packages/toolkit/api-reports/** text eol=lf

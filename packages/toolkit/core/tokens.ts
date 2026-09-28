@@ -18,6 +18,57 @@ import type {
 export interface NgxSignalFormFieldContext {
   /** Resolved field name signal, or `null` when the wrapper cannot resolve one. */
   readonly fieldName: Signal<string | null>;
+
+  /**
+   * Resolves a stable 0-based ordinal for `hint` among its sibling hints
+   * that also need a generated fallback id (no bound or explicit `id`).
+   * Wrappers that project more than one `<ngx-form-field-hint>` for the
+   * same field implement this so the fallback id stays unique per hint
+   * instead of every unnamed hint colliding on `${fieldName}-hint`
+   * (WCAG 1.3.1, axe `duplicate-id-aria`). `hint` is the requesting hint
+   * component instance, typed as `object` here so this core token stays
+   * free of a dependency on the assistive entry point.
+   *
+   * Read reactively (inside a `computed`) so ids stay in sync as sibling
+   * hints are added, removed, or reordered. Omitted by contexts that don't
+   * track hints — callers fall back to ordinal `0`.
+   *
+   * Contract: implementations must return `0` for a `hint` they cannot
+   * place among their own candidates (unknown instance, or one that
+   * belongs to a nested field context) rather than a sentinel like `-1` —
+   * callers use the return value directly to build an id, so an unresolved
+   * position must still resolve to the unsuffixed `${fieldName}-hint`.
+   */
+  readonly hintOrdinal?: (hint: object) => number;
+
+  /**
+   * Whether the wrapper's bound control has its `aria-describedby` composed
+   * by `NgxSignalFormAutoAria` — `true` unless the control opts out via
+   * `ngxSignalFormControlAria="manual"`. In manual mode, auto-aria leaves
+   * `aria-describedby` entirely author-owned (see
+   * `NgxSignalFormAutoAria.ariaDescribedBy`), so an id registered through
+   * `NGX_SIGNAL_FORM_HINT_REGISTRY` — a hint's, or a character count's limit
+   * description — never reaches the DOM attribute even though the id was
+   * successfully minted.
+   *
+   * This does not affect `NgxFormFieldHint`: its content stays directly
+   * visible whether or not its id is referenced, so an unlinked hint is
+   * still readable. `NgxFormFieldCharacterCount` reads this signal because
+   * it does the opposite — it hides its own visible "n/max" text once a
+   * limit description exists to replace it — and hiding that text without a
+   * working link would silence the count for assistive technology (issue
+   * #499 hardening).
+   *
+   * Omitted by contexts that don't track control ARIA ownership. Callers
+   * default to `false` when this is absent — a context that cannot confirm
+   * the link is safest treated as "not linked", not as the common case.
+   * `NgxFormFieldWrapper` always publishes it (`true` unless the bound
+   * control opts into `ngxSignalFormControlAria="manual"`); a custom
+   * wrapper that provides its own `NGX_SIGNAL_FORM_FIELD_CONTEXT` without
+   * this member gets the safe default instead of silently promising a link
+   * it never registers (see `docs/CUSTOM_WRAPPERS.md`).
+   */
+  readonly isControlDescribedByManaged?: () => boolean;
 }
 
 /**
@@ -41,6 +92,11 @@ export const DEFAULT_NGX_SIGNAL_FORMS_CONFIG = {
   requiredLegendText: '{marker} indicates a required field',
   optionalLegendText: 'All fields are required unless marked {marker}',
   requiredHintText: 'required',
+  errorPrefixText: 'Error:',
+  warningPrefixText: 'Warning:',
+  errorSummaryAnnouncesAlone: true,
+  characterCountLimitText: 'Up to {max} characters',
+  hideHintOnError: false,
 } as const satisfies NgxSignalFormsConfig;
 
 /**
@@ -136,10 +192,13 @@ export const NGX_SIGNAL_FORM_FIELD_CONTEXT =
  * longer needs a direct class import, which lets the two directives evolve
  * independently.
  *
- * Internal contract between the control-semantics directive and the
- * auto-ARIA directive. Consumers should use `ngxSignalFormControlAria` on
- * their control host instead of providing this token directly — that keeps
- * the public API focused on the declarative directive input.
+ * Exported from the package root so a custom wrapper that writes its own ARIA
+ * can declare the mode for a control host it builds itself. Prefer the
+ * `ngxSignalFormControlAria` attribute on the control host wherever a
+ * template can carry it — provide this token directly only when there is no
+ * such host to annotate.
+ *
+ * @public
  */
 export const NGX_SIGNAL_FORM_ARIA_MODE = new InjectionToken<
   Signal<NgxSignalFormControlAriaMode | null>

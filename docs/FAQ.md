@@ -3,7 +3,7 @@
 This is a **use-case FAQ**: how do I actually do _X_ when building a form with Angular Signal
 Forms and this toolkit. Each answer is short and links the canonical doc plus a runnable demo. For
 conceptual "what is this / why / how does it differ from Angular's built-ins" questions, see the
-[root README FAQ](../README.md#faq) and [docs/ANGULAR_VS_TOOLKIT.md](./ANGULAR_VS_TOOLKIT.md).
+[root README](../README.md) and [docs/ANGULAR_VS_TOOLKIT.md](./ANGULAR_VS_TOOLKIT.md).
 
 Throughout: primitives like `form`, `submit`, `validate`, `hidden`, `disabled`, `debounce`,
 `validateHttp`, `validateStandardSchema`, `applyEach`, and the control contracts are **Angular

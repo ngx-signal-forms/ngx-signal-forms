@@ -9,37 +9,21 @@ metadata:
 
 # Angular Developer Guidelines
 
-1. Always analyze the project's Angular version before providing guidance, as best practices and available features can vary significantly between versions. If creating a new project with Angular CLI, do not specify a version unless prompted by the user.
+1. Check the project's installed Angular version before choosing APIs. Preserve its form strategy unless the user authorizes a migration.
 
-2. When generating code, follow Angular's style guide and best practices for maintainability and performance. Use the Angular CLI for scaffolding components, services, directives, pipes, and routes to ensure consistency.
+2. Follow Angular's style guide. In an Nx workspace, use the `nx-generate` skill and the workspace's configured generators. Outside Nx, use the project's Angular CLI for generation.
 
-3. Once you finish generating code, run `ng build` to ensure there are no build errors. If there are errors, analyze the error messages and fix them before proceeding. Do not skip this step, as it is critical for ensuring the generated code is correct and functional.
+3. After generating code, build the affected project and fix relevant errors. In Nx, use `nx-run-tasks` to run its configured build target through the workspace package manager. Outside Nx, use its configured build command or local Angular CLI.
 
-## Creating New Projects
+## Creating new projects
 
-If no guidelines are provided by the user, here are some default rules to follow when creating a new Angular project:
+In an existing Nx workspace, use `nx-generate` first and match the workspace's Angular version. Do not create a separate CLI workspace inside it unless requested.
 
-1. Use the latest stable version of Angular unless the user specifies otherwise.
-2. Use Signals Forms for form management in new projects (available in Angular v21 and newer) [Find out more](references/signal-forms.md).
+For a new project outside Nx:
 
-**Execution Rules for `ng new`:**
-When asked to create a new Angular project, you must determine the correct execution command by following these strict steps:
-
-**Step 1: Check for an explicit user version.**
-
-- **IF** the user requests a specific version (e.g., Angular 15), bypass local installations and strictly use `npx`.
-- **Command:** `npx @angular/cli@<requested_version> new <project-name>`
-
-**Step 2: Check for an existing Angular installation.**
-
-- **IF** no specific version is requested, run `ng version` in the terminal to check if the Angular CLI is already installed on the system.
-- **IF** the command succeeds and returns an installed version, use the local/global installation directly.
-- **Command:** `ng new <project-name>`
-
-**Step 3: Fallback to Latest.**
-
-- **IF** no specific version is requested AND the `ng version` command fails (indicating no Angular installation exists), you must use `npx` to fetch the latest version.
-- **Command:** `npx @angular/cli@latest new <project-name>`
+1. If the user specifies a version, use `npx @angular/cli@<requested_version> new <project-name>`.
+2. Otherwise select the latest stable CLI explicitly with `npx @angular/cli@latest new <project-name>`. A global CLI installation does not determine the new project's version.
+3. Prefer Signal Forms for new Angular v22+ projects. They are stable in v22 and experimental in v21. Read [Signal Forms](references/signal-forms.md) before implementation.
 
 ## Components
 
@@ -69,14 +53,11 @@ When communicating with backend services, use Angular HTTP APIs and consult the 
 
 ## Forms
 
-In most cases for new apps, **prefer signal forms**. When making a forms decision, analyze the project and consider the following guidelines:
+Preserve the application's existing form strategy, including new forms added to that application, unless the user authorizes a change. For new Angular v22+ applications, prefer Signal Forms. Complexity alone does not require Reactive Forms.
 
-- If the application is using v21 or newer and this is a new form, **prefer signal forms**.
-- For older applications or when working with existing forms, use the appropriate form type that matches the applications current form strategy.
-
-- **Signal Forms**: Use signals for form state management. Read [signal-forms.md](references/signal-forms.md)
-- **Template-driven forms**: Use for simple forms. Read [template-driven-forms.md](references/template-driven-forms.md)
-- **Reactive forms**: Use for complex forms. Read [reactive-forms.md](references/reactive-forms.md)
+- **Signal Forms**: Read [signal-forms.md](references/signal-forms.md) for APIs, submission, validation, and custom controls. This repository owns the canonical project-specific reference; update it here rather than copying it to user-level skills.
+- **Template-driven forms**: Read [template-driven-forms.md](references/template-driven-forms.md) when maintaining or explicitly choosing this strategy.
+- **Reactive forms**: Read [reactive-forms.md](references/reactive-forms.md) when maintaining or explicitly choosing this strategy.
 
 ## Dependency Injection
 

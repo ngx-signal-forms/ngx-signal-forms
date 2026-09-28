@@ -19,7 +19,7 @@ export const WARNING_SUPPORT_CONTENT = {
       {
         title: 'Warning Support Features',
         items: [
-          '<code>warningError()</code> utility for non-blocking feedback',
+          '<code>warn:*</code> error kinds for non-blocking feedback',
           'Visual distinction: Errors (red) vs Warnings (amber)',
           'ARIA roles: <code>alert</code> (errors) vs <code>status</code> (warnings)',
           'Form submission allowed with warnings present',
@@ -41,17 +41,17 @@ export const WARNING_SUPPORT_CONTENT = {
     title: 'Interactive Warning Testing',
     sections: [
       {
-        title: '🧪 Try This',
+        title: 'Try This',
         items: [
           '1. Leave fields empty → Submit → See blocking errors prevent submission',
-          '2. Enter username "abc" (3 chars) → Warning appears: "Consider using 6+ characters for better security"',
-          '3. Enter password "Short123" (8 chars) → Warning: "Consider using 12+ characters for better security"',
+          '2. Enter username "abcd" (4 chars) → Warning appears: "Consider using 6+ characters for better security"',
+          '3. Enter password "password123" (11 chars) → Warnings appear: "Consider using 12+ characters for better security" and "Consider mixing uppercase, lowercase, numbers, and special characters"',
           '4. Enter password "alllowercase" → Warning: "Consider mixing uppercase, lowercase, numbers, and special characters"',
           "5. Submit with warnings present → Submission succeeds! Warnings don't block.",
         ],
       },
       {
-        title: '📊 When to Use Each',
+        title: 'When to Use Each',
         items: [
           '<strong>Blocking Errors:</strong> Required fields, invalid format, business rules',
           '<strong>Warnings:</strong> Password strength, recommendations, best practices',
@@ -60,9 +60,9 @@ export const WARNING_SUPPORT_CONTENT = {
         ],
       },
       {
-        title: '🎯 Implementation Pattern',
+        title: 'Implementation Pattern',
         items: [
-          'Use <code>warningError("weak-password", "Consider 12+ chars...")</code>',
+          'Use a <code>ValidationError</code> whose <code>kind</code> starts with <code>warn:</code>',
           'Toolkit automatically separates errors from warnings',
           'Visual styling distinguishes severity levels',
           'Screen readers announce appropriately',

@@ -1,6 +1,6 @@
 {
   "name": "@ngx-signal-forms/toolkit",
-  "version": "1.0.0-rc.12",
+  "version": "1.0.0-rc.15",
   "description": "Zero-intrusive toolkit for Angular Signal Forms with automatic accessibility, error display strategies, and form field wrappers",
   "keywords": [
     "angular",
@@ -8,12 +8,18 @@
     "forms",
     "accessibility",
     "a11y",
+    "aria",
     "validation",
+    "vest",
     "wcag"
   ],
+  "homepage": "https://github.com/ngx-signal-forms/ngx-signal-forms#readme",
+  "bugs": {
+    "url": "https://github.com/ngx-signal-forms/ngx-signal-forms/issues"
+  },
   "repository": {
     "type": "git",
-    "url": "https://github.com/ngx-signal-forms/ngx-signal-forms",
+    "url": "git+https://github.com/ngx-signal-forms/ngx-signal-forms.git",
     "directory": "packages/toolkit"
   },
   "license": "MIT",
@@ -28,8 +34,8 @@
     "@angular/common": ">=22.0.0 <23.0.0",
     "@angular/core": ">=22.0.0 <23.0.0",
     "@angular/forms": ">=22.0.0 <23.0.0",
-    "axe-core": ">=4.5.0",
-    "vest": ">=6.0.0 <7.0.0"
+    "axe-core": ">=4.13.0 <5",
+    "vest": ">=6.3.0 <7.0.0"
   },
   "peerDependenciesMeta": {
     "axe-core": {

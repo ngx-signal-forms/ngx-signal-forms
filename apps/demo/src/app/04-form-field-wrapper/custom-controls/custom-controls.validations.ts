@@ -79,4 +79,9 @@ export const customControlsSchema = schema<CustomControlsModel>((path) => {
   // validation is the `parse` error the LegacyDatepickerAdapterComponent
   // reports automatically (via `transformedValue`) when the underlying
   // legacy widget's typed text isn't a real YYYY-MM-DD date.
+
+  // Country — mocked autocomplete demonstrating the padding-ownership
+  // recipe (#475). Required so the field shows validation feedback as part
+  // of that recipe (see docs/CUSTOM_CONTROLS.md).
+  required(path.country, { message: 'Choose a country' });
 });

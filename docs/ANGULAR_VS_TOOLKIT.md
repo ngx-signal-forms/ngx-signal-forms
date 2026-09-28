@@ -35,7 +35,7 @@ adds nothing you'd miss. Adopting it later requires no rewrites because your
 
 ### Side-by-side: the same field, with and without the toolkit
 
-See [the root README's side-by-side comparison](../README.md#see-the-difference)
+See [the root README's entry-point chooser](../README.md#which-part-of-the-toolkit-do-i-need)
 for the same email field written with plain Signal Forms versus with the
 toolkit. The wrapper handles ARIA wiring, error timing, `role="alert"` vs
 `role="status"`, and hint/counter projection automatically. Angular still owns

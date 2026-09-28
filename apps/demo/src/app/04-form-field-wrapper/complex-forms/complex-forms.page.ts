@@ -85,13 +85,13 @@ const FIELDSET_ERROR_PLACEMENT_LABELS: Record<
           class="block min-w-0"
         />
         <ngx-display-controls-section
-          title="🎨 Long-form styling"
+          title="Long-form styling"
           description="Compare whether the standard or outline wrapper does a better job of keeping long sections and array rows scannable."
         >
           <ngx-appearance-toggle [(value)]="selectedAppearance" />
         </ngx-display-controls-section>
         <ngx-display-controls-section
-          title="↔️ Label orientation"
+          title="Label orientation"
           description="Switch between standard vertical labels and horizontal label columns for the non-outline wrappers. Outline remains vertical by design."
         >
           <ngx-orientation-toggle
@@ -100,7 +100,7 @@ const FIELDSET_ERROR_PLACEMENT_LABELS: Record<
           />
         </ngx-display-controls-section>
         <ngx-display-controls-section
-          title="↕️ Grouped feedback placement"
+          title="Grouped feedback placement"
           description="Move grouped feedback above or below each section to compare when a shared summary or grouped wrapper error should lead or follow the controls."
         >
           <div
@@ -169,13 +169,21 @@ const FIELDSET_ERROR_PLACEMENT_LABELS: Record<
           @if (complexFormRef) {
             <div>
               <h3
-                class="mb-2 text-sm font-semibold tracking-wider text-gray-500 uppercase"
+                class="mb-2 text-sm font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400"
               >
                 Complex Form State
               </h3>
-              <ngx-signal-form-debugger
-                [formTree]="complexFormRef.complexForm"
-              />
+              @defer (on idle) {
+                <ngx-signal-form-debugger
+                  [formTree]="complexFormRef.complexForm"
+                />
+              } @placeholder {
+                <div class="debugger-placeholder" aria-hidden="true"></div>
+              } @error {
+                <p class="debugger-placeholder">
+                  The form debugger failed to load.
+                </p>
+              }
             </div>
           }
         </div>

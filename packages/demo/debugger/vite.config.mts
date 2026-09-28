@@ -7,7 +7,7 @@ import tsconfigPaths from 'vite-tsconfig-paths';
 process.env['NX_DAEMON'] ??= 'false';
 
 export default defineConfig({
-  root: __dirname,
+  root: import.meta.dirname,
   cacheDir: '../../../node_modules/.vite/packages/demo/debugger',
   plugins: [angular(), tsconfigPaths()],
   optimizeDeps: {

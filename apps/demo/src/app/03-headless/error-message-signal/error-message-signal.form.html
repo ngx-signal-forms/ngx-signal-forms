@@ -38,7 +38,7 @@
       <label for="password" class="text-sm font-medium"> Password * </label>
       <input
         id="password"
-        type="text"
+        type="password"
         class="form-input"
         [formField]="passwordForm.password"
         placeholder="Enter a password…"
@@ -150,7 +150,7 @@
       <button
         type="submit"
         class="btn-primary"
-        [disabled]="passwordForm().submitting()"
+        [ngxBusy]="passwordForm().submitting()"
       >
         @if (passwordForm().submitting()) { Submitting... } @else { Submit }
       </button>
@@ -159,4 +159,6 @@
       </button>
     </div>
   </form>
+
+  <ngx-submit-status [message]="successMessage()" />
 </div>

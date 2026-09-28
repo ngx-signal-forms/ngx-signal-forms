@@ -9,7 +9,7 @@ This route is the smallest advanced baseline for Zod validation with Angular Sig
 - `validateStandardSchema(path, zodSchema)` — Standard Schema adapter consuming Zod.
 - `form(model, schema, { submission })` with declarative submit handling.
 - `ngx-form-field-wrapper` rendering for baseline structural errors.
-- Display controls that let you compare timing (`on-touch`, `on-dirty`, `always`) and wrapper appearance.
+- Display controls compare `on-touch`, `on-submit`, and `immediate` timing and wrapper appearance.
 
 ## Form model
 

@@ -1,9 +1,14 @@
 import {
+  afterNextRender,
   ChangeDetectionStrategy,
   Component,
   computed,
+  ElementRef,
+  inject,
+  Injector,
   input,
   signal,
+  viewChild,
 } from '@angular/core';
 import { FormField, form } from '@angular/forms/signals';
 import type {
@@ -22,6 +27,7 @@ import {
 import { SwitchControlComponent } from '../../shared/controls';
 import type { ComplexFormModel } from './complex-forms.model';
 import { complexFormSchema } from './complex-forms.validations';
+import { BusyButtonDirective } from '../../shared/busy-button.directive';
 
 function createInitialComplexFormModel(): ComplexFormModel {
   return {
@@ -64,6 +70,7 @@ function createInitialComplexFormModel(): ComplexFormModel {
   changeDetection: ChangeDetectionStrategy.OnPush,
 
   imports: [
+    BusyButtonDirective,
     FormField,
     NgxSignalFormToolkit,
     NgxFormField,
@@ -75,17 +82,24 @@ function createInitialComplexFormModel(): ComplexFormModel {
     }
 
     .complex-form-fieldset {
-      --ngx-signal-form-fieldset-gap: 0;
+      /* #471: the fieldset's own gap owns the rhythm between its fields now
+         that the field margin defaults to 0. */
       --ngx-signal-form-fieldset-padding: 0;
       --ngx-signal-form-fieldset-border-width: 0;
       --ngx-signal-form-fieldset-content-offset: 0.5rem;
     }
 
     .complex-array-fieldset {
+      /* The array rows own their own spacing via the
+         .array-entry-grid + .array-entry-grid rule below, not the
+         fieldset gap. */
       --ngx-signal-form-fieldset-gap: 0;
     }
 
     .complex-form-fieldset--credentials-summary {
+      /* The intro paragraph and fields grid here sit close together by
+         design, unrelated to #471. */
+      --ngx-signal-form-fieldset-gap: 0;
       --ngx-signal-form-fieldset-content-offset: 0;
       --ngx-signal-form-fieldset-message-inset-inline-start: 0.875rem;
       --ngx-signal-form-fieldset-message-padding-inline-start: 0;
@@ -100,6 +114,17 @@ function createInitialComplexFormModel(): ComplexFormModel {
 
     .choice-group-field__label {
       color: #324155;
+    }
+
+    /* #324155 is 1.94:1 on the dark surface */
+    :host-context(.dark) .choice-group-field__label {
+      color: var(--color-text-muted);
+    }
+
+    .array-empty {
+      margin-block: 0.25rem 0.5rem;
+      font-size: 0.875rem;
+      color: var(--color-text-muted);
     }
 
     .preferences-stack {
@@ -208,6 +233,12 @@ export class ComplexFormsComponent {
 
   /** Form data model */
   readonly #model = signal(createInitialComplexFormModel());
+  readonly #host = inject<ElementRef<HTMLElement>>(ElementRef);
+  readonly #injector = inject(Injector);
+  private readonly addSkillButton =
+    viewChild.required<ElementRef<HTMLButtonElement>>('addSkillButton');
+  private readonly addContactButton =
+    viewChild.required<ElementRef<HTMLButtonElement>>('addContactButton');
 
   /** Create form with validation schema */
   readonly complexForm = form(this.#model, complexFormSchema, {
@@ -253,6 +284,13 @@ export class ComplexFormsComponent {
       ...data,
       skills: data.skills.filter((_, i) => i !== index),
     }));
+    this.#focusAfterRemoval(
+      'skill',
+      'name',
+      index,
+      this.#model().skills.length,
+      this.addSkillButton(),
+    );
   }
 
   /**
@@ -273,6 +311,40 @@ export class ComplexFormsComponent {
       ...data,
       contacts: data.contacts.filter((_, i) => i !== index),
     }));
+    this.#focusAfterRemoval(
+      'contact',
+      'value',
+      index,
+      this.#model().contacts.length,
+      this.addContactButton(),
+    );
+  }
+
+  /**
+   * The remove button leaves the DOM with its row, which drops focus to
+   * <body>. Move it to the row that took its place, else the previous row,
+   * else the Add button.
+   */
+  #focusAfterRemoval(
+    prefix: string,
+    field: string,
+    removedIndex: number,
+    remaining: number,
+    addButton: ElementRef<HTMLButtonElement>,
+  ): void {
+    afterNextRender(
+      () => {
+        const target = Math.min(removedIndex, remaining - 1);
+        const input =
+          target >= 0
+            ? this.#host.nativeElement.querySelector<HTMLElement>(
+                `#${prefix}-${target}-${field}`,
+              )
+            : null;
+        (input ?? addButton.nativeElement).focus();
+      },
+      { injector: this.#injector },
+    );
   }
 
   /**

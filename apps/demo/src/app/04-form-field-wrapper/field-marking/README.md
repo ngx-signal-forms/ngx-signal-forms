@@ -11,8 +11,8 @@ form-aware legend.
 - **`NgxFormMarkingLegend`** — placed at the top of the form; mode-aware,
   form-aware (hides when no relevant field exists), and text-overridable.
 - **All appearances** — markers render in `standard`, `outline`, and `plain`.
-- **Conditional required** — the "make phone required" toggle flips a field's
-  required-ness so the legend's auto-hide can be observed.
+- The "make phone required" toggle changes the phone marker. Name/email remain
+  required and Company/Bio remain optional, so this toggle does not hide either legend category.
 
 ## Manual test checklist
 

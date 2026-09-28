@@ -198,23 +198,9 @@ The component uses CSS custom properties for theming:
 
 Or override the component styles entirely using `::ng-deep` or by providing custom CSS classes.
 
-## Comparison with @defer Alone
+## Deferred step content
 
-The advanced-wizard demo uses `@defer` directly in a `@switch`:
-
-```html
-@switch (store.currentStep()) { @case ('step1') { @defer { <step1 /> } } }
-```
-
-This works but:
-
-- Step definitions are inline (less reusable)
-- Navigation logic is in the parent component
-- No built-in progress indicator
-
-The reusable wizard component provides:
-
-- Declarative step definitions via directives
-- Built-in progress and navigation
-- `stepChange` event for validation hooks
-- Consistent patterns across features
+The [advanced wizard](../../05-advanced/advanced-wizard/README.md) uses
+`<ngx-wizard>` with projected step templates and `@defer` inside them.
+The shared component provides progress and navigation; deferred content
+controls when each step implementation loads. These mechanisms work together.

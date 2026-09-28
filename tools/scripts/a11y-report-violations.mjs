@@ -10,11 +10,13 @@
  *   - RESOLVED violation (in baseline, not in results) → drop from baseline
  *
  * The baseline is then rewritten to exactly the current violation set, so the
- * file diff in a PR shows precisely what changed. Demo apps showcase the
- * toolkit and may inherit violations from page scaffolding or third-party UI
- * layers, so this is a tracking gate, not a hard fail — the toolkit's own
- * Vitest browser specs (packages/toolkit/.../*.a11y.browser.spec.ts) are the
- * hard WCAG 2.2 AA gate.
+ * file diff in a PR shows precisely what changed. On pull requests this is a
+ * blocking gate: `--check` fails the job on any violation the baseline does
+ * not list, and a reviewed baseline diff is the only way to accept one (see
+ * ADR-0013). On pushes to main the job does not block, so the auto-issue flow
+ * still runs. The toolkit's own Vitest browser specs
+ * (packages/toolkit/.../*.a11y.browser.spec.ts) remain the WCAG 2.2 AA gate
+ * for the components themselves.
  *
  * Usage:
  *   node tools/scripts/a11y-report-violations.mjs [flags]
@@ -25,8 +27,8 @@
  *   --update-baseline  Rewrite each app's a11y-baseline.json to exactly the
  *                      current violation set. Run locally to accept the current
  *                      state (e.g. `pnpm a11y:baseline`).
- *   --check            Exit 1 if any NEW violations were found. Used on PRs for
- *                      visibility (the CI job is non-blocking).
+ *   --check            Exit 1 if any NEW violations were found. Used on PRs,
+ *                      which fails the job (see ADR-0013).
  */
 
 import { execFileSync } from 'node:child_process';
@@ -146,31 +148,30 @@ function issueBody(app, v) {
   ].join('\n');
 }
 
-/** Avoid duplicate issues: returns true if an open issue with this title exists. */
-function issueExists(title) {
-  try {
-    const out = execFileSync(
-      'gh',
-      [
-        'issue',
-        'list',
-        '--state',
-        'open',
-        '--search',
-        title,
-        '--json',
-        'title',
-        '--limit',
-        '50',
-      ],
-      { cwd: WORKSPACE_ROOT, encoding: 'utf8' },
-    );
-    const issues = JSON.parse(out);
-    return issues.some((issue) => issue.title === title);
-  } catch (error) {
-    console.warn(`  ! could not query existing issues: ${error.message}`);
-    return false;
-  }
+/**
+ * Avoid duplicate issues: returns true if an open issue with this title
+ * exists. Throws if the search itself fails, so a `gh` outage cannot be
+ * mistaken for "no issue found" and create a duplicate.
+ */
+export function issueExists(title) {
+  const out = execFileSync(
+    'gh',
+    [
+      'issue',
+      'list',
+      '--state',
+      'open',
+      '--search',
+      title,
+      '--json',
+      'title',
+      '--limit',
+      '50',
+    ],
+    { cwd: WORKSPACE_ROOT, encoding: 'utf8' },
+  );
+  const issues = JSON.parse(out);
+  return issues.some((issue) => issue.title === title);
 }
 
 function createIssue(app, v) {
@@ -266,4 +267,6 @@ function main() {
   }
 }
 
-main();
+if (import.meta.main) {
+  main();
+}

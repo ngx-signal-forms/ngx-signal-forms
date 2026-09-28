@@ -111,6 +111,12 @@ function isStandardSchemaKeyRequired(
   }
 
   if (isPromiseLike(result)) {
+    // The probe's answer is `false` either way, but dropping the promise on
+    // the floor would let an async validator that rejects surface as an
+    // unhandled rejection (a crash under Node's default policy) from a call
+    // the consumer never made themselves. Adopt it and swallow the outcome.
+    void Promise.resolve(result).catch(() => undefined);
+
     return false;
   }
 
@@ -153,7 +159,7 @@ function isStandardSchemaKeyRequired(
  * @example
  * ```typescript
  * import { form, validateStandardSchema } from '@angular/forms/signals';
- * import { requiredFromStandardSchema } from '@ngx-signal-forms/toolkit/core';
+ * import { requiredFromStandardSchema } from '@ngx-signal-forms/toolkit';
  *
  * const travelerForm = form(model, (path) => {
  *   validateStandardSchema(path, TravelerSchema);

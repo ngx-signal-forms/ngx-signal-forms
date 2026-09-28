@@ -15,7 +15,12 @@
       "!{projectRoot}/**/?(*.)+(spec|test).[jt]s?(x)?(.snap)",
       "!{projectRoot}/tsconfig.spec.json",
       "!{projectRoot}/src/test-setup.[jt]s",
-      "!{projectRoot}/test-setup.[jt]s"
+      "!{projectRoot}/test-setup.[jt]s",
+      // Committed baseline snapshots (#514) and their size-budget config are
+      // build-output artifacts and check tooling, not build input — a
+      // no-op glob on every project that doesn't have them.
+      "!{projectRoot}/api-reports/**",
+      "!{projectRoot}/.size-limit.cjs"
     ],
     "sharedGlobals": []
   },

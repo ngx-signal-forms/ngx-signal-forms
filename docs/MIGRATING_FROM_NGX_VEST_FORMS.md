@@ -32,7 +32,7 @@ If you are coming from `ngx-vest-forms` with **Vest 5.x**, the first migration s
 
 You cannot keep Vest 5.x and migrate directly to `@ngx-signal-forms/toolkit/vest`.
 
-- `@ngx-signal-forms/toolkit` declares `vest` as an optional peer dependency at `>=6.0.0` (see `packages/toolkit/package.json`)
+- `@ngx-signal-forms/toolkit` declares `vest` as an optional peer dependency at `>=6.3.0 <7.0.0` (see `packages/toolkit/package.json`)
 - current toolkit docs and demos assume **Vest 6**
 - `@ngx-signal-forms/toolkit/vest` will **not work on Vest 5.x**
 - your existing suite logic will often still look familiar, but you should verify any usage of `only()`, `skip()`, `omitWhen()`, async warnings, and focused updates against Vest 6 docs

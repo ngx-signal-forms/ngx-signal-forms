@@ -5,7 +5,7 @@
 /* https://lea.verou.me/blog/2021/10/custom-properties-with-defaults/ */
 /* Layering approach: */
 /* 1. Design tokens (internal, --_fieldset-*) - Base values for colors, spacing, typography */
-/* 2. Shared feedback tier (--_feedback-*, from form-field/_feedback-tokens) */
+/* 2. Shared feedback tier (--_feedback-*, from core/feedback-tokens.css) */
 /* 3. Public API (--ngx-signal-form-fieldset-*) - Overridable by consumers */
 /* 4. Pseudo-private (--_fieldset-*) - Resolve public → feedback → internal defaults */
 /* 5. Implementation - Uses only the resolved --_* variables */
@@ -28,23 +28,40 @@
   --_fieldset-radius-lg: 0.75rem;
   --_fieldset-border-width-default: 1px;
 
-  --_fieldset-clr-text: #324155;
-  --_fieldset-clr-text-secondary: rgba(50, 65, 85, 0.75);
-  --_fieldset-clr-border: rgba(50, 65, 85, 0.25);
-  --_fieldset-clr-info: #007bc7;
-  --_fieldset-clr-success: #3f8f4f;
-  --_fieldset-clr-danger: #db1818;
-  --_fieldset-clr-warning: #a16207;
-  --_fieldset-clr-warning-strong: #92400e;
+  /* Colors are light-dark(<light>, <dark>) pairs that follow the element's */
+  /* used `color-scheme` (see THEMING.md, "Scenario C: Dark Mode"). Dark text values */
+  /* meet WCAG 1.4.3 on the dark surface (#1f2937): text 14.05:1, */
+  /* secondary 8.54:1, danger 7.73:1 (7.02:1 on the dark danger surface), */
+  /* warning 10.18:1 (9.28:1 on the dark warning tint). */
+  --_fieldset-clr-text: light-dark(#324155, #f9fafb);
+  --_fieldset-clr-text-secondary: light-dark(
+    rgba(50, 65, 85, 0.75),
+    rgba(249, 250, 251, 0.75)
+  );
+  --_fieldset-clr-border: light-dark(
+    rgba(50, 65, 85, 0.25),
+    rgba(249, 250, 251, 0.25)
+  );
+  --_fieldset-clr-info: light-dark(#007bc7, #60a5fa);
+  --_fieldset-clr-success: light-dark(#3f8f4f, #4ade80);
+  --_fieldset-clr-danger: light-dark(#db1818, #fca5a5);
+  --_fieldset-clr-warning: light-dark(#a16207, #fcd34d);
+  --_fieldset-clr-warning-strong: light-dark(#92400e, #fcd34d);
 
-  --_fieldset-bg-danger-soft: #fdebeb;
+  --_fieldset-bg-danger-soft: light-dark(#fdebeb, rgb(127 29 29 / 0.32));
   /* Expo surface/danger — the saturated tint for an invalid grouped *surface*
      (the radio/checkbox group box), one step stronger than the danger-soft
      (surface/danger-light) used by the grouped summary notification card. */
-  --_fieldset-bg-danger-surface: #fbdddd;
-  --_fieldset-bg-warning-soft: #fff6e8;
-  --_fieldset-border-danger-soft: rgb(219 24 24 / 0.18);
-  --_fieldset-border-warning-soft: rgb(161 98 7 / 0.2);
+  --_fieldset-bg-danger-surface: light-dark(#fbdddd, rgb(127 29 29 / 0.45));
+  --_fieldset-bg-warning-soft: light-dark(#fff6e8, rgb(120 53 15 / 0.28));
+  --_fieldset-border-danger-soft: light-dark(
+    rgb(219 24 24 / 0.18),
+    rgb(252 165 165 / 0.3)
+  );
+  --_fieldset-border-warning-soft: light-dark(
+    rgb(161 98 7 / 0.2),
+    rgb(252 211 77 / 0.3)
+  );
   --_fieldset-message-animation-default: ngx-status-slide-in 300ms
     cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
 
@@ -343,7 +360,15 @@
   transition: var(--_fieldset-transition-chrome);
 }
 
-:host > legend {
+/* `::ng-deep` is required: `<legend>` is projected (`<ng-content select= */
+/* "legend" />` in `form-fieldset.ts`), so it carries the consumer's */
+/* content attribute, not this component's. Without it this selector */
+/* requires this component's own attribute on the `<legend>` element, */
+/* which a projected legend never carries — it has never matched, on any */
+/* Angular version (#552). Put `::ng-deep` directly after `:host(...)`, */
+/* with no selector between them, and never inside a nested block (22.1 */
+/* leaves it as literal text). */
+:host ::ng-deep > legend {
   max-inline-size: 100%;
   margin-inline-start: var(--_fieldset-legend-inset-inline-start);
   padding: var(--_fieldset-legend-padding);
@@ -366,12 +391,14 @@
   border-color: var(--_fieldset-warning-border);
 }
 
-:host(.ngx-signal-form-fieldset--invalid) > legend {
+/* `::ng-deep` required for the same reason as `:host > legend` above. */
+:host(.ngx-signal-form-fieldset--invalid) ::ng-deep > legend {
   color: var(--_fieldset-invalid-legend-color);
   background: var(--_fieldset-invalid-legend-bg);
 }
 
-:host(.ngx-signal-form-fieldset--warning) > legend {
+/* `::ng-deep` required for the same reason as `:host > legend` above. */
+:host(.ngx-signal-form-fieldset--warning) ::ng-deep > legend {
   color: var(--_fieldset-warning-legend-color);
   background: var(--_fieldset-warning-legend-bg);
 }

@@ -49,10 +49,24 @@ import {
 </form>
 ```
 
-`ngx-form-field-hint` and `ngx-form-field-character-count` are only
-auto-associated with the control when a form-field wrapper (or a custom
-`NGX_SIGNAL_FORM_HINT_REGISTRY` provider) owns the field association. Used
-next to a bare control as shown above, they remain visual-only.
+`ngx-form-field-hint` reaches the control's `aria-describedby` only when a
+form-field wrapper (or your own `NGX_SIGNAL_FORM_HINT_REGISTRY` provider)
+registers it. Next to a bare control, as shown above, it stays visual-only.
+
+`ngx-form-field-character-count` needs the same two things as the hint — a
+resolved field name (`NGX_SIGNAL_FORM_FIELD_CONTEXT`) and a wrapper that
+queries it and registers its id — before it links anything. When both are
+present, it renders a visually-hidden element stating the limit (e.g. "Up to
+500 characters") and links it into `aria-describedby`, right after any
+hints, so a screen reader user hears the limit on focus even with
+`[liveAnnounce]` off; the visible "n/max" text then becomes hidden from
+assistive technology, since the hidden element already describes it. Next to
+a bare control, as shown above, nothing links it, so the visible "n/max"
+text stays exposed to assistive technology instead of going silent.
+Override the limit text through `NgxSignalFormsConfig.characterCountLimitText`
+(`{max}` placeholder). Set `[liveAnnounce]="true"` to also give the running
+count its own polite live region, which speaks only on a threshold change,
+not on every keystroke.
 
 ## Components
 
@@ -93,7 +107,7 @@ presentations share this one component:
 | `warningStrategy` | `WarningDisplayStrategy`                       | Override warning display strategy (defaults to `'on-touch'`)                |
 | `listStyle`       | `'plain' \| 'bullets'`                         | Visual layout for rendered messages (`'plain'` by default)                  |
 | `submittedStatus` | `SubmittedStatus`                              | Manual override for `'on-submit'` strategy                                  |
-| `title`           | `string`                                       | Optional title rendered above a visible container's message list            |
+| `title`           | `string \| null \| undefined`                  | Optional title rendered above a visible container's message list            |
 | `presentation`    | `'inline' \| 'panel'`                          | Visual treatment — bare messages vs. a bordered card (`'inline'` default)   |
 
 - Blocking errors render with `role="alert"` (assertive)
@@ -106,6 +120,56 @@ presentations share this one component:
 
 Use `ngxSignalForm` alongside `[formRoot]` when relying on the `'on-submit'` strategy so assistive components can inherit submission state automatically.
 
+#### Telling errors and warnings apart without colour
+
+Each message carries a visually hidden prefix — "Error:" for blocking
+errors, "Warning:" for warnings — inside the element `aria-describedby`
+points to. A screen reader announces "Error: …" or "Warning: …" instead of
+relying on colour alone (WCAG 1.4.1, 1.3.1).
+
+- Configure the text through `NgxSignalFormsConfig.errorPrefixText` /
+  `warningPrefixText` (default `'Error:'` / `'Warning:'`), the same seam as
+  `requiredHintText`. Pass `''` to disable a channel's prefix.
+- Rendered even when `title` is set — a title names the group (e.g.
+  "Delivery notes"), not the channel of a given message, so it cannot stand
+  in for the per-message prefix. `NgxFormFieldset` passes a title to both
+  the error and warning container; without the per-message prefix, a
+  titled warning would be colour-only again.
+- Not applied by `NgxFormFieldErrorSummary` (it renders only blocking
+  errors) or by headless consumers, who render their own markup.
+- `error.message` never contains the prefix: it is rendered as a separate
+  span, so validators and message registries stay prefix-free.
+
+To add a visible icon (none ships by default), set one of these custom
+properties — they feed a `content` value on the message's `::before` (see
+the [Theming guide](../form-field/THEMING.md) for the full token list):
+
+```css
+ngx-form-field-error {
+  --ngx-signal-form-error-icon: '⛔';
+  --ngx-signal-form-warning-icon: '⚠';
+}
+```
+
+Once set, the glyph is generated `::before` content, exposed to assistive
+tech the same as any other CSS-generated content — keep it a supplementary
+visual cue. The accessible distinction always comes from the visually
+hidden prefix above, not from this icon.
+
+To make a specific icon decorative, add empty alt text inside the
+variable's own value instead:
+
+```css
+ngx-form-field-error {
+  --ngx-signal-form-error-icon: '⛔' / '';
+}
+```
+
+The toolkit's own hook stays the plain `content: var(--icon, none)` form
+(no alt text). Its accessible-description test suite runs through
+`dom-accessibility-api`, which mis-parses `content: <value> / ''` and
+reports a stray `" / "` token that real Chromium never announces.
+
 ### NgxFormFieldErrorSummary
 
 Form-level error summary with clickable entries that focus the invalid control.
@@ -117,13 +181,39 @@ Form-level error summary with clickable entries that focus the invalid control.
 />
 ```
 
-| Input             | Type                   | Description                                                                                             |
-| ----------------- | ---------------------- | ------------------------------------------------------------------------------------------------------- |
-| `formTree`        | `FieldTree` (required) | Root form to aggregate errors from                                                                      |
-| `summaryLabel`    | `string`               | Label above the error list                                                                              |
-| `strategy`        | `ErrorDisplayStrategy` | When to show errors                                                                                     |
-| `submittedStatus` | `SubmittedStatus`      | Manual override for `'on-submit'`                                                                       |
-| `autoFocus`       | `boolean`              | Auto-focus the summary on first appearance under `'on-submit'` (default `true`); set `false` to opt out |
+| Input             | Type                    | Description                                                                                             |
+| ----------------- | ----------------------- | ------------------------------------------------------------------------------------------------------- |
+| `formTree`        | `FieldTree` (required)  | Root form to aggregate errors from                                                                      |
+| `summaryLabel`    | `string`                | Label above the error list                                                                              |
+| `headingLevel`    | `2 \| 3 \| 4 \| 5 \| 6` | Heading level for the label — renders a native `h2`–`h6` (default `2`)                                  |
+| `strategy`        | `ErrorDisplayStrategy`  | When to show errors                                                                                     |
+| `submittedStatus` | `SubmittedStatus`       | Manual override for `'on-submit'`                                                                       |
+| `autoFocus`       | `boolean`               | Auto-focus the summary on first appearance under `'on-submit'` (default `true`); set `false` to opt out |
+
+The label is the summary's accessible name: focusing the summary (see
+`autoFocus` above) announces it via `aria-labelledby`. An entry whose error
+has no bound control (for example a custom validator not tied to a field)
+renders as plain text instead of a button, because it has nothing to focus.
+
+#### One announcement per submit
+
+The summary and each `ngx-form-field-error` are `role="alert"` regions. So
+one submit that reveals five field errors would fire six assertive
+announcements at once, and NVDA and JAWS then cut speech off, stack it, or
+read errors twice. Inside a `[ngxSignalForm]` form, the summary therefore
+announces alone:
+
+- A field error that a submit reveals shows outside its own live region. It
+  looks the same and keeps its `${fieldName}-error` id, so the control's
+  `aria-describedby` still reads it. It only skips the announcement.
+- When the user edits the field and its error changes, the new error goes
+  into the field's live region and announces as usual.
+- Forms without a summary, or with the summary outside the `<form>`, do not
+  change.
+- Turn it off with `provideNgxSignalFormsConfig({ errorSummaryAnnouncesAlone: false })`.
+
+Warnings (`role="status"`) and `NgxHeadlessErrorSummary` are not part of
+this. See [ADR-0012](../../../docs/decisions/0012-error-summary-announces-alone.md).
 
 Override field names with `provideFieldLabels()` from `@ngx-signal-forms/toolkit`.
 
@@ -145,8 +235,12 @@ opt into end alignment.
 | `position` | `'left' \| 'right' \| null` | `null`  | Alignment within the assistive row.                                                                                               |
 
 When the hint is inside `ngx-form-field-wrapper`, its resolved ID is registered
-for automatic `aria-describedby` composition. Use an explicit `id` when a
-custom wrapper or design system needs to control the hint's stable DOM identity:
+for automatic `aria-describedby` composition. Without an explicit `id`, a hint
+falls back to `${fieldName}-hint`. Project more than one unnamed hint into the
+same wrapper and the first keeps that short id; each later one gets a unique
+numbered suffix (`${fieldName}-hint-2`, `${fieldName}-hint-3`, …) so no two
+hints share a DOM id (WCAG 1.3.1). Use an explicit `id` when a custom wrapper
+or design system needs to control the hint's stable DOM identity:
 
 ```html
 <ngx-form-field-hint [id]="hintId"
@@ -187,6 +281,11 @@ item count. Unsupported values render `0` and emit a one-time development
 warning rather than being coerced or exposed in the diagnostic.
 
 The built-in announcement strings ("Approaching limit: N characters remaining.", etc.) are English-only. Bind `[announcementFormatter]` to a `(state, { current, max, remaining, over }) => string` function to localize them:
+
+The formatter receives only `warning`, `danger`, or `exceeded`, never `ok`.
+`remaining` and `over` are clamped to zero. Exported types are
+`NgxCharacterCountAnnouncementFormatter`, `NgxCharacterCountAnnouncementState`,
+and `NgxCharacterCountAnnouncementInfo`.
 
 ```typescript
 formatter = (
@@ -255,7 +354,7 @@ while consumers override only the public `--ngx-*` properties.
 
 See the [Theming guide](../form-field/THEMING.md) for the complete list of
 `--ngx-*` custom properties (error/warning/error-panel/hint/char-count
-tokens, dark-mode overrides, and the fieldset-level
+tokens, dark mode through `color-scheme`, and the fieldset-level
 `--ngx-signal-form-fieldset-notification-inset-*` positioning tokens).
 
 ## Related documentation

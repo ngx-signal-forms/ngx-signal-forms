@@ -1,19 +1,28 @@
 # Migrating from beta → current v1 API
 
 This guide covers every breaking change between the last beta
-(`1.0.0-beta.10`) and the current v1 release-candidate surface, including
-`v1.0.0-rc.13`. It is intentionally written against the **latest state only**.
+(`1.0.0-beta.10`) and the current v1 release-candidate surface.
+`1.0.0-rc.15` is the latest released version. Historical beta examples below
+remain migration examples, not current API recipes.
 
 That means this document does **not** walk through interim RC-to-RC
 waypoints. Every “before → after” example below shows the migration from
-beta-era usage to the API you should use **today**. For an RC-to-RC upgrade,
+beta-era usage to the current source API. For an RC-to-RC upgrade,
 read the applicable guide in [`docs/migrations/`](./migrations/README.md);
-for example, [`v1.0.0-rc.13`](./migrations/v1.0.0-rc.13.md) documents the
-upgrade from rc.12.
+for example, [`v1.0.0-rc.15`](./migrations/v1.0.0-rc.15.md) documents the
+upgrade from rc.14. `v1.0.0-rc.16` is the next release and is not yet
+published; its guide at [`v1.0.0-rc.16`](./migrations/v1.0.0-rc.16.md)
+documents the upcoming hop from rc.15.
 
 `v1.0.0-rc.13` adds no new beta-to-v1 breaking TypeScript API. Combobox
 hosts now infer `input-like` instead of `composite`. See that hop guide if
 you already sit on rc.12.
+
+[`v1.0.0-rc.14`](./migrations/v1.0.0-rc.14.md) adds no breaking change.
+`v1.0.0-rc.15` changes three CSS custom-property defaults instead of any
+TypeScript API. See [`v1.0.0-rc.15`](./migrations/v1.0.0-rc.15.md) and
+[`MIGRATING_CSS_VARS.md`](./MIGRATING_CSS_VARS.md#6-rc15-upgrade-from-rc14)
+for the details.
 
 The toolkit follows semver strictly from `1.0.0` onward. Future 1.x
 releases will not include any of the renames below.
@@ -207,8 +216,8 @@ removed. Replace them with the v1 equivalents.
 </ngx-form-field-wrapper>
 ```
 
-The wrapper now owns floating-label behavior via the `appearance`
-input, so there is nothing extra to import.
+The wrapper now owns label placement via the `appearance` input, so there
+is nothing extra to import.
 
 ### `NgxSignalFormsUserConfig` is now flat
 
@@ -646,7 +655,7 @@ driven by `prefers-color-scheme` only, consistently across all engines.
   `--ngx-signal-form-error-*` / `--ngx-signal-form-warning-*` /
   `--ngx-signal-form-error-panel-*` / `--ngx-signal-form-warning-panel-*`
   custom properties yourself, scoped to your `.dark` selector — see the
-  [assistive README](../packages/toolkit/assistive/README.md#dark-mode).
+  [theming guide](../packages/toolkit/form-field/THEMING.md#scenario-c-dark-mode).
 
 ---
 

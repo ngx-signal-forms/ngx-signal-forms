@@ -1,3 +1,3 @@
 # @spartan-ng/helm/select
 
-Secondary entry point of `@spartan-ng/helm`. It can be used by importing from `@spartan-ng/helm/select`.
+Repository-local implementation, imported here through `@spartan-ng/helm/select`. See the [parent guide](../README.md) for adaptations and regeneration limits.

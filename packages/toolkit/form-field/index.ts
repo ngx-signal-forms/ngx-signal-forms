@@ -6,6 +6,7 @@ export * from './form-fieldset';
 // `@ngx-signal-forms/toolkit/form-field` keep resolving it after the type
 // moved to the core barrel during v1 hardening.
 export type { NgxFormFieldErrorPlacement } from '@ngx-signal-forms/toolkit';
+export { NgxFieldIdentityProvider } from '@ngx-signal-forms/toolkit';
 
 import {
   NgxSignalFormAutoAria,

@@ -42,15 +42,16 @@ specific.
   "ARIA writes target the host element" below).
 - A custom **`PrimeFieldHintComponent`** registered through
   `provideFormFieldHintRenderer({ component: ... })` so the hint slot is
-  ready for the toolkit's future dynamic-outlet hint mode without any
-  template changes.
+  registered with the wrapper's hint renderer. This describes the current
+  demo integration, not a promise about a future rendering mode.
 
 The wrapper composes the toolkit's headless primitives directly
 (`createFieldNameResolver`, `createAriaInvalidSignal`,
-`createAriaRequiredSignal`, `createShowErrorsComputed`) so the seam never
-drifts from the canonical `NgxFormFieldWrapper` as the toolkit evolves. Hint
-descriptors and the error-renderer inputs map are each a single inline
-`computed()` (see `docs/CUSTOM_WRAPPERS.md`) rather than a shared helper.
+`createAriaRequiredSignal`, `createErrorVisibility`,
+`createWarningVisibility`) so the seam never drifts from the canonical
+`NgxFormFieldWrapper` as the toolkit evolves (ADR-0006). Hint descriptors
+and the error-renderer inputs map are each a single inline `computed()`
+(see `docs/CUSTOM_WRAPPERS.md`) rather than a shared helper.
 
 ## Quick start
 

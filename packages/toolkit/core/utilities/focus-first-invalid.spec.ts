@@ -1,14 +1,7 @@
-import { signal } from '@angular/core';
-import type {
-  DisabledReason,
-  FieldState,
-  FieldTree,
-  FormField,
-  MetadataKey,
-  ValidationError,
-} from '@angular/forms/signals';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import type { FieldTree, ValidationError } from '@angular/forms/signals';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { focusFirstInvalid } from './focus-first-invalid';
+import { createMockFieldTree } from './testing/mock-field-tree';
 
 /**
  * Test suite for focus-first-invalid utility.
@@ -19,6 +12,14 @@ import { focusFirstInvalid } from './focus-first-invalid';
 describe('focusFirstInvalid', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+  });
+
+  afterEach(() => {
+    for (const element of Array.from(
+      document.body.querySelectorAll('[data-mock-focus-target]'),
+    )) {
+      element.remove();
+    }
   });
 
   describe('Happy Path', () => {
@@ -278,6 +279,101 @@ describe('focusFirstInvalid', () => {
       expect(readonlyFocusSpy).toHaveBeenCalledOnce();
     });
   });
+
+  describe('Silent no-op focusBoundControl (unregistered custom control binding)', () => {
+    it('skips a field whose focusBoundControl() call does not move focus and focuses the next native field', () => {
+      const noopFocusSpy = vi.fn();
+      const nativeFocusSpy = vi.fn();
+
+      const mockField = createMockFieldWithErrors([
+        createMockNoopError(() => {
+          noopFocusSpy();
+        }),
+        createMockError(() => {
+          nativeFocusSpy();
+        }),
+      ]);
+
+      const result = focusFirstInvalid(mockField);
+
+      expect(result).toBe(true);
+      expect(noopFocusSpy).toHaveBeenCalledOnce();
+      expect(nativeFocusSpy).toHaveBeenCalledOnce();
+    });
+
+    it('returns false and warns once when every focusBoundControl() call is a silent no-op', () => {
+      const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {
+        // suppress the warning output during the test run
+      });
+
+      const mockField = createMockFieldWithErrors([
+        createMockNoopError(() => undefined),
+        createMockNoopError(() => undefined),
+      ]);
+
+      const result = focusFirstInvalid(mockField);
+
+      expect(result).toBe(false);
+      expect(warnSpy).toHaveBeenCalledTimes(1);
+
+      warnSpy.mockRestore();
+    });
+
+    it('counts a descendant binding (composite whose child registered) as a hit', () => {
+      // A composite control's focusBoundControl() descends into a child
+      // binding — the moved focus target is not the field's own element, but
+      // it is still a real, observable focus move that must count as success.
+      const mockField = createMockFieldWithErrors([
+        createMockDescendantFocusError(),
+      ]);
+
+      const result = focusFirstInvalid(mockField);
+
+      expect(result).toBe(true);
+    });
+  });
+
+  describe('Already-focused control (submit triggered from within the invalid field)', () => {
+    it('treats the already-focused first invalid control as success and does not advance to the next error', () => {
+      // Submitting via Enter from inside the first invalid control leaves it
+      // already focused: focusBoundControl() is then a same-element no-op,
+      // so document.activeElement never changes even though focus is
+      // already correct. That must still count as success.
+      const alreadyFocusedElement = createFocusTarget();
+      alreadyFocusedElement.focus();
+
+      const nextFocusSpy = vi.fn();
+
+      const mockField = createMockFieldWithErrors([
+        createMockAlreadyFocusedError(alreadyFocusedElement),
+        createMockError(() => {
+          nextFocusSpy();
+        }),
+      ]);
+
+      const result = focusFirstInvalid(mockField);
+
+      expect(result).toBe(true);
+      expect(nextFocusSpy).not.toHaveBeenCalled();
+    });
+
+    it('still counts as a hit when the already-focused element is a descendant of the registered binding', () => {
+      const bindingElement = document.createElement('div');
+      bindingElement.setAttribute('data-mock-focus-target', '');
+      const descendant = document.createElement('input');
+      bindingElement.append(descendant);
+      document.body.append(bindingElement);
+      descendant.focus();
+
+      const mockField = createMockFieldWithErrors([
+        createMockAlreadyFocusedError(bindingElement),
+      ]);
+
+      const result = focusFirstInvalid(mockField);
+
+      expect(result).toBe(true);
+    });
+  });
 });
 
 /**
@@ -308,7 +404,9 @@ function createMockField(valid: boolean): FieldTree<unknown> {
 }
 
 /**
- * Helper: Create mock ValidationError with focusBoundControl spy.
+ * Helper: Create mock ValidationError whose `focusBoundControl()` actually
+ * moves DOM focus (as a real bound native control would), plus a spy so
+ * tests can also assert call counts.
  */
 function createMockError(
   focusBoundControlSpy: () => void,
@@ -318,6 +416,7 @@ function createMockError(
     readonly?: boolean;
   }> = {},
 ): ValidationError.WithFieldTree {
+  const target = createFocusTarget();
   return {
     kind: 'required',
     message: 'Required',
@@ -325,6 +424,7 @@ function createMockError(
       errors: [],
       focusBoundControl: (_options?: FocusOptions): void => {
         focusBoundControlSpy();
+        target.focus();
       },
       invalid: true,
       valid: false,
@@ -355,84 +455,87 @@ function createMockErrorWithoutFocusBoundControl(): ValidationError.WithFieldTre
   } satisfies ValidationError.WithFieldTree;
 }
 
-function createMockFieldTree<TValue>({
-  errors,
-  focusBoundControl,
-  omitFocusBoundControl = false,
-  invalid,
-  valid,
-  value,
-  hidden = false,
-  disabled = false,
-  isReadonly = false,
-}: {
-  errors: ValidationError.WithFieldTree[];
-  focusBoundControl?: (options?: FocusOptions) => void;
-  omitFocusBoundControl?: boolean;
-  invalid: boolean;
-  valid: boolean;
-  value: TValue;
-  hidden?: boolean;
-  disabled?: boolean;
-  isReadonly?: boolean;
-}): FieldTree<TValue> {
-  let fieldTree!: FieldTree<TValue>;
+/**
+ * Helper: Create a mock ValidationError whose `focusBoundControl()` method
+ * exists (a real `FieldState` always has it) but is a **silent no-op** —
+ * reproducing Angular's own `focusBoundControl()` behavior when the field
+ * has no registered binding (`getBindingForFocus()` finds nothing to call
+ * `.focus()` on). `focusFirstInvalid()` must detect that focus did not move
+ * and continue to the next candidate.
+ */
+function createMockNoopError(
+  focusBoundControlSpy: () => void,
+): ValidationError.WithFieldTree {
+  return {
+    kind: 'required',
+    message: 'Required',
+    fieldTree: createMockFieldTree({
+      errors: [],
+      focusBoundControl: (_options?: FocusOptions): void => {
+        focusBoundControlSpy();
+        // Deliberately does not touch document.activeElement — mirrors
+        // Angular's silent no-op for an unbound custom control.
+      },
+      invalid: true,
+      valid: false,
+      value: '',
+    }),
+  } satisfies ValidationError.WithFieldTree;
+}
 
-  const valueSignal = signal(value);
-  const errorSignal = signal(errors);
-  const focusBoundControlFn =
-    focusBoundControl ?? ((_options?: FocusOptions): void => undefined);
+/**
+ * Helper: Create a mock ValidationError simulating a composite control whose
+ * `focusBoundControl()` descends into a child's registered binding. The
+ * focused element is not the field's own element, but focus still moves.
+ */
+function createMockDescendantFocusError(): ValidationError.WithFieldTree {
+  const descendantTarget = createFocusTarget();
+  return {
+    kind: 'required',
+    message: 'Required',
+    fieldTree: createMockFieldTree({
+      errors: [],
+      focusBoundControl: (_options?: FocusOptions): void => {
+        descendantTarget.focus();
+      },
+      invalid: true,
+      valid: false,
+      value: '',
+    }),
+  } satisfies ValidationError.WithFieldTree;
+}
 
-  const fieldState: FieldState<TValue> = {
-    get fieldTree() {
-      return fieldTree;
-    },
-    value: valueSignal,
-    controlValue: valueSignal,
-    disabled: signal(disabled),
-    disabledReasons: signal<DisabledReason[]>([]),
-    dirty: signal(false),
-    errorSummary: errorSignal,
-    errors: errorSignal,
-    formFieldBindings: signal<FormField<unknown>[]>([]),
-    hidden: signal(hidden),
-    invalid: signal(invalid),
-    keyInParent: signal<string | number>('root'),
-    max: signal<NonNullable<TValue> | undefined>(undefined),
-    maxLength: signal<number | undefined>(undefined),
-    min: signal<NonNullable<TValue> | undefined>(undefined),
-    minLength: signal<number | undefined>(undefined),
-    name: signal('root'),
-    pattern: signal<readonly RegExp[]>([]),
-    pending: signal(false),
-    readonly: signal(isReadonly),
-    required: signal(false),
-    submitting: signal(false),
-    touched: signal(false),
-    valid: signal(valid),
-    focusBoundControl: focusBoundControlFn,
-    markAsDirty: (): void => undefined,
-    markAsTouched: (): void => undefined,
-    metadata: <M>(_key: MetadataKey<M, unknown, unknown>): M | undefined =>
-      undefined,
-    hasMetadata: (_key: MetadataKey<unknown, unknown, unknown>): boolean =>
-      false,
-    getError: (_kind: string): undefined => undefined,
-    reset: (_value?: TValue): void => undefined,
-    reloadValidation: (): void => undefined,
-  };
+/**
+ * Helper: Create a mock ValidationError whose field state already has
+ * `boundElement` registered as a `formFieldBindings()` entry and whose
+ * `focusBoundControl()` is a no-op (mirroring focusing an element that is
+ * already focused: the browser does not fire a focus change). Simulates
+ * submitting from within the invalid control itself.
+ */
+function createMockAlreadyFocusedError(
+  boundElement: HTMLElement,
+): ValidationError.WithFieldTree {
+  return {
+    kind: 'required',
+    message: 'Required',
+    fieldTree: createMockFieldTree({
+      errors: [],
+      focusBoundControl: (_options?: FocusOptions): void => undefined,
+      invalid: true,
+      valid: false,
+      value: '',
+      formFieldBindings: [boundElement],
+    }),
+  } satisfies ValidationError.WithFieldTree;
+}
 
-  if (omitFocusBoundControl) {
-    // Simulate a custom control that never registered a binding: the native
-    // FieldState surface still exists, but focusBoundControl is absent.
-    delete (fieldState as Partial<FieldState<TValue>>).focusBoundControl;
-  }
-
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- This test helper only needs the callable FieldTree shape used by focusFirstInvalid().
-  fieldTree = Object.assign(
-    (): FieldState<TValue> => fieldState,
-    {},
-  ) as FieldTree<TValue>;
-
-  return fieldTree;
+/**
+ * Helper: Append a focusable element to the document so tests can assert on
+ * real `document.activeElement` transitions. Cleaned up in `afterEach`.
+ */
+function createFocusTarget(): HTMLElement {
+  const element = document.createElement('button');
+  element.setAttribute('data-mock-focus-target', '');
+  document.body.append(element);
+  return element;
 }

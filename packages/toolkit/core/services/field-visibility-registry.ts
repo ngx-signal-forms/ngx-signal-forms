@@ -27,6 +27,8 @@ import type { NgxSignalFormFieldVisibilityDescriptor } from '../tokens';
  * element/directive-scoped contract. `NgxSignalForm` provides one instance
  * per `[ngxSignalForm]` host so fields in unrelated forms never collide on
  * field name.
+ *
+ * @internal
  */
 @Injectable({ providedIn: null })
 export class NgxFieldVisibilityRegistry {

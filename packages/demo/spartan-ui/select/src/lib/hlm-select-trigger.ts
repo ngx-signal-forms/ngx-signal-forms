@@ -73,6 +73,13 @@ export class HlmSelectTrigger {
    * `data-matches-spartan-invalid` (the destructive-ring styling below).
    * Without the OR, a forced-invalid trigger would show the destructive
    * ring without announcing invalidity to assistive tech.
+   *
+   * The write is also gated on the button's own layout box, via the
+   * platform's `checkVisibility()` directly rather than the toolkit's
+   * `isElementCssVisible` — this component takes no toolkit dependency and
+   * that stays true here. Without the gate, a required-and-touched select
+   * collapsed inside a closed `<details>` or an inactive tab panel keeps
+   * `aria-invalid="true"` on a button no assistive tech can reach.
    */
   private readonly _fieldControl = inject(BrnFieldControl, { optional: true });
 
@@ -85,13 +92,32 @@ export class HlmSelectTrigger {
     viewChild.required<ElementRef<HTMLButtonElement>>('trigger');
 
   constructor() {
-    afterEveryRender(() => {
-      const button = this._triggerButton().nativeElement;
-      if (this._gatedInvalid()) {
-        button.setAttribute('aria-invalid', 'true');
-      } else {
-        button.removeAttribute('aria-invalid');
-      }
+    afterEveryRender({
+      // `checkVisibility()` is a layout read, so it belongs in `earlyRead`:
+      // effects flush before render hooks and would report pre-layout
+      // geometry. `write` reuses the same button element.
+      earlyRead: () => {
+        const button = this._triggerButton().nativeElement;
+        // Runtimes with no `checkVisibility()` (older browsers, jsdom) fail
+        // open — same contract as the toolkit's own `isElementCssVisible`,
+        // reproduced inline rather than imported to keep this component
+        // toolkit-dependency-free.
+        const visible =
+          typeof button.checkVisibility === 'function'
+            ? button.checkVisibility({
+                checkVisibilityCSS: true,
+                visibilityProperty: true,
+              })
+            : true;
+        return { button, visible };
+      },
+      write: ({ button, visible }) => {
+        if (visible && this._gatedInvalid()) {
+          button.setAttribute('aria-invalid', 'true');
+        } else {
+          button.removeAttribute('aria-invalid');
+        }
+      },
     });
   }
 

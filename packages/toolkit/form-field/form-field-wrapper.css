@@ -13,7 +13,7 @@
 /* - Creates a clean API without exposing internal token names */
 /* - Allows consumers to override specific values while preserving defaults */
 /* Design token reference values (light mode): */
-/* - Border: rgba(50, 65, 85, 0.25), hover: #324155 */
+/* - Border: rgba(50, 65, 85, 0.7) (>= 3:1 on white, #f9fafb, #f3f4f6, #e5e7eb), hover: #324155 */
 /* - Focus: #007bc7 with 4px spread */
 /* - Error: #db1818 */
 /* - Text primary: #324155, secondary: rgba(50, 65, 85, 0.75) */
@@ -58,25 +58,38 @@
 /* Use semantic names without framework-specific terminology. */
 
 :host {
-  /* Color tokens */
-  --_field-clr-primary: #007bc7; /* Focus/interactive states */
-  --_field-clr-danger: #db1818; /* Error/invalid states */
+  /* Color tokens: light-dark(<light>, <dark>) pairs. The browser picks the */
+  /* side that matches the element's used `color-scheme`, which the app */
+  /* declares (see THEMING.md, "Scenario C: Dark Mode"). No declaration means light. */
+  /* Dark values are measured against the dark surface (#1f2937). */
+  --_field-clr-primary: light-dark(
+    #007bc7,
+    #60a5fa
+  ); /* Focus/interactive states (4.51:1 on white, 5.77:1 on #1f2937) */
+  --_field-clr-danger: light-dark(
+    #db1818,
+    #fca5a5
+  ); /* Error/invalid states (5.05:1 on white, 7.73:1 on #1f2937) */
   /* Tailwind amber-700 (#a16207) — chosen over the previous #f59e0b (amber-500, */
   /* 2.16:1 on white) so warning text meets WCAG 2.2 AA contrast (4.5:1 on */
   /* white). Borders/icons would have been fine at the lighter shade, but this */
-  /* token also drives warning message text. ~5.17:1 on #ffffff. */
-  --_field-clr-warning: #a16207; /* Warning states (amber-700, AA contrast) */
-  --_field-clr-text: #324155; /* Primary text color */
-  --_field-clr-text-secondary: rgba(
-    50,
-    65,
-    85,
-    0.75
-  ); /* Labels, hints, placeholders */
-  --_field-clr-surface: #ffffff; /* Input background */
-  --_field-clr-border: rgba(50, 65, 85, 0.25); /* Default border */
-  --_field-clr-border-hover: #324155; /* Hover border */
-  --_field-clr-disabled: #f3f4f6; /* Disabled background */
+  /* token also drives warning message text. ~4.92:1 on #ffffff. */
+  --_field-clr-warning: light-dark(
+    #a16207,
+    #fcd34d
+  ); /* Warning states (10.18:1 on #1f2937) */
+  --_field-clr-text: light-dark(#324155, #f9fafb); /* Primary text color */
+  --_field-clr-text-secondary: light-dark(
+    rgba(50, 65, 85, 0.75),
+    rgba(249, 250, 251, 0.75)
+  ); /* Labels, hints, placeholders (4.99:1 on white, 8.54:1 on #1f2937) */
+  --_field-clr-surface: light-dark(#ffffff, #1f2937); /* Input background */
+  --_field-clr-border: light-dark(
+    rgba(50, 65, 85, 0.7),
+    rgba(249, 250, 251, 0.4)
+  ); /* Default border (>= 3:1 on white, #f9fafb, #f3f4f6, #e5e7eb; 3.51:1 on #1f2937) */
+  --_field-clr-border-hover: light-dark(#324155, #f9fafb); /* Hover border */
+  --_field-clr-disabled: light-dark(#f3f4f6, #111827); /* Disabled background */
 
   /* Spacing scale (rem for accessibility) */
   --_field-space-3xs: 0.125rem; /* 2px - tight gaps */
@@ -120,61 +133,6 @@
   --_field-line-height-m: var(--_field-line-height-body);
   --_field-clr-text-muted: var(--_field-clr-text-secondary);
   --_field-clr-text-subtle: var(--_field-clr-text-secondary);
-}
-
-/* Dark mode overrides (respects system preference) */
-@media (prefers-color-scheme: dark) {
-  :host {
-    --_field-clr-primary: #60a5fa; /* Lighter blue for dark bg */
-    --_field-clr-danger: #fca5a5; /* Lighter red for dark bg */
-    --_field-clr-warning: #fcd34d; /* Lighter amber for dark bg */
-    --_field-clr-text: #f9fafb; /* Almost white - main text */
-    --_field-clr-text-secondary: rgba(
-      249,
-      250,
-      251,
-      0.75
-    ); /* Light text/secondary */
-    --_field-clr-surface: #1f2937; /* Dark gray - backgrounds */
-    --_field-clr-border: rgba(249, 250, 251, 0.25); /* Light border */
-    --_field-clr-border-hover: #f9fafb;
-    --_field-clr-disabled: #111827;
-  }
-}
-
-/* Light mode override (when app explicitly sets light theme against OS dark preference) */
-@media (prefers-color-scheme: dark) {
-  :host-context(:root:not(.dark)) {
-    --_field-clr-primary: #007bc7;
-    --_field-clr-danger: #db1818;
-    /* Mirror the light-mode :host default (amber-700) for AA-on-white contrast. */
-    --_field-clr-warning: #a16207;
-    --_field-clr-text: #324155;
-    --_field-clr-text-secondary: rgba(50, 65, 85, 0.75);
-    --_field-clr-surface: #ffffff;
-    --_field-clr-border: rgba(50, 65, 85, 0.25);
-    --_field-clr-border-hover: #324155;
-    --_field-clr-disabled: #f3f4f6;
-  }
-}
-
-/* Explicit dark theme override (activated by the demo theme switcher) */
-/* Kept separate from prefers-color-scheme so manual theme selection wins. */
-:host-context(.dark) {
-  --_field-clr-primary: #60a5fa; /* Lighter blue for dark bg */
-  --_field-clr-danger: #fca5a5; /* Lighter red for dark bg */
-  --_field-clr-warning: #fcd34d; /* Lighter amber for dark bg */
-  --_field-clr-text: #f9fafb; /* Almost white - main text */
-  --_field-clr-text-secondary: rgba(
-    249,
-    250,
-    251,
-    0.75
-  ); /* Light text/secondary */
-  --_field-clr-surface: #1f2937; /* Dark gray - backgrounds */
-  --_field-clr-border: rgba(249, 250, 251, 0.25); /* Light border */
-  --_field-clr-border-hover: #f9fafb;
-  --_field-clr-disabled: #111827;
 }
 
 /* ============================================================================ */
@@ -237,11 +195,12 @@
 :host {
   /* Layout */
   --_gap: var(--ngx-form-field-gap, var(--_field-space-3xs));
-  /* Default bottom rhythm so a column of stacked fields breathes without the
-     consumer having to add a container gap. Override with
-     `--ngx-form-field-margin` (e.g. set to 0 when a grid/flex `gap` already
-     owns the spacing between fields). */
-  --_margin-bottom: var(--ngx-form-field-margin, 1rem);
+  /* Container-owned spacing (see CONTEXT.md): the wrapper contributes no
+     outer margin of its own by default. The space between fields belongs to
+     the parent layout (`gap` on a grid or flex container). Consumers who
+     want the wrapper to own that space opt in with `--ngx-form-field-margin`
+     at whatever scope they choose. */
+  --_margin-bottom: var(--ngx-form-field-margin, 0);
 
   /* Prefix/Suffix */
   --_prefix-gap: var(--ngx-form-field-prefix-gap, var(--_field-space-md));
@@ -382,22 +341,21 @@
     --ngx-form-field-hover-border-color,
     var(--_color-border-hover)
   );
+  /* Focused invalid/warning fields draw a solid outline (below) instead of
+     this soft ring — see the outline tokens further down. The ring tokens
+     default to `none` so the two focus signals don't overlap, but they stay
+     public and overridable for consumers who want the ring back. */
   --_invalid-color: var(--ngx-form-field-invalid-color, var(--_color-error));
-  --_invalid-ring-color: color-mix(
-    in srgb,
-    var(--_invalid-color) var(--_state-ring-opacity),
-    transparent
-  );
+  --_invalid-box-shadow: var(--ngx-form-field-invalid-box-shadow, none);
   --_warning-color: var(--ngx-form-field-warning-color, var(--_color-warning));
-  --_warning-ring-color: color-mix(
-    in srgb,
-    var(--_warning-color) var(--_state-ring-opacity),
-    transparent
-  );
-  --_warning-box-shadow: var(
-    --ngx-form-field-warning-box-shadow,
-    0 0 0 var(--_field-focus-spread) var(--_warning-ring-color)
-  );
+  --_warning-box-shadow: var(--ngx-form-field-warning-box-shadow, none);
+  /* Solid focus outline: the sole guaranteed-contrast focus signal for
+     valid, invalid and warning textual fields. Invalid and warning fields
+     draw it in their state color. Offset keeps it clear of the
+     state-colored border so its contrast is measured against the page
+     background, not the adjacent border color. */
+  --_focus-outline-width: var(--ngx-form-field-focus-outline-width, 2px);
+  --_focus-outline-offset: var(--ngx-form-field-focus-outline-offset, 2px);
   --_disabled-bg: var(--ngx-form-field-disabled-bg, var(--_color-disabled));
   --_disabled-opacity: var(
     --ngx-form-field-disabled-opacity,
@@ -418,6 +376,10 @@
   --_selection-assistive-gap: 0rem;
   --_selection-cluster-gap: var(
     --ngx-form-field-selection-group-gap,
+    var(--_field-space-sm)
+  );
+  --_selection-row-gap: var(
+    --ngx-form-field-selection-row-gap,
     var(--_field-space-sm)
   );
   --_selection-cluster-padding: var(
@@ -513,6 +475,16 @@
   display: none !important;
 }
 
+/* Structural wrapper around label/messages/content/assistive (#523).
+   `display: contents` drops it out of the box tree so every appearance
+   below keeps laying out its children directly against `:host`, exactly as
+   if the wrapper div didn't exist. Only the horizontal layout (see
+   form-field-wrapper.selection.css) gives it a real box, since that's the
+   one layout that needs an inline-size container query. */
+.ngx-signal-form-field-wrapper__layout {
+  display: contents;
+}
+
 :host(.ngx-signal-form-field-wrapper--selection-group) {
   --_gap: var(--_field-space-xs);
 }
@@ -551,15 +523,12 @@
   border-radius: var(--_input-radius);
   background-color: var(--_input-bg);
   padding: var(--_input-padding);
+  /* A click anywhere in the box focuses the control (#567), so the pointer */
+  /* shows a text cursor over the padding too. */
+  cursor: text;
 
   &:hover:not(:focus-within) {
     border-color: var(--_hover-border-color);
-  }
-
-  &:focus-within {
-    border-color: var(--_focus-color);
-    box-shadow: var(--_focus-box-shadow);
-    outline: none;
   }
 
   &:has(:is(input, textarea, select):disabled) {
@@ -567,6 +536,37 @@
     opacity: var(--_disabled-opacity);
     cursor: not-allowed;
   }
+}
+
+/* Keep this focus rule flat. Angular 22.2 adds a scoping attribute to */
+/* nested `&` rules, which raises their specificity. The forced-colors focus */
+/* rule at the end of this file has the same specificity as this flat rule */
+/* and wins by source order. A nested copy of this rule would beat it (#556). */
+:host(.ngx-signal-form-field-wrapper--textual)
+  .ngx-signal-form-field-wrapper__content:focus-within {
+  border-color: var(--_focus-color);
+  box-shadow: var(--_focus-box-shadow);
+}
+
+/* Solid outline: the state-color border (invalid/warning) stays */
+/* unfocused-looking on its own, so the outline is what actually shows the */
+/* field is focused. It applies to every state. The invalid and warning */
+/* rules below re-point `--_focus-color` to the state color, so the outline */
+/* matches the border. */
+/* `:has(... :focus-visible)` follows the browser's focus-visible heuristic, */
+/* so a mouse click on a `<select>` or custom control draws no outline. It */
+/* only looks inside `__main`, so a focused prefix/suffix button keeps its */
+/* own outline and the container does not add a second one. */
+/* The plain appearance overrides `outline` back to `none` in */
+/* `form-field-wrapper.selection.css` and relies on its own input-level */
+/* outline instead (see `#493`). Keep this rule flat for the same reason as */
+/* the rule above (#556). */
+:host(.ngx-signal-form-field-wrapper--textual)
+  .ngx-signal-form-field-wrapper__content:has(
+    .ngx-signal-form-field-wrapper__main :focus-visible
+  ) {
+  outline: var(--_focus-outline-width) solid var(--_focus-color);
+  outline-offset: var(--_focus-outline-offset);
 }
 
 .ngx-signal-form-field-wrapper__main {
@@ -594,6 +594,7 @@
 }
 
 .ngx-signal-form-field-wrapper__prefix {
+  gap: var(--_prefix-gap);
   padding-inline-end: var(--_field-space-md);
 }
 
@@ -767,18 +768,28 @@
     align-items: flex-start;
     pointer-events: none;
     padding: var(--_field-space-2xs) var(--_field-space-xs) 0;
-
-    :is(label, [ngxFormFieldLabel]) {
-      /* Caption typography: smaller, lighter for inline labels */
-      font-size: var(--_label-outline-size);
-      line-height: var(--_label-outline-line-height);
-      font-weight: var(--_label-outline-weight);
-      font-family: var(--_label-outline-font-family);
-      color: var(--_label-outline-color);
-      cursor: text;
-      pointer-events: auto;
-    }
   }
+}
+
+/* `::ng-deep` is required: the label is projected, so it carries the */
+/* consumer's content attribute, not this component's. A selector nested */
+/* under `:host(...)` would get scoped to this component's own attribute */
+/* on Angular 22.2+ and stop matching (#552) — `::ng-deep` keeps the match */
+/* on every Angular version. Put `::ng-deep` directly after `:host(...)`, */
+/* with no selector between them, and never inside a nested block (22.1 */
+/* leaves it as literal text). */
+:host(.ngx-signal-forms-outline)
+  ::ng-deep
+  .ngx-signal-form-field-wrapper__label
+  :is(label, [ngxFormFieldLabel]) {
+  /* Caption typography: smaller, lighter for inline labels */
+  font-size: var(--_label-outline-size);
+  line-height: var(--_label-outline-line-height);
+  font-weight: var(--_label-outline-weight);
+  font-family: var(--_label-outline-font-family);
+  color: var(--_label-outline-color);
+  cursor: text;
+  pointer-events: auto;
 }
 
 :host(.ngx-signal-forms-outline.ngx-signal-form-field-wrapper--messages-top) {
@@ -964,10 +975,14 @@
   )
   .ngx-signal-form-field-wrapper__content {
   border-color: var(--_invalid-color);
+  /* Focus takes the state color, so the outline repeats the error signal. */
+  /* Re-pointing the token (not `outline-color`) keeps the flat forced-colors */
+  /* focus rule winning (#556). */
+  --_focus-color: var(--_invalid-color);
 
   &:focus-within {
     border-color: var(--_invalid-color);
-    box-shadow: 0 0 0 var(--_field-focus-spread) var(--_invalid-ring-color);
+    box-shadow: var(--_invalid-box-shadow);
   }
 }
 
@@ -977,6 +992,7 @@
   )
   .ngx-signal-form-field-wrapper__content {
   border-color: var(--_warning-color);
+  --_focus-color: var(--_warning-color);
 
   &:focus-within {
     border-color: var(--_warning-color);
@@ -1015,10 +1031,16 @@
 /* Selection controls (checkbox/switch/radio-group) require labels for */
 /* accessibility and intentionally keep their own layout. */
 
-/* Standard vertical: hide the empty label div. Flex gap only applies */
-/* between rendered children, so removing the div removes the gap too. */
-/* Plain appearance is a non-goal (it already strips label chrome), so */
-/* exclude it explicitly to keep the spec and the CSS in sync. */
+/* Hide the empty label div. The selector isn't scoped to an orientation, so
+   this also covers horizontal (see form-field-wrapper.selection.css,
+   "HORIZONTAL LAYOUT", #523): without it, a labelless horizontal field
+   would still occupy the orphaned 'label' grid-area target via
+   auto-placement, and — once the narrow `@container` query gives every
+   item an explicit row — reserve a whole empty row plus a `row-gap` sliver
+   above the control for nothing. In the vertical layout, flex gap only
+   applies between rendered children, so removing the div removes that gap
+   too. Plain appearance is a non-goal (it already strips label chrome), so
+   exclude it explicitly to keep the spec and the CSS in sync. */
 :host(.ngx-signal-form-field-wrapper--textual:not(.ngx-signal-forms-plain)):not(
     :has(.ngx-signal-form-field-wrapper__label :is(label, [ngxFormFieldLabel]))
   )
@@ -1027,7 +1049,7 @@
 }
 
 /* Outline: hide the label div and drop the top-padding reservation that */
-/* accommodates the floating label. `.ngx-signal-forms-outline` and */
+/* holds the label caption. `.ngx-signal-forms-outline` and */
 /* `.ngx-signal-forms-plain` are mutually exclusive appearance classes, so */
 /* no extra exclusion is needed here. */
 :host(.ngx-signal-forms-outline.ngx-signal-form-field-wrapper--textual):not(
@@ -1054,14 +1076,17 @@
 /* textual non-plain wrappers so this mirrors the standard/outline rules */
 /* and cannot rewrite the grid on any non-textual host that might carry */
 /* the `--horizontal` class (today selection controls force vertical, but */
-/* the CSS should not rely on that invariant). */
+/* the CSS should not rely on that invariant). The grid itself lives on */
+/* `__layout`, not `:host` (see form-field-wrapper.selection.css, */
+/* "HORIZONTAL LAYOUT", #523), so these overrides target that div. */
 :host(
-  .ngx-signal-form-field-wrapper--textual.ngx-signal-form-field-wrapper--horizontal:not(
-      .ngx-signal-forms-plain
-    )
-):not(
-  :has(.ngx-signal-form-field-wrapper__label :is(label, [ngxFormFieldLabel]))
-) {
+    .ngx-signal-form-field-wrapper--textual.ngx-signal-form-field-wrapper--horizontal:not(
+        .ngx-signal-forms-plain
+      )
+  ):not(
+    :has(.ngx-signal-form-field-wrapper__label :is(label, [ngxFormFieldLabel]))
+  )
+  .ngx-signal-form-field-wrapper__layout {
   grid-template-columns: minmax(0, 1fr);
   grid-template-areas:
     'content'
@@ -1069,12 +1094,13 @@
 }
 
 :host(
-  .ngx-signal-form-field-wrapper--textual.ngx-signal-form-field-wrapper--horizontal.ngx-signal-form-field-wrapper--messages-top:not(
-      .ngx-signal-forms-plain
-    )
-):not(
-  :has(.ngx-signal-form-field-wrapper__label :is(label, [ngxFormFieldLabel]))
-) {
+    .ngx-signal-form-field-wrapper--textual.ngx-signal-form-field-wrapper--horizontal.ngx-signal-form-field-wrapper--messages-top:not(
+        .ngx-signal-forms-plain
+      )
+  ):not(
+    :has(.ngx-signal-form-field-wrapper__label :is(label, [ngxFormFieldLabel]))
+  )
+  .ngx-signal-form-field-wrapper__layout {
   grid-template-areas:
     'messages'
     'content'
@@ -1096,8 +1122,9 @@
   gap: var(--ngx-form-field-assistive-gap, 0.5rem);
   /*
    * The row is always reserved (never collapsed) so a field does not shift when
-   * a hint is swapped for an error or warning. The reservation is exactly one
-   * caption line — the feedback line-height a hint/message renders at — so a
+   * an error or warning appears (by default, alongside the hint; with
+   * `hideHintOnError`, in its place). The reservation is exactly one caption
+   * line — the feedback line-height a hint/message renders at — so a
    * single-line message fits without leaving dead space below every field
    * (#246). Multi-line messages grow the row, which is the accepted shift.
    */
@@ -1201,20 +1228,37 @@
 }
 
 /* ============================================================================ */
-/* HINT/ERROR VISIBILITY: Show either hint OR error (not both) */
+/* HINT/ERROR VISIBILITY: hint stays visible by default; hiding is opt-in */
 /* ============================================================================ */
-/* Per modern web guidance (required-field-feedback pattern), hints should
- * disappear when errors appear to avoid visual clutter and focus user
- * attention on the blocking error message.
+/* WCAG 2.2 SC 3.3.2 (Labels or Instructions): a sighted user needs format
+ * instructions most while an error tells them the value was wrong, so the
+ * hint stays visible next to the error by default. The `hideHintOnError`
+ * wrapper input / `NgxSignalFormsConfig.hideHintOnError` restores the old
+ * hide-on-error behavior for consumers who want it.
+ *
+ * The `--hide-hint-on-error` host class (form-field-wrapper.ts) is already
+ * true only while the opt-in is set AND `presentation.showErrors() ||
+ * presentation.showWarnings()` is true — i.e. a message is actually
+ * visible, not merely present-but-not-yet-shown by its own display
+ * strategy. `renderMessageSlot()` is deliberately NOT used here: it also
+ * opens the renderer while an error strategy allows messages on a field
+ * that only has warnings, so a warning-only field with, say,
+ * `warningStrategy="on-submit"` would otherwise hide its hint before
+ * submit even though nothing is shown yet. The `:is(--invalid, --warning)`
+ * check below is a coarser match on the same states (`--warning` itself
+ * has no timing gate), narrowed to the actually-visible case by the AND
+ * with the host class above.
  *
  * Implementation uses CSS custom properties (no ::ng-deep) so that
  * ngx-form-field-hint reads --ngx-form-field-hint-display from its host
- * context. This respects Angular's view encapsulation boundary.
+ * context. This respects Angular's view encapsulation boundary. The
+ * wrapper's template additionally collapses the hint's own projection slot
+ * the same way, for consumers who never touch this CSS variable at all.
  */
 
-/* Hide hints when field has blocking errors or warnings */
+/* Hide hints when field has blocking errors or warnings, opt-in only */
 :host(
-  :is(
+  .ngx-signal-form-field-wrapper--hide-hint-on-error:is(
     .ngx-signal-form-field-wrapper--invalid,
     .ngx-signal-form-field-wrapper--warning
   )
@@ -1269,9 +1313,15 @@
   /* signal in forced-colors mode. */
   :host(.ngx-signal-form-field-wrapper--textual)
     .ngx-signal-form-field-wrapper__content:focus-within {
-    outline: 2px solid Highlight;
-    outline-offset: 2px;
     box-shadow: none;
     border-color: Highlight;
+  }
+
+  :host(.ngx-signal-form-field-wrapper--textual)
+    .ngx-signal-form-field-wrapper__content:has(
+      .ngx-signal-form-field-wrapper__main :focus-visible
+    ) {
+    outline: 2px solid Highlight;
+    outline-offset: 2px;
   }
 }

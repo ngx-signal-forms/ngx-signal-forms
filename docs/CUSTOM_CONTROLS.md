@@ -22,21 +22,25 @@ Also read it for:
 
 ## Angular Control Interfaces
 
-Angular Signal Forms provides three interfaces for custom controls:
+Angular Signal Forms provides two editable contracts with a shared base:
 
-| Interface             | Use Case                                                  |
-| --------------------- | --------------------------------------------------------- |
-| `FormValueControl<T>` | Value-carrying controls (input, textarea, custom editors) |
-| `FormUiControl`       | UI-only controls (no value, just focus/state/display)     |
-| `FormCheckboxControl` | Toggle/checkbox-like inputs                               |
+| Interface             | Use Case                                                                            |
+| --------------------- | ----------------------------------------------------------------------------------- |
+| `FormValueControl<T>` | Value-carrying controls (input, textarea, custom editors)                           |
+| `FormUiControl<T>`    | Common optional-state base for both editable contracts, not an editable alternative |
+| `FormCheckboxControl` | Toggle/checkbox-like inputs                                                         |
 
 Pick in ten seconds:
 
 - The control **reads and writes a value** (text, number, selection, date) →
   `FormValueControl<T>`. This is the right answer for almost every custom control.
 - The control is a **boolean toggle** with a checked state → `FormCheckboxControl`.
-- The control carries **no value at all** — it only needs focus, disabled, or
-  validation-state display (e.g. a composite's visual shell) → `FormUiControl`.
+
+`FormValueControl<T>` requires a `value` model. `FormCheckboxControl` requires a
+boolean `checked` model. Never define both on one control. `FormUiControl<T>`
+describes shared optional state, focus, touch, and reset support; implementing
+it alone does not supply an editable `[formField]` value contract. A visual
+wrapper accepts a field tree rather than pretending to be a value control.
 
 ### FormValueControl\<T\>
 
@@ -58,12 +62,11 @@ export class CustomInputDirective implements FormValueControl<string> {
   // sync with the bound field in both directions.
   readonly value = model('');
 
-  // `touch` is optional: emit it whenever the control should report
-  // interaction (the `Field` directive marks the field touched in response).
+  // Report interaction when focus leaves, not when focus enters.
   readonly touch = output();
 
-  focus(): void {
-    this.#el.nativeElement.focus();
+  focus(options?: FocusOptions): void {
+    this.#el.nativeElement.focus(options);
   }
 
   // Optional reactive state inputs
@@ -95,11 +98,52 @@ export class CustomToggleDirective implements FormCheckboxControl {
   // Optional: report interaction so strategy-aware error visibility works.
   readonly touch = output();
 
-  focus(): void {
-    this.#el.nativeElement.focus();
+  focus(options?: FocusOptions): void {
+    this.#el.nativeElement.focus(options);
   }
 }
 ```
+
+## Control-kind inference vs. auto-ARIA eligibility
+
+**Inferred control kind and auto-ARIA eligibility are two decisions.**
+Control-kind inference answers "which wrapper layout does this control get".
+Auto-ARIA eligibility answers "does the toolkit own `aria-invalid`,
+`aria-required`, and `aria-describedby` on this host". The two do not always
+agree:
+
+| Markup                                                      | Inferred kind                               | Auto-ARIA default      | How to opt in                                                                       |
+| ----------------------------------------------------------- | ------------------------------------------- | ---------------------- | ----------------------------------------------------------------------------------- |
+| `input[type="checkbox"]`                                    | `checkbox`                                  | Not eligible           | Add `ngxSignalFormControl="checkbox"`                                               |
+| `input[type="checkbox"][role="switch"]`                     | `switch`                                    | Eligible automatically | None — works out of the box                                                         |
+| `input[type="radio"]`                                       | `radio-group`                               | Not eligible           | Add `ngxSignalFormControl="radio-group"`                                            |
+| `[role="combobox"]` element with a stable `id`              | `input-like`                                | Eligible automatically | None — works out of the box                                                         |
+| Plain `input` / `select` / `textarea`                       | `input-like` / `standalone-field-like`      | Eligible automatically | None — works out of the box                                                         |
+| Custom `[formField]` host (not `input`/`textarea`/`select`) | inferred from shape, or none until declared | Eligible automatically | Opt out with `ngxSignalFormAutoAriaDisabled` or `ngxSignalFormControlAria="manual"` |
+
+A native checkbox or radio infers a wrapper kind (`checkbox` /
+`radio-group`). It is **not** auto-ARIA eligible by default. In a selection
+group, `ngx-form-field-wrapper` owns `role`, `aria-labelledby`,
+`aria-describedby`, and `aria-required` on the group container. Writing
+those same attributes on each grouped input would duplicate or contradict
+the group-level values. A checkbox with `role="switch"` is always a single
+control. It never joins a group, so it is eligible automatically.
+
+The element that receives auto-ARIA's managed attributes also needs a role
+that supports `aria-required` (for example `combobox`, `textbox`, or
+`radiogroup`) — a role-less element gets no `aria-required` at all, because
+the generic role does not support it. That element is usually the
+`[formField]` host itself. It is the inner `role="combobox"` trigger instead
+when auto-ARIA relocates managed attributes there (see "Combobox inference"
+below) — the host can stay role-less in that case.
+
+`ariaMode` in a control preset (`'auto'` | `'manual'`) only applies once a
+host is already auto-ARIA eligible. Setting `ariaMode: 'auto'` on the
+`checkbox` preset does not make a plain checkbox eligible on its own. The
+auto-ARIA directive's selector gates eligibility first. Declare
+`ngxSignalFormControl="checkbox"` (or `"radio-group"`) to opt a control in.
+Then the preset's `ariaMode` governs ownership from there. See
+[ADR-0001](https://github.com/ngx-signal-forms/ngx-signal-forms/blob/main/docs/decisions/0001-control-semantics-architecture.md#auto-aria-eligibility-boundary).
 
 ## Switch Semantics for Custom Toggle Controls
 
@@ -182,6 +226,12 @@ It does **not** mean you stop using the wrapper. The wrapper can still provide:
 - field identity / error ID conventions
 - validation context and strategy-aware visibility
 
+For an integration that cannot annotate the bound host, the root entry exports
+`NGX_SIGNAL_FORM_ARIA_MODE`. It carries a signal of `'auto'`, `'manual'`, or
+`null`. Auto-ARIA injects it with `self: true` on the control's element injector;
+an ancestor provider does not select manual mode. Prefer the directive input
+when the template can express it.
+
 `appearance="plain"` is also commonly paired with custom sliders and composite
 controls for the same reason: the wrapper still contributes semantics and
 feedback, while the widget keeps ownership of its own visual chrome. These are
@@ -217,15 +267,29 @@ Join with one of these two paths:
    `ngxSignalFormControl="input-like"` on the `[formField]` host. Do **not**
    set `role="combobox"` on that host. This is the closed-select path.
 
+The field **name** comes from the `[formField]` host's `id` when it has one
+— Path 1 relocates the managed ARIA attributes (`aria-invalid`,
+`aria-required`, `aria-describedby`) to the inner combobox, but the _name_
+used to build `${fieldName}-error` and `${fieldName}-warning` stays the
+host's. A sibling `<ngx-form-field-error>` must set its explicit
+`fieldName` to that host name to agree with auto-ARIA, since it has no way
+to see the inner combobox's `id`. When the host itself carries no `id` at
+all — a custom control that derives its field name some other way and only
+ever put an `id` on the relocated target — the name falls back to the
+combobox's `id` instead of resolving to nothing. If the host also carries
+an author-written `aria-describedby`, that value is preserved on the
+relocated combobox rather than dropped, and a one-time dev-mode
+`console.warn` flags the relocation.
+
 ```html
 <!-- Path 1: inner combobox infers input-like -->
-<ngx-form-field-wrapper [formField]="form.framework" appearance="outline">
+<ngx-form-field-wrapper [formField]="form.framework">
   <label for="framework">Framework</label>
   <app-autocomplete inputId="framework" [formField]="form.framework" />
 </ngx-form-field-wrapper>
 
 <!-- Path 2: host declares input-like without a combobox role -->
-<ngx-form-field-wrapper [formField]="form.frameworkSelect" appearance="outline">
+<ngx-form-field-wrapper [formField]="form.frameworkSelect">
   <label id="framework-select-label" for="frameworkSelect">Framework</label>
   <app-select
     id="frameworkSelect"
@@ -278,6 +342,79 @@ For combobox and select behavior, follow the Angular Aria guides:
 
 To fully disable toolkit ARIA participation on a bespoke host, use
 `ngxSignalFormAutoAriaDisabled` on the control element instead of an `ariaMode` value.
+
+### Padding ownership recipe for field-shaped autocomplete adapters
+
+A field-shaped autocomplete (naked `role="combobox"` trigger, wrapper-owned
+outline) usually needs no extra work: the wrapper already strips the
+trigger's own border and padding and applies its public input tokens (see
+"Inherit public input tokens" above). Use this recipe when the adapter also
+renders a prefix icon, a suffix clear button, or a popup, and needs to state
+clearly who owns which inset — the wrapper (public token) or the adapter
+(private, unconfigurable, or adapter-authored CSS).
+
+1. **The outer field shell.** `--ngx-form-field-padding-horizontal` and
+   `--ngx-form-field-padding-vertical` are public tokens that size the
+   wrapper's bordered container
+   (`.ngx-signal-form-field-wrapper__content`). The wrapper always owns
+   this shell; an adapter never draws its own border or background around
+   the trigger.
+2. **Text, caption, and placeholder.** `--ngx-form-field-input-size`,
+   `--ngx-form-field-input-line-height`, `--ngx-form-field-input-color`,
+   `--ngx-form-field-input-font-family`, `--ngx-form-field-input-weight`
+   (plus the `--ngx-form-field-outline-input-*` aliases in outline
+   appearance) and `--ngx-form-field-placeholder-color` are public
+   tokens. They apply automatically to any element the wrapper infers as
+   `input-like` — a native input, or an inner `role="combobox"` trigger.
+   The adapter's own trigger markup must use `font: inherit` /
+   `line-height: inherit`, never a hardcoded size, so these tokens keep
+   winning.
+3. **When the adapter owns its own inset.** Most field-shaped adapters
+   never need this. Set `--ngx-form-field-padding-horizontal: 0` on the
+   wrapper (scoped with a class, not globally) only when the adapter's own
+   trigger already draws an inset that would otherwise double up with the
+   wrapper's — for example a third-party widget whose trigger cannot have
+   its padding stripped. When you do this, the adapter must apply the
+   equivalent padding itself (matching the wrapper's default), so the
+   caret, prefix, and suffix stay visually aligned. This is a deliberate
+   escape hatch for one adapter, not a rule the toolkit applies
+   automatically to every autocomplete.
+4. **Trigger, affixes, and popup.**
+   - The trigger itself never has its own padding or border on the
+     `input-like` path — the wrapper strips both.
+   - `[prefix]` / `[suffix]` are the adapter's affix slots. Their own
+     spacing is public: `--ngx-form-field-prefix-gap` and
+     `--ngx-form-field-suffix-gap` size the gap **between** multiple
+     affix children (an icon plus a spinner, say); `--ngx-form-field-prefix-color`
+     / `--ngx-form-field-suffix-color` set their text color. The gap
+     **between an affix and the field shell's border** is private and not
+     configurable — an adapter does not own or need to reproduce it.
+   - A popup (the open listbox) belongs to the adapter, not the wrapper.
+     `.ngx-signal-form-field-wrapper__content` is already
+     `position: relative`, so a popup rendered in the wrapper's default
+     slot uses it as a containing block for free. `inset-inline-start: 0`
+     lands on the shell's padding edge — one border-width inside the
+     visible outline — so an adapter that wants the popup's edge to align
+     with the field's visible border sets `inset-inline-start: -1px` (the
+     shell's fixed 1px border), not `0`. This holds under `dir="rtl"`
+     because `inset-inline-start` is a logical property.
+5. **`appearance="plain"` escape hatch.** A widget-shaped control (its own
+   full chrome — border, background, focus ring) should not fight the
+   wrapper's shell at all. Use `appearance="plain"` and let the widget own
+   every inset; none of the tokens above apply. This recipe is for
+   field-shaped controls only — see "Field-shaped vs widget-shaped custom
+   controls" above for that boundary.
+
+**Runnable reference:** the
+[`custom-controls`](../apps/demo/src/app/04-form-field-wrapper/custom-controls)
+page's mocked autocomplete, next to the `role="combobox"` Angular Aria
+example, applies this recipe: a naked trigger, a `[prefix]` icon, a
+`[suffix]` clear button, and a popup anchored to the field shell.
+
+Token tables and the geometry this recipe locks in: see "Padding ownership
+recipe for field-shaped autocomplete adapters" in
+[THEMING.md](../packages/toolkit/form-field/THEMING.md) and
+`packages/toolkit/form-field/form-field-wrapper.autocomplete-padding.browser.spec.ts`.
 
 ### Third-party component libraries
 
@@ -367,7 +504,7 @@ import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit';
   `,
 })
 export class SwitchControlComponent {
-  readonly field = input<FieldTree<boolean>>();
+  readonly field = input.required<FieldTree<boolean>>();
   readonly inputId = input.required<string>();
 }
 ```
@@ -437,8 +574,8 @@ Angular's `focusBoundControl()` calls the `focus()` method on your custom contro
 field().focusBoundControl();
 
 // This works because your control implements:
-focus(): void {
-  this.#el.nativeElement.focus();
+focus(options?: FocusOptions): void {
+  this.#el.nativeElement.focus(options);
 }
 ```
 
@@ -480,24 +617,30 @@ Or with headless primitives:
 >
   <app-custom-field [formField]="form.password" />
 
-  @if (errorState.shouldShowWarnings() && errorState.hasWarnings()) {
-  <div role="status" aria-live="polite">
-    @for (warning of errorState.resolvedWarnings(); track warning.kind) {
+  <div role="status">
+    @if (errorState.shouldShowWarnings() && errorState.hasWarnings()) { @for
+    (warning of errorState.resolvedWarnings(); track $index) {
     <span>{{ warning.message }}</span>
-    }
+    } }
   </div>
-  }
 </div>
 ```
+
+Keep the status host mounted before warning content appears. The role supplies
+polite live-region semantics; do not create it in the same `@if` as its first
+message. If the control references the region, give it the matching active
+warning ID and use the same visibility gate for `aria-describedby`.
 
 ### Publishing visibility for a custom standalone error surface
 
 Both snippets above render **without** `<ngx-form-field-wrapper>` — the
 bound control and the error/warning surface are siblings, not
 ancestor/descendant. `NgxSignalFormAutoAria` normally learns a field's
-resolved `strategy`/`warningStrategy` from `NgxFieldIdentity`, but that
-service is only provided by `NgxFormFieldWrapper`, so a wrapper-less
-surface has no DI path to publish an override through — and without one,
+resolved `strategy`/`warningStrategy` from `NgxFieldIdentity`. The built-in
+wrapper provides it, and custom wrappers can provide it through
+`NgxFieldIdentityProvider`. That public provider publishes only the name, not
+timing. A standalone surface needs the visibility registry to publish overrides;
+without one,
 `aria-describedby` falls back to the ambient form context, which can
 disagree with whatever the surface actually renders (a dangling id, or a
 rendered-but-unreferenced region).
@@ -546,7 +689,7 @@ export class MyStandaloneErrorSurface {
 ```
 
 Register the exact booleans you already used to decide whether your
-`${fieldName}-error` / `${fieldName}-warning` elements are in the DOM —
+`${fieldName}-error` / `${fieldName}-warning` containers have active content and IDs, not merely mounted hosts —
 not a strategy for auto-ARIA to re-resolve — so the published value can
 never drift from what your surface actually renders. `NgxFormFieldError`
 follows this same pattern; see `packages/toolkit/assistive/form-field-error.ts`
@@ -629,16 +772,18 @@ version in the
 
 When building custom controls that work with the toolkit:
 
-- [ ] Implement `FormValueControl<T>`, `FormCheckboxControl`, or `FormUiControl`
+- [ ] Implement `FormValueControl<T>` or `FormCheckboxControl` for an editable control
 - [ ] Expose the contract's required model — `readonly value = model<T>(...)` for
       `FormValueControl<T>`, `readonly checked = model(false)` for
       `FormCheckboxControl` (never define both on the same control)
-- [ ] Implement `focus()` method for `focusBoundControl()` support
-- [ ] Emit an optional `touch = output()` on blur for strategy-aware error visibility
+- [ ] Forward `focus(options)` to the actual interactive element
+- [ ] Emit `touch` on blur or composite focus exit, not focus entry or internal focus moves
 - [ ] Update the `value`/`checked` model signal on user interaction so the bound field stays in sync
 - [ ] Accept `disabled` and `invalid` signal inputs for state reflection
 - [ ] Use `[formField]` directive binding (not manual wiring)
 - [ ] Test that `focusFirstInvalid()` reaches your control
+- [ ] Test model-to-widget and widget-to-model round trips, invalid raw input,
+      and reset. A composite reports touch only when focus leaves the whole widget.
 - [ ] Expose a stable `id` on the host (or set `fieldName` on the wrapper) so ARIA IDs resolve
 - [ ] Field-shaped combobox / closed select: keep the trigger naked, use `input-like`, inherit `--ngx-form-field-input-*` (and outline aliases) plus `--ngx-form-field-placeholder-color`
 - [ ] Widget-shaped slider / datepicker / composite: use `appearance="plain"` and do not restyle as a text field
@@ -663,12 +808,12 @@ import type { FormValueControl } from '@angular/forms/signals';
   template: `
     <select
       #select
+      role="combobox"
       [id]="selectId()"
       [value]="value()"
       (change)="value.set(select.value)"
       (blur)="touch.emit()"
       [disabled]="disabled()"
-      [attr.aria-invalid]="invalid() ? 'true' : null"
     >
       <option value="">-- Select --</option>
       @for (option of options(); track option.value) {
@@ -684,18 +829,22 @@ export class CustomSelectComponent implements FormValueControl<string> {
   readonly selectId = input.required<string>();
   readonly options = input<{ value: string; label: string }[]>([]);
   readonly disabled = input<boolean>(false);
-  readonly invalid = input<boolean>(false);
 
   readonly value = model('');
   readonly touch = output();
 
-  focus(): void {
-    this.#select().nativeElement.focus();
+  focus(options?: FocusOptions): void {
+    this.#select().nativeElement.focus(options);
   }
 }
 ```
 
-Usage with toolkit:
+The explicit combobox role and ID identify the inner select as auto-ARIA's
+attribute target. The component does not also bind `aria-invalid` from Angular's
+raw invalid flag; auto-ARIA applies feedback timing on the inner control.
+
+Usage with toolkit (import `FormField`, `NgxSignalFormToolkit`, and `NgxFormField`
+in the declaring component):
 
 ```html
 <form [formRoot]="myForm" ngxSignalForm errorStrategy="on-touch">
@@ -719,12 +868,14 @@ other case: you already have a widget — a datepicker, a rich-text editor, a
 combobox — with its own value/change API, and you need a thin
 `FormValueControl<T>` adapter around it rather than a new control.
 
-**Runnable reference:** the custom-controls demo's "Date of Birth" field —
-`apps/demo/src/app/shared/controls/legacy-datepicker-adapter.ts`, wrapping a
-self-contained fake "legacy" datepicker widget
-(`legacy-datepicker-widget.ts`) that has no Signal Forms awareness at all.
-See that adapter's class-level doc comment for the full design writeup; this
-section summarizes the four decisions it makes.
+**Transformation example:** the custom-controls demo's "Date of Birth" field
+uses the [legacy datepicker adapter](../apps/demo/src/app/shared/controls/legacy-datepicker-adapter.ts)
+around a [fake legacy widget](../apps/demo/src/app/shared/controls/legacy-datepicker-widget.ts)
+with no Signal Forms awareness. Use it to study raw/model conversion, not as a
+ready-made ARIA ownership or `focus(options)` recipe. An integration must still
+choose one ARIA writer on the real input and forward focus options through the
+widget. The contracts below describe those requirements; this documentation
+does not change or certify the demo's runtime behavior.
 
 ### 1. Value round-trip and type mismatch
 
@@ -744,9 +895,11 @@ protected readonly rawValue = transformedValue(this.value, {
 });
 ```
 
-`parse` runs on every widget change event; `format` runs whenever `value`
-changes from outside — including a programmatic `form().reset()` — so the
-widget always redisplays what the model actually holds.
+Wire widget changes to `rawValue.set()` so `parse` runs. External model changes
+run `format`. In a bound field context, `field().reset()` also clears parse
+errors and reformats the current model value, even when that value is unchanged;
+`field().reset(value)` supplies a replacement. Neither restores an initial
+snapshot automatically. See the [canonical Angular contract](../.agents/skills/angular-developer/references/signal-forms.md#value-transformation).
 
 ### 2. Touched propagation without a single native blur
 
@@ -814,7 +967,7 @@ raise with the widget's maintainers.
 
 Report unparseable or partial input as a `kind: 'parse'` validation error —
 the same built-in kind `transformedValue`'s own reference example uses, and
-one the toolkit's `resolveErrorMessage` already renders through the normal
+one the toolkit's `resolveValidationErrorMessage` already renders through the normal
 error surface with no extra wiring:
 
 ```typescript
@@ -828,9 +981,11 @@ if (!isRealCalendarDate) {
 }
 ```
 
-Because `transformedValue` is called inside the component bound via
-`[formField]`, that error is reported to the nearest field automatically —
-no manual `errors` input wiring required.
+Inside a Signal Forms field context, `transformedValue` reports parse errors to
+the nearest field automatically. Without that context, consume
+`rawValue.parseErrors()` yourself. Return `{ value }` for a parsed result or
+`{ error }` to keep the previous model value while showing invalid raw input.
+Returning both updates the model and reports the error.
 
 ## Related
 

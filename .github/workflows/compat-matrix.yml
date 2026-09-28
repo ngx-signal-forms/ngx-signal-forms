@@ -1,0 +1,202 @@
+name: Compat matrix
+
+# Tests the toolkit against the lowest and highest version of each declared
+# Node, Angular and peer-dependency range (#515). Main CI only ever exercises
+# one version of each, so a floor could break without anyone noticing.
+#
+# Each matrix cell that needs a non-default package version resolves it
+# (exact floor, or the highest version in a declared range) and writes it
+# into `pnpm-workspace.yaml`'s `overrides` map via
+# `tools/scripts/compat-matrix-override.mjs`, then reinstalls. `overrides`
+# is workspace-wide, so it reaches the toolkit's own auto-installed peers
+# (`autoInstallPeers`), which a scoped `pnpm add --filter` cannot. Nothing
+# here is committed back to the repository — the checkout is discarded when
+# the job ends.
+
+on:
+  schedule:
+    - cron: '17 4 * * 1' # weekly, Monday 04:17 UTC
+  workflow_dispatch: {}
+  pull_request:
+    paths:
+      - 'packages/toolkit/**'
+      - 'package.json'
+      - 'pnpm-workspace.yaml'
+      - 'tools/scripts/compat-matrix-override.mjs'
+      - '.github/workflows/compat-matrix.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: compat-matrix-${{ github.event_name }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  matrix:
+    name: ${{ matrix.name }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # Node: engines declares `^22.22.3 || ^24.15.0 || >=26.0.0` — three
+          # disjoint ranges, each floor tested, plus the current 26.x latest.
+          - name: node-floor-22
+            node: '22.22.3'
+            override: ''
+            guard_pkg: ''
+          - name: node-floor-24
+            node: '24.15.0'
+            override: ''
+            guard_pkg: ''
+          - name: node-floor-26
+            node: '26.0.0'
+            override: ''
+            guard_pkg: ''
+          - name: node-current-26
+            node: '26'
+            override: ''
+            guard_pkg: ''
+          # Angular: peers declare `>=22.0.0 <23.0.0`. Override the whole
+          # framework family so a cell never mixes a floor/ceiling runtime
+          # with a different compiler-cli or router — pnpm's `overrides` is
+          # workspace-wide, so this also keeps @angular/core to one single
+          # resolved version across every importer (verified locally: after
+          # the override, `pnpm-lock.yaml` holds exactly one `@angular/core`
+          # entry). `@angular/cli` and the `@angular-devkit/*` tooling are
+          # deliberately left alone: `toolkit:test`/`test-browser` never load
+          # them. `@angular/build` is different: analog's vite plugin loads
+          # `@angular/build/private` for JIT compilation, and it picks which
+          # `@angular/build` API to call from the `@angular/compiler-cli`
+          # version. `@angular/build` 22.2 changed that API, so a 22.0.0
+          # compiler-cli next to a 22.2 `@angular/build` breaks every spec
+          # file ("initializeHash() before use"). Override `@angular/build`
+          # together with compiler-cli so the two always match.
+          - name: angular-floor
+            node: ''
+            override: '@angular/build@22.0.0,@angular/common@22.0.0,@angular/compiler@22.0.0,@angular/compiler-cli@22.0.0,@angular/core@22.0.0,@angular/forms@22.0.0,@angular/platform-browser@22.0.0,@angular/router@22.0.0,@angular/animations@22.0.0'
+            guard_pkg: '@angular/core'
+          - name: angular-ceiling
+            node: ''
+            override: '@angular/build@>=22.0.0 <23.0.0,@angular/common@>=22.0.0 <23.0.0,@angular/compiler@>=22.0.0 <23.0.0,@angular/compiler-cli@>=22.0.0 <23.0.0,@angular/core@>=22.0.0 <23.0.0,@angular/forms@>=22.0.0 <23.0.0,@angular/platform-browser@>=22.0.0 <23.0.0,@angular/router@>=22.0.0 <23.0.0,@angular/animations@>=22.0.0 <23.0.0'
+            guard_pkg: '@angular/core'
+          # axe-core: peer declares `>=4.13.0 <5`.
+          - name: axe-core-floor
+            node: ''
+            override: 'axe-core@4.13.0'
+            guard_pkg: 'axe-core'
+          - name: axe-core-ceiling
+            node: ''
+            override: 'axe-core@>=4.13.0 <5'
+            guard_pkg: 'axe-core'
+          # vest: peer declares `>=6.3.0 <7.0.0`.
+          - name: vest-floor
+            node: ''
+            override: 'vest@6.3.0'
+            guard_pkg: 'vest'
+          - name: vest-ceiling
+            node: ''
+            override: 'vest@>=6.3.0 <7.0.0'
+            guard_pkg: 'vest'
+    env:
+      NX_NO_CLOUD: 'true'
+      NX_DAEMON: 'false'
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          filter: tree:0
+          fetch-depth: 1
+          persist-credentials: false
+
+      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413
+        name: Install pnpm
+        with:
+          run_install: false
+
+      - name: Set up Node (matrix version)
+        if: ${{ matrix.node != '' }}
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version: ${{ matrix.node }}
+          cache: 'pnpm'
+
+      - name: Set up Node (repo default)
+        if: ${{ matrix.node == '' }}
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version-file: '.node-version'
+          cache: 'pnpm'
+
+      - run: pnpm install --frozen-lockfile
+
+      # Playwright setup runs against the untouched lockfile, before any
+      # override, so its cache key stays stable across cells and isn't
+      # invalidated by a temporary version override.
+      - name: Cache Playwright browsers
+        id: playwright-cache
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-chromium-${{ runner.os }}-${{ hashFiles('**/pnpm-lock.yaml') }}
+
+      # The runner image ships Google's Chrome apt source. Playwright installs
+      # its own browsers and only needs Ubuntu's archives for system libraries,
+      # so drop the source before `install-deps` runs `apt-get update`. That
+      # third-party mirror has served a mismatched package index and broken
+      # every CI job that touched apt.
+      - name: Drop the Google Chrome apt source
+        run: sudo rm -f /etc/apt/sources.list.d/google-chrome.list /etc/apt/sources.list.d/google-chrome.sources
+
+      - name: Install Playwright browsers
+        run: pnpm exec playwright install --with-deps chromium
+        if: steps.playwright-cache.outputs.cache-hit != 'true'
+
+      - name: Install Playwright system dependencies
+        run: pnpm exec playwright install-deps chromium
+        if: steps.playwright-cache.outputs.cache-hit == 'true'
+
+      - name: Apply version override
+        if: ${{ matrix.override != '' }}
+        id: override
+        env:
+          OVERRIDE: ${{ matrix.override }}
+        run: |
+          set -euo pipefail
+          IFS=',' read -ra PAIRS <<< "$OVERRIDE"
+          node tools/scripts/compat-matrix-override.mjs "${PAIRS[@]}"
+          pnpm install --no-frozen-lockfile
+
+      - name: Verify resolved versions
+        env:
+          RESOLVED: ${{ steps.override.outputs.resolved }}
+          GUARD_PKG: ${{ matrix.guard_pkg }}
+          NODE_SPEC: ${{ matrix.node }}
+        run: |
+          set -euo pipefail
+          ACTUAL_NODE="$(node -v)"
+          echo "node: $ACTUAL_NODE"
+          if [[ "$NODE_SPEC" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] && [[ "$ACTUAL_NODE" != "v$NODE_SPEC" ]]; then
+            echo "::error::Expected Node v$NODE_SPEC, got $ACTUAL_NODE"
+            exit 1
+          fi
+          if [[ -n "$GUARD_PKG" ]]; then
+            EXPECTED="$(tr ',' '\n' <<< "$RESOLVED" | grep "^${GUARD_PKG}=" | cut -d= -f2)"
+            if [[ -z "$EXPECTED" ]]; then
+              echo "::error::No resolved version found for $GUARD_PKG in '$RESOLVED'"
+              exit 1
+            fi
+            ACTUAL="$(node -p "require('./packages/toolkit/node_modules/${GUARD_PKG}/package.json').version")"
+            echo "$GUARD_PKG: expected $EXPECTED, toolkit resolves $ACTUAL"
+            if [[ "$ACTUAL" != "$EXPECTED" ]]; then
+              echo "::error::$GUARD_PKG mismatch: expected $EXPECTED, toolkit resolves $ACTUAL"
+              exit 1
+            fi
+          fi
+
+      - name: Run toolkit:test
+        run: pnpm exec nx run toolkit:test --skip-nx-cache --outputStyle=static
+
+      - name: Run toolkit:test-browser
+        run: pnpm exec nx run toolkit:test-browser --skip-nx-cache --outputStyle=static

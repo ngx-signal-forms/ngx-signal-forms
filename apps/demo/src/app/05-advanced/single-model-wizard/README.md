@@ -3,7 +3,7 @@
 ## Intent
 
 A three-step wizard (Account → Shipping → Review) built on **one shared `form()` model**,
-answering [docs/FAQ.md's condensed answer](../../../../../docs/FAQ.md#for-a-multi-step-wizard-how-do-i-validate-only-the-current-step-before-next-with-one-form-model)
+answering [docs/FAQ.md's condensed answer](../../../../../../docs/FAQ.md#for-a-multi-step-wizard-how-do-i-validate-only-the-current-step-before-next-with-one-form-model)
 in full: how to gate "Next" on only the active step's subtree, run cross-step validation
 against a single model, and submit the whole thing once at the end. It reuses the shared
 `ngx-wizard` component **unmodified** — no fork, no new inputs.
@@ -59,7 +59,7 @@ the same signal directly.
 ## How `canNavigate` gates a single-model wizard
 
 Bound as `[canNavigate]="guardStep"` on `<ngx-wizard>`. Per
-[`docs/FAQ.md`](../../../../../docs/FAQ.md#for-a-multi-step-wizard-how-do-i-validate-only-the-current-step-before-next-with-one-form-model),
+[`docs/FAQ.md`](../../../../../../docs/FAQ.md#for-a-multi-step-wizard-how-do-i-validate-only-the-current-step-before-next-with-one-form-model),
 the guard validates the subtree of the step being **left**, not the one being entered:
 
 ```ts
@@ -111,39 +111,23 @@ The shared wizard's navigation has since been fixed: `next()`/`previous()` now r
 navigation unmodified, with no custom Next/Previous buttons and no
 `[showNavigation]="false"`.
 
-## Confirm is unreachable with an invalid earlier step
+## Known navigation limit
 
-A natural question: can you reach Review with Account or Shipping quietly broken (e.g.
-edited back into an invalid state after already passing it once), and have `submit()`
-fail at Confirm? Tested and confirmed **no** — this is not just untested, it's
-unreachable through the UI, by construction:
+Runtime concern R03 remains. The guard validates only the step being left.
+Previously visited destinations remain selectable, so it does not validate
+every skipped intermediate step.
 
-- Every forward transition — the built-in Next button and the progress header's own
-  clicks — runs `guardStep`, which re-validates the subtree of the step **currently
-  being left**, per `#validateStep()`. An invalid step can never be left forward, by
-  either path.
-- The Confirm button only renders once `isLastStep()` (Review). Reaching Review requires
-  leaving Shipping forward at least once _after_ it was last made invalid — which
-  `#validateStep()` blocks.
-- Cross-step validators (the express-shipping rule) live on the field whose value depends
-  on the other step (`shipping.expressShipping`), so editing `account.email` after the
-  fact reactively invalidates that field immediately — which also drops `'shipping'` out
-  of `completedSteps()` right away, disabling its own header button before you could even
-  attempt the workaround.
+Reproduction to cover with a regression test:
 
-Pinned by the "per-subtree gating makes reaching Confirm … unreachable" e2e test: it
-deliberately tries to construct the broken path (complete the wizard once, go back,
-invalidate Shipping, attempt to return to Review both via Next and via the progress
-header) and asserts every attempt is blocked.
+1. Reach Review with valid data.
+2. Return to Shipping and clear the postal code.
+3. Return to valid Account, then select the visited Review header.
 
-This does **not** mean `submit()`'s own whole-form validation in `confirmOrder()` is dead
-code — it's a safety net for exactly this state, kept as defense in depth in case the
-gating above is ever loosened. See that method's doc comment for the known UX nit if it
-ever does trigger: `focusFirstInvalid()` can't focus fields on Account/Shipping from
-Review, since those steps' `ng-template`s aren't rendered there — the `review-error`
-alert would be the only feedback. A "jump to the first invalid step" helper is a possible
-future improvement, not built here since the state it would help with isn't reachable
-today.
+The Account guard can pass while Shipping remains invalid. Final whole-form
+submission still rejects invalid data, but focus cannot reach an unmounted
+Shipping control. A runtime fix should validate skipped steps or navigate to
+the invalid step before focusing. Existing direct Shipping-to-Review coverage
+does not establish that this detour is safe.
 
 ## Strong suites (favor one model)
 

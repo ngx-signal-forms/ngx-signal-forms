@@ -28,8 +28,8 @@ import { ErrorMessageSignalComponent } from './error-message-signal.form';
   ],
   template: `
     <ngx-page-header
-      title="createErrorMessageSignal"
-      subtitle="Flat error iteration with visibility gating, message resolution, and stable ARIA IDs"
+      title="Error Message Signal"
+      subtitle="createErrorMessageSignal(): flat error iteration with visibility gating, message resolution, and stable ARIA IDs"
     />
 
     <ngx-example-cards
@@ -41,7 +41,15 @@ import { ErrorMessageSignalComponent } from './error-message-signal.form';
 
         @if (formRef) {
           <div right>
-            <ngx-signal-form-debugger [formTree]="formRef.passwordForm" />
+            @defer (on idle) {
+              <ngx-signal-form-debugger [formTree]="formRef.passwordForm" />
+            } @placeholder {
+              <div class="debugger-placeholder" aria-hidden="true"></div>
+            } @error {
+              <p class="debugger-placeholder">
+                The form debugger failed to load.
+              </p>
+            }
           </div>
         }
       </ngx-split-layout>

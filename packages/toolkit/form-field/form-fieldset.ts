@@ -2,6 +2,7 @@ import { NgComponentOutlet, NgTemplateOutlet } from '@angular/common';
 import {
   afterEveryRender,
   booleanAttribute,
+  ChangeDetectionStrategy,
   Component,
   computed,
   ElementRef,
@@ -19,9 +20,16 @@ import { NgxHeadlessFieldset } from '@ngx-signal-forms/toolkit/headless';
 
 import {
   NGX_FORM_FIELD_ERROR_RENDERER,
+  generateErrorId,
+  generateWarningId,
   type NgxFormFieldErrorPlacement,
 } from '@ngx-signal-forms/toolkit';
-import { devWarnOnce, type WarnOnceRef } from '@ngx-signal-forms/toolkit/core';
+import {
+  devWarnOnce,
+  isHtmlElement,
+  sanitizeFieldNameForId,
+  type WarnOnceRef,
+} from '@ngx-signal-forms/toolkit/core';
 import { resolveUnionInput } from './utilities/resolve-union-input';
 
 export type NgxFormFieldsetFeedbackAppearance =
@@ -135,6 +143,7 @@ const FIELDSET_SURFACE_TONE_VALUES = [
  */
 @Component({
   selector: 'ngx-form-fieldset, [ngxFormFieldset]',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 
   hostDirectives: [
     {
@@ -151,7 +160,7 @@ const FIELDSET_SURFACE_TONE_VALUES = [
     },
   ],
   imports: [NgComponentOutlet, NgTemplateOutlet, NgxFormFieldError],
-  styleUrls: ['./feedback-tokens.css', './form-fieldset.css'],
+  styleUrls: ['../core/feedback-tokens.css', './form-fieldset.css'],
   exportAs: 'ngxFormFieldset',
   // BEM classnames keep the legacy `ngx-signal-form-fieldset--*` prefix for
   // theming back-compat. The host's element selector uses the new short
@@ -531,17 +540,24 @@ export class NgxFormFieldset {
 
     const fieldsetId = this.fieldset.resolvedFieldsetId();
 
+    // Build through `generateErrorId`/`generateWarningId` rather than
+    // concatenating the raw `fieldsetId` directly — the rendered
+    // `<ngx-form-field-error [fieldName]="fieldset.resolvedFieldsetId()">`
+    // (above) generates its own id the same way, so a `fieldsetId` with
+    // inner whitespace still resolves to the same, single-token id here as
+    // what is actually in the DOM.
+    //
     // Errors suppress warnings in the rendered notification (see
     // `filteredErrorsSignal`), so only reference the id that is actually in
     // the DOM.
     if (this.fieldset.shouldShowErrors()) {
-      return initial ? `${initial} ${fieldsetId}-error` : `${fieldsetId}-error`;
+      const errorId = generateErrorId(fieldsetId);
+      return initial ? `${initial} ${errorId}` : errorId;
     }
 
     if (this.fieldset.shouldShowWarnings()) {
-      return initial
-        ? `${initial} ${fieldsetId}-warning`
-        : `${fieldsetId}-warning`;
+      const warningId = generateWarningId(fieldsetId);
+      return initial ? `${initial} ${warningId}` : warningId;
     }
 
     return initial;
@@ -552,17 +568,20 @@ export class NgxFormFieldset {
       earlyRead: () => {
         const host = this.#elementRef.nativeElement;
         const legend = host.querySelector(':scope > legend');
-        const legendId =
-          legend instanceof HTMLElement ? legend.id || null : null;
+        const legendId = isHtmlElement(legend) ? legend.id || null : null;
 
         return {
-          legend: legend instanceof HTMLElement ? legend : null,
+          legend: isHtmlElement(legend) ? legend : null,
           legendId,
         };
       },
       write: ({ legend, legendId }) => {
         if (legend && !legendId) {
-          const assigned = `${this.fieldset.resolvedFieldsetId()}-legend`;
+          // Sanitize here, at the point the id is built and assigned to the
+          // DOM — `resolvedFieldsetId()` is the raw resolved name and may
+          // contain inner whitespace. This id also feeds `aria-labelledby`
+          // (see `legendLabelId` below), which splits on whitespace.
+          const assigned = `${sanitizeFieldNameForId(this.fieldset.resolvedFieldsetId())}-legend`;
           legend.id = assigned;
           this.#legendId.set(assigned);
         } else if (legendId !== this.#legendId()) {

@@ -1,5 +1,4 @@
-import { httpMutation, withMutations } from '@angular-architects/ngrx-toolkit';
-import { effect } from '@angular/core';
+import { httpMutation, withMutations } from '@ngrx-toolkit/core';
 import {
   patchState,
   signalStore,
@@ -164,7 +163,6 @@ export const WizardStore = signalStore(
           body: data,
         };
       },
-      parse: (response) => response as DraftResponse,
       onSuccess: (response) => {
         store.setDraftSaved(response.draftId);
         patchState(store, { error: null });
@@ -172,27 +170,6 @@ export const WizardStore = signalStore(
       onError: (error) => {
         patchState(store, { error: 'Failed to save draft' });
         console.error('Draft save failed:', error);
-      },
-    }),
-
-    /**
-     * Load existing draft from server.
-     */
-    loadDraft: httpMutation<string, DraftData>({
-      request: (draftId) => ({
-        url: `/api/wizard/draft/${draftId}`,
-        method: 'GET',
-      }),
-      parse: (response) => response as DraftData,
-      onSuccess: (data) => {
-        // Set committed state; withLinkedState auto-updates drafts
-        store.setTraveler(data.traveler);
-        store.setDestinations(data.destinations);
-        patchState(store, { error: null, bookingConfirmation: null });
-      },
-      onError: (error) => {
-        patchState(store, { error: 'Failed to load draft' });
-        console.error('Draft load failed:', error);
       },
     }),
 
@@ -205,7 +182,6 @@ export const WizardStore = signalStore(
         method: 'POST',
         body: trip,
       }),
-      parse: (response) => response as BookingResponse,
       onSuccess: (response) => {
         patchState(store, {
           error: null,
@@ -226,7 +202,6 @@ export const WizardStore = signalStore(
   // Mutation state signals for template binding
   withComputed((store) => ({
     isSaving: () => store.saveDraftIsPending(),
-    isLoading: () => store.loadDraftIsPending(),
     isSubmitting: () => store.submitBookingIsPending(),
   })),
 
@@ -290,10 +265,9 @@ export const WizardStore = signalStore(
   // Store lifecycle hooks
   withHooks({
     onInit(store) {
-      // Auto-save draft data when it changes
-      effect(() => {
-        store.autoSaveDraft(store.draftSummary());
-      });
+      // Auto-save draft data when it changes. rxMethod tracks the signal
+      // itself, so no hand-written effect is needed.
+      store.autoSaveDraft(store.draftSummary);
 
       store.initializeIfEmpty();
     },

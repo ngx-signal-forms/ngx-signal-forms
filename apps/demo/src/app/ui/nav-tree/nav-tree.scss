@@ -19,44 +19,36 @@
   align-items: center;
   gap: 0.5rem;
   width: 100%;
+  min-height: 2.5rem;
   padding: 0.5rem 0.6rem;
   border: 0;
   border-radius: 0.5rem;
   background: transparent;
   cursor: pointer;
-  color: rgb(100 116 139);
+  color: var(--color-text-muted);
   text-align: left;
   transition:
     background-color 140ms ease,
     color 140ms ease;
 
   &:hover {
-    background: rgb(241 245 249);
-    color: rgb(51 65 85);
+    background: var(--color-surface-hover);
+    color: var(--color-text);
   }
 
   &:focus-visible {
-    outline: 2px solid rgb(99 102 241);
+    outline: 2px solid var(--color-border-focus);
     outline-offset: -2px;
   }
 
   &[aria-expanded='true'] .cat__chevron {
     transform: rotate(90deg);
-    color: rgb(99 102 241);
+    color: var(--color-accent);
   }
 
   &[aria-expanded='true'] .cat__count {
-    color: rgb(79 70 229);
-    background: rgb(238 242 255);
-  }
-}
-
-:host-context(.dark) .cat__trigger {
-  color: rgb(100 116 139);
-
-  &:hover {
-    background: rgb(30 41 59 / 0.55);
-    color: rgb(203 213 225);
+    color: var(--color-accent-text);
+    background: var(--color-accent-soft);
   }
 }
 
@@ -64,7 +56,7 @@
   width: 0.7rem;
   height: 0.7rem;
   flex-shrink: 0;
-  color: rgb(148 163 184);
+  color: var(--color-icon-muted);
   transition: transform 200ms cubic-bezier(0.4, 0, 0.2, 1);
 }
 
@@ -73,9 +65,9 @@
   min-width: 0;
   font-family:
     'ui-monospace', 'SFMono-Regular', 'Cascadia Code', 'Menlo', monospace;
-  font-size: 0.66rem;
+  font-size: 0.75rem;
   font-weight: 600;
-  letter-spacing: 0.14em;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
 }
 
@@ -83,36 +75,19 @@
 .cat__count {
   font-family:
     'ui-monospace', 'SFMono-Regular', 'Cascadia Code', 'Menlo', monospace;
-  font-size: 0.62rem;
+  font-size: 0.75rem;
   font-weight: 600;
   line-height: 1;
-  padding: 0.18rem 0.36rem;
+  padding: 0.2rem 0.4rem;
   border-radius: 999px;
-  /* slate-600 (was slate-400, rgb(148 163 184) / #94a3b8): that gray on this
-     pill's slate-100 background is 2.34:1, well under the 4.5:1 WCAG 1.4.3 AA
-     floor for this 9.92px text — a pre-existing violation baselined across
-     every route (apps/demo-e2e/a11y-baseline.json), not something specific
-     to any one page. slate-600 clears it at 6.92:1 while staying in the
-     same muted gray family as the rest of the pill. */
-  color: rgb(71 85 105);
-  background: rgb(241 245 249);
+  /* Muted text on the hover fill: gray-600 on gray-100 is 6.9:1 and
+     gray-400 on gray-800 is 5.8:1, both above the 4.5:1 WCAG 1.4.3 floor
+     for this small text. */
+  color: var(--color-text-muted);
+  background: var(--color-surface-hover);
   transition:
     color 140ms ease,
     background-color 140ms ease;
-}
-
-:host-context(.dark) .cat__count {
-  /* slate-400 (was slate-500, rgb(100 116 139) / #64748b): that gray against
-     this pill's translucent dark background resolves to ~3.47:1 once
-     blended with the page's actual dark background — also under 4.5:1.
-     slate-400 clears it at 6.43:1 on the same blended background. */
-  color: rgb(148 163 184);
-  background: rgb(30 41 59 / 0.7);
-}
-
-:host-context(.dark) .cat__trigger[aria-expanded='true'] .cat__count {
-  color: rgb(165 180 252);
-  background: rgb(49 46 129 / 0.4);
 }
 
 /* ── Animated panel (grid-rows trick) ────────────────── */
@@ -137,11 +112,7 @@
   padding: 0;
   /* guide rail */
   margin-left: 1.05rem;
-  border-left: 1px solid rgb(226 232 240);
-}
-
-:host-context(.dark) .cat__list {
-  border-left-color: rgb(30 41 59);
+  border-left: 1px solid var(--color-border);
 }
 
 /* ── Leaf link ───────────────────────────────────────── */
@@ -151,11 +122,11 @@
   align-items: flex-start;
   gap: 0.45rem;
   margin: 0.05rem 0 0.05rem -1px;
-  padding: 0.4rem 0.6rem 0.4rem 0.85rem;
+  padding: 0.55rem 0.6rem 0.55rem 0.85rem;
   border-left: 2px solid transparent;
-  font-size: 0.83rem;
+  font-size: 0.875rem;
   line-height: 1.35;
-  color: rgb(100 116 139);
+  color: var(--color-text-muted);
   text-decoration: none;
   transition:
     color 130ms ease,
@@ -173,7 +144,7 @@
     width: 0.85rem;
     height: 0.85rem;
     margin-top: 0.12rem;
-    color: rgb(148 163 184);
+    color: var(--color-icon-muted);
     opacity: 0.55;
     transition:
       color 130ms ease,
@@ -181,8 +152,8 @@
   }
 
   &:hover {
-    color: rgb(15 23 42);
-    border-left-color: rgb(203 213 225);
+    color: var(--color-text);
+    border-left-color: var(--color-border-strong);
 
     .leaf__controls {
       opacity: 0.9;
@@ -190,57 +161,30 @@
   }
 
   &:focus-visible {
-    outline: 2px solid rgb(99 102 241);
+    outline: 2px solid var(--color-border-focus);
     outline-offset: -2px;
     border-radius: 0.3rem;
   }
 
   /* active */
   &--active {
-    color: rgb(67 56 202);
+    color: var(--color-accent-text);
     font-weight: 600;
-    border-left-color: rgb(99 102 241);
+    border-left-color: var(--color-accent);
     background: linear-gradient(
       to right,
-      rgb(238 242 255) 0%,
-      rgb(238 242 255 / 0) 100%
+      var(--color-accent-soft) 0%,
+      transparent 100%
     );
 
     .leaf__controls {
-      color: rgb(99 102 241);
+      color: var(--color-accent);
       opacity: 1;
     }
 
     &:hover {
-      color: rgb(67 56 202);
-      border-left-color: rgb(99 102 241);
-    }
-  }
-}
-
-:host-context(.dark) .leaf {
-  color: rgb(100 116 139);
-
-  &:hover {
-    color: rgb(226 232 240);
-    border-left-color: rgb(51 65 85);
-  }
-
-  &--active {
-    color: rgb(199 210 254);
-    border-left-color: rgb(129 140 248);
-    background: linear-gradient(
-      to right,
-      rgb(49 46 129 / 0.32) 0%,
-      rgb(49 46 129 / 0) 100%
-    );
-
-    .leaf__controls {
-      color: rgb(129 140 248);
-    }
-
-    &:hover {
-      color: rgb(199 210 254);
+      color: var(--color-accent-text);
+      border-left-color: var(--color-accent);
     }
   }
 }

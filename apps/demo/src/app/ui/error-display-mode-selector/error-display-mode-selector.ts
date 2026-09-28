@@ -88,7 +88,7 @@ export const ERROR_DISPLAY_MODES: ErrorDisplayModeConfig[] = [
     }
 
     .error-mode-summary--embedded {
-      border-top: 1px solid rgba(99, 102, 241, 0.14);
+      border-top: 1px solid var(--color-accent-border);
       background: transparent;
       border-radius: 0;
       padding: 0.9rem 0 0;
@@ -96,20 +96,10 @@ export const ERROR_DISPLAY_MODES: ErrorDisplayModeConfig[] = [
 
     .error-mode-instructions--embedded {
       margin-top: 0.65rem;
-      border-top: 1px dashed rgba(245, 158, 11, 0.38);
+      border-top: 1px dashed var(--color-warning-border);
       background: transparent;
       border-radius: 0;
       padding: 0.9rem 0 0;
-    }
-
-    :host-context(.dark) {
-      .error-mode-summary--embedded {
-        border-top-color: rgba(129, 140, 248, 0.28);
-      }
-
-      .error-mode-instructions--embedded {
-        border-top-color: rgba(251, 191, 36, 0.34);
-      }
     }
   `,
   template: `
@@ -121,9 +111,9 @@ export const ERROR_DISPLAY_MODES: ErrorDisplayModeConfig[] = [
       <div class="mb-4">
         <fieldset>
           <legend
-            class="mb-3 text-lg font-semibold text-gray-900 dark:text-gray-100"
+            class="mb-3 text-sm font-semibold text-gray-900 dark:text-gray-100"
           >
-            🎛️ Error Display Mode
+            Error Display Mode
           </legend>
           <div class="flex flex-wrap gap-4">
             @for (modeConfig of errorDisplayModes(); track modeConfig.mode) {

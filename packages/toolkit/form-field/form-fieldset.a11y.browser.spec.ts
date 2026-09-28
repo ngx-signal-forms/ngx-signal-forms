@@ -8,7 +8,7 @@ import { describe, expect, it } from 'vitest';
 import {
   expectNoA11yViolations,
   findAlertContaining,
-} from '@ngx-signal-forms/toolkit/testing';
+} from '../testing/a11y-internal';
 
 /**
  * WCAG 2.2 AA conformance gate for `NgxFormFieldset`.

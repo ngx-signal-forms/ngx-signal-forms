@@ -6,10 +6,8 @@ import {
 import type { NgxSignalFormControlKind } from '@ngx-signal-forms/toolkit';
 import { readFormFieldWrapperDomSnapshot } from './form-field-dom-snapshot';
 import {
-  hasPaddedControlContent,
-  isSelectionGroupKind,
-  isTextualControlKind,
-  supportsOutlinedAppearance,
+  capabilitiesFor,
+  type ControlKindCapabilities,
 } from './form-field.utils';
 
 /**
@@ -24,56 +22,65 @@ import {
  */
 const EXPECTED_CAPABILITIES: Record<
   NgxSignalFormControlKind,
-  {
-    textual: boolean;
-    supportsOutline: boolean;
-    selectionGroup: boolean;
-    paddedContent: boolean;
-  }
+  ControlKindCapabilities
 > = {
   'input-like': {
     textual: true,
     supportsOutline: true,
     selectionGroup: false,
     paddedContent: false,
+    forcesVertical: false,
+    clusterRole: null,
   },
   'standalone-field-like': {
     textual: true,
     supportsOutline: true,
     selectionGroup: false,
     paddedContent: false,
+    forcesVertical: false,
+    clusterRole: null,
   },
   switch: {
     textual: false,
     supportsOutline: false,
     selectionGroup: false,
     paddedContent: false,
+    forcesVertical: true,
+    clusterRole: null,
   },
   checkbox: {
     textual: false,
     supportsOutline: false,
     selectionGroup: true,
     paddedContent: false,
+    forcesVertical: true,
+    clusterRole: 'group',
   },
   'radio-group': {
     textual: false,
     supportsOutline: false,
     selectionGroup: true,
     paddedContent: false,
+    forcesVertical: true,
+    clusterRole: 'radiogroup',
   },
   slider: {
     textual: false,
     supportsOutline: true,
     selectionGroup: false,
     paddedContent: true,
+    forcesVertical: false,
+    clusterRole: null,
   },
   composite: {
     textual: false,
     supportsOutline: true,
     selectionGroup: false,
     paddedContent: true,
+    forcesVertical: false,
+    clusterRole: null,
   },
-} satisfies Record<NgxSignalFormControlKind, object>;
+};
 
 describe('CONTROL_KIND_CAPABILITIES exhaustiveness', () => {
   it('should have a capability entry for every registered control kind', () => {
@@ -101,28 +108,8 @@ describe('CONTROL_KIND_CAPABILITIES exhaustiveness', () => {
   });
 
   describe.each(NGX_SIGNAL_FORM_CONTROL_KIND_VALUES)('%s', (kind) => {
-    it('isTextualControlKind returns expected value', () => {
-      expect(isTextualControlKind(kind)).toBe(
-        EXPECTED_CAPABILITIES[kind].textual,
-      );
-    });
-
-    it('supportsOutlinedAppearance returns expected value', () => {
-      expect(supportsOutlinedAppearance(kind)).toBe(
-        EXPECTED_CAPABILITIES[kind].supportsOutline,
-      );
-    });
-
-    it('isSelectionGroupKind returns expected value', () => {
-      expect(isSelectionGroupKind(kind)).toBe(
-        EXPECTED_CAPABILITIES[kind].selectionGroup,
-      );
-    });
-
-    it('hasPaddedControlContent returns expected value', () => {
-      expect(hasPaddedControlContent(kind)).toBe(
-        EXPECTED_CAPABILITIES[kind].paddedContent,
-      );
+    it('capabilitiesFor returns the expected capability flags', () => {
+      expect(capabilitiesFor(kind)).toEqual(EXPECTED_CAPABILITIES[kind]);
     });
   });
 });
@@ -137,13 +124,19 @@ describe('readFormFieldWrapperDomSnapshot — native-vs-fallback precedence', ()
     ...controls: readonly HTMLElement[]
   ): HTMLElement {
     const host = document.createElement('div');
+    // Mirrors the real template's structural `__layout` wrapper (#523) — see
+    // form-field-wrapper.ts and form-field-dom-snapshot.ts's
+    // `:scope > … > …` selectors.
+    const layout = document.createElement('div');
+    layout.className = 'ngx-signal-form-field-wrapper__layout';
     const content = document.createElement('div');
     content.className = 'ngx-signal-form-field-wrapper__content';
     const main = document.createElement('div');
     main.className = 'ngx-signal-form-field-wrapper__main';
     main.append(...controls);
     content.append(main);
-    host.append(content);
+    layout.append(content);
+    host.append(layout);
     return host;
   }
 
@@ -197,6 +190,12 @@ describe('readFormFieldWrapperDomSnapshot — native-vs-fallback precedence', ()
     // scoped to `__main` so only the real control can match.
     const host = document.createElement('div');
 
+    // The real template nests label/content one level deeper, inside the
+    // structural `__layout` wrapper (#523) — see form-field-wrapper.ts and
+    // form-field-dom-snapshot.ts's `:scope > … > …` selectors.
+    const layout = document.createElement('div');
+    layout.className = 'ngx-signal-form-field-wrapper__layout';
+
     const label = document.createElement('div');
     label.className = 'ngx-signal-form-field-wrapper__label';
     // A native <button type="button"> with an id satisfies
@@ -221,7 +220,8 @@ describe('readFormFieldWrapperDomSnapshot — native-vs-fallback precedence', ()
     main.append(realControl);
 
     content.append(prefix, main);
-    host.append(label, content);
+    layout.append(label, content);
+    host.append(layout);
 
     const snapshot = readFormFieldWrapperDomSnapshot(
       host,
@@ -289,19 +289,14 @@ describe('readFormFieldWrapperDomSnapshot — native-vs-fallback precedence', ()
 });
 
 describe('null (unresolved) control kind fallback', () => {
-  it('isTextualControlKind falls back to textual chrome', () => {
-    expect(isTextualControlKind(null)).toBe(true);
-  });
-
-  it('supportsOutlinedAppearance falls back to outline support', () => {
-    expect(supportsOutlinedAppearance(null)).toBe(true);
-  });
-
-  it('isSelectionGroupKind falls back to false', () => {
-    expect(isSelectionGroupKind(null)).toBe(false);
-  });
-
-  it('hasPaddedControlContent falls back to false', () => {
-    expect(hasPaddedControlContent(null)).toBe(false);
+  it('falls back to textual chrome with outline support and no grouping', () => {
+    expect(capabilitiesFor(null)).toEqual({
+      textual: true,
+      supportsOutline: true,
+      selectionGroup: false,
+      paddedContent: false,
+      forcesVertical: false,
+      clusterRole: null,
+    });
   });
 });

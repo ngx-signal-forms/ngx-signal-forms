@@ -9,6 +9,10 @@
   "ignorePatterns": [
     "dist/**",
     "coverage/**",
+    // Committed baseline snapshots of built `.d.ts` output (#514). These
+    // must stay byte-identical to what ng-packagr emits, so the API-surface
+    // guard's diff is meaningful; reformatting them would fight every build.
+    "packages/toolkit/api-reports/**",
     ".nx/cache/**",
     ".nx/workspace-data/**",
     ".angular/**",

@@ -22,7 +22,7 @@ Shows the practical layered strategy for non-trivial forms: use **Zod** for stru
 ### Errors (from Zod — structural)
 
 - Required/format/length rules per field come from `zodVestAccountSchema` (see the schemas file).
-- Empty fields trigger Zod errors before the Vest suite runs policy checks.
+- Zod and Vest contribute independently. Vest uses its own rule conditions; it does not wait for Zod to succeed.
 
 ### Errors (from Vest — policy)
 
@@ -51,8 +51,8 @@ Shows the practical layered strategy for non-trivial forms: use **Zod** for stru
 ## How to test
 
 1. Run the demo and navigate to `/validation/zod-vest-validation`.
-2. Leave fields empty — confirm Zod structural errors render first.
-3. Fill the fields, choose `Business`, and enter a `gmail.com` address — confirm the Vest policy error replaces the generic one.
+2. Leave fields empty and inspect structural errors. Both validators are registered independently, not as a sequential pipeline.
+3. Fill the fields, choose `Business`, and enter a `gmail.com` address. Confirm Vest contributes the business-email policy error.
 4. Include your first or last name inside the password — confirm the Vest policy error.
 5. Choose `Business` with `DE`, `NL`, or `BE` and leave VAT empty — confirm the blocking error.
 6. Enter a long password with letters only (no symbols) — warning appears without blocking submission.

@@ -11,7 +11,7 @@ import type { AutosaveProfileModel } from './autosave.model';
  * `debounce(path, 500)` — the native Angular 22 schema rule — delays writing
  * a UI edit into the field's own value signal until 500ms after the user
  * stops typing that field. Everything downstream (`dirty()`, `valid()`, and
- * the autosave `httpResource` request built from them) only ever sees the
+ * the autosave PATCH built from them) only ever sees the
  * settled value, so no hand-rolled RxJS `debounceTime` is needed to get a
  * debounced autosave.
  *

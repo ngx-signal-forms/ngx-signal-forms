@@ -25,7 +25,7 @@ export const CROSS_FIELD_VALIDATION_CONTENT = {
     title: 'Validation Strategies',
     sections: [
       {
-        title: '🧪 Try This (On Touch Strategy)',
+        title: 'Try This (On Touch Strategy)',
         items: [
           '1. Pick a <strong>Check-In</strong> date → Set <strong>Check-Out</strong> to the same or an earlier date → Tab away → Error: <em>"Check-out must be after check-in"</em>',
           '2. Move Check-Out to any date after Check-In → Error disappears',

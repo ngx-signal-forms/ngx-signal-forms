@@ -1,7 +1,11 @@
 import {
+  afterNextRender,
   ChangeDetectionStrategy,
   Component,
   computed,
+  DOCUMENT,
+  inject,
+  Injector,
   input,
   signal,
 } from '@angular/core';
@@ -23,6 +27,7 @@ import { NgxFormFieldErrorSummary } from '@ngx-signal-forms/toolkit/assistive';
 import { NgxFormField } from '@ngx-signal-forms/toolkit/form-field';
 import type { SubmissionModel } from './submission-patterns.model';
 import { submissionSchema } from './submission-patterns.validations';
+import { BusyButtonDirective } from '../../shared/busy-button.directive';
 
 /**
  * Submission state indicator.
@@ -49,7 +54,7 @@ import { submissionSchema } from './submission-patterns.validations';
     <div
       class="mb-6 flex items-center gap-3 rounded-lg border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-900"
     >
-      <span class="text-2xl">📊</span>
+      <span class="text-2xl" aria-hidden="true">📊</span>
       <div class="flex-1">
         <div class="mb-1 text-sm font-medium text-gray-700 dark:text-gray-300">
           Submission State
@@ -126,6 +131,7 @@ export class SubmissionStateIndicatorComponent {
   changeDetection: ChangeDetectionStrategy.OnPush,
 
   imports: [
+    BusyButtonDirective,
     FormField,
     NgxSignalFormToolkit,
     NgxFormField,
@@ -143,25 +149,30 @@ export class SubmissionStateIndicatorComponent {
            injectFormContext() resolves the real NgxSignalFormContext. -->
       <ngx-submission-state-indicator #stateIndicator />
 
-      <!-- Success message (if submission succeeded) -->
-      @if (submissionSuccess()) {
-        <div
-          role="status"
-          class="mb-6 rounded-lg border border-green-200 bg-green-50 p-4 dark:border-green-800 dark:bg-green-950"
-        >
-          <div class="flex items-start gap-3">
-            <span class="text-2xl">✅</span>
-            <div>
-              <h3 class="mb-1 font-semibold text-green-900 dark:text-green-100">
-                Registration Successful!
-              </h3>
-              <p class="text-sm text-green-800 dark:text-green-200">
-                Account created for <strong>{{ model().username }}</strong>
-              </p>
+      <!-- Success message. The live region stays in the DOM and only its
+           content changes, so screen readers announce it. -->
+      <div role="status">
+        @if (submissionSuccess()) {
+          <div
+            class="mb-6 rounded-lg border border-green-200 bg-green-50 p-4 dark:border-green-800 dark:bg-green-950"
+          >
+            <div class="flex items-start gap-3">
+              <span class="text-2xl" aria-hidden="true">✅</span>
+              <div>
+                <p
+                  class="mb-1 font-semibold text-green-900 dark:text-green-100"
+                >
+                  Registration Successful!
+                </p>
+                <p class="text-sm text-green-800 dark:text-green-200">
+                  Account created for
+                  <strong>{{ lastRegisteredUsername() }}</strong>
+                </p>
+              </div>
             </div>
           </div>
-        </div>
-      }
+        }
+      </div>
 
       <!-- Form-level error summary (GOV.UK pattern) -->
       <!-- Aggregates all field errors into a clickable list; each entry focuses the invalid control -->
@@ -238,9 +249,11 @@ export class SubmissionStateIndicatorComponent {
       <div
         class="mt-6 rounded-lg border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-900"
       >
-        <h4 class="mb-2 font-semibold text-gray-900 dark:text-gray-100">
+        <h2
+          class="mb-2 text-base font-semibold text-gray-900 dark:text-gray-100"
+        >
           Submission State (Using Toolkit Helpers)
-        </h4>
+        </h2>
         <dl class="space-y-2 text-sm">
           <div class="flex gap-2">
             <dt class="font-medium text-gray-700 dark:text-gray-300">
@@ -281,7 +294,7 @@ export class SubmissionStateIndicatorComponent {
       <div class="mt-8 flex gap-4">
         <button
           type="submit"
-          [disabled]="isFormSubmitting()"
+          [ngxBusy]="isFormSubmitting()"
           class="btn-primary"
         >
           @if (isFormSubmitting()) {
@@ -293,7 +306,7 @@ export class SubmissionStateIndicatorComponent {
         <button
           type="button"
           (click)="resetForm()"
-          [disabled]="isFormSubmitting()"
+          [ngxBusy]="isFormSubmitting()"
           class="btn-secondary"
         >
           Reset
@@ -362,6 +375,14 @@ export class SubmissionPatternsComponent {
         /// TreeValidationResult so Signal Forms attaches it to the username field
         if (formData().value().simulateServerError) {
           const username = formData().value().username;
+          // createOnInvalidHandler() doesn't run for server-returned errors,
+          // and the submit button kept focus; take the user to the field.
+          afterNextRender(
+            () => {
+              this.#document.querySelector<HTMLElement>('#username')?.focus();
+            },
+            { injector: this.#injector },
+          );
           return {
             kind: 'usernameTaken',
             message: `Username "${username}" is already taken. Please choose another.`,
@@ -369,7 +390,9 @@ export class SubmissionPatternsComponent {
           };
         }
 
-        /// Success - show success message and reset form
+        /// Success - show success message and reset form. Keep the name for
+        /// the message: the reset below clears the model before it renders.
+        this.lastRegisteredUsername.set(formData().value().username);
         this.submissionSuccess.set(true);
         this.#model.set({
           username: '',
@@ -399,6 +422,9 @@ export class SubmissionPatternsComponent {
   );
 
   protected readonly submissionSuccess = signal(false);
+  protected readonly lastRegisteredUsername = signal('');
+  readonly #document = inject(DOCUMENT);
+  readonly #injector = inject(Injector);
 
   protected resetForm(): void {
     /// Reset form state and data

@@ -1,4 +1,5 @@
 import {
+  ChangeDetectionStrategy,
   Component,
   computed,
   effect,
@@ -57,6 +58,7 @@ import { createFieldOptionalitySummary } from '@ngx-signal-forms/toolkit/headles
  */
 @Component({
   selector: 'ngx-form-marking-legend',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 
   template: `
     @if (resolvedText(); as text) {
@@ -71,7 +73,12 @@ import { createFieldOptionalitySummary } from '@ngx-signal-forms/toolkit/headles
     .ngx-form-marking-legend {
       margin: 0;
       font-size: var(--ngx-form-marking-legend-font-size, 0.875rem);
-      color: var(--ngx-form-marking-legend-color, rgba(50, 65, 85, 0.85));
+      /* light-dark() follows the inherited color-scheme: 6.65:1 on white,
+       * 10.54:1 on the dark surface (#1f2937). */
+      color: var(
+        --ngx-form-marking-legend-color,
+        light-dark(rgba(50, 65, 85, 0.85), rgba(249, 250, 251, 0.85))
+      );
     }
   `,
 })

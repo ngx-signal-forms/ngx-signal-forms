@@ -442,6 +442,60 @@ describe('NgxFormFieldHint', () => {
       expect(hint).toHaveAttribute('id', 'email-hint');
       expect(hint).toHaveAttribute('data-signal-field', 'email');
     });
+
+    it('should keep the short {fieldName}-hint id at ordinal 0 (single hint of a field)', async () => {
+      const { container } = await render(
+        `<ngx-form-field-hint>Hint</ngx-form-field-hint>`,
+        {
+          imports: [NgxFormFieldHint],
+          providers: [
+            {
+              provide: NGX_SIGNAL_FORM_FIELD_CONTEXT,
+              useValue: { fieldName: signal('email'), hintOrdinal: () => 0 },
+            },
+          ],
+        },
+      );
+
+      const hint = container.querySelector('ngx-form-field-hint');
+      expect(hint).toHaveAttribute('id', 'email-hint');
+    });
+
+    it('should append a unique suffix for a hint at a later ordinal (issue #435)', async () => {
+      const { container } = await render(
+        `<ngx-form-field-hint>Hint</ngx-form-field-hint>`,
+        {
+          imports: [NgxFormFieldHint],
+          providers: [
+            {
+              provide: NGX_SIGNAL_FORM_FIELD_CONTEXT,
+              useValue: { fieldName: signal('email'), hintOrdinal: () => 1 },
+            },
+          ],
+        },
+      );
+
+      const hint = container.querySelector('ngx-form-field-hint');
+      expect(hint).toHaveAttribute('id', 'email-hint-2');
+    });
+
+    it('should leave an explicit id unaffected by hintOrdinal (issue #435)', async () => {
+      const { container } = await render(
+        `<ngx-form-field-hint id="custom-email-hint">Hint</ngx-form-field-hint>`,
+        {
+          imports: [NgxFormFieldHint],
+          providers: [
+            {
+              provide: NGX_SIGNAL_FORM_FIELD_CONTEXT,
+              useValue: { fieldName: signal('email'), hintOrdinal: () => 1 },
+            },
+          ],
+        },
+      );
+
+      const hint = container.querySelector('ngx-form-field-hint');
+      expect(hint).toHaveAttribute('id', 'custom-email-hint');
+    });
   });
 
   describe('SSR/hydration parity (approximation)', () => {

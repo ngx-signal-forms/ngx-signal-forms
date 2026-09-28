@@ -6,7 +6,7 @@ Angular 22 made `{ when }` the consistent shape for driving dynamic field state 
 
 ## Toolkit features showcased
 
-- `hidden(path, { when })` — drops the invite-code field out of the form entirely until invite-only onboarding is active.
+- `hidden(path, { when })` excludes invite-code validation participation while inactive. Its value stays in the model; the template uses `@if` to remove the control from the DOM.
 - `disabled(path, { when })` — keeps the mobile-number field visible but inert until SMS notifications are selected.
 - `readonly(path, { when })` — locks the work-email field for display/copy once it's identity-provider managed, without hiding it.
 - Consistent `{ when }` syntax — the same context (`ctx.valueOf(path.*)`) drives both these state functions and ordinary `required(path, { when, message })` rules.
@@ -17,7 +17,7 @@ Angular 22 made `{ when }` the consistent shape for driving dynamic field state 
 ## Form model
 
 - Signal model: `signal<FieldStatePatternsModel>()` with `workEmail`, `contactPreference` (`'email' | 'sms'`), `mobileNumber`, `inviteOnly`, `inviteCode`, `managedByIdentityProvider`.
-- Initial state: `workEmail` prefilled (`ada@company.com`), `contactPreference` set to `'email'`, all other fields empty/`false`.
+- Initial state: `workEmail` prefilled (`ada@example.com`), `contactPreference` set to `'email'`, all other fields empty/`false`.
 - Schema: `form(model, fieldStatePatternsSchema, { submission })`.
 
 ## Validation rules

@@ -2,6 +2,24 @@
   "name": "workspace",
   "$schema": "node_modules/nx/schemas/project-schema.json",
   "targets": {
+    "check-skill-package": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "node --test tools/scripts/check-skill-package.spec.mjs && node tools/scripts/check-skill-package.mjs"
+      }
+    },
+    "check-changelog-renderer": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "node --experimental-strip-types --test tools/release/project-changelog-renderer.spec.mjs"
+      }
+    },
+    "check-no-bare-mention": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "node --test tools/commitlint/no-bare-mention.spec.mjs"
+      }
+    },
     "lint": {
       "executor": "nx:run-commands",
       "options": {
@@ -50,6 +68,12 @@
       "options": {
         "command": "vitest run --config vitest.coverage.config.mts --coverage --maxWorkers=2",
         "cwd": "{workspaceRoot}"
+      }
+    },
+    "check-a11y-report-violations": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "node --test tools/scripts/a11y-report-violations.spec.mjs"
       }
     },
     "a11y-report": {

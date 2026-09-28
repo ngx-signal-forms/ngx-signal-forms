@@ -1,6 +1,10 @@
 import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
-import type { FieldTree, ValidationError } from '@angular/forms/signals';
+import {
+  form,
+  type FieldTree,
+  type ValidationError,
+} from '@angular/forms/signals';
 import { describe, expect, it, vi } from 'vitest';
 import { hasSubmitted, submitWithWarnings } from './submission-helpers';
 /**
@@ -193,6 +197,14 @@ describe('Submission Helpers', () => {
   });
 
   describe('submitWithWarnings re-entrancy', () => {
+    // The success path now delegates to Angular's native `submit()`, which
+    // reads internal form-tree structure a hand-rolled mock cannot fake — use
+    // a real, always-valid form so the delegation actually executes.
+    const makeValidForm = (): FieldTree<{ name: string }> => {
+      const model = signal({ name: 'Ada' });
+      return TestBed.runInInjectionContext(() => form(model));
+    };
+
     it('deferred-action overlap: concurrent calls run action exactly once', async () => {
       // Arrange: an action whose completion we can control manually.
       let resolveAction!: () => void;
@@ -201,11 +213,7 @@ describe('Submission Helpers', () => {
       });
       const action = vi.fn(() => actionPromise);
 
-      const formTree = createMockFieldTreeForSubmit({
-        submitting: () => false,
-        pending: () => false,
-        errorSummary: () => [],
-      });
+      const formTree = makeValidForm();
 
       // Act: fire two concurrent submitWithWarnings calls before the action resolves.
       const p1 = submitWithWarnings(formTree, action);
@@ -213,10 +221,12 @@ describe('Submission Helpers', () => {
 
       // Resolve the deferred action.
       resolveAction();
-      await Promise.all([p1, p2]);
+      const [result1, result2] = await Promise.all([p1, p2]);
 
       // Assert: action was only invoked once — the second call was dropped.
       expect(action).toHaveBeenCalledOnce();
+      expect(result1).toBe(true);
+      expect(result2).toBe(false);
     });
 
     it('native overlap: bails out without invoking action when submitting() is true', async () => {
@@ -228,9 +238,10 @@ describe('Submission Helpers', () => {
         errorSummary: () => [],
       });
 
-      await submitWithWarnings(formTree, action);
+      const result = await submitWithWarnings(formTree, action);
 
       expect(action).not.toHaveBeenCalled();
+      expect(result).toBe(false);
     });
 
     it('recovery after rejection: form is re-submittable after action rejects', async () => {
@@ -241,11 +252,7 @@ describe('Submission Helpers', () => {
         return Promise.reject(new Error('network error'));
       });
 
-      const formTree = createMockFieldTreeForSubmit({
-        submitting: () => false,
-        pending: () => false,
-        errorSummary: () => [],
-      });
+      const formTree = makeValidForm();
 
       // First call: action rejects → helper rejects too.
       await expect(
@@ -255,8 +262,9 @@ describe('Submission Helpers', () => {
 
       // Second call: form should be re-submittable after the rejection cleared
       // the in-flight guard in the finally block.
-      await submitWithWarnings(formTree, workingAction);
+      const result = await submitWithWarnings(formTree, workingAction);
       expect(workingAction).toHaveBeenCalledOnce();
+      expect(result).toBe(true);
     });
   });
 });

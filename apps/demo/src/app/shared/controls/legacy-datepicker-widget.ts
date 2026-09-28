@@ -171,13 +171,14 @@ import type { FormFieldAppearance } from '@ngx-signal-forms/toolkit';
 
     .legacy-datepicker__grid {
       display: grid;
-      grid-template-columns: repeat(7, 2rem);
+      grid-template-columns: repeat(7, minmax(0, 2rem));
       gap: 0.125rem;
     }
 
     .legacy-datepicker__day {
-      inline-size: 2rem;
-      block-size: 2rem;
+      inline-size: 100%;
+      max-inline-size: 2rem;
+      aspect-ratio: 1;
       border: 1px solid transparent;
       border-radius: 0.25rem;
       background: transparent;

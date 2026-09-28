@@ -9,11 +9,11 @@
 /* Configure Tailwind to use class-based dark mode */
 @variant dark (.dark &);
 
-/* Modern theme tokens with brand gradient */
+/* Theme tokens. apps/demo/DESIGN.md documents the rules. */
 @theme default {
-  /* Brand colors (from logo gradient) */
-  --color-brand-start: #6366f1; /* Indigo 500 */
-  --color-brand-end: #8b5cf6; /* Purple */
+  /* Brand colors. Both gradient stops carry white text at ≥5.7:1. */
+  --color-brand-start: #4f46e5; /* Indigo 600 */
+  --color-brand-end: #7c3aed; /* Violet 600 */
   --color-brand-strong: #4f46e5; /* Indigo 600 — brand shade that clears WCAG AA (≥4.5:1) as text on light surfaces */
 
   /* Neutral colors (modern grays) */
@@ -28,24 +28,30 @@
   --color-gray-800: #1f2937;
   --color-gray-900: #111827;
 
-  /* Semantic colors */
-  --color-success: #10b981;
-  --color-warning: #a16207;
-  --color-error: #ef4444;
-  --color-info: #3b82f6;
+  /* Status colors, safe as text on white and on their -soft surface */
+  --color-success: #15803d; /* green-700 */
+  --color-warning: #a16207; /* yellow-700 */
+  --color-error: #b91c1c; /* red-700 */
+  --color-info: #1d4ed8; /* blue-700 */
+  --color-error-border: rgb(219 24 24 / 0.5);
+  --color-error-soft: #fdebeb;
 
-  /* Brand gradient */
+  /* Brand gradient: button fills (white text on top) */
   --gradient-brand: linear-gradient(
     135deg,
     var(--color-brand-start),
     var(--color-brand-end)
   );
 
+  /* Brand gradient for text: logo and page titles only */
+  --gradient-brand-text: var(--gradient-brand);
+
   /* Background system */
   --color-bg: var(--color-gray-50);
   --color-bg-elevated: #ffffff;
   --color-text: var(--color-gray-900);
   --color-text-muted: var(--color-gray-600);
+  --color-placeholder: var(--color-gray-500);
   --color-border: var(--color-gray-200);
   --color-border-focus: var(--color-brand-start);
 
@@ -80,19 +86,28 @@
   --spacing-12: 3rem;
 }
 
-/* Signal-forms error/warning colors.
- *
- * The toolkit drives its dark-mode error colors from `prefers-color-scheme`
- * only; it no longer detects a `.dark` ancestor class (that relied on the
- * non-standard `:host-context()`, unsupported in Firefox/Safari — see the
- * v1.0.0 accessibility audit). Because this demo themes via a `.dark` class
- * toggled independently of the OS preference, it must set the public
- * `--ngx-signal-form-error-color` / `--ngx-signal-form-warning-color`
- * custom properties per theme, otherwise an explicit-light UI on an
- * OS-prefers-dark machine would show dark-mode error colors. */
-:root {
-  --ngx-signal-form-error-color: #db1818;
-  --ngx-signal-form-warning-color: #a16207;
+/* App chrome tokens: shell, nav tree, right rail, toggles. One neutral
+   family (gray), so each value needs no dark-mode rule of its own; the dark
+   values live in `.dark` below. `static` makes Tailwind emit every token,
+   including the ones only component SCSS reads (it does not scan SCSS). */
+@theme static {
+  --color-bg-chrome: #ffffff; /* nav, mobile bar, rail */
+  --color-surface-hover: var(--color-gray-100); /* hover fill, count pill */
+  --color-border-strong: var(--color-gray-300); /* hover border */
+  --color-icon-muted: var(--color-gray-400); /* chevrons, decorative glyphs */
+  --color-on-brand: #ffffff; /* text on a brand fill */
+  --color-brand-deep: #4338ca; /* indigo-700: end stop of the pin button */
+  --color-accent: #6366f1; /* indigo-500: active borders and icons */
+  --color-accent-text: #4338ca; /* indigo-700: active nav text, 7.9:1 on white */
+  --color-accent-soft: #eef2ff; /* indigo-50: active nav fill */
+  --color-accent-border: rgb(99 102 241 / 0.2); /* panel borders, dividers */
+  --color-link: var(--color-brand-strong);
+  --color-link-hover: #3730a3; /* indigo-800 */
+  --color-warning-border: rgb(245 158 11 / 0.38); /* amber-500 divider */
+  --color-selected: #e8f4fb; /* selected segmented-toggle option */
+  --color-on-selected: #005d96; /* 6.2:1 on --color-selected */
+  --color-backdrop: rgb(17 24 39 / 0.4); /* gray-900 scrim */
+  --color-shadow: rgb(17 24 39); /* mix with transparent for shadows */
 }
 
 /* Dark theme variable overrides (activated via .dark class) */
@@ -101,20 +116,41 @@
   --color-bg-elevated: var(--color-gray-800);
   --color-text: var(--color-gray-100);
   --color-text-muted: var(--color-gray-400);
+  --color-placeholder: var(--color-gray-400);
   --color-border: var(--color-gray-700);
-  --color-border-focus: var(--color-brand-end);
-  --ngx-signal-form-error-color: #fca5a5;
-  --ngx-signal-form-warning-color: #fcd34d;
+  --color-border-focus: #a78bfa; /* violet-400 */
+  --color-bg-chrome: var(--color-gray-900);
+  --color-surface-hover: var(--color-gray-800);
+  --color-border-strong: var(--color-gray-600);
+  --color-icon-muted: var(--color-gray-500);
+  --color-accent: #818cf8; /* indigo-400 */
+  --color-accent-text: #c7d2fe; /* indigo-200: 11.9:1 on gray-900 */
+  --color-accent-soft: rgb(49 46 129 / 0.32); /* indigo-900 */
+  --color-accent-border: rgb(129 140 248 / 0.25);
+  --color-link: #c4b5fd; /* violet-300 */
+  --color-link-hover: #eef2ff;
+  --color-warning-border: rgb(251 191 36 / 0.34); /* amber-400 */
+  --color-selected: var(--color-gray-700);
+  --color-on-selected: #93c5fd; /* blue-300: 5.7:1 on gray-700 */
+  --color-shadow: #000000;
+  --color-success: #86efac;
+  --color-warning: #fcd34d;
+  --color-error: #fca5a5;
+  --color-info: #93c5fd;
+  --color-error-border: rgb(248 113 113 / 0.4);
+  --color-error-soft: rgb(127 29 29 / 0.2);
+  --gradient-brand-text: linear-gradient(135deg, #818cf8, #c4b5fd);
 }
 
 /* Base layer: global resets */
 @layer base {
   html {
     -webkit-font-smoothing: antialiased;
-    font-family: 'Inter', system-ui, sans-serif;
+    font-family: 'Inter Variable', system-ui, sans-serif;
   }
 
-  /* Let CSS handle color-scheme automatically based on .dark class */
+  /* The toolkit picks its light or dark colors from color-scheme, so the
+   * .dark class must set it too. */
   :root {
     color-scheme: light;
   }
@@ -127,6 +163,12 @@
     background: var(--color-bg);
     color: var(--color-text);
     line-height: 1.6;
+  }
+
+  /* Long API names (createErrorMessageSignal) break instead of pushing the
+     page sideways at 320px (WCAG 1.4.10). */
+  :is(h1, h2, h3, h4, h5, h6, legend, dt, dd) {
+    overflow-wrap: break-word;
   }
 
   ::selection {
@@ -155,70 +197,14 @@
 
 /* Components: semantic classes used by examples */
 @layer components {
-  /* Brand gradient text (enhanced blues extracted from reference) */
+  /* Brand gradient text: the logo */
   .brand-gradient {
-    --brand-blue-start: #3b82f6; /* blue-500 */
-    --brand-blue-mid: #2563eb; /* blue-600 */
-    --brand-indigo-end: #4f46e5; /* indigo-600 */
-    background: linear-gradient(
-      120deg,
-      var(--brand-blue-start),
-      var(--brand-blue-mid) 45%,
-      var(--brand-indigo-end)
-    );
+    background: var(--gradient-brand-text);
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
   }
 
-  /* Navigation link with animated gradient underline */
-  .nav-grad-link {
-    position: relative;
-    --underline-gradient: linear-gradient(
-      90deg,
-      #2563eb,
-      #1d4ed8 45%,
-      #4338ca 85%
-    );
-  }
-  .nav-grad-link:after {
-    content: '';
-    position: absolute;
-    left: 0;
-    right: 0;
-    bottom: 0.2rem;
-    height: 2px;
-    background: var(--underline-gradient);
-    border-radius: 2px;
-    transform: scaleX(0.3);
-    opacity: 0.55;
-    transform-origin: left;
-    transition: transform 200ms ease;
-  }
-  .nav-grad-link:hover:after,
-  .nav-grad-link:focus-visible:after,
-  .nav-grad-link.active:after {
-    transform: scaleX(1);
-    opacity: 1;
-  }
-  .dark .nav-grad-link:after {
-    filter: brightness(1.2) saturate(1.1);
-  }
-
-  /* Slight color emphasis while preserving minimal fill */
-  .nav-grad-link {
-    @apply rounded-md px-3 py-2 text-sm font-medium transition-colors;
-    color: #1e3a8a; /* blue-800 */
-  }
-  .dark .nav-grad-link {
-    color: #bfdbfe; /* blue-200 */
-  }
-  .nav-grad-link:hover,
-  .nav-grad-link:focus-visible,
-  .nav-grad-link.active {
-    @apply text-gray-900 dark:text-white;
-    background: rgba(255, 255, 255, 0.05);
-  }
   /* Form semantic classes - keep forms clean and readable */
   .form-container {
     @apply space-y-6;
@@ -249,16 +235,12 @@
   /* Grouped validation summary — Expo "Validatie fouten" card:
      surface/danger-light fill, 50% danger border, danger text. Pairs with the
      toolkit fieldset's grouped notification so raw and wrapped forms match. */
+  /* Text is red-700, not the #db1818 border red: #db1818 on #fdebeb is
+     4.39:1 and fails AA (same finding as the toolkit's fieldset tint, #535). */
   .feedback-alert--error {
-    background: #fdebeb;
-    border: 1px solid rgb(219 24 24 / 0.5);
-    color: #db1818;
-  }
-
-  :where(.dark) .feedback-alert--error {
-    background: rgb(127 29 29 / 0.2);
-    border-color: rgb(248 113 113 / 0.4);
-    color: #fca5a5;
+    background: var(--color-error-soft);
+    border: 1px solid var(--color-error-border);
+    color: var(--color-error);
   }
 
   .feedback-alert--pending {
@@ -325,7 +307,11 @@
     border: 1px solid var(--color-border);
     @apply rounded-md shadow-sm;
     color: var(--color-text);
-    @apply placeholder-gray-400 dark:placeholder-gray-500;
+    /* gray-500 on white is 4.83:1, gray-400 on gray-800 is 5.78:1 */
+    &::placeholder {
+      color: var(--color-placeholder);
+      opacity: 1;
+    }
     /* Remove inner focus ring; rely on container focus styles (e.g., form-field wrapper) */
     @apply focus:border-transparent;
     @apply transition-colors duration-200;
@@ -404,6 +390,37 @@
     color: var(--color-text-muted);
   }
 
+  /* Icon button in a field's suffix slot (remove row, clear value):
+     a 32px hit area instead of the bare 12x20px glyph (WCAG 2.5.8). */
+  .field-remove-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-inline-size: 2rem;
+    min-block-size: 2rem;
+    border-radius: var(--radius-md);
+    color: var(--color-text-muted);
+    cursor: pointer;
+  }
+
+  .field-remove-button:hover {
+    background: color-mix(in srgb, var(--color-text) 8%, transparent);
+    color: var(--color-text);
+  }
+
+  /* Holds the form debugger's space while its @defer chunk loads, so the
+     layout doesn't jump. */
+  .debugger-placeholder {
+    display: block;
+    min-height: 20rem;
+    padding: 1rem;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-xl);
+    background: var(--color-bg-elevated);
+    font-size: 0.875rem;
+    color: var(--color-text-muted);
+  }
+
   /* Headless demo shared styling */
   .headless-card {
     @apply rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-900;
@@ -426,18 +443,7 @@
   }
 
   .headless-counter {
-    @apply flex items-center justify-between text-xs text-gray-500;
-  }
-
-  /* Warning vs Error styling for toolkit error component */
-  :global(.ngx-form-field-error__item[data-error-type='warning']) {
-    @apply mt-1 rounded border-l-4 border-amber-500 bg-amber-50 px-3 py-2 text-sm text-amber-800;
-    @apply dark:bg-amber-900/20 dark:text-amber-200;
-  }
-
-  :global(.ngx-form-field-error__item[data-error-type='error']) {
-    @apply mt-1 rounded border-l-4 border-red-500 bg-red-50 px-3 py-2 text-sm text-red-800;
-    @apply dark:bg-red-900/20 dark:text-red-200;
+    @apply flex items-center justify-between text-xs text-gray-500 dark:text-gray-400;
   }
 
   /* Actions */
@@ -445,39 +451,79 @@
     @apply flex gap-3 pt-4;
   }
 
-  /* Buttons with gradient */
+  /* Buttons. One primary per page. Every state has its own look:
+     hover lifts, pressed sinks, keyboard focus shows a ring, disabled fades
+     and ignores hover. `aria-disabled` gets the disabled look too, for
+     buttons that stay focusable while a submit runs. */
+  .btn-primary,
+  .btn-secondary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    min-height: 2.75rem;
+    padding: 0.5rem 1rem;
+    border-radius: var(--radius-md);
+    font-weight: 500;
+    line-height: 1.25;
+    box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+    cursor: pointer;
+    transition:
+      box-shadow 150ms ease,
+      filter 150ms ease,
+      transform 100ms ease,
+      background-color 150ms ease;
+  }
+
   .btn-primary {
-    @apply px-4 py-2;
     background: var(--gradient-brand);
-    @apply font-medium text-white;
-    @apply rounded-md shadow-sm;
-    @apply hover:shadow-lg focus:ring-2 focus:ring-offset-2;
-    --tw-ring-color: var(--color-border-focus);
-    @apply disabled:cursor-not-allowed disabled:opacity-50;
-    @apply transition-all duration-200;
+    border: 1px solid transparent;
+    color: #fff;
   }
 
   .btn-secondary {
-    @apply px-4 py-2;
     background: var(--color-bg-elevated);
-    color: var(--color-text);
-    @apply font-medium;
     border: 1px solid var(--color-border);
-    @apply rounded-md shadow-sm;
-    @apply hover:shadow-md;
-    @apply focus:ring-2 focus:ring-offset-2;
-    --tw-ring-color: var(--color-border-focus);
-    @apply disabled:cursor-not-allowed disabled:opacity-50;
-    @apply transition-all duration-200;
+    color: var(--color-text);
   }
 
-  /* Legacy support - keep minimal old classes for existing components */
-  .nv-page-title {
-    @apply mb-4 text-3xl font-bold;
-    background: var(--gradient-brand);
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
+  .btn-primary:is(:hover, :focus-visible):not(
+      :disabled,
+      [aria-disabled='true']
+    ) {
+    filter: brightness(1.1);
+    box-shadow: 0 4px 10px -2px rgb(79 70 229 / 0.35);
+  }
+
+  .btn-secondary:hover:not(:disabled, [aria-disabled='true']) {
+    background: var(--color-gray-50);
+    box-shadow: 0 2px 6px -1px rgb(0 0 0 / 0.1);
+  }
+
+  .dark .btn-secondary:hover:not(:disabled, [aria-disabled='true']) {
+    background: var(--color-gray-700);
+  }
+
+  .btn-primary:active:not(:disabled, [aria-disabled='true']),
+  .btn-secondary:active:not(:disabled, [aria-disabled='true']) {
+    transform: translateY(1px);
+    filter: brightness(0.95);
+    box-shadow: none;
+  }
+
+  .btn-primary:focus-visible,
+  .btn-secondary:focus-visible {
+    outline: 2px solid var(--color-border-focus);
+    outline-offset: 2px;
+  }
+
+  .btn-primary:disabled,
+  .btn-secondary:disabled,
+  .btn-primary[aria-disabled='true'],
+  .btn-secondary[aria-disabled='true'] {
+    cursor: not-allowed;
+    opacity: 0.55;
+    box-shadow: none;
   }
 
   /* Page layout components */
@@ -485,17 +531,21 @@
     @apply mx-auto max-w-4xl;
   }
 
+  /* overflow-wrap: long API names (createErrorMessageSignal) must wrap at
+     320px instead of scrolling the page sideways. */
   .page-title {
     @apply mb-4 text-3xl font-bold;
-    background: var(--gradient-brand);
+    background: var(--gradient-brand-text);
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
+    overflow-wrap: anywhere;
   }
 
   .page-subtitle {
     @apply text-lg;
     color: var(--color-text-muted);
+    overflow-wrap: anywhere;
   }
 
   /* Grouped radio/checkbox field inside the form-field wrapper */
@@ -768,13 +818,6 @@
 }
 
 @layer utilities {
-  .u-gradient-text {
-    background: var(--gradient-brand);
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
-  }
-
   /* Screen reader only text */
   .sr-only {
     position: absolute;
@@ -789,13 +832,25 @@
   }
 }
 
+/* The parent layout owns the space between fields (CONTEXT.md). The
+   wrapper's own margin rule outranks Tailwind's zero-specificity space-y-*
+   margins, so every space-y-* stack of wrappers collapsed and each hint
+   touched the next field. This rule must stay outside @layer to beat the
+   toolkit's unlayered component styles. */
+@each $step in (1, 2, 3, 4, 5, 6, 8) {
+  .space-y-#{$step} > ngx-form-field-wrapper:not(:last-child) {
+    margin-block-end: #{$step * 0.25}rem;
+  }
+}
+
 // WCAG 2.3.3 — honour the user's reduced-motion preference.
 // The global override is the pragmatic choice for a Tailwind app where
 // transition-* utilities are scattered through templates.
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
-  *::after {
+  *::after,
+  *::backdrop {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;

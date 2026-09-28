@@ -20,7 +20,7 @@ import type { FieldState } from '@angular/forms/signals';
  *
  * Its callers bridge from a bare `ValidationError` whose `fieldTree()` result
  * is typed as `FieldState<unknown>` but, in tests and at framework
- * boundaries, may be a partial shape without every signal. Angular 21.2's
+ * boundaries, may be a partial shape without every signal. Angular 22's
  * stable `FieldState` guarantees the signals on real field states, but this
  * bridge helper still needs to tolerate the partial case so it defaults to
  * "interactive" when a signal is missing — nothing is silently hidden from
@@ -64,4 +64,22 @@ export function isFieldStateHidden(
 ): boolean {
   const hidden = (fieldState as { hidden?: () => boolean }).hidden;
   return typeof hidden === 'function' && hidden();
+}
+
+/**
+ * Reads `required()` from a real `FieldState`.
+ *
+ * Angular types `FieldState.required` as `Signal<boolean>`, so the parameter
+ * is the structural `Pick` of `FieldState<unknown>` rather than a widening
+ * cast at the call site. The body stays defensively duck-typed for the same
+ * reason {@link isFieldStateHidden} does: the form-field wrapper specs still
+ * hand-roll partial field mocks that carry no `required` signal.
+ *
+ * @internal Reachable only through the package-internal `/core` entry.
+ */
+export function isFieldStateRequired(
+  fieldState: Pick<FieldState<unknown>, 'required'>,
+): boolean {
+  const required = (fieldState as { required?: () => boolean }).required;
+  return typeof required === 'function' && required();
 }

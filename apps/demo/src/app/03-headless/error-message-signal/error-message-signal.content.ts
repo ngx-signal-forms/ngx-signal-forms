@@ -24,7 +24,7 @@ export const ERROR_MESSAGE_SIGNAL_CONTENT = {
     title: 'When to use createErrorMessageSignal',
     sections: [
       {
-        title: '🧪 Try This (Headless error signals)',
+        title: 'Try This (Headless error signals)',
         items: [
           '1. Click the <strong>Password</strong> field → Tab away empty → Modes 1 &amp; 2 show the <code>required</code> message',
           '2. Type <code>abc</code> → blocking error: password must be at least <strong>8 characters</strong>',

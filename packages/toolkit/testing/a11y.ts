@@ -25,6 +25,35 @@ export const WCAG_22_AA_TAGS = [
 export type WCAG_22_AA_TAG = (typeof WCAG_22_AA_TAGS)[number];
 
 /**
+ * How {@link expectNoA11yViolations} and {@link createA11yValidator} treat
+ * axe `incomplete` results — checks axe could not resolve to a pass or a
+ * fail on its own, most often `color-contrast` over a background it cannot
+ * reduce to one flat color.
+ *
+ * - `'ignore'` (the default): incomplete results are not inspected at all.
+ *   This is the toolkit's pre-#501 behavior — a bare `expectNoA11yViolations`
+ *   call for an external consumer sees no change.
+ * - `'warn'`: every incomplete result is logged via `console.warn` for manual
+ *   review, but never fails the scan.
+ * - `'fail'`: same logging as `'warn'`, and additionally throws if any
+ *   `color-contrast` result is incomplete. Every other rule's incomplete
+ *   results are still only logged — see {@link logIncompleteResults}'s own
+ *   doc for why `color-contrast` specifically is not turned into a blanket
+ *   hard-fail here.
+ */
+export type IncompleteResultMode = 'ignore' | 'warn' | 'fail';
+
+/**
+ * `axe.RunOptions` (minus the non-overridable `runOnly`) plus the toolkit's
+ * own {@link IncompleteResultMode} switch. `incomplete` is a toolkit-level
+ * option, not an axe one — it is read by {@link runA11yCheck} and stripped
+ * out before the remaining options reach `axe.run`.
+ */
+export type A11yCheckOptions = Omit<axe.RunOptions, 'runOnly'> & {
+  incomplete?: IncompleteResultMode;
+};
+
+/**
  * Runs an axe-core audit against `context` and throws when any WCAG 2.2 AA
  * violation is found.
  *
@@ -42,10 +71,13 @@ export type WCAG_22_AA_TAG = (typeof WCAG_22_AA_TAGS)[number];
  *   omitted from this parameter's type, so passing a literal with `runOnly`
  *   is a compile error, and the baseline always wins at runtime even for an
  *   `axe.RunOptions`-typed value carrying a `runOnly` (see implementation).
+ *   `incomplete` (see {@link IncompleteResultMode}) defaults to `'ignore'` —
+ *   axe `incomplete` results are neither logged nor checked unless a caller
+ *   opts in.
  */
 export async function expectNoA11yViolations(
   context: axe.ElementContext = document.body,
-  options: Omit<axe.RunOptions, 'runOnly'> = {},
+  options: A11yCheckOptions = {},
 ): Promise<void> {
   return runA11yCheck(
     WCAG_22_AA_TAGS,
@@ -63,7 +95,7 @@ export async function expectNoA11yViolations(
  */
 export type A11yValidator = (
   context?: axe.ElementContext,
-  options?: Omit<axe.RunOptions, 'runOnly'>,
+  options?: A11yCheckOptions,
 ) => Promise<void>;
 
 /**
@@ -85,7 +117,7 @@ export type A11yValidator = (
  * {@link WCAG_22_AA_TAGS} is drawn from — not an arbitrary `string[]`, so a
  * typo'd or invented tag is a compile error rather than a silently-empty
  * scan. There is no escape hatch back to `string[]` here: the validator this
- * returns keeps the same `Omit<axe.RunOptions, 'runOnly'>` shape as
+ * returns keeps the same `A11yCheckOptions` shape as
  * `expectNoA11yViolations`, so `runOnly` still can't be smuggled back in
  * through its own per-call `options` argument either.
  *
@@ -104,6 +136,15 @@ export type A11yValidator = (
  *   violations. Failing fast here, before a validator is ever handed back to
  *   a caller, turns that silent gate-disable into an immediate, loud error
  *   instead of a validator that always resolves.
+ *
+ * @example
+ * ```typescript
+ * const expectBaselineOnly = createA11yValidator({
+ *   tags: ['wcag2a', 'wcag2aa'],
+ * });
+ *
+ * await expectBaselineOnly(document.body);
+ * ```
  */
 export function createA11yValidator(
   options: { tags?: readonly WCAG_22_AA_TAG[] } = {},
@@ -125,16 +166,31 @@ export function createA11yValidator(
     runA11yCheck(tags, context, runOptions, describeViolations);
 }
 
+/**
+ * axe rules whose `incomplete` result {@link runA11yCheck} treats as a hard
+ * failure under `incomplete: 'fail'`, on top of ordinary `violations`.
+ *
+ * `color-contrast` is the one rule where "incomplete" usually means axe found
+ * a genuine contrast problem it could not finish computing (for example a
+ * background axe cannot resolve to a single color) rather than an
+ * environment limitation — see {@link logIncompleteResults} for why it is
+ * still not the toolkit's own default.
+ */
+const FAILING_INCOMPLETE_RULES = new Set(['color-contrast']);
+
 async function runA11yCheck(
   tags: readonly WCAG_22_AA_TAG[],
   context: axe.ElementContext,
-  options: Omit<axe.RunOptions, 'runOnly'>,
+  options: A11yCheckOptions,
   describeViolations: (count: number) => string,
 ): Promise<void> {
+  const { incomplete: incompleteMode = 'ignore', ...axeOptions } = options;
+  const runOnly: axe.RunOnly = { type: 'tag', values: [...tags] };
+
   const results = await axe.run(context, {
-    // `resultTypes` before `...options` so callers can still override it.
+    // `resultTypes` before `...axeOptions` so callers can still override it.
     resultTypes: ['violations'],
-    ...options,
+    ...axeOptions,
     // `runOnly` last: TypeScript's excess-property check only rejects
     // `runOnly` on fresh object literals, so a caller could still widen a
     // value to `axe.RunOptions` and smuggle `runOnly` through `options`
@@ -142,29 +198,248 @@ async function runA11yCheck(
     // the tag baseline after the spread makes it win at runtime regardless,
     // so the guarantee holds even when the type-level guard (the `Omit`
     // above) is bypassed this way.
-    runOnly: { type: 'tag', values: [...tags] },
+    runOnly,
   });
 
-  if (results.violations.length === 0) {
+  const failingIncomplete: axe.Result[] = [];
+  if (incompleteMode !== 'ignore') {
+    // A second, `incomplete`-only pass, run separately from (not merged
+    // into) the `violations` pass above: axe's own aggregation keys off
+    // which `resultTypes` were requested for a *given* run, so folding
+    // `incomplete` into the same `resultTypes` array as `violations`
+    // changed what that same run reported as a `violation` in local
+    // testing. Running `incomplete` as its own pass keeps the `violations`
+    // pass byte-for-byte identical to the `'ignore'` (pre-#501) behavior,
+    // while still surfacing what axe could not resolve.
+    const incompleteResults = await axe.run(context, {
+      ...axeOptions,
+      resultTypes: ['incomplete'],
+      runOnly,
+    });
+
+    logIncompleteResults(incompleteResults.incomplete);
+
+    if (incompleteMode === 'fail') {
+      failingIncomplete.push(
+        ...incompleteResults.incomplete.filter((result) =>
+          FAILING_INCOMPLETE_RULES.has(result.id),
+        ),
+      );
+    }
+  }
+
+  const failures = [...results.violations, ...failingIncomplete];
+  if (failures.length === 0) {
     return;
   }
 
-  const report = results.violations
-    .map((violation) => {
-      const nodes = violation.nodes
+  const report = failures
+    .map((failure) => {
+      const nodes = failure.nodes
         .map((node) => `      - ${node.target.join(' ')}`)
         .join('\n');
       return [
-        `  • [${violation.impact ?? 'n/a'}] ${violation.id}: ${violation.help}`,
-        `    ${violation.helpUrl}`,
+        `  • [${failure.impact ?? 'n/a'}] ${failure.id}: ${failure.help}`,
+        `    ${failure.helpUrl}`,
         nodes,
       ].join('\n');
     })
     .join('\n');
 
-  throw new Error(
-    `${describeViolations(results.violations.length)}\n${report}`,
+  throw new Error(`${describeViolations(failures.length)}\n${report}`);
+}
+
+/**
+ * Logs every `incomplete` result axe could not resolve on its own. axe marks
+ * a check `incomplete` — rather than pass or fail — when it needs a human to
+ * confirm the result, most commonly `color-contrast` over a background it
+ * cannot resolve to one color.
+ *
+ * `color-contrast` incomplete results are not turned into a hard failure by
+ * default (see {@link IncompleteResultMode}), even though that is the rule
+ * most likely to hide a real WCAG 1.4.3 violation: every toolkit textual
+ * control paints a **transparent** `background-color`
+ * (`form-field-wrapper.css`, "Transparent - container has background") so
+ * its content-box border can show through, and axe's static contrast
+ * algorithm cannot always trace a transparent-background element back to the
+ * flat color it actually renders over — the same alpha-channel limitation
+ * `form-field-wrapper.state-focus-outline.browser.spec.ts` already works
+ * around with its own manual `blendOverSurface`/`contrastRatio` math instead
+ * of axe. Trying `color-contrast` incomplete as a hard failure across the
+ * whole toolkit suite surfaced exactly one case (the outlined, invalid email
+ * field, a fixture already covered — and passing — by the dedicated
+ * contrast math in that other spec): a false positive from the transparency,
+ * not a new defect. Logging keeps every incomplete result visible for manual
+ * review without failing a scan on a case axe itself cannot confirm.
+ */
+function logIncompleteResults(incomplete: readonly axe.Result[]): void {
+  if (incomplete.length === 0) {
+    return;
+  }
+
+  const report = incomplete
+    .map((result) => {
+      const nodes = result.nodes
+        .map((node) => `      - ${node.target.join(' ')}`)
+        .join('\n');
+      return [`  • ${result.id}: ${result.help}`, nodes].join('\n');
+    })
+    .join('\n');
+
+  console.warn(
+    `[ngx-signal-forms] axe reported ${incomplete.length} incomplete result(s) it could not resolve on its own — review manually:\n${report}`,
   );
+}
+
+/**
+ * A parsed CSS color function's alpha channel, or `1` if unspecified.
+ * `color` must be a single color function call with no nested parentheses
+ * (e.g. `rgb(0, 0, 0, 0.5)`, `rgb(0 0 0 / 50%)`, `oklab(0 0 0 / 0)`,
+ * `color(srgb 0 0.482 0.78 / 0.4)`) — the exact shape `getComputedStyle`
+ * returns for a resolved color, regardless of how it was authored (Chromium
+ * serializes a `color-mix()` result as `color(srgb ...)`, not as
+ * `color-mix()` itself).
+ *
+ * Tries the modern slash syntax first (`/ <alpha>` or `/ <alpha>%`, right
+ * before the closing paren), then falls back to the legacy 4-argument comma
+ * form (`rgba(r, g, b, a)` / `hsla(h, s, l, a)`) by checking whether the
+ * function actually has 4 comma-separated arguments — not just "does the
+ * string end in a comma and a number", which would misread a 3-argument
+ * `rgb(0, 0, 0)`'s blue channel as if it were alpha.
+ */
+function colorAlpha(color: string): number {
+  const inner = /\(([^)]*)\)/u.exec(color)?.[1] ?? '';
+
+  const slashMatch = /\/\s*([\d.]+)(%)?\s*$/u.exec(inner.trim());
+  if (slashMatch) {
+    const value = Number(slashMatch[1]);
+    return slashMatch[2] ? value / 100 : value;
+  }
+
+  const commaArgs = inner.split(',').map((arg) => arg.trim());
+  return commaArgs.length === 4 ? Number(commaArgs[3]) : 1;
+}
+
+/**
+ * Splits a CSS value list on commas that are not nested inside parentheses
+ * — e.g. splitting `box-shadow`'s multiple layers without breaking apart a
+ * `rgba(0, 0, 0, 0.5)` color's own internal commas.
+ */
+function splitTopLevelCommas(value: string): string[] {
+  const parts: string[] = [];
+  let depth = 0;
+  let current = '';
+  for (const char of value) {
+    if (char === '(') depth += 1;
+    if (char === ')') depth -= 1;
+    if (char === ',' && depth === 0) {
+      parts.push(current);
+      current = '';
+      continue;
+    }
+    current += char;
+  }
+  parts.push(current);
+  return parts;
+}
+
+/** Whether `styles` paints a non-transparent, non-zero-width outline. */
+function hasVisibleOutline(styles: CSSStyleDeclaration): boolean {
+  if (styles.outlineStyle === 'none' || styles.outlineWidth === '0px') {
+    return false;
+  }
+  return colorAlpha(styles.outlineColor) > 0;
+}
+
+/**
+ * Whether a computed `box-shadow` value paints at least one visible layer —
+ * non-transparent, and with a nonzero blur or spread radius (a `0 0 0 0`
+ * shadow, sometimes used as an animatable placeholder, paints nothing).
+ */
+function hasVisibleBoxShadow(boxShadow: string): boolean {
+  if (boxShadow === 'none') {
+    return false;
+  }
+
+  return splitTopLevelCommas(boxShadow).some((layer) => {
+    // Any color function, not just `rgb(a)`/`hsl(a)`: Chromium can also
+    // serialize a computed box-shadow color as `oklch(...)`, `oklab(...)`,
+    // or `color(srgb ...)` (e.g. a resolved `color-mix()`). Missing one of
+    // those left its numbers in `layer` for the length parse below to
+    // misread — a `color(srgb 0 0.48 0.78 / 0.4)` color's `0.4` alpha, read
+    // as if it were a length, could pass this check for the wrong reason.
+    const colorMatch = /\w+\([^()]*\)/u.exec(layer);
+    const alpha = colorMatch ? colorAlpha(colorMatch[0]) : 1;
+    if (alpha <= 0) {
+      return false;
+    }
+
+    const lengths = layer
+      .replace(colorMatch?.[0] ?? '', '')
+      .replaceAll(/inset/giu, '')
+      .trim()
+      .split(/\s+/u)
+      .filter((token) => token.length > 0)
+      .map((token) => Number.parseFloat(token));
+    // Computed order is offsetX, offsetY, blurRadius, spreadRadius.
+    const [, , blurRadius = 0, spreadRadius = 0] = lengths;
+    return blurRadius > 0 || spreadRadius > 0;
+  });
+}
+
+/**
+ * Asserts that `element` is the current keyboard focus target (or a
+ * `:focus-within` ancestor of it) and that its computed style paints a
+ * visible focus indicator — a non-transparent, nonzero-width `outline`, or a
+ * `box-shadow` layer with a nonzero blur/spread and a non-transparent color
+ * — and throws a descriptive error otherwise.
+ *
+ * This is a presence check only: it confirms *something* renders, not that
+ * it is legible. It does not measure contrast, so it does not stand in for
+ * WCAG 1.4.11 (Non-text Contrast) coverage — see
+ * `form-field-wrapper.state-focus-outline.browser.spec.ts`'s manual
+ * `blendOverSurface`/`contrastRatio` math for a fixture that also proves the
+ * indicator clears the 3:1 floor against its background. No axe rule
+ * performs either check, because axe only ever scans the resting
+ * (unfocused) DOM.
+ *
+ * Caller is responsible for moving focus first, with a real keyboard
+ * interaction (`await userEvent.tab()` from `vitest/browser`) rather than
+ * `element.focus()` — Chromium's `:focus-visible` heuristic only matches
+ * keyboard-driven focus, so a programmatic `.focus()` call can under-report
+ * an outline that a real Tab press would show.
+ *
+ * The precondition below is stricter than "either pseudo-class matches":
+ * when `element` **is** `document.activeElement`, only `:focus-visible` is
+ * accepted — `:focus-within` also matches an element on itself (not just its
+ * ancestors), so accepting it here for the direct target would let a
+ * genuine `:focus-visible` miss (a real, catchable bug) slip through as a
+ * false pass. `:focus-within` is checked only when `element` is *not* the
+ * active element itself, for the documented ancestor-container case.
+ *
+ * @param element The element expected to carry the focus indicator — either
+ *   the focused control itself (must be `:focus-visible`), or a
+ *   `:focus-within` ancestor that renders the ring instead (see
+ *   `form-field-wrapper.state-focus-outline.browser.spec.ts`).
+ */
+export function expectVisibleFocusIndicator(element: Element): void {
+  const isFocusedDirectly = element === document.activeElement;
+  const isValidFocusTarget = isFocusedDirectly
+    ? element.matches(':focus-visible')
+    : element.matches(':focus-within');
+
+  if (!isValidFocusTarget) {
+    throw new Error(
+      `Expected <${element.tagName.toLowerCase()}> to be the current :focus-visible element, or a :focus-within ancestor of it, but it was neither. Move focus onto or into it with a real keyboard interaction (e.g. await userEvent.tab()) before calling expectVisibleFocusIndicator.`,
+    );
+  }
+
+  const styles = getComputedStyle(element);
+  if (!hasVisibleOutline(styles) && !hasVisibleBoxShadow(styles.boxShadow)) {
+    throw new Error(
+      `Expected a visible focus indicator (a non-transparent outline, or a box-shadow with a nonzero blur/spread and a non-transparent color) on <${element.tagName.toLowerCase()}>, but found neither.`,
+    );
+  }
 }
 
 /**

@@ -78,6 +78,9 @@ export default defineConfig({
     '**/dist',
     '**/tmp',
     '**/node_modules',
+    // Committed baseline snapshots of built `.d.ts` output (#514) — generated
+    // files, not source to lint. Same reasoning as `**/dist` above.
+    'packages/toolkit/api-reports',
     '**/vite.config.*.timestamp*',
     '**/vitest.config.*.timestamp*',
     '**/mockServiceWorker.js',
@@ -189,6 +192,9 @@ export default defineConfig({
         '**/*.test.tsx',
         '**/*.spec.js',
         '**/*.test.js',
+        // Shared test-only helpers, not specs themselves — same relaxed
+        // rules apply (they exist purely to build spec fixtures).
+        'packages/toolkit/core/utilities/testing/**/*.ts',
       ],
       globals: {
         describe: 'readonly',
@@ -207,6 +213,13 @@ export default defineConfig({
         'vitest/no-conditional-tests': 'warn',
         'vitest/no-import-node-test': 'error',
         'vitest/require-local-test-context-for-concurrent-snapshots': 'error',
+        // A focused/disabled test that reaches main silently drops coverage
+        // (`.only` skips every other test in the file; `.skip` skips itself).
+        // No specs currently use either — the deliberate exceptions are
+        // `.skipIf` (dev-mode-only gates) and `.fails` (issue #550's known-
+        // failure twins), neither of which these two rules flag.
+        'vitest/no-focused-tests': 'error',
+        'vitest/no-disabled-tests': 'error',
       },
     },
     {
@@ -218,11 +231,7 @@ export default defineConfig({
       },
     },
     {
-      files: [
-        'apps/demo/src/**/*.ts',
-        'packages/demo/debugger/**/*.ts',
-        'packages/toolkit/vite.config.mts',
-      ],
+      files: ['apps/demo/src/**/*.ts', 'packages/demo/debugger/**/*.ts'],
       rules: {
         '@typescript-eslint/prefer-readonly-parameter-types': 'off',
       },

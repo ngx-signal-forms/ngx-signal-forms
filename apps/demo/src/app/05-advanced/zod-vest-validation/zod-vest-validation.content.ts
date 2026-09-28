@@ -27,7 +27,7 @@ export const ZOD_VEST_VALIDATION_CONTENT = {
     title: 'How to split responsibilities',
     sections: [
       {
-        title: '🧪 Try This (Zod Layer, Then Vest Layer)',
+        title: 'Try This (Zod Layer, Then Vest Layer)',
         items: [
           '1. Submit the empty form → the <strong>Zod</strong> layer fires first: "First name is required", "Enter a valid email address", "Password must be at least 12 characters", …',
           '2. Set <strong>Account type</strong> to <code>Business</code> and <strong>Email</strong> to <code>you@gmail.com</code> (or <code>outlook.com</code>/<code>yahoo.com</code>) → blocking <strong>Vest</strong> error: "Business accounts must use a company email domain"',

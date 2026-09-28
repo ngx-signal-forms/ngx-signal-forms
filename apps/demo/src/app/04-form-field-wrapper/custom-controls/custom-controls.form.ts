@@ -30,8 +30,10 @@ import {
   AriaAutocompleteComponent,
   AriaSelectComponent,
 } from '@ngx-signal-forms/demo-shared/ui';
+import { MockAutocompleteComponent } from './mock-autocomplete';
 import { initialCustomControlsModel } from './custom-controls.model';
 import { customControlsSchema } from './custom-controls.validations';
+import { BusyButtonDirective } from '../../shared/busy-button.directive';
 
 /**
  * Custom Controls Demo Form
@@ -63,12 +65,14 @@ import { customControlsSchema } from './custom-controls.validations';
     }),
   ],
   imports: [
+    BusyButtonDirective,
     FormField,
     NgxSignalFormToolkit,
     NgxFormField,
     AriaAutocompleteComponent,
     AriaSelectComponent,
     LegacyDatepickerAdapterComponent,
+    MockAutocompleteComponent,
     RatingControlComponent,
     SwitchControlComponent,
   ],

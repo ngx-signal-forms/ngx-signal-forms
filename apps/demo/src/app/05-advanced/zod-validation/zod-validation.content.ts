@@ -27,7 +27,7 @@ export const ZOD_VALIDATION_CONTENT = {
     title: 'When this baseline helps',
     sections: [
       {
-        title: '🧪 Try This (Schema-Driven Errors)',
+        title: 'Try This (Schema-Driven Errors)',
         items: [
           '1. Click <strong>Save baseline form</strong> with everything empty → every field shows its Zod message at once ("First name is required", "Email is required", "Choose an account type", …)',
           '2. Type <code>test</code> in <strong>Email</strong> → Tab away → error: "Enter a valid email address"',

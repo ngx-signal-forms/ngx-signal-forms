@@ -2,8 +2,9 @@
  * @file Styled assistive components for form fields.
  *
  * These components provide visual feedback and supplementary information
- * for form fields, including hints, character counts, errors, warnings,
- * and layout containers.
+ * for form fields: hints, character counts, errors and warnings, the
+ * form-level error summary, and the required/optional marking legend. Layout
+ * shells live in `@ngx-signal-forms/toolkit/form-field`.
  *
  * Architecture:
  * - Uses headless primitives from `@ngx-signal-forms/toolkit/headless`
@@ -31,6 +32,9 @@ export {
   type NgxFormFieldListStyle,
   type NgxFormFieldErrorListStyle,
 } from './form-field-error';
-export { NgxFormFieldErrorSummary } from './form-field-error-summary';
+export {
+  NgxFormFieldErrorSummary,
+  type NgxErrorSummaryHeadingLevel,
+} from './form-field-error-summary';
 export { NgxFormMarkingLegend } from './form-marking-legend';
 export { NgxFormFieldHint } from './hint';

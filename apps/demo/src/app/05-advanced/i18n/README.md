@@ -139,8 +139,8 @@ the browser rather than guessed:
   marker property (`fieldAlert.__marker`) set on the node _before_ the click was
   still present _after_ the click, confirming the same DOM node persisted; only its
   `textContent` changed, to `" Dit veld is verplicht. "`.
-- Caveat this demo does **not** claim: DOM-mutation observation confirms the browser
-  fires the accessibility events a screen reader listens for. It does not confirm any
+- DOM-mutation observation confirms changed DOM text, not accessibility events
+  or announcements. It does not confirm any
   specific screen reader's actual announcement behavior (NVDA/JAWS/VoiceOver differ in
   how they queue/interrupt live-region updates) — that requires a manual AT pass, which
   is outside what this repo's automated suite can verify.

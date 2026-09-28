@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/angular';
+import { render, screen, waitFor } from '@testing-library/angular';
 import userEvent from '@testing-library/user-event';
 import { beforeAll, describe, expect, it, vi } from 'vitest';
 import { AccountPreferencesForm } from './account-preferences-form';
@@ -97,6 +97,60 @@ describe('Spartan reference wrapper — smoke', () => {
     expect(displayName.getAttribute('aria-invalid')).not.toBe('true');
     const describedBy = displayName.getAttribute('aria-describedby') ?? '';
     expect(describedBy.split(/\s+/)).toContain('display-name-warning');
+  });
+
+  it('drops the real aria-invalid on the plan trigger when it loses its layout box (#409)', async () => {
+    // Regression for #409 — #406 fixed the wrapper's `data-spartan-invalid`
+    // mirror but left the *real* `aria-invalid` on the trigger button stale:
+    // `HlmSelectTrigger` writes it imperatively off `BrnFieldControl.spartanInvalid()`
+    // with no concept of layout, so it survived a control with no layout box
+    // (a collapsed `<details>`, an inactive tab panel).
+    const user = userEvent.setup();
+
+    await render(AccountPreferencesForm);
+
+    const plan = screen.getByRole('combobox', { name: /plan/i });
+    await user.click(plan);
+    await user.keyboard('{Escape}');
+    await user.tab();
+
+    await waitFor(() => {
+      expect(plan.getAttribute('aria-invalid')).toBe('true');
+    });
+
+    // Simulate the trigger losing its layout box without going through real
+    // layout, which jsdom does not compute — the same stub-`checkVisibility`
+    // technique the toolkit uses to pin the fail-open contract in
+    // `field-identity.spec.ts`.
+    Object.defineProperty(plan, 'checkVisibility', {
+      value: () => false,
+      configurable: true,
+    });
+
+    // Force a genuine render pass through a real signal write elsewhere in
+    // the form — `HlmSelectTrigger`'s `afterEveryRender` runs on every
+    // application render, not only when its own inputs change.
+    const displayName = screen.getByLabelText(/display name/i);
+    await user.type(displayName, 'A');
+
+    await waitFor(() => {
+      expect(plan.getAttribute('aria-invalid')).toBeNull();
+    });
+
+    // Restoring the layout box brings the attribute back: unlike Material's
+    // reference (which relies on a framework-owned binding that only
+    // rewrites on a value change), `HlmSelectTrigger` reads
+    // `spartanInvalid()` fresh on every render, so the corrected write
+    // naturally recovers once visible again.
+    Object.defineProperty(plan, 'checkVisibility', {
+      value: () => true,
+      configurable: true,
+    });
+    await user.type(displayName, 'd');
+
+    await waitFor(() => {
+      expect(plan.getAttribute('aria-invalid')).toBe('true');
+    });
   });
 
   it("threads hint ids through Brain's BrnFieldControlDescribedBy via the wrapper-scoped bridge", async () => {

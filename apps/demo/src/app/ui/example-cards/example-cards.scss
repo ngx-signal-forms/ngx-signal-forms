@@ -14,15 +14,12 @@
 
 .example-cards__overview-summary h2 {
   margin: 0;
+  overflow-wrap: anywhere;
 }
 
 .example-cards__overview-hint {
   font-size: 0.8rem;
-  color: #4b5563;
-}
-
-:host-context(.dark) .example-cards__overview-hint {
-  color: #cbd5e1;
+  color: var(--color-text-muted);
 }
 
 .example-cards__section {

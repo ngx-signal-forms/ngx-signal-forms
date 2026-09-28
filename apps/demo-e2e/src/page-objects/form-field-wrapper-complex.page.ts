@@ -153,8 +153,10 @@ export class FormFieldWrapperComplexPage extends BaseFormPage {
   }
 
   get contactMethodGroupLabel(): Locator {
+    // The label sits one level deeper than the host, inside the structural
+    // `__layout` wrapper (#523) — see form-field-wrapper.ts.
     return this.contactMethodGroup.locator(
-      ':scope > .ngx-signal-form-field-wrapper__label [ngxFormFieldLabel]',
+      ':scope > .ngx-signal-form-field-wrapper__layout > .ngx-signal-form-field-wrapper__label [ngxFormFieldLabel]',
     );
   }
 

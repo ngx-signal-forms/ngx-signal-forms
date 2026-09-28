@@ -26,25 +26,26 @@ import { WizardStepInterface } from '../wizard-step.interface';
       <!-- Traveler Summary -->
       <section class="review-section mb-6">
         <h3 class="mb-3 flex items-center gap-2 text-lg font-medium">
-          <span class="section-icon" aria-hidden="true">👤</span>
           Traveler Information
         </h3>
         <div class="review-card">
           <dl class="grid grid-cols-2 gap-3">
             <div>
-              <dt class="text-sm text-gray-500">Full Name</dt>
+              <dt class="text-sm text-gray-500 dark:text-gray-400">
+                Full Name
+              </dt>
               <dd class="font-medium">
                 {{ reviewForm.travelerDisplay().fullName }}
               </dd>
             </div>
             <div>
-              <dt class="text-sm text-gray-500">Email</dt>
+              <dt class="text-sm text-gray-500 dark:text-gray-400">Email</dt>
               <dd class="font-medium">
                 {{ reviewForm.travelerDisplay().email }}
               </dd>
             </div>
             <div>
-              <dt class="text-sm text-gray-500">Age</dt>
+              <dt class="text-sm text-gray-500 dark:text-gray-400">Age</dt>
               <dd class="font-medium">
                 @if (reviewForm.travelerDisplay().age !== null) {
                   {{ reviewForm.travelerDisplay().age }} years old
@@ -54,7 +55,9 @@ import { WizardStepInterface } from '../wizard-step.interface';
               </dd>
             </div>
             <div>
-              <dt class="text-sm text-gray-500">Passport Status</dt>
+              <dt class="text-sm text-gray-500 dark:text-gray-400">
+                Passport Status
+              </dt>
               <dd class="font-medium">
                 @if (reviewForm.travelerDisplay().hasPassport) {
                   @if (reviewForm.travelerDisplay().passportValid) {
@@ -63,7 +66,9 @@ import { WizardStepInterface } from '../wizard-step.interface';
                     <span class="text-red-600">✗ Expired</span>
                   }
                 } @else {
-                  <span class="text-gray-400">Not provided</span>
+                  <span class="text-gray-500 dark:text-gray-400"
+                    >Not provided</span
+                  >
                 }
               </dd>
             </div>
@@ -74,17 +79,20 @@ import { WizardStepInterface } from '../wizard-step.interface';
       <!-- Trip Summary -->
       <section class="review-section mb-6">
         <h3 class="mb-3 flex items-center gap-2 text-lg font-medium">
-          <span class="section-icon" aria-hidden="true">✈️</span>
           Trip Overview
         </h3>
         <div class="review-card">
           <div class="mb-4 flex items-center justify-between">
             <div>
-              <span class="text-sm text-gray-500">Travel Dates</span>
+              <span class="text-sm text-gray-500 dark:text-gray-400"
+                >Travel Dates</span
+              >
               <p class="font-medium">{{ reviewForm.dateRange() }}</p>
             </div>
             <div class="text-right">
-              <span class="text-sm text-gray-500">Statistics</span>
+              <span class="text-sm text-gray-500 dark:text-gray-400"
+                >Statistics</span
+              >
               <p class="font-medium">
                 {{ reviewForm.destinationsDisplay().length }} destinations,
                 {{ reviewForm.totalActivities() }} activities,
@@ -98,38 +106,35 @@ import { WizardStepInterface } from '../wizard-step.interface';
       <!-- Destinations Detail -->
       <section class="review-section">
         <h3 class="mb-3 flex items-center gap-2 text-lg font-medium">
-          <span class="section-icon" aria-hidden="true">📍</span>
           Destinations
         </h3>
-
-        @if (reviewForm.destinationsDisplay().length === 0) {
-          <div
-            class="empty-state rounded border border-dashed p-4 text-center text-gray-400"
-          >
-            No destinations added
-          </div>
-        }
 
         @for (dest of reviewForm.destinationsDisplay(); track $index) {
           <div class="destination-review-card mb-4">
             <div class="mb-3 flex items-start justify-between">
               <div>
                 <h4 class="text-lg font-medium">{{ dest.name }}</h4>
-                <p class="text-sm text-gray-500">{{ dest.dates }}</p>
+                <p class="text-sm text-gray-500 dark:text-gray-400">
+                  {{ dest.dates }}
+                </p>
               </div>
               <span class="badge">{{ dest.activityCount }} activities</span>
             </div>
 
             @if (dest.accommodation) {
               <p class="mb-3 text-sm">
-                <span class="text-gray-500">Accommodation:</span>
+                <span class="text-gray-500 dark:text-gray-400"
+                  >Accommodation:</span
+                >
                 {{ dest.accommodation }}
               </p>
             }
 
             @if (dest.activities.length > 0) {
               <div class="activities-list">
-                <h5 class="mb-2 text-sm font-medium text-gray-600">
+                <h5
+                  class="mb-2 text-sm font-medium text-gray-600 dark:text-gray-300"
+                >
                   Activities:
                 </h5>
                 <ul class="space-y-2">
@@ -137,14 +142,17 @@ import { WizardStepInterface } from '../wizard-step.interface';
                     <li class="activity-item flex items-center justify-between">
                       <div>
                         <span class="font-medium">{{ activity.name }}</span>
-                        <span class="ml-2 text-sm text-gray-500">{{
-                          activity.date
-                        }}</span>
+                        <span
+                          class="ml-2 text-sm text-gray-500 dark:text-gray-400"
+                          >{{ activity.date }}</span
+                        >
                       </div>
                       <div class="text-right">
                         <span class="text-sm">{{ activity.cost }}</span>
                         @if (activity.requirementCount > 0) {
-                          <span class="ml-2 text-xs text-gray-400">
+                          <span
+                            class="ml-2 text-xs text-gray-500 dark:text-gray-400"
+                          >
                             ({{ activity.requirementCount }} requirements)
                           </span>
                         }
@@ -154,6 +162,12 @@ import { WizardStepInterface } from '../wizard-step.interface';
                 </ul>
               </div>
             }
+          </div>
+        } @empty {
+          <div
+            class="empty-state rounded border border-dashed p-4 text-center text-gray-500 dark:text-gray-400"
+          >
+            No destinations added
           </div>
         }
       </section>
@@ -174,36 +188,37 @@ import { WizardStepInterface } from '../wizard-step.interface';
       padding: 1rem;
     }
 
-    .section-icon {
-      font-size: 1.25rem;
-    }
-
     .review-card {
-      background-color: #f9fafb;
-      border: 1px solid #e5e7eb;
+      background-color: var(--color-bg);
+      border: 1px solid var(--color-border);
       border-radius: 0.5rem;
       padding: 1rem;
     }
 
     .destination-review-card {
-      background-color: white;
-      border: 1px solid #e5e7eb;
+      background-color: var(--color-bg-elevated);
+      border: 1px solid var(--color-border);
       border-radius: 0.5rem;
       padding: 1rem;
     }
 
     .badge {
-      background-color: #dbeafe;
-      color: #1d4ed8;
+      background-color: #e0e7ff;
+      color: #3730a3;
       padding: 0.25rem 0.75rem;
       border-radius: 9999px;
       font-size: 0.75rem;
       font-weight: 500;
     }
 
+    :host-context(.dark) .badge {
+      background-color: rgb(49 46 129 / 0.5);
+      color: #c7d2fe;
+    }
+
     .activity-item {
       padding: 0.5rem;
-      background-color: #f9fafb;
+      background-color: var(--color-bg);
       border-radius: 0.25rem;
     }
 

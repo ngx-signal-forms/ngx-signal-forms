@@ -30,7 +30,8 @@ type WalkFieldTreeEntry = {
  * methods, child typed as a non-callable value, etc.) rather than a runtime
  * condition the toolkit can recover from.
  *
- * @public
+ * @internal Reachable only through the package-internal `/core` entry;
+ * absent from the published root barrel.
  */
 export class InvalidFieldTreeError extends Error {
   constructor(message: string, options?: ErrorOptions) {
@@ -56,7 +57,8 @@ export class InvalidFieldTreeError extends Error {
  * submission tracker entry points, third-party wrapper integration code) so
  * the cast to `FieldTree<unknown>` is provably safe rather than asserted.
  *
- * @public
+ * @internal Reachable only through the package-internal `/core` entry;
+ * absent from the published root barrel.
  */
 export function isFieldTreeLike(value: unknown): value is FieldTree<unknown> {
   if (typeof value !== 'function') {
@@ -81,7 +83,8 @@ export function isFieldTreeLike(value: unknown): value is FieldTree<unknown> {
  *
  * @yields Each reachable `FieldState` plus its dotted path.
  *
- * @public
+ * @internal Reachable only through the package-internal `/core` entry;
+ * absent from the published root barrel.
  */
 export function* walkFieldTreeEntries<TModel>(
   root: FieldTree<TModel>,

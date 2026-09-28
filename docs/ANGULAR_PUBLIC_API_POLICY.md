@@ -34,27 +34,27 @@ These APIs are part of Angular's `@angular/forms/signals` package. The toolkit c
 
 These APIs are part of `@ngx-signal-forms/toolkit`. They build on top of Angular's form engine:
 
-| Feature                   | Entry Point          | Purpose                                              |
-| ------------------------- | -------------------- | ---------------------------------------------------- |
-| `ngxSignalForm` directive | `toolkit`            | Form-level context: error strategy, submitted status |
-| Auto-ARIA directive       | `toolkit`            | Automatic `aria-invalid`, `aria-describedby`         |
-| Error display strategies  | `toolkit`            | `'on-touch'`, `'on-submit'`, `'immediate'`           |
-| Error message registry    | `toolkit`            | App-wide registry via `provideErrorMessages()`       |
-| `focusFirstInvalid()`     | `toolkit`            | Focus first invalid field via `errorSummary()`       |
-| Submission helpers        | `toolkit`            | `createSubmittedStatusTracker()`                     |
-| Headless error state      | `toolkit/headless`   | Strategy-aware error/warning signals                 |
-| Headless error summary    | `toolkit/headless`   | Form-level error aggregation with focus              |
-| Headless fieldset         | `toolkit/headless`   | Grouped error aggregation                            |
-| Headless character count  | `toolkit/headless`   | Progressive character limits                         |
-| Headless field name       | `toolkit/headless`   | ID generation for ARIA                               |
-| Styled error component    | `toolkit/assistive`  | WCAG-compliant error/warning display                 |
-| Styled error summary      | `toolkit/assistive`  | Clickable form-level error list                      |
-| Styled hints              | `toolkit/assistive`  | Helper text components                               |
-| Styled character count    | `toolkit/assistive`  | Visual character counter                             |
-| Form field wrapper        | `toolkit/form-field` | Complete field layout with label + feedback          |
-| Form fieldset             | `toolkit/form-field` | Grouped field layout                                 |
-| Warning convention        | `toolkit/assistive`  | `warn:` prefix for non-blocking messages             |
-| Vest integration          | `toolkit/vest`       | Vest v6+ validation suite adapter                    |
+| Feature                   | Entry Point          | Purpose                                                                   |
+| ------------------------- | -------------------- | ------------------------------------------------------------------------- |
+| `ngxSignalForm` directive | `toolkit`            | Form-level context: error strategy, submitted status                      |
+| Auto-ARIA directive       | `toolkit`            | Automatic `aria-invalid`, `aria-describedby`                              |
+| Error display strategies  | `toolkit`            | `'on-touch'`, `'on-submit'`, `'immediate'`                                |
+| Error message registry    | `toolkit`            | App-wide registry via `provideErrorMessages()`                            |
+| `focusFirstInvalid()`     | `toolkit`            | Focus first invalid field via `errorSummary()`                            |
+| Submission helpers        | `toolkit`            | `createSubmittedStatusTracker()`                                          |
+| Headless error state      | `toolkit/headless`   | Strategy-aware error/warning signals                                      |
+| Headless error summary    | `toolkit/headless`   | Form-level error aggregation with focus                                   |
+| Headless fieldset         | `toolkit/headless`   | Grouped error aggregation                                                 |
+| Headless character count  | `toolkit/headless`   | Progressive character limits                                              |
+| Headless field name       | `toolkit/headless`   | ID generation for ARIA                                                    |
+| Styled error component    | `toolkit/assistive`  | WCAG-compliant error/warning display                                      |
+| Styled error summary      | `toolkit/assistive`  | Clickable form-level error list                                           |
+| Styled hints              | `toolkit/assistive`  | Helper text components                                                    |
+| Styled character count    | `toolkit/assistive`  | Visual character counter                                                  |
+| Form field wrapper        | `toolkit/form-field` | Complete field layout with label + feedback                               |
+| Form fieldset             | `toolkit/form-field` | Grouped field layout                                                      |
+| Warning convention        | `toolkit`            | Root warning helpers; implementation in `core/utilities/warning-error.ts` |
+| Vest integration          | `toolkit/vest`       | Vest v6+ validation suite adapter                                         |
 
 ## Design Principles
 
@@ -62,7 +62,8 @@ These APIs are part of `@ngx-signal-forms/toolkit`. They build on top of Angular
 
 The toolkit never provides an alternative API for something Angular already owns. For example:
 
-- **Submit handling**: Angular's `submit()` or `FormRoot` handles form submission. The toolkit's `ngxSignalForm` only tracks submitted status — it does not call `submit()` or intercept the submit event.- **Field binding**: Angular's `[formField]` directive is the only way to bind fields. The toolkit never introduces its own field binding syntax.
+- **Submit handling**: Angular's `submit()` or `FormRoot` owns submission. The toolkit observes native submit attempts for status tracking; it does not replace Angular's action or validation gate.
+- **Field binding**: Angular's `[formField]` binds fields. The toolkit does not introduce a replacement binding.
 - **Validation**: Angular's `schema()` and validators define rules. The toolkit only adds the warning convention (`warn:` prefix) and message resolution on top.
 
 ### 2. Enhance, Don't Replace
@@ -81,7 +82,8 @@ Toolkit components (errors, hints, character counts) work without `ngxSignalForm
 ```html
 <!-- No ngxSignalForm - components fall back to defaults -->
 <form [formRoot]="myForm">
-  <input [formField]="myForm.email" />
+  <label for="email">Email</label>
+  <input id="email" [formField]="myForm.email" />
   <ngx-form-field-error [formField]="myForm.email" fieldName="email" />
 </form>
 ```
@@ -90,7 +92,10 @@ Form-level features like `'on-submit'` strategy and inherited submitted status r
 
 ### 4. Duck-Typed Angular Integration
 
-The toolkit uses duck-typing when accessing Angular Signal Forms internals that may change between versions. For example, `focusBoundControl()`, `errorSummary()`, and `name()` are accessed via type-safe duck-typed checks rather than hard imports of internal types.
+`focusBoundControl()` and `errorSummary()` are public Angular contracts.
+Some toolkit utilities use structural checks when accepting unknown state;
+that defensive implementation does not make these APIs internal. Check the
+installed public `FieldState` declaration when adding integrations.
 
 ## Angular Version Baseline
 
@@ -98,7 +103,11 @@ Tracks the same Angular 22 baseline and stability contract as [Compatibility](..
 
 ## Internal `/core` secondary entry point
 
-`@ngx-signal-forms/toolkit/core` exists in the built `dist/` as a secondary entry point but is **not part of the public API**. It carries `@internal` plumbing (injection tokens for the hint registry, ARIA mode, error-message registry, field-label resolver, and defaults) that the toolkit's own sibling entries — `form-field`, `assistive`, `headless`, `debugger` — import at build time.
+`@ngx-signal-forms/toolkit/core` exists in the built `dist/` as an internal
+secondary entry point, not a supported consumer import. Toolkit sibling
+entries use its implementation at build time. The debugger is a separate,
+internal demo package, not a toolkit secondary entry point. Public tokens are
+explicitly re-exported from the toolkit root.
 
 The published `dist/packages/toolkit/package.json` `exports` map **omits `./core`** (a post-build script at `packages/toolkit/scripts/strip-internal-exports.mjs` strips it during the `toolkit:post-build` target and rewrites sibling bundles to use relative paths to the `/core` fesm file instead). Modern Node and TypeScript resolvers return `ERR_PACKAGE_PATH_NOT_EXPORTED` for `import from '@ngx-signal-forms/toolkit/core'`.
 

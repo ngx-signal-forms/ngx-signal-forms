@@ -41,6 +41,10 @@ import {
 
 ## Quick start
 
+Use the [tested root starter](../../../README.md#quick-start) for a complete
+component with submission and invalid-field focus. This example demonstrates
+rendering only, including hints and a counter. It has no save action.
+
 ```typescript
 import { Component, signal, ChangeDetectionStrategy } from '@angular/core';
 import {
@@ -86,8 +90,6 @@ import { NgxFormField } from '@ngx-signal-forms/toolkit/form-field';
           [maxLength]="500"
         />
       </ngx-form-field-wrapper>
-
-      <button type="submit">Send</button>
     </form>
   `,
 })
@@ -115,12 +117,13 @@ export class ContactFormComponent {
 | `fieldName`       | `string`                                          | From `id`   | Explicit field name; derived from control `id`               |
 | `appearance`      | `'standard' \| 'outline' \| 'plain' \| 'inherit'` | `'inherit'` | Visual style variant                                         |
 | `orientation`     | `'vertical' \| 'horizontal' \| 'inherit'`         | `'inherit'` | Label position (see [Orientation](#orientation))             |
-| `strategy`        | `ErrorDisplayStrategy`                            | Inherited   | Override error display strategy                              |
+| `strategy`        | `ErrorDisplayStrategy \| null`                    | `null`      | Override error display strategy; `null` inherits             |
 | `warningStrategy` | `WarningDisplayStrategy`                          | Inherited   | Override warning display strategy, independent of `strategy` |
 | `errorPlacement`  | `'top' \| 'bottom'`                               | `'bottom'`  | Render errors above or below the control                     |
 | `showMarkerWhen`  | `'required' \| 'optional' \| 'none'`              | Config      | Which fields carry a visual marker                           |
 | `requiredMarker`  | `string`                                          | Config      | Marker text for required fields                              |
 | `optionalMarker`  | `string`                                          | Config      | Marker text for optional fields                              |
+| `hideHintOnError` | `boolean`                                         | Config      | Hide the hint while a blocking error or warning shows        |
 
 Only `formField` is required. Every "Inherited" / "Config" default resolves
 through the toolkit's settings cascade (field input → form context →
@@ -131,7 +134,7 @@ these inputs only to override a specific field — see
 ### Appearances
 
 - **`standard`** — label above input, simple vertical layout
-- **`outline`** — Material Design floating label with bordered container (requires CSS `:has()` — Chrome 105+, Firefox 121+, Safari 15.4+)
+- **`outline`** — bordered container with the label printed inside it as a static caption above the control. The label does not float or animate, so no `placeholder=" "` is needed. Needs CSS `:has()`, but the wrapper's stylesheets also use native nesting throughout, which sets the real floor at Chrome 112, Edge 112, Safari 16.5, Firefox 121 — see [THEMING.md](./THEMING.md#browser-support).
 - **`plain`** — no field chrome; the wrapper still provides labels, errors, and field identity. Good for custom controls with their own visual treatment.
 - **`inherit`** (default) — uses the value from `provideNgxSignalFormsConfig()`
 
@@ -141,8 +144,8 @@ these inputs only to override a specific field — see
 - **`horizontal`** — label in a shared column to the left of the field control
 - **`inherit`** (default input value) — uses the value from `provideNgxSignalFormsConfig()`
 
-`appearance="outline"` always resolves to vertical because the floating-label
-treatment depends on the label staying inside the field chrome. Selection rows
+`appearance="outline"` always resolves to vertical because its label caption
+sits inside the field chrome, above the control. Selection rows
 such as checkbox, switch, and radio-group controls keep their own inline
 layouts even when `orientation="horizontal"` is requested.
 
@@ -158,7 +161,7 @@ in the page or feature container.
 | `plain`    | ✅ Supported             | ✅ Supported               |
 | `outline`  | ✅ Supported             | ↩️ Resolves to vertical    |
 
-`outline` keeps a vertical layout because floating-label behavior depends on that structure.
+`outline` keeps a vertical layout because its label caption lives inside the bordered container.
 
 ### Prefix and suffix slots
 
@@ -211,6 +214,39 @@ and the Angular Aria [Combobox](https://angular.dev/guide/aria/combobox) and
 
 A native `input[type="checkbox"][role="switch"]` is recognized as a switch automatically — no extra directives needed.
 
+#### Inferred kind vs. auto-ARIA eligibility
+
+**Inferred control kind and auto-ARIA eligibility are two decisions.**
+Control-kind inference answers "which wrapper layout does this control get".
+Auto-ARIA eligibility answers "does the toolkit own `aria-invalid`,
+`aria-required`, and `aria-describedby` on this host". The two do not always
+agree:
+
+| Markup                                                      | Inferred kind                               | Auto-ARIA default      | How to opt in                                                                       |
+| ----------------------------------------------------------- | ------------------------------------------- | ---------------------- | ----------------------------------------------------------------------------------- |
+| `input[type="checkbox"]`                                    | `checkbox`                                  | Not eligible           | Add `ngxSignalFormControl="checkbox"`                                               |
+| `input[type="checkbox"][role="switch"]`                     | `switch`                                    | Eligible automatically | None — works out of the box                                                         |
+| `input[type="radio"]`                                       | `radio-group`                               | Not eligible           | Add `ngxSignalFormControl="radio-group"`                                            |
+| `[role="combobox"]` element with a stable `id`              | `input-like`                                | Eligible automatically | None — works out of the box                                                         |
+| Plain `input` / `select` / `textarea`                       | `input-like` / `standalone-field-like`      | Eligible automatically | None — works out of the box                                                         |
+| Custom `[formField]` host (not `input`/`textarea`/`select`) | inferred from shape, or none until declared | Eligible automatically | Opt out with `ngxSignalFormAutoAriaDisabled` or `ngxSignalFormControlAria="manual"` |
+
+A native checkbox or radio infers a wrapper kind (`checkbox` /
+`radio-group`). It is **not** auto-ARIA eligible by default. In a selection
+group, `ngx-form-field-wrapper` owns `role`, `aria-labelledby`,
+`aria-describedby`, and `aria-required` on the group container. Writing
+those same attributes on each grouped input would duplicate or contradict
+the group-level values. A checkbox with `role="switch"` is always a single
+control. It never joins a group, so it is eligible automatically.
+
+`ariaMode` in a control preset (`'auto'` | `'manual'`) only applies once a
+host is already auto-ARIA eligible. Setting `ariaMode: 'auto'` on the
+`checkbox` preset does not make a plain checkbox eligible on its own. The
+auto-ARIA directive's selector gates eligibility first. Declare
+`ngxSignalFormControl="checkbox"` (or `"radio-group"`) to opt a control in.
+Then the preset's `ariaMode` governs ownership from there. See
+[ADR-0001](https://github.com/ngx-signal-forms/ngx-signal-forms/blob/main/docs/decisions/0001-control-semantics-architecture.md#auto-aria-eligibility-boundary).
+
 ### Warning support
 
 Warnings (errors with `kind` starting with `warn:`) display automatically:
@@ -221,7 +257,7 @@ Warnings (errors with `kind` starting with `warn:`) display automatically:
   implicit live-region semantics of those roles — no explicit `aria-live`)
 
 Warning **display timing** is independent from error timing. The wrapper
-exposes a `warningStrategy` input (default `'on-touch'`, forwarded to the
+exposes an inherited `warningStrategy` input (built-in fallback `'on-touch'`, forwarded to the
 projected `NgxFormFieldError`) so advisory messages keep their own timing even
 when errors are gated by `'on-submit'` — the wrapper mounts its
 error/warning renderer whenever either should be visible, not just on the
@@ -286,7 +322,7 @@ aggregation signals without any prebuilt markup, drop down to
 ### Warning support
 
 Like `ngx-form-field-wrapper`, the fieldset decouples warning **display timing**
-from blocking-error timing: `warningStrategy` defaults to `'on-touch'` and
+from blocking-error timing: `warningStrategy` has a built-in fallback of `'on-touch'` and
 resolves through its own cascade, so aggregated warnings keep their own timing
 even when `strategy` is `'on-submit'`.
 
@@ -381,7 +417,11 @@ like a single field with wrapper-owned inline feedback.
 Use a normal `<label for="..."></label>` for single controls. For grouped
 radio/checkbox wrappers, project a neutral heading element such as
 `<span ngxFormFieldLabel>` instead of an HTML `<label>` because the wrapper is
-labelling the group container (`radiogroup`/`group`), not a single input.
+labelling the group container (`radiogroup`/`group`), not a single input. A
+projected `<ngx-form-field-hint>`'s id reaches the group's `aria-describedby`
+through `NgxSignalFormAutoAria` running on the wrapper host itself (it also
+matches `[formField]` hosts that aren't `input`/`textarea`/`select`) — a setup
+that disables or excludes auto-aria on the wrapper loses that hint link too.
 
 When the wrapper detects a grouped radio or checkbox cluster, it uses a surfaced
 background on the wrapper content instead of a text-field border. The feedback
@@ -475,9 +515,12 @@ Quick example:
 
 ```css
 :root {
-  --ngx-form-field-focus-color: #007bc7;
-  --ngx-form-field-color-border: rgba(50, 65, 85, 0.25);
-  --ngx-signal-form-error-color: #db1818;
+  --ngx-form-field-focus-color: light-dark(#007bc7, #60a5fa);
+  --ngx-form-field-color-border: light-dark(
+    rgba(50, 65, 85, 0.7),
+    rgba(249, 250, 251, 0.4)
+  );
+  --ngx-signal-form-error-color: light-dark(#db1818, #fca5a5);
   --ngx-signal-form-feedback-font-size: 0.75rem;
 }
 ```

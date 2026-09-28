@@ -84,6 +84,31 @@ export interface ValidateVestOptions<
  * Implemented on top of the public {@link sharedVestAdapter}, so passing the
  * same suite to a blocking `validateVest` (or to
  * `sharedVestAdapter.runVestSuite(...)`) reuses a single suite execution.
+ *
+ * @example
+ * ```typescript
+ * import { signal } from '@angular/core';
+ * import { form } from '@angular/forms/signals';
+ * import { create, enforce, only, test, warn } from 'vest';
+ * import { validateVestWarnings } from '@ngx-signal-forms/toolkit/vest';
+ *
+ * interface SignupModel {
+ *   password: string;
+ * }
+ *
+ * const strengthSuite = create((data: SignupModel, field?: string) => {
+ *   only(field);
+ *   test('password', 'Consider using 12+ characters', () => {
+ *     warn();
+ *     enforce(data.password.length).greaterThanOrEquals(12);
+ *   });
+ * });
+ *
+ * const signupModel = signal<SignupModel>({ password: '' });
+ * const signupForm = form(signupModel, (path) => {
+ *   validateVestWarnings(path, strengthSuite);
+ * });
+ * ```
  */
 export function validateVestWarnings<TValue, F extends string = string>(
   path: VestFieldPath<TValue>,
@@ -125,9 +150,12 @@ export function validateVestWarnings<TValue, F extends string = string>(
  * to opt out when you deliberately want suite state to persist.
  *
  * Pass `{ only: (ctx) => fieldName }` to enable per-field focused runs. The
- * adapter then invokes `suite.run(value, fieldName)` (or
- * `suite.only(fieldName).run(value)` where supported) rather than a full-suite
- * run. Works with suite callbacks that use `only(fieldName)` internally.
+ * adapter then prefers `suite.only(fieldName).run(value)`, which also accepts
+ * a list of field names, and falls back to `suite.run(value, fieldName)` only
+ * for a suite that exposes no `only()` — that legacy path takes one field name
+ * and collapses a list to its first entry. Either way it replaces the
+ * full-suite run, and works with suite callbacks that call `only(fieldName)`
+ * internally.
  *
  * Built on the public {@link sharedVestAdapter}; advanced consumers can wire
  * the same machinery manually via `createVestAdapter` /
@@ -135,6 +163,7 @@ export function validateVestWarnings<TValue, F extends string = string>(
  *
  * @example
  * ```typescript
+ * import { signal } from '@angular/core';
  * import { form } from '@angular/forms/signals';
  * import { create, enforce, only, test } from 'vest';
  * import { validateVest } from '@ngx-signal-forms/toolkit/vest';

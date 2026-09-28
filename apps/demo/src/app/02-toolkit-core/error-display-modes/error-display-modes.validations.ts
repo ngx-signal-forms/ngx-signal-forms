@@ -37,7 +37,7 @@ export const productFeedbackSchema = schema<ProductFeedbackModel>((path) => {
   });
 
   required(path.email, { message: 'Email is required' });
-  email(path.email, { message: 'Please enter a valid email address' });
+  email(path.email, { message: 'Enter a valid email address' });
 
   // Company is optional but has max length
   maxLength(path.company, 100, {

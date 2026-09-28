@@ -5,8 +5,9 @@
 // hygiene: `/core` is a build-time-only secondary entry point (hidden from
 // the published `exports` map by a post-build script) that carries both
 // public symbols AND `@internal` plumbing used by the toolkit's sibling
-// entries (form-field, assistive, headless, debugger). A blanket re-export
-// would leak those `@internal` tokens through the root `.d.ts`. Enumerating
+// entries (form-field, assistive, headless) and by `packages/demo/debugger`.
+// A blanket re-export would leak those `@internal` tokens through the root
+// `.d.ts`. Enumerating
 // the public names here keeps the root entry in lockstep with what
 // `packages/toolkit/README.md` documents as the stable public API.
 //
@@ -24,6 +25,7 @@ export {
   NGX_SIGNAL_FORM_FIELD_VISIBILITY_REGISTRY,
   NGX_SIGNAL_FORM_HINT_REGISTRY,
   NGX_SIGNAL_FORMS_CONFIG,
+  WARN_KIND_PREFIX,
   NgxControlPresetRegistry,
   NgxFieldIdentity,
   NgxFieldIdentityProvider,
@@ -36,8 +38,10 @@ export {
   combineShowErrors,
   createControlVisibilitySignal,
   createErrorVisibility,
+  createFieldPresentation,
   createOnInvalidHandler,
   createShowErrorsComputed,
+  createWarningVisibility,
   createSubmittedStatusTracker,
   createUniqueId,
   focusFirstInvalid,
@@ -97,11 +101,15 @@ export type {
   AriaDescribedByChainOptions,
   ControlVisibilitySignal,
   CreateErrorVisibilityOptions,
+  CreateFieldPresentationOptions,
+  CreateWarningVisibilityOptions,
   ErrorDisplayStrategy,
   ErrorMessageRegistry,
   ErrorReadableState,
   ErrorVisibilityState,
   FieldLabelMap,
+  FieldPresentation,
+  FieldPresentationState,
   FieldLabelResolver,
   FieldMarkingMode,
   MarkerKind,
@@ -144,4 +152,5 @@ export type {
   StandardSchemaLikeResult,
   SubmittedStatus,
   WarningDisplayStrategy,
+  WarningVisibilityState,
 } from '@ngx-signal-forms/toolkit/core';

@@ -1,0 +1,201 @@
+# Toolkit Assistive
+
+Implements the `@ngx-signal-forms/toolkit/assistive` entry point.
+
+Use the [source index](../references/api.md) for exports and component inputs.
+
+## Principle
+
+The assistive entry point provides accessible feedback rendering that sits between raw Angular field state and the fully styled `form-field` wrapper. Use it when you want pre-built accessible components but full control over layout structure, including grouped notification blocks driven by aggregated `ValidationError[]`. Use [form-field](../form-field/guide.md) instead when a complete wrapper shell is acceptable.
+
+## Workflow
+
+1. Import from `@ngx-signal-forms/toolkit/assistive`. The `NgxFormField` bundle contains `NgxSignalFormAutoAria`, `NgxSignalFormControlSemanticsDirective`, `NgxFormFieldWrapper`, `NgxFormFieldHint`, `NgxFormFieldCharacterCount`, `NgxFormFieldError`, and `NgxFormFieldset`. It does not contain `NgxFormFieldErrorSummary` or `NgxFormMarkingLegend`; import those separately from `/assistive`.
+
+2. **`NgxFormFieldError`** — displays validation errors (and optionally warnings) for a single field or a pre-aggregated, grouped error list. Two presentations:
+   - `presentation="inline"` (default) — bare messages under a single control. Always provide `[formField]` for this usage.
+   - `presentation="panel"` — a bordered, padded notification card for grouped fieldset summaries or custom summary blocks. Provide `[errors]` (a reactive or static source of aggregated `ValidationError[]`) instead of `[formField]`; optional `title` renders above the messages. Tone routing is automatic and content-driven — there is no `tone` input: any blocking error surfaces the `role="alert"` container; a warning-only list surfaces the `role="status"` container; an empty list hides both.
+   - Always provide `fieldName` when used standalone (not inside `ngx-form-field-wrapper`).
+   - Inside a wrapper, `fieldName` is inherited automatically.
+   - Use `listStyle="bullets"` for grouped summaries; default `'plain'` for inline single-field output.
+
+3. **`NgxFormFieldHint`** — static helper text that participates in `aria-describedby` linkage. Place before or after the input; the wrapper handles ordering automatically. Without an explicit `id` a hint falls back to `${fieldName}-hint`; inside one wrapper the first unnamed hint keeps that name and later ones become `${fieldName}-hint-2`, `-hint-3`, so no two share a DOM id. Set an explicit `id` when the id must be stable across reordering.
+
+4. **`NgxFormFieldCharacterCount`** — live character count with progressive color states:
+   - Provide `[formField]` for the bound field.
+   - Omit `maxLength` when a `maxLength` validator on the field provides it.
+   - Warning/danger thresholds are CSS-only (no component input): override `--ngx-form-field-char-count-warning-threshold` / `--ngx-form-field-char-count-danger-threshold` (plain numbers, percent of `maxLength`, default 80/95).
+
+5. Grouped validation notification for fieldsets, summary cards, or custom sections is `NgxFormFieldError` with `presentation="panel"` (see step 2 above) — there is no separate notification component:
+
+- Provide `[errors]` as a reactive or static source of aggregated `ValidationError[]` and `presentation="panel"`.
+- Provide `fieldName` when the grouped block needs deterministic `aria-describedby` IDs.
+- Optional `title` renders above the messages; `listStyle` (`'plain' | 'bullets'`) controls stacked paragraphs vs a bullet list.
+- Prefer this over `NgxFormFieldErrorSummary` when you already own the grouping logic and want both warning and blocking surfaces.
+
+6. **`NgxFormFieldErrorSummary`** — form-level error summary (GOV.UK pattern):
+   - Place at the top of the form, between any server status banners and the first field.
+   - Always provide `[formTree]` — pass the form tree directly (e.g., `[formTree]="myForm"`), not `myForm()`.
+   - `summaryLabel` defaults to `'Please fix the following errors:'`. Override with a meaningful label.
+   - Renders blocking errors only (no warnings). For warnings, use `NgxHeadlessErrorSummary` instead.
+   - Inherits `errorStrategy` and `submittedStatus` from `ngxSignalForm` context automatically — no extra wiring needed when used inside `form[formRoot][ngxSignalForm]`.
+   - An entry is a focusable button that calls `focusBoundControl()` on click only when its error has a focusable target; otherwise it renders as plain text (a control with a no-op `focus()` would look interactive but do nothing).
+   - The label renders as a native heading (`h2`–`h6`); `headingLevel` picks the level (default `2`).
+   - Inside `form[formRoot][ngxSignalForm]`, the summary announces alone after a submit. Field errors that the submit reveals render outside their `role="alert"` region, with the same id and look. Later edits announce through the field as usual.
+   - Place the summary inside the `<form>` for this. In e2e tests, find a submit-revealed field error by its `${fieldName}-error` id, not by `[role="alert"]`.
+   - Opt out with `errorSummaryAnnouncesAlone: false` in `NGX_SIGNAL_FORMS_CONFIG` (ADR-0012).
+
+- Uses `role="alert"` and relies on the role's implicit live-region semantics (no explicit `aria-live` / `aria-atomic`).
+
+7. **`NgxFormMarkingLegend`** (`<ngx-form-marking-legend>`) — form-level legend that explains the required/optional marker (e.g. "\* indicates a required field"), the companion to the per-field markers rendered by the `form-field` wrapper:
+   - Place it once wherever it reads well; there is no automatic injection.
+   - `[formTree]` is optional — it falls back to the ambient `form[formRoot][ngxSignalForm]` context. Pass it explicitly when used outside a form host.
+   - `showMarkerWhen` (`'required' | 'optional' | 'none'`), `text`, `requiredMarker`, and `optionalMarker` all fall back to `NgxSignalFormsConfig`, so by default the legend matches whatever the fields render.
+   - Mode- and content-aware: it hides when the form has no field of the relevant kind, and renders nothing in `'none'` mode. It is plain visible text (not `aria-hidden`) with no `role`/live region.
+
+8. Keep warning and error semantics distinct. Errors use `role="alert"` (assertive); warnings use `role="status"` (polite). Do not homogenize them.
+
+## Error Summary Usage Example
+
+```typescript
+import { Component, signal } from '@angular/core';
+import { form, FormField, required, email } from '@angular/forms/signals';
+import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit';
+import {
+  NgxFormFieldError,
+  NgxFormFieldErrorSummary,
+} from '@ngx-signal-forms/toolkit/assistive';
+
+@Component({
+  selector: 'app-registration-form',
+  imports: [
+    FormField,
+    NgxSignalFormToolkit,
+    NgxFormFieldError,
+    NgxFormFieldErrorSummary,
+  ],
+  template: `
+    <form [formRoot]="registrationForm" ngxSignalForm errorStrategy="on-submit">
+      <ngx-form-field-error-summary
+        [formTree]="registrationForm"
+        summaryLabel="Please fix the following errors before submitting:"
+      />
+
+      <label for="email">Email</label>
+      <input id="email" type="email" [formField]="registrationForm.email" />
+      <ngx-form-field-error
+        [formField]="registrationForm.email"
+        fieldName="email"
+      />
+
+      <button type="submit">Submit</button>
+    </form>
+  `,
+})
+export class RegistrationFormComponent {
+  readonly #model = signal({ email: '' });
+  protected readonly savedEmail = signal<string | null>(null);
+  protected readonly registrationForm = form(
+    this.#model,
+    (path) => {
+      required(path.email, { message: 'Email is required' });
+      email(path.email, { message: 'Enter a valid email' });
+    },
+    {
+      submission: {
+        action: async (tree) => {
+          this.savedEmail.set(tree().value().email);
+        },
+      },
+    },
+  );
+}
+```
+
+## Standalone Usage Example
+
+```typescript
+import { Component, signal } from '@angular/core';
+import { form, FormField, maxLength } from '@angular/forms/signals';
+import {
+  NgxFormFieldError,
+  NgxFormFieldCharacterCount,
+} from '@ngx-signal-forms/toolkit/assistive';
+import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit';
+
+@Component({
+  selector: 'app-bio-field',
+  imports: [
+    FormField,
+    NgxSignalFormToolkit,
+    NgxFormFieldError,
+    NgxFormFieldCharacterCount,
+  ],
+  template: `
+    <form [formRoot]="profileForm" ngxSignalForm>
+      <label for="bio">Bio</label>
+      <textarea id="bio" [formField]="profileForm.bio"></textarea>
+      <ngx-form-field-character-count [formField]="profileForm.bio" />
+      <ngx-form-field-error [formField]="profileForm.bio" fieldName="bio" />
+      <button type="submit">Save bio</button>
+    </form>
+  `,
+})
+export class BioFieldComponent {
+  readonly #model = signal({ bio: '' });
+  protected readonly savedBio = signal<string | null>(null);
+  protected readonly profileForm = form(
+    this.#model,
+    (path) => {
+      maxLength(path.bio, 500);
+    },
+    {
+      submission: {
+        action: async (tree) => {
+          this.savedBio.set(tree().value().bio);
+        },
+      },
+    },
+  );
+}
+```
+
+## Warning Semantics
+
+`warningError()` and friends are exported from the root entry point:
+
+```typescript
+import {
+  warningError,
+  isWarningError,
+  isBlockingError,
+} from '@ngx-signal-forms/toolkit';
+```
+
+`NgxFormFieldError` automatically renders warnings with `role="status"` — no manual ARIA needed.
+
+`NgxFormFieldError`'s `presentation="panel"` mode follows the same separation at the grouped level, automatically and content-driven (no `tone` input): any blocking error routes to the assertive `role="alert"` container, a warning-only list to the polite `role="status"` container, and an empty list hides both. This prevents accidentally downgrading real errors or over-announcing non-blocking guidance.
+
+Each message also carries a visually hidden "Error:" / "Warning:" prefix, so the accessible description tells the two channels apart without relying on colour. Configure the text through `NGX_SIGNAL_FORMS_CONFIG`'s `errorPrefixText` / `warningPrefixText` (default `'Error:'` / `'Warning:'`); pass `''` to disable a channel's prefix. Rendered even when `title` is set, since a title names the group, not a given message's channel. Not applied by `NgxFormFieldErrorSummary` or headless consumers. See "Telling errors and warnings apart without colour" in the `/assistive` README for the CSS hook that adds a visible icon.
+
+## Error Handling
+
+- If errors don't display: check that `fieldName` is provided when the component is used standalone.
+- If character count doesn't update or silently renders 0: verify the field value is a string and `[formField]` is bound. With no `maxLength` configured or auto-detected, an unsupported value type logs a one-shot dev-mode `console.warn` naming `NgxFormFieldCharacterCount` — watch the console.
+- If a property-bound hint id (`[id]="expr"`) doesn't reach `aria-describedby`: update the toolkit — older versions read the id once at construction and missed property bindings; current versions map both static `id` and `[id]` onto the hint's `id` input.
+- If hints don't appear in `aria-describedby`: use the wrapper's hint registry, or follow the [manual-ownership example](../references/headless-composition.md#manual-aria-example). `NgxHeadlessFieldName` supplies identity only; it does not register hints or compose their ARIA links.
+- If a grouped notification announces with the wrong urgency: check the `[errors]` list you pass in — routing is content-driven, so a stray blocking error will force the assertive `role="alert"` container. There is no `tone` input to override it.
+- For grouped output you already aggregate yourself, use `NgxFormFieldError` with `presentation="panel"`. Switch to [form-field](../form-field/guide.md) for `NgxFormFieldset` when you also need the styled group shell and aggregation.
+- If error summary does not show: verify `ngxSignalForm` is applied to the `<form>` element so context is active, or provide `strategy` and `submittedStatus` explicitly.
+- If error summary entries don't focus controls on click: check the binding and focus target. Angular `FormField` registers native controls and normal custom `FormValueControl` components bound with `[formField]` automatically. A composite custom control may need a `focus()` method to forward focus to its inner control. `registerAsBinding()` is only for integrations that deliberately bypass `FormField`, not a requirement for ordinary custom controls. Without a usable binding, `focusBoundControl()` cannot move focus.
+- For warning entries in the summary, use `NgxHeadlessErrorSummary` from `@ngx-signal-forms/toolkit/headless`, or use `NgxFormFieldError` with `presentation="panel"` when you already have aggregated `ValidationError[]`.
+
+## Done
+
+- Standalone feedback IDs match their control's identity. Referenced hints
+  exist and multiple hints have unique IDs.
+- Error and warning gates work independently; grouped input arrays are already
+  visibility-filtered. Empty, warning-only, and blocking lists have the right
+  content and role without replacing live-region hosts.
+- Summary buttons reach the intended controls. Changed counters exercise limit
+  transitions under the real theme; report keyboard/announcement checks not run.

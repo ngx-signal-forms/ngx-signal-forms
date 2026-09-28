@@ -10,7 +10,11 @@
     "exactOptionalPropertyTypes": true
   },
   "exclude": [
+    // Committed baseline snapshots of built `.d.ts` output (#514) — raw
+    // build output, not source to compile.
+    "./api-reports/**",
     "./**/*.spec.ts",
+    "./core/utilities/testing/**",
     "./test-setup.ts",
     "jest.config.ts",
     "./**/*.test.ts",

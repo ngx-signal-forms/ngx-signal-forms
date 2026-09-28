@@ -868,6 +868,28 @@ export function createVestAdapter(
  * `validateVest` / `validateVestWarnings` entry points. Exposed so advanced
  * consumers can run a suite through {@link VestSuiteAdapter.runVestSuite} and
  * reuse the SAME cached execution that the built-in validators consume.
+ *
+ * @example
+ * ```typescript
+ * import { signal } from '@angular/core';
+ * import { form } from '@angular/forms/signals';
+ * import { create, enforce, test } from 'vest';
+ * import { sharedVestAdapter } from '@ngx-signal-forms/toolkit/vest';
+ *
+ * const contactSuite = create((data: { email: string }) => {
+ *   test('email', 'Email is required', () => {
+ *     enforce(data.email).isNotBlank();
+ *   });
+ * });
+ *
+ * const contactForm = form(signal({ email: '' }));
+ *
+ * const result = sharedVestAdapter.runVestSuite({
+ *   suite: contactSuite,
+ *   fieldTree: contactForm,
+ *   value: contactForm().value(),
+ * });
+ * ```
  */
 export const sharedVestAdapter: VestSuiteAdapter = createVestAdapter();
 

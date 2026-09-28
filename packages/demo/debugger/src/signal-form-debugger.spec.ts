@@ -153,14 +153,14 @@ describe('NgxSignalFormDebugger', () => {
 
   describe('Data Display', () => {
     it('should display JSON model', () => {
-      model.set({ name: 'Alice', email: 'alice@test.com' });
+      model.set({ name: 'Alice', email: 'alice@example.com' });
       fixture.detectChanges();
 
       const jsonCode = debuggerEl.querySelector(
         '.ngx-debugger__json-display pre code',
       );
       expect(jsonCode?.textContent).toContain('"Alice"');
-      expect(jsonCode?.textContent).toContain('"alice@test.com"');
+      expect(jsonCode?.textContent).toContain('"alice@example.com"');
     });
   });
 

@@ -404,30 +404,21 @@ The wrapper's `data-spartan-form-field` attribute is the join point
 between Spartan's `helm` selectors and the toolkit's chrome — bespoke
 styling can target it without forking the wrapper.
 
-### Error/warning color overrides for `.dark`
+### Toolkit colors under `.dark`
 
-The toolkit's own error/warning colors (`--ngx-signal-form-error-color` /
-`--ngx-signal-form-warning-color`, consumed by
-`packages/toolkit/assistive`) default to tracking `prefers-color-scheme`
-directly — they do **not** detect a `.dark` ancestor class. Since this
-demo themes via a `.dark` class toggled independently of the OS
-preference (see `:root` / `.dark` above), `styles.css` sets both custom
-properties explicitly per theme:
+The toolkit's colors are `light-dark()` pairs that follow the inherited
+`color-scheme`. They do not detect a `.dark` class. The `.dark` rule in
+`styles.css` therefore also sets `color-scheme: dark`, and the toolkit
+follows it without any token overrides:
 
 ```css
-:root {
-  --ngx-signal-form-error-color: #db1818;
-  --ngx-signal-form-warning-color: #a16207;
-}
 .dark {
-  --ngx-signal-form-error-color: #fca5a5;
-  --ngx-signal-form-warning-color: #fcd34d;
+  color-scheme: dark;
 }
 ```
 
-Without this, an explicit-light UI on an OS-prefers-dark machine (or vice
-versa) would show the wrong theme's error colors. `apps/demo` follows the
-same convention for the same reason.
+`apps/demo` does the same: its theme switcher sets `color-scheme` on the
+root element next to the `.dark` class.
 
 ## Pinned versions
 

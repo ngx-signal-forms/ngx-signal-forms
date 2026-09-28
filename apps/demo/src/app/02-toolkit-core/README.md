@@ -13,9 +13,9 @@ This section covers the two UX fundamentals every team meets first: **when** val
 ## 📂 Demos in this section
 
 - **[error-display-modes](./error-display-modes/README.md)** — switch a single form between `immediate`, `on-touch`, and `on-submit`.
-  - What you'll learn: strategy inheritance via `[errorStrategy]` · reading the active strategy with `injectFormContext()` · conditional validation (`applyWhen`).
+  - Strategy inheritance and conditional required/custom checks for ratings 1–3. Maximum length remains unconditional.
 - **[warning-support](./warning-support/README.md)** — `warn:*` validation errors rendered as advisory guidance.
-  - What you'll learn: the `warn:*` kind convention · `role="status"` vs `role="alert"` · warning-tolerant submission with `submitWithWarnings()`.
+  - Warning classification and declarative submission with `ignoreValidators: 'all'` plus a blocking-error guard.
 
 ## 🧠 Core concepts
 

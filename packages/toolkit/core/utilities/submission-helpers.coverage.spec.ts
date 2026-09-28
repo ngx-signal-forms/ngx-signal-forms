@@ -14,6 +14,7 @@ import {
   getBlockingErrors,
   hasOnlyWarnings,
 } from './submission-helpers';
+import { createLooseMockFieldTree as createMockFieldTree } from './testing/loose-mock-field-tree';
 import { warningError } from './warning-error';
 
 /**
@@ -137,6 +138,75 @@ describe('createSubmittedStatusTracker', () => {
     expect(submitAttempted()).toBe(false);
   });
 
+  it('does not resurrect "submitted" from a stale submitAttempted flag after the user touches the form again post-reset', async () => {
+    // Regression guard: an invalid-submit attempt sets `submitAttempted`,
+    // then a reset must clear it — not just roll `status` back to
+    // 'unsubmitted' for one tick. If the clear were skipped, the next
+    // touched: false → true transition (the user simply re-focusing a
+    // field, with no new submit) would see `attempted` still `true` and
+    // flip `status` straight back to 'submitted' — an `'on-submit'`
+    // consumer would show stale errors on a form nobody resubmitted.
+    const submittingState = signal(false);
+    const touchedState = signal(false);
+    const submitAttempted: WritableSignal<boolean> = signal(false);
+    const mockForm = makeMockForm(
+      () => submittingState(),
+      () => touchedState(),
+    );
+
+    const status = TestBed.runInInjectionContext(() =>
+      createSubmittedStatusTracker(mockForm, submitAttempted),
+    );
+
+    // Invalid submit attempt: submitting() never flips, only the flag does.
+    touchedState.set(true);
+    submitAttempted.set(true);
+    await flush();
+    expect(status()).toBe('submitted');
+
+    // Reset.
+    touchedState.set(false);
+    await flush();
+    expect(status()).toBe('unsubmitted');
+    expect(submitAttempted()).toBe(false);
+
+    // The user touches a field again — no submit attempt this time.
+    touchedState.set(true);
+    await flush();
+    expect(status()).toBe('unsubmitted');
+  });
+
+  it('follows submitAttempted back to false immediately when the caller clears it without a form reset', async () => {
+    // Regression guard: `submitAttempted` is a live signal the exposed
+    // status ORs in directly (`submittedHistory() || submitAttempted()`),
+    // not a value folded into the linkedSignal's own source. A caller can
+    // clear the flag on its own — e.g. after handling the invalid attempt —
+    // with no `touched()` transition at all, and `status` must follow that
+    // clear on the very next read, not stay stuck at `'submitted'` waiting
+    // for a reset that never comes.
+    const submittingState = signal(false);
+    const touchedState = signal(true);
+    const submitAttempted: WritableSignal<boolean> = signal(false);
+    const mockForm = makeMockForm(
+      () => submittingState(),
+      () => touchedState(),
+    );
+
+    const status = TestBed.runInInjectionContext(() =>
+      createSubmittedStatusTracker(mockForm, submitAttempted),
+    );
+
+    // Touched, then an invalid submit attempt: submitting() never flips.
+    submitAttempted.set(true);
+    await flush();
+    expect(status()).toBe('submitted');
+
+    // Caller clears the flag directly — no reset, touched() stays true.
+    submitAttempted.set(false);
+    await flush();
+    expect(status()).toBe('unsubmitted');
+  });
+
   it("should not reset to 'unsubmitted' when touched flips false during in-flight submission", async () => {
     // Pins the WCAG-equivalent invariant: the `!curr.submitting` guard at
     // submission-helpers.ts protects against mid-submit rollback so users
@@ -185,21 +255,6 @@ describe('createSubmittedStatusTracker', () => {
     ).toThrow(/FieldTree or Signal<FieldTree>/);
   });
 });
-
-function createMockFieldTree<TValue>(
-  state: Readonly<Record<string, unknown>>,
-): FieldTree<TValue> {
-  let fieldTree!: FieldTree<TValue>;
-
-  fieldTree = (() => ({
-    ...state,
-    get fieldTree() {
-      return fieldTree;
-    },
-  })) as FieldTree<TValue>;
-
-  return fieldTree;
-}
 
 describe('hasOnlyWarnings', () => {
   it('returns true for an empty errors array', () => {
@@ -356,10 +411,16 @@ describe('canSubmitWithWarnings', () => {
     expect(canSubmit()).toBe(false);
   });
 
-  it('returns false while submitting()/pending() are true (mock form)', () => {
+  it('returns false while submitting() is true, but pending() does not block (mock form)', () => {
     // canSubmitWithWarnings reads `submitting()` and `pending()` on the
     // FieldState. Use a mock to drive both signals deterministically without
     // racing the Angular submit pipeline.
+    //
+    // `pending()` no longer gates here (issue #437): Angular `submit()`'s
+    // default `ignoreValidators: 'pending'` does not wait for in-flight
+    // async validators either, and `submitWithWarnings()` delegates to it —
+    // keeping the two helpers in agreement means a pending validator must
+    // not silently drop a submit attempt.
     const submittingState = signal(false);
     const pendingState = signal(false);
     const errorsState = signal<readonly ValidationError[]>([]);
@@ -395,9 +456,9 @@ describe('canSubmitWithWarnings', () => {
     expect(canSubmit()).toBe(false);
     submittingState.set(false);
 
-    // pending() true → block.
+    // pending() true → does NOT block.
     pendingState.set(true);
-    expect(canSubmit()).toBe(false);
+    expect(canSubmit()).toBe(true);
     pendingState.set(false);
 
     // Back to idle.

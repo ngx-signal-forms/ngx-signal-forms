@@ -83,10 +83,18 @@ import { SingleModelWizardComponent } from './single-model-wizard.form';
 
         @if (wizardRef(); as wizard) {
           <div right>
-            <ngx-signal-form-debugger
-              [formTree]="wizard.formTree"
-              title="Whole-Wizard Form State"
-            />
+            @defer (on idle) {
+              <ngx-signal-form-debugger
+                [formTree]="wizard.formTree"
+                title="Whole-Wizard Form State"
+              />
+            } @placeholder {
+              <div class="debugger-placeholder" aria-hidden="true"></div>
+            } @error {
+              <p class="debugger-placeholder">
+                The form debugger failed to load.
+              </p>
+            }
           </div>
         }
       </ngx-split-layout>

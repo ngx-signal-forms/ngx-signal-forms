@@ -2,6 +2,7 @@ import type {
   ReadonlyFieldTree,
   ValidationError,
 } from '@angular/forms/signals';
+import { WARN_KIND_PREFIX } from '@ngx-signal-forms/toolkit';
 import {
   VEST_KEY_SEPARATOR,
   type VestFailureMessages,
@@ -42,9 +43,10 @@ const VEST_KIND_SEGMENT_MAX_LEN = 48;
  * Public constant kind prefix used for Vest `warn()` messages surfaced through
  * the toolkit. Exported so downstream code (error strategies, tests, debug
  * tooling) can filter warning-mode validation errors without re-deriving the
- * string literal.
+ * string literal. Built from the shared {@link WARN_KIND_PREFIX} so the
+ * `warn:` convention has one source of truth across the toolkit.
  */
-export const VEST_WARNING_KIND_PREFIX = 'warn:vest:';
+export const VEST_WARNING_KIND_PREFIX = `${WARN_KIND_PREFIX}vest:`;
 
 /**
  * Public constant kind prefix used for blocking Vest errors surfaced through

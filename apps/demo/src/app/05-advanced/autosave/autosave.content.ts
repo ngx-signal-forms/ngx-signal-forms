@@ -21,10 +21,11 @@ export const AUTOSAVE_CONTENT = {
       {
         title: 'The save itself',
         items: [
-          '• <strong><code>httpResource</code>:</strong> the request function returns <code>undefined</code> whenever nothing dirty+valid is waiting, which pauses the resource — no polling flag to keep in sync',
-          "• <strong>Real MSW handler:</strong> the PATCH hits <code>/api/autosave/profile</code> in <code>apps/demo/src/mocks/handlers.ts</code>, not an in-memory fake — <code>httpResource</code>'s loading/error states are the real thing",
-          "• <strong>Status surfaced:</strong> idle / saving / saved / failed, mapped from the resource's own <code>status()</code> signal",
-          '• <strong>Retry:</strong> a failed save leaves its field(s) dirty; <code>resource.reload()</code> re-issues the current patch',
+          '• <strong>A write, not a resource:</strong> an <code>effect</code> sends each new patch with <code>HttpClient.patch()</code>. A resource would abort an in-flight PATCH whenever the patch changes, and the server may already have applied it',
+          '• <strong>One save at a time:</strong> a patch that changes during a save is queued, then sent as one follow-up request once that save settles',
+          '• <strong>Real MSW handler:</strong> the PATCH hits <code>/api/autosave/profile</code> in <code>apps/demo/src/mocks/handlers.ts</code>, not an in-memory fake — the saving/error states come from a real HTTP round trip',
+          '• <strong>Status surfaced:</strong> idle / saving / saved / failed, held in a <code>saveStatus</code> signal',
+          '• <strong>Retry:</strong> a failed save leaves its field(s) dirty; <strong>Retry save</strong> sends the current patch again',
           "• <strong>Lost-update guard on success:</strong> only fields whose value still matches what was actually sent get marked saved, via each field's own no-argument <code>reset()</code> — a field edited again while the request was in flight stays dirty, so nothing silently drops",
         ],
       },
@@ -42,7 +43,7 @@ export const AUTOSAVE_CONTENT = {
     title: 'Best Practices & Patterns',
     sections: [
       {
-        title: '🧪 Try This',
+        title: 'Try This',
         items: [
           '1. Edit <strong>Display name</strong> and stop typing — after ~500ms the status region reads <em>Saving…</em>, then <em>All changes saved.</em> after the fake ~400ms PATCH resolves.',
           "2. Watch the state panel: <code>dirty()</code> flips back to <code>false</code> the instant the save resolves, via that field's own <code>reset()</code>.",

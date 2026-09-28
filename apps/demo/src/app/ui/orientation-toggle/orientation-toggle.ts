@@ -30,12 +30,10 @@ import {
           (click)="value.set(orientation)"
           [disabled]="isDisabled(orientation)"
           [attr.aria-pressed]="value() === orientation"
-          [class.bg-[#e8f4fb]]="value() === orientation"
+          [class.bg-selected]="value() === orientation"
           [class.shadow-sm]="value() === orientation"
-          [class.text-[#005d96]]="value() === orientation"
-          [class.dark:bg-gray-700]="value() === orientation"
-          [class.dark:text-blue-300]="value() === orientation"
-          class="rounded-full px-3 py-1.5 text-sm font-medium text-gray-600 transition-all hover:text-gray-900 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#005fcc] disabled:cursor-not-allowed disabled:opacity-50 dark:text-gray-300 dark:hover:text-white"
+          [class.text-on-selected]="value() === orientation"
+          class="focus-visible:outline-border-focus rounded-full px-3 py-1.5 text-sm font-medium text-gray-600 transition-all hover:text-gray-900 focus-visible:outline-2 focus-visible:outline-offset-2 disabled:cursor-not-allowed disabled:opacity-50 dark:text-gray-300 dark:hover:text-white"
         >
           {{ orientationLabels[orientation] }}
         </button>

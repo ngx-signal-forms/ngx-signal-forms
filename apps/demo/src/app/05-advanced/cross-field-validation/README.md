@@ -24,7 +24,7 @@ Validating a single field is easy; validating _relationships_ between fields ("c
 - Check-in — required.
 - Check-out — required; must be strictly after check-in (`dateRange`).
 - Guests — required; min 1; max 10.
-- Promo code — `STARTER100` / `SMALLGROUP` only valid when guests ≤ 4 (`invalidPromo`).
+- Promo code: `SMALLGROUP` requires guests ≤ 4 (`invalidPromo`). The schema does not impose that restriction on `STARTER100`.
 
 ### Warnings
 

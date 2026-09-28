@@ -31,7 +31,7 @@ export const I18N_DEMO_CONTENT = {
     title: 'Try It',
     sections: [
       {
-        title: '🧪 Try This',
+        title: 'Try This',
         items: [
           '1. Tab into <strong>Full name</strong> and back out empty → the required error appears in English',
           '2. Switch the language switcher to <strong>Nederlands</strong> → the same error re-renders in Dutch, with no reload and no re-submit',

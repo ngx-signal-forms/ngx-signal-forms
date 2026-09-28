@@ -28,6 +28,8 @@ test.describe('Headless - createErrorMessageSignal', () => {
     }) => {
       const input = page.getByTestId('password-input');
 
+      await expect(input).toHaveAttribute('type', 'password');
+
       await test.step('Touch and leave empty', async () => {
         await input.focus();
         await input.blur();

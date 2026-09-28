@@ -93,9 +93,17 @@ import { BrandThemingFormComponent } from './brand-theming.form';
           <ngx-brand-theming-form #formComponent left />
           @if (formComponent) {
             <div right>
-              <ngx-signal-form-debugger
-                [formTree]="formComponent.brandThemingForm"
-              />
+              @defer (on idle) {
+                <ngx-signal-form-debugger
+                  [formTree]="formComponent.brandThemingForm"
+                />
+              } @placeholder {
+                <div class="debugger-placeholder" aria-hidden="true"></div>
+              } @error {
+                <p class="debugger-placeholder">
+                  The form debugger failed to load.
+                </p>
+              }
             </div>
           }
         </ngx-split-layout>

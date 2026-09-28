@@ -9,7 +9,10 @@ import {
   ViewContainerRef,
 } from '@angular/core';
 import type { FieldTree } from '@angular/forms/signals';
-import { type ErrorDisplayStrategy } from '@ngx-signal-forms/toolkit';
+import {
+  type ErrorDisplayStrategy,
+  type WarningDisplayStrategy,
+} from '@ngx-signal-forms/toolkit';
 import { createErrorMessageSignal } from '@ngx-signal-forms/toolkit/headless';
 
 /**
@@ -127,9 +130,13 @@ export class NgxMatErrorSlot<TValue = unknown> {
  * </mat-hint>
  * ```
  *
- * Per-slot strategy override via structural microsyntax:
+ * Per-slot overrides via structural microsyntax. The hint renders warnings,
+ * so `warningStrategy` is the one that times what appears here; `strategy`
+ * only times the blocking-error check that suppresses the warning:
  * ```html
- * <mat-hint *ngxMatHintSlot="form.name; strategy: 'on-submit'; let warning">
+ * <mat-hint
+ *   *ngxMatHintSlot="form.name; warningStrategy: 'immediate'; let warning"
+ * >
  *   @if (warning) {
  *     <span class="warning">{{ warning }}</span>
  *   } @else {
@@ -148,14 +155,30 @@ export class NgxMatHintSlot<TValue = unknown> {
     alias: 'ngxMatHintSlot',
   });
 
+  /**
+   * Per-slot blocking-error strategy. Governs only the check that suppresses
+   * the warning while a blocking error is on screen — see
+   * {@link warningStrategy} for the hint's own timing.
+   */
   readonly strategy = input<ErrorDisplayStrategy | null>(null, {
     alias: 'ngxMatHintSlotStrategy',
+  });
+
+  /**
+   * Per-slot warning strategy. Warnings run their own cascade (ADR-0007), so
+   * this is the input that decides when the hint's warning copy appears.
+   */
+  readonly warningStrategy = input<WarningDisplayStrategy | null>(null, {
+    alias: 'ngxMatHintSlotWarningStrategy',
   });
 
   readonly #templateRef = inject(TemplateRef<NgxMatHintSlotContext>);
   readonly #viewContainerRef = inject(ViewContainerRef);
 
   readonly #strategySignal = computed(() => this.strategy() ?? undefined);
+  readonly #warningStrategySignal = computed(
+    () => this.warningStrategy() ?? undefined,
+  );
 
   readonly #blockingErrors = createErrorMessageSignal(
     () => this.formField()(),
@@ -164,6 +187,7 @@ export class NgxMatHintSlot<TValue = unknown> {
 
   readonly #warnings = createErrorMessageSignal(() => this.formField()(), {
     strategy: this.#strategySignal,
+    warningStrategy: this.#warningStrategySignal,
     includeWarnings: 'only',
   });
 

@@ -7,13 +7,10 @@ import { createDevWarnOnce } from './dev-warn-once';
  * `null`/`undefined` (treated as "empty"), and `0` — plus a one-shot dev-mode
  * `console.warn` — for anything else.
  *
- * Shared by every caller that needs "character-count length + unsupported
- * value diagnostic" semantics without necessarily going through the full
- * `createCharacterCount` factory (e.g. `NgxHeadlessCharacterCount`'s
- * `currentLength`, and `NgxFormFieldCharacterCount`'s no-`maxLength`
- * fallback, which has no limit to hand `createCharacterCount`). Both call
- * sites get the identical diagnostic instead of one silently re-deriving the
- * length logic without it.
+ * Used internally by `createCharacterCount` for its own `currentLength`
+ * signal, so every consumer of the factory (`NgxHeadlessCharacterCount`,
+ * `NgxFormFieldCharacterCount`) gets the identical diagnostic instead of
+ * re-deriving the length logic without it.
  *
  * @remarks Does not require an injection context (only creates a `computed()`
  * signal internally).
@@ -25,6 +22,8 @@ import { createDevWarnOnce } from './dev-warn-once';
  *   `[ngx-signal-forms] <component>: unsupported value type — …`. Required
  *   rather than defaulted — every current caller passes its own name so the
  *   warning always points at the component the misconfiguration lives in.
+ *
+ * @internal
  */
 export function createCharacterCountLengthSignal(
   value: () => unknown,

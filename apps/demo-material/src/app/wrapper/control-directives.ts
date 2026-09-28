@@ -1,13 +1,16 @@
 import {
+  afterEveryRender,
   Directive,
   ElementRef,
   forwardRef,
   inject,
+  Injector,
   signal,
   type Provider,
   type Signal,
 } from '@angular/core';
 import {
+  isElementCssVisible,
   NGX_SIGNAL_FORM_ARIA_MODE,
   type NgxSignalFormControlAriaMode,
 } from '@ngx-signal-forms/toolkit';
@@ -71,10 +74,66 @@ function ngxMatBoundControlProviders(
  * The published `@ngx-signal-forms/material` package re-exports this base
  * class so consumers can extend it for custom Material controls (e.g. their
  * own `MatFormFieldControl` implementor).
+ *
+ * **Layout gate on the real `aria-invalid`:** Material writes the real
+ * `aria-invalid` on this directive's own host element — `errorState`,
+ * evaluated through `NgxMatWarningAwareErrorStateMatcher`
+ * (`warning-aware-error-state-matcher.ts`) — entirely outside this
+ * directive's control, and Material's writer has no concept of layout. Left
+ * alone, the attribute survives a control that loses its layout box (a
+ * collapsed `<details>`, an inactive tab panel).
+ *
+ * A remove-only correction (drop the attribute while hidden, trust Material
+ * to rewrite it once the element is visible again) does not hold up:
+ * Angular's `[attr.aria-invalid]="errorState"` host binding only touches the
+ * DOM when `errorState` itself changes value between renders. Reopening a
+ * collapsed container does not change `errorState` — the field's validity
+ * did not change, only its layout did — so the binding sees no diff and
+ * never rewrites the attribute this directive just removed. The constructor
+ * below therefore caches the last value it observed on the host and
+ * actively restores it once the element regains a layout box and Material
+ * has not independently written a fresh one; it never overwrites a value
+ * Material *did* just write (a real `errorState` change lands before this
+ * hook runs, in the regular change-detection pass), so this stays a
+ * corrective layer, not a second writer racing `ariaMode="manual"`.
  */
 @Directive({})
 export abstract class NgxMatBoundControl {
   readonly elementRef = inject(ElementRef<HTMLElement>);
+
+  constructor() {
+    const injector = inject(Injector);
+    let lastKnownAriaInvalid: string | null = null;
+
+    afterEveryRender(
+      {
+        // `isElementCssVisible` is a layout read, so it belongs in
+        // `earlyRead`: effects flush before render hooks and would report
+        // pre-layout geometry.
+        earlyRead: () => isElementCssVisible(this.elementRef.nativeElement),
+        write: (visible) => {
+          const el = this.elementRef.nativeElement;
+          const current = el.getAttribute('aria-invalid');
+
+          if (!visible) {
+            if (current !== null) {
+              lastKnownAriaInvalid = current;
+            }
+            el.removeAttribute('aria-invalid');
+            return;
+          }
+
+          if (current === null && lastKnownAriaInvalid !== null) {
+            el.setAttribute('aria-invalid', lastKnownAriaInvalid);
+            return;
+          }
+
+          lastKnownAriaInvalid = current;
+        },
+      },
+      { injector },
+    );
+  }
 }
 
 /**

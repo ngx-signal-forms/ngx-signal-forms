@@ -19,7 +19,7 @@ directly wherever you render a fixture in a test.
 is only required if you import from this entry point.
 
 ```bash
-npm install --save-dev axe-core@^4.5.0
+npm install --save-dev axe-core@^4.13.0
 ```
 
 ## Import
@@ -28,6 +28,7 @@ npm install --save-dev axe-core@^4.5.0
 import {
   createA11yValidator,
   expectNoA11yViolations,
+  expectVisibleFocusIndicator,
   findAlertContaining,
   WCAG_22_AA_TAGS,
 } from '@ngx-signal-forms/toolkit/testing';
@@ -51,8 +52,7 @@ it('has no accessibility violations', async () => {
 ```
 
 Pass extra axe `RunOptions` as a second argument to merge over the WCAG 2.2
-AA defaults, e.g. to waive a rule for a fixture that intentionally renders
-unstyled controls. All keys are honored (`rules`, `resultTypes`, …) except
+AA defaults. All keys are honored (`rules`, `resultTypes`, …) except
 `runOnly`: the WCAG 2.2 AA tag set is the hard-fail baseline and is not
 overridable. `runOnly` is omitted from this parameter's type, so passing it
 in an object literal is a compile error — and because TypeScript only
@@ -60,15 +60,14 @@ enforces that omission on fresh literals, a `runOnly` smuggled in through a
 value widened to `axe.RunOptions` is overridden at runtime as well; the
 baseline always wins:
 
-```typescript
-await expectNoA11yViolations(container, {
-  rules: { 'color-contrast': { enabled: false } },
-});
-```
+Apply the intended theme and keep applicable rules enabled, including contrast.
+An unstyled fixture is not a reason to disable contrast. Any narrow waiver must
+explain why the rule is outside that fixture's scope and name the representative
+themed browser check that covers it without the waiver.
 
-> [!WARNING]
-> Keep waivers narrow and fixture-specific. If you disable a rule broadly,
-> you can accidentally hide regressions in production-facing components.
+Also verify keyboard operation, visible focus, summary focus destinations, and
+error/warning transitions. Live-region hosts must precede their first message;
+verify announcements with a screen reader. Axe alone is not full WCAG evidence.
 
 ## Scoping the tag baseline: `createA11yValidator(options?)`
 
@@ -108,7 +107,62 @@ handing back a validator that would silently pass every scan. Omit `tags`
 behaves exactly like `expectNoA11yViolations` — the full baseline is the
 default, not a special case.
 
+## Reporting axe `incomplete` results
+
+axe marks a check `incomplete` — rather than pass or fail — when it needs a
+human to confirm the result, most often `color-contrast` over a background it
+cannot resolve to one flat color. `expectNoA11yViolations` and
+`createA11yValidator`'s returned validator accept an `incomplete` option:
+
+```typescript
+await expectNoA11yViolations(container, { incomplete: 'warn' });
+```
+
+- `'ignore'` (the default): incomplete results are not inspected at all — a
+  bare call behaves exactly as it did before this option existed.
+- `'warn'`: every incomplete result is logged via `console.warn` for manual
+  review, without failing the scan.
+- `'fail'`: same logging, and additionally throws if any `color-contrast`
+  result is incomplete. Every other rule's incomplete results are still only
+  logged.
+
+`color-contrast` incomplete results are never turned into a hard failure by
+this package's own default, even though that is the rule most likely to hide
+a real WCAG 1.4.3 violation: every toolkit textual control paints a
+**transparent** `background-color` so its border can show through, and axe's
+static contrast algorithm cannot always trace a transparent-background
+element back to the color it actually renders over. Trying `'fail'` across
+the toolkit's own suite surfaced exactly one case — the outlined, invalid
+email field — and it was a false positive, not a real defect: the toolkit's
+own specs already prove that field's contrast is compliant, with manual
+color-blending math, for exactly this reason.
+
 ## Utilities
+
+### `expectVisibleFocusIndicator(element)`
+
+Asserts that `element` is the current keyboard focus target (or a
+`:focus-within` ancestor of it) and that its computed style paints a visible
+focus indicator — WCAG 2.2 SC 2.4.7 (Focus Visible). No axe rule performs
+this check: axe only scans the resting, unfocused DOM. Move focus with a real
+keyboard interaction first:
+
+```typescript
+import { expectVisibleFocusIndicator } from '@ngx-signal-forms/toolkit/testing';
+import { userEvent } from 'vitest/browser';
+
+await userEvent.click(anchor); // a preceding, focusable element
+await userEvent.tab();
+
+expectVisibleFocusIndicator(document.activeElement!);
+```
+
+This is a **presence** check only — it confirms an outline or box-shadow
+renders with a non-transparent color and a nonzero width/blur/spread, not
+that it is legible against its background. It does not measure contrast, so
+it is not a substitute for WCAG 1.4.11 (Non-text Contrast) coverage; the
+toolkit's own specs pair it with manual contrast math where a fixture needs
+to prove its focus indicator also clears the 3:1 floor.
 
 ### `findAlertContaining(container, text)`
 

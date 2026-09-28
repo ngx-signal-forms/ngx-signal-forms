@@ -3,14 +3,17 @@ import type { ValidationError } from '@angular/forms/signals';
 import {
   assertInjector,
   createErrorVisibility,
+  createWarningVisibility,
   generateErrorId,
   readDirectErrors,
   splitByKind,
   stripAngularFormPrefix,
   type CreateErrorVisibilityOptions,
+  type CreateWarningVisibilityOptions,
   type ErrorDisplayStrategy,
   type ErrorMessageRegistry,
   type SubmittedStatus,
+  type WarningDisplayStrategy,
 } from '@ngx-signal-forms/toolkit/core';
 
 import { buildHeadlessContext } from './build-headless-context';
@@ -112,10 +115,25 @@ export interface CreateErrorMessageSignalOptions {
     | Signal<ErrorDisplayStrategy | undefined>;
 
   /**
-   * Submission status override forwarded to {@link createErrorVisibility}.
+   * Warning display strategy override forwarded to
+   * {@link createWarningVisibility}. Only affects the entries selected by
+   * {@link includeWarnings}.
    *
-   * Only relevant for the `'on-submit'` strategy. Omit to inherit from the
-   * form context.
+   * Static value or `Signal<WarningDisplayStrategy | undefined>`. Omit to
+   * inherit from the form context's `warningStrategy()`, then
+   * `NGX_SIGNAL_FORMS_CONFIG.defaultWarningStrategy`, then `'on-touch'`. No
+   * tier consults the blocking-error strategy (ADR-0007).
+   */
+  readonly warningStrategy?:
+    | WarningDisplayStrategy
+    | Signal<WarningDisplayStrategy | undefined>;
+
+  /**
+   * Submission status override forwarded to both {@link createErrorVisibility}
+   * and {@link createWarningVisibility} — one status feeds both cascades.
+   *
+   * Only relevant for the `'on-submit'` strategy on either channel. Omit to
+   * inherit from the form context.
    */
   readonly submittedStatus?:
     | SubmittedStatus
@@ -158,9 +176,14 @@ type FieldStateAccessor = () => FieldStateInput;
  * validation errors. Combines three concerns the toolkit otherwise asks
  * consumers to compose by hand:
  *
- * 1. {@link createErrorVisibility} — gate by the error display strategy
- *    cascade (explicit `strategy` option → form context → the global
- *    `NGX_SIGNAL_FORMS_CONFIG.defaultErrorStrategy` → `'on-touch'`).
+ * 1. {@link createErrorVisibility} — gate blocking errors by the error
+ *    display strategy cascade (explicit `strategy` option → form context →
+ *    the global `NGX_SIGNAL_FORMS_CONFIG.defaultErrorStrategy` →
+ *    `'on-touch'`), and {@link createWarningVisibility} — gate the entries
+ *    selected by `includeWarnings` by the separate warning cascade
+ *    (`warningStrategy` option → form context `warningStrategy()` →
+ *    `defaultWarningStrategy` → `'on-touch'`), so a form that defers errors
+ *    to submit still shows warnings on touch (ADR-0007).
  * 2. {@link resolveValidationErrorMessage} — apply the 3-tier message
  *    cascade (validator message → registry → default).
  * 3. {@link generateErrorId} — produce per-error DOM IDs that match the
@@ -245,9 +268,9 @@ export function createErrorMessageSignal(
       // `NgxHeadlessFieldset` applies) when neither an explicit `strategy` nor
       // a form context is present, keeping standalone usage consistent
       // regardless of which headless surface a consumer reaches for.
-      ...(config?.defaultErrorStrategy !== undefined && {
-        configDefault: config.defaultErrorStrategy,
-      }),
+      // `buildHeadlessContext()` always resolves a config (the built-in
+      // defaults when no token is provided), so this key is unconditional.
+      configDefault: config.defaultErrorStrategy,
     };
     // `createErrorVisibility` is typed against Angular's `Partial<ErrorVisibilityState>`
     // (signal-branded `invalid` / `touched`). Our `FieldStateLike` keeps the
@@ -257,6 +280,28 @@ export function createErrorMessageSignal(
     const showErrors = createErrorVisibility(
       field as Parameters<typeof createErrorVisibility>[0],
       visibilityOptions,
+    );
+
+    // Warnings run the warning cascade instead of borrowing the error
+    // decision (ADR-0007), so `includeWarnings: 'only'` under an on-submit
+    // form still surfaces on touch. `errorVisibility` is deliberately
+    // omitted: this primitive returns a list, not a message region, and
+    // `includeWarnings: true` exists precisely to render both categories
+    // together — suppressing warnings whenever errors show would contradict
+    // that option. Callers that render one slot apply the priority
+    // themselves.
+    const warningVisibilityOptions: CreateWarningVisibilityOptions = {
+      ...(options?.warningStrategy !== undefined && {
+        strategy: options.warningStrategy,
+      }),
+      ...(options?.submittedStatus !== undefined && {
+        submittedStatus: options.submittedStatus,
+      }),
+      configDefault: config.defaultWarningStrategy,
+    };
+    const showWarnings = createWarningVisibility(
+      field as Parameters<typeof createWarningVisibility>[0],
+      warningVisibilityOptions,
     );
 
     const include = options?.includeWarnings ?? false;
@@ -272,13 +317,19 @@ export function createErrorMessageSignal(
     });
 
     return computed<readonly ResolvedFieldError[]>(() => {
-      if (!showErrors()) return EMPTY;
+      const errorsVisible = showErrors();
+      const warningsVisible = showWarnings();
+      if (!errorsVisible && !warningsVisible) return EMPTY;
 
       const errors = readDirectErrors(field());
       if (errors.length === 0) return EMPTY;
 
       const split = splitByKind(errors);
-      const ordered = orderByInclude(split.blocking, split.warnings, include);
+      const ordered = orderByInclude(
+        errorsVisible ? split.blocking : EMPTY_ERRORS,
+        warningsVisible ? split.warnings : EMPTY_ERRORS,
+        include,
+      );
       if (ordered.length === 0) return EMPTY;
 
       const registry = registrySignal ? registrySignal() : injectedRegistry;
@@ -295,6 +346,7 @@ export function createErrorMessageSignal(
 }
 
 const EMPTY: readonly ResolvedFieldError[] = Object.freeze([]);
+const EMPTY_ERRORS: readonly ValidationError[] = Object.freeze([]);
 
 function orderByInclude(
   blocking: readonly ValidationError[],

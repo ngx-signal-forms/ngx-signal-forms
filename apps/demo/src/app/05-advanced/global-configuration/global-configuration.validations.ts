@@ -8,7 +8,7 @@ export const globalConfigSchema = schema<GlobalConfigModel>((path) => {
   // Email validation — no explicit message so the component-scoped
   // provideErrorMessages() registry override is visible in the demo.
   required(path.userEmail);
-  email(path.userEmail, { message: 'Invalid email format' });
+  email(path.userEmail, { message: 'Enter a valid email address' });
 
   // Phone validation (US format)
   required(path.userPhone, { message: 'Phone number is required' });

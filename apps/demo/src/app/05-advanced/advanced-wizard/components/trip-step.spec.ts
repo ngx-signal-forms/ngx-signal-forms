@@ -7,7 +7,7 @@ import {
 } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { render, screen } from '@testing-library/angular';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
 import { TripStepComponent } from './trip-step';
 import { WizardStore } from '../stores/wizard.store';
@@ -65,6 +65,18 @@ describe('TripStepComponent validate-and-advance transition', () => {
     screen.getByRole('button', { name: 'Continue' }).click();
     fixture.detectChanges();
     await TestBed.inject(ApplicationRef).whenStable();
+    fixture.detectChanges();
+
+    // `validateAndFocus()` now delegates to `submitWithWarnings()`, which in
+    // turn delegates to Angular's native `submit()` — one extra microtask
+    // hop `whenStable()` alone does not reliably wait out here. Poll for the
+    // host's rendered result instead of asserting a fixed number of
+    // detectChanges()/whenStable() cycles.
+    await vi.waitFor(() => {
+      expect(screen.getByTestId('advance-result')).not.toHaveTextContent(
+        'pending',
+      );
+    });
     fixture.detectChanges();
   }
 

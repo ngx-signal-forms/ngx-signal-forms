@@ -51,6 +51,21 @@ test.describe('Advanced Scenarios - Single-Model Wizard', () => {
     await expect(wizard.stepHeading).toBeFocused();
   });
 
+  test('Enter in a text input advances like Next', async () => {
+    await wizard.fillAccountStep('Ada Lovelace', 'ada@acme.example');
+    await wizard.fullNameInput.press('Enter');
+
+    await expect(wizard.stepHeading).toHaveText(/Step 2 of 3: Shipping/);
+    await expect(wizard.stepHeading).toBeFocused();
+  });
+
+  test('Enter on an invalid step is blocked like Next', async () => {
+    await wizard.fullNameInput.press('Enter');
+
+    await expect(wizard.stepHeading).toHaveText(/Step 1 of 3: Account/);
+    await expect(wizard.errorAlerts.first()).toBeVisible();
+  });
+
   test("Next validates only the active step's subtree, not the sibling step", async () => {
     await test.step("a blocked Next on Account never renders Shipping's fields at all", async () => {
       await wizard.nextButton.click();

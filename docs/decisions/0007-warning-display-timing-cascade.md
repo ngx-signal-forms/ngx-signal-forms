@@ -104,7 +104,7 @@ export function shouldShowWarnings(
 }
 ```
 
-This mirrors `shouldShowErrors()` but gates on warning _presence_ rather than the field's invalid state, since warnings are non-blocking and never make a field invalid.
+This mirrors `shouldShowErrors()` but gates on warning _presence_ rather than the field's invalid state. Angular offers no non-invalidating validation channel: a `warn:`-prefixed `ValidationError` comes out of the same validator pipeline and marks the field `invalid()` like any other, so `invalid()` cannot tell the two channels apart. The toolkit splits on `kind` instead. "Non-blocking" here is the toolkit's own meaning — warnings never gate submission, and they are timed by this cascade.
 
 ### New Resolution Functions
 
@@ -129,7 +129,7 @@ Splitting the cascades exposed a latent coupling in `NgxSignalFormAutoAria`, whi
 Two changes close it:
 
 1. `NgxSignalFormAutoAria` resolves warning visibility through the warning cascade, and `createAriaDescribedBySignal` takes an optional `warningVisibility` (defaulting to `visibility`, so pre-existing callers are unaffected).
-2. `NgxFormFieldWrapper` publishes both **fully-resolved** strategies through `NgxFieldIdentity.setResolvedStrategies()`, and auto-aria prefers them over the form context. The identity service is already the wrapper→auto-aria channel for field name, hint ids, and control visibility; field-level strategy is the same kind of fact.
+2. `NgxFormFieldWrapper` publishes both **fully-resolved** strategies through `createFieldPresentation()`, which calls `NgxFieldIdentity.setResolvedStrategies()` internally, and auto-aria prefers them over the form context. The identity service is already the wrapper→auto-aria channel for field name, hint ids, and control visibility; field-level strategy is the same kind of fact.
 
 The invariant to preserve in future work: **a rendered region must be referenced, and a suppressed one must not be.** Blocking-error precedence still applies — a visible error suppresses both the warning region and its id.
 

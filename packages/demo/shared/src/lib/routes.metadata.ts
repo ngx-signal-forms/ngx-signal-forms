@@ -202,10 +202,13 @@ export const DEMO_CATEGORIES = [
   },
 ] as const;
 
+export const SITE_NAME = 'ngx-signal-forms';
+
+/** Document title for a demo route: `<page label> · ngx-signal-forms`. */
 export function getRouteTitle(path: string): string {
   for (const category of DEMO_CATEGORIES) {
     const link = category.links.find((l) => l.path === path);
-    if (link) return link.label;
+    if (link) return `${link.label} · ${SITE_NAME}`;
   }
-  return 'NgxSignalForms Toolkit';
+  return SITE_NAME;
 }

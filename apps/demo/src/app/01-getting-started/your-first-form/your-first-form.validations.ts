@@ -12,7 +12,7 @@ export const contactFormSchema = schema<ContactFormModel>((path) => {
 
   // Email validation
   required(path.email, { message: 'Email is required' });
-  email(path.email, { message: 'Please enter a valid email address' });
+  email(path.email, { message: 'Enter a valid email address' });
 
   // Message validation
   required(path.message, { message: 'Message is required' });

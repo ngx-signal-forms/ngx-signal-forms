@@ -454,11 +454,17 @@ details[open] > .ngx-debugger__section-header .ngx-debugger__chevron {
 
 .ngx-debugger__error-header {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
+  gap: 0.25rem 0.5rem;
 }
 
+/* Long error kinds (vest:country:choose-a-billing-country) wrap instead of
+   being clipped by the card's overflow: hidden at 320px. */
 .ngx-debugger__error-kind {
+  min-width: 0;
+  overflow-wrap: anywhere;
   margin: 0;
   font-size: var(--ngx-debugger-font-size-sm);
   font-weight: 600;

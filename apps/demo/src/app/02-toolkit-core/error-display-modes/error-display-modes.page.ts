@@ -51,7 +51,7 @@ import { ErrorDisplayModesFormComponent } from './error-display-modes.form';
     </ng-template>
 
     <ngx-page-header
-      title="Error Display Strategies"
+      title="Error Display Modes"
       subtitle="Explore how different error display timing affects user experience"
     />
 
@@ -69,10 +69,18 @@ import { ErrorDisplayModesFormComponent } from './error-display-modes.form';
             />
             @if (formComponent) {
               <div right>
-                <ngx-signal-form-debugger
-                  [formTree]="formComponent.productForm"
-                  errorStrategy="immediate"
-                />
+                @defer (on idle) {
+                  <ngx-signal-form-debugger
+                    [formTree]="formComponent.productForm"
+                    errorStrategy="immediate"
+                  />
+                } @placeholder {
+                  <div class="debugger-placeholder" aria-hidden="true"></div>
+                } @error {
+                  <p class="debugger-placeholder">
+                    The form debugger failed to load.
+                  </p>
+                }
               </div>
             }
           </ngx-split-layout>
@@ -86,10 +94,18 @@ import { ErrorDisplayModesFormComponent } from './error-display-modes.form';
             />
             @if (formComponent) {
               <div right>
-                <ngx-signal-form-debugger
-                  [formTree]="formComponent.productForm"
-                  errorStrategy="on-submit"
-                />
+                @defer (on idle) {
+                  <ngx-signal-form-debugger
+                    [formTree]="formComponent.productForm"
+                    errorStrategy="on-submit"
+                  />
+                } @placeholder {
+                  <div class="debugger-placeholder" aria-hidden="true"></div>
+                } @error {
+                  <p class="debugger-placeholder">
+                    The form debugger failed to load.
+                  </p>
+                }
               </div>
             }
           </ngx-split-layout>
@@ -103,10 +119,18 @@ import { ErrorDisplayModesFormComponent } from './error-display-modes.form';
             />
             @if (formComponent) {
               <div right>
-                <ngx-signal-form-debugger
-                  [formTree]="formComponent.productForm"
-                  errorStrategy="on-touch"
-                />
+                @defer (on idle) {
+                  <ngx-signal-form-debugger
+                    [formTree]="formComponent.productForm"
+                    errorStrategy="on-touch"
+                  />
+                } @placeholder {
+                  <div class="debugger-placeholder" aria-hidden="true"></div>
+                } @error {
+                  <p class="debugger-placeholder">
+                    The form debugger failed to load.
+                  </p>
+                }
               </div>
             }
           </ngx-split-layout>

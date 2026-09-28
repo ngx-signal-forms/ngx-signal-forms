@@ -1,5 +1,7 @@
 import type { FieldState } from '@angular/forms/signals';
 
+import { isHtmlElement } from './dom-guards';
+
 /**
  * Minimal FieldState contract required to read Angular's native form-field
  * binding registry.
@@ -10,6 +12,8 @@ import type { FieldState } from '@angular/forms/signals';
  * signal of the `[formField]` (and custom-control) directive instances Angular
  * has registered against this field — each exposes the DOM `element` hosting
  * the binding.
+ *
+ * @internal
  */
 export type FormFieldBindingsState = Pick<
   FieldState<unknown>,
@@ -53,7 +57,7 @@ export type FormFieldBindingsState = Pick<
  * - every registered binding element inside this host lacks an `id` (the native
  *   match would diverge from the CSS-selector fallback — see above).
  *
- * @packageInternal Used only within `@ngx-signal-forms/toolkit` package entries.
+ * @internal Used only within `@ngx-signal-forms/toolkit` package entries.
  */
 export function resolveBoundControlFromBindings(
   fieldState: FormFieldBindingsState | null | undefined,
@@ -73,7 +77,7 @@ export function resolveBoundControlFromBindings(
     // would shadow its inner `<input id>`). Falling through lets the probe find
     // that inner control instead.
     if (
-      element instanceof HTMLElement &&
+      isHtmlElement(element) &&
       element.id.length > 0 &&
       hostEl.contains(element)
     ) {

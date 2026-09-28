@@ -7,7 +7,7 @@ const contactMethodFieldsetTopAriaSnapshot = `
 - radiogroup "Preferred contact method *":
   - text: Preferred contact method *
   - alert:
-    - paragraph: Preferred contact method is required
+    - paragraph: "Error: Preferred contact method is required"
   - radio "Email"
   - text: Email
   - radio "SMS"
@@ -26,7 +26,7 @@ const contactMethodFieldsetBottomAriaSnapshot = `
   - radio "Phone"
   - text: Phone
   - alert:
-    - paragraph: Preferred contact method is required
+    - paragraph: "Error: Preferred contact method is required"
 `;
 
 function requireValue<T>(value: T | null, label: string): T {
@@ -41,8 +41,13 @@ function getMessagePlacement(
   fieldset: ReturnType<FormFieldWrapperComplexPage['getFieldsetByLegend']>,
 ): Promise<'top' | 'bottom' | 'missing'> {
   return fieldset.evaluate((host) => {
+    // A form-field-wrapper host (e.g. a radio-group cluster) nests its
+    // messages/content/assistive children one level deeper, inside a
+    // structural `__layout` wrapper (#523) — see form-field-wrapper.ts.
     const layoutRoot =
-      host.querySelector('.ngx-signal-form-fieldset__surface') ?? host;
+      host.querySelector('.ngx-signal-form-fieldset__surface') ??
+      host.querySelector(':scope > .ngx-signal-form-field-wrapper__layout') ??
+      host;
     const messageContainer = host.querySelector(
       '.ngx-signal-form-fieldset__messages, .ngx-signal-form-field-wrapper__messages, .ngx-signal-form-field-wrapper__assistive',
     );
@@ -518,23 +523,23 @@ test.describe('Form Field Wrapper - Complex Forms', () => {
       // the legend because it is also rendered visually inside the host —
       // they are labels for sibling controls, not the group's own name.
       await expect(page.personalInfoFieldset).toMatchAriaSnapshot(`
-        - group "👤 Personal Information":
-          - text: 👤 Personal Information First Name
+        - group "Personal Information":
+          - text: Personal Information First Name
           - textbox "First Name"
           - alert:
-            - paragraph: First name is required
+            - paragraph: "Error: First name is required"
           - text: Last Name
           - textbox "Last Name"
           - alert:
-            - paragraph: Last name is required
+            - paragraph: "Error: Last name is required"
           - text: Email
           - textbox "Email"
           - alert:
-            - paragraph: Email is required
+            - paragraph: "Error: Email is required"
           - text: Age
           - spinbutton "Age": "0"
           - alert:
-            - paragraph: Must be 18 or older
+            - paragraph: "Error: Must be 18 or older"
       `);
     });
 
