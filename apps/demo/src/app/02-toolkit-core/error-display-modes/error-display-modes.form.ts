@@ -222,7 +222,7 @@ export class ErrorDisplayHelpersComponent {
             type="email"
             autocomplete="email"
             [formField]="productForm.email"
-            placeholder="your.email@company.com"
+            placeholder="your.email@example.com"
           />
           <ngx-form-field-hint id="email-hint">
             For follow-up questions (we respect your privacy)

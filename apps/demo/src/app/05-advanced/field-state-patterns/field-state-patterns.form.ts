@@ -36,7 +36,7 @@ interface FieldStatePatternsModel {
 
 function createInitialFieldStatePatternsModel(): FieldStatePatternsModel {
   return {
-    workEmail: 'ada@company.com',
+    workEmail: 'ada@example.com',
     contactPreference: 'email',
     mobileNumber: '',
     inviteOnly: false,

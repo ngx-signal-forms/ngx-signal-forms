@@ -51,7 +51,7 @@ export const passwordFormSchema = schema<PasswordFormModel>((path) => {
 
   // Email validation - blocking errors
   required(path.email, { message: 'Email address is required' });
-  email(path.email, { message: 'Please enter a valid email address' });
+  email(path.email, { message: 'Enter a valid email address' });
 
   // Email warning - suggest avoiding common disposable email domains
   validate(path.email, (ctx) => {

@@ -15,6 +15,7 @@
     [completedSteps]="completedSteps()"
     [showNavigation]="false"
     [canNavigate]="guardStepNavigation"
+    (enterPress)="onEnterPress()"
   >
     <!-- Traveler Step -->
     <ng-template ngxWizardStep="traveler" label="Traveler Info">

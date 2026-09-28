@@ -151,7 +151,7 @@ const zodVestValidationSchema: SchemaFn<Readonly<ZodVestValidationModel>> = (
               id="zod-vest-email"
               type="email"
               [formField]="accountForm.email"
-              placeholder="name@company.com"
+              placeholder="name@example.com"
             />
           </ngx-form-field-wrapper>
 

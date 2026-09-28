@@ -56,7 +56,13 @@ Use the 4px grid, with the Tailwind steps 1, 2, 3, 4, 6 and 8.
 - Space between fields: 1rem to 1.5rem. Keep hints inside the field block.
 - Space between sections: 1.5rem.
 - Card padding: 1.5rem, or 1rem when compact.
-- Page padding: 16px on phones, so 200% text still reflows at 320px.
+- Page padding: 16px on phones.
+
+## Reflow and zoom
+
+- Every route must fit a 320px viewport with no sideways scrolling (WCAG 1.4.10).
+- Every route must fit 200% text at a 640px viewport. That equals 200% browser zoom on a 1280px window, which is what WCAG 1.4.4 tests.
+- 200% text at 320px is not a WCAG requirement. Some wide examples, such as code and the debugger, don't fit it, and that is accepted.
 
 ## Radius and elevation
 

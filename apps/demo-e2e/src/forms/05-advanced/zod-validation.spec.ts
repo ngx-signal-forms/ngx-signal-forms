@@ -60,7 +60,7 @@ test.describe('Validation - Zod-Only Validation', () => {
   test('submits successfully with valid baseline data', async ({ page }) => {
     await page.getByLabel('First name', { exact: true }).fill('Arjen');
     await page.getByLabel('Last name', { exact: true }).fill('Althoff');
-    await page.getByLabel('Email', { exact: true }).fill('arjen@company.com');
+    await page.getByLabel('Email', { exact: true }).fill('arjen@example.com');
     await page
       .getByLabel('Password', { exact: true })
       .fill('baseline-pass-123');

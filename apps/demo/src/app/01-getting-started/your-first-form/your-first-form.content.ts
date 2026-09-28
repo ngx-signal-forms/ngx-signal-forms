@@ -62,7 +62,7 @@ export const YOUR_FIRST_FORM_CONTENT = {
           '1. Click the Name field → Tab away → See error appear: "Name is required"',
           '2. Type "A" → Error: "Name must be at least 2 characters"',
           '3. Type "Ab" → Error disappears',
-          '4. Test Email: Enter "test" → Leave field → "Please enter a valid email address"',
+          '4. Test Email: Enter "test" → Leave field → "Enter a valid email address"',
           '5. Submit empty form → All errors show at once',
         ],
       },

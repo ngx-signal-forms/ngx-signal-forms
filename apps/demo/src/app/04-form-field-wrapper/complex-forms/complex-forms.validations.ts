@@ -33,7 +33,7 @@ export const complexFormSchema = schema<ComplexFormModel>((path) => {
   });
 
   required(path.personalInfo.email, { message: 'Email is required' });
-  email(path.personalInfo.email, { message: 'Valid email required' });
+  email(path.personalInfo.email, { message: 'Enter a valid email address' });
 
   required(path.personalInfo.age, { message: 'Age is required' });
   min(path.personalInfo.age, 18, { message: 'Must be 18 or older' });

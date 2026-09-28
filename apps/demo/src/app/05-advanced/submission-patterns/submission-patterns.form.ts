@@ -378,7 +378,9 @@ export class SubmissionPatternsComponent {
           // createOnInvalidHandler() doesn't run for server-returned errors,
           // and the submit button kept focus; take the user to the field.
           afterNextRender(
-            () => this.#document.querySelector('#username')?.focus(),
+            () => {
+              this.#document.querySelector<HTMLElement>('#username')?.focus();
+            },
             { injector: this.#injector },
           );
           return {

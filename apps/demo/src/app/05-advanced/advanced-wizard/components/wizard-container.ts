@@ -209,6 +209,15 @@ export class WizardContainerComponent {
     this.currentStepRef()?.commitToStore();
   }
 
+  /** Enter in a step's text input: Next, or Confirm Booking on the last step. */
+  protected onEnterPress(): void {
+    if (this.store.isLastStep()) {
+      void this.submit();
+    } else {
+      void this.nextStep();
+    }
+  }
+
   protected async submit(): Promise<void> {
     if (
       this.store.hasConfirmedBooking() ||

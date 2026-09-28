@@ -40,7 +40,7 @@
 </nav>
 
 <!-- Step Content (lazy rendered via NgTemplateOutlet) -->
-<div class="wizard-content">
+<div class="wizard-content" (keydown.enter)="onContentEnter($event)">
   @if (activeStep(); as step) {
   <ng-container
     [ngTemplateOutlet]="step.templateRef"
