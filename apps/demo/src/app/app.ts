@@ -64,11 +64,7 @@ function toPath(url: string): string {
       display: flex;
       height: 100dvh;
       overflow: hidden;
-      background: rgb(248 250 252);
-    }
-
-    :host-context(.dark) .shell {
-      background: rgb(2 6 23);
+      background: var(--color-bg);
     }
 
     /* ── Left nav ── */
@@ -78,13 +74,8 @@ function toPath(url: string): string {
       display: flex;
       flex-direction: column;
       height: 100%;
-      background: rgb(255 255 255);
-      border-right: 1px solid rgb(226 232 240);
-    }
-
-    :host-context(.dark) .shell__nav {
-      background: rgb(2 6 23);
-      border-right-color: rgb(15 23 42);
+      background: var(--color-bg-chrome);
+      border-right: 1px solid var(--color-border);
     }
 
     /* Below 900px: the nav leaves the flex flow and becomes a fixed
@@ -102,7 +93,8 @@ function toPath(url: string): string {
         transition:
           transform 220ms cubic-bezier(0.16, 1, 0.3, 1),
           visibility 0s linear 220ms;
-        box-shadow: 12px 0 32px -16px rgba(15, 23, 42, 0.35);
+        box-shadow: 12px 0 32px -16px
+          color-mix(in srgb, var(--color-shadow) 35%, transparent);
       }
 
       .shell__nav.is-nav-open {
@@ -126,7 +118,7 @@ function toPath(url: string): string {
       position: fixed;
       inset: 0;
       z-index: 65;
-      background: rgb(15 23 42 / 0.4);
+      background: var(--color-backdrop);
       animation: navBackdropIn 160ms ease;
     }
 
@@ -156,13 +148,8 @@ function toPath(url: string): string {
         flex-shrink: 0;
         height: 3.25rem;
         padding-inline: 1rem;
-        background: rgb(255 255 255);
-        border-bottom: 1px solid rgb(226 232 240);
-      }
-
-      :host-context(.dark) .shell__mobile-bar {
-        background: rgb(2 6 23);
-        border-bottom-color: rgb(15 23 42);
+        background: var(--color-bg-chrome);
+        border-bottom: 1px solid var(--color-border);
       }
     }
 
@@ -173,20 +160,15 @@ function toPath(url: string): string {
       width: 2.75rem;
       height: 2.75rem;
       flex-shrink: 0;
-      border: 1px solid rgb(226 232 240);
+      border: 1px solid var(--color-border);
       border-radius: 0.5rem;
       background: none;
-      color: rgb(51 65 85);
+      color: var(--color-text);
       cursor: pointer;
     }
 
-    :host-context(.dark) .shell__nav-toggle {
-      border-color: rgb(30 41 59);
-      color: rgb(226 232 240);
-    }
-
     .shell__nav-toggle:focus-visible {
-      outline: 2px solid rgb(99 102 241);
+      outline: 2px solid var(--color-border-focus);
       outline-offset: 2px;
     }
 
@@ -230,17 +212,17 @@ function toPath(url: string): string {
         border: none;
         border-radius: 0.5rem;
         background: none;
-        color: rgb(100 116 139);
+        color: var(--color-text-muted);
         cursor: pointer;
       }
 
       .shell__nav-close:hover {
-        background: rgb(241 245 249);
-        color: rgb(15 23 42);
+        background: var(--color-surface-hover);
+        color: var(--color-text);
       }
 
       .shell__nav-close:focus-visible {
-        outline: 2px solid rgb(99 102 241);
+        outline: 2px solid var(--color-border-focus);
         outline-offset: 2px;
       }
 
@@ -248,11 +230,6 @@ function toPath(url: string): string {
         width: 1rem;
         height: 1rem;
       }
-    }
-
-    :host-context(.dark) .shell__nav-close:hover {
-      background: rgb(30 41 59);
-      color: rgb(226 232 240);
     }
 
     .shell__brand {
@@ -269,15 +246,11 @@ function toPath(url: string): string {
       margin-top: 0.375rem;
       font-size: 0.8125rem;
       line-height: 1.35;
-      color: rgb(71 85 105);
-    }
-
-    :host-context(.dark) .shell__tagline {
-      color: rgb(148 163 184);
+      color: var(--color-text-muted);
     }
 
     .shell__brand:focus-visible {
-      outline: 2px solid rgb(99 102 241);
+      outline: 2px solid var(--color-border-focus);
       outline-offset: 4px;
       border-radius: 0.5rem;
     }
@@ -295,15 +268,11 @@ function toPath(url: string): string {
 
     .shell__nav-footer {
       padding: 0.85rem 1rem;
-      border-top: 1px solid rgb(226 232 240);
+      border-top: 1px solid var(--color-border);
       display: flex;
       align-items: center;
       gap: 0.25rem;
       flex-shrink: 0;
-    }
-
-    :host-context(.dark) .shell__nav-footer {
-      border-top-color: rgb(15 23 42);
     }
 
     .shell__footer-link {
@@ -313,20 +282,12 @@ function toPath(url: string): string {
       min-width: 2rem;
       height: 2rem;
       border-radius: 0.375rem;
-      color: rgb(79 70 229);
+      color: var(--color-link);
       transition: color 140ms ease;
     }
 
     .shell__footer-link:hover {
-      color: rgb(55 48 163);
-    }
-
-    :host-context(.dark) .shell__footer-link {
-      color: rgb(196 181 253);
-    }
-
-    :host-context(.dark) .shell__footer-link:hover {
-      color: rgb(238 242 255);
+      color: var(--color-link-hover);
     }
 
     .shell__footer-link svg {
@@ -346,15 +307,20 @@ function toPath(url: string): string {
       align-items: center;
       height: 2.75rem;
       padding: 0 0.9rem;
-      border: 1px solid rgba(99, 102, 241, 0.3);
+      border: 1px solid color-mix(in srgb, var(--color-accent) 30%, transparent);
       border-right: none;
       border-radius: 9999px 0 0 9999px;
-      background: linear-gradient(180deg, #4f46e5 0%, #4338ca 100%);
-      color: #fff;
+      background: linear-gradient(
+        180deg,
+        var(--color-brand-strong) 0%,
+        var(--color-brand-deep) 100%
+      );
+      color: var(--color-on-brand);
       cursor: pointer;
       box-shadow:
-        -6px 10px 24px -10px rgba(67, 56, 202, 0.55),
-        0 2px 6px -2px rgba(15, 23, 42, 0.3);
+        -6px 10px 24px -10px
+          color-mix(in srgb, var(--color-brand-deep) 55%, transparent),
+        0 2px 6px -2px color-mix(in srgb, var(--color-shadow) 30%, transparent);
       font-size: 0.78rem;
       font-weight: 600;
       letter-spacing: 0.01em;
@@ -390,8 +356,9 @@ function toPath(url: string): string {
       transform: translateX(-3px);
       filter: brightness(1.06);
       box-shadow:
-        -10px 14px 30px -10px rgba(67, 56, 202, 0.6),
-        0 3px 8px -2px rgba(15, 23, 42, 0.35);
+        -10px 14px 30px -10px
+          color-mix(in srgb, var(--color-brand-deep) 60%, transparent),
+        0 3px 8px -2px color-mix(in srgb, var(--color-shadow) 35%, transparent);
     }
 
     .shell__pin:hover .shell__pin-label,
@@ -402,7 +369,7 @@ function toPath(url: string): string {
     }
 
     .shell__pin:focus-visible {
-      outline: 2px solid rgb(99 102 241);
+      outline: 2px solid var(--color-border-focus);
       outline-offset: 3px;
     }
 
@@ -503,14 +470,9 @@ function toPath(url: string): string {
       width: 21rem;
       flex-shrink: 0;
       height: 100%;
-      border-left: 1px solid rgb(226 232 240);
-      background: rgb(252 253 255);
+      border-left: 1px solid var(--color-border);
+      background: var(--color-bg-chrome);
       overflow: hidden;
-    }
-
-    :host-context(.dark) .shell__rail {
-      background: rgb(4 9 30);
-      border-left-color: rgb(15 23 42);
     }
 
     @media (width >= 1280px) {

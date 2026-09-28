@@ -2,7 +2,7 @@
 
 These rules keep the demo calm and consistent. The form is the hero. The chrome stays quiet.
 
-The tokens live in `src/styles.scss` (`@theme` and `.dark`). Use a token, not a raw hex value. If a token is missing, add it there first.
+The tokens live in `src/styles.scss` (`@theme` and `.dark`). The app-chrome tokens are in their own `@theme static` block, because Tailwind does not scan component SCSS and would drop them. Use a token, not a raw hex value. If a token is missing, add it there first.
 
 ## Principles
 
@@ -27,6 +27,24 @@ The tokens live in `src/styles.scss` (`@theme` and `.dark`). Use a token, not a 
 | `--gradient-brand-text`                              | indigo-600 → violet-600 | indigo-400 → violet-300 | Logo and page title only                 |
 | `--color-error` / `-soft` / `-border`                | red-700 on `#fdebeb`    | red-300 on red-900/20   | Error text, alert surface and border     |
 | `--color-success`, `--color-warning`, `--color-info` | 700 shades              | 300 shades              | Status text                              |
+
+### App chrome
+
+The shell, nav tree, right rail and segmented toggles use the gray family, like the page tokens above. Each token has a light and a dark value, so a component needs no `.dark` rule for its colors.
+
+| Token                                      | Light                     | Dark                          | Use                                    |
+| ------------------------------------------ | ------------------------- | ----------------------------- | -------------------------------------- |
+| `--color-bg-chrome`                        | white                     | gray-900                      | Nav, mobile bar, rail                  |
+| `--color-surface-hover`                    | gray-100                  | gray-800                      | Hover fill, count pill                 |
+| `--color-border-strong`                    | gray-300                  | gray-600                      | Hover border                           |
+| `--color-icon-muted`                       | gray-400                  | gray-500                      | Chevrons and decorative glyphs only    |
+| `--color-accent` / `-text` / `-soft`       | indigo-500 / 700 / 50     | indigo-400 / 200 / 900 at 32% | Active nav item: border, text, fill    |
+| `--color-accent-border`                    | indigo-500 at 20%         | indigo-400 at 25%             | Panel borders and dividers             |
+| `--color-link` / `-hover`                  | indigo-600 / 800          | violet-300 / indigo-50        | Links in the chrome                    |
+| `--color-selected` / `--color-on-selected` | `#e8f4fb` / `#005d96`     | gray-700 / blue-300           | Selected option of a segmented toggle  |
+| `--color-on-brand`, `--color-brand-deep`   | white, indigo-700         | same                          | Text on, and end stop of, a brand fill |
+| `--color-warning-border`                   | amber-500 at 38%          | amber-400 at 34%              | Dashed warning divider                 |
+| `--color-backdrop`, `--color-shadow`       | gray-900 at 40%, gray-900 | same, black                   | Modal scrim; mix into shadows          |
 
 - Use the gradient only on the logo, the page title and the primary button. Use solid colors for everything else.
 - In dark mode, use gray-400 or lighter for muted text. gray-500 fails on gray-900.
