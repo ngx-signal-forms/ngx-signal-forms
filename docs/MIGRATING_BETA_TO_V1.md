@@ -111,7 +111,7 @@ Notes:
   `errorStrategy` (`'on-submit'` / `'immediate'`), submit-lifecycle tracking
   via `submittedStatus`, or one shared strategy propagated to every
   descendant via DI instead of passing inputs around. See the root
-  [`README.md`](../README.md#adding-form-level-context-with-ngxsignalform)
+  [`README.md`](../README.md#when-errors-show)
   for the full with/without comparison.
 - The directive's `exportAs` is now `ngxSignalForm` (was `ngxFormRoot`).
 - The `NgxSignalFormToolkit` bundle now also re-exports Angular's

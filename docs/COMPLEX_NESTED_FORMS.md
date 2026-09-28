@@ -127,9 +127,12 @@ links each message back to its field.
 Under the hood this wraps Angular's native `errorSummary()` so every nested
 field's errors surface at the root. The summary:
 
-- Shows messages only when the strategy allows (e.g. after the first submit)
-- Renders each entry as a clickable link that calls Angular's
-  `focusBoundControl()` to jump to the offending field
+- Shows messages only when the strategy allows, for example after the first
+  submit
+- Moves focus to itself the first time it appears under `on-submit` timing.
+  Set `[autoFocus]="false"` if your flow moves focus elsewhere
+- Renders each entry as a button that moves focus to the field, when the
+  field has a focusable bound control, and as plain text otherwise
 - Renders blocking errors in `role="alert"`; it does not render warnings
 - Deduplicates by originating field, kind, and message, keeping distinct fields
 
@@ -138,6 +141,11 @@ field's errors surface at the root. The summary:
 | Styled summary   | Not rendered                                                | Field identity + kind + message | Summary only     |
 | Headless summary | Separate warning entries                                    | Field identity + kind + message | Summary only     |
 | Fieldset         | Separate signals; styled slot gives visible errors priority | Kind + message across the group | Aggregation only |
+
+Other inputs: `summaryLabel` sets the heading text (default
+`Please fix the following errors:`), and `headingLevel` sets the heading
+element, from `2` (default) to `6`. See the
+[assistive reference](../packages/toolkit/assistive/README.md) for all inputs.
 
 For fully custom markup, the headless equivalent
 (`NgxHeadlessErrorSummary`) exposes the same managed state as signals
@@ -166,22 +174,14 @@ picks up the same strategy via DI:
 </form>
 ```
 
-You can still override at any level by passing `[strategy]` to a specific
-wrapper or fieldset. A fieldset override affects its own aggregation, not
-descendant wrappers; it does not provide new form context. This is the settings
-cascade at work: field input ?? form context ?? component-scoped provider ??
-app-wide provider ?? built-in default — see
-[how settings resolve](../README.md#how-settings-resolve-the-cascade) in the
-root README.
+To override one element, pass `strategy` to that wrapper, fieldset, or
+summary. A fieldset's `strategy` changes only its own group message, not the
+wrappers inside it. See [timing and configuration](./WARNINGS_SUPPORT.md#timing-and-configuration)
+for the full order of settings.
 
 ---
 
 ## Field labels for deep paths
-
-Known runtime concern R02: distinct fields with identical display labels,
-kinds, and messages can produce duplicate styled-summary rendering keys.
-Use distinct labels as a workaround. Raw field identity should drive rendering
-keys; this documentation does not fix that defect.
 
 For deeply nested arrays where paths vary by index (`facts.0.offenses.1.article`),
 pass a **factory** that returns a custom resolver and do the pattern matching
@@ -202,9 +202,9 @@ provideFieldLabels(() => (fieldPath) => {
 });
 ```
 
-See [WARNINGS_SUPPORT's field label resolution](./WARNINGS_SUPPORT.md#field-label-resolution)
-for the default humanized-path format, the exact-match map form, and the
-full resolver API — including how to inject a translation service for i18n.
+See [field label resolution](./WARNINGS_SUPPORT.md#field-label-resolution)
+for the default label format, the map form, translated labels, and a known
+limitation with duplicate labels.
 
 ---
 
@@ -277,6 +277,6 @@ and individual wrappers can override `appearance` on the element itself.
 
 - [Form-field wrapper](../packages/toolkit/form-field/README.md) — the single-field primitive these patterns compose
 - [Headless primitives](../packages/toolkit/headless/README.md) — for custom markup of fieldset aggregation and error summary
-- [Warnings and error flow](./WARNINGS_SUPPORT.md) — how `errors()` and `errorSummary()` differ, and how messages are resolved
+- [Warnings, timing, and messages](./WARNINGS_SUPPORT.md) — how `errors()` and `errorSummary()` differ, and how messages are resolved
 - [Validation strategies](./VALIDATION_STRATEGY.md) — layering Angular validators, Zod, and Vest in a complex form
 - [Archived: NgRx nested arrays pattern](./archive/NESTED_FORM_ARRAYS_PATTERN.md) — deep state-management architecture with NgRx Signal Store (not toolkit-specific)

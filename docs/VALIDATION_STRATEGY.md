@@ -1,55 +1,57 @@
 # Choosing a validation strategy
 
-For most projects, the real choice is not just **Angular vs toolkit** — it is also:
+The toolkit shows errors from any validator that Angular Signal Forms runs. So
+the choice is which validation source to use:
 
-- when to use Angular Signal Forms validators directly
-- when to reuse a Standard Schema validator such as Zod or generated OpenAPI schemas
-- when to use [Vest](https://vestjs.dev/) for higher-order business rules
+- Angular Signal Forms validators,
+- a Standard Schema library such as Zod, or a schema generated from OpenAPI,
+- [Vest](https://vestjs.dev/) for business rules.
 
-Start with Angular validators. Add a Standard Schema library when you need a
-shared contract, or Vest when its rule model helps express your business policy.
-They can coexist, but a form does not need all three by default.
+Start with Angular validators. Add a Standard Schema library when you share a
+data contract. Add Vest when its rule model makes your business rules easier
+to read. They can run together, but a form does not need all three.
 
 ## Decision table
 
-| Option                                     | Best for                                                                   | Strengths                                                                                                                                                                                                                                                              | Tradeoffs                                                                                                             |
-| ------------------------------------------ | -------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
-| **Angular Signal Forms schema validation** | field constraints, conditional/cross-field rules, and async checks         | Built-in validators, `validate()`, `validateTree()`, `validateAsync()`, and `validateHttp()`; reusable `schema()`/`apply()`; `applyWhenValue()` for value narrowing. Async validator `debounce` delays checks, while the `debounce()` rule delays UI-to-model updates. | Large policy sets can benefit from a different organization; this does not require another library.                   |
-| **Zod / OpenAPI / Standard Schema**        | reusable contract and structural validation                                | ideal when schemas already exist or are generated; keeps backend/frontend contract rules in one place; strong for shape, enums, bounds, and format rules; works through `validateStandardSchema(...)`                                                                  | not the best place for complex business policy; easy to over-centralize rules that really belong in application logic |
-| **Vest**                                   | Existing suites or business-policy rules that read better as grouped tests | Reuses policy outside Angular; groups related rules; supports advisory `warn()` guidance through the toolkit adapter.                                                                                                                                                  | Adds a dependency and suite lifecycle. Async work or cross-field dependencies alone do not justify it.                |
+| Option                              | Best for                                                     | Strengths                                                                                                                                                                                                                                                                         | Tradeoffs                                                                                      |
+| ----------------------------------- | ------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| **Angular validators**              | Field rules, conditional and cross-field rules, async checks | Built-in validators, `validate()`, `validateTree()`, `validateAsync()`, and `validateHttp()`. Reuse with `schema()` and `apply()`. Narrow by value with `applyWhenValue()`. The async validators' `debounce` option delays the check; the `debounce()` rule delays model updates. | A large set of policy rules can be hard to organize. That alone does not need another library. |
+| **Zod / OpenAPI / Standard Schema** | A shared data contract                                       | Reuses schemas you already have or generate. Keeps backend and frontend contract rules in one place. Good for shape, enums, bounds, and formats. Runs through `validateStandardSchema()`.                                                                                         | Not the best place for complex business rules. Easy to put rules there that belong in the app. |
+| **Vest**                            | Existing suites, or business rules that read better as tests | Reuses rules outside Angular. Groups related rules. Its `warn()` results become toolkit warnings.                                                                                                                                                                                 | Adds a dependency and a suite lifecycle. Async or cross-field rules alone do not justify it.   |
 
 ## Quick rule of thumb
 
-- **Angular validators** for field constraints, custom checks, and async validation
-- **Zod / OpenAPI Standard Schema** for reusable contract validation
-- **Vest** for existing suites or a concrete readability/reuse benefit in business policy
+- **Angular validators** for field rules, custom checks, and async checks.
+- **Zod / OpenAPI Standard Schema** for a shared contract.
+- **Vest** for existing suites, or when it makes business rules easier to
+  reuse or read.
 
-You do **not** need to pick only one. Angular Signal Forms lets you register small local
-validators, Standard Schema validation, and Vest rules side by side in the same schema
-callback.
+You can register Angular validators, Standard Schema validation, and Vest rules
+side by side in the same schema function.
 
-## Optional layering
+## Give each rule one home
 
-When a form needs these separate responsibilities, assign each rule once:
+When a form uses more than one source, write each rule in one place only:
 
-1. **Angular Signal Forms validators** for small local rules
-2. **Zod / OpenAPI Standard Schema** for contract-level validation
-3. **Vest** for higher-order business rules and `warn()` guidance — Vest's
-   `warn()` flows into the toolkit's non-blocking warning rendering; see
-   [`WARNINGS_SUPPORT.md`](./WARNINGS_SUPPORT.md)
+1. **Angular validators** for small local rules.
+2. **Zod / OpenAPI Standard Schema** for contract rules.
+3. **Vest** for business rules and `warn()` advice. See
+   [warnings](./WARNINGS_SUPPORT.md).
 
 Examples:
 
-- `email is required` → Angular validator
-- `country must be one of the API enum values` → Zod / OpenAPI Standard Schema
-- `VAT number is required only for business accounts in DE, NL, or BE` → Angular `required({ when })`, or an existing Vest policy suite
-- `username is unique unless the account is in migration mode` → Angular `validateHttp`/`validateAsync` with `when`, or reuse the policy's existing suite
+- `email is required`: Angular validator.
+- `country must be one of the API enum values`: Zod or OpenAPI Standard Schema.
+- `VAT number is required only for business accounts in DE, NL, or BE`:
+  Angular `required(path.vatNumber, { when })`, or an existing Vest suite.
+- `username is unique unless the account is in migration mode`: Angular
+  `validateHttp()` or `validateAsync()` with `when`, or an existing Vest suite.
 
 ## Combining Angular validators, Zod, and Vest
 
-This partial schema excerpt shows an optional combination. Supply `SignupSchema`
-and `signupBusinessSuite` from your application. Do not add these dependencies
-unless the shared contract and policy rules need them.
+This excerpt shows all three together. Supply `SignupSchema` and
+`signupBusinessSuite` from your application. Add these dependencies only when
+the form needs a shared contract or business rules.
 
 ```typescript
 import { signal } from '@angular/core';
@@ -60,6 +62,7 @@ import {
   required,
   validateStandardSchema,
 } from '@angular/forms/signals';
+import { requiredFromStandardSchema } from '@ngx-signal-forms/toolkit';
 import { validateVest } from '@ngx-signal-forms/toolkit/vest';
 
 const model = signal({
@@ -70,24 +73,35 @@ const model = signal({
 });
 
 const signupForm = form(model, (path) => {
-  // Small field-local UI rules
+  // Small local rules
   required(path.email, { message: 'Email is required' });
   email(path.email, { message: 'Enter a valid email address' });
   minLength(path.password, 12, { message: 'Use at least 12 characters' });
 
   // Shared contract rules from Zod / OpenAPI / Standard Schema
   validateStandardSchema(path, SignupSchema);
+  requiredFromStandardSchema(path.accountType, SignupSchema);
 
-  // Rich business rules and advisory warnings
+  // Business rules and warnings
   validateVest(path, signupBusinessSuite, { includeWarnings: true });
 });
 ```
 
-The practical split is:
+## Required fields with Standard Schema
 
-- keep **small local rules** in Angular validators
-- keep **shared shape and contract rules** in Zod / OpenAPI Standard Schema
-- keep **policy rules** in Vest when the suite improves reuse or readability
+`validateStandardSchema()` reports errors, but it does not tell Angular which
+fields are required. Standard Schema has no way to ask that. Without it,
+`required()` on the field state stays `false`, so the control gets no
+`aria-required` and the wrapper shows no required marker.
 
-For the deeper Vest decision guide, see
-[`packages/toolkit/vest/README.md`](../packages/toolkit/vest/README.md).
+Call `requiredFromStandardSchema(path.field, schema)` from
+`@ngx-signal-forms/toolkit` once for each required field. Pass the schema that
+validates the object that holds the field. You do not need it for a field that
+also has Angular's `required()`.
+
+## Related
+
+- [`/vest` reference](../packages/toolkit/vest/README.md): when to use Vest,
+  and the adapter options
+- [Warnings](./WARNINGS_SUPPORT.md): how Vest `warn()` results show and submit
+- [zod-validation demo](../apps/demo/src/app/05-advanced/zod-validation/README.md)

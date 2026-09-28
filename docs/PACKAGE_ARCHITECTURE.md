@@ -1,61 +1,28 @@
 # Package Architecture
 
-> **Audience:** contributors and the architecture-curious. If you're choosing
-> which entry point to import as a _user_ of the toolkit, start with the
-> [toolkit README](../packages/toolkit/README.md#entry-points) instead — this
-> document describes how the repository is organized, not how to pick an API.
+This is a maintainer document. It describes how the repository and the
+published package are built. To choose an entry point as a user, read
+[Choose your level](../README.md#choose-your-level) in the root README.
 
-This document combines two documentation views:
+## Why one package with several entry points
 
-- **Explanation**: why the package is split into entry points.
-- **Reference**: what exists and where.
+The repository publishes one package, `@ngx-signal-forms/toolkit`, with six
+entry points: the root, `/assistive`, `/form-field`, `/headless`, `/vest`, and
+`/testing`.
 
----
+1. **One install** for the common case.
+2. **Layered adoption**, from the styled wrapper down to state-only directives.
+3. **Optional integrations stay optional.** `vest` and `axe-core` are needed
+   only by `/vest` and `/testing`.
+4. **Bundle control.** An app pays only for the entry points it imports.
 
-## Explanation
+## Internal boundary
 
-### Architecture intent
+`packages/toolkit/core` is internal. The public entry points use it, but the
+post-build step removes it from the published `exports` map. An import from
+`@ngx-signal-forms/toolkit/core` does not resolve in the published package.
 
-The repository publishes one package, `@ngx-signal-forms/toolkit`, with
-multiple public entry points. The split keeps adoption simple for most users
-while preserving tree-shaking and opt-in advanced surfaces.
-
-### Why one package with multiple entry points
-
-1. **Single install path** for common usage (`npm install @ngx-signal-forms/toolkit`).
-2. **Layered adoption** from core behavior to styled UI to headless primitives.
-3. **No forced runtime coupling** for optional integrations (Vest).
-4. **Bundle control** by importing only the entry points a consumer needs.
-
-### Role of each entry point
-
-See the [toolkit README's entry-point table](../packages/toolkit/README.md#entry-points)
-for what each entry point is for and which one to pick — that table is the
-single maintained copy.
-
-### Internal boundary
-
-`packages/toolkit/core` is intentionally **internal**. It powers public entry
-points but is stripped from the published exports map. The practical
-consequence for consumers: `import … from '@ngx-signal-forms/toolkit/core'`
-fails to resolve against the published package, and anything reached that way
-in a source checkout carries no stability guarantee — import from the
-documented public entry points only.
-
----
-
-## Reference
-
-### Public entry points
-
-- `@ngx-signal-forms/toolkit` — core directives, providers, utilities
-- `@ngx-signal-forms/toolkit/assistive` — styled error/hint/counter/summary UI
-- `@ngx-signal-forms/toolkit/form-field` — prebuilt wrapper + fieldset UI
-- `@ngx-signal-forms/toolkit/headless` — renderless directives and utility functions
-- `@ngx-signal-forms/toolkit/vest` — Vest helper adapters
-- `@ngx-signal-forms/toolkit/testing` — axe-core a11y assertion helpers for consumer test suites
-
-### Package layout
+## Package layout
 
 A curated overview, not an exhaustive listing — it groups files by role and
 calls out the ones contributors ask about most. Run `find packages/toolkit`
@@ -138,7 +105,7 @@ packages/toolkit/
 └── package.json
 ```
 
-Only the six public entry points above ship to npm. `core/` exists in source
+Only the six public entry points ship to npm. `core/` exists in source
 but is not in the published exports map, and `docs/` (repo root) is not part
 of the package at all.
 
@@ -156,24 +123,14 @@ to a repo-only file (e.g. `../../CONTEXT.md`) resolves on GitHub but not on
 npm. See [issue #568](https://github.com/ngx-signal-forms/ngx-signal-forms/issues/568)
 for the follow-up to rewrite them too.
 
-### Import examples
-
-```typescript
-import { provideNgxSignalFormsConfig } from '@ngx-signal-forms/toolkit';
-import { NgxFormField } from '@ngx-signal-forms/toolkit/form-field';
-import { NgxFormFieldError } from '@ngx-signal-forms/toolkit/assistive';
-import { NgxHeadlessNotification } from '@ngx-signal-forms/toolkit/headless';
-import { validateVest } from '@ngx-signal-forms/toolkit/vest';
-```
-
-### Dependency graph
+## Dependency graph
 
 ```text
 @angular/core (peer)
 @angular/common (peer)
 @angular/forms/signals (peer)
-vest ^6 (optional peer for /vest)
-axe-core (optional peer for /testing; range in package.json)
+vest >=6.3.0 <7.0.0 (optional peer for /vest)
+axe-core >=4.13.0 <5 (optional peer for /testing)
         ↓
 @ngx-signal-forms/toolkit
 ├── root (core public API)
@@ -184,19 +141,18 @@ axe-core (optional peer for /testing; range in package.json)
 └── /testing
 ```
 
-### Internal-only debugger
-
 The [package manifest](../packages/toolkit/package.json) is the source of
-truth for peer version ranges.
+truth for peer ranges.
 
-The form debugger is no longer part of the published toolkit package. It now
-lives in `packages/demo/debugger` for internal/demo usage and is consumed via
-`@ngx-signal-forms/debugger` path aliases inside this repository.
+## Internal-only debugger
 
-### Publishing notes
+The form debugger is not part of the published package. It lives in
+`packages/demo/debugger`, and demo code imports it through the
+`@ngx-signal-forms/debugger` path alias.
 
-- Package follows semantic versioning once it reaches `1.0.0`. Today it is
-  pre-1.0 (`1.0.0-rc.*`), and v1.0.0 has never shipped — every release to
-  date is a release candidate, so an RC can still break (see ADR-0007's
-  "Consequences" section for an example).
-- `core/` remains internal even though it exists in source.
+## Publishing notes
+
+- The package follows semantic versioning from `1.0.0`. Releases before
+  that are release candidates (`1.0.0-rc.*`), and an RC can still break.
+- `core/` stays internal even though it exists in source.
+- Release and publish steps are in [Contributing](./CONTRIBUTING.md#release).
