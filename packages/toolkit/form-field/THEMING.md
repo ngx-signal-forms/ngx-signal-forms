@@ -657,7 +657,8 @@ The form field wrapper supports three appearance modes via the `appearance` inpu
 - Removes border and background chrome from the field container
 - Uses `--ngx-form-field-label-*` properties (same token set as standard)
 - Draws a focus outline on native text inputs (2px, 2px offset, colored by
-  `--ngx-form-field-focus-color`). Selection controls (checkbox, radio,
+  `--ngx-form-field-focus-color`, or the invalid or warning color when the
+  field is in that state). Selection controls (checkbox, radio,
   switch) and non-textual custom controls still draw their own. The
   container-level focus outline that other appearances draw (see
   [States & Focus](#states--focus)) is suppressed here, so a plain field
@@ -887,17 +888,34 @@ attribute (`"required"` / `"optional"` / absent) for additional styling hooks.
 
 #### States & Focus
 
-**Applies to standard and outline layouts. `--ngx-form-field-focus-color` also
-colors the plain layout's input focus outline (2px, 2px offset).**
+**Applies to standard and outline layouts. The same colors apply to the plain
+layout's input focus outline (2px, 2px offset).**
 
-A focused textual field draws a solid, offset outline in the focus color on
-the container, for every state (valid, invalid, warning). This is the
-field's guaranteed-contrast focus signal (WCAG 2.2 SC 1.4.11, SC 2.4.7). The
-2px offset keeps the outline clear of the state-colored border, so its
-contrast is measured against the page background — with the default focus
-color (`#007bc7`), 4.51:1 against white, dropping to 3.64:1 against a
-darker background such as `#e5e7eb` — not against the adjacent border
-color. The plain layout
+A focused textual field draws a solid, offset outline on the container, for
+every state. A valid field uses the focus color. An invalid field uses
+`--ngx-form-field-invalid-color` and a warning field uses
+`--ngx-form-field-warning-color`, so the outline matches the border and
+focus does not hide the field's state. This outline is the field's
+guaranteed-contrast focus signal (WCAG 2.2 SC 1.4.11, SC 2.4.7). The 2px
+offset keeps it clear of the border, so its contrast is measured against
+the page background. The defaults are `#007bc7` (4.51:1 on white), `#db1818`
+(5.05:1) and `#a16207` (4.92:1). If you theme the invalid or warning color,
+keep it at 3:1 or more against your page background.
+
+The outline follows the browser's `:focus-visible` heuristic for the control
+itself (`:has(... :focus-visible)`), not `:focus-within`:
+
+- Tabbing to the control, or clicking a text input, draws the outline.
+- A mouse click on a custom control, such as a `role="combobox"` button, does
+  not. Chromium treats a clicked native `<select>` as `:focus-visible`, so a
+  select still gets the outline there.
+- A focused prefix or suffix button draws its own outline. The container does
+  not add a second one around the whole field.
+
+The border and the soft ring still follow `:focus-within`, so any focus
+inside the field changes the border color.
+
+The plain layout
 suppresses this container outline and relies on its own input-level outline
 instead (see [Plain layout](#plain-layout-appearanceplain)), so a plain
 field never shows two outlines at once.
@@ -911,7 +929,7 @@ back.
 
 | Property                                | Default                                                             | Description                                                                                   |
 | :-------------------------------------- | :------------------------------------------------------------------ | :-------------------------------------------------------------------------------------------- |
-| `--ngx-form-field-focus-color`          | `var(--ngx-form-field-color-primary)`                               | Focus border and outline color                                                                |
+| `--ngx-form-field-focus-color`          | `var(--ngx-form-field-color-primary)`                               | Focus border and outline color (valid state)                                                  |
 | `--ngx-form-field-focus-box-shadow`     | `0 0 0 4px color-mix(in srgb, var(--focus-color) 25%, transparent)` | Focus ring (valid state)                                                                      |
 | `--ngx-form-field-focus-outline-width`  | `2px`                                                               | Width of the solid focus outline                                                              |
 | `--ngx-form-field-focus-outline-offset` | `2px`                                                               | Offset of the solid focus outline from the border                                             |

@@ -350,7 +350,8 @@
   --_warning-color: var(--ngx-form-field-warning-color, var(--_color-warning));
   --_warning-box-shadow: var(--ngx-form-field-warning-box-shadow, none);
   /* Solid focus outline: the sole guaranteed-contrast focus signal for
-     valid, invalid and warning textual fields. Offset keeps it clear of the
+     valid, invalid and warning textual fields. Invalid and warning fields
+     draw it in their state color. Offset keeps it clear of the
      state-colored border so its contrast is measured against the page
      background, not the adjacent border color. */
   --_focus-outline-width: var(--ngx-form-field-focus-outline-width, 2px);
@@ -545,13 +546,25 @@
   .ngx-signal-form-field-wrapper__content:focus-within {
   border-color: var(--_focus-color);
   box-shadow: var(--_focus-box-shadow);
-  /* Solid outline: the state-color border (invalid/warning) stays
-     unfocused-looking on its own, so the outline is what actually shows
-     the field is focused. It applies to every state — the invalid and
-     warning rules below don't set `outline`, so this declaration reaches
-     them unchanged. The plain appearance is the one exception: it
-     overrides `outline` back to `none` in `form-field-wrapper.selection.css`
-     and relies on its own input-level outline instead (see `#493`). */
+}
+
+/* Solid outline: the state-color border (invalid/warning) stays */
+/* unfocused-looking on its own, so the outline is what actually shows the */
+/* field is focused. It applies to every state. The invalid and warning */
+/* rules below re-point `--_focus-color` to the state color, so the outline */
+/* matches the border. */
+/* `:has(... :focus-visible)` follows the browser's focus-visible heuristic, */
+/* so a mouse click on a `<select>` or custom control draws no outline. It */
+/* only looks inside `__main`, so a focused prefix/suffix button keeps its */
+/* own outline and the container does not add a second one. */
+/* The plain appearance overrides `outline` back to `none` in */
+/* `form-field-wrapper.selection.css` and relies on its own input-level */
+/* outline instead (see `#493`). Keep this rule flat for the same reason as */
+/* the rule above (#556). */
+:host(.ngx-signal-form-field-wrapper--textual)
+  .ngx-signal-form-field-wrapper__content:has(
+    .ngx-signal-form-field-wrapper__main :focus-visible
+  ) {
   outline: var(--_focus-outline-width) solid var(--_focus-color);
   outline-offset: var(--_focus-outline-offset);
 }
@@ -962,6 +975,10 @@
   )
   .ngx-signal-form-field-wrapper__content {
   border-color: var(--_invalid-color);
+  /* Focus takes the state color, so the outline repeats the error signal. */
+  /* Re-pointing the token (not `outline-color`) keeps the flat forced-colors */
+  /* focus rule winning (#556). */
+  --_focus-color: var(--_invalid-color);
 
   &:focus-within {
     border-color: var(--_invalid-color);
@@ -975,6 +992,7 @@
   )
   .ngx-signal-form-field-wrapper__content {
   border-color: var(--_warning-color);
+  --_focus-color: var(--_warning-color);
 
   &:focus-within {
     border-color: var(--_warning-color);
@@ -1295,9 +1313,15 @@
   /* signal in forced-colors mode. */
   :host(.ngx-signal-form-field-wrapper--textual)
     .ngx-signal-form-field-wrapper__content:focus-within {
-    outline: 2px solid Highlight;
-    outline-offset: 2px;
     box-shadow: none;
     border-color: Highlight;
+  }
+
+  :host(.ngx-signal-form-field-wrapper--textual)
+    .ngx-signal-form-field-wrapper__content:has(
+      .ngx-signal-form-field-wrapper__main :focus-visible
+    ) {
+    outline: 2px solid Highlight;
+    outline-offset: 2px;
   }
 }

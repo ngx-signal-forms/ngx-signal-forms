@@ -395,10 +395,13 @@
     &:focus-within {
       border-color: transparent;
       box-shadow: none;
-      /* The shared focus rule in `form-field-wrapper.css` puts a solid
-         outline on every textual field's container. Plain already draws
-         its own outline on the input itself (`#493`) — drop the
-         container's copy so a plain field doesn't show two outlines. */
+    }
+
+    /* The shared focus rule in `form-field-wrapper.css` puts a solid
+       outline on every textual field's container. Plain already draws
+       its own outline on the input itself (`#493`) — drop the
+       container's copy so a plain field doesn't show two outlines. */
+    &:has(.ngx-signal-form-field-wrapper__main :focus-visible) {
       outline: none;
     }
   }
@@ -406,7 +409,7 @@
 
 /* Plain appearance: restore a focus indicator on the input itself. */
 /* The textual reset in `form-field-wrapper.css` removes the input's own */
-/* focus outline and relies on the container's `:focus-within` ring. The */
+/* focus outline and relies on the container's outline. The */
 /* plain rule above clears that ring, so a plain field had no focus */
 /* indicator (WCAG 2.2 SC 2.4.7). This rule has the same scope as the reset. */
 /* It carries one more class, so it wins regardless of stylesheet order. */
@@ -434,7 +437,9 @@
 /* point the input at the system `Highlight` color. */
 @media (forced-colors: active) {
   :host(.ngx-signal-forms-plain.ngx-signal-form-field-wrapper--textual)
-    .ngx-signal-form-field-wrapper__content:focus-within {
+    .ngx-signal-form-field-wrapper__content:has(
+      .ngx-signal-form-field-wrapper__main :focus-visible
+    ) {
     outline: none;
   }
 
