@@ -21,8 +21,9 @@ import { NgxFormFieldWrapper } from './form-field-wrapper';
  * contrast) 3:1 floor. A keyboard user tabbing from the error summary into
  * an invalid field could not see where focus landed (SC 2.4.7).
  *
- * The fix adds a solid, offset outline on `:focus-within`, for every
- * textual state (valid, invalid, warning). Invalid and warning fields draw
+ * The fix adds a solid, offset outline when the control inside `__main`
+ * matches `:focus-visible`, for every textual state (valid, invalid,
+ * warning). Invalid and warning fields draw
  * it in their state color, so focusing a field repeats its state instead of
  * hiding it behind the brand color. The ring's default box-shadow is now
  * `none` so it does not visually collide with the outline.
