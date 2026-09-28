@@ -26,8 +26,10 @@ import { NgxHeadlessToolkit } from '@ngx-signal-forms/toolkit/headless';
 each directive by name.
 
 Import `NgxSignalFormToolkit` from the root entry point too. It adds auto-ARIA
-to every `[formField]` control, and the `ngxSignalForm` directive that shares
-form-level timing.
+to eligible `[formField]` controls, and the `ngxSignalForm` directive that
+shares form-level timing. Native checkboxes and radios are not eligible by
+default, because their ARIA belongs on the group. See
+[custom controls](../../../docs/CUSTOM_CONTROLS.md#inferred-kind-vs-auto-aria-eligibility).
 
 ## What you do and what the toolkit does
 

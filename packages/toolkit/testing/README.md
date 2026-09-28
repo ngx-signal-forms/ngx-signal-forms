@@ -111,7 +111,8 @@ it('has no WCAG Level A violations', async () => {
 - An empty array throws when you create the validator. An empty tag set would
   pass every scan.
 - Without `tags`, the validator uses the full WCAG 2.2 AA set.
-- The failure message names the tags that ran.
+- With `tags`, the failure message names the scoped tags that ran. Without
+  `tags`, it names the WCAG 2.2 AA baseline.
 
 ## Reporting axe `incomplete` results
 

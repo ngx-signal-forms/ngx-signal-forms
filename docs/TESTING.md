@@ -116,7 +116,8 @@ input out. For a custom wrapper, see [custom wrappers](./CUSTOM_WRAPPERS.md).
 ## Test submit
 
 Click the submit button with `userEvent`. Angular's `submit()` marks every
-field touched, so every field's error shows, whatever the timing:
+interactive field touched, so the error of each interactive field shows,
+whatever the timing. Hidden, disabled, and readonly fields stay untouched:
 
 ```typescript
 const submitButton = screen.getByRole('button', { name: /send message/i });

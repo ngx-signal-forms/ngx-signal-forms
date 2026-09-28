@@ -218,7 +218,7 @@ provideNgxSignalFormsConfig({ defaultErrorStrategy: 'on-submit' });
 ```
 
 The quick start works without `ngxSignalForm`, because it keeps the default
-`on-touch` timing and Angular marks every field touched on submit. Add
+`on-touch` timing and Angular marks every interactive field touched on submit. Add
 `ngxSignalForm` to the form when you change the timing at any level, or when
 you show an error summary. Without it, `aria-invalid` keeps `on-touch` timing
 while the visible message follows your setting. The directive is already in

@@ -29,8 +29,11 @@ import {
 This entry point has no bundle. Import the components you use.
 
 Always import `NgxSignalFormToolkit` from the root entry point too. It adds
-auto-ARIA to every `[formField]` control, and the `ngxSignalForm` directive
-that shares form-level timing with these components.
+auto-ARIA to eligible `[formField]` controls, and the `ngxSignalForm`
+directive that shares form-level timing with these components. Native
+checkboxes and radios are not eligible by default, because their ARIA belongs
+on the group. See
+[custom controls](../../../docs/CUSTOM_CONTROLS.md#inferred-kind-vs-auto-aria-eligibility).
 
 ## What you do and what the toolkit does
 

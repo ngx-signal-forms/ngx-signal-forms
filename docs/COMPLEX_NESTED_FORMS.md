@@ -132,7 +132,10 @@ field's errors surface at the root. The summary:
 - Moves focus to itself the first time it appears under `on-submit` timing.
   Set `[autoFocus]="false"` if your flow moves focus elsewhere
 - Renders each entry as a button that moves focus to the field, when the
-  field has a focusable bound control, and as plain text otherwise
+  field has a focusable bound control, and as plain text otherwise. The
+  button check (`canFocus`) only confirms that Angular can look up the
+  control. If the field has no rendered `[formField]`, the button moves no
+  focus
 - Renders blocking errors in `role="alert"`; it does not render warnings
 - Deduplicates by originating field, kind, and message, keeping distinct fields
 
