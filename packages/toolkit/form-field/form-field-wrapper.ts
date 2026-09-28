@@ -11,6 +11,7 @@ import {
   input,
   signal,
   type Type,
+  viewChild,
 } from '@angular/core';
 import type { FieldTree } from '@angular/forms/signals';
 import type {
@@ -58,6 +59,26 @@ import {
 import { capabilitiesFor } from './form-field.utils';
 import { resolveClusterAriaAttrs } from './form-field-cluster-aria';
 import { resolveUnionInput } from './utilities/resolve-union-input';
+
+/**
+ * Elements inside the field box that handle their own clicks. A click on one
+ * of these must not move focus to the bound control (#567).
+ */
+const FIELD_BOX_INTERACTIVE_SELECTOR = [
+  'input',
+  'textarea',
+  'select',
+  'button',
+  'a[href]',
+  'label',
+  'summary',
+  '[contenteditable]:not([contenteditable="false"])',
+  '[tabindex]',
+  '[role="button"]',
+  '[role="link"]',
+  '[role="combobox"]',
+  '[data-ngx-signal-form-control]',
+].join(', ');
 
 /**
  * Form field wrapper component with automatic error/warning display.
@@ -295,6 +316,7 @@ import { resolveUnionInput } from './utilities/resolve-union-input';
     '[attr.role]': 'clusterAria().role',
     '[attr.aria-labelledby]': 'clusterAria().labelledBy',
     '[attr.aria-describedby]': 'clusterAria().describedBy',
+    '(click)': 'focusControlFromFieldBox($event)',
   },
   template: `
     <!--
@@ -361,7 +383,7 @@ import { resolveUnionInput } from './utilities/resolve-union-input';
       }
 
       <!-- Bordered input container with prefix/suffix integrated -->
-      <div class="ngx-signal-form-field-wrapper__content">
+      <div #fieldBox class="ngx-signal-form-field-wrapper__content">
         <!-- Prefix slot (icons, text, etc.) -->
         <div class="ngx-signal-form-field-wrapper__prefix">
           <ng-content select="[prefix]" />
@@ -890,6 +912,49 @@ export class NgxFormFieldWrapper<TValue = unknown> {
   protected readonly isTextualControl = computed(() => {
     return capabilitiesFor(this.dom.semantics().kind).textual;
   });
+
+  /**
+   * The bordered field box (`__content`) that wraps prefix, control and
+   * suffix. `protected`, not `#`: Angular 22.1 does not allow signal queries
+   * on ES private fields.
+   */
+  protected readonly fieldBox =
+    viewChild.required<ElementRef<HTMLElement>>('fieldBox');
+
+  /**
+   * Focuses the bound control when the user clicks the field box outside it.
+   *
+   * A textual field draws a box of about 32–44px, but the control inside it
+   * is only one line tall. Without this handler a click on the box padding
+   * does nothing, so the real target is much smaller than the one the user
+   * sees (#567, WCAG 2.5.8).
+   *
+   * The handler does nothing when:
+   * - the field is not textual (selection rows manage their own clicks),
+   * - the click lands on an interactive element (the control itself, a
+   *   prefix or suffix button, a link, a label),
+   * - the click belongs to a nested wrapper's field box.
+   *
+   * It is a pointer convenience only. Keyboard users already reach the
+   * control with Tab, so the host needs no key handler.
+   */
+  protected focusControlFromFieldBox(event: MouseEvent): void {
+    if (event.defaultPrevented || !this.isTextualControl()) return;
+
+    const target = event.target;
+    if (!(target instanceof Element)) return;
+
+    const fieldBox = this.fieldBox().nativeElement;
+    if (
+      target.closest('.ngx-signal-form-field-wrapper__content') !== fieldBox
+    ) {
+      return;
+    }
+
+    if (target.closest(FIELD_BOX_INTERACTIVE_SELECTOR)) return;
+
+    this.#fieldState().focusBoundControl?.();
+  }
 
   protected readonly isCheckboxControl = computed(() => {
     return this.dom.semantics().kind === 'checkbox';
