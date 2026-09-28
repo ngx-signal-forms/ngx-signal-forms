@@ -4,7 +4,7 @@ Copy everything below the line into a **new agent session**.
 
 ---
 
-Implement [spec/spec-process-demo-forms-best-practices-remediation.md](spec/spec-process-demo-forms-best-practices-remediation.md).
+Implement [spec-process-demo-forms-best-practices-remediation.md](spec-process-demo-forms-best-practices-remediation.md).
 
 The spec is accepted. Treat every `REQ-*`, `CON-*`, `AC-*`, and section 4 contract as binding. Do not re-litigate demo vs toolkit. Do not expand scope.
 

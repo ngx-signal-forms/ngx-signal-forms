@@ -192,6 +192,10 @@ Provides character count signals with progressive limit states.
 | `warningThreshold` | `number`                         | `0.8`    | Warning at 80%                                           |
 | `dangerThreshold`  | `number`                         | `0.95`   | Danger at 95%                                            |
 
+The defaults are exported as `DEFAULT_WARNING_THRESHOLD` (`0.8`) and
+`DEFAULT_DANGER_THRESHOLD` (`0.95`), for consumers that build their own
+threshold UI without hardcoding the numbers.
+
 Signals (type `CharacterCountState`): `currentLength()`, `resolvedMaxLength()`,
 `remaining()`, `limitState()` (`'ok' | 'warning' | 'danger' | 'exceeded'`),
 `hasLimit()`, `isExceeded()`, `percentUsed()`.
@@ -273,7 +277,7 @@ Factories that return plain signals for programmatic use — in services, host d
 
 > **Lockstep guarantee:** `NgxHeadlessErrorState.resolvedErrors`/`resolvedWarnings` and `createErrorMessageSignal` share the same internal resolver — message resolution behaviour is guaranteed identical across both surfaces.
 
-A `Signal<readonly ResolvedFieldError[]>` that combines visibility gating, the 3-tier message cascade (validator `message` → `NGX_ERROR_MESSAGES` registry → default), and stable per-error DOM IDs in a single primitive. Use it when you want the directive's resolution logic without the directive itself — for example inside a custom error renderer that the form-field wrapper drives via `*ngComponentOutlet`, or in an Angular `Component` that opts to read errors directly off a `FieldTree`.
+A `Signal<readonly ResolvedFieldError[]>` that combines visibility gating, the 3-tier message cascade (validator `message` → the registry set by `provideErrorMessages()` → default), and stable per-error DOM IDs in a single primitive. Use it when you want the directive's resolution logic without the directive itself — for example inside a custom error renderer that the form-field wrapper drives via `*ngComponentOutlet`, or in an Angular `Component` that opts to read errors directly off a `FieldTree`.
 
 See a runnable example at `apps/demo/src/app/03-headless/error-message-signal/`.
 
@@ -306,7 +310,7 @@ Options of note:
 
 - `includeWarnings`: `false` (default), `true`, or `'only'` — selects blocking errors, both, or warnings only.
 - `stripWarningPrefix`: defaults to `true` (display-oriented); set to `false` to keep the `warn:` prefix visible for debugging.
-- `errorMessages`: explicit `Signal<ErrorMessageRegistry>` override; when omitted, the primitive auto-injects `NGX_ERROR_MESSAGES`.
+- `errorMessages`: explicit `Signal<ErrorMessageRegistry>` override; when omitted, the primitive auto-injects the registry set by `provideErrorMessages()`.
 - `strategy` / `submittedStatus`: forwarded to `createErrorVisibility`. Omit to inherit from the form context.
 - `warningStrategy`: forwarded to `createWarningVisibility`, which times the entries `includeWarnings` selects. Its cascade — this option → the form context's `warningStrategy()` → `defaultWarningStrategy` → `'on-touch'` — never consults `defaultErrorStrategy`, so an `'on-submit'` form still shows warnings on touch and the example above needs no `strategy: 'immediate'` workaround.
 - `injector`: optional, for use outside an Angular injection context.

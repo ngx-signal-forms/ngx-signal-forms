@@ -355,6 +355,8 @@ export function generateWarningId(fieldName: string): string {
  * ```typescript
  * generateRequiredHintId('consent'); // Returns: 'consent-required-hint'
  * ```
+ *
+ * @internal
  */
 export function generateRequiredHintId(fieldName: string): string {
   return `${sanitizeFieldNameForId(fieldName)}-required-hint`;

@@ -34,7 +34,7 @@ The adapter reads Vest's full `run()` result, mapping blocking errors **and** `w
 
 ## Installation
 
-Vest is an optional peer dependency (`>=6.0.0 <7.0.0`). Install it only when using this entry point.
+Vest is an optional peer dependency (`>=6.3.0 <7.0.0`). Install it only when using this entry point.
 
 ```bash
 pnpm add @ngx-signal-forms/toolkit vest

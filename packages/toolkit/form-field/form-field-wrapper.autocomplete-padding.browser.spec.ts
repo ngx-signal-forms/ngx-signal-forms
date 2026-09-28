@@ -36,7 +36,7 @@ const mockField = (options: MockFieldOptions = {}) => {
     value: signal(options.value ?? ''),
     required: signal(false),
   };
-  return signal(() => fieldState);
+  return signal(fieldState);
 };
 
 const contentOf = (wrapper: Element): HTMLElement => {

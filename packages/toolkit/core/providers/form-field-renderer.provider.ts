@@ -125,6 +125,13 @@ const hintRendererProviders = createRendererProviders(
 /**
  * Provides the error renderer at environment scope.
  *
+ * @example
+ * ```typescript
+ * providers: [
+ *   provideFormFieldErrorRenderer({ component: MyErrorRenderer }),
+ * ];
+ * ```
+ *
  * @public
  */
 export function provideFormFieldErrorRenderer(
@@ -135,6 +142,15 @@ export function provideFormFieldErrorRenderer(
 
 /**
  * Component-scoped override for the error renderer.
+ *
+ * @example
+ * ```typescript
+ * providers: [
+ *   ...provideFormFieldErrorRendererForComponent({
+ *     component: MyErrorRenderer,
+ *   }),
+ * ];
+ * ```
  *
  * @public
  */
@@ -147,6 +163,13 @@ export function provideFormFieldErrorRendererForComponent(
 /**
  * Provides the hint renderer at environment scope.
  *
+ * @example
+ * ```typescript
+ * providers: [
+ *   provideFormFieldHintRenderer({ component: MyHintRenderer }),
+ * ];
+ * ```
+ *
  * @public
  */
 export function provideFormFieldHintRenderer(
@@ -157,6 +180,15 @@ export function provideFormFieldHintRenderer(
 
 /**
  * Component-scoped override for the hint renderer.
+ *
+ * @example
+ * ```typescript
+ * providers: [
+ *   ...provideFormFieldHintRendererForComponent({
+ *     component: MyHintRenderer,
+ *   }),
+ * ];
+ * ```
  *
  * @public
  */

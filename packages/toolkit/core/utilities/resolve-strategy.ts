@@ -13,6 +13,16 @@ type WarningStrategyInput = WarningDisplayStrategy | null | undefined;
 const isSet = <T>(value: T | null | undefined): value is T =>
   value !== null && value !== undefined;
 
+/**
+ * Resolves the error display strategy from an input value, context, and
+ * config default.
+ *
+ * Cascade order (three tiers, plus a terminal fallback):
+ * 1. explicit input strategy (if not `'inherit'`)
+ * 2. form context's error strategy
+ * 3. config default error strategy
+ * 4. terminal fallback `'on-touch'`
+ */
 export function resolveErrorDisplayStrategy(
   inputStrategy: StrategyInput,
   contextStrategy?: ResolvedErrorDisplayStrategy | null,

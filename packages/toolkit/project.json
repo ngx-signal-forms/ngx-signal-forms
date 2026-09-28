@@ -50,6 +50,34 @@
         "cwd": "{workspaceRoot}"
       }
     },
+    "check-published-package": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["post-build"],
+      "options": {
+        "command": "node packages/toolkit/scripts/check-published-package.mjs",
+        "cwd": "{workspaceRoot}"
+      }
+    },
+    "check-package-shape": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["post-build"],
+      "options": {
+        "commands": [
+          "pnpm exec publint dist/packages/toolkit --strict",
+          "pnpm exec attw --pack dist/packages/toolkit --profile esm-only"
+        ],
+        "parallel": false,
+        "cwd": "{workspaceRoot}"
+      }
+    },
+    "check-size": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["post-build"],
+      "options": {
+        "command": "node packages/toolkit/scripts/size-report.mjs",
+        "cwd": "{workspaceRoot}"
+      }
+    },
     "nx-release-publish": {
       "dependsOn": ["build", "post-build"],
       "options": {

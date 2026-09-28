@@ -1279,6 +1279,36 @@ describe('form-field wrapper — additional variant coverage (#501)', () => {
       await commands.emulateForcedColors(null);
     });
 
+    /**
+     * Resolves a CSS system color keyword (`Highlight`, `Mark`) to the
+     * value the emulated forced-colors palette gives it. The wrapper sets
+     * `forced-color-adjust: none` on the textual container, so the browser
+     * no longer adapts author colors there: only a system color keyword
+     * follows the user's palette. Comparing against the resolved keyword
+     * proves the focus styling comes from the forced-colors rule and not
+     * from the ordinary author focus color.
+     */
+    const resolveSystemColor = (keyword: string): string => {
+      const probe = document.createElement('div');
+      probe.style.cssText = `forced-color-adjust: none; outline: 2px solid ${keyword}`;
+      document.body.append(probe);
+      const resolved = getComputedStyle(probe).outlineColor;
+      probe.remove();
+      return resolved;
+    };
+
+    /** Waits for the container's color transitions, so reads see final values. */
+    const settleTransitions = async (): Promise<void> => {
+      await expect
+        .poll(
+          () =>
+            document
+              .getAnimations()
+              .filter((animation) => animation.playState === 'running').length,
+        )
+        .toBe(0);
+    };
+
     it('applies the emulation and repaints the textual border from a forced-colors-only system color', async () => {
       // Default (not "outline") appearance only. Outline appearance's own
       // border rule (`:host(.ngx-signal-forms-outline.ngx-signal-form-field-
@@ -1432,6 +1462,7 @@ describe('form-field wrapper — additional variant coverage (#501)', () => {
         )!,
       );
       await userEvent.tab();
+      await settleTransitions();
 
       const content = container.querySelector<HTMLElement>(
         '.ngx-signal-form-field-wrapper__content',
@@ -1439,9 +1470,68 @@ describe('form-field wrapper — additional variant coverage (#501)', () => {
       const styles = getComputedStyle(content);
       // The forced-colors focus rule neutralizes the ordinary color-mix()
       // box-shadow ring and draws a solid 2px `Highlight` outline instead —
-      // the sole focus signal in this mode.
+      // the sole focus signal in this mode. On Angular 22.2 the ordinary
+      // nested focus rule out-specified it (#556): the author focus color
+      // and ring came back, and they do not follow the user's palette.
       expect(styles.outlineStyle).toBe('solid');
       expect(styles.outlineWidth).toBe('2px');
+      expect(styles.outlineColor).toBe(resolveSystemColor('Highlight'));
+      expect(styles.borderTopColor).toBe(resolveSystemColor('Highlight'));
+      expect(styles.boxShadow).toBe('none');
+    });
+
+    it('keeps the Mark border and draws the Highlight focus outline on an invalid field under forced-colors: active', async () => {
+      // The invalid state has its own forced-colors focus rule for the
+      // border and box-shadow. The outline still comes from the shared
+      // forced-colors focus rule, so an invalid field must show both
+      // signals: `Mark` for the error, `Highlight` for focus (#556).
+      const TestComponent = defineFixtureComponent(
+        'ngx-test-a11y-forced-colors-invalid-focus',
+        `
+          <button type="button" id="forced-colors-invalid-focus-anchor">Before</button>
+          <form [formRoot]="testForm" ngxSignalForm>
+            <ngx-form-field-wrapper [formField]="testForm.name" fieldName="name">
+              <label for="forced-colors-invalid-focus-name">Full name</label>
+              <input
+                id="forced-colors-invalid-focus-name"
+                type="text"
+                [formField]="testForm.name"
+              />
+            </ngx-form-field-wrapper>
+          </form>
+        `,
+        () =>
+          form(
+            signal({ name: '' }),
+            schema<{ name: string }>((path) => {
+              required(path.name, { message: 'Full name is required' });
+            }),
+          ),
+      );
+
+      const { container, fixture } = await render(TestComponent);
+      fixture.componentInstance.testForm.name().markAsTouched();
+      await TestBed.inject(ApplicationRef).whenStable();
+      await commands.emulateForcedColors('active');
+
+      await userEvent.click(
+        container.querySelector<HTMLButtonElement>(
+          '#forced-colors-invalid-focus-anchor',
+        )!,
+      );
+      await userEvent.tab();
+      await settleTransitions();
+
+      expect(container.querySelector('ngx-form-field-wrapper')).toHaveClass(
+        'ngx-signal-form-field-wrapper--invalid',
+      );
+      const content = container.querySelector<HTMLElement>(
+        '.ngx-signal-form-field-wrapper__content',
+      )!;
+      const styles = getComputedStyle(content);
+      expect(styles.outlineStyle).toBe('solid');
+      expect(styles.outlineColor).toBe(resolveSystemColor('Highlight'));
+      expect(styles.borderTopColor).toBe(resolveSystemColor('Mark'));
       expect(styles.boxShadow).toBe('none');
     });
 

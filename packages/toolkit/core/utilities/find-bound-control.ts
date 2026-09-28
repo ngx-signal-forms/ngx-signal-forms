@@ -36,6 +36,8 @@ import { isHtmlElement } from './dom-guards';
  * Centralized here (rather than co-located with the form-field wrapper) so
  * `NgxFieldIdentity` and any future surface that needs to discover a bound
  * control share one resolution rule.
+ *
+ * @internal
  */
 export const BOUND_CONTROL_SELECTOR =
   'input[id], textarea[id], select[id], button[type="button"][id], [role="combobox"][id], [id][formField], [id][ng-reflect-form-field], [id][data-ngx-signal-form-control]';
@@ -50,6 +52,8 @@ export const BOUND_CONTROL_SELECTOR =
  *
  * `hostEl` should already be scoped to the region that can only contain the
  * real control — see the document-order caveat on {@link BOUND_CONTROL_SELECTOR}.
+ *
+ * @internal
  */
 export function findBoundControl(
   // oxlint-disable-next-line @typescript-eslint/prefer-readonly-parameter-types -- DOM APIs operate on mutable HTMLElement instances.

@@ -19,7 +19,7 @@ directly wherever you render a fixture in a test.
 is only required if you import from this entry point.
 
 ```bash
-npm install --save-dev axe-core@^4.5.0
+npm install --save-dev axe-core@^4.13.0
 ```
 
 ## Import

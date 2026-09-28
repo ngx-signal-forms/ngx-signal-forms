@@ -1,30 +1,46 @@
-import type { FieldTree } from '@angular/forms/signals';
+import type { FieldTree, ValidationError } from '@angular/forms/signals';
 import { describe, expect, it, vi } from 'vitest';
 import { createOnInvalidHandler } from './on-invalid-handler';
+import { createMockFieldTree as createMockFieldTreeShared } from './testing/mock-field-tree';
 
-function createMockFieldTree(errors: unknown[] = []): FieldTree<unknown> {
-  let fieldTree!: FieldTree<unknown>;
-  // The walker enforces a `state.fieldTree === fieldTree` back-reference, so
-  // mocks consumed via focusFirstInvalid (and therefore via this handler)
-  // must expose it. A getter keeps the closed-over `fieldTree` referenced
-  // after Object.assign without TDZ headaches.
-  fieldTree = (() => ({
-    get fieldTree() {
-      return fieldTree;
-    },
-    errorSummary: () => errors,
-    errors: () => errors,
-    invalid: () => errors.length > 0,
-    touched: () => false,
-    dirty: () => false,
-    valid: () => errors.length === 0,
-    pending: () => false,
-    submitting: () => false,
-    value: () => ({}),
-    markAsTouched: () => {},
-  })) as unknown as FieldTree<unknown>;
+function createMockFieldTree(
+  errors: readonly ValidationError.WithFieldTree[] = [],
+): FieldTree<unknown> {
+  return createMockFieldTreeShared({
+    value: {},
+    errors,
+    valid: errors.length === 0,
+    invalid: errors.length > 0,
+  });
+}
 
-  return fieldTree;
+/**
+ * A single required-field error whose `focusBoundControl()` calls the given
+ * spy — enough for `createOnInvalidHandler`'s focus-then-`afterInvalid`
+ * ordering tests, which only care that focus was attempted.
+ *
+ * Builds the mock field tree ONCE and reuses it as `fieldTree` directly,
+ * rather than a `() => createMockFieldTreeShared(...)()` factory that would
+ * mint a brand-new `FieldState` (with its own new `fieldTree` back-
+ * reference) on every call — breaking the `state.fieldTree === fieldTree`
+ * identity the walker relies on if `error.fieldTree()` is ever read more
+ * than once.
+ */
+function createMockError(
+  focusBoundControl: () => void,
+): ValidationError.WithFieldTree {
+  const fieldTree = createMockFieldTreeShared({
+    value: '',
+    invalid: true,
+    valid: false,
+    focusBoundControl,
+  });
+
+  return {
+    kind: 'required',
+    message: 'Required',
+    fieldTree,
+  } satisfies ValidationError.WithFieldTree;
 }
 
 describe('createOnInvalidHandler', () => {
@@ -34,23 +50,13 @@ describe('createOnInvalidHandler', () => {
   });
 
   it('should call focusFirstInvalid by default', () => {
-    const mockFieldTree = createMockFieldTree([
-      {
-        kind: 'required',
-        message: 'Required',
-        fieldTree: () => ({
-          name: () => 'email',
-          focusBoundControl: vi.fn(),
-        }),
-      },
-    ]);
+    const focusSpy = vi.fn();
+    const mockFieldTree = createMockFieldTree([createMockError(focusSpy)]);
 
     const handler = createOnInvalidHandler();
+    handler(mockFieldTree);
 
-    // Should not throw
-    expect(() => {
-      handler(mockFieldTree);
-    }).not.toThrow();
+    expect(focusSpy).toHaveBeenCalledOnce();
   });
 
   it('should not throw when focusFirstInvalid is disabled', () => {
@@ -86,16 +92,7 @@ describe('createOnInvalidHandler', () => {
       callOrder.push('afterInvalid');
     });
 
-    const mockFieldTree = createMockFieldTree([
-      {
-        kind: 'required',
-        message: 'Required',
-        fieldTree: () => ({
-          name: () => 'email',
-          focusBoundControl: focusFn,
-        }),
-      },
-    ]);
+    const mockFieldTree = createMockFieldTree([createMockError(focusFn)]);
 
     const handler = createOnInvalidHandler({ afterInvalid });
     handler(mockFieldTree);

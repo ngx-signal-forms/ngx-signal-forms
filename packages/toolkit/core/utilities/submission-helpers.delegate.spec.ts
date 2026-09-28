@@ -1,13 +1,10 @@
 import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
-import {
-  form,
-  type FieldTree,
-  type ValidationError,
-} from '@angular/forms/signals';
+import { form, type ValidationError } from '@angular/forms/signals';
 import { describe, expect, it, vi } from 'vitest';
 
 import { submitWithWarnings } from './submission-helpers';
+import { createLooseMockFieldTree as createMockFieldTree } from './testing/loose-mock-field-tree';
 
 describe('submitWithWarnings markAsTouched() delegation', () => {
   it('delegates touch-all to markAsTouched() on the root form tree', async () => {
@@ -64,18 +61,3 @@ describe('submitWithWarnings markAsTouched() delegation', () => {
     expect(result).toBe(false);
   });
 });
-
-function createMockFieldTree<TValue>(
-  state: Readonly<Record<string, unknown>>,
-): FieldTree<TValue> {
-  let fieldTree!: FieldTree<TValue>;
-
-  fieldTree = (() => ({
-    ...state,
-    get fieldTree() {
-      return fieldTree;
-    },
-  })) as FieldTree<TValue>;
-
-  return fieldTree;
-}

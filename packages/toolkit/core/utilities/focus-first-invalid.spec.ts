@@ -1,14 +1,7 @@
-import { signal } from '@angular/core';
-import type {
-  DisabledReason,
-  FieldState,
-  FieldTree,
-  FormField,
-  MetadataKey,
-  ValidationError,
-} from '@angular/forms/signals';
+import type { FieldTree, ValidationError } from '@angular/forms/signals';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { focusFirstInvalid } from './focus-first-invalid';
+import { createMockFieldTree } from './testing/mock-field-tree';
 
 /**
  * Test suite for focus-first-invalid utility.
@@ -545,92 +538,4 @@ function createFocusTarget(): HTMLElement {
   element.setAttribute('data-mock-focus-target', '');
   document.body.append(element);
   return element;
-}
-
-function createMockFieldTree<TValue>({
-  errors,
-  focusBoundControl,
-  omitFocusBoundControl = false,
-  invalid,
-  valid,
-  value,
-  hidden = false,
-  disabled = false,
-  isReadonly = false,
-  formFieldBindings = [],
-}: {
-  errors: ValidationError.WithFieldTree[];
-  focusBoundControl?: (options?: FocusOptions) => void;
-  omitFocusBoundControl?: boolean;
-  invalid: boolean;
-  valid: boolean;
-  value: TValue;
-  hidden?: boolean;
-  disabled?: boolean;
-  isReadonly?: boolean;
-  /** Elements to expose via `fieldState.formFieldBindings()`. */
-  formFieldBindings?: readonly HTMLElement[];
-}): FieldTree<TValue> {
-  let fieldTree!: FieldTree<TValue>;
-
-  const valueSignal = signal(value);
-  const errorSignal = signal(errors);
-  const focusBoundControlFn =
-    focusBoundControl ?? ((_options?: FocusOptions): void => undefined);
-
-  const fieldState: FieldState<TValue> = {
-    get fieldTree() {
-      return fieldTree;
-    },
-    value: valueSignal,
-    controlValue: valueSignal,
-    disabled: signal(disabled),
-    disabledReasons: signal<DisabledReason[]>([]),
-    dirty: signal(false),
-    errorSummary: errorSignal,
-    errors: errorSignal,
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- test-only partial FormField shape; only `element` is read by the code under test.
-    formFieldBindings: signal(
-      formFieldBindings.map((element) => ({ element }) as FormField<unknown>),
-    ),
-    hidden: signal(hidden),
-    invalid: signal(invalid),
-    keyInParent: signal<string | number>('root'),
-    max: signal<NonNullable<TValue> | undefined>(undefined),
-    maxLength: signal<number | undefined>(undefined),
-    min: signal<NonNullable<TValue> | undefined>(undefined),
-    minLength: signal<number | undefined>(undefined),
-    name: signal('root'),
-    pattern: signal<readonly RegExp[]>([]),
-    pending: signal(false),
-    readonly: signal(isReadonly),
-    required: signal(false),
-    submitting: signal(false),
-    touched: signal(false),
-    valid: signal(valid),
-    focusBoundControl: focusBoundControlFn,
-    markAsDirty: (): void => undefined,
-    markAsTouched: (): void => undefined,
-    metadata: <M>(_key: MetadataKey<M, unknown, unknown>): M | undefined =>
-      undefined,
-    hasMetadata: (_key: MetadataKey<unknown, unknown, unknown>): boolean =>
-      false,
-    getError: (_kind: string): undefined => undefined,
-    reset: (_value?: TValue): void => undefined,
-    reloadValidation: (): void => undefined,
-  };
-
-  if (omitFocusBoundControl) {
-    // Simulate a custom control that never registered a binding: the native
-    // FieldState surface still exists, but focusBoundControl is absent.
-    delete (fieldState as Partial<FieldState<TValue>>).focusBoundControl;
-  }
-
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- This test helper only needs the callable FieldTree shape used by focusFirstInvalid().
-  fieldTree = Object.assign(
-    (): FieldState<TValue> => fieldState,
-    {},
-  ) as FieldTree<TValue>;
-
-  return fieldTree;
 }

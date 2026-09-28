@@ -79,19 +79,19 @@ This document is written for a later implementation agent. It is self-contained.
 
 ### Form contract
 
-- **REQ-003**: [warning-support.form.ts](apps/demo/src/app/02-toolkit-core/warning-support/warning-support.form.ts) MUST use `form[formRoot]`.
+- **REQ-003**: [warning-support.form.ts](../apps/demo/src/app/02-toolkit-core/warning-support/warning-support.form.ts) MUST use `form[formRoot]`.
 - **REQ-004**: Warning Support MUST use Angular `form(..., { submission })` or an equivalent `[formRoot]`-compatible submit path. Remove the standalone `novalidate` + `(submit)="handleSubmit($event)"` host form.
 - **REQ-005**: Warning Support MUST keep `submitWithWarnings()` semantics: warnings do not block submit; blocking errors do.
 - **REQ-006**: Warning Support MUST derive in-flight submit UI from `passwordForm().submitting()` (or the `[formRoot]` submission signal). Delete the local `isSubmitting` signal if it only duplicates that state.
-- **REQ-007**: [trip-step.ts](apps/demo/src/app/05-advanced/advanced-wizard/components/trip-step.ts) MUST wrap destination/activity fields in `form[formRoot]="tripForm"`.
+- **REQ-007**: [trip-step.ts](../apps/demo/src/app/05-advanced/advanced-wizard/components/trip-step.ts) MUST wrap destination/activity fields in `form[formRoot]="tripForm"`.
 - **REQ-008**: Traveler step MAY keep `form[formRoot]` without `ngxSignalForm` if it only needs default `'on-touch'` timing. Add `ngxSignalForm` only if the step needs form-level strategy, `submittedStatus`, or inherited `'on-submit'`.
 - **REQ-009**: Do not introduce `(ngSubmit)` anywhere.
 
 ### Accessibility and ARIA
 
-- **REQ-010**: Remove author-owned `aria-describedby` from native inputs in [error-display-modes.form.ts](apps/demo/src/app/02-toolkit-core/error-display-modes/error-display-modes.form.ts) unless that control is explicitly in manual ARIA mode.
+- **REQ-010**: Remove author-owned `aria-describedby` from native inputs in [error-display-modes.form.ts](../apps/demo/src/app/02-toolkit-core/error-display-modes/error-display-modes.form.ts) unless that control is explicitly in manual ARIA mode.
 - **REQ-011**: Keep hint and character-count elements. Give them stable `id`s. Let auto-ARIA compose `aria-describedby`.
-- **REQ-012**: Headless pages ([error-message-signal](apps/demo/src/app/03-headless/error-message-signal), [fieldset-utilities](apps/demo/src/app/03-headless/fieldset-utilities)) MAY keep manual `aria-invalid` / `aria-describedby`. That is the headless contract.
+- **REQ-012**: Headless pages ([error-message-signal](../apps/demo/src/app/03-headless/error-message-signal), [fieldset-utilities](../apps/demo/src/app/03-headless/fieldset-utilities)) MAY keep manual `aria-invalid` / `aria-describedby`. That is the headless contract.
 - **REQ-013**: Custom rating and legacy datepicker MAY keep manual ARIA. They already opt out correctly.
 
 ### Success and error presentation
@@ -120,7 +120,7 @@ This document is written for a later implementation agent. It is self-contained.
 
 ### Display Controls and debugger
 
-- **REQ-027**: [i18n.page.ts](apps/demo/src/app/05-advanced/i18n/i18n.page.ts) MUST render `ngx-signal-form-debugger` bound to the live form tree, using the same split-layout pattern as other advanced pages.
+- **REQ-027**: [i18n.page.ts](../apps/demo/src/app/05-advanced/i18n/i18n.page.ts) MUST render `ngx-signal-form-debugger` bound to the live form tree, using the same split-layout pattern as other advanced pages.
 - **REQ-028**: Error Message Signal and Single-Model Wizard MAY omit Display Controls. If omitted, do not add empty rail chrome.
 - **REQ-029**: Fieldset Appearance already embeds a debugger in the form component. Keep one visible debugger. Do not add a second copy on the page wrapper.
 - **REQ-030**: Nav “Has display controls” badges MUST match pages that actually register `ngxPageControls`. If a page has controls, the nav item must advertise them. If it does not, it must not.
@@ -128,9 +128,9 @@ This document is written for a later implementation agent. It is self-contained.
 ### Cleanup allowed in this pass
 
 - **REQ-031**: Delete unused `productFeedbackValidationSuite` or stop exporting it. Do not leave a second unused schema that disagrees with the live form.
-- **REQ-032**: [example-cards.ts](apps/demo/src/app/ui/example-cards/example-cards.ts) MUST stop using `Math.random()` for `demonstratedHeadingId`. Use a stable id (static suffix, incremental counter, or `crypto.randomUUID()` only if generated once per class field initialization is insufficiently stable for tests — prefer a deterministic string such as `example-cards-demonstrated`).
-- **REQ-033**: [example-cards.html](apps/demo/src/app/ui/example-cards/example-cards.html) next-step links MUST use Angular `routerLink` (or `RouterLink`) for in-app paths. Keep external URLs as `href`.
-- **REQ-034**: When already editing a file, remove `standalone: true` from [badge-icon.ts](apps/demo/src/app/ui/badge/badge-icon.ts) if that file is touched. Do not open a dedicated cleanup-only PR for OnPush/standalone.
+- **REQ-032**: [example-cards.ts](../apps/demo/src/app/ui/example-cards/example-cards.ts) MUST stop using `Math.random()` for `demonstratedHeadingId`. Use a stable id (static suffix, incremental counter, or `crypto.randomUUID()` only if generated once per class field initialization is insufficiently stable for tests — prefer a deterministic string such as `example-cards-demonstrated`).
+- **REQ-033**: [example-cards.html](../apps/demo/src/app/ui/example-cards/example-cards.html) next-step links MUST use Angular `routerLink` (or `RouterLink`) for in-app paths. Keep external URLs as `href`.
+- **REQ-034**: When already editing a file, remove `standalone: true` from [badge-icon.ts](../apps/demo/src/app/ui/badge/badge-icon.ts) if that file is touched. Do not open a dedicated cleanup-only PR for OnPush/standalone.
 - **GUD-002**: `Date | null` on the legacy datepicker adapter MAY remain. That empty-date contract is justified.
 - **GUD-003**: `monthlyBudget: number | null` in brand-theming MAY remain if `0` would incorrectly trigger or hide the warning demo. If `0` preserves the demo (empty/unset vs over-budget warning), prefer `0` and `number`.
 
