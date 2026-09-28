@@ -14,12 +14,19 @@ const TARGET_LABEL = 'Warning Support';
 const TARGET_PATH = DEMO_PATHS.warningSupport;
 
 async function clickSidebarLink(page: Page): Promise<void> {
+  // Let the page settle first: the nav tree expands the active category
+  // after the route renders, and a click before that would collapse it.
+  await expect(page.locator('main h1')).toBeVisible();
+
   const navTree = page.getByLabel('Documentation sections');
-  const link = navTree.getByRole('link', { name: TARGET_LABEL });
-  if (!(await link.isVisible())) {
-    await navTree.getByRole('button', { name: 'Toolkit Core' }).click();
+  // A collapsed panel still reports its links as visible (0fr grid row), so
+  // read the disclosure state instead.
+  const category = navTree.getByRole('button', { name: 'Toolkit Core' });
+  if ((await category.getAttribute('aria-expanded')) !== 'true') {
+    await category.click();
   }
-  await link.click();
+  await expect(category).toHaveAttribute('aria-expanded', 'true');
+  await navTree.getByRole('link', { name: TARGET_LABEL }).click();
   await expect(page).toHaveURL(new RegExp(`${TARGET_PATH}$`));
 }
 
