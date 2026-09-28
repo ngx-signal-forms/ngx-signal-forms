@@ -578,8 +578,17 @@ export class NgxSignalFormAutoAria {
    * control.
    */
   #hasDescendantControl(): boolean {
+    const target = this.#ariaTarget();
+    if (target.querySelector(DESCENDANT_CONTROL_SELECTOR) !== null) return true;
+
+    // A wrapper publishes the control it wraps. That control may carry a
+    // role that does not support `aria-required` (`slider`, `button`), so
+    // the selector above misses it, but the host is still a container.
+    const boundControl = this.#fieldIdentity?.resolveControlElement() ?? null;
     return (
-      this.#ariaTarget().querySelector(DESCENDANT_CONTROL_SELECTOR) !== null
+      boundControl !== null &&
+      boundControl !== target &&
+      target.contains(boundControl)
     );
   }
 
