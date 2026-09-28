@@ -236,7 +236,11 @@ amber, with `role="status"`:
 
 ```typescript
 import { validate } from '@angular/forms/signals';
-import { hasOnlyWarnings, warningError } from '@ngx-signal-forms/toolkit';
+import {
+  createOnInvalidHandler,
+  hasOnlyWarnings,
+  warningError,
+} from '@ngx-signal-forms/toolkit';
 
 // In the schema function
 validate(path.password, ({ value }) =>
@@ -251,12 +255,14 @@ it by default. To let warnings through, ignore validators in the submission
 options and check for blocking errors yourself:
 
 ```typescript
+readonly #onInvalid = createOnInvalidHandler();
+
 readonly signupForm = form(this.model, signupSchema, {
   submission: {
     ignoreValidators: 'all',
     action: async (tree) => {
       if (!hasOnlyWarnings(tree().errorSummary())) {
-        this.onInvalid(tree); // from createOnInvalidHandler()
+        this.#onInvalid(tree);
         return;
       }
       await this.api.save(tree().value());
