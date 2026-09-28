@@ -23,12 +23,17 @@ import {
 } from '@angular/router';
 import { Title } from '@angular/platform-browser';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { filter, map, of, switchMap, timer } from 'rxjs';
+import { filter, map, of, pairwise, startWith, switchMap, timer } from 'rxjs';
 import { getRouteTitle, SITE_NAME } from '@ngx-signal-forms/demo-shared';
 import { NavTreeComponent } from './ui/nav-tree';
 import { RightRailComponent } from './ui/right-rail';
 import { NgxThemeSwitcherComponent } from './ui/theme-switcher/theme-switcher';
 import { PageControlsService } from './ui/page-controls';
+
+/** Strips the query string and fragment from a router URL. */
+function toPath(url: string): string {
+  return url.split(/[?#]/)[0] ?? url;
+}
 
 @Component({
   selector: 'ngx-root',
@@ -792,12 +797,14 @@ export class AppComponent {
     { initialValue: false },
   );
 
+  /** The URL path without its query string or fragment, so a query-only or
+   * fragment-only change does not count as a new page. */
   readonly #currentPath = toSignal(
     this.#router.events.pipe(
       filter((e) => e instanceof NavigationEnd),
-      map(() => this.#router.url.split('?')[0]),
+      map(() => toPath(this.#router.url)),
     ),
-    { initialValue: this.#router.url.split('?')[0] },
+    { initialValue: toPath(this.#router.url) },
   );
 
   // Named Angular effect fields are intentionally unread.
@@ -822,6 +829,49 @@ export class AppComponent {
     this.navOpen.set(false);
     const scroller = this.scrollContainer()?.nativeElement;
     if (scroller) scroller.scrollTop = 0;
+  });
+
+  /**
+   * Move focus to the new page's `<h1>` after a route change (#571).
+   *
+   * Without this, focus stays on the nav link that was clicked (or returns
+   * to the hamburger on mobile), and a screen-reader user hears nothing
+   * about the new page. Focusing the heading announces the page name and
+   * puts the next Tab stop at the start of the page content. This is the
+   * pattern the Angular accessibility guide recommends.
+   *
+   * It does not run on the first load (the browser already announces a new
+   * document), or when only the query string or fragment changes. Pages
+   * without an `<h1>` fall back to `<main>`.
+   */
+  readonly #pageChange = toSignal(
+    this.#router.events.pipe(
+      filter((e) => e instanceof NavigationEnd),
+      map((e) => ({ id: e.id, path: toPath(e.urlAfterRedirects) })),
+      startWith({ id: 0, path: toPath(this.#router.url) }),
+      pairwise(),
+      // The initial navigation always has id 1. Blocking initial navigation
+      // can complete before this subscription exists, so the id check covers
+      // both orders.
+      filter(([previous, next]) => next.id > 1 && next.path !== previous.path),
+      map(([, next]) => next),
+    ),
+    { initialValue: null },
+  );
+
+  // oxlint-disable-next-line no-unused-private-class-members -- EffectRef is intentionally kept as a named field to document the side effect.
+  readonly #focusHeadingOnPageChangeEffect = effect(() => {
+    if (this.#pageChange() === null) return;
+
+    afterNextRender(
+      () => {
+        const main = this.mainContent()?.nativeElement;
+        const target =
+          main?.querySelector<HTMLElement>('h1[tabindex="-1"]') ?? main;
+        target?.focus({ preventScroll: true });
+      },
+      { injector: this.#injector },
+    );
   });
 
   /** Skip link: focus `<main>` in place instead of following the fragment
@@ -968,7 +1018,19 @@ export class AppComponent {
       () => {
         if (isOpen) {
           this.navCloseButton()?.nativeElement.focus();
-        } else {
+          return;
+        }
+
+        // Return focus to the toggle only when it would otherwise be lost:
+        // still in the now-hidden drawer, or dropped to <body>. After a nav
+        // link click, the route-change effect may already have moved focus
+        // to the new page's heading, and that must win (#571).
+        const active = this.#document.activeElement;
+        const lostFocus =
+          active === null ||
+          active === this.#document.body ||
+          this.#document.querySelector('.shell__nav')?.contains(active);
+        if (lostFocus) {
           this.navToggleButton()?.nativeElement.focus();
         }
       },
