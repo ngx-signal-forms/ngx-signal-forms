@@ -51,7 +51,7 @@ Autosave watches drafts, so persistence is not restricted to committed data.
 
 **Lazy steps.** Each step is a `@defer` block so step-specific dependencies (validation libraries, data lists) ship as separate chunks. A shared `WizardStepInterface` lets the container call `validateAndFocus()` / `commitToStore()` / `focusHeading()` on whichever step is currently loaded.
 
-**Auto-save.** The store watches `draftSummary()` and persists via `rxMethod` + `httpMutation`. Saving indicator uses the `onCleanup` effect pattern so debounced timers cancel on re-run.
+**Auto-save.** The store passes the `draftSummary` signal straight to an `rxMethod`, which tracks it and persists through `httpMutation`. Saving indicator uses the `onCleanup` effect pattern so debounced timers cancel on re-run.
 
 ## Key files
 
@@ -65,8 +65,8 @@ Autosave watches drafts, so persistence is not restricted to committed data.
 ## Other tools
 
 - **Zod 4** schemas via `validateStandardSchema()`.
-- **NgRx Signal Store** (`@ngrx/signals`) and rxjs interop (`rxMethod`).
-- **`@angular-architects/ngrx-toolkit`** for `httpMutation()` and linked state.
+- **NgRx Signal Store** (`@ngrx/signals`) for `withLinkedState()` and rxjs interop (`rxMethod`).
+- **`@ngrx-toolkit/core`** for `withMutations()` and `httpMutation()`.
 - **MSW** mock APIs in `apps/demo/src/mocks/*`.
 
 ## How to test

@@ -116,9 +116,7 @@
     <button
       type="button"
       class="btn-secondary"
-      [disabled]="
-          store.isFirstStep() || store.isLoading() || store.isSubmitting()
-        "
+      [disabled]="store.isFirstStep() || store.isSubmitting()"
       (click)="previousStep()"
     >
       Previous
@@ -128,7 +126,7 @@
     <button
       type="button"
       class="btn-primary"
-      [ngxBusy]="store.isLoading() || store.isSubmitting()"
+      [ngxBusy]="store.isSubmitting()"
       (click)="nextStep()"
     >
       Next
@@ -137,7 +135,7 @@
     <button
       type="button"
       class="btn-primary"
-      [ngxBusy]="store.isLoading() || store.isSubmitting()"
+      [ngxBusy]="store.isSubmitting()"
       (click)="submit()"
     >
       @if (store.isSubmitting()) { Submitting... } @else { Confirm Booking }

@@ -7,7 +7,7 @@ import { BaseFormPage } from './base-form.page';
  * Route: /advanced-scenarios/autosave
  *
  * Debounced, field-level autosave (`debounce()` + a dirty+valid+settled gate
- * + `httpResource`) with no submit button — see
+ * + a one-at-a-time `HttpClient` PATCH) with no submit button — see
  * `apps/demo/src/app/05-advanced/autosave/README.md`. Exposes only public
  * surfaces: the two form controls, the two fixed-role save-status live
  * regions, the Retry/Reset buttons, and the visible dirty()/valid() debug

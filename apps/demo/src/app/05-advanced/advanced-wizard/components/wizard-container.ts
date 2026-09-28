@@ -182,11 +182,7 @@ export class WizardContainerComponent {
   }
 
   protected async nextStep(): Promise<void> {
-    if (
-      this.store.hasConfirmedBooking() ||
-      this.store.isLoading() ||
-      this.store.isSubmitting()
-    ) {
+    if (this.store.hasConfirmedBooking() || this.store.isSubmitting()) {
       return;
     }
 
@@ -219,11 +215,7 @@ export class WizardContainerComponent {
   }
 
   protected async submit(): Promise<void> {
-    if (
-      this.store.hasConfirmedBooking() ||
-      this.store.isLoading() ||
-      this.store.isSubmitting()
-    ) {
+    if (this.store.hasConfirmedBooking() || this.store.isSubmitting()) {
       return;
     }
 

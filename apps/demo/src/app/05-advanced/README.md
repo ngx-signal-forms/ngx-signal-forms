@@ -28,8 +28,8 @@ Choose individual patterns. The wizard and server-save demos document known runt
   - What you'll learn: `resource()`-driven prefill · form-level vs. field-level server errors · the auto-clear semantics of submission errors · `reset(value)` after a successful save.
 - **[store-binding](./store-binding/README.md)** — honest two-way binding between a Signal Form and an `@ngrx/signals` store via `linkedSignal`, contrasted with the wizard's draft/commit buffer.
   - Uses the native options-level `set` callback to write through to `patchState`; it does not replace the signal's setter methods.
-- **[autosave](./autosave/README.md)** — debounced, field-level save via `debounce(path, 500)` + `httpResource`, with no submit button.
-  - What you'll learn: the native `debounce()` schema rule · gating a save on `dirty()` **and** `valid()` · pausing `httpResource` with an `undefined` request · accessible save-status live regions.
+- **[autosave](./autosave/README.md)** — debounced, field-level save via `debounce(path, 500)` + `HttpClient.patch()`, with no submit button.
+  - What you'll learn: the native `debounce()` schema rule · gating a save on `dirty()` **and** `valid()` · why a save is a write and never a resource · accessible save-status live regions.
 - **[i18n](./i18n/README.md)** — `provideErrorMessages()`/`provideFieldLabels()` factories reacting to a runtime language signal.
   - What you'll learn: the string-vs-function registry contract · why `$localize` can't do a runtime switch · a parameterised, translated `minLength` message.
 

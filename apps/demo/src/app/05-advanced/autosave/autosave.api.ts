@@ -2,13 +2,13 @@
  * Autosave API constants
  *
  * The autosave demo routes through a **real** MSW handler (see
- * `apps/demo/src/mocks/handlers.ts`) via `httpResource`, unlike
+ * `apps/demo/src/mocks/handlers.ts`) via `HttpClient`, unlike
  * `server-integration`'s in-memory fake service — this file only holds the
  * endpoint and the magic value that makes the fake backend reject a save, so
  * the client and the handler agree on both without duplicating literals.
  */
 
-/** Endpoint the autosave `httpResource` PATCHes dirty, valid changes to. */
+/** Endpoint the autosave form PATCHes dirty, valid changes to. */
 export const AUTOSAVE_ENDPOINT = '/api/autosave/profile';
 
 /**
