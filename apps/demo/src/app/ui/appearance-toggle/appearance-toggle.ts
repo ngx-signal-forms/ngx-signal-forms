@@ -17,12 +17,10 @@ import { APPEARANCE_LABELS, APPEARANCE_OPTIONS } from './appearance.constants';
           type="button"
           (click)="value.set(appearance)"
           [attr.aria-pressed]="value() === appearance"
-          [class.bg-[#e8f4fb]]="value() === appearance"
+          [class.bg-selected]="value() === appearance"
           [class.shadow-sm]="value() === appearance"
-          [class.text-[#005d96]]="value() === appearance"
-          [class.dark:bg-gray-700]="value() === appearance"
-          [class.dark:text-blue-300]="value() === appearance"
-          class="rounded-full px-3 py-1.5 text-sm font-medium text-gray-600 transition-all hover:text-gray-900 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#005fcc] dark:text-gray-300 dark:hover:text-white"
+          [class.text-on-selected]="value() === appearance"
+          class="focus-visible:outline-border-focus rounded-full px-3 py-1.5 text-sm font-medium text-gray-600 transition-all hover:text-gray-900 focus-visible:outline-2 focus-visible:outline-offset-2 dark:text-gray-300 dark:hover:text-white"
         >
           {{ appearanceLabels[appearance] }}
         </button>

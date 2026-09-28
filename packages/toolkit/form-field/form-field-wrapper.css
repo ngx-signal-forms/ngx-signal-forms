@@ -522,6 +522,9 @@
   border-radius: var(--_input-radius);
   background-color: var(--_input-bg);
   padding: var(--_input-padding);
+  /* A click anywhere in the box focuses the control (#567), so the pointer */
+  /* shows a text cursor over the padding too. */
+  cursor: text;
 
   &:hover:not(:focus-within) {
     border-color: var(--_hover-border-color);

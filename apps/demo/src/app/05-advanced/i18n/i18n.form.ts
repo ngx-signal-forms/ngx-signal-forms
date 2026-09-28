@@ -115,12 +115,10 @@ import { SubmitStatusComponent } from '../../ui/submit-status/submit-status';
               (click)="langService.setLang(lang)"
               [attr.aria-pressed]="langService.lang() === lang"
               [attr.lang]="lang"
-              [class.bg-[#e8f4fb]]="langService.lang() === lang"
+              [class.bg-selected]="langService.lang() === lang"
               [class.shadow-sm]="langService.lang() === lang"
-              [class.text-[#005d96]]="langService.lang() === lang"
-              [class.dark:bg-gray-700]="langService.lang() === lang"
-              [class.dark:text-blue-300]="langService.lang() === lang"
-              class="rounded-full px-3 py-1.5 text-sm font-medium text-gray-600 transition-all hover:text-gray-900 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#005fcc] dark:text-gray-300 dark:hover:text-white"
+              [class.text-on-selected]="langService.lang() === lang"
+              class="focus-visible:outline-border-focus rounded-full px-3 py-1.5 text-sm font-medium text-gray-600 transition-all hover:text-gray-900 focus-visible:outline-2 focus-visible:outline-offset-2 dark:text-gray-300 dark:hover:text-white"
             >
               {{ langLabels[lang] }}
             </button>

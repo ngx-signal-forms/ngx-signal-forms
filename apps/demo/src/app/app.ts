@@ -23,12 +23,17 @@ import {
 } from '@angular/router';
 import { Title } from '@angular/platform-browser';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { filter, map, of, switchMap, timer } from 'rxjs';
+import { filter, map, of, pairwise, startWith, switchMap, timer } from 'rxjs';
 import { getRouteTitle, SITE_NAME } from '@ngx-signal-forms/demo-shared';
 import { NavTreeComponent } from './ui/nav-tree';
 import { RightRailComponent } from './ui/right-rail';
 import { NgxThemeSwitcherComponent } from './ui/theme-switcher/theme-switcher';
 import { PageControlsService } from './ui/page-controls';
+
+/** Strips the query string and fragment from a router URL. */
+function toPath(url: string): string {
+  return url.split(/[?#]/)[0] ?? url;
+}
 
 @Component({
   selector: 'ngx-root',
@@ -59,11 +64,7 @@ import { PageControlsService } from './ui/page-controls';
       display: flex;
       height: 100dvh;
       overflow: hidden;
-      background: rgb(248 250 252);
-    }
-
-    :host-context(.dark) .shell {
-      background: rgb(2 6 23);
+      background: var(--color-bg);
     }
 
     /* ── Left nav ── */
@@ -73,13 +74,8 @@ import { PageControlsService } from './ui/page-controls';
       display: flex;
       flex-direction: column;
       height: 100%;
-      background: rgb(255 255 255);
-      border-right: 1px solid rgb(226 232 240);
-    }
-
-    :host-context(.dark) .shell__nav {
-      background: rgb(2 6 23);
-      border-right-color: rgb(15 23 42);
+      background: var(--color-bg-chrome);
+      border-right: 1px solid var(--color-border);
     }
 
     /* Below 900px: the nav leaves the flex flow and becomes a fixed
@@ -97,7 +93,8 @@ import { PageControlsService } from './ui/page-controls';
         transition:
           transform 220ms cubic-bezier(0.16, 1, 0.3, 1),
           visibility 0s linear 220ms;
-        box-shadow: 12px 0 32px -16px rgba(15, 23, 42, 0.35);
+        box-shadow: 12px 0 32px -16px
+          color-mix(in srgb, var(--color-shadow) 35%, transparent);
       }
 
       .shell__nav.is-nav-open {
@@ -121,7 +118,7 @@ import { PageControlsService } from './ui/page-controls';
       position: fixed;
       inset: 0;
       z-index: 65;
-      background: rgb(15 23 42 / 0.4);
+      background: var(--color-backdrop);
       animation: navBackdropIn 160ms ease;
     }
 
@@ -151,13 +148,8 @@ import { PageControlsService } from './ui/page-controls';
         flex-shrink: 0;
         height: 3.25rem;
         padding-inline: 1rem;
-        background: rgb(255 255 255);
-        border-bottom: 1px solid rgb(226 232 240);
-      }
-
-      :host-context(.dark) .shell__mobile-bar {
-        background: rgb(2 6 23);
-        border-bottom-color: rgb(15 23 42);
+        background: var(--color-bg-chrome);
+        border-bottom: 1px solid var(--color-border);
       }
     }
 
@@ -168,20 +160,15 @@ import { PageControlsService } from './ui/page-controls';
       width: 2.75rem;
       height: 2.75rem;
       flex-shrink: 0;
-      border: 1px solid rgb(226 232 240);
+      border: 1px solid var(--color-border);
       border-radius: 0.5rem;
       background: none;
-      color: rgb(51 65 85);
+      color: var(--color-text);
       cursor: pointer;
     }
 
-    :host-context(.dark) .shell__nav-toggle {
-      border-color: rgb(30 41 59);
-      color: rgb(226 232 240);
-    }
-
     .shell__nav-toggle:focus-visible {
-      outline: 2px solid rgb(99 102 241);
+      outline: 2px solid var(--color-border-focus);
       outline-offset: 2px;
     }
 
@@ -225,17 +212,17 @@ import { PageControlsService } from './ui/page-controls';
         border: none;
         border-radius: 0.5rem;
         background: none;
-        color: rgb(100 116 139);
+        color: var(--color-text-muted);
         cursor: pointer;
       }
 
       .shell__nav-close:hover {
-        background: rgb(241 245 249);
-        color: rgb(15 23 42);
+        background: var(--color-surface-hover);
+        color: var(--color-text);
       }
 
       .shell__nav-close:focus-visible {
-        outline: 2px solid rgb(99 102 241);
+        outline: 2px solid var(--color-border-focus);
         outline-offset: 2px;
       }
 
@@ -243,11 +230,6 @@ import { PageControlsService } from './ui/page-controls';
         width: 1rem;
         height: 1rem;
       }
-    }
-
-    :host-context(.dark) .shell__nav-close:hover {
-      background: rgb(30 41 59);
-      color: rgb(226 232 240);
     }
 
     .shell__brand {
@@ -264,15 +246,11 @@ import { PageControlsService } from './ui/page-controls';
       margin-top: 0.375rem;
       font-size: 0.8125rem;
       line-height: 1.35;
-      color: rgb(71 85 105);
-    }
-
-    :host-context(.dark) .shell__tagline {
-      color: rgb(148 163 184);
+      color: var(--color-text-muted);
     }
 
     .shell__brand:focus-visible {
-      outline: 2px solid rgb(99 102 241);
+      outline: 2px solid var(--color-border-focus);
       outline-offset: 4px;
       border-radius: 0.5rem;
     }
@@ -290,15 +268,11 @@ import { PageControlsService } from './ui/page-controls';
 
     .shell__nav-footer {
       padding: 0.85rem 1rem;
-      border-top: 1px solid rgb(226 232 240);
+      border-top: 1px solid var(--color-border);
       display: flex;
       align-items: center;
       gap: 0.25rem;
       flex-shrink: 0;
-    }
-
-    :host-context(.dark) .shell__nav-footer {
-      border-top-color: rgb(15 23 42);
     }
 
     .shell__footer-link {
@@ -308,20 +282,12 @@ import { PageControlsService } from './ui/page-controls';
       min-width: 2rem;
       height: 2rem;
       border-radius: 0.375rem;
-      color: rgb(79 70 229);
+      color: var(--color-link);
       transition: color 140ms ease;
     }
 
     .shell__footer-link:hover {
-      color: rgb(55 48 163);
-    }
-
-    :host-context(.dark) .shell__footer-link {
-      color: rgb(196 181 253);
-    }
-
-    :host-context(.dark) .shell__footer-link:hover {
-      color: rgb(238 242 255);
+      color: var(--color-link-hover);
     }
 
     .shell__footer-link svg {
@@ -341,15 +307,20 @@ import { PageControlsService } from './ui/page-controls';
       align-items: center;
       height: 2.75rem;
       padding: 0 0.9rem;
-      border: 1px solid rgba(99, 102, 241, 0.3);
+      border: 1px solid color-mix(in srgb, var(--color-accent) 30%, transparent);
       border-right: none;
       border-radius: 9999px 0 0 9999px;
-      background: linear-gradient(180deg, #4f46e5 0%, #4338ca 100%);
-      color: #fff;
+      background: linear-gradient(
+        180deg,
+        var(--color-brand-strong) 0%,
+        var(--color-brand-deep) 100%
+      );
+      color: var(--color-on-brand);
       cursor: pointer;
       box-shadow:
-        -6px 10px 24px -10px rgba(67, 56, 202, 0.55),
-        0 2px 6px -2px rgba(15, 23, 42, 0.3);
+        -6px 10px 24px -10px
+          color-mix(in srgb, var(--color-brand-deep) 55%, transparent),
+        0 2px 6px -2px color-mix(in srgb, var(--color-shadow) 30%, transparent);
       font-size: 0.78rem;
       font-weight: 600;
       letter-spacing: 0.01em;
@@ -385,8 +356,9 @@ import { PageControlsService } from './ui/page-controls';
       transform: translateX(-3px);
       filter: brightness(1.06);
       box-shadow:
-        -10px 14px 30px -10px rgba(67, 56, 202, 0.6),
-        0 3px 8px -2px rgba(15, 23, 42, 0.35);
+        -10px 14px 30px -10px
+          color-mix(in srgb, var(--color-brand-deep) 60%, transparent),
+        0 3px 8px -2px color-mix(in srgb, var(--color-shadow) 35%, transparent);
     }
 
     .shell__pin:hover .shell__pin-label,
@@ -397,7 +369,7 @@ import { PageControlsService } from './ui/page-controls';
     }
 
     .shell__pin:focus-visible {
-      outline: 2px solid rgb(99 102 241);
+      outline: 2px solid var(--color-border-focus);
       outline-offset: 3px;
     }
 
@@ -498,14 +470,9 @@ import { PageControlsService } from './ui/page-controls';
       width: 21rem;
       flex-shrink: 0;
       height: 100%;
-      border-left: 1px solid rgb(226 232 240);
-      background: rgb(252 253 255);
+      border-left: 1px solid var(--color-border);
+      background: var(--color-bg-chrome);
       overflow: hidden;
-    }
-
-    :host-context(.dark) .shell__rail {
-      background: rgb(4 9 30);
-      border-left-color: rgb(15 23 42);
     }
 
     @media (width >= 1280px) {
@@ -792,12 +759,14 @@ export class AppComponent {
     { initialValue: false },
   );
 
+  /** The URL path without its query string or fragment, so a query-only or
+   * fragment-only change does not count as a new page. */
   readonly #currentPath = toSignal(
     this.#router.events.pipe(
       filter((e) => e instanceof NavigationEnd),
-      map(() => this.#router.url.split('?')[0]),
+      map(() => toPath(this.#router.url)),
     ),
-    { initialValue: this.#router.url.split('?')[0] },
+    { initialValue: toPath(this.#router.url) },
   );
 
   // Named Angular effect fields are intentionally unread.
@@ -822,6 +791,49 @@ export class AppComponent {
     this.navOpen.set(false);
     const scroller = this.scrollContainer()?.nativeElement;
     if (scroller) scroller.scrollTop = 0;
+  });
+
+  /**
+   * Move focus to the new page's `<h1>` after a route change (#571).
+   *
+   * Without this, focus stays on the nav link that was clicked (or returns
+   * to the hamburger on mobile), and a screen-reader user hears nothing
+   * about the new page. Focusing the heading announces the page name and
+   * puts the next Tab stop at the start of the page content. This is the
+   * pattern the Angular accessibility guide recommends.
+   *
+   * It does not run on the first load (the browser already announces a new
+   * document), or when only the query string or fragment changes. Pages
+   * without an `<h1>` fall back to `<main>`.
+   */
+  readonly #pageChange = toSignal(
+    this.#router.events.pipe(
+      filter((e) => e instanceof NavigationEnd),
+      map((e) => ({ id: e.id, path: toPath(e.urlAfterRedirects) })),
+      startWith({ id: 0, path: toPath(this.#router.url) }),
+      pairwise(),
+      // The initial navigation always has id 1. Blocking initial navigation
+      // can complete before this subscription exists, so the id check covers
+      // both orders.
+      filter(([previous, next]) => next.id > 1 && next.path !== previous.path),
+      map(([, next]) => next),
+    ),
+    { initialValue: null },
+  );
+
+  // oxlint-disable-next-line no-unused-private-class-members -- EffectRef is intentionally kept as a named field to document the side effect.
+  readonly #focusHeadingOnPageChangeEffect = effect(() => {
+    if (this.#pageChange() === null) return;
+
+    afterNextRender(
+      () => {
+        const main = this.mainContent()?.nativeElement;
+        const target =
+          main?.querySelector<HTMLElement>('h1[tabindex="-1"]') ?? main;
+        target?.focus({ preventScroll: true });
+      },
+      { injector: this.#injector },
+    );
   });
 
   /** Skip link: focus `<main>` in place instead of following the fragment
@@ -968,7 +980,19 @@ export class AppComponent {
       () => {
         if (isOpen) {
           this.navCloseButton()?.nativeElement.focus();
-        } else {
+          return;
+        }
+
+        // Return focus to the toggle only when it would otherwise be lost:
+        // still in the now-hidden drawer, or dropped to <body>. After a nav
+        // link click, the route-change effect may already have moved focus
+        // to the new page's heading, and that must win (#571).
+        const active = this.#document.activeElement;
+        const lostFocus =
+          active === null ||
+          active === this.#document.body ||
+          this.#document.querySelector('.shell__nav')?.contains(active);
+        if (lostFocus) {
           this.navToggleButton()?.nativeElement.focus();
         }
       },
