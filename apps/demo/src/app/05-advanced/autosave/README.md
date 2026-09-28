@@ -264,8 +264,10 @@ form.
   server. Last-write-wins at the server is fine for this demo; a production
   autosave with real multi-client conflict risk needs more than this
   (optimistic concurrency tokens, CRDTs, or similar).
-- **Retries with backoff, and saving on page unload.** A failed save waits
-  for the user to click **Retry save** or to edit again.
+- **Retries with backoff, and saving on page unload.** A failed save is
+  never retried automatically. It waits for the user to click **Retry save**
+  or to edit again. An edit made while the failed save was in flight counts:
+  it was queued, so it goes out as soon as the failure arrives.
 - **Offline queueing / `localStorage` persistence.** Not implemented.
 
 ## Key files
