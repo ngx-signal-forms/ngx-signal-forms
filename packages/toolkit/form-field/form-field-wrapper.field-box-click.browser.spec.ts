@@ -111,4 +111,37 @@ describe('NgxFormFieldWrapper — click on the field box focuses the control (#5
 
     expect(document.activeElement).toBe(elsewhere);
   });
+
+  it('focuses the control in its own wrapper when two wrappers bind the same field', async () => {
+    @Component({
+      selector: 'ngx-test-field-box-shared-field',
+      imports: [FormField, NgxFormFieldWrapper],
+      template: `
+        <ngx-form-field-wrapper [formField]="testForm.email">
+          <label for="email-a">Email (first)</label>
+          <input id="email-a" type="email" [formField]="testForm.email" />
+        </ngx-form-field-wrapper>
+        <ngx-form-field-wrapper [formField]="testForm.email">
+          <label for="email-b">Email (second)</label>
+          <input id="email-b" type="email" [formField]="testForm.email" />
+        </ngx-form-field-wrapper>
+      `,
+    })
+    class TestComponent {
+      readonly #model = signal({ email: '' });
+      readonly testForm = form(this.#model);
+    }
+
+    const { container } = await render(TestComponent);
+    const second = container.querySelector<HTMLInputElement>('#email-b')!;
+    const secondBox = second.closest<HTMLElement>(
+      '.ngx-signal-form-field-wrapper__content',
+    )!;
+
+    await userEvent.click(secondBox, {
+      position: { x: 2, y: secondBox.getBoundingClientRect().height - 2 },
+    });
+
+    expect(document.activeElement).toBe(second);
+  });
 });

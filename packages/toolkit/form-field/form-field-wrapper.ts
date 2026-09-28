@@ -953,7 +953,13 @@ export class NgxFormFieldWrapper<TValue = unknown> {
 
     if (target.closest(FIELD_BOX_INTERACTIVE_SELECTOR)) return;
 
-    this.#fieldState().focusBoundControl?.();
+    // Not `focusBoundControl()`: that focuses the field's first binding in
+    // DOM order, which is another wrapper's control when two wrappers bind
+    // the same field. `binding.focus()` keeps custom-control focus behavior.
+    this.#fieldState()
+      .formFieldBindings?.()
+      .find((binding) => fieldBox.contains(binding.element))
+      ?.focus();
   }
 
   protected readonly isCheckboxControl = computed(() => {
