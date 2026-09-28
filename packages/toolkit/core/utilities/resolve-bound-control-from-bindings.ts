@@ -12,6 +12,8 @@ import { isHtmlElement } from './dom-guards';
  * signal of the `[formField]` (and custom-control) directive instances Angular
  * has registered against this field — each exposes the DOM `element` hosting
  * the binding.
+ *
+ * @internal
  */
 export type FormFieldBindingsState = Pick<
   FieldState<unknown>,

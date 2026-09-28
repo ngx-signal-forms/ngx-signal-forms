@@ -8,9 +8,15 @@
     "forms",
     "accessibility",
     "a11y",
+    "aria",
     "validation",
+    "vest",
     "wcag"
   ],
+  "homepage": "https://github.com/ngx-signal-forms/ngx-signal-forms#readme",
+  "bugs": {
+    "url": "https://github.com/ngx-signal-forms/ngx-signal-forms/issues"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/ngx-signal-forms/ngx-signal-forms.git",

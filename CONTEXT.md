@@ -11,9 +11,6 @@ ngx-signal-forms — an Angular toolkit for working with Signal Forms.
 
 ## Glossary
 
-<!-- Populate with domain terms as they get resolved. Each entry: term, definition, and any
-     synonyms to *avoid* drifting to. -->
-
 - **Built-in validation error** — a validation error produced by Angular's own
   validators, i.e. a member of the `NgValidationError` union (`required`,
   `min`, `max`, `minDate`, `maxDate`, `minLength`, `maxLength`, `pattern`,
@@ -29,8 +26,8 @@ ngx-signal-forms — an Angular toolkit for working with Signal Forms.
   prefix on its `kind`. It is **per-error**: one field can simultaneously carry
   a blocking error _and_ a warning, and the toolkit splits the two on the
   prefix. Deliberately **not** modelled on Angular's per-field `SEVERITY`
-  metadata (which appears in post-22.0.0 docs and is absent from the pinned
-  `22.0.0`): `SEVERITY` aggregates to a field's _highest_ severity and so
+  metadata (which appears in post-22.0.0 docs and is still absent from the
+  pinned `22.1.7`): `SEVERITY` aggregates to a field's _highest_ severity and so
   cannot express "error A on this field blocks, error B is a warning". The
   toolkit will only retire `warn:` for a _per-`ValidationError`_ severity/blocking
   signal from Angular, not for field-level `SEVERITY`. Synonym to avoid: "soft
@@ -93,9 +90,6 @@ ngx-signal-forms — an Angular toolkit for working with Signal Forms.
   "field margin".
 
 ## Key concepts
-
-<!-- Populate with the load-bearing ideas a new contributor (or agent) needs to know before
-     touching the code. -->
 
 - **Structural vs. nominal error narrowing** — error-message resolution keys on
   the public `kind` discriminant rather than `instanceof NgValidationError`.
@@ -163,7 +157,8 @@ ngx-signal-forms — an Angular toolkit for working with Signal Forms.
   region is always referenced and a suppressed one never is. There are two
   channels field-level overrides reach it through, depending on composition:
   a **wrapped** field's `NgxFormFieldWrapper` publishes both resolved
-  strategies via `NgxFieldIdentity.setResolvedStrategies()`; a **standalone**
+  strategies through `createFieldPresentation()`, which calls
+  `NgxFieldIdentity.setResolvedStrategies()` internally; a **standalone**
   `<ngx-form-field-error>` — a sibling of the control it describes, not an
   ancestor, so it has no shared element injector to publish an identity
   through — instead registers its already-rendered

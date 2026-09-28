@@ -35,15 +35,15 @@ const createOxcCommands = (files) => {
   const commandArguments = toCommandArguments(lintableFiles);
 
   return [
-    `oxlint --fix --quiet ${commandArguments}`,
-    `oxfmt --write ${commandArguments}`,
+    `oxlint --fix --quiet --no-error-on-unmatched-pattern ${commandArguments}`,
+    `oxfmt --write --no-error-on-unmatched-pattern ${commandArguments}`,
   ];
 };
 
 const createOxfmtCommand = (files) => {
   const repoRelativeFiles = files.map(toRepoRelativePath);
 
-  return `oxfmt --write ${toCommandArguments(repoRelativeFiles)}`;
+  return `oxfmt --write --no-error-on-unmatched-pattern ${toCommandArguments(repoRelativeFiles)}`;
 };
 
 export default {

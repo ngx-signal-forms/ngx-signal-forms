@@ -124,6 +124,20 @@ export type ResolvableValidationError = Omit<ValidationError, 'message'> & {
   readonly message?: string | undefined;
 };
 
+/**
+ * Resolves the display message for one validation error.
+ *
+ * Three-tier cascade:
+ * 1. the error's own `message`, if set (an explicit empty string wins too)
+ * 2. the matching entry in `registry`, if any
+ * 3. {@link getDefaultValidationMessage}
+ *
+ * @param error The validation error to describe.
+ * @param registry An optional error-message registry, as set by
+ *   `provideErrorMessages()`.
+ * @param options Formatting options, such as `stripWarningPrefix`.
+ * @returns The resolved display string.
+ */
 export function resolveValidationErrorMessage(
   error: ResolvableValidationError,
   registry?: Readonly<ErrorMessageRegistry> | null,
@@ -156,6 +170,18 @@ export function resolveValidationErrorMessage(
   return getDefaultValidationMessage(error, options);
 }
 
+/**
+ * The last tier of {@link resolveValidationErrorMessage}: a message for an
+ * error with no explicit `message` and no registry entry.
+ *
+ * A built-in `NgValidationError` kind gets a written-out sentence. Any other
+ * kind gets its `kind` string humanized (underscores become spaces, and the
+ * `warn:` prefix is stripped when `options.stripWarningPrefix` is set).
+ *
+ * @param error The validation error to describe.
+ * @param options Formatting options, such as `stripWarningPrefix`.
+ * @returns The default display string.
+ */
 export function getDefaultValidationMessage(
   error: ResolvableValidationError,
   options?: ResolveErrorMessageOptions,

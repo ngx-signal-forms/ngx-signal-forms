@@ -111,6 +111,15 @@ type A11yValidator = (context?: axe.ElementContext, options?: A11yCheckOptions) 
  *   violations. Failing fast here, before a validator is ever handed back to
  *   a caller, turns that silent gate-disable into an immediate, loud error
  *   instead of a validator that always resolves.
+ *
+ * @example
+ * ```typescript
+ * const expectBaselineOnly = createA11yValidator({
+ *   tags: ['wcag2a', 'wcag2aa'],
+ * });
+ *
+ * await expectBaselineOnly(document.body);
+ * ```
  */
 declare function createA11yValidator(options?: {
     tags?: readonly WCAG_22_AA_TAG[];

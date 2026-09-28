@@ -1065,6 +1065,15 @@ declare function mergeNgxSignalFormControlPresets(parentPresetsOrNull: NgxSignal
  * `ngxSignalFormControlAria` on every matching control.
  *
  * Explicit directive inputs still win over provider defaults.
+ *
+ * @example
+ * ```typescript
+ * providers: [
+ *   provideNgxSignalFormControlPresets({
+ *     slider: { layout: 'custom', ariaMode: 'manual' },
+ *   }),
+ * ];
+ * ```
  */
 declare function provideNgxSignalFormControlPresets(presets: NgxSignalFormControlPresetOverrides): EnvironmentProviders;
 /**
@@ -1072,6 +1081,15 @@ declare function provideNgxSignalFormControlPresets(presets: NgxSignalFormContro
  *
  * This is useful for demos, feature shells, or isolated subtrees that need a
  * different semantic default without changing application-wide behavior.
+ *
+ * @example
+ * ```typescript
+ * providers: [
+ *   ...provideNgxSignalFormControlPresetsForComponent({
+ *     slider: { layout: 'custom', ariaMode: 'manual' },
+ *   }),
+ * ];
+ * ```
  */
 declare function provideNgxSignalFormControlPresetsForComponent(presets: NgxSignalFormControlPresetOverrides): Provider[];
 
@@ -1528,11 +1546,27 @@ interface NgxFormFieldHintRendererOverride {
 /**
  * Provides the error renderer at environment scope.
  *
+ * @example
+ * ```typescript
+ * providers: [
+ *   provideFormFieldErrorRenderer({ component: MyErrorRenderer }),
+ * ];
+ * ```
+ *
  * @public
  */
 declare function provideFormFieldErrorRenderer(override: NgxFormFieldErrorRendererOverride): EnvironmentProviders;
 /**
  * Component-scoped override for the error renderer.
+ *
+ * @example
+ * ```typescript
+ * providers: [
+ *   ...provideFormFieldErrorRendererForComponent({
+ *     component: MyErrorRenderer,
+ *   }),
+ * ];
+ * ```
  *
  * @public
  */
@@ -1540,11 +1574,27 @@ declare function provideFormFieldErrorRendererForComponent(override: NgxFormFiel
 /**
  * Provides the hint renderer at environment scope.
  *
+ * @example
+ * ```typescript
+ * providers: [
+ *   provideFormFieldHintRenderer({ component: MyHintRenderer }),
+ * ];
+ * ```
+ *
  * @public
  */
 declare function provideFormFieldHintRenderer(override: NgxFormFieldHintRendererOverride): EnvironmentProviders;
 /**
  * Component-scoped override for the hint renderer.
+ *
+ * @example
+ * ```typescript
+ * providers: [
+ *   ...provideFormFieldHintRendererForComponent({
+ *     component: MyHintRenderer,
+ *   }),
+ * ];
+ * ```
  *
  * @public
  */
@@ -1897,6 +1947,8 @@ declare class NgxFieldIdentity {
  * element/directive-scoped contract. `NgxSignalForm` provides one instance
  * per `[ngxSignalForm]` host so fields in unrelated forms never collide on
  * field name.
+ *
+ * @internal
  */
 declare class NgxFieldVisibilityRegistry {
     #private;
@@ -2652,6 +2704,8 @@ type InjectionContextDebugFn = Function;
  *   });
  * }
  * ```
+ *
+ * @internal
  */
 declare function assertInjector<Runner extends () => unknown>(fn: InjectionContextDebugFn, injector: Injector | undefined | null, runner: Runner): ReturnType<Runner>;
 /**
@@ -2778,6 +2832,8 @@ declare function createCascadingResolver<T>(opts: ReactiveCascadingResolverOptio
  *   `[ngx-signal-forms] <component>: unsupported value type — …`. Required
  *   rather than defaulted — every current caller passes its own name so the
  *   warning always points at the component the misconfiguration lives in.
+ *
+ * @internal
  */
 declare function createCharacterCountLengthSignal(value: () => unknown, component: string): Signal<number>;
 
@@ -3955,6 +4011,8 @@ declare function generateWarningId(fieldName: string): string;
  * ```typescript
  * generateRequiredHintId('consent'); // Returns: 'consent-required-hint'
  * ```
+ *
+ * @internal
  */
 declare function generateRequiredHintId(fieldName: string): string;
 /**
@@ -4017,6 +4075,8 @@ declare function generateCharacterCountLimitId(fieldName: string): string;
  * Centralized here (rather than co-located with the form-field wrapper) so
  * `NgxFieldIdentity` and any future surface that needs to discover a bound
  * control share one resolution rule.
+ *
+ * @internal
  */
 declare const BOUND_CONTROL_SELECTOR = "input[id], textarea[id], select[id], button[type=\"button\"][id], [role=\"combobox\"][id], [id][formField], [id][ng-reflect-form-field], [id][data-ngx-signal-form-control]";
 /**
@@ -4029,6 +4089,8 @@ declare const BOUND_CONTROL_SELECTOR = "input[id], textarea[id], select[id], but
  *
  * `hostEl` should already be scoped to the region that can only contain the
  * real control — see the document-order caveat on {@link BOUND_CONTROL_SELECTOR}.
+ *
+ * @internal
  */
 declare function findBoundControl(hostEl: HTMLElement): HTMLElement | null;
 
@@ -4042,6 +4104,8 @@ declare function findBoundControl(hostEl: HTMLElement): HTMLElement | null;
  * signal of the `[formField]` (and custom-control) directive instances Angular
  * has registered against this field — each exposes the DOM `element` hosting
  * the binding.
+ *
+ * @internal
  */
 type FormFieldBindingsState = Pick<FieldState<unknown>, 'formFieldBindings'>;
 /**
@@ -4416,7 +4480,33 @@ interface ResolveErrorMessageOptions {
 type ResolvableValidationError = Omit<ValidationError, 'message'> & {
     readonly message?: string | undefined;
 };
+/**
+ * Resolves the display message for one validation error.
+ *
+ * Three-tier cascade:
+ * 1. the error's own `message`, if set (an explicit empty string wins too)
+ * 2. the matching entry in `registry`, if any
+ * 3. {@link getDefaultValidationMessage}
+ *
+ * @param error The validation error to describe.
+ * @param registry An optional error-message registry, as set by
+ *   `provideErrorMessages()`.
+ * @param options Formatting options, such as `stripWarningPrefix`.
+ * @returns The resolved display string.
+ */
 declare function resolveValidationErrorMessage(error: ResolvableValidationError, registry?: Readonly<ErrorMessageRegistry> | null, options?: ResolveErrorMessageOptions): string;
+/**
+ * The last tier of {@link resolveValidationErrorMessage}: a message for an
+ * error with no explicit `message` and no registry entry.
+ *
+ * A built-in `NgValidationError` kind gets a written-out sentence. Any other
+ * kind gets its `kind` string humanized (underscores become spaces, and the
+ * `warn:` prefix is stripped when `options.stripWarningPrefix` is set).
+ *
+ * @param error The validation error to describe.
+ * @param options Formatting options, such as `stripWarningPrefix`.
+ * @returns The default display string.
+ */
 declare function getDefaultValidationMessage(error: ResolvableValidationError, options?: ResolveErrorMessageOptions): string;
 
 /**
@@ -4510,6 +4600,16 @@ declare function requiredFromStandardSchema<TValue, TModel = unknown, TPathKind 
 
 type StrategyInput = ErrorDisplayStrategy | null | undefined;
 type WarningStrategyInput = WarningDisplayStrategy | null | undefined;
+/**
+ * Resolves the error display strategy from an input value, context, and
+ * config default.
+ *
+ * Cascade order (three tiers, plus a terminal fallback):
+ * 1. explicit input strategy (if not `'inherit'`)
+ * 2. form context's error strategy
+ * 3. config default error strategy
+ * 4. terminal fallback `'on-touch'`
+ */
 declare function resolveErrorDisplayStrategy(inputStrategy: StrategyInput, contextStrategy?: ResolvedErrorDisplayStrategy | null, configDefault?: ResolvedErrorDisplayStrategy | null): ResolvedErrorDisplayStrategy;
 /**
  * Resolves the warning display strategy from an input value, context, and config default.

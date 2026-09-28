@@ -350,6 +350,28 @@ declare function createVestAdapter(options?: VestAdapterOptions): VestSuiteAdapt
  * `validateVest` / `validateVestWarnings` entry points. Exposed so advanced
  * consumers can run a suite through {@link VestSuiteAdapter.runVestSuite} and
  * reuse the SAME cached execution that the built-in validators consume.
+ *
+ * @example
+ * ```typescript
+ * import { signal } from '@angular/core';
+ * import { form } from '@angular/forms/signals';
+ * import { create, enforce, test } from 'vest';
+ * import { sharedVestAdapter } from '@ngx-signal-forms/toolkit/vest';
+ *
+ * const contactSuite = create((data: { email: string }) => {
+ *   test('email', 'Email is required', () => {
+ *     enforce(data.email).isNotBlank();
+ *   });
+ * });
+ *
+ * const contactForm = form(signal({ email: '' }));
+ *
+ * const result = sharedVestAdapter.runVestSuite({
+ *   suite: contactSuite,
+ *   fieldTree: contactForm,
+ *   value: contactForm().value(),
+ * });
+ * ```
  */
 declare const sharedVestAdapter: VestSuiteAdapter;
 
@@ -421,6 +443,31 @@ interface ValidateVestOptions<TValue = unknown, F extends string = string> {
  * Implemented on top of the public {@link sharedVestAdapter}, so passing the
  * same suite to a blocking `validateVest` (or to
  * `sharedVestAdapter.runVestSuite(...)`) reuses a single suite execution.
+ *
+ * @example
+ * ```typescript
+ * import { signal } from '@angular/core';
+ * import { form } from '@angular/forms/signals';
+ * import { create, enforce, only, test, warn } from 'vest';
+ * import { validateVestWarnings } from '@ngx-signal-forms/toolkit/vest';
+ *
+ * interface SignupModel {
+ *   password: string;
+ * }
+ *
+ * const strengthSuite = create((data: SignupModel, field?: string) => {
+ *   only(field);
+ *   test('password', 'Consider using 12+ characters', () => {
+ *     warn();
+ *     enforce(data.password.length).greaterThanOrEquals(12);
+ *   });
+ * });
+ *
+ * const signupModel = signal<SignupModel>({ password: '' });
+ * const signupForm = form(signupModel, (path) => {
+ *   validateVestWarnings(path, strengthSuite);
+ * });
+ * ```
  */
 declare function validateVestWarnings<TValue, F extends string = string>(path: VestFieldPath<TValue>, suite: VestRunnableSuite<TValue, F>, options?: Pick<ValidateVestOptions<TValue, F>, 'resetOnDestroy' | 'only'>): void;
 /**
@@ -463,6 +510,7 @@ declare function validateVestWarnings<TValue, F extends string = string>(path: V
  *
  * @example
  * ```typescript
+ * import { signal } from '@angular/core';
  * import { form } from '@angular/forms/signals';
  * import { create, enforce, only, test } from 'vest';
  * import { validateVest } from '@ngx-signal-forms/toolkit/vest';
