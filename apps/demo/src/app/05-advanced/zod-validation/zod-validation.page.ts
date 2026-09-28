@@ -71,13 +71,13 @@ import { ZodValidationComponent } from './zod-validation.form';
           class="block min-w-0"
         />
         <ngx-display-controls-section
-          title="🎨 Structural framing"
+          title="Structural framing"
           description="Switch wrapper appearance while keeping Zod schema rules fixed, so you can focus on how baseline contract errors read."
         >
           <ngx-appearance-toggle [(value)]="selectedAppearance" />
         </ngx-display-controls-section>
         <ngx-display-controls-section
-          title="↔️ Label orientation"
+          title="Label orientation"
           description="Compare vertical and horizontal labels to see where structural error messages scan fastest for your UI density."
         >
           <ngx-orientation-toggle
@@ -107,7 +107,15 @@ import { ZodValidationComponent } from './zod-validation.form';
 
         @if (formRef(); as form) {
           <div right>
-            <ngx-signal-form-debugger [formTree]="form.accountForm" />
+            @defer (on idle) {
+              <ngx-signal-form-debugger [formTree]="form.accountForm" />
+            } @placeholder {
+              <div class="debugger-placeholder" aria-hidden="true"></div>
+            } @error {
+              <p class="debugger-placeholder">
+                The form debugger failed to load.
+              </p>
+            }
           </div>
         }
       </ngx-split-layout>

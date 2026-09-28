@@ -19,6 +19,7 @@
   align-items: center;
   gap: 0.5rem;
   width: 100%;
+  min-height: 2.5rem;
   padding: 0.5rem 0.6rem;
   border: 0;
   border-radius: 0.5rem;
@@ -51,8 +52,9 @@
   }
 }
 
+/* slate-400: slate-500 on the slate-950 rail is only 4.24:1 */
 :host-context(.dark) .cat__trigger {
-  color: rgb(100 116 139);
+  color: rgb(148 163 184);
 
   &:hover {
     background: rgb(30 41 59 / 0.55);
@@ -73,9 +75,9 @@
   min-width: 0;
   font-family:
     'ui-monospace', 'SFMono-Regular', 'Cascadia Code', 'Menlo', monospace;
-  font-size: 0.66rem;
+  font-size: 0.75rem;
   font-weight: 600;
-  letter-spacing: 0.14em;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
 }
 
@@ -83,10 +85,10 @@
 .cat__count {
   font-family:
     'ui-monospace', 'SFMono-Regular', 'Cascadia Code', 'Menlo', monospace;
-  font-size: 0.62rem;
+  font-size: 0.75rem;
   font-weight: 600;
   line-height: 1;
-  padding: 0.18rem 0.36rem;
+  padding: 0.2rem 0.4rem;
   border-radius: 999px;
   /* slate-600 (was slate-400, rgb(148 163 184) / #94a3b8): that gray on this
      pill's slate-100 background is 2.34:1, well under the 4.5:1 WCAG 1.4.3 AA
@@ -151,9 +153,9 @@
   align-items: flex-start;
   gap: 0.45rem;
   margin: 0.05rem 0 0.05rem -1px;
-  padding: 0.4rem 0.6rem 0.4rem 0.85rem;
+  padding: 0.55rem 0.6rem 0.55rem 0.85rem;
   border-left: 2px solid transparent;
-  font-size: 0.83rem;
+  font-size: 0.875rem;
   line-height: 1.35;
   color: rgb(100 116 139);
   text-decoration: none;
@@ -219,7 +221,7 @@
 }
 
 :host-context(.dark) .leaf {
-  color: rgb(100 116 139);
+  color: rgb(148 163 184);
 
   &:hover {
     color: rgb(226 232 240);

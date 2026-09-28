@@ -33,10 +33,10 @@ export const ADVANCED_WIZARD_CONTENT = {
     title: 'Angular 22 Patterns',
     sections: [
       {
-        title: '🧪 Try This (Step-by-Step)',
+        title: 'Try This (Step-by-Step)',
         items: [
           '1. On the empty <strong>Traveler Info</strong> step, click <strong>Next</strong> → navigation is blocked, errors like "First name required" appear, and focus jumps to the first invalid field',
-          '2. Enter <code>test</code> as <strong>Email</strong> → "Valid email required"; enter <code>ABC12</code> (5 chars) as <strong>Passport Number</strong> → "Passport number required" (minimum 6 characters)',
+          '2. Enter <code>test</code> as <strong>Email</strong> → "Enter a valid email address"; enter <code>ABC12</code> (5 chars) as <strong>Passport Number</strong> → "Passport number required" (minimum 6 characters)',
           '3. Pick a past date for <strong>Passport Expiry</strong> → "Passport has expired"',
           '4. Fill the traveler step with valid data, then pause ~2 seconds → the debounced auto-save shows "Saving draft..." and then "Last saved: &lt;time&gt;" above the wizard',
           '5. On <strong>Trip Details</strong>, set <strong>Departure Date</strong> earlier than <strong>Arrival Date</strong> → "Departure date must be after arrival date"; an arrival date in the past triggers "Arrival date cannot be in the past"',

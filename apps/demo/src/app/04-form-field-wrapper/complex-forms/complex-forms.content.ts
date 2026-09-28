@@ -43,7 +43,7 @@ export const COMPLEX_FORMS_CONTENT = {
     title: 'Advanced Patterns & Best Practices',
     sections: [
       {
-        title: '🧪 Try This (Nested groups & arrays)',
+        title: 'Try This (Nested groups & arrays)',
         items: [
           '1. <strong>First Name:</strong> type <code>A</code> → Tab away → "At least 2 characters"',
           '2. <strong>Age:</strong> enter <code>17</code> → Tab away → "Must be 18 or older"; enter <code>121</code> → "Invalid age" (max 120)',

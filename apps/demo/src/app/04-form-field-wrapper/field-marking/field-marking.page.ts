@@ -54,7 +54,7 @@ const MODE_OPTIONS: readonly { value: FieldMarkingMode; label: string }[] = [
         layout="split"
       >
         <ngx-display-controls-section
-          title="✳️ Marking mode"
+          title="Marking mode"
           description="Choose which fields carry a marker."
           display-controls-primary
         >
@@ -79,14 +79,14 @@ const MODE_OPTIONS: readonly { value: FieldMarkingMode; label: string }[] = [
         </ngx-display-controls-section>
 
         <ngx-display-controls-section
-          title="🎨 Wrapper appearance"
+          title="Wrapper appearance"
           description="Markers render in every appearance, not just outline."
         >
           <ngx-appearance-toggle [(value)]="appearance" />
         </ngx-display-controls-section>
 
         <ngx-display-controls-section
-          title="🔤 Marker text"
+          title="Marker text"
           description="The legend stays in sync via the {{ '{marker}' }} token."
         >
           <div class="text-controls">
@@ -110,7 +110,7 @@ const MODE_OPTIONS: readonly { value: FieldMarkingMode; label: string }[] = [
         </ngx-display-controls-section>
 
         <ngx-display-controls-section
-          title="🔁 Conditional required"
+          title="Conditional required"
           description="Flip a field's required-ness and watch the legend react."
         >
           <label class="checkbox-row">
@@ -143,7 +143,17 @@ const MODE_OPTIONS: readonly { value: FieldMarkingMode; label: string }[] = [
         />
         @if (formComponent) {
           <div right>
-            <ngx-signal-form-debugger [formTree]="formComponent.markingForm" />
+            @defer (on idle) {
+              <ngx-signal-form-debugger
+                [formTree]="formComponent.markingForm"
+              />
+            } @placeholder {
+              <div class="debugger-placeholder" aria-hidden="true"></div>
+            } @error {
+              <p class="debugger-placeholder">
+                The form debugger failed to load.
+              </p>
+            }
           </div>
         }
       </ngx-split-layout>

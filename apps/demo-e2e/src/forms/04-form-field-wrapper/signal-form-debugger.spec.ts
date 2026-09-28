@@ -37,16 +37,18 @@ function getDebuggerByHeading(
  * - Works correctly with on-touch error display strategy
  */
 test.describe('Signal Form Debugger - Visibility Counts', () => {
-  test.beforeEach(async ({ page }) => {
-    const formPage = new FormFieldWrapperComplexPage(page);
-    await formPage.goto();
-  });
-
   /**
    * Helper to get the debugger component
    */
   const getDebugger = (page: import('@playwright/test').Page) =>
     getDebuggerByHeading(page, 'Complex Form State');
+
+  test.beforeEach(async ({ page }) => {
+    const formPage = new FormFieldWrapperComplexPage(page);
+    await formPage.goto();
+    // The debugger renders in `@defer (on idle)`; wait for it before counting.
+    await expect(getDebugger(page)).toBeVisible();
+  });
 
   test.describe('Initial State', () => {
     test('should show Form Model section collapsed by default', async ({
@@ -139,6 +141,7 @@ test.describe('Signal Form Debugger - Visibility Counts', () => {
       const debuggerPanel = getDebugger(page);
       const hiddenByStrategyBadges =
         debuggerPanel.getByText('Hidden by strategy');
+      await expect(hiddenByStrategyBadges.first()).toBeVisible();
       const count = await hiddenByStrategyBadges.count();
 
       // Should have multiple errors still hidden (total - 1)

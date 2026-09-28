@@ -1,4 +1,9 @@
-import { DEMO_CATEGORIES, DEMO_PATHS, getRouteTitle } from './routes.metadata';
+import {
+  DEMO_CATEGORIES,
+  DEMO_PATHS,
+  getRouteTitle,
+  SITE_NAME,
+} from './routes.metadata';
 
 describe('routes.metadata', () => {
   it('exposes a title for each registered demo path', () => {
@@ -11,12 +16,13 @@ describe('routes.metadata', () => {
     );
 
     for (const path of registeredPaths) {
-      expect(getRouteTitle(path)).not.toBe('NgxSignalForms Toolkit');
+      expect(getRouteTitle(path)).not.toBe(SITE_NAME);
+      expect(getRouteTitle(path)).toMatch(/ · ngx-signal-forms$/u);
     }
   });
 
   it('falls back to the default title for unknown routes', () => {
-    expect(getRouteTitle('/not-a-demo-route')).toBe('NgxSignalForms Toolkit');
+    expect(getRouteTitle('/not-a-demo-route')).toBe(SITE_NAME);
   });
 
   it('advertises expected display controls for representative routes', () => {

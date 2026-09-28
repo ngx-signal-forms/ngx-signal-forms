@@ -29,3 +29,4 @@ export {
   type SupportedLanguage,
   type SupportedTheme,
 } from './code-highlight';
+export { SubmitStatusComponent } from './submit-status/submit-status';

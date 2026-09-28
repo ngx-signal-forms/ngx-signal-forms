@@ -117,7 +117,7 @@ const zodValidationSchema: SchemaFn<Readonly<ZodValidationModel>> = (
               id="zod-only-email"
               type="email"
               [formField]="accountForm.email"
-              placeholder="name@company.com"
+              placeholder="name@example.com"
             />
           </ngx-form-field-wrapper>
 

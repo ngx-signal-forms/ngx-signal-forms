@@ -42,7 +42,7 @@ export const ERROR_DISPLAY_MODES_CONTENT = {
     title: 'Interactive Strategy Testing',
     sections: [
       {
-        title: '🧪 Try Different Strategies',
+        title: 'Try Different Strategies',
         items: [
           '<strong>Immediate:</strong> Type in Name field → Errors appear instantly',
           '<strong>On Touch:</strong> Click field → Tab away → Errors appear',
@@ -50,7 +50,7 @@ export const ERROR_DISPLAY_MODES_CONTENT = {
         ],
       },
       {
-        title: '🎯 Conditional Validation Test',
+        title: 'Conditional Validation Test',
         items: [
           '1. Set rating to 3 or below → Improvement field becomes required: "Please help us understand what could be improved"',
           '2. Type less than 10 characters → Error: "Please provide at least 10 characters of feedback"',
@@ -59,7 +59,7 @@ export const ERROR_DISPLAY_MODES_CONTENT = {
         ],
       },
       {
-        title: '📊 UX Strategy Guidelines',
+        title: 'UX Strategy Guidelines',
         items: [
           '<strong>Immediate:</strong> Use for complex rules (password strength)',
           '<strong>On Touch:</strong> Balanced UX, recommended for most forms',

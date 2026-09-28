@@ -43,6 +43,7 @@
     "@angular/forms": "catalog:angular",
     "@angular/platform-browser": "catalog:angular",
     "@angular/router": "catalog:angular",
+    "@fontsource-variable/inter": "catalog:fonts",
     "@ng-icons/core": "catalog:spartan",
     "@ng-icons/lucide": "catalog:spartan",
     "@ngrx-toolkit/core": "catalog:ngrx",

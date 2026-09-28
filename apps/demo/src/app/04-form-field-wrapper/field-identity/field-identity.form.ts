@@ -15,6 +15,7 @@ import { initialFieldIdentityModel } from './field-identity.model';
 import { fieldIdentitySchema } from './field-identity.validations';
 import { IdentityFieldComponent } from './field-identity.wrapper';
 import { GeneratedIdWidgetComponent } from './field-identity.widget';
+import { SubmitStatusComponent } from '../../ui/submit-status/submit-status';
 
 /**
  * Field Identity demo form.
@@ -40,6 +41,7 @@ import { GeneratedIdWidgetComponent } from './field-identity.widget';
   selector: 'ngx-field-identity',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
+    SubmitStatusComponent,
     NgxSignalFormToolkit,
     NgxFormFieldHint,
     IdentityFieldComponent,
@@ -59,12 +61,17 @@ export class FieldIdentityFormComponent {
 
   readonly #model = signal(initialFieldIdentityModel);
 
+  protected readonly successMessage = signal('');
+
   /** Drives the collapsible section in section 2. */
   protected readonly deliveryExpanded = signal(true);
 
   readonly identityForm = form(this.#model, fieldIdentitySchema, {
     submission: {
-      action: () => Promise.resolve(null),
+      action: () => {
+        this.successMessage.set('All fields are valid. Nothing was sent.');
+        return Promise.resolve(null);
+      },
       onInvalid: (formTree) => {
         this.#handleInvalidSubmission(formTree);
       },

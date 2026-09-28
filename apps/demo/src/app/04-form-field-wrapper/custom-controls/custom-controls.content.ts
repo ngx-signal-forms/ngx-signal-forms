@@ -69,7 +69,7 @@ export const CUSTOM_CONTROLS_CONTENT: ExampleCardConfig = {
     title: 'Integration Guide',
     sections: [
       {
-        title: '🧪 Try This (Custom controls)',
+        title: 'Try This (Custom controls)',
         items: [
           '1. Click <strong>Submit Review</strong> on the empty form → errors appear on every required field: Product Name, both ratings, the switch, the checkbox, and Accessibility Audit',
           '2. <strong>Product Rating:</strong> click a star (or focus and press an arrow key) → setting 1+ stars clears "Rating must be at least 1 star"',

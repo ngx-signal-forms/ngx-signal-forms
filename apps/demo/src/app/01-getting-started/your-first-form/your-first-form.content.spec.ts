@@ -13,7 +13,7 @@ describe('Your First Form educational copy', () => {
     ].join('\n');
 
     expect(items).toContain('Name must be at least 2 characters');
-    expect(items).toContain('Please enter a valid email address');
+    expect(items).toContain('Enter a valid email address');
     expect(items).toMatch(/Signal Forms owns requiredness|owns requiredness/i);
     expect(items).not.toMatch(
       /Keep semantic control attributes such as <code>type<\/code>, <code>required<\/code>/,
