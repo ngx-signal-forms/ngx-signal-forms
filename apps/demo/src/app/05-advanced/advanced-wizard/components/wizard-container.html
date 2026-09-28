@@ -85,9 +85,7 @@
     <button
       type="button"
       class="btn btn-secondary"
-      [disabled]="
-          store.isFirstStep() || store.isLoading() || store.isSubmitting()
-        "
+      [disabled]="store.isFirstStep() || store.isSubmitting()"
       (click)="previousStep()"
     >
       Previous
@@ -97,7 +95,7 @@
     <button
       type="button"
       class="btn btn-primary"
-      [disabled]="store.isLoading() || store.isSubmitting()"
+      [disabled]="store.isSubmitting()"
       (click)="nextStep()"
     >
       Next
@@ -106,7 +104,7 @@
     <button
       type="button"
       class="btn btn-success"
-      [disabled]="store.isLoading() || store.isSubmitting()"
+      [disabled]="store.isSubmitting()"
       (click)="submit()"
     >
       @if (store.isSubmitting()) { Submitting... } @else { Confirm Booking }

@@ -52,8 +52,8 @@ catalogs:
   angular-material:
     '@angular/material': '22.1.7'
   ngrx:
-    '@angular-architects/ngrx-toolkit': '21.0.1'
-    '@ngrx/signals': '21.1.1'
+    '@ngrx-toolkit/core': '22.0.1'
+    '@ngrx/signals': '22.0.1'
   nx:
     '@nx/angular': '23.2.1'
     '@nx/devkit': '23.2.1'
