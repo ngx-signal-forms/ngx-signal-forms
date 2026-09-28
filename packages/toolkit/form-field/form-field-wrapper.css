@@ -543,13 +543,25 @@
   .ngx-signal-form-field-wrapper__content:focus-within {
   border-color: var(--_focus-color);
   box-shadow: var(--_focus-box-shadow);
-  /* Solid outline: the state-color border (invalid/warning) stays
-     unfocused-looking on its own, so the outline is what actually shows
-     the field is focused. It applies to every state. The invalid and
-     warning rules below re-point `--_focus-color` to the state color, so
-     the outline matches the border. The plain appearance is the one exception: it
-     overrides `outline` back to `none` in `form-field-wrapper.selection.css`
-     and relies on its own input-level outline instead (see `#493`). */
+}
+
+/* Solid outline: the state-color border (invalid/warning) stays */
+/* unfocused-looking on its own, so the outline is what actually shows the */
+/* field is focused. It applies to every state. The invalid and warning */
+/* rules below re-point `--_focus-color` to the state color, so the outline */
+/* matches the border. */
+/* `:has(... :focus-visible)` follows the browser's focus-visible heuristic, */
+/* so a mouse click on a `<select>` or custom control draws no outline. It */
+/* only looks inside `__main`, so a focused prefix/suffix button keeps its */
+/* own outline and the container does not add a second one. */
+/* The plain appearance overrides `outline` back to `none` in */
+/* `form-field-wrapper.selection.css` and relies on its own input-level */
+/* outline instead (see `#493`). Keep this rule flat for the same reason as */
+/* the rule above (#556). */
+:host(.ngx-signal-form-field-wrapper--textual)
+  .ngx-signal-form-field-wrapper__content:has(
+    .ngx-signal-form-field-wrapper__main :focus-visible
+  ) {
   outline: var(--_focus-outline-width) solid var(--_focus-color);
   outline-offset: var(--_focus-outline-offset);
 }
@@ -1298,9 +1310,15 @@
   /* signal in forced-colors mode. */
   :host(.ngx-signal-form-field-wrapper--textual)
     .ngx-signal-form-field-wrapper__content:focus-within {
-    outline: 2px solid Highlight;
-    outline-offset: 2px;
     box-shadow: none;
     border-color: Highlight;
+  }
+
+  :host(.ngx-signal-form-field-wrapper--textual)
+    .ngx-signal-form-field-wrapper__content:has(
+      .ngx-signal-form-field-wrapper__main :focus-visible
+    ) {
+    outline: 2px solid Highlight;
+    outline-offset: 2px;
   }
 }

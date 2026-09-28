@@ -362,3 +362,80 @@ describe('NgxFormFieldWrapper — default border contrast in dark mode (#494)', 
     ).toBeGreaterThanOrEqual(3);
   });
 });
+
+/**
+ * The container outline follows `:focus-visible` on the control inside
+ * `__main`, not `:focus-within`. A mouse user who clicks a custom combobox
+ * did not ask for a keyboard focus ring. (Chromium treats a clicked native
+ * `<select>` as `:focus-visible`, so that case still draws the outline.) A
+ * focused suffix button draws its own ring, so the container must not add a second one around the whole field.
+ */
+describe('NgxFormFieldWrapper — container outline follows :focus-visible', () => {
+  @Component({
+    selector: 'ngx-test-focus-visible-outline',
+    imports: [NgxFormFieldWrapper, FormField],
+    template: `
+      <button type="button" id="anchor">Before</button>
+      <ngx-form-field-wrapper appearance="outline" [formField]="field.country">
+        <label for="country">Country</label>
+        <select id="country" [formField]="field.country">
+          <option value="nl">Netherlands</option>
+          <option value="be">Belgium</option>
+        </select>
+      </ngx-form-field-wrapper>
+      <ngx-form-field-wrapper appearance="outline" [formField]="field.password">
+        <label for="password">Password</label>
+        <input id="password" type="password" [formField]="field.password" />
+        <button type="button" suffix id="reveal">Show</button>
+      </ngx-form-field-wrapper>
+      <ngx-form-field-wrapper
+        appearance="outline"
+        [formField]="field.framework"
+      >
+        <label for="framework">Framework</label>
+        <button id="framework" type="button" role="combobox">Angular</button>
+      </ngx-form-field-wrapper>
+    `,
+  })
+  class FocusVisibleOutlineComponent {
+    protected readonly field = form(
+      signal({ country: 'nl', password: '', framework: '' }),
+    );
+  }
+
+  const contents = (container: Element) =>
+    container.querySelectorAll<HTMLElement>(
+      '.ngx-signal-form-field-wrapper__content',
+    );
+
+  it('draws the outline when the keyboard focuses the control', async () => {
+    const { container } = await render(FocusVisibleOutlineComponent);
+
+    await userEvent.click(container.querySelector<HTMLElement>('#anchor')!);
+    await userEvent.tab();
+
+    expect(document.activeElement?.id).toBe('country');
+    expect(getComputedStyle(contents(container)[0]!).outlineStyle).toBe(
+      'solid',
+    );
+  });
+
+  it('draws no outline when the mouse focuses a custom combobox', async () => {
+    const { container } = await render(FocusVisibleOutlineComponent);
+
+    await userEvent.click(page.getByRole('combobox', { name: 'Framework' }));
+
+    expect(document.activeElement?.id).toBe('framework');
+    expect(getComputedStyle(contents(container)[2]!).outlineStyle).toBe('none');
+  });
+
+  it('leaves the ring to a focused suffix button', async () => {
+    const { container } = await render(FocusVisibleOutlineComponent);
+
+    await userEvent.click(page.getByLabelText('Password'));
+    await userEvent.tab();
+
+    expect(document.activeElement?.id).toBe('reveal');
+    expect(getComputedStyle(contents(container)[1]!).outlineStyle).toBe('none');
+  });
+});
