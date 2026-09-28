@@ -1,10 +1,11 @@
 import { JsonPipe } from '@angular/common';
-import { httpResource } from '@angular/common/http';
+import { HttpClient } from '@angular/common/http';
 import {
   ChangeDetectionStrategy,
   Component,
   computed,
   effect,
+  inject,
   input,
   signal,
   untracked,
@@ -43,9 +44,8 @@ interface AutosavePatchResponse {
  *
  * Debounced, field-level autosave: `debounce(path, 500)` settles each field
  * independently, a computed patch collects only the fields that are both
- * `dirty()` and `valid()`, and `httpResource` PATCHes that patch — paused
- * (no request) whenever nothing qualifies. There is no submit button; saving
- * *is* the interaction.
+ * `dirty()` and `valid()`, and `HttpClient` PATCHes that patch, one request
+ * at a time. There is no submit button; saving *is* the interaction.
  */
 @Component({
   selector: 'ngx-autosave',
@@ -77,12 +77,10 @@ interface AutosavePatchResponse {
             never an untouched or invalid value.
           </li>
           <li>
-            <code
-              >httpResource(() =&gt; patch ? &#123; url, method: 'PATCH', body:
-              patch &#125; : undefined)</code
-            >
-            — returning <code>undefined</code> pauses the resource, so there is
-            no request while nothing qualifies.
+            An <code>effect</code> sends the patch with
+            <code>HttpClient.patch()</code>, one request at a time. A save is a
+            write, so it is never a resource: a resource would abort an
+            in-flight PATCH whenever the patch changes.
           </li>
           <li>
             On a successful save, only the fields that are still unchanged since
@@ -272,74 +270,85 @@ export class AutosaveComponent {
     );
   }
 
-  /**
-   * The patch actually included in the most recently issued PATCH — a plain
-   * field, not a signal, written synchronously inside the `httpResource`
-   * request builder below. It can never drift from what was truly sent,
-   * unlike re-reading `dirtyValidPatch()` later from an effect (which could
-   * already reflect a newer edit by the time that effect runs). Read back in
-   * `#reconcileAfterSave()` to decide which fields a resolved save may mark
-   * pristine.
-   */
-  #lastRequestedPatch: Partial<AutosaveProfileModel> | undefined;
+  readonly #http = inject(HttpClient);
 
-  /**
-   * PATCHes `dirtyValidPatch()` whenever it holds a value. Returning
-   * `undefined` from the request function pauses `httpResource` — there is
-   * no request while nothing dirty+valid is waiting to be saved, and no
-   * separate "should I save?" flag to keep in sync.
-   */
-  protected readonly saveResource = httpResource<AutosavePatchResponse>(() => {
-    const patch = this.dirtyValidPatch();
-    if (!patch) return undefined;
+  protected readonly saveStatus = signal<SaveStatus>('idle');
 
-    this.#lastRequestedPatch = patch;
-    return { url: AUTOSAVE_ENDPOINT, method: 'PATCH', body: patch };
-  });
+  /** True while a PATCH is on the wire. A plain field: nothing renders it. */
+  #saveInFlight = false;
 
-  /**
-   * Maps the resource's `ResourceStatus` onto the four states this demo
-   * shows the user. `'reloading'` (the state during a manual retry) reads as
-   * `'saving'` too — the user doesn't need a fifth word for that.
-   */
-  protected readonly saveStatus = computed<SaveStatus>(() => {
-    switch (this.saveResource.status()) {
-      case 'loading':
-      case 'reloading':
-        return 'saving';
-      case 'resolved':
-      case 'local':
-        return 'saved';
-      case 'error':
-        return 'error';
-      default:
-        return 'idle';
-    }
-  });
+  /** Set when the patch changed during a save; sent once that save settles. */
+  #saveQueued = false;
 
   constructor() {
-    /// Re-baseline on a successful save, but only for fields the save
-    /// actually covered: `httpResource` is last-write-wins for *requests*
-    /// (a new patch cancels an in-flight one), but a field can still change
-    /// again *after* its request was already dispatched and before it
-    /// resolves. Blindly resetting the whole form at that point would mark
-    /// that field pristine even though the server never saw the newer
-    /// value — a lost update. `fieldsSafeToMarkSaved` excludes exactly that
-    /// field, leaving it dirty so the next debounce cycle saves it for real.
-    /// `untracked` keeps each field's own `reset()` from re-triggering this
-    /// effect.
+    /// Save whenever the dirty+valid patch changes. `untracked` keeps the
+    /// signals the save writes (`saveStatus`, and each field's `reset()` on
+    /// success) from becoming dependencies of this effect.
     effect(() => {
-      if (this.saveResource.status() === 'resolved') {
+      const patch = this.dirtyValidPatch();
+      if (patch) {
         untracked(() => {
-          this.#reconcileAfterSave();
+          this.#requestSave(patch);
         });
       }
     });
   }
 
-  #reconcileAfterSave(): void {
+  /**
+   * Sends `patch`, or queues it when a save is already in flight. A save is
+   * a write, so an in-flight PATCH is never aborted: the server may already
+   * have applied it, and an aborted request can still land after the one
+   * that replaced it. Instead, saves run one at a time, and the queued save
+   * reads `dirtyValidPatch()` fresh once the current one settles, so edits
+   * made in the meantime fold into a single follow-up request.
+   */
+  #requestSave(patch: Partial<AutosaveProfileModel>): void {
+    if (this.#saveInFlight) {
+      this.#saveQueued = true;
+      return;
+    }
+    this.#save(patch);
+  }
+
+  #save(patch: Partial<AutosaveProfileModel>): void {
+    this.#saveInFlight = true;
+    this.saveStatus.set('saving');
+    this.#http
+      .patch<AutosavePatchResponse>(AUTOSAVE_ENDPOINT, patch)
+      .subscribe({
+        next: () => {
+          this.saveStatus.set('saved');
+          this.#reconcileAfterSave(patch);
+          this.#onSaveSettled();
+        },
+        error: () => {
+          this.saveStatus.set('error');
+          this.#onSaveSettled();
+        },
+      });
+  }
+
+  #onSaveSettled(): void {
+    this.#saveInFlight = false;
+    if (!this.#saveQueued) return;
+
+    this.#saveQueued = false;
+    const next = this.dirtyValidPatch();
+    if (next) {
+      this.#save(next);
+    }
+  }
+
+  /// Re-baseline after a successful save, but only for fields the save
+  /// actually covered. A field can change again *after* its request was
+  /// dispatched and before it resolves. Blindly resetting the whole form at
+  /// that point would mark that field pristine even though the server never
+  /// saw the newer value — a lost update. `fieldsSafeToMarkSaved` excludes
+  /// exactly that field, leaving it dirty so the next debounce cycle saves
+  /// it for real.
+  #reconcileAfterSave(sentPatch: Partial<AutosaveProfileModel>): void {
     const safeFields = fieldsSafeToMarkSaved(
-      this.#lastRequestedPatch,
+      sentPatch,
       this.profileForm().value(),
     );
 
@@ -369,13 +378,19 @@ export class AutosaveComponent {
     }
   }
 
-  /** Re-issues the last PATCH after a failure — the fields stay dirty until it succeeds. */
+  /** Re-sends the current patch after a failure — the fields stay dirty until it succeeds. */
   protected retrySave(): void {
-    this.saveResource.reload();
+    const patch = this.dirtyValidPatch();
+    if (patch) {
+      this.#requestSave(patch);
+    } else {
+      this.saveStatus.set('idle');
+    }
   }
 
   /** Restores the initial value and clears dirty/touched in one `reset(value)` call. */
   protected resetDemo(): void {
     this.profileForm().reset(createInitialAutosaveProfile());
+    this.saveStatus.set('idle');
   }
 }

@@ -20,9 +20,9 @@ Prompted by [Auto-Saving Signal Forms](https://tech.trellis.org/blog/2026-07-08-
   debounces independently.
 - A computed patch gate includes a field only when it is dirty, valid,
   and its control buffer equals its model value.
-- `httpResource` (`@angular/common/http`, `@publicApi 22.0`) — the request
-  function returns `undefined` whenever nothing dirty+valid is waiting,
-  pausing the resource. No separate "should I save?" flag.
+- `HttpClient.patch()` from an `effect` — the save is a write, so it is not a
+  resource. Saves run one at a time and are never aborted (see "Why not
+  `httpResource`" below).
 - Per-field, no-argument `reset()` on a successful save — clears
   `dirty()`/`touched()` for exactly the fields the resolved request covered,
   leaving any field edited again mid-flight dirty so it autosaves for real
@@ -40,8 +40,8 @@ Prompted by [Auto-Saving Signal Forms](https://tech.trellis.org/blog/2026-07-08-
 - Backend: a real MSW handler, `PATCH /api/autosave/profile`
   (`apps/demo/src/mocks/handlers.ts`) — unlike
   [Server Integration](../server-integration/README.md)'s in-memory fake
-  service, `httpResource`'s loading/error states here come from an actual
-  (mocked) HTTP round trip.
+  service, the saving/error states here come from an actual (mocked) HTTP
+  round trip.
 
 ## Validation rules
 
@@ -129,13 +129,31 @@ If a real form had a dozen+ autosaved fields, `extractValue` would very
 likely be the better trade — this demo's teaching point is the gate, not
 "never use extractValue."
 
-## Lost-update guard
+## One save at a time
 
-`httpResource` is last-write-wins **for requests**: if the computed patch
-changes while a PATCH is in flight, the resource cancels it and issues a new
-one with the current patch — so an edit that lands _before_ the request is
-dispatched is never lost, it just gets folded into the request that actually
-goes out.
+An `effect` watches `dirtyValidPatch()` and sends each new patch with
+`HttpClient.patch()`. When a save is already in flight, the new patch is not
+sent. The component sets a flag instead. When the current save settles, it
+reads `dirtyValidPatch()` again and sends what is still unsaved, as one
+follow-up request. Edits made during a save are never lost. They fold into
+that follow-up request.
+
+### Why not `httpResource`
+
+An earlier version of this demo used `httpResource` with `method: 'PATCH'`.
+That is wrong for a write, and Angular's own docs say so: `resource` is for
+read operations. A resource aborts its in-flight request whenever its request
+changes. For a read, that is correct. For a write, it is a bug:
+
+- The server may already have applied the aborted PATCH. The client then
+  treats it as "not sent".
+- An aborted request can still reach the server _after_ the request that
+  replaced it. The server then ends with the older value.
+- A resource also drops back to `idle` when its request becomes `undefined`.
+  Resetting the saved field did exactly that, so "All changes saved." never
+  rendered.
+
+## Lost-update guard
 
 What is not automatically safe is an edit that lands _after_ a request is
 already dispatched and _before_ it resolves. A naive "reset the whole form on
@@ -147,14 +165,11 @@ sent was just forgotten).
 
 The fix, in `autosave.form.ts`:
 
-1. The `httpResource` request builder captures the exact patch it sends into
-   a plain instance field, `#lastRequestedPatch` — not a signal, so reading
-   it back later can't itself trigger reactivity, and it can never drift
-   from what was truly sent (unlike re-reading `dirtyValidPatch()` from an
-   effect, which could already reflect a newer edit by the time that effect
-   runs).
+1. `#save(patch)` keeps the exact patch it sent and passes it to
+   `#reconcileAfterSave(patch)` when the request resolves. It does not
+   re-read `dirtyValidPatch()`, which could already reflect a newer edit.
 2. On a resolved save, `fieldsSafeToMarkSaved()` (`autosave.save-reconciliation.ts`,
-   a pure function with its own spec) compares `#lastRequestedPatch` against
+   a pure function with its own spec) compares the sent patch against
    each field's **current** value. A field is safe to mark saved only if it
    was part of the request that resolved **and** its value hasn't moved on
    since.
@@ -210,11 +225,12 @@ demo should adopt it.
 ## Retry and reset
 
 - **Retry:** a failed save leaves its field(s) `dirty()`; **Retry save**
-  calls `saveResource.reload()`, which re-issues the current patch (picking
-  up any edits made since the failure).
+  sends the current `dirtyValidPatch()` again (picking up any edits made
+  since the failure).
 - **Reset demo:** `profileForm().reset(createInitialAutosaveProfile())` — one
   call sets the model back to its initial value _and_ clears
-  `dirty()`/`touched()` for the whole form. This one is a deliberate
+  `dirty()`/`touched()` for the whole form. The save status goes back to
+  idle. This one is a deliberate
   whole-form reset (there is nothing to preserve — the demo is starting
   over), unlike the per-field reconciliation after a successful save.
 
@@ -248,18 +264,8 @@ form.
   server. Last-write-wins at the server is fine for this demo; a production
   autosave with real multi-client conflict risk needs more than this
   (optimistic concurrency tokens, CRDTs, or similar).
-- **`httpResource`'s request-level cancellation is coarser than the
-  save.** `httpResource` cancels the entire in-flight HTTP request when its
-  computed request changes — it has no concept of "this PATCH's body
-  changed, but keep the connection." That's the right trade for this demo
-  (it's exactly what folds a pre-dispatch edit into the next request, see
-  "Lost-update guard" above) but it does mean a request that was almost
-  done can still be aborted and re-sent from scratch. A production autosave
-  with stricter delivery guarantees (e.g. "never re-send a request that's
-  already X% through," or serialized-queue semantics) would need to drop to
-  `HttpClient` directly and manage that queue explicitly — out of scope for
-  what is meant to stay an idiomatic `httpResource` example matching this
-  repo's other `resource()`/`httpResource` demos.
+- **Retries with backoff, and saving on page unload.** A failed save waits
+  for the user to click **Retry save** or to edit again.
 - **Offline queueing / `localStorage` persistence.** Not implemented.
 
 ## Key files
@@ -272,7 +278,7 @@ form.
   pure lost-update guard (`fieldsSafeToMarkSaved()`), with its own
   [spec](autosave.save-reconciliation.spec.ts).
 - [autosave.form.ts](autosave.form.ts) — the dirty+valid+settled gate,
-  `httpResource`, the post-save reconciliation, save-status live regions,
+  the one-at-a-time save, the post-save reconciliation, save-status live regions,
   with its own [spec](autosave.form.spec.ts) covering the settled-value
   race from #366.
 - [autosave.page.ts](autosave.page.ts) — page wrapper and debugger.

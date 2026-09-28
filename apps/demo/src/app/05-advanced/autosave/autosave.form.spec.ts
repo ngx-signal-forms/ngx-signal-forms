@@ -258,6 +258,47 @@ describe('AutosaveComponent (#366 — settled-value autosave)', () => {
     expect(bio.value).toBe('Second edit, mid-flight.');
   });
 
+  it('never aborts or overlaps a PATCH: an edit that settles mid-save is sent after that save resolves', async () => {
+    const { fixture } = await setup();
+    const component = fixture.componentInstance;
+
+    const displayName = screen.getByLabelText(
+      /display name/i,
+    ) as HTMLInputElement;
+    const bio = screen.getByLabelText(/bio/i) as HTMLTextAreaElement;
+
+    fireEvent.input(bio, { target: { value: 'Bio sent first.' } });
+    fixture.detectChanges();
+    await vi.advanceTimersByTimeAsync(500);
+    fixture.detectChanges();
+    const firstReq = httpMock.expectOne(AUTOSAVE_ENDPOINT);
+
+    // A second field settles while the first PATCH is still on the wire.
+    fireEvent.input(displayName, { target: { value: 'Ada Byron' } });
+    fixture.detectChanges();
+    await vi.advanceTimersByTimeAsync(500);
+    fixture.detectChanges();
+
+    // A save is a write: the server may already have applied it, so it must
+    // not be cancelled, and a second PATCH must not race it.
+    expect(firstReq.cancelled).toBe(false);
+    httpMock.expectNone(AUTOSAVE_ENDPOINT);
+
+    firstReq.flush({ savedAt: new Date().toISOString() });
+    await vi.advanceTimersByTimeAsync(0);
+    fixture.detectChanges();
+
+    // Bio is saved; the queued follow-up carries only what is still unsaved.
+    expect(component.profileForm.bio().dirty()).toBe(false);
+    const followUp = httpMock.expectOne(AUTOSAVE_ENDPOINT);
+    expect(followUp.request.body).toEqual({ displayName: 'Ada Byron' });
+    followUp.flush({ savedAt: new Date().toISOString() });
+    await vi.advanceTimersByTimeAsync(0);
+    fixture.detectChanges();
+
+    expect(component.profileForm.displayName().dirty()).toBe(false);
+  });
+
   it('reset demo restores the initial model and pristine state', async () => {
     const { fixture } = await setup();
     const component = fixture.componentInstance;
