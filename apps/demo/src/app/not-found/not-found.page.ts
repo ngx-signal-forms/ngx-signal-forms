@@ -1,5 +1,7 @@
 import { Component, inject } from '@angular/core';
-import { Router, RouterLink } from '@angular/router';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { NavigationEnd, Router, RouterLink } from '@angular/router';
+import { filter, map } from 'rxjs';
 import { DEMO_CATEGORIES } from '@ngx-signal-forms/demo-shared';
 import { PageHeaderComponent } from '../ui';
 
@@ -19,7 +21,7 @@ import { PageHeaderComponent } from '../ui';
 
     <section class="not-found" aria-labelledby="not-found-sections">
       <p class="not-found__path">
-        Requested: <code class="code-inline">{{ requestedPath }}</code>
+        Requested: <code class="code-inline">{{ requestedPath() }}</code>
       </p>
 
       <p class="mt-6">
@@ -96,6 +98,16 @@ import { PageHeaderComponent } from '../ui';
   `,
 })
 export class NotFoundPageComponent {
-  protected readonly requestedPath = inject(Router).url;
+  readonly #router = inject(Router);
+
+  /** Follows the URL: Angular reuses this component from one unknown URL to
+   * the next, so a value read once in the constructor would go stale. */
+  protected readonly requestedPath = toSignal(
+    this.#router.events.pipe(
+      filter((event) => event instanceof NavigationEnd),
+      map(() => this.#router.url),
+    ),
+    { initialValue: this.#router.url },
+  );
   protected readonly categories = DEMO_CATEGORIES;
 }

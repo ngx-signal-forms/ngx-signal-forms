@@ -282,6 +282,22 @@ test.describe('Demo Application - Route Handling', () => {
     });
   });
 
+  test('should show the current path when moving between unknown URLs', async ({
+    page,
+  }) => {
+    await page.goto('/first-miss');
+    await expect(page.locator('main code')).toHaveText('/first-miss');
+
+    // Same wildcard route, so Angular reuses the not-found component.
+    await page.evaluate(() => {
+      history.pushState({}, '', '/second-miss');
+      dispatchEvent(new PopStateEvent('popstate'));
+    });
+
+    await expect(page).toHaveURL(/\/second-miss$/u);
+    await expect(page.locator('main code')).toHaveText('/second-miss');
+  });
+
   test('should preserve query parameters during navigation', async ({
     page,
   }) => {

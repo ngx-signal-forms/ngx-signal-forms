@@ -88,15 +88,17 @@ export interface WizardSubmitEvent {
  * </ngx-wizard>
  * ```
  */
-/** Input types where Enter already means something else, or nothing. */
-const NON_TEXT_INPUT_TYPES = new Set([
-  'button',
-  'checkbox',
-  'file',
-  'image',
-  'radio',
-  'reset',
-  'submit',
+/**
+ * Input types where Enter should advance the wizard. Other types (date,
+ * number, range, color, checkbox, …) keep their native Enter behaviour.
+ */
+const TEXT_LIKE_INPUT_TYPES = new Set([
+  'email',
+  'password',
+  'search',
+  'tel',
+  'text',
+  'url',
 ]);
 
 @Component({
@@ -280,7 +282,7 @@ export class WizardComponent {
   protected onContentEnter(event: KeyboardEvent): void {
     const target = event.target;
     if (event.isComposing || !(target instanceof HTMLInputElement)) return;
-    if (NON_TEXT_INPUT_TYPES.has(target.type)) return;
+    if (!TEXT_LIKE_INPUT_TYPES.has(target.type)) return;
     // An open combobox owns Enter: it picks the active option.
     if (
       target.getAttribute('role') === 'combobox' &&
