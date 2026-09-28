@@ -67,19 +67,20 @@ jobs:
           # the override, `pnpm-lock.yaml` holds exactly one `@angular/core`
           # entry). `@angular/cli` and the `@angular-devkit/*` tooling are
           # deliberately left alone: `toolkit:test`/`test-browser` never load
-          # them. `@angular/build` is a different matter — analog's vite
-          # plugin does `require('@angular/build/private')` for JIT
-          # compilation, so it IS loaded — but its own framework peers are
-          # `^22.0.0`, so pairing its installed 22.1.x with a 22.0.0 or
-          # latest-22 compiler-cli is still a supported combination and
-          # doesn't need its own override.
+          # them. `@angular/build` is different: analog's vite plugin loads
+          # `@angular/build/private` for JIT compilation, and it picks which
+          # `@angular/build` API to call from the `@angular/compiler-cli`
+          # version. `@angular/build` 22.2 changed that API, so a 22.0.0
+          # compiler-cli next to a 22.2 `@angular/build` breaks every spec
+          # file ("initializeHash() before use"). Override `@angular/build`
+          # together with compiler-cli so the two always match.
           - name: angular-floor
             node: ''
-            override: '@angular/common@22.0.0,@angular/compiler@22.0.0,@angular/compiler-cli@22.0.0,@angular/core@22.0.0,@angular/forms@22.0.0,@angular/platform-browser@22.0.0,@angular/router@22.0.0,@angular/animations@22.0.0'
+            override: '@angular/build@22.0.0,@angular/common@22.0.0,@angular/compiler@22.0.0,@angular/compiler-cli@22.0.0,@angular/core@22.0.0,@angular/forms@22.0.0,@angular/platform-browser@22.0.0,@angular/router@22.0.0,@angular/animations@22.0.0'
             guard_pkg: '@angular/core'
           - name: angular-ceiling
             node: ''
-            override: '@angular/common@>=22.0.0 <23.0.0,@angular/compiler@>=22.0.0 <23.0.0,@angular/compiler-cli@>=22.0.0 <23.0.0,@angular/core@>=22.0.0 <23.0.0,@angular/forms@>=22.0.0 <23.0.0,@angular/platform-browser@>=22.0.0 <23.0.0,@angular/router@>=22.0.0 <23.0.0,@angular/animations@>=22.0.0 <23.0.0'
+            override: '@angular/build@>=22.0.0 <23.0.0,@angular/common@>=22.0.0 <23.0.0,@angular/compiler@>=22.0.0 <23.0.0,@angular/compiler-cli@>=22.0.0 <23.0.0,@angular/core@>=22.0.0 <23.0.0,@angular/forms@>=22.0.0 <23.0.0,@angular/platform-browser@>=22.0.0 <23.0.0,@angular/router@>=22.0.0 <23.0.0,@angular/animations@>=22.0.0 <23.0.0'
             guard_pkg: '@angular/core'
           # axe-core: peer declares `>=4.13.0 <5`.
           - name: axe-core-floor
