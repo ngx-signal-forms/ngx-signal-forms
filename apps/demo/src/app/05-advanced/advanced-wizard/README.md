@@ -53,7 +53,7 @@ Autosave watches drafts, so persistence is not restricted to committed data.
 
 **Auto-save.** The store passes the `draftSummary` signal straight to an `rxMethod`, which tracks it and persists through `httpMutation`. Saving indicator uses the `onCleanup` effect pattern so debounced timers cancel on re-run.
 
-**Resume.** The store's `withStorageSync` keeps only the draft id in `sessionStorage`. The MSW mock server keeps the full drafts under its own `sessionStorage` key, in place of a server database. On each visit, `withResource` loads that draft through an `httpResource`, wrapped by `extendResource` with `withPreviousValueOnLoading()` and `withValueOnError(undefined)`. Committed `traveler` and `destinations` are `withLinkedState` over the loaded draft, so no effect copies it. The step buttons and fields stay disabled while the draft loads. A failed load shows an error, and the next save starts a new draft and clears the error.
+**Resume.** The store's `withStorageSync` keeps only the draft id in `sessionStorage`. The MSW mock server keeps the full drafts under its own `sessionStorage` key, in place of a server database. On each visit, `withResource` loads that draft through an `httpResource`, wrapped by `extendResource` with `withPreviousValueOnLoading()` and `withValueOnError(undefined)`. Committed `traveler` and `destinations` are `withLinkedState` over the loaded draft, so no effect copies it. The step buttons and fields stay disabled while the draft loads. A failed load shows an error, and the next save starts a new draft and clears the error. The draft holds only the steps you finished with Next. Text typed in the current step is not saved until you click Next.
 
 ## Key files
 
