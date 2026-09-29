@@ -141,7 +141,7 @@ interface VestRunnableSuite<TValue, F extends string = string> {
  * `run()` returns — see {@link waitForSuiteIdle} and
  * {@link awaitVestRunSettlement}.
  */
-type VestCoordinatedSuite<TValue, F extends string = string> = Pick<VestRunnableSuite<TValue, F>, 'run' | 'only' | 'subscribe' | 'get'>;
+type VestCoordinatedSuite<TValue, F extends string = string> = Pick<VestRunnableSuite<TValue, F>, 'get' | 'only' | 'run' | 'subscribe'>;
 
 /**
  * Public constant kind prefix used for Vest `warn()` messages surfaced through
@@ -469,7 +469,7 @@ interface ValidateVestOptions<TValue = unknown, F extends string = string> {
  * });
  * ```
  */
-declare function validateVestWarnings<TValue, F extends string = string>(path: VestFieldPath<TValue>, suite: VestRunnableSuite<TValue, F>, options?: Pick<ValidateVestOptions<TValue, F>, 'resetOnDestroy' | 'only'>): void;
+declare function validateVestWarnings<TValue, F extends string = string>(path: VestFieldPath<TValue>, suite: VestRunnableSuite<TValue, F>, options?: Pick<ValidateVestOptions<TValue, F>, 'only' | 'resetOnDestroy'>): void;
 /**
  * Register a Vest suite as a first-class Angular Signal Forms validator.
  *

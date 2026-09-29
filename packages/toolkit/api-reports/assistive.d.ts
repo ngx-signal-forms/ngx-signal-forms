@@ -234,7 +234,7 @@ declare class NgxFormFieldCharacterCount {
      *
      * @default 'right'
      */
-    readonly position: _angular_core.InputSignal<"left" | "right">;
+    readonly position: _angular_core.InputSignal<'left' | 'right'>;
     /**
      * Enable/disable color progression based on character limit.
      *
@@ -351,7 +351,7 @@ declare class NgxFormFieldCharacterCount {
     static ɵcmp: _angular_core.ɵɵComponentDeclaration<NgxFormFieldCharacterCount, "ngx-form-field-character-count", never, { "formField": { "alias": "formField"; "required": true; "isSignal": true; }; "maxLength": { "alias": "maxLength"; "required": false; "isSignal": true; }; "position": { "alias": "position"; "required": false; "isSignal": true; }; "showLimitColors": { "alias": "showLimitColors"; "required": false; "isSignal": true; }; "liveAnnounce": { "alias": "liveAnnounce"; "required": false; "isSignal": true; }; "announcementFormatter": { "alias": "announcementFormatter"; "required": false; "isSignal": true; }; }, {}, never, never, true, never>;
 }
 
-type NgxFormFieldListStyle = 'plain' | 'bullets';
+type NgxFormFieldListStyle = 'bullets' | 'plain';
 /**
  * @deprecated Use {@link NgxFormFieldListStyle} instead.
  */
