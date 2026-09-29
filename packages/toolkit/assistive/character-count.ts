@@ -291,19 +291,24 @@ export type NgxCharacterCountAnnouncementFormatter = (
        * the inherited color-scheme (see THEMING.md, "Scenario C: Dark Mode"). WCAG
        * 1.4.3 contrast, light on white / dark on #1f2937: ok 4.99:1 /
        * 8.54:1, warning 4.92:1 / 10.18:1, danger 5.05:1 / 7.73:1,
-       * exceeded 8.31:1 / 5.31:1.
+       * exceeded 8.31:1 / 5.31:1. A tinted ancestor surface
+       * (NgxFormFieldset) hands in darker ok, warning and danger tones
+       * through the inherited --_tinted-surface-clr-* tokens.
        */
       --_char-count-color-ok: var(
         --ngx-form-field-char-count-color-ok,
-        light-dark(rgba(50, 65, 85, 0.75), rgba(249, 250, 251, 0.75))
+        var(
+          --_tinted-surface-clr-text-secondary,
+          light-dark(rgba(50, 65, 85, 0.75), rgba(249, 250, 251, 0.75))
+        )
       );
       --_char-count-color-warning: var(
         --ngx-form-field-char-count-color-warning,
-        light-dark(#a16207, #fcd34d)
+        var(--_tinted-surface-clr-warning, light-dark(#a16207, #fcd34d))
       );
       --_char-count-color-danger: var(
         --ngx-form-field-char-count-color-danger,
-        light-dark(#db1818, #fca5a5)
+        var(--_tinted-surface-clr-danger, light-dark(#db1818, #fca5a5))
       );
       --_char-count-color-exceeded: var(
         --ngx-form-field-char-count-color-exceeded,

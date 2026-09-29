@@ -107,10 +107,15 @@ import { sanitizeFieldNameForId } from '@ngx-signal-forms/toolkit/core';
         var(--ngx-signal-form-feedback-line-height, 1rem)
       );
       /* light-dark() follows the inherited color-scheme: 4.99:1 on white,
-       * 8.54:1 on the dark surface (#1f2937). */
+       * 8.54:1 on the dark surface (#1f2937). A tinted ancestor surface
+       * (NgxFormFieldset) hands in a darker tone through the inherited
+       * --_tinted-surface-clr-text-secondary. */
       color: var(
         --ngx-form-field-hint-color,
-        light-dark(rgba(50, 65, 85, 0.75), rgba(249, 250, 251, 0.75))
+        var(
+          --_tinted-surface-clr-text-secondary,
+          light-dark(rgba(50, 65, 85, 0.75), rgba(249, 250, 251, 0.75))
+        )
       );
       /*
        * Hint shares the input's border-left edge (no padding offset) and reads
