@@ -540,7 +540,7 @@
 
 /* Keep this focus rule flat. Angular 22.2 adds a scoping attribute to */
 /* nested `&` rules, which raises their specificity. The forced-colors focus */
-/* rule at the end of this file has the same specificity as this flat rule */
+/* rule near the end of this file has the same specificity as this flat rule */
 /* and wins by source order. A nested copy of this rule would beat it (#556). */
 :host(.ngx-signal-form-field-wrapper--textual)
   .ngx-signal-form-field-wrapper__content:focus-within {
@@ -1276,12 +1276,32 @@
 /* soft state backgrounds flatten to system colors, erasing the invalid/ */
 /* warning distinction. Map states to explicit system colors instead. */
 @media (forced-colors: active) {
+  /* A media query adds no specificity. The outline appearance's rules carry */
+  /* a two-class `:host()` compound, so they outrank these one-class rules */
+  /* in any source order. The resting and focus rules below list the outline */
+  /* selector too, at equal specificity, and win by source order (#550). */
   :host(.ngx-signal-form-field-wrapper--textual)
+    .ngx-signal-form-field-wrapper__content,
+  :host(.ngx-signal-forms-outline.ngx-signal-form-field-wrapper--textual)
     .ngx-signal-form-field-wrapper__content {
     forced-color-adjust: none;
     background: Field;
     color: FieldText;
     border: 2px solid FieldText;
+  }
+
+  /* Neutralize color-mix() box-shadow and border-color overrides from the */
+  /* normal focus rules — the outline: Highlight below is the sole focus */
+  /* signal in forced-colors mode. This rule sits above the invalid and */
+  /* warning rules: its outline selector has the same specificity as their */
+  /* `:focus-within` rules before Angular 22.2, so source order keeps their */
+  /* state border color. */
+  :host(.ngx-signal-form-field-wrapper--textual)
+    .ngx-signal-form-field-wrapper__content:focus-within,
+  :host(.ngx-signal-forms-outline.ngx-signal-form-field-wrapper--textual)
+    .ngx-signal-form-field-wrapper__content:focus-within {
+    box-shadow: none;
+    border-color: Highlight;
   }
 
   :host(
@@ -1306,15 +1326,6 @@
       border-color: CanvasText;
       box-shadow: none;
     }
-  }
-
-  /* Neutralize color-mix() box-shadow and border-color overrides from the */
-  /* normal focus rules — the outline: Highlight below is the sole focus */
-  /* signal in forced-colors mode. */
-  :host(.ngx-signal-form-field-wrapper--textual)
-    .ngx-signal-form-field-wrapper__content:focus-within {
-    box-shadow: none;
-    border-color: Highlight;
   }
 
   :host(.ngx-signal-form-field-wrapper--textual)
