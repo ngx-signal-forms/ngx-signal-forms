@@ -266,11 +266,6 @@ interface ResolvedMarker {
  */
 interface NgxSignalFormsConfig {
     /**
-     * Enable automatic ARIA attributes (aria-invalid, aria-describedby).
-     * @default true
-     */
-    autoAria: boolean;
-    /**
      * Default error display strategy.
      * @default 'on-touch'
      */
@@ -405,7 +400,6 @@ interface NgxSignalFormsConfig {
  * via CSS); omitting the key inherits the parent value instead.
  */
 interface NgxSignalFormsUserConfig {
-    autoAria?: boolean | undefined;
     defaultErrorStrategy?: ResolvedErrorDisplayStrategy | undefined;
     defaultWarningStrategy?: ResolvedWarningDisplayStrategy | undefined;
     defaultFormFieldAppearance?: FormFieldAppearance | undefined;
@@ -676,7 +670,6 @@ interface NgxSignalFormFieldContext {
  * @internal
  */
 declare const DEFAULT_NGX_SIGNAL_FORMS_CONFIG: {
-    readonly autoAria: true;
     readonly defaultErrorStrategy: "on-touch";
     readonly defaultWarningStrategy: "on-touch";
     readonly defaultFormFieldAppearance: "standard";
@@ -998,7 +991,6 @@ declare const NGX_FORM_FIELD_HINT_RENDERER: InjectionToken<NgxFormFieldHintRende
  * export const appConfig: ApplicationConfig = {
  *   providers: [
  *     provideNgxSignalFormsConfig({
- *       autoAria: true,
  *       defaultErrorStrategy: 'on-touch',
  *     }),
  *   ],

@@ -63,7 +63,6 @@ describe('*ngxMatErrorSlot / *ngxMatHintSlot — strategy microsyntax alias', ()
         // the error should stay hidden UNLESS the per-slot override wins.
         provideNgxSignalFormsConfig({
           defaultErrorStrategy: 'on-touch',
-          autoAria: false,
         }),
       ],
     });
@@ -100,7 +99,6 @@ describe('*ngxMatErrorSlot / *ngxMatHintSlot — strategy microsyntax alias', ()
         provideZonelessChangeDetection(),
         provideNgxSignalFormsConfig({
           defaultErrorStrategy: 'on-touch',
-          autoAria: false,
         }),
       ],
     });
@@ -149,7 +147,6 @@ describe('*ngxMatErrorSlot / *ngxMatHintSlot — strategy microsyntax alias', ()
         // the warning should stay hidden UNLESS the per-slot override wins.
         provideNgxSignalFormsConfig({
           defaultErrorStrategy: 'on-touch',
-          autoAria: false,
         }),
       ],
     });
