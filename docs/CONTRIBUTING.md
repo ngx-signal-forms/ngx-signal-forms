@@ -6,6 +6,15 @@ This is the entry point for work on the repository. Code and agent rules live
 in [`AGENTS.md`](../AGENTS.md). Repository layout and packaging live in
 [Package architecture](./PACKAGE_ARCHITECTURE.md).
 
+## Issues and pull requests
+
+For now, only repository collaborators can open pull requests. To report a bug
+or ask for a feature, open an
+[issue](https://github.com/ngx-signal-forms/ngx-signal-forms/issues/new/choose).
+For questions and ideas, use
+[Discussions](https://github.com/ngx-signal-forms/ngx-signal-forms/discussions).
+For a security problem, follow the [security policy](../SECURITY.md).
+
 ## Setup
 
 1. Use the Node version in [`.node-version`](../.node-version).
@@ -66,6 +75,26 @@ Explain each topic in one file. Elsewhere, write one sentence and a link.
 User docs describe the current state only. Put history in `migrations/`.
 Put maintainer notes in a `## For maintainers` section at the end of a file,
 or in this file.
+
+## Docs site
+
+The docs site on Docs7 is built from these markdown files. `docs.json` at the
+repo root lists the pages. Write links as normal relative links to `.md`
+files, so they work on GitHub. On each push to `main`,
+[`build-docs7-site.mjs`](../tools/scripts/build-docs7-site.mjs) rewrites the
+links for the site and pushes the result to the `docs7` branch. Docs7
+deploys that branch.
+
+The build fails on a link to a missing file or heading. CI runs it on every
+pull request. To check the build and preview the site locally:
+
+```sh
+pnpm nx run workspace:check-docs7-site
+npx @upstash/docs7 dev dist/docs7
+```
+
+To add a page, add it to `docs.json` and give the file `title` and
+`sidebarTitle` frontmatter in place of the `#` heading.
 
 ## Architecture decisions
 

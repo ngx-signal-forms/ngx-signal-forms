@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Question or idea
+    url: https://github.com/ngx-signal-forms/ngx-signal-forms/discussions
+    about: Ask how to use the toolkit, or discuss an idea before you open a feature request.
+  - name: Security problem
+    url: https://github.com/ngx-signal-forms/ngx-signal-forms/security/advisories/new
+    about: Report a vulnerability privately. Do not open a public issue.

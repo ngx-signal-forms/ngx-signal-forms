@@ -1,6 +1,9 @@
 # @ngx-signal-forms/toolkit
 
-[![skills.sh](https://skills.sh/b/ngx-signal-forms/ngx-signal-forms)](https://skills.sh/ngx-signal-forms/ngx-signal-forms)
+[![npm](https://img.shields.io/npm/v/@ngx-signal-forms/toolkit)](https://www.npmjs.com/package/@ngx-signal-forms/toolkit)
+[![CI](https://img.shields.io/github/actions/workflow/status/ngx-signal-forms/ngx-signal-forms/ci.yml?branch=main&label=CI)](https://github.com/ngx-signal-forms/ngx-signal-forms/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/npm/l/@ngx-signal-forms/toolkit)](./LICENSE)
+[![Context7](https://img.shields.io/badge/Context7-docs-blue)](https://context7.com/ngx-signal-forms/ngx-signal-forms)
 
 Accessible field feedback for Angular Signal Forms. The toolkit shows errors
 and warnings at the right moment, wires ARIA for you, moves focus to the first
@@ -10,6 +13,7 @@ Angular still owns the model, validation, field state, and submission. You keep
 using `form()`, `[formRoot]`, and `[formField]`. The toolkit adds the UI layer
 around them.
 
+[Docs](https://ngx-signal-forms-ngx-signal-forms.docs7.io/) ·
 [Live demo](https://ngx-signal-forms.github.io/ngx-signal-forms/) ·
 [npm](https://www.npmjs.com/package/@ngx-signal-forms/toolkit) ·
 [API reference](./packages/toolkit/README.md)
@@ -298,26 +302,40 @@ fields, use the toolkit's `aria-invalid`. See
 
 Build forms:
 
-- [Theming](./packages/toolkit/form-field/THEMING.md)
-- [Grouped fields, arrays, and error summaries](./docs/COMPLEX_NESTED_FORMS.md)
-- [Warnings, timing, and messages](./docs/WARNINGS_SUPPORT.md)
-- [Validation choices](./docs/VALIDATION_STRATEGY.md)
-- [CSS framework integration](./docs/CSS_FRAMEWORK_INTEGRATION.md)
-- [Testing form components](./docs/TESTING.md)
-- [Best practices](./docs/BEST_PRACTICES.md)
-- [FAQ](./docs/FAQ.md)
+- [Theming](./packages/toolkit/form-field/THEMING.md): style the wrapper,
+  messages, hints, and error summary with CSS custom properties.
+- [Grouped fields, arrays, and error summaries](./docs/COMPLEX_NESTED_FORMS.md):
+  fieldsets, nested arrays, wizards, and a summary that links to each field.
+- [Warnings, timing, and messages](./docs/WARNINGS_SUPPORT.md): add
+  non-blocking rules, set when feedback shows, and translate messages.
+- [Validation choices](./docs/VALIDATION_STRATEGY.md): pick Angular
+  validators, a Standard Schema library such as Zod, or Vest.
+- [CSS framework integration](./docs/CSS_FRAMEWORK_INTEGRATION.md): style
+  invalid fields in Bootstrap, Tailwind CSS, and Angular Material.
+- [Testing form components](./docs/TESTING.md): check error text and ARIA
+  in Vitest with Testing Library.
+- [Best practices](./docs/BEST_PRACTICES.md): what to do, what to avoid,
+  and why.
+- [FAQ](./docs/FAQ.md): short answers to "how do I…" questions, with links
+  to demos.
 
 Extend the toolkit:
 
-- [Custom controls](./docs/CUSTOM_CONTROLS.md)
-- [Custom wrappers](./docs/CUSTOM_WRAPPERS.md)
+- [Custom controls](./docs/CUSTOM_CONTROLS.md): bind a combobox, switch,
+  datepicker, or third-party widget, and keep its ARIA correct.
+- [Custom wrappers](./docs/CUSTOM_WRAPPERS.md): wrap Material, PrimeNG,
+  Spartan, or your design system once and reuse it in every form.
 
 Migrate:
 
-- [Versioned migration notes](./docs/migrations/README.md). Check these
-  against your installed version before you use a new feature.
-- [From Reactive Forms](./docs/MIGRATING_FROM_REACTIVE_FORMS.md)
-- [From ngx-vest-forms](./docs/MIGRATING_FROM_NGX_VEST_FORMS.md)
+- [Versioned migration notes](./docs/migrations/README.md): upgrade steps
+  for each release. Check these against your installed version before you
+  use a new feature.
+- [From Reactive Forms](./docs/MIGRATING_FROM_REACTIVE_FORMS.md): the
+  toolkit parts of a move off `ReactiveFormsModule`. Angular's own guide
+  covers the rest.
+- [From ngx-vest-forms](./docs/MIGRATING_FROM_NGX_VEST_FORMS.md): move to
+  `/vest`. Upgrade to Vest 6 first.
 
 ## AI agent skill
 
