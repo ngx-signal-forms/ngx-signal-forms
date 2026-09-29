@@ -342,8 +342,11 @@ Behavior:
   `provideNgxSignalFormsConfig()`.
 - Without a wrapper, set `fieldName` to render the same hidden text with the
   id `{fieldName}-char-count-limit`. Put that id in the control's
-  `aria-describedby` yourself. Inside a wrapper, the wrapper's field name
-  wins over `fieldName`.
+  `aria-describedby` yourself. Auto-ARIA keeps ids that you write. Use one id
+  token for `fieldName`: the count trims it and replaces inner whitespace
+  with `-`, so `"shipping notes"` gives `shipping-notes-char-count-limit`.
+  Inside a wrapper, the count ignores `fieldName` and uses the wrapper's
+  field name.
 
   ```html
   <textarea

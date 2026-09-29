@@ -865,6 +865,49 @@ describe('NgxFormFieldCharacterCount', () => {
       expect(container.querySelector('#other-char-count-limit')).toBeNull();
     });
 
+    it('ignores the input inside a wrapper whose field name is unresolved', async () => {
+      // The wrapper claims aria-describedby, so a minted limit id would hide
+      // the visible "n/max" text. But auto-ARIA links only registry ids
+      // tagged with the wrapper's own field name, and it has none. Falling
+      // back to the input would leave the control with neither the limit
+      // description nor a readable count.
+      const { container } = await render(FieldNameWrapperComponent, {
+        componentInputs: { fieldName: 'bio' },
+        providers: [
+          {
+            provide: NGX_SIGNAL_FORM_FIELD_CONTEXT,
+            useValue: {
+              fieldName: signal(null),
+              isControlDescribedByManaged: signal(true),
+            },
+          },
+        ],
+      });
+
+      expect(
+        container.querySelector('.ngx-signal-form-field-char-count__limit'),
+      ).toBeNull();
+      expect(
+        container.querySelector('.ngx-signal-form-field-char-count__text'),
+      ).not.toHaveAttribute('aria-hidden');
+    });
+
+    it('trims the fieldName and turns inner whitespace into "-" in the id', async () => {
+      // Authors write the id into aria-describedby by hand, so the documented
+      // normalization must match what the count renders.
+      const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      const { container, rerender } = await render(FieldNameWrapperComponent, {
+        componentInputs: { fieldName: '  bio  ' },
+      });
+      expect(container.querySelector('#bio-char-count-limit')).not.toBeNull();
+
+      await rerender({ componentInputs: { fieldName: 'shipping notes' } });
+      expect(
+        container.querySelector('#shipping-notes-char-count-limit'),
+      ).not.toBeNull();
+      warnSpy.mockRestore();
+    });
+
     it('renders no limit element for a blank fieldName', async () => {
       const { container } = await render(FieldNameWrapperComponent, {
         componentInputs: { fieldName: '  ' },

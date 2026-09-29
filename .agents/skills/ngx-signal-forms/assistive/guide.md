@@ -24,7 +24,7 @@ The assistive entry point provides accessible feedback rendering that sits betwe
 4. **`NgxFormFieldCharacterCount`** — live character count with progressive color states:
    - Provide `[formField]` for the bound field.
    - Omit `maxLength` when a `maxLength` validator on the field provides it.
-   - Without a wrapper, set `fieldName` and add `${fieldName}-char-count-limit` to the control's `aria-describedby` so screen readers read the limit on focus. Inside a wrapper the wrapper links it for you, and its field name wins over `fieldName`.
+   - Without a wrapper, set `fieldName` to one id token (usually the control's `id`) and add `${fieldName}-char-count-limit` to the control's `aria-describedby` so screen readers read the limit on focus. This is an authored description id, which rule 4 allows: auto-ARIA keeps it and appends its own ids. Inner whitespace in `fieldName` becomes `-` in the id. Inside a wrapper the wrapper links the limit for you and ignores `fieldName`.
    - Warning/danger thresholds are CSS-only (no component input): override `--ngx-form-field-char-count-warning-threshold` / `--ngx-form-field-char-count-danger-threshold` (plain numbers, percent of `maxLength`, default 80/95).
 
 5. Grouped validation notification for fieldsets, summary cards, or custom sections is `NgxFormFieldError` with `presentation="panel"` (see step 2 above) — there is no separate notification component:

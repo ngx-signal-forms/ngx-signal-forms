@@ -522,7 +522,11 @@ export class NgxFormFieldCharacterCount {
    * Outside a wrapper, set it to mint the stable
    * `{fieldName}-char-count-limit` id, then put that id in the control's
    * `aria-describedby` so screen readers read the limit on focus. Inside a
-   * wrapper, the wrapper's field name wins and this input is ignored.
+   * wrapper this input is ignored, even when the wrapper has no field name.
+   *
+   * Use one id token, such as the control's `id`. The count trims the value
+   * and replaces each run of inner whitespace with `-`, with a dev-mode
+   * warning: `"shipping notes"` mints `shipping-notes-char-count-limit`.
    *
    * @example Standalone count linked to its control
    * ```html
@@ -538,20 +542,20 @@ export class NgxFormFieldCharacterCount {
 
   /**
    * Resolved field name: the wrapper's `NGX_SIGNAL_FORM_FIELD_CONTEXT` field
-   * name first, then the {@link fieldName} input, else `null`. Blank names
-   * count as unset.
+   * name when a context is injected, else the {@link fieldName} input.
+   * Blank names count as unset (`null`).
    *
-   * The context wins, which reverses the usual "explicit input wins" order
-   * of `resolveFieldNameFromCandidates`. A wrapper registers {@link limitId}
-   * in `NGX_SIGNAL_FORM_HINT_REGISTRY` tagged with this name, and auto-ARIA
-   * only links registry ids whose name matches the control's field. An
-   * input that overrode the wrapper's name would drop the limit from
-   * `aria-describedby`. Public so a wrapper can read it (issue #499).
+   * Inside a wrapper the input never applies, which reverses the usual
+   * "explicit input wins" order. A wrapper registers {@link limitId} in
+   * `NGX_SIGNAL_FORM_HINT_REGISTRY` tagged with this name, and auto-ARIA
+   * only links registry ids whose name matches the wrapper's field. An
+   * input name would never match, so the limit would not reach
+   * `aria-describedby` while `hidesVisibleText` still hid the visible
+   * count. Public so a wrapper can read it (issue #499).
    */
   readonly resolvedFieldName = computed(() => {
     return resolveFieldNameFromCandidates(
-      this.#fieldContext?.fieldName(),
-      this.fieldName(),
+      this.#fieldContext ? this.#fieldContext.fieldName() : this.fieldName(),
     );
   });
 
