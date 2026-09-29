@@ -1,4 +1,7 @@
-# Angular Signal Forms and the toolkit
+---
+title: 'Angular Signal Forms and the toolkit'
+sidebarTitle: 'Angular vs toolkit'
+---
 
 This page explains what Angular Signal Forms does, what the toolkit adds, and
 when the toolkit is worth adding.

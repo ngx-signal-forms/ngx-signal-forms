@@ -1,4 +1,7 @@
-# Unit-testing a form component
+---
+title: 'Unit-testing a form component'
+sidebarTitle: 'Testing'
+---
 
 This guide shows how to unit-test a component that uses Angular Signal Forms'
 `form()` and the toolkit's error components. You set a field value, touch the

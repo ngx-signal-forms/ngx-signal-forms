@@ -1,4 +1,6 @@
-# Custom controls
+---
+title: 'Custom controls'
+---
 
 This guide is for app developers who put a custom input or widget inside a
 form: a combobox, a closed select, a switch, a rating, a datepicker, or a

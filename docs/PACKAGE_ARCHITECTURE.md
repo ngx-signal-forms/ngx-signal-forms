@@ -1,4 +1,6 @@
-# Package Architecture
+---
+title: 'Package Architecture'
+---
 
 This is a maintainer document. It describes how the repository and the
 published package are built. To choose an entry point as a user, read

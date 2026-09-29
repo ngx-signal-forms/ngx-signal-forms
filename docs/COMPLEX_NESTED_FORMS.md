@@ -1,4 +1,6 @@
-# Complex and nested forms
+---
+title: 'Complex and nested forms'
+---
 
 How the toolkit's fieldset, error summary, and strategy inheritance scale from
 flat forms to deeply nested groups and arrays.

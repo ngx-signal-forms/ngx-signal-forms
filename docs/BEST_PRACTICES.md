@@ -1,4 +1,6 @@
-# Best practices
+---
+title: 'Best practices'
+---
 
 How to use `@ngx-signal-forms/toolkit` as it is designed. Each practice says
 what to do, what to avoid, and why, and links to the guide that explains more.
