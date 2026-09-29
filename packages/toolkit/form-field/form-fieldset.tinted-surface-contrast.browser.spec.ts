@@ -31,6 +31,7 @@ import { NgxFormField } from './index';
  */
 
 type SurfaceTone = 'default' | 'danger';
+type FieldAppearance = 'inherit' | 'plain';
 
 @Component({
   selector: 'ngx-test-tinted-fieldset',
@@ -51,6 +52,7 @@ type SurfaceTone = 'default' | 'danger';
       >
         <legend>Account</legend>
         <ngx-form-field-wrapper
+          [appearance]="appearance()"
           [formField]="testForm.group.name"
           fieldName="name"
         >
@@ -58,6 +60,7 @@ type SurfaceTone = 'default' | 'danger';
           <input id="name" type="text" [formField]="testForm.group.name" />
         </ngx-form-field-wrapper>
         <ngx-form-field-wrapper
+          [appearance]="appearance()"
           [formField]="testForm.group.username"
           fieldName="username"
         >
@@ -69,6 +72,7 @@ type SurfaceTone = 'default' | 'danger';
           />
         </ngx-form-field-wrapper>
         <ngx-form-field-wrapper
+          [appearance]="appearance()"
           [formField]="testForm.group.motto"
           fieldName="motto"
         >
@@ -84,6 +88,7 @@ type SurfaceTone = 'default' | 'danger';
           />
         </ngx-form-field-wrapper>
         <ngx-form-field-wrapper
+          [appearance]="appearance()"
           [formField]="testForm.group.tagline"
           fieldName="tagline"
         >
@@ -100,6 +105,20 @@ type SurfaceTone = 'default' | 'danger';
           />
         </ngx-form-field-wrapper>
         <ngx-form-field-wrapper
+          [appearance]="appearance()"
+          [formField]="testForm.group.nickname"
+          fieldName="nickname"
+          showMarkerWhen="optional"
+        >
+          <label for="nickname">Nickname</label>
+          <input
+            id="nickname"
+            type="text"
+            [formField]="testForm.group.nickname"
+          />
+        </ngx-form-field-wrapper>
+        <ngx-form-field-wrapper
+          [appearance]="appearance()"
           [formField]="testForm.group.accept"
           fieldName="accept"
         >
@@ -118,6 +137,7 @@ type SurfaceTone = 'default' | 'danger';
 class TintedFieldsetFixture {
   readonly validationSurface = input<'always' | 'never'>('always');
   readonly surfaceTone = input<SurfaceTone>('default');
+  readonly appearance = input<FieldAppearance>('inherit');
   readonly testForm = form(
     signal({
       group: {
@@ -127,6 +147,7 @@ class TintedFieldsetFixture {
         motto: 'Carpe die',
         // 10/10 = 100%: the character count's danger tone.
         tagline: 'Carpe diem',
+        nickname: '',
         accept: false,
       },
     }),
@@ -175,6 +196,7 @@ function surfaceTexts(root: HTMLElement): Record<string, HTMLElement> {
     legend: one('legend'),
     label: one('label[for="motto"]'),
     requiredMarker: one('.ngx-signal-form-field-wrapper__required-marker'),
+    optionalMarker: one('.ngx-signal-form-field-wrapper__optional-marker'),
     invalidCheckboxLabel: one('label[for="accept"]'),
     hint: one('#motto-hint'),
     countWarning: one('#motto-count'),
@@ -229,10 +251,14 @@ function luminance([r, g, b]: Rgba): number {
   return 0.2126 * channel(r) + 0.7152 * channel(g) + 0.0722 * channel(b);
 }
 
-/** WCAG contrast of a (possibly translucent) text color on an opaque surface. */
-function contrastOn(text: string, surface: string): number {
+/**
+ * WCAG contrast of a (possibly translucent) text color on an opaque surface.
+ * `opacity` is the element's own `opacity`, which fades the text further.
+ */
+function contrastOn(text: string, surface: string, opacity = 1): number {
   const bg = parseColor(surface);
-  const [r, g, b, a] = parseColor(text);
+  const [r, g, b, alpha] = parseColor(text);
+  const a = alpha * opacity;
   const fg: Rgba = [
     r * a + bg[0] * (1 - a),
     g * a + bg[1] * (1 - a),
@@ -254,10 +280,15 @@ async function renderFieldset(
   {
     validationSurface = 'always',
     surfaceTone = 'default',
-  }: { validationSurface?: 'always' | 'never'; surfaceTone?: SurfaceTone } = {},
+    appearance = 'inherit',
+  }: {
+    validationSurface?: 'always' | 'never';
+    surfaceTone?: SurfaceTone;
+    appearance?: FieldAppearance;
+  } = {},
 ) {
   const { container } = await render(
-    `<div id="surface" style="${surfaceStyle}; padding: 1rem;"><ngx-test-tinted-fieldset validationSurface="${validationSurface}" surfaceTone="${surfaceTone}" /></div>`,
+    `<div id="surface" style="${surfaceStyle}; padding: 1rem;"><ngx-test-tinted-fieldset validationSurface="${validationSurface}" surfaceTone="${surfaceTone}" appearance="${appearance}" /></div>`,
     { imports: [TintedFieldsetFixture] },
   );
   // Warnings show once the field is touched.
@@ -285,7 +316,13 @@ async function renderFieldset(
       getComputedStyle(element).color,
     ]),
   );
-  return { surface, fieldset, texts, colors };
+  const opacities = Object.fromEntries(
+    Object.entries(texts).map(([name, element]) => [
+      name,
+      Number(getComputedStyle(element).opacity),
+    ]),
+  );
+  return { surface, fieldset, texts, colors, opacities };
 }
 
 const LIGHT_PAGE = 'background-color: #ffffff';
@@ -294,7 +331,7 @@ const DARK_PAGE =
 
 describe('NgxFormFieldset — text on a tinted surface (#535)', () => {
   it('keeps every text on the light invalid tint at 4.5:1 or more', async () => {
-    const { fieldset, colors } = await renderFieldset(LIGHT_PAGE);
+    const { fieldset, colors, opacities } = await renderFieldset(LIGHT_PAGE);
     const tint = getComputedStyle(fieldset).backgroundColor;
     // The tint and the borders keep their colors: only text gets darker.
     expect(tint).toBe('rgb(251, 221, 221)');
@@ -306,13 +343,16 @@ describe('NgxFormFieldset — text on a tinted surface (#535)', () => {
 
     for (const [name, color] of Object.entries(colors)) {
       expect
-        .soft(contrastOn(color, tint), `${name} (${color}) on ${tint}`)
+        .soft(
+          contrastOn(color, tint, opacities[name]),
+          `${name} (${color} at opacity ${opacities[name]}) on ${tint}`,
+        )
         .toBeGreaterThanOrEqual(4.5);
     }
   });
 
   it('keeps every text on the light danger surface tone at 4.5:1 or more', async () => {
-    const { fieldset, colors } = await renderFieldset(LIGHT_PAGE, {
+    const { fieldset, colors, opacities } = await renderFieldset(LIGHT_PAGE, {
       validationSurface: 'never',
       surfaceTone: 'danger',
     });
@@ -321,13 +361,16 @@ describe('NgxFormFieldset — text on a tinted surface (#535)', () => {
 
     for (const [name, color] of Object.entries(colors)) {
       expect
-        .soft(contrastOn(color, tint), `${name} (${color}) on ${tint}`)
+        .soft(
+          contrastOn(color, tint, opacities[name]),
+          `${name} (${color} at opacity ${opacities[name]}) on ${tint}`,
+        )
         .toBeGreaterThanOrEqual(4.5);
     }
   });
 
   it('leaves text colors unchanged in an untinted fieldset', async () => {
-    const { fieldset, colors } = await renderFieldset(LIGHT_PAGE, {
+    const { fieldset, colors, opacities } = await renderFieldset(LIGHT_PAGE, {
       validationSurface: 'never',
     });
     expect(getComputedStyle(fieldset).backgroundColor).toBe('rgba(0, 0, 0, 0)');
@@ -336,6 +379,7 @@ describe('NgxFormFieldset — text on a tinted surface (#535)', () => {
       legend: 'rgb(219, 24, 24)',
       label: 'rgba(50, 65, 85, 0.75)',
       requiredMarker: 'rgb(219, 24, 24)',
+      optionalMarker: 'rgba(50, 65, 85, 0.75)',
       invalidCheckboxLabel: 'rgb(219, 24, 24)',
       hint: 'rgba(50, 65, 85, 0.75)',
       fieldError: 'rgb(219, 24, 24)',
@@ -344,6 +388,7 @@ describe('NgxFormFieldset — text on a tinted surface (#535)', () => {
     });
     expect(asRgb(colors['countWarning'])).toBe('rgb(161, 98, 7)');
     expect(asRgb(colors['countDanger'])).toBe('rgb(219, 24, 24)');
+    expect(opacities['optionalMarker']).toBe(0.7);
   });
 
   it('leaves text colors unchanged on the dark invalid tint', async () => {
@@ -356,6 +401,7 @@ describe('NgxFormFieldset — text on a tinted surface (#535)', () => {
       legend: 'rgb(252, 165, 165)',
       label: 'rgba(249, 250, 251, 0.75)',
       requiredMarker: 'rgb(252, 165, 165)',
+      optionalMarker: 'rgba(249, 250, 251, 0.75)',
       invalidCheckboxLabel: 'rgb(252, 165, 165)',
       hint: 'rgba(249, 250, 251, 0.75)',
       fieldError: 'rgb(252, 165, 165)',
@@ -364,6 +410,7 @@ describe('NgxFormFieldset — text on a tinted surface (#535)', () => {
     });
     expect(asRgb(tinted.colors['countWarning'])).toBe('rgb(252, 211, 77)');
     expect(asRgb(tinted.colors['countDanger'])).toBe('rgb(252, 165, 165)');
+    expect(tinted.opacities['optionalMarker']).toBe(0.7);
   });
 
   it('lets public color tokens on an ancestor win inside the tint', async () => {
@@ -375,6 +422,7 @@ describe('NgxFormFieldset — text on a tinted surface (#535)', () => {
       '--ngx-form-field-label-color',
       '--ngx-form-field-hint-color',
       '--ngx-form-field-required-marker-color',
+      '--ngx-form-field-optional-marker-color',
       '--ngx-form-field-invalid-color',
       '--ngx-form-field-char-count-color-warning',
       '--ngx-signal-form-fieldset-invalid-legend-color',
@@ -395,6 +443,7 @@ describe('NgxFormFieldset — text on a tinted surface (#535)', () => {
       'legend',
       'label',
       'requiredMarker',
+      'optionalMarker',
       'invalidCheckboxLabel',
       'hint',
       'countWarning',
@@ -406,5 +455,130 @@ describe('NgxFormFieldset — text on a tinted surface (#535)', () => {
         .soft(asRgb(getComputedStyle(texts[name]).color), name)
         .toBe(override);
     }
+  });
+
+  it('lets an ancestor hint color win in a plain wrapper', async () => {
+    const override = 'rgb(120, 0, 80)';
+    const { surface } = await renderFieldset(LIGHT_PAGE, {
+      appearance: 'plain',
+    });
+    surface.style.setProperty('--ngx-form-field-hint-color', override);
+
+    await expect
+      .poll(() => asRgb(getComputedStyle(surfaceTexts(surface).hint).color))
+      .toBe(override);
+  });
+});
+
+@Component({
+  selector: 'ngx-test-warning-fieldset',
+  imports: [FormField, NgxSignalFormToolkit, NgxFormField],
+  template: `
+    <form [formRoot]="testForm" ngxSignalForm errorStrategy="immediate">
+      <fieldset
+        ngxFormFieldset
+        [field]="testForm.group"
+        validationSurface="never"
+        surfaceTone="danger"
+        feedbackAppearance="plain"
+      >
+        <legend>Account</legend>
+        <ngx-form-field-wrapper
+          [formField]="testForm.group.username"
+          fieldName="username"
+        >
+          <label for="username">Username</label>
+          <input
+            id="username"
+            type="text"
+            [formField]="testForm.group.username"
+          />
+        </ngx-form-field-wrapper>
+      </fieldset>
+    </form>
+  `,
+  changeDetection: ChangeDetectionStrategy.OnPush,
+})
+class WarningFieldsetFixture {
+  readonly testForm = form(
+    signal({ group: { username: 'ab' } }),
+    schema((path) => {
+      // A group-level warning and no errors: the fieldset shows its warning
+      // state.
+      validate(path.group, () => ({
+        kind: 'warn:group',
+        message: 'Check the account details',
+      }));
+    }),
+  );
+}
+
+describe('NgxFormFieldset — warning legend on the danger surface tone (#535)', () => {
+  async function renderWarningFieldset(surfaceStyle: string) {
+    const { container } = await render(
+      `<div id="surface" style="${surfaceStyle}; padding: 1rem;"><ngx-test-warning-fieldset /></div>`,
+      { imports: [WarningFieldsetFixture] },
+    );
+    await userEvent.click(
+      container.querySelector<HTMLInputElement>('#username')!,
+    );
+    await userEvent.tab();
+    await TestBed.inject(ApplicationRef).whenStable();
+    const surface = container.querySelector<HTMLElement>('#surface')!;
+    const fieldset = surface.querySelector<HTMLElement>('fieldset')!;
+    await expect
+      .poll(() =>
+        fieldset.classList.contains('ngx-signal-form-fieldset--warning'),
+      )
+      .toBe(true);
+    await expect
+      .poll(
+        () =>
+          document
+            .getAnimations()
+            .filter((animation) => animation.playState === 'running').length,
+      )
+      .toBe(0);
+    const legend = fieldset.querySelector<HTMLElement>('legend')!;
+    return { surface, fieldset, legend };
+  }
+
+  it('keeps the warning legend at 4.5:1 or more on the light tint', async () => {
+    const { fieldset, legend } = await renderWarningFieldset(LIGHT_PAGE);
+    const tint = getComputedStyle(fieldset).backgroundColor;
+    expect(tint).toBe('rgb(253, 235, 235)');
+    // The border keeps the base amber: only the text gets darker.
+    expect(getComputedStyle(fieldset).borderTopColor).toBe('rgb(161, 98, 7)');
+
+    const color = getComputedStyle(legend).color;
+    expect(
+      contrastOn(color, tint),
+      `legend (${color}) on ${tint}`,
+    ).toBeGreaterThanOrEqual(4.5);
+  });
+
+  it('keeps the warning legend unchanged on the dark tint', async () => {
+    const { legend } = await renderWarningFieldset(DARK_PAGE);
+    expect(getComputedStyle(legend).color).toBe('rgb(252, 211, 77)');
+  });
+
+  it('lets the public warning legend and border tokens color the legend', async () => {
+    const { surface, legend } = await renderWarningFieldset(LIGHT_PAGE);
+
+    surface.style.setProperty(
+      '--ngx-signal-form-fieldset-warning-border-color',
+      'rgb(120, 0, 80)',
+    );
+    await expect
+      .poll(() => asRgb(getComputedStyle(legend).color))
+      .toBe('rgb(120, 0, 80)');
+
+    surface.style.setProperty(
+      '--ngx-signal-form-fieldset-warning-legend-color',
+      'rgb(0, 80, 120)',
+    );
+    await expect
+      .poll(() => asRgb(getComputedStyle(legend).color))
+      .toBe('rgb(0, 80, 120)');
   });
 });

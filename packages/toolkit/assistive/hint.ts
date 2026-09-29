@@ -109,12 +109,16 @@ import { sanitizeFieldNameForId } from '@ngx-signal-forms/toolkit/core';
       /* light-dark() follows the inherited color-scheme: 4.99:1 on white,
        * 8.54:1 on the dark surface (#1f2937). A tinted ancestor surface
        * (NgxFormFieldset) hands in a darker tone through the inherited
-       * --_tinted-surface-clr-text-secondary. */
+       * --_tinted-surface-clr-text-secondary. A plain wrapper hands in its
+       * label tone through --_field-hint-color. */
       color: var(
         --ngx-form-field-hint-color,
         var(
-          --_tinted-surface-clr-text-secondary,
-          light-dark(rgba(50, 65, 85, 0.75), rgba(249, 250, 251, 0.75))
+          --_field-hint-color,
+          var(
+            --_tinted-surface-clr-text-secondary,
+            light-dark(rgba(50, 65, 85, 0.75), rgba(249, 250, 251, 0.75))
+          )
         )
       );
       /*

@@ -383,7 +383,8 @@
   /* so they align perfectly with the flush-left content. */
   --ngx-signal-form-feedback-padding-horizontal: 0;
   --ngx-signal-form-feedback-font-size: var(--_field-text-caption);
-  --ngx-form-field-hint-color: var(--_color-label);
+  /* Private, so an ancestor's public `--ngx-form-field-hint-color` still wins. */
+  --_field-hint-color: var(--_color-label);
 
   .ngx-signal-form-field-wrapper__content {
     border: none;

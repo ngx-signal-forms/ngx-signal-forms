@@ -307,7 +307,10 @@
   );
   --_fieldset-warning-legend-color: var(
     --ngx-signal-form-fieldset-warning-legend-color,
-    var(--_fieldset-warning-border)
+    var(
+      --ngx-signal-form-fieldset-warning-border-color,
+      var(--_fieldset-clr-warning-text)
+    )
   );
   --_fieldset-warning-legend-bg: var(
     --ngx-signal-form-fieldset-warning-legend-bg,
@@ -482,14 +485,16 @@
 }
 
 /* Tinted danger surfaces (#535). On the light invalid tint (#fbdddd) and the
-   danger tone (#fdebeb), the default red, amber and 75% slate text fall
-   under 4.5:1. This rule sets the inherited `--_tinted-surface-clr-*`
-   tokens to darker tones: on #fbdddd, #b91c1c is 5.08:1, #92400e 5.57:1
-   and #324155 8.15:1. The legend, the fieldset messages and the nested
-   wrappers, hints, character counts and errors use them as their private
-   text fallback, so a public color token set on any ancestor still wins.
-   The dark values equal the untinted ones, which already pass on the dark
-   tints. Borders do not change. */
+   danger tone (#fdebeb), the default red and amber text fall under 4.5:1.
+   The 75% slate text falls under 4.5:1 on #fbdddd only (4.35:1; 4.61:1 on
+   #fdebeb). This rule sets the inherited `--_tinted-surface-clr-*` tokens
+   to darker tones: on #fbdddd, #b91c1c is 5.08:1, #92400e 5.57:1 and
+   #324155 8.15:1. The optional marker paints at 70% opacity, so its muted
+   tone is #1e293b: 4.92:1 at that opacity. The legend, the fieldset
+   messages and the nested wrappers, hints, character counts and errors use
+   them as their private text fallback, so a public color token set on any
+   ancestor still wins. The dark values equal the untinted ones, which
+   already pass on the dark tints. Borders do not change. */
 :host(
   .ngx-signal-form-fieldset--surface-invalid:not([data-appearance='plain'])
 ),
@@ -500,6 +505,7 @@
     #324155,
     rgba(249, 250, 251, 0.75)
   );
+  --_tinted-surface-clr-text-muted: light-dark(#1e293b, currentColor);
 }
 
 .ngx-signal-form-fieldset__content {

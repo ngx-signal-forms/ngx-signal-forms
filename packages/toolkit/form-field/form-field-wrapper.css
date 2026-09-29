@@ -280,7 +280,10 @@
      annotates the exception rather than flagging a problem. */
   --_optional-marker-color: var(
     --ngx-form-field-optional-marker-color,
-    var(--_color-label-muted, currentColor)
+    var(
+      --_tinted-surface-clr-text-muted,
+      var(--_color-label-muted, currentColor)
+    )
   );
   --_optional-marker-weight: var(
     --ngx-form-field-optional-marker-weight,
