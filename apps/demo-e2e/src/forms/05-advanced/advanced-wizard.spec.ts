@@ -377,6 +377,39 @@ test.describe('Advanced Wizard Demo', () => {
     await expect(statusRow).toContainText(/Last saved: \d{1,2}:\d{2}/);
   });
 
+  test('leaving the route stops autosave and returning starts with a fresh store', async ({
+    page,
+  }) => {
+    const draftSaves: string[] = [];
+    page.on('request', (request) => {
+      if (
+        request.url().includes('/api/wizard/draft') &&
+        ['POST', 'PUT'].includes(request.method())
+      ) {
+        draftSaves.push(request.method());
+      }
+    });
+
+    // Change the draft, then leave inside the 2 s autosave debounce. A store
+    // that outlives the route would still fire the pending save.
+    await page.getByLabel('First Name').fill('Ada');
+    const nav = page.getByRole('navigation', {
+      name: 'Documentation sections',
+    });
+    await nav.getByRole('link', { name: 'Global Configuration' }).click();
+    await expect(page).toHaveURL(/\/advanced-scenarios\/global-configuration$/);
+
+    // Wait past the debounce window, then check that nothing was sent.
+    // oxlint-disable-next-line playwright/no-wait-for-timeout -- absence of a request can only be shown by waiting
+    await page.waitForTimeout(3000);
+    expect(draftSaves).toEqual([]);
+
+    // Coming back builds a new store, so the earlier input is gone.
+    await nav.getByRole('link', { name: 'Advanced Wizard' }).click();
+    await expect(page).toHaveURL(/\/advanced-scenarios\/advanced-wizard$/);
+    await expect(page.getByLabel('First Name')).toHaveValue('');
+  });
+
   test('review step shows all entered details', async ({ page }) => {
     await fillTravelerStep(page, {
       firstName: 'Alice',
