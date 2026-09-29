@@ -37,8 +37,13 @@ updates:
         update-types: ['version-update:semver-major']
       - dependency-name: '@schematics/angular'
         update-types: ['version-update:semver-major']
+      # Hold ng-packagr at 22.1.x. 22.2 breaks the Nx `ng-packagr-lite` build
+      # of the Spartan helm library (TS6059 rootDir on secondary entry points)
+      # and reformats the toolkit .d.ts output. Bump it by hand together with
+      # an Nx version that supports it, and regenerate the API reports.
       - dependency-name: 'ng-packagr'
-        update-types: ['version-update:semver-major']
+        update-types:
+          ['version-update:semver-major', 'version-update:semver-minor']
       - dependency-name: '@angular-eslint/*'
         update-types: ['version-update:semver-major']
     # Each dependency joins the FIRST matching group, so the lockstep families
