@@ -1,0 +1,53 @@
+name: Publish Docs7 site
+
+# Docs7 deploys the `docs7` branch. This job builds that branch from the
+# markdown on `main`: tools/scripts/build-docs7-site.mjs copies the pages in
+# docs.json and rewrites their relative links for the site. The branch holds
+# one generated commit and is force-pushed on every run.
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - '**/*.md'
+      - 'docs.json'
+      - 'tools/scripts/build-docs7-site.mjs'
+      - '.github/workflows/publish-docs7.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: docs7
+  cancel-in-progress: true
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version-file: '.node-version'
+
+      - name: Build the site
+        run: node tools/scripts/build-docs7-site.mjs --out dist/docs7 --ref "$GITHUB_SHA"
+
+      - name: Push to the docs7 branch
+        working-directory: dist/docs7
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git init --quiet --initial-branch docs7
+          git add --all
+          git -c user.name='github-actions[bot]' \
+            -c user.email='41898282+github-actions[bot]@users.noreply.github.com' \
+            commit --quiet --message "docs: build the Docs7 site from ${GITHUB_SHA}"
+          git push --force --quiet \
+            "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" docs7

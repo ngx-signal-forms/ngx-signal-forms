@@ -147,6 +147,12 @@ jobs:
       - name: Check no-bare-mention rule
         run: pnpm exec nx run workspace:check-no-bare-mention --outputStyle=static
 
+      # Same reasoning as the checks above. Building the Docs7 site fails on
+      # a docs link to a missing file or anchor, so a broken link fails the
+      # PR instead of shipping to the site.
+      - name: Check Docs7 site build
+        run: pnpm exec nx run workspace:check-docs7-site --outputStyle=static
+
       # Same reasoning as the README starter check above: neither is a
       # build/lint/test target, so `nx affected` never picks it up on its
       # own. Each guards a different part of the published toolkit package
