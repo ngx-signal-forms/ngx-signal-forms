@@ -1,7 +1,6 @@
 import { NgTemplateOutlet } from '@angular/common';
 import {
   afterRenderEffect,
-  ChangeDetectionStrategy,
   Component,
   computed,
   DestroyRef,
@@ -97,7 +96,6 @@ export type NgxErrorSummaryHeadingLevel = 2 | 3 | 4 | 5 | 6;
  */
 @Component({
   selector: 'ngx-form-field-error-summary',
-  changeDetection: ChangeDetectionStrategy.OnPush,
 
   host: {
     // `tabindex="-1"` makes the host programmatically focusable without

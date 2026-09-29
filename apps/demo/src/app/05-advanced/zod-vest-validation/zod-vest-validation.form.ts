@@ -1,9 +1,4 @@
-import {
-  ChangeDetectionStrategy,
-  Component,
-  input,
-  signal,
-} from '@angular/core';
+import { Component, input, signal } from '@angular/core';
 import {
   form,
   FormField,
@@ -55,7 +50,6 @@ const zodVestValidationSchema: SchemaFn<Readonly<ZodVestValidationModel>> = (
 
 @Component({
   selector: 'ngx-zod-vest-validation',
-  changeDetection: ChangeDetectionStrategy.OnPush,
 
   imports: [FormField, NgxSignalFormToolkit, NgxFormField],
   template: `

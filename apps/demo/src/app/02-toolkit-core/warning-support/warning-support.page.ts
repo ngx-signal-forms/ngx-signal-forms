@@ -1,10 +1,4 @@
-import {
-  ChangeDetectionStrategy,
-  Component,
-  computed,
-  signal,
-  viewChild,
-} from '@angular/core';
+import { Component, computed, signal, viewChild } from '@angular/core';
 import { type ResolvedErrorDisplayStrategy } from '@ngx-signal-forms/toolkit';
 import { NgxSignalFormDebugger } from '@ngx-signal-forms/debugger';
 import {
@@ -23,7 +17,6 @@ import { WarningsSupportFormComponent } from './warning-support.form';
 
 @Component({
   selector: 'ngx-warning-support-page',
-  changeDetection: ChangeDetectionStrategy.OnPush,
 
   imports: [
     ExampleCardsComponent,

@@ -1,6 +1,5 @@
 import {
   booleanAttribute,
-  ChangeDetectionStrategy,
   Component,
   computed,
   inject,
@@ -212,7 +211,6 @@ export type NgxCharacterCountAnnouncementFormatter = (
  */
 @Component({
   selector: 'ngx-form-field-character-count',
-  changeDetection: ChangeDetectionStrategy.OnPush,
 
   template: `
     <span

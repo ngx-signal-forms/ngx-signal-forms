@@ -5,7 +5,9 @@ import { describe, expect, it } from 'vitest';
 /**
  * Every component this package ships runs on `OnPush`: all of their state is
  * signals, so a component that re-renders on every application-wide check
- * costs consumers change detection they cannot opt out of.
+ * costs consumers change detection they cannot opt out of. Angular 22 makes
+ * `OnPush` the default, so components no longer declare it. What can still
+ * break the guarantee is a component that opts back into `Eager` or `Default`.
  *
  * Asserted against the source text rather than the compiled definition
  * because the alternative — reading `ɵcmp.onPush` — is a private Angular
@@ -63,9 +65,12 @@ describe('change detection', () => {
     ]);
   });
 
-  it.each(componentFiles)('declares OnPush in %s', (relativePath) => {
-    const source = readFileSync(join(PACKAGE_ROOT, relativePath), 'utf8');
+  it.each(componentFiles)(
+    'does not opt out of OnPush in %s',
+    (relativePath) => {
+      const source = readFileSync(join(PACKAGE_ROOT, relativePath), 'utf8');
 
-    expect(source).toContain('changeDetection: ChangeDetectionStrategy.OnPush');
-  });
+      expect(source).not.toMatch(/ChangeDetectionStrategy\.(Eager|Default)/u);
+    },
+  );
 });

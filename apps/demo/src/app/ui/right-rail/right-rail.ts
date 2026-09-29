@@ -1,6 +1,5 @@
 import { NgTemplateOutlet } from '@angular/common';
 import {
-  ChangeDetectionStrategy,
   afterNextRender,
   Component,
   effect,
@@ -25,7 +24,6 @@ import { PanelHelpService } from '../display-controls-card/panel-help.service';
  */
 @Component({
   selector: 'ngx-right-rail',
-  changeDetection: ChangeDetectionStrategy.OnPush,
 
   imports: [NgTemplateOutlet],
   host: {

@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { Component } from '@angular/core';
 import { NgxSignalFormDebugger } from '@ngx-signal-forms/debugger';
 import {
   ExampleCardsComponent,
@@ -10,7 +10,6 @@ import { ErrorMessageSignalComponent } from './error-message-signal.form';
 
 @Component({
   selector: 'ngx-error-message-signal-page',
-  changeDetection: ChangeDetectionStrategy.OnPush,
 
   styles: `
     :host {

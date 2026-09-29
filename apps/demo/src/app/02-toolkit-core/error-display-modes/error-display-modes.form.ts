@@ -1,10 +1,4 @@
-import {
-  ChangeDetectionStrategy,
-  Component,
-  computed,
-  input,
-  signal,
-} from '@angular/core';
+import { Component, computed, input, signal } from '@angular/core';
 import type { FieldState, FieldTree } from '@angular/forms/signals';
 import { form, FormField } from '@angular/forms/signals';
 import {
@@ -39,7 +33,6 @@ const INITIAL_MODEL: ProductFeedbackModel = {
 
 @Component({
   selector: 'ngx-error-display-helpers',
-  changeDetection: ChangeDetectionStrategy.OnPush,
 
   template: `
     <div
@@ -156,7 +149,6 @@ export class ErrorDisplayHelpersComponent {
  */
 @Component({
   selector: 'ngx-error-display-modes-form',
-  changeDetection: ChangeDetectionStrategy.OnPush,
 
   imports: [
     BusyButtonDirective,

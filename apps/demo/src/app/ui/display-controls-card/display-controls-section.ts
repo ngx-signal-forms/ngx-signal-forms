@@ -1,14 +1,8 @@
-import {
-  ChangeDetectionStrategy,
-  Component,
-  inject,
-  input,
-} from '@angular/core';
+import { Component, inject, input } from '@angular/core';
 import { PanelHelpService } from './panel-help.service';
 
 @Component({
   selector: 'ngx-display-controls-section',
-  changeDetection: ChangeDetectionStrategy.OnPush,
 
   styles: `
     :host {

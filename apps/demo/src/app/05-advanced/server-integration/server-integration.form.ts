@@ -1,5 +1,4 @@
 import {
-  ChangeDetectionStrategy,
   Component,
   computed,
   effect,
@@ -53,7 +52,6 @@ const PROFILE_FIELD_KEYS: readonly (keyof ProfileFormModel)[] = [
  */
 @Component({
   selector: 'ngx-server-integration',
-  changeDetection: ChangeDetectionStrategy.OnPush,
 
   imports: [BusyButtonDirective, FormField, NgxSignalFormToolkit, NgxFormField],
   template: `

@@ -1,14 +1,8 @@
 import { NgTemplateOutlet } from '@angular/common';
-import {
-  ChangeDetectionStrategy,
-  Component,
-  input,
-  type TemplateRef,
-} from '@angular/core';
+import { Component, input, type TemplateRef } from '@angular/core';
 
 @Component({
   selector: 'ngx-card',
-  changeDetection: ChangeDetectionStrategy.OnPush,
 
   imports: [NgTemplateOutlet],
   host: {

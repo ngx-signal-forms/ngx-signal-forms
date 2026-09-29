@@ -1,9 +1,4 @@
-import {
-  ChangeDetectionStrategy,
-  Component,
-  computed,
-  signal,
-} from '@angular/core';
+import { Component, computed, signal } from '@angular/core';
 import { NgxSignalFormDebugger } from '@ngx-signal-forms/debugger';
 import {
   DisplayControlsCardComponent,
@@ -28,7 +23,6 @@ import { BrandThemingFormComponent } from './brand-theming.form';
  */
 @Component({
   selector: 'ngx-brand-theming-page',
-  changeDetection: ChangeDetectionStrategy.OnPush,
 
   imports: [
     BrandThemingFormComponent,

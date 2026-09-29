@@ -1,6 +1,5 @@
 import { DatePipe } from '@angular/common';
 import {
-  ChangeDetectionStrategy,
   afterRenderEffect,
   Component,
   computed,
@@ -39,7 +38,6 @@ const MIN_DISPLAY_MS = 500;
 
 @Component({
   selector: 'ngx-wizard-container',
-  changeDetection: ChangeDetectionStrategy.OnPush,
 
   imports: [
     BusyButtonDirective,

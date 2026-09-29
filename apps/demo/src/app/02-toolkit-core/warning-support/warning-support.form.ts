@@ -1,9 +1,4 @@
-import {
-  ChangeDetectionStrategy,
-  Component,
-  input,
-  signal,
-} from '@angular/core';
+import { Component, input, signal } from '@angular/core';
 import { form, FormField } from '@angular/forms/signals';
 import {
   createOnInvalidHandler,
@@ -18,7 +13,6 @@ import { SubmitStatusComponent } from '../../ui/submit-status/submit-status';
 
 @Component({
   selector: 'ngx-warning-support-form',
-  changeDetection: ChangeDetectionStrategy.OnPush,
 
   imports: [
     BusyButtonDirective,
