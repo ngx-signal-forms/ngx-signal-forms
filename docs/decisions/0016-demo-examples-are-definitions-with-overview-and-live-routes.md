@@ -14,7 +14,7 @@ Issue [#595](https://github.com/ngx-signal-forms/ngx-signal-forms/issues/595).
 
 `apps/demo` has 26 examples. Each example is one routed `*.page.ts` file. 21 of these pages repeat the same parts: the page header, the example cards, the split layout, the display controls in the right rail, a deferred form debugger with the same `@error` block, and the chips that summarize the controls. Ten pages are near-copies of each other.
 
-Each page also reaches into its form component through `viewChild` only to give the form's field tree to the debugger. Across the pages, 20 different property names feed the debugger.
+24 pages reach into their form component only to give its field tree to the debugger: 14 through a `viewChild` query and 10 through a template reference. fieldset-appearance and advanced-wizard render the debugger inside the form instead. Across the pages, 20 different property names feed the debugger.
 
 Every path lives in three places: the route config, a `getRouteTitle('/…')` string and the navigation metadata. These lists already disagree: the metadata marks single-model-wizard as having no controls, but the page registers them.
 
