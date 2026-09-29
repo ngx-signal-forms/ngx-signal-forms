@@ -159,6 +159,18 @@ void test('a link to an anchor no heading has is an error, and nothing is writte
   await assert.rejects(read('docs.json'));
 });
 
+// Otherwise the second page overwrites the first and the build still passes.
+void test('two pages that map to the same site route are an error', async (t) => {
+  const { errors } = await site(t, {
+    'docs.json': docsJson(['docs/a.b', 'docs/a-b']),
+    'docs/a.b.md': 'one\n',
+    'docs/a-b.md': 'two\n',
+  });
+  assert.deepEqual(errors, [
+    'docs/a-b.md: its site route is already used by another page: docs/a-b.md',
+  ]);
+});
+
 void test('docs.json lists the dash routes so the sidebar matches the files', async (t) => {
   const { read } = await site(t, {
     'docs.json': docsJson(['README', 'docs/v1.0.0-rc.16']),

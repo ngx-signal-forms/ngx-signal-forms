@@ -245,10 +245,15 @@ export function buildSite({ root, outDir, ref }) {
       if (!anchors.has(id))
         errors.push(`${from}: link to a missing anchor: ${file}#${id}`);
     }
-    files.set(
-      `${siteRoute(page)}.md`,
-      addHeadingIds(rewritten.get(file), anchors, ids.keys()),
-    );
+    // `a.b` and `a-b` both map to `a-b`; one would silently replace the other.
+    const output = `${siteRoute(page)}.md`;
+    if (files.has(output)) {
+      errors.push(
+        `${file}: its site route is already used by another page: ${output}`,
+      );
+      continue;
+    }
+    files.set(output, addHeadingIds(rewritten.get(file), anchors, ids.keys()));
   }
   if (errors.length > 0) return errors;
 
