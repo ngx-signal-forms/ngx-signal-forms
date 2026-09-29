@@ -10,6 +10,7 @@ Angular still owns the model, validation, field state, and submission. You keep
 using `form()`, `[formRoot]`, and `[formField]`. The toolkit adds the UI layer
 around them.
 
+[Docs](https://ngx-signal-forms-ngx-signal-forms.docs7.io/) ·
 [Live demo](https://ngx-signal-forms.github.io/ngx-signal-forms/) ·
 [npm](https://www.npmjs.com/package/@ngx-signal-forms/toolkit) ·
 [API reference](./packages/toolkit/README.md)
