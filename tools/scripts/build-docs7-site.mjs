@@ -117,17 +117,23 @@ export function githubSlug(heading) {
  */
 export function pageAnchors(markdown) {
   const anchors = new Map();
-  const seen = new Map();
+  const used = new Set();
+  const repeats = new Map();
   forEachProseLine(markdown.split('\n'), (line, index) => {
     for (const [, id] of line.matchAll(/\sid="([^"]+)"/g)) anchors.set(id, {});
     const heading = line.match(/^#{1,6}\s+(.*?)\s*#*\s*$/);
     if (!heading) return;
+    // Same rule as github-slugger: skip suffixes that another heading already took.
     const base = githubSlug(heading[1]);
-    const count = seen.get(base) ?? 0;
-    seen.set(base, count + 1);
-    const slug = count === 0 ? base : `${base}-${count}`;
+    let slug = base;
+    while (used.has(slug)) {
+      const count = (repeats.get(base) ?? 0) + 1;
+      repeats.set(base, count);
+      slug = `${base}-${count}`;
+    }
+    used.add(slug);
     // Docs7 matches GitHub for plain words and spaces; anything else needs an explicit id.
-    const plain = count === 0 && /^[A-Za-z0-9 -]+$/.test(heading[1]);
+    const plain = slug === base && /^[A-Za-z0-9 -]+$/.test(heading[1]);
     anchors.set(slug, { line: index, plain });
   });
   return anchors;

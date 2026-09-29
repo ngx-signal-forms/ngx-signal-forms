@@ -125,6 +125,17 @@ void test('repeated headings get GitHub-style -1 suffixes', async (t) => {
   assert.match(await read('README.md'), /<a id="why-1"><\/a>\n\n## Why\n$/);
 });
 
+// A heading that already ends in `-1` takes that id, so GitHub gives the
+// next repeat `-2`. Reusing `-1` would break a correct `#foo-2` link.
+void test('a repeat skips suffixes that another heading already took', async (t) => {
+  const { errors, read } = await site(t, {
+    'docs.json': docsJson(['README']),
+    'README.md': '[third](#foo-2)\n\n## Foo\n\n## Foo-1\n\n## Foo\n',
+  });
+  assert.deepEqual(errors, []);
+  assert.match(await read('README.md'), /<a id="foo-2"><\/a>\n\n## Foo\n$/);
+});
+
 void test('a link to an anchor no heading has is an error, and nothing is written', async (t) => {
   const { errors, read } = await site(t, {
     'docs.json': docsJson(['README', 'docs/GUIDE']),
