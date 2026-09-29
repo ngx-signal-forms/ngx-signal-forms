@@ -211,8 +211,8 @@ Behavior:
   group an alert. A list of only warnings is a status.
 - Without a wrapper, add `ngxSignalForm` to the form to keep the message and
   the ARIA in step. Set the timing there or on this component. Without
-  `ngxSignalForm`, `aria-invalid` always uses `on-touch`, whatever the app
-  config says.
+  `ngxSignalForm`, `aria-invalid` follows the app config, but not a
+  `strategy` set on this component.
 - If no `fieldName` resolves, the component renders without ids and logs a
   warning in development mode.
 

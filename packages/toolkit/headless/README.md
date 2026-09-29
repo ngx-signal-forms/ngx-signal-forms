@@ -53,11 +53,9 @@ You do this yourself:
   `role="status"`, and the ids from the directive.
 - Use a `fieldName` that equals the control's `id`, so auto-ARIA and your
   elements agree on the ids.
-- Add `ngxSignalForm` to the form and set error timing there
-  (`errorStrategy="…"`). Auto-ARIA does not see a `strategy` input on a
-  headless directive, and without `ngxSignalForm` it ignores the app config
-  and uses `on-touch`. Either way, the ARIA would change at a different time
-  than your message.
+- Set error timing on the form (`ngxSignalForm` with `errorStrategy="…"`) or
+  in the app config. Auto-ARIA does not see a `strategy` input on a headless
+  directive, so the ARIA would change at a different time than your message.
 - Link hints yourself: give the hint an `id` and add it to the control's
   `aria-describedby`. Auto-ARIA keeps ids that you write.
 - Style everything.
