@@ -57,6 +57,7 @@ class HealthyPage {}
     <h1 tabindex="-1">Page with broken controls</h1>
     <ng-template ngxPageControls>
       <p>{{ controls() }}</p>
+      <button type="button" disabled>Disabled control</button>
       <button type="button">Control</button>
     </ng-template>
   `,
@@ -191,6 +192,11 @@ describe('AppComponent render-error boundaries', () => {
     expect(rail).toHaveTextContent(
       'These display controls could not be shown.',
     );
+    // The message appears after the rail is on screen and takes no focus, so
+    // it announces itself.
+    expect(within(rail).getByRole('alert', { hidden: true })).toHaveTextContent(
+      'These display controls could not be shown.',
+    );
 
     controlsShouldThrow = false;
     await userEvent.click(
@@ -200,7 +206,7 @@ describe('AppComponent render-error boundaries', () => {
 
     expect(rail).toHaveTextContent('Recovered page controls');
     // The pressed button is gone, so focus moves to the first recovered
-    // control instead of dropping to <body>.
+    // control that accepts focus. The disabled control before it is skipped.
     expect(
       within(rail).getByRole('button', { name: 'Control', hidden: true }),
     ).toHaveFocus();

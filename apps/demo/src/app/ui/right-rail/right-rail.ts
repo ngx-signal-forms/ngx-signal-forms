@@ -102,8 +102,9 @@ export class RightRailComponent {
 
   /**
    * "Try again" on the controls fallback. The pressed button disappears with
-   * the fallback, so move focus to the first recovered control instead of
-   * `<body>`.
+   * the fallback, so move focus to the first recovered control that accepts it
+   * instead of `<body>`. A disabled or hidden control ignores `focus()`, so
+   * try each candidate in order until one is the active element.
    */
   protected retryControls(reset: () => void, event: Event): void {
     const panelBody =
@@ -113,11 +114,13 @@ export class RightRailComponent {
     reset();
     afterNextRender(
       () => {
-        panelBody
-          ?.querySelector<HTMLElement>(
-            'button, input, select, textarea, a[href], [tabindex]:not([tabindex="-1"])',
-          )
-          ?.focus();
+        const candidates = panelBody?.querySelectorAll<HTMLElement>(
+          'button, input, select, textarea, a[href], [tabindex]:not([tabindex="-1"])',
+        );
+        for (const candidate of candidates ?? []) {
+          candidate.focus();
+          if (candidate.ownerDocument.activeElement === candidate) return;
+        }
       },
       { injector: this.#injector },
     );
