@@ -1,0 +1,67 @@
+name: Bug report
+description: Something in the toolkit does not work as documented.
+labels: ['bug', 'needs-triage']
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for the report. For a security problem, do not use this form. See the [security policy](https://github.com/ngx-signal-forms/ngx-signal-forms/security/policy).
+  - type: dropdown
+    id: entry-point
+    attributes:
+      label: Entry point
+      description: Which part of the toolkit is affected?
+      options:
+        - '@ngx-signal-forms/toolkit (core)'
+        - '@ngx-signal-forms/toolkit/form-field'
+        - '@ngx-signal-forms/toolkit/assistive'
+        - '@ngx-signal-forms/toolkit/headless'
+        - '@ngx-signal-forms/toolkit/vest'
+        - '@ngx-signal-forms/toolkit/testing'
+        - Not sure
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: What happens
+      description: Describe the problem. Include error messages and console output.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What you expected
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps to reproduce
+      description: A StackBlitz link or a minimal component is best. Include the form model, the validators and the template.
+      placeholder: |
+        1. Create a form with ...
+        2. Type ... into ...
+        3. See ...
+    validations:
+      required: true
+  - type: input
+    id: toolkit-version
+    attributes:
+      label: Toolkit version
+      placeholder: 1.0.0-rc.15
+    validations:
+      required: true
+  - type: input
+    id: angular-version
+    attributes:
+      label: Angular version
+      placeholder: 22.2.0
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: Browser and assistive technology
+      description: For an accessibility problem, name the browser, the screen reader or other assistive technology, and their versions.
+      placeholder: Chrome 140, NVDA 2026.1
