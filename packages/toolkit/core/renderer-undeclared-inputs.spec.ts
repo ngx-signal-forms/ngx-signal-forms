@@ -11,7 +11,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 
 /**
  * Pins what Angular does with an input a renderer does not declare. The
- * JSDoc on `NGX_ERROR_RENDERER` (core/tokens.ts) and on `NgxFormFieldHint`
+ * JSDoc on `NGX_FORM_FIELD_ERROR_RENDERER` (core/tokens.ts) and on `NgxFormFieldHint`
  * (assistive/hint.ts), and `docs/CUSTOM_WRAPPERS.md`, describe this behavior.
  *
  * The error renderer is mounted with `*ngComponentOutlet`. The hint renderer
