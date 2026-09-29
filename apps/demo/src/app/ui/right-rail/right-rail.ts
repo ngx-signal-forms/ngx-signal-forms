@@ -12,6 +12,7 @@ import {
 } from '@angular/core';
 import { PageControlsService } from '../page-controls/page-controls.service';
 import { PanelHelpService } from '../display-controls-card/panel-help.service';
+import { NgxResetOnNavigationDirective } from '../render-error/reset-on-navigation.directive';
 
 /**
  * The configuration panel. The panel *is* the card — a single surface with a
@@ -27,7 +28,7 @@ import { PanelHelpService } from '../display-controls-card/panel-help.service';
   selector: 'ngx-right-rail',
   changeDetection: ChangeDetectionStrategy.OnPush,
 
-  imports: [NgTemplateOutlet],
+  imports: [NgTemplateOutlet, NgxResetOnNavigationDirective],
   host: {
     '[class.is-rail]': "variant() === 'rail'",
   },
@@ -97,6 +98,29 @@ export class RightRailComponent {
 
   protected collapseRail(): void {
     this.#pageControls.collapseRail();
+  }
+
+  /**
+   * "Try again" on the controls fallback. The pressed button disappears with
+   * the fallback, so move focus to the first recovered control instead of
+   * `<body>`.
+   */
+  protected retryControls(reset: () => void, event: Event): void {
+    const panelBody =
+      event.target instanceof Element
+        ? event.target.closest('.panel__body')
+        : null;
+    reset();
+    afterNextRender(
+      () => {
+        panelBody
+          ?.querySelector<HTMLElement>(
+            'button, input, select, textarea, a[href], [tabindex]:not([tabindex="-1"])',
+          )
+          ?.focus();
+      },
+      { injector: this.#injector },
+    );
   }
 
   /**

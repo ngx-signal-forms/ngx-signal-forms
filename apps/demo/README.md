@@ -197,6 +197,21 @@ check contrast for each theme.
 - Or import individual directives from `@ngx-signal-forms/toolkit`
 - Verify toolkit is built: `pnpm nx run toolkit:post-build`
 
+**Issue:** A page shows "This page could not be shown"
+
+The page threw an error while it rendered. The app shell catches render errors
+with Angular's `@boundary` block (developer preview in Angular 22.2):
+
+- One boundary wraps the routed page. It shows a fallback with a **Try again**
+  button, and it resets on the next navigation, so other pages still work.
+- One boundary wraps the page's display controls in the right rail. Broken
+  controls show a small fallback in the rail. The page itself still renders.
+- `DemoErrorHandler.onViewError` logs each caught error with `console.error`.
+  Open the browser console to see the error and the component that threw it.
+
+A boundary does not catch errors thrown inside `effect()`. Those go to the
+global `ErrorHandler.handleError`, and the page does not show a fallback.
+
 ### Accessibility Issues
 
 **Issue:** ARIA attributes not appearing
