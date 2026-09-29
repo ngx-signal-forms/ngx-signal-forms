@@ -306,6 +306,9 @@ Publish the other channels separately:
   readers. Register the booleans gating content and active IDs, not host
   existence or a strategy for auto-ARIA to resolve again. Clean up registration
   on change/destruction. Keep error and warning timing independent.
+  `NgxHeadlessErrorState` with a `fieldName` already registers its own
+  visibility, including a local `strategy`/`warningStrategy`; do not register
+  the same field again.
 
 Import projected hints and auto-ARIA in the template that declares them;
 wrapper imports do not apply to consumer projection. The public identity read
