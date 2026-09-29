@@ -425,6 +425,6 @@ describe('main() check mode (end-to-end via a fixture dist + baseline)', () => {
     expect(result.stderr).toContain(
       'pnpm run check:toolkit-published-package -- --update',
     );
-    expect(result.stderr).toContain('pnpm nx run toolkit:post-build');
+    expect(result.stderr).toContain('pnpm nx build toolkit');
   });
 });
