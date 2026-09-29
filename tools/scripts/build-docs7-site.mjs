@@ -94,16 +94,11 @@ function forEachProseLine(lines, visit) {
 
 /** GitHub's id for a heading: lower case, punctuation dropped, spaces to dashes. */
 export function githubSlug(heading) {
-  // Code spans keep their text (`<select>` stays); outside them HTML tags go.
+  // Punctuation, including `<`, `>` and backticks, is dropped below. A heading
+  // with raw HTML would keep the tag name, which GitHub drops; a link to it
+  // then fails the build as a missing anchor. No site page has one.
   const text = heading
     .replaceAll(LINK, (_, label) => label.slice(1, -2))
-    .split(/(`+[^`]*`+)/)
-    .map((part, index) =>
-      index % 2 === 1
-        ? part.replaceAll('`', '')
-        : part.replaceAll(/<\/?[a-z][^>]*>/gi, ''),
-    )
-    .join('')
     .trim();
   return text
     .toLowerCase()
