@@ -8,6 +8,7 @@ import {
   patchState,
   signalStoreFeature,
   type,
+  withComputed,
   withHooks,
   withState,
 } from '@ngrx/signals';
@@ -70,6 +71,16 @@ export function withSavedDraft() {
       }),
       { errorHandling: 'native' },
     ),
+
+    withComputed((store) => ({
+      /**
+       * The stored draft failed to load and no new draft has saved since. The
+       * one-shot resource stays in `error`, so the id check tells the two apart.
+       */
+      resumeFailed: () =>
+        store.savedDraftStatus() === 'error' &&
+        store.draftId() === store.resumeDraftId(),
+    })),
 
     withHooks({
       onInit(store) {

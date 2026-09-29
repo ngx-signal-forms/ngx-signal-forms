@@ -35,12 +35,22 @@ interface StoredBooking {
 // drafts in `sessionStorage`, the way a real server would keep them, so the
 // wizard can resume one after a reload.
 const DRAFTS_STORAGE_KEY = 'ngx-demo:mock-wizard-drafts';
-const drafts = new Map<string, StoredDraft>(
-  JSON.parse(sessionStorage.getItem(DRAFTS_STORAGE_KEY) ?? '[]') as [
-    string,
-    StoredDraft,
-  ][],
-);
+const drafts = readStoredDrafts();
+
+// `main.ts` awaits this module before it starts Angular. A bad stored value
+// must not stop the demo, so it only costs the stored drafts.
+function readStoredDrafts(): Map<string, StoredDraft> {
+  try {
+    return new Map(
+      JSON.parse(sessionStorage.getItem(DRAFTS_STORAGE_KEY) ?? '[]') as [
+        string,
+        StoredDraft,
+      ][],
+    );
+  } catch {
+    return new Map();
+  }
+}
 
 function persistDrafts(): void {
   sessionStorage.setItem(DRAFTS_STORAGE_KEY, JSON.stringify([...drafts]));

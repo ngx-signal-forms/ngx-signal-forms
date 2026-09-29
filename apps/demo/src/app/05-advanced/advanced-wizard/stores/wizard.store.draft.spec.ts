@@ -16,10 +16,12 @@ import { WIZARD_DRAFT_STORAGE_KEY } from './features/saved-draft.feature';
 import { WizardStore } from './wizard.store';
 
 /**
- * The wizard resumes the last auto-saved draft of the tab. Only the draft id
- * may reach `sessionStorage`: the draft holds a passport number, so it must
- * stay on the server. The loaded draft must seed the wizard once, and never
- * overwrite what the user types after the first save.
+ * The wizard resumes the last auto-saved draft of the tab. The store's own
+ * `sessionStorage` key may hold only the draft id: the draft holds a passport
+ * number, so it belongs to the server. (In the demo, the MSW mock server keeps
+ * the drafts under its own key, in place of a server database.) The loaded
+ * draft must seed the wizard once, and never overwrite what the user types
+ * after the first save.
  */
 describe('WizardStore draft resume', () => {
   const savedDraft: WizardDraft = {

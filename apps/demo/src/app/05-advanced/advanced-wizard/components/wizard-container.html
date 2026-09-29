@@ -12,66 +12,70 @@
     }
   </div>
 
-  <ngx-wizard
-    [(currentStep)]="currentStep"
-    [completedSteps]="completedSteps()"
-    [showNavigation]="false"
-    [canNavigate]="guardStepNavigation"
-    (enterPress)="onEnterPress()"
-  >
-    <!-- Traveler Step -->
-    <ng-template ngxWizardStep="traveler" label="Traveler Info">
-      @defer {
-      <ngx-traveler-step
-        [appearance]="appearance()"
-        [orientation]="orientation()"
-        #currentStepRef
-      />
-      } @placeholder {
-      <div class="step-placeholder" aria-hidden="true"></div>
-      } @loading (after 150ms; minimum 300ms) {
-      <p class="step-placeholder">Loading step…</p>
-      } @error {
-      <p class="error-message" role="alert">
-        This step failed to load. Reload the page to try again.
-      </p>
-      }
-    </ng-template>
+  <!-- Anything typed before the saved draft arrives would be replaced by it,
+       so the step fields stay disabled while it loads. -->
+  <fieldset class="wizard-fieldset" [disabled]="store.isLoadingDraft()">
+    <ngx-wizard
+      [(currentStep)]="currentStep"
+      [completedSteps]="completedSteps()"
+      [showNavigation]="false"
+      [canNavigate]="guardStepNavigation"
+      (enterPress)="onEnterPress()"
+    >
+      <!-- Traveler Step -->
+      <ng-template ngxWizardStep="traveler" label="Traveler Info">
+        @defer {
+        <ngx-traveler-step
+          [appearance]="appearance()"
+          [orientation]="orientation()"
+          #currentStepRef
+        />
+        } @placeholder {
+        <div class="step-placeholder" aria-hidden="true"></div>
+        } @loading (after 150ms; minimum 300ms) {
+        <p class="step-placeholder">Loading step…</p>
+        } @error {
+        <p class="error-message" role="alert">
+          This step failed to load. Reload the page to try again.
+        </p>
+        }
+      </ng-template>
 
-    <!-- Trip Step -->
-    <ng-template ngxWizardStep="trip" label="Trip Details">
-      @defer {
-      <ngx-trip-step
-        [appearance]="appearance()"
-        [orientation]="orientation()"
-        #currentStepRef
-      />
-      } @placeholder {
-      <div class="step-placeholder" aria-hidden="true"></div>
-      } @loading (after 150ms; minimum 300ms) {
-      <p class="step-placeholder">Loading step…</p>
-      } @error {
-      <p class="error-message" role="alert">
-        This step failed to load. Reload the page to try again.
-      </p>
-      }
-    </ng-template>
+      <!-- Trip Step -->
+      <ng-template ngxWizardStep="trip" label="Trip Details">
+        @defer {
+        <ngx-trip-step
+          [appearance]="appearance()"
+          [orientation]="orientation()"
+          #currentStepRef
+        />
+        } @placeholder {
+        <div class="step-placeholder" aria-hidden="true"></div>
+        } @loading (after 150ms; minimum 300ms) {
+        <p class="step-placeholder">Loading step…</p>
+        } @error {
+        <p class="error-message" role="alert">
+          This step failed to load. Reload the page to try again.
+        </p>
+        }
+      </ng-template>
 
-    <!-- Review Step -->
-    <ng-template ngxWizardStep="review" label="Review">
-      @defer {
-      <ngx-review-step #currentStepRef />
-      } @placeholder {
-      <div class="step-placeholder" aria-hidden="true"></div>
-      } @loading (after 150ms; minimum 300ms) {
-      <p class="step-placeholder">Loading step…</p>
-      } @error {
-      <p class="error-message" role="alert">
-        This step failed to load. Reload the page to try again.
-      </p>
-      }
-    </ng-template>
-  </ngx-wizard>
+      <!-- Review Step -->
+      <ng-template ngxWizardStep="review" label="Review">
+        @defer {
+        <ngx-review-step #currentStepRef />
+        } @placeholder {
+        <div class="step-placeholder" aria-hidden="true"></div>
+        } @loading (after 150ms; minimum 300ms) {
+        <p class="step-placeholder">Loading step…</p>
+        } @error {
+        <p class="error-message" role="alert">
+          This step failed to load. Reload the page to try again.
+        </p>
+        }
+      </ng-template>
+    </ngx-wizard>
+  </fieldset>
 
   @if (currentStepRef()?.formTree; as formTree) {
   <div class="wizard-debugger mt-6">
@@ -150,7 +154,7 @@
   <div role="alert" aria-live="assertive" aria-atomic="true">
     @if (store.error(); as errorMessage) {
     <div class="error-message mt-4">{{ errorMessage }}</div>
-    } @if (store.savedDraftError()) {
+    } @if (store.resumeFailed()) {
     <div class="error-message mt-4">
       Your saved draft could not be loaded. Start again below.
     </div>

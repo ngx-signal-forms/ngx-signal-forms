@@ -149,10 +149,7 @@ export const WizardStore = signalStore(
       request: (data) => {
         // A draft that failed to load may be gone on the server. Start a new
         // one instead of writing to it.
-        const resumeFailed =
-          store.savedDraftStatus() === 'error' &&
-          store.draftId() === store.resumeDraftId();
-        const draftId = resumeFailed ? null : store.draftId();
+        const draftId = store.resumeFailed() ? null : store.draftId();
         return {
           url: draftId ? `/api/wizard/draft/${draftId}` : '/api/wizard/draft',
           method: draftId ? 'PUT' : 'POST',

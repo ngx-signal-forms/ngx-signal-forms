@@ -437,7 +437,19 @@ test.describe('Advanced Wizard Demo', () => {
     await page.getByRole('button', { name: 'Next' }).click();
     await fillTripStepMinimal(page);
     await page.getByRole('button', { name: 'Next' }).click();
-    await bothStepsSaved;
+    const { draftId } = (await (await bothStepsSaved).json()) as {
+      draftId: string;
+    };
+
+    // Playwright can see the response before the store keeps the id. A reload
+    // before that would leave nothing to resume.
+    await expect
+      .poll(() =>
+        page.evaluate(() =>
+          sessionStorage.getItem('ngx-demo:advanced-wizard-draft'),
+        ),
+      )
+      .toBe(JSON.stringify({ draftId }));
 
     await page.reload();
 
