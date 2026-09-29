@@ -20,10 +20,8 @@ alone is enough — come back here when you hit the first group of related field
 
 > **State management is out of scope.** How the model signal is owned
 > (component-local, service, NgRx Signal Store) doesn't change the toolkit
-> patterns below. For a deep dive on owning nested CRUD state with NgRx Signal
-> Store, see the archived
-> [NgRx nested arrays pattern](./archive/NESTED_FORM_ARRAYS_PATTERN.md) —
-> it's long, NgRx-first, and orthogonal to the toolkit.
+> patterns below. For a working example with NgRx Signal Store, see the demo's
+> [advanced wizard](../apps/demo/src/app/05-advanced/advanced-wizard/README.md).
 
 ---
 
@@ -284,4 +282,3 @@ and individual wrappers can override `appearance` on the element itself.
 - [Headless primitives](../packages/toolkit/headless/README.md) — for custom markup of fieldset aggregation and error summary
 - [Warnings, timing, and messages](./WARNINGS_SUPPORT.md) — how `errors()` and `errorSummary()` differ, and how messages are resolved
 - [Validation strategies](./VALIDATION_STRATEGY.md) — layering Angular validators, Zod, and Vest in a complex form
-- [Archived: NgRx nested arrays pattern](./archive/NESTED_FORM_ARRAYS_PATTERN.md) — deep state-management architecture with NgRx Signal Store (not toolkit-specific)
