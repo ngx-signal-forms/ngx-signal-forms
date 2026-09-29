@@ -4,6 +4,7 @@
   "private": true,
   "sideEffects": false,
   "dependencies": {
+    "@angular/cdk": "catalog:angular",
     "@ng-icons/core": "catalog:spartan",
     "@ng-icons/lucide": "catalog:spartan",
     "@spartan-ng/brain": "catalog:spartan",

@@ -36,7 +36,6 @@
   "private": true,
   "dependencies": {
     "@angular/aria": "catalog:angular",
-    "@angular/cdk": "catalog:angular",
     "@angular/common": "catalog:angular",
     "@angular/compiler": "catalog:angular",
     "@angular/core": "catalog:angular",
