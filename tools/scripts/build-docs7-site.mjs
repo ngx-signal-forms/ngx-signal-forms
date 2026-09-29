@@ -18,7 +18,7 @@ import {
   statSync,
   writeFileSync,
 } from 'node:fs';
-import { posix, resolve } from 'node:path';
+import { dirname, posix, resolve } from 'node:path';
 import { parseArgs } from 'node:util';
 
 const REPO_URL = 'https://github.com/ngx-signal-forms/ngx-signal-forms';
@@ -259,7 +259,7 @@ export function buildSite({ root, outDir, ref }) {
   rmSync(outDir, { recursive: true, force: true });
   for (const [path, content] of files) {
     const destination = resolve(outDir, path);
-    mkdirSync(posix.dirname(destination), { recursive: true });
+    mkdirSync(dirname(destination), { recursive: true });
     writeFileSync(destination, content);
   }
   return [];
