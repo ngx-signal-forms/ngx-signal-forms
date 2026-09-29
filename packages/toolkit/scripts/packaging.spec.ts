@@ -219,6 +219,15 @@ describe('packages/toolkit/project.json build target', () => {
   // target writes `dist/packages/toolkit` and a second one strips it in
   // place, a cached run of the first restores the unstripped package (#560).
   // So the target that owns the directory must also strip it.
+  it('runs both strip scripts in the build target', () => {
+    expect(buildCommands).toContain(
+      'node packages/toolkit/scripts/strip-internal-members.mjs',
+    );
+    expect(buildCommands).toContain(
+      'node packages/toolkit/scripts/strip-internal-exports.mjs',
+    );
+  });
+
   it('is the only target that owns and strips dist/packages/toolkit', () => {
     const targetsWhere = (
       predicate: (target: (typeof projectJson.targets)[string]) => boolean,
