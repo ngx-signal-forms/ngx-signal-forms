@@ -231,7 +231,15 @@ export function buildSite({ root, outDir, ref }) {
     errors.push(...result.errors);
     for (const { file: target, hash } of result.anchorLinks) {
       if (!linkedIds.has(target)) linkedIds.set(target, new Map());
-      linkedIds.get(target).set(decodeURIComponent(hash), file);
+      // A stray `%` makes decodeURIComponent throw; report it like any bad link.
+      let id;
+      try {
+        id = decodeURIComponent(hash);
+      } catch {
+        errors.push(`${file}: malformed anchor: ${target}#${hash}`);
+        continue;
+      }
+      linkedIds.get(target).set(id, file);
     }
   }
 

@@ -160,6 +160,15 @@ void test('a link to an anchor no heading has is an error, and nothing is writte
 });
 
 // Otherwise the second page overwrites the first and the build still passes.
+// A crash would hide every other link error in the same run.
+void test('an anchor with a stray % is a link error, not a crash', async (t) => {
+  const { errors } = await site(t, {
+    'docs.json': docsJson(['README']),
+    'README.md': '[x](#100%)\n',
+  });
+  assert.deepEqual(errors, ['README.md: malformed anchor: README.md#100%']);
+});
+
 void test('two pages that map to the same site route are an error', async (t) => {
   const { errors } = await site(t, {
     'docs.json': docsJson(['docs/a.b', 'docs/a-b']),
