@@ -1,0 +1,5 @@
+{
+  "extends": "../../../tsconfig.app.json",
+  "compilerOptions": { "noEmit": true, "noUnusedLocals": false },
+  "include": ["./*.prototype.ts"]
+}

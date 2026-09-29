@@ -1,0 +1,304 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Display controls prototype</title>
+<style>
+  :root { --bg:#fafaf9; --fg:#1c1917; --muted:#57534e; --line:#e7e5e4; --card:#fff; --accent:#4f46e5; --bad:#b91c1c; --ok:#047857; }
+  @media (prefers-color-scheme: dark) { :root { --bg:#1c1917; --fg:#f5f5f4; --muted:#a8a29e; --line:#44403c; --card:#292524; --accent:#a5b4fc; --bad:#fca5a5; --ok:#6ee7b7; } }
+  * { box-sizing: border-box; }
+  body { margin:0; font:15px/1.5 system-ui, sans-serif; background:var(--bg); color:var(--fg); }
+  main { max-width: 1100px; margin: 0 auto; padding: 24px 16px 64px; }
+  h1 { font-size: 1.6rem; margin: 0 0 4px; } h2 { font-size: 1.05rem; margin: 0 0 12px; }
+  .lede { color: var(--muted); margin: 0 0 24px; max-width: 70ch; }
+  .grid { display:grid; gap:16px; grid-template-columns: 1fr; }
+  @media (min-width: 900px) { .grid { grid-template-columns: 1fr 1fr; } }
+  section { background: var(--card); border:1px solid var(--line); border-radius: 10px; padding: 16px; }
+  label.row, .ctl { display:block; margin: 0 0 12px; }
+  .ctl-label { font-size:.8rem; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); display:block; margin-bottom:4px; }
+  .seg { display:flex; flex-wrap:wrap; gap:4px; }
+  button { font:inherit; border:1px solid var(--line); background:transparent; color:inherit; border-radius:6px; padding:4px 10px; cursor:pointer; }
+  button[aria-pressed="true"] { background: var(--accent); color: var(--card); border-color: var(--accent); }
+  button:disabled { opacity:.4; cursor:not-allowed; }
+  input[type=text], select { font:inherit; padding:4px 8px; border:1px solid var(--line); border-radius:6px; background:transparent; color:inherit; }
+  dl { display:grid; grid-template-columns: max-content 1fr; gap: 4px 12px; margin:0; }
+  dt { color: var(--muted); } dd { margin:0; font-family: ui-monospace, monospace; font-size:.9rem; }
+  .chips { display:flex; flex-wrap:wrap; gap:6px; }
+  .chip { border:1px solid var(--line); border-radius: 999px; padding: 2px 10px; font-size: .85rem; }
+  .note { padding: 8px 12px; border-radius: 6px; margin-bottom: 12px; border:1px solid var(--line); }
+  .note.bad { color: var(--bad); border-color: currentColor; } .note.ok { color: var(--ok); border-color: currentColor; }
+  .tabs { display:flex; flex-wrap:wrap; gap:4px; margin-bottom:12px; }
+  ol { padding-left: 20px; } li { margin-bottom: 6px; }
+  li.done button { opacity:.5; } .live { border:2px dashed var(--line); border-radius:8px; padding:8px 12px; margin-top:8px; }
+  .live.brand { border-color: var(--accent); }
+  code { font-family: ui-monospace, monospace; font-size:.9em; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Can every display control be a standard control?</h1>
+  <p class="lede">Prototype for issue #600. Each example's definition turns on controls from one shared catalog. The live example owns their values, passes them to the form and shows them as chips. Pick an example, change controls, and watch the state. The guided walkthroughs cover the awkward cases.</p>
+
+  <div class="grid">
+    <section aria-labelledby="play-h">
+      <h2 id="play-h">Free play</h2>
+      <label class="row"><span class="ctl-label">Example</span><select id="example"></select></label>
+      <div id="controls"></div>
+    </section>
+    <section aria-labelledby="state-h">
+      <h2 id="state-h">What the live example holds</h2>
+      <div id="note" role="status"></div>
+      <span class="ctl-label">Chips (right rail summary)</span>
+      <div class="chips" id="chips"></div>
+      <div class="live" id="live"><span class="ctl-label">Live area around the form</span><span id="flags"></span></div>
+      <p class="ctl-label" style="margin-top:12px">Form inputs</p>
+      <dl id="inputs"></dl>
+      <p class="ctl-label" style="margin-top:12px">Definition's controls section</p>
+      <dd id="def" style="white-space:pre-wrap"></dd>
+    </section>
+  </div>
+
+  <section style="margin-top:16px" aria-labelledby="walk-h">
+    <h2 id="walk-h">Guided walkthroughs</h2>
+    <div class="tabs" id="tabs" role="tablist"></div>
+    <p id="walk-desc"></p>
+    <ol id="steps"></ol>
+  </section>
+</main>
+<script>
+const exports = {};
+"use strict";
+/**
+ * PROTOTYPE — throwaway, issue #600. Not shipped. Lives only on the
+ * `prototype/600-standard-display-controls` branch.
+ *
+ * Question: can EVERY display control the current examples use be a
+ * standard control that an example turns on in its definition (option b),
+ * without the definition or the live example growing special cases?
+ *
+ * This module is pure (no Angular, no DOM) so the same code drives the
+ * clickable demo (`demo.html`) and could lift into the real live example.
+ */
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.CATALOG = void 0;
+exports.initialState = initialState;
+exports.allowedOptions = allowedOptions;
+exports.setControl = setControl;
+exports.formInputs = formInputs;
+exports.liveAreaFlags = liveAreaFlags;
+exports.chips = chips;
+/** Keeps each entry's literal types (input name, default) while checking it against Spec. */
+const control = () => (spec) => spec;
+const opts = (...pairs) => pairs.map(([value, label]) => ({ value, label }));
+/**
+ * The standard control catalog — option (b): every control any current
+ * example uses. One entry per control; the entry IS the cost of making a
+ * control standard.
+ */
+exports.CATALOG = {
+    errorMode: control()({
+        label: 'Error mode', input: 'errorDisplayMode', default: 'on-touch', kind: 'choice',
+        options: opts(['immediate', 'Immediate'], ['on-touch', 'On touch'], ['on-submit', 'On submit']),
+    }),
+    appearance: control()({
+        label: 'Appearance', input: 'appearance', default: 'outline', kind: 'choice',
+        options: opts(['standard', 'Standard'], ['outline', 'Outline'], ['plain', 'Plain']),
+    }),
+    orientation: control()({
+        label: 'Orientation', input: 'orientation', default: 'vertical', kind: 'choice',
+        options: opts(['vertical', 'Vertical'], ['horizontal', 'Horizontal']),
+    }),
+    errorPlacement: control()({
+        label: 'Grouped feedback', input: 'errorPlacement', default: 'bottom', kind: 'choice',
+        options: opts(['top', 'Top'], ['bottom', 'Bottom']),
+    }),
+    brandTheme: control()({
+        label: 'Theme', liveArea: 'brand', default: true, kind: 'toggle', on: 'Brand', off: 'Stock',
+    }),
+    markingMode: control()({
+        label: 'Marking', input: 'markingMode', default: 'required', kind: 'choice',
+        options: opts(['required', 'Mark required'], ['optional', 'Mark optional'], ['none', 'No marking']),
+    }),
+    requiredMarkerText: control()({ label: 'Required marker', input: 'requiredMarkerText', default: ' *', kind: 'text' }),
+    optionalMarkerText: control()({ label: 'Optional marker', input: 'optionalMarkerText', default: ' (optional)', kind: 'text' }),
+    legendText: control()({ label: 'Legend text', input: 'legendText', default: '', kind: 'text' }),
+    phoneRequired: control()({
+        label: 'Phone', input: 'phoneRequired', default: false, kind: 'toggle', on: 'Required', off: 'Optional',
+    }),
+    fieldsetAppearance: control()({
+        label: 'Fieldset', input: 'fieldsetAppearance', default: 'outline', kind: 'choice',
+        options: opts(['outline', 'Outline'], ['plain', 'Plain']),
+    }),
+    feedbackAppearance: control()({
+        label: 'Feedback', input: 'feedbackAppearance', default: 'auto', kind: 'choice',
+        options: opts(['auto', 'Auto'], ['plain', 'Plain'], ['notification', 'Notification']),
+    }),
+    surfaceTone: control()({
+        label: 'Surface tone', input: 'surfaceTone', default: 'default', kind: 'choice',
+        options: opts(['default', 'Default'], ['neutral', 'Neutral'], ['info', 'Info'], ['success', 'Success'], ['warning', 'Warning'], ['danger', 'Danger']),
+    }),
+    validationSurface: control()({
+        label: 'Validation surface', input: 'validationSurface', default: 'never', kind: 'choice',
+        options: opts(['never', 'Never'], ['always', 'Always']),
+    }),
+    listStyle: control()({
+        label: 'Error list', input: 'listStyle', default: 'bullets', kind: 'choice',
+        options: opts(['bullets', 'Bullets'], ['plain', 'Plain']),
+    }),
+    includeNestedErrors: control()({
+        label: 'Nested errors', input: 'includeNestedErrors', default: true, kind: 'toggle', on: 'Included', off: 'Hidden',
+    }),
+    showNotificationTitle: control()({
+        label: 'Notification title', input: 'showNotificationTitle', default: true, kind: 'toggle', on: 'Shown', off: 'Hidden',
+    }),
+};
+// ── Cross-control rules. The only one today: outline forces vertical.
+//    Every rule here is a special case the live example must know about.
+const RULES = [
+    {
+        why: 'Outline fields only support vertical labels.',
+        blocks: (s, id, v) => (id === 'orientation' && v === 'horizontal' && s.appearance === 'outline'),
+        repair: (s) => s.appearance === 'outline' && s.orientation === 'horizontal'
+            ? { ...s, orientation: 'vertical' }
+            : s,
+    },
+];
+function initialState(controls) {
+    const state = {};
+    for (const id of Object.keys(controls)) {
+        state[id] = controls[id]?.default ?? exports.CATALOG[id].default;
+    }
+    return RULES.reduce((s, r) => r.repair(s), state);
+}
+function allowedOptions(controls, state, id) {
+    const spec = exports.CATALOG[id];
+    if (spec.kind !== 'choice')
+        return [];
+    const modes = id === 'errorMode' ? controls.errorMode?.modes : undefined;
+    return spec.options
+        .map((o) => o.value)
+        .filter((v) => !modes || modes.includes(v))
+        .filter((v) => !RULES.some((r) => r.blocks(state, id, v)));
+}
+function setControl(controls, state, id, value) {
+    if (!(id in controls))
+        return { state, rejected: `This example does not offer "${exports.CATALOG[id].label}".` };
+    const spec = exports.CATALOG[id];
+    if (spec.kind === 'choice' && !allowedOptions(controls, state, id).includes(value)) {
+        const rule = RULES.find((r) => r.blocks(state, id, value));
+        return { state, rejected: rule?.why ?? `"${String(value)}" is not offered here.` };
+    }
+    const next = { ...state, [id]: value };
+    return { state: RULES.reduce((s, r) => r.repair(s), next) };
+}
+/** The values the live example passes to the form, keyed by input name. */
+function formInputs(state) {
+    const out = {};
+    for (const id of Object.keys(state)) {
+        const spec = exports.CATALOG[id];
+        if ('input' in spec)
+            out[spec.input] = state[id];
+    }
+    return out;
+}
+/** Flags the live example puts on the live area around the form. */
+function liveAreaFlags(state) {
+    return Object.keys(state).flatMap((id) => {
+        const spec = exports.CATALOG[id];
+        return 'liveArea' in spec && state[id] === true ? [spec.liveArea] : [];
+    });
+}
+function chips(state) {
+    return Object.keys(state).map((id) => {
+        const spec = exports.CATALOG[id];
+        const v = state[id];
+        const value = spec.kind === 'toggle' ? (v ? spec.on : spec.off)
+            : spec.kind === 'text' ? (v === '' ? '(empty)' : JSON.stringify(v))
+                : spec.options.find((o) => o.value === v)?.label ?? String(v);
+        return { label: spec.label, value };
+    });
+}
+
+const M = exports;
+
+const EXAMPLES = {
+  'server-integration (standard shape, 20 examples)': { errorMode: {}, appearance: {}, orientation: {} },
+  'warning-support (restricted modes)': { errorMode: { modes: ['immediate', 'on-touch'] } },
+  'complex-forms (+ grouped feedback)': { errorMode: {}, appearance: {}, orientation: {}, errorPlacement: { default: 'bottom' } },
+  'field-marking (all custom)': { appearance: { default: 'standard' }, markingMode: {}, requiredMarkerText: {}, optionalMarkerText: {}, legendText: {}, phoneRequired: {} },
+  'brand-theming (styles the live area)': { brandTheme: {} },
+  'fieldset-appearance (after its signals become inputs)': { errorMode: { default: 'immediate' }, appearance: { default: 'standard' }, orientation: {}, fieldsetAppearance: {}, feedbackAppearance: {}, surfaceTone: {}, validationSurface: {}, listStyle: {}, errorPlacement: {}, includeNestedErrors: {}, showNotificationTitle: {} },
+};
+let current = Object.keys(EXAMPLES)[0];
+let state = M.initialState(EXAMPLES[current]);
+let note = null;
+
+function act(id, value) {
+  const r = M.setControl(EXAMPLES[current], state, id, value);
+  const before = state; state = r.state;
+  const changed = Object.keys(state).filter((k) => state[k] !== before[k] && k !== id);
+  note = r.rejected ? { bad: true, text: 'Rejected: ' + r.rejected }
+       : { bad: false, text: `Set ${M.CATALOG[id].label} → ${JSON.stringify(value)}` + (changed.length ? `. Also changed: ${changed.map((k) => M.CATALOG[k].label).join(', ')} (rule applied).` : '.') };
+  render();
+}
+function pickExample(name) { current = name; state = M.initialState(EXAMPLES[name]); note = { bad:false, text: 'Loaded ' + name + ' with its defaults.' }; render(); }
+
+function render() {
+  const sel = document.getElementById('example');
+  if (!sel.options.length) for (const k of Object.keys(EXAMPLES)) sel.add(new Option(k, k));
+  sel.value = current;
+  const box = document.getElementById('controls'); box.innerHTML = '';
+  for (const id of Object.keys(EXAMPLES[current])) {
+    const spec = M.CATALOG[id]; const wrap = document.createElement('div'); wrap.className = 'ctl';
+    wrap.innerHTML = `<span class="ctl-label">${spec.label} <small>(${spec.kind})</small></span>`;
+    const row = document.createElement('div'); row.className = 'seg';
+    if (spec.kind === 'choice') {
+      const allowed = M.allowedOptions(EXAMPLES[current], state, id);
+      for (const o of spec.options) { const b = document.createElement('button'); b.textContent = o.label; b.setAttribute('aria-pressed', String(state[id] === o.value)); b.disabled = !allowed.includes(o.value); b.onclick = () => act(id, o.value); row.append(b); }
+    } else if (spec.kind === 'toggle') {
+      for (const [v, l] of [[true, spec.on], [false, spec.off]]) { const b = document.createElement('button'); b.textContent = l; b.setAttribute('aria-pressed', String(state[id] === v)); b.onclick = () => act(id, v); row.append(b); }
+    } else { const i = document.createElement('input'); i.type = 'text'; i.value = state[id]; i.onchange = () => act(id, i.value); row.append(i); }
+    wrap.append(row); box.append(wrap);
+  }
+  document.getElementById('note').innerHTML = note ? `<div class="note ${note.bad ? 'bad' : 'ok'}">${note.text}</div>` : '';
+  document.getElementById('chips').innerHTML = M.chips(state).map((c) => `<span class="chip">${c.label}: <strong>${c.value}</strong></span>`).join('');
+  const flags = M.liveAreaFlags(state); document.getElementById('live').className = 'live' + (flags.includes('brand') ? ' brand' : '');
+  document.getElementById('flags').textContent = flags.length ? ' flags: ' + flags.join(', ') : ' (no flags)';
+  document.getElementById('inputs').innerHTML = Object.entries(M.formInputs(state)).map(([k, v]) => `<dt>${k}</dt><dd>${JSON.stringify(v)}</dd>`).join('') || '<dt>(none)</dt><dd>this form takes no inputs</dd>';
+  document.getElementById('def').textContent = JSON.stringify(EXAMPLES[current], null, 1).replace(/\n\s*/g, ' ');
+}
+document.getElementById('example').onchange = (e) => pickExample(e.target.value);
+
+const WALKS = [
+  { name: 'Outline forces vertical', ex: 'server-integration (standard shape, 20 examples)',
+    desc: 'The only rule between two controls today. Watch the orientation snap back when the appearance changes, and the horizontal option switch off.',
+    steps: [['Choose standard appearance', 'appearance', 'standard'], ['Choose horizontal labels', 'orientation', 'horizontal'], ['Switch to outline appearance', 'appearance', 'outline'], ['Try horizontal again (should be refused)', 'orientation', 'horizontal']] },
+  { name: 'Restricted error modes', ex: 'warning-support (restricted modes)',
+    desc: 'warning-support only offers two modes. "On submit" is switched off in the controls and refused if set.',
+    steps: [['Choose immediate', 'errorMode', 'immediate'], ['Try on submit (should be refused)', 'errorMode', 'on-submit']] },
+  { name: 'All-custom controls', ex: 'field-marking (all custom)',
+    desc: 'field-marking has six controls of its own: a choice, three texts and a toggle. None needs its own component. Watch the six chips.',
+    steps: [['Mark optional fields', 'markingMode', 'optional'], ['Change the optional marker', 'optionalMarkerText', ' (opt.)'], ['Make phone required', 'phoneRequired', true]] },
+  { name: 'Styles the live area', ex: 'brand-theming (styles the live area)',
+    desc: 'Brand theme feeds no form input. It puts a flag on the live area instead. Watch the "form inputs" list stay empty while the live-area border changes.',
+    steps: [['Switch to stock', 'brandTheme', false], ['Switch back to brand', 'brandTheme', true]] },
+  { name: 'Eleven controls', ex: 'fieldset-appearance (after its signals become inputs)',
+    desc: 'The heaviest case. Do eleven chips still read well, and does the controls panel stay usable?',
+    steps: [['Choose notification feedback', 'feedbackAppearance', 'notification'], ['Choose the warning tone', 'surfaceTone', 'warning'], ['Hide nested errors', 'includeNestedErrors', false]] },
+  { name: 'Control the example does not offer', ex: 'field-marking (all custom)',
+    desc: 'field-marking has no orientation input. The definition cannot turn it on (a compile error), and at runtime a stray write is refused.',
+    steps: [['Try to set horizontal orientation (should be refused)', 'orientation', 'horizontal']] },
+];
+let walk = 0, stepIdx = 0;
+function renderWalk() {
+  const tabs = document.getElementById('tabs'); tabs.innerHTML = '';
+  WALKS.forEach((w, i) => { const b = document.createElement('button'); b.textContent = w.name; b.setAttribute('role', 'tab'); b.setAttribute('aria-selected', String(i === walk)); b.setAttribute('aria-pressed', String(i === walk)); b.onclick = () => { walk = i; stepIdx = 0; pickExample(WALKS[i].ex); renderWalk(); }; tabs.append(b); });
+  const w = WALKS[walk]; document.getElementById('walk-desc').textContent = w.desc;
+  const ol = document.getElementById('steps'); ol.innerHTML = '';
+  w.steps.forEach(([label, id, v], i) => { const li = document.createElement('li'); if (i < stepIdx) li.className = 'done'; const b = document.createElement('button'); b.textContent = label; b.disabled = i !== stepIdx; b.onclick = () => { act(id, v); stepIdx++; renderWalk(); }; li.append(b); ol.append(li); });
+}
+pickExample(WALKS[0].ex); renderWalk();
+</script>
+</body>
+</html>
