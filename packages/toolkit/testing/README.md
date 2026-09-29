@@ -1,4 +1,7 @@
-# @ngx-signal-forms/toolkit/testing
+---
+title: '@ngx-signal-forms/toolkit/testing'
+sidebarTitle: 'testing'
+---
 
 Accessibility assertions for component tests. The helpers run
 [axe-core](https://github.com/dequelabs/axe-core) with the WCAG 2.2 AA rule

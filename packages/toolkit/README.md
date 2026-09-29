@@ -1,4 +1,7 @@
-# @ngx-signal-forms/toolkit
+---
+title: '@ngx-signal-forms/toolkit'
+sidebarTitle: 'toolkit'
+---
 
 API reference for the root entry point, `@ngx-signal-forms/toolkit`.
 

@@ -11,6 +11,7 @@ packages/toolkit/__screenshots__/
 packages/toolkit/api-reports/
 docs/agents/
 docs/archive/
+docs/decisions/
 AGENTS.md
 CLAUDE.md
 CONTEXT.md

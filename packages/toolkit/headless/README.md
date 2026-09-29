@@ -1,4 +1,7 @@
-# @ngx-signal-forms/toolkit/headless
+---
+title: '@ngx-signal-forms/toolkit/headless'
+sidebarTitle: 'headless'
+---
 
 Toolkit state as signals, with no markup and no styles. You write every element.
 The toolkit tells you when to show an error, which message to show, and which

@@ -1,4 +1,7 @@
-# Migrating from Reactive Forms: the toolkit layer
+---
+title: 'Migrating from Reactive Forms: the toolkit layer'
+sidebarTitle: 'From Reactive Forms'
+---
 
 Angular ships its own framework-level migration guide for teams moving off
 `ReactiveFormsModule`:

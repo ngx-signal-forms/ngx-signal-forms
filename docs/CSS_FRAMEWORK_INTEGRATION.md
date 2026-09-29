@@ -1,4 +1,7 @@
-# CSS Framework Integration
+---
+title: 'CSS Framework Integration'
+sidebarTitle: 'CSS frameworks'
+---
 
 > How to integrate `@ngx-signal-forms/toolkit` with Bootstrap, Tailwind CSS, and Angular Material
 

@@ -1,4 +1,7 @@
-# Migrating from beta → current v1 API
+---
+title: 'Migrating from beta → current v1 API'
+sidebarTitle: 'Beta to v1'
+---
 
 This guide covers every breaking change between the last beta
 (`1.0.0-beta.10`) and the current v1 release-candidate surface.
@@ -1033,7 +1036,7 @@ behavior:
 (`>=6.0.0 <6.3.0 || >=6.3.1`) over an unverified packaging-defect claim, and
 the `>=6.3.1` half of that range pointed at a version that was never
 published as stable (only `6.3.2` was). The peer range is now simply
-`>=6.0.0` — see [`COMPATIBILITY.md`](../COMPATIBILITY.md#vest-compatibility).
+`>=6.0.0` — see [`COMPATIBILITY.md`](./COMPATIBILITY.md#vest-compatibility).
 This is a relaxation, not a breaking change.
 
 ### Null-safe field-name resolution
@@ -1060,7 +1063,7 @@ queried the attributes in tests — switch tests to assert `role` instead.
 ### Angular peer-dependency ceiling
 
 Peer dependencies now constrain `@angular/core` and `@angular/forms` to
-`>=22.0.0 <23.0.0`. See [`COMPATIBILITY.md`](../COMPATIBILITY.md) for the
+`>=22.0.0 <23.0.0`. See [`COMPATIBILITY.md`](./COMPATIBILITY.md) for the
 reasoning. If you are already on Angular 22, no migration action is required.
 
 ### `@angular/common` is now a declared peer dependency

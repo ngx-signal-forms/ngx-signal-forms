@@ -1,4 +1,7 @@
-# @ngx-signal-forms/toolkit/form-field
+---
+title: '@ngx-signal-forms/toolkit/form-field'
+sidebarTitle: 'form-field'
+---
 
 The styled field wrapper. Put a label and a control inside
 `ngx-form-field-wrapper`. The wrapper shows errors and warnings at the right

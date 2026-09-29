@@ -72,7 +72,7 @@ full split.
 npm install @ngx-signal-forms/toolkit
 ```
 
-Use Angular 22. See [compatibility](./COMPATIBILITY.md) for supported Angular,
+Use Angular 22. See [compatibility](./docs/COMPATIBILITY.md) for supported Angular,
 TypeScript, Node, and browser versions. `vest` and `axe-core` are optional peer
 dependencies. Install them only if you use `/vest` or `/testing`.
 

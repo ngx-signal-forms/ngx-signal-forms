@@ -1,4 +1,6 @@
-# Contributing
+---
+title: 'Contributing'
+---
 
 This is the entry point for work on the repository. Code and agent rules live
 in [`AGENTS.md`](../AGENTS.md). Repository layout and packaging live in

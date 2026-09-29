@@ -1,4 +1,7 @@
-# Form Field & Toolkit Theming Guide
+---
+title: 'Form Field & Toolkit Theming Guide'
+sidebarTitle: 'form-field theming'
+---
 
 A comprehensive guide to styling `@ngx-signal-forms/toolkit` components using standard CSS Custom Properties.
 

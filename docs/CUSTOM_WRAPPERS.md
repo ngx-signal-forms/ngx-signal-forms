@@ -1,4 +1,6 @@
-# Custom wrappers
+---
+title: 'Custom wrappers'
+---
 
 This guide is for app developers who wrap a component library or design
 system once and reuse the wrapper in every form. Examples are Angular

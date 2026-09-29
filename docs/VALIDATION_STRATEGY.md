@@ -1,4 +1,7 @@
-# Choosing a validation strategy
+---
+title: 'Choosing a validation strategy'
+sidebarTitle: 'Validation strategy'
+---
 
 The toolkit shows errors from any validator that Angular Signal Forms runs. So
 the choice is which validation source to use:

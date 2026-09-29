@@ -1,4 +1,7 @@
-# Migrating from `ngx-vest-forms` to `@ngx-signal-forms/toolkit/vest`
+---
+title: 'Migrating from ngx-vest-forms to @ngx-signal-forms/toolkit/vest'
+sidebarTitle: 'From ngx-vest-forms'
+---
 
 This guide covers the **common migration path** from `ngx-vest-forms` (typically paired with Vest 5.x) to Angular Signal Forms plus `@ngx-signal-forms/toolkit/vest`.
 
