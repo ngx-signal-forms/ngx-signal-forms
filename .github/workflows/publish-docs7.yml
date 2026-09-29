@@ -25,6 +25,8 @@ concurrency:
 
 jobs:
   publish:
+    # A manual run can target any branch. Only `main` may publish.
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
