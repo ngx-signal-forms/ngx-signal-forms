@@ -2,5 +2,13 @@
   "name": "@spartan-ng/helm",
   "version": "0.0.1",
   "private": true,
-  "sideEffects": false
+  "sideEffects": false,
+  "dependencies": {
+    "@ng-icons/core": "catalog:spartan",
+    "@ng-icons/lucide": "catalog:spartan",
+    "@spartan-ng/brain": "catalog:spartan",
+    "class-variance-authority": "catalog:spartan",
+    "clsx": "catalog:spartan",
+    "tailwind-merge": "catalog:spartan"
+  }
 }

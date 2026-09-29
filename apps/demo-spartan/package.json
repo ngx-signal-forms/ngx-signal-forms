@@ -2,5 +2,11 @@
   "name": "@ngx-signal-forms/demo-spartan",
   "version": "0.0.0",
   "private": true,
-  "description": "Reference wrapper integrating ngx-signal-forms toolkit on top of Spartan Components"
+  "description": "Reference wrapper integrating ngx-signal-forms toolkit on top of Spartan Components",
+  "dependencies": {
+    "@spartan-ng/brain": "catalog:spartan"
+  },
+  "devDependencies": {
+    "tw-animate-css": "catalog:spartan"
+  }
 }
