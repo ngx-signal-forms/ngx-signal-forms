@@ -47,9 +47,13 @@ The only inline markup is backticks for code. The template renders it as `<code>
 
 **The live example owns the display controls.** The definition lists the controls it offers and their defaults. The live example owns the state and passes it to the form through inputs. Error mode (with an optional list of allowed modes), appearance and orientation are standard controls.
 
-The preferred option is to make **every** control that the current examples use a standard control that an example turns on in its definition. This adds brand theme, grouped-feedback placement, field marking and the fieldset variants. A prototype must show that this option stays simple before we build it. If the prototype shows that it is too complex or does not work, we fall back: a control joins the standard set only when a second example needs it.
+**Every control that the current examples use is a standard control** that an example turns on in its definition. This adds brand theme, grouped-feedback placement, field marking and the fieldset variants to the standard set. A prototype confirmed this option (issue #600):
 
-A control that no standard control covers goes in an example controls component. That component shares state with the form through an example-scoped provider on the example's route.
+- A definition may only turn on controls its form has a matching input for, and the compiler checks this against the form's own inputs.
+- One catalog entry makes a control standard.
+- Three generic renderers (choice, toggle, text) draw the controls. A catalog entry can name its own renderer instead, so the error mode, appearance and orientation controls keep their descriptions and help text.
+- Most controls feed a form input. A control can instead target the live area around the form, which brand theme needs.
+- The only rule between controls stays the existing one: outline appearance forces vertical labels.
 
 **Examples that do not fit supply their own live area.** error-display-modes re-mounts the form for each mode on purpose. fieldset-appearance and advanced-wizard render their debugger in their own way. These three examples supply their own component for the live area, which takes the place of the form and debugger split. They keep the rest of the live example. fieldset-appearance moves its controls out of its form component.
 
@@ -67,6 +71,8 @@ A control that no standard control covers goes in an example controls component.
 
 **Markdown content files, or AnalogJS content routes.** Rejected for now: a framework change inside a content redesign doubles the risk. The structured content maps directly to Markdown frontmatter if a later AnalogJS spike shows that prerendering is worth it.
 
+**Add a control to the standard set only when a second example needs it, and keep one-off controls in per-example controls components.** Rejected after the prototype (issue #600): the standard set covers every current control for one catalog entry each, with no new special cases apart from the live-area target. Per-example controls components would add a component and a shared-state provider per example for no gain.
+
 **Rename every form's field-tree property to `formTree`.** Rejected: names like `profileForm` read better in the form templates that readers learn from. The typed accessor gives the same result without changing the forms.
 
 ## Consequences
@@ -75,6 +81,6 @@ A control that no standard control covers goes in an example controls component.
 - Adding an example means adding one definition and one form. A spec runs over every definition and checks that the overview and the live example render, that every content section is filled in and that the debugger gets a field tree.
 - The a11y gate (ADR-0013) scans twice as many URLs.
 - The navigation, the titles and the test route lists can no longer drift from the routes. This also fixes the wrong `hasControls` value for single-model-wizard.
-- If the prototype confirms the preferred option, the standard control set is wider than today's shared controls. Each standard control makes the live example's interface wider. The prototype's result decides which rule applies, and this ADR is updated to record it.
+- The standard control set is wider than today's shared controls: 17 controls, most of them used by one example. The catalog grows by one entry per new control, and the compiler keeps each definition honest against its form's inputs.
 - The demo's render-error boundary (issue #596) sits around the app shell's router outlet. It covers both the overview route and the live route without changes.
 - An agent drafts the new teaching content for each migration batch, and a maintainer reviews it in that batch's pull request.
