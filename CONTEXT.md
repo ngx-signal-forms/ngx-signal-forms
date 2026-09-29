@@ -88,6 +88,17 @@ ngx-signal-forms — an Angular toolkit for working with Signal Forms.
   reservation. The public token `--ngx-form-field-margin` is the opt-in for a
   field-owned outer margin; its default is `0` from RC.15. Synonym to avoid:
   "field margin".
+- **Example** — one use case the demo app teaches, such as "server
+  integration". It has two parts: an **example overview** and a **live
+  example**. Synonyms to avoid: "demo page", "demo shell".
+- **Example overview** — the teaching part of an example: its purpose and the
+  toolkit features it uses. Synonym to avoid: "intro page".
+- **Live example** — the working part of an example: one form under
+  demonstration, its display controls, its debugger, and guidance on what to
+  try and how the form uses each feature. Synonym to avoid: "playground".
+- **App shell** — the frame that stays around every example: navigation, the
+  routed outlet, the right rail and the render-error boundary. Synonym to
+  avoid: "layout".
 
 ## Key concepts
 
