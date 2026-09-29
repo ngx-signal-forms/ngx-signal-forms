@@ -737,7 +737,7 @@ declare class NgxFormFieldErrorSummary {
     readonly autoFocus: _angular_core.InputSignal<boolean>;
     constructor();
     static ɵfac: _angular_core.ɵɵFactoryDeclaration<NgxFormFieldErrorSummary, never>;
-    static ɵcmp: _angular_core.ɵɵComponentDeclaration<NgxFormFieldErrorSummary, "ngx-form-field-error-summary", never, { "summaryLabel": { "alias": "summaryLabel"; "required": false; "isSignal": true; }; "headingLevel": { "alias": "headingLevel"; "required": false; "isSignal": true; }; "autoFocus": { "alias": "autoFocus"; "required": false; "isSignal": true; }; }, {}, never, never, true, [{ directive: typeof _ngx_signal_forms_toolkit_headless.NgxHeadlessErrorSummary; inputs: { "formTree": "formTree"; "strategy": "strategy"; "warningStrategy": "warningStrategy"; "submittedStatus": "submittedStatus"; }; outputs: {}; }]>;
+    static ɵcmp: _angular_core.ɵɵComponentDeclaration<NgxFormFieldErrorSummary, "ngx-form-field-error-summary", never, { "summaryLabel": { "alias": "summaryLabel"; "required": false; "isSignal": true; }; "headingLevel": { "alias": "headingLevel"; "required": false; "isSignal": true; }; "autoFocus": { "alias": "autoFocus"; "required": false; "isSignal": true; }; }, {}, never, never, true, [{ directive: typeof _ngx_signal_forms_toolkit_headless.NgxHeadlessErrorSummary; inputs: { "formTree": "formTree"; "strategy": "strategy"; "submittedStatus": "submittedStatus"; }; outputs: {}; }]>;
 }
 
 /**
