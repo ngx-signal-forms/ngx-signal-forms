@@ -31,7 +31,21 @@ interface StoredBooking {
   createdAt: string;
 }
 
-const drafts = new Map<string, StoredDraft>();
+// MSW runs in the page, so module memory is gone after a reload. Keep the
+// drafts in `sessionStorage`, the way a real server would keep them, so the
+// wizard can resume one after a reload.
+const DRAFTS_STORAGE_KEY = 'ngx-demo:mock-wizard-drafts';
+const drafts = new Map<string, StoredDraft>(
+  JSON.parse(sessionStorage.getItem(DRAFTS_STORAGE_KEY) ?? '[]') as [
+    string,
+    StoredDraft,
+  ][],
+);
+
+function persistDrafts(): void {
+  sessionStorage.setItem(DRAFTS_STORAGE_KEY, JSON.stringify([...drafts]));
+}
+
 const bookings = new Map<string, StoredBooking>();
 
 // ══════════════════════════════════════════════════════════════════════════════
@@ -117,6 +131,7 @@ export const wizardHandlers = [
     };
 
     drafts.set(draftId, draft);
+    persistDrafts();
 
     console.log('[MSW] Created draft:', draftId);
 
@@ -145,6 +160,7 @@ export const wizardHandlers = [
     };
 
     drafts.set(draftId, draft);
+    persistDrafts();
 
     console.log('[MSW] Updated draft:', draftId);
 
@@ -184,6 +200,7 @@ export const wizardHandlers = [
     }
 
     drafts.delete(draftId);
+    persistDrafts();
 
     console.log('[MSW] Deleted draft:', draftId);
 

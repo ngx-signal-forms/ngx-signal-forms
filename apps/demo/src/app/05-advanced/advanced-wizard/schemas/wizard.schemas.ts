@@ -157,6 +157,9 @@ export type Destination = z.infer<typeof DestinationSchema>;
 export type Traveler = z.infer<typeof TravelerSchema>;
 export type Trip = z.infer<typeof TripSchema>;
 
+/** The auto-saved work in progress, as the draft API stores it. */
+export type WizardDraft = Pick<Trip, 'traveler' | 'destinations'>;
+
 // ══════════════════════════════════════════════════════════════════════════════
 // FACTORY FUNCTIONS
 // ══════════════════════════════════════════════════════════════════════════════

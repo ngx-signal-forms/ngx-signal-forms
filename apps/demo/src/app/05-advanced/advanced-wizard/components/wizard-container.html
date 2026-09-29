@@ -1,7 +1,9 @@
 <div class="wizard-container">
   <!-- Status indicator with reserved space (no layout shift) -->
   <div class="status-row" aria-live="polite">
-    @if (showSavingIndicator()) {
+    @if (store.isLoadingDraft()) {
+    <span class="saving-indicator">Loading saved draft...</span>
+    } @else if (showSavingIndicator()) {
     <span class="saving-indicator">Saving draft...</span>
     } @else if (store.lastSavedAt()) {
     <span class="saved-indicator">
@@ -116,7 +118,9 @@
     <button
       type="button"
       class="btn-secondary"
-      [disabled]="store.isFirstStep() || store.isSubmitting()"
+      [disabled]="
+        store.isFirstStep() || store.isSubmitting() || store.isLoadingDraft()
+      "
       (click)="previousStep()"
     >
       Previous
@@ -126,7 +130,7 @@
     <button
       type="button"
       class="btn-primary"
-      [ngxBusy]="store.isSubmitting()"
+      [ngxBusy]="store.isSubmitting() || store.isLoadingDraft()"
       (click)="nextStep()"
     >
       Next
@@ -135,7 +139,7 @@
     <button
       type="button"
       class="btn-primary"
-      [ngxBusy]="store.isSubmitting()"
+      [ngxBusy]="store.isSubmitting() || store.isLoadingDraft()"
       (click)="submit()"
     >
       @if (store.isSubmitting()) { Submitting... } @else { Confirm Booking }
@@ -146,6 +150,10 @@
   <div role="alert" aria-live="assertive" aria-atomic="true">
     @if (store.error(); as errorMessage) {
     <div class="error-message mt-4">{{ errorMessage }}</div>
+    } @if (store.savedDraftError()) {
+    <div class="error-message mt-4">
+      Your saved draft could not be loaded. Start again below.
+    </div>
     }
   </div>
 </div>

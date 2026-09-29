@@ -53,12 +53,15 @@ Autosave watches drafts, so persistence is not restricted to committed data.
 
 **Auto-save.** The store passes the `draftSummary` signal straight to an `rxMethod`, which tracks it and persists through `httpMutation`. Saving indicator uses the `onCleanup` effect pattern so debounced timers cancel on re-run.
 
+**Resume.** `withStorageSync` keeps only the draft id in `sessionStorage`. On each visit, `withResource` loads that draft through an `httpResource`, wrapped by `extendResource` with `withPreviousValueOnLoading()` and `withValueOnError(undefined)`. Committed `traveler` and `destinations` are `withLinkedState` over the loaded draft, so no effect copies it. The step buttons wait while the draft loads. A failed load shows an error, and the next save starts a new draft.
+
 ## Key files
 
 - [forms/traveler-step.form.ts](forms/traveler-step.form.ts) — traveler form + cross-step passport rule.
 - [forms/trip-step.form.ts](forms/trip-step.form.ts) — destinations, activities, and cross-field rules.
 - [schemas/wizard.schemas.ts](schemas/wizard.schemas.ts) — Zod schemas and factories.
 - [stores/wizard.store.ts](stores/wizard.store.ts) — store composition, draft state, and auto-save.
+- [stores/features/saved-draft.feature.ts](stores/features/saved-draft.feature.ts) — stored draft id and the draft resource.
 - [components/wizard-container.ts](components/wizard-container.ts) — step navigation, commit flow, `@defer` coordination.
 - `components/*-step.ts` — individual step UI implementations.
 
