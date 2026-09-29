@@ -13,6 +13,7 @@ import {
   devWarnOnce,
   generateCharacterCountLimitId,
   NGX_SIGNAL_FORMS_CONFIG,
+  resolveFieldNameFromCandidates,
   type WarnOnceRef,
 } from '@ngx-signal-forms/toolkit/core';
 import {
@@ -207,6 +208,11 @@ export type NgxCharacterCountAnnouncementFormatter = (
  *   custom wrapper's context that resolves a field name but never
  *   registers `limitId()` into its own `NGX_SIGNAL_FORM_HINT_REGISTRY` (see
  *   `docs/CUSTOM_WRAPPERS.md`).
+ * - Without a wrapper, set the `fieldName` input to render the same hidden
+ *   limit element with the id `{fieldName}-char-count-limit`, and put that
+ *   id in the control's `aria-describedby` yourself (issue #589). The
+ *   visible "n/max" text stays exposed, because the component cannot tell
+ *   whether you linked the id.
  *
  * @see {@link createCharacterCount} for the underlying headless utility
  */
@@ -511,14 +517,42 @@ export class NgxFormFieldCharacterCount {
   });
 
   /**
-   * Resolved field name from the wrapper's `NGX_SIGNAL_FORM_FIELD_CONTEXT`,
-   * or `null` when the component is rendered outside a wrapper. Public so a
-   * wrapper can register {@link limitId} into `NGX_SIGNAL_FORM_HINT_REGISTRY`
-   * — the same channel `NgxFormFieldHint.resolvedFieldName` feeds (issue
-   * #499).
+   * Field name for the limit id when no wrapper supplies one.
+   *
+   * Outside a wrapper, set it to mint the stable
+   * `{fieldName}-char-count-limit` id, then put that id in the control's
+   * `aria-describedby` so screen readers read the limit on focus. Inside a
+   * wrapper, the wrapper's field name wins and this input is ignored.
+   *
+   * @example Standalone count linked to its control
+   * ```html
+   * <textarea
+   *   id="bio"
+   *   aria-describedby="bio-char-count-limit"
+   *   [formField]="form.bio"
+   * ></textarea>
+   * <ngx-form-field-character-count [formField]="form.bio" fieldName="bio" />
+   * ```
+   */
+  readonly fieldName = input<string>();
+
+  /**
+   * Resolved field name: the wrapper's `NGX_SIGNAL_FORM_FIELD_CONTEXT` field
+   * name first, then the {@link fieldName} input, else `null`. Blank names
+   * count as unset.
+   *
+   * The context wins, which reverses the usual "explicit input wins" order
+   * of `resolveFieldNameFromCandidates`. A wrapper registers {@link limitId}
+   * in `NGX_SIGNAL_FORM_HINT_REGISTRY` tagged with this name, and auto-ARIA
+   * only links registry ids whose name matches the control's field. An
+   * input that overrode the wrapper's name would drop the limit from
+   * `aria-describedby`. Public so a wrapper can read it (issue #499).
    */
   readonly resolvedFieldName = computed(() => {
-    return this.#fieldContext?.fieldName() ?? null;
+    return resolveFieldNameFromCandidates(
+      this.#fieldContext?.fieldName(),
+      this.fieldName(),
+    );
   });
 
   /**
