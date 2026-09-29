@@ -13,6 +13,7 @@ import {
   createErrorVisibility,
   createWarningVisibility,
   NGX_SIGNAL_FORM_FIELD_VISIBILITY_REGISTRY,
+  normalizeFieldName,
   readDirectErrors,
   resolveSubmittedStatusFromContext,
   splitByKind,
@@ -517,9 +518,18 @@ export class NgxHeadlessErrorState<
     Partial<ErrorReadableState> | null | undefined
   >(() => this.field()?.() ?? this.#bridgedFieldState()?.());
 
+  /**
+   * `fieldName`, trimmed, or `null` when it is empty or whitespace only. The
+   * ids and the registry entry both use it, so they match the `email-error`
+   * id and the `email` key that auto-ARIA derives from the control's `id`.
+   */
+  readonly #resolvedFieldName = computed(() =>
+    normalizeFieldName(this.fieldName()),
+  );
+
   readonly #core = buildHeadlessErrorState(
     this.#fieldState,
-    this.fieldName,
+    this.#resolvedFieldName,
     computed(() => {
       const override = this.errorsOverride();
       return override === undefined ? undefined : unwrapValue(override);
@@ -650,11 +660,12 @@ export class NgxHeadlessErrorState<
     // It registers the booleans that give the error and warning elements
     // their ids, not a strategy for auto-ARIA to resolve again. It does
     // nothing without a registry (no `[ngxSignalForm]` ancestor) or without
-    // a `fieldName`. `NgxFormFieldError` does not forward `fieldName` to this
-    // directive and registers by itself, so the two never publish twice.
+    // a non-blank `fieldName`. `NgxFormFieldError` does not forward
+    // `fieldName` to this directive and registers by itself, so the two
+    // never publish twice.
     effect((onCleanup) => {
       const registry = this.#visibilityRegistry;
-      const fieldName = this.fieldName();
+      const fieldName = this.#resolvedFieldName();
 
       if (!registry || fieldName === null) {
         return;

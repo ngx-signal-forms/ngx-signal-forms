@@ -7,7 +7,10 @@ import {
   schema,
   validate,
 } from '@angular/forms/signals';
-import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit';
+import {
+  NGX_SIGNAL_FORM_FIELD_VISIBILITY_REGISTRY,
+  NgxSignalFormToolkit,
+} from '@ngx-signal-forms/toolkit';
 import { render, screen } from '@testing-library/angular';
 import { describe, expect, it } from 'vitest';
 import { expectNoA11yViolations } from '../../../testing/a11y-internal';
@@ -116,6 +119,55 @@ class WarningStrategyHost {
   readonly profileForm = createProfileForm('ab');
 }
 
+/**
+ * The directive trims `fieldName` the same way every other field-name
+ * surface does. Auto-ARIA looks the field up by the control's `id`, which is
+ * never padded, so a padded name must register and build ids under the
+ * trimmed name. A whitespace-only name is no name.
+ */
+@Component({
+  selector: 'ngx-test-headless-padded-name-host',
+  imports: [FormField, NgxSignalFormToolkit, NgxHeadlessErrorState],
+  template: `
+    <form [formRoot]="profileForm" ngxSignalForm errorStrategy="on-touch">
+      <label for="email">Email</label>
+      <input id="email" [formField]="profileForm.email" />
+      <div
+        ngxHeadlessErrorState
+        #emailState="errorState"
+        [field]="profileForm.email"
+        fieldName=" email "
+        strategy="immediate"
+      >
+        <div
+          role="alert"
+          [attr.id]="
+            emailState.shouldShowErrors() && emailState.hasErrors()
+              ? emailState.errorId()
+              : null
+          "
+        >
+          @if (emailState.shouldShowErrors()) {
+            @for (error of emailState.resolvedErrors(); track error.kind) {
+              <p>{{ error.message }}</p>
+            }
+          }
+        </div>
+      </div>
+
+      <div
+        ngxHeadlessErrorState
+        [field]="profileForm.nickname"
+        fieldName="   "
+        strategy="immediate"
+      ></div>
+    </form>
+  `,
+})
+class PaddedFieldNameHost {
+  readonly profileForm = createProfileForm('');
+}
+
 async function renderStable<T>(component: new () => T) {
   const result = await render(component);
   await TestBed.inject(ApplicationRef).whenStable();
@@ -169,6 +221,33 @@ describe('NgxHeadlessErrorState — local strategy reaches auto-ARIA (#586)', ()
     const email = container.querySelector<HTMLInputElement>('#email')!;
     expect(screen.queryByText('Email is required')).toBeNull();
     expect(email).toHaveAttribute('aria-invalid', 'false');
+
+    await expectNoA11yViolations(container);
+  });
+
+  it('registers and builds ids under the trimmed fieldName', async () => {
+    const { container, fixture } = await renderStable(PaddedFieldNameHost);
+
+    const email = container.querySelector<HTMLInputElement>('#email')!;
+
+    // Auto-ARIA finds the entry under `email`, so the local `immediate`
+    // strategy wins over the form's `on-touch`, and the id it links is the
+    // id the template rendered.
+    expect(email).toHaveAttribute('aria-invalid', 'true');
+    expect(email.getAttribute('aria-describedby')).toContain('email-error');
+    expect(container.querySelector('#email-error')).toHaveTextContent(
+      'Email is required',
+    );
+
+    const registry = fixture.debugElement
+      .query((node) => node.name === 'form')
+      .injector.get(NGX_SIGNAL_FORM_FIELD_VISIBILITY_REGISTRY);
+
+    expect(registry.get('email')).toBeDefined();
+    expect(registry.get(' email ')).toBeUndefined();
+    // A whitespace-only name must not register a phantom entry.
+    expect(registry.get('   ')).toBeUndefined();
+    expect(registry.get('')).toBeUndefined();
 
     await expectNoA11yViolations(container);
   });
