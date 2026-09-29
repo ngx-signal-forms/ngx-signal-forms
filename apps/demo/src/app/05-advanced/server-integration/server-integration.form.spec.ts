@@ -35,11 +35,26 @@ describe('ServerIntegrationComponent — profile load failure', () => {
   });
 
   it('shows an announced error and Retry, not an empty form, when the load fails', async () => {
-    loadProfile.mockRejectedValue(new Error('boom'));
+    let rejectLoad!: (reason: Error) => void;
+    loadProfile.mockReturnValue(
+      new Promise((_, reject) => {
+        rejectLoad = reject;
+      }),
+    );
     await setup();
 
-    const alert = await screen.findByRole('alert');
-    expect(alert).toHaveTextContent('Could not load profile');
+    // WCAG 4.1.3: the live region must already exist and be empty before the
+    // failure. A host created together with its message can miss the first
+    // screen-reader announcement.
+    const alert = screen.getByRole('alert');
+    expect(alert).toBeEmptyDOMElement();
+
+    rejectLoad(new Error('boom'));
+
+    await vi.waitFor(() =>
+      expect(alert).toHaveTextContent('Could not load profile'),
+    );
+    expect(screen.getByRole('alert')).toBe(alert);
     expect(screen.getByRole('button', { name: 'Retry' })).toBeInTheDocument();
     expect(screen.queryByRole('textbox')).not.toBeInTheDocument();
   });
