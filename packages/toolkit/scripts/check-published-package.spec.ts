@@ -80,6 +80,22 @@ describe('normalizeLiteralUnions', () => {
     expect(normalizeLiteralUnions(source)).toBe(source);
   });
 
+  it('keeps an escaped line break escaped instead of writing a raw one', () => {
+    // `.text` is the decoded value: a raw newline in the output would break
+    // the string literal and change the meaning of the baseline.
+    const source = String.raw`type T = 'b\nx' | 'a\t' | "q'\\";`;
+    const out = normalizeLiteralUnions(source);
+    expect(out).toBe(String.raw`type T = 'a\t' | 'b\nx' | 'q\'\\';`);
+    expect(out).not.toMatch(/[\n\t]/);
+  });
+
+  it('leaves a union with a comment between members as emitted', () => {
+    // Sorting would detach the comment from the member it describes.
+    const source =
+      "type T = 'b' /* deprecated */ | 'a';\ntype U = 'z' // note\n | 'y';\n";
+    expect(normalizeLiteralUnions(source)).toBe(source);
+  });
+
   it('does not touch string literals outside a union', () => {
     const source = "declare const x: 'b';\n// 'b' | 'a' in a comment\n";
     expect(normalizeLiteralUnions(source)).toBe(source);

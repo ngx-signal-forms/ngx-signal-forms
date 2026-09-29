@@ -130,6 +130,26 @@ function isInternalEntryName(name) {
 }
 
 /**
+ * Writes a decoded string value as a single-quoted TypeScript literal.
+ * `JSON.stringify` escapes backslashes, line breaks and control characters
+ * one character at a time; only the quotes differ, and U+2028/U+2029 need
+ * their own escape (JSON leaves them raw).
+ *
+ * @param {string} value
+ * @returns {string}
+ */
+function singleQuoted(value) {
+  const body = value.replaceAll(/[\s\S]/gu, (char) => {
+    if (char === "'") return String.raw`\'`;
+    if (char === '"') return char;
+    if (char === '\u2028') return String.raw`\u2028`;
+    if (char === '\u2029') return String.raw`\u2029`;
+    return JSON.stringify(char).slice(1, -1);
+  });
+  return `'${body}'`;
+}
+
+/**
  * Returns `[rank, key, text]` for a union member that is a string, number or
  * boolean literal, or `undefined` for any other member. `text` is the
  * canonical spelling written back (strings always single-quoted, so a build
@@ -142,8 +162,7 @@ function literalUnionMember(member) {
   if (!ts.isLiteralTypeNode(member)) return undefined;
   const { literal } = member;
   if (ts.isStringLiteral(literal)) {
-    const escaped = literal.text.replaceAll(/[\\']/g, '\\$&');
-    return [0, literal.text, `'${escaped}'`];
+    return [0, literal.text, singleQuoted(literal.text)];
   }
   if (ts.isNumericLiteral(literal)) {
     return [1, Number(literal.text), literal.getText()];
@@ -186,7 +205,16 @@ export function normalizeLiteralUnions(source) {
   const visit = (/** @type {import('typescript').Node} */ node) => {
     if (ts.isUnionTypeNode(node)) {
       const members = node.types.map(literalUnionMember);
-      if (members.every((member) => member !== undefined)) {
+      // Sorting would detach a comment from the member it describes, so a
+      // union with anything but `|` between its members stays as emitted.
+      const plainSeparators = node.types.every(
+        (type, index) =>
+          index === 0 ||
+          /^\s*\|\s*$/.test(
+            source.slice(node.types[index - 1].end, type.getStart(sourceFile)),
+          ),
+      );
+      if (plainSeparators && members.every((member) => member !== undefined)) {
         const sorted = members.toSorted(
           (a, b) => a[0] - b[0] || (a[1] < b[1] ? -1 : a[1] > b[1] ? 1 : 0),
         );
