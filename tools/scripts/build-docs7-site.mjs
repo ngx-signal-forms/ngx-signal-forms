@@ -12,10 +12,10 @@
 //   node tools/scripts/build-docs7-site.mjs [--out dist/docs7] [--ref <sha>]
 import { execFileSync } from 'node:child_process';
 import {
-  existsSync,
   mkdirSync,
   readFileSync,
   rmSync,
+  statSync,
   writeFileSync,
 } from 'node:fs';
 import { posix, resolve } from 'node:path';
@@ -141,12 +141,13 @@ export function pageAnchors(markdown) {
 
 /**
  * Rewrites the relative links in one page. `file` is the page's repo path,
- * `routes` maps each page's markdown file to its site route, and `exists`
- * reports whether a repo path exists. Returns the new markdown, one error per
+ * `routes` maps each page's markdown file to its site route, and `kind`
+ * returns `'file'` or `'directory'` for a repo path, or undefined if it is
+ * missing. Returns the new markdown, one error per
  * link that leaves the repo or points at a missing file, and every anchor
  * link into a site page as `{ file, hash }`.
  */
-export function rewriteLinks(markdown, { file, routes, ref, exists }) {
+export function rewriteLinks(markdown, { file, routes, ref, kind }) {
   const errors = [];
   const anchorLinks = [];
   const rewrite = (target) => {
@@ -173,11 +174,14 @@ export function rewriteLinks(markdown, { file, routes, ref, exists }) {
       if (hash) anchorLinks.push({ file: resolved, hash: hash.slice(1) });
       return `/${routes.get(resolved)}${hash}`;
     }
-    if (!exists(resolved)) {
+    const type = kind(resolved);
+    if (!type) {
       errors.push(`${file}: link to a missing file: ${target}`);
       return target;
     }
-    return `${REPO_URL}/blob/${ref}/${resolved}${hash}`;
+    // GitHub shows folders under /tree/ and files under /blob/.
+    const view = type === 'directory' ? 'tree' : 'blob';
+    return `${REPO_URL}/${view}/${ref}/${resolved}${hash}`;
   };
 
   const lines = markdown.split('\n');
@@ -208,7 +212,11 @@ export function buildSite({ root, outDir, ref }) {
   const docsJson = JSON.parse(readFileSync(resolve(root, 'docs.json'), 'utf8'));
   const pages = collectPages(docsJson.navigation);
   const routes = new Map(pages.map((page) => [`${page}.md`, siteRoute(page)]));
-  const exists = (path) => existsSync(resolve(root, path));
+  const kind = (path) => {
+    const stat = statSync(resolve(root, path), { throwIfNoEntry: false });
+    if (!stat) return undefined;
+    return stat.isDirectory() ? 'directory' : 'file';
+  };
 
   const errors = [];
   const sources = new Map();
@@ -217,7 +225,7 @@ export function buildSite({ root, outDir, ref }) {
   for (const page of pages) {
     const file = `${page}.md`;
     const source = readFileSync(resolve(root, file), 'utf8');
-    const result = rewriteLinks(source, { file, routes, ref, exists });
+    const result = rewriteLinks(source, { file, routes, ref, kind });
     sources.set(file, source);
     rewritten.set(file, result.markdown);
     errors.push(...result.errors);

@@ -10,14 +10,14 @@ const BLOB = `https://github.com/ngx-signal-forms/ngx-signal-forms/blob/${REF}`;
 
 function rewrite(
   markdown,
-  { file = 'docs/GUIDE.md', exists = () => true } = {},
+  { file = 'docs/GUIDE.md', kind = () => 'file' } = {},
 ) {
   const routes = new Map([
     ['README.md', 'README'],
     ['docs/GUIDE.md', 'docs/GUIDE'],
     ['docs/migrations/v1.0.0-rc.16.md', 'docs/migrations/v1-0-0-rc-16'],
   ]);
-  return rewriteLinks(markdown, { file, routes, ref: REF, exists });
+  return rewriteLinks(markdown, { file, routes, ref: REF, kind });
 }
 
 async function site(t, files) {
@@ -63,6 +63,17 @@ void test('a link to a repo file that is not a page points at GitHub at the buil
   assert.equal(markdown, `[type](${BLOB}/packages/toolkit/core/types.ts#L10)`);
 });
 
+// GitHub answers a /blob/ URL for a folder with a 404 page.
+void test('a link to a repo folder points at the GitHub folder view', () => {
+  const { markdown } = rewrite('[demo](../apps/demo/src/app/)', {
+    kind: () => 'directory',
+  });
+  assert.equal(
+    markdown,
+    '[demo](https://github.com/ngx-signal-forms/ngx-signal-forms/tree/abc123/apps/demo/src/app)',
+  );
+});
+
 void test('a link label with brackets is still rewritten', () => {
   const { markdown } = rewrite('[`[formField]` guide](./GUIDE.md)');
   assert.equal(markdown, '[`[formField]` guide](/docs/GUIDE)');
@@ -81,7 +92,7 @@ void test('absolute URLs, same-page anchors and code blocks stay as written', ()
 // Broken links should fail the PR check, not ship to the site.
 void test('a link to a missing file or outside the repo is an error', () => {
   const { errors } = rewrite('[gone](./GONE.md) [out](../../../x.md)', {
-    exists: () => false,
+    kind: () => undefined,
   });
   assert.deepEqual(errors, [
     'docs/GUIDE.md: link to a missing file: ./GONE.md',
