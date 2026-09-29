@@ -1,4 +1,7 @@
-# @ngx-signal-forms/toolkit/vest
+---
+title: '@ngx-signal-forms/toolkit/vest'
+sidebarTitle: 'vest'
+---
 
 Run [Vest](https://vestjs.dev/) suites as Angular Signal Forms validators. The
 adapter maps blocking Vest tests to errors and Vest `warn()` tests to toolkit

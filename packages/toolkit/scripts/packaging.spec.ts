@@ -195,7 +195,7 @@ describe('packages/toolkit/package.json', () => {
     // but an unbounded-above range (e.g. ">=6.0.0") would let a future vest 7.x/8.x
     // with breaking SuiteResult/typing changes silently satisfy the peer contract,
     // contradicting the deliberate upper-bound-cap philosophy applied to Angular
-    // (see COMPATIBILITY.md) and the /vest README's "requires vest@6" wording.
+    // (see docs/COMPATIBILITY.md) and the /vest README's "requires vest@6" wording.
     const vestRange = packageJson.peerDependencies?.['vest'];
     expect(vestRange).toBeTruthy();
     expect(vestRange).toMatch(/<7\.0\.0/);
@@ -257,10 +257,10 @@ describe('form-field entry point surface', () => {
   });
 });
 
-describe('COMPATIBILITY.md', () => {
+describe('docs/COMPATIBILITY.md', () => {
   it('documents the same engines.node range as package.json', () => {
     const compatibilityMd = readFileSync(
-      resolve(import.meta.dirname, '../../../COMPATIBILITY.md'),
+      resolve(import.meta.dirname, '../../../docs/COMPATIBILITY.md'),
       'utf8',
     );
     expect(packageJson.engines?.node).toBeTruthy();

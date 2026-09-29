@@ -1,4 +1,7 @@
-# FAQ: building forms with `@ngx-signal-forms/toolkit`
+---
+title: 'FAQ: building forms with @ngx-signal-forms/toolkit'
+sidebarTitle: 'FAQ'
+---
 
 Short answers to "how do I do X" questions. Each answer links the guide that
 explains the topic in full, and a runnable demo where one exists. For what the

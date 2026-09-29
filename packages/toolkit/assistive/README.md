@@ -1,4 +1,7 @@
-# @ngx-signal-forms/toolkit/assistive
+---
+title: '@ngx-signal-forms/toolkit/assistive'
+sidebarTitle: 'assistive'
+---
 
 Styled feedback parts for Angular Signal Forms: field errors and warnings, an
 error summary, hints, a character count, and a required-field legend. You keep

@@ -1,4 +1,6 @@
-# Coverage
+---
+title: 'Coverage'
+---
 
 One command produces one number:
 

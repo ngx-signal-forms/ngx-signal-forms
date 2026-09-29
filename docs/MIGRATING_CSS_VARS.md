@@ -1,4 +1,7 @@
-# Migrating CSS custom properties to v1
+---
+title: 'Migrating CSS custom properties to v1'
+sidebarTitle: 'CSS custom properties'
+---
 
 This guide covers every breaking CSS custom property change that landed during
 the v1 release-candidate cycle. It is additive to

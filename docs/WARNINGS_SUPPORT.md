@@ -1,4 +1,6 @@
-# Warnings, timing, and messages
+---
+title: 'Warnings, timing, and messages'
+---
 
 This guide covers three things. Warnings are validation results that give
 advice but do not block submit. Timing decides when errors and warnings become

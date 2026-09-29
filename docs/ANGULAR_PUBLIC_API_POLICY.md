@@ -1,4 +1,6 @@
-# Angular Public API Policy
+---
+title: 'Angular Public API Policy'
+---
 
 This document defines the ownership boundary between Angular Signal Forms and `@ngx-signal-forms/toolkit`. The toolkit **enhances** Angular's form engine — it never replaces or reimplements it.
 
@@ -99,7 +101,7 @@ installed public `FieldState` declaration when adding integrations.
 
 ## Angular Version Baseline
 
-Tracks the same Angular 22 baseline and stability contract as [Compatibility](../COMPATIBILITY.md#angular-signal-forms-status).
+Tracks the same Angular 22 baseline and stability contract as [Compatibility](./COMPATIBILITY.md#angular-signal-forms-status).
 
 ## Internal `/core` secondary entry point
 
