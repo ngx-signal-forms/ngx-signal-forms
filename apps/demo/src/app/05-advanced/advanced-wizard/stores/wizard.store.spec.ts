@@ -111,6 +111,23 @@ describe('WizardStore step validity', () => {
       expect(store.canProceed()).toBe(false);
     });
 
+    it.each([
+      ['after departure', '2099-01-11'],
+      ['before arrival', '2098-12-31'],
+    ])(
+      'is invalid when an activity is dated %s of its destination',
+      (_label, activityDate) => {
+        const store = setup();
+        fillValidTrip(store);
+        store.updateActivity(0, 0, { date: activityDate });
+        store.goToStep('trip', true);
+
+        expect(store.isTripStepValid()).toBe(false);
+        expect(store.stepValidation().trip).toBe(false);
+        expect(store.canProceed()).toBe(false);
+      },
+    );
+
     it('is invalid when a destination has no activity', () => {
       const store = setup();
       fillValidTrip(store);
