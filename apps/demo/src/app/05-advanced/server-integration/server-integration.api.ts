@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, signal } from '@angular/core';
 import type { ProfileFormModel } from './server-integration.model';
 
 /**
@@ -43,9 +43,20 @@ export class ProfileApiService {
     email: 'grace@example.com',
   };
 
-  /** Simulates `GET /profile/me`. */
+  /**
+   * When `true`, the next {@link loadProfile} call rejects, then the flag
+   * clears itself — so a Retry succeeds. The page controls set it, which is
+   * how a visitor (or a test) can see the load-error state.
+   */
+  readonly failNextLoad = signal(false);
+
+  /** Simulates `GET /profile/me`. Rejects once when {@link failNextLoad} is set. */
   async loadProfile(): Promise<ProfileFormModel> {
     await delay(SIMULATED_LATENCY_MS);
+    if (this.failNextLoad()) {
+      this.failNextLoad.set(false);
+      throw new Error('The profile service is unavailable.');
+    }
     return { ...this.#record };
   }
 

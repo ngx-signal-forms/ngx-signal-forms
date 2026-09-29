@@ -18,6 +18,7 @@ export const SERVER_INTEGRATION_CONTENT = {
           '• <strong>Server form errors:</strong> a general message with <strong>no</strong> <code>fieldTree</code> lands on the submitted field itself — the form root — and renders as a page-level banner',
           '• <strong>Reset:</strong> after a successful save, <code>reset(value)</code> re-baselines dirty/touched without clearing the fields',
           '• <strong>Reload:</strong> a dedicated button calls <code>resource.reload()</code> to re-fetch and re-prefill on demand',
+          '• <strong>Load failure:</strong> the prefill effect guards on <code>hasValue()</code> (reading <code>value()</code> in an error state throws). A failed load replaces the form with an announced error and a <strong>Retry</strong> button that calls <code>resource.reload()</code>',
         ],
       },
       {
@@ -44,6 +45,8 @@ export const SERVER_INTEGRATION_CONTENT = {
           "5. Instead, edit the <strong>Name</strong> field after a failed submit → the <em>form-level</em> banner clears too, even though you didn't touch Email — because the banner is a root-level error and the root's value changes on any field edit.",
           '6. Change Email to something else and submit → the success banner appears, and the state panel shows <code>dirty(): false</code> immediately (from <code>reset(value)</code>) — the values stay, only the pristine state resets.',
           "7. Click <strong>Reload from server</strong> → the button reads <em>Reloading…</em>, then the form re-populates from the fake API's in-memory record (whatever you last successfully saved).",
+          '8. Tick <strong>Fail the next profile load</strong> in the page controls, then click <strong>Reload from server</strong> → the form is replaced by a <em>Could not load profile</em> alert (announced by screen readers) and a <strong>Retry</strong> button. Click <strong>Retry</strong> → the form returns prefilled, with <code>dirty(): false</code> and <code>touched(): false</code>.',
+          '8. Tick <strong>Fail the next profile load</strong> in the page controls, then click <strong>Reload from server</strong> → the form is replaced by a <em>Could not load profile</em> alert (announced by screen readers) and a <strong>Retry</strong> button. Click <strong>Retry</strong> → the form returns prefilled, with <code>dirty(): false</code> and <code>touched(): false</code>.',
         ],
       },
       {
