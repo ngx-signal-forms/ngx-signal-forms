@@ -1,99 +1,175 @@
 # @ngx-signal-forms/toolkit/headless
 
-> Renderless directives and utility functions that expose toolkit state as signals — you control every bit of markup and styling.
+Toolkit state as signals, with no markup and no styles. You write every element.
+The toolkit tells you when to show an error, which message to show, and which
+ids to use.
 
-## Why this entry point exists
+- **Use this when** you render all feedback markup yourself, for example in
+  your own design system.
+- **Use [`/assistive`](../assistive/README.md) instead when** ready-made
+  feedback components fit. Use [`/form-field`](../form-field/README.md) when
+  the toolkit's field layout fits.
 
-The form-field wrapper (`/form-field`) gives you layout, errors, and ARIA automatically. But when you have your own design system or need full control over markup, you want the toolkit's state logic without its UI. That's what headless provides.
-
-Headless primitives handle error timing, message resolution, character counting, fieldset aggregation, and ID generation. You write the template and styling.
-
-### When to use directives vs utility functions
-
-- Use **directives** (`NgxHeadlessErrorState`, `NgxHeadlessFieldset`, etc.) when your state naturally lives in templates.
-- Use **utility functions** (`createErrorState`, `createCharacterCount`, etc.) when composing behavior in services, host directives, or custom renderers.
-- Mix both only when it keeps ownership boundaries clear (one source of truth per field state).
+See [Choose your level](../../../README.md#choose-your-level).
 
 ## Import
 
 ```typescript
-// Bundle import
+import { FormField } from '@angular/forms/signals';
+import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit';
 import { NgxHeadlessToolkit } from '@ngx-signal-forms/toolkit/headless';
-
-// Individual imports
-import {
-  NgxHeadlessErrorState,
-  NgxHeadlessErrorSummary,
-  NgxHeadlessNotification,
-  NgxHeadlessCharacterCount,
-  NgxHeadlessFieldset,
-  NgxHeadlessFieldName,
-  createErrorMessageSignal,
-  createErrorState,
-  createCharacterCount,
-  createFieldStateFlags,
-  readErrors,
-  readFieldFlag,
-  dedupeValidationErrors,
-  humanizeFieldPath,
-  createUniqueId,
-} from '@ngx-signal-forms/toolkit/headless';
 ```
 
-## Quick start
+`NgxHeadlessToolkit` holds all six directives: `NgxHeadlessErrorState`,
+`NgxHeadlessErrorSummary`, `NgxHeadlessFieldset`, `NgxHeadlessCharacterCount`,
+`NgxHeadlessFieldName`, and `NgxHeadlessNotification`. You can also import
+each directive by name.
 
-This template excerpt uses toolkit-owned ARIA. Import Angular's `FormField`,
-the root `NgxSignalFormToolkit` bundle, and `NgxHeadlessErrorState` in the
-component rendering it. Use the model and submission setup from the
-[root starter](../../../README.md#quick-start). Do not manually bind ARIA
-while auto-ARIA owns the control.
+Import `NgxSignalFormToolkit` from the root entry point too. It adds auto-ARIA
+to eligible `[formField]` controls, and the `ngxSignalForm` directive that
+shares form-level timing. Native checkboxes and radios are not eligible by
+default, because their ARIA belongs on the group. See
+[custom controls](../../../docs/CUSTOM_CONTROLS.md#inferred-kind-vs-auto-aria-eligibility).
 
-```html
-<div
-  ngxHeadlessErrorState
-  #errorState="errorState"
-  [field]="contactForm.email"
-  fieldName="email"
->
-  <label for="email">Email</label>
-  <input id="email" [formField]="contactForm.email" />
+## What you do and what the toolkit does
 
-  <div [id]="errorState.errorId()" role="alert" class="my-error">
-    @if (errorState.shouldShowErrors()) { @for (error of
-    errorState.resolvedErrors(); track $index) {
-    <span>{{ error.message }}</span>
-    } }
-  </div>
-  <div [id]="errorState.warningId()" role="status" class="my-warning">
-    @if (errorState.shouldShowWarnings()) { @for (warning of
-    errorState.resolvedWarnings(); track $index) {
-    <span>{{ warning.message }}</span>
-    } }
-  </div>
-</div>
-```
+The toolkit does this for you:
 
-### Host directive composition
+- Decides when errors and warnings show (`on-touch` by default).
+- Resolves the message text (validator `message`, then your
+  `provideErrorMessages()` registry, then a built-in default).
+- Gives you stable ids: `{fieldName}-error` and `{fieldName}-warning`.
+- With `NgxSignalFormToolkit`, auto-ARIA writes `aria-invalid`,
+  `aria-required`, and `aria-describedby` on each control. It points
+  `aria-describedby` at `{id}-error` or `{id}-warning`, where `{id}` is the
+  control's `id`.
 
-Headless directives work as Angular [host directives](https://angular.dev/guide/directives/directive-composition-api) for building custom form-field components:
+You do this yourself:
+
+- Render the error and warning elements, with `role="alert"` and
+  `role="status"`, and the ids from the directive.
+- Use a `fieldName` that equals the control's `id`, so auto-ARIA and your
+  elements agree on the ids.
+- Add `ngxSignalForm` to the form and set error timing there
+  (`errorStrategy="…"`). Auto-ARIA does not see a `strategy` input on a
+  headless directive, and without `ngxSignalForm` it ignores the app config
+  and uses `on-touch`. Either way, the ARIA would change at a different time
+  than your message.
+- Link hints yourself: give the hint an `id` and add it to the control's
+  `aria-describedby`. Auto-ARIA keeps ids that you write.
+- Style everything.
+
+If auto-ARIA is off for a control (`ngxSignalFormControlAria="manual"`), you
+write all ARIA yourself. The [ARIA factories](#aria-composition) help with
+that.
+
+## Example
+
+An email field with your own error and warning markup. Copy it into an Angular
+application and render `<app-contact />`.
 
 ```typescript
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { email, form, FormField, required } from '@angular/forms/signals';
+import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit';
+import { NgxHeadlessErrorState } from '@ngx-signal-forms/toolkit/headless';
+
 @Component({
-  selector: 'my-form-field',
+  selector: 'app-contact',
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [FormField, NgxSignalFormToolkit, NgxHeadlessErrorState],
+  template: `
+    <form [formRoot]="contactForm" ngxSignalForm>
+      <div
+        ngxHeadlessErrorState
+        #errorState="errorState"
+        [field]="contactForm.email"
+        fieldName="email"
+      >
+        <label for="email">Email</label>
+        <input id="email" type="email" [formField]="contactForm.email" />
+
+        <div [id]="errorState.errorId()" role="alert" class="my-error">
+          @if (errorState.shouldShowErrors()) {
+            @for (error of errorState.resolvedErrors(); track $index) {
+              <p>{{ error.message }}</p>
+            }
+          }
+        </div>
+        <div [id]="errorState.warningId()" role="status" class="my-warning">
+          @if (errorState.shouldShowWarnings()) {
+            @for (warning of errorState.resolvedWarnings(); track $index) {
+              <p>{{ warning.message }}</p>
+            }
+          }
+        </div>
+      </div>
+
+      <button type="submit">Send</button>
+    </form>
+  `,
+})
+export class ContactComponent {
+  readonly model = signal({ email: '' });
+  readonly contactForm = form(
+    this.model,
+    (path) => {
+      required(path.email, { message: 'Email is required' });
+      email(path.email, { message: 'Enter a valid email address' });
+    },
+    {
+      submission: {
+        action: async () => {
+          // Call your API here.
+        },
+      },
+    },
+  );
+}
+```
+
+The live regions stay in the DOM and only their content changes. Screen
+readers announce a live region more reliably when it exists before its content
+arrives.
+
+## Which primitive do I need?
+
+Each feature has a template directive and a factory function. Use the
+directive in a template. Use the factory in a component class, a service, or a
+host directive.
+
+| You want to show…                  | Directive (`exportAs`)                          | Factory                             |
+| ---------------------------------- | ----------------------------------------------- | ----------------------------------- |
+| One field's errors and warnings    | `NgxHeadlessErrorState` (`errorState`)          | `createErrorState()`                |
+| Resolved messages with ids         | `NgxHeadlessErrorState` (`resolvedErrors()`)    | `createErrorMessageSignal()`        |
+| A summary of all form errors       | `NgxHeadlessErrorSummary` (`errorSummary`)      | `createErrorSummaryEntries()`       |
+| Errors of a group of fields        | `NgxHeadlessFieldset` (`fieldset`)              | `createFieldsetAggregation()`       |
+| A list of errors you computed      | `NgxHeadlessNotification` (`notificationState`) | —                                   |
+| A character count                  | `NgxHeadlessCharacterCount` (`characterCount`)  | `createCharacterCount()`            |
+| Error and warning ids only         | `NgxHeadlessFieldName` (`fieldName`)            | —                                   |
+| Required or optional markers       | —                                               | `createFieldOptionalitySummary()`   |
+| ARIA attributes you write yourself | —                                               | [ARIA factories](#aria-composition) |
+
+## A reusable feedback component
+
+Use `NgxHeadlessErrorState` as a
+[host directive](https://angular.dev/guide/directives/directive-composition-api)
+to build your own error component. This component renders feedback only. You
+put it next to your control.
+
+```typescript
+import { Component, inject } from '@angular/core';
+import { NgxHeadlessErrorState } from '@ngx-signal-forms/toolkit/headless';
+
+@Component({
+  selector: 'my-field-feedback',
   hostDirectives: [
     {
       directive: NgxHeadlessErrorState,
-      inputs: [
-        'field',
-        'fieldName',
-        'strategy',
-        'warningStrategy',
-        'submittedStatus',
-      ],
+      inputs: ['field', 'fieldName'],
     },
   ],
   template: `
-    <ng-content />
     <div
       role="alert"
       [attr.id]="
@@ -104,7 +180,7 @@ Headless directives work as Angular [host directives](https://angular.dev/guide/
     >
       @if (errorState.shouldShowErrors()) {
         @for (error of errorState.resolvedErrors(); track $index) {
-          <span class="error">{{ error.message }}</span>
+          <p class="error">{{ error.message }}</p>
         }
       }
     </div>
@@ -118,22 +194,32 @@ Headless directives work as Angular [host directives](https://angular.dev/guide/
     >
       @if (errorState.shouldShowWarnings()) {
         @for (warning of errorState.resolvedWarnings(); track $index) {
-          <span>{{ warning.message }}</span>
+          <p class="warning">{{ warning.message }}</p>
         }
       }
     </div>
   `,
 })
-export class MyFormFieldComponent {
+export class MyFieldFeedback {
   protected readonly errorState = inject(NgxHeadlessErrorState);
 }
 ```
 
-This fragment composes feedback, not the whole wrapper. Before using local
-timing overrides, publish the same active-region gates through the visibility
-registry. Declare identity when the control ID differs from the field name,
-and register hints separately. Read [wrapper channels](../../../docs/CUSTOM_WRAPPERS.md#which-seam-publishes-what).
-Headless composition does not choose an ARIA owner for the projected control.
+```html
+<label for="email">Email</label>
+<input id="email" [formField]="form.email" />
+<my-field-feedback [field]="form.email" fieldName="email" />
+```
+
+This component is complete for feedback when:
+
+- `fieldName` equals the control's `id`.
+- The form has `ngxSignalForm`, and you set timing there. The component does
+  not forward `strategy` or `warningStrategy`, because auto-ARIA would not
+  see them.
+
+For a component that also owns the label, the control, and the hints, build a
+full wrapper. See [custom wrappers](../../../docs/CUSTOM_WRAPPERS.md).
 
 ## Directives
 
@@ -141,147 +227,179 @@ Headless composition does not choose an ARIA owner for the projected control.
 
 Selector: `[ngxHeadlessErrorState]` · Export: `errorState`
 
-Exposes error state signals for custom error display.
+The errors and warnings of one field, with timing applied.
 
-| Input             | Type                                                                                                                                                                   | Description                                                                                                                                                         |
-| ----------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `field`           | `FieldTree` (optional)                                                                                                                                                 | The field to track. Omit when supplying `errorsOverride`. `connectFieldState()` is package-internal and is stripped from published declarations.                    |
-| `fieldName`       | `string \| null` (optional, default `null`)                                                                                                                            | Field name for ID generation. Pass `null` (or omit) to disable id generation until a name resolves                                                                  |
-| `errorsOverride`  | `ReactiveOrStatic<readonly ValidationError[]>` (optional) — a plain array, a `Signal<readonly ValidationError[]>`, or a bare `() => readonly ValidationError[]` reader | Pre-aggregated errors that replace field-based extraction (e.g. for fieldsets). When provided, `field` is not required and `shouldShowErrors` always returns `true` |
-| `strategy`        | `ErrorDisplayStrategy`                                                                                                                                                 | Override for blocking errors (inherits from context)                                                                                                                |
-| `warningStrategy` | `WarningDisplayStrategy`                                                                                                                                               | Override for warnings, independent of `strategy` (default: `'on-touch'`)                                                                                            |
-| `submittedStatus` | `SubmittedStatus`                                                                                                                                                      | Override for `'on-submit'` strategy                                                                                                                                 |
+| Input             | Type                                           | Default   | Description                                                                   |
+| ----------------- | ---------------------------------------------- | --------- | ----------------------------------------------------------------------------- |
+| `field`           | `FieldTree`                                    | —         | The field to track. Omit it when you bind `errorsOverride`.                   |
+| `fieldName`       | `string \| null`                               | `null`    | Base for the ids. `null` turns ids off.                                       |
+| `errorsOverride`  | `ReactiveOrStatic<readonly ValidationError[]>` | —         | A list you computed, as an array, a signal, or a function. Wins over `field`. |
+| `strategy`        | `ErrorDisplayStrategy`                         | inherited | When errors show.                                                             |
+| `warningStrategy` | `WarningDisplayStrategy`                       | inherited | When warnings show. Falls back to `on-touch`.                                 |
+| `submittedStatus` | `SubmittedStatus`                              | inherited | Submission state for `on-submit`, when there is no `ngxSignalForm`.           |
 
-Signals: `shouldShowErrors()`, `shouldShowWarnings()`, `hasErrors()`, `hasWarnings()`, `errors()`, `warnings()`, `resolvedErrors()`, `resolvedWarnings()`, `errorId` (nullable), `warningId` (nullable).
+"Inherited" means the directive uses the form's `ngxSignalForm` setting, then
+the provided config. See
+[timing and configuration](../../../docs/WARNINGS_SUPPORT.md#timing-and-configuration).
 
-`shouldShowWarnings()` runs the warning cascade — `warningStrategy` input → the form context's `warningStrategy()` → `NGX_SIGNAL_FORMS_CONFIG.defaultWarningStrategy` → `'on-touch'` — and gates on warning presence rather than `invalid()`. It stays `false` while a blocking error is visible on the same field, because both categories share one message region.
+Signals: `shouldShowErrors()`, `shouldShowWarnings()`, `hasErrors()`,
+`hasWarnings()`, `errors()`, `warnings()`, `resolvedErrors()`,
+`resolvedWarnings()`, `errorId()`, `warningId()`, `resolvedSubmittedStatus()`.
+`errorId()` and `warningId()` are `null` when no `fieldName` is set.
 
-Exception: `errorsOverride` makes both visibility signals true. The caller owns
-timing and suppression in that mode. Omitting a warning strategy and setting
-`inherit` both defer to context/config, not an unconditional input default.
+- `shouldShowWarnings()` stays `false` while a blocking error shows on the same
+  field.
+- With `errorsOverride`, `shouldShowErrors()` is always `true`. You decide when
+  to pass the list.
 
 ### NgxHeadlessErrorSummary
 
 Selector: `[ngxHeadlessErrorSummary]` · Export: `errorSummary`
 
-Aggregates all errors from a form tree. Each entry has a `focus()` method that calls Angular's `focusBoundControl()`, and a `canFocus` flag. Render the entry as a button only when `canFocus` is `true`; otherwise render it as plain text — the error has no bound field, so `focus()` would do nothing.
+All errors and warnings of a form, one entry per message.
 
-| Input             | Type                     | Description                                                              |
-| ----------------- | ------------------------ | ------------------------------------------------------------------------ |
-| `formTree`        | `FieldTree` (required)   | Root form to aggregate                                                   |
-| `strategy`        | `ErrorDisplayStrategy`   | Override for blocking errors (inherits from context)                     |
-| `warningStrategy` | `WarningDisplayStrategy` | Override for warnings, independent of `strategy` (default: `'on-touch'`) |
-| `submittedStatus` | `SubmittedStatus`        | Override for `'on-submit'` strategy                                      |
+| Input             | Type                     | Default   | Description                                          |
+| ----------------- | ------------------------ | --------- | ---------------------------------------------------- |
+| `formTree`        | `FieldTree` (required)   | —         | The root form.                                       |
+| `strategy`        | `ErrorDisplayStrategy`   | inherited | When error entries show.                             |
+| `warningStrategy` | `WarningDisplayStrategy` | inherited | When warning entries show. Falls back to `on-touch`. |
+| `submittedStatus` | `SubmittedStatus`        | inherited | Submission state for `on-submit`.                    |
 
-Signals: `entries()`, `warningEntries()`, `hasErrors()`, `hasWarnings()`, `shouldShow()`, `shouldShowWarnings()`, `resolvedStrategy()`, `resolvedWarningStrategy()`.
+Signals: `entries()`, `warningEntries()`, `hasErrors()`, `hasWarnings()`,
+`shouldShow()`, `shouldShowWarnings()`, `resolvedStrategy()`,
+`resolvedWarningStrategy()`. Method: `focusFirst()`.
 
-Method: `focusFirst()` — focuses the first error entry.
-
-`shouldShow()` gates `entries()` (`strategy` && `hasErrors()`); `shouldShowWarnings()` gates `warningEntries()` (`warningStrategy` && `hasWarnings()`). The two are independent in both directions: a warnings-only form has no blocking errors, so `shouldShow()` alone can never reveal warnings, and a form that defers its errors to submit still surfaces summary warnings on touch.
-
-### NgxHeadlessCharacterCount
-
-Selector: `[ngxHeadlessCharacterCount]` · Export: `characterCount`
-
-Provides character count signals with progressive limit states.
-
-| Input              | Type                             | Default  | Description                                              |
-| ------------------ | -------------------------------- | -------- | -------------------------------------------------------- |
-| `field`            | `FieldTree<CharacterCountValue>` | required | `string \| readonly string[] \| null \| undefined` field |
-| `maxLength`        | `number`                         | required | Character limit                                          |
-| `warningThreshold` | `number`                         | `0.8`    | Warning at 80%                                           |
-| `dangerThreshold`  | `number`                         | `0.95`   | Danger at 95%                                            |
-
-The defaults are exported as `DEFAULT_WARNING_THRESHOLD` (`0.8`) and
-`DEFAULT_DANGER_THRESHOLD` (`0.95`), for consumers that build their own
-threshold UI without hardcoding the numbers.
-
-Signals (type `CharacterCountState`): `currentLength()`, `resolvedMaxLength()`,
-`remaining()`, `limitState()` (`'ok' | 'warning' | 'danger' | 'exceeded'`),
-`hasLimit()`, `isExceeded()`, `percentUsed()`.
-
-This directive requires `maxLength`. `createCharacterCount()` does not —
-its `maxLength` option is optional, and a `useValidatorMaxLength: true`
-option makes it fall back to the field's own `maxLength` schema validator
-(default `false`, no fallback). `resolvedMaxLength()` is `number | null`;
-`null` means no limit — check `hasLimit()` first. `remaining()`,
-`isExceeded()`, `percentUsed()`, and `limitState()` stay non-nullable, with
-neutral values (`0`, `false`, `0`, `'ok'`) when there is no limit.
-`percentUsed()` can exceed 100. `remaining()` goes negative once the limit
-is exceeded — it is not clamped to zero.
+- Each entry has `kind`, `message`, `fieldName`, `focus()`, and `canFocus`.
+  Render an entry as a button only when `canFocus` is `true`. Otherwise render
+  plain text, because the error has no control to focus.
+- `shouldShow()` controls error entries. `shouldShowWarnings()` controls
+  warning entries. They are independent: a form that shows errors only after
+  submit can still show warnings on touch.
 
 ### NgxHeadlessFieldset
 
 Selector: `[ngxHeadlessFieldset]` · Export: `fieldset`
 
-Aggregates error state across multiple fields for group validation.
+The errors and warnings of a group of fields.
 
-| Input                 | Type                           | Description                                       |
-| --------------------- | ------------------------------ | ------------------------------------------------- |
-| `field`               | `FieldTree` (required)         | Primary field group                               |
-| `fields`              | `readonly FieldTree[] \| null` | Optional explicit field list — see note below     |
-| `fieldsetId`          | `string` (optional)            | For ARIA linking                                  |
-| `strategy`            | `ErrorDisplayStrategy`         | Override blocking-error strategy                  |
-| `warningStrategy`     | `WarningDisplayStrategy`       | Override warning strategy (default: `'on-touch'`) |
-| `submittedStatus`     | `SubmittedStatus`              | Override for `'on-submit'` strategy               |
-| `includeNestedErrors` | `boolean`                      | Include child errors (default: `false`)           |
+| Input                 | Type                           | Default   | Description                                         |
+| --------------------- | ------------------------------ | --------- | --------------------------------------------------- |
+| `field`               | `FieldTree` (required)         | —         | The group.                                          |
+| `fields`              | `readonly FieldTree[] \| null` | `null`    | Fields to collect from. `[]` collects nothing.      |
+| `fieldsetId`          | `string`                       | generated | Base id for your group elements.                    |
+| `includeNestedErrors` | `boolean`                      | `false`   | Also collect errors of the fields inside the group. |
+| `strategy`            | `ErrorDisplayStrategy`         | inherited | When errors show.                                   |
+| `warningStrategy`     | `WarningDisplayStrategy`       | inherited | When warnings show. Falls back to `on-touch`.       |
+| `submittedStatus`     | `SubmittedStatus`              | inherited | Submission state for `on-submit`.                   |
 
-> `fields` distinguishes "not provided" from "provided but empty": `null`/unbound (default) aggregates the fieldset's own errors; an explicitly bound `[]` aggregates nothing rather than falling back — useful when a dynamically computed field list legitimately becomes empty.
+Signals: `resolvedErrors()`, `resolvedWarnings()`, `aggregatedErrors()`,
+`aggregatedWarnings()`, `hasErrors()`, `hasWarnings()`, `shouldShowErrors()`,
+`shouldShowWarnings()`, `isValid()`, `isInvalid()`, `isTouched()`, `isDirty()`,
+`isPending()`, `resolvedStrategy()`, `resolvedWarningStrategy()`,
+`resolvedSubmittedStatus()`, `resolvedFieldsetId()`.
 
-Signals: `isValid()`, `isInvalid()`, `isTouched()`, `isDirty()`, `isPending()`, `aggregatedErrors()`, `aggregatedWarnings()`, `resolvedErrors()`, `resolvedWarnings()`, `hasErrors()`, `hasWarnings()`, `shouldShowErrors()`, `shouldShowWarnings()`, `resolvedStrategy()`, `resolvedWarningStrategy()`, `resolvedSubmittedStatus()`, `resolvedFieldsetId()`.
+- `shouldShowErrors()` and `shouldShowWarnings()` are independent. If you show
+  errors and warnings in one place, hide the warnings yourself while errors
+  show.
+- Render `resolvedErrors()`, not `aggregatedErrors()[i].message`. A validator
+  without a `message` option has no `message`. The resolved signals fill it in.
 
-`warningStrategy` times `shouldShowWarnings()` independently of `strategy`/`shouldShowErrors()`. It resolves through its own cascade — this input → the form context's `warningStrategy()` → `NGX_SIGNAL_FORMS_CONFIG.defaultWarningStrategy` → `'on-touch'` — which never consults `defaultErrorStrategy`, matching `NgxFormFieldWrapper.warningStrategy` / `NgxFormFieldError.warningStrategy`'s contract exactly. `shouldShowWarnings()` is also no longer suppressed just because `shouldShowErrors()` is `true` — it matches `NgxHeadlessErrorSummary.shouldShowWarnings()`'s independent error/warning visibility instead (fieldsets aggregate the same way a summary does). Consumers that render errors and warnings in a single slot (like `NgxFormFieldset`) apply "errors take visual priority" themselves on top of these two independent signals.
-
-Render `resolvedErrors()` / `resolvedWarnings()` (not `aggregatedErrors()[i].message`) — `ValidationError.message` is `undefined` for framework-default errors (e.g. `required(path.x)` with no `message` option), so the resolved signals apply the same 3-tier message priority as `NgxHeadlessErrorState.resolvedErrors`:
-
-```html
-<fieldset ngxHeadlessFieldset #fieldset="fieldset" [field]="form.address">
-  <legend>Address</legend>
-  <div class="errors" role="alert">
-    @if (fieldset.shouldShowErrors() && fieldset.hasErrors()) { @for (error of
-    fieldset.resolvedErrors(); track $index) {
-    <span>{{ error.message }}</span>
-    } }
-  </div>
-</fieldset>
+```typescript
+@Component({
+  selector: 'app-address',
+  imports: [FormField, NgxHeadlessFieldset],
+  template: `
+    <fieldset ngxHeadlessFieldset #fieldset="fieldset" [field]="form.address">
+      <legend>Address</legend>
+      <!-- controls -->
+      <div role="alert" class="my-errors">
+        @if (fieldset.shouldShowErrors() && fieldset.hasErrors()) {
+          @for (error of fieldset.resolvedErrors(); track $index) {
+            <p>{{ error.message }}</p>
+          }
+        }
+      </div>
+    </fieldset>
+  `,
+})
+export class AddressComponent {
+  // `form` holds an `address` group
+}
 ```
+
+See [grouped fields and arrays](../../../docs/COMPLEX_NESTED_FORMS.md) for
+fieldset patterns.
 
 ### NgxHeadlessNotification
 
 Selector: `[ngxHeadlessNotification]` · Export: `notificationState`
 
-Tone-aware grouped validation state for custom notification cards and summary blocks.
+Messages and ids for a list of errors you computed, for example a group card.
+It applies no timing. You decide when to pass the list.
 
-| Input       | Type                                                      | Description                                                                                                        |
-| ----------- | --------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
-| `errors`    | `ReactiveOrStatic<readonly ValidationError[]>` (optional) | Grouped validation messages: a plain array, a `Signal`, or a bare `() => …` reader. Omitted reads as an empty list |
-| `fieldName` | `string \| null` (optional)                               | Base id for generated error/warning ids; omitted or `null` turns id output off                                     |
+| Input       | Type                                           | Default | Description                                               |
+| ----------- | ---------------------------------------------- | ------- | --------------------------------------------------------- |
+| `errors`    | `ReactiveOrStatic<readonly ValidationError[]>` | `[]`    | The messages, as an array, a signal, or a function.       |
+| `fieldName` | `string \| null`                               | —       | Base for the ids. Omit it or pass `null` to turn ids off. |
 
-Tone is fully content-driven — there is no `tone` input. Any blocking (non-`warn:`) error resolves the group to `'error'` (`role="alert"`); an all-warning list resolves to `'warning'` (polite `role="status"`).
+Signals: `hasMessages()`, `resolvedMessages()`, `resolvedTone()`,
+`showErrorContainer()`, `showWarningContainer()`, `errorContainerId()`,
+`warningContainerId()`.
 
-Signals: `resolvedMessages()`, `resolvedTone()`, `showErrorContainer()`, `showWarningContainer()`, `errorContainerId()` (nullable), `warningContainerId()` (nullable).
+The content sets the tone. One blocking error makes the tone `'error'`: render
+the group with `role="alert"`. A list of only warnings has the tone
+`'warning'`: render it with `role="status"`.
+
+### NgxHeadlessCharacterCount
+
+Selector: `[ngxHeadlessCharacterCount]` · Export: `characterCount`
+
+A character count with limit states.
+
+| Input              | Type                             | Default  | Description                                                    |
+| ------------------ | -------------------------------- | -------- | -------------------------------------------------------------- |
+| `field`            | `FieldTree<CharacterCountValue>` | required | A `string`, `readonly string[]`, `null`, or `undefined` field. |
+| `maxLength`        | `number`                         | required | The limit.                                                     |
+| `warningThreshold` | `number`                         | `0.8`    | Share of the limit where `'warning'` starts.                   |
+| `dangerThreshold`  | `number`                         | `0.95`   | Share of the limit where `'danger'` starts.                    |
+
+Signals: `currentLength()`, `resolvedMaxLength()`, `remaining()`,
+`limitState()` (`'ok' | 'warning' | 'danger' | 'exceeded'`), `hasLimit()`,
+`isExceeded()`, `percentUsed()`.
+
+- `remaining()` goes below zero when the value is over the limit.
+  `percentUsed()` can go over 100.
+- The default thresholds are exported as `DEFAULT_WARNING_THRESHOLD` and
+  `DEFAULT_DANGER_THRESHOLD`.
+- `createCharacterCount()` makes `maxLength` optional. Set
+  `useValidatorMaxLength: true` to read the field's `maxLength` validator. With
+  no limit, `resolvedMaxLength()` is `null`, so check `hasLimit()` first.
 
 ### NgxHeadlessFieldName
 
 Selector: `[ngxHeadlessFieldName]` · Export: `fieldName`
 
-Resolves field names and generates stable IDs for ARIA linking. Falls back to the host element `id` when `fieldName` is omitted. When neither a non-empty `fieldName` input nor a non-empty host `id` is provided, `resolvedFieldName()`, `errorId()`, and `warningId()` return `null` and the directive emits a one-shot `console.error` in dev mode. Downstream ARIA wiring should gate on a non-null value rather than produce unstable `"-error"` IDs.
+Resolves a field name and its ids. It uses the `fieldName` input, or else the
+host element's `id`.
 
-Signals: `resolvedFieldName()` (nullable), `errorId()` (nullable), `warningId()` (nullable).
+Signals: `resolvedFieldName()`, `errorId()`, `warningId()`. All three are
+`null` when neither a `fieldName` nor an `id` is set. The directive then logs
+an error in development mode. Do not build ids from a `null` name.
 
 ## Reactive Primitives
 
-Factories that return plain signals for programmatic use — in services, host directives, or custom renderers that don't want a template directive.
+Factory functions that return signals. Use them in a component class, a
+service, or a host directive.
 
 ### createErrorMessageSignal
 
-> **Lockstep guarantee:** `NgxHeadlessErrorState.resolvedErrors`/`resolvedWarnings` and `createErrorMessageSignal` share the same internal resolver — message resolution behaviour is guaranteed identical across both surfaces.
-
-A `Signal<readonly ResolvedFieldError[]>` that combines visibility gating, the 3-tier message cascade (validator `message` → the registry set by `provideErrorMessages()` → default), and stable per-error DOM IDs in a single primitive. Use it when you want the directive's resolution logic without the directive itself — for example inside a custom error renderer that the form-field wrapper drives via `*ngComponentOutlet`, or in an Angular `Component` that opts to read errors directly off a `FieldTree`.
-
-See a runnable example at `apps/demo/src/app/03-headless/error-message-signal/`.
+Resolved messages for one field, with timing applied and one id per message.
+`NgxHeadlessErrorState` uses the same message resolution, so both give the
+same text.
 
 ```typescript
+import { Component, input } from '@angular/core';
+import type { FieldTree } from '@angular/forms/signals';
 import { createErrorMessageSignal } from '@ngx-signal-forms/toolkit/headless';
 
 @Component({/* ... */})
@@ -301,126 +419,160 @@ export class EmailErrors {
 
 Each entry is `{ kind, message, id, error }`:
 
-- `kind` — convenience copy of the validator kind, lifted to the top level so templates can write `entry.kind` instead of `entry.error.kind`.
-- `message` — the resolved display string after the 3-tier cascade.
-- `id` names a per-message entry, such as `{fieldName}-error-{kind}`. The wrapper references `{fieldName}-error` and `{fieldName}-warning` containers instead. Preserve those containers or update the description chain when swapping renderers. Repeated kinds need occurrence-safe IDs when rendered individually.
-- `error` — the raw `ValidationError` from the field, kept for consumers that need validator-specific params or a non-stripped `message` override.
+- `kind`: the validator kind.
+- `message`: the resolved text.
+- `id`: an id for this one message, `{fieldName}-error-{kind}`. Auto-ARIA
+  points at the container ids `{fieldName}-error` and `{fieldName}-warning`,
+  so keep those ids on the containers. Two messages with the same kind share an
+  id, so do not use it as a DOM id when kinds can repeat.
+- `error`: the original `ValidationError`.
 
-Options of note:
+Options:
 
-- `includeWarnings`: `false` (default), `true`, or `'only'` — selects blocking errors, both, or warnings only.
-- `stripWarningPrefix`: defaults to `true` (display-oriented); set to `false` to keep the `warn:` prefix visible for debugging.
-- `errorMessages`: explicit `Signal<ErrorMessageRegistry>` override; when omitted, the primitive auto-injects the registry set by `provideErrorMessages()`.
-- `strategy` / `submittedStatus`: forwarded to `createErrorVisibility`. Omit to inherit from the form context.
-- `warningStrategy`: forwarded to `createWarningVisibility`, which times the entries `includeWarnings` selects. Its cascade — this option → the form context's `warningStrategy()` → `defaultWarningStrategy` → `'on-touch'` — never consults `defaultErrorStrategy`, so an `'on-submit'` form still shows warnings on touch and the example above needs no `strategy: 'immediate'` workaround.
-- `injector`: optional, for use outside an Angular injection context.
+| Option               | Default   | Description                                                                          |
+| -------------------- | --------- | ------------------------------------------------------------------------------------ |
+| `includeWarnings`    | `false`   | `false`: errors only. `true`: both. `'only'`: warnings only.                         |
+| `stripWarningPrefix` | `true`    | Removes `warn:` from the kind. Set `false` to keep it.                               |
+| `fieldName`          | —         | Base for the ids.                                                                    |
+| `errorMessages`      | injected  | A `Signal<ErrorMessageRegistry>`. Defaults to the `provideErrorMessages()` registry. |
+| `strategy`           | inherited | When errors show.                                                                    |
+| `warningStrategy`    | inherited | When warnings show. Falls back to `on-touch`.                                        |
+| `submittedStatus`    | inherited | Submission state for `on-submit`.                                                    |
+| `injector`           | —         | Needed outside an injection context.                                                 |
+
+A runnable demo is in
+[`apps/demo/src/app/03-headless/error-message-signal`](../../../apps/demo/src/app/03-headless/error-message-signal/).
 
 ### createErrorState / createCharacterCount / createFieldStateFlags
 
-For programmatic use without a directive:
-
-`createErrorState()` returns raw `errors()` and `warnings()`, not resolved
-display messages. Use `resolveValidationErrorMessage()` for copy or
-`createErrorMessageSignal()` for visibility-filtered entries. `fieldName` is
-required by the factory but can be `null` to suppress ID generation. Supply an
-`injector` outside an injection context.
-
 ```typescript
-// Error state without a directive
+// Error state. `fieldName` is required; pass `null` to turn ids off.
 const state = createErrorState({ field: form.email, fieldName: 'email' });
-// Strategy resolution: explicit `strategy` option → form context →
-// NGX_SIGNAL_FORMS_CONFIG.defaultErrorStrategy → 'on-touch'. Pass `injector`
-// to call this outside an injection context (mirrors createErrorVisibility /
-// createErrorMessageSignal):
-// createErrorState({ field: form.email, fieldName: 'email', injector });
 
-// Character count without a directive
+// Character count
 const count = createCharacterCount({ field: form.bio, maxLength: 500 });
 
-// Common field-state flags in one object
-const flags = createFieldStateFlags(form.email);
-// flags.isTouched(), flags.isDirty(), flags.isValid(), flags.isInvalid(), flags.isPending()
+// Common flags: isTouched(), isDirty(), isValid(), isInvalid(), isPending()
+const flags = createFieldStateFlags(() => form.email());
 ```
+
+- `createErrorState()` returns `errors()` and `warnings()` as raw
+  `ValidationError` lists, not resolved text. Use `createErrorMessageSignal()`
+  for resolved messages, or `resolveValidationErrorMessage()` from
+  `@ngx-signal-forms/toolkit` for one message.
+- `createErrorState()` also returns `shouldShowErrors()`,
+  `shouldShowWarnings()`, `hasErrors()`, `hasWarnings()`, `errorId()`,
+  `warningId()`, and `fieldName()`. It takes `strategy`, `warningStrategy`,
+  `submittedStatus`, and `injector` options.
+- Call these factories in an injection context, or pass `injector`.
 
 ### createFieldOptionalitySummary / summarizeFieldOptionality
 
-Reach for these when a custom component needs to know whether a field is required/optional to render a marker or legend:
+Tell whether a form has required or optional fields, for example to show a
+legend:
 
 ```typescript
-// Required/optional leaf summary for a form tree (drives marking legends)
 const summary = summarizeFieldOptionality(formTree); // { hasRequired, hasOptional }
-const reactive = createFieldOptionalitySummary(() => this.formTree()); // computed signals
+const reactive = createFieldOptionalitySummary(() => this.formTree()); // signals
 ```
 
 ### createFieldsetAggregation / createErrorSummaryEntries
 
-The pure pipelines behind `NgxHeadlessFieldset` and `NgxHeadlessErrorSummary` — reach for these when building a custom grouped surface. No injection context required, but both take pre-resolved `showErrors` and `showWarnings` signals, which you produce with your own `createErrorVisibility()` and `createWarningVisibility()` calls. Passing one signal for both re-couples the channels and defeats the warning cascade. See the source JSDoc for the option/result contracts.
-
-Pass a reader of the current field state, such as `() => form.address()` or
-`() => form()`. For aggregate warning timing, pass `hasWarnings: true` to
-`createWarningVisibility()` and let aggregation check warning presence. Do not
-pass form-wide `errorVisibility`; a blocker on one field must not hide a
-sibling's warning. These low-level visibility helpers accept `configDefault`
-explicitly rather than injecting provider configuration themselves.
-
-The summary factory reads descendant errors, filters hidden/disabled fields,
-deduplicates per field, and maps resolved messages to entries. Orphan messages
-(no bound field) stay visible with `canFocus: false` rather than being dropped
-— render them as plain text, not a link or button. The fieldset factory
-distinguishes omitted/null `fields` from `[]`, which aggregates nothing.
-
-## ARIA Composition
-
-This entry point also re-exports the pure factories that
-[`docs/CUSTOM_WRAPPERS.md`](https://github.com/ngx-signal-forms/ngx-signal-forms/blob/main/docs/CUSTOM_WRAPPERS.md)
-teaches for hosts that own their own ARIA instead of using
-`NgxSignalFormAutoAria`:
-
-| Factory                            | Produces                                                            |
-| ---------------------------------- | ------------------------------------------------------------------- |
-| `createAriaInvalidSignal(...)`     | Strategy-aware `aria-invalid` signal                                |
-| `createAriaRequiredSignal(...)`    | `aria-required` signal from field state                             |
-| `createAriaDescribedBySignal(...)` | Composed `aria-describedby` chain (errors, warnings, hints)         |
-| `createHintIdsSignal(...)`         | Hint-id collection for the described-by chain                       |
-| `createAriaDescribedByBridge(...)` | Bridge for hosts whose described-by attribute another library owns  |
-| `createFieldNameResolver(...)`     | Field-name cascade (explicit → label `for` (opt-in) → control `id`) |
-
-`createAriaInvalidSignal`'s third argument is a `Signal<boolean>` saying
-whether the element that carries the attribute still has a layout box. It has
-no default: omit it and `aria-invalid` goes stale on a control inside a
-collapsed `<details>`, an inactive tab panel, or a non-current wizard step.
-The probe needs DI and a render hook, so it lives in the root entry, not here
-— use `createControlVisibilitySignal(resolveElement, injector)` when the
-wrapper has no render hook of its own, or `isElementCssVisible(el)` inside an
-existing `afterEveryRender` `earlyRead` when it already runs one. Both come
-from `@ngx-signal-forms/toolkit`.
-
-## Utility Functions
-
-Plain, dependency-free helpers used internally by the directives and factories above — safe to call directly for one-off reads:
+The functions behind `NgxHeadlessFieldset` and `NgxHeadlessErrorSummary`. They
+need no injection context. You pass in the timing. `createErrorVisibility()` and
+`createWarningVisibility()` read the `ngxSignalForm` context, so call them in an
+injection context, such as a class field, or pass `injector`.
 
 ```typescript
-// Safe field state reading
-readFieldFlag(field(), 'invalid'); // boolean, null-safe
-readErrors(field()); // uses errorSummary() or errors()
-readDirectErrors(field()); // only direct-field errors, not descendants
-dedupeValidationErrors(errors); // remove duplicates by kind+message
+import {
+  createErrorVisibility,
+  createWarningVisibility,
+} from '@ngx-signal-forms/toolkit';
+import { createErrorSummaryEntries } from '@ngx-signal-forms/toolkit/headless';
 
-// Human-readable field paths
+const fieldState = () => this.form();
+const summary = createErrorSummaryEntries({
+  fieldState,
+  showErrors: createErrorVisibility(fieldState),
+  showWarnings: createWarningVisibility(fieldState, { hasWarnings: true }),
+});
+// summary.entries(), summary.warningEntries(), summary.shouldShow(), ...
+```
+
+`createErrorSummaryEntries()` options:
+
+| Option          | Required | Description                                                       |
+| --------------- | -------- | ----------------------------------------------------------------- |
+| `fieldState`    | yes      | A function that returns the form's state, such as `() => form()`. |
+| `showErrors`    | yes      | A signal that says when errors show.                              |
+| `showWarnings`  | yes      | A signal that says when warnings show.                            |
+| `errorMessages` | no       | A message registry.                                               |
+| `labelResolver` | no       | A function that turns a field path into a label.                  |
+
+It returns `entries()`, `warningEntries()`, `hasErrors()`, `hasWarnings()`,
+`shouldShow()`, and `shouldShowWarnings()`.
+
+`createFieldsetAggregation()` takes `fieldState`, `showErrors`, and
+`showWarnings`, plus optional `fields`, `includeNestedErrors`, and
+`errorMessages`. It returns `aggregatedErrors()`, `aggregatedWarnings()`,
+`resolvedErrors()`, `resolvedWarnings()`, `hasErrors()`, `hasWarnings()`,
+`shouldShowErrors()`, and `shouldShowWarnings()`.
+
+Rules for the timing signals:
+
+- Pass two separate signals. One signal for both makes warnings follow error
+  timing.
+- For warnings, pass `hasWarnings: true` to `createWarningVisibility()`. Do not
+  pass a form-wide `errorVisibility`, or an error on one field hides the
+  warning on another.
+- These helpers do not read `provideNgxSignalFormsConfig()`. Pass
+  `configDefault` if you need the app default.
+
+## ARIA composition
+
+Use these factories when you write ARIA yourself instead of using auto-ARIA,
+for example in a custom wrapper. See
+[custom wrappers](../../../docs/CUSTOM_WRAPPERS.md) for a full example.
+
+| Factory                            | Produces                                                                    |
+| ---------------------------------- | --------------------------------------------------------------------------- |
+| `createAriaInvalidSignal(...)`     | `aria-invalid`, with error timing applied                                   |
+| `createAriaRequiredSignal(...)`    | `aria-required` from field state                                            |
+| `createAriaDescribedBySignal(...)` | `aria-describedby` from your ids, hint ids, and error and warning ids       |
+| `createHintIdsSignal(...)`         | The list of hint ids for `aria-describedby`                                 |
+| `createAriaDescribedByBridge(...)` | `aria-describedby` for a control whose library also writes that attribute   |
+| `createFieldNameResolver(...)`     | The field name: explicit name, then label `for` (opt-in), then control `id` |
+
+`createAriaInvalidSignal()` takes a third argument: a `Signal<boolean>` that
+is `true` while the control is visible on the page. Without it, a control in a
+closed `<details>`, a hidden tab, or another wizard step keeps a stale
+`aria-invalid`. Create it with `createControlVisibilitySignal(resolveElement,
+injector)` from `@ngx-signal-forms/toolkit`. If your code already runs an
+`afterEveryRender` read, call `isElementCssVisible(element)` there instead.
+
+## Utility functions
+
+Small helpers for one-off reads:
+
+```typescript
+readFieldFlag(field(), 'invalid'); // boolean, safe on null
+readErrors(field()); // errorSummary() or errors()
+readDirectErrors(field()); // errors of this field only, not its children
+dedupeValidationErrors(errors); // removes repeats with the same kind and message
+
 humanizeFieldPath('address.postalCode'); // 'Address / Postal code'
-
-// Unique ID generation
 createUniqueId('field'); // 'field-1', 'field-2', ...
 
-// Error-summary building blocks (what NgxHeadlessErrorSummary uses internally)
-toErrorSummaryEntry(error); // ValidationError → ErrorSummaryEntryData with focus() and canFocus
-resolveFieldNameFromError(error); // ValidationError → human-readable field name
-focusBoundControlFromError(error); // focus the control bound to an error (no-op when canFocus is false)
+// Error summary building blocks
+toErrorSummaryEntry(error); // ValidationError → entry with focus() and canFocus
+resolveFieldNameFromError(error); // ValidationError → readable field name
+focusBoundControlFromError(error); // focuses the error's control, if it has one
 ```
 
 ## Related documentation
 
-- [Toolkit core](../README.md) — error strategies, ARIA, configuration
-- [Form field wrapper](../form-field/README.md) — pre-styled wrapper component
-- [Assistive components](../assistive/README.md) — styled error, grouped panel feedback, hint, counter, and summary components
-- [Theming guide](../form-field/THEMING.md) — CSS custom properties for styled components
+- [Toolkit core](../README.md): configuration, auto-ARIA, and utilities
+- [Assistive components](../assistive/README.md): styled errors, summary,
+  hint, and character count
+- [Form field wrapper](../form-field/README.md): the complete styled field
+- [Custom wrappers](../../../docs/CUSTOM_WRAPPERS.md): build your own wrapper

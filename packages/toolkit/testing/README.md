@@ -1,25 +1,30 @@
 # @ngx-signal-forms/toolkit/testing
 
-> WCAG 2.2 AA accessibility test harness for `@ngx-signal-forms/toolkit`.
+Accessibility assertions for component tests. The helpers run
+[axe-core](https://github.com/dequelabs/axe-core) with the WCAG 2.2 AA rule
+set and fail the test on any violation. The toolkit tests its own components
+with the same helpers.
 
-## Why this entry point exists
+## When to use it
 
-The toolkit's ARIA wiring, live-region roles, and error-display markup are
-checked against the WCAG 2.2 AA axe-core ruleset as a hard-fail gate in the
-toolkit's own test suite (see [Accessibility](../../../README.md#accessibility)
-in the root README). This entry point publishes the same assertion helper so
-you can run the identical check against your own forms and custom wrappers.
+Use it to check your forms, custom controls, and custom wrappers in Vitest
+browser-mode or other DOM tests. Call it after you render a fixture.
 
-It has no dependency on the rest of the toolkit's public API — import it
-directly wherever you render a fixture in a test.
+It does not test behavior such as rendered messages or submit handling. For
+that, see [testing form components](../../../docs/TESTING.md). An axe scan is
+also not full WCAG evidence. Still test keyboard use, visible focus, and
+screen reader announcements.
+
+The helpers do not depend on the rest of the toolkit. You can use them on any
+Angular component.
 
 ## Install
 
-`axe-core` is an optional peer dependency of `@ngx-signal-forms/toolkit`; it
-is only required if you import from this entry point.
+`axe-core` is an optional peer dependency (`>=4.13.0 <5`). Install it only
+when you use `/testing`:
 
 ```bash
-npm install --save-dev axe-core@^4.13.0
+npm install --save-dev axe-core
 ```
 
 ## Import
@@ -34,12 +39,10 @@ import {
 } from '@ngx-signal-forms/toolkit/testing';
 ```
 
-## Usage
+## Quick start
 
-`expectNoA11yViolations` runs an axe-core audit against an element (or the
-whole `document.body` by default) and throws when any WCAG 2.2 AA violation
-is found. Call it once per rendered fixture in a Vitest browser-mode spec —
-it scans the whole subtree:
+`expectNoA11yViolations` scans an element and its children. Without an
+argument, it scans `document.body`. Call it once per rendered fixture:
 
 ```typescript
 import { expectNoA11yViolations } from '@ngx-signal-forms/toolkit/testing';
@@ -51,125 +54,124 @@ it('has no accessibility violations', async () => {
 });
 ```
 
-Pass extra axe `RunOptions` as a second argument to merge over the WCAG 2.2
-AA defaults. All keys are honored (`rules`, `resultTypes`, …) except
-`runOnly`: the WCAG 2.2 AA tag set is the hard-fail baseline and is not
-overridable. `runOnly` is omitted from this parameter's type, so passing it
-in an object literal is a compile error — and because TypeScript only
-enforces that omission on fresh literals, a `runOnly` smuggled in through a
-value widened to `axe.RunOptions` is overridden at runtime as well; the
-baseline always wins:
+Scan each state that matters, for example after a failed submit, when
+errors and warnings show.
 
-Apply the intended theme and keep applicable rules enabled, including contrast.
-An unstyled fixture is not a reason to disable contrast. Any narrow waiver must
-explain why the rule is outside that fixture's scope and name the representative
-themed browser check that covers it without the waiver.
+## API reference
 
-Also verify keyboard operation, visible focus, summary focus destinations, and
-error/warning transitions. Live-region hosts must precede their first message;
-verify announcements with a screen reader. Axe alone is not full WCAG evidence.
+| Export                                       | Kind     | Use it to                                                                                    |
+| -------------------------------------------- | -------- | -------------------------------------------------------------------------------------------- |
+| `expectNoA11yViolations(context?, options?)` | Function | Run axe with the WCAG 2.2 AA tags. Rejects when axe finds a violation.                       |
+| `createA11yValidator(options?)`              | Function | Build a validator like `expectNoA11yViolations` with a smaller tag set.                      |
+| `expectVisibleFocusIndicator(element)`       | Function | Assert that the focused element shows a visible focus indicator.                             |
+| `findAlertContaining(container, text)`       | Function | Find the first `[role="alert"]` element whose text contains `text`.                          |
+| `WCAG_22_AA_TAGS`                            | Constant | The axe tags that `expectNoA11yViolations` uses.                                             |
+| `WCAG_22_AA_TAG`                             | Type     | One tag from `WCAG_22_AA_TAGS`.                                                              |
+| `A11yCheckOptions`                           | Type     | axe `RunOptions` without `runOnly`, plus `incomplete`.                                       |
+| `A11yValidator`                              | Type     | The function type of `expectNoA11yViolations` and of a created validator.                    |
+| `IncompleteResultMode`                       | Type     | `'ignore' \| 'warn' \| 'fail'`. See [incomplete results](#reporting-axe-incomplete-results). |
+
+### Options
+
+The second argument takes axe `RunOptions`, such as `rules` or
+`resultTypes`, and merges them over the defaults. You cannot change the tag
+set: `runOnly` is not in the type, and the helper ignores it at runtime.
+
+```typescript
+await expectNoA11yViolations(container, {
+  resultTypes: ['violations'],
+});
+```
+
+Apply your real theme in the fixture and keep contrast rules on. If you turn
+off a rule, write down why the fixture does not need it and which themed test
+covers it.
 
 ## Scoping the tag baseline: `createA11yValidator(options?)`
 
-`expectNoA11yViolations` is deliberately locked to the full WCAG 2.2 AA tag
-set — that's the right call for the toolkit's own components, which are
-published primitives where any violation is a bug. A custom wrapper you're
-building doesn't always have that same all-or-nothing constraint: a fixture
-might only need a narrower rule subset checked at a given call site. Use
-`createA11yValidator` to build a validator scoped to your own tag subset,
-without giving up the same non-overridable `runOnly` guarantee:
+Use `createA11yValidator` when a fixture needs a smaller set of WCAG tags. The
+returned validator has the same call signature as `expectNoA11yViolations`:
 
 ```typescript
 import { createA11yValidator } from '@ngx-signal-forms/toolkit/testing';
 
-// Scoped to Level A only — narrower than the toolkit's own baseline.
 const expectNoLevelAViolations = createA11yValidator({
   tags: ['wcag2a', 'wcag21a'],
 });
 
-it('has no WCAG 2.2 Level A violations', async () => {
+it('has no WCAG Level A violations', async () => {
   const { container } = await render(MyCustomWrapper);
 
   await expectNoLevelAViolations(container);
 });
 ```
 
-The validator `createA11yValidator` returns has the exact same call shape as
-`expectNoA11yViolations` — `(context?, options?)` — so it's a drop-in
-replacement anywhere you'd use the default helper. `tags` accepts only
-`WCAG_22_AA_TAG` values (the same union `WCAG_22_AA_TAGS` is drawn from), so
-a typo'd or invented tag is a compile error rather than a silently-empty
-scan; there's no escape hatch to widen it to an arbitrary `string[]`. An
-empty array (`tags: []`) does type-check — the type has no minimum length —
-but `createA11yValidator` throws synchronously at creation time instead of
-handing back a validator that would silently pass every scan. Omit `tags`
-(or call `createA11yValidator()` with no arguments) to get a validator that
-behaves exactly like `expectNoA11yViolations` — the full baseline is the
-default, not a special case.
+- `tags` accepts only values from `WCAG_22_AA_TAGS`. A typo is a compile
+  error.
+- An empty array throws when you create the validator. An empty tag set would
+  pass every scan.
+- Without `tags`, the validator uses the full WCAG 2.2 AA set.
+- With `tags`, the failure message names the scoped tags that ran. Without
+  `tags`, it names the WCAG 2.2 AA baseline.
 
 ## Reporting axe `incomplete` results
 
-axe marks a check `incomplete` — rather than pass or fail — when it needs a
-human to confirm the result, most often `color-contrast` over a background it
-cannot resolve to one flat color. `expectNoA11yViolations` and
-`createA11yValidator`'s returned validator accept an `incomplete` option:
+axe reports a check as `incomplete` when a person must confirm it. This
+happens most often with `color-contrast` over a background that axe cannot
+compute. Both helpers accept an `incomplete` option:
 
 ```typescript
 await expectNoA11yViolations(container, { incomplete: 'warn' });
 ```
 
-- `'ignore'` (the default): incomplete results are not inspected at all — a
-  bare call behaves exactly as it did before this option existed.
-- `'warn'`: every incomplete result is logged via `console.warn` for manual
-  review, without failing the scan.
-- `'fail'`: same logging, and additionally throws if any `color-contrast`
-  result is incomplete. Every other rule's incomplete results are still only
-  logged.
+| Value                | Effect                                                                                    |
+| -------------------- | ----------------------------------------------------------------------------------------- |
+| `'ignore'` (default) | The helper does not read incomplete results.                                              |
+| `'warn'`             | The helper logs each incomplete result with `console.warn`. The scan passes.              |
+| `'fail'`             | The helper logs like `'warn'`. It also fails when a `color-contrast` check is incomplete. |
 
-`color-contrast` incomplete results are never turned into a hard failure by
-this package's own default, even though that is the rule most likely to hide
-a real WCAG 1.4.3 violation: every toolkit textual control paints a
-**transparent** `background-color` so its border can show through, and axe's
-static contrast algorithm cannot always trace a transparent-background
-element back to the color it actually renders over. Trying `'fail'` across
-the toolkit's own suite surfaced exactly one case — the outlined, invalid
-email field — and it was a false positive, not a real defect: the toolkit's
-own specs already prove that field's contrast is compliant, with manual
-color-blending math, for exactly this reason.
+Toolkit controls use a transparent background, so axe often cannot compute
+their contrast. That is why `'fail'` can report a false positive. Confirm a
+failure with a manual contrast check before you change your styles.
 
 ## Utilities
 
 ### `expectVisibleFocusIndicator(element)`
 
-Asserts that `element` is the current keyboard focus target (or a
-`:focus-within` ancestor of it) and that its computed style paints a visible
-focus indicator — WCAG 2.2 SC 2.4.7 (Focus Visible). No axe rule performs
-this check: axe only scans the resting, unfocused DOM. Move focus with a real
-keyboard interaction first:
+Asserts that `element` has keyboard focus, or contains the focused element,
+and shows a visible focus indicator. This checks WCAG 2.2 SC 2.4.7 (Focus
+Visible). axe cannot check it, because axe scans the page without focus.
+
+Move focus with the keyboard first. A call to `element.focus()` does not
+always match `:focus-visible` in Chromium:
 
 ```typescript
 import { expectVisibleFocusIndicator } from '@ngx-signal-forms/toolkit/testing';
 import { userEvent } from 'vitest/browser';
 
-await userEvent.click(anchor); // a preceding, focusable element
+await userEvent.click(anchor); // a focusable element before the target
 await userEvent.tab();
 
 expectVisibleFocusIndicator(document.activeElement!);
 ```
 
-This is a **presence** check only — it confirms an outline or box-shadow
-renders with a non-transparent color and a nonzero width/blur/spread, not
-that it is legible against its background. It does not measure contrast, so
-it is not a substitute for WCAG 1.4.11 (Non-text Contrast) coverage; the
-toolkit's own specs pair it with manual contrast math where a fixture needs
-to prove its focus indicator also clears the 3:1 floor.
+The rules:
+
+- If `element` is the focused element, it must match `:focus-visible`.
+- If `element` is a container, it must match `:focus-within`.
+- It must have an `outline` with a width and a visible color, or a
+  `box-shadow` with a blur or spread and a visible color.
+
+The helper checks that an indicator exists. It does not measure contrast, so
+it does not cover WCAG 1.4.11 (Non-text Contrast).
 
 ### `findAlertContaining(container, text)`
 
-Finds the first `[role="alert"]` element whose text contains the given
-string. Useful for asserting that the expected error message is on screen
-_before_ running the a11y scan, so a missing error fails with a clear
-assertion instead of a silent pass:
+Returns the first `[role="alert"]` element in `container` whose text contains
+`text`, or `undefined`. A form can hold several alert regions that stay in
+the page while empty, so `getByRole('alert')` can match more than one. Use
+this helper to check the message before the scan. A missing message then
+fails with a clear assertion:
 
 ```typescript
 const errorAlert = findAlertContaining(container, 'Email is required');
@@ -178,12 +180,9 @@ expect(errorAlert).toBeTruthy();
 await expectNoA11yViolations(container);
 ```
 
-Returns the matching `HTMLElement`, or `undefined` when no alert contains
-the text.
-
 ## `WCAG_22_AA_TAGS`
 
-The axe-core tag set `expectNoA11yViolations` scans with by default:
+The axe tags that `expectNoA11yViolations` uses:
 
 ```typescript
 export const WCAG_22_AA_TAGS = [
@@ -195,16 +194,20 @@ export const WCAG_22_AA_TAGS = [
 ] as const;
 ```
 
-WCAG is additive across versions, so the full 2.2 AA surface is the union of
-every prior level/version tag — there is no separate `wcag22a` tag because
-axe-core has no automated rule for either new 2.2 Level A criterion
-(Consistent Help, Redundant Entry); both must be verified manually. Automated
-scanning with this tag set therefore covers only a subset of full WCAG 2.2 AA
-conformance — see [Accessibility](../../../README.md#accessibility) in the
-root README for what the toolkit's own automation does and does not cover.
+WCAG 2.2 AA includes every A and AA criterion from 2.0 and 2.1, so the set
+lists each version. There is no `wcag22a` tag: axe has no automated rule for
+the two new Level A criteria (Consistent Help, Redundant Entry). Check those
+by hand.
 
 ## Related documentation
 
-- [Unit-testing a form component](../../../docs/TESTING.md) — TestBed/Vitest setup for the rest of a form component's behavior: rendered errors, `aria-invalid`/`aria-describedby`, and submit handling. This entry point covers only the WCAG conformance scan.
-- [Toolkit core](../README.md) — error strategies, ARIA, configuration
-- [Root README — Accessibility](../../../README.md#accessibility) — what the toolkit verifies in CI and what remains your responsibility
+- [Testing form components](../../../docs/TESTING.md): rendered errors, ARIA attributes, and submit handling
+- [Accessibility](../../../README.md#accessibility): what the toolkit wires and what you still own
+
+## For maintainers
+
+- The toolkit's own specs call these helpers with `incomplete: 'warn'` through
+  `testing/a11y-internal.ts`. The public default stays `'ignore'`.
+- `form-field-wrapper.state-focus-outline.browser.spec.ts` pairs
+  `expectVisibleFocusIndicator` with manual contrast math for the 3:1 check.
+- Test strategy: [ADR-0004](../../../docs/decisions/0004-wcag22-testing-strategy.md).
