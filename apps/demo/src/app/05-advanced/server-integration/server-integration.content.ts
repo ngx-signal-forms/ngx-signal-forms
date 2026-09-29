@@ -46,7 +46,6 @@ export const SERVER_INTEGRATION_CONTENT = {
           '6. Change Email to something else and submit → the success banner appears, and the state panel shows <code>dirty(): false</code> immediately (from <code>reset(value)</code>) — the values stay, only the pristine state resets.',
           "7. Click <strong>Reload from server</strong> → the button reads <em>Reloading…</em>, then the form re-populates from the fake API's in-memory record (whatever you last successfully saved).",
           '8. Tick <strong>Fail the next profile load</strong> in the page controls, then click <strong>Reload from server</strong> → the form is replaced by a <em>Could not load profile</em> alert (announced by screen readers) and a <strong>Retry</strong> button. Click <strong>Retry</strong> → the form returns prefilled, with <code>dirty(): false</code> and <code>touched(): false</code>.',
-          '8. Tick <strong>Fail the next profile load</strong> in the page controls, then click <strong>Reload from server</strong> → the form is replaced by a <em>Could not load profile</em> alert (announced by screen readers) and a <strong>Retry</strong> button. Click <strong>Retry</strong> → the form returns prefilled, with <code>dirty(): false</code> and <code>touched(): false</code>.',
         ],
       },
       {

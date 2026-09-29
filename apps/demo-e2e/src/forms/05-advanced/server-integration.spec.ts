@@ -164,6 +164,8 @@ test.describe('Advanced Scenarios - Server Integration (loaded)', () => {
 
       await expect(serverIntegration.loadErrorAlert).toBeVisible();
       await expect(serverIntegration.retryButton).toBeVisible();
+      // The focused Reload button was destroyed; focus must not fall to <body>.
+      await expect(serverIntegration.retryButton).toBeFocused();
       await expect(serverIntegration.nameInput).toHaveCount(0);
       await expect(serverIntegration.emailInput).toHaveCount(0);
       // The one-shot flag cleared itself when the load consumed it.
@@ -175,6 +177,7 @@ test.describe('Advanced Scenarios - Server Integration (loaded)', () => {
 
       await expect(serverIntegration.loadErrorAlert).toHaveCount(0);
       await expect(serverIntegration.nameInput).toHaveValue('Grace Hopper');
+      await expect(serverIntegration.nameInput).toBeFocused();
       await expect(serverIntegration.emailInput).toHaveValue(
         'grace@example.com',
       );

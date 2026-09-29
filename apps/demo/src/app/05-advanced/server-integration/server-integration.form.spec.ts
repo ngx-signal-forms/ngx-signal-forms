@@ -44,6 +44,14 @@ describe('ServerIntegrationComponent — profile load failure', () => {
     expect(screen.queryByRole('textbox')).not.toBeInTheDocument();
   });
 
+  it('does not steal focus when the first load fails', async () => {
+    loadProfile.mockRejectedValue(new Error('boom'));
+    await setup();
+
+    const retry = await screen.findByRole('button', { name: 'Retry' });
+    expect(retry).not.toHaveFocus();
+  });
+
   it('Retry reloads the profile and prefills a pristine form', async () => {
     const user = userEvent.setup();
     loadProfile.mockRejectedValueOnce(new Error('boom')).mockResolvedValueOnce({
@@ -54,9 +62,10 @@ describe('ServerIntegrationComponent — profile load failure', () => {
 
     await user.click(await screen.findByRole('button', { name: 'Retry' }));
 
-    expect(await screen.findByRole('textbox', { name: 'Name' })).toHaveValue(
-      'Grace Hopper',
-    );
+    const name = await screen.findByRole('textbox', { name: 'Name' });
+    expect(name).toHaveValue('Grace Hopper');
+    // Retry was destroyed while focused; focus must land on the restored form.
+    await vi.waitFor(() => expect(name).toHaveFocus());
     expect(screen.getByRole('textbox', { name: 'Email' })).toHaveValue(
       'grace@example.com',
     );

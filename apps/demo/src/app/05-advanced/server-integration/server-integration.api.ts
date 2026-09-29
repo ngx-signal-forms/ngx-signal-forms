@@ -50,11 +50,16 @@ export class ProfileApiService {
    */
   readonly failNextLoad = signal(false);
 
-  /** Simulates `GET /profile/me`. Rejects once when {@link failNextLoad} is set. */
+  /**
+   * Simulates `GET /profile/me`. Rejects once when {@link failNextLoad} is
+   * set. The flag is read and cleared when the call starts, so toggling it
+   * while a request is in flight affects the next request, not this one.
+   */
   async loadProfile(): Promise<ProfileFormModel> {
+    const shouldFail = this.failNextLoad();
+    this.failNextLoad.set(false);
     await delay(SIMULATED_LATENCY_MS);
-    if (this.failNextLoad()) {
-      this.failNextLoad.set(false);
+    if (shouldFail) {
       throw new Error('The profile service is unavailable.');
     }
     return { ...this.#record };
