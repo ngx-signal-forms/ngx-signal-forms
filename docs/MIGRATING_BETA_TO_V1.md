@@ -859,6 +859,9 @@ for the full input table and worked example. No migration action is required
 unless you previously relied on warnings sharing the error timing, in which
 case set `warningStrategy="inherit"` (or match `strategy` explicitly).
 
+`NgxFormFieldErrorSummary` has no `warningStrategy` input. It lists blocking
+errors only. Use `NgxHeadlessErrorSummary` when a summary needs warning timing.
+
 ### `NgxFormFieldError` — new inputs
 
 | Input             | Type                                           | Purpose                                                                                                                       |
