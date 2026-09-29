@@ -93,9 +93,10 @@ ngx-signal-forms — an Angular toolkit for working with Signal Forms.
   example**. Synonyms to avoid: "demo page", "demo shell".
 - **Example overview** — the teaching part of an example: its purpose and the
   toolkit features it uses. Synonym to avoid: "intro page".
-- **Live example** — the working part of an example: one form under
-  demonstration, its display controls, its debugger, and guidance on what to
-  try and how the form uses each feature. Synonym to avoid: "playground".
+- **Live example** — the working part of an example: the form, or the forms of
+  a multi-step flow, under demonstration, its display controls, its debugger,
+  and guidance on what to try and how the form uses each feature. Synonym to
+  avoid: "playground".
 - **App shell** — the frame that stays around every example: navigation, the
   routed outlet, the right rail and the render-error boundary. Synonym to
   avoid: "layout".
