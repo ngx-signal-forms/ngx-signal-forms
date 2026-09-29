@@ -1,6 +1,5 @@
 import { Routes } from '@angular/router';
 import { getRouteTitle, SITE_NAME } from '@ngx-signal-forms/demo-shared';
-import { WizardStore } from './05-advanced/advanced-wizard/stores/wizard.store';
 
 /**
  * Demo Application Routes
@@ -217,10 +216,8 @@ export const appRoutes: Routes = [
       },
       {
         path: 'advanced-wizard',
-        providers: [WizardStore],
-        loadComponent: () =>
-          import('./05-advanced/advanced-wizard/advanced-wizard.page'),
-        title: getRouteTitle('/advanced-scenarios/advanced-wizard'),
+        loadChildren: () =>
+          import('./05-advanced/advanced-wizard/advanced-wizard.routes'),
       },
       {
         path: 'single-model-wizard',
