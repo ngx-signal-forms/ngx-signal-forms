@@ -1,6 +1,7 @@
 import { ChangeDetectorRef, Component, signal } from '@angular/core';
 import { By } from '@angular/platform-browser';
 import {
+  applyEach,
   email as signalEmail,
   form,
   FormField,
@@ -9,6 +10,7 @@ import {
   validate,
 } from '@angular/forms/signals';
 import type { SubmittedStatus } from '@ngx-signal-forms/toolkit';
+import { provideFieldLabels } from '@ngx-signal-forms/toolkit/core';
 import { NgxHeadlessErrorSummary } from '@ngx-signal-forms/toolkit/headless';
 import { render, screen } from '@testing-library/angular';
 import { userEvent } from '@testing-library/user-event';
@@ -240,6 +242,71 @@ describe('NgxFormFieldErrorSummary', () => {
     expect(buttons.length).toBe(2);
     expect(screen.getByText(/Server error A/iu)).toBeTruthy();
     expect(screen.getByText(/Server error B/iu)).toBeTruthy();
+
+    const duplicateKeyWarning = warnSpy.mock.calls.find((call) =>
+      String(call[0]).includes('duplicated keys'),
+    );
+    expect(duplicateKeyWarning).toBeUndefined();
+
+    warnSpy.mockRestore();
+  });
+
+  it('keeps one row per field when two array rows share a label, kind and message', async () => {
+    // Two address rows both read "Street: Street is required". The label is
+    // display text only, so the row key must come from the field itself.
+    // A label-based key collides: Angular logs a duplicate-key warning and
+    // can reuse the wrong row, so a button would focus the other row's input.
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+    @Component({
+      selector: 'ngx-test-error-summary-shared-label',
+      imports: [FormField, NgxFormFieldErrorSummary],
+      providers: [provideFieldLabels(() => () => 'Street')],
+
+      template: `
+        @for (row of addressForm.rows; track $index) {
+          <input
+            [attr.data-testid]="'street-' + $index"
+            [formField]="row.street"
+          />
+        }
+        <ngx-form-field-error-summary
+          [formTree]="addressForm"
+          strategy="immediate"
+        />
+      `,
+    })
+    class TestComponent {
+      readonly model = signal({ rows: [{ street: '' }, { street: '' }] });
+      readonly addressForm = form(
+        this.model,
+        schema((path) => {
+          applyEach(path.rows, (row) => {
+            required(row.street, { message: 'Street is required' });
+          });
+        }),
+      );
+    }
+
+    const user = userEvent.setup();
+    const { fixture } = await render(TestComponent);
+
+    // Duplicate-key detection only runs when `@for` reconciles against an
+    // already rendered list, so force a second pass with fresh entries.
+    fixture.componentInstance.model.set({
+      rows: [{ street: '' }, { street: '' }],
+    });
+    fixture.detectChanges();
+
+    const buttons = screen.getAllByRole('button', {
+      name: /Street\s*:\s*Street is required/iu,
+    });
+    expect(buttons).toHaveLength(2);
+
+    await user.click(buttons[0]);
+    expect(document.activeElement).toBe(screen.getByTestId('street-0'));
+    await user.click(buttons[1]);
+    expect(document.activeElement).toBe(screen.getByTestId('street-1'));
 
     const duplicateKeyWarning = warnSpy.mock.calls.find((call) =>
       String(call[0]).includes('duplicated keys'),
@@ -726,6 +793,7 @@ describe('NgxFormFieldErrorSummary', () => {
         configurable: true,
         value: () => [
           {
+            key: 'email',
             kind: 'required',
             message: 'Email is required',
             fieldName: 'Email',
@@ -735,6 +803,7 @@ describe('NgxFormFieldErrorSummary', () => {
             },
           },
           {
+            key: 'server',
             kind: 'server',
             message: 'Something went wrong',
             fieldName: 'Server',

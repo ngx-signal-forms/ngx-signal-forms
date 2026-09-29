@@ -54,8 +54,8 @@ Each summary gate includes presence. Warning rows use their own gate, never
 ```html
 <section ngxHeadlessErrorSummary #summary="errorSummary" [formTree]="myForm">
   <div role="alert">
-    @if (summary.shouldShow()) { @for (entry of summary.entries(); track $index)
-    {
+    @if (summary.shouldShow()) { @for (entry of summary.entries(); track
+    entry.key) {
     <button type="button" (click)="entry.focus()">
       {{ entry.fieldName }}: {{ entry.message }}
     </button>
@@ -63,7 +63,7 @@ Each summary gate includes presence. Warning rows use their own gate, never
   </div>
   <div role="status">
     @if (summary.shouldShowWarnings()) { @for (entry of
-    summary.warningEntries(); track $index) {
+    summary.warningEntries(); track entry.key) {
     <p>{{ entry.fieldName }}: {{ entry.message }}</p>
     } }
   </div>
