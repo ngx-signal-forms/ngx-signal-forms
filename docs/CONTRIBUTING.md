@@ -6,6 +6,15 @@ This is the entry point for work on the repository. Code and agent rules live
 in [`AGENTS.md`](../AGENTS.md). Repository layout and packaging live in
 [Package architecture](./PACKAGE_ARCHITECTURE.md).
 
+## Issues and pull requests
+
+For now, only repository collaborators can open pull requests. To report a bug
+or ask for a feature, open an
+[issue](https://github.com/ngx-signal-forms/ngx-signal-forms/issues/new/choose).
+For questions and ideas, use
+[Discussions](https://github.com/ngx-signal-forms/ngx-signal-forms/discussions).
+For a security problem, follow the [security policy](../SECURITY.md).
+
 ## Setup
 
 1. Use the Node version in [`.node-version`](../.node-version).

@@ -1,0 +1,6 @@
+# yaml-language-server: $schema=https://coderabbit.ai/integrations/schema.v2.json
+# Settings not set here come from the CodeRabbit UI or its defaults.
+reviews:
+  # Approve the PR when all CodeRabbit comments are resolved, the latest
+  # commit is reviewed, and no pre-merge checks fail.
+  request_changes_workflow: true
