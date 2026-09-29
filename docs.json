@@ -1,0 +1,95 @@
+{
+  "$schema": "https://context7.com/schema/docs7.json",
+  "name": "ngx-signal-forms",
+  "colors": {
+    "primary": "#4f46e5"
+  },
+  "filterSidebar": true,
+  "navigation": {
+    "groups": [
+      {
+        "group": "Get started",
+        "pages": [
+          "README",
+          "docs/ANGULAR_VS_TOOLKIT",
+          "docs/BEST_PRACTICES",
+          "docs/FAQ",
+          "COMPATIBILITY"
+        ]
+      },
+      {
+        "group": "Guides",
+        "pages": [
+          "docs/VALIDATION_STRATEGY",
+          "docs/WARNINGS_SUPPORT",
+          "docs/CUSTOM_CONTROLS",
+          "docs/CUSTOM_WRAPPERS",
+          "docs/COMPLEX_NESTED_FORMS",
+          "docs/CSS_FRAMEWORK_INTEGRATION",
+          "docs/TESTING"
+        ]
+      },
+      {
+        "group": "Packages",
+        "pages": [
+          "packages/toolkit/README",
+          "packages/toolkit/assistive/README",
+          "packages/toolkit/form-field/README",
+          "packages/toolkit/form-field/THEMING",
+          "packages/toolkit/headless/README",
+          "packages/toolkit/testing/README",
+          "packages/toolkit/vest/README"
+        ]
+      },
+      {
+        "group": "Migration",
+        "pages": [
+          "docs/MIGRATING_FROM_REACTIVE_FORMS",
+          "docs/MIGRATING_FROM_NGX_VEST_FORMS",
+          "docs/MIGRATING_BETA_TO_V1",
+          "docs/MIGRATING_CSS_VARS",
+          {
+            "group": "Release candidates",
+            "pages": [
+              "docs/migrations/README",
+              "docs/migrations/v1.0.0-rc.16",
+              "docs/migrations/v1.0.0-rc.15",
+              "docs/migrations/v1.0.0-rc.14",
+              "docs/migrations/v1.0.0-rc.13",
+              "docs/migrations/v1.0.0-rc.12",
+              "docs/migrations/v1.0.0-rc.11"
+            ]
+          }
+        ]
+      },
+      {
+        "group": "Contributing",
+        "pages": [
+          "docs/CONTRIBUTING",
+          "docs/PACKAGE_ARCHITECTURE",
+          "docs/ANGULAR_PUBLIC_API_POLICY",
+          "docs/COVERAGE",
+          {
+            "group": "Decisions",
+            "pages": [
+              "docs/decisions/0001-control-semantics-architecture",
+              "docs/decisions/0002-ngx-mat-forms-package-shape",
+              "docs/decisions/0003-deduplicate-error-message-resolution",
+              "docs/decisions/0004-wcag22-testing-strategy",
+              "docs/decisions/0005-aria-primitives-as-factories",
+              "docs/decisions/0006-one-cascade-seam",
+              "docs/decisions/0007-warning-display-timing-cascade",
+              "docs/decisions/0008-vest-suite-input-is-the-bound-path",
+              "docs/decisions/0009-vest-run-coordination-is-its-own-seam",
+              "docs/decisions/0010-field-identity-shadows-registries-per-channel",
+              "docs/decisions/0011-field-identity-provider-host-directive",
+              "docs/decisions/0012-error-summary-announces-alone",
+              "docs/decisions/0013-block-pr-on-new-demo-a11y-violations",
+              "docs/decisions/0015-hints-stay-visible-while-an-error-shows"
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}
