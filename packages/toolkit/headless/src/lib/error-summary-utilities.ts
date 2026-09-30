@@ -28,8 +28,21 @@ import type { ValidationErrorWithFieldTree } from './field-state-utilities';
  * @group Utility Functions
  */
 export interface ErrorSummaryEntryData {
+  /**
+   * Identity of this entry, unique within one summary list. Use it as the
+   * `@for` track key. Treat the value as opaque.
+   *
+   * Built from the field's unique name (not its label), the error `kind`
+   * and the raw validator message. The message is in the key because one
+   * field can keep two errors of one kind with different messages. A
+   * message that comes from the error-message registry does not change the
+   * key. An entry with
+   * no bound field never shares a key with a bound one.
+   */
+  readonly key: string;
   readonly kind: string;
   readonly message: string;
+  /** Display label for the field. Not unique: use {@link key} for identity. */
   readonly fieldName: string;
   readonly focus: () => void;
   /**
@@ -82,7 +95,7 @@ export function dedupeValidationErrorsByField(
   const result: ValidationError[] = [];
 
   for (const error of errors) {
-    const key = `${fieldIdentityKey(error)}::${error.kind}::${error.message ?? ''}`;
+    const key = errorSummaryEntryKey(error);
     if (seen.has(key)) {
       continue;
     }
@@ -93,7 +106,21 @@ export function dedupeValidationErrorsByField(
   return result;
 }
 
-function fieldIdentityKey(error: ValidationError): string {
+/**
+ * The {@link ErrorSummaryEntryData.key} for an error: the field's unique
+ * name (or `null` when there is no bound field), the kind and the raw
+ * message. JSON encoding keeps the parts apart, so no field name or message
+ * can make two different errors produce the same key.
+ */
+function errorSummaryEntryKey(error: ValidationError): string {
+  return JSON.stringify([
+    fieldIdentity(error),
+    error.kind,
+    error.message ?? '',
+  ]);
+}
+
+function fieldIdentity(error: ValidationError): string | null {
   const e = error as ValidationErrorWithFieldTree;
   if (typeof e.fieldTree === 'function') {
     const fieldState = e.fieldTree();
@@ -101,7 +128,7 @@ function fieldIdentityKey(error: ValidationError): string {
       return fieldState.name();
     }
   }
-  return '';
+  return null;
 }
 
 /**
@@ -195,6 +222,7 @@ export function toErrorSummaryEntry(
   const fieldName = resolveFieldNameFromError(error, labelResolver);
 
   return {
+    key: errorSummaryEntryKey(error),
     kind: error.kind,
     message,
     fieldName,

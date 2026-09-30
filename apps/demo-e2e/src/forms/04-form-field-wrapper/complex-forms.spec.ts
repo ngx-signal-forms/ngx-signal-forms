@@ -765,14 +765,18 @@ test.describe('Form Field Wrapper - Complex Forms', () => {
   });
 
   test.describe('Mixed Control Families', () => {
-    test('should render newsletter as a switch with correct data attributes', async () => {
+    test('should infer the switch layout for a native role="switch" checkbox', async () => {
       const newsletter = page.newsletterSwitch;
       await expect(newsletter).toBeVisible();
       await expect(newsletter).toHaveAttribute('role', 'switch');
-      await expect(newsletter).toHaveAttribute(
+      // The demo sets no ngxSignalFormControl attribute on the switch, so the
+      // wrapper's switch layout comes from inference alone.
+      await expect(newsletter).not.toHaveAttribute(
         'data-ngx-signal-form-control-kind',
-        'switch',
       );
+      await expect(
+        newsletter.locator('xpath=ancestor::ngx-form-field-wrapper'),
+      ).toHaveClass(/ngx-signal-form-field-wrapper--switch/);
     });
 
     test('should render notifications as a checkbox with correct data attributes', async () => {

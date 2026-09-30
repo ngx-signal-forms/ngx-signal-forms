@@ -9,6 +9,7 @@ import {
 import { bootstrapApplication } from '@angular/platform-browser';
 import {
   provideRouter,
+  withAutoCleanupInjectors,
   withComponentInputBinding,
   withEnabledBlockingInitialNavigation,
   withViewTransitions,
@@ -65,7 +66,6 @@ void (async () => {
       provideHttpClient(),
       provideNgxSignalFormsConfig({
         defaultErrorStrategy: 'on-touch',
-        autoAria: true,
       }),
       provideNgxSignalFormControlPresets({
         switch: { layout: 'inline-control', ariaMode: 'auto' },
@@ -74,6 +74,7 @@ void (async () => {
         appRoutes,
         withEnabledBlockingInitialNavigation(),
         withComponentInputBinding(),
+        withAutoCleanupInjectors(),
         withViewTransitions(),
       ),
     ],

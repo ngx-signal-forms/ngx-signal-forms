@@ -216,9 +216,8 @@ export const appRoutes: Routes = [
       },
       {
         path: 'advanced-wizard',
-        loadComponent: () =>
-          import('./05-advanced/advanced-wizard/advanced-wizard.page'),
-        title: getRouteTitle('/advanced-scenarios/advanced-wizard'),
+        loadChildren: () =>
+          import('./05-advanced/advanced-wizard/advanced-wizard.routes'),
       },
       {
         path: 'single-model-wizard',

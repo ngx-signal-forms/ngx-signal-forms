@@ -488,7 +488,8 @@ that itself.
 
 A renderer is a standalone component, passed as `{ component }`. Declare
 every input the caller sets with `input()`. An input the component does not
-declare never reaches it, and Angular can log an error for it.
+declare never reaches it. In dev mode Angular logs an `NG0303` error for it,
+and it throws if the app sets `errorOnUnknownProperties`.
 
 | Caller                                              | Error renderer inputs                                                      |
 | --------------------------------------------------- | -------------------------------------------------------------------------- |

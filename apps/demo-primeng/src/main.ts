@@ -39,7 +39,6 @@ void (async () => {
         // Warnings are informational, so this demo shows them immediately
         // instead of waiting for the ADR-0007 terminal default (`'on-touch'`).
         defaultWarningStrategy: 'immediate',
-        autoAria: true,
       }),
       // Single bootstrap entry point for the PrimeNG reference renderers.
       // Registers both NGX_FORM_FIELD_ERROR_RENDERER and
