@@ -178,7 +178,7 @@ export class LegacySignupComponent {
 ### After: Angular Signal Forms + toolkit Vest adapter
 
 ```typescript
-import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { Component, signal } from '@angular/core';
 import { form, FormField } from '@angular/forms/signals';
 import {
   createOnInvalidHandler,
@@ -207,7 +207,6 @@ const signupSuite = create((data: SignupModel) => {
 @Component({
   selector: 'ngx-signup-form',
   imports: [FormField, NgxSignalFormToolkit, NgxFormField],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <form [formRoot]="signupForm" ngxSignalForm>
       <ngx-form-field-wrapper [formField]="signupForm.email">

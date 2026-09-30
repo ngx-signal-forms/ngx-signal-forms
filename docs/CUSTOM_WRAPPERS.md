@@ -38,7 +38,6 @@ on it.
 ```typescript
 import { NgComponentOutlet } from '@angular/common';
 import {
-  ChangeDetectionStrategy,
   Component,
   computed,
   contentChildren,
@@ -66,7 +65,6 @@ import { createFieldNameResolver } from '@ngx-signal-forms/toolkit/headless';
 @Component({
   // The attribute in the selector keeps [formField] off the wrapper element.
   selector: 'my-form-field[myFormField]',
-  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [NgComponentOutlet],
   providers: [
     // 1. Tell projected hints and the error renderer the field name.

@@ -62,7 +62,7 @@ Keep `[formRoot]` and `ngxSignalForm` on the form. Set
 errors at the start of the action:
 
 ```typescript
-import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { Component, signal } from '@angular/core';
 import { form, FormField } from '@angular/forms/signals';
 import {
   createOnInvalidHandler,
@@ -74,7 +74,6 @@ import { signupSchema } from './signup.validations';
 
 @Component({
   selector: 'app-signup',
-  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [FormField, NgxSignalFormToolkit, NgxFormField],
   templateUrl: './signup.html',
 })
@@ -136,7 +135,7 @@ code before submit. Write one native `(submit)` handler, and do not add
 `[formRoot]` to the same form:
 
 ```typescript
-import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { Component, signal } from '@angular/core';
 import { form, FormField } from '@angular/forms/signals';
 import { submitWithWarnings } from '@ngx-signal-forms/toolkit';
 import { NgxFormField } from '@ngx-signal-forms/toolkit/form-field';
@@ -144,7 +143,6 @@ import { profileSchema } from './profile.validations';
 
 @Component({
   selector: 'app-profile',
-  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [FormField, NgxFormField],
   templateUrl: './profile.html',
 })

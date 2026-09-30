@@ -73,7 +73,7 @@ A profile form with your own layout. Copy it into an Angular application and
 render `<app-profile />`.
 
 ```typescript
-import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { Component, signal } from '@angular/core';
 import {
   email,
   form,
@@ -94,7 +94,6 @@ import {
 
 @Component({
   selector: 'app-profile',
-  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     FormField,
     NgxSignalFormToolkit,
