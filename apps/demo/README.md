@@ -195,7 +195,7 @@ check contrast for each theme.
 
 - Import `NgxSignalFormToolkit` bundle (recommended)
 - Or import individual directives from `@ngx-signal-forms/toolkit`
-- Verify toolkit is built: `pnpm nx run toolkit:post-build`
+- Verify toolkit is built: `pnpm nx build toolkit`
 
 ### Accessibility Issues
 
