@@ -196,6 +196,7 @@ removed. Replace them with the v1 equivalents.
 | `fieldNameResolver` config                  | Put an `id` on the bound control element                                                                                                                                                                                                                                                                                                                               |
 | `strictFieldResolution` config              | Removed — strict by default                                                                                                                                                                                                                                                                                                                                            |
 | `debug` config field                        | Removed — use the `/debugger` entry point instead                                                                                                                                                                                                                                                                                                                      |
+| `autoAria` config field                     | Removed — it had no effect (#584). Opt out per control kind with `ariaMode: 'manual'` in `provideNgxSignalFormControlPresets()`; the preset reaches only hosts that declare their kind with `ngxSignalFormControl`, so add it to each affected host. Or opt out per control with `ngxSignalFormControlAria="manual"` or `ngxSignalFormAutoAriaDisabled`                |
 | `injectFormConfig()`                        | `inject(NGX_SIGNAL_FORMS_CONFIG)`                                                                                                                                                                                                                                                                                                                                      |
 | `NgxFloatingLabelDirective`                 | `<ngx-form-field-wrapper appearance="outline">`                                                                                                                                                                                                                                                                                                                        |
 | `NgxSignalFormsUserConfig` as `DeepPartial` | `Partial<NgxSignalFormsConfig>` (top-level only)                                                                                                                                                                                                                                                                                                                       |
@@ -858,6 +859,9 @@ See [`WARNINGS_SUPPORT.md`](./WARNINGS_SUPPORT.md#when-warnings-appear--warnings
 for the full input table and worked example. No migration action is required
 unless you previously relied on warnings sharing the error timing, in which
 case set `warningStrategy="inherit"` (or match `strategy` explicitly).
+
+`NgxFormFieldErrorSummary` has no `warningStrategy` input. It lists blocking
+errors only. Use `NgxHeadlessErrorSummary` when a summary needs warning timing.
 
 ### `NgxFormFieldError` — new inputs
 

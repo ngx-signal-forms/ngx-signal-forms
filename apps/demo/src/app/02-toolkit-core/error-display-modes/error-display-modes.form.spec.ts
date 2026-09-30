@@ -30,7 +30,6 @@ describe('ErrorDisplayModesFormComponent', () => {
         provideZonelessChangeDetection(),
         provideNgxSignalFormsConfig({
           defaultErrorStrategy: 'on-touch',
-          autoAria: true,
         }),
       ],
     });
@@ -103,7 +102,6 @@ describe('ErrorDisplayModesFormComponent', () => {
         provideZonelessChangeDetection(),
         provideNgxSignalFormsConfig({
           defaultErrorStrategy: 'on-touch',
-          autoAria: true,
         }),
       ],
     }).compileComponents();

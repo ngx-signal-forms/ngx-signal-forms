@@ -11,7 +11,7 @@ A realistic, non-trivial form with nested objects, dynamic arrays, and mixed con
 - `NgxFormFieldset` — realistic section structure with grouped state.
 - Wrapper-owned grouped radio feedback for the contact-method choice group.
 - Dynamic array mutations on signal models (add/remove skills and contacts).
-- Explicit `ngxSignalFormControl="switch|checkbox"` semantics so switch/checkbox rows land on the right wrapper layout without projection heuristics.
+- Explicit `ngxSignalFormControl="checkbox"` semantics so checkbox rows land on the right wrapper layout. Native `role="switch"` checkboxes are recognized automatically.
 
 ## Form model
 

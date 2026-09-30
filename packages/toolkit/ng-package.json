@@ -1,6 +1,6 @@
 {
   "$schema": "../../node_modules/ng-packagr/ng-package.schema.json",
-  "dest": "../../dist/packages/toolkit",
+  "dest": "../../dist/packages/toolkit-ng-packagr",
   "lib": {
     "entryFile": "index.ts"
   },

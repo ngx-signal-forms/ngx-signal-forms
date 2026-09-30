@@ -234,7 +234,7 @@ declare class NgxFormFieldCharacterCount {
      *
      * @default 'right'
      */
-    readonly position: _angular_core.InputSignal<"left" | "right">;
+    readonly position: _angular_core.InputSignal<'left' | 'right'>;
     /**
      * Enable/disable color progression based on character limit.
      *
@@ -351,7 +351,7 @@ declare class NgxFormFieldCharacterCount {
     static ɵcmp: _angular_core.ɵɵComponentDeclaration<NgxFormFieldCharacterCount, "ngx-form-field-character-count", never, { "formField": { "alias": "formField"; "required": true; "isSignal": true; }; "maxLength": { "alias": "maxLength"; "required": false; "isSignal": true; }; "position": { "alias": "position"; "required": false; "isSignal": true; }; "showLimitColors": { "alias": "showLimitColors"; "required": false; "isSignal": true; }; "liveAnnounce": { "alias": "liveAnnounce"; "required": false; "isSignal": true; }; "announcementFormatter": { "alias": "announcementFormatter"; "required": false; "isSignal": true; }; }, {}, never, never, true, never>;
 }
 
-type NgxFormFieldListStyle = 'plain' | 'bullets';
+type NgxFormFieldListStyle = 'bullets' | 'plain';
 /**
  * @deprecated Use {@link NgxFormFieldListStyle} instead.
  */
@@ -418,7 +418,7 @@ type NgxFormFieldErrorPresentation = 'inline' | 'panel';
  *
  * @example Simplest Usage (no NgxSignalFormToolkit needed!)
  * ```html
- * <form (submit)="save($event)" novalidate>
+ * <form [formRoot]="form">
  *   <input [formField]="form.email" />
  *   <ngx-form-field-error [formField]="form.email" fieldName="email" />
  *   <button type="submit">Submit</button>
@@ -825,8 +825,9 @@ declare class NgxFormMarkingLegend {
  * dispatched renderer receives the metadata `<ngx-form-field-hint>` already
  * exposes as inputs: `{ resolvedFieldName: string | null, resolvedId:
  * string, position: 'left' | 'right' | null }` — renderers must declare all
- * three with `input()` because Angular's `componentRef.setInput` rejects
- * writes to undeclared inputs.
+ * three with `input()`. `componentRef.setInput` skips an undeclared input and,
+ * in dev mode, logs an `NG0303` error (it throws when the app sets
+ * `errorOnUnknownProperties`).
  *
  * The dispatch only runs in browser contexts (`afterNextRender`); SSR keeps
  * the projected fallback content. When no renderer is registered, content

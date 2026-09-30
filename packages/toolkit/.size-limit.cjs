@@ -10,7 +10,7 @@
 // enough that routine feature work does not.
 //
 // To update after an intentional size change:
-//   1. `pnpm nx run toolkit:post-build`
+//   1. `pnpm nx build toolkit`
 //   2. `pnpm nx run toolkit:check-size` and read the reported size.
 //   3. Set `limit` to that size plus ~25% headroom.
 module.exports = [
