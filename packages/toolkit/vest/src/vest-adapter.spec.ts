@@ -4,7 +4,7 @@ import { TestBed } from '@angular/core/testing';
 import { render, screen } from '@testing-library/angular';
 import userEvent from '@testing-library/user-event';
 import { create, enforce, test as vestTest, warn } from 'vest';
-import { describe, expect, it, vi } from 'vitest';
+import { assert, describe, expect, it, vi } from 'vitest';
 import {
   createVestAdapter,
   sharedVestAdapter,
@@ -253,7 +253,9 @@ describe('createVestAdapter', () => {
     }
 
     const { fixture } = await render(TestComponent);
-    const fieldTree = fixture.componentInstance.f.email;
+    // The suite validates the whole `{ email }` model, so the run is keyed on
+    // the root field tree, which is the tree that owns that value.
+    const fieldTree = fixture.componentInstance.f;
 
     const valueA = { email: '' };
     const first = adapter.runVestSuite({ suite, fieldTree, value: valueA });
@@ -603,7 +605,9 @@ describe('createVestAdapter', () => {
     const { fixture } = await render(TestComponent);
     await TestBed.inject(ApplicationRef).whenStable();
 
-    const skuErrors = fixture.componentInstance.f.items[0].sku().errors();
+    const firstItem = fixture.componentInstance.f.items[0];
+    assert(firstItem, 'expected a field tree for items[0]');
+    const skuErrors = firstItem.sku().errors();
     expect(skuErrors.some((error) => error.message === 'SKU is required')).toBe(
       true,
     );
@@ -643,7 +647,9 @@ describe('createVestAdapter', () => {
     const { fixture } = await render(TestComponent);
     await TestBed.inject(ApplicationRef).whenStable();
 
-    const skuErrors = fixture.componentInstance.f.items[0].sku().errors();
+    const firstItem = fixture.componentInstance.f.items[0];
+    assert(firstItem, 'expected a field tree for items[0]');
+    const skuErrors = firstItem.sku().errors();
     expect(skuErrors.some((error) => error.message === 'SKU is required')).toBe(
       true,
     );
