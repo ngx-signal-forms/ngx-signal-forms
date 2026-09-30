@@ -1,7 +1,7 @@
 import { signal } from '@angular/core';
 import { NgxSignalFormControl } from '@ngx-signal-forms/toolkit';
 import { render } from '@testing-library/angular';
-import { describe, expect, it } from 'vitest';
+import { assert, describe, expect, it } from 'vitest';
 import { NgxFormFieldWrapper } from './form-field-wrapper';
 
 const mockField = () => {
@@ -72,10 +72,10 @@ describe('NgxFormFieldWrapper — combobox field chrome', () => {
 
     const native = container.querySelector<HTMLElement>('#productName');
     const custom = container.querySelector<HTMLElement>('#frameworkSelect');
-    expect(native && custom).toBeTruthy();
+    assert(native && custom, 'expected both the native and the custom control');
 
-    const nativeStyle = getComputedStyle(native!);
-    const customStyle = getComputedStyle(custom!);
+    const nativeStyle = getComputedStyle(native);
+    const customStyle = getComputedStyle(custom);
 
     expect(customStyle.fontSize).toBe(nativeStyle.fontSize);
     expect(customStyle.lineHeight).toBe(nativeStyle.lineHeight);

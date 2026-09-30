@@ -1,11 +1,5 @@
 import { Component, signal } from '@angular/core';
-import {
-  FormField,
-  form,
-  required,
-  schema,
-  validate,
-} from '@angular/forms/signals';
+import { FormField, form, required, validate } from '@angular/forms/signals';
 import { render } from '@testing-library/angular';
 import { page, userEvent } from 'vitest/browser';
 import { describe, expect, it } from 'vitest';
@@ -37,21 +31,18 @@ describe('NgxFormFieldWrapper — warning display timing (issue #264)', () => {
   })
   class WarningImmediateComponent {
     // Field with only warnings - warnings should show immediately due to defaultWarningStrategy
-    protected readonly field = form(
-      signal({ username: '' }),
-      schema((path) => {
-        validate(path.username, (ctx) => {
-          const value = ctx.value();
-          if (value && value.length > 0 && value.length < 3) {
-            return {
-              kind: 'warn:too-short',
-              message: 'Consider 3+ characters',
-            };
-          }
-          return null;
-        });
-      }),
-    );
+    protected readonly field = form(signal({ username: '' }), (path) => {
+      validate(path.username, (ctx) => {
+        const value = ctx.value();
+        if (value && value.length > 0 && value.length < 3) {
+          return {
+            kind: 'warn:too-short',
+            message: 'Consider 3+ characters',
+          };
+        }
+        return null;
+      });
+    });
   }
 
   @Component({
@@ -75,21 +66,18 @@ describe('NgxFormFieldWrapper — warning display timing (issue #264)', () => {
   })
   class WarningOnTouchComponent {
     // Field with only warnings - warnings should NOT show until touched
-    protected readonly field = form(
-      signal({ email: '' }),
-      schema((path) => {
-        validate(path.email, (ctx) => {
-          const value = ctx.value();
-          if (value && value.length > 0 && !value.includes('@')) {
-            return {
-              kind: 'warn:missing-at',
-              message: 'Email should include @',
-            };
-          }
-          return null;
-        });
-      }),
-    );
+    protected readonly field = form(signal({ email: '' }), (path) => {
+      validate(path.email, (ctx) => {
+        const value = ctx.value();
+        if (value && value.length > 0 && !value.includes('@')) {
+          return {
+            kind: 'warn:missing-at',
+            message: 'Email should include @',
+          };
+        }
+        return null;
+      });
+    });
   }
 
   @Component({
@@ -120,21 +108,18 @@ describe('NgxFormFieldWrapper — warning display timing (issue #264)', () => {
     ],
   })
   class WarningOnSubmitComponent {
-    protected readonly form = form(
-      signal({ email: '' }),
-      schema((path) => {
-        validate(path.email, (ctx) => {
-          const value = ctx.value();
-          if (value && value.length > 0 && !value.includes('@')) {
-            return {
-              kind: 'warn:missing-at',
-              message: 'Email should include @',
-            };
-          }
-          return null;
-        });
-      }),
-    );
+    protected readonly form = form(signal({ email: '' }), (path) => {
+      validate(path.email, (ctx) => {
+        const value = ctx.value();
+        if (value && value.length > 0 && !value.includes('@')) {
+          return {
+            kind: 'warn:missing-at',
+            message: 'Email should include @',
+          };
+        }
+        return null;
+      });
+    });
   }
 
   @Component({
@@ -154,21 +139,18 @@ describe('NgxFormFieldWrapper — warning display timing (issue #264)', () => {
   })
   class ExplicitWarningStrategyComponent {
     // Explicit warningStrategy on wrapper overrides config default
-    protected readonly field = form(
-      signal({ password: '' }),
-      schema((path) => {
-        validate(path.password, (ctx) => {
-          const value = ctx.value();
-          if (value && value.length > 0 && value.length < 8) {
-            return {
-              kind: 'warn:weak-password',
-              message: 'Consider 8+ characters',
-            };
-          }
-          return null;
-        });
-      }),
-    );
+    protected readonly field = form(signal({ password: '' }), (path) => {
+      validate(path.password, (ctx) => {
+        const value = ctx.value();
+        if (value && value.length > 0 && value.length < 8) {
+          return {
+            kind: 'warn:weak-password',
+            message: 'Consider 8+ characters',
+          };
+        }
+        return null;
+      });
+    });
   }
 
   @Component({
@@ -193,24 +175,21 @@ describe('NgxFormFieldWrapper — warning display timing (issue #264)', () => {
   class WarningsWithBlockingErrorsComponent {
     // Field with both blocking errors and warnings
     // Warnings should NOT show when there are blocking errors
-    protected readonly field = form(
-      signal({ confirm: '' }),
-      schema((path) => {
-        required(path.confirm, { message: 'Confirm is required' });
-        validate(path.confirm, (ctx) => {
-          const value = ctx.value();
-          // Return both a blocking error and a warning for short values
-          if (value && value.length > 0 && value.length < 8) {
-            // Return both blocking error and warning as an array
-            return [
-              { kind: 'too-short', message: 'Password too short' },
-              { kind: 'warn:weak-password', message: 'Consider 8+ characters' },
-            ];
-          }
-          return null;
-        });
-      }),
-    );
+    protected readonly field = form(signal({ confirm: '' }), (path) => {
+      required(path.confirm, { message: 'Confirm is required' });
+      validate(path.confirm, (ctx) => {
+        const value = ctx.value();
+        // Return both a blocking error and a warning for short values
+        if (value && value.length > 0 && value.length < 8) {
+          // Return both blocking error and warning as an array
+          return [
+            { kind: 'too-short', message: 'Password too short' },
+            { kind: 'warn:weak-password', message: 'Consider 8+ characters' },
+          ];
+        }
+        return null;
+      });
+    });
   }
 
   it('shows warnings immediately when defaultWarningStrategy is immediate', async () => {

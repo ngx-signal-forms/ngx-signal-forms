@@ -4,7 +4,6 @@ import {
   FormField,
   form,
   required,
-  schema,
   type FormValueControl,
 } from '@angular/forms/signals';
 import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit';
@@ -60,12 +59,9 @@ describe('NgxFormFieldWrapper — no missing-role warning for a wrapped custom c
       `,
     })
     class TestComponent {
-      readonly testForm = form(
-        signal({ rating: 0 }),
-        schema((path) => {
-          required(path.rating);
-        }),
-      );
+      readonly testForm = form(signal({ rating: 0 }), (path) => {
+        required(path.rating);
+      });
     }
 
     await render(TestComponent);

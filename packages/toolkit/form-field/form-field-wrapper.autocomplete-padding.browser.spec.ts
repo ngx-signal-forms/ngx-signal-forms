@@ -1,6 +1,6 @@
 import { signal } from '@angular/core';
 import { render } from '@testing-library/angular';
-import { describe, expect, it } from 'vitest';
+import { assert, describe, expect, it } from 'vitest';
 import { NgxFormFieldWrapper } from './form-field-wrapper';
 
 /**
@@ -81,6 +81,10 @@ describe('NgxFormFieldWrapper — autocomplete padding-ownership recipe (#475)',
     const [nativeWrapper, autoWrapper] = container.querySelectorAll(
       'ngx-form-field-wrapper',
     );
+    assert(
+      nativeWrapper && autoWrapper,
+      'expected the native and auto wrappers',
+    );
 
     // Text start x: both controls get padding:0/border:none from the
     // wrapper's textual-content rule, so the rendered caret position is the
@@ -128,6 +132,10 @@ describe('NgxFormFieldWrapper — autocomplete padding-ownership recipe (#475)',
     const autoInput = container.querySelector<HTMLElement>('#countryAutoRtl')!;
     const [nativeWrapper, autoWrapper] = container.querySelectorAll(
       'ngx-form-field-wrapper',
+    );
+    assert(
+      nativeWrapper && autoWrapper,
+      'expected the native and auto wrappers',
     );
 
     // Under RTL the inline-start edge is the *right* edge of the box.
@@ -186,6 +194,10 @@ describe('NgxFormFieldWrapper — autocomplete padding-ownership recipe (#475)',
     const [nativeWrapper, autoWrapper] = container.querySelectorAll(
       'ngx-form-field-wrapper',
     );
+    assert(
+      nativeWrapper && autoWrapper,
+      'expected the native and auto wrappers',
+    );
     const nativeContentRect = contentOf(nativeWrapper).getBoundingClientRect();
     const autoContentRect = contentOf(autoWrapper).getBoundingClientRect();
     expect(autoContentRect.width).toBeCloseTo(nativeContentRect.width, 1);
@@ -230,6 +242,10 @@ describe('NgxFormFieldWrapper — autocomplete padding-ownership recipe (#475)',
       container.querySelector<HTMLElement>('#countryAutoError')!;
     const [nativeWrapper, autoWrapper] = container.querySelectorAll(
       'ngx-form-field-wrapper',
+    );
+    assert(
+      nativeWrapper && autoWrapper,
+      'expected the native and auto wrappers',
     );
 
     expect(autoInput.getBoundingClientRect().left).toBeCloseTo(

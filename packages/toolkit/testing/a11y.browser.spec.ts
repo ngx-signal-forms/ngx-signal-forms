@@ -452,18 +452,32 @@ describe('expectNoA11yViolations — incomplete result handling (#501)', () => {
   const mockAxeResults = (
     violations: axe.Result[],
     incomplete: axe.Result[],
-  ): axe.AxeResults =>
-    ({
-      violations,
-      incomplete,
-      passes: [],
-      inapplicable: [],
-    }) as unknown as axe.AxeResults;
+  ): axe.AxeResults => ({
+    testEngine: { name: 'axe-core', version: axeCore.version },
+    testRunner: { name: 'vitest' },
+    testEnvironment: { userAgent: 'test', windowWidth: 0, windowHeight: 0 },
+    url: 'https://example.test/',
+    timestamp: '1970-01-01T00:00:00.000Z',
+    toolOptions: {},
+    violations,
+    incomplete,
+    passes: [],
+    inapplicable: [],
+  });
+
+  // `axe.run` is overloaded and `vi.spyOn` types the mock against the LAST
+  // overload (the callback form, which returns `void`), so `mockResolvedValue`
+  // rejects an `AxeResults`. A function that returns a promise is still
+  // assignable to a `void`-returning one, so the promise-returning overload
+  // the toolkit actually calls is mocked through `mockImplementationOnce`.
+  const axeRunResolving =
+    (violations: axe.Result[], incomplete: axe.Result[]) => () =>
+      Promise.resolve(mockAxeResults(violations, incomplete));
 
   it('ignores incomplete results by default, without a second axe.run call', async () => {
     const runSpy = vi
       .spyOn(axeCore, 'run')
-      .mockResolvedValueOnce(mockAxeResults([], []));
+      .mockImplementationOnce(axeRunResolving([], []));
     const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
 
     try {
@@ -484,8 +498,8 @@ describe('expectNoA11yViolations — incomplete result handling (#501)', () => {
     async (ruleId) => {
       const runSpy = vi
         .spyOn(axeCore, 'run')
-        .mockResolvedValueOnce(mockAxeResults([], []))
-        .mockResolvedValueOnce(mockAxeResults([], [mockResult(ruleId)]));
+        .mockImplementationOnce(axeRunResolving([], []))
+        .mockImplementationOnce(axeRunResolving([], [mockResult(ruleId)]));
       const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
 
       try {
@@ -503,8 +517,8 @@ describe('expectNoA11yViolations — incomplete result handling (#501)', () => {
   it('with incomplete: "warn", does not log when there are no incomplete results', async () => {
     const runSpy = vi
       .spyOn(axeCore, 'run')
-      .mockResolvedValueOnce(mockAxeResults([], []))
-      .mockResolvedValueOnce(mockAxeResults([], []));
+      .mockImplementationOnce(axeRunResolving([], []))
+      .mockImplementationOnce(axeRunResolving([], []));
     const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
 
     try {
@@ -519,9 +533,9 @@ describe('expectNoA11yViolations — incomplete result handling (#501)', () => {
   it('with incomplete: "fail", throws on an incomplete color-contrast result', async () => {
     const runSpy = vi
       .spyOn(axeCore, 'run')
-      .mockResolvedValueOnce(mockAxeResults([], []))
-      .mockResolvedValueOnce(
-        mockAxeResults([], [mockResult('color-contrast')]),
+      .mockImplementationOnce(axeRunResolving([], []))
+      .mockImplementationOnce(
+        axeRunResolving([], [mockResult('color-contrast')]),
       );
     const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
 
@@ -538,9 +552,9 @@ describe('expectNoA11yViolations — incomplete result handling (#501)', () => {
   it('with incomplete: "fail", logs but does not fail on an incomplete result for a rule other than color-contrast', async () => {
     const runSpy = vi
       .spyOn(axeCore, 'run')
-      .mockResolvedValueOnce(mockAxeResults([], []))
-      .mockResolvedValueOnce(
-        mockAxeResults([], [mockResult('link-in-text-block')]),
+      .mockImplementationOnce(axeRunResolving([], []))
+      .mockImplementationOnce(
+        axeRunResolving([], [mockResult('link-in-text-block')]),
       );
     const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
 
@@ -560,9 +574,9 @@ describe('expectNoA11yViolations — incomplete result handling (#501)', () => {
   it('still fails on a real violation alongside a logged incomplete result', async () => {
     const runSpy = vi
       .spyOn(axeCore, 'run')
-      .mockResolvedValueOnce(mockAxeResults([mockResult('image-alt')], []))
-      .mockResolvedValueOnce(
-        mockAxeResults([], [mockResult('link-in-text-block')]),
+      .mockImplementationOnce(axeRunResolving([mockResult('image-alt')], []))
+      .mockImplementationOnce(
+        axeRunResolving([], [mockResult('link-in-text-block')]),
       );
     const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
 

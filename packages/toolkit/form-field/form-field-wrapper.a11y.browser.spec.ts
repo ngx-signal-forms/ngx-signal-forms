@@ -110,12 +110,9 @@ describe('form-field wrapper — WCAG 2.2 AA conformance', () => {
     })
     class TestComponent {
       readonly #model = signal({ email: '' });
-      readonly testForm = form(
-        this.#model,
-        schema((path) => {
-          required(path.email, { message: 'Email is required' });
-        }),
-      );
+      readonly testForm = form(this.#model, (path) => {
+        required(path.email, { message: 'Email is required' });
+      });
     }
 
     const { container } = await render(TestComponent);
@@ -143,12 +140,9 @@ describe('form-field wrapper — WCAG 2.2 AA conformance', () => {
     })
     class TestComponent {
       readonly #model = signal({ name: '' });
-      readonly testForm = form(
-        this.#model,
-        schema((path) => {
-          required(path.name, { message: 'Name is required' });
-        }),
-      );
+      readonly testForm = form(this.#model, (path) => {
+        required(path.name, { message: 'Name is required' });
+      });
     }
 
     const { container } = await render(TestComponent);
@@ -254,14 +248,11 @@ describe('form-field wrapper — WCAG 2.2 AA conformance', () => {
         'ngx-test-a11y-radio-valid',
         RADIO_CLUSTER_TEMPLATE,
         () =>
-          form(
-            signal({ deliveryMethod: 'standard' }),
-            schema((path) => {
-              required(path.deliveryMethod, {
-                message: 'Delivery method is required',
-              });
-            }),
-          ),
+          form(signal({ deliveryMethod: 'standard' }), (path) => {
+            required(path.deliveryMethod, {
+              message: 'Delivery method is required',
+            });
+          }),
       );
 
       const { container } = await render(TestComponent);
@@ -278,14 +269,11 @@ describe('form-field wrapper — WCAG 2.2 AA conformance', () => {
         'ngx-test-a11y-radio-error',
         RADIO_CLUSTER_TEMPLATE,
         () =>
-          form(
-            signal({ deliveryMethod: '' }),
-            schema((path) => {
-              required(path.deliveryMethod, {
-                message: 'Delivery method is required',
-              });
-            }),
-          ),
+          form(signal({ deliveryMethod: '' }), (path) => {
+            required(path.deliveryMethod, {
+              message: 'Delivery method is required',
+            });
+          }),
       );
 
       const { container, fixture } = await render(TestComponent);
@@ -338,13 +326,10 @@ describe('form-field wrapper — WCAG 2.2 AA conformance', () => {
         'ngx-test-a11y-checkbox-cluster-error',
         CHECKBOX_CLUSTER_TEMPLATE,
         () =>
-          form(
-            signal({ consentRead: false, consentAgree: false }),
-            schema((path) => {
-              required(path.consentRead, { message: 'Consent is required' });
-              required(path.consentAgree, { message: 'Consent is required' });
-            }),
-          ),
+          form(signal({ consentRead: false, consentAgree: false }), (path) => {
+            required(path.consentRead, { message: 'Consent is required' });
+            required(path.consentAgree, { message: 'Consent is required' });
+          }),
       );
 
       const { container, fixture } = await render(TestComponent);
@@ -399,13 +384,10 @@ describe('form-field wrapper — WCAG 2.2 AA conformance', () => {
         'ngx-test-a11y-checkbox-cluster-empty-hint-text',
         CHECKBOX_CLUSTER_TEMPLATE,
         () =>
-          form(
-            signal({ consentRead: false, consentAgree: false }),
-            schema((path) => {
-              required(path.consentRead, { message: 'Consent is required' });
-              required(path.consentAgree, { message: 'Consent is required' });
-            }),
-          ),
+          form(signal({ consentRead: false, consentAgree: false }), (path) => {
+            required(path.consentRead, { message: 'Consent is required' });
+            required(path.consentAgree, { message: 'Consent is required' });
+          }),
       );
 
       const { container } = await render(TestComponent, {
@@ -530,20 +512,17 @@ describe('form-field wrapper — WCAG 2.2 AA conformance', () => {
           </form>
         `,
         () =>
-          form(
-            signal({ plan: '' }),
-            schema((path) => {
-              validate(path.plan, (ctx) => {
-                if (ctx.value() === 'basic') {
-                  return {
-                    kind: 'warn:basic-plan-limited',
-                    message: 'Basic plan has limited features',
-                  };
-                }
-                return null;
-              });
-            }),
-          ),
+          form(signal({ plan: '' }), (path) => {
+            validate(path.plan, (ctx) => {
+              if (ctx.value() === 'basic') {
+                return {
+                  kind: 'warn:basic-plan-limited',
+                  message: 'Basic plan has limited features',
+                };
+              }
+              return null;
+            });
+          }),
       );
 
       const { container } = await render(TestComponent);
@@ -595,26 +574,23 @@ describe('form-field wrapper — WCAG 2.2 AA conformance', () => {
           </form>
         `,
         () =>
-          form(
-            signal({ plan: '' }),
-            schema((path) => {
-              validate(path.plan, (ctx) => {
-                if (ctx.value() === 'deprecated') {
-                  return [
-                    {
-                      kind: 'not-available',
-                      message: 'This plan is no longer available',
-                    },
-                    {
-                      kind: 'warn:legacy-plan',
-                      message: 'Consider switching plans',
-                    },
-                  ];
-                }
-                return null;
-              });
-            }),
-          ),
+          form(signal({ plan: '' }), (path) => {
+            validate(path.plan, (ctx) => {
+              if (ctx.value() === 'deprecated') {
+                return [
+                  {
+                    kind: 'not-available',
+                    message: 'This plan is no longer available',
+                  },
+                  {
+                    kind: 'warn:legacy-plan',
+                    message: 'Consider switching plans',
+                  },
+                ];
+              }
+              return null;
+            });
+          }),
       );
 
       const { container } = await render(TestComponent);
@@ -655,12 +631,9 @@ describe('form-field wrapper — WCAG 2.2 AA conformance', () => {
           </form>
         `,
         () =>
-          form(
-            signal({ username: '' }),
-            schema((path) => {
-              required(path.username, { message: 'Username is required' });
-            }),
-          ),
+          form(signal({ username: '' }), (path) => {
+            required(path.username, { message: 'Username is required' });
+          }),
       );
 
       const { container } = await render(TestComponent);
@@ -696,12 +669,9 @@ describe('form-field wrapper — WCAG 2.2 AA conformance', () => {
           </form>
         `,
         () =>
-          form(
-            signal({ email: '' }),
-            schema((path) => {
-              required(path.email, { message: 'Email is required' });
-            }),
-          ),
+          form(signal({ email: '' }), (path) => {
+            required(path.email, { message: 'Email is required' });
+          }),
       );
 
       const { container } = await render(TestComponent);
@@ -735,12 +705,9 @@ describe('form-field wrapper — WCAG 2.2 AA conformance', () => {
           </form>
         `,
         () =>
-          form(
-            signal({ secret: '' }),
-            schema((path) => {
-              hidden(path.secret, { when: () => true });
-            }),
-          ),
+          form(signal({ secret: '' }), (path) => {
+            hidden(path.secret, { when: () => true });
+          }),
       );
 
       const { container } = await render(TestComponent);
@@ -829,12 +796,9 @@ describe('form-field wrapper — additional variant coverage (#501)', () => {
         </form>
       `,
       () =>
-        form(
-          signal({ country: '' }),
-          schema((path) => {
-            required(path.country, { message: 'Country is required' });
-          }),
-        ),
+        form(signal({ country: '' }), (path) => {
+          required(path.country, { message: 'Country is required' });
+        }),
     );
 
     const { container, fixture } = await render(TestComponent);
@@ -866,12 +830,9 @@ describe('form-field wrapper — additional variant coverage (#501)', () => {
         </form>
       `,
       () =>
-        form(
-          signal({ bio: '' }),
-          schema((path) => {
-            required(path.bio, { message: 'Bio is required' });
-          }),
-        ),
+        form(signal({ bio: '' }), (path) => {
+          required(path.bio, { message: 'Bio is required' });
+        }),
     );
 
     const { container } = await render(TestComponent);
@@ -902,12 +863,9 @@ describe('form-field wrapper — additional variant coverage (#501)', () => {
         </form>
       `,
       () =>
-        form(
-          signal({ agree: false }),
-          schema((path) => {
-            required(path.agree, { message: 'You must agree to the terms' });
-          }),
-        ),
+        form(signal({ agree: false }), (path) => {
+          required(path.agree, { message: 'You must agree to the terms' });
+        }),
     );
 
     const { container, fixture } = await render(TestComponent);
@@ -946,12 +904,9 @@ describe('form-field wrapper — additional variant coverage (#501)', () => {
         </form>
       `,
       () =>
-        form(
-          signal({ updates: false }),
-          schema((path) => {
-            required(path.updates, { message: 'Choose a preference' });
-          }),
-        ),
+        form(signal({ updates: false }), (path) => {
+          required(path.updates, { message: 'Choose a preference' });
+        }),
     );
 
     const { container, fixture } = await render(TestComponent);
@@ -981,12 +936,9 @@ describe('form-field wrapper — additional variant coverage (#501)', () => {
         </form>
       `,
       () =>
-        form(
-          signal({ nickname: '' }),
-          schema((path) => {
-            required(path.nickname, { message: 'Nickname is required' });
-          }),
-        ),
+        form(signal({ nickname: '' }), (path) => {
+          required(path.nickname, { message: 'Nickname is required' });
+        }),
     );
 
     const { container } = await render(TestComponent);
@@ -1018,12 +970,9 @@ describe('form-field wrapper — additional variant coverage (#501)', () => {
         </form>
       `,
       () =>
-        form(
-          signal({ city: '' }),
-          schema((path) => {
-            required(path.city, { message: 'City is required' });
-          }),
-        ),
+        form(signal({ city: '' }), (path) => {
+          required(path.city, { message: 'City is required' });
+        }),
     );
 
     const { container } = await render(TestComponent);
@@ -1086,17 +1035,14 @@ describe('form-field wrapper — additional variant coverage (#501)', () => {
         </form>
       `,
       () =>
-        form(
-          signal({ amount: 0, password: '' }),
-          schema((path) => {
-            required(path.password, { message: 'Password is required' });
-            validate(path.amount, (ctx) =>
-              ctx.value() > 0
-                ? null
-                : { kind: 'required', message: 'Amount is required' },
-            );
-          }),
-        ),
+        form(signal({ amount: 0, password: '' }), (path) => {
+          required(path.password, { message: 'Password is required' });
+          validate(path.amount, (ctx) =>
+            ctx.value() > 0
+              ? null
+              : { kind: 'required', message: 'Amount is required' },
+          );
+        }),
     );
 
     const { container, fixture } = await render(TestComponent);
@@ -1158,16 +1104,13 @@ describe('form-field wrapper — additional variant coverage (#501)', () => {
       `,
     })
     class FormValueControlComponent {
-      readonly testForm = form(
-        signal({ rating: 0 }),
-        schema((path) => {
-          validate(path.rating, (ctx) =>
-            ctx.value() > 0
-              ? null
-              : { kind: 'required', message: 'Choose a rating' },
-          );
-        }),
-      );
+      readonly testForm = form(signal({ rating: 0 }), (path) => {
+        validate(path.rating, (ctx) =>
+          ctx.value() > 0
+            ? null
+            : { kind: 'required', message: 'Choose a rating' },
+        );
+      });
     }
 
     const { container, fixture } = await render(FormValueControlComponent);
@@ -1820,12 +1763,9 @@ describe('form-field wrapper — additional variant coverage (#501)', () => {
           </form>
         `,
         () =>
-          form(
-            signal({ name: '' }),
-            schema((path) => {
-              required(path.name, { message: 'Full name is required' });
-            }),
-          ),
+          form(signal({ name: '' }), (path) => {
+            required(path.name, { message: 'Full name is required' });
+          }),
       );
 
       const { container } = await render(TestComponent);
@@ -2017,14 +1957,14 @@ describe('form-field wrapper — additional variant coverage (#501)', () => {
             city: '',
             amount: 0,
           }),
-          schema((path) => {
+          (path) => {
             required(path.country, { message: 'Country is required' });
             required(path.bio, { message: 'Bio is required' });
             required(path.agree, { message: 'You must agree to the terms' });
             required(path.updates, { message: 'Choose a preference' });
             required(path.nickname, { message: 'Nickname is required' });
             required(path.city, { message: 'City is required' });
-          }),
+          },
         ),
     );
 
@@ -2103,12 +2043,9 @@ describe('form-field wrapper — additional variant coverage (#501)', () => {
           </form>
         `,
         () =>
-          form(
-            signal({ country: '' }),
-            schema((path) => {
-              required(path.country, { message: 'Country is required' });
-            }),
-          ),
+          form(signal({ country: '' }), (path) => {
+            required(path.country, { message: 'Country is required' });
+          }),
       );
 
       const { container, fixture } = await render(TestComponent);
