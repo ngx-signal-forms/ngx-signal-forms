@@ -19,7 +19,7 @@ export const CUSTOM_CONTROLS_CONTENT: ExampleCardConfig = {
         title: 'Switch styling',
         items: [
           'SwitchControl keeps a native checkbox input and styles it as a compact switch',
-          'The bound input opts into switch behavior with ngxSignalFormControl="switch" so the wrapper can use a stable layout hook instead of DOM heuristics',
+          'The toolkit recognizes a native checkbox with role="switch" automatically, so the input needs no ngxSignalFormControl attribute',
           'Form field wrapper collapses to a short label-plus-toggle row for switch controls',
         ],
       },

@@ -271,10 +271,6 @@ the submit status through its options.
 The full list of configuration keys is in the
 [toolkit configuration reference](../packages/toolkit/README.md#configuration).
 
-**Known limitation:** without `ngxSignalForm` and without a wrapper, auto-ARIA
-ignores `defaultErrorStrategy` for `aria-invalid` and uses `on-touch`. Add
-`ngxSignalForm` to the form to get the configured timing.
-
 Native `:user-invalid` uses the browser's own timing. It is not the same as
 `on-touch`, and it cannot see schema errors, server errors, or warnings.
 

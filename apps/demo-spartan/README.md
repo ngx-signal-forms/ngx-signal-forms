@@ -162,7 +162,9 @@ export class CheckoutForm {}
 ```
 
 A custom renderer receives the toolkit's standard renderer-input contract
-(`{ formField, strategy, submittedStatus }`). See
+(the wrapper binds `{ formField, strategy, submittedStatus, warningStrategy,
+fieldName }`, the fieldset binds `{ errors, fieldName, strategy,
+submittedStatus, listStyle }`). See
 [CUSTOM_WRAPPERS.md → The renderer interface](../../docs/CUSTOM_WRAPPERS.md#the-renderer-interface).
 
 ## Spartan-specific gotchas
