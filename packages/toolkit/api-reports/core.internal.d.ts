@@ -266,11 +266,6 @@ interface ResolvedMarker {
  */
 interface NgxSignalFormsConfig {
     /**
-     * Enable automatic ARIA attributes (aria-invalid, aria-describedby).
-     * @default true
-     */
-    autoAria: boolean;
-    /**
      * Default error display strategy.
      * @default 'on-touch'
      */
@@ -405,7 +400,6 @@ interface NgxSignalFormsConfig {
  * via CSS); omitting the key inherits the parent value instead.
  */
 interface NgxSignalFormsUserConfig {
-    autoAria?: boolean | undefined;
     defaultErrorStrategy?: ResolvedErrorDisplayStrategy | undefined;
     defaultWarningStrategy?: ResolvedWarningDisplayStrategy | undefined;
     defaultFormFieldAppearance?: FormFieldAppearance | undefined;
@@ -676,7 +670,6 @@ interface NgxSignalFormFieldContext {
  * @internal
  */
 declare const DEFAULT_NGX_SIGNAL_FORMS_CONFIG: {
-    readonly autoAria: true;
     readonly defaultErrorStrategy: "on-touch";
     readonly defaultWarningStrategy: "on-touch";
     readonly defaultFormFieldAppearance: "standard";
@@ -882,7 +875,9 @@ declare const NGX_SIGNAL_FORM_FIELD_VISIBILITY_REGISTRY: InjectionToken<NgxSigna
  * The wrapper instantiates the configured component via `*ngComponentOutlet`
  * and binds the relevant input set per call site. A custom renderer intended
  * to replace both must accept the union of those input names; inputs the
- * renderer doesn't declare are silently dropped by `*ngComponentOutlet`.
+ * renderer doesn't declare never reach it. Angular's `componentRef.setInput`
+ * skips them and, in dev mode, logs an `NG0303` error (it throws when the app
+ * sets `errorOnUnknownProperties`).
  *
  * Renderers may accept extra inputs beyond the contract (analytics tags,
  * theming hooks); the wrapper/fieldset ignore them and Angular accepts the
@@ -925,8 +920,9 @@ interface NgxFormFieldErrorRenderer {
  * `NgxFormFieldHint` already exposes as inputs:
  * `{ resolvedFieldName: string | null, resolvedId: string, position:
  * 'left' | 'right' | null }`. Renderers must declare all three with
- * `input()` — Angular's `componentRef.setInput` rejects writes to
- * undeclared inputs, so omitting any of them errors at runtime.
+ * `input()`. `componentRef.setInput` skips an undeclared input and, in dev
+ * mode, logs an `NG0303` error (it throws when the app sets
+ * `errorOnUnknownProperties`).
  *
  * When no provider is registered, `NgxFormFieldHint` falls back to direct
  * `<ng-content />` projection (preserving backwards compatibility for
@@ -998,7 +994,6 @@ declare const NGX_FORM_FIELD_HINT_RENDERER: InjectionToken<NgxFormFieldHintRende
  * export const appConfig: ApplicationConfig = {
  *   providers: [
  *     provideNgxSignalFormsConfig({
- *       autoAria: true,
  *       defaultErrorStrategy: 'on-touch',
  *     }),
  *   ],
@@ -2892,14 +2887,11 @@ interface CreateErrorVisibilityOptions {
      * context resolve to nothing (i.e. no `[ngxSignalForm]` host is present).
      * Typically the caller's own `NGX_SIGNAL_FORMS_CONFIG.defaultErrorStrategy`.
      *
-     * Deliberately opt-in rather than auto-injected: most callers of this
-     * generic primitive (e.g. `NgxSignalFormAutoAria`) already run inside a
-     * form context and never observe the difference, and forcing every call
-     * site to consult the global config would be an unannounced behavior
-     * change for the handful that don't. Callers that need config-default
-     * parity with `NgxHeadlessFieldset.resolvedStrategy` (e.g. the headless
-     * package's standalone factories) inject the config themselves and pass
-     * it through here.
+     * Deliberately opt-in rather than auto-injected, so this generic
+     * primitive does not read the global config behind a caller's back.
+     * Callers that must match the visible message when no form context
+     * exists (`NgxSignalFormAutoAria`, the headless package's standalone
+     * factories) inject the config themselves and pass it through here.
      */
     readonly configDefault?: ResolvedErrorDisplayStrategy | null;
     /**

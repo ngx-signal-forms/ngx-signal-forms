@@ -13,7 +13,7 @@ Angular Signal Forms replaces the legacy `ControlValueAccessor` boilerplate with
 - `NgxFormField` wrapper — automatic label/error/hint linkage for custom components.
 - Field-shaped `input-like` — Angular Aria combobox infers this from inner `role="combobox"`; closed select sets `ngxSignalFormControl="input-like"` on the host. Both inherit `--ngx-form-field-input-*` / outline aliases / `--ngx-form-field-placeholder-color`.
 - `MockAutocompleteComponent` (Country) — a minimal mocked autocomplete binding `[formField]` to its own inner `role="combobox"` input, next to the Angular Aria combobox example. Demonstrates the padding-ownership recipe: a `[prefix]` icon and a `[suffix]` clear button contributed by the consuming template, and a popup anchored to the field shell's border rather than the padded input area. See [docs/CUSTOM_CONTROLS.md](../../../../../../docs/CUSTOM_CONTROLS.md#padding-ownership-recipe-for-field-shaped-autocomplete-adapters).
-- `ngxSignalFormControl="switch"` — native checkbox switch semantics (inline row layout).
+- Native `input[type=checkbox][role=switch]` — recognized as a switch automatically, with no `ngxSignalFormControl` attribute (inline row layout).
 - `ngxSignalFormControl="checkbox"` — opt-in checkbox semantics for a standard checkbox.
 - `ngxSignalFormControl="slider"` — custom slider with `layout: 'custom'` and `ariaMode: 'manual'` so the control owns its own `aria-describedby` chain.
 - Component-scoped control presets inherited via `provideNgxSignalFormControlPresetsForComponent()`.

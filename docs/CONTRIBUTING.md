@@ -163,10 +163,16 @@ Two CI checks keep design-system packages out of the toolkit:
 
 1. `pnpm check:toolkit-peer-deps` fails when
    `packages/toolkit/package.json` lists `@angular/material`, `primeng`,
-   `primeicons`, or `@spartan-ng/*`.
+   `primeicons`, `@spartan-ng/*`, `@primeuix/*`, `@primeng/*`, or
+   `@angular/cdk`.
 2. The `toolkit-isolation` job in
    [`ci.yml`](../.github/workflows/ci.yml) installs only the toolkit's
    dependency graph and builds it.
+
+`pnpm nx lint toolkit` also fails on any toolkit source import of those
+packages (`bannedExternalImports` in `oxlint.config.ts`).
+Declare a design-system package in the `package.json` of the demo project
+that imports it, never in the root `package.json`.
 
 If one fails, move the dependency into the demo app that needs it. Do not
 relax the check.

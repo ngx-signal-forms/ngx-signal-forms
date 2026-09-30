@@ -244,9 +244,9 @@ jobs:
       # accidental `import` of it from toolkit source still fails to resolve
       # at build time, confirmed by reproducing the leak locally. `pnpm
       # check:toolkit-peer-deps` covers the other case, a design-system
-      # package declared in the toolkit's own package.json. Gap: a package
-      # the workspace ROOT declares (today `@spartan-ng/brain`) resolves from
-      # the toolkit in every install, here and in ci.yml. Tracked in #547.
+      # package declared in the toolkit's own package.json. The workspace
+      # ROOT declares no design-system package, so nothing resolves from the
+      # toolkit by walking up to the root.
       - name: Assert toolkit declares no design-system deps
         run: pnpm check:toolkit-peer-deps
 

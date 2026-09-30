@@ -55,7 +55,6 @@ describe('AutosaveComponent (#366 — settled-value autosave)', () => {
         provideHttpClientTesting(),
         provideNgxSignalFormsConfig({
           defaultErrorStrategy: 'on-touch',
-          autoAria: true,
         }),
       ],
     });

@@ -1,13 +1,17 @@
 import {
   ChangeDetectionStrategy,
   Component,
+  afterNextRender,
   computed,
   effect,
+  ElementRef,
   inject,
+  Injector,
   input,
   resource,
   signal,
   untracked,
+  viewChild,
 } from '@angular/core';
 import {
   form,
@@ -97,7 +101,39 @@ const PROFILE_FIELD_KEYS: readonly (keyof ProfileFormModel)[] = [
         </ul>
       </div>
 
-      @if (isInitialLoad()) {
+      <!-- Load-failure announcement. The live region stays rendered (an empty
+           div has no height) so it is in the accessibility tree before the
+           message is inserted, which is what makes screen readers announce it. -->
+      <div role="alert">
+        @if (loadFailed()) {
+          <div
+            class="mb-4 rounded-lg border border-red-200 bg-red-50 p-4 dark:border-red-800 dark:bg-red-950"
+          >
+            <div class="flex items-start gap-3">
+              <span class="text-2xl" aria-hidden="true">⚠️</span>
+              <div>
+                <h3 class="mb-1 font-semibold text-red-900 dark:text-red-100">
+                  Could not load profile
+                </h3>
+                <p class="text-sm text-red-800 dark:text-red-200">
+                  The server did not return your profile. Try again.
+                </p>
+              </div>
+            </div>
+          </div>
+        }
+      </div>
+
+      @if (loadFailed()) {
+        <button
+          #retryButton
+          type="button"
+          class="btn-primary"
+          (click)="reloadFromServer()"
+        >
+          Retry
+        </button>
+      } @else if (isInitialLoad()) {
         <div
           class="mb-6 flex items-center gap-3 rounded-lg border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-900"
           role="status"
@@ -172,6 +208,7 @@ const PROFILE_FIELD_KEYS: readonly (keyof ProfileFormModel)[] = [
           >
             <label for="server-integration-name">Name</label>
             <input
+              #nameInput
               id="server-integration-name"
               type="text"
               [formField]="profileForm.name"
@@ -258,6 +295,11 @@ export class ServerIntegrationComponent {
   protected readonly takenEmail = TAKEN_EMAIL;
 
   readonly #api = inject(ProfileApiService);
+  readonly #injector = inject(Injector);
+  private readonly retryButton =
+    viewChild<ElementRef<HTMLButtonElement>>('retryButton');
+  private readonly nameInput =
+    viewChild<ElementRef<HTMLInputElement>>('nameInput');
   readonly #model = signal<ProfileFormModel>(createEmptyProfileFormModel());
   protected readonly model = this.#model.asReadonly();
 
@@ -272,9 +314,12 @@ export class ServerIntegrationComponent {
 
   /** True only for the very first load — reloads reuse the form UI shell. */
   protected readonly isInitialLoad = computed(
-    () =>
-      this.profileResource.isLoading() &&
-      this.profileResource.value() === undefined,
+    () => this.profileResource.isLoading() && !this.profileResource.hasValue(),
+  );
+
+  /** True while the last load failed; the form is replaced by an error and Retry. */
+  protected readonly loadFailed = computed(
+    () => this.profileResource.status() === 'error',
   );
 
   protected readonly saveSucceeded = signal(false);
@@ -334,13 +379,40 @@ export class ServerIntegrationComponent {
         .find((error) => error.kind === 'server-error')?.message ?? null,
   );
 
+  /** True after the visitor asked for a reload; keeps focus moves off page load. */
+  #userReload = false;
+  /** True after a load failed and until the form is back. */
+  #recovering = false;
+
   constructor() {
+    /// Focus follows the swap between the form and the error state: a failed
+    /// reload destroys the focused Reload button, and Retry destroys itself,
+    /// so without this focus would drop to <body>. Only user-triggered
+    /// loads move focus; the first page load must not steal it.
+    effect(() => {
+      const status = this.profileResource.status();
+      untracked(() => {
+        if (status === 'error') {
+          this.#recovering = true;
+          if (this.#userReload) this.#focusAfterRender(this.retryButton);
+        } else if (status === 'resolved' || status === 'local') {
+          if (this.#recovering && this.#userReload) {
+            this.#focusAfterRender(this.nameInput);
+          }
+          this.#recovering = false;
+          this.#userReload = false;
+        }
+      });
+    });
+
     /// Prefill: whenever the resource resolves (initial load or a manual
     /// `.reload()`), copy the record into the form model and reset touched/
     /// dirty so the freshly loaded values read as pristine.
     effect(() => {
+      /// `value()` throws while the resource is in its error state, so guard
+      /// on `hasValue()` first.
+      if (!this.profileResource.hasValue()) return;
       const record = this.profileResource.value();
-      if (!record) return;
 
       untracked(() => {
         this.#model.set(record);
@@ -354,7 +426,14 @@ export class ServerIntegrationComponent {
     this.profileForm().reset();
   }
 
+  #focusAfterRender(target: () => ElementRef<HTMLElement> | undefined): void {
+    afterNextRender(() => target()?.nativeElement.focus(), {
+      injector: this.#injector,
+    });
+  }
+
   protected reloadFromServer(): void {
+    this.#userReload = true;
     this.saveSucceeded.set(false);
     this.profileResource.reload();
   }
