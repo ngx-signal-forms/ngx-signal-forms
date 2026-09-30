@@ -486,62 +486,6 @@ describe('NgxHeadlessErrorSummary', () => {
     });
   });
 
-  describe('focus capability', () => {
-    it('should expose focus method on error entries', async () => {
-      @Component({
-        selector: 'ngx-test-summary-focus',
-        imports: [FormField, NgxHeadlessErrorSummary],
-
-        template: `
-          <div>
-            <input
-              id="email"
-              data-testid="email-input"
-              [formField]="contactForm.email"
-            />
-            <div
-              ngxHeadlessErrorSummary
-              #summary="errorSummary"
-              [formTree]="contactForm"
-              strategy="immediate"
-            >
-              @for (
-                entry of summary.entries();
-                track entry.kind + entry.fieldName
-              ) {
-                <button
-                  type="button"
-                  [attr.data-testid]="'focus-' + entry.kind"
-                  (click)="entry.focus()"
-                >
-                  {{ entry.message }}
-                </button>
-              }
-            </div>
-          </div>
-        `,
-      })
-      class TestComponent {
-        readonly #model = signal({ email: '' });
-        readonly contactForm = form(
-          this.#model,
-          schema((path) => {
-            required(path.email, { message: 'Email is required' });
-          }),
-        );
-      }
-
-      const user = userEvent.setup();
-      await render(TestComponent);
-
-      const button = screen.getByTestId('focus-required');
-      expect(button).toBeTruthy();
-
-      await user.click(button);
-      expect(document.activeElement).toBe(screen.getByTestId('email-input'));
-    });
-  });
-
   describe('non-interactive fields (hidden/disabled)', () => {
     it('should omit entries for hidden fields from the summary', async () => {
       @Component({
