@@ -46,7 +46,6 @@
   --_fieldset-clr-success: light-dark(#3f8f4f, #4ade80);
   --_fieldset-clr-danger: light-dark(#db1818, #fca5a5);
   --_fieldset-clr-warning: light-dark(#a16207, #fcd34d);
-  --_fieldset-clr-warning-strong: light-dark(#92400e, #fcd34d);
   /* Text tones. They follow a tinted surface; borders keep the base tones. */
   --_fieldset-clr-danger-text: var(
     --_tinted-surface-clr-danger,
@@ -489,8 +488,8 @@
    The 75% slate text falls under 4.5:1 on #fbdddd only (4.35:1; 4.61:1 on
    #fdebeb). This rule sets the inherited `--_tinted-surface-clr-*` tokens
    to darker tones: on #fbdddd, #b91c1c is 5.08:1, #92400e 5.57:1 and
-   #324155 8.15:1. The optional marker paints at 70% opacity, so its muted
-   tone is #1e293b: 4.92:1 at that opacity. The legend, the fieldset
+   #324155 8.15:1. The optional marker needs no tinted tone: its default
+   base (#1e293b at 70% opacity) is 4.92:1 on #fbdddd. The legend, the fieldset
    messages and the nested wrappers, hints, character counts and errors use
    them as their private text fallback, so a public color token set on any
    ancestor still wins. The dark values equal the untinted ones, which
@@ -505,7 +504,6 @@
     #324155,
     rgba(249, 250, 251, 0.75)
   );
-  --_tinted-surface-clr-text-muted: light-dark(#1e293b, currentColor);
 }
 
 .ngx-signal-form-fieldset__content {

@@ -83,6 +83,11 @@
     rgba(50, 65, 85, 0.75),
     rgba(249, 250, 251, 0.75)
   ); /* Labels, hints, placeholders (4.99:1 on white, 8.54:1 on #1f2937) */
+  /* Optional marker base. The marker paints at 70% opacity, so it needs a */
+  /* darker base than the label: #1e293b at 0.7 is 5.52:1 on white and 4.92:1 */
+  /* on the invalid fieldset tint. Dark mode keeps the label color (4.97:1 on */
+  /* #1f2937 at 0.7). */
+  --_field-clr-optional-marker: light-dark(#1e293b, currentColor);
   --_field-clr-surface: light-dark(#ffffff, #1f2937); /* Input background */
   --_field-clr-border: light-dark(
     rgba(50, 65, 85, 0.7),
@@ -280,10 +285,7 @@
      annotates the exception rather than flagging a problem. */
   --_optional-marker-color: var(
     --ngx-form-field-optional-marker-color,
-    var(
-      --_tinted-surface-clr-text-muted,
-      var(--_color-label-muted, currentColor)
-    )
+    var(--_field-clr-optional-marker)
   );
   --_optional-marker-weight: var(
     --ngx-form-field-optional-marker-weight,
@@ -1183,7 +1185,6 @@
  */
 
 /* Hide empty slots to prevent unnecessary spacing */
-.ngx-signal-form-field-wrapper__assistive-left:empty,
 .ngx-signal-form-field-wrapper__assistive-right:empty {
   display: none;
 }
