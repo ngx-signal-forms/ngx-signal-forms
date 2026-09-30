@@ -172,10 +172,7 @@ export type NgxErrorSummaryHeadingLevel = 2 | 3 | 4 | 5 | 6;
           }
         }
         <ul class="ngx-form-field-error-summary__list" role="list">
-          @for (
-            entry of summary.entries();
-            track entry.fieldName + '::' + entry.kind + '::' + entry.message
-          ) {
+          @for (entry of summary.entries(); track entry.key) {
             <li class="ngx-form-field-error-summary__item">
               @if (entry.canFocus) {
                 <button

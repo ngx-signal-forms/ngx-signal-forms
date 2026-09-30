@@ -53,10 +53,11 @@ You do this yourself:
   `role="status"`, and the ids from the directive.
 - Use a `fieldName` that equals the control's `id`, so auto-ARIA and your
   elements agree on the ids.
-- Set error timing on the form (`ngxSignalForm` with `errorStrategy="…"`) or
-  in the app config. Auto-ARIA follows both. Do not set `strategy` on the
-  headless directive: auto-ARIA does not see it, so the ARIA would change at
-  a different time than your message.
+- Add `ngxSignalForm` to the form when you set `strategy` or
+  `warningStrategy` on the directive. The directive then tells auto-ARIA when
+  its messages show, so `aria-invalid` and `aria-describedby` change together
+  with your message. Without `ngxSignalForm`, auto-ARIA follows the app
+  config, not the directive, so set timing in the app config instead.
 - Link hints yourself: give the hint an `id` and add it to the control's
   `aria-describedby`. Auto-ARIA keeps ids that you write.
 - Style everything.
@@ -167,7 +168,7 @@ import { NgxHeadlessErrorState } from '@ngx-signal-forms/toolkit/headless';
   hostDirectives: [
     {
       directive: NgxHeadlessErrorState,
-      inputs: ['field', 'fieldName'],
+      inputs: ['field', 'fieldName', 'strategy', 'warningStrategy'],
     },
   ],
   template: `
@@ -215,9 +216,8 @@ export class MyFieldFeedback {
 This component is complete for feedback when:
 
 - `fieldName` equals the control's `id`.
-- The form has `ngxSignalForm`, and you set timing there. The component does
-  not forward `strategy` or `warningStrategy`, because auto-ARIA would not
-  see them.
+- The form has `ngxSignalForm`. Then auto-ARIA follows the timing of this
+  component, also when you set `strategy` or `warningStrategy` on it.
 
 For a component that also owns the label, the control, and the hints, build a
 full wrapper. See [custom wrappers](../../../docs/CUSTOM_WRAPPERS.md).
@@ -270,9 +270,11 @@ Signals: `entries()`, `warningEntries()`, `hasErrors()`, `hasWarnings()`,
 `shouldShow()`, `shouldShowWarnings()`, `resolvedStrategy()`,
 `resolvedWarningStrategy()`. Method: `focusFirst()`.
 
-- Each entry has `kind`, `message`, `fieldName`, `focus()`, and `canFocus`.
-  Render an entry as a button only when `canFocus` is `true`. Otherwise render
-  plain text, because the error has no control to focus.
+- Each entry has `key`, `kind`, `message`, `fieldName`, `focus()`, and
+  `canFocus`. Render an entry as a button only when `canFocus` is `true`.
+  Otherwise render plain text, because the error has no control to focus.
+- Track rows by `key` (`@for (entry of summary.entries(); track entry.key)`).
+  `fieldName` is display text: two fields can share it.
 - `shouldShow()` controls error entries. `shouldShowWarnings()` controls
   warning entries. They are independent: a form that shows errors only after
   submit can still show warnings on touch.

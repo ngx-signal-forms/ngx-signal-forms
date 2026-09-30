@@ -129,12 +129,7 @@ import { NgxFormField } from './index';
   `,
 })
 export class ColorSchemeFixtureComponent {
-  /**
-   * Tints the invalid fieldset surface. Off for the light-scheme scans: the
-   * light tint (#fbdddd, unchanged by #494) puts wrapper labels at 4.35:1,
-   * a known light-mode gap that #494 does not change (#db1818 text on it is
-   * 3.97:1). It needs a design decision and is tracked separately.
-   */
+  /** Tints the invalid fieldset surface (`validationSurface="always"`). */
   readonly tintInvalidSurface = input(false);
   readonly testForm = form(
     signal({

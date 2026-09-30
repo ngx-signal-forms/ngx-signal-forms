@@ -180,6 +180,11 @@ type NgxCharacterCountAnnouncementFormatter = (state: NgxCharacterCountAnnouncem
  *   custom wrapper's context that resolves a field name but never
  *   registers `limitId()` into its own `NGX_SIGNAL_FORM_HINT_REGISTRY` (see
  *   `docs/CUSTOM_WRAPPERS.md`).
+ * - Without a wrapper, set the `fieldName` input to render the same hidden
+ *   limit element with the id `{fieldName}-char-count-limit`, and put that
+ *   id in the control's `aria-describedby` yourself (issue #589). The
+ *   visible "n/max" text stays exposed, because the component cannot tell
+ *   whether you linked the id.
  *
  * @see {@link createCharacterCount} for the underlying headless utility
  */
@@ -261,11 +266,40 @@ declare class NgxFormFieldCharacterCount {
      */
     readonly announcementFormatter: _angular_core.InputSignal<NgxCharacterCountAnnouncementFormatter | undefined>;
     /**
-     * Resolved field name from the wrapper's `NGX_SIGNAL_FORM_FIELD_CONTEXT`,
-     * or `null` when the component is rendered outside a wrapper. Public so a
-     * wrapper can register {@link limitId} into `NGX_SIGNAL_FORM_HINT_REGISTRY`
-     * — the same channel `NgxFormFieldHint.resolvedFieldName` feeds (issue
-     * #499).
+     * Field name for the limit id when no wrapper supplies one.
+     *
+     * Outside a wrapper, set it to mint the stable
+     * `{fieldName}-char-count-limit` id, then put that id in the control's
+     * `aria-describedby` so screen readers read the limit on focus. Inside a
+     * wrapper this input is ignored, even when the wrapper has no field name.
+     *
+     * Use one id token, such as the control's `id`. The count trims the value
+     * and replaces each run of inner whitespace with `-`, with a dev-mode
+     * warning: `"shipping notes"` mints `shipping-notes-char-count-limit`.
+     *
+     * @example Standalone count linked to its control
+     * ```html
+     * <textarea
+     *   id="bio"
+     *   aria-describedby="bio-char-count-limit"
+     *   [formField]="form.bio"
+     * ></textarea>
+     * <ngx-form-field-character-count [formField]="form.bio" fieldName="bio" />
+     * ```
+     */
+    readonly fieldName: _angular_core.InputSignal<string | undefined>;
+    /**
+     * Resolved field name: the wrapper's `NGX_SIGNAL_FORM_FIELD_CONTEXT` field
+     * name when a context is injected, else the {@link fieldName} input.
+     * Blank names count as unset (`null`).
+     *
+     * Inside a wrapper the input never applies, which reverses the usual
+     * "explicit input wins" order. A wrapper registers {@link limitId} in
+     * `NGX_SIGNAL_FORM_HINT_REGISTRY` tagged with this name, and auto-ARIA
+     * only links registry ids whose name matches the wrapper's field. An
+     * input name would never match, so the limit would not reach
+     * `aria-describedby` while `hidesVisibleText` still hid the visible
+     * count. Public so a wrapper can read it (issue #499).
      */
     readonly resolvedFieldName: _angular_core.Signal<string | null>;
     /**
@@ -348,7 +382,7 @@ declare class NgxFormFieldCharacterCount {
      */
     protected readonly announcementText: _angular_core.Signal<string>;
     static ɵfac: _angular_core.ɵɵFactoryDeclaration<NgxFormFieldCharacterCount, never>;
-    static ɵcmp: _angular_core.ɵɵComponentDeclaration<NgxFormFieldCharacterCount, "ngx-form-field-character-count", never, { "formField": { "alias": "formField"; "required": true; "isSignal": true; }; "maxLength": { "alias": "maxLength"; "required": false; "isSignal": true; }; "position": { "alias": "position"; "required": false; "isSignal": true; }; "showLimitColors": { "alias": "showLimitColors"; "required": false; "isSignal": true; }; "liveAnnounce": { "alias": "liveAnnounce"; "required": false; "isSignal": true; }; "announcementFormatter": { "alias": "announcementFormatter"; "required": false; "isSignal": true; }; }, {}, never, never, true, never>;
+    static ɵcmp: _angular_core.ɵɵComponentDeclaration<NgxFormFieldCharacterCount, "ngx-form-field-character-count", never, { "formField": { "alias": "formField"; "required": true; "isSignal": true; }; "maxLength": { "alias": "maxLength"; "required": false; "isSignal": true; }; "position": { "alias": "position"; "required": false; "isSignal": true; }; "showLimitColors": { "alias": "showLimitColors"; "required": false; "isSignal": true; }; "liveAnnounce": { "alias": "liveAnnounce"; "required": false; "isSignal": true; }; "announcementFormatter": { "alias": "announcementFormatter"; "required": false; "isSignal": true; }; "fieldName": { "alias": "fieldName"; "required": false; "isSignal": true; }; }, {}, never, never, true, never>;
 }
 
 type NgxFormFieldListStyle = 'bullets' | 'plain';

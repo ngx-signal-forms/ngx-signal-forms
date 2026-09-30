@@ -59,13 +59,13 @@ You do this yourself:
 
 Each component and what it needs for ARIA without a wrapper:
 
-| Component                        | Works without a wrapper | What links it to the control                                                                                                                                                                                      |
-| -------------------------------- | ----------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `ngx-form-field-error`           | Yes                     | Auto-ARIA, when `fieldName` equals the control's `id`. It adds `{fieldName}-error` or `{fieldName}-warning` to `aria-describedby` while the message shows.                                                        |
-| `ngx-form-field-hint`            | Yes, visual only        | You. Give the hint an `id` and put that id in the control's `aria-describedby`. Auto-ARIA keeps ids that you write.                                                                                               |
-| `ngx-form-field-character-count` | Yes, visual only        | Nothing. The visible "12/500" text stays readable by screen readers. To announce the limit on focus, state it in a linked hint. Add `[liveAnnounce]="true"` to announce when the count nears or passes the limit. |
-| `ngx-form-field-error-summary`   | Yes                     | Not needed. Each entry is a button that moves focus to its control.                                                                                                                                               |
-| `ngx-form-marking-legend`        | Yes                     | Not needed. Each control already gets `aria-required` from auto-ARIA.                                                                                                                                             |
+| Component                        | Works without a wrapper | What links it to the control                                                                                                                                                                                                                                                                                           |
+| -------------------------------- | ----------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `ngx-form-field-error`           | Yes                     | Auto-ARIA, when `fieldName` equals the control's `id`. It adds `{fieldName}-error` or `{fieldName}-warning` to `aria-describedby` while the message shows.                                                                                                                                                             |
+| `ngx-form-field-hint`            | Yes, visual only        | You. Give the hint an `id` and put that id in the control's `aria-describedby`. Auto-ARIA keeps ids that you write.                                                                                                                                                                                                    |
+| `ngx-form-field-character-count` | Yes                     | You. Set `fieldName` on the count and put `{fieldName}-char-count-limit` in the control's `aria-describedby`. Screen readers then read "Up to 500 characters" on focus. Without `fieldName`, only the visible "12/500" text is read. Add `[liveAnnounce]="true"` to announce when the count nears or passes the limit. |
+| `ngx-form-field-error-summary`   | Yes                     | Not needed. Each entry is a button that moves focus to its control.                                                                                                                                                                                                                                                    |
+| `ngx-form-marking-legend`        | Yes                     | Not needed. Each control already gets `aria-required` from auto-ARIA.                                                                                                                                                                                                                                                  |
 
 ## Example
 
@@ -119,13 +119,16 @@ import {
         <label for="bio">Bio</label>
         <textarea
           id="bio"
-          aria-describedby="bio-hint"
+          aria-describedby="bio-hint bio-char-count-limit"
           [formField]="profileForm.bio"
         ></textarea>
         <ngx-form-field-hint id="bio-hint">
-          Up to 500 characters.
+          A few words about you.
         </ngx-form-field-hint>
-        <ngx-form-field-character-count [formField]="profileForm.bio" />
+        <ngx-form-field-character-count
+          [formField]="profileForm.bio"
+          fieldName="bio"
+        />
         <ngx-form-field-error [formField]="profileForm.bio" fieldName="bio" />
       </div>
 
@@ -159,8 +162,11 @@ What happens:
 - The email error shows after the user leaves the field or submits. Auto-ARIA
   sets `aria-invalid="true"` and adds `email-error` to the input's
   `aria-describedby` at the same moment.
-- The textarea's `aria-describedby` keeps `bio-hint`, because you wrote it.
-- The character count reads the limit from the `maxLength` validator.
+- The textarea's `aria-describedby` keeps `bio-hint` and
+  `bio-char-count-limit`, because you wrote them.
+- The character count reads the limit from the `maxLength` validator. With
+  `fieldName="bio"` it renders a hidden "Up to 500 characters" text with the
+  id `bio-char-count-limit`, so screen readers read the limit on focus.
 - On an invalid submit, the summary lists every error, and only the summary
   announces. See [NgxFormFieldErrorSummary](#ngxformfielderrorsummary).
 
@@ -318,6 +324,7 @@ Shows "current/max" and changes colour as the value nears the limit.
 | `showLimitColors`       | `boolean`                                      | `true`                     | Colour changes as the count nears the limit.                  |
 | `liveAnnounce`          | `boolean`                                      | `false`                    | Polite announcement when the limit state changes.             |
 | `announcementFormatter` | `NgxCharacterCountAnnouncementFormatter`       | English text               | Function that returns localized announcement text.            |
+| `fieldName`             | `string \| undefined`                          | from the wrapper           | Field name for the limit id when no wrapper supplies one.     |
 
 Behavior:
 
@@ -333,6 +340,22 @@ Behavior:
   text to the control's `aria-describedby`. Change that text with
   `characterCountLimitText` (`{max}` placeholder) in
   `provideNgxSignalFormsConfig()`.
+- Without a wrapper, set `fieldName` to render the same hidden text with the
+  id `{fieldName}-char-count-limit`. Put that id in the control's
+  `aria-describedby` yourself. Auto-ARIA keeps ids that you write. Use one id
+  token for `fieldName`: the count trims it and replaces inner whitespace
+  with `-`, so `"shipping notes"` gives `shipping-notes-char-count-limit`.
+  Inside a wrapper, the count ignores `fieldName` and uses the wrapper's
+  field name.
+
+  ```html
+  <textarea
+    id="bio"
+    aria-describedby="bio-char-count-limit"
+    [formField]="form.bio"
+  ></textarea>
+  <ngx-form-field-character-count [formField]="form.bio" fieldName="bio" />
+  ```
 
 To localize the announcements, bind `[announcementFormatter]`. The function
 gets `'warning'`, `'danger'`, or `'exceeded'`, never `'ok'`. `remaining` and

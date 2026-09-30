@@ -223,7 +223,8 @@ provideNgxSignalFormsConfig({ defaultErrorStrategy: 'on-submit' });
 The quick start works without `ngxSignalForm`. The app-wide setting times the
 visible message and `aria-invalid` together, and Angular marks every
 interactive field touched on submit. Add `ngxSignalForm` to the form when you
-use `on-submit`, set the timing for one form, or show an error summary.
+use `on-submit`, set the timing for one form, set the timing on an error
+message outside a wrapper, or show an error summary.
 `on-submit` needs the directive because the directive tracks the submit. The
 directive is already in `NgxSignalFormToolkit`, so you only add the attribute.
 
