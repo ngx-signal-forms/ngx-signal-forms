@@ -15,11 +15,15 @@ import { resolve } from 'node:path';
 const here = import.meta.dirname;
 const pkgPath = resolve(here, '../../packages/toolkit/package.json');
 
+// Keep in step with `bannedExternalImports` in oxlint.config.ts.
 const FORBIDDEN_PATTERNS = [
+  /^@angular\/cdk(\/.*)?$/,
   /^@angular\/material(\/.*)?$/,
   /^@angular\/material-.*/,
   /^primeng(\/.*)?$/,
   /^primeicons(\/.*)?$/,
+  /^@primeuix\/.+/,
+  /^@primeng\/.+/,
   /^@spartan-ng\/.+/,
 ];
 

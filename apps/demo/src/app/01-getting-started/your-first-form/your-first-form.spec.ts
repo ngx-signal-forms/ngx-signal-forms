@@ -27,7 +27,6 @@ describe('YourFirstFormComponent (unit-testing guide example)', () => {
         // once a field is blurred, not on every keystroke.
         provideNgxSignalFormsConfig({
           defaultErrorStrategy: 'on-touch',
-          autoAria: true,
         }),
       ],
     });

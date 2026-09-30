@@ -237,7 +237,7 @@ export interface ErrorSummarySignals {
  * <div ngxHeadlessErrorSummary #summary="errorSummary" [formTree]="myForm">
  *   <ul role="alert">
  *     @if (summary.shouldShow() && summary.hasErrors()) {
- *       @for (entry of summary.entries(); track entry.kind + entry.fieldName) {
+ *       @for (entry of summary.entries(); track entry.key) {
  *         <li>
  *           @if (entry.canFocus) {
  *             <button type="button" (click)="entry.focus()">

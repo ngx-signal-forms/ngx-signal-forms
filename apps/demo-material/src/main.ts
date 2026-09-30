@@ -25,7 +25,6 @@ void (async () => {
       // required (unlike Material 21 and earlier).
       provideNgxSignalFormsConfig({
         defaultErrorStrategy: 'on-touch',
-        autoAria: true,
       }),
       // Registers the Material feedback renderer for both error and hint
       // slots once for the entire app — the recommended path per

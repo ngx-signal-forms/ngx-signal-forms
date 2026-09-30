@@ -265,9 +265,26 @@ export default defineConfig({
               // The published toolkit must never reach into demo-only code.
               // This is what keeps the design-system reference apps (#40)
               // from contaminating the toolkit bundle.
+              // It must also stay design-system-free. Keep the banned list
+              // in step with FORBIDDEN_PATTERNS in
+              // tools/scripts/check-toolkit-peer-deps.mjs.
               {
                 sourceTag: 'scope:lib',
                 onlyDependOnLibsWithTags: ['scope:lib'],
+                bannedExternalImports: [
+                  '@angular/cdk',
+                  '@angular/cdk/*',
+                  '@angular/material',
+                  '@angular/material/*',
+                  '@angular/material-*',
+                  'primeng',
+                  'primeng/*',
+                  'primeicons',
+                  'primeicons/*',
+                  '@primeuix/*',
+                  '@primeng/*',
+                  '@spartan-ng/*',
+                ],
               },
               {
                 sourceTag: 'scope:demo',
