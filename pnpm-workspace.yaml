@@ -14,11 +14,44 @@ allowBuilds:
   simple-git-hooks: true
 autoInstallPeers: true
 catalogMode: 'prefer'
-# pnpm 11 defaults this to `install`, which runs an implicit `pnpm install`
+# pnpm defaults this to `install`, which runs an implicit `pnpm install`
 # before commands such as `pnpm nx ...`. That is unsafe in git worktrees where
 # `node_modules` may be symlinked to the main checkout, and CI should use the
 # explicit install step instead of command-time dependency repair.
 verifyDepsBeforeRun: false
+# Supply-chain settings.
+# Refuse a version whose publish trust is weaker than earlier versions of the
+# same package, such as a provenance-signed package that suddenly publishes
+# without provenance. Add `trustPolicyExclude` entries only for named cases.
+trustPolicy: no-downgrade
+trustPolicyExclude:
+  # 9.13.x and 10.x publish with GitHub provenance; the 9.14.0 backport to the
+  # 9.x line does not. Reached only through verdaccio (local release dry runs).
+  - pino@9.14.0
+  # The 6.x line is a 2023 backport that predates npm provenance, so it looks
+  # like a downgrade next to 7.x. Reached only through @babel/core.
+  - semver@6.3.1
+# Transitive dependencies cannot come from git, tarball URLs or other
+# non-registry sources.
+blockExoticSubdeps: true
+# Fail the install when a dependency with build scripts is missing from
+# `allowBuilds`, instead of skipping its scripts silently.
+strictDepBuilds: true
+# Skip versions younger than two days (in minutes). Keep this equal to the
+# Dependabot `cooldown.default-days` in .github/dependabot.yml.
+minimumReleaseAge: 2880
+# pnpm 12.3+ turns strict mode on whenever `minimumReleaseAge` is set. Strict
+# mode refuses `pnpm update --no-save`, which is what Dependabot runs, so every
+# Dependabot update fails (dependabot-core#16375). The two-day window still
+# applies; strict mode only adds an approval prompt a bot cannot answer.
+# Remove this once dependabot-core#16376 ships.
+minimumReleaseAgeStrict: false
+# pnpm 12 writes the lockfile as two YAML documents. Dependabot reads only the
+# first and sees no dependencies (dependabot-core#15904). This keeps the
+# lockfile to one document. It also stops pnpm from enforcing `packageManager`,
+# so CI and `pnpm/action-setup` are the only pins for the pnpm version. Remove
+# this once dependabot-core#15904 is fixed.
+pmOnFail: ignore
 catalogs:
   analogjs:
     '@analogjs/vite-plugin-angular': '2.7.5'
@@ -142,33 +175,10 @@ catalogs:
     '@vitest/ui': '~4.1.11'
     vitest: '~4.1.11'
 
-overrides:
-  '@babel/plugin-transform-modules-systemjs@>=7.12.0 <=7.29.3': '^7.29.4'
-  ajv@>=7.0.0-alpha.0 <8.18.0: '^8.18.0'
-  axios@>=1.0.0 <1.16.0: '^1.16.0'
-  brace-expansion@>=4.0.0 <5.0.5: '^5.0.5'
-  brace-expansion@>=5.0.0 <5.0.6: '^5.0.6'
-  fast-uri@<=3.1.1: '^3.1.2'
-  follow-redirects@<=1.15.11: '^1.15.12'
-  ip-address@<=10.1.0: '^10.1.1'
-  picomatch@>=4.0.0 <4.0.4: '^4.0.4'
-  qs@>=6.11.1 <=6.15.1: '^6.15.2'
-  tmp@<0.2.7: '^0.2.7'
-  uuid@<11.1.1: '^11.1.1'
-  webpack-dev-server@<5.2.5: '^5.2.5'
-  ws@>=8.0.0 <8.20.1: '^8.20.1'
-  yaml@>=2.0.0 <2.8.3: '^2.8.3'
-  # Transitive CVE pins — Dependabot cannot auto-bump these through pnpm catalogs,
-  # so they are pinned here by range. Review when the parent tooling updates.
-  '@babel/core@<=7.29.0': '^7.29.1'
-  esbuild@>=0.27.3 <0.28.1: '^0.28.1'
-  form-data@>=4.0.0 <4.0.6: '^4.0.6'
-  hono@<4.12.25: '^4.12.25'
-  http-proxy-middleware@>=0.16.0 <2.0.10: '^2.0.10'
-  http-proxy-middleware@>=3.0.0 <3.0.7: '^3.0.7'
-  js-yaml@<=4.1.1: '^4.1.2'
-  piscina@>=5.0.0-alpha.0 <=5.1.4: '^5.1.5'
-  undici@<6.27.0: '^6.27.0'
-  undici@>=7.0.0 <7.28.0: '^7.28.0'
-  vite@>=7.0.0 <7.3.5: '>=7.3.5 <9'
 strictPeerDependencies: false
+# `pnpm peers check` runs in CI. tsconfck (via vite-tsconfig-paths) lists
+# typescript ^5 as its peer; the workspace builds and tests on TypeScript 6
+# with it. Drop this rule once tsconfck widens its range.
+peerDependencyRules:
+  allowedVersions:
+    'tsconfck>typescript': '6'

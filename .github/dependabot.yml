@@ -20,7 +20,9 @@ updates:
     open-pull-requests-limit: 10
     # Skip versions younger than pnpm's minimumReleaseAge supply-chain window,
     # otherwise Dependabot commits lockfiles that pnpm rejects at install time
-    # (ERR_PNPM_MINIMUM_RELEASE_AGE_VIOLATION, see PR #132).
+    # (ERR_PNPM_MINIMUM_RELEASE_AGE_VIOLATION, see PR #132). Keep
+    # `default-days: 2` equal to `minimumReleaseAge: 2880` (minutes) in
+    # pnpm-workspace.yaml.
     cooldown:
       default-days: 2
     labels:
