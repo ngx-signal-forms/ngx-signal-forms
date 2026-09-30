@@ -49,6 +49,13 @@ The form-field entry point provides a pre-styled field shell (label + control + 
     [formField]="form.emailUpdates"
   />
 
+  <!-- Library or custom switch host with no native role="switch" input: declare the kind -->
+  <app-toggle
+    id="darkMode"
+    [formField]="form.darkMode"
+    ngxSignalFormControl="switch"
+  />
+
   <!-- Native checkbox opt-in uses the group preset; switches use inline-control. -->
   <input
     id="agreeToTerms"
@@ -211,7 +218,7 @@ timing unless `warningStrategy` is also set. For theme work, read the
 
 - If wrapper errors don't appear: confirm the bound control has an `id` attribute matching the field, or add explicit `fieldName` when the control is nested.
 - If grouped summary duplicates child messages: remove `includeNestedErrors` or scope `fields` explicitly.
-- If a switch row collapses or inherits text-input styling: make sure the bound control has `role="switch"`. The toolkit infers the switch kind from that role, so the wrapper uses switch-specific layout without `ngxSignalFormControl="switch"`.
+- If a switch row collapses or inherits text-input styling: make sure the bound control has `role="switch"`. The toolkit infers the switch kind from that role, so the wrapper uses switch-specific layout without `ngxSignalFormControl="switch"`. A library switch host that renders no native `role="switch"` checkbox (`mat-slide-toggle`, a Spartan switch, `p-toggleswitch`) needs `ngxSignalFormControl="switch"` instead.
 - If a slider or composite control gets an outlined text-field shell: add `ngxSignalFormControl="slider"` (or `"composite"`) to the bound host so the wrapper picks up the correct layout. If a field-shaped combobox or closed select does **not** get the text-field shell, keep the trigger naked and join as `input-like` (combobox role + id, or explicit `ngxSignalFormControl="input-like"`). Do not add a `select` kind.
 - If auto-ARIA conflicts with a custom control's own ARIA attributes: add `ngxSignalFormControlAria="manual"` on the control host to suppress toolkit ARIA management. Use `buildAriaDescribedBy` to assemble the `aria-describedby` value manually.
 - For fully custom markup without wrapper assumptions, switch to [headless](../headless/guide.md).

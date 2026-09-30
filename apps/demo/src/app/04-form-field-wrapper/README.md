@@ -31,7 +31,7 @@ Uses the root bundle and form-field entry point.
 
 - **The wrapper** — `ngx-form-field-wrapper` projects label, control, hints, and errors into a consistent layout. API reference in [form-field README](../../../../../packages/toolkit/form-field/README.md).
 - **Appearances** — `standard` / `outline` / `plain` via the `appearance` input. Theme with CSS custom properties; see [theming guide](../../../../../packages/toolkit/form-field/THEMING.md).
-- **Control semantics** — `ngxSignalFormControl="checkbox|slider"` makes projection explicit instead of guessed. A native `role="switch"` checkbox needs no attribute. Background in [ADR-0001](../../../../../docs/decisions/0001-control-semantics-architecture.md) and [docs/CUSTOM_CONTROLS.md](../../../../../docs/CUSTOM_CONTROLS.md).
+- **Control semantics** — `ngxSignalFormControl="checkbox|slider"` makes projection explicit instead of guessed. A native `role="switch"` checkbox needs no attribute. A library switch that renders no such checkbox (Material `mat-slide-toggle`, PrimeNG `p-toggleswitch`, a Spartan switch) needs `ngxSignalFormControl="switch"`. Background in [ADR-0001](../../../../../docs/decisions/0001-control-semantics-architecture.md) and [docs/CUSTOM_CONTROLS.md](../../../../../docs/CUSTOM_CONTROLS.md).
 - **Fieldset grouping** — `<ngx-form-fieldset>` aggregates descendant errors for grouped layouts, and the dedicated [fieldset-appearance](./fieldset-appearance/README.md) page compares grouped summary modes, surfaced tones, and nested aggregation. See [docs/COMPLEX_NESTED_FORMS.md](../../../../../docs/COMPLEX_NESTED_FORMS.md).
 
 ## 🤔 When to use this section

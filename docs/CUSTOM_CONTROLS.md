@@ -20,7 +20,7 @@ Find your case:
 | You have…                                                         | Do this                                                                                                   |
 | ----------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
 | A new control that reads and writes a value                       | [Build a custom control](#build-a-custom-control) with `FormValueControl<T>`                              |
-| A new on/off control                                              | Use a native checkbox with `role="switch"`. See [Switches](#switches)                                     |
+| A new on/off control                                              | Use a native checkbox with `role="switch"`. For a library switch, see [Switches](#switches)               |
 | A combobox or closed select that must look like a text field      | [Field-shaped controls](#field-shaped-vs-widget-shaped-custom-controls): kind `input-like`, naked trigger |
 | A slider, rating, datepicker, or other composite widget           | [Widget-shaped controls](#field-shaped-vs-widget-shaped-custom-controls): `appearance="plain"`            |
 | A widget that writes its own `aria-invalid` or `aria-describedby` | [`ngxSignalFormControlAria="manual"`](#aria-ownership)                                                    |
@@ -174,6 +174,7 @@ The two do not always agree:
 | `input[type="checkbox"][role="switch"]`                                 | `switch`                             | Yes. No attribute needed                              |
 | `input[type="radio"]`                                                   | `radio-group`                        | No. Add `ngxSignalFormControl="radio-group"`          |
 | Custom host with `role="switch"`, `"slider"`, or `"radiogroup"`         | `switch`, `slider`, or `radio-group` | Yes                                                   |
+| Custom host with no `role`, plus `ngxSignalFormControl="switch"`        | `switch` (declared)                  | Yes                                                   |
 | Custom host with `role="combobox"`, or an inner `[role="combobox"][id]` | `input-like`                         | Yes                                                   |
 | `<button>` host                                                         | `composite`                          | Yes                                                   |
 | Other custom host                                                       | none, until you declare one          | Yes. Opt out with `ngxSignalFormControlAria="manual"` |
@@ -271,8 +272,28 @@ Library switches:
 
 - **Bootstrap or ng-bootstrap switch styling** sits on a native checkbox. Add
   `role="switch"` and let the toolkit add its ARIA.
-- **Angular Material `mat-slide-toggle`** and **PrimeNG toggles** own their
-  switch semantics and ARIA. Let the library keep them. Add
+- **A switch component that does not render a native
+  `input[type="checkbox"][role="switch"]`** has nothing for the toolkit to
+  infer from. This covers Angular Material `mat-slide-toggle`, a Spartan
+  switch, PrimeNG `p-toggleswitch`, and your own switch component used as a
+  `[formField]` host. Set `ngxSignalFormControl="switch"` on the host. The
+  wrapper then uses the switch layout (`inline-control`, no outline).
+
+  ```html
+  <app-toggle
+    id="emailUpdates"
+    [formField]="form.emailUpdates"
+    ngxSignalFormControl="switch"
+  />
+  ```
+
+  The attribute does not add a role. Auto-ARIA already covers a custom
+  `[formField]` host, and it sets `aria-required` only when the host has a
+  role that supports it. The switch component must supply `role="switch"`,
+  keyboard handling, the checked state, and the accessible name.
+
+  If the library owns `aria-invalid` and `aria-describedby`, as
+  `mat-slide-toggle` and PrimeNG toggles do, also add
   `ngxSignalFormControlAria="manual"`, or use a
   [custom wrapper](./CUSTOM_WRAPPERS.md). Check the rendered DOM for the
   accessible name, the checked state, and the `aria-describedby` link.
