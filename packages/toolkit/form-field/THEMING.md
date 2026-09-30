@@ -578,7 +578,7 @@ text falls under 4.5:1 on `#fbdddd` only (4.35:1; 4.61:1 on `#fdebeb`). In
 light mode, the legend, labels, required markers, hints, character counts
 and error and warning text therefore switch to `#b91c1c`, `#92400e` and
 `#324155`. On `#fbdddd` that is 5.08:1, 5.57:1 and 8.15:1. The optional
-marker keeps its 70% opacity on a darker `#1e293b` base: 4.92:1. The tint,
+marker needs no tinted tone: its default base is 4.92:1 there. The tint,
 the borders and the dark values do not change. The panel presentation uses the
 same idea (see
 [Grouped Panel Feedback](#grouped-panel-feedback-panel-presentation)). These
@@ -870,9 +870,17 @@ attribute (`"required"` / `"optional"` / absent) for additional styling hooks.
 | :----------------------------------------- | :---------------------------------- | :---------------------- |
 | `--ngx-form-field-required-marker-color`   | `var(--ngx-form-field-color-error)` | Required marker color   |
 | `--ngx-form-field-required-marker-weight`  | `600`                               | Required marker weight  |
-| `--ngx-form-field-optional-marker-color`   | `currentColor` (muted)              | Optional marker color   |
+| `--ngx-form-field-optional-marker-color`   | `light-dark(#1e293b, currentColor)` | Optional marker color   |
 | `--ngx-form-field-optional-marker-weight`  | `400`                               | Optional marker weight  |
 | `--ngx-form-field-optional-marker-opacity` | `0.7`                               | Optional marker opacity |
+
+The optional marker paints at 70% opacity. The label color at that opacity
+is 2.80:1 on white, under the 4.5:1 that WCAG 1.4.3 asks for. So in light
+mode the marker has its own darker base, `#1e293b`: 5.52:1 on white at 0.7.
+In dark mode it keeps the label color (4.97:1 on `#1f2937`). If you set
+`--ngx-form-field-label-color` and want the marker to follow it, set
+`--ngx-form-field-optional-marker-color: currentColor` too, and check the
+contrast at your opacity.
 
 #### Input (Standard Layout)
 

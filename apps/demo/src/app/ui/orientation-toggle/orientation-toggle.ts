@@ -1,9 +1,4 @@
-import {
-  ChangeDetectionStrategy,
-  Component,
-  input,
-  model,
-} from '@angular/core';
+import { Component, input, model } from '@angular/core';
 import type {
   FormFieldAppearance,
   FormFieldOrientation,
@@ -16,7 +11,6 @@ import {
 
 @Component({
   selector: 'ngx-orientation-toggle',
-  changeDetection: ChangeDetectionStrategy.OnPush,
 
   template: `
     <div

@@ -1,6 +1,5 @@
 import {
   afterNextRender,
-  ChangeDetectionStrategy,
   Component,
   ElementRef,
   output,
@@ -19,7 +18,6 @@ import {
  */
 @Component({
   selector: 'ngx-page-error',
-  changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <header class="mb-8 text-center">
       <h1

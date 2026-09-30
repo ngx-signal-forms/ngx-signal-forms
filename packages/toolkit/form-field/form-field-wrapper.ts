@@ -2,7 +2,6 @@ import { NgComponentOutlet } from '@angular/common';
 import {
   afterEveryRender,
   booleanAttribute,
-  ChangeDetectionStrategy,
   Component,
   computed,
   contentChildren,
@@ -197,7 +196,6 @@ const FIELD_BOX_INTERACTIVE_SELECTOR = [
  */
 @Component({
   selector: 'ngx-form-field-wrapper',
-  changeDetection: ChangeDetectionStrategy.OnPush,
 
   // `NgxFormFieldError` is deliberately absent: the wrapper never writes the
   // element in its template, it renders whatever `#errorRendererComponent()`

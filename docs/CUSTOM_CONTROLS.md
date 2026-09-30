@@ -121,13 +121,12 @@ If you get this wrong, nothing fails. The form works, but the control gets no
 `aria-invalid` or `aria-describedby`.
 
 ```typescript
-import { ChangeDetectionStrategy, Component, input } from '@angular/core';
+import { Component, input } from '@angular/core';
 import { FormField, type FieldTree } from '@angular/forms/signals';
 import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit';
 
 @Component({
   selector: 'app-switch-control',
-  changeDetection: ChangeDetectionStrategy.OnPush,
   // FormField and auto-ARIA must be imported HERE, next to the <input>.
   imports: [FormField, NgxSignalFormToolkit],
   template: `
@@ -528,7 +527,6 @@ the `<select>` that the user operates.
 
 ```typescript
 import {
-  ChangeDetectionStrategy,
   Component,
   ElementRef,
   input,
@@ -540,7 +538,6 @@ import type { FormValueControl } from '@angular/forms/signals';
 
 @Component({
   selector: 'app-custom-select',
-  changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <select
       #select

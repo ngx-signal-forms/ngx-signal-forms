@@ -1,10 +1,4 @@
-import {
-  ChangeDetectionStrategy,
-  Component,
-  computed,
-  signal,
-  viewChild,
-} from '@angular/core';
+import { Component, computed, signal, viewChild } from '@angular/core';
 import {
   type ResolvedErrorDisplayStrategy,
   type FormFieldAppearance,
@@ -34,7 +28,6 @@ import { I18nDemoComponent } from './i18n.form';
 
 @Component({
   selector: 'ngx-i18n-demo-page',
-  changeDetection: ChangeDetectionStrategy.OnPush,
 
   styles: `
     :host {

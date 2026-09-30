@@ -1,5 +1,4 @@
 import {
-  ChangeDetectionStrategy,
   Component,
   ElementRef,
   computed,
@@ -39,7 +38,6 @@ import type { FormFieldAppearance } from '@ngx-signal-forms/toolkit';
  */
 @Component({
   selector: 'ngx-legacy-datepicker',
-  changeDetection: ChangeDetectionStrategy.OnPush,
   host: {
     class: 'legacy-datepicker',
     '[attr.data-appearance]': 'appearance()',

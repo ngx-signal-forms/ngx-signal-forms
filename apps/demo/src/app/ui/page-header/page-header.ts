@@ -1,8 +1,7 @@
-import { ChangeDetectionStrategy, Component, input } from '@angular/core';
+import { Component, input } from '@angular/core';
 
 @Component({
   selector: 'ngx-page-header',
-  changeDetection: ChangeDetectionStrategy.OnPush,
 
   // `tabindex="-1"` lets the shell move focus here after a route change, so a
   // screen reader announces the new page (#571). It keeps the heading out of

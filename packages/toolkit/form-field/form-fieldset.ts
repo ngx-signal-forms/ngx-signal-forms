@@ -2,7 +2,6 @@ import { NgComponentOutlet, NgTemplateOutlet } from '@angular/common';
 import {
   afterEveryRender,
   booleanAttribute,
-  ChangeDetectionStrategy,
   Component,
   computed,
   ElementRef,
@@ -143,7 +142,6 @@ const FIELDSET_SURFACE_TONE_VALUES = [
  */
 @Component({
   selector: 'ngx-form-fieldset, [ngxFormFieldset]',
-  changeDetection: ChangeDetectionStrategy.OnPush,
 
   hostDirectives: [
     {

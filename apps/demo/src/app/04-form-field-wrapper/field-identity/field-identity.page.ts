@@ -1,10 +1,4 @@
-import {
-  ChangeDetectionStrategy,
-  Component,
-  computed,
-  signal,
-  viewChild,
-} from '@angular/core';
+import { Component, computed, signal, viewChild } from '@angular/core';
 import { NgxSignalFormDebugger } from '@ngx-signal-forms/debugger';
 import type { ResolvedErrorDisplayStrategy } from '@ngx-signal-forms/toolkit';
 import {
@@ -23,7 +17,6 @@ import { FieldIdentityFormComponent } from './field-identity.form';
 
 @Component({
   selector: 'ngx-field-identity-page',
-  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     FieldIdentityFormComponent,
     ErrorDisplayModeSelectorComponent,

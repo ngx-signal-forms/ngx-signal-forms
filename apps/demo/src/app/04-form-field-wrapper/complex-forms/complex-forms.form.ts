@@ -1,6 +1,5 @@
 import {
   afterNextRender,
-  ChangeDetectionStrategy,
   Component,
   computed,
   ElementRef,
@@ -67,7 +66,6 @@ function createInitialComplexFormModel(): ComplexFormModel {
  */
 @Component({
   selector: 'ngx-complex-forms',
-  changeDetection: ChangeDetectionStrategy.OnPush,
 
   imports: [
     BusyButtonDirective,

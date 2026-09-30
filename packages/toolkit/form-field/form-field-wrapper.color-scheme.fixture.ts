@@ -6,13 +6,7 @@
 // blocks a second time under the importing file's test run, which is not
 // what either caller wants.
 
-import {
-  ApplicationRef,
-  ChangeDetectionStrategy,
-  Component,
-  input,
-  signal,
-} from '@angular/core';
+import { ApplicationRef, Component, input, signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import {
   FormField,
@@ -133,7 +127,6 @@ import { NgxFormField } from './index';
       </ngx-form-field-wrapper>
     </form>
   `,
-  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ColorSchemeFixtureComponent {
   /** Tints the invalid fieldset surface (`validationSurface="always"`). */

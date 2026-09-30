@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { Component, signal } from '@angular/core';
 import {
   form,
   FormField,
@@ -75,7 +75,6 @@ const accountSchema = schema<AccountPreferences>((path) => {
  */
 @Component({
   selector: 'ngx-account-preferences-form',
-  changeDetection: ChangeDetectionStrategy.OnPush,
 
   imports: [
     FormField,

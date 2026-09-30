@@ -1,6 +1,5 @@
 import { NgTemplateOutlet } from '@angular/common';
 import {
-  ChangeDetectionStrategy,
   afterNextRender,
   Component,
   effect,
@@ -26,7 +25,6 @@ import { NgxResetOnNavigationDirective } from '../render-error/reset-on-navigati
  */
 @Component({
   selector: 'ngx-right-rail',
-  changeDetection: ChangeDetectionStrategy.OnPush,
 
   imports: [NgTemplateOutlet, NgxResetOnNavigationDirective],
   host: {
