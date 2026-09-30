@@ -875,7 +875,9 @@ declare const NGX_SIGNAL_FORM_FIELD_VISIBILITY_REGISTRY: InjectionToken<NgxSigna
  * The wrapper instantiates the configured component via `*ngComponentOutlet`
  * and binds the relevant input set per call site. A custom renderer intended
  * to replace both must accept the union of those input names; inputs the
- * renderer doesn't declare are silently dropped by `*ngComponentOutlet`.
+ * renderer doesn't declare never reach it. Angular's `componentRef.setInput`
+ * skips them and, in dev mode, logs an `NG0303` error (it throws when the app
+ * sets `errorOnUnknownProperties`).
  *
  * Renderers may accept extra inputs beyond the contract (analytics tags,
  * theming hooks); the wrapper/fieldset ignore them and Angular accepts the
@@ -918,8 +920,9 @@ interface NgxFormFieldErrorRenderer {
  * `NgxFormFieldHint` already exposes as inputs:
  * `{ resolvedFieldName: string | null, resolvedId: string, position:
  * 'left' | 'right' | null }`. Renderers must declare all three with
- * `input()` — Angular's `componentRef.setInput` rejects writes to
- * undeclared inputs, so omitting any of them errors at runtime.
+ * `input()`. `componentRef.setInput` skips an undeclared input and, in dev
+ * mode, logs an `NG0303` error (it throws when the app sets
+ * `errorOnUnknownProperties`).
  *
  * When no provider is registered, `NgxFormFieldHint` falls back to direct
  * `<ng-content />` projection (preserving backwards compatibility for
