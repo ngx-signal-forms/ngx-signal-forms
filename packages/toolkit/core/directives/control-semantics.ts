@@ -88,11 +88,11 @@ type NgxSignalFormControlDirectiveValue =
     NgxControlPresetRegistry,
     {
       provide: NGX_SIGNAL_FORM_ARIA_MODE,
-      useFactory: () => inject(NgxSignalFormControlSemanticsDirective).ariaMode,
+      useFactory: () => inject(NgxSignalFormControl).ariaMode,
     },
   ],
 })
-export class NgxSignalFormControlSemanticsDirective {
+export class NgxSignalFormControl {
   // Provided at this directive's node so it observes element-scoped preset
   // overrides; the token remains the backing source of truth.
   readonly #presetRegistry = inject(NgxControlPresetRegistry);
@@ -101,7 +101,7 @@ export class NgxSignalFormControlSemanticsDirective {
    * Host element this directive is applied to.
    *
    * Exposed so parent wrappers can locate the bound control via
-   * `contentChildren(NgxSignalFormControlSemanticsDirective)` and read the
+   * `contentChildren(NgxSignalFormControl)` and read the
    * host's tag, `id`, or current attributes (e.g. Material's
    * `aria-describedby` for the `preservedIds` reader of
    * `createAriaDescribedBySignal`). This is the canonical signal-native

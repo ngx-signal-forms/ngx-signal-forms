@@ -5,7 +5,7 @@ export type * from './form-field-error-placement';
 
 import {
   NgxSignalFormAutoAria,
-  NgxSignalFormControlSemanticsDirective,
+  NgxSignalFormControl,
 } from '@ngx-signal-forms/toolkit';
 import {
   NgxFormFieldCharacterCount,
@@ -24,7 +24,7 @@ import { NgxFormFieldset } from './form-fieldset';
  * `NgxSignalFormToolkit`. The directive is idempotent — importing it twice
  * (e.g. via both bundles) is safe.
  *
- * Also includes `NgxSignalFormControlSemanticsDirective` so the
+ * Also includes `NgxSignalFormControl` so the
  * `ngxSignalFormControl="..."` / `ngxSignalFormControlAria="manual"`
  * attributes the wrapper's own dev-mode warning instructs authors to add
  * (see the "unresolved control kind" diagnostic in `NgxFormFieldWrapper`)
@@ -58,7 +58,7 @@ import { NgxFormFieldset } from './form-fieldset';
  */
 export const NgxFormField = [
   NgxSignalFormAutoAria,
-  NgxSignalFormControlSemanticsDirective,
+  NgxSignalFormControl,
   NgxFormFieldWrapper,
   NgxFormFieldHint,
   NgxFormFieldCharacterCount,

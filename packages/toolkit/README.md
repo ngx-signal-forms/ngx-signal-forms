@@ -40,12 +40,12 @@ export class ProfileFormComponent {}
 
 The bundle contains four standalone directives:
 
-| Directive                                | Selector                        | Does                                                         |
-| ---------------------------------------- | ------------------------------- | ------------------------------------------------------------ |
-| `FormRoot`                               | `form[formRoot]`                | Angular's form directive. Handles `submit()`                 |
-| `NgxSignalForm`                          | `form[formRoot][ngxSignalForm]` | Shares error timing and submit status with the form's fields |
-| `NgxSignalFormAutoAria`                  | `[formField]` controls          | Writes `aria-invalid`, `aria-required`, `aria-describedby`   |
-| `NgxSignalFormControlSemanticsDirective` | `[ngxSignalFormControl]`        | Declares the kind of a custom control                        |
+| Directive               | Selector                        | Does                                                         |
+| ----------------------- | ------------------------------- | ------------------------------------------------------------ |
+| `FormRoot`              | `form[formRoot]`                | Angular's form directive. Handles `submit()`                 |
+| `NgxSignalForm`         | `form[formRoot][ngxSignalForm]` | Shares error timing and submit status with the form's fields |
+| `NgxSignalFormAutoAria` | `[formField]` controls          | Writes `aria-invalid`, `aria-required`, `aria-describedby`   |
+| `NgxSignalFormControl`  | `[ngxSignalFormControl]`        | Declares the kind of a custom control                        |
 
 You can also import each directive on its own.
 
@@ -187,7 +187,7 @@ provideNgxSignalFormControlPresets({
 
 No config key turns auto-ARIA off for the whole app.
 
-### NgxSignalFormControlSemanticsDirective
+### NgxSignalFormControl
 
 Tells the wrapper and auto-ARIA what kind of control a custom host is.
 
@@ -544,8 +544,8 @@ violations with axe-core. See the [testing README](./testing/README.md).
 - npm publishes the root `README.md`, not this file.
 - `packages/toolkit/index.ts` lists every public root export by name. When you
   add a public symbol to `core/`, add it there and to this page.
-- `NgxSignalFormControlSemanticsDirective` keeps the `Directive` suffix. The
-  interface `NgxSignalFormControlSemantics` already uses the short name.
+- `NgxSignalFormControl` is the directive class. The interface
+  `NgxSignalFormControlSemantics` describes the same shape as data.
 - `NgxFieldIdentity` has `set*` writer methods tagged `@internal`.
   `scripts/strip-internal-members.mjs` removes them from the published
   `.d.ts`. The build does not use TypeScript's `stripInternal`, because it

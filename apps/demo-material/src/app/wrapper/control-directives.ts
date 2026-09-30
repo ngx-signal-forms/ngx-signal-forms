@@ -56,7 +56,7 @@ function ngxMatBoundControlProviders(
  * `MatInput` / `MatSelect`).
  *
  * ## Why not host-directive composition over the toolkit's
- *    `NgxSignalFormControlSemanticsDirective`?
+ *    `NgxSignalFormControl`?
  *
  * Angular's host-directive metadata supports forwarding consumer-bound
  * inputs but does **not** support setting default input values. There is

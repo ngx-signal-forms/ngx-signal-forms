@@ -5,7 +5,7 @@ A runnable end-to-end example showing how to integrate
 **Spartan Components** (`@spartan-ng/brain` + `@spartan-ng/helm`). This is
 the canonical "host directive" example for the toolkit's renderer-token
 seam — Spartan's directive-first composition model maps directly onto how
-the toolkit exposes its own seams (`NgxSignalFormControlSemanticsDirective`,
+the toolkit exposes its own seams (`NgxSignalFormControl`,
 `NgxSignalFormAutoAria`).
 
 The four contracts from
@@ -86,7 +86,7 @@ export class MyForm {
 ```
 
 `NgxSpartanFormBundle` is the import bundle for the wrapper itself plus
-`NgxSignalFormControlSemanticsDirective`. The error renderer
+`NgxSignalFormControl`. The error renderer
 (`NgxSpartanFormFieldError`) is mounted dynamically via
 `*ngComponentOutlet` and resolved through `NGX_FORM_FIELD_ERROR_RENDERER`,
 so it is intentionally not in the bundle — see
@@ -116,7 +116,7 @@ src/app/
     live regions).
   - Hint output flows through `<ngx-form-field-hint>` projected as
     `<small data-slot="form-description">`-style copy.
-- `NgxSignalFormControlSemanticsDirective` declared **alongside** the
+- `NgxSignalFormControl` declared **alongside** the
   helm directives (`[hlmInput]` / `<hlm-select>` / `<hlm-checkbox>`) —
   the toolkit reads control semantics through DI, not DOM heuristics, so
   layering both directives on the same host element is the canonical

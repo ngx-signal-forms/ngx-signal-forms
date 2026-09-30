@@ -7,15 +7,15 @@ import {
   NGX_SIGNAL_FORM_CONTROL_PRESETS,
 } from '../tokens';
 import type { NgxSignalFormControlPresetRegistry } from '../types';
-import { NgxSignalFormControlSemanticsDirective } from './control-semantics';
+import { NgxSignalFormControl } from './control-semantics';
 
-describe('NgxSignalFormControlSemanticsDirective', () => {
+describe('NgxSignalFormControl', () => {
   describe('String kind input', () => {
     it('should write data attributes for a valid kind', async () => {
       @Component({
         template:
           '<div data-testid="host" ngxSignalFormControl="switch"></div>',
-        imports: [NgxSignalFormControlSemanticsDirective],
+        imports: [NgxSignalFormControl],
       })
       class TestComponent {}
 
@@ -32,7 +32,7 @@ describe('NgxSignalFormControlSemanticsDirective', () => {
       @Component({
         template:
           '<div data-testid="host" ngxSignalFormControl="switch"></div>',
-        imports: [NgxSignalFormControlSemanticsDirective],
+        imports: [NgxSignalFormControl],
       })
       class TestComponent {}
 
@@ -51,7 +51,7 @@ describe('NgxSignalFormControlSemanticsDirective', () => {
       @Component({
         template:
           '<div data-testid="host" ngxSignalFormControl="unknown"></div>',
-        imports: [NgxSignalFormControlSemanticsDirective],
+        imports: [NgxSignalFormControl],
       })
       class TestComponent {}
 
@@ -65,7 +65,7 @@ describe('NgxSignalFormControlSemanticsDirective', () => {
     it('should treat empty string as no semantics', async () => {
       @Component({
         template: '<div data-testid="host" ngxSignalFormControl=""></div>',
-        imports: [NgxSignalFormControlSemanticsDirective],
+        imports: [NgxSignalFormControl],
       })
       class TestComponent {}
 
@@ -81,7 +81,7 @@ describe('NgxSignalFormControlSemanticsDirective', () => {
       @Component({
         template:
           '<div data-testid="host" [ngxSignalFormControl]="semantics"></div>',
-        imports: [NgxSignalFormControlSemanticsDirective],
+        imports: [NgxSignalFormControl],
       })
       class TestComponent {
         semantics = {
@@ -109,7 +109,7 @@ describe('NgxSignalFormControlSemanticsDirective', () => {
       @Component({
         template:
           '<div data-testid="host" [ngxSignalFormControl]="semantics"></div>',
-        imports: [NgxSignalFormControlSemanticsDirective],
+        imports: [NgxSignalFormControl],
       })
       class TestComponent {
         semantics = { kind: 'slider' as const };
@@ -136,7 +136,7 @@ describe('NgxSignalFormControlSemanticsDirective', () => {
           ngxSignalFormControl="switch"
           ngxSignalFormControlLayout="stacked"
         ></div>`,
-        imports: [NgxSignalFormControlSemanticsDirective],
+        imports: [NgxSignalFormControl],
       })
       class TestComponent {}
 
@@ -156,7 +156,7 @@ describe('NgxSignalFormControlSemanticsDirective', () => {
           ngxSignalFormControl="slider"
           ngxSignalFormControlAria="manual"
         ></div>`,
-        imports: [NgxSignalFormControlSemanticsDirective],
+        imports: [NgxSignalFormControl],
       })
       class TestComponent {}
 
@@ -180,7 +180,7 @@ describe('NgxSignalFormControlSemanticsDirective', () => {
       @Component({
         template:
           '<div data-testid="host" ngxSignalFormControl="slider"></div>',
-        imports: [NgxSignalFormControlSemanticsDirective],
+        imports: [NgxSignalFormControl],
       })
       class TestComponent {}
 
@@ -209,7 +209,7 @@ describe('NgxSignalFormControlSemanticsDirective', () => {
         selector: 'app-child-host',
         template:
           '<div data-testid="child" ngxSignalFormControl="slider"></div>',
-        imports: [NgxSignalFormControlSemanticsDirective],
+        imports: [NgxSignalFormControl],
         providers: [
           provideNgxSignalFormControlPresetsForComponent({
             slider: { layout: 'custom', ariaMode: 'manual' },
@@ -223,7 +223,7 @@ describe('NgxSignalFormControlSemanticsDirective', () => {
           <div data-testid="parent" ngxSignalFormControl="slider"></div>
           <app-child-host />
         `,
-        imports: [NgxSignalFormControlSemanticsDirective, ChildHostComponent],
+        imports: [NgxSignalFormControl, ChildHostComponent],
       })
       class ParentComponent {}
 
@@ -254,7 +254,7 @@ describe('NgxSignalFormControlSemanticsDirective', () => {
       @Component({
         template:
           '<div data-testid="host" [ngxSignalFormControl]="kind()"></div>',
-        imports: [NgxSignalFormControlSemanticsDirective],
+        imports: [NgxSignalFormControl],
       })
       class TestComponent {
         readonly kind = signal('switch');
@@ -286,7 +286,7 @@ describe('NgxSignalFormControlSemanticsDirective', () => {
       @Component({
         template:
           '<div data-testid="host" [ngxSignalFormControl]="kind()"></div>',
-        imports: [NgxSignalFormControlSemanticsDirective],
+        imports: [NgxSignalFormControl],
       })
       class TestComponent {
         readonly kind = signal('switch');
@@ -311,7 +311,7 @@ describe('NgxSignalFormControlSemanticsDirective', () => {
       @Component({
         template:
           '<div data-testid="host" ngxSignalFormControl="input-like"></div>',
-        imports: [NgxSignalFormControlSemanticsDirective],
+        imports: [NgxSignalFormControl],
       })
       class TestComponent {}
 
@@ -325,7 +325,7 @@ describe('NgxSignalFormControlSemanticsDirective', () => {
       @Component({
         template:
           '<div data-testid="host" ngxSignalFormControlLayout="stacked"></div>',
-        imports: [NgxSignalFormControlSemanticsDirective],
+        imports: [NgxSignalFormControl],
       })
       class TestComponent {}
 
@@ -342,12 +342,10 @@ describe('NgxSignalFormControlSemanticsDirective', () => {
     it("should expose the directive's host element so parents can locate the bound control via contentChildren", async () => {
       @Component({
         template: '<div data-testid="host" ngxSignalFormControl="text"></div>',
-        imports: [NgxSignalFormControlSemanticsDirective],
+        imports: [NgxSignalFormControl],
       })
       class TestComponent {
-        readonly directive = viewChild.required(
-          NgxSignalFormControlSemanticsDirective,
-        );
+        readonly directive = viewChild.required(NgxSignalFormControl);
       }
 
       const { fixture } = await render(TestComponent);

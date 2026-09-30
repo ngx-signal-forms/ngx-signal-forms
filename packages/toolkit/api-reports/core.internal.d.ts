@@ -147,7 +147,7 @@ type FormFieldOrientationInput = FormFieldOrientation | 'inherit';
  * - **Override preset behavior** for an existing kind via
  *   `provideNgxSignalFormControlPresets({ slider: { layout: 'custom', ariaMode: 'manual' } })`.
  * - **Declare per-control semantics** on the host via the
- *   `NgxSignalFormControlSemanticsDirective` inputs:
+ *   `NgxSignalFormControl` inputs:
  *   `ngxSignalFormControl`, `ngxSignalFormControlLayout`,
  *   `ngxSignalFormControlAria`.
  * - **Custom widgets that don't fit any native kind** should use
@@ -735,7 +735,7 @@ declare const NGX_SIGNAL_FORM_CONTEXT: InjectionToken<NgxSignalFormContext>;
 declare const NGX_SIGNAL_FORM_FIELD_CONTEXT: InjectionToken<NgxSignalFormFieldContext>;
 /**
  * Injection token for the resolved ARIA ownership mode for a single control
- * host. Provided by `NgxSignalFormControlSemanticsDirective` at its own
+ * host. Provided by `NgxSignalFormControl` at its own
  * directive level, and read by `NgxSignalFormAutoAria` via
  * `{ optional: true, self: true }`.
  *
@@ -1633,7 +1633,7 @@ declare class NgxControlPresetRegistry {
     /**
      * Returns the registered control kinds, derived from the effective registry.
      *
-     * Consumed by `NgxSignalFormControlSemanticsDirective` as its
+     * Consumed by `NgxSignalFormControl` as its
      * recognized-kind set so the runtime list never drifts from the registry.
      *
      * @returns A readonly array of registered control kinds.
@@ -2244,13 +2244,13 @@ type NgxSignalFormControlDirectiveValue = NgxSignalFormControlKind | NgxSignalFo
  * />
  * ```
  */
-declare class NgxSignalFormControlSemanticsDirective {
+declare class NgxSignalFormControl {
     #private;
     /**
      * Host element this directive is applied to.
      *
      * Exposed so parent wrappers can locate the bound control via
-     * `contentChildren(NgxSignalFormControlSemanticsDirective)` and read the
+     * `contentChildren(NgxSignalFormControl)` and read the
      * host's tag, `id`, or current attributes (e.g. Material's
      * `aria-describedby` for the `preservedIds` reader of
      * `createAriaDescribedBySignal`). This is the canonical signal-native
@@ -2264,8 +2264,8 @@ declare class NgxSignalFormControlSemanticsDirective {
     readonly layout: i0.Signal<NgxSignalFormControlLayout | null>;
     readonly ariaMode: i0.Signal<NgxSignalFormControlAriaMode | null>;
     readonly hasSemantics: i0.Signal<boolean>;
-    static ɵfac: i0.ɵɵFactoryDeclaration<NgxSignalFormControlSemanticsDirective, never>;
-    static ɵdir: i0.ɵɵDirectiveDeclaration<NgxSignalFormControlSemanticsDirective, "[ngxSignalFormControl],[ngxSignalFormControlLayout],[ngxSignalFormControlAria]", never, { "semanticsInput": { "alias": "ngxSignalFormControl"; "required": false; "isSignal": true; }; "layoutOverride": { "alias": "ngxSignalFormControlLayout"; "required": false; "isSignal": true; }; "ariaModeOverride": { "alias": "ngxSignalFormControlAria"; "required": false; "isSignal": true; }; }, {}, never, never, true, never>;
+    static ɵfac: i0.ɵɵFactoryDeclaration<NgxSignalFormControl, never>;
+    static ɵdir: i0.ɵɵDirectiveDeclaration<NgxSignalFormControl, "[ngxSignalFormControl],[ngxSignalFormControlLayout],[ngxSignalFormControlAria]", never, { "semanticsInput": { "alias": "ngxSignalFormControl"; "required": false; "isSignal": true; }; "layoutOverride": { "alias": "ngxSignalFormControlLayout"; "required": false; "isSignal": true; }; "ariaModeOverride": { "alias": "ngxSignalFormControlAria"; "required": false; "isSignal": true; }; }, {}, never, never, true, never>;
 }
 
 /**
@@ -3247,7 +3247,7 @@ declare function createWarningVisibility(field: ReactiveOrStatic<Partial<Warning
 /**
  * Reactive reader of the bound control's host element. Returns `null` when
  * no control has been projected (or queried) yet. Typically a `computed`
- * over `contentChildren(NgxSignalFormControlSemanticsDirective)`.
+ * over `contentChildren(NgxSignalFormControl)`.
  *
  * @public
  * @group ARIA Composition
@@ -3460,14 +3460,14 @@ declare function isNgxSignalFormControlLayout(value: string | null | undefined):
 declare function isNgxSignalFormControlAriaMode(value: string | null | undefined): value is NgxSignalFormControlAriaMode;
 /**
  * Reads explicit control semantics from the stable `data-ngx-signal-form-*`
- * attributes written by `NgxSignalFormControlSemanticsDirective`.
+ * attributes written by `NgxSignalFormControl`.
  *
  * The wrapper layer uses this to read projected-control semantics from the DOM
  * instead of injecting the directive directly, so projected controls, custom
  * elements, and plain DOM lookups all share the same transport format.
  *
  * Note: the auto-ARIA directive reads semantics via Angular DI
- * (`inject(NgxSignalFormControlSemanticsDirective)`) rather than this function.
+ * (`inject(NgxSignalFormControl)`) rather than this function.
  *
  * @param element Rendered control host to inspect.
  * @returns The explicit semantics declared on the host, or an empty object.
@@ -4019,7 +4019,7 @@ declare function generateCharacterCountLimitId(fieldName: string): string;
  *   input serializes to a string. Kept as a courtesy branch for those
  *   applications; nothing in the toolkit depends on it.
  * - `[id][data-ngx-signal-form-control]` — the stable attribute written
- *   by `NgxSignalFormControlSemanticsDirective`. Recommended fallback for
+ *   by `NgxSignalFormControl`. Recommended fallback for
  *   custom control hosts that don't carry a native `[formField]` binding
  *   themselves.
  *
@@ -5154,7 +5154,7 @@ declare function warningError(kind: string, message?: string): ValidationError;
  * - {@link FormRoot} - Angular-owned submit and `novalidate` behavior
  * - {@link NgxSignalForm} - Adds toolkit context and error strategy
  * - {@link NgxSignalFormAutoAria} - Automatically applies ARIA attributes
- * - {@link NgxSignalFormControlSemanticsDirective} - Declares stable wrapper/ARIA semantics for a control
+ * - {@link NgxSignalFormControl} - Declares stable wrapper/ARIA semantics for a control
  *
  * **For error display:** Import `NgxFormFieldError` from `@ngx-signal-forms/toolkit/assistive`
  *
@@ -5165,7 +5165,7 @@ declare function warningError(kind: string, message?: string): ValidationError;
  *
  * @public
  */
-declare const NgxSignalFormToolkit: readonly [typeof FormRoot, typeof NgxSignalForm, typeof NgxSignalFormAutoAria, typeof NgxSignalFormControlSemanticsDirective];
+declare const NgxSignalFormToolkit: readonly [typeof FormRoot, typeof NgxSignalForm, typeof NgxSignalFormAutoAria, typeof NgxSignalFormControl];
 
-export { BOUND_CONTROL_SELECTOR, DEFAULT_NGX_SIGNAL_FORMS_CONFIG, DEFAULT_NGX_SIGNAL_FORM_CONTROL_PRESETS, FORM_FIELD_APPEARANCE_VALUES, FORM_FIELD_ORIENTATION_VALUES, InvalidFieldTreeError, NGX_ERROR_MESSAGES, NGX_FIELD_LABEL_RESOLVER, NGX_FORM_FIELD_ERROR_RENDERER, NGX_FORM_FIELD_HINT_RENDERER, NGX_SIGNAL_FORMS_CONFIG, NGX_SIGNAL_FORM_ARIA_MODE, NGX_SIGNAL_FORM_CONTEXT, NGX_SIGNAL_FORM_CONTROL_KIND_VALUES, NGX_SIGNAL_FORM_CONTROL_PRESETS, NGX_SIGNAL_FORM_FIELD_CONTEXT, NGX_SIGNAL_FORM_FIELD_VISIBILITY_REGISTRY, NGX_SIGNAL_FORM_HINT_REGISTRY, NgxControlPresetRegistry, NgxFieldIdentity, NgxFieldIdentityProvider, NgxFieldVisibilityRegistry, NgxSignalForm, NgxSignalFormAutoAria, NgxSignalFormControlSemanticsDirective, NgxSignalFormIdCounter, NgxSignalFormToolkit, NgxSubmitAnnouncements, WARN_KIND_PREFIX, assertInjector, buildAriaDescribedBy, canSubmitWithWarnings, createAriaDescribedByBridge, createAriaDescribedBySignal, createAriaInvalidSignal, createAriaRequiredSignal, createCascadingResolver, createCharacterCountLengthSignal, createControlVisibilitySignal, createDevWarnOnce, createErrorVisibility, createFieldMessageIdSignals, createFieldNameResolver, createFieldPresentation, createHintIdsSignal, createOnInvalidHandler, createShowErrorsComputed, createSubmittedStatusTracker, createUniqueId, createWarningVisibility, devWarnOnce, findBoundControl, focusFirstInvalid, generateCharacterCountLimitId, generateErrorId, generateRequiredHintId, generateWarningId, getBlockingErrors, getDefaultValidationMessage, hasOnlyWarnings, hasSubmitted, humanizeFieldPath, inferNgxSignalFormControlKind, injectFieldControl, injectFormContext, isBlockingError, isElementCssVisible, isFieldStateHidden, isFieldStateInteractive, isFieldStateRequired, isFieldTreeLike, isHtmlButtonElement, isHtmlElement, isHtmlInputElement, isHtmlSelectElement, isHtmlTextAreaElement, isNgxSignalFormControlAriaMode, isNgxSignalFormControlKind, isNgxSignalFormControlLayout, isWarningError, mergeNgxSignalFormControlPresets, normalizeFieldName, provideErrorMessages, provideFieldLabels, provideFormFieldErrorRenderer, provideFormFieldErrorRendererForComponent, provideFormFieldHintRenderer, provideFormFieldHintRendererForComponent, provideNgxSignalFormControlPresets, provideNgxSignalFormControlPresetsForComponent, provideNgxSignalFormsConfig, provideNgxSignalFormsConfigForComponent, readDirectErrors, readNgxSignalFormControlSemantics, requiredFromStandardSchema, resolveBoundControlFromBindings, resolveFieldName, resolveFieldNameFromCandidates, resolveNgxSignalFormControlSemantics, resolveStrategyFromContext, resolveSubmittedStatusFromContext, resolveValidationErrorMessage, resolveWarningStrategyFromContext, sanitizeFieldNameForId, shouldShowErrors, shouldShowWarnings, splitByKind, stripAngularFormPrefix, submitWithWarnings, unwrapValue, updateAt, updateNested, walkFieldTreeEntries, warningError };
+export { BOUND_CONTROL_SELECTOR, DEFAULT_NGX_SIGNAL_FORMS_CONFIG, DEFAULT_NGX_SIGNAL_FORM_CONTROL_PRESETS, FORM_FIELD_APPEARANCE_VALUES, FORM_FIELD_ORIENTATION_VALUES, InvalidFieldTreeError, NGX_ERROR_MESSAGES, NGX_FIELD_LABEL_RESOLVER, NGX_FORM_FIELD_ERROR_RENDERER, NGX_FORM_FIELD_HINT_RENDERER, NGX_SIGNAL_FORMS_CONFIG, NGX_SIGNAL_FORM_ARIA_MODE, NGX_SIGNAL_FORM_CONTEXT, NGX_SIGNAL_FORM_CONTROL_KIND_VALUES, NGX_SIGNAL_FORM_CONTROL_PRESETS, NGX_SIGNAL_FORM_FIELD_CONTEXT, NGX_SIGNAL_FORM_FIELD_VISIBILITY_REGISTRY, NGX_SIGNAL_FORM_HINT_REGISTRY, NgxControlPresetRegistry, NgxFieldIdentity, NgxFieldIdentityProvider, NgxFieldVisibilityRegistry, NgxSignalForm, NgxSignalFormAutoAria, NgxSignalFormControl, NgxSignalFormIdCounter, NgxSignalFormToolkit, NgxSubmitAnnouncements, WARN_KIND_PREFIX, assertInjector, buildAriaDescribedBy, canSubmitWithWarnings, createAriaDescribedByBridge, createAriaDescribedBySignal, createAriaInvalidSignal, createAriaRequiredSignal, createCascadingResolver, createCharacterCountLengthSignal, createControlVisibilitySignal, createDevWarnOnce, createErrorVisibility, createFieldMessageIdSignals, createFieldNameResolver, createFieldPresentation, createHintIdsSignal, createOnInvalidHandler, createShowErrorsComputed, createSubmittedStatusTracker, createUniqueId, createWarningVisibility, devWarnOnce, findBoundControl, focusFirstInvalid, generateCharacterCountLimitId, generateErrorId, generateRequiredHintId, generateWarningId, getBlockingErrors, getDefaultValidationMessage, hasOnlyWarnings, hasSubmitted, humanizeFieldPath, inferNgxSignalFormControlKind, injectFieldControl, injectFormContext, isBlockingError, isElementCssVisible, isFieldStateHidden, isFieldStateInteractive, isFieldStateRequired, isFieldTreeLike, isHtmlButtonElement, isHtmlElement, isHtmlInputElement, isHtmlSelectElement, isHtmlTextAreaElement, isNgxSignalFormControlAriaMode, isNgxSignalFormControlKind, isNgxSignalFormControlLayout, isWarningError, mergeNgxSignalFormControlPresets, normalizeFieldName, provideErrorMessages, provideFieldLabels, provideFormFieldErrorRenderer, provideFormFieldErrorRendererForComponent, provideFormFieldHintRenderer, provideFormFieldHintRendererForComponent, provideNgxSignalFormControlPresets, provideNgxSignalFormControlPresetsForComponent, provideNgxSignalFormsConfig, provideNgxSignalFormsConfigForComponent, readDirectErrors, readNgxSignalFormControlSemantics, requiredFromStandardSchema, resolveBoundControlFromBindings, resolveFieldName, resolveFieldNameFromCandidates, resolveNgxSignalFormControlSemantics, resolveStrategyFromContext, resolveSubmittedStatusFromContext, resolveValidationErrorMessage, resolveWarningStrategyFromContext, sanitizeFieldNameForId, shouldShowErrors, shouldShowWarnings, splitByKind, stripAngularFormPrefix, submitWithWarnings, unwrapValue, updateAt, updateNested, walkFieldTreeEntries, warningError };
 export type { AriaDescribedByBridge, AriaDescribedByChainOptions, AriaDescribedByFieldNameReader, AriaDescribedByPreservedIdsReader, AriaRequiredFieldState, BoundControlElementReader, ControlVisibilitySignal, CreateAriaDescribedByBridgeOptions, CreateAriaDescribedBySignalOptions, CreateErrorVisibilityOptions, CreateFieldNameResolverOptions, CreateFieldPresentationOptions, CreateHintIdsSignalOptions, CreateWarningVisibilityOptions, ErrorDisplayStrategy, ErrorMessageRegistry, ErrorReadableState, ErrorVisibilityState, FieldLabelMap, FieldLabelResolver, FieldMarkingMode, FieldMessageIdSignals, FieldPresentation, FieldPresentationState, FormFieldAppearance, FormFieldAppearanceInput, FormFieldBindingsState, FormFieldOrientation, FormFieldOrientationInput, HintIdsFieldNameReader, HintIdsIdentityLike, HintIdsRegistryLike, HintIdsSignal, LabelForReader, MarkerKind, NgxFormFieldErrorRenderer, NgxFormFieldErrorRendererOverride, NgxFormFieldHintRenderer, NgxFormFieldHintRendererOverride, NgxSignalFormContext, NgxSignalFormControlAriaMode, NgxSignalFormControlKind, NgxSignalFormControlLayout, NgxSignalFormControlPreset, NgxSignalFormControlPresetOverrides, NgxSignalFormControlPresetRegistry, NgxSignalFormControlSemantics, NgxSignalFormFieldContext, NgxSignalFormFieldVisibilityDescriptor, NgxSignalFormFieldVisibilityRegistry, NgxSignalFormHintDescriptor, NgxSignalFormHintRegistry, NgxSignalFormsConfig, NgxSignalFormsUserConfig, OnInvalidHandlerOptions, ReactiveCascadingResolverOptions, ReactiveOrStatic, ResolvableValidationError, ResolveErrorMessageOptions, ResolvedErrorDisplayStrategy, ResolvedMarker, ResolvedNgxSignalFormControlSemantics, ResolvedWarningDisplayStrategy, SignalLike, SplitErrors, StandardSchemaLike, StandardSchemaLikeIssue, StandardSchemaLikeResult, StaticCascadingResolverOptions, SubmittedStatus, WarnOnceRef, WarningDisplayStrategy, WarningVisibilityState };

@@ -30,7 +30,7 @@ export {
   NgxFieldIdentity,
   NgxFieldIdentityProvider,
   NgxSignalFormAutoAria,
-  NgxSignalFormControlSemanticsDirective,
+  NgxSignalFormControl,
   NgxSignalForm,
   NgxSignalFormToolkit,
   buildAriaDescribedBy,

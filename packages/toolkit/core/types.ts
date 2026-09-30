@@ -152,7 +152,7 @@ export type FormFieldOrientationInput = FormFieldOrientation | 'inherit';
  * - **Override preset behavior** for an existing kind via
  *   `provideNgxSignalFormControlPresets({ slider: { layout: 'custom', ariaMode: 'manual' } })`.
  * - **Declare per-control semantics** on the host via the
- *   `NgxSignalFormControlSemanticsDirective` inputs:
+ *   `NgxSignalFormControl` inputs:
  *   `ngxSignalFormControl`, `ngxSignalFormControlLayout`,
  *   `ngxSignalFormControlAria`.
  * - **Custom widgets that don't fit any native kind** should use

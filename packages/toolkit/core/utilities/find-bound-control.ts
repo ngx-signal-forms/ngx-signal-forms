@@ -18,7 +18,7 @@ import { isHtmlElement } from './dom-guards';
  *   input serializes to a string. Kept as a courtesy branch for those
  *   applications; nothing in the toolkit depends on it.
  * - `[id][data-ngx-signal-form-control]` — the stable attribute written
- *   by `NgxSignalFormControlSemanticsDirective`. Recommended fallback for
+ *   by `NgxSignalFormControl`. Recommended fallback for
  *   custom control hosts that don't carry a native `[formField]` binding
  *   themselves.
  *

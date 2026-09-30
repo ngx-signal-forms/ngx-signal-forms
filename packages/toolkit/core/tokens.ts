@@ -183,7 +183,7 @@ export const NGX_SIGNAL_FORM_FIELD_CONTEXT =
 
 /**
  * Injection token for the resolved ARIA ownership mode for a single control
- * host. Provided by `NgxSignalFormControlSemanticsDirective` at its own
+ * host. Provided by `NgxSignalFormControl` at its own
  * directive level, and read by `NgxSignalFormAutoAria` via
  * `{ optional: true, self: true }`.
  *

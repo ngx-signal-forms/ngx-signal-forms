@@ -141,7 +141,7 @@ export {
 // Convenience imports
 import { FormRoot } from '@angular/forms/signals';
 import { NgxSignalFormAutoAria } from './directives/auto-aria';
-import { NgxSignalFormControlSemanticsDirective } from './directives/control-semantics';
+import { NgxSignalFormControl } from './directives/control-semantics';
 import { NgxSignalForm } from './directives/ngx-signal-form';
 
 /**
@@ -175,7 +175,7 @@ import { NgxSignalForm } from './directives/ngx-signal-form';
  * - {@link FormRoot} - Angular-owned submit and `novalidate` behavior
  * - {@link NgxSignalForm} - Adds toolkit context and error strategy
  * - {@link NgxSignalFormAutoAria} - Automatically applies ARIA attributes
- * - {@link NgxSignalFormControlSemanticsDirective} - Declares stable wrapper/ARIA semantics for a control
+ * - {@link NgxSignalFormControl} - Declares stable wrapper/ARIA semantics for a control
  *
  * **For error display:** Import `NgxFormFieldError` from `@ngx-signal-forms/toolkit/assistive`
  *
@@ -190,5 +190,5 @@ export const NgxSignalFormToolkit = [
   FormRoot,
   NgxSignalForm,
   NgxSignalFormAutoAria,
-  NgxSignalFormControlSemanticsDirective,
+  NgxSignalFormControl,
 ] as const;

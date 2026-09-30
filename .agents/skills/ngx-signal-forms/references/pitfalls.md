@@ -165,9 +165,8 @@ These were removed or are not public:
 The notification fold also renamed the CSS hooks: `--ngx-signal-form-notification-*`
 became `--ngx-signal-form-error-panel-*` / `--ngx-signal-form-warning-panel-*`.
 
-Use current suffix-less public class names. `NgxSignalFormControlSemanticsDirective`
-keeps its suffix to distinguish it from the `NgxSignalFormControlSemantics`
-interface. For a version upgrade, the [crossed migration guides](https://github.com/ngx-signal-forms/ngx-signal-forms/blob/main/docs/migrations/README.md)
+Use current public class names. `NgxSignalFormControl` is the directive;
+`NgxSignalFormControlSemantics` is the matching interface. For a version upgrade, the [crossed migration guides](https://github.com/ngx-signal-forms/ngx-signal-forms/blob/main/docs/migrations/README.md)
 are authoritative; this table is a quick lookup, not the upgrade checklist.
 
 ## Renamed — Update the Name, Same Behavior

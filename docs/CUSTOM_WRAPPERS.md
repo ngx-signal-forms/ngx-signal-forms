@@ -52,7 +52,7 @@ import {
   NGX_FORM_FIELD_ERROR_RENDERER,
   NGX_SIGNAL_FORM_FIELD_CONTEXT,
   NGX_SIGNAL_FORM_HINT_REGISTRY,
-  NgxSignalFormControlSemanticsDirective,
+  NgxSignalFormControl,
   type ErrorDisplayStrategy,
   type WarningDisplayStrategy,
 } from '@ngx-signal-forms/toolkit';
@@ -97,10 +97,9 @@ export class MyFormField<TValue = unknown> {
   readonly warningStrategy = input<WarningDisplayStrategy | null>(null);
 
   // 3. Find the projected control. It carries `ngxSignalFormControl`.
-  protected readonly boundControls = contentChildren(
-    NgxSignalFormControlSemanticsDirective,
-    { descendants: true },
-  );
+  protected readonly boundControls = contentChildren(NgxSignalFormControl, {
+    descendants: true,
+  });
 
   // 4. Resolve the name: `fieldName` input, then the control's `id`.
   readonly resolvedFieldName = createFieldNameResolver({
@@ -783,7 +782,7 @@ Rules for this path:
 
 1. **One writer.** Where toolkit auto-ARIA is also in scope, add
    `ngxSignalFormControlAria="manual"` to the host, and import the toolkit
-   bundle or `NgxSignalFormControlSemanticsDirective` in that template.
+   bundle or `NgxSignalFormControl` in that template.
 2. **Import Angular's `FormField`** in the consumer's template. The
    directive injects `FORM_FIELD`, which only `FormField` provides.
 3. **Timing.** `createErrorVisibility` and `createWarningVisibility` read the
