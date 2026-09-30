@@ -172,6 +172,40 @@ test.describe('Form Field Wrapper - Complex Forms', () => {
       await page.showOutlineAppearance();
       await expectFigmaAssistiveMetrics();
     });
+
+    // The demo's global reset in apps/demo/src/styles.scss removes the input
+    // outline because the wrapper draws the focus ring. Plain draws none, so
+    // dropping the `:not(.ngx-signal-forms-plain)` guard would leave keyboard
+    // users without a focus indicator (WCAG 2.4.7). Toolkit specs don't load
+    // this stylesheet, so only a demo-level test can catch that.
+    test('should keep the input focus outline on Plain and leave Standard/Outline container-owned', async () => {
+      const focusedInputOutlineStyle = async (): Promise<string> => {
+        const input = page.getWrapperByControlId('firstName').locator('input');
+
+        await input.focus();
+        // Text inputs always match :focus-visible, so this is the keyboard case.
+        await expect(input).toBeFocused();
+        expect(await input.evaluate((el) => el.matches(':focus-visible'))).toBe(
+          true,
+        );
+
+        return input.evaluate((el) => getComputedStyle(el).outlineStyle);
+      };
+      const wrapper = page.getWrapperByControlId('firstName');
+
+      await page.showStandardAppearance();
+      // The appearance class lands a render after the click; wait for it.
+      await expect(wrapper).not.toHaveClass(/ngx-signal-forms-(outline|plain)/);
+      expect(await focusedInputOutlineStyle()).toBe('none');
+
+      await page.showOutlineAppearance();
+      await expect(wrapper).toHaveClass(/ngx-signal-forms-outline/);
+      expect(await focusedInputOutlineStyle()).toBe('none');
+
+      await page.showPlainAppearance();
+      await expect(wrapper).toHaveClass(/ngx-signal-forms-plain/);
+      expect(await focusedInputOutlineStyle()).not.toBe('none');
+    });
   });
 
   test.describe('Fieldset Grouping', () => {
