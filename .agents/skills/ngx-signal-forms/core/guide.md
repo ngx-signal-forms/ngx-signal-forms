@@ -142,7 +142,6 @@ export const appConfig = {
       defaultErrorStrategy: 'on-submit', // 'immediate' | 'on-touch' | 'on-submit'
       defaultWarningStrategy: 'on-submit', // warnings time independently; default: 'on-touch'
       defaultFormFieldAppearance: 'outline', // 'standard' | 'outline' | 'plain'
-      autoAria: true, // default: true
     }),
     provideErrorMessages({
       required: 'This field is required',

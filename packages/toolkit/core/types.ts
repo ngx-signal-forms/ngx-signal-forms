@@ -309,12 +309,6 @@ export interface ResolvedMarker {
  */
 export interface NgxSignalFormsConfig {
   /**
-   * Enable automatic ARIA attributes (aria-invalid, aria-describedby).
-   * @default true
-   */
-  autoAria: boolean;
-
-  /**
    * Default error display strategy.
    * @default 'on-touch'
    */
@@ -471,7 +465,6 @@ export interface NgxSignalFormsConfig {
 // Declaring it keeps the type honest about the merge this interface exists
 // to feed.
 export interface NgxSignalFormsUserConfig {
-  autoAria?: boolean | undefined;
   defaultErrorStrategy?: ResolvedErrorDisplayStrategy | undefined;
   defaultWarningStrategy?: ResolvedWarningDisplayStrategy | undefined;
   defaultFormFieldAppearance?: FormFieldAppearance | undefined;

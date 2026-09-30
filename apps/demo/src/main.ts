@@ -63,7 +63,6 @@ void (async () => {
       provideHttpClient(),
       provideNgxSignalFormsConfig({
         defaultErrorStrategy: 'on-touch',
-        autoAria: true,
       }),
       provideNgxSignalFormControlPresets({
         switch: { layout: 'inline-control', ariaMode: 'auto' },
