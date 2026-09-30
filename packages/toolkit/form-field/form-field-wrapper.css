@@ -149,6 +149,14 @@
     var(--_field-clr-primary)
   );
   --_color-error: var(--ngx-form-field-color-error, var(--_field-clr-danger));
+  /* Text around the control (label, marker, plain hint) sits on the page, */
+  /* not on the input. A tinted ancestor surface (NgxFormFieldset) hands in */
+  /* darker tones for it through the inherited `--_tinted-surface-clr-*` */
+  /* tokens. Borders, placeholders and prefixes keep the base tones. */
+  --_color-error-text: var(
+    --ngx-form-field-color-error,
+    var(--_tinted-surface-clr-danger, var(--_field-clr-danger))
+  );
   --_color-warning: var(
     --ngx-form-field-color-warning,
     var(--_field-clr-warning)
@@ -157,6 +165,10 @@
   --_color-text-secondary: var(
     --ngx-form-field-color-text-secondary,
     var(--_field-clr-text-secondary)
+  );
+  --_color-label: var(
+    --ngx-form-field-color-text-secondary,
+    var(--_tinted-surface-clr-text-secondary, var(--_field-clr-text-secondary))
   );
   --_color-surface: var(
     --ngx-form-field-color-surface,
@@ -221,10 +233,7 @@
     var(--_field-weight-normal)
   );
   --_label-font-family: var(--ngx-form-field-label-font-family, inherit);
-  --_label-color: var(
-    --ngx-form-field-label-color,
-    var(--_color-text-secondary)
-  );
+  --_label-color: var(--ngx-form-field-label-color, var(--_color-label));
   --_label-line-height: var(
     --ngx-form-field-label-line-height,
     var(--_field-line-height-caption)
@@ -260,7 +269,7 @@
   /* Required marker */
   --_required-marker-color: var(
     --ngx-form-field-required-marker-color,
-    var(--_color-error)
+    var(--_color-error-text)
   );
   --_required-marker-weight: var(
     --ngx-form-field-required-marker-weight,
@@ -271,7 +280,10 @@
      annotates the exception rather than flagging a problem. */
   --_optional-marker-color: var(
     --ngx-form-field-optional-marker-color,
-    var(--_color-label-muted, currentColor)
+    var(
+      --_tinted-surface-clr-text-muted,
+      var(--_color-label-muted, currentColor)
+    )
   );
   --_optional-marker-weight: var(
     --ngx-form-field-optional-marker-weight,
@@ -346,6 +358,10 @@
      default to `none` so the two focus signals don't overlap, but they stay
      public and overridable for consumers who want the ring back. */
   --_invalid-color: var(--ngx-form-field-invalid-color, var(--_color-error));
+  --_invalid-text-color: var(
+    --ngx-form-field-invalid-color,
+    var(--_color-error-text)
+  );
   --_invalid-box-shadow: var(--ngx-form-field-invalid-box-shadow, none);
   --_warning-color: var(--ngx-form-field-warning-color, var(--_color-warning));
   --_warning-box-shadow: var(--ngx-form-field-warning-box-shadow, none);

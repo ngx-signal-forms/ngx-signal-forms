@@ -508,8 +508,8 @@ implementation details, not part of the theming API.
 - `--ngx-signal-form-fieldset-warning-border-color` — default `light-dark(#a16207, #fcd34d)`; border color when warnings are shown
 - `--ngx-signal-form-fieldset-invalid-surface-bg` — default `var(--...invalid-bg...)`; error-tinted background below the legend
 - `--ngx-signal-form-fieldset-warning-surface-bg` — default `var(--...notification-warning-bg...)`; warning-tinted background below the legend
-- `--ngx-signal-form-fieldset-invalid-legend-color` — default `var(--...invalid-border...)`; legend color in error state
-- `--ngx-signal-form-fieldset-warning-legend-color` — default `var(--...warning-border...)`; legend color in warning state
+- `--ngx-signal-form-fieldset-invalid-legend-color` — default `var(--...invalid-border...)`, or the darker tinted-surface tone on a tinted danger surface; legend color in error state
+- `--ngx-signal-form-fieldset-warning-legend-color` — default `var(--...warning-border...)`, or the darker tinted-surface tone on a tinted danger surface; legend color in warning state
 - `--ngx-signal-form-fieldset-invalid-legend-bg` — default `var(--...legend-bg...)`; optional legend background in error state
 - `--ngx-signal-form-fieldset-warning-legend-bg` — default `var(--...legend-bg...)`; optional legend background in warning state
 - `--ngx-signal-form-fieldset-message-padding` — default `0`; grouped summary container padding
@@ -573,6 +573,22 @@ Validation tinting on `ngx-form-fieldset` is opt-in:
 - `validationSurface="never"` (default) keeps the surface neutral and relies on
   the grouped message alone
 - `validationSurface="always"` tints every invalid/warning fieldset surface
+
+Text on a tinted danger surface gets its own, darker tones. This applies to
+the invalid tint (`#fbdddd`) and to `surfaceTone="danger"` (`#fdebeb`). The
+default red and amber text fall under 4.5:1 on both tints. The 75% slate
+text falls under 4.5:1 on `#fbdddd` only (4.35:1; 4.61:1 on `#fdebeb`). In
+light mode, the legend, labels, required markers, hints, character counts
+and error and warning text therefore switch to `#b91c1c`, `#92400e` and
+`#324155`. On `#fbdddd` that is 5.08:1, 5.57:1 and 8.15:1. The optional
+marker keeps its 70% opacity on a darker `#1e293b` base: 4.92:1. The tint,
+the borders and the dark values do not change. The panel presentation uses the
+same idea (see
+[Grouped Panel Feedback](#grouped-panel-feedback-panel-presentation)). These
+tones are private fallbacks: a public color token such as
+`--ngx-signal-form-error-color` or `--ngx-form-field-label-color`, set on any
+ancestor, still wins inside the tinted surface. The `plain` appearance
+paints no tint and keeps the default tones.
 
 Grouped summaries intentionally inherit from the shared `ngx-form-field-error`
 tokens by default. The fieldset-specific variables above are aliases for the
