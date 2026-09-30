@@ -377,6 +377,127 @@ test.describe('Advanced Wizard Demo', () => {
     await expect(statusRow).toContainText(/Last saved: \d{1,2}:\d{2}/);
   });
 
+  test('leaving the route stops autosave and returning starts with a fresh store', async ({
+    page,
+  }) => {
+    const draftSaves: string[] = [];
+    page.on('request', (request) => {
+      if (
+        request.url().includes('/api/wizard/draft') &&
+        ['POST', 'PUT'].includes(request.method())
+      ) {
+        draftSaves.push(request.method());
+      }
+    });
+
+    // Change the draft, then leave inside the 2 s autosave debounce. A store
+    // that outlives the route would still fire the pending save.
+    await page.getByLabel('First Name').fill('Ada');
+    const nav = page.getByRole('navigation', {
+      name: 'Documentation sections',
+    });
+    await nav.getByRole('link', { name: 'Global Configuration' }).click();
+    await expect(page).toHaveURL(/\/advanced-scenarios\/global-configuration$/);
+
+    // Wait past the debounce window, then check that nothing was sent.
+    // oxlint-disable-next-line playwright/no-wait-for-timeout -- absence of a request can only be shown by waiting
+    await page.waitForTimeout(3000);
+    expect(draftSaves).toEqual([]);
+
+    // Coming back builds a new store, so the earlier input is gone.
+    await nav.getByRole('link', { name: 'Advanced Wizard' }).click();
+    await expect(page).toHaveURL(/\/advanced-scenarios\/advanced-wizard$/);
+    await expect(page.getByLabel('First Name')).toHaveValue('');
+  });
+
+  test('resumes the auto-saved draft after a reload', async ({ page }) => {
+    // Wait for the save that holds both steps, not an earlier one.
+    const bothStepsSaved = page.waitForResponse(
+      (response) => {
+        const request = response.request();
+        if (
+          !request.url().includes('/api/wizard/draft') ||
+          !['POST', 'PUT'].includes(request.method())
+        ) {
+          return false;
+        }
+        const body = request.postDataJSON() as {
+          traveler: { firstName: string };
+          destinations: { city: string }[];
+        };
+        return (
+          response.ok() &&
+          body.traveler.firstName === 'John' &&
+          body.destinations[0]?.city === 'Tokyo'
+        );
+      },
+      { timeout: 15000 },
+    );
+    await fillTravelerStep(page);
+    await page.getByRole('button', { name: 'Next' }).click();
+    await fillTripStepMinimal(page);
+    await page.getByRole('button', { name: 'Next' }).click();
+    const { draftId } = (await (await bothStepsSaved).json()) as {
+      draftId: string;
+    };
+
+    // Playwright can see the response before the store keeps the id. A reload
+    // before that would leave nothing to resume.
+    await expect
+      .poll(() =>
+        page.evaluate(() =>
+          sessionStorage.getItem('ngx-demo:advanced-wizard-draft'),
+        ),
+      )
+      .toBe(JSON.stringify({ draftId }));
+
+    await page.reload();
+
+    await expect(page.getByLabel('First Name')).toHaveValue('John');
+    await expect(page.getByLabel('Passport Number')).toHaveValue('A1234567');
+
+    await page.getByRole('button', { name: 'Next' }).click();
+    const dest1 = page.getByRole('group', { name: 'Destination 1' });
+    await expect(dest1.getByLabel(/City/i)).toHaveValue('Tokyo');
+    await expect(dest1.getByLabel(/Arrival Date/i)).toHaveValue(
+      tripDates.arrival,
+    );
+  });
+
+  test('a draft that fails to load shows an error and an empty, usable wizard', async ({
+    page,
+  }) => {
+    // Point the wizard at a draft the mock server does not have.
+    await page.addInitScript(() => {
+      sessionStorage.setItem(
+        'ngx-demo:advanced-wizard-draft',
+        JSON.stringify({ draftId: 'missing-draft' }),
+      );
+    });
+    await page.reload();
+
+    await expect(
+      page
+        .getByRole('alert')
+        .filter({ hasText: 'Your saved draft could not be loaded.' }),
+    ).toBeVisible();
+    await expect(page.getByLabel('First Name')).toHaveValue('');
+
+    // The next save starts a new draft instead of writing to the missing one.
+    const newDraft = page.waitForRequest(
+      (request) =>
+        request.url().endsWith('/api/wizard/draft') &&
+        request.method() === 'POST',
+      { timeout: 15000 },
+    );
+    await fillTravelerStep(page);
+    await page.getByRole('button', { name: 'Next' }).click();
+    await expect(
+      page.getByRole('group', { name: 'Destination 1' }),
+    ).toBeVisible();
+    await newDraft;
+  });
+
   test('review step shows all entered details', async ({ page }) => {
     await fillTravelerStep(page, {
       firstName: 'Alice',

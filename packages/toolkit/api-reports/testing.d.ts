@@ -33,7 +33,7 @@ type WCAG_22_AA_TAG = (typeof WCAG_22_AA_TAGS)[number];
  *   doc for why `color-contrast` specifically is not turned into a blanket
  *   hard-fail here.
  */
-type IncompleteResultMode = 'ignore' | 'warn' | 'fail';
+type IncompleteResultMode = 'fail' | 'ignore' | 'warn';
 /**
  * `axe.RunOptions` (minus the non-overridable `runOnly`) plus the toolkit's
  * own {@link IncompleteResultMode} switch. `incomplete` is a toolkit-level
