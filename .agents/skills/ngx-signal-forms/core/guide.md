@@ -70,11 +70,7 @@ The toolkit is an enhancement layer, not a replacement. Angular Signal Forms own
 
    Explicit `ngxSignalFormControl` directive inputs still override preset defaults.
 
-   For tooling and tests, two low-level helpers expose the same lookup:
-   `readNgxSignalFormControlSemantics(element)` returns exactly what the
-   consumer declared on the host (or `null`), and `inferNgxSignalFormControlKind(element)`
-   runs the DOM-heuristic fallback that the wrapper and auto-ARIA use when no
-   explicit semantics are present. Prefer `resolveNgxSignalFormControlSemantics`
+   For tooling and tests, use `resolveNgxSignalFormControlSemantics(element, presets)`
    for merged results that include preset defaults.
 
 7. **Use `provideErrorMessages()` for centralized validation copy.** Message priority: validator-provided `error.message` → registry → toolkit default.

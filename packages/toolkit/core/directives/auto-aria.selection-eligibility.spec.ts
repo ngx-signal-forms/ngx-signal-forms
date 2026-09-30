@@ -4,8 +4,8 @@ import { FormField, form, required, schema } from '@angular/forms/signals';
 import {
   NgxSignalFormToolkit,
   generateErrorId,
-  inferNgxSignalFormControlKind,
 } from '@ngx-signal-forms/toolkit';
+import { inferNgxSignalFormControlKind } from '@ngx-signal-forms/toolkit/core';
 import { render } from '@testing-library/angular';
 import { describe, expect, it, vi } from 'vitest';
 import { NgxFormFieldWrapper } from '../../form-field/form-field-wrapper';

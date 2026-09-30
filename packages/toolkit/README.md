@@ -348,12 +348,11 @@ Both providers also accept a factory, for translation libraries. See
 [message resolution](../../docs/WARNINGS_SUPPORT.md#message-resolution) and
 [runtime language changes](../../docs/WARNINGS_SUPPORT.md#runtime-language-changes).
 
-For your own error UI, two functions give you the same text:
+For your own error UI, one function gives you the same text:
 
 | Function                                                    | Returns                                  |
 | ----------------------------------------------------------- | ---------------------------------------- |
 | `resolveValidationErrorMessage(error, registry?, options?)` | The message, using all three steps above |
-| `getDefaultValidationMessage(error, options?)`              | Only the built-in message (step 3)       |
 
 ## Utilities
 
@@ -501,14 +500,11 @@ behave like the built-in ones. Read
 
 | Export                                                                                           | Does                                                                                          |
 | ------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------- |
-| `inferNgxSignalFormControlKind(element)`                                                         | Guesses the kind from the DOM, or returns `null`                                              |
-| `readNgxSignalFormControlSemantics(element)`                                                     | Reads the kind declared on a host                                                             |
 | `resolveNgxSignalFormControlSemantics(element, presets)`                                         | Declared kind, then guessed kind, then preset. Same as the wrapper                            |
 | `NgxControlPresetRegistry`                                                                       | Service with `resolve(kind)`, `kinds()`, and `extend(overrides)`. Add it to `providers` first |
 | `NGX_SIGNAL_FORM_CONTROL_PRESETS` / `DEFAULT_NGX_SIGNAL_FORM_CONTROL_PRESETS`                    | The active presets and the built-in presets                                                   |
 | `NGX_SIGNAL_FORM_ARIA_MODE`                                                                      | The `auto` or `manual` ARIA mode of one control host                                          |
 | `isNgxSignalFormControlKind` / `isNgxSignalFormControlLayout` / `isNgxSignalFormControlAriaMode` | Type guards for preset values                                                                 |
-| `isFormFieldAppearance` / `isFormFieldOrientation`                                               | Type guards for config values                                                                 |
 
 **Ids and ARIA**
 
@@ -522,7 +518,6 @@ behave like the built-in ones. Read
 | `resolveFieldNameFromCandidates(...candidates)`           | Returns the first name that is not blank                          |
 | `isElementCssVisible(element)`                            | `true` when CSS shows the element                                 |
 | `createControlVisibilitySignal(resolveElement, injector)` | `Signal<boolean>` that tracks whether the control is visible      |
-| `injectFieldControl(element, injector?)`                  | The `FieldTree` bound to an element                               |
 
 Each function also has companion types exported from the root, such as
 `CreateErrorVisibilityOptions` and `OnInvalidHandlerOptions`.
