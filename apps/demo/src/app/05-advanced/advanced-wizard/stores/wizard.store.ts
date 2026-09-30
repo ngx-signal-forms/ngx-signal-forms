@@ -15,6 +15,7 @@ import {
   Destination,
   Traveler,
   Trip,
+  TripSchema,
 } from '../schemas/wizard.schemas';
 import {
   withWizardNavigation,
@@ -51,24 +52,6 @@ type TripSummary = {
 };
 
 // ══════════════════════════════════════════════════════════════════════════════
-// VALIDATION HELPERS - reusable validation logic
-// ══════════════════════════════════════════════════════════════════════════════
-
-function isTravelerValid(t: Traveler): boolean {
-  return !!t.firstName && !!t.lastName && !!t.email && !!t.passportNumber;
-}
-
-function isDestinationsValid(d: Destination[]): boolean {
-  return (
-    d.length > 0 &&
-    d.every(
-      (dest) =>
-        dest.country && dest.city && dest.arrivalDate && dest.departureDate,
-    )
-  );
-}
-
-// ══════════════════════════════════════════════════════════════════════════════
 // STORE
 // ══════════════════════════════════════════════════════════════════════════════
 
@@ -91,35 +74,38 @@ export const WizardStore = signalStore(
   // Computed values using arrow function shorthand (auto-wrapped in computed())
   withComputed((store) => ({
     // ══════════════════════════════════════════════════════════════════════════
-    // STEP VALIDATION - validates draft data (what user is editing)
+    // STEP VALIDATION - the wizard Zod schemas own the rules; the store only
+    // asks them about the draft the user is editing.
     // ══════════════════════════════════════════════════════════════════════════
-    isTravelerStepValid: () => isTravelerValid(store.travelerDraft()),
-    isTripStepValid: () => isDestinationsValid(store.destinationsDraft()),
+    isTravelerStepValid: () =>
+      TripSchema.shape.traveler.safeParse(store.travelerDraft()).success,
+    isTripStepValid: () =>
+      TripSchema.shape.destinations.safeParse(store.destinationsDraft())
+        .success,
+  })),
+
+  withComputed((store) => ({
     isReviewStepValid: () =>
-      isTravelerValid(store.travelerDraft()) &&
-      isDestinationsValid(store.destinationsDraft()),
+      store.isTravelerStepValid() && store.isTripStepValid(),
 
     /**
      * Validation status for all steps as a record.
      */
     stepValidation: (): Record<WizardStep, boolean> => ({
-      traveler: isTravelerValid(store.travelerDraft()),
-      trip: isDestinationsValid(store.destinationsDraft()),
-      review:
-        isTravelerValid(store.travelerDraft()) &&
-        isDestinationsValid(store.destinationsDraft()),
+      traveler: store.isTravelerStepValid(),
+      trip: store.isTripStepValid(),
+      review: store.isTravelerStepValid() && store.isTripStepValid(),
     }),
 
     /**
      * Whether the current step's draft is valid and user can proceed.
      */
     canProceed: () => {
-      const step = store.currentStep();
-      switch (step) {
+      switch (store.currentStep()) {
         case 'traveler':
-          return isTravelerValid(store.travelerDraft());
+          return store.isTravelerStepValid();
         case 'trip':
-          return isDestinationsValid(store.destinationsDraft());
+          return store.isTripStepValid();
         case 'review':
           return true;
         default:
@@ -145,8 +131,10 @@ export const WizardStore = signalStore(
     }),
 
     isReadyToSubmit: () =>
-      isTravelerValid(store.traveler()) &&
-      isDestinationsValid(store.destinations()),
+      TripSchema.safeParse({
+        traveler: store.traveler(),
+        destinations: store.destinations(),
+      }).success,
 
     hasDestinations: () => store.destinationsDraft().length > 0,
     hasConfirmedBooking: () => store.bookingConfirmation() !== null,
