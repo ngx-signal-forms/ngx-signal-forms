@@ -34,7 +34,7 @@
 //     guards size, and pinning exact byte counts here would fail on every
 //     source change instead of only on a structural one).
 //
-// Run after `toolkit:post-build` (`nx run toolkit:check-published-package`).
+// Run after `toolkit:build` (`nx run toolkit:check-published-package`).
 // `--update` regenerates the baseline; the default `--check` mode compares
 // against it and exits non-zero with an actionable message (a capped
 // unified diff per changed file) on drift.
@@ -497,7 +497,7 @@ export function writeBaseline(baselineDir, surface, manifest) {
 }
 
 const UPDATE_COMMAND = 'pnpm run check:toolkit-published-package -- --update';
-const REBUILD_COMMAND = 'pnpm nx run toolkit:post-build';
+const REBUILD_COMMAND = 'pnpm nx build toolkit';
 
 function main() {
   const update = process.argv.includes('--update');

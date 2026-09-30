@@ -111,7 +111,7 @@ entries use its implementation at build time. The debugger is a separate,
 internal demo package, not a toolkit secondary entry point. Public tokens are
 explicitly re-exported from the toolkit root.
 
-The published `dist/packages/toolkit/package.json` `exports` map **omits `./core`** (a post-build script at `packages/toolkit/scripts/strip-internal-exports.mjs` strips it during the `toolkit:post-build` target and rewrites sibling bundles to use relative paths to the `/core` fesm file instead). Modern Node and TypeScript resolvers return `ERR_PACKAGE_PATH_NOT_EXPORTED` for `import from '@ngx-signal-forms/toolkit/core'`.
+The published `dist/packages/toolkit/package.json` `exports` map **omits `./core`** (a post-build script at `packages/toolkit/scripts/strip-internal-exports.mjs` strips it during the `toolkit:build` target and rewrites sibling bundles to use relative paths to the `/core` fesm file instead). Modern Node and TypeScript resolvers return `ERR_PACKAGE_PATH_NOT_EXPORTED` for `import from '@ngx-signal-forms/toolkit/core'`.
 
 The root `@ngx-signal-forms/toolkit` entry point enumerates its public re-exports explicitly in `packages/toolkit/index.ts` rather than using `export * from './core'`. That enumeration is the authoritative list of consumer-facing symbols — new `core/` exports that are meant to be public must be added to the list by hand; `@internal`-tagged symbols must stay out of it so they remain invisible in the published root `.d.ts`.
 
