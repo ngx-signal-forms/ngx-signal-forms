@@ -379,7 +379,8 @@ describe('NgxFormFieldset — text on a tinted surface (#535)', () => {
       legend: 'rgb(219, 24, 24)',
       label: 'rgba(50, 65, 85, 0.75)',
       requiredMarker: 'rgb(219, 24, 24)',
-      optionalMarker: 'rgba(50, 65, 85, 0.75)',
+      // The marker's default base, the same inside and outside the tint.
+      optionalMarker: 'rgb(30, 41, 59)',
       invalidCheckboxLabel: 'rgb(219, 24, 24)',
       hint: 'rgba(50, 65, 85, 0.75)',
       fieldError: 'rgb(219, 24, 24)',
