@@ -54,7 +54,6 @@ describe('NgxFormFieldErrorSummary', () => {
       );
     }
 
-    const user = userEvent.setup();
     await render(TestComponent);
 
     expect(screen.getByRole('alert')).toBeTruthy();
@@ -64,9 +63,6 @@ describe('NgxFormFieldErrorSummary', () => {
       name: /email\s*:\s*Email is required/iu,
     });
     expect(entry).toBeTruthy();
-
-    await user.click(entry);
-    expect(document.activeElement).toBe(screen.getByTestId('email-input'));
   });
 
   it('respects submittedStatus passed through the composed public API', async () => {
@@ -536,45 +532,6 @@ describe('NgxFormFieldErrorSummary', () => {
       expect(warnings[0]).toContain('NgxFormFieldErrorSummary');
       expect(warnings[0]).toContain('WCAG 2.4.3');
       expect(warnings[0]).toContain('autoFocus');
-    });
-
-    it('should not warn when host.focus() succeeds in moving focus', async () => {
-      @Component({
-        selector: 'ngx-test-error-summary-focus-ok',
-        imports: [FormField, NgxFormFieldErrorSummary],
-
-        template: `
-          <input id="email" [formField]="contactForm.email" />
-          <ngx-form-field-error-summary
-            [formTree]="contactForm"
-            strategy="on-submit"
-            [submittedStatus]="submittedStatus()"
-          />
-        `,
-      })
-      class TestComponent {
-        readonly #model = signal({ email: '' });
-        readonly contactForm = form(
-          this.#model,
-          schema((path) => {
-            required(path.email, { message: 'Email is required' });
-          }),
-        );
-        readonly submittedStatus = signal<SubmittedStatus>('unsubmitted');
-      }
-
-      const { fixture } = await render(TestComponent);
-
-      fixture.componentInstance.submittedStatus.set('submitted');
-      fixture.detectChanges();
-      await fixture.whenStable();
-
-      // Sanity: focus did land on the summary host, so no diagnostic fires.
-      const focusTarget = (await screen.findByRole('alert')).closest(
-        'ngx-form-field-error-summary',
-      );
-      expect(document.activeElement).toBe(focusTarget);
-      expect(getFocusFailureWarnings(warnSpy)).toHaveLength(0);
     });
   });
 

@@ -23,14 +23,6 @@ import { userEvent } from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 import { NgxFormFieldError } from './form-field-error';
 
-// jsdom does not compute custom-property values from emulated component
-// stylesheets, so theme-default specs read the CSS source directly. Runtime
-// resolution is covered by the *.browser.spec.ts suite and e2e snapshots.
-const errorCssSource = readFileSync(
-  resolve(import.meta.dirname, './form-field-error.css'),
-  'utf8',
-);
-
 describe('NgxFormFieldError', () => {
   describe('BUG REPRODUCTION - Initial Render', () => {
     it('should NOT show errors on initial render with untouched field (on-touch strategy)', async () => {
@@ -100,24 +92,6 @@ describe('NgxFormFieldError', () => {
   });
 
   describe('error rendering', () => {
-    it('exposes token-backed theme defaults through pseudo-private properties', () => {
-      // The pseudo-private variables flow design tokens (`--_error-clr-*`)
-      // into the public-facing names (`--_error-color`, `--_warning-color`)
-      // via `var(--ngx-…, var(--_error-clr-…))`. Asserting on the source keeps
-      // the WCAG-AA contrast contract documented and prevents accidental
-      // overrides — runtime resolution is covered in browser-mode specs.
-      expect(errorCssSource).toMatch(
-        /--_error-clr-danger:\s*light-dark\(\s*#db1818\b/,
-      );
-      expect(errorCssSource).toMatch(/--_error-color:[^;]*--_error-clr-danger/);
-      expect(errorCssSource).toMatch(
-        /--_error-clr-warning:\s*light-dark\(\s*#a16207\b/,
-      );
-      expect(errorCssSource).toMatch(
-        /--_warning-color:[^;]*--_error-clr-warning/,
-      );
-    });
-
     it('should render errors when field is invalid and touched (on-touch strategy)', async () => {
       @Component({
         selector: 'ngx-test-touched-invalid',
@@ -1551,18 +1525,6 @@ describe('NgxFormFieldError', () => {
 
       expect(screen.getByRole('status')).toHaveTextContent(
         'PO boxes may delay delivery',
-      );
-    });
-
-    it('defaults the panel error background to the Figma soft-danger token', () => {
-      // Runtime resolution is covered by the *.browser.spec.ts suite and
-      // e2e snapshots; jsdom can't compute custom properties from emulated
-      // component stylesheets.
-      expect(errorCssSource).toMatch(
-        /--_error-panel-clr-danger-soft:\s*light-dark\(\s*#fdebeb\b/,
-      );
-      expect(errorCssSource).toMatch(
-        /--_error-bg:[^;]*--ngx-signal-form-error-panel-bg[^;]*--_error-panel-clr-danger-soft/,
       );
     });
   });
