@@ -40,6 +40,18 @@ strictDepBuilds: true
 # Skip versions younger than two days (in minutes). Keep this equal to the
 # Dependabot `cooldown.default-days` in .github/dependabot.yml.
 minimumReleaseAge: 2880
+# pnpm 12.3+ turns strict mode on whenever `minimumReleaseAge` is set. Strict
+# mode refuses `pnpm update --no-save`, which is what Dependabot runs, so every
+# Dependabot update fails (dependabot-core#16375). The two-day window still
+# applies; strict mode only adds an approval prompt a bot cannot answer.
+# Remove this once dependabot-core#16376 ships.
+minimumReleaseAgeStrict: false
+# pnpm 12 writes the lockfile as two YAML documents. Dependabot reads only the
+# first and sees no dependencies (dependabot-core#15904). This keeps the
+# lockfile to one document. It also stops pnpm from enforcing `packageManager`,
+# so CI and `pnpm/action-setup` are the only pins for the pnpm version. Remove
+# this once dependabot-core#15904 is fixed.
+pmOnFail: ignore
 catalogs:
   analogjs:
     '@analogjs/vite-plugin-angular': '2.7.5'
