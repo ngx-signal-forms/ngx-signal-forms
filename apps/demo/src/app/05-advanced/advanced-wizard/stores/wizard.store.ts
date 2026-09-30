@@ -157,6 +157,10 @@ export const WizardStore = signalStore(
         };
       },
       onSuccess: (response) => {
+        // A save that lands after the booking must not bring the id back.
+        if (store.hasConfirmedBooking()) {
+          return;
+        }
         store.setDraftSaved(response.draftId);
         patchState(store, { error: null });
       },
@@ -179,6 +183,9 @@ export const WizardStore = signalStore(
         patchState(store, {
           error: null,
           bookingConfirmation: response,
+          // The trip is booked, so the draft is spent. Clearing the id also
+          // clears the stored one, so a reload starts empty.
+          draftId: null,
         });
         console.log('Booking confirmed:', response.confirmationNumber);
       },

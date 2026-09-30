@@ -189,4 +189,69 @@ describe('WizardStore draft resume', () => {
     next.httpMock.expectNone((request) => request.method === 'GET');
     expect(next.store.traveler()).toEqual(emptyTraveler);
   });
+
+  describe('after the booking is confirmed', () => {
+    const confirmed = {
+      bookingId: 'booking-1',
+      confirmationNumber: 'CONF-1',
+      status: 'confirmed',
+    };
+
+    it('clears the stored id, so a reload does not resume the booked trip', async () => {
+      const { store, httpMock } = setup('draft-1');
+      httpMock.expectOne('/api/wizard/draft/draft-1').flush(savedDraft);
+      await settle();
+
+      const booking = store.submitBooking(store.tripData());
+      httpMock.expectOne('/api/wizard/booking').flush(confirmed);
+      await booking;
+
+      expect(store.hasConfirmedBooking()).toBe(true);
+      expect(store.draftId()).toBeNull();
+      expect(storedJson()).toEqual({ draftId: null });
+
+      // A reload builds a new store from what is stored.
+      TestBed.resetTestingModule();
+      const next = setup();
+      next.httpMock.expectNone((request) => request.method === 'GET');
+      expect(next.store.traveler()).toEqual(emptyTraveler);
+    });
+
+    it('keeps the stored id when the booking fails, so the draft stays resumable', async () => {
+      const { store, httpMock } = setup('draft-1');
+      httpMock.expectOne('/api/wizard/draft/draft-1').flush(savedDraft);
+      await settle();
+
+      const booking = store.submitBooking(store.tripData());
+      httpMock
+        .expectOne('/api/wizard/booking')
+        .flush({}, { status: 500, statusText: 'Server Error' });
+      await booking;
+
+      expect(store.hasConfirmedBooking()).toBe(false);
+      expect(store.draftId()).toBe('draft-1');
+      expect(storedJson()).toEqual({ draftId: 'draft-1' });
+    });
+
+    it('ignores an autosave that lands after the confirmation', async () => {
+      const { store, httpMock } = setup();
+      store.setTraveler(savedDraft.traveler);
+
+      // The save is in flight when the booking confirms.
+      const save = store.saveDraft(store.draftSummary());
+      const savePost = httpMock.expectOne('/api/wizard/draft');
+      const booking = store.submitBooking(store.tripData());
+      httpMock.expectOne('/api/wizard/booking').flush(confirmed);
+      await booking;
+
+      savePost.flush({
+        draftId: 'draft-late',
+        savedAt: new Date().toISOString(),
+      });
+      await save;
+
+      expect(store.draftId()).toBeNull();
+      expect(storedJson()).toEqual({ draftId: null });
+    });
+  });
 });

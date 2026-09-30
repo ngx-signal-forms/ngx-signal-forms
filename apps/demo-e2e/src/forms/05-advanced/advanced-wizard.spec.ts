@@ -603,6 +603,68 @@ test.describe('Advanced Wizard Demo', () => {
     await expect(page.locator('.error-message')).toHaveCount(0);
   });
 
+  test('a reload after the booking is confirmed starts a fresh wizard', async ({
+    page,
+  }) => {
+    // The booking must confirm after the draft has an id, or there is nothing
+    // to clear.
+    const draftSaved = page.waitForResponse(
+      (response) =>
+        response.url().includes('/api/wizard/draft') &&
+        ['POST', 'PUT'].includes(response.request().method()) &&
+        response.ok(),
+      { timeout: 15000 },
+    );
+    await fillTravelerStep(page);
+    await page.getByRole('button', { name: 'Next' }).click();
+    await fillTripStepMinimal(page);
+    await page.getByRole('button', { name: 'Next' }).click();
+    const { draftId } = (await (await draftSaved).json()) as {
+      draftId: string;
+    };
+    await expect
+      .poll(() =>
+        page.evaluate(() =>
+          sessionStorage.getItem('ngx-demo:advanced-wizard-draft'),
+        ),
+      )
+      .toBe(JSON.stringify({ draftId }));
+
+    await page.getByRole('button', { name: 'Confirm Booking' }).click();
+    await expect(
+      page.getByRole('status').filter({ hasText: 'Booking confirmed' }),
+    ).toBeVisible();
+
+    // The booked trip is not a draft any more.
+    await expect
+      .poll(() =>
+        page.evaluate(() =>
+          sessionStorage.getItem('ngx-demo:advanced-wizard-draft'),
+        ),
+      )
+      .toBe(JSON.stringify({ draftId: null }));
+
+    const draftLoads: string[] = [];
+    page.on('request', (request) => {
+      if (
+        request.method() === 'GET' &&
+        request.url().includes('/api/wizard/draft/')
+      ) {
+        draftLoads.push(request.url());
+      }
+    });
+    await page.reload();
+
+    await expect(page.getByLabel('First Name')).toHaveValue('');
+    await expect(
+      page.getByRole('heading', { name: 'Review Your Booking' }),
+    ).toHaveCount(0);
+    await expect(
+      page.getByRole('alert').filter({ hasText: 'saved draft' }),
+    ).toHaveCount(0);
+    expect(draftLoads).toEqual([]);
+  });
+
   test('progress-header step click cannot skip validation on an invalid current step (#166 finding #3)', async ({
     page,
   }) => {
