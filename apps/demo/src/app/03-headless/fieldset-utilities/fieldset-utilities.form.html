@@ -36,8 +36,7 @@
         </p>
 
         <ul class="headless-summary__list" role="list">
-          @for ( entry of formSummary.entries(); track entry.kind +
-          entry.fieldName ) {
+          @for (entry of formSummary.entries(); track entry.key) {
           <li>
             <button
               type="button"

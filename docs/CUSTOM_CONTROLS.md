@@ -20,7 +20,7 @@ Find your case:
 | You have…                                                         | Do this                                                                                                   |
 | ----------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
 | A new control that reads and writes a value                       | [Build a custom control](#build-a-custom-control) with `FormValueControl<T>`                              |
-| A new on/off control                                              | Use a native checkbox with `role="switch"`. See [Switches](#switches)                                     |
+| A new on/off control                                              | Use a native checkbox with `role="switch"`. For a library switch, see [Switches](#switches)               |
 | A combobox or closed select that must look like a text field      | [Field-shaped controls](#field-shaped-vs-widget-shaped-custom-controls): kind `input-like`, naked trigger |
 | A slider, rating, datepicker, or other composite widget           | [Widget-shaped controls](#field-shaped-vs-widget-shaped-custom-controls): `appearance="plain"`            |
 | A widget that writes its own `aria-invalid` or `aria-describedby` | [`ngxSignalFormControlAria="manual"`](#aria-ownership)                                                    |
@@ -174,6 +174,7 @@ The two do not always agree:
 | `input[type="checkbox"][role="switch"]`                                 | `switch`                             | Yes. No attribute needed                              |
 | `input[type="radio"]`                                                   | `radio-group`                        | No. Add `ngxSignalFormControl="radio-group"`          |
 | Custom host with `role="switch"`, `"slider"`, or `"radiogroup"`         | `switch`, `slider`, or `radio-group` | Yes                                                   |
+| Custom host with no `role`, plus `ngxSignalFormControl="switch"`        | `switch` (declared)                  | Yes                                                   |
 | Custom host with `role="combobox"`, or an inner `[role="combobox"][id]` | `input-like`                         | Yes                                                   |
 | `<button>` host                                                         | `composite`                          | Yes                                                   |
 | Other custom host                                                       | none, until you declare one          | Yes. Opt out with `ngxSignalFormControlAria="manual"` |
@@ -271,11 +272,45 @@ Library switches:
 
 - **Bootstrap or ng-bootstrap switch styling** sits on a native checkbox. Add
   `role="switch"` and let the toolkit add its ARIA.
-- **Angular Material `mat-slide-toggle`** and **PrimeNG toggles** own their
-  switch semantics and ARIA. Let the library keep them. Add
-  `ngxSignalFormControlAria="manual"`, or use a
-  [custom wrapper](./CUSTOM_WRAPPERS.md). Check the rendered DOM for the
-  accessible name, the checked state, and the `aria-describedby` link.
+- **A switch component whose `[formField]` host is not itself a switch.**
+  Inference reads only the host, not what the component renders inside it.
+  If the host is a native checkbox with `role="switch"`, or has
+  `role="switch"`, the toolkit infers the kind and needs no attribute.
+  Otherwise, set `ngxSignalFormControl="switch"` on the host. The wrapper then
+  uses the switch layout (`inline-control`, no outline). This covers Angular
+  Material `mat-slide-toggle`, PrimeNG `p-toggleswitch`, and a Spartan switch.
+  Each one puts `role="switch"` on an inner `<button>` or `<input>` and leaves
+  the host without a role.
+
+  ```html
+  <app-toggle
+    id="emailUpdates"
+    [formField]="form.emailUpdates"
+    ngxSignalFormControl="switch"
+    ngxSignalFormControlAria="manual"
+  />
+  ```
+
+  The attribute sets the layout. It does not add a role or switch behavior.
+
+- **ARIA for a nested switch.** Auto-ARIA writes `aria-invalid` and
+  `aria-describedby` on the `[formField]` host. When the focusable switch is
+  inside the host, assistive tech does not read them there. Add
+  `ngxSignalFormControlAria="manual"`, then put both attributes on the inner
+  switch yourself. Build the `aria-describedby` value with
+  `buildAriaDescribedBy` (see [ARIA ownership](#aria-ownership)). What each
+  library lets you set:
+
+  | Library                             | `aria-describedby` on the inner switch                                          | `aria-invalid` on the inner switch                                                                     |
+  | ----------------------------------- | ------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
+  | Angular Material `mat-slide-toggle` | `aria-describedby` input                                                        | No input, and Material does not set it. The error still reaches the switch through `aria-describedby`. |
+  | PrimeNG `p-toggleswitch`            | No input. Use the pass-through: `[pt]="{ input: { 'aria-describedby': ids } }"` | No input. Use the same `pt.input` pass-through.                                                        |
+  | Spartan `brn-switch`                | `aria-describedby` input                                                        | Spartan sets it from its own form-control state. Check that it follows your error timing.              |
+
+  Manual mode alone only stops the toolkit. It does not connect the error to
+  the switch. Check the rendered DOM for the accessible name, the checked
+  state, `aria-invalid`, and the `aria-describedby` link on the focusable
+  element.
 
 ## Field-shaped vs widget-shaped custom controls
 
@@ -478,8 +513,9 @@ warning, and link that ID from the control with the same condition.
 
 ### Publishing visibility for a custom standalone error surface
 
-`<ngx-form-field-error>` tells auto-ARIA when its messages show. Your own
-message element must do the same through
+`<ngx-form-field-error>` tells auto-ARIA when its messages show. So does
+`ngxHeadlessErrorState` with a `fieldName`, inside `form[ngxSignalForm]`. A
+message element that decides visibility without them must do the same through
 `NGX_SIGNAL_FORM_FIELD_VISIBILITY_REGISTRY`, or `aria-describedby` can point
 to a message that is not rendered. See
 [Custom wrappers: visibility registry](./CUSTOM_WRAPPERS.md#visibility-registry-tell-auto-aria-when-messages-show).

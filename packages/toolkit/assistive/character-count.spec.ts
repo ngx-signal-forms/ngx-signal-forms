@@ -111,6 +111,29 @@ class UnsupportedValueNoMaxLengthWrapperComponent {
   readonly objectField = this.objectForm.data;
 }
 
+/**
+ * Standalone count (no wrapper) with an explicit `fieldName` input, for the
+ * issue #589 specs.
+ */
+@Component({
+  selector: 'ngx-test-wrapper-field-name',
+  standalone: true,
+  imports: [NgxFormFieldCharacterCount],
+  template: `
+    <ngx-form-field-character-count
+      [formField]="testForm.text"
+      [maxLength]="500"
+      [fieldName]="fieldName()"
+    />
+  `,
+})
+class FieldNameWrapperComponent {
+  readonly fieldName = input<string>();
+
+  readonly #model = signal({ text: '' });
+  protected readonly testForm = form(this.#model);
+}
+
 describe('NgxFormFieldCharacterCount', () => {
   describe('Basic rendering', () => {
     it('should render the component with character count text', async () => {
@@ -806,6 +829,104 @@ describe('NgxFormFieldCharacterCount', () => {
       );
 
       warnSpy.mockRestore();
+    });
+  });
+
+  describe('Standalone limit id from the fieldName input (issue #589)', () => {
+    // Outside a wrapper nothing supplies a field name, so the count cannot
+    // mint a limit id and a screen reader never hears the limit on focus.
+    // The `fieldName` input lets the author mint the same stable id the
+    // wrapper path produces and put it in the control's aria-describedby.
+
+    it('renders the limit text with the stable `{fieldName}-char-count-limit` id', async () => {
+      const { container } = await render(FieldNameWrapperComponent, {
+        componentInputs: { fieldName: 'bio' },
+      });
+
+      const limitEl = container.querySelector('#bio-char-count-limit');
+      expect(limitEl).toHaveTextContent('Up to 500 characters');
+    });
+
+    it('lets the wrapper context field name win over the input', async () => {
+      // Auto-ARIA only links registry ids tagged with the control's field
+      // name, which is the wrapper's name. An input that overrode it would
+      // drop the limit from aria-describedby.
+      const { container } = await render(FieldNameWrapperComponent, {
+        componentInputs: { fieldName: 'other' },
+        providers: [
+          {
+            provide: NGX_SIGNAL_FORM_FIELD_CONTEXT,
+            useValue: { fieldName: signal('bio') },
+          },
+        ],
+      });
+
+      expect(container.querySelector('#bio-char-count-limit')).not.toBeNull();
+      expect(container.querySelector('#other-char-count-limit')).toBeNull();
+    });
+
+    it('ignores the input inside a wrapper whose field name is unresolved', async () => {
+      // The wrapper claims aria-describedby, so a minted limit id would hide
+      // the visible "n/max" text. But auto-ARIA links only registry ids
+      // tagged with the wrapper's own field name, and it has none. Falling
+      // back to the input would leave the control with neither the limit
+      // description nor a readable count.
+      const { container } = await render(FieldNameWrapperComponent, {
+        componentInputs: { fieldName: 'bio' },
+        providers: [
+          {
+            provide: NGX_SIGNAL_FORM_FIELD_CONTEXT,
+            useValue: {
+              fieldName: signal(null),
+              isControlDescribedByManaged: signal(true),
+            },
+          },
+        ],
+      });
+
+      expect(
+        container.querySelector('.ngx-signal-form-field-char-count__limit'),
+      ).toBeNull();
+      expect(
+        container.querySelector('.ngx-signal-form-field-char-count__text'),
+      ).not.toHaveAttribute('aria-hidden');
+    });
+
+    it('trims the fieldName and turns inner whitespace into "-" in the id', async () => {
+      // Authors write the id into aria-describedby by hand, so the documented
+      // normalization must match what the count renders.
+      const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      const { container, rerender } = await render(FieldNameWrapperComponent, {
+        componentInputs: { fieldName: '  bio  ' },
+      });
+      expect(container.querySelector('#bio-char-count-limit')).not.toBeNull();
+
+      await rerender({ componentInputs: { fieldName: 'shipping notes' } });
+      expect(
+        container.querySelector('#shipping-notes-char-count-limit'),
+      ).not.toBeNull();
+      warnSpy.mockRestore();
+    });
+
+    it('renders no limit element for a blank fieldName', async () => {
+      const { container } = await render(FieldNameWrapperComponent, {
+        componentInputs: { fieldName: '  ' },
+      });
+
+      expect(
+        container.querySelector('.ngx-signal-form-field-char-count__limit'),
+      ).toBeNull();
+    });
+
+    it('keeps the visible "n/max" text exposed to AT, because nothing confirms the link', async () => {
+      const { container } = await render(FieldNameWrapperComponent, {
+        componentInputs: { fieldName: 'bio' },
+      });
+
+      const visibleText = container.querySelector(
+        '.ngx-signal-form-field-char-count__text',
+      );
+      expect(visibleText).not.toHaveAttribute('aria-hidden');
     });
   });
 

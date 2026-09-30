@@ -155,8 +155,13 @@ jobs:
 
           echo "Release credential OK."
 
+      - name: Set up Socket Firewall
+        uses: socketdev/action@ba6de6cc0565af1f42295590380973573297e31f # v1.3.2
+        with:
+          mode: firewall
+
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: sfw pnpm install --frozen-lockfile
 
       - name: Cache Playwright browsers
         id: playwright-cache
@@ -251,7 +256,7 @@ jobs:
         run: pnpm check:toolkit-peer-deps
 
       - name: Install only toolkit + its dependencies
-        run: pnpm install --frozen-lockfile --filter "@ngx-signal-forms/toolkit..."
+        run: sfw pnpm install --frozen-lockfile --filter "@ngx-signal-forms/toolkit..."
 
       - name: Build toolkit in isolation
         # Skip the cache: the earlier build step already cached this hash, and
@@ -259,7 +264,7 @@ jobs:
         run: pnpm exec nx build toolkit --skip-nx-cache
 
       - name: Restore full workspace install
-        run: pnpm install --frozen-lockfile
+        run: sfw pnpm install --frozen-lockfile
 
       - name: Verify e2e (affected)
         # e2e suites are slow; keep this one affected so release run time
