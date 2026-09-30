@@ -119,7 +119,7 @@ entry's `README.md` into its own output folder, and
 one gets rewritten: `scripts/generate-readme.mjs` reads the **repo-root**
 `README.md` (not `packages/toolkit/README.md`), rewrites its relative links
 to absolute GitHub URLs pinned to the commit being published, and writes the
-result to `dist/packages/toolkit/README.md` during `post-build`. The five
+result to `dist/packages/toolkit/README.md` during `toolkit:build`. The five
 secondary READMEs ship as-is, with their relative links unrewritten — a link
 to a repo-only file (e.g. `../../CONTEXT.md`) resolves on GitHub but not on
 npm. See [issue #568](https://github.com/ngx-signal-forms/ngx-signal-forms/issues/568)

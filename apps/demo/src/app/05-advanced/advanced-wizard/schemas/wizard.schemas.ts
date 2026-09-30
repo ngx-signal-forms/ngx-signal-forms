@@ -58,6 +58,28 @@ export const DestinationSchema = z
   .refine((data) => new Date(data.departureDate) > new Date(data.arrivalDate), {
     message: 'Departure date must be after arrival date',
     path: ['departureDate'],
+  })
+  // Nested cross-field rule. The issue lands on the activity's date field, so
+  // the trip form (validateStandardSchema) and the wizard store share it.
+  .superRefine((data, ctx) => {
+    const { arrivalDate, departureDate } = data;
+    if (!arrivalDate || !departureDate) return;
+
+    const arrival = new Date(arrivalDate);
+    const departure = new Date(departureDate);
+
+    data.activities.forEach((activity, index) => {
+      if (!activity.date) return;
+
+      const activityDate = new Date(activity.date);
+      if (activityDate < arrival || activityDate > departure) {
+        ctx.addIssue({
+          code: 'custom',
+          message: 'Activity date must be within destination date range',
+          path: ['activities', index, 'date'],
+        });
+      }
+    });
   });
 
 export const TravelerSchema = z
@@ -134,6 +156,9 @@ export type Activity = z.infer<typeof ActivitySchema>;
 export type Destination = z.infer<typeof DestinationSchema>;
 export type Traveler = z.infer<typeof TravelerSchema>;
 export type Trip = z.infer<typeof TripSchema>;
+
+/** The auto-saved work in progress, as the draft API stores it. */
+export type WizardDraft = Pick<Trip, 'traveler' | 'destinations'>;
 
 // ══════════════════════════════════════════════════════════════════════════════
 // FACTORY FUNCTIONS

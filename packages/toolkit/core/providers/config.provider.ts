@@ -20,7 +20,8 @@ import { createCascadingResolver } from '../utilities/cascading-resolver';
  *
  * Tiers per property: `userConfig` → `parentConfig` → `DEFAULT_NGX_SIGNAL_FORMS_CONFIG`.
  * Uses nullish-only short-circuit so falsy overrides (e.g. `requiredMarker: ''`,
- * `autoAria: false`) are preserved and do not fall through to parent defaults.
+ * `errorSummaryAnnouncesAlone: false`) are preserved and do not fall through
+ * to parent defaults.
  *
  * @internal
  */
@@ -34,11 +35,6 @@ function createConfigFactory(
     });
 
     return {
-      autoAria: createCascadingResolver({
-        input: userConfig.autoAria,
-        configDefault: parentOrNull?.autoAria,
-        fallback: DEFAULT_NGX_SIGNAL_FORMS_CONFIG.autoAria,
-      }),
       defaultErrorStrategy: createCascadingResolver({
         input: userConfig.defaultErrorStrategy,
         configDefault: parentOrNull?.defaultErrorStrategy,
@@ -137,7 +133,6 @@ function createConfigFactory(
  * export const appConfig: ApplicationConfig = {
  *   providers: [
  *     provideNgxSignalFormsConfig({
- *       autoAria: true,
  *       defaultErrorStrategy: 'on-touch',
  *     }),
  *   ],

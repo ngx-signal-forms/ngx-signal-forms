@@ -95,7 +95,6 @@ describe('PrimeFormFieldComponent warning timing (#506)', () => {
         provideZonelessChangeDetection(),
         provideNgxSignalFormsConfig({
           defaultErrorStrategy: 'on-touch',
-          autoAria: true,
         }),
       ],
     });
@@ -179,7 +178,6 @@ describe('PrimeFieldErrorComponent follows the wrapper-resolved warningStrategy 
           // wrapper's resolved value reaches the renderer rather than the
           // renderer re-deciding warning timing on its own.
           defaultWarningStrategy: 'immediate',
-          autoAria: true,
         }),
         ...provideNgxPrimeForms(),
       ],
@@ -253,7 +251,6 @@ describe('PrimeFormFieldComponent does not suppress a warning-only field (#506 C
         provideZonelessChangeDetection(),
         provideNgxSignalFormsConfig({
           defaultErrorStrategy: 'on-touch',
-          autoAria: true,
         }),
       ],
     });

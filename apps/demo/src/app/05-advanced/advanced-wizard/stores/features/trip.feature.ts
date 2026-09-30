@@ -2,10 +2,10 @@ import { linkedSignal } from '@angular/core';
 import {
   patchState,
   signalStoreFeature,
+  type,
   withComputed,
   withLinkedState,
   withMethods,
-  withState,
 } from '@ngrx/signals';
 import { updateAt, updateNested } from '@ngx-signal-forms/toolkit';
 
@@ -16,11 +16,8 @@ import {
   createEmptyRequirement,
   Destination,
   Requirement,
+  type WizardDraft,
 } from '../../schemas/wizard.schemas';
-
-type TripState = {
-  destinations: Destination[];
-};
 
 // Compose nested updates for 3-level depth (destinations → activities → requirements)
 function updateRequirementNested(
@@ -44,9 +41,15 @@ function updateRequirementNested(
 
 export function withTripManagement() {
   return signalStoreFeature(
-    withState<TripState>({
-      destinations: [],
-    }),
+    // Needs the saved draft from `withSavedDraft()`.
+    { state: type<{ savedDraftValue: WizardDraft | undefined }>() },
+
+    // Committed state follows the resumed draft, with no effect to copy it.
+    // It stays writable, so the methods below still patch it.
+    withLinkedState(({ savedDraftValue }) => ({
+      destinations: (): Destination[] =>
+        savedDraftValue()?.destinations ?? [createEmptyDestination()],
+    })),
 
     // Draft state linked to committed - form binds to this
     withLinkedState(({ destinations }) => ({

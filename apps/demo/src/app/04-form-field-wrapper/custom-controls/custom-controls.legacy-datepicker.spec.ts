@@ -23,7 +23,6 @@ describe('LegacyDatepickerAdapterComponent (custom-controls demo)', () => {
         provideZonelessChangeDetection(),
         provideNgxSignalFormsConfig({
           defaultErrorStrategy: 'on-touch',
-          autoAria: true,
         }),
       ],
     });
