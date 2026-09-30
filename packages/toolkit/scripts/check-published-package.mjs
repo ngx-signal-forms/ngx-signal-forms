@@ -50,9 +50,10 @@ import {
   writeFileSync,
 } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join, resolve } from 'node:path';
+import { join, posix, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import ts from 'typescript';
+import { isRelativeLink, mapReadmeLinks } from './generate-readme.mjs';
 
 const TOOLKIT_ENTRY_PREFIX = 'ngx-signal-forms-toolkit';
 
@@ -333,6 +334,36 @@ export function buildTarballManifest(distRoot) {
 }
 
 /**
+ * Lists every relative link in a packed `README.md` that does not point at a
+ * file in the tarball. Such a link works in the repo but is dead on npm and in
+ * `node_modules`; `generate-readme.mjs` rewrites those links to absolute URLs.
+ *
+ * @param {string} distRoot
+ * @param {string[]} manifest paths `npm pack` would publish
+ * @returns {{ readme: string, target: string }[]}
+ */
+export function findBrokenReadmeLinks(distRoot, manifest) {
+  const shipped = new Set(manifest);
+  const broken = [];
+  for (const readme of manifest.filter((path) =>
+    /(^|\/)README\.md$/.test(path),
+  )) {
+    mapReadmeLinks(readFileSync(join(distRoot, readme), 'utf8'), (target) => {
+      if (isRelativeLink(target)) {
+        const path = target.split(/[#?]/)[0];
+        const resolved = path.startsWith('/')
+          ? undefined
+          : posix.join(posix.dirname(readme), path);
+        if (resolved === undefined || !shipped.has(resolved))
+          broken.push({ readme, target });
+      }
+      return target;
+    });
+  }
+  return broken;
+}
+
+/**
  * Reads a committed baseline directory back into an entry-name -> content
  * map, stripping the explanatory header `writeBaseline` prepends to an
  * internal entry so the comparison only ever sees dist-identical content.
@@ -522,6 +553,18 @@ function main() {
 
   const surface = buildApiSurfaceSnapshot(distRoot);
   const manifest = buildTarballManifest(distRoot);
+
+  // Not a baseline diff: a broken link is wrong whatever the baseline says,
+  // so this fails in `--update` mode too.
+  const brokenLinks = findBrokenReadmeLinks(distRoot, manifest);
+  if (brokenLinks.length > 0) {
+    console.error(
+      "[toolkit] ERROR: packed READMEs link to files that are not in the tarball. Rewrite them in 'scripts/generate-readme.mjs':\n",
+    );
+    for (const { readme, target } of brokenLinks)
+      console.error(`  ${readme}: ${target}`);
+    process.exit(1);
+  }
 
   if (update) {
     writeBaseline(baselineDir, surface, manifest);

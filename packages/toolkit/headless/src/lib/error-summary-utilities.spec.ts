@@ -208,3 +208,60 @@ describe('toErrorSummaryEntry', () => {
     expect(entry.fieldName).toBe('E-mail');
   });
 });
+
+describe('ErrorSummaryEntryData.key', () => {
+  const sameLabel = (): string => 'Street';
+
+  it('differs for two fields that share a label, kind and message', () => {
+    // The key is the `@for` track key. A label-based key would collide here.
+    const first = toErrorSummaryEntry(
+      errorWithFieldTree({ fieldName: 'ngf-0.rows.0.street' }),
+      undefined,
+      undefined,
+      sameLabel,
+    );
+    const second = toErrorSummaryEntry(
+      errorWithFieldTree({ fieldName: 'ngf-0.rows.1.street' }),
+      undefined,
+      undefined,
+      sameLabel,
+    );
+
+    expect(first.fieldName).toBe(second.fieldName);
+    expect(first.key).not.toBe(second.key);
+  });
+
+  it('stays the same when the same error is mapped again on a later render', () => {
+    const error = errorWithFieldTree({ fieldName: 'ngf-0.email' });
+
+    expect(toErrorSummaryEntry(error).key).toBe(toErrorSummaryEntry(error).key);
+  });
+
+  it('changes with the message, because one field can keep two errors of one kind', () => {
+    // Dedupe keeps both of these, so their keys must differ.
+    const required = errorWithFieldTree({ message: 'Required' });
+    const format = errorWithFieldTree({ message: 'Invalid format' });
+
+    expect(dedupeValidationErrorsByField([required, format])).toHaveLength(2);
+    expect(toErrorSummaryEntry(required).key).not.toBe(
+      toErrorSummaryEntry(format).key,
+    );
+  });
+
+  it('never matches a bound field, even one with an empty name', () => {
+    const unbound: ValidationError = { kind: 'required', message: 'Required' };
+    const emptyName = errorWithFieldTree({ fieldName: '' });
+
+    expect(toErrorSummaryEntry(unbound).key).not.toBe(
+      toErrorSummaryEntry(emptyName).key,
+    );
+  });
+
+  it('keeps the name, kind and message apart when they contain separators', () => {
+    // A plain `name::kind::message` join would make these two identical.
+    const a = errorWithFieldTree({ fieldName: 'a::b', kind: 'c' });
+    const b = errorWithFieldTree({ fieldName: 'a', kind: 'b::c' });
+
+    expect(toErrorSummaryEntry(a).key).not.toBe(toErrorSummaryEntry(b).key);
+  });
+});

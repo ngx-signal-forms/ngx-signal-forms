@@ -271,9 +271,11 @@ Signals: `entries()`, `warningEntries()`, `hasErrors()`, `hasWarnings()`,
 `shouldShow()`, `shouldShowWarnings()`, `resolvedStrategy()`,
 `resolvedWarningStrategy()`. Method: `focusFirst()`.
 
-- Each entry has `kind`, `message`, `fieldName`, `focus()`, and `canFocus`.
-  Render an entry as a button only when `canFocus` is `true`. Otherwise render
-  plain text, because the error has no control to focus.
+- Each entry has `key`, `kind`, `message`, `fieldName`, `focus()`, and
+  `canFocus`. Render an entry as a button only when `canFocus` is `true`.
+  Otherwise render plain text, because the error has no control to focus.
+- Track rows by `key` (`@for (entry of summary.entries(); track entry.key)`).
+  `fieldName` is display text: two fields can share it.
 - `shouldShow()` controls error entries. `shouldShowWarnings()` controls
   warning entries. They are independent: a form that shows errors only after
   submit can still show warnings on touch.
