@@ -26,8 +26,8 @@ import type {
  * value from `ErrorDisplayStrategy` is a user-facing input that must be
  * resolved to a concrete strategy (`'immediate' | 'on-touch' | 'on-submit'`)
  * before calling this function. Route user input through
- * {@link resolveErrorDisplayStrategy} or {@link resolveStrategyFromContext}
- * first. Reactive surfaces should use {@link createShowErrorsComputed},
+ * {@link resolveStrategyFromContext} first. Reactive surfaces should use
+ * {@link createShowErrorsComputed},
  * which accepts the wider `ErrorDisplayStrategy` and resolves `'inherit'`
  * internally.
  *
@@ -62,9 +62,9 @@ import type {
  *
  * @see {@link createShowErrorsComputed} For reactive version that creates a computed signal
  * @see {@link ResolvedErrorDisplayStrategy} For the resolved strategy union
- * @see {@link resolveErrorDisplayStrategy} To resolve `'inherit'` before calling this
+ * @see {@link resolveStrategyFromContext} To resolve `'inherit'` before calling this
  *
- * @public
+ * @internal
  */
 export function shouldShowErrors(
   isInvalid: boolean,

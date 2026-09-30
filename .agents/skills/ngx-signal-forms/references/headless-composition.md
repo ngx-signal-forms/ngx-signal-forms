@@ -19,8 +19,8 @@ Choose state before markup:
 - `createErrorVisibility()` and `createWarningVisibility()` resolve explicit
   strategy, form context, explicit `configDefault`, then `on-touch`. Pass the
   provider default when composing these low-level helpers yourself. Higher-level
-  state factories supply it. A direct `createShowErrorsComputed()` call never
-  injects form context; pass submitted status for `on-submit`.
+  state factories supply it. Outside an `ngxSignalForm` context there is no form context to
+  inherit; pass submitted status for `on-submit`.
 - `createFieldsetAggregation()` and `createErrorSummaryEntries()` are pure,
   with no DI requirement. Supply a reader of `field()` or `formTree()` plus
   separate pre-resolved `showErrors` and `showWarnings` signals. For aggregate

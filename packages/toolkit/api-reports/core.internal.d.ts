@@ -3219,8 +3219,9 @@ interface CreateWarningVisibilityOptions {
  * ## When NOT to use
  *
  * Reach for `resolveWarningStrategyFromContext()` + `shouldShowWarnings()`
- * directly when a surface needs the resolved strategy as public API, or
- * composes the presence check into a larger pipeline of its own.
+ * from `@ngx-signal-forms/toolkit/core` (toolkit-internal) when a surface needs
+ * the resolved strategy as public API, or composes the presence check into a
+ * larger pipeline of its own.
  *
  * @param field Reactive or static field state. Nullish values short-circuit
  *   the result to `false`.
@@ -3623,8 +3624,7 @@ declare function isFormFieldOrientation(value: string | null | undefined): value
  * value from `ErrorDisplayStrategy` is a user-facing input that must be
  * resolved to a concrete strategy (`'immediate' | 'on-touch' | 'on-submit'`)
  * before calling this function. Route user input through
- * {@link resolveErrorDisplayStrategy} or {@link resolveStrategyFromContext}
- * first. Reactive surfaces should use {@link createShowErrorsComputed},
+ * {@link resolveStrategyFromContext} first. Reactive surfaces should use {@link createShowErrorsComputed},
  * which accepts the wider `ErrorDisplayStrategy` and resolves `'inherit'`
  * internally.
  *
@@ -3659,9 +3659,9 @@ declare function isFormFieldOrientation(value: string | null | undefined): value
  *
  * @see {@link createShowErrorsComputed} For reactive version that creates a computed signal
  * @see {@link ResolvedErrorDisplayStrategy} For the resolved strategy union
- * @see {@link resolveErrorDisplayStrategy} To resolve `'inherit'` before calling this
+ * @see {@link resolveStrategyFromContext} To resolve `'inherit'` before calling this
  *
- * @public
+ * @internal
  */
 declare function shouldShowErrors(isInvalid: boolean, isTouched: boolean, strategy: ResolvedErrorDisplayStrategy, submittedStatus: SubmittedStatus): boolean;
 /**
@@ -4594,30 +4594,6 @@ interface StandardSchemaLikeResult<TInput> {
  */
 declare function requiredFromStandardSchema<TValue, TModel = unknown, TPathKind extends PathKind = PathKind.Root>(path: SchemaPath<TValue, SchemaPathRules.Supported, TPathKind>, schema: StandardSchemaLike<TModel> | LogicFn<TValue, StandardSchemaLike<TModel> | undefined, TPathKind>): void;
 
-type StrategyInput = ErrorDisplayStrategy | null | undefined;
-type WarningStrategyInput = WarningDisplayStrategy | null | undefined;
-/**
- * Resolves the error display strategy from an input value, context, and
- * config default.
- *
- * Cascade order (three tiers, plus a terminal fallback):
- * 1. explicit input strategy (if not `'inherit'`)
- * 2. form context's error strategy
- * 3. config default error strategy
- * 4. terminal fallback `'on-touch'`
- */
-declare function resolveErrorDisplayStrategy(inputStrategy: StrategyInput, contextStrategy?: ResolvedErrorDisplayStrategy | null, configDefault?: ResolvedErrorDisplayStrategy | null): ResolvedErrorDisplayStrategy;
-/**
- * Resolves the warning display strategy from an input value, context, and config default.
- * This is the warning-specific counterpart to `resolveErrorDisplayStrategy`.
- *
- * Cascade order (four tiers):
- * 1. explicit input strategy (if not 'inherit')
- * 2. form context's warning strategy
- * 3. config default warning strategy
- * 4. terminal fallback 'on-touch'
- */
-declare function resolveWarningStrategy(inputStrategy: WarningStrategyInput, contextStrategy?: ResolvedWarningDisplayStrategy | null, configDefault?: ResolvedWarningDisplayStrategy | null): ResolvedWarningDisplayStrategy;
 /**
  * Resolves the error display strategy from a component/directive's input,
  * falling back to form context, then to the default.
@@ -4750,7 +4726,7 @@ declare function createDevWarnOnce(): (level: 'error' | 'warn', message: string,
  *
  * @example Simple usage (recommended - no submittedStatus needed)
  * ```typescript
- * import { createShowErrorsComputed } from '@ngx-signal-forms/toolkit';
+ * import { createShowErrorsComputed } from '@ngx-signal-forms/toolkit/core';
  *
  * @Component({
  *   template: `
@@ -4784,93 +4760,9 @@ declare function createDevWarnOnce(): (level: 'error' | 'warn', message: string,
  * );
  * ```
  *
- * @see {@link combineShowErrors} For combining multiple error signals
- *
- * @public
+ * @internal
  */
 declare function createShowErrorsComputed(field: ReactiveOrStatic<Partial<ErrorVisibilityState> | null | undefined>, strategy: ReactiveOrStatic<ErrorDisplayStrategy>, submittedStatus?: ReactiveOrStatic<SubmittedStatus | undefined>): Signal<boolean>;
-/**
- * Combines multiple error visibility signals into a single signal.
- *
- * ## What does it do?
- * Creates a computed signal that returns `true` if ANY of the provided error
- * visibility signals are `true`. This is useful for showing aggregate error
- * states, form-level validation, or section-level error indicators.
- *
- * ## When to use it?
- * Use `combineShowErrors()` when you need to:
- * - Show form-level error indicator if any field has errors
- * - Disable submit button when any field should show errors
- * - Display section-level validation status (e.g., "Address has errors")
- * - Implement custom error aggregation logic
- *
- * ## How does it work?
- * 1. Accepts an array of error visibility signals
- * 2. Creates a computed signal that checks all inputs
- * 3. Returns `true` if ANY signal is `true` (logical OR operation)
- * 4. Updates automatically when any input signal changes
- *
- * @param showErrorsSignals - Array of error visibility signals to combine
- * @returns A computed signal that is `true` if any input signal is `true`
- *
- * @example Form-level error indicator
- * ```typescript
- * const showAnyFormErrors = combineShowErrors([
- *   createShowErrorsComputed(form.email, 'on-touch', submitted),
- *   createShowErrorsComputed(form.password, 'on-touch', submitted),
- *   createShowErrorsComputed(form.confirmPassword, 'on-touch', submitted)
- * ]);
- *
- * /// Use in template
- * @if (showAnyFormErrors()) {
- *   <div class="form-error-banner">
- *     Please fix the errors below before submitting
- *   </div>
- * }
- * ```
- *
- * @example Disable submit button
- * ```typescript
- * const hasVisibleErrors = combineShowErrors([
- *   createShowErrorsComputed(form.username, strategy, submitted),
- *   createShowErrorsComputed(form.email, strategy, submitted)
- * ]);
- *
- * /// In template
- * <button [disabled]="hasVisibleErrors()">Submit</button>
- * ```
- *
- * @example Section-level validation
- * ```typescript
- * const showAddressErrors = combineShowErrors([
- *   createShowErrorsComputed(form.street, strategy, submitted),
- *   createShowErrorsComputed(form.city, strategy, submitted),
- *   createShowErrorsComputed(form.zipCode, strategy, submitted)
- * ]);
- *
- * const showPaymentErrors = combineShowErrors([
- *   createShowErrorsComputed(form.cardNumber, strategy, submitted),
- *   createShowErrorsComputed(form.cvv, strategy, submitted)
- * ]);
- * ```
- *
- * @example Custom error count
- * ```typescript
- * const errorSignals = [
- *   createShowErrorsComputed(form.field1, 'on-touch', submitted),
- *   createShowErrorsComputed(form.field2, 'on-touch', submitted),
- *   createShowErrorsComputed(form.field3, 'on-touch', submitted)
- * ];
- *
- * const hasErrors = combineShowErrors(errorSignals);
- * const errorCount = computed(() =>
- *   errorSignals.filter(signal => signal()).length
- * );
- * ```
- *
- * @see {@link createShowErrorsComputed} For creating individual error visibility signals
- */
-declare function combineShowErrors(showErrorsSignals: readonly Signal<boolean>[]): Signal<boolean>;
 
 /**
  * Tracks completed-once submission history on top of native
@@ -5309,5 +5201,5 @@ declare function warningError(kind: string, message?: string): ValidationError;
  */
 declare const NgxSignalFormToolkit: readonly [typeof FormRoot, typeof NgxSignalForm, typeof NgxSignalFormAutoAria, typeof NgxSignalFormControlSemanticsDirective];
 
-export { BOUND_CONTROL_SELECTOR, DEFAULT_NGX_SIGNAL_FORMS_CONFIG, DEFAULT_NGX_SIGNAL_FORM_CONTROL_PRESETS, FORM_FIELD_APPEARANCE_VALUES, FORM_FIELD_ORIENTATION_VALUES, InvalidFieldTreeError, NGX_ERROR_MESSAGES, NGX_FIELD_LABEL_RESOLVER, NGX_FORM_FIELD_ERROR_RENDERER, NGX_FORM_FIELD_HINT_RENDERER, NGX_SIGNAL_FORMS_CONFIG, NGX_SIGNAL_FORM_ARIA_MODE, NGX_SIGNAL_FORM_CONTEXT, NGX_SIGNAL_FORM_CONTROL_KIND_VALUES, NGX_SIGNAL_FORM_CONTROL_PRESETS, NGX_SIGNAL_FORM_FIELD_CONTEXT, NGX_SIGNAL_FORM_FIELD_VISIBILITY_REGISTRY, NGX_SIGNAL_FORM_HINT_REGISTRY, NgxControlPresetRegistry, NgxFieldIdentity, NgxFieldIdentityProvider, NgxFieldVisibilityRegistry, NgxSignalForm, NgxSignalFormAutoAria, NgxSignalFormControlSemanticsDirective, NgxSignalFormIdCounter, NgxSignalFormToolkit, NgxSubmitAnnouncements, WARN_KIND_PREFIX, assertInjector, buildAriaDescribedBy, canSubmitWithWarnings, combineShowErrors, createAriaDescribedByBridge, createAriaDescribedBySignal, createAriaInvalidSignal, createAriaRequiredSignal, createCascadingResolver, createCharacterCountLengthSignal, createControlVisibilitySignal, createDevWarnOnce, createErrorVisibility, createFieldMessageIdSignals, createFieldNameResolver, createFieldPresentation, createHintIdsSignal, createOnInvalidHandler, createShowErrorsComputed, createSubmittedStatusTracker, createUniqueId, createWarningVisibility, devWarnOnce, findBoundControl, focusFirstInvalid, generateCharacterCountLimitId, generateErrorId, generateRequiredHintId, generateWarningId, getBlockingErrors, getDefaultValidationMessage, hasOnlyWarnings, hasSubmitted, humanizeFieldPath, inferNgxSignalFormControlKind, injectFieldControl, injectFormContext, isBlockingError, isElementCssVisible, isFieldStateHidden, isFieldStateInteractive, isFieldStateRequired, isFieldTreeLike, isFormFieldAppearance, isFormFieldOrientation, isHtmlButtonElement, isHtmlElement, isHtmlInputElement, isHtmlSelectElement, isHtmlTextAreaElement, isNgxSignalFormControlAriaMode, isNgxSignalFormControlKind, isNgxSignalFormControlLayout, isWarningError, mergeNgxSignalFormControlPresets, normalizeFieldName, provideErrorMessages, provideFieldLabels, provideFormFieldErrorRenderer, provideFormFieldErrorRendererForComponent, provideFormFieldHintRenderer, provideFormFieldHintRendererForComponent, provideNgxSignalFormControlPresets, provideNgxSignalFormControlPresetsForComponent, provideNgxSignalFormsConfig, provideNgxSignalFormsConfigForComponent, readDirectErrors, readNgxSignalFormControlSemantics, requiredFromStandardSchema, resolveBoundControlFromBindings, resolveErrorDisplayStrategy, resolveFieldName, resolveFieldNameFromCandidates, resolveNgxSignalFormControlSemantics, resolveStrategyFromContext, resolveSubmittedStatusFromContext, resolveValidationErrorMessage, resolveWarningStrategy, resolveWarningStrategyFromContext, sanitizeFieldNameForId, shouldShowErrors, shouldShowWarnings, splitByKind, stripAngularFormPrefix, submitWithWarnings, unwrapValue, updateAt, updateNested, walkFieldTreeEntries, warningError };
+export { BOUND_CONTROL_SELECTOR, DEFAULT_NGX_SIGNAL_FORMS_CONFIG, DEFAULT_NGX_SIGNAL_FORM_CONTROL_PRESETS, FORM_FIELD_APPEARANCE_VALUES, FORM_FIELD_ORIENTATION_VALUES, InvalidFieldTreeError, NGX_ERROR_MESSAGES, NGX_FIELD_LABEL_RESOLVER, NGX_FORM_FIELD_ERROR_RENDERER, NGX_FORM_FIELD_HINT_RENDERER, NGX_SIGNAL_FORMS_CONFIG, NGX_SIGNAL_FORM_ARIA_MODE, NGX_SIGNAL_FORM_CONTEXT, NGX_SIGNAL_FORM_CONTROL_KIND_VALUES, NGX_SIGNAL_FORM_CONTROL_PRESETS, NGX_SIGNAL_FORM_FIELD_CONTEXT, NGX_SIGNAL_FORM_FIELD_VISIBILITY_REGISTRY, NGX_SIGNAL_FORM_HINT_REGISTRY, NgxControlPresetRegistry, NgxFieldIdentity, NgxFieldIdentityProvider, NgxFieldVisibilityRegistry, NgxSignalForm, NgxSignalFormAutoAria, NgxSignalFormControlSemanticsDirective, NgxSignalFormIdCounter, NgxSignalFormToolkit, NgxSubmitAnnouncements, WARN_KIND_PREFIX, assertInjector, buildAriaDescribedBy, canSubmitWithWarnings, createAriaDescribedByBridge, createAriaDescribedBySignal, createAriaInvalidSignal, createAriaRequiredSignal, createCascadingResolver, createCharacterCountLengthSignal, createControlVisibilitySignal, createDevWarnOnce, createErrorVisibility, createFieldMessageIdSignals, createFieldNameResolver, createFieldPresentation, createHintIdsSignal, createOnInvalidHandler, createShowErrorsComputed, createSubmittedStatusTracker, createUniqueId, createWarningVisibility, devWarnOnce, findBoundControl, focusFirstInvalid, generateCharacterCountLimitId, generateErrorId, generateRequiredHintId, generateWarningId, getBlockingErrors, getDefaultValidationMessage, hasOnlyWarnings, hasSubmitted, humanizeFieldPath, inferNgxSignalFormControlKind, injectFieldControl, injectFormContext, isBlockingError, isElementCssVisible, isFieldStateHidden, isFieldStateInteractive, isFieldStateRequired, isFieldTreeLike, isFormFieldAppearance, isFormFieldOrientation, isHtmlButtonElement, isHtmlElement, isHtmlInputElement, isHtmlSelectElement, isHtmlTextAreaElement, isNgxSignalFormControlAriaMode, isNgxSignalFormControlKind, isNgxSignalFormControlLayout, isWarningError, mergeNgxSignalFormControlPresets, normalizeFieldName, provideErrorMessages, provideFieldLabels, provideFormFieldErrorRenderer, provideFormFieldErrorRendererForComponent, provideFormFieldHintRenderer, provideFormFieldHintRendererForComponent, provideNgxSignalFormControlPresets, provideNgxSignalFormControlPresetsForComponent, provideNgxSignalFormsConfig, provideNgxSignalFormsConfigForComponent, readDirectErrors, readNgxSignalFormControlSemantics, requiredFromStandardSchema, resolveBoundControlFromBindings, resolveFieldName, resolveFieldNameFromCandidates, resolveNgxSignalFormControlSemantics, resolveStrategyFromContext, resolveSubmittedStatusFromContext, resolveValidationErrorMessage, resolveWarningStrategyFromContext, sanitizeFieldNameForId, shouldShowErrors, shouldShowWarnings, splitByKind, stripAngularFormPrefix, submitWithWarnings, unwrapValue, updateAt, updateNested, walkFieldTreeEntries, warningError };
 export type { AriaDescribedByBridge, AriaDescribedByChainOptions, AriaDescribedByFieldNameReader, AriaDescribedByPreservedIdsReader, AriaRequiredFieldState, BoundControlElementReader, ControlVisibilitySignal, CreateAriaDescribedByBridgeOptions, CreateAriaDescribedBySignalOptions, CreateErrorVisibilityOptions, CreateFieldNameResolverOptions, CreateFieldPresentationOptions, CreateHintIdsSignalOptions, CreateWarningVisibilityOptions, ErrorDisplayStrategy, ErrorMessageRegistry, ErrorReadableState, ErrorVisibilityState, FieldLabelMap, FieldLabelResolver, FieldMarkingMode, FieldMessageIdSignals, FieldPresentation, FieldPresentationState, FormFieldAppearance, FormFieldAppearanceInput, FormFieldBindingsState, FormFieldOrientation, FormFieldOrientationInput, HintIdsFieldNameReader, HintIdsIdentityLike, HintIdsRegistryLike, HintIdsSignal, LabelForReader, MarkerKind, NgxFormFieldErrorPlacement, NgxFormFieldErrorRenderer, NgxFormFieldErrorRendererOverride, NgxFormFieldHintRenderer, NgxFormFieldHintRendererOverride, NgxSignalFormContext, NgxSignalFormControlAriaMode, NgxSignalFormControlKind, NgxSignalFormControlLayout, NgxSignalFormControlPreset, NgxSignalFormControlPresetOverrides, NgxSignalFormControlPresetRegistry, NgxSignalFormControlSemantics, NgxSignalFormFieldContext, NgxSignalFormFieldVisibilityDescriptor, NgxSignalFormFieldVisibilityRegistry, NgxSignalFormHintDescriptor, NgxSignalFormHintRegistry, NgxSignalFormsConfig, NgxSignalFormsUserConfig, OnInvalidHandlerOptions, ReactiveCascadingResolverOptions, ReactiveOrStatic, ResolvableValidationError, ResolveErrorMessageOptions, ResolvedErrorDisplayStrategy, ResolvedMarker, ResolvedNgxSignalFormControlSemantics, ResolvedWarningDisplayStrategy, SignalLike, SplitErrors, StandardSchemaLike, StandardSchemaLikeIssue, StandardSchemaLikeResult, StaticCascadingResolverOptions, SubmittedStatus, WarnOnceRef, WarningDisplayStrategy, WarningVisibilityState };

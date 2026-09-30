@@ -114,8 +114,9 @@ export interface CreateWarningVisibilityOptions {
  * ## When NOT to use
  *
  * Reach for `resolveWarningStrategyFromContext()` + `shouldShowWarnings()`
- * directly when a surface needs the resolved strategy as public API, or
- * composes the presence check into a larger pipeline of its own.
+ * from `@ngx-signal-forms/toolkit/core` (toolkit-internal) when a surface needs
+ * the resolved strategy as public API, or composes the presence check into a
+ * larger pipeline of its own.
  *
  * @param field Reactive or static field state. Nullish values short-circuit
  *   the result to `false`.

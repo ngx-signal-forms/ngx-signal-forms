@@ -59,7 +59,7 @@ import { unwrapValue } from './unwrap-signal-or-value';
  *
  * @example Simple usage (recommended - no submittedStatus needed)
  * ```typescript
- * import { createShowErrorsComputed } from '@ngx-signal-forms/toolkit';
+ * import { createShowErrorsComputed } from '@ngx-signal-forms/toolkit/core';
  *
  * @Component({
  *   template: `
@@ -93,9 +93,7 @@ import { unwrapValue } from './unwrap-signal-or-value';
  * );
  * ```
  *
- * @see {@link combineShowErrors} For combining multiple error signals
- *
- * @public
+ * @internal
  */
 export function createShowErrorsComputed(
   field: ReactiveOrStatic<Partial<ErrorVisibilityState> | null | undefined>,
@@ -123,8 +121,7 @@ export function createShowErrorsComputed(
     // `'on-touch'` — that matches the historical behavior of the
     // now-removed `'inherit'` branch in `shouldShowErrors`. Call sites that
     // own a context should resolve `'inherit'` themselves via
-    // `resolveErrorDisplayStrategy` / `resolveStrategyFromContext` before
-    // passing the value in.
+    // `resolveStrategyFromContext` before passing the value in.
     const resolvedStrategy: ResolvedErrorDisplayStrategy =
       strategyValue === 'inherit' ? 'on-touch' : strategyValue;
 
@@ -152,91 +149,4 @@ export function createShowErrorsComputed(
       fallbackStatus,
     );
   });
-}
-
-/**
- * Combines multiple error visibility signals into a single signal.
- *
- * ## What does it do?
- * Creates a computed signal that returns `true` if ANY of the provided error
- * visibility signals are `true`. This is useful for showing aggregate error
- * states, form-level validation, or section-level error indicators.
- *
- * ## When to use it?
- * Use `combineShowErrors()` when you need to:
- * - Show form-level error indicator if any field has errors
- * - Disable submit button when any field should show errors
- * - Display section-level validation status (e.g., "Address has errors")
- * - Implement custom error aggregation logic
- *
- * ## How does it work?
- * 1. Accepts an array of error visibility signals
- * 2. Creates a computed signal that checks all inputs
- * 3. Returns `true` if ANY signal is `true` (logical OR operation)
- * 4. Updates automatically when any input signal changes
- *
- * @param showErrorsSignals - Array of error visibility signals to combine
- * @returns A computed signal that is `true` if any input signal is `true`
- *
- * @example Form-level error indicator
- * ```typescript
- * const showAnyFormErrors = combineShowErrors([
- *   createShowErrorsComputed(form.email, 'on-touch', submitted),
- *   createShowErrorsComputed(form.password, 'on-touch', submitted),
- *   createShowErrorsComputed(form.confirmPassword, 'on-touch', submitted)
- * ]);
- *
- * /// Use in template
- * @if (showAnyFormErrors()) {
- *   <div class="form-error-banner">
- *     Please fix the errors below before submitting
- *   </div>
- * }
- * ```
- *
- * @example Disable submit button
- * ```typescript
- * const hasVisibleErrors = combineShowErrors([
- *   createShowErrorsComputed(form.username, strategy, submitted),
- *   createShowErrorsComputed(form.email, strategy, submitted)
- * ]);
- *
- * /// In template
- * <button [disabled]="hasVisibleErrors()">Submit</button>
- * ```
- *
- * @example Section-level validation
- * ```typescript
- * const showAddressErrors = combineShowErrors([
- *   createShowErrorsComputed(form.street, strategy, submitted),
- *   createShowErrorsComputed(form.city, strategy, submitted),
- *   createShowErrorsComputed(form.zipCode, strategy, submitted)
- * ]);
- *
- * const showPaymentErrors = combineShowErrors([
- *   createShowErrorsComputed(form.cardNumber, strategy, submitted),
- *   createShowErrorsComputed(form.cvv, strategy, submitted)
- * ]);
- * ```
- *
- * @example Custom error count
- * ```typescript
- * const errorSignals = [
- *   createShowErrorsComputed(form.field1, 'on-touch', submitted),
- *   createShowErrorsComputed(form.field2, 'on-touch', submitted),
- *   createShowErrorsComputed(form.field3, 'on-touch', submitted)
- * ];
- *
- * const hasErrors = combineShowErrors(errorSignals);
- * const errorCount = computed(() =>
- *   errorSignals.filter(signal => signal()).length
- * );
- * ```
- *
- * @see {@link createShowErrorsComputed} For creating individual error visibility signals
- */
-export function combineShowErrors(
-  showErrorsSignals: readonly Signal<boolean>[],
-): Signal<boolean> {
-  return computed(() => showErrorsSignals.some((signal) => signal()));
 }

@@ -359,16 +359,12 @@ For your own error UI, two functions give you the same text:
 
 ### Show errors and warnings at the right time
 
-| Function                                                     | Does                                                                      |
-| ------------------------------------------------------------ | ------------------------------------------------------------------------- |
-| `createErrorVisibility(field, opts?)`                        | `Signal<boolean>`: show the error now? Reads the form's timing and status |
-| `createWarningVisibility(field, opts?)`                      | Same for warnings. `false` while a blocking error shows                   |
-| `createShowErrorsComputed(field, strategy, status?)`         | Same as `createErrorVisibility`, with the strategy passed in              |
-| `shouldShowErrors(invalid, touched, strategy, status)`       | Plain boolean version. Not reactive                                       |
-| `shouldShowWarnings(hasWarnings, touched, strategy, status)` | Plain boolean version for warnings                                        |
-| `combineShowErrors(signals)`                                 | `true` when any of the given signals is `true`                            |
-| `readDirectErrors(state)`                                    | The field's own errors, without errors from child fields                  |
-| `injectFormContext(injector?)`                               | The nearest `ngxSignalForm` context, or `undefined`                       |
+| Function                                | Does                                                                      |
+| --------------------------------------- | ------------------------------------------------------------------------- |
+| `createErrorVisibility(field, opts?)`   | `Signal<boolean>`: show the error now? Reads the form's timing and status |
+| `createWarningVisibility(field, opts?)` | Same for warnings. `false` while a blocking error shows                   |
+| `readDirectErrors(state)`               | The field's own errors, without errors from child fields                  |
+| `injectFormContext(injector?)`          | The nearest `ngxSignalForm` context, or `undefined`                       |
 
 `createErrorVisibility` and `createWarningVisibility` read the
 `ngxSignalForm` context through dependency injection. Call them in a component
@@ -527,16 +523,6 @@ behave like the built-in ones. Read
 | `isElementCssVisible(element)`                            | `true` when CSS shows the element                                 |
 | `createControlVisibilitySignal(resolveElement, injector)` | `Signal<boolean>` that tracks whether the control is visible      |
 | `injectFieldControl(element, injector?)`                  | The `FieldTree` bound to an element                               |
-
-**Timing resolution**
-
-| Export                                                                  | Returns                                             |
-| ----------------------------------------------------------------------- | --------------------------------------------------- |
-| `resolveErrorDisplayStrategy(input, context?, configDefault?)`          | Input, then context, then config, then `'on-touch'` |
-| `resolveWarningStrategy(input, context?, configDefault?)`               | Same for warnings                                   |
-| `resolveStrategyFromContext(input, formContext, configDefault?)`        | Error timing from an input and the form context     |
-| `resolveWarningStrategyFromContext(input, formContext, configDefault?)` | Warning timing from an input and the form context   |
-| `resolveSubmittedStatusFromContext(input, formContext)`                 | Submit status from an input and the form context    |
 
 Each function also has companion types exported from the root, such as
 `CreateErrorVisibilityOptions` and `OnInvalidHandlerOptions`.

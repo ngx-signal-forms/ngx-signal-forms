@@ -15,7 +15,6 @@ import {
   NGX_SIGNAL_FORM_FIELD_VISIBILITY_REGISTRY,
   normalizeFieldName,
   readDirectErrors,
-  resolveSubmittedStatusFromContext,
   splitByKind,
   unwrapValue,
   type ErrorDisplayStrategy,
@@ -28,6 +27,7 @@ import {
 import {
   assertInjector,
   createFieldMessageIdSignals,
+  resolveSubmittedStatusFromContext,
 } from '@ngx-signal-forms/toolkit/core';
 
 import { buildHeadlessContext } from './build-headless-context';

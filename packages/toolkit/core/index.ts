@@ -112,10 +112,8 @@ export {
   type StandardSchemaLikeResult,
 } from './utilities/schema/required-from-standard-schema';
 export {
-  resolveErrorDisplayStrategy,
   resolveStrategyFromContext,
   resolveSubmittedStatusFromContext,
-  resolveWarningStrategy,
   resolveWarningStrategyFromContext,
 } from './utilities/resolve-strategy';
 export {
@@ -123,10 +121,7 @@ export {
   devWarnOnce,
   type WarnOnceRef,
 } from './utilities/dev-warn-once';
-export {
-  combineShowErrors,
-  createShowErrorsComputed,
-} from './utilities/show-errors';
+export { createShowErrorsComputed } from './utilities/show-errors';
 export * from './utilities/submission-helpers';
 export { unwrapValue } from './utilities/unwrap-signal-or-value';
 export {
