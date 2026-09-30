@@ -418,7 +418,7 @@ type NgxFormFieldErrorPresentation = 'inline' | 'panel';
  *
  * @example Simplest Usage (no NgxSignalFormToolkit needed!)
  * ```html
- * <form (submit)="save($event)" novalidate>
+ * <form [formRoot]="form">
  *   <input [formField]="form.email" />
  *   <ngx-form-field-error [formField]="form.email" fieldName="email" />
  *   <button type="submit">Submit</button>
