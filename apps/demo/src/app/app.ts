@@ -29,6 +29,10 @@ import { NavTreeComponent } from './ui/nav-tree';
 import { RightRailComponent } from './ui/right-rail';
 import { NgxThemeSwitcherComponent } from './ui/theme-switcher/theme-switcher';
 import { PageControlsService } from './ui/page-controls';
+import {
+  NgxResetOnNavigationDirective,
+  PageErrorComponent,
+} from './ui/render-error';
 
 /** Strips the query string and fragment from a router URL. */
 function toPath(url: string): string {
@@ -45,6 +49,8 @@ function toPath(url: string): string {
     NavTreeComponent,
     RightRailComponent,
     NgxThemeSwitcherComponent,
+    PageErrorComponent,
+    NgxResetOnNavigationDirective,
   ],
   host: {
     '(document:keydown.escape)': 'closeNav()',
@@ -692,7 +698,19 @@ function toPath(url: string): string {
         </button>
         <div #scrollContainer class="shell__scroll">
           <div class="shell__container">
-            <router-outlet />
+            <!-- A page that throws while it renders shows the fallback
+                 instead of a blank area. The fallback resets the boundary
+                 on the next navigation, so the next page renders. Errors
+                 thrown inside effect() are not caught here; they reach
+                 the global ErrorHandler. -->
+            @boundary {
+              <router-outlet />
+            } @error {
+              <ngx-page-error
+                [ngxResetOnNavigation]="$reset"
+                (retry)="retryPage($reset)"
+              />
+            }
           </div>
         </div>
       </main>
@@ -824,7 +842,10 @@ export class AppComponent {
   // oxlint-disable-next-line no-unused-private-class-members -- EffectRef is intentionally kept as a named field to document the side effect.
   readonly #focusHeadingOnPageChangeEffect = effect(() => {
     if (this.#pageChange() === null) return;
+    this.#focusPageHeadingAfterRender();
+  });
 
+  #focusPageHeadingAfterRender(): void {
     afterNextRender(
       () => {
         const main = this.mainContent()?.nativeElement;
@@ -834,7 +855,14 @@ export class AppComponent {
       },
       { injector: this.#injector },
     );
-  });
+  }
+
+  /** "Try again" on the page fallback. The pressed button disappears with
+   * the fallback, so move focus to the page heading instead of `<body>`. */
+  protected retryPage(reset: () => void): void {
+    reset();
+    this.#focusPageHeadingAfterRender();
+  }
 
   /** Skip link: focus `<main>` in place instead of following the fragment
    * href, which `<base href>` would resolve to another page. */

@@ -1,6 +1,7 @@
 import '@fontsource-variable/inter/wght.css';
 import { provideHttpClient } from '@angular/common/http';
 import {
+  ErrorHandler,
   importProvidersFrom,
   isDevMode,
   provideZonelessChangeDetection,
@@ -19,6 +20,7 @@ import {
 } from '@ngx-signal-forms/toolkit';
 import { AppComponent } from './app/app';
 import { appRoutes } from './app/app.routes';
+import { DemoErrorHandler } from './app/ui/render-error';
 
 // Enable MSW mocking in development
 async function enableMocking(): Promise<void> {
@@ -59,6 +61,7 @@ void (async () => {
   await bootstrapApplication(AppComponent, {
     providers: [
       provideZonelessChangeDetection(),
+      { provide: ErrorHandler, useClass: DemoErrorHandler },
       importProvidersFrom(),
       provideHttpClient(),
       provideNgxSignalFormsConfig({
