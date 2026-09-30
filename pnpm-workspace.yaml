@@ -139,7 +139,7 @@ catalogs:
   vitest:
     '@vitest/browser-playwright': '~4.1.11'
     '@vitest/coverage-v8': '~4.1.11'
-    '@vitest/ui': '~4.1.11'
+    '@vitest/ui': '~5.0.2'
     vitest: '~4.1.11'
 
 overrides:
