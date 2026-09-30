@@ -2884,14 +2884,11 @@ interface CreateErrorVisibilityOptions {
      * context resolve to nothing (i.e. no `[ngxSignalForm]` host is present).
      * Typically the caller's own `NGX_SIGNAL_FORMS_CONFIG.defaultErrorStrategy`.
      *
-     * Deliberately opt-in rather than auto-injected: most callers of this
-     * generic primitive (e.g. `NgxSignalFormAutoAria`) already run inside a
-     * form context and never observe the difference, and forcing every call
-     * site to consult the global config would be an unannounced behavior
-     * change for the handful that don't. Callers that need config-default
-     * parity with `NgxHeadlessFieldset.resolvedStrategy` (e.g. the headless
-     * package's standalone factories) inject the config themselves and pass
-     * it through here.
+     * Deliberately opt-in rather than auto-injected, so this generic
+     * primitive does not read the global config behind a caller's back.
+     * Callers that must match the visible message when no form context
+     * exists (`NgxSignalFormAutoAria`, the headless package's standalone
+     * factories) inject the config themselves and pass it through here.
      */
     readonly configDefault?: ResolvedErrorDisplayStrategy | null;
     /**
