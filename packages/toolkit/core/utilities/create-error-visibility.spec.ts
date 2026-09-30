@@ -34,6 +34,7 @@ function createMockFormContext(
   return {
     form: (() => ({})) as NgxSignalFormContext['form'],
     errorStrategy: signal(overrides.errorStrategy ?? 'on-touch'),
+    warningStrategy: signal('on-touch'),
     submittedStatus: signal(overrides.submittedStatus ?? 'unsubmitted'),
   };
 }
@@ -223,6 +224,7 @@ describe('createErrorVisibility – DI context cascade', () => {
     const context: NgxSignalFormContext = {
       form: (() => ({})) as NgxSignalFormContext['form'],
       errorStrategy: signal('on-submit'),
+      warningStrategy: signal('on-touch'),
       submittedStatus: submittedStatusSignal,
     };
     const injector = injectorWithContext(context);

@@ -788,11 +788,9 @@ describe('validateVest', () => {
       only(field: string | string[]) {
         onlyCalls += 1;
         // The real Vest `Suite.only()` shorthand doesn't accept `false` (only
-        // the standalone `only()` hook does) and wants a mutable array, not a
-        // readonly one — narrow/clone before delegating, matching `false` to
-        // "run nothing" via an empty list.
-        const target =
-          field === false ? [] : typeof field === 'string' ? field : [...field];
+        // the standalone `only()` hook does), so the toolkit never passes it
+        // here. It wants a mutable array, so clone before delegating.
+        const target = typeof field === 'string' ? field : [...field];
         return {
           run: (value: { email: string }) => {
             onlyRunCalls += 1;

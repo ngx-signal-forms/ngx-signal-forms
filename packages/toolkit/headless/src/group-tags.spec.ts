@@ -1,7 +1,7 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import ts from 'typescript';
-import { describe, expect, it } from 'vitest';
+import { assert, describe, expect, it } from 'vitest';
 
 // Mechanical verification for issue #360: every public export of the
 // `/headless` barrel must carry a `@group <Name>` JSDoc tag at its
@@ -72,13 +72,13 @@ function resolveSpecifier(fromFile: string, specifier: string): string {
     );
   }
 
-  const mapping = tsconfigBase.compilerOptions.paths[specifier];
-  if (!mapping || mapping.length === 0) {
+  const target = tsconfigBase.compilerOptions.paths[specifier]?.[0];
+  if (target === undefined) {
     throw new Error(
       `${fromFile}: no tsconfig.base.json path mapping for '${specifier}'`,
     );
   }
-  return resolve(repoRoot, mapping[0]);
+  return resolve(repoRoot, target);
 }
 
 const sourceFileCache = new Map<string, ts.SourceFile>();
@@ -350,7 +350,9 @@ describe('@ngx-signal-forms/toolkit/headless — @group JSDoc coverage (issue #3
       // tag) is the only thing the capture could still pick up beyond the
       // group name itself — strip it before comparing so
       // `@group Directives */` still validates as `Directives`.
-      const value = matches[0][1].replace(/\*\/\s*$/u, '').trim();
+      const [onlyMatch] = matches;
+      assert(onlyMatch?.[1] !== undefined, `'${name}' has no @group value`);
+      const value = onlyMatch[1].replace(/\*\/\s*$/u, '').trim();
 
       if (!(ALLOWED_GROUPS as readonly string[]).includes(value)) {
         throw new Error(

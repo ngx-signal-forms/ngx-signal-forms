@@ -14,7 +14,15 @@ import { provideFieldLabels } from '@ngx-signal-forms/toolkit/core';
 import { NgxHeadlessErrorSummary } from '@ngx-signal-forms/toolkit/headless';
 import { render, screen } from '@testing-library/angular';
 import { userEvent } from '@testing-library/user-event';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import {
+  afterEach,
+  assert,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+} from 'vitest';
 import { NgxFormFieldErrorSummary } from './form-field-error-summary';
 
 describe('NgxFormFieldErrorSummary', () => {
@@ -303,9 +311,11 @@ describe('NgxFormFieldErrorSummary', () => {
     });
     expect(buttons).toHaveLength(2);
 
-    await user.click(buttons[0]);
+    const [firstButton, secondButton] = buttons;
+    assert(firstButton && secondButton, 'expected two summary buttons');
+    await user.click(firstButton);
     expect(document.activeElement).toBe(screen.getByTestId('street-0'));
-    await user.click(buttons[1]);
+    await user.click(secondButton);
     expect(document.activeElement).toBe(screen.getByTestId('street-1'));
 
     const duplicateKeyWarning = warnSpy.mock.calls.find((call) =>

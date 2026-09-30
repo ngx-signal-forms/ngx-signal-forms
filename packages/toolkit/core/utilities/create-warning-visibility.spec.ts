@@ -9,6 +9,7 @@ import type {
   SubmittedStatus,
 } from '../types';
 import { createWarningVisibility } from './create-warning-visibility';
+import { createMockFieldTree } from './testing/mock-field-tree';
 import { warningError } from './warning-error';
 
 // ---------------------------------------------------------------------------
@@ -21,12 +22,21 @@ const blockingError: ValidationError = {
 };
 const weakPassword = warningError('weak-password', 'Consider 12+ characters');
 
+// Angular's `FieldState.errors` holds `ValidationError.WithFieldTree[]`, so a
+// mock error needs a `fieldTree` back-reference like the real ones carry.
+const anchorFieldTree = createMockFieldTree({ value: '' });
+
 function createMockFieldState(
   errors: readonly ValidationError[] = [],
   touched = false,
 ) {
   return signal({
-    errors: signal(errors),
+    errors: signal(
+      errors.map((error): ValidationError.WithFieldTree => ({
+        ...error,
+        fieldTree: anchorFieldTree,
+      })),
+    ),
     touched: signal(touched),
   });
 }

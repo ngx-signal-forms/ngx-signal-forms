@@ -12,7 +12,7 @@ import {
 import { TestBed } from '@angular/core/testing';
 import { render } from '@testing-library/angular';
 import { create, enforce, test as vestTest, warn } from 'vest';
-import { describe, expect, it, vi } from 'vitest';
+import { assert, describe, expect, it, vi } from 'vitest';
 import { validateVest } from './validate-vest';
 import { createVestAdapter, sharedVestAdapter } from './vest-adapter';
 
@@ -360,8 +360,10 @@ describe('VestSuiteAdapter — exported-interface guarantees', () => {
       await vi.waitFor(() => {
         expect(gates.length).toBe(2);
       });
-      gates[0]();
-      gates[1]();
+      const [firstGate, secondGate] = gates;
+      assert(firstGate && secondGate, 'expected two registered gates');
+      firstGate();
+      secondGate();
 
       await vi.waitFor(() => {
         expect(firstSettled).toBe(true);
@@ -399,7 +401,9 @@ describe('VestSuiteAdapter — exported-interface guarantees', () => {
       await vi.waitFor(() => {
         expect(gates[index]).toBeDefined();
       });
-      gates[index]();
+      const gate = gates[index];
+      assert(gate, `gate ${index} was not registered`);
+      gate();
     }
 
     it('serializes three concurrently-pending unfocused runs on one suite across three field trees, in strict FIFO order, executing the suite exactly once per tree', async () => {

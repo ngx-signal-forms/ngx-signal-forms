@@ -63,7 +63,7 @@ const FEEDBACK_TEMPLATE = (name: string, strategyAttrs: string) => `
  */
 function createProfileForm(nickname: string) {
   return form(
-    signal({ email: '', nickname }),
+    signal<{ email: string; nickname: string }>({ email: '', nickname }),
     schema((path) => {
       required(path.email, { message: 'Email is required' });
       required(path.nickname, { message: 'Nickname is required' });

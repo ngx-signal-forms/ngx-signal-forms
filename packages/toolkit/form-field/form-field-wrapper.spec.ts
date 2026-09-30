@@ -405,7 +405,7 @@ describe('NgxSignalFormWrapperComponent', () => {
         `,
       })
       class Host {
-        protected readonly testForm = form(
+        readonly testForm = form(
           signal({ email: '' }),
           schema<{ email: string }>((p) => {
             required(p.email, { message: 'Email is required' });
@@ -2998,7 +2998,6 @@ describe('NgxSignalFormWrapperComponent', () => {
         errors: () => [
           { kind: 'warn:weak-password', message: 'Consider 8+ characters' },
         ],
-        hasWarnings: () => true,
       });
 
       const { container, fixture } = await render(

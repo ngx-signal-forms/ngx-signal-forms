@@ -8,13 +8,7 @@
 
 import { ApplicationRef, Component, input, signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
-import {
-  FormField,
-  form,
-  required,
-  schema,
-  validate,
-} from '@angular/forms/signals';
+import { FormField, form, required, validate } from '@angular/forms/signals';
 import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit';
 import {
   NgxFormFieldCharacterCount,
@@ -142,7 +136,7 @@ export class ColorSchemeFixtureComponent {
       tagline: 'Way past the ten character limit',
       passwords: { password: 'hunter2', confirm: 'hunter3' },
     }),
-    schema((path) => {
+    (path) => {
       required(path.name, { message: 'Full name is required' });
       validate(path.passwords, (ctx) => {
         const { password, confirm } = ctx.value();
@@ -155,7 +149,7 @@ export class ColorSchemeFixtureComponent {
           ? { kind: 'warn:short-username', message: 'Consider 3+ characters' }
           : null,
       );
-    }),
+    },
   );
 }
 

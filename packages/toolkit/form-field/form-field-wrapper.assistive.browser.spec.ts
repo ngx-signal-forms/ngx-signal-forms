@@ -1,7 +1,7 @@
 import { Component, signal } from '@angular/core';
 import { FormField, form } from '@angular/forms/signals';
 import { render } from '@testing-library/angular';
-import { describe, expect, it } from 'vitest';
+import { assert, describe, expect, it } from 'vitest';
 import {
   NgxFormFieldCharacterCount,
   NgxFormFieldHint,
@@ -56,6 +56,7 @@ describe('NgxFormFieldWrapper — assistive row reserved space', () => {
   // reporting a missing element. Resolve each node once, loudly.
   const firstAssistiveRow = (container: Element): HTMLElement => {
     const [row] = assistiveRows(container);
+    assert(row, 'expected row to exist');
     if (!row) {
       throw new Error('Expected the fixture to render an assistive row.');
     }
@@ -183,6 +184,7 @@ describe('NgxFormFieldWrapper — assistive empty-row behavior (#297)', () => {
     const { container } = await render(Host);
 
     const [bare] = assistiveRows(container);
+    assert(bare, 'expected bare to exist');
 
     expect(bare.getBoundingClientRect().height).toBeCloseTo(16, 1);
   });
@@ -191,6 +193,7 @@ describe('NgxFormFieldWrapper — assistive empty-row behavior (#297)', () => {
     const { container } = await render(Host);
 
     const [bare, hinted] = assistiveRows(container);
+    assert(bare && hinted, 'expected bare and hinted to exist');
     const wrapper = wrapperOf(bare);
     // Disable the reservation transition (as the other override tests in
     // this file do) so the height change applies synchronously instead of
@@ -209,6 +212,7 @@ describe('NgxFormFieldWrapper — assistive empty-row behavior (#297)', () => {
     const { container } = await render(Host);
 
     const [bare] = assistiveRows(container);
+    assert(bare, 'expected bare to exist');
     const wrapper = wrapperOf(bare);
     wrapper.style.setProperty('--ngx-form-field-assistive-transition', 'none');
     wrapper.style.setProperty('--ngx-form-field-assistive-margin-top', '4px');
@@ -234,6 +238,7 @@ describe('NgxFormFieldWrapper — assistive empty-row behavior (#297)', () => {
     const { container } = await render(Host);
 
     const [bare] = assistiveRows(container);
+    assert(bare, 'expected bare to exist');
     const wrapper = wrapperOf(bare);
     wrapper.style.setProperty('--ngx-form-field-assistive-transition', 'none');
     wrapper.style.setProperty(
@@ -395,6 +400,10 @@ describe('NgxFormFieldWrapper — assistive row slots', () => {
     const { container } = await render(Host);
 
     const [hintedRight, countedRight] = rightSlots(container);
+    assert(
+      hintedRight && countedRight,
+      'expected hintedRight and countedRight to exist',
+    );
 
     expect(getComputedStyle(hintedRight).display).toBe('none');
     expect(getComputedStyle(countedRight).display).not.toBe('none');
@@ -409,6 +418,10 @@ describe('NgxFormFieldWrapper — assistive row slots', () => {
     }
 
     const [hintedHint, countedHint] = hints(container);
+    assert(
+      hintedHint && countedHint,
+      'expected hintedHint and countedHint to exist',
+    );
 
     expect(getComputedStyle(hintedHint).textAlign).toBe('right');
     expect(getComputedStyle(countedHint).textAlign).toBe('left');

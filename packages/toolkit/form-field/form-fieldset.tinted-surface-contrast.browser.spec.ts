@@ -6,13 +6,7 @@ import {
   signal,
 } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
-import {
-  FormField,
-  form,
-  required,
-  schema,
-  validate,
-} from '@angular/forms/signals';
+import { FormField, form, required, validate } from '@angular/forms/signals';
 import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit';
 import { NgxFormFieldCharacterCount } from '@ngx-signal-forms/toolkit/assistive';
 import { render } from '@testing-library/angular';
@@ -151,7 +145,7 @@ class TintedFieldsetFixture {
         accept: false,
       },
     }),
-    schema((path) => {
+    (path) => {
       required(path.group.name, { message: 'Full name is required' });
       validate(path.group.accept, (ctx) =>
         ctx.value() ? null : { kind: 'accept', message: 'Please accept' },
@@ -165,7 +159,7 @@ class TintedFieldsetFixture {
           ? { kind: 'warn:short-username', message: 'Consider 3+ characters' }
           : null,
       );
-    }),
+    },
   );
 }
 
@@ -174,7 +168,22 @@ class TintedFieldsetFixture {
  * `feedbackAppearance="plain"` so the group error sits on the surface too.
  * The notification card paints its own background and has its own tones.
  */
-function surfaceTexts(root: HTMLElement): Record<string, HTMLElement> {
+const SURFACE_TEXT_NAMES = [
+  'legend',
+  'label',
+  'requiredMarker',
+  'optionalMarker',
+  'invalidCheckboxLabel',
+  'hint',
+  'countWarning',
+  'countDanger',
+  'fieldError',
+  'fieldWarning',
+  'groupError',
+] as const;
+type SurfaceTextName = (typeof SURFACE_TEXT_NAMES)[number];
+
+function surfaceTexts(root: HTMLElement): Record<SurfaceTextName, HTMLElement> {
   const byText = (selector: string, text: string): HTMLElement => {
     const match = Array.from(root.querySelectorAll<HTMLElement>(selector)).find(
       (element) => element.textContent?.includes(text),
@@ -310,19 +319,31 @@ async function renderFieldset(
   const surface = container.querySelector<HTMLElement>('#surface')!;
   const fieldset = surface.querySelector<HTMLElement>('fieldset')!;
   const texts = surfaceTexts(surface);
-  const colors = Object.fromEntries(
-    Object.entries(texts).map(([name, element]) => [
-      name,
-      getComputedStyle(element).color,
-    ]),
-  );
-  const opacities = Object.fromEntries(
-    Object.entries(texts).map(([name, element]) => [
-      name,
-      Number(getComputedStyle(element).opacity),
-    ]),
+  const colors = mapTexts(texts, (element) => getComputedStyle(element).color);
+  const opacities = mapTexts(texts, (element) =>
+    Number(getComputedStyle(element).opacity),
   );
   return { surface, fieldset, texts, colors, opacities };
+}
+
+/** Reads one value per named text, keeping the names so lookups stay typed. */
+function mapTexts<T>(
+  texts: Record<SurfaceTextName, HTMLElement>,
+  read: (element: HTMLElement) => T,
+): Record<SurfaceTextName, T> {
+  return {
+    legend: read(texts.legend),
+    label: read(texts.label),
+    requiredMarker: read(texts.requiredMarker),
+    optionalMarker: read(texts.optionalMarker),
+    invalidCheckboxLabel: read(texts.invalidCheckboxLabel),
+    hint: read(texts.hint),
+    countWarning: read(texts.countWarning),
+    countDanger: read(texts.countDanger),
+    fieldError: read(texts.fieldError),
+    fieldWarning: read(texts.fieldWarning),
+    groupError: read(texts.groupError),
+  };
 }
 
 const LIGHT_PAGE = 'background-color: #ffffff';
@@ -341,7 +362,8 @@ describe('NgxFormFieldset — text on a tinted surface (#535)', () => {
     )!;
     expect(getComputedStyle(nameBox).borderTopColor).toBe('rgb(219, 24, 24)');
 
-    for (const [name, color] of Object.entries(colors)) {
+    for (const name of SURFACE_TEXT_NAMES) {
+      const color = colors[name];
       expect
         .soft(
           contrastOn(color, tint, opacities[name]),
@@ -359,7 +381,8 @@ describe('NgxFormFieldset — text on a tinted surface (#535)', () => {
     const tint = getComputedStyle(fieldset).backgroundColor;
     expect(tint).toBe('rgb(253, 235, 235)');
 
-    for (const [name, color] of Object.entries(colors)) {
+    for (const name of SURFACE_TEXT_NAMES) {
+      const color = colors[name];
       expect
         .soft(
           contrastOn(color, tint, opacities[name]),
@@ -501,17 +524,14 @@ describe('NgxFormFieldset — text on a tinted surface (#535)', () => {
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 class WarningFieldsetFixture {
-  readonly testForm = form(
-    signal({ group: { username: 'ab' } }),
-    schema((path) => {
-      // A group-level warning and no errors: the fieldset shows its warning
-      // state.
-      validate(path.group, () => ({
-        kind: 'warn:group',
-        message: 'Check the account details',
-      }));
-    }),
-  );
+  readonly testForm = form(signal({ group: { username: 'ab' } }), (path) => {
+    // A group-level warning and no errors: the fieldset shows its warning
+    // state.
+    validate(path.group, () => ({
+      kind: 'warn:group',
+      message: 'Check the account details',
+    }));
+  });
 }
 
 describe('NgxFormFieldset — warning legend on the danger surface tone (#535)', () => {
