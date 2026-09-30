@@ -72,14 +72,13 @@ An email field with your own error and warning markup. Copy it into an Angular
 application and render `<app-contact />`.
 
 ```typescript
-import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { Component, signal } from '@angular/core';
 import { email, form, FormField, required } from '@angular/forms/signals';
 import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit';
 import { NgxHeadlessErrorState } from '@ngx-signal-forms/toolkit/headless';
 
 @Component({
   selector: 'app-contact',
-  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [FormField, NgxSignalFormToolkit, NgxHeadlessErrorState],
   template: `
     <form [formRoot]="contactForm" ngxSignalForm>

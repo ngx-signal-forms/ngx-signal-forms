@@ -1,6 +1,5 @@
 import {
   afterRenderEffect,
-  ChangeDetectionStrategy,
   Component,
   computed,
   effect,
@@ -39,7 +38,6 @@ const DEFAULT_OPTIONS: readonly AriaSelectOption[] = [
  */
 @Component({
   selector: 'ngx-aria-select',
-  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [Listbox, Option, OverlayModule],
   host: {
     class: 'ngx-aria-select',

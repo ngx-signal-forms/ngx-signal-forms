@@ -2,7 +2,6 @@ import type { BooleanInput } from '@angular/cdk/coercion';
 import {
   afterEveryRender,
   booleanAttribute,
-  ChangeDetectionStrategy,
   Component,
   computed,
   ElementRef,
@@ -24,7 +23,6 @@ import type { ClassValue } from 'clsx';
   selector: 'hlm-select-trigger',
   imports: [NgIcon, BrnSelectTrigger, BrnFieldControlDescribedBy],
   providers: [provideIcons({ lucideChevronDown })],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <button
       #trigger

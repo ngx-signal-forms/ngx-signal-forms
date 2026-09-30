@@ -1,10 +1,4 @@
-import {
-  ChangeDetectionStrategy,
-  Component,
-  computed,
-  signal,
-  viewChild,
-} from '@angular/core';
+import { Component, computed, signal, viewChild } from '@angular/core';
 import { NgxSignalFormDebugger } from '@ngx-signal-forms/debugger';
 import type { FormFieldAppearance } from '@ngx-signal-forms/toolkit';
 
@@ -28,7 +22,6 @@ import { SingleModelWizardComponent } from './single-model-wizard.form';
 
 @Component({
   selector: 'ngx-single-model-wizard-page',
-  changeDetection: ChangeDetectionStrategy.OnPush,
 
   styles: `
     :host {

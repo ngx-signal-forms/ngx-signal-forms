@@ -1,11 +1,4 @@
-import {
-  ChangeDetectionStrategy,
-  Component,
-  ElementRef,
-  inject,
-  input,
-  viewChild,
-} from '@angular/core';
+import { Component, ElementRef, inject, input, viewChild } from '@angular/core';
 import { FormField } from '@angular/forms/signals';
 
 import {
@@ -23,7 +16,6 @@ import { WizardStepInterface } from '../wizard-step.interface';
 
 @Component({
   selector: 'ngx-trip-step',
-  changeDetection: ChangeDetectionStrategy.OnPush,
 
   imports: [FormField, NgxSignalFormToolkit, NgxFormField],
   template: `

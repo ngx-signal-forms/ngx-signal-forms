@@ -1,10 +1,4 @@
-import {
-  ChangeDetectionStrategy,
-  Component,
-  computed,
-  input,
-  signal,
-} from '@angular/core';
+import { Component, computed, input, signal } from '@angular/core';
 import {
   form,
   FormField,
@@ -40,7 +34,6 @@ const vestValidationSchema: SchemaFn<Readonly<VestValidationModel>> = (
 
 @Component({
   selector: 'ngx-vest-validation',
-  changeDetection: ChangeDetectionStrategy.OnPush,
 
   imports: [FormField, NgxSignalFormToolkit, NgxFormField],
   styles: `

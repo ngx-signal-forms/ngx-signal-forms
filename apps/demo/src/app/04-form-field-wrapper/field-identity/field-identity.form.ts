@@ -1,9 +1,4 @@
-import {
-  ChangeDetectionStrategy,
-  Component,
-  input,
-  signal,
-} from '@angular/core';
+import { Component, input, signal } from '@angular/core';
 import { form } from '@angular/forms/signals';
 import {
   createOnInvalidHandler,
@@ -39,7 +34,6 @@ import { SubmitStatusComponent } from '../../ui/submit-status/submit-status';
  */
 @Component({
   selector: 'ngx-field-identity',
-  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     SubmitStatusComponent,
     NgxSignalFormToolkit,

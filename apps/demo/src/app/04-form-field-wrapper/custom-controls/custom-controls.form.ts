@@ -1,11 +1,5 @@
 // Custom controls demo form - product review with rating, switch, checkbox controls
-import {
-  ChangeDetectionStrategy,
-  Component,
-  computed,
-  input,
-  signal,
-} from '@angular/core';
+import { Component, computed, input, signal } from '@angular/core';
 import { FormField, form } from '@angular/forms/signals';
 import {
   buildAriaDescribedBy,
@@ -54,7 +48,6 @@ import { BusyButtonDirective } from '../../shared/busy-button.directive';
  */
 @Component({
   selector: 'ngx-custom-controls',
-  changeDetection: ChangeDetectionStrategy.OnPush,
 
   providers: [
     ...provideNgxSignalFormControlPresetsForComponent({

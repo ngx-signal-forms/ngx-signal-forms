@@ -1,5 +1,4 @@
 import {
-  ChangeDetectionStrategy,
   afterNextRender,
   Component,
   computed,
@@ -41,7 +40,6 @@ function toPath(url: string): string {
 
 @Component({
   selector: 'ngx-root',
-  changeDetection: ChangeDetectionStrategy.OnPush,
 
   imports: [
     RouterOutlet,

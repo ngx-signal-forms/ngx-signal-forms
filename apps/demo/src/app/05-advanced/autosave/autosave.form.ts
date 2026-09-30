@@ -1,7 +1,6 @@
 import { JsonPipe } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import {
-  ChangeDetectionStrategy,
   Component,
   computed,
   effect,
@@ -49,7 +48,6 @@ interface AutosavePatchResponse {
  */
 @Component({
   selector: 'ngx-autosave',
-  changeDetection: ChangeDetectionStrategy.OnPush,
 
   imports: [FormField, NgxSignalFormToolkit, NgxFormField, JsonPipe],
   template: `

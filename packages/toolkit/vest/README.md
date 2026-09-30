@@ -72,7 +72,7 @@ The suite has one blocking test and one warning. The form submits when only
 warnings remain.
 
 ```typescript
-import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { Component, signal } from '@angular/core';
 import { form, FormField } from '@angular/forms/signals';
 import { create, enforce, test, warn } from 'vest';
 import {
@@ -100,7 +100,6 @@ const signupSuite = create((data: SignupModel) => {
 
 @Component({
   selector: 'app-signup-form',
-  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [FormField, NgxSignalFormToolkit, NgxFormFieldError],
   template: `
     <form [formRoot]="signupForm" ngxSignalForm>

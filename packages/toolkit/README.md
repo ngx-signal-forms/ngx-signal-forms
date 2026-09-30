@@ -55,12 +55,7 @@ The UI entry points render messages for you. This example renders the
 message by hand, so you can see what the root entry point does by itself.
 
 ```typescript
-import {
-  ChangeDetectionStrategy,
-  Component,
-  computed,
-  signal,
-} from '@angular/core';
+import { Component, computed, signal } from '@angular/core';
 import { form, FormField, required } from '@angular/forms/signals';
 import {
   createErrorVisibility,
@@ -70,7 +65,6 @@ import {
 
 @Component({
   selector: 'app-newsletter',
-  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [FormField, NgxSignalFormToolkit],
   templateUrl: './newsletter.html',
 })

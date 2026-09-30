@@ -1,6 +1,5 @@
 import {
   afterNextRender,
-  ChangeDetectionStrategy,
   Component,
   computed,
   effect,
@@ -94,7 +93,6 @@ import { sanitizeFieldNameForId } from '@ngx-signal-forms/toolkit/core';
  */
 @Component({
   selector: 'ngx-form-field-hint',
-  changeDetection: ChangeDetectionStrategy.OnPush,
   template: `<ng-content />`,
   styles: `
     :host {

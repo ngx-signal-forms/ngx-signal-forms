@@ -1,9 +1,4 @@
-import {
-  ChangeDetectionStrategy,
-  Component,
-  input,
-  signal,
-} from '@angular/core';
+import { Component, input, signal } from '@angular/core';
 import { form, FormField } from '@angular/forms/signals';
 import {
   type ResolvedErrorDisplayStrategy,
@@ -37,7 +32,6 @@ import { BusyButtonDirective } from '../../shared/busy-button.directive';
  */
 @Component({
   selector: 'ngx-global-configuration',
-  changeDetection: ChangeDetectionStrategy.OnPush,
 
   /**
    * Component-scoped providers demonstrating the configuration cascade:

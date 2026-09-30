@@ -1,10 +1,4 @@
-import {
-  ChangeDetectionStrategy,
-  Component,
-  ElementRef,
-  inject,
-  viewChild,
-} from '@angular/core';
+import { Component, ElementRef, inject, viewChild } from '@angular/core';
 
 import {
   createReviewStepForm,
@@ -15,7 +9,6 @@ import { WizardStepInterface } from '../wizard-step.interface';
 
 @Component({
   selector: 'ngx-review-step',
-  changeDetection: ChangeDetectionStrategy.OnPush,
 
   template: `
     <div class="review-step">

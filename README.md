@@ -90,7 +90,7 @@ It stores the submitted email locally. Replace the action with your API call.
 <!-- documentation-starter:start -->
 
 ```typescript
-import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { Component, signal } from '@angular/core';
 import { email, form, FormField, required } from '@angular/forms/signals';
 import {
   createOnInvalidHandler,
@@ -100,7 +100,6 @@ import { NgxFormField } from '@ngx-signal-forms/toolkit/form-field';
 
 @Component({
   selector: 'app-contact',
-  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [FormField, NgxSignalFormToolkit, NgxFormField],
   template: `
     <form [formRoot]="contactForm">
