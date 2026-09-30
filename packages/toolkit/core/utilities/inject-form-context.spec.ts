@@ -1,7 +1,11 @@
 import { Injector, signal } from '@angular/core';
 import type { FieldTree } from '@angular/forms/signals';
 import { describe, expect, it } from 'vitest';
-import type { ResolvedErrorDisplayStrategy, SubmittedStatus } from '../types';
+import type {
+  ResolvedErrorDisplayStrategy,
+  ResolvedWarningDisplayStrategy,
+  SubmittedStatus,
+} from '../types';
 import type { NgxSignalFormContext } from '../directives/ngx-signal-form';
 import { NGX_SIGNAL_FORM_CONTEXT } from '../tokens';
 import { injectFormContext } from './inject-form-context';
@@ -43,6 +47,7 @@ describe('injectFormContext', () => {
       form: mockForm,
       submittedStatus: signal<SubmittedStatus>('unsubmitted'),
       errorStrategy: signal<ResolvedErrorDisplayStrategy>('on-touch'),
+      warningStrategy: signal<ResolvedWarningDisplayStrategy>('on-touch'),
     };
 
     const injector = Injector.create({
@@ -73,6 +78,7 @@ describe('injectFormContext', () => {
       form: createRootFieldTree({}),
       submittedStatus: submittedStatusSignal,
       errorStrategy: signal<ResolvedErrorDisplayStrategy>('immediate'),
+      warningStrategy: signal<ResolvedWarningDisplayStrategy>('on-touch'),
     };
 
     const injector = Injector.create({

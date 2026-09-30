@@ -56,7 +56,7 @@ describe('NgxSignalFormAutoAria — native checkbox/radio inference vs. eligibil
     })
     class Host {
       readonly testForm = form(
-        signal({ agree: false }),
+        signal<{ agree: boolean }>({ agree: false }),
         schema((path) => {
           required(path.agree, { message: 'Agreement is required' });
         }),
@@ -94,7 +94,7 @@ describe('NgxSignalFormAutoAria — native checkbox/radio inference vs. eligibil
     })
     class Host {
       readonly testForm = form(
-        signal({ emailUpdates: false }),
+        signal<{ emailUpdates: boolean }>({ emailUpdates: false }),
         schema((path) => {
           required(path.emailUpdates, { message: 'Updates opt-in required' });
         }),
@@ -150,7 +150,7 @@ describe('NgxSignalFormAutoAria — native checkbox/radio inference vs. eligibil
     })
     class Host {
       readonly testForm = form(
-        signal({ delivery: '' }),
+        signal<{ delivery: string }>({ delivery: '' }),
         schema((path) => {
           required(path.delivery, { message: 'Delivery method is required' });
         }),
@@ -198,7 +198,7 @@ describe('NgxSignalFormAutoAria — native checkbox/radio inference vs. eligibil
     })
     class Host {
       readonly testForm = form(
-        signal({ terms: false }),
+        signal<{ terms: boolean }>({ terms: false }),
         schema((path) => {
           required(path.terms, { message: 'Terms acceptance is required' });
         }),
@@ -267,7 +267,7 @@ describe('NgxSignalFormAutoAria — native checkbox/radio inference vs. eligibil
     })
     class Host {
       readonly testForm = form(
-        signal({ delivery: '' }),
+        signal<{ delivery: string }>({ delivery: '' }),
         schema((path) => {
           required(path.delivery, { message: 'Delivery method is required' });
         }),

@@ -21,7 +21,7 @@ import {
  */
 const emailForm = () =>
   form(
-    signal({ email: '' }),
+    signal<{ email: string }>({ email: '' }),
     schema((path) => {
       required(path.email, { message: 'Email is required' });
     }),
