@@ -52,6 +52,7 @@ import {
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
+import ts from 'typescript';
 
 const TOOLKIT_ENTRY_PREFIX = 'ngx-signal-forms-toolkit';
 
@@ -129,10 +130,120 @@ function isInternalEntryName(name) {
 }
 
 /**
+ * Writes a decoded string value as a single-quoted TypeScript literal.
+ * `JSON.stringify` escapes backslashes, line breaks and control characters
+ * one character at a time; only the quotes differ, and U+2028/U+2029 need
+ * their own escape (JSON leaves them raw).
+ *
+ * @param {string} value
+ * @returns {string}
+ */
+function singleQuoted(value) {
+  const body = value.replaceAll(/[\s\S]/gu, (char) => {
+    if (char === "'") return String.raw`\'`;
+    if (char === '"') return char;
+    if (char === '\u2028') return String.raw`\u2028`;
+    if (char === '\u2029') return String.raw`\u2029`;
+    return JSON.stringify(char).slice(1, -1);
+  });
+  return `'${body}'`;
+}
+
+/**
+ * Returns `[rank, key, text]` for a union member that is a string, number or
+ * boolean literal, or `undefined` for any other member. `text` is the
+ * canonical spelling written back (strings always single-quoted, so a build
+ * that emitted `'a'` and one that emitted `"a"` agree).
+ *
+ * @param {import('typescript').TypeNode} member
+ * @returns {[number, string | number, string] | undefined}
+ */
+function literalUnionMember(member) {
+  if (!ts.isLiteralTypeNode(member)) return undefined;
+  const { literal } = member;
+  if (ts.isStringLiteral(literal)) {
+    return [0, literal.text, singleQuoted(literal.text)];
+  }
+  if (ts.isNumericLiteral(literal)) {
+    return [1, Number(literal.text), literal.getText()];
+  }
+  if (
+    ts.isPrefixUnaryExpression(literal) &&
+    literal.operator === ts.SyntaxKind.MinusToken &&
+    ts.isNumericLiteral(literal.operand)
+  ) {
+    return [1, -Number(literal.operand.text), `-${literal.operand.getText()}`];
+  }
+  if (literal.kind === ts.SyntaxKind.FalseKeyword) return [2, 0, 'false'];
+  if (literal.kind === ts.SyntaxKind.TrueKeyword) return [2, 1, 'true'];
+  return undefined;
+}
+
+/**
+ * Sorts the members of every union made only of string, number or boolean
+ * literals, and writes them with one spelling (`'a' | 'b'`). Any other union
+ * is left as emitted.
+ *
+ * TypeScript emits union members in type-ID order, and that order depends on
+ * which type the checker met first. The same source can give
+ * `"error" | "warning"` from one build and `"warning" | "error"` from
+ * another (#570), so the baseline must not depend on it. Applied both when
+ * writing and when comparing a baseline.
+ *
+ * @param {string} source
+ * @returns {string}
+ */
+export function normalizeLiteralUnions(source) {
+  const sourceFile = ts.createSourceFile(
+    'snapshot.d.ts',
+    source,
+    ts.ScriptTarget.Latest,
+    /* setParentNodes */ true,
+  );
+  /** @type {{ start: number, end: number, text: string }[]} */
+  const edits = [];
+  const visit = (/** @type {import('typescript').Node} */ node) => {
+    if (ts.isUnionTypeNode(node)) {
+      const members = node.types.map(literalUnionMember);
+      // Sorting would detach a comment from the member it describes, so a
+      // union with anything but `|` between its members stays as emitted.
+      const plainSeparators = node.types.every(
+        (type, index) =>
+          index === 0 ||
+          /^\s*\|\s*$/.test(
+            source.slice(node.types[index - 1].end, type.getStart(sourceFile)),
+          ),
+      );
+      if (plainSeparators && members.every((member) => member !== undefined)) {
+        const sorted = members.toSorted(
+          (a, b) => a[0] - b[0] || (a[1] < b[1] ? -1 : a[1] > b[1] ? 1 : 0),
+        );
+        edits.push({
+          start: node.getStart(sourceFile),
+          end: node.end,
+          text: sorted.map((member) => member[2]).join(' | '),
+        });
+        return;
+      }
+    }
+    ts.forEachChild(node, visit);
+  };
+  visit(sourceFile);
+  return edits
+    .toSorted((a, b) => b.start - a.start)
+    .reduce(
+      (text, edit) =>
+        text.slice(0, edit.start) + edit.text + text.slice(edit.end),
+      source,
+    );
+}
+
+/**
  * Reads every `.d.ts` file in the built `types/` directory - the published
  * entries AND any entry (currently only `/core`) that ships a loose `.d.ts`
  * without being in the published `exports` map. See this file's header for
- * why the latter matters.
+ * why the latter matters. Literal unions are order-normalized (see
+ * `normalizeLiteralUnions`).
  *
  * @param {string} distRoot
  * @returns {Map<string, string>} entry name -> file content
@@ -152,7 +263,10 @@ export function buildApiSurfaceSnapshot(distRoot) {
     const publishedName = publishedByFileName.get(fileName);
     const name =
       publishedName ?? `${baseEntryNameFromFileName(fileName)}.internal`;
-    snapshot.set(name, readFileSync(join(typesDir, fileName), 'utf8'));
+    snapshot.set(
+      name,
+      normalizeLiteralUnions(readFileSync(join(typesDir, fileName), 'utf8')),
+    );
   }
   return snapshot;
 }

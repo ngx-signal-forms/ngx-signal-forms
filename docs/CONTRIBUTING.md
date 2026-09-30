@@ -130,7 +130,10 @@ These checks run against the built package in `dist/packages/toolkit`, after
    (including the internal `/core` types as `core.internal`) and the `npm pack`
    file list with the baseline in
    [`packages/toolkit/api-reports/`](../packages/toolkit/api-reports). After
-   an intended change, review the diff and update the baseline:
+   an intended change, review the diff and update the baseline. The check
+   sorts the members of literal unions (`'a' | 'b'`), so a cached and a clean
+   build give the same baseline. Always run `toolkit:post-build` first: a bare
+   `toolkit:build` skips the steps that shape the published package:
 
    ```sh
    pnpm nx run toolkit:post-build
