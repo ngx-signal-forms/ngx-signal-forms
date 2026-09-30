@@ -5,6 +5,7 @@ import {
   withComputed,
   withHooks,
   withMethods,
+  withProps,
   withState,
 } from '@ngrx/signals';
 import { rxMethod } from '@ngrx/signals/rxjs-interop';
@@ -15,11 +16,14 @@ import {
   Destination,
   Traveler,
   Trip,
+  TripSchema,
+  type WizardDraft,
 } from '../schemas/wizard.schemas';
 import {
   withWizardNavigation,
   type WizardStep,
 } from './features/navigation.feature';
+import { withSavedDraft } from './features/saved-draft.feature';
 import { withTravelerManagement } from './features/traveler.feature';
 import { withTripManagement } from './features/trip.feature';
 
@@ -34,11 +38,6 @@ type DraftResponse = {
   savedAt: string;
 };
 
-type DraftData = {
-  traveler: Traveler;
-  destinations: Destination[];
-};
-
 type BookingResponse = {
   bookingId: string;
   confirmationNumber: string;
@@ -51,30 +50,15 @@ type TripSummary = {
 };
 
 // ══════════════════════════════════════════════════════════════════════════════
-// VALIDATION HELPERS - reusable validation logic
-// ══════════════════════════════════════════════════════════════════════════════
-
-function isTravelerValid(t: Traveler): boolean {
-  return !!t.firstName && !!t.lastName && !!t.email && !!t.passportNumber;
-}
-
-function isDestinationsValid(d: Destination[]): boolean {
-  return (
-    d.length > 0 &&
-    d.every(
-      (dest) =>
-        dest.country && dest.city && dest.arrivalDate && dest.departureDate,
-    )
-  );
-}
-
-// ══════════════════════════════════════════════════════════════════════════════
 // STORE
 // ══════════════════════════════════════════════════════════════════════════════
 
+/**
+ * Not `providedIn: 'root'`: the advanced-wizard route lists it in `providers`,
+ * so the store (and its debounced autosave) is destroyed when the user leaves
+ * the route. Provide it yourself in any other host, such as a TestBed.
+ */
 export const WizardStore = signalStore(
-  { providedIn: 'root' },
-
   withState({
     error: null as string | null,
     bookingConfirmation: null as BookingResponse | null,
@@ -82,41 +66,47 @@ export const WizardStore = signalStore(
 
   // Compose features (order matters - navigation first, then data features)
   withWizardNavigation(),
+  withSavedDraft(),
+
+  // Committed traveler and destinations follow `savedDraftValue`.
   withTravelerManagement(),
   withTripManagement(),
 
   // Computed values using arrow function shorthand (auto-wrapped in computed())
   withComputed((store) => ({
     // ══════════════════════════════════════════════════════════════════════════
-    // STEP VALIDATION - validates draft data (what user is editing)
+    // STEP VALIDATION - the wizard Zod schemas own the rules; the store only
+    // asks them about the draft the user is editing.
     // ══════════════════════════════════════════════════════════════════════════
-    isTravelerStepValid: () => isTravelerValid(store.travelerDraft()),
-    isTripStepValid: () => isDestinationsValid(store.destinationsDraft()),
+    isTravelerStepValid: () =>
+      TripSchema.shape.traveler.safeParse(store.travelerDraft()).success,
+    isTripStepValid: () =>
+      TripSchema.shape.destinations.safeParse(store.destinationsDraft())
+        .success,
+  })),
+
+  withComputed((store) => ({
     isReviewStepValid: () =>
-      isTravelerValid(store.travelerDraft()) &&
-      isDestinationsValid(store.destinationsDraft()),
+      store.isTravelerStepValid() && store.isTripStepValid(),
 
     /**
      * Validation status for all steps as a record.
      */
     stepValidation: (): Record<WizardStep, boolean> => ({
-      traveler: isTravelerValid(store.travelerDraft()),
-      trip: isDestinationsValid(store.destinationsDraft()),
-      review:
-        isTravelerValid(store.travelerDraft()) &&
-        isDestinationsValid(store.destinationsDraft()),
+      traveler: store.isTravelerStepValid(),
+      trip: store.isTripStepValid(),
+      review: store.isTravelerStepValid() && store.isTripStepValid(),
     }),
 
     /**
      * Whether the current step's draft is valid and user can proceed.
      */
     canProceed: () => {
-      const step = store.currentStep();
-      switch (step) {
+      switch (store.currentStep()) {
         case 'traveler':
-          return isTravelerValid(store.travelerDraft());
+          return store.isTravelerStepValid();
         case 'trip':
-          return isDestinationsValid(store.destinationsDraft());
+          return store.isTripStepValid();
         case 'review':
           return true;
         default:
@@ -142,32 +132,60 @@ export const WizardStore = signalStore(
     }),
 
     isReadyToSubmit: () =>
-      isTravelerValid(store.traveler()) &&
-      isDestinationsValid(store.destinations()),
+      TripSchema.safeParse({
+        traveler: store.traveler(),
+        destinations: store.destinations(),
+      }).success,
 
     hasDestinations: () => store.destinationsDraft().length > 0,
     hasConfirmedBooking: () => store.bookingConfirmation() !== null,
   })),
+
+  // A booking or a reset ends the draft. Each save records the epoch it started
+  // in, and a save from an earlier epoch is ignored when it completes. The
+  // confirmation alone cannot do this: "Start New Booking" clears it.
+  withProps(() => {
+    const startedIn = new WeakMap<WizardDraft, number>();
+    const draftEpoch = {
+      current: 0,
+      markStarted: (data: WizardDraft): void => {
+        startedIn.set(data, draftEpoch.current);
+      },
+      isSpent: (data: WizardDraft): boolean =>
+        startedIn.get(data) !== draftEpoch.current,
+    };
+    return { draftEpoch };
+  }),
 
   // Mutations for API calls (ngrx-toolkit)
   withMutations((store) => ({
     /**
      * Save draft to server.
      */
-    saveDraft: httpMutation<DraftData, DraftResponse>({
+    saveDraft: httpMutation<WizardDraft, DraftResponse>({
       request: (data) => {
-        const draftId = store.draftId();
+        store.draftEpoch.markStarted(data);
+        // A draft that failed to load may be gone on the server. Start a new
+        // one instead of writing to it.
+        const draftId = store.resumeFailed() ? null : store.draftId();
         return {
           url: draftId ? `/api/wizard/draft/${draftId}` : '/api/wizard/draft',
           method: draftId ? 'PUT' : 'POST',
           body: data,
         };
       },
-      onSuccess: (response) => {
+      onSuccess: (response, data) => {
+        // A save that lands after the booking or a reset must not bring the id back.
+        if (store.draftEpoch.isSpent(data)) {
+          return;
+        }
         store.setDraftSaved(response.draftId);
         patchState(store, { error: null });
       },
-      onError: (error) => {
+      onError: (error, data) => {
+        if (store.draftEpoch.isSpent(data)) {
+          return;
+        }
         patchState(store, { error: 'Failed to save draft' });
         console.error('Draft save failed:', error);
       },
@@ -183,9 +201,13 @@ export const WizardStore = signalStore(
         body: trip,
       }),
       onSuccess: (response) => {
+        store.draftEpoch.current++;
         patchState(store, {
           error: null,
           bookingConfirmation: response,
+          // The trip is booked, so the draft is spent. Clearing the id also
+          // clears the stored one, so a reload starts empty.
+          draftId: null,
         });
         console.log('Booking confirmed:', response.confirmationNumber);
       },
@@ -201,6 +223,7 @@ export const WizardStore = signalStore(
 
   // Mutation state signals for template binding
   withComputed((store) => ({
+    isLoadingDraft: () => store.savedDraftIsLoading(),
     isSaving: () => store.saveDraftIsPending(),
     isSubmitting: () => store.submitBookingIsPending(),
   })),
@@ -213,6 +236,11 @@ export const WizardStore = signalStore(
         debounceTime(2000),
         distinctUntilChanged((a, b) => JSON.stringify(a) === JSON.stringify(b)),
         tap((data) => {
+          // Until the saved draft arrives, the drafts are still empty. Saving
+          // them would overwrite the draft that is loading.
+          if (store.isLoadingDraft()) {
+            return;
+          }
           if (data.traveler.firstName || data.destinations.length > 0) {
             void store.saveDraft(data);
           }
@@ -242,22 +270,16 @@ export const WizardStore = signalStore(
        * Reset wizard to initial state.
        */
       reset(): void {
+        store.draftEpoch.current++;
         store.resetTraveler();
         store.setDestinations([createEmptyDestination()]);
         store.goToStep('traveler');
         patchState(store, {
           error: null,
           bookingConfirmation: null,
+          // Also clears the stored id, so a reload starts empty.
+          draftId: null,
         });
-      },
-
-      /**
-       * Initialize wizard with a destination if empty.
-       */
-      initializeIfEmpty(): void {
-        if (store.destinations().length === 0) {
-          store.setDestinations([createEmptyDestination()]);
-        }
       },
     };
   }),
@@ -268,8 +290,6 @@ export const WizardStore = signalStore(
       // Auto-save draft data when it changes. rxMethod tracks the signal
       // itself, so no hand-written effect is needed.
       store.autoSaveDraft(store.draftSummary);
-
-      store.initializeIfEmpty();
     },
   }),
 );

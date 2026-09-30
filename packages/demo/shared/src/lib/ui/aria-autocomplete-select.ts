@@ -1,5 +1,4 @@
 import {
-  ChangeDetectionStrategy,
   Component,
   computed,
   effect,
@@ -39,7 +38,6 @@ const DEFAULT_OPTIONS: readonly AriaAutocompleteOption[] = [
  */
 @Component({
   selector: 'ngx-aria-autocomplete',
-  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     Combobox,
     ComboboxPopup,

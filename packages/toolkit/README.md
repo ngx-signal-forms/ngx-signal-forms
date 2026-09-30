@@ -55,12 +55,7 @@ The UI entry points render messages for you. This example renders the
 message by hand, so you can see what the root entry point does by itself.
 
 ```typescript
-import {
-  ChangeDetectionStrategy,
-  Component,
-  computed,
-  signal,
-} from '@angular/core';
+import { Component, computed, signal } from '@angular/core';
 import { form, FormField, required } from '@angular/forms/signals';
 import {
   createErrorVisibility,
@@ -70,7 +65,6 @@ import {
 
 @Component({
   selector: 'app-newsletter',
-  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [FormField, NgxSignalFormToolkit],
   templateUrl: './newsletter.html',
 })
@@ -177,6 +171,22 @@ To stop auto-ARIA on one control:
 - Add `ngxSignalFormControlAria="manual"` when the control or its library
   writes its own ARIA.
 
+To stop auto-ARIA on every control of one kind, set `ariaMode: 'manual'` in a
+[control preset](#control-presets). The preset applies to each control that
+declares that kind with `ngxSignalFormControl`:
+
+```typescript
+provideNgxSignalFormControlPresets({
+  composite: { ariaMode: 'manual' },
+});
+```
+
+```html
+<app-date-range ngxSignalFormControl="composite" [formField]="form.dates" />
+```
+
+No config key turns auto-ARIA off for the whole app.
+
 ### NgxSignalFormControlSemanticsDirective
 
 Tells the wrapper and auto-ARIA what kind of control a custom host is.
@@ -220,7 +230,6 @@ All keys and their defaults:
 
 | Key                           | Default                                            | Controls                                                                  |
 | ----------------------------- | -------------------------------------------------- | ------------------------------------------------------------------------- |
-| `autoAria`                    | `true`                                             | Has no effect yet. Use `ngxSignalFormControlAria="manual"` per control    |
 | `defaultErrorStrategy`        | `'on-touch'`                                       | When errors show: `'immediate'`, `'on-touch'`, or `'on-submit'`           |
 | `defaultWarningStrategy`      | `'on-touch'`                                       | When warnings show. Same values                                           |
 | `defaultFormFieldAppearance`  | `'standard'`                                       | Wrapper look: `'standard'`, `'outline'`, or `'plain'`                     |

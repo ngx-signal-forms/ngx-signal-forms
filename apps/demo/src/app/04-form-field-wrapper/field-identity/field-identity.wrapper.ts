@@ -1,5 +1,4 @@
 import {
-  ChangeDetectionStrategy,
   Component,
   computed,
   contentChildren,
@@ -60,7 +59,6 @@ import { IdentityProbeComponent } from './field-identity.probe';
  */
 @Component({
   selector: 'ngx-demo-identity-field',
-  changeDetection: ChangeDetectionStrategy.OnPush,
   hostDirectives: [
     { directive: NgxFieldIdentityProvider, inputs: ['fieldName'] },
   ],

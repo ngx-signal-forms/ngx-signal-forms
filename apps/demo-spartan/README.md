@@ -162,7 +162,9 @@ export class CheckoutForm {}
 ```
 
 A custom renderer receives the toolkit's standard renderer-input contract
-(`{ formField, strategy, submittedStatus }`). See
+(the wrapper binds `{ formField, strategy, submittedStatus, warningStrategy,
+fieldName }`, the fieldset binds `{ errors, fieldName, strategy,
+submittedStatus, listStyle }`). See
 [CUSTOM_WRAPPERS.md → The renderer interface](../../docs/CUSTOM_WRAPPERS.md#the-renderer-interface).
 
 ## Spartan-specific gotchas
@@ -422,13 +424,16 @@ root element next to the `.dark` class.
 
 ## Pinned versions
 
-| Package             | Version               |
-| ------------------- | --------------------- |
-| `@spartan-ng/brain` | `1.0.4`               |
-| `@spartan-ng/cli`   | (catalog: `spartan:`) |
-| `@ng-icons/core`    | `>=33.4.0 <34.0.0`    |
-| `@ng-icons/lucide`  | `>=33.4.0 <34.0.0`    |
-| `tw-animate-css`    | (catalog: `spartan:`) |
+Versions come from the `spartan:` pnpm catalog in `pnpm-workspace.yaml`.
+The resolved column is from `pnpm-lock.yaml`.
+
+| Package             | Declared in                                     | Catalog pin | Resolved |
+| ------------------- | ----------------------------------------------- | ----------- | -------- |
+| `@spartan-ng/brain` | `apps/demo-spartan`, `packages/demo/spartan-ui` | `1.4.1`     | `1.4.1`  |
+| `@spartan-ng/cli`   | root `package.json`                             | `1.4.1`     | `1.4.1`  |
+| `@ng-icons/core`    | `packages/demo/spartan-ui`                      | `36.0.0`    | `36.0.0` |
+| `@ng-icons/lucide`  | `packages/demo/spartan-ui`                      | `36.0.0`    | `36.0.0` |
+| `tw-animate-css`    | `apps/demo-spartan` (dev)                       | `^1.4.0`    | `1.4.0`  |
 
 The toolkit itself is consumed in-tree via the workspace tsconfig path
 alias (no `@spartan-ng/*` reaches `packages/toolkit/package.json`).

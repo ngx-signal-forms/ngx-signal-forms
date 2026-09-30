@@ -1,6 +1,8 @@
 import {
   computed,
   Directive,
+  effect,
+  inject,
   input,
   signal,
   type Injector,
@@ -10,6 +12,8 @@ import type { FieldTree, ValidationError } from '@angular/forms/signals';
 import {
   createErrorVisibility,
   createWarningVisibility,
+  NGX_SIGNAL_FORM_FIELD_VISIBILITY_REGISTRY,
+  normalizeFieldName,
   readDirectErrors,
   resolveSubmittedStatusFromContext,
   splitByKind,
@@ -390,6 +394,15 @@ export class NgxHeadlessErrorState<
   readonly #config = this.#context.config;
 
   /**
+   * Field-visibility registry from the nearest `[ngxSignalForm]` host, or
+   * `null` outside one. See the constructor.
+   */
+  readonly #visibilityRegistry = inject(
+    NGX_SIGNAL_FORM_FIELD_VISIBILITY_REGISTRY,
+    { optional: true },
+  );
+
+  /**
    * Bridged field-state signal, set by host components that cannot forward
    * their `[formField]` input via `hostDirectives` inputs (because
    * `[formField]` conflicts with Angular's `FormField` directive selector).
@@ -505,9 +518,18 @@ export class NgxHeadlessErrorState<
     Partial<ErrorReadableState> | null | undefined
   >(() => this.field()?.() ?? this.#bridgedFieldState()?.());
 
+  /**
+   * `fieldName`, trimmed, or `null` when it is empty or whitespace only. The
+   * ids and the registry entry both use it, so they match the `email-error`
+   * id and the `email` key that auto-ARIA derives from the control's `id`.
+   */
+  readonly #resolvedFieldName = computed(() =>
+    normalizeFieldName(this.fieldName()),
+  );
+
   readonly #core = buildHeadlessErrorState(
     this.#fieldState,
-    this.fieldName,
+    this.#resolvedFieldName,
     computed(() => {
       const override = this.errorsOverride();
       return override === undefined ? undefined : unwrapValue(override);
@@ -619,6 +641,45 @@ export class NgxHeadlessErrorState<
       message: this.#resolveErrorMessage(warning),
     })),
   );
+
+  readonly #errorContainerVisible = computed(
+    () => this.shouldShowErrors() && this.hasErrors(),
+  );
+
+  readonly #warningContainerVisible = computed(
+    () => this.shouldShowWarnings() && this.hasWarnings(),
+  );
+
+  constructor() {
+    // Publishes this directive's visibility to the form's field-visibility
+    // registry, under its own `fieldName`. Auto-ARIA reads that entry when
+    // no `NgxFieldIdentity` has published a strategy for the field
+    // (ADR-0010), so `aria-invalid` and `aria-describedby` follow a local
+    // `strategy` or `warningStrategy` too.
+    //
+    // It registers the booleans that give the error and warning elements
+    // their ids, not a strategy for auto-ARIA to resolve again. It does
+    // nothing without a registry (no `[ngxSignalForm]` ancestor) or without
+    // a non-blank `fieldName`. `NgxFormFieldError` does not forward
+    // `fieldName` to this directive and registers by itself, so the two
+    // never publish twice.
+    effect((onCleanup) => {
+      const registry = this.#visibilityRegistry;
+      const fieldName = this.#resolvedFieldName();
+
+      if (!registry || fieldName === null) {
+        return;
+      }
+
+      onCleanup(
+        registry.register({
+          fieldName,
+          errorContainerVisible: this.#errorContainerVisible,
+          warningContainerVisible: this.#warningContainerVisible,
+        }),
+      );
+    });
+  }
 
   #resolveErrorMessage(error: ValidationError): string {
     return resolveErrorMessage(error, this.#errorMessagesRegistry);

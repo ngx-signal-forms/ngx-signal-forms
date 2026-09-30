@@ -48,7 +48,7 @@ field, use the [tested root starter](../../../README.md#quick-start). This
 example adds a hint and a character count.
 
 ```typescript
-import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { Component, signal } from '@angular/core';
 import {
   email,
   form,
@@ -64,7 +64,6 @@ import { NgxFormField } from '@ngx-signal-forms/toolkit/form-field';
 
 @Component({
   selector: 'app-contact',
-  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [FormField, NgxSignalFormToolkit, NgxFormField],
   templateUrl: './contact.html',
 })

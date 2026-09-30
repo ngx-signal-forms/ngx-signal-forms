@@ -18,7 +18,6 @@ const createInjectorFromEnvProviders = (
 describe('provideNgxSignalFormsConfig', () => {
   it('should return environment providers', () => {
     const config = {
-      autoAria: true,
       defaultErrorStrategy: 'immediate' as const,
     };
 
@@ -30,17 +29,32 @@ describe('provideNgxSignalFormsConfig', () => {
 
   it('should work with partial config', () => {
     const config = {
-      autoAria: false,
+      errorSummaryAnnouncesAlone: false,
     };
 
     const providers = provideNgxSignalFormsConfig(config);
     const injector = createInjectorFromEnvProviders([providers]);
 
     const resolved = injector.get(NGX_SIGNAL_FORMS_CONFIG);
-    expect(resolved.autoAria).toBe(false);
+    expect(resolved.errorSummaryAnnouncesAlone).toBe(false);
     expect(resolved.defaultErrorStrategy).toBe(
       DEFAULT_NGX_SIGNAL_FORMS_CONFIG.defaultErrorStrategy,
     );
+  });
+
+  it('does not accept or resolve the removed autoAria key', () => {
+    // `autoAria` never reached a directive, so it was removed (#584). The
+    // real opt-outs are control presets with `ariaMode: 'manual'` and the
+    // per-control `ngxSignalFormControlAria="manual"`.
+    const providers = provideNgxSignalFormsConfig({
+      // @ts-expect-error -- `autoAria` is no longer a config key
+      autoAria: false,
+    });
+    const injector = createInjectorFromEnvProviders([providers]);
+
+    const resolved = injector.get(NGX_SIGNAL_FORMS_CONFIG);
+    expect(resolved).not.toHaveProperty('autoAria');
+    expect(DEFAULT_NGX_SIGNAL_FORMS_CONFIG).not.toHaveProperty('autoAria');
   });
 
   it('should work with empty config', () => {
@@ -54,7 +68,7 @@ describe('provideNgxSignalFormsConfig', () => {
 
 describe('provideNgxSignalFormsConfigForComponent', () => {
   it('should return providers array', () => {
-    const config = { autoAria: true };
+    const config = { defaultErrorStrategy: 'immediate' as const };
     const providers = provideNgxSignalFormsConfigForComponent(config);
 
     expect(Array.isArray(providers)).toBe(true);
@@ -63,14 +77,14 @@ describe('provideNgxSignalFormsConfigForComponent', () => {
 
   it('should provide configured values', () => {
     const config = {
-      autoAria: false,
+      errorSummaryAnnouncesAlone: false,
     };
 
     const providers = provideNgxSignalFormsConfigForComponent(config);
     const injector = createInjectorFromEnvProviders(providers);
 
     const resolved = injector.get(NGX_SIGNAL_FORMS_CONFIG);
-    expect(resolved.autoAria).toBe(false);
+    expect(resolved.errorSummaryAnnouncesAlone).toBe(false);
     expect(resolved.defaultErrorStrategy).toBe(
       DEFAULT_NGX_SIGNAL_FORMS_CONFIG.defaultErrorStrategy,
     );
@@ -82,11 +96,11 @@ describe('provideNgxSignalFormsConfigForComponent', () => {
       provideNgxSignalFormsConfig({ defaultErrorStrategy: 'immediate' }),
     ]);
 
-    // Component-level override only changes autoAria. The parent
+    // Component-level override only changes errorSummaryAnnouncesAlone. The parent
     // `defaultErrorStrategy` MUST bubble down — matches the factory+skipSelf
     // pattern in `provideNgxSignalFormControlPresetsForComponent`.
     const childProviders = provideNgxSignalFormsConfigForComponent({
-      autoAria: false,
+      errorSummaryAnnouncesAlone: false,
     });
     const childInjector = createInjectorFromEnvProviders(
       childProviders,
@@ -94,7 +108,7 @@ describe('provideNgxSignalFormsConfigForComponent', () => {
     );
 
     const resolved = childInjector.get(NGX_SIGNAL_FORMS_CONFIG);
-    expect(resolved.autoAria).toBe(false);
+    expect(resolved.errorSummaryAnnouncesAlone).toBe(false);
     expect(resolved.defaultErrorStrategy).toBe('immediate');
     expect(resolved.defaultFormFieldAppearance).toBe(
       DEFAULT_NGX_SIGNAL_FORMS_CONFIG.defaultFormFieldAppearance,
@@ -107,12 +121,12 @@ describe('provideNgxSignalFormsConfigForComponent', () => {
     ]);
 
     const childEnv = createInjectorFromEnvProviders(
-      [provideNgxSignalFormsConfig({ autoAria: false })],
+      [provideNgxSignalFormsConfig({ errorSummaryAnnouncesAlone: false })],
       parentEnv,
     );
 
     const resolved = childEnv.get(NGX_SIGNAL_FORMS_CONFIG);
-    expect(resolved.autoAria).toBe(false);
+    expect(resolved.errorSummaryAnnouncesAlone).toBe(false);
     expect(resolved.requiredMarker).toBe(' (required)');
   });
 

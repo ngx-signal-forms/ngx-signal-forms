@@ -1,9 +1,8 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { Component } from '@angular/core';
 import { AccountPreferencesForm } from './form/account-preferences-form';
 
 @Component({
   selector: 'ngx-spartan-root',
-  changeDetection: ChangeDetectionStrategy.OnPush,
 
   imports: [AccountPreferencesForm],
   template: `

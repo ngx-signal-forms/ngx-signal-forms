@@ -90,7 +90,7 @@ It stores the submitted email locally. Replace the action with your API call.
 <!-- documentation-starter:start -->
 
 ```typescript
-import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { Component, signal } from '@angular/core';
 import { email, form, FormField, required } from '@angular/forms/signals';
 import {
   createOnInvalidHandler,
@@ -100,7 +100,6 @@ import { NgxFormField } from '@ngx-signal-forms/toolkit/form-field';
 
 @Component({
   selector: 'app-contact',
-  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [FormField, NgxSignalFormToolkit, NgxFormField],
   template: `
     <form [formRoot]="contactForm">
@@ -221,12 +220,13 @@ provideNgxSignalFormsConfig({ defaultErrorStrategy: 'on-submit' });
 </form>
 ```
 
-The quick start works without `ngxSignalForm`, because it keeps the default
-`on-touch` timing and Angular marks every interactive field touched on submit. Add
-`ngxSignalForm` to the form when you change the timing at any level, or when
-you show an error summary. Without it, `aria-invalid` keeps `on-touch` timing
-while the visible message follows your setting. The directive is already in
-`NgxSignalFormToolkit`, so you only add the attribute.
+The quick start works without `ngxSignalForm`. The app-wide setting times the
+visible message and `aria-invalid` together, and Angular marks every
+interactive field touched on submit. Add `ngxSignalForm` to the form when you
+use `on-submit`, set the timing for one form, set the timing on an error
+message outside a wrapper, or show an error summary.
+`on-submit` needs the directive because the directive tracks the submit. The
+directive is already in `NgxSignalFormToolkit`, so you only add the attribute.
 
 Warnings have their own `warningStrategy` with the same three values. The
 default is `on-touch`, so a form can hold errors until submit and still show

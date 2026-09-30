@@ -1,6 +1,5 @@
 import { DatePipe } from '@angular/common';
 import {
-  ChangeDetectionStrategy,
   afterRenderEffect,
   Component,
   computed,
@@ -39,7 +38,6 @@ const MIN_DISPLAY_MS = 500;
 
 @Component({
   selector: 'ngx-wizard-container',
-  changeDetection: ChangeDetectionStrategy.OnPush,
 
   imports: [
     BusyButtonDirective,
@@ -152,7 +150,7 @@ export class WizardContainerComponent {
    * the wizard invokes it as a plain function reference.
    */
   protected readonly guardStepNavigation: WizardCanNavigate = async (event) => {
-    if (this.store.hasConfirmedBooking()) {
+    if (this.store.hasConfirmedBooking() || this.store.isLoadingDraft()) {
       return false;
     }
 
@@ -182,7 +180,11 @@ export class WizardContainerComponent {
   }
 
   protected async nextStep(): Promise<void> {
-    if (this.store.hasConfirmedBooking() || this.store.isSubmitting()) {
+    if (
+      this.store.hasConfirmedBooking() ||
+      this.store.isSubmitting() ||
+      this.store.isLoadingDraft()
+    ) {
       return;
     }
 
@@ -215,7 +217,11 @@ export class WizardContainerComponent {
   }
 
   protected async submit(): Promise<void> {
-    if (this.store.hasConfirmedBooking() || this.store.isSubmitting()) {
+    if (
+      this.store.hasConfirmedBooking() ||
+      this.store.isSubmitting() ||
+      this.store.isLoadingDraft()
+    ) {
       return;
     }
 

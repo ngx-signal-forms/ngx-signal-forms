@@ -1,6 +1,5 @@
 import { NgTemplateOutlet } from '@angular/common';
 import {
-  ChangeDetectionStrategy,
   booleanAttribute,
   Component,
   computed,
@@ -103,7 +102,6 @@ const TEXT_LIKE_INPUT_TYPES = new Set([
 
 @Component({
   selector: 'ngx-wizard',
-  changeDetection: ChangeDetectionStrategy.OnPush,
 
   imports: [NgTemplateOutlet],
   templateUrl: './wizard.html',

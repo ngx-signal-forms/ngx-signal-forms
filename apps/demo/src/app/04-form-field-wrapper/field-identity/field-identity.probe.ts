@@ -1,6 +1,5 @@
 import {
   afterEveryRender,
-  ChangeDetectionStrategy,
   Component,
   ElementRef,
   inject,
@@ -45,7 +44,6 @@ const EMPTY_READING: ProbeReading = {
  */
 @Component({
   selector: 'ngx-demo-identity-probe',
-  changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <dl
       class="grid grid-cols-[auto_minmax(0,1fr)] gap-x-3 gap-y-1 rounded-md bg-gray-50 p-3 font-mono text-xs break-all text-gray-700 dark:bg-gray-900/50 dark:text-gray-300"

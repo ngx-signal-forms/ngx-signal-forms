@@ -46,7 +46,15 @@
   --_fieldset-clr-success: light-dark(#3f8f4f, #4ade80);
   --_fieldset-clr-danger: light-dark(#db1818, #fca5a5);
   --_fieldset-clr-warning: light-dark(#a16207, #fcd34d);
-  --_fieldset-clr-warning-strong: light-dark(#92400e, #fcd34d);
+  /* Text tones. They follow a tinted surface; borders keep the base tones. */
+  --_fieldset-clr-danger-text: var(
+    --_tinted-surface-clr-danger,
+    var(--_fieldset-clr-danger)
+  );
+  --_fieldset-clr-warning-text: var(
+    --_tinted-surface-clr-warning,
+    var(--_fieldset-clr-warning)
+  );
 
   --_fieldset-bg-danger-soft: light-dark(#fdebeb, rgb(127 29 29 / 0.32));
   /* Expo surface/danger — the saturated tint for an invalid grouped *surface*
@@ -279,7 +287,10 @@
   );
   --_fieldset-invalid-legend-color: var(
     --ngx-signal-form-fieldset-invalid-legend-color,
-    var(--_fieldset-invalid-border)
+    var(
+      --ngx-signal-form-fieldset-invalid-border-color,
+      var(--_fieldset-clr-danger-text)
+    )
   );
   --_fieldset-invalid-legend-bg: var(
     --ngx-signal-form-fieldset-invalid-legend-bg,
@@ -295,7 +306,10 @@
   );
   --_fieldset-warning-legend-color: var(
     --ngx-signal-form-fieldset-warning-legend-color,
-    var(--_fieldset-warning-border)
+    var(
+      --ngx-signal-form-fieldset-warning-border-color,
+      var(--_fieldset-clr-warning-text)
+    )
   );
   --_fieldset-warning-legend-bg: var(
     --ngx-signal-form-fieldset-warning-legend-bg,
@@ -303,7 +317,7 @@
   );
   --_fieldset-message-error-color: var(
     --ngx-signal-form-fieldset-error-color,
-    var(--ngx-signal-form-error-color, var(--_fieldset-clr-danger))
+    var(--ngx-signal-form-error-color, var(--_fieldset-clr-danger-text))
   );
   --_fieldset-message-error-bg: var(
     --ngx-signal-form-fieldset-error-bg,
@@ -315,7 +329,7 @@
   );
   --_fieldset-message-warning-color: var(
     --ngx-signal-form-fieldset-warning-color,
-    var(--ngx-signal-form-warning-color, var(--_fieldset-clr-warning))
+    var(--ngx-signal-form-warning-color, var(--_fieldset-clr-warning-text))
   );
   --_fieldset-message-warning-bg: var(
     --ngx-signal-form-fieldset-warning-bg,
@@ -467,6 +481,29 @@
 :host([data-appearance='plain'].ngx-signal-form-fieldset--surface-invalid),
 :host([data-appearance='plain'].ngx-signal-form-fieldset--surface-warning) {
   background: transparent;
+}
+
+/* Tinted danger surfaces (#535). On the light invalid tint (#fbdddd) and the
+   danger tone (#fdebeb), the default red and amber text fall under 4.5:1.
+   The 75% slate text falls under 4.5:1 on #fbdddd only (4.35:1; 4.61:1 on
+   #fdebeb). This rule sets the inherited `--_tinted-surface-clr-*` tokens
+   to darker tones: on #fbdddd, #b91c1c is 5.08:1, #92400e 5.57:1 and
+   #324155 8.15:1. The optional marker needs no tinted tone: its default
+   base (#1e293b at 70% opacity) is 4.92:1 on #fbdddd. The legend, the fieldset
+   messages and the nested wrappers, hints, character counts and errors use
+   them as their private text fallback, so a public color token set on any
+   ancestor still wins. The dark values equal the untinted ones, which
+   already pass on the dark tints. Borders do not change. */
+:host(
+  .ngx-signal-form-fieldset--surface-invalid:not([data-appearance='plain'])
+),
+:host([data-surface-tone='danger']:not([data-appearance='plain'])) {
+  --_tinted-surface-clr-danger: light-dark(#b91c1c, #fca5a5);
+  --_tinted-surface-clr-warning: light-dark(#92400e, #fcd34d);
+  --_tinted-surface-clr-text-secondary: light-dark(
+    #324155,
+    rgba(249, 250, 251, 0.75)
+  );
 }
 
 .ngx-signal-form-fieldset__content {

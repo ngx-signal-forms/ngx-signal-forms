@@ -1,5 +1,4 @@
 import {
-  ChangeDetectionStrategy,
   Component,
   inject,
   input,
@@ -18,7 +17,6 @@ import { type Settings, SettingsStore } from './settings.store';
 
 @Component({
   selector: 'ngx-store-binding-form',
-  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [FormField, NgxSignalFormToolkit, NgxFormField],
   template: `
     <div class="px-6 pt-0 pb-6">

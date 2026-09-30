@@ -196,6 +196,10 @@ export class NgxSignalFormAutoAria {
 
   readonly #element: ElementRef<HTMLElement> = inject(ElementRef);
   readonly #injector = inject(Injector);
+  // `NGX_SIGNAL_FORMS_CONFIG` has a root `factory` (see `../tokens.ts`), so
+  // `inject()` always resolves a value here — no `{ optional: true }` needed.
+  // Declared ahead of the visibility fields, which read it on init.
+  readonly #config = inject(NGX_SIGNAL_FORMS_CONFIG);
   readonly #ariaModeSignal = inject(NGX_SIGNAL_FORM_ARIA_MODE, {
     optional: true,
     self: true,
@@ -300,8 +304,11 @@ export class NgxSignalFormAutoAria {
    * field error component.
    *
    * Uses `createErrorVisibility` to auto-consume the nearest
-   * `[ngxSignalForm]` context (strategy + submittedStatus) via DI, matching
-   * the same cascade as the form-field wrapper and headless error-state.
+   * `[ngxSignalForm]` context (strategy + submittedStatus) via DI, then the
+   * nearest `defaultErrorStrategy` config, then `'on-touch'`. That is the
+   * same cascade as the form-field wrapper and headless error-state, so a
+   * `[formRoot]`-only form still times `aria-invalid` like the visible
+   * message.
    *
    * When an owning wrapper has **published an error strategy** on the
    * identity, that wins: it already accounts for the wrapper's field-level
@@ -335,12 +342,9 @@ export class NgxSignalFormAutoAria {
       strategy: computed(
         () => this.#fieldIdentity?.resolvedErrorStrategy() ?? undefined,
       ),
+      configDefault: this.#config.defaultErrorStrategy,
     },
   );
-
-  // `NGX_SIGNAL_FORMS_CONFIG` has a root `factory` (see `../tokens.ts`), so
-  // `inject()` always resolves a value here — no `{ optional: true }` needed.
-  readonly #config = inject(NGX_SIGNAL_FORMS_CONFIG);
 
   /**
    * Warning-visibility timing, resolved through the **warning** cascade

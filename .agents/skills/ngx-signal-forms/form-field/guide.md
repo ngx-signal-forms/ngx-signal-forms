@@ -41,13 +41,19 @@ The form-field entry point provides a pre-styled field shell (label + control + 
 - Declare control semantics explicitly with `ngxSignalFormControl` on the bound host. Without it, the wrapper falls back to DOM heuristics that can produce the wrong layout or ARIA behavior:
 
   ```html
-  <!-- Native switch: role="switch" on the element + declare kind -->
+  <!-- Native switch: role="switch" is enough; the toolkit infers the switch kind -->
   <input
     id="emailUpdates"
     type="checkbox"
     role="switch"
-    ngxSignalFormControl="switch"
     [formField]="form.emailUpdates"
+  />
+
+  <!-- Switch host with no role="switch" of its own: declare the kind -->
+  <app-toggle
+    id="darkMode"
+    [formField]="form.darkMode"
+    ngxSignalFormControl="switch"
   />
 
   <!-- Native checkbox opt-in uses the group preset; switches use inline-control. -->
@@ -212,7 +218,7 @@ timing unless `warningStrategy` is also set. For theme work, read the
 
 - If wrapper errors don't appear: confirm the bound control has an `id` attribute matching the field, or add explicit `fieldName` when the control is nested.
 - If grouped summary duplicates child messages: remove `includeNestedErrors` or scope `fields` explicitly.
-- If a switch row collapses or inherits text-input styling: make sure the bound control declares `ngxSignalFormControl="switch"` (in addition to `role="switch"` for a11y) so the wrapper uses switch-specific layout.
+- If a switch row collapses or inherits text-input styling: check the `[formField]` host itself. If the host is a native checkbox with `role="switch"`, or has `role="switch"`, the toolkit infers the switch kind and needs no attribute. Otherwise set `ngxSignalFormControl="switch"` on the host. Inference does not look at descendants, so `mat-slide-toggle`, `p-toggleswitch`, and a Spartan switch need the attribute, even though each renders an inner `role="switch"` element.
 - If a slider or composite control gets an outlined text-field shell: add `ngxSignalFormControl="slider"` (or `"composite"`) to the bound host so the wrapper picks up the correct layout. If a field-shaped combobox or closed select does **not** get the text-field shell, keep the trigger naked and join as `input-like` (combobox role + id, or explicit `ngxSignalFormControl="input-like"`). Do not add a `select` kind.
 - If auto-ARIA conflicts with a custom control's own ARIA attributes: add `ngxSignalFormControlAria="manual"` on the control host to suppress toolkit ARIA management. Use `buildAriaDescribedBy` to assemble the `aria-describedby` value manually.
 - For fully custom markup without wrapper assumptions, switch to [headless](../headless/guide.md).

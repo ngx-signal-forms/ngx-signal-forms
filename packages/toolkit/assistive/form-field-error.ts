@@ -1,7 +1,6 @@
 import { NgTemplateOutlet } from '@angular/common';
 import {
   afterEveryRender,
-  ChangeDetectionStrategy,
   Component,
   computed,
   effect,
@@ -132,7 +131,6 @@ export type NgxFormFieldErrorPresentation = 'inline' | 'panel';
  */
 @Component({
   selector: 'ngx-form-field-error',
-  changeDetection: ChangeDetectionStrategy.OnPush,
 
   host: {
     // The role="alert"/role="status" containers stay mounted (see the

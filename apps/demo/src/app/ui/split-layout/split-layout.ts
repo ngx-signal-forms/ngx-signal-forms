@@ -1,8 +1,7 @@
-import { ChangeDetectionStrategy, Component, input } from '@angular/core';
+import { Component, input } from '@angular/core';
 
 @Component({
   selector: 'ngx-split-layout',
-  changeDetection: ChangeDetectionStrategy.OnPush,
 
   styles: `
     :host {

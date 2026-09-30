@@ -1,10 +1,4 @@
-import {
-  ChangeDetectionStrategy,
-  Component,
-  computed,
-  signal,
-  viewChild,
-} from '@angular/core';
+import { Component, computed, signal, viewChild } from '@angular/core';
 import { type FormFieldAppearance } from '@ngx-signal-forms/toolkit';
 import { NgxSignalFormDebugger } from '@ngx-signal-forms/debugger';
 import {
@@ -27,7 +21,6 @@ import { StoreBindingFormComponent } from './store-binding.form';
 
 @Component({
   selector: 'ngx-store-binding-page',
-  changeDetection: ChangeDetectionStrategy.OnPush,
   styles: `
     :host {
       display: flex;

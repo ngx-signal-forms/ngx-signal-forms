@@ -1,10 +1,4 @@
-import {
-  ChangeDetectionStrategy,
-  Component,
-  computed,
-  signal,
-  viewChild,
-} from '@angular/core';
+import { Component, computed, signal, viewChild } from '@angular/core';
 import {
   type ResolvedErrorDisplayStrategy,
   type FormFieldAppearance,
@@ -34,7 +28,6 @@ import { VestValidationComponent } from './vest-validation.form';
 
 @Component({
   selector: 'ngx-vest-validation-page',
-  changeDetection: ChangeDetectionStrategy.OnPush,
 
   styles: `
     :host {

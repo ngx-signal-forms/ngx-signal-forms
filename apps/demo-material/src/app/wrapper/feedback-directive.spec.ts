@@ -71,7 +71,6 @@ describe('*ngxMatFeedback — registry resolution + severity precedence', () => 
         provideZonelessChangeDetection(),
         provideNgxSignalFormsConfig({
           defaultErrorStrategy: 'immediate',
-          autoAria: false,
         }),
         provideErrorMessages({ required: 'Please agree before continuing' }),
       ],
@@ -128,7 +127,6 @@ describe('*ngxMatFeedback — registry resolution + severity precedence', () => 
         provideZonelessChangeDetection(),
         provideNgxSignalFormsConfig({
           defaultErrorStrategy: 'immediate',
-          autoAria: false,
         }),
       ],
     });

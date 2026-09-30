@@ -91,7 +91,7 @@ packages/toolkit/
 │   ├── check-published-package.mjs     # guards the public API + tarball against api-reports/
 │   ├── documentation-starter.mjs       # extracts the README's marked TypeScript starter so
 │   │                                   # check-documentation-starter.mjs can typecheck it
-│   ├── generate-readme.mjs             # rewrites the root README's relative links for npm
+│   ├── generate-readme.mjs             # rewrites the relative links of every shipped README for npm
 │   ├── size-report.mjs                 # reports brotli bundle size per entry against budgets
 │   ├── strip-internal-exports.mjs      # post-build: hides /core from the exports map
 │   └── strip-internal-members.mjs      # post-build: strips @internal class/interface members
@@ -115,15 +115,17 @@ Every entry point's README ships: ng-packagr's `copyAssets` copies each
 entry's `README.md` into its own output folder, and
 `packages/toolkit/api-reports/tarball-manifest.json` lists all six
 (`README.md`, `assistive/README.md`, `form-field/README.md`,
-`headless/README.md`, `testing/README.md`, `vest/README.md`). Only the root
-one gets rewritten: `scripts/generate-readme.mjs` reads the **repo-root**
-`README.md` (not `packages/toolkit/README.md`), rewrites its relative links
-to absolute GitHub URLs pinned to the commit being published, and writes the
-result to `dist/packages/toolkit/README.md` during `post-build`. The five
-secondary READMEs ship as-is, with their relative links unrewritten — a link
-to a repo-only file (e.g. `../../CONTEXT.md`) resolves on GitHub but not on
-npm. See [issue #568](https://github.com/ngx-signal-forms/ngx-signal-forms/issues/568)
-for the follow-up to rewrite them too.
+`headless/README.md`, `testing/README.md`, `vest/README.md`).
+`scripts/generate-readme.mjs` rewrites all six during `toolkit:build`. The
+root one comes from the **repo-root** `README.md` (not
+`packages/toolkit/README.md`). Each secondary one comes from its own source
+folder, after ng-packagr has copied it. Relative links become absolute GitHub
+URLs pinned to the commit being published. A link stays relative when its
+target also ships in the package (for example `../form-field/README.md`), so
+it resolves on npm too. Repo-only targets such as `../../../docs/TESTING.md`
+or `../form-field/THEMING.md` get the absolute URL. The source READMEs keep
+their relative links. `check-published-package.mjs` fails if any packed
+README still links to a file that is not in the tarball.
 
 ## Dependency graph
 

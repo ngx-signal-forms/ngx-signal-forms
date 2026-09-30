@@ -1,10 +1,4 @@
-import {
-  ChangeDetectionStrategy,
-  Component,
-  computed,
-  signal,
-  viewChild,
-} from '@angular/core';
+import { Component, computed, inject, signal, viewChild } from '@angular/core';
 import {
   type ResolvedErrorDisplayStrategy,
   type FormFieldAppearance,
@@ -29,18 +23,26 @@ import {
   ERROR_DISPLAY_MODE_LABELS,
   ErrorDisplayModeSelectorComponent,
 } from '../../ui/error-display-mode-selector/error-display-mode-selector';
+import { ProfileApiService } from './server-integration.api';
 import { SERVER_INTEGRATION_CONTENT } from './server-integration.content';
 import { ServerIntegrationComponent } from './server-integration.form';
 
 @Component({
   selector: 'ngx-server-integration-page',
-  changeDetection: ChangeDetectionStrategy.OnPush,
 
   styles: `
     :host {
       display: flex;
       flex-direction: column;
       gap: 2rem;
+    }
+
+    .checkbox-row {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.875rem;
+      cursor: pointer;
     }
   `,
   imports: [
@@ -85,6 +87,20 @@ import { ServerIntegrationComponent } from './server-integration.form';
             [appearance]="selectedAppearance()"
           />
         </ngx-display-controls-section>
+        <ngx-display-controls-section
+          title="Load failure"
+          description="Make the next profile load fail, then click Reload from server. The error state replaces the form until you retry."
+        >
+          <label class="checkbox-row">
+            <input
+              #failNextLoad
+              type="checkbox"
+              [checked]="api.failNextLoad()"
+              (change)="api.failNextLoad.set(failNextLoad.checked)"
+            />
+            <span>Fail the next profile load</span>
+          </label>
+        </ngx-display-controls-section>
       </ngx-display-controls-card>
     </ng-template>
 
@@ -123,6 +139,7 @@ import { ServerIntegrationComponent } from './server-integration.form';
   `,
 })
 export class ServerIntegrationPage {
+  protected readonly api = inject(ProfileApiService);
   protected readonly errorDisplayMode =
     signal<ResolvedErrorDisplayStrategy>('on-touch');
   protected readonly selectedAppearance =

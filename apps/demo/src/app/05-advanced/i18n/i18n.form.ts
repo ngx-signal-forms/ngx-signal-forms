@@ -1,10 +1,4 @@
-import {
-  ChangeDetectionStrategy,
-  Component,
-  inject,
-  input,
-  signal,
-} from '@angular/core';
+import { Component, inject, input, signal } from '@angular/core';
 import { FormField, form } from '@angular/forms/signals';
 import {
   type ResolvedErrorDisplayStrategy,
@@ -43,7 +37,6 @@ import { SubmitStatusComponent } from '../../ui/submit-status/submit-status';
  */
 @Component({
   selector: 'ngx-i18n-demo',
-  changeDetection: ChangeDetectionStrategy.OnPush,
 
   providers: [
     I18nDemoLanguageService,

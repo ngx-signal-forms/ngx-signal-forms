@@ -1,10 +1,9 @@
-import { ChangeDetectionStrategy, Component, input } from '@angular/core';
+import { Component, input } from '@angular/core';
 import { FormField, type FieldTree } from '@angular/forms/signals';
 import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit';
 
 @Component({
   selector: 'ngx-switch-control',
-  changeDetection: ChangeDetectionStrategy.OnPush,
 
   imports: [FormField, NgxSignalFormToolkit],
   host: {
@@ -111,7 +110,6 @@ import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit';
       class="ngx-switch-control__input"
       [id]="inputId()"
       type="checkbox"
-      ngxSignalFormControl="switch"
       role="switch"
       [formField]="field()"
     />

@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { Component, signal } from '@angular/core';
 import {
   disabled,
   FormField,
@@ -59,7 +59,6 @@ const brandThemingSchema = schema<BrandThemingModel>((path) => {
  */
 @Component({
   selector: 'ngx-brand-theming-form',
-  changeDetection: ChangeDetectionStrategy.OnPush,
 
   imports: [FormField, NgxSignalFormToolkit, NgxFormField],
   templateUrl: './brand-theming.form.html',

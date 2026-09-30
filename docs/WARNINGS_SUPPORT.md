@@ -62,7 +62,7 @@ Keep `[formRoot]` and `ngxSignalForm` on the form. Set
 errors at the start of the action:
 
 ```typescript
-import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { Component, signal } from '@angular/core';
 import { form, FormField } from '@angular/forms/signals';
 import {
   createOnInvalidHandler,
@@ -74,7 +74,6 @@ import { signupSchema } from './signup.validations';
 
 @Component({
   selector: 'app-signup',
-  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [FormField, NgxSignalFormToolkit, NgxFormField],
   templateUrl: './signup.html',
 })
@@ -136,7 +135,7 @@ code before submit. Write one native `(submit)` handler, and do not add
 `[formRoot]` to the same form:
 
 ```typescript
-import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { Component, signal } from '@angular/core';
 import { form, FormField } from '@angular/forms/signals';
 import { submitWithWarnings } from '@ngx-signal-forms/toolkit';
 import { NgxFormField } from '@ngx-signal-forms/toolkit/form-field';
@@ -144,7 +143,6 @@ import { profileSchema } from './profile.validations';
 
 @Component({
   selector: 'app-profile',
-  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [FormField, NgxFormField],
   templateUrl: './profile.html',
 })
@@ -221,7 +219,7 @@ For each field, the toolkit uses the first value it finds in this order:
 
 | Step | Where you set it                                                       | Errors                 | Warnings                 |
 | ---- | ---------------------------------------------------------------------- | ---------------------- | ------------------------ |
-| 1    | Input on the wrapper, fieldset, error, or summary                      | `strategy`             | `warningStrategy`        |
+| 1    | Input on the wrapper, fieldset, error, or headless summary             | `strategy`             | `warningStrategy`        |
 | 2    | `ngxSignalForm` on the `<form>`                                        | `errorStrategy`        | `warningStrategy`        |
 | 3    | `provideNgxSignalFormsConfigForComponent()` in a component's providers | `defaultErrorStrategy` | `defaultWarningStrategy` |
 | 4    | `provideNgxSignalFormsConfig()` in the app providers                   | `defaultErrorStrategy` | `defaultWarningStrategy` |
@@ -270,10 +268,6 @@ the submit status through its options.
 
 The full list of configuration keys is in the
 [toolkit configuration reference](../packages/toolkit/README.md#configuration).
-
-**Known limitation:** without `ngxSignalForm` and without a wrapper, auto-ARIA
-ignores `defaultErrorStrategy` for `aria-invalid` and uses `on-touch`. Add
-`ngxSignalForm` to the form to get the configured timing.
 
 Native `:user-invalid` uses the browser's own timing. It is not the same as
 `on-touch`, and it cannot see schema errors, server errors, or warnings.
