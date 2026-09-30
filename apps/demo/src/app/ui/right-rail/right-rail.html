@@ -148,8 +148,25 @@
 <!-- Body — page controls or empty state -->
 <ng-template #panelBody>
   @if (template()) {
+  <!-- The page declares this template, but it renders here. A boundary at
+       this insertion point keeps broken controls from taking down the page,
+       and keeps a broken page from taking down the rail. -->
+  @boundary {
   <ng-container [ngTemplateOutlet]="template()!" />
-  } @else {
+  } @error {
+  <div class="panel__empty" [ngxResetOnNavigation]="$reset">
+    <span class="panel__empty-title" role="alert">
+      These display controls could not be shown.
+    </span>
+    <button
+      type="button"
+      class="btn-secondary"
+      (click)="retryControls($reset, $event)"
+    >
+      Try again
+    </button>
+  </div>
+  } } @else {
   <div class="panel__empty">
     <svg
       viewBox="0 0 24 24"
