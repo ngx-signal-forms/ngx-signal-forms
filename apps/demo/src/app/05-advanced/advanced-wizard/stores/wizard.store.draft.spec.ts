@@ -5,7 +5,7 @@ import {
 } from '@angular/common/http/testing';
 import { ApplicationRef } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import {
   createEmptyDestination,
@@ -252,6 +252,70 @@ describe('WizardStore draft resume', () => {
 
       expect(store.draftId()).toBeNull();
       expect(storedJson()).toEqual({ draftId: null });
+    });
+
+    it('ignores a save that lands after the confirmation and a new booking started', async () => {
+      const { store, httpMock } = setup();
+      store.setTraveler(savedDraft.traveler);
+
+      const save = store.saveDraft(store.draftSummary());
+      const savePost = httpMock.expectOne('/api/wizard/draft');
+      const booking = store.submitBooking(store.tripData());
+      httpMock.expectOne('/api/wizard/booking').flush(confirmed);
+      await booking;
+
+      // "Start New Booking" clears the confirmation, so the guard on
+      // `hasConfirmedBooking()` no longer covers the old save.
+      store.reset();
+      expect(store.hasConfirmedBooking()).toBe(false);
+
+      savePost.flush({
+        draftId: 'draft-late',
+        savedAt: new Date().toISOString(),
+      });
+      await save;
+
+      expect(store.draftId()).toBeNull();
+      expect(storedJson()).toEqual({ draftId: null });
+    });
+
+    it('shows no save error when a save fails after the confirmation and a new booking started', async () => {
+      const { store, httpMock } = setup();
+      store.setTraveler(savedDraft.traveler);
+      const consoleError = vi
+        .spyOn(console, 'error')
+        .mockImplementation(() => undefined);
+
+      const save = store.saveDraft(store.draftSummary());
+      const savePost = httpMock.expectOne('/api/wizard/draft');
+      const booking = store.submitBooking(store.tripData());
+      httpMock.expectOne('/api/wizard/booking').flush(confirmed);
+      await booking;
+      store.reset();
+
+      savePost.flush({}, { status: 500, statusText: 'Server Error' });
+      await save;
+
+      expect(store.error()).toBeNull();
+      consoleError.mockRestore();
+    });
+
+    it('still accepts a save that starts after the reset', async () => {
+      const { store, httpMock } = setup();
+      store.setTraveler(savedDraft.traveler);
+      const booking = store.submitBooking(store.tripData());
+      httpMock.expectOne('/api/wizard/booking').flush(confirmed);
+      await booking;
+      store.reset();
+
+      store.setTraveler(savedDraft.traveler);
+      const save = store.saveDraft(store.draftSummary());
+      httpMock
+        .expectOne('/api/wizard/draft')
+        .flush({ draftId: 'draft-new', savedAt: new Date().toISOString() });
+      await save;
+
+      expect(store.draftId()).toBe('draft-new');
     });
   });
 });
