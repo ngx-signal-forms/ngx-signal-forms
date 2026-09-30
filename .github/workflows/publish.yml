@@ -112,10 +112,15 @@ jobs:
           registry-url: 'https://registry.npmjs.org'
           scope: '@ngx-signal-forms'
 
+      - name: Set up Socket Firewall
+        uses: socketdev/action@ba6de6cc0565af1f42295590380973573297e31f # v1.3.2
+        with:
+          mode: firewall
+
       - name: Install npm for trusted publishing
         # npm 12.0.0 omits sigstore, which breaks `npm publish --provenance`.
         # Stay on npm 11 until the upstream packaging regression is fixed.
-        run: npm install --global npm@11
+        run: sfw npm install --global npm@11
 
       - name: Enforce OIDC auth mode for npm publish
         run: |
@@ -130,7 +135,7 @@ jobs:
           fi
 
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: sfw pnpm install --frozen-lockfile
 
       - name: Configure Nx Cloud access
         env:
