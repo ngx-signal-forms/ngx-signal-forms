@@ -13,7 +13,7 @@ Uses the root bundle and form-field entry point.
 ## 📂 Demos in this section
 
 - **[complex-forms](./complex-forms/README.md)** — realistic form with nested objects, dynamic arrays, grouped fieldsets, and mixed control families.
-  - What you'll learn: nested schemas · array add/remove wiring · `NgxFormFieldset` aggregation · explicit `ngxSignalFormControl="switch"` / `"checkbox"` semantics for projection-safe rows.
+  - What you'll learn: nested schemas · array add/remove wiring · `NgxFormFieldset` aggregation · explicit `ngxSignalFormControl="checkbox"` semantics for projection-safe rows (native switches are recognized automatically).
 - **[fieldset-appearance](./fieldset-appearance/README.md)** — focused showroom for grouped summaries, surface tones, and nested aggregation.
   - What you'll learn: `feedbackAppearance` · `surfaceTone` · `validationSurface` · `listStyle` · `includeNestedErrors` trade-offs in one place.
 - **[custom-controls](./custom-controls/README.md)** — star rating, native switch, and slider integrated into the wrapper.
@@ -31,7 +31,7 @@ Uses the root bundle and form-field entry point.
 
 - **The wrapper** — `ngx-form-field-wrapper` projects label, control, hints, and errors into a consistent layout. API reference in [form-field README](../../../../../packages/toolkit/form-field/README.md).
 - **Appearances** — `standard` / `outline` / `plain` via the `appearance` input. Theme with CSS custom properties; see [theming guide](../../../../../packages/toolkit/form-field/THEMING.md).
-- **Control semantics** — `ngxSignalFormControl="switch|checkbox|slider"` makes projection explicit instead of guessed. Background in [ADR-0001](../../../../../docs/decisions/0001-control-semantics-architecture.md) and [docs/CUSTOM_CONTROLS.md](../../../../../docs/CUSTOM_CONTROLS.md).
+- **Control semantics** — `ngxSignalFormControl="checkbox|slider"` makes projection explicit instead of guessed. If the `[formField]` host is a native checkbox with `role="switch"`, or has `role="switch"` itself, it needs no attribute. Any other switch host needs `ngxSignalFormControl="switch"`: inference reads the host, not its descendants. Material `mat-slide-toggle`, PrimeNG `p-toggleswitch`, and a Spartan switch put `role="switch"` on an inner element, so they need it. Background in [ADR-0001](../../../../../docs/decisions/0001-control-semantics-architecture.md) and [docs/CUSTOM_CONTROLS.md](../../../../../docs/CUSTOM_CONTROLS.md).
 - **Fieldset grouping** — `<ngx-form-fieldset>` aggregates descendant errors for grouped layouts, and the dedicated [fieldset-appearance](./fieldset-appearance/README.md) page compares grouped summary modes, surfaced tones, and nested aggregation. See [docs/COMPLEX_NESTED_FORMS.md](../../../../../docs/COMPLEX_NESTED_FORMS.md).
 
 ## 🤔 When to use this section

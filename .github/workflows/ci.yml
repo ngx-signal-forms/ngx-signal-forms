@@ -46,7 +46,12 @@ jobs:
           node-version-file: '.node-version'
           cache: 'pnpm'
 
-      - run: pnpm install --frozen-lockfile
+      - name: Set up Socket Firewall
+        uses: socketdev/action@ba6de6cc0565af1f42295590380973573297e31f # v1.3.2
+        with:
+          mode: firewall
+
+      - run: sfw pnpm install --frozen-lockfile
 
       # `strictPeerDependencies` is off, so peer conflicts do not fail the
       # install. This step makes them visible.
@@ -163,7 +168,7 @@ jobs:
       # own. Each guards a different part of the published toolkit package
       # (#514): the public `.d.ts` surface and tarball file list, and the
       # `publint` + `attw` package-shape checks. Run together via
-      # `run-many` so `toolkit:post-build` (their shared dependency) runs
+      # `run-many` so `toolkit:build` (their shared dependency) runs
       # once for both instead of once per `nx run`.
       - name: Check published API surface, tarball contents, and package shape
         run: pnpm exec nx run-many -t check-published-package check-package-shape -p toolkit --outputStyle=static
@@ -173,7 +178,7 @@ jobs:
       # also appends a Markdown table to the job summary.
       - name: Check bundle size budget
         run: |
-          pnpm exec nx run toolkit:post-build --outputStyle=static
+          pnpm exec nx build toolkit --outputStyle=static
           set +e
           node packages/toolkit/scripts/size-report.mjs > "$RUNNER_TEMP/size-limit-summary.md"
           status=$?
@@ -235,7 +240,12 @@ jobs:
           node-version-file: '.node-version'
           cache: 'pnpm'
 
-      - run: pnpm install --frozen-lockfile
+      - name: Set up Socket Firewall
+        uses: socketdev/action@ba6de6cc0565af1f42295590380973573297e31f # v1.3.2
+        with:
+          mode: firewall
+
+      - run: sfw pnpm install --frozen-lockfile
 
       - name: Cache Playwright browsers
         id: playwright-cache
@@ -309,12 +319,17 @@ jobs:
       - name: Assert toolkit declares no design-system deps
         run: pnpm check:toolkit-peer-deps
 
+      - name: Set up Socket Firewall
+        uses: socketdev/action@ba6de6cc0565af1f42295590380973573297e31f # v1.3.2
+        with:
+          mode: firewall
+
       - name: Install only toolkit + its dependencies
         # `--filter "@ngx-signal-forms/toolkit..."` includes the toolkit and
         # its transitive workspace deps but excludes apps/demo* and any
         # future demo apps that depend on the toolkit. Demo design-system
         # deps therefore never enter node_modules in this job.
-        run: pnpm install --frozen-lockfile --filter "@ngx-signal-forms/toolkit..."
+        run: sfw pnpm install --frozen-lockfile --filter "@ngx-signal-forms/toolkit..."
 
       - name: Build toolkit
         run: pnpm exec nx build toolkit
@@ -348,7 +363,12 @@ jobs:
           node-version-file: '.node-version'
           cache: 'pnpm'
 
-      - run: pnpm install --frozen-lockfile
+      - name: Set up Socket Firewall
+        uses: socketdev/action@ba6de6cc0565af1f42295590380973573297e31f # v1.3.2
+        with:
+          mode: firewall
+
+      - run: sfw pnpm install --frozen-lockfile
 
       - name: Cache Playwright browsers
         id: playwright-cache
@@ -423,7 +443,12 @@ jobs:
           node-version-file: '.node-version'
           cache: 'pnpm'
 
-      - run: pnpm install --frozen-lockfile
+      - name: Set up Socket Firewall
+        uses: socketdev/action@ba6de6cc0565af1f42295590380973573297e31f # v1.3.2
+        with:
+          mode: firewall
+
+      - run: sfw pnpm install --frozen-lockfile
 
       # Both engines: the scan runs in Chromium + Firefox for cross-engine
       # accessibility coverage of the last-2-versions browser policy.

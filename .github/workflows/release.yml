@@ -155,8 +155,13 @@ jobs:
 
           echo "Release credential OK."
 
+      - name: Set up Socket Firewall
+        uses: socketdev/action@ba6de6cc0565af1f42295590380973573297e31f # v1.3.2
+        with:
+          mode: firewall
+
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: sfw pnpm install --frozen-lockfile
 
       - name: Cache Playwright browsers
         id: playwright-cache
@@ -222,7 +227,7 @@ jobs:
       # broken exports map/types condition, or a bundle-size regression must
       # block a release, not just a PR (#514). See docs/CONTRIBUTING.md
       # "Published package guardrails" for how to update a baseline. Run via
-      # `run-many` so `toolkit:post-build` (their shared dependency) runs
+      # `run-many` so `toolkit:build` (their shared dependency) runs
       # once instead of once per `nx run`.
       - name: Check published API surface, tarball contents, and package shape
         run: pnpm exec nx run-many -t check-published-package check-package-shape -p toolkit --outputStyle=static
@@ -244,14 +249,14 @@ jobs:
       # accidental `import` of it from toolkit source still fails to resolve
       # at build time, confirmed by reproducing the leak locally. `pnpm
       # check:toolkit-peer-deps` covers the other case, a design-system
-      # package declared in the toolkit's own package.json. Gap: a package
-      # the workspace ROOT declares (today `@spartan-ng/brain`) resolves from
-      # the toolkit in every install, here and in ci.yml. Tracked in #547.
+      # package declared in the toolkit's own package.json. The workspace
+      # ROOT declares no design-system package, so nothing resolves from the
+      # toolkit by walking up to the root.
       - name: Assert toolkit declares no design-system deps
         run: pnpm check:toolkit-peer-deps
 
       - name: Install only toolkit + its dependencies
-        run: pnpm install --frozen-lockfile --filter "@ngx-signal-forms/toolkit..."
+        run: sfw pnpm install --frozen-lockfile --filter "@ngx-signal-forms/toolkit..."
 
       - name: Build toolkit in isolation
         # Skip the cache: the earlier build step already cached this hash, and
@@ -259,7 +264,7 @@ jobs:
         run: pnpm exec nx build toolkit --skip-nx-cache
 
       - name: Restore full workspace install
-        run: pnpm install --frozen-lockfile
+        run: sfw pnpm install --frozen-lockfile
 
       - name: Verify e2e (affected)
         # e2e suites are slow; keep this one affected so release run time

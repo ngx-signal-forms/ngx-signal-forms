@@ -67,7 +67,12 @@
     --ngx-signal-form-error-animation,
     var(--_error-animation-default)
   );
-  --_error-color: var(--ngx-signal-form-error-color, var(--_error-clr-danger));
+  /* A tinted ancestor surface (NgxFormFieldset) hands in darker tones */
+  /* through the inherited `--_tinted-surface-clr-*` tokens. */
+  --_error-color: var(
+    --ngx-signal-form-error-color,
+    var(--_tinted-surface-clr-danger, var(--_error-clr-danger))
+  );
   --_error-bg: var(--ngx-signal-form-error-bg, var(--_error-token-transparent));
   --_error-border-color: var(
     --ngx-signal-form-error-border-color,
@@ -75,7 +80,7 @@
   );
   --_warning-color: var(
     --ngx-signal-form-warning-color,
-    var(--_error-clr-warning)
+    var(--_tinted-surface-clr-warning, var(--_error-clr-warning))
   );
   --_warning-bg: var(
     --ngx-signal-form-warning-bg,

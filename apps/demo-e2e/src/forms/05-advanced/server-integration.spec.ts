@@ -148,4 +148,44 @@ test.describe('Advanced Scenarios - Server Integration (loaded)', () => {
       await expect(serverIntegration.debugLine('touched', false)).toBeVisible();
     });
   });
+
+  test('a failed load shows an announced error and Retry, and Retry restores a pristine prefilled form', async ({
+    page,
+  }) => {
+    const consoleErrors: string[] = [];
+    page.on('console', (message) => {
+      if (message.type() === 'error') consoleErrors.push(message.text());
+    });
+    const pageErrors: Error[] = [];
+    page.on('pageerror', (error) => pageErrors.push(error));
+
+    await test.step('a failing load replaces the form with an error and Retry', async () => {
+      await serverIntegration.reloadWithFailure();
+
+      await expect(serverIntegration.loadErrorAlert).toBeVisible();
+      await expect(serverIntegration.retryButton).toBeVisible();
+      // The focused Reload button was destroyed; focus must not fall to <body>.
+      await expect(serverIntegration.retryButton).toBeFocused();
+      await expect(serverIntegration.nameInput).toHaveCount(0);
+      await expect(serverIntegration.emailInput).toHaveCount(0);
+      // The one-shot flag cleared itself when the load consumed it.
+      await expect(serverIntegration.failNextLoadCheckbox).not.toBeChecked();
+    });
+
+    await test.step('Retry reloads the profile and prefills the form as pristine', async () => {
+      await serverIntegration.retry();
+
+      await expect(serverIntegration.loadErrorAlert).toHaveCount(0);
+      await expect(serverIntegration.nameInput).toHaveValue('Grace Hopper');
+      await expect(serverIntegration.nameInput).toBeFocused();
+      await expect(serverIntegration.emailInput).toHaveValue(
+        'grace@example.com',
+      );
+      await expect(serverIntegration.debugLine('dirty', false)).toBeVisible();
+      await expect(serverIntegration.debugLine('touched', false)).toBeVisible();
+    });
+
+    expect(pageErrors).toEqual([]);
+    expect(consoleErrors).toEqual([]);
+  });
 });

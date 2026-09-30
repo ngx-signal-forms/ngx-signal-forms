@@ -39,6 +39,9 @@ export class ServerIntegrationPage extends BaseFormPage {
   readonly successBanner: Locator;
   readonly formBanner: Locator;
   readonly emailFieldError: Locator;
+  readonly failNextLoadCheckbox: Locator;
+  readonly loadErrorAlert: Locator;
+  readonly retryButton: Locator;
 
   constructor(page: Page) {
     super(page);
@@ -63,6 +66,13 @@ export class ServerIntegrationPage extends BaseFormPage {
     this.emailFieldError = this.page.locator(ROLE_ALERT_SELECTOR, {
       hasText: 'This email is already taken.',
     });
+    this.failNextLoadCheckbox = this.page.getByRole('checkbox', {
+      name: 'Fail the next profile load',
+    });
+    this.loadErrorAlert = this.page.locator(ROLE_ALERT_SELECTOR, {
+      hasText: 'Could not load profile',
+    });
+    this.retryButton = this.page.getByRole('button', { name: 'Retry' });
   }
 
   async goto(): Promise<void> {
@@ -160,5 +170,15 @@ export class ServerIntegrationPage extends BaseFormPage {
 
   async reload(): Promise<void> {
     await this.reloadButton.click();
+  }
+
+  /** Arms the fake API to reject the next profile load, then reloads. */
+  async reloadWithFailure(): Promise<void> {
+    await this.failNextLoadCheckbox.check();
+    await this.reload();
+  }
+
+  async retry(): Promise<void> {
+    await this.retryButton.click();
   }
 }

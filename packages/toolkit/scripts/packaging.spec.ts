@@ -18,7 +18,10 @@ const packageJson = JSON.parse(
 const projectJson = JSON.parse(
   readFileSync(resolve(import.meta.dirname, '../project.json'), 'utf8'),
 ) as {
-  targets: { 'post-build': { options: { commands: string[] } } };
+  targets: Record<
+    string,
+    { outputs?: string[]; options?: { commands?: string[] } }
+  >;
 };
 
 const toolkitDir = resolve(import.meta.dirname, '..');
@@ -202,13 +205,49 @@ describe('packages/toolkit/package.json', () => {
   });
 });
 
-describe('packages/toolkit/project.json post-build target', () => {
+describe('packages/toolkit/project.json build target', () => {
+  const buildCommands = projectJson.targets['build']?.options?.commands ?? [];
+
   it('copies LICENSE into the publish root alongside README.md', () => {
-    const commands = projectJson.targets['post-build'].options.commands;
-    const copiesLicense = commands.some((command) =>
+    const copiesLicense = buildCommands.some((command) =>
       /\bcp\b.*\bLICENSE\b.*dist\/packages\/toolkit/.test(command),
     );
     expect(copiesLicense).toBe(true);
+  });
+
+  // A cache hit restores only the outputs of the target that hit. If one
+  // target writes `dist/packages/toolkit` and a second one strips it in
+  // place, a cached run of the first restores the unstripped package (#560).
+  // So the target that owns the directory must also strip it.
+  it('runs both strip scripts in the build target', () => {
+    expect(buildCommands).toContain(
+      'node packages/toolkit/scripts/strip-internal-members.mjs',
+    );
+    expect(buildCommands).toContain(
+      'node packages/toolkit/scripts/strip-internal-exports.mjs',
+    );
+  });
+
+  it('is the only target that owns and strips dist/packages/toolkit', () => {
+    const targetsWhere = (
+      predicate: (target: (typeof projectJson.targets)[string]) => boolean,
+    ) =>
+      Object.entries(projectJson.targets)
+        .filter(([, target]) => predicate(target))
+        .map(([name]) => name);
+
+    expect(
+      targetsWhere((target) =>
+        (target.outputs ?? []).includes('{workspaceRoot}/dist/{projectRoot}'),
+      ),
+    ).toEqual(['build']);
+    expect(
+      targetsWhere((target) =>
+        (target.options?.commands ?? []).some((command) =>
+          command.includes('strip-internal-'),
+        ),
+      ),
+    ).toEqual(['build']);
   });
 });
 

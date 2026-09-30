@@ -32,13 +32,19 @@ Run every task through Nx with `pnpm nx …`.
 | Toolkit unit tests (jsdom)    | `pnpm nx test toolkit`                                        |
 | Toolkit browser tests         | `pnpm nx run toolkit:test-browser`                            |
 | Lint the toolkit              | `pnpm nx lint toolkit`                                        |
-| Build the toolkit             | `pnpm nx build toolkit`                                       |
-| Build the publishable package | `pnpm nx run toolkit:post-build`                              |
+| Build the publishable toolkit | `pnpm nx build toolkit`                                       |
 | Format                        | `pnpm format` (check only: `pnpm format:check`)               |
 | Coverage                      | `pnpm nx run workspace:coverage`                              |
 | Demo end-to-end tests         | `pnpm nx run demo-e2e:e2e-demo-app`                           |
 | Demo accessibility scan       | `pnpm nx run demo-e2e:a11y`                                   |
 | What CI runs for the toolkit  | `pnpm nx run-many -t lint test test-browser build -p toolkit` |
+
+The toolkit build has two cached steps. `toolkit:build-ng-packagr` runs
+ng-packagr into `dist/packages/toolkit-ng-packagr`. `toolkit:build` copies
+that into `dist/packages/toolkit`, writes the npm README, copies `LICENSE`,
+and strips the `@internal` members and the `./core` export. Only
+`toolkit:build` writes `dist/packages/toolkit`, so a cache hit always
+restores the finished package.
 
 ## Documentation starter check
 
@@ -122,7 +128,7 @@ ship with. When you add a project, add both tags and run
 ## Published package guardrails
 
 These checks run against the built package in `dist/packages/toolkit`, after
-`toolkit:post-build`. CI and the release workflow call them directly, so
+`toolkit:build`. CI and the release workflow call them directly, so
 `nx affected` does not skip them.
 
 1. **Public API and tarball contents.**
@@ -130,10 +136,13 @@ These checks run against the built package in `dist/packages/toolkit`, after
    (including the internal `/core` types as `core.internal`) and the `npm pack`
    file list with the baseline in
    [`packages/toolkit/api-reports/`](../packages/toolkit/api-reports). After
-   an intended change, review the diff and update the baseline:
+   an intended change, review the diff and update the baseline. The check
+   sorts the members of literal unions (`'a' | 'b'`), so a cached and a clean
+   build give the same baseline. Build first: `toolkit:build` runs every step
+   that shapes the published package:
 
    ```sh
-   pnpm nx run toolkit:post-build
+   pnpm nx build toolkit
    pnpm run check:toolkit-published-package -- --update
    ```
 
@@ -154,10 +163,16 @@ Two CI checks keep design-system packages out of the toolkit:
 
 1. `pnpm check:toolkit-peer-deps` fails when
    `packages/toolkit/package.json` lists `@angular/material`, `primeng`,
-   `primeicons`, or `@spartan-ng/*`.
+   `primeicons`, `@spartan-ng/*`, `@primeuix/*`, `@primeng/*`, or
+   `@angular/cdk`.
 2. The `toolkit-isolation` job in
    [`ci.yml`](../.github/workflows/ci.yml) installs only the toolkit's
    dependency graph and builds it.
+
+`pnpm nx lint toolkit` also fails on any toolkit source import of those
+packages (`bannedExternalImports` in `oxlint.config.ts`).
+Declare a design-system package in the `package.json` of the demo project
+that imports it, never in the root `package.json`.
 
 If one fails, move the dependency into the demo app that needs it. Do not
 relax the check.

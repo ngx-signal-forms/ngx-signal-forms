@@ -40,7 +40,7 @@ type CharacterCountValue = string | readonly string[] | null | undefined;
  *
  * @group Directives
  */
-type CharacterCountLimitState = 'ok' | 'warning' | 'danger' | 'exceeded';
+type CharacterCountLimitState = 'danger' | 'exceeded' | 'ok' | 'warning';
 /**
  * Default warning threshold percentage.
  *
@@ -298,8 +298,21 @@ declare class NgxHeadlessCharacterCount implements CharacterCountState {
  * @group Utility Functions
  */
 interface ErrorSummaryEntryData {
+    /**
+     * Identity of this entry, unique within one summary list. Use it as the
+     * `@for` track key. Treat the value as opaque.
+     *
+     * Built from the field's unique name (not its label), the error `kind`
+     * and the raw validator message. The message is in the key because one
+     * field can keep two errors of one kind with different messages. A
+     * message that comes from the error-message registry does not change the
+     * key. An entry with
+     * no bound field never shares a key with a bound one.
+     */
+    readonly key: string;
     readonly kind: string;
     readonly message: string;
+    /** Display label for the field. Not unique: use {@link key} for identity. */
     readonly fieldName: string;
     readonly focus: () => void;
     /**
@@ -380,7 +393,7 @@ declare function toErrorSummaryEntry(error: ValidationError, registry?: Readonly
  *
  * @group Utility Functions
  */
-type BooleanStateKey = 'invalid' | 'valid' | 'touched' | 'dirty' | 'pending';
+type BooleanStateKey = 'dirty' | 'invalid' | 'pending' | 'touched' | 'valid';
 /**
  * Type representing the shape of FieldState for reading errors.
  * Used for duck-typing access to error properties.
@@ -810,6 +823,7 @@ declare class NgxHeadlessErrorState<TValue = unknown> implements ErrorStateSigna
      * Resolved warning messages.
      */
     readonly resolvedWarnings: Signal<readonly ResolvedError[]>;
+    constructor();
     static ɵfac: _angular_core.ɵɵFactoryDeclaration<NgxHeadlessErrorState<any>, never>;
     static ɵdir: _angular_core.ɵɵDirectiveDeclaration<NgxHeadlessErrorState<any>, "[ngxHeadlessErrorState]", ["errorState"], { "field": { "alias": "field"; "required": false; "isSignal": true; }; "fieldName": { "alias": "fieldName"; "required": false; "isSignal": true; }; "strategy": { "alias": "strategy"; "required": false; "isSignal": true; }; "warningStrategy": { "alias": "warningStrategy"; "required": false; "isSignal": true; }; "submittedStatus": { "alias": "submittedStatus"; "required": false; "isSignal": true; }; "errorsOverride": { "alias": "errorsOverride"; "required": false; "isSignal": true; }; }, {}, never, never, true, never>;
 }
@@ -974,7 +988,7 @@ interface ErrorSummarySignals {
  * <div ngxHeadlessErrorSummary #summary="errorSummary" [formTree]="myForm">
  *   <ul role="alert">
  *     @if (summary.shouldShow() && summary.hasErrors()) {
- *       @for (entry of summary.entries(); track entry.kind + entry.fieldName) {
+ *       @for (entry of summary.entries(); track entry.key) {
  *         <li>
  *           @if (entry.canFocus) {
  *             <button type="button" (click)="entry.focus()">
@@ -1571,7 +1585,7 @@ declare class NgxHeadlessNotification implements NotificationStateSignals {
      */
     readonly fieldName: _angular_core.InputSignal<string | null | undefined>;
     readonly hasMessages: Signal<boolean>;
-    readonly resolvedTone: Signal<"warning" | "error">;
+    readonly resolvedTone: Signal<'error' | 'warning'>;
     readonly showErrorContainer: Signal<boolean>;
     readonly showWarningContainer: Signal<boolean>;
     readonly errorContainerId: Signal<string | null>;

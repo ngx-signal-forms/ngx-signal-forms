@@ -406,9 +406,10 @@ anywhere inside `form[ngxSignalForm]`. Auto-ARIA reads it when no
 `NgxFieldIdentity` has published a strategy for the field. Errors and
 warnings fall back separately.
 
-`NgxFormFieldError` registers itself. Register your own message component
-when it decides visibility by itself, for example with
-`ngxHeadlessErrorState`:
+`NgxFormFieldError` registers itself. `ngxHeadlessErrorState` registers itself
+when it has a `fieldName`, also when you compose it as a host directive. Do not
+register again for the same field. Register your own message component only
+when it decides visibility without these:
 
 ```typescript
 import { Component, effect, inject, input } from '@angular/core';
@@ -488,7 +489,8 @@ that itself.
 
 A renderer is a standalone component, passed as `{ component }`. Declare
 every input the caller sets with `input()`. An input the component does not
-declare never reaches it, and Angular can log an error for it.
+declare never reaches it. In dev mode Angular logs an `NG0303` error for it,
+and it throws if the app sets `errorOnUnknownProperties`.
 
 | Caller                                              | Error renderer inputs                                                      |
 | --------------------------------------------------- | -------------------------------------------------------------------------- |

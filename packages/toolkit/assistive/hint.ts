@@ -34,8 +34,9 @@ import { sanitizeFieldNameForId } from '@ngx-signal-forms/toolkit/core';
  * dispatched renderer receives the metadata `<ngx-form-field-hint>` already
  * exposes as inputs: `{ resolvedFieldName: string | null, resolvedId:
  * string, position: 'left' | 'right' | null }` — renderers must declare all
- * three with `input()` because Angular's `componentRef.setInput` rejects
- * writes to undeclared inputs.
+ * three with `input()`. `componentRef.setInput` skips an undeclared input and,
+ * in dev mode, logs an `NG0303` error (it throws when the app sets
+ * `errorOnUnknownProperties`).
  *
  * The dispatch only runs in browser contexts (`afterNextRender`); SSR keeps
  * the projected fallback content. When no renderer is registered, content
@@ -107,10 +108,19 @@ import { sanitizeFieldNameForId } from '@ngx-signal-forms/toolkit/core';
         var(--ngx-signal-form-feedback-line-height, 1rem)
       );
       /* light-dark() follows the inherited color-scheme: 4.99:1 on white,
-       * 8.54:1 on the dark surface (#1f2937). */
+       * 8.54:1 on the dark surface (#1f2937). A tinted ancestor surface
+       * (NgxFormFieldset) hands in a darker tone through the inherited
+       * --_tinted-surface-clr-text-secondary. A plain wrapper hands in its
+       * label tone through --_field-hint-color. */
       color: var(
         --ngx-form-field-hint-color,
-        light-dark(rgba(50, 65, 85, 0.75), rgba(249, 250, 251, 0.75))
+        var(
+          --_field-hint-color,
+          var(
+            --_tinted-surface-clr-text-secondary,
+            light-dark(rgba(50, 65, 85, 0.75), rgba(249, 250, 251, 0.75))
+          )
+        )
       );
       /*
        * Hint shares the input's border-left edge (no padding offset) and reads

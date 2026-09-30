@@ -26,14 +26,15 @@ The toolkit is an enhancement layer, not a replacement. Angular Signal Forms own
    `aria-invalid`, `aria-required`, and `aria-describedby` on this host".
    The two do not always agree:
 
-   | Markup                                                      | Inferred kind                               | Auto-ARIA default      | How to opt in                                                                       |
-   | ----------------------------------------------------------- | ------------------------------------------- | ---------------------- | ----------------------------------------------------------------------------------- |
-   | `input[type="checkbox"]`                                    | `checkbox`                                  | Not eligible           | Add `ngxSignalFormControl="checkbox"`                                               |
-   | `input[type="checkbox"][role="switch"]`                     | `switch`                                    | Eligible automatically | None — works out of the box                                                         |
-   | `input[type="radio"]`                                       | `radio-group`                               | Not eligible           | Add `ngxSignalFormControl="radio-group"`                                            |
-   | `[role="combobox"]` element with a stable `id`              | `input-like`                                | Eligible automatically | None — works out of the box                                                         |
-   | Plain `input` / `select` / `textarea`                       | `input-like` / `standalone-field-like`      | Eligible automatically | None — works out of the box                                                         |
-   | Custom `[formField]` host (not `input`/`textarea`/`select`) | inferred from shape, or none until declared | Eligible automatically | Opt out with `ngxSignalFormAutoAriaDisabled` or `ngxSignalFormControlAria="manual"` |
+   | Markup                                                                                                       | Inferred kind                               | Auto-ARIA default                                                     | How to opt in                                                                                                   |
+   | ------------------------------------------------------------------------------------------------------------ | ------------------------------------------- | --------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
+   | `input[type="checkbox"]`                                                                                     | `checkbox`                                  | Not eligible                                                          | Add `ngxSignalFormControl="checkbox"`                                                                           |
+   | `input[type="checkbox"][role="switch"]`                                                                      | `switch`                                    | Eligible automatically                                                | None — works out of the box                                                                                     |
+   | `[formField]` host with no `role="switch"` of its own (`mat-slide-toggle`, `p-toggleswitch`, Spartan switch) | none until declared                         | Eligible automatically, but writes to the host, not the nested switch | Add `ngxSignalFormControl="switch"` and `ngxSignalFormControlAria="manual"`, then put ARIA on the nested switch |
+   | `input[type="radio"]`                                                                                        | `radio-group`                               | Not eligible                                                          | Add `ngxSignalFormControl="radio-group"`                                                                        |
+   | `[role="combobox"]` element with a stable `id`                                                               | `input-like`                                | Eligible automatically                                                | None — works out of the box                                                                                     |
+   | Plain `input` / `select` / `textarea`                                                                        | `input-like` / `standalone-field-like`      | Eligible automatically                                                | None — works out of the box                                                                                     |
+   | Custom `[formField]` host (not `input`/`textarea`/`select`)                                                  | inferred from shape, or none until declared | Eligible automatically                                                | Opt out with `ngxSignalFormAutoAriaDisabled` or `ngxSignalFormControlAria="manual"`                             |
 
    A native checkbox or radio infers a wrapper kind (`checkbox` /
    `radio-group`). It is **not** auto-ARIA eligible by default. In a
@@ -49,7 +50,9 @@ The toolkit is an enhancement layer, not a replacement. Angular Signal Forms own
 4. **Remember that standalone imports are template-local.** Importing `NgxSignalFormToolkit` in a parent form component does not make `NgxSignalFormAutoAria` available inside a child component's template. If a custom control renders the actual `<input [formField]>` itself, import the toolkit bundle or the directive in that child component.
 
 5. **Declare control semantics for controls outside the default native field families.** `NgxSignalFormControlSemanticsDirective` (the directive class — included in `NgxSignalFormToolkit`; the suffix-less `NgxSignalFormControlSemantics` name is the matching public _interface_ in `core/types.ts`) writes stable `data-ngx-signal-form-control-*` attributes the wrapper and auto-ARIA use to pick correct layout and ARIA behavior instead of guessing from DOM heuristics.
-   - Use `ngxSignalFormControl="switch"` on a native `input[type="checkbox"][role="switch"]` to opt it into switch wrapper styling and ARIA.
+   - A native `input[type="checkbox"][role="switch"]` needs no attribute: the toolkit infers the `switch` kind from `role="switch"`, which gives it switch wrapper styling and ARIA.
+   - Inference reads only the `[formField]` host, not its descendants. A host that has `role="switch"` itself is inferred. Any other switch host needs `ngxSignalFormControl="switch"`, so the wrapper uses the switch layout. `mat-slide-toggle`, `p-toggleswitch`, and a Spartan switch need it: each puts `role="switch"` on an inner element and leaves the host without a role.
+   - When the focusable switch is nested, also add `ngxSignalFormControlAria="manual"`. Auto-ARIA writes `aria-invalid` and `aria-describedby` on the host, where assistive tech does not read them. Put both on the nested switch through the library's inputs. See [Switches](https://github.com/ngx-signal-forms/ngx-signal-forms/blob/main/docs/CUSTOM_CONTROLS.md#switches) for what each library exposes.
    - Use `ngxSignalFormControl="checkbox"` on a plain `input[type="checkbox"]` when it should opt in to wrapper validation display.
    - Use `ngxSignalFormControl="slider"` or `ngxSignalFormControl="composite"` on a custom component host to declare layout and ARIA ownership.
    - Pass an object for combined overrides: `[ngxSignalFormControl]="{ kind: 'slider', layout: 'stacked', ariaMode: 'manual' }"` (`'stacked'` here is a control layout, not an appearance).
@@ -142,7 +145,6 @@ export const appConfig = {
       defaultErrorStrategy: 'on-submit', // 'immediate' | 'on-touch' | 'on-submit'
       defaultWarningStrategy: 'on-submit', // warnings time independently; default: 'on-touch'
       defaultFormFieldAppearance: 'outline', // 'standard' | 'outline' | 'plain'
-      autoAria: true, // default: true
     }),
     provideErrorMessages({
       required: 'This field is required',

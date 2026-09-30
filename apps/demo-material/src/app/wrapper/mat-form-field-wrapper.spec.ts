@@ -126,7 +126,6 @@ describe('MatFormFieldWrapper.toolkitAriaDescribedBy', () => {
         provideZonelessChangeDetection(),
         provideNgxSignalFormsConfig({
           defaultErrorStrategy: 'on-touch',
-          autoAria: true,
         }),
       ],
     });
@@ -240,7 +239,6 @@ describe('MatFormFieldWrapper dev-mode missing-control assertion', () => {
         provideZonelessChangeDetection(),
         provideNgxSignalFormsConfig({
           defaultErrorStrategy: 'on-touch',
-          autoAria: true,
         }),
       ],
     });
@@ -322,7 +320,6 @@ describe('MatFormFieldWrapper warning timing (#506)', () => {
         provideZonelessChangeDetection(),
         provideNgxSignalFormsConfig({
           defaultErrorStrategy: 'on-touch',
-          autoAria: true,
         }),
       ],
     });

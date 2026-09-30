@@ -60,8 +60,13 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
+      - name: Set up Socket Firewall
+        uses: socketdev/action@ba6de6cc0565af1f42295590380973573297e31f # v1.3.2
+        with:
+          mode: firewall
+
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: sfw pnpm install --frozen-lockfile
 
       - name: Install Playwright browsers
         run: pnpm exec playwright install --with-deps
