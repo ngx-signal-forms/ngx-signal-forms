@@ -26,18 +26,19 @@ Run every task through Nx with `pnpm nx …`.
 
 ## Common commands
 
-| Task                          | Command                                                       |
-| ----------------------------- | ------------------------------------------------------------- |
-| Serve the demo app            | `pnpm nx serve demo` (or `pnpm start`)                        |
-| Toolkit unit tests (jsdom)    | `pnpm nx test toolkit`                                        |
-| Toolkit browser tests         | `pnpm nx run toolkit:test-browser`                            |
-| Lint the toolkit              | `pnpm nx lint toolkit`                                        |
-| Build the publishable toolkit | `pnpm nx build toolkit`                                       |
-| Format                        | `pnpm format` (check only: `pnpm format:check`)               |
-| Coverage                      | `pnpm nx run workspace:coverage`                              |
-| Demo end-to-end tests         | `pnpm nx run demo-e2e:e2e-demo-app`                           |
-| Demo accessibility scan       | `pnpm nx run demo-e2e:a11y`                                   |
-| What CI runs for the toolkit  | `pnpm nx run-many -t lint test test-browser build -p toolkit` |
+| Task                          | Command                                                                 |
+| ----------------------------- | ----------------------------------------------------------------------- |
+| Serve the demo app            | `pnpm nx serve demo` (or `pnpm start`)                                  |
+| Toolkit unit tests (jsdom)    | `pnpm nx test toolkit`                                                  |
+| Toolkit browser tests         | `pnpm nx run toolkit:test-browser`                                      |
+| Lint the toolkit              | `pnpm nx lint toolkit`                                                  |
+| Type-check the toolkit specs  | `pnpm nx run toolkit:typecheck`                                         |
+| Build the publishable toolkit | `pnpm nx build toolkit`                                                 |
+| Format                        | `pnpm format` (check only: `pnpm format:check`)                         |
+| Coverage                      | `pnpm nx run workspace:coverage`                                        |
+| Demo end-to-end tests         | `pnpm nx run demo-e2e:e2e-demo-app`                                     |
+| Demo accessibility scan       | `pnpm nx run demo-e2e:a11y`                                             |
+| What CI runs for the toolkit  | `pnpm nx run-many -t lint typecheck test test-browser build -p toolkit` |
 
 The toolkit build has two cached steps. `toolkit:build-ng-packagr` runs
 ng-packagr into `dist/packages/toolkit-ng-packagr`. `toolkit:build` copies
