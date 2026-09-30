@@ -3718,8 +3718,8 @@ declare function isFieldStateRequired(fieldState: Pick<FieldState<unknown>, 'req
  * a name as the basis for an `id` or `aria-describedby` chain.
  *
  * Deliberately does NOT touch inner whitespace. This is also the primitive
- * that path navigation (`injectFieldControl`) and DOM-id reporting
- * (`NgxFieldIdentity.controlId`) rely on, so the returned string must
+ * that DOM-id reporting
+ * (`NgxFieldIdentity.controlId`) relies on, so the returned string must
  * round-trip a data-driven name exactly — a field literally named
  * `"x other-id"` must still be injectable, and a control's reported id must
  * still match its actual DOM `id` attribute. See
@@ -3746,7 +3746,7 @@ declare function normalizeFieldName(fieldName: string | null | undefined): strin
  * {@link generateRequiredHintId}, and the hint / selection-cluster-label id
  * builders all apply it internally. Everything that resolves or looks up a
  * field name ({@link normalizeFieldName}, {@link resolveFieldName},
- * {@link resolveFieldNameFromCandidates}, `injectFieldControl`,
+ * {@link resolveFieldNameFromCandidates},
  * `NgxFieldIdentity.controlId`) deliberately stays raw, because those
  * consumers need the exact characters the form model or the DOM `id`
  * attribute carries.
@@ -3847,7 +3847,7 @@ declare function resolveFieldNameFromCandidates(...fieldNameCandidates: readonly
  *   empty strings collapse to `null`, treated as "no id".
  *
  * Returns the raw (trimmed-only) id, unchanged otherwise — this is the
- * primitive `injectFieldControl` walks form paths with and
+ * primitive
  * `NgxFieldIdentity.controlId` reports, so it must match the DOM `id`
  * attribute and the form model's own key exactly. ARIA id generation
  * applies {@link sanitizeFieldNameForId} separately, at the point an id is
@@ -4270,53 +4270,6 @@ declare function updateAt<T>(array: readonly T[], index: number, updater: (item:
  * ```
  */
 declare function updateNested<T extends Record<K, U[]>, K extends keyof T, U>(array: readonly T[], index: number, nestedKey: K, nestedIndex: number, updater: (item: U) => U): T[];
-
-/**
- * Custom Inject Function (CIF) for retrieving a specific field control from the form.
- * Works both inside and outside Angular injection context when an injector is provided.
- *
- * This pattern is inspired by ngxtension's Custom Inject Functions.
- * @see https://github.com/ngxtension/ngxtension-platform
- *
- * @param element - The HTML element or ElementRef to resolve the field name from
- * @param injector - Optional injector for use outside injection context
- * @returns The resolved `FieldTree<TValue>` from the form
- * @throws Error if field cannot be resolved, the resolved value does not
- *   satisfy the runtime `FieldTree` contract (see `isFieldTreeLike`), or form
- *   context is not found
- *
- * @remarks
- * Resolution is a **one-shot, non-reactive** lookup: the form instance and
- * the element's `id` are both read once, at injection/call time. Swapping
- * the underlying form instance or assigning the element's `id` after this
- * call resolves will NOT be reflected — the returned `FieldTree` reference
- * is fixed for the lifetime of the caller. Re-invoke this function (e.g. in
- * a fresh `computed()`) if you need to track a form or id that can change.
- *
- * @example
- * ```typescript
- * /// Inside a directive — typed result
- * @Directive({ selector: '[myDirective]' })
- * export class MyDirective {
- *   readonly #element = inject(ElementRef);
- *   readonly fieldControl = injectFieldControl<string>(this.#element);
- *   // fieldControl is FieldTree<string>
- *
- *   constructor() {
- *     effect(() => {
- *       console.log('Value:', this.fieldControl().value());
- *     });
- *   }
- * }
- *
- * /// Outside injection context
- * function myUtility(element: HTMLElement, injector: Injector) {
- *   const fieldControl = injectFieldControl<number>(element, injector);
- *   // fieldControl is FieldTree<number>
- * }
- * ```
- */
-declare function injectFieldControl<TValue = unknown>(element: HTMLElement | ElementRef<HTMLElement>, injector?: Injector): FieldTree<TValue>;
 
 /**
  * Custom Inject Function (CIF) for retrieving the form context from FormProviderDirective.
@@ -5167,5 +5120,5 @@ declare function warningError(kind: string, message?: string): ValidationError;
  */
 declare const NgxSignalFormToolkit: readonly [typeof FormRoot, typeof NgxSignalForm, typeof NgxSignalFormAutoAria, typeof NgxSignalFormControl];
 
-export { BOUND_CONTROL_SELECTOR, DEFAULT_NGX_SIGNAL_FORMS_CONFIG, DEFAULT_NGX_SIGNAL_FORM_CONTROL_PRESETS, FORM_FIELD_APPEARANCE_VALUES, FORM_FIELD_ORIENTATION_VALUES, InvalidFieldTreeError, NGX_ERROR_MESSAGES, NGX_FIELD_LABEL_RESOLVER, NGX_FORM_FIELD_ERROR_RENDERER, NGX_FORM_FIELD_HINT_RENDERER, NGX_SIGNAL_FORMS_CONFIG, NGX_SIGNAL_FORM_ARIA_MODE, NGX_SIGNAL_FORM_CONTEXT, NGX_SIGNAL_FORM_CONTROL_KIND_VALUES, NGX_SIGNAL_FORM_CONTROL_PRESETS, NGX_SIGNAL_FORM_FIELD_CONTEXT, NGX_SIGNAL_FORM_FIELD_VISIBILITY_REGISTRY, NGX_SIGNAL_FORM_HINT_REGISTRY, NgxControlPresetRegistry, NgxFieldIdentity, NgxFieldIdentityProvider, NgxFieldVisibilityRegistry, NgxSignalForm, NgxSignalFormAutoAria, NgxSignalFormControl, NgxSignalFormIdCounter, NgxSignalFormToolkit, NgxSubmitAnnouncements, WARN_KIND_PREFIX, assertInjector, buildAriaDescribedBy, canSubmitWithWarnings, createAriaDescribedByBridge, createAriaDescribedBySignal, createAriaInvalidSignal, createAriaRequiredSignal, createCascadingResolver, createCharacterCountLengthSignal, createControlVisibilitySignal, createDevWarnOnce, createErrorVisibility, createFieldMessageIdSignals, createFieldNameResolver, createFieldPresentation, createHintIdsSignal, createOnInvalidHandler, createShowErrorsComputed, createSubmittedStatusTracker, createUniqueId, createWarningVisibility, devWarnOnce, findBoundControl, focusFirstInvalid, generateCharacterCountLimitId, generateErrorId, generateRequiredHintId, generateWarningId, getBlockingErrors, getDefaultValidationMessage, hasOnlyWarnings, hasSubmitted, humanizeFieldPath, inferNgxSignalFormControlKind, injectFieldControl, injectFormContext, isBlockingError, isElementCssVisible, isFieldStateHidden, isFieldStateInteractive, isFieldStateRequired, isFieldTreeLike, isHtmlButtonElement, isHtmlElement, isHtmlInputElement, isHtmlSelectElement, isHtmlTextAreaElement, isNgxSignalFormControlAriaMode, isNgxSignalFormControlKind, isNgxSignalFormControlLayout, isWarningError, mergeNgxSignalFormControlPresets, normalizeFieldName, provideErrorMessages, provideFieldLabels, provideFormFieldErrorRenderer, provideFormFieldErrorRendererForComponent, provideFormFieldHintRenderer, provideFormFieldHintRendererForComponent, provideNgxSignalFormControlPresets, provideNgxSignalFormControlPresetsForComponent, provideNgxSignalFormsConfig, provideNgxSignalFormsConfigForComponent, readDirectErrors, readNgxSignalFormControlSemantics, requiredFromStandardSchema, resolveBoundControlFromBindings, resolveFieldName, resolveFieldNameFromCandidates, resolveNgxSignalFormControlSemantics, resolveStrategyFromContext, resolveSubmittedStatusFromContext, resolveValidationErrorMessage, resolveWarningStrategyFromContext, sanitizeFieldNameForId, shouldShowErrors, shouldShowWarnings, splitByKind, stripAngularFormPrefix, submitWithWarnings, unwrapValue, updateAt, updateNested, walkFieldTreeEntries, warningError };
+export { BOUND_CONTROL_SELECTOR, DEFAULT_NGX_SIGNAL_FORMS_CONFIG, DEFAULT_NGX_SIGNAL_FORM_CONTROL_PRESETS, FORM_FIELD_APPEARANCE_VALUES, FORM_FIELD_ORIENTATION_VALUES, InvalidFieldTreeError, NGX_ERROR_MESSAGES, NGX_FIELD_LABEL_RESOLVER, NGX_FORM_FIELD_ERROR_RENDERER, NGX_FORM_FIELD_HINT_RENDERER, NGX_SIGNAL_FORMS_CONFIG, NGX_SIGNAL_FORM_ARIA_MODE, NGX_SIGNAL_FORM_CONTEXT, NGX_SIGNAL_FORM_CONTROL_KIND_VALUES, NGX_SIGNAL_FORM_CONTROL_PRESETS, NGX_SIGNAL_FORM_FIELD_CONTEXT, NGX_SIGNAL_FORM_FIELD_VISIBILITY_REGISTRY, NGX_SIGNAL_FORM_HINT_REGISTRY, NgxControlPresetRegistry, NgxFieldIdentity, NgxFieldIdentityProvider, NgxFieldVisibilityRegistry, NgxSignalForm, NgxSignalFormAutoAria, NgxSignalFormControl, NgxSignalFormIdCounter, NgxSignalFormToolkit, NgxSubmitAnnouncements, WARN_KIND_PREFIX, assertInjector, buildAriaDescribedBy, canSubmitWithWarnings, createAriaDescribedByBridge, createAriaDescribedBySignal, createAriaInvalidSignal, createAriaRequiredSignal, createCascadingResolver, createCharacterCountLengthSignal, createControlVisibilitySignal, createDevWarnOnce, createErrorVisibility, createFieldMessageIdSignals, createFieldNameResolver, createFieldPresentation, createHintIdsSignal, createOnInvalidHandler, createShowErrorsComputed, createSubmittedStatusTracker, createUniqueId, createWarningVisibility, devWarnOnce, findBoundControl, focusFirstInvalid, generateCharacterCountLimitId, generateErrorId, generateRequiredHintId, generateWarningId, getBlockingErrors, getDefaultValidationMessage, hasOnlyWarnings, hasSubmitted, humanizeFieldPath, inferNgxSignalFormControlKind, injectFormContext, isBlockingError, isElementCssVisible, isFieldStateHidden, isFieldStateInteractive, isFieldStateRequired, isFieldTreeLike, isHtmlButtonElement, isHtmlElement, isHtmlInputElement, isHtmlSelectElement, isHtmlTextAreaElement, isNgxSignalFormControlAriaMode, isNgxSignalFormControlKind, isNgxSignalFormControlLayout, isWarningError, mergeNgxSignalFormControlPresets, normalizeFieldName, provideErrorMessages, provideFieldLabels, provideFormFieldErrorRenderer, provideFormFieldErrorRendererForComponent, provideFormFieldHintRenderer, provideFormFieldHintRendererForComponent, provideNgxSignalFormControlPresets, provideNgxSignalFormControlPresetsForComponent, provideNgxSignalFormsConfig, provideNgxSignalFormsConfigForComponent, readDirectErrors, readNgxSignalFormControlSemantics, requiredFromStandardSchema, resolveBoundControlFromBindings, resolveFieldName, resolveFieldNameFromCandidates, resolveNgxSignalFormControlSemantics, resolveStrategyFromContext, resolveSubmittedStatusFromContext, resolveValidationErrorMessage, resolveWarningStrategyFromContext, sanitizeFieldNameForId, shouldShowErrors, shouldShowWarnings, splitByKind, stripAngularFormPrefix, submitWithWarnings, unwrapValue, updateAt, updateNested, walkFieldTreeEntries, warningError };
 export type { AriaDescribedByBridge, AriaDescribedByChainOptions, AriaDescribedByFieldNameReader, AriaDescribedByPreservedIdsReader, AriaRequiredFieldState, BoundControlElementReader, ControlVisibilitySignal, CreateAriaDescribedByBridgeOptions, CreateAriaDescribedBySignalOptions, CreateErrorVisibilityOptions, CreateFieldNameResolverOptions, CreateFieldPresentationOptions, CreateHintIdsSignalOptions, CreateWarningVisibilityOptions, ErrorDisplayStrategy, ErrorMessageRegistry, ErrorReadableState, ErrorVisibilityState, FieldLabelMap, FieldLabelResolver, FieldMarkingMode, FieldMessageIdSignals, FieldPresentation, FieldPresentationState, FormFieldAppearance, FormFieldAppearanceInput, FormFieldBindingsState, FormFieldOrientation, FormFieldOrientationInput, HintIdsFieldNameReader, HintIdsIdentityLike, HintIdsRegistryLike, HintIdsSignal, LabelForReader, MarkerKind, NgxFormFieldErrorRenderer, NgxFormFieldErrorRendererOverride, NgxFormFieldHintRenderer, NgxFormFieldHintRendererOverride, NgxReactiveOrStatic, NgxSignalFormContext, NgxSignalFormControlAriaMode, NgxSignalFormControlKind, NgxSignalFormControlLayout, NgxSignalFormControlPreset, NgxSignalFormControlPresetOverrides, NgxSignalFormControlPresetRegistry, NgxSignalFormControlSemantics, NgxSignalFormFieldContext, NgxSignalFormFieldVisibilityDescriptor, NgxSignalFormFieldVisibilityRegistry, NgxSignalFormHintDescriptor, NgxSignalFormHintRegistry, NgxSignalFormsConfig, NgxSignalFormsUserConfig, NgxSignalLike, OnInvalidHandlerOptions, ReactiveCascadingResolverOptions, ResolvableValidationError, ResolveErrorMessageOptions, ResolvedErrorDisplayStrategy, ResolvedMarker, ResolvedNgxSignalFormControlSemantics, ResolvedWarningDisplayStrategy, SplitErrors, StandardSchemaLike, StandardSchemaLikeIssue, StandardSchemaLikeResult, StaticCascadingResolverOptions, SubmittedStatus, WarnOnceRef, WarningDisplayStrategy, WarningVisibilityState };

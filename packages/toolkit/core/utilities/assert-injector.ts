@@ -10,7 +10,7 @@ import {
 // diagnostic output (it is never invoked with typed arguments). Tightening
 // this alias to e.g. `(...args: readonly unknown[]) => unknown` or
 // `(...args: never[]) => unknown` breaks downstream callers like
-// `injectFormContext` / `injectFieldControl`, whose parameter types are not
+// `injectFormContext`, whose parameter types are not
 // assignable to a stricter callable. We accept the two oxlint warnings here.
 // oxlint-disable-next-line @typescript-eslint/no-unsafe-function-type, @typescript-eslint/ban-types -- see comment above
 type InjectionContextDebugFn = Function;

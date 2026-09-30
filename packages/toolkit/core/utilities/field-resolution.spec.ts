@@ -46,8 +46,7 @@ describe('field-resolution', () => {
 
     it('does not touch inner whitespace — path lookups and controlId reporting need the raw id', () => {
       // Regression: `resolveFieldName` used to hyphenate inner whitespace,
-      // which broke two callers that need the exact DOM/model characters:
-      // `injectFieldControl` (walks a form path built from this string) and
+      // which broke a caller that needs the exact DOM/model characters:
       // `NgxFieldIdentity.controlId` (must match the control's actual `id`
       // attribute). ARIA id generation sanitizes separately, at the point
       // an id is built — see `sanitizeFieldNameForId`.

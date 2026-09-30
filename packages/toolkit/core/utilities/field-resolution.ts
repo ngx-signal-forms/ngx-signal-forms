@@ -11,8 +11,8 @@ import { createDevWarnOnce } from './dev-warn-once';
  * a name as the basis for an `id` or `aria-describedby` chain.
  *
  * Deliberately does NOT touch inner whitespace. This is also the primitive
- * that path navigation (`injectFieldControl`) and DOM-id reporting
- * (`NgxFieldIdentity.controlId`) rely on, so the returned string must
+ * that DOM-id reporting
+ * (`NgxFieldIdentity.controlId`) relies on, so the returned string must
  * round-trip a data-driven name exactly — a field literally named
  * `"x other-id"` must still be injectable, and a control's reported id must
  * still match its actual DOM `id` attribute. See
@@ -55,7 +55,7 @@ const warnInnerWhitespace = createDevWarnOnce();
  * {@link generateRequiredHintId}, and the hint / selection-cluster-label id
  * builders all apply it internally. Everything that resolves or looks up a
  * field name ({@link normalizeFieldName}, {@link resolveFieldName},
- * {@link resolveFieldNameFromCandidates}, `injectFieldControl`,
+ * {@link resolveFieldNameFromCandidates},
  * `NgxFieldIdentity.controlId`) deliberately stays raw, because those
  * consumers need the exact characters the form model or the DOM `id`
  * attribute carries.
@@ -185,7 +185,7 @@ export function resolveFieldNameFromCandidates(
  *   empty strings collapse to `null`, treated as "no id".
  *
  * Returns the raw (trimmed-only) id, unchanged otherwise — this is the
- * primitive `injectFieldControl` walks form paths with and
+ * primitive
  * `NgxFieldIdentity.controlId` reports, so it must match the DOM `id`
  * attribute and the form model's own key exactly. ARIA id generation
  * applies {@link sanitizeFieldNameForId} separately, at the point an id is

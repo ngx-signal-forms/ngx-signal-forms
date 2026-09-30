@@ -100,7 +100,6 @@ export {
   stripAngularFormPrefix,
 } from './utilities/humanize-field-path';
 export { updateAt, updateNested } from './utilities/immutable-array';
-export * from './utilities/inject-field-control';
 export * from './utilities/inject-form-context';
 export * from './utilities/on-invalid-handler';
 export * from './utilities/read-direct-errors';
