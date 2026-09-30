@@ -2,7 +2,6 @@ import * as _angular_core from '@angular/core';
 import { Signal, Injector } from '@angular/core';
 import { FieldTree, ValidationError } from '@angular/forms/signals';
 import { ReactiveOrStatic, ErrorReadableState, ErrorDisplayStrategy, WarningDisplayStrategy, SubmittedStatus, SignalLike, ResolvedErrorDisplayStrategy, ResolvedWarningDisplayStrategy } from '@ngx-signal-forms/toolkit';
-export { ErrorMessageRegistry, createUniqueId, readDirectErrors } from '@ngx-signal-forms/toolkit';
 import { FieldLabelResolver, ErrorMessageRegistry, ErrorDisplayStrategy as ErrorDisplayStrategy$1, WarningDisplayStrategy as WarningDisplayStrategy$1, SubmittedStatus as SubmittedStatus$1 } from './ngx-signal-forms-toolkit-core.js';
 export { AriaDescribedByBridge, AriaDescribedByFieldNameReader, AriaDescribedByPreservedIdsReader, AriaRequiredFieldState, BoundControlElementReader, CreateAriaDescribedByBridgeOptions, CreateAriaDescribedBySignalOptions, CreateFieldNameResolverOptions, CreateHintIdsSignalOptions, HintIdsFieldNameReader, HintIdsIdentityLike, HintIdsRegistryLike, HintIdsSignal, LabelForReader, createAriaDescribedByBridge, createAriaDescribedBySignal, createAriaInvalidSignal, createAriaRequiredSignal, createFieldNameResolver, createHintIdsSignal, humanizeFieldPath } from './ngx-signal-forms-toolkit-core.js';
 
@@ -1493,109 +1492,6 @@ declare class NgxHeadlessFieldset<TFieldset = unknown> implements FieldsetStateS
 }
 
 /**
- * Resolved notification message with kind and human-facing message.
- *
- * @group Directives
- */
-interface ResolvedNotificationMessage {
-    readonly kind: string;
-    readonly message: string;
-}
-/**
- * State signals exposed by the headless notification directive. A custom
- * styled component can render a complete grouped notification surface
- * (alert + status live regions, IDs, messages) using only these signals —
- * see the usage example below.
- *
- * @group Directives
- */
-interface NotificationStateSignals {
-    /** Whether any messages are present. */
-    readonly hasMessages: Signal<boolean>;
-    /** Resolved tone after applying content-driven semantics. */
-    readonly resolvedTone: Signal<'error' | 'warning'>;
-    /** Whether the error (`role="alert"`) container should expose content. */
-    readonly showErrorContainer: Signal<boolean>;
-    /** Whether the warning (`role="status"`) container should expose content. */
-    readonly showWarningContainer: Signal<boolean>;
-    /** Generated error container id, or `null` when no fieldName is resolvable. */
-    readonly errorContainerId: Signal<string | null>;
-    /** Generated warning container id, or `null` when no fieldName is resolvable. */
-    readonly warningContainerId: Signal<string | null>;
-    /** Resolved messages with applied 3-tier message priority. */
-    readonly resolvedMessages: Signal<readonly ResolvedNotificationMessage[]>;
-}
-/**
- * Headless directive for grouped validation notifications.
- *
- * Owns the message-resolution, tone-routing, and ID-generation logic for
- * grouped fieldset feedback and custom summary cards. There is no in-tree
- * styled shell over this directive — `NgxFormFieldError`'s
- * `presentation="panel"` mode covers that case by composing
- * `NgxHeadlessErrorState`'s own error/warning override instead (same
- * tone-resolution outcome, one fewer headless directive in that
- * composition). Reach for this directive directly when building a custom
- * grouped-notification UI from scratch.
- *
- * ## Tone resolution rules
- *
- * Tone is fully content-driven — there is no `tone` input. The resolved
- * tone is:
- * - Any blocking (non-`warn:`) error → `'error'` (raises `role="alert"`).
- * - All-warning lists → `'warning'` (polite `role="status"`).
- * - Empty list → `'error'` (the container stays hidden anyway).
- *
- * Rationale: downgrading real errors to a polite region would bury the
- * alert; over-announcing warning-only text via `role="alert"` harms UX.
- *
- * ## Usage
- *
- * ```html
- * <div
- *   ngxHeadlessNotification
- *   #notification="notificationState"
- *   [errors]="aggregatedErrors"
- *   fieldName="address"
- * >
- *   @if (notification.showErrorContainer()) {
- *     <my-card role="alert" [id]="notification.errorContainerId()">
- *       @for (m of notification.resolvedMessages(); track m.kind) {
- *         <p>{{ m.message }}</p>
- *       }
- *     </my-card>
- *   }
- * </div>
- * ```
- *
- * @group Directives
- */
-declare class NgxHeadlessNotification implements NotificationStateSignals {
-    #private;
-    /**
-     * Grouped validation messages to present.
-     *
-     * Accepts a plain array or a reactive source (`Signal<…>` / `() => …`) —
-     * unwrapped internally via {@link unwrapValue}, so a `computed()` fieldset
-     * aggregation and a static array both work directly.
-     */
-    readonly errors: _angular_core.InputSignal<ReactiveOrStatic<readonly ValidationError[]> | undefined>;
-    /**
-     * Optional field/group identifier used to produce deterministic ids for
-     * `aria-describedby` linkage. Pass `null` (or omit) to disable id output.
-     */
-    readonly fieldName: _angular_core.InputSignal<string | null | undefined>;
-    readonly hasMessages: Signal<boolean>;
-    readonly resolvedTone: Signal<'error' | 'warning'>;
-    readonly showErrorContainer: Signal<boolean>;
-    readonly showWarningContainer: Signal<boolean>;
-    readonly errorContainerId: Signal<string | null>;
-    readonly warningContainerId: Signal<string | null>;
-    readonly resolvedMessages: Signal<readonly ResolvedNotificationMessage[]>;
-    static ɵfac: _angular_core.ɵɵFactoryDeclaration<NgxHeadlessNotification, never>;
-    static ɵdir: _angular_core.ɵɵDirectiveDeclaration<NgxHeadlessNotification, "[ngxHeadlessNotification]", ["notificationState"], { "errors": { "alias": "errors"; "required": false; "isSignal": true; }; "fieldName": { "alias": "fieldName"; "required": false; "isSignal": true; }; }, {}, never, never, true, never>;
-}
-
-/**
  * One resolved validation error, ready for rendering.
  *
  * - `kind` — convenience copy of `error.kind`, lifted to the top level so
@@ -1817,17 +1713,6 @@ interface FieldOptionality {
 }
 type AnyFieldTree = FieldTree<unknown>;
 /**
- * Synchronously summarise whether a form tree has any required / optional leaf
- * fields. Reads each leaf's `required()` signal, so calling this inside a
- * `computed()` (or `effect()`) makes the result reactive — conditionally
- * required fields update it automatically.
- *
- * @param tree A form `FieldTree` (typically a form root or a subtree).
- * @public
- * @group Reactive Primitives
- */
-declare function summarizeFieldOptionality(tree: AnyFieldTree): FieldOptionality;
-/**
  * Reactive summary of required / optional leaf fields across a form tree.
  *
  * Accepts a reader so the source tree can be reactive (e.g. an `input()` that
@@ -1878,7 +1763,7 @@ declare function createFieldOptionalitySummary(treeSource: () => AnyFieldTree | 
  *
  * @group Directives
  */
-declare const NgxHeadlessToolkit: readonly [typeof NgxHeadlessErrorState, typeof NgxHeadlessErrorSummary, typeof NgxHeadlessFieldset, typeof NgxHeadlessCharacterCount, typeof NgxHeadlessFieldName, typeof NgxHeadlessNotification];
+declare const NgxHeadlessToolkit: readonly [typeof NgxHeadlessErrorState, typeof NgxHeadlessErrorSummary, typeof NgxHeadlessFieldset, typeof NgxHeadlessCharacterCount, typeof NgxHeadlessFieldName];
 
-export { DEFAULT_DANGER_THRESHOLD, DEFAULT_WARNING_THRESHOLD, NgxHeadlessCharacterCount, NgxHeadlessErrorState, NgxHeadlessErrorSummary, NgxHeadlessFieldName, NgxHeadlessFieldset, NgxHeadlessNotification, NgxHeadlessToolkit, createCharacterCount, createErrorMessageSignal, createErrorState, createErrorSummaryEntries, createFieldOptionalitySummary, createFieldStateFlags, createFieldsetAggregation, dedupeValidationErrors, focusBoundControlFromError, readErrors, readFieldFlag, resolveFieldNameFromError, summarizeFieldOptionality, toErrorSummaryEntry };
-export type { BooleanStateKey, CharacterCountLimitState, CharacterCountState, CharacterCountValue, CreateCharacterCountOptions, CreateErrorMessageSignalOptions, CreateErrorStateOptions, CreateErrorSummaryEntriesOptions, CreateFieldsetAggregationOptions, ErrorStateResult, ErrorStateSignals, ErrorSummaryEntriesResult, ErrorSummaryEntry, ErrorSummaryEntryData, ErrorSummarySignals, FieldNameStateSignals, FieldOptionality, FieldStateFlags, FieldStateLike$1 as FieldStateLike, FieldsetAggregationResult, FieldsetStateSignals, IncludeWarningsOption, NotificationStateSignals, ResolvedError, ResolvedFieldError, ResolvedNotificationMessage };
+export { DEFAULT_DANGER_THRESHOLD, DEFAULT_WARNING_THRESHOLD, NgxHeadlessCharacterCount, NgxHeadlessErrorState, NgxHeadlessErrorSummary, NgxHeadlessFieldName, NgxHeadlessFieldset, NgxHeadlessToolkit, createCharacterCount, createErrorMessageSignal, createErrorState, createErrorSummaryEntries, createFieldOptionalitySummary, createFieldStateFlags, createFieldsetAggregation, dedupeValidationErrors, focusBoundControlFromError, readErrors, readFieldFlag, resolveFieldNameFromError, toErrorSummaryEntry };
+export type { BooleanStateKey, CharacterCountLimitState, CharacterCountState, CharacterCountValue, CreateCharacterCountOptions, CreateErrorMessageSignalOptions, CreateErrorStateOptions, CreateErrorSummaryEntriesOptions, CreateFieldsetAggregationOptions, ErrorStateResult, ErrorStateSignals, ErrorSummaryEntriesResult, ErrorSummaryEntry, ErrorSummarySignals, FieldNameStateSignals, FieldOptionality, FieldStateFlags, FieldStateLike$1 as FieldStateLike, FieldsetAggregationResult, FieldsetStateSignals, IncludeWarningsOption, ResolvedError, ResolvedFieldError };

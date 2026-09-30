@@ -87,8 +87,8 @@ schema-validated fields need the extra call.
 />
 ```
 
-`NgxFormFieldError`'s `presentation="panel"` mode (assistive) and
-`NgxHeadlessNotification` (headless) route tone automatically from content:
+`NgxFormFieldError`'s `presentation="panel"` mode (assistive) routes tone
+automatically from content:
 any blocking error raises the error container (`role="alert"`); a
 warning-only list raises the warning container (`role="status"`); an empty
 list hides both. Do not try to set a tone — there is

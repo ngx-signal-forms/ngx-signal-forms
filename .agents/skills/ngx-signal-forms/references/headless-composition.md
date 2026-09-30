@@ -29,17 +29,12 @@ Choose state before markup:
 - `NgxHeadlessErrorState.errorsOverride` supplies already-filtered messages and
   makes both timing flags true. The caller owns timing and precedence. The
   internal `connectFieldState()` bridge is not a published consumer API.
-- `NgxHeadlessNotification` accepts an array, signal, or reader through `errors`.
-  Omitted/undefined means empty; use `[]`, not `null`, for no messages. A blocking
-  error selects the alert container; a warning-only list selects status. There
-  is no `tone` input.
 - `NgxHeadlessCharacterCount` requires `field` and `maxLength`. `createCharacterCount()`
   requires only `field` — pass `useValidatorMaxLength: true` to read the
   field's own `maxLength` validator when no explicit `maxLength` is given.
   `createCharacterCount()` uses fractional thresholds, while styled counters
   expose percent-based CSS thresholds.
-- `summarizeFieldOptionality()` and `createFieldOptionalitySummary()` report
-  required/optional leaves. A mixed form can set both flags; an empty form sets
+- `createFieldOptionalitySummary()` reports required/optional leaves. A mixed form can set both flags; an empty form sets
   neither. Use them for custom legends instead of traversing the tree again.
 
 Read [headless contracts](https://github.com/ngx-signal-forms/ngx-signal-forms/blob/main/packages/toolkit/headless/README.md#reactive-primitives)
@@ -70,35 +65,9 @@ Each summary gate includes presence. Warning rows use their own gate, never
 </section>
 ```
 
-For a pre-filtered `addressErrors` source, import `NgxHeadlessNotification`:
-
-```html
-<section
-  ngxHeadlessNotification
-  #notice="notificationState"
-  [errors]="addressErrors"
-  fieldName="address"
->
-  <div
-    role="alert"
-    [attr.id]="notice.showErrorContainer() ? notice.errorContainerId() : null"
-  >
-    @if (notice.showErrorContainer()) { @for (message of
-    notice.resolvedMessages(); track $index) {
-    <p>{{ message.message }}</p>
-    } }
-  </div>
-  <div
-    role="status"
-    [attr.id]="notice.showWarningContainer() ? notice.warningContainerId() : null"
-  >
-    @if (notice.showWarningContainer()) { @for (message of
-    notice.resolvedMessages(); track $index) {
-    <p>{{ message.message }}</p>
-    } }
-  </div>
-</section>
-```
+For a pre-filtered `addressErrors` source, pass it to `NgxHeadlessErrorState`
+through `[errorsOverride]`. The caller owns timing. A blocking error selects the
+alert container; a warning-only list selects status.
 
 ## Manual ARIA example
 

@@ -23,9 +23,9 @@ import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit';
 import { NgxHeadlessToolkit } from '@ngx-signal-forms/toolkit/headless';
 ```
 
-`NgxHeadlessToolkit` holds all six directives: `NgxHeadlessErrorState`,
+`NgxHeadlessToolkit` holds all five directives: `NgxHeadlessErrorState`,
 `NgxHeadlessErrorSummary`, `NgxHeadlessFieldset`, `NgxHeadlessCharacterCount`,
-`NgxHeadlessFieldName`, and `NgxHeadlessNotification`. You can also import
+and `NgxHeadlessFieldName`. You can also import
 each directive by name.
 
 Import `NgxSignalFormToolkit` from the root entry point too. It adds auto-ARIA
@@ -140,17 +140,17 @@ Each feature has a template directive and a factory function. Use the
 directive in a template. Use the factory in a component class, a service, or a
 host directive.
 
-| You want to show…                  | Directive (`exportAs`)                          | Factory                             |
-| ---------------------------------- | ----------------------------------------------- | ----------------------------------- |
-| One field's errors and warnings    | `NgxHeadlessErrorState` (`errorState`)          | `createErrorState()`                |
-| Resolved messages with ids         | `NgxHeadlessErrorState` (`resolvedErrors()`)    | `createErrorMessageSignal()`        |
-| A summary of all form errors       | `NgxHeadlessErrorSummary` (`errorSummary`)      | `createErrorSummaryEntries()`       |
-| Errors of a group of fields        | `NgxHeadlessFieldset` (`fieldset`)              | `createFieldsetAggregation()`       |
-| A list of errors you computed      | `NgxHeadlessNotification` (`notificationState`) | —                                   |
-| A character count                  | `NgxHeadlessCharacterCount` (`characterCount`)  | `createCharacterCount()`            |
-| Error and warning ids only         | `NgxHeadlessFieldName` (`fieldName`)            | —                                   |
-| Required or optional markers       | —                                               | `createFieldOptionalitySummary()`   |
-| ARIA attributes you write yourself | —                                               | [ARIA factories](#aria-composition) |
+| You want to show…                  | Directive (`exportAs`)                         | Factory                             |
+| ---------------------------------- | ---------------------------------------------- | ----------------------------------- |
+| One field's errors and warnings    | `NgxHeadlessErrorState` (`errorState`)         | `createErrorState()`                |
+| Resolved messages with ids         | `NgxHeadlessErrorState` (`resolvedErrors()`)   | `createErrorMessageSignal()`        |
+| A summary of all form errors       | `NgxHeadlessErrorSummary` (`errorSummary`)     | `createErrorSummaryEntries()`       |
+| Errors of a group of fields        | `NgxHeadlessFieldset` (`fieldset`)             | `createFieldsetAggregation()`       |
+| A list of errors you computed      | `NgxHeadlessErrorState` (`errorsOverride`)     | `createErrorState()`                |
+| A character count                  | `NgxHeadlessCharacterCount` (`characterCount`) | `createCharacterCount()`            |
+| Error and warning ids only         | `NgxHeadlessFieldName` (`fieldName`)           | —                                   |
+| Required or optional markers       | —                                              | `createFieldOptionalitySummary()`   |
+| ARIA attributes you write yourself | —                                              | [ARIA factories](#aria-composition) |
 
 ## A reusable feedback component
 
@@ -333,26 +333,6 @@ export class AddressComponent {
 See [grouped fields and arrays](../../../docs/COMPLEX_NESTED_FORMS.md) for
 fieldset patterns.
 
-### NgxHeadlessNotification
-
-Selector: `[ngxHeadlessNotification]` · Export: `notificationState`
-
-Messages and ids for a list of errors you computed, for example a group card.
-It applies no timing. You decide when to pass the list.
-
-| Input       | Type                                           | Default | Description                                               |
-| ----------- | ---------------------------------------------- | ------- | --------------------------------------------------------- |
-| `errors`    | `ReactiveOrStatic<readonly ValidationError[]>` | `[]`    | The messages, as an array, a signal, or a function.       |
-| `fieldName` | `string \| null`                               | —       | Base for the ids. Omit it or pass `null` to turn ids off. |
-
-Signals: `hasMessages()`, `resolvedMessages()`, `resolvedTone()`,
-`showErrorContainer()`, `showWarningContainer()`, `errorContainerId()`,
-`warningContainerId()`.
-
-The content sets the tone. One blocking error makes the tone `'error'`: render
-the group with `role="alert"`. A list of only warnings has the tone
-`'warning'`: render it with `role="status"`.
-
 ### NgxHeadlessCharacterCount
 
 Selector: `[ngxHeadlessCharacterCount]` · Export: `characterCount`
@@ -469,14 +449,15 @@ const flags = createFieldStateFlags(() => form.email());
   `submittedStatus`, and `injector` options.
 - Call these factories in an injection context, or pass `injector`.
 
-### createFieldOptionalitySummary / summarizeFieldOptionality
+### createFieldOptionalitySummary
 
 Tell whether a form has required or optional fields, for example to show a
 legend:
 
 ```typescript
-const summary = summarizeFieldOptionality(formTree); // { hasRequired, hasOptional }
-const reactive = createFieldOptionalitySummary(() => this.formTree()); // signals
+const summary = createFieldOptionalitySummary(() => this.formTree()); // signals
+summary.hasRequired(); // boolean
+summary.hasOptional(); // boolean
 ```
 
 ### createFieldsetAggregation / createErrorSummaryEntries
@@ -560,11 +541,9 @@ Small helpers for one-off reads:
 ```typescript
 readFieldFlag(field(), 'invalid'); // boolean, safe on null
 readErrors(field()); // errorSummary() or errors()
-readDirectErrors(field()); // errors of this field only, not its children
 dedupeValidationErrors(errors); // removes repeats with the same kind and message
 
 humanizeFieldPath('address.postalCode'); // 'Address / Postal code'
-createUniqueId('field'); // 'field-1', 'field-2', ...
 
 // Error summary building blocks
 toErrorSummaryEntry(error); // ValidationError → entry with focus() and canFocus

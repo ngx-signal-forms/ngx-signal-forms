@@ -15,7 +15,6 @@ import { NgxHeadlessErrorState } from './lib/error-state';
 import { NgxHeadlessErrorSummary } from './lib/error-summary';
 import { NgxHeadlessFieldName } from './lib/field-name';
 import { NgxHeadlessFieldset } from './lib/fieldset';
-import { NgxHeadlessNotification } from './lib/notification';
 
 // Reactive primitives
 export {
@@ -24,11 +23,6 @@ export {
   type IncludeWarningsOption,
   type ResolvedFieldError,
 } from './lib/create-error-message-signal';
-
-// Re-exported from the root entrypoint (NOT `/core`, which is stripped from
-// the published exports map) so `CreateErrorMessageSignalOptions.errorMessages`
-// (a `Signal<ErrorMessageRegistry>`) is fully resolvable from `/headless`.
-export { type ErrorMessageRegistry } from '@ngx-signal-forms/toolkit';
 
 // Directives
 export {
@@ -74,14 +68,7 @@ export {
 } from './lib/field-name';
 
 export {
-  NgxHeadlessNotification,
-  type NotificationStateSignals,
-  type ResolvedNotificationMessage,
-} from './lib/notification';
-
-export {
   createFieldOptionalitySummary,
-  summarizeFieldOptionality,
   type FieldOptionality,
 } from './lib/field-optionality';
 
@@ -115,17 +102,14 @@ export {
 // Utility functions
 export {
   createFieldStateFlags,
-  createUniqueId,
   dedupeValidationErrors,
   focusBoundControlFromError,
   humanizeFieldPath,
-  readDirectErrors,
   readErrors,
   readFieldFlag,
   resolveFieldNameFromError,
   toErrorSummaryEntry,
   type BooleanStateKey,
-  type ErrorSummaryEntryData,
   type FieldStateLike,
   type FieldStateFlags,
 } from './lib/utilities';
@@ -152,5 +136,4 @@ export const NgxHeadlessToolkit = [
   NgxHeadlessFieldset,
   NgxHeadlessCharacterCount,
   NgxHeadlessFieldName,
-  NgxHeadlessNotification,
 ] as const;
