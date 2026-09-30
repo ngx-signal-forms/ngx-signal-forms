@@ -7,7 +7,10 @@ import { describe, expect, it } from 'vitest';
  * signals, so a component that re-renders on every application-wide check
  * costs consumers change detection they cannot opt out of. Angular 22 makes
  * `OnPush` the default, so components no longer declare it. What can still
- * break the guarantee is a component that opts back into `Eager` or `Default`.
+ * break the guarantee is a component that sets `changeDetection` at all: to
+ * `Eager` or `Default`, or through an alias such as `changeDetection: strategy`.
+ * The guard rejects the property itself. A component that needs `Eager` on
+ * purpose has to change this spec, so the opt-out is a visible decision.
  *
  * Asserted against the source text rather than the compiled definition
  * because the alternative — reading `ɵcmp.onPush` — is a private Angular
@@ -45,6 +48,11 @@ function* walkSourceFiles(directory: string): Generator<string> {
   }
 }
 
+/** Whether component source sets `changeDetection`, however it spells the value. */
+function setsChangeDetection(source: string): boolean {
+  return /\bchangeDetection\s*:/u.test(source);
+}
+
 const componentFiles = ENTRY_DIRECTORIES.flatMap((entry) => [
   ...walkSourceFiles(join(PACKAGE_ROOT, entry)),
 ])
@@ -65,12 +73,28 @@ describe('change detection', () => {
     ]);
   });
 
+  it.each([
+    'changeDetection: ChangeDetectionStrategy.Eager,',
+    'changeDetection: ChangeDetectionStrategy.Default,',
+    'changeDetection: ChangeDetectionStrategy.OnPush,',
+    'changeDetection: strategy,',
+    'changeDetection:\n    strategy,',
+  ])('flags a component that sets %j', (line) => {
+    expect(setsChangeDetection(`@Component({\n  ${line}\n})`)).toBe(true);
+  });
+
+  it('does not flag a component that leaves the default alone', () => {
+    expect(setsChangeDetection('@Component({\n  selector: "a",\n})')).toBe(
+      false,
+    );
+  });
+
   it.each(componentFiles)(
-    'does not opt out of OnPush in %s',
+    'does not set changeDetection in %s',
     (relativePath) => {
       const source = readFileSync(join(PACKAGE_ROOT, relativePath), 'utf8');
 
-      expect(source).not.toMatch(/ChangeDetectionStrategy\.(Eager|Default)/u);
+      expect(setsChangeDetection(source)).toBe(false);
     },
   );
 });
