@@ -198,9 +198,11 @@ GitHub release notes as written.
 1. Run the **Release** workflow
    ([`release.yml`](../.github/workflows/release.yml)) from the Actions tab.
    Pick the bump (`prerelease` with `rc` for a release candidate). Use
-   **Dry run** first to preview. The workflow runs the checks, then
-   `nx release` versions, tags, and creates the GitHub release. It does not
-   publish.
+   **Dry run** first to preview. The workflow runs the checks. Then
+   `nx release version` bumps, commits and tags locally, with no push token.
+   A separate `push` job checks the result and pushes the commit and tag. A
+   last job creates the GitHub release. The workflow does not publish. It
+   asks for approval twice, because two jobs use the `release` environment.
 2. The new `v*` tag starts the **Publish** workflow
    ([`publish.yml`](../.github/workflows/publish.yml)). It publishes to npm
    through trusted publishing (OIDC), with the dist-tag taken from the
