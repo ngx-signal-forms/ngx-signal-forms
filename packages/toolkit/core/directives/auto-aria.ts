@@ -14,6 +14,7 @@ import {
   NGX_SIGNAL_FORM_FIELD_VISIBILITY_REGISTRY,
   NGX_SIGNAL_FORM_HINT_REGISTRY,
   NGX_SIGNAL_FORMS_CONFIG,
+  type NgxSignalFormFieldVisibilityDescriptor,
 } from '../tokens';
 import { createAriaInvalidSignal } from '../utilities/aria/create-aria-invalid-signal';
 import {
@@ -321,20 +322,40 @@ export class NgxSignalFormAutoAria {
    * The precedence test is on the published *value*, not on whether an
    * identity happens to be injectable — see `#registryVisibilityEntry`.
    */
-  readonly #visibilityByStrategy = computed(() => {
+  readonly #visibilityByStrategy = computed(() =>
+    this.#errorVisibilityBy((entry) => entry.errorContainerVisible()),
+  );
+
+  /**
+   * Same precedence as {@link #visibilityByStrategy}, but for `aria-invalid`:
+   * a registry entry answers with `shouldShowErrors` ("the field shows its
+   * errors") when it publishes one. A surface that renders only the warning
+   * channel sets `errorContainerVisible` to `false`, yet the field is still
+   * invalid. Entries without `shouldShowErrors` fall back to
+   * `errorContainerVisible`.
+   */
+  readonly #invalidVisibilityByStrategy = computed(() =>
+    this.#errorVisibilityBy((entry) =>
+      (entry.shouldShowErrors ?? entry.errorContainerVisible)(),
+    ),
+  );
+
+  #errorVisibilityBy(
+    fromRegistry: (entry: NgxSignalFormFieldVisibilityDescriptor) => boolean,
+  ): boolean {
     const publishedErrorStrategy =
       this.#fieldIdentity?.resolvedErrorStrategy() ?? null;
 
     if (publishedErrorStrategy === null) {
       const registryEntry = this.#registryVisibilityEntry();
-      if (registryEntry) return registryEntry.errorContainerVisible();
+      if (registryEntry) return fromRegistry(registryEntry);
     }
 
     // `#ownVisibilityByStrategy` already reads the published strategy and
     // falls back to the ambient form context when it is null, so it covers
     // both remaining branches.
     return this.#ownVisibilityByStrategy();
-  });
+  }
 
   readonly #ownVisibilityByStrategy = createErrorVisibility(
     () => this.#resolveFieldState(),
@@ -452,7 +473,7 @@ export class NgxSignalFormAutoAria {
 
   readonly #factoryAriaInvalid = createAriaInvalidSignal(
     this.#fieldStateSignal,
-    this.#visibilityByStrategy,
+    this.#invalidVisibilityByStrategy,
     this.#isControlVisible,
   );
 

@@ -645,6 +645,13 @@ interface ErrorStateResult {
  */
 declare function createErrorState<TValue = unknown>(options: Readonly<CreateErrorStateOptions<TValue>>): ErrorStateResult;
 /**
+ * Which message channels a headless template renders: blocking `'errors'`,
+ * non-blocking `'warnings'`, or `'both'`.
+ *
+ * @group Directives
+ */
+type NgxHeadlessErrorChannels = 'both' | 'errors' | 'warnings';
+/**
  * Error state signals exposed by the headless directive.
  *
  * These signals provide all the state needed for custom error display implementations.
@@ -770,6 +777,20 @@ declare class NgxHeadlessErrorState<TValue = unknown> implements ErrorStateSigna
      */
     readonly errorsOverride: _angular_core.InputSignal<NgxReactiveOrStatic<readonly ValidationError[]> | undefined>;
     /**
+     * Which channels the template renders. `NgxHeadlessErrorState` renders no
+     * DOM, so it cannot tell. Set `'warnings'` when the template has no error
+     * element, or `'errors'` when it has no warning element. The directive then
+     * does not put the id of the missing element in the control's
+     * `aria-describedby`, so no id points to nothing (WCAG 1.3.1).
+     *
+     * `aria-invalid` still follows the real error state. This input changes
+     * which ids auto-ARIA links. It does not change when messages show or what
+     * `shouldShowErrors()` and `shouldShowWarnings()` return.
+     *
+     * @default 'both'
+     */
+    readonly renders: _angular_core.InputSignal<NgxHeadlessErrorChannels>;
+    /**
      * Resolved submission status after applying form-context defaults.
      * Exposed so that host components composing this directive via
      * `hostDirectives` can reuse the resolved value without re-calling
@@ -824,7 +845,7 @@ declare class NgxHeadlessErrorState<TValue = unknown> implements ErrorStateSigna
     readonly resolvedWarnings: Signal<readonly ResolvedError[]>;
     constructor();
     static ɵfac: _angular_core.ɵɵFactoryDeclaration<NgxHeadlessErrorState<any>, never>;
-    static ɵdir: _angular_core.ɵɵDirectiveDeclaration<NgxHeadlessErrorState<any>, "[ngxHeadlessErrorState]", ["errorState"], { "field": { "alias": "field"; "required": false; "isSignal": true; }; "fieldName": { "alias": "fieldName"; "required": false; "isSignal": true; }; "strategy": { "alias": "strategy"; "required": false; "isSignal": true; }; "warningStrategy": { "alias": "warningStrategy"; "required": false; "isSignal": true; }; "submittedStatus": { "alias": "submittedStatus"; "required": false; "isSignal": true; }; "errorsOverride": { "alias": "errorsOverride"; "required": false; "isSignal": true; }; }, {}, never, never, true, never>;
+    static ɵdir: _angular_core.ɵɵDirectiveDeclaration<NgxHeadlessErrorState<any>, "[ngxHeadlessErrorState]", ["errorState"], { "field": { "alias": "field"; "required": false; "isSignal": true; }; "fieldName": { "alias": "fieldName"; "required": false; "isSignal": true; }; "strategy": { "alias": "strategy"; "required": false; "isSignal": true; }; "warningStrategy": { "alias": "warningStrategy"; "required": false; "isSignal": true; }; "submittedStatus": { "alias": "submittedStatus"; "required": false; "isSignal": true; }; "errorsOverride": { "alias": "errorsOverride"; "required": false; "isSignal": true; }; "renders": { "alias": "renders"; "required": false; "isSignal": true; }; }, {}, never, never, true, never>;
 }
 
 /**
@@ -1766,4 +1787,4 @@ declare function createFieldOptionalitySummary(treeSource: () => AnyFieldTree | 
 declare const NgxHeadlessToolkit: readonly [typeof NgxHeadlessErrorState, typeof NgxHeadlessErrorSummary, typeof NgxHeadlessFieldset, typeof NgxHeadlessCharacterCount, typeof NgxHeadlessFieldName];
 
 export { DEFAULT_DANGER_THRESHOLD, DEFAULT_WARNING_THRESHOLD, NgxHeadlessCharacterCount, NgxHeadlessErrorState, NgxHeadlessErrorSummary, NgxHeadlessFieldName, NgxHeadlessFieldset, NgxHeadlessToolkit, createCharacterCount, createErrorMessageSignal, createErrorState, createErrorSummaryEntries, createFieldOptionalitySummary, createFieldStateFlags, createFieldsetAggregation, dedupeValidationErrors, focusBoundControlFromError, readErrors, readFieldFlag, resolveFieldNameFromError, toErrorSummaryEntry };
-export type { BooleanStateKey, CharacterCountLimitState, CharacterCountState, CharacterCountValue, CreateCharacterCountOptions, CreateErrorMessageSignalOptions, CreateErrorStateOptions, CreateErrorSummaryEntriesOptions, CreateFieldsetAggregationOptions, ErrorStateResult, ErrorStateSignals, ErrorSummaryEntriesResult, ErrorSummaryEntry, ErrorSummarySignals, FieldNameStateSignals, FieldOptionality, FieldStateFlags, FieldStateLike$1 as FieldStateLike, FieldsetAggregationResult, FieldsetStateSignals, IncludeWarningsOption, ResolvedError, ResolvedFieldError };
+export type { BooleanStateKey, CharacterCountLimitState, CharacterCountState, CharacterCountValue, CreateCharacterCountOptions, CreateErrorMessageSignalOptions, CreateErrorStateOptions, CreateErrorSummaryEntriesOptions, CreateFieldsetAggregationOptions, ErrorStateResult, ErrorStateSignals, ErrorSummaryEntriesResult, ErrorSummaryEntry, ErrorSummarySignals, FieldNameStateSignals, FieldOptionality, FieldStateFlags, FieldStateLike$1 as FieldStateLike, FieldsetAggregationResult, FieldsetStateSignals, IncludeWarningsOption, NgxHeadlessErrorChannels, ResolvedError, ResolvedFieldError };

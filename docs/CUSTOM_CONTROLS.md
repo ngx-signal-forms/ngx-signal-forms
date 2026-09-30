@@ -491,6 +491,7 @@ To render the messages yourself, use the headless error state:
   #errorState="errorState"
   [field]="form.password"
   fieldName="password"
+  renders="warnings"
 >
   <label for="password">Password</label>
   <app-password-input id="password" [formField]="form.password" />
@@ -509,6 +510,12 @@ Keep the `role="status"` element in the DOM before its first message appears.
 Do not create it inside the same `@if` as the message, or screen readers can
 miss the first announcement. Give it the warning ID only while it shows a
 warning, and link that ID from the control with the same condition.
+
+This template has no error element, so it sets `renders="warnings"`. The
+directive then keeps `password-error` out of the control's `aria-describedby`.
+Without it, the control would point to an element that does not exist.
+`aria-invalid` still follows the real error state. Use `renders="errors"` for
+a template with an error element only. The default is `'both'`.
 
 ### Publishing visibility for a custom standalone error surface
 

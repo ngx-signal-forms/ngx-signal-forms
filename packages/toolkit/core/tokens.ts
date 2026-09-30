@@ -259,6 +259,15 @@ export const NGX_SIGNAL_FORM_HINT_REGISTRY =
  * `NgxFormFieldError`'s own `errorContainerVisible`/`warningContainerVisible`
  * signals verbatim, so the publish/read seam is grep-traceable end to end.
  *
+ * `errorContainerVisible` answers "is the error ID in the DOM?", so it drives
+ * `aria-describedby`. `shouldShowErrors` answers "does the field show its
+ * errors?", so it drives `aria-invalid`. They differ when a surface renders
+ * only one channel: a warning-only template has no error element (container
+ * `false`), yet the field is still invalid (`shouldShowErrors` `true`).
+ * `shouldShowErrors` is optional. When a registrant leaves it out,
+ * auto-ARIA uses `errorContainerVisible` for `aria-invalid` too, which is the
+ * behavior before this signal existed.
+ *
  * Public wire format for the {@link NgxSignalFormFieldVisibilityRegistry}
  * contract.
  *
@@ -268,6 +277,12 @@ export interface NgxSignalFormFieldVisibilityDescriptor {
   readonly fieldName: string;
   readonly errorContainerVisible: Signal<boolean>;
   readonly warningContainerVisible: Signal<boolean>;
+  /**
+   * Whether the field shows its blocking errors, whether or not this surface
+   * renders an error element. Drives `aria-invalid`. Optional: when absent,
+   * auto-ARIA falls back to {@link errorContainerVisible}.
+   */
+  readonly shouldShowErrors?: Signal<boolean>;
 }
 
 /**

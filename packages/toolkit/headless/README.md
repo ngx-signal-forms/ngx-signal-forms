@@ -237,6 +237,7 @@ The errors and warnings of one field, with timing applied.
 | `errorsOverride`  | `NgxReactiveOrStatic<readonly ValidationError[]>` | —         | A list you computed, as an array, a signal, or a function. Wins over `field`. |
 | `strategy`        | `ErrorDisplayStrategy`                            | inherited | When errors show.                                                             |
 | `warningStrategy` | `WarningDisplayStrategy`                          | inherited | When warnings show. Falls back to `on-touch`.                                 |
+| `renders`         | `NgxHeadlessErrorChannels`                        | `'both'`  | `'errors'`, `'warnings'` or `'both'`: the channels your template renders.     |
 | `submittedStatus` | `SubmittedStatus`                                 | inherited | Submission state for `on-submit`, when there is no `ngxSignalForm`.           |
 
 "Inherited" means the directive uses the form's `ngxSignalForm` setting, then
@@ -250,6 +251,9 @@ Signals: `shouldShowErrors()`, `shouldShowWarnings()`, `hasErrors()`,
 
 - `shouldShowWarnings()` stays `false` while a blocking error shows on the same
   field.
+- Set `renders` when your template has no error element or no warning element.
+  The control's `aria-describedby` then leaves out the id of the missing
+  element. `aria-invalid` still follows the real error state.
 - With `errorsOverride`, `shouldShowErrors()` is always `true`. You decide when
   to pass the list.
 

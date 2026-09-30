@@ -31,6 +31,7 @@ export {
   type CreateErrorStateOptions,
   type ErrorStateResult,
   type ErrorStateSignals,
+  type NgxHeadlessErrorChannels,
   type ResolvedError,
 } from './lib/error-state';
 

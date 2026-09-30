@@ -252,3 +252,90 @@ describe('NgxHeadlessErrorState — local strategy reaches auto-ARIA (#586)', ()
     await expectNoA11yViolations(container);
   });
 });
+
+/**
+ * #644: a template that renders only the warning element sets
+ * `renders="warnings"`. The accessibility tree must then describe the control
+ * with the warning text alone, and still report the control as invalid when a
+ * blocking error shows. The error element does not exist, so a link to it
+ * would be an empty description.
+ */
+const WARNING_ONLY_TEMPLATE = `
+  <div
+    ngxHeadlessErrorState
+    #nicknameState="errorState"
+    [field]="profileForm.nickname"
+    fieldName="nickname"
+    strategy="immediate"
+    warningStrategy="immediate"
+    renders="warnings"
+  >
+    <div
+      role="status"
+      [attr.id]="nicknameState.shouldShowWarnings() && nicknameState.hasWarnings() ? nicknameState.warningId() : null"
+    >
+      @if (nicknameState.shouldShowWarnings()) {
+        @for (warning of nicknameState.resolvedWarnings(); track warning.kind) {
+          <p>{{ warning.message }}</p>
+        }
+      }
+    </div>
+  </div>
+`;
+
+@Component({
+  selector: 'ngx-test-headless-warning-only-error-host',
+  imports: [FormField, NgxSignalFormToolkit, NgxHeadlessErrorState],
+  template: `
+    <form [formRoot]="profileForm" ngxSignalForm errorStrategy="on-touch">
+      <label for="nickname">Nickname</label>
+      <input id="nickname" [formField]="profileForm.nickname" />
+      ${WARNING_ONLY_TEMPLATE}
+    </form>
+  `,
+})
+class WarningOnlyBlockingErrorHost {
+  readonly profileForm = createProfileForm('');
+}
+
+@Component({
+  selector: 'ngx-test-headless-warning-only-warning-host',
+  imports: [FormField, NgxSignalFormToolkit, NgxHeadlessErrorState],
+  template: `
+    <form [formRoot]="profileForm" ngxSignalForm errorStrategy="on-touch">
+      <label for="nickname">Nickname</label>
+      <input id="nickname" [formField]="profileForm.nickname" />
+      ${WARNING_ONLY_TEMPLATE}
+    </form>
+  `,
+})
+class WarningOnlyWarningHost {
+  readonly profileForm = createProfileForm('ab');
+}
+
+describe('NgxHeadlessErrorState — renders="warnings" in the accessibility tree (#644)', () => {
+  it('reports the control invalid and describes it with no error text', async () => {
+    const { container } = await renderStable(WarningOnlyBlockingErrorHost);
+
+    const nickname = container.querySelector<HTMLInputElement>('#nickname')!;
+
+    // Invalid: assistive tech still learns the field has an error (WCAG 3.3.1).
+    expect(nickname).toBeInvalid();
+    // No dangling `nickname-error` id, so the description is empty, not broken
+    // (WCAG 1.3.1).
+    expect(nickname).toHaveAccessibleDescription('');
+    await expectNoA11yViolations(container);
+  });
+
+  it('describes the control with the warning text', async () => {
+    const { container } = await renderStable(WarningOnlyWarningHost);
+
+    const nickname = container.querySelector<HTMLInputElement>('#nickname')!;
+
+    expect(nickname).toHaveAccessibleDescription(
+      'Short nicknames are hard to find',
+    );
+    expect(nickname).toBeValid();
+    await expectNoA11yViolations(container);
+  });
+});

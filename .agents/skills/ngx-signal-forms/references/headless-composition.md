@@ -277,7 +277,11 @@ Publish the other channels separately:
   on change/destruction. Keep error and warning timing independent.
   `NgxHeadlessErrorState` with a `fieldName` already registers its own
   visibility, including a local `strategy`/`warningStrategy`; do not register
-  the same field again.
+  the same field again. Set its `renders` input (`'errors'`, `'warnings'`,
+  `'both'`) when the template renders one channel only, so no `aria-describedby`
+  id points to a missing element. `aria-invalid` still follows the error state.
+  A custom registrant can publish the optional `shouldShowErrors` signal for
+  `aria-invalid` when it renders one channel.
 
 Import projected hints and auto-ARIA in the template that declares them;
 wrapper imports do not apply to consumer projection. The public identity read
