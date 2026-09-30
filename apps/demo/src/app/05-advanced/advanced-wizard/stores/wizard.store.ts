@@ -72,9 +72,12 @@ function isDestinationsValid(d: Destination[]): boolean {
 // STORE
 // ══════════════════════════════════════════════════════════════════════════════
 
+/**
+ * Not `providedIn: 'root'`: the advanced-wizard route lists it in `providers`,
+ * so the store (and its debounced autosave) is destroyed when the user leaves
+ * the route. Provide it yourself in any other host, such as a TestBed.
+ */
 export const WizardStore = signalStore(
-  { providedIn: 'root' },
-
   withState({
     error: null as string | null,
     bookingConfirmation: null as BookingResponse | null,

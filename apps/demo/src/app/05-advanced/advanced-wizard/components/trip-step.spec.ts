@@ -51,13 +51,11 @@ class TripStepHostComponent {
 
 describe('TripStepComponent validate-and-advance transition', () => {
   async function setup() {
-    const rendered = await render(TripStepHostComponent);
-    // WizardStore is `providedIn: 'root'`, so its committed state can
-    // outlive an individual `it()` unless explicitly cleared. `render()`
-    // instantiates the TestBed module, so this can only run afterwards —
-    // `TestBed.inject()` beforehand would lock the module before `render()`
-    // gets a chance to configure it.
-    TestBed.inject(WizardStore).setDestinations([]);
+    const rendered = await render(TripStepHostComponent, {
+      providers: [WizardStore],
+    });
+    // The store is provided per TestBed, so each `it()` starts with a fresh
+    // one holding a single empty destination.
     return rendered;
   }
 
@@ -83,7 +81,8 @@ describe('TripStepComponent validate-and-advance transition', () => {
   it('blocks advancement, marks the invalid field, and focuses it when the destination is invalid', async () => {
     const { fixture } = await setup();
     const store = TestBed.inject(WizardStore);
-    store.addDestination(); // empty destination fails required-field validation
+    // The initial empty destination fails required-field validation.
+    expect(store.destinationsDraft()).toHaveLength(1);
     fixture.detectChanges();
 
     await clickContinue(fixture);
@@ -98,8 +97,7 @@ describe('TripStepComponent validate-and-advance transition', () => {
   it('advances when all destination fields are valid', async () => {
     const { fixture } = await setup();
     const store = TestBed.inject(WizardStore);
-    store.addDestination();
-    const destIdx = store.destinationsDraft().length - 1;
+    const destIdx = 0;
     store.updateDestination(destIdx, {
       country: 'Japan',
       city: 'Tokyo',
@@ -126,6 +124,8 @@ describe('TripStepComponent validate-and-advance transition', () => {
 
   it('blocks advancement and focuses the add-destination button when there are no destinations', async () => {
     const { fixture } = await setup();
+    TestBed.inject(WizardStore).setDestinations([]);
+    fixture.detectChanges();
     await clickContinue(fixture);
 
     expect(screen.getByTestId('advance-result')).toHaveTextContent('blocked');
