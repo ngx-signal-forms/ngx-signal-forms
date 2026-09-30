@@ -272,31 +272,45 @@ Library switches:
 
 - **Bootstrap or ng-bootstrap switch styling** sits on a native checkbox. Add
   `role="switch"` and let the toolkit add its ARIA.
-- **A switch component that does not render a native
-  `input[type="checkbox"][role="switch"]`** has nothing for the toolkit to
-  infer from. This covers Angular Material `mat-slide-toggle`, a Spartan
-  switch, PrimeNG `p-toggleswitch`, and your own switch component used as a
-  `[formField]` host. Set `ngxSignalFormControl="switch"` on the host. The
-  wrapper then uses the switch layout (`inline-control`, no outline).
+- **A switch component whose `[formField]` host is not itself a switch.**
+  Inference reads only the host, not what the component renders inside it.
+  If the host is a native checkbox with `role="switch"`, or has
+  `role="switch"`, the toolkit infers the kind and needs no attribute.
+  Otherwise, set `ngxSignalFormControl="switch"` on the host. The wrapper then
+  uses the switch layout (`inline-control`, no outline). This covers Angular
+  Material `mat-slide-toggle`, PrimeNG `p-toggleswitch`, and a Spartan switch.
+  Each one puts `role="switch"` on an inner `<button>` or `<input>` and leaves
+  the host without a role.
 
   ```html
   <app-toggle
     id="emailUpdates"
     [formField]="form.emailUpdates"
     ngxSignalFormControl="switch"
+    ngxSignalFormControlAria="manual"
   />
   ```
 
-  The attribute does not add a role. Auto-ARIA already covers a custom
-  `[formField]` host, and it sets `aria-required` only when the host has a
-  role that supports it. The switch component must supply `role="switch"`,
-  keyboard handling, the checked state, and the accessible name.
+  The attribute sets the layout. It does not add a role or switch behavior.
 
-  If the library owns `aria-invalid` and `aria-describedby`, as
-  `mat-slide-toggle` and PrimeNG toggles do, also add
-  `ngxSignalFormControlAria="manual"`, or use a
-  [custom wrapper](./CUSTOM_WRAPPERS.md). Check the rendered DOM for the
-  accessible name, the checked state, and the `aria-describedby` link.
+- **ARIA for a nested switch.** Auto-ARIA writes `aria-invalid` and
+  `aria-describedby` on the `[formField]` host. When the focusable switch is
+  inside the host, assistive tech does not read them there. Add
+  `ngxSignalFormControlAria="manual"`, then put both attributes on the inner
+  switch yourself. Build the `aria-describedby` value with
+  `buildAriaDescribedBy` (see [ARIA ownership](#aria-ownership)). What each
+  library lets you set:
+
+  | Library                             | `aria-describedby` on the inner switch                                          | `aria-invalid` on the inner switch                                                                     |
+  | ----------------------------------- | ------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
+  | Angular Material `mat-slide-toggle` | `aria-describedby` input                                                        | No input, and Material does not set it. The error still reaches the switch through `aria-describedby`. |
+  | PrimeNG `p-toggleswitch`            | No input. Use the pass-through: `[pt]="{ input: { 'aria-describedby': ids } }"` | No input. Use the same `pt.input` pass-through.                                                        |
+  | Spartan `brn-switch`                | `aria-describedby` input                                                        | Spartan sets it from its own form-control state. Check that it follows your error timing.              |
+
+  Manual mode alone only stops the toolkit. It does not connect the error to
+  the switch. Check the rendered DOM for the accessible name, the checked
+  state, `aria-invalid`, and the `aria-describedby` link on the focusable
+  element.
 
 ## Field-shaped vs widget-shaped custom controls
 
