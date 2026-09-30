@@ -116,7 +116,7 @@ entry's `README.md` into its own output folder, and
 `packages/toolkit/api-reports/tarball-manifest.json` lists all six
 (`README.md`, `assistive/README.md`, `form-field/README.md`,
 `headless/README.md`, `testing/README.md`, `vest/README.md`).
-`scripts/generate-readme.mjs` rewrites all six during `post-build`. The
+`scripts/generate-readme.mjs` rewrites all six during `toolkit:build`. The
 root one comes from the **repo-root** `README.md` (not
 `packages/toolkit/README.md`). Each secondary one comes from its own source
 folder, after ng-packagr has copied it. Relative links become absolute GitHub

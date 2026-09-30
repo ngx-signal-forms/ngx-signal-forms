@@ -17,6 +17,7 @@ import {
   diffTarballManifest,
   entryNameFor,
   findBrokenReadmeLinks,
+  normalizeLiteralUnions,
   publishedEntries,
   readBaselineSurface,
   readBaselineTarballManifest,
@@ -44,6 +45,61 @@ describe('entryNameFor', () => {
 
   it('strips the leading "./" from a secondary entry', () => {
     expect(entryNameFor('./form-field')).toBe('form-field');
+  });
+});
+
+describe('normalizeLiteralUnions', () => {
+  // Why this exists (#570): TypeScript emits union members in type-ID order,
+  // which depends on what the checker met first, so a cached and a clean
+  // build can emit the same union in different orders. The baseline must not
+  // fail on that.
+  it('gives the same text for both member orders and both quote styles', () => {
+    expect(normalizeLiteralUnions("type T = 'error' | 'warning';")).toBe(
+      normalizeLiteralUnions('type T = "warning" | "error";'),
+    );
+    expect(normalizeLiteralUnions("type T = 'warning' | 'error';")).toBe(
+      "type T = 'error' | 'warning';",
+    );
+  });
+
+  it('normalizes literal unions nested in generics and readonly properties', () => {
+    const emitted = (order: string) =>
+      `declare class A {\n  readonly resolvedTone: Signal<${order}>;\n  readonly items: readonly (${order})[];\n}\n`;
+    expect(normalizeLiteralUnions(emitted('"warning" | "error"'))).toBe(
+      emitted("'error' | 'warning'"),
+    );
+  });
+
+  it('sorts number and boolean literals deterministically', () => {
+    expect(
+      normalizeLiteralUnions("type T = true | 10 | 'b' | -1 | 2 | false;"),
+    ).toBe("type T = 'b' | -1 | 2 | 10 | false | true;");
+  });
+
+  it('leaves unions that contain a non-literal member as emitted', () => {
+    const source = "type T = 'b' | 'a' | Foo;\ntype U = string | null;\n";
+    expect(normalizeLiteralUnions(source)).toBe(source);
+  });
+
+  it('keeps an escaped line break escaped instead of writing a raw one', () => {
+    // `.text` is the decoded value: a raw newline in the output would break
+    // the string literal and change the meaning of the baseline.
+    const source = String.raw`type T = 'b\nx' | 'a\t' | "q'\\";`;
+    const out = normalizeLiteralUnions(source);
+    expect(out).toBe(String.raw`type T = 'a\t' | 'b\nx' | 'q\'\\';`);
+    expect(out).not.toMatch(/[\n\t]/);
+  });
+
+  it('leaves a union with a comment between members as emitted', () => {
+    // Sorting would detach the comment from the member it describes.
+    const source =
+      "type T = 'b' /* deprecated */ | 'a';\ntype U = 'z' // note\n | 'y';\n";
+    expect(normalizeLiteralUnions(source)).toBe(source);
+  });
+
+  it('does not touch string literals outside a union', () => {
+    const source = "declare const x: 'b';\n// 'b' | 'a' in a comment\n";
+    expect(normalizeLiteralUnions(source)).toBe(source);
   });
 });
 
@@ -92,6 +148,33 @@ describe('publishedEntries + buildApiSurfaceSnapshot', () => {
     const snapshot = buildApiSurfaceSnapshot(distRoot);
     expect(snapshot.get('index')).toBe('export declare const a: 1;\n');
     expect(snapshot.get('form-field')).toBe('export declare const b: 2;\n');
+  });
+
+  it('snapshots two builds that emit a union in different orders identically', async () => {
+    const build = async (union: string) => {
+      const root = mkdtempSync(join(tmpdir(), 'check-published-package-'));
+      await mkdir(join(root, 'types'), { recursive: true });
+      writeFileSync(
+        join(root, 'types/index.d.ts'),
+        `export declare const tone: Signal<${union}>;\n`,
+      );
+      writeFileSync(
+        join(root, 'package.json'),
+        JSON.stringify({
+          exports: { '.': { types: './types/index.d.ts' } },
+        }),
+      );
+      return root;
+    };
+    distRoot = await build("'error' | 'warning'");
+    const other = await build('"warning" | "error"');
+    try {
+      expect(buildApiSurfaceSnapshot(distRoot)).toEqual(
+        buildApiSurfaceSnapshot(other),
+      );
+    } finally {
+      rmSync(other, { recursive: true, force: true });
+    }
   });
 
   it('snapshots a .d.ts that ships without an exports map entry under an "<name>.internal" key', async () => {
@@ -467,6 +550,6 @@ describe('main() check mode (end-to-end via a fixture dist + baseline)', () => {
     expect(result.stderr).toContain(
       'pnpm run check:toolkit-published-package -- --update',
     );
-    expect(result.stderr).toContain('pnpm nx run toolkit:post-build');
+    expect(result.stderr).toContain('pnpm nx build toolkit');
   });
 });

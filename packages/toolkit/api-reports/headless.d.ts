@@ -40,7 +40,7 @@ type CharacterCountValue = string | readonly string[] | null | undefined;
  *
  * @group Directives
  */
-type CharacterCountLimitState = 'ok' | 'warning' | 'danger' | 'exceeded';
+type CharacterCountLimitState = 'danger' | 'exceeded' | 'ok' | 'warning';
 /**
  * Default warning threshold percentage.
  *
@@ -380,7 +380,7 @@ declare function toErrorSummaryEntry(error: ValidationError, registry?: Readonly
  *
  * @group Utility Functions
  */
-type BooleanStateKey = 'invalid' | 'valid' | 'touched' | 'dirty' | 'pending';
+type BooleanStateKey = 'dirty' | 'invalid' | 'pending' | 'touched' | 'valid';
 /**
  * Type representing the shape of FieldState for reading errors.
  * Used for duck-typing access to error properties.
@@ -1571,7 +1571,7 @@ declare class NgxHeadlessNotification implements NotificationStateSignals {
      */
     readonly fieldName: _angular_core.InputSignal<string | null | undefined>;
     readonly hasMessages: Signal<boolean>;
-    readonly resolvedTone: Signal<"warning" | "error">;
+    readonly resolvedTone: Signal<'error' | 'warning'>;
     readonly showErrorContainer: Signal<boolean>;
     readonly showWarningContainer: Signal<boolean>;
     readonly errorContainerId: Signal<string | null>;
