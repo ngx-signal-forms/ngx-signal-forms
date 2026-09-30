@@ -221,7 +221,7 @@ For each field, the toolkit uses the first value it finds in this order:
 
 | Step | Where you set it                                                       | Errors                 | Warnings                 |
 | ---- | ---------------------------------------------------------------------- | ---------------------- | ------------------------ |
-| 1    | Input on the wrapper, fieldset, error, or summary                      | `strategy`             | `warningStrategy`        |
+| 1    | Input on the wrapper, fieldset, error, or headless summary             | `strategy`             | `warningStrategy`        |
 | 2    | `ngxSignalForm` on the `<form>`                                        | `errorStrategy`        | `warningStrategy`        |
 | 3    | `provideNgxSignalFormsConfigForComponent()` in a component's providers | `defaultErrorStrategy` | `defaultWarningStrategy` |
 | 4    | `provideNgxSignalFormsConfig()` in the app providers                   | `defaultErrorStrategy` | `defaultWarningStrategy` |
