@@ -1280,6 +1280,10 @@
   /* a two-class `:host()` compound, so they outrank these one-class rules */
   /* in any source order. The resting and focus rules below list the outline */
   /* selector too, at equal specificity, and win by source order (#550). */
+  /* The nested hover and `:has(:disabled)` rules outrank the rules here, by */
+  /* a margin that differs per Angular version. So these rules set the */
+  /* tokens that hover and disabled read, not the properties. Hover and */
+  /* disabled then paint system colors on every Angular version (#558). */
   :host(.ngx-signal-form-field-wrapper--textual)
     .ngx-signal-form-field-wrapper__content,
   :host(.ngx-signal-forms-outline.ngx-signal-form-field-wrapper--textual)
@@ -1288,6 +1292,8 @@
     background: Field;
     color: FieldText;
     border: 2px solid FieldText;
+    --_hover-border-color: FieldText;
+    --_disabled-bg: Field;
   }
 
   /* Neutralize color-mix() box-shadow and border-color overrides from the */
@@ -1309,6 +1315,7 @@
     )
     .ngx-signal-form-field-wrapper__content {
     border-color: Mark;
+    --_hover-border-color: Mark;
 
     &:focus-within {
       border-color: Mark;
@@ -1321,6 +1328,7 @@
     )
     .ngx-signal-form-field-wrapper__content {
     border-color: CanvasText;
+    --_hover-border-color: CanvasText;
 
     &:focus-within {
       border-color: CanvasText;

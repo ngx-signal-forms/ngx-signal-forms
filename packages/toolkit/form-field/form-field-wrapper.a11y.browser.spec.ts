@@ -8,6 +8,7 @@ import {
 import { TestBed } from '@angular/core/testing';
 import {
   FormField,
+  disabled,
   form,
   hidden,
   required,
@@ -1678,6 +1679,114 @@ describe('form-field wrapper — additional variant coverage (#501)', () => {
       expect(styles.borderTopColor).toBe(resolveSystemColor('Mark'));
       expect(styles.outlineColor).toBe(resolveSystemColor('Highlight'));
       expect(styles.boxShadow).toBe('none');
+    });
+
+    /**
+     * #558: the hover and `:has(:disabled)` rules are nested under the
+     * textual container rule, so they outrank the forced-colors rules. A
+     * hovered field painted the author hover border color. A hovered invalid
+     * or warning field lost its state border. A disabled field painted the
+     * author disabled background. The container sets
+     * `forced-color-adjust: none`, so the browser does not remap them.
+     */
+    describe('hover and disabled states (#558)', () => {
+      const appearances = ['standard', 'outline'] as const;
+
+      const renderStateField = async (
+        appearance: (typeof appearances)[number],
+        state: 'valid' | 'invalid' | 'warning' | 'disabled',
+      ): Promise<HTMLElement> => {
+        const TestComponent = defineFixtureComponent(
+          `ngx-test-a11y-forced-colors-${state}-${appearance}`,
+          `
+            <form [formRoot]="testForm" ngxSignalForm>
+              <ngx-form-field-wrapper
+                [formField]="testForm.name"
+                fieldName="name"
+                appearance="${appearance}"
+              >
+                <label for="forced-colors-state-name">Full name</label>
+                <input
+                  id="forced-colors-state-name"
+                  type="text"
+                  [formField]="testForm.name"
+                />
+              </ngx-form-field-wrapper>
+            </form>
+          `,
+          () =>
+            form(
+              signal({ name: '' }),
+              schema<{ name: string }>((path) => {
+                if (state === 'invalid') {
+                  required(path.name, { message: 'Full name is required' });
+                }
+                if (state === 'warning') {
+                  validate(path.name, () => ({
+                    kind: 'warn:short-name',
+                    message: 'Consider your full name',
+                  }));
+                }
+                if (state === 'disabled') {
+                  disabled(path.name);
+                }
+              }),
+            ),
+        );
+
+        const { container, fixture } = await render(TestComponent);
+        if (state === 'invalid' || state === 'warning') {
+          fixture.componentInstance.testForm.name().markAsTouched();
+        }
+        await TestBed.inject(ApplicationRef).whenStable();
+        await commands.emulateForcedColors('active');
+        expect(window.matchMedia('(forced-colors: active)').matches).toBe(true);
+
+        return container.querySelector<HTMLElement>(
+          '.ngx-signal-form-field-wrapper__content',
+        )!;
+      };
+
+      // Each state keeps its resting system color while hovered. `hostClass`
+      // is the wrapper class that selects the state's forced-colors rule.
+      const hoverCases = [
+        { state: 'valid', hostClass: 'textual', border: 'FieldText' },
+        { state: 'invalid', hostClass: 'invalid', border: 'Mark' },
+        { state: 'warning', hostClass: 'warning', border: 'CanvasText' },
+      ] as const;
+
+      describe.each(appearances)('appearance="%s"', (appearance) => {
+        it.each(hoverCases)(
+          'keeps the 2px $border border on a hovered $state field',
+          async ({ state, hostClass, border }) => {
+            const content = await renderStateField(appearance, state);
+
+            await userEvent.hover(content.querySelector('input')!);
+            await settleTransitions();
+
+            // Guard: the pointer really hovers the container and the state
+            // class is set, so the hover and state rules are both in play.
+            expect(content.matches(':hover')).toBe(true);
+            expect(content.closest('ngx-form-field-wrapper')).toHaveClass(
+              `ngx-signal-form-field-wrapper--${hostClass}`,
+            );
+            const styles = getComputedStyle(content);
+            expect(styles.borderTopWidth).toBe('2px');
+            expect(styles.borderTopColor).toBe(resolveSystemColor(border));
+          },
+        );
+
+        it('keeps the Field background and FieldText border on a disabled field', async () => {
+          const content = await renderStateField(appearance, 'disabled');
+          await settleTransitions();
+
+          expect(content.querySelector('input')).toBeDisabled();
+          const styles = getComputedStyle(content);
+          expect(styles.backgroundColor).toBe(resolveSystemBackground('Field'));
+          expect(styles.borderTopWidth).toBe('2px');
+          expect(styles.borderTopColor).toBe(resolveSystemColor('FieldText'));
+        });
+      });
     });
   });
 
