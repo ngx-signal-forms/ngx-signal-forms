@@ -202,8 +202,11 @@ GitHub release notes as written.
    `nx release` versions, tags, and creates the GitHub release. It does not
    publish.
 2. The new `v*` tag starts the **Publish** workflow
-   ([`publish.yml`](../.github/workflows/publish.yml)). It publishes to npm
+   ([`publish.yml`](../.github/workflows/publish.yml)). It fails unless the
+   tagged commit is on `main`. A `build` job builds the package and uploads
+   it. A `publish` job then waits for approval on the `npm-publish`
+   environment. It installs nothing and publishes the uploaded package to npm
    through trusted publishing (OIDC), with the dist-tag taken from the
-   version.
+   version. A dry run skips the approval.
 
 Release notes are the GitHub releases. There is no `CHANGELOG.md`.
