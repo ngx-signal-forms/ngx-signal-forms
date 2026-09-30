@@ -55,17 +55,17 @@ const pairs = args.map((rawArg) => {
 const workspacePath = 'pnpm-workspace.yaml';
 const original = readFileSync(workspacePath, 'utf8');
 const marker = 'overrides:\n';
-const insertAt = original.indexOf(marker);
-if (insertAt === -1) {
-  throw new Error(`Could not find "${marker}" in ${workspacePath}`);
-}
 const insertion = pairs
   .map(({ pkg, version }) => `  '${pkg}': '${version}'\n`)
   .join('');
+const insertAt = original.indexOf(marker);
+// The workspace keeps no permanent `overrides:` map, so add one when missing.
 const updated =
-  original.slice(0, insertAt + marker.length) +
-  insertion +
-  original.slice(insertAt + marker.length);
+  insertAt === -1
+    ? `${original.endsWith('\n') ? original : `${original}\n`}${marker}${insertion}`
+    : original.slice(0, insertAt + marker.length) +
+      insertion +
+      original.slice(insertAt + marker.length);
 writeFileSync(workspacePath, updated);
 
 const githubOutput = process.env.GITHUB_OUTPUT;
