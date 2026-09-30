@@ -54,15 +54,15 @@ concurrency:
   group: release-${{ github.workflow }}
   cancel-in-progress: false
 
-# Three jobs, so that the push token never shares a runner with third-party code:
+# Three jobs:
 #   release:        install, checks, `nx release version`. Commits and tags
-#                   LOCALLY. It has no push token. It uploads the result as a
-#                   git bundle.
-#   push:           verifies the bundle, checks the token and runs `git push`.
-#                   It installs nothing and runs no repo script.
+#                   locally, pushes nothing, and uploads the result as a git
+#                   bundle.
+#   push:           verifies the bundle, creates a GitHub App token and runs
+#                   `git push`. It installs nothing and runs no repo code.
 #   github-release: `nx release changelog` creates the GitHub release with the
 #                   workflow's own `GITHUB_TOKEN`.
-# A dry run runs `release` only. It never needs the secret.
+# A dry run runs `release` only.
 jobs:
   release:
     name: Version and tag
@@ -90,9 +90,7 @@ jobs:
         with:
           fetch-depth: 0
           filter: tree:0
-          # SECURITY: this job runs third-party code (install, Nx, plugins).
-          # It gets no push token and persists no credential. Only the `push`
-          # job holds RELEASE_TOKEN.
+          # Persist no credential. Only the `push` job creates a push token.
           persist-credentials: false
 
       - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413
@@ -279,9 +277,9 @@ jobs:
           fi
 
       - name: Version, commit and tag locally
-        # No push token in this job. `nx release version` bumps the version,
-        # commits and tags, and pushes nothing. The `release.version.git`
-        # block in nx.json sets the commit message and the tag message.
+        # `nx release version` bumps the version, commits and tags, and pushes
+        # nothing. The `release.version.git` block in nx.json sets the commit
+        # message and the tag message.
         env:
           VERSION_CMD: ${{ steps.version_cmd.outputs.cmd }}
           FIRST_RELEASE_FLAG: ${{ steps.first_release_flag.outputs.flag }}
@@ -382,15 +380,12 @@ jobs:
             echo "- Next: the push job pushes the tag. The push starts the Publish workflow." >> "$GITHUB_STEP_SUMMARY"
           fi
 
-  # Holds the push token. It runs no third-party code: no install, no Nx, no
-  # repo script. The only actions are checkout and download-artifact. The
-  # bundle comes from the `release` job, so it is untrusted input. Check it
-  # before the token is used.
-  # Gate the release behind a protected environment. Store RELEASE_TOKEN as an
-  # *environment* secret (not a plain repo secret) with required reviewers, so
-  # a `workflow_dispatch` on an untrusted ref cannot reach the admin push token
-  # without human approval. GitHub auto-creates this environment on first run;
-  # add the protection rules in Settings > Environments > release.
+  # Pushes the release commit and tag. This job installs nothing and runs no
+  # repo code. It checks the bundle from the `release` job, then creates a
+  # GitHub App token and pushes.
+  # The `release` environment holds the App variable and secret
+  # (`RELEASE_APP_ID`, `RELEASE_APP_PRIVATE_KEY`) and its required reviewers
+  # approve the push.
   push:
     name: Push release commit and tag
     needs: release
@@ -447,9 +442,7 @@ jobs:
             exit 1
           fi
 
-          # A release changes one file: the package version. A release commit
-          # has never touched the lockfile, and a changed lockfile would change
-          # what Publish builds.
+          # A release commit changes one file: packages/toolkit/package.json.
           CHANGED=$(git diff --name-only origin/main "$CANDIDATE")
           if [ "$CHANGED" != "packages/toolkit/package.json" ]; then
             echo "❌ A release commit must change only packages/toolkit/package.json. It changes:" >&2
@@ -457,8 +450,7 @@ jobs:
             exit 1
           fi
 
-          # Only the version value may change. A changed `scripts`,
-          # `dependencies` or `exports` would ship to users.
+          # Only the version value changes. Every other field stays the same.
           OLD_REST=$(git show origin/main:packages/toolkit/package.json | jq -S 'del(.version)')
           NEW_REST=$(git show "$CANDIDATE:packages/toolkit/package.json" | jq -S 'del(.version)')
           if [ "$OLD_REST" != "$NEW_REST" ]; then
@@ -474,64 +466,45 @@ jobs:
             exit 1
           fi
 
-      # Fail before the push if the release credential is missing, expired or
-      # revoked. Nothing is pushed yet. The token comes from env only.
+      # The App token is scoped to this repository with `contents: write`.
+      - name: Create App token
+        id: app_token
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
+        with:
+          app-id: ${{ vars.RELEASE_APP_ID }}
+          private-key: ${{ secrets.RELEASE_APP_PRIVATE_KEY }}
+          permission-contents: write
+
+      # Check the token before the push. The token comes from env only.
       - name: Verify release credential
         env:
-          RELEASE_TOKEN: ${{ secrets.RELEASE_TOKEN }}
+          APP_TOKEN: ${{ steps.app_token.outputs.token }}
         run: |
-          if [ -z "$RELEASE_TOKEN" ]; then
-            echo "::error::RELEASE_TOKEN is not set on the 'release' environment."
-            echo "Add the secret in Settings > Environments > release." >&2
+          if [ -z "$APP_TOKEN" ]; then
+            echo "::error::No App token was created." >&2
             exit 1
           fi
 
-          BODY=$(mktemp)
-          HEADERS=$(mktemp)
-          CODE=$(curl -sS -o "$BODY" -D "$HEADERS" -w '%{http_code}' \
-            -H "Authorization: Bearer $RELEASE_TOKEN" \
+          CODE=$(curl -sS -o /dev/null -w '%{http_code}' \
+            -H "Authorization: Bearer $APP_TOKEN" \
             -H "Accept: application/vnd.github+json" \
             "https://api.github.com/repos/$GITHUB_REPOSITORY")
 
           if [ "$CODE" != "200" ]; then
-            echo "::error::RELEASE_TOKEN could not authenticate against $GITHUB_REPOSITORY (HTTP $CODE)."
-            echo "The token is expired, revoked, or invalid. Mint a new one and update" >&2
-            echo "the RELEASE_TOKEN secret in Settings > Environments > release." >&2
+            echo "::error::The App token could not read $GITHUB_REPOSITORY (HTTP $CODE)." >&2
             exit 1
-          fi
-
-          # GitHub returns this header for PATs that carry an expiry date.
-          EXPIRY=$(grep -i '^github-authentication-token-expiration:' "$HEADERS" \
-            | cut -d: -f2- | sed 's/^ *//' | tr -d '\r')
-
-          if [ -n "$EXPIRY" ]; then
-            echo "Release credential expires: $EXPIRY"
-            echo "- Release credential expires: \`$EXPIRY\`" >> "$GITHUB_STEP_SUMMARY"
-          else
-            echo "Release credential has no expiration date set."
-            echo "- Release credential: no expiry" >> "$GITHUB_STEP_SUMMARY"
-          fi
-
-          # Warn (do not block) if push access is not visible: the permissions
-          # object is absent for some GitHub App installation tokens that can
-          # still push perfectly well.
-          PUSH=$(python3 -c "import json,sys; d=json.load(open(sys.argv[1])); p=d.get('permissions'); print('' if p is None else str(p.get('push', False)).lower())" "$BODY")
-          if [ "$PUSH" = "false" ]; then
-            echo "::warning::RELEASE_TOKEN authenticated but reports no push permission on $GITHUB_REPOSITORY; the push may fail."
           fi
 
           echo "Release credential OK."
 
-      # The only step that holds the push token. RELEASE_TOKEN is an
-      # admin-scoped token (PAT with Contents:write, or a GitHub App token)
-      # that bypasses the `main` ruleset; GITHUB_TOKEN cannot push to protected
-      # main. The token lives in one command-scoped header. It is never written
-      # to .git/config. This push starts the Publish workflow.
+      # The App is a bypass actor on the `main` ruleset; `GITHUB_TOKEN` cannot
+      # push to protected main. The token goes in one command-scoped header and
+      # is never written to .git/config. This push starts the Publish workflow.
       - name: Push release commit and tag
         env:
-          RELEASE_TOKEN: ${{ secrets.RELEASE_TOKEN }}
+          APP_TOKEN: ${{ steps.app_token.outputs.token }}
         run: |
-          AUTH=$(printf 'x-access-token:%s' "$RELEASE_TOKEN" | base64 -w0)
+          AUTH=$(printf 'x-access-token:%s' "$APP_TOKEN" | base64 -w0)
           echo "::add-mask::$AUTH"
           git -c "http.https://github.com/.extraheader=AUTHORIZATION: basic $AUTH" \
             push --no-verify --atomic origin \
