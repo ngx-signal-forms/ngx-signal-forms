@@ -21,7 +21,6 @@ import {
   NGX_FORM_FIELD_ERROR_RENDERER,
   generateErrorId,
   generateWarningId,
-  type NgxFormFieldErrorPlacement,
 } from '@ngx-signal-forms/toolkit';
 import {
   devWarnOnce,
@@ -29,6 +28,7 @@ import {
   sanitizeFieldNameForId,
   type WarnOnceRef,
 } from '@ngx-signal-forms/toolkit/core';
+import type { NgxFormFieldErrorPlacement } from './form-field-error-placement';
 import { resolveUnionInput } from './utilities/resolve-union-input';
 
 export type NgxFormFieldsetFeedbackAppearance =

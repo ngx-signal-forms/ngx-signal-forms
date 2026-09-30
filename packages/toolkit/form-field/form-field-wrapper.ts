@@ -20,7 +20,6 @@ import type {
   FormFieldAppearanceInput,
   FormFieldOrientation,
   FormFieldOrientationInput,
-  NgxFormFieldErrorPlacement,
   NgxSignalFormHintDescriptor,
   ResolvedMarker,
   WarningDisplayStrategy,
@@ -57,6 +56,7 @@ import {
 } from './form-field-dom-sync';
 import { capabilitiesFor } from './form-field.utils';
 import { resolveClusterAriaAttrs } from './form-field-cluster-aria';
+import type { NgxFormFieldErrorPlacement } from './form-field-error-placement';
 import { resolveUnionInput } from './utilities/resolve-union-input';
 
 /**

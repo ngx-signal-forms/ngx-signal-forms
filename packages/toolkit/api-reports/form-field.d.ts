@@ -1,6 +1,5 @@
 import * as _ngx_signal_forms_toolkit from '@ngx-signal-forms/toolkit';
-import { ResolvedNgxSignalFormControlSemantics, ErrorDisplayStrategy, WarningDisplayStrategy, NgxFormFieldErrorPlacement, FormFieldAppearanceInput, FormFieldOrientationInput, FieldMarkingMode, FormFieldAppearance, FormFieldOrientation, ResolvedMarker, NgxSignalFormHintDescriptor, NgxSignalFormAutoAria, NgxSignalFormControlSemanticsDirective } from '@ngx-signal-forms/toolkit';
-export { NgxFieldIdentityProvider, NgxFormFieldErrorPlacement } from '@ngx-signal-forms/toolkit';
+import { ResolvedNgxSignalFormControlSemantics, ErrorDisplayStrategy, WarningDisplayStrategy, FormFieldAppearanceInput, FormFieldOrientationInput, FieldMarkingMode, FormFieldAppearance, FormFieldOrientation, ResolvedMarker, NgxSignalFormHintDescriptor, NgxSignalFormAutoAria, NgxSignalFormControlSemanticsDirective } from '@ngx-signal-forms/toolkit';
 import * as _angular_core from '@angular/core';
 import { WritableSignal, Type, ElementRef } from '@angular/core';
 import * as _angular_forms_signals from '@angular/forms/signals';
@@ -63,6 +62,18 @@ interface WrapperDomState {
     readonly warnedUnresolvedKind: WarnOnceRef;
     readonly warnedUnresolvedFieldName: WarnOnceRef;
 }
+
+/**
+ * Placement of the validation summary relative to the control or fieldset
+ * content. Shared by `NgxFormFieldWrapper` and `NgxFormFieldset` so a
+ * single value binds cleanly across both APIs.
+ *
+ * - `'top'`: render the summary directly below the legend / above the inputs
+ * - `'bottom'`: render the summary after the projected content
+ *
+ * @public
+ */
+type NgxFormFieldErrorPlacement = 'bottom' | 'top';
 
 /**
  * Form field wrapper component with automatic error/warning display.
@@ -786,4 +797,4 @@ declare class NgxFormFieldset {
 declare const NgxFormField: readonly [typeof NgxSignalFormAutoAria, typeof NgxSignalFormControlSemanticsDirective, typeof NgxFormFieldWrapper, typeof NgxFormFieldHint, typeof NgxFormFieldCharacterCount, typeof NgxFormFieldError, typeof NgxFormFieldset];
 
 export { NgxFormField, NgxFormFieldWrapper, NgxFormFieldset };
-export type { NgxFormFieldsetAppearance, NgxFormFieldsetFeedbackAppearance, NgxFormFieldsetSurfaceTone, NgxFormFieldsetValidationSurface };
+export type { NgxFormFieldErrorPlacement, NgxFormFieldsetAppearance, NgxFormFieldsetFeedbackAppearance, NgxFormFieldsetSurfaceTone, NgxFormFieldsetValidationSurface };

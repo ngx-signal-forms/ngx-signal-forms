@@ -103,7 +103,6 @@ export type {
   FormFieldAppearanceInput,
   FormFieldOrientation,
   FormFieldOrientationInput,
-  NgxFormFieldErrorPlacement,
   NgxFormFieldErrorRenderer,
   NgxFormFieldErrorRendererOverride,
   NgxFormFieldHintRenderer,
