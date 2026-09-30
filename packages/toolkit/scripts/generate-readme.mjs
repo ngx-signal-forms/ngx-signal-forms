@@ -54,6 +54,11 @@ export function mapReadmeLinks(markdown, map) {
  * (`''` for the root README). `isShipped(repoPath)` says whether a
  * repo-relative path also exists in the package. Links to shipped files keep
  * their relative form because they still resolve after install.
+ *
+ * @param {string} markdown
+ * @param {string} ref
+ * @param {{ sourceDir?: string, isShipped?: (repoPath: string) => boolean }} [options]
+ * @returns {string}
  */
 export function publishedReadme(
   markdown,

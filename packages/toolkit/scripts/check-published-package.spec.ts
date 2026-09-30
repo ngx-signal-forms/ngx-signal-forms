@@ -240,12 +240,13 @@ describe('buildTarballManifest', () => {
   });
 
   it('throws a clear error instead of an npm stack trace when the directory has no package.json', () => {
-    distRoot = mkdtempSync(join(tmpdir(), 'check-published-package-'));
+    const emptyRoot = mkdtempSync(join(tmpdir(), 'check-published-package-'));
+    distRoot = emptyRoot;
 
     // No package.json written - `npm pack` fails immediately. The guard
     // must report that failure as an actionable one-line error, not let a
     // raw ENOENT/npm stack trace leak to the CI log.
-    expect(() => buildTarballManifest(distRoot)).toThrow(
+    expect(() => buildTarballManifest(emptyRoot)).toThrow(
       /npm pack --dry-run.* failed/,
     );
   });
