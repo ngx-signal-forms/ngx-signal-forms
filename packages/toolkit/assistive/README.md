@@ -316,15 +316,15 @@ Shows "current/max" and changes colour as the value nears the limit.
 <ngx-form-field-character-count [formField]="form.bio" [maxLength]="500" />
 ```
 
-| Input                   | Type                                           | Default                    | Description                                                   |
-| ----------------------- | ---------------------------------------------- | -------------------------- | ------------------------------------------------------------- |
-| `formField`             | `FieldTree<NgxCharacterCountValue>` (required) | —                          | The field to count.                                           |
-| `maxLength`             | `number \| undefined`                          | from `maxLength` validator | The limit. Omit it to read the field's `maxLength` validator. |
-| `position`              | `'left' \| 'right'`                            | `'right'`                  | Alignment.                                                    |
-| `showLimitColors`       | `boolean`                                      | `true`                     | Colour changes as the count nears the limit.                  |
-| `liveAnnounce`          | `boolean`                                      | `false`                    | Polite announcement when the limit state changes.             |
-| `announcementFormatter` | `NgxCharacterCountAnnouncementFormatter`       | English text               | Function that returns localized announcement text.            |
-| `fieldName`             | `string \| undefined`                          | from the wrapper           | Field name for the limit id when no wrapper supplies one.     |
+| Input                   | Type                                        | Default                    | Description                                                                                                   |
+| ----------------------- | ------------------------------------------- | -------------------------- | ------------------------------------------------------------------------------------------------------------- |
+| `formField`             | `FieldTree<CharacterCountValue>` (required) | —                          | The field to count. `CharacterCountValue` is `string \| string[]`, from `@ngx-signal-forms/toolkit/headless`. |
+| `maxLength`             | `number \| undefined`                       | from `maxLength` validator | The limit. Omit it to read the field's `maxLength` validator.                                                 |
+| `position`              | `'left' \| 'right'`                         | `'right'`                  | Alignment.                                                                                                    |
+| `showLimitColors`       | `boolean`                                   | `true`                     | Colour changes as the count nears the limit.                                                                  |
+| `liveAnnounce`          | `boolean`                                   | `false`                    | Polite announcement when the limit state changes.                                                             |
+| `announcementFormatter` | `NgxCharacterCountAnnouncementFormatter`    | English text               | Function that returns localized announcement text.                                                            |
+| `fieldName`             | `string \| undefined`                       | from the wrapper           | Field name for the limit id when no wrapper supplies one.                                                     |
 
 Behavior:
 

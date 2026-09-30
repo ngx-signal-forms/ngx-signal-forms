@@ -28,11 +28,6 @@ import { NgxHeadlessErrorState } from '@ngx-signal-forms/toolkit/headless';
 export type NgxFormFieldListStyle = 'plain' | 'bullets';
 
 /**
- * @deprecated Use {@link NgxFormFieldListStyle} instead.
- */
-export type NgxFormFieldErrorListStyle = NgxFormFieldListStyle;
-
-/**
  * Visual treatment for the rendered live regions.
  *
  * - `'inline'` (default) — bare messages under a single control, no card

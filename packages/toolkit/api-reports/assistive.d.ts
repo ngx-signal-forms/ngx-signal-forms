@@ -5,23 +5,6 @@ import { CharacterCountLimitState, CharacterCountValue, NgxHeadlessErrorState, N
 import { FieldMarkingMode } from '@ngx-signal-forms/toolkit';
 
 /**
- * Supported value shape for the character-count `formField` input.
- *
- * Re-exports {@link CharacterCountValue} from the headless entry so the
- * styled component's input type cannot drift from what the underlying
- * `createCharacterCount()` utility actually supports.
- *
- * The component counts length of either:
- * - A `string` value (e.g. `<input>`, `<textarea>`)
- * - A `string[]` value (e.g. tokenized inputs where each array entry is
- *   one token). The displayed count is `array.length`, not the combined
- *   string length — this matches the intuitive "X of N tokens" UX.
- *
- * `null` / `undefined` are treated as length `0`. Any other value type
- * logs a dev-mode warning via `createCharacterCount` and renders `0`.
- */
-type NgxCharacterCountValue = CharacterCountValue;
-/**
  * Non-`'ok'` limit states that ever produce a live-announcement string.
  * `'ok'` is intentionally excluded — no announcement is emitted for it, so
  * an {@link NgxCharacterCountAnnouncementFormatter} is never invoked with it.
@@ -194,7 +177,7 @@ declare class NgxFormFieldCharacterCount {
      * Form field to track character count from.
      *
      * Supported value shapes: `string`, `readonly string[]`, `null`, or
-     * `undefined` — see {@link NgxCharacterCountValue}. Anything else
+     * `undefined` — see {@link CharacterCountValue}. Anything else
      * degrades to a displayed count of `0` and logs a dev-mode warning.
      */
     readonly formField: _angular_core.InputSignal<FieldTree<CharacterCountValue>>;
@@ -386,10 +369,6 @@ declare class NgxFormFieldCharacterCount {
 }
 
 type NgxFormFieldListStyle = 'bullets' | 'plain';
-/**
- * @deprecated Use {@link NgxFormFieldListStyle} instead.
- */
-type NgxFormFieldErrorListStyle = NgxFormFieldListStyle;
 /**
  * Visual treatment for the rendered live regions.
  *
@@ -950,4 +929,4 @@ declare class NgxFormFieldHint {
 }
 
 export { NgxFormFieldCharacterCount, NgxFormFieldError, NgxFormFieldErrorSummary, NgxFormFieldHint, NgxFormMarkingLegend };
-export type { NgxCharacterCountAnnouncementFormatter, NgxCharacterCountAnnouncementInfo, NgxCharacterCountAnnouncementState, NgxCharacterCountValue, NgxErrorSummaryHeadingLevel, NgxFormFieldErrorListStyle, NgxFormFieldErrorPresentation, NgxFormFieldListStyle };
+export type { NgxCharacterCountAnnouncementFormatter, NgxCharacterCountAnnouncementInfo, NgxCharacterCountAnnouncementState, NgxErrorSummaryHeadingLevel, NgxFormFieldErrorPresentation, NgxFormFieldListStyle };
