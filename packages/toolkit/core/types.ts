@@ -18,7 +18,7 @@ export type SubmittedStatus = 'unsubmitted' | 'submitting' | 'submitted';
  *
  * @template T The type of value returned when called
  */
-export type SignalLike<T> = Signal<T> | (() => T);
+export type NgxSignalLike<T> = Signal<T> | (() => T);
 
 /**
  * Accepts a reactive (Signal/function) or a plain static value.
@@ -30,7 +30,7 @@ export type SignalLike<T> = Signal<T> | (() => T);
  * @public
  * @template T The type of value when unwrapped
  */
-export type ReactiveOrStatic<T> = SignalLike<T> | T;
+export type NgxReactiveOrStatic<T> = NgxSignalLike<T> | T;
 
 /**
  * Resolved error display strategy used by forms and config defaults.

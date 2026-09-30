@@ -14,10 +14,10 @@ import {
   splitByKind,
   unwrapValue,
   type ErrorDisplayStrategy,
-  type ReactiveOrStatic,
+  type NgxReactiveOrStatic,
   type ResolvedErrorDisplayStrategy,
   type ResolvedWarningDisplayStrategy,
-  type SignalLike,
+  type NgxSignalLike,
   type SubmittedStatus,
   type WarningDisplayStrategy,
 } from '@ngx-signal-forms/toolkit';
@@ -51,19 +51,19 @@ import {
  */
 export interface CreateFieldsetAggregationOptions {
   /** Reactive reader for the fieldset's own field state (from `field()()`). */
-  readonly fieldState: SignalLike<unknown>;
+  readonly fieldState: NgxSignalLike<unknown>;
   /**
    * Explicit field-list override. `null`/omitted means "not provided" —
    * aggregate `fieldState`'s own errors. See `NgxHeadlessFieldset.fields`
    * for the "not provided" vs "explicitly empty" distinction this preserves.
    */
-  readonly fields?: ReactiveOrStatic<readonly FieldTree<unknown>[] | null>;
+  readonly fields?: NgxReactiveOrStatic<readonly FieldTree<unknown>[] | null>;
   /** Whether to aggregate nested field errors (`errorSummary()`) instead of direct ones (`errors()`). */
-  readonly includeNestedErrors?: ReactiveOrStatic<boolean>;
+  readonly includeNestedErrors?: NgxReactiveOrStatic<boolean>;
   /** Pre-resolved blocking-error visibility (from the caller's own visibility seam call). */
-  readonly showErrors: SignalLike<boolean>;
+  readonly showErrors: NgxSignalLike<boolean>;
   /** Pre-resolved warning visibility, timed independently of {@link showErrors}. */
-  readonly showWarnings: SignalLike<boolean>;
+  readonly showWarnings: NgxSignalLike<boolean>;
   /** Error message registry for 3-tier message resolution. */
   readonly errorMessages?: Readonly<ErrorMessageRegistry> | null;
 }

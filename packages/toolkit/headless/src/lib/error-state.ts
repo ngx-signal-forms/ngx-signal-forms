@@ -19,8 +19,8 @@ import {
   unwrapValue,
   type ErrorDisplayStrategy,
   type ErrorReadableState,
-  type ReactiveOrStatic,
-  type SignalLike,
+  type NgxReactiveOrStatic,
+  type NgxSignalLike,
   type SubmittedStatus,
   type WarningDisplayStrategy,
 } from '@ngx-signal-forms/toolkit';
@@ -71,9 +71,9 @@ interface HeadlessErrorStateCore {
  * @internal
  */
 export function buildHeadlessErrorState(
-  fieldState: SignalLike<unknown>,
-  fieldName: SignalLike<string | null>,
-  errorsOverride?: SignalLike<readonly ValidationError[] | undefined>,
+  fieldState: NgxSignalLike<unknown>,
+  fieldName: NgxSignalLike<string | null>,
+  errorsOverride?: NgxSignalLike<readonly ValidationError[] | undefined>,
 ): HeadlessErrorStateCore {
   const split = computed(() => {
     const override = errorsOverride?.();
@@ -103,7 +103,7 @@ export interface CreateErrorStateOptions<TValue = unknown> {
   /** Form field FieldTree */
   readonly field: FieldTree<TValue>;
   /** Field name for ID generation. `null` disables ID generation. */
-  readonly fieldName: ReactiveOrStatic<string | null>;
+  readonly fieldName: NgxReactiveOrStatic<string | null>;
   /**
    * Error display strategy override.
    *
@@ -114,7 +114,7 @@ export interface CreateErrorStateOptions<TValue = unknown> {
    * defaults apply consistently across headless surfaces even outside a
    * form context.
    */
-  readonly strategy?: ReactiveOrStatic<ErrorDisplayStrategy>;
+  readonly strategy?: NgxReactiveOrStatic<ErrorDisplayStrategy>;
   /**
    * Warning display strategy override, independent of {@link strategy}.
    *
@@ -124,14 +124,14 @@ export interface CreateErrorStateOptions<TValue = unknown> {
    * consults `defaultErrorStrategy`, so an ambient `'on-submit'` meant for
    * blocking errors never silently gates warnings (ADR-0007).
    */
-  readonly warningStrategy?: ReactiveOrStatic<WarningDisplayStrategy>;
+  readonly warningStrategy?: NgxReactiveOrStatic<WarningDisplayStrategy>;
   /**
    * Submitted status override.
    *
    * Resolution order: this option (when not `undefined`) → ambient
    * `NGX_SIGNAL_FORM_CONTEXT.submittedStatus` → `undefined`.
    */
-  readonly submittedStatus?: ReactiveOrStatic<SubmittedStatus | undefined>;
+  readonly submittedStatus?: NgxReactiveOrStatic<SubmittedStatus | undefined>;
   /**
    * Optional injector for use outside an Angular injection context (e.g.
    * unit tests, `runInInjectionContext` wrappers). When omitted the
@@ -258,7 +258,7 @@ function createErrorStateInternal<TValue = unknown>(
   // (ADR-0006) instead of re-inlining `resolveStrategyFromContext` →
   // `resolveSubmittedStatusFromContext` → `createShowErrorsComputed`.
   //
-  // `strategy`/`submittedStatus` are core's `ReactiveOrStatic<T>`
+  // `strategy`/`submittedStatus` are core's `NgxReactiveOrStatic<T>`
   // (signal-or-plain-function-or-value union), which also accepts a bare
   // `() => T` reader — a shape `createErrorVisibility`'s `Signal<T>`-typed
   // options don't structurally accept. Normalize through `computed()` so
@@ -469,7 +469,7 @@ export class NgxHeadlessErrorState<
    * controls visibility through `hasErrors`/`hasWarnings`).
    */
   readonly errorsOverride =
-    input<ReactiveOrStatic<readonly ValidationError[]>>();
+    input<NgxReactiveOrStatic<readonly ValidationError[]>>();
 
   /**
    * Bridges a host component's field input to this directive when the

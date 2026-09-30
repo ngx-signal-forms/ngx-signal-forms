@@ -7,7 +7,7 @@ import {
   type ErrorDisplayStrategy,
   type ResolvedErrorDisplayStrategy,
   type ResolvedWarningDisplayStrategy,
-  type SignalLike,
+  type NgxSignalLike,
   type SubmittedStatus,
   type WarningDisplayStrategy,
 } from '@ngx-signal-forms/toolkit';
@@ -49,11 +49,11 @@ const STRIP_WARNING_PREFIX_OPTION = { stripWarningPrefix: true } as const;
  */
 export interface CreateErrorSummaryEntriesOptions {
   /** Reactive reader for the root field state (from `formTree()()`). */
-  readonly fieldState: SignalLike<unknown>;
+  readonly fieldState: NgxSignalLike<unknown>;
   /** Pre-resolved blocking-error visibility. */
-  readonly showErrors: SignalLike<boolean>;
+  readonly showErrors: NgxSignalLike<boolean>;
   /** Pre-resolved warning visibility, timed independently of {@link showErrors}. */
-  readonly showWarnings: SignalLike<boolean>;
+  readonly showWarnings: NgxSignalLike<boolean>;
   /** Error message registry for 3-tier message resolution. */
   readonly errorMessages?: Readonly<ErrorMessageRegistry> | null;
   /** Optional field-label resolver; falls back to `humanizeFieldPath`. */

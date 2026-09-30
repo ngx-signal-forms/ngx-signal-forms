@@ -191,17 +191,17 @@ in.
 />
 ```
 
-| Input             | Type                                           | Default    | Description                                                                                 |
-| ----------------- | ---------------------------------------------- | ---------- | ------------------------------------------------------------------------------------------- |
-| `formField`       | `FieldTree`                                    | —          | The field to show. Give `formField` or `errors`.                                            |
-| `errors`          | `ReactiveOrStatic<readonly ValidationError[]>` | —          | A list you computed, as an array, a signal, or a function. Wins over `formField`.           |
-| `fieldName`       | `string`                                       | —          | Base for the `{fieldName}-error` and `{fieldName}-warning` ids. Required without a wrapper. |
-| `strategy`        | `ErrorDisplayStrategy`                         | inherited  | When errors show. Has no effect when `errors` is bound.                                     |
-| `warningStrategy` | `WarningDisplayStrategy`                       | inherited  | When warnings show. Falls back to `on-touch`.                                               |
-| `submittedStatus` | `SubmittedStatus`                              | inherited  | Submission state for `on-submit`, when there is no `ngxSignalForm`.                         |
-| `listStyle`       | `'plain' \| 'bullets'`                         | `'plain'`  | Message layout.                                                                             |
-| `title`           | `string \| null \| undefined`                  | —          | Title above the message list.                                                               |
-| `presentation`    | `'inline' \| 'panel'`                          | `'inline'` | `inline` shows bare messages. `panel` shows a bordered card for grouped feedback.           |
+| Input             | Type                                              | Default    | Description                                                                                 |
+| ----------------- | ------------------------------------------------- | ---------- | ------------------------------------------------------------------------------------------- |
+| `formField`       | `FieldTree`                                       | —          | The field to show. Give `formField` or `errors`.                                            |
+| `errors`          | `NgxReactiveOrStatic<readonly ValidationError[]>` | —          | A list you computed, as an array, a signal, or a function. Wins over `formField`.           |
+| `fieldName`       | `string`                                          | —          | Base for the `{fieldName}-error` and `{fieldName}-warning` ids. Required without a wrapper. |
+| `strategy`        | `ErrorDisplayStrategy`                            | inherited  | When errors show. Has no effect when `errors` is bound.                                     |
+| `warningStrategy` | `WarningDisplayStrategy`                          | inherited  | When warnings show. Falls back to `on-touch`.                                               |
+| `submittedStatus` | `SubmittedStatus`                                 | inherited  | Submission state for `on-submit`, when there is no `ngxSignalForm`.                         |
+| `listStyle`       | `'plain' \| 'bullets'`                            | `'plain'`  | Message layout.                                                                             |
+| `title`           | `string \| null \| undefined`                     | —          | Title above the message list.                                                               |
+| `presentation`    | `'inline' \| 'panel'`                             | `'inline'` | `inline` shows bare messages. `panel` shows a bordered card for grouped feedback.           |
 
 "Inherited" means the component uses the form's `ngxSignalForm` setting, then
 the provided config. See

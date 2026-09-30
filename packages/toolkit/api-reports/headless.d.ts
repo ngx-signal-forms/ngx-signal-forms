@@ -1,7 +1,7 @@
 import * as _angular_core from '@angular/core';
 import { Signal, Injector } from '@angular/core';
 import { FieldTree, ValidationError } from '@angular/forms/signals';
-import { ReactiveOrStatic, ErrorReadableState, ErrorDisplayStrategy, WarningDisplayStrategy, SubmittedStatus, SignalLike, ResolvedErrorDisplayStrategy, ResolvedWarningDisplayStrategy } from '@ngx-signal-forms/toolkit';
+import { NgxReactiveOrStatic, ErrorReadableState, ErrorDisplayStrategy, WarningDisplayStrategy, SubmittedStatus, NgxSignalLike, ResolvedErrorDisplayStrategy, ResolvedWarningDisplayStrategy } from '@ngx-signal-forms/toolkit';
 import { FieldLabelResolver, ErrorMessageRegistry, ErrorDisplayStrategy as ErrorDisplayStrategy$1, WarningDisplayStrategy as WarningDisplayStrategy$1, SubmittedStatus as SubmittedStatus$1 } from './ngx-signal-forms-toolkit-core.js';
 export { AriaDescribedByBridge, AriaDescribedByFieldNameReader, AriaDescribedByPreservedIdsReader, AriaRequiredFieldState, BoundControlElementReader, CreateAriaDescribedByBridgeOptions, CreateAriaDescribedBySignalOptions, CreateFieldNameResolverOptions, CreateHintIdsSignalOptions, HintIdsFieldNameReader, HintIdsIdentityLike, HintIdsRegistryLike, HintIdsSignal, LabelForReader, createAriaDescribedByBridge, createAriaDescribedBySignal, createAriaInvalidSignal, createAriaRequiredSignal, createFieldNameResolver, createHintIdsSignal, humanizeFieldPath } from './ngx-signal-forms-toolkit-core.js';
 
@@ -104,7 +104,7 @@ interface CreateCharacterCountOptions {
      * `undefined`, `null`, or omitting the option means "no explicit limit".
      * See `useValidatorMaxLength` for the fallback that applies then.
      */
-    readonly maxLength?: ReactiveOrStatic<number | null>;
+    readonly maxLength?: NgxReactiveOrStatic<number | null>;
     /**
      * Falls back to the field's own `maxLength` validator signal when
      * `maxLength` resolves to no explicit limit. Only a present, positive
@@ -115,9 +115,9 @@ interface CreateCharacterCountOptions {
      */
     readonly useValidatorMaxLength?: boolean;
     /** Warning threshold (0-1), default 0.8 */
-    readonly warningThreshold?: ReactiveOrStatic<number>;
+    readonly warningThreshold?: NgxReactiveOrStatic<number>;
     /** Danger threshold (0-1), default 0.95 */
-    readonly dangerThreshold?: ReactiveOrStatic<number>;
+    readonly dangerThreshold?: NgxReactiveOrStatic<number>;
     /**
      * Name reported in the unsupported-value-type dev warning, e.g.
      * `[ngx-signal-forms] <component>: unsupported value type — …`. Lets a
@@ -521,7 +521,7 @@ interface CreateErrorStateOptions<TValue = unknown> {
     /** Form field FieldTree */
     readonly field: FieldTree<TValue>;
     /** Field name for ID generation. `null` disables ID generation. */
-    readonly fieldName: ReactiveOrStatic<string | null>;
+    readonly fieldName: NgxReactiveOrStatic<string | null>;
     /**
      * Error display strategy override.
      *
@@ -532,7 +532,7 @@ interface CreateErrorStateOptions<TValue = unknown> {
      * defaults apply consistently across headless surfaces even outside a
      * form context.
      */
-    readonly strategy?: ReactiveOrStatic<ErrorDisplayStrategy>;
+    readonly strategy?: NgxReactiveOrStatic<ErrorDisplayStrategy>;
     /**
      * Warning display strategy override, independent of {@link strategy}.
      *
@@ -542,14 +542,14 @@ interface CreateErrorStateOptions<TValue = unknown> {
      * consults `defaultErrorStrategy`, so an ambient `'on-submit'` meant for
      * blocking errors never silently gates warnings (ADR-0007).
      */
-    readonly warningStrategy?: ReactiveOrStatic<WarningDisplayStrategy>;
+    readonly warningStrategy?: NgxReactiveOrStatic<WarningDisplayStrategy>;
     /**
      * Submitted status override.
      *
      * Resolution order: this option (when not `undefined`) → ambient
      * `NGX_SIGNAL_FORM_CONTEXT.submittedStatus` → `undefined`.
      */
-    readonly submittedStatus?: ReactiveOrStatic<SubmittedStatus | undefined>;
+    readonly submittedStatus?: NgxReactiveOrStatic<SubmittedStatus | undefined>;
     /**
      * Optional injector for use outside an Angular injection context (e.g.
      * unit tests, `runInInjectionContext` wrappers). When omitted the
@@ -768,7 +768,7 @@ declare class NgxHeadlessErrorState<TValue = unknown> implements ErrorStateSigna
      * not required and `shouldShowErrors` always returns `true` (the caller
      * controls visibility through `hasErrors`/`hasWarnings`).
      */
-    readonly errorsOverride: _angular_core.InputSignal<ReactiveOrStatic<readonly ValidationError[]> | undefined>;
+    readonly errorsOverride: _angular_core.InputSignal<NgxReactiveOrStatic<readonly ValidationError[]> | undefined>;
     /**
      * Resolved submission status after applying form-context defaults.
      * Exposed so that host components composing this directive via
@@ -847,11 +847,11 @@ type ErrorSummaryEntry = ErrorSummaryEntryData;
  */
 interface CreateErrorSummaryEntriesOptions {
     /** Reactive reader for the root field state (from `formTree()()`). */
-    readonly fieldState: SignalLike<unknown>;
+    readonly fieldState: NgxSignalLike<unknown>;
     /** Pre-resolved blocking-error visibility. */
-    readonly showErrors: SignalLike<boolean>;
+    readonly showErrors: NgxSignalLike<boolean>;
     /** Pre-resolved warning visibility, timed independently of {@link showErrors}. */
-    readonly showWarnings: SignalLike<boolean>;
+    readonly showWarnings: NgxSignalLike<boolean>;
     /** Error message registry for 3-tier message resolution. */
     readonly errorMessages?: Readonly<ErrorMessageRegistry> | null;
     /** Optional field-label resolver; falls back to `humanizeFieldPath`. */
@@ -1180,19 +1180,19 @@ declare class NgxHeadlessFieldName implements FieldNameStateSignals {
  */
 interface CreateFieldsetAggregationOptions {
     /** Reactive reader for the fieldset's own field state (from `field()()`). */
-    readonly fieldState: SignalLike<unknown>;
+    readonly fieldState: NgxSignalLike<unknown>;
     /**
      * Explicit field-list override. `null`/omitted means "not provided" —
      * aggregate `fieldState`'s own errors. See `NgxHeadlessFieldset.fields`
      * for the "not provided" vs "explicitly empty" distinction this preserves.
      */
-    readonly fields?: ReactiveOrStatic<readonly FieldTree<unknown>[] | null>;
+    readonly fields?: NgxReactiveOrStatic<readonly FieldTree<unknown>[] | null>;
     /** Whether to aggregate nested field errors (`errorSummary()`) instead of direct ones (`errors()`). */
-    readonly includeNestedErrors?: ReactiveOrStatic<boolean>;
+    readonly includeNestedErrors?: NgxReactiveOrStatic<boolean>;
     /** Pre-resolved blocking-error visibility (from the caller's own visibility seam call). */
-    readonly showErrors: SignalLike<boolean>;
+    readonly showErrors: NgxSignalLike<boolean>;
     /** Pre-resolved warning visibility, timed independently of {@link showErrors}. */
-    readonly showWarnings: SignalLike<boolean>;
+    readonly showWarnings: NgxSignalLike<boolean>;
     /** Error message registry for 3-tier message resolution. */
     readonly errorMessages?: Readonly<ErrorMessageRegistry> | null;
 }

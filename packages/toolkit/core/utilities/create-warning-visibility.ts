@@ -1,6 +1,6 @@
 import { computed, type Injector, type Signal } from '@angular/core';
 import type {
-  ReactiveOrStatic,
+  NgxReactiveOrStatic,
   ResolvedWarningDisplayStrategy,
   SubmittedStatus,
   WarningDisplayStrategy,
@@ -70,7 +70,7 @@ export interface CreateWarningVisibilityOptions {
    * fieldset's own `errors()`, and `createFieldsetAggregation` already
    * returns `showWarnings() && hasWarnings()`.
    */
-  readonly hasWarnings?: ReactiveOrStatic<boolean>;
+  readonly hasWarnings?: NgxReactiveOrStatic<boolean>;
 
   /**
    * Whether a blocking error is currently visible on the **same field**.
@@ -83,7 +83,7 @@ export interface CreateWarningVisibilityOptions {
    * omitted on purpose — they span a subtree, and a blocking error on one
    * member field must not silence a warning on a sibling.
    */
-  readonly errorVisibility?: ReactiveOrStatic<boolean>;
+  readonly errorVisibility?: NgxReactiveOrStatic<boolean>;
 
   /**
    * Optional injector for use outside an Angular injection context (e.g.
@@ -149,7 +149,9 @@ export interface CreateWarningVisibilityOptions {
  * @public
  */
 export function createWarningVisibility(
-  field: ReactiveOrStatic<Partial<WarningVisibilityState> | null | undefined>,
+  field: NgxReactiveOrStatic<
+    Partial<WarningVisibilityState> | null | undefined
+  >,
   opts?: CreateWarningVisibilityOptions,
 ): Signal<boolean> {
   return assertInjector(createWarningVisibility, opts?.injector, () => {

@@ -1,7 +1,7 @@
 import { type Injector, type Signal } from '@angular/core';
 import type {
   ErrorDisplayStrategy,
-  ReactiveOrStatic,
+  NgxReactiveOrStatic,
   ResolvedErrorDisplayStrategy,
   SubmittedStatus,
 } from '../types';
@@ -163,7 +163,7 @@ export interface CreateErrorVisibilityOptions {
  * @public
  */
 export function createErrorVisibility(
-  field: ReactiveOrStatic<Partial<ErrorVisibilityState> | null | undefined>,
+  field: NgxReactiveOrStatic<Partial<ErrorVisibilityState> | null | undefined>,
   opts?: CreateErrorVisibilityOptions,
 ): Signal<boolean> {
   return assertInjector(createErrorVisibility, opts?.injector, () => {

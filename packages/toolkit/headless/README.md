@@ -230,14 +230,14 @@ Selector: `[ngxHeadlessErrorState]` · Export: `errorState`
 
 The errors and warnings of one field, with timing applied.
 
-| Input             | Type                                           | Default   | Description                                                                   |
-| ----------------- | ---------------------------------------------- | --------- | ----------------------------------------------------------------------------- |
-| `field`           | `FieldTree`                                    | —         | The field to track. Omit it when you bind `errorsOverride`.                   |
-| `fieldName`       | `string \| null`                               | `null`    | Base for the ids. `null` turns ids off.                                       |
-| `errorsOverride`  | `ReactiveOrStatic<readonly ValidationError[]>` | —         | A list you computed, as an array, a signal, or a function. Wins over `field`. |
-| `strategy`        | `ErrorDisplayStrategy`                         | inherited | When errors show.                                                             |
-| `warningStrategy` | `WarningDisplayStrategy`                       | inherited | When warnings show. Falls back to `on-touch`.                                 |
-| `submittedStatus` | `SubmittedStatus`                              | inherited | Submission state for `on-submit`, when there is no `ngxSignalForm`.           |
+| Input             | Type                                              | Default   | Description                                                                   |
+| ----------------- | ------------------------------------------------- | --------- | ----------------------------------------------------------------------------- |
+| `field`           | `FieldTree`                                       | —         | The field to track. Omit it when you bind `errorsOverride`.                   |
+| `fieldName`       | `string \| null`                                  | `null`    | Base for the ids. `null` turns ids off.                                       |
+| `errorsOverride`  | `NgxReactiveOrStatic<readonly ValidationError[]>` | —         | A list you computed, as an array, a signal, or a function. Wins over `field`. |
+| `strategy`        | `ErrorDisplayStrategy`                            | inherited | When errors show.                                                             |
+| `warningStrategy` | `WarningDisplayStrategy`                          | inherited | When warnings show. Falls back to `on-touch`.                                 |
+| `submittedStatus` | `SubmittedStatus`                                 | inherited | Submission state for `on-submit`, when there is no `ngxSignalForm`.           |
 
 "Inherited" means the directive uses the form's `ngxSignalForm` setting, then
 the provided config. See

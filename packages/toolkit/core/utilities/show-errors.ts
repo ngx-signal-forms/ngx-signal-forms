@@ -1,7 +1,7 @@
 import { computed, type Signal } from '@angular/core';
 import type {
   ErrorDisplayStrategy,
-  ReactiveOrStatic,
+  NgxReactiveOrStatic,
   ResolvedErrorDisplayStrategy,
   SubmittedStatus,
 } from '../types';
@@ -96,9 +96,9 @@ import { unwrapValue } from './unwrap-signal-or-value';
  * @internal
  */
 export function createShowErrorsComputed(
-  field: ReactiveOrStatic<Partial<ErrorVisibilityState> | null | undefined>,
-  strategy: ReactiveOrStatic<ErrorDisplayStrategy>,
-  submittedStatus?: ReactiveOrStatic<SubmittedStatus | undefined>,
+  field: NgxReactiveOrStatic<Partial<ErrorVisibilityState> | null | undefined>,
+  strategy: NgxReactiveOrStatic<ErrorDisplayStrategy>,
+  submittedStatus?: NgxReactiveOrStatic<SubmittedStatus | undefined>,
 ): Signal<boolean> {
   const warnOnce = createDevWarnOnce();
 
