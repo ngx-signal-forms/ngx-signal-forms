@@ -16,7 +16,15 @@ Infer the repo from `git remote -v` — `gh` does this automatically when run in
 
 ## When a skill says "publish to the issue tracker"
 
-Create a GitHub issue.
+Create a GitHub issue. A security finding is the exception. See the next section.
+
+## Security findings
+
+A security finding in the toolkit, or in the workflows that build and publish it, never goes in a public issue, pull request, commit message or code comment. `SECURITY.md` sets this rule.
+
+- Report it in a private draft advisory: `gh api -X POST repos/{owner}/{repo}/security-advisories` with `summary`, `description` and `severity`.
+- Keep the public text of the fix neutral. Say what the change does. Do not describe the attack, name the weak file and line, list gaps that are still open, or give secret names or expiry dates.
+- Put the detail and any manual steps in the advisory.
 
 ## When a skill says "fetch the relevant ticket"
 

@@ -27,6 +27,8 @@ Conventional Commits. The subject line drives `nx release` versioning **and land
 
 Triage labels: `needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`.
 
+Security findings never go in a public issue or pull request. Use a private advisory. See `docs/agents/issue-tracker.md#security-findings`.
+
 <!-- nx configuration start-->
 <!-- Leave the start & end comments to automatically receive updates. -->
 
