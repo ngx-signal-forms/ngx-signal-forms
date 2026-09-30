@@ -502,7 +502,7 @@ describe('error-strategies', () => {
     it('maps inherit at the createShowErrorsComputed boundary to on-touch semantics', () => {
       // shouldShowErrors now accepts only ResolvedErrorDisplayStrategy.
       // `'inherit'` is resolved upstream by createShowErrorsComputed() /
-      // resolveErrorDisplayStrategy(). Exercise that contract through the
+      // resolveStrategyFromContext(). Exercise that contract through the
       // public reactive entry point rather than casting.
       const touched = signal({
         invalid: signal(true),
