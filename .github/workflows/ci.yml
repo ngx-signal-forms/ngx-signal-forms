@@ -516,3 +516,24 @@ jobs:
             apps/*/playwright-report/
           if-no-files-found: ignore
           retention-days: 14
+
+  # One stable check name for the `main` ruleset and Dependabot auto-merge.
+  # It fails when any CI job failed or was cancelled. A skipped job passes.
+  # Add every new CI job to `needs` so the required check cannot miss it.
+  ci-success:
+    name: ci-success
+    if: ${{ always() }}
+    needs: [main, demo-e2e-sharded, toolkit-isolation, coverage, a11y]
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions: {}
+    steps:
+      - name: Require every CI job to pass
+        env:
+          NEEDS_JSON: ${{ toJSON(needs) }}
+        run: |
+          echo "$NEEDS_JSON" | jq -r 'to_entries[] | "\(.key): \(.value.result)"'
+          if echo "$NEEDS_JSON" | jq -e 'any(.[]; .result == "failure" or .result == "cancelled")' >/dev/null; then
+            echo "❌ At least one CI job failed or was cancelled." >&2
+            exit 1
+          fi

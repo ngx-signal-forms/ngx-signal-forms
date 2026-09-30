@@ -48,35 +48,49 @@ on:
         default: false
 
 permissions:
-  contents: write
+  contents: read
 
 concurrency:
   group: release-${{ github.workflow }}
   cancel-in-progress: false
 
+# Three jobs:
+#   release:        install, checks, `nx release version`. Commits and tags
+#                   locally, pushes nothing, and uploads the result as a git
+#                   bundle.
+#   push:           verifies the bundle, creates a GitHub App token and runs
+#                   `git push`. It installs nothing and runs no repo code.
+#   github-release: `nx release changelog` creates the GitHub release with the
+#                   workflow's own `GITHUB_TOKEN`.
+# A dry run runs `release` only.
 jobs:
   release:
+    name: Version and tag
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     # The quality gate runs every affected e2e suite in this one job, including
     # demo-e2e unsharded (ci.yml splits it across a 4-way matrix). Matches the
     # 35 min ci.yml allows its own main job.
     timeout-minutes: 35
-    # Gate the release behind a protected environment. Store RELEASE_TOKEN as an
-    # *environment* secret (not a plain repo secret) with required reviewers, so
-    # a `workflow_dispatch` on an untrusted ref cannot reach the admin push token
-    # without human approval. GitHub auto-creates this environment on first run;
-    # add the protection rules in Settings > Environments > release.
-    environment: release
+    outputs:
+      tag: ${{ steps.release_info.outputs.tag }}
+      sha: ${{ steps.release_info.outputs.sha }}
     steps:
+      - name: Require main
+        if: ${{ !inputs.dry_run }}
+        run: |
+          # The push job moves `main`. Fail early if this is another branch.
+          if [ "$GITHUB_REF" != "refs/heads/main" ]; then
+            echo "::error::Run the Release workflow from main, not from $GITHUB_REF." >&2
+            exit 1
+          fi
+
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           fetch-depth: 0
           filter: tree:0
-          # SECURITY: do not persist any credential into .git/config here. The
-          # install + `nx affected` steps below execute untrusted dependency
-          # code; a persisted admin token could be exfiltrated by a malicious
-          # package. The privileged push credential is bound late, only in the
-          # Release step, after all third-party code has finished running.
+          # Persist no credential. Only the `push` job creates a push token.
           persist-credentials: false
 
       - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413
@@ -94,66 +108,6 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-
-      # Fail fast if the release credential is missing, expired, or revoked.
-      # A release runs a ~15 min quality gate before it ever touches the push
-      # token; without this the only signal of an expired PAT is a failure at
-      # the very end. Deliberately placed BEFORE `pnpm install`: no
-      # third-party code has executed yet, so the token is never resident in
-      # the environment while untrusted dependency code runs.
-      - name: Verify release credential
-        env:
-          # Resolved separately from the token itself: the `||` fallback below
-          # is indistinguishable from a real RELEASE_TOKEN once evaluated, so
-          # without this the preflight would happily green-light a run that
-          # has no push credential at all.
-          HAS_RELEASE_TOKEN: ${{ secrets.RELEASE_TOKEN != '' }}
-          RELEASE_TOKEN: ${{ secrets.RELEASE_TOKEN || secrets.GITHUB_TOKEN }}
-        run: |
-          if [ "$HAS_RELEASE_TOKEN" != "true" ]; then
-            echo "::error::RELEASE_TOKEN is not set on the 'release' environment."
-            echo "The workflow would fall back to GITHUB_TOKEN, which cannot push to" >&2
-            echo "protected main, so the Release step would fail only after the full" >&2
-            echo "quality gate has already run. Add the secret in" >&2
-            echo "Settings > Environments > release." >&2
-            exit 1
-          fi
-
-          BODY=$(mktemp)
-          HEADERS=$(mktemp)
-          CODE=$(curl -sS -o "$BODY" -D "$HEADERS" -w '%{http_code}' \
-            -H "Authorization: Bearer $RELEASE_TOKEN" \
-            -H "Accept: application/vnd.github+json" \
-            "https://api.github.com/repos/$GITHUB_REPOSITORY")
-
-          if [ "$CODE" != "200" ]; then
-            echo "::error::RELEASE_TOKEN could not authenticate against $GITHUB_REPOSITORY (HTTP $CODE)."
-            echo "The token is expired, revoked, or invalid. Mint a new one and update" >&2
-            echo "the RELEASE_TOKEN secret in Settings > Environments > release." >&2
-            exit 1
-          fi
-
-          # GitHub returns this header for PATs that carry an expiry date.
-          EXPIRY=$(grep -i '^github-authentication-token-expiration:' "$HEADERS" \
-            | cut -d: -f2- | sed 's/^ *//' | tr -d '\r')
-
-          if [ -n "$EXPIRY" ]; then
-            echo "Release credential expires: $EXPIRY"
-            echo "- Release credential expires: \`$EXPIRY\`" >> "$GITHUB_STEP_SUMMARY"
-          else
-            echo "Release credential has no expiration date set."
-            echo "- Release credential: no expiry" >> "$GITHUB_STEP_SUMMARY"
-          fi
-
-          # Warn (do not block) if push access is not visible: the permissions
-          # object is absent for some GitHub App installation tokens that can
-          # still push perfectly well.
-          PUSH=$(python3 -c "import json,sys; d=json.load(open(sys.argv[1])); p=d.get('permissions'); print('' if p is None else str(p.get('push', False)).lower())" "$BODY")
-          if [ "$PUSH" = "false" ]; then
-            echo "::warning::RELEASE_TOKEN authenticated but reports no push permission on $GITHUB_REPOSITORY; the Release step may fail."
-          fi
-
-          echo "Release credential OK."
 
       - name: Set up Socket Firewall
         uses: socketdev/action@ba6de6cc0565af1f42295590380973573297e31f # v1.3.2
@@ -297,107 +251,318 @@ jobs:
 
       - name: Determine version command
         id: version_cmd
+        env:
+          VERSION: ${{ inputs.version }}
+          CUSTOM_VERSION: ${{ inputs.custom_version }}
+          PRERELEASE_ID: ${{ inputs.prerelease_id }}
         run: |
-          VERSION="${{ inputs.version }}"
           if [ "$VERSION" = "custom" ]; then
-            printf 'cmd=%s\n' "${{ inputs.custom_version }}" >> "$GITHUB_OUTPUT"
+            printf 'cmd=%s\n' "$CUSTOM_VERSION" >> "$GITHUB_OUTPUT"
           elif [[ "$VERSION" == pre* ]]; then
             # prepatch, preminor, premajor, prerelease all use --preid
-            printf 'cmd=%s --preid=%s\n' "$VERSION" "${{ inputs.prerelease_id }}" >> "$GITHUB_OUTPUT"
+            printf 'cmd=%s --preid=%s\n' "$VERSION" "$PRERELEASE_ID" >> "$GITHUB_OUTPUT"
           else
             printf 'cmd=%s\n' "$VERSION" >> "$GITHUB_OUTPUT"
           fi
 
       - name: Determine first-release flag
         id: first_release_flag
+        env:
+          FIRST_RELEASE: ${{ inputs.first_release }}
         run: |
-          if [ "${{ inputs.first_release }}" = "true" ]; then
+          if [ "$FIRST_RELEASE" = "true" ]; then
             printf 'flag=%s\n' '--first-release' >> "$GITHUB_OUTPUT"
           else
             printf 'flag=\n' >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Preview Release Changelog
-        # This dry run is also the release pre-flight. It runs the changelog
-        # renderer, which requires `docs/migrations/v<version>.md`, before the
-        # real Release step binds the push token or writes a version. A failed
-        # dry run fails the job here with the renderer's own message, instead
-        # of failing later inside the real release with a partial log.
+      - name: Version, commit and tag locally
+        # `nx release version` bumps the version, commits and tags, and pushes
+        # nothing. The `release.version.git` block in nx.json sets the commit
+        # message and the tag message.
+        env:
+          VERSION_CMD: ${{ steps.version_cmd.outputs.cmd }}
+          FIRST_RELEASE_FLAG: ${{ steps.first_release_flag.outputs.flag }}
         run: |
-          echo "## 📋 Release Preview" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "Running: \`nx release ${{ steps.version_cmd.outputs.cmd }} --skip-publish --dry-run ${{ steps.first_release_flag.outputs.flag }}\`" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          set +e
-          pnpm exec nx release ${{ steps.version_cmd.outputs.cmd }} --skip-publish --dry-run ${{ steps.first_release_flag.outputs.flag }} > /tmp/release-preview.txt 2>&1
-          STATUS=$?
-          set -e
-          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
-          head -n 100 /tmp/release-preview.txt >> $GITHUB_STEP_SUMMARY
-          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
-
-          if [ "$STATUS" -ne 0 ]; then
-            echo "" >> $GITHUB_STEP_SUMMARY
-            echo "❌ Release dry run failed with exit code $STATUS. Last lines:" >> $GITHUB_STEP_SUMMARY
-            echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
-            tail -n 20 /tmp/release-preview.txt >> $GITHUB_STEP_SUMMARY
-            echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
-            echo "❌ Release dry run failed with exit code $STATUS. The real release did not start." >&2
-            tail -n 20 /tmp/release-preview.txt >&2
-            exit "$STATUS"
-          fi
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Release (Dry Run)
-        if: ${{ inputs.dry_run }}
-        run: pnpm exec nx release ${{ steps.version_cmd.outputs.cmd }} --skip-publish --dry-run ${{ steps.first_release_flag.outputs.flag }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Release
-        if: ${{ !inputs.dry_run }}
-        # The push credential is bound here and nowhere earlier: RELEASE_TOKEN is
-        # an admin-scoped token (PAT with Contents:write, or a GitHub App token)
-        # that bypasses the `main` ruleset; GITHUB_TOKEN cannot push to protected
-        # main. The token comes from env (never inlined into the command, so it
-        # is not logged). Falls back to GITHUB_TOKEN when the secret is unset.
-        run: |
-          git remote set-url origin "https://x-access-token:${RELEASE_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
-          pnpm exec nx release ${{ steps.version_cmd.outputs.cmd }} --skip-publish ${{ steps.first_release_flag.outputs.flag }}
-        env:
-          RELEASE_TOKEN: ${{ secrets.RELEASE_TOKEN || secrets.GITHUB_TOKEN }}
-          GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN || secrets.GITHUB_TOKEN }}
+          read -r -a VERSION_ARGS <<< "$VERSION_CMD"
+          read -r -a FIRST_RELEASE_ARGS <<< "$FIRST_RELEASE_FLAG"
+          pnpm exec nx release version "${VERSION_ARGS[@]}" "${FIRST_RELEASE_ARGS[@]}"
 
       - name: Resolve created release tag
-        if: ${{ !inputs.dry_run }}
         id: release_info
         run: |
-          git fetch --tags --force
-
           TAG=$(git tag --points-at HEAD | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+([-.][0-9A-Za-z.-]+)?$' | head -n 1)
 
           if [ -z "$TAG" ]; then
-            TAG=$(git tag --list 'v*' --sort=-version:refname | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+([-.][0-9A-Za-z.-]+)?$' | head -n 1)
-          fi
-
-          if [ -z "$TAG" ]; then
-            echo "❌ No release tag found after nx release" >&2
+            echo "❌ No release tag found after nx release version" >&2
             git tag --list 'v*' --sort=-version:refname | head -5 >&2
             exit 1
           fi
 
+          # The commit must sit directly on main, and be the only new commit.
+          if [ "$(git rev-list --count origin/main..HEAD)" != "1" ]; then
+            echo "❌ Expected exactly one release commit on top of origin/main." >&2
+            exit 1
+          fi
+
           echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
           echo "Resolved: tag=$TAG"
 
-      - name: Summary
+      # This step is also the release pre-flight. It runs the changelog
+      # renderer, which requires `docs/migrations/v<version>.md`. A failed run
+      # fails the job here with the renderer's own message, before anything is
+      # pushed. `--dry-run` writes nothing and creates no release.
+      - name: Preview release notes
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ steps.release_info.outputs.tag }}
+          FIRST_RELEASE_FLAG: ${{ steps.first_release_flag.outputs.flag }}
         run: |
-          echo "## Release Summary" >> $GITHUB_STEP_SUMMARY
-          echo "- Version: ${{ steps.version_cmd.outputs.cmd }}" >> $GITHUB_STEP_SUMMARY
-          echo "- Dry Run: ${{ inputs.dry_run }}" >> $GITHUB_STEP_SUMMARY
-          echo "- First Release Mode: ${{ inputs.first_release }}" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          if [ "${{ inputs.dry_run }}" != "true" ]; then
-            echo "- Git Tag: ${{ steps.release_info.outputs.tag }}" >> $GITHUB_STEP_SUMMARY
-            echo "- Publish: run the separate Publish workflow with ref=${{ steps.release_info.outputs.tag }}" >> $GITHUB_STEP_SUMMARY
+          read -r -a FIRST_RELEASE_ARGS <<< "$FIRST_RELEASE_FLAG"
+          if [ -n "$FIRST_RELEASE_FLAG" ]; then
+            RANGE_ARGS=()
+          else
+            # The new tag is on HEAD. Start the notes at the tag before it.
+            PREVIOUS_TAG=$(git describe --tags --abbrev=0 --match 'v*' "${TAG}^")
+            RANGE_ARGS=(--from "$PREVIOUS_TAG")
           fi
+
+          set +e
+          pnpm exec nx release changelog "${TAG#v}" "${RANGE_ARGS[@]}" "${FIRST_RELEASE_ARGS[@]}" \
+            --git-commit=false --git-tag=false --git-push=false --dry-run > /tmp/release-preview.txt 2>&1
+          STATUS=$?
+          set -e
+
+          {
+            echo "## 📋 Release Preview"
+            echo ""
+            echo "Running: \`nx release changelog ${TAG#v} --dry-run\`"
+            echo "\`\`\`"
+            head -n 100 /tmp/release-preview.txt
+            echo "\`\`\`"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+          if [ "$STATUS" -ne 0 ]; then
+            echo "❌ Release notes preview failed with exit code $STATUS. The release did not start." >&2
+            tail -n 20 /tmp/release-preview.txt >&2
+            exit "$STATUS"
+          fi
+
+      - name: Bundle the release commit and tag
+        if: ${{ !inputs.dry_run }}
+        env:
+          TAG: ${{ steps.release_info.outputs.tag }}
+        run: git bundle create release.bundle origin/main..HEAD "refs/tags/$TAG"
+
+      - name: Upload release bundle
+        if: ${{ !inputs.dry_run }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: release-bundle
+          path: release.bundle
+          if-no-files-found: error
+          retention-days: 1
+
+      - name: Summary
+        env:
+          VERSION_CMD: ${{ steps.version_cmd.outputs.cmd }}
+          DRY_RUN: ${{ inputs.dry_run }}
+          FIRST_RELEASE: ${{ inputs.first_release }}
+          TAG: ${{ steps.release_info.outputs.tag }}
+        run: |
+          echo "## Release Summary" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Version: $VERSION_CMD" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Dry Run: $DRY_RUN" >> "$GITHUB_STEP_SUMMARY"
+          echo "- First Release Mode: $FIRST_RELEASE" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Git Tag: $TAG" >> "$GITHUB_STEP_SUMMARY"
+          if [ "$DRY_RUN" != "true" ]; then
+            echo "- Next: the push job pushes the tag. The push starts the Publish workflow." >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+  # Pushes the release commit and tag. This job installs nothing and runs no
+  # repo code. It checks the bundle from the `release` job, then creates a
+  # GitHub App token and pushes.
+  # The `release` environment holds the App variable and secret
+  # (`RELEASE_APP_ID`, `RELEASE_APP_PRIVATE_KEY`) and its required reviewers
+  # approve the push.
+  push:
+    name: Push release commit and tag
+    needs: release
+    if: ${{ !inputs.dry_run }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment: release
+    permissions:
+      contents: read
+    env:
+      TAG: ${{ needs.release.outputs.tag }}
+      EXPECTED_SHA: ${{ needs.release.outputs.sha }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Download release bundle
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: release-bundle
+          path: bundle
+
+      - name: Verify the bundle
+        run: |
+          set -o pipefail
+          if [ "$GITHUB_REF" != "refs/heads/main" ]; then
+            echo "❌ Push only from main, not from $GITHUB_REF." >&2
+            exit 1
+          fi
+          if [[ ! "$TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+([-.][0-9A-Za-z.-]+)?$ ]] || [[ ! "$EXPECTED_SHA" =~ ^[0-9a-f]{40}$ ]]; then
+            echo "❌ The release job returned an invalid tag or SHA." >&2
+            exit 1
+          fi
+
+          # Main must not have moved since the release job started.
+          git fetch --no-tags origin main
+          git bundle verify bundle/release.bundle
+          git fetch --no-tags bundle/release.bundle \
+            "refs/tags/${TAG}:refs/tags/${TAG}" \
+            "HEAD:refs/heads/release-candidate"
+
+          CANDIDATE=$(git rev-parse refs/heads/release-candidate)
+          TAG_COMMIT=$(git rev-parse "refs/tags/${TAG}^{commit}")
+          if [ "$CANDIDATE" != "$EXPECTED_SHA" ] || [ "$TAG_COMMIT" != "$EXPECTED_SHA" ]; then
+            echo "❌ The bundle does not match the expected commit $EXPECTED_SHA." >&2
+            exit 1
+          fi
+
+          # A fast-forward of main by exactly one commit.
+          if [ "$(git rev-list --parents -n 1 "$CANDIDATE" | wc -w | tr -d ' ')" != "2" ] || [ "$(git rev-parse "${CANDIDATE}^")" != "$(git rev-parse origin/main)" ]; then
+            echo "❌ The release commit is not a single commit on top of origin/main." >&2
+            exit 1
+          fi
+
+          # A release commit changes one file: packages/toolkit/package.json.
+          CHANGED=$(git diff --name-only origin/main "$CANDIDATE")
+          if [ "$CHANGED" != "packages/toolkit/package.json" ]; then
+            echo "❌ A release commit must change only packages/toolkit/package.json. It changes:" >&2
+            echo "$CHANGED" >&2
+            exit 1
+          fi
+
+          # Only the version value changes. Every other field stays the same.
+          OLD_REST=$(git show origin/main:packages/toolkit/package.json | jq -S 'del(.version)')
+          NEW_REST=$(git show "$CANDIDATE:packages/toolkit/package.json" | jq -S 'del(.version)')
+          if [ "$OLD_REST" != "$NEW_REST" ]; then
+            echo "❌ The release commit changes more than the version in package.json." >&2
+            echo "$OLD_REST" > "$RUNNER_TEMP/package.old.json"
+            echo "$NEW_REST" > "$RUNNER_TEMP/package.new.json"
+            diff "$RUNNER_TEMP/package.old.json" "$RUNNER_TEMP/package.new.json" >&2 || true
+            exit 1
+          fi
+          NEW_VERSION=$(git show "$CANDIDATE:packages/toolkit/package.json" | jq -r '.version')
+          if [ "$NEW_VERSION" != "${TAG#v}" ]; then
+            echo "❌ package.json version '$NEW_VERSION' does not match tag '$TAG'." >&2
+            exit 1
+          fi
+
+      # The App token is scoped to this repository with `contents: write`.
+      - name: Create App token
+        id: app_token
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
+        with:
+          app-id: ${{ vars.RELEASE_APP_ID }}
+          private-key: ${{ secrets.RELEASE_APP_PRIVATE_KEY }}
+          permission-contents: write
+
+      # Check the token before the push. The token comes from env only.
+      - name: Verify release credential
+        env:
+          APP_TOKEN: ${{ steps.app_token.outputs.token }}
+        run: |
+          if [ -z "$APP_TOKEN" ]; then
+            echo "::error::No App token was created." >&2
+            exit 1
+          fi
+
+          CODE=$(curl -sS -o /dev/null -w '%{http_code}' \
+            -H "Authorization: Bearer $APP_TOKEN" \
+            -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/$GITHUB_REPOSITORY")
+
+          if [ "$CODE" != "200" ]; then
+            echo "::error::The App token could not read $GITHUB_REPOSITORY (HTTP $CODE)." >&2
+            exit 1
+          fi
+
+          echo "Release credential OK."
+
+      # The App is a bypass actor on the `main` ruleset; `GITHUB_TOKEN` cannot
+      # push to protected main. The token goes in one command-scoped header and
+      # is never written to .git/config. This push starts the Publish workflow.
+      - name: Push release commit and tag
+        env:
+          APP_TOKEN: ${{ steps.app_token.outputs.token }}
+        run: |
+          AUTH=$(printf 'x-access-token:%s' "$APP_TOKEN" | base64 -w0)
+          echo "::add-mask::$AUTH"
+          git -c "http.https://github.com/.extraheader=AUTHORIZATION: basic $AUTH" \
+            push --no-verify --atomic origin \
+            "refs/heads/release-candidate:refs/heads/main" \
+            "refs/tags/${TAG}:refs/tags/${TAG}"
+
+  # `nx release changelog` runs third-party code (Nx, the renderer). It gets
+  # only the workflow's own `GITHUB_TOKEN`, which cannot bypass the `main`
+  # ruleset.
+  github-release:
+    name: Create GitHub release
+    needs: [release, push]
+    if: ${{ !inputs.dry_run }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ needs.release.outputs.sha }}
+          fetch-depth: 0
+          filter: tree:0
+          persist-credentials: false
+
+      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413
+        name: Install pnpm
+        with:
+          run_install: false
+
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version-file: '.node-version'
+          cache: 'pnpm'
+
+      - name: Set up Socket Firewall
+        uses: socketdev/action@ba6de6cc0565af1f42295590380973573297e31f # v1.3.2
+        with:
+          mode: firewall
+
+      - name: Install dependencies
+        run: sfw pnpm install --frozen-lockfile
+
+      - name: Create GitHub release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NX_NO_CLOUD: 'true'
+          NX_DAEMON: 'false'
+          TAG: ${{ needs.release.outputs.tag }}
+          FIRST_RELEASE: ${{ inputs.first_release }}
+        run: |
+          git fetch --tags --force
+          if [ "$FIRST_RELEASE" = "true" ]; then
+            RANGE_ARGS=(--first-release)
+          else
+            PREVIOUS_TAG=$(git describe --tags --abbrev=0 --match 'v*' "${TAG}^")
+            RANGE_ARGS=(--from "$PREVIOUS_TAG")
+          fi
+
+          pnpm exec nx release changelog "${TAG#v}" "${RANGE_ARGS[@]}" \
+            --git-commit=false --git-tag=false --git-push=false

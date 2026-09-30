@@ -84,12 +84,13 @@
   },
   "release": {
     "projects": ["toolkit"],
-    "git": {
-      "commit": true,
-      "commitMessage": "chore(release): publish {version}",
-      "tag": true,
-      "tagMessage": "Release {version}",
-      "push": true
+    "version": {
+      "git": {
+        "commit": true,
+        "commitMessage": "chore(release): publish {version}",
+        "tag": true,
+        "tagMessage": "Release {version}"
+      }
     },
     "changelog": {
       "workspaceChangelog": false,
