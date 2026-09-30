@@ -48,6 +48,11 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
+      # `strictPeerDependencies` is off, so peer conflicts do not fail the
+      # install. This step makes them visible.
+      - name: Check peer dependencies
+        run: pnpm peers check
+
       - name: Cache Playwright browsers
         id: playwright-cache
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
