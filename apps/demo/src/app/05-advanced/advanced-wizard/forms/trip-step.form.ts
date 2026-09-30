@@ -3,7 +3,6 @@ import {
   applyEach,
   type FieldTree,
   form,
-  validate,
   validateStandardSchema,
 } from '@angular/forms/signals';
 import { requiredFromStandardSchema } from '@ngx-signal-forms/toolkit';
@@ -43,7 +42,8 @@ export type TripStepForm = FieldTree<TripStepData>;
  * Validation strategy:
  * - Single-field: Zod schemas via validateStandardSchema()
  * - Same-object cross-field: Zod schema refine() for dates
- * - Nested cross-field: validate() for activity date within destination range
+ * - Nested cross-field: Zod schema superRefine() for activity date within
+ *   destination range (shared with the wizard store)
  *
  * @param store Wizard store instance
  */
@@ -74,27 +74,6 @@ export function createTripStepForm(store: InstanceType<typeof WizardStore>): {
 
       applyEach(destPath.activities, (actPath) => {
         validateStandardSchema(actPath, ActivitySchema);
-
-        // Cross-field: activity date within destination date range
-        validate(actPath.date, (ctx) => {
-          const arrival = ctx.valueOf(destPath.arrivalDate);
-          const departure = ctx.valueOf(destPath.departureDate);
-          const activityDate = ctx.value();
-
-          if (!arrival || !departure || !activityDate) return null;
-
-          const arrDate = new Date(arrival);
-          const depDate = new Date(departure);
-          const actDate = new Date(activityDate);
-
-          if (actDate < arrDate || actDate > depDate) {
-            return {
-              kind: 'activity_date_range',
-              message: 'Activity date must be within destination date range',
-            };
-          }
-          return null;
-        });
 
         applyEach(actPath.requirements, (reqPath) => {
           validateStandardSchema(reqPath, RequirementSchema);
