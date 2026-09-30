@@ -138,8 +138,8 @@ These checks run against the built package in `dist/packages/toolkit`, after
    [`packages/toolkit/api-reports/`](../packages/toolkit/api-reports). After
    an intended change, review the diff and update the baseline. The check
    sorts the members of literal unions (`'a' | 'b'`), so a cached and a clean
-   build give the same baseline. Always run `toolkit:post-build` first: a bare
-   `toolkit:build` skips the steps that shape the published package:
+   build give the same baseline. Build first: `toolkit:build` runs every step
+   that shapes the published package:
 
    ```sh
    pnpm nx build toolkit

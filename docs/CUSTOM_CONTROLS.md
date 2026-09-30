@@ -499,8 +499,9 @@ warning, and link that ID from the control with the same condition.
 
 ### Publishing visibility for a custom standalone error surface
 
-`<ngx-form-field-error>` tells auto-ARIA when its messages show. Your own
-message element must do the same through
+`<ngx-form-field-error>` tells auto-ARIA when its messages show. So does
+`ngxHeadlessErrorState` with a `fieldName`, inside `form[ngxSignalForm]`. A
+message element that decides visibility without them must do the same through
 `NGX_SIGNAL_FORM_FIELD_VISIBILITY_REGISTRY`, or `aria-describedby` can point
 to a message that is not rendered. See
 [Custom wrappers: visibility registry](./CUSTOM_WRAPPERS.md#visibility-registry-tell-auto-aria-when-messages-show).

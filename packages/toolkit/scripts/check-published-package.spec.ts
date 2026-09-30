@@ -16,6 +16,7 @@ import {
   diffApiSurface,
   diffTarballManifest,
   entryNameFor,
+  findBrokenReadmeLinks,
   normalizeLiteralUnions,
   publishedEntries,
   readBaselineSurface,
@@ -247,6 +248,47 @@ describe('buildTarballManifest', () => {
     expect(() => buildTarballManifest(distRoot)).toThrow(
       /npm pack --dry-run.* failed/,
     );
+  });
+});
+
+describe('findBrokenReadmeLinks', () => {
+  let distRoot: string | undefined;
+
+  afterEach(() => {
+    if (distRoot !== undefined)
+      rmSync(distRoot, { recursive: true, force: true });
+  });
+
+  async function pack(readmes: Record<string, string>) {
+    distRoot = mkdtempSync(join(tmpdir(), 'check-published-readme-'));
+    for (const [path, text] of Object.entries(readmes)) {
+      await mkdir(join(distRoot, path, '..'), { recursive: true });
+      writeFileSync(join(distRoot, path), text);
+    }
+    return { distRoot, manifest: Object.keys(readmes).toSorted() };
+  }
+
+  it('reports a link that leaves the package or points at a file not in the tarball', async () => {
+    const { distRoot, manifest } = await pack({
+      'README.md': '# Root',
+      'form-field/README.md':
+        '[a](../../../docs/X.md) [b](./THEMING.md) [c](/docs/Y.md)',
+    });
+    expect(findBrokenReadmeLinks(distRoot, manifest)).toEqual([
+      { readme: 'form-field/README.md', target: '../../../docs/X.md' },
+      { readme: 'form-field/README.md', target: './THEMING.md' },
+      { readme: 'form-field/README.md', target: '/docs/Y.md' },
+    ]);
+  });
+
+  it('accepts links that resolve in the tarball, absolute URLs, anchors and fenced examples', async () => {
+    const { distRoot, manifest } = await pack({
+      'README.md': '# Root',
+      'assistive/README.md': '# Assistive',
+      'form-field/README.md':
+        '[a](../assistive/README.md#top) [b](../README.md) [c](https://example.com) [d](#here)\n```md\n[e](./missing.md)\n```',
+    });
+    expect(findBrokenReadmeLinks(distRoot, manifest)).toEqual([]);
   });
 });
 

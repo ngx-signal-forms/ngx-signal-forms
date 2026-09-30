@@ -54,8 +54,8 @@ Each summary gate includes presence. Warning rows use their own gate, never
 ```html
 <section ngxHeadlessErrorSummary #summary="errorSummary" [formTree]="myForm">
   <div role="alert">
-    @if (summary.shouldShow()) { @for (entry of summary.entries(); track $index)
-    {
+    @if (summary.shouldShow()) { @for (entry of summary.entries(); track
+    entry.key) {
     <button type="button" (click)="entry.focus()">
       {{ entry.fieldName }}: {{ entry.message }}
     </button>
@@ -63,7 +63,7 @@ Each summary gate includes presence. Warning rows use their own gate, never
   </div>
   <div role="status">
     @if (summary.shouldShowWarnings()) { @for (entry of
-    summary.warningEntries(); track $index) {
+    summary.warningEntries(); track entry.key) {
     <p>{{ entry.fieldName }}: {{ entry.message }}</p>
     } }
   </div>
@@ -306,6 +306,9 @@ Publish the other channels separately:
   readers. Register the booleans gating content and active IDs, not host
   existence or a strategy for auto-ARIA to resolve again. Clean up registration
   on change/destruction. Keep error and warning timing independent.
+  `NgxHeadlessErrorState` with a `fieldName` already registers its own
+  visibility, including a local `strategy`/`warningStrategy`; do not register
+  the same field again.
 
 Import projected hints and auto-ARIA in the template that declares them;
 wrapper imports do not apply to consumer projection. The public identity read

@@ -106,6 +106,16 @@ describe('toolkit colors follow the inherited color-scheme (#494)', () => {
     await expectNoA11yViolations(surface);
   });
 
+  it('keeps the tinted invalid fieldset surface readable on a light page (#535)', async () => {
+    const surface = await renderFixture('background-color: #ffffff', {
+      tintInvalidSurface: true,
+    });
+
+    // The inline "Full name" error sits outside the tint and keeps its color.
+    expect(errorColor(surface)).toBe(LIGHT_ERROR);
+    await expectNoA11yViolations(surface);
+  });
+
   it('keeps the tinted invalid fieldset surface readable when :root follows a dark OS', async () => {
     document.documentElement.style.setProperty('color-scheme', 'light dark');
     await commands.emulateColorScheme('dark');
