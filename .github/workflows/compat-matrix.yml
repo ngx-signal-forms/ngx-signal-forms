@@ -129,7 +129,12 @@ jobs:
           node-version-file: '.node-version'
           cache: 'pnpm'
 
-      - run: pnpm install --frozen-lockfile
+      - name: Set up Socket Firewall
+        uses: socketdev/action@ba6de6cc0565af1f42295590380973573297e31f # v1.3.2
+        with:
+          mode: firewall
+
+      - run: sfw pnpm install --frozen-lockfile
 
       # Playwright setup runs against the untouched lockfile, before any
       # override, so its cache key stays stable across cells and isn't
@@ -166,7 +171,7 @@ jobs:
           set -euo pipefail
           IFS=',' read -ra PAIRS <<< "$OVERRIDE"
           node tools/scripts/compat-matrix-override.mjs "${PAIRS[@]}"
-          pnpm install --no-frozen-lockfile
+          sfw pnpm install --no-frozen-lockfile
 
       - name: Verify resolved versions
         env:
