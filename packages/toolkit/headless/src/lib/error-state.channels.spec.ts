@@ -21,15 +21,18 @@ import { render } from '@testing-library/angular';
 import { describe, expect, it } from 'vitest';
 import { NgxHeadlessErrorState } from './error-state';
 
+type Channels = 'both' | 'errors' | 'warnings';
+
 /**
  * #644: a headless template can render one channel only. The directive must
  * then not hand auto-ARIA an id that no element has, while `aria-invalid`
  * keeps following the real error state.
  *
- * Every fixture uses `strategy="immediate"`, so a blocking error counts as
- * shown with no touch.
+ * The template renders only the channels it declares. A `'warnings'` template
+ * has no error element at all, as in the real case. Every fixture uses
+ * `strategy="immediate"`, so a blocking error counts as shown with no touch.
  */
-const FEEDBACK = (renders: string) => `
+const FEEDBACK = (channels: Channels) => `
   <div
     ngxHeadlessErrorState
     #state="errorState"
@@ -37,13 +40,21 @@ const FEEDBACK = (renders: string) => `
     fieldName="nickname"
     strategy="immediate"
     warningStrategy="immediate"
-    ${renders}
+    ${channels === 'both' ? '' : `renders="${channels}"`}
   >
-    @if (state.shouldShowErrors() && state.hasErrors()) {
+    ${
+      channels === 'warnings'
+        ? ''
+        : `@if (state.shouldShowErrors() && state.hasErrors()) {
       <p [attr.id]="state.errorId()">{{ state.resolvedErrors()[0].message }}</p>
+    }`
     }
-    @if (state.shouldShowWarnings() && state.hasWarnings()) {
+    ${
+      channels === 'errors'
+        ? ''
+        : `@if (state.shouldShowWarnings() && state.hasWarnings()) {
       <p [attr.id]="state.warningId()">{{ state.resolvedWarnings()[0].message }}</p>
+    }`
     }
   </div>
 `;
@@ -62,7 +73,7 @@ function createProfileForm(nickname: string) {
   );
 }
 
-function host(renders: string) {
+function host(channels: Channels) {
   @Component({
     selector: 'ngx-test-headless-channels-host',
     imports: [FormField, NgxSignalFormToolkit, NgxHeadlessErrorState],
@@ -70,36 +81,36 @@ function host(renders: string) {
       <form [formRoot]="profileForm" ngxSignalForm errorStrategy="on-touch">
         <label for="nickname">Nickname</label>
         <input id="nickname" [formField]="profileForm.nickname" />
-        ${FEEDBACK(renders)}
+        ${FEEDBACK(channels)}
       </form>
     `,
   })
   class ChannelsHost {
-    // An empty nickname has a blocking error. 'ab' has a warning only.
-    readonly profileForm = createProfileForm(
-      renders.includes('errors') ? '' : 'ab',
-    );
+    // The test sets the value after render: '' gives a blocking error,
+    // 'ab' a warning only.
+    readonly profileForm = createProfileForm('');
   }
   return ChannelsHost;
 }
 
-async function renderNickname(
-  renders: string,
-  nickname: '' | 'ab',
-): Promise<HTMLInputElement> {
-  const Host = host(renders);
+async function renderNickname(channels: Channels, nickname: '' | 'ab') {
+  const Host = host(channels);
   const { container, fixture } = await render(Host);
   fixture.componentInstance.profileForm.nickname().value.set(nickname);
   await TestBed.inject(ApplicationRef).whenStable();
   fixture.detectChanges();
-  return container.querySelector<HTMLInputElement>('#nickname')!;
+  return {
+    input: container.querySelector<HTMLInputElement>('#nickname')!,
+    container,
+  };
 }
 
 describe('NgxHeadlessErrorState — renders (#644)', () => {
   it('leaves the error id out of aria-describedby when only warnings render', async () => {
     // A dangling id breaks the description relationship (WCAG 1.3.1, 4.1.2).
-    const input = await renderNickname('renders="warnings"', '');
+    const { input, container } = await renderNickname('warnings', '');
 
+    expect(container.querySelector('#nickname-error')).toBeNull();
     expect(input.getAttribute('aria-describedby') ?? '').not.toContain(
       'nickname-error',
     );
@@ -107,15 +118,18 @@ describe('NgxHeadlessErrorState — renders (#644)', () => {
 
   it('keeps aria-invalid on the real error state when only warnings render', async () => {
     // Assistive tech learns the field is invalid from aria-invalid (WCAG 3.3.1).
-    const input = await renderNickname('renders="warnings"', '');
+    const { input, container } = await renderNickname('warnings', '');
 
+    expect(container.querySelector('#nickname-error')).toBeNull();
     expect(input).toHaveAttribute('aria-invalid', 'true');
   });
 
   it('still links the warning id when only warnings render', async () => {
     // The warning element exists, so its id must stay linked (WCAG 1.3.1).
-    const input = await renderNickname('renders="warnings"', 'ab');
+    const { input, container } = await renderNickname('warnings', 'ab');
 
+    expect(container.querySelector('#nickname-error')).toBeNull();
+    expect(container.querySelector('#nickname-warning')).not.toBeNull();
     expect(input.getAttribute('aria-describedby')).toContain(
       'nickname-warning',
     );
@@ -124,30 +138,34 @@ describe('NgxHeadlessErrorState — renders (#644)', () => {
 
   it('leaves the warning id out of aria-describedby when only errors render', async () => {
     // The mirror case: no warning element, so no warning id (WCAG 1.3.1).
-    const input = await renderNickname('renders="errors"', 'ab');
+    const { input, container } = await renderNickname('errors', 'ab');
 
+    expect(container.querySelector('#nickname-warning')).toBeNull();
     expect(input.getAttribute('aria-describedby') ?? '').not.toContain(
       'nickname-warning',
     );
   });
 
   it('still links the error id when only errors render', async () => {
-    const input = await renderNickname('renders="errors"', '');
+    // The error element exists, so its id must stay linked (WCAG 1.3.1).
+    const { input, container } = await renderNickname('errors', '');
 
+    expect(container.querySelector('#nickname-warning')).toBeNull();
+    expect(container.querySelector('#nickname-error')).not.toBeNull();
     expect(input.getAttribute('aria-describedby')).toContain('nickname-error');
     expect(input).toHaveAttribute('aria-invalid', 'true');
   });
 
   it('links the error id by default, as before', async () => {
     // The default must not change existing templates.
-    const input = await renderNickname('', '');
+    const { input } = await renderNickname('both', '');
 
     expect(input.getAttribute('aria-describedby')).toContain('nickname-error');
     expect(input).toHaveAttribute('aria-invalid', 'true');
   });
 
   it('links the warning id by default, as before', async () => {
-    const input = await renderNickname('', 'ab');
+    const { input } = await renderNickname('both', 'ab');
 
     expect(input.getAttribute('aria-describedby')).toContain(
       'nickname-warning',
