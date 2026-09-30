@@ -447,6 +447,14 @@ Register the exact booleans that give your `<fieldName>-error` and
 `<fieldName>-warning` elements their content and IDs, not whether the
 elements are in the DOM. Do not register a strategy for auto-ARIA to resolve
 again. Then `aria-describedby` always matches what is on screen.
+
+`aria-invalid` needs a different answer when a surface renders one channel
+only. A warning-only surface has no error element, so its
+`errorContainerVisible` is `false`, yet the field can be invalid. Add the
+optional `shouldShowErrors` signal: `true` when the field shows its errors,
+whether or not you render them. Auto-ARIA uses it for `aria-invalid`. Without
+it, auto-ARIA uses `errorContainerVisible` for both, as before.
+
 `NgxFormFieldError` in `packages/toolkit/assistive/form-field-error.ts` is the
 reference implementation.
 

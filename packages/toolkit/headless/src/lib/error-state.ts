@@ -305,6 +305,14 @@ function createErrorStateInternal<TValue = unknown>(
 }
 
 /**
+ * Which message channels a headless template renders: blocking `'errors'`,
+ * non-blocking `'warnings'`, or `'both'`.
+ *
+ * @group Directives
+ */
+export type NgxHeadlessErrorChannels = 'both' | 'errors' | 'warnings';
+
+/**
  * Error state signals exposed by the headless directive.
  *
  * These signals provide all the state needed for custom error display implementations.
@@ -470,6 +478,21 @@ export class NgxHeadlessErrorState<
    */
   readonly errorsOverride =
     input<NgxReactiveOrStatic<readonly ValidationError[]>>();
+
+  /**
+   * Which channels the template renders. `NgxHeadlessErrorState` renders no
+   * DOM, so it cannot tell. Set `'warnings'` when the template has no error
+   * element, or `'errors'` when it has no warning element. The directive then
+   * does not put the id of the missing element in the control's
+   * `aria-describedby`, so no id points to nothing (WCAG 1.3.1).
+   *
+   * `aria-invalid` still follows the real error state. This input changes
+   * which ids auto-ARIA links. It does not change when messages show or what
+   * `shouldShowErrors()` and `shouldShowWarnings()` return.
+   *
+   * @default 'both'
+   */
+  readonly renders = input<NgxHeadlessErrorChannels>('both');
 
   /**
    * Bridges a host component's field input to this directive when the
@@ -642,12 +665,21 @@ export class NgxHeadlessErrorState<
     })),
   );
 
-  readonly #errorContainerVisible = computed(
+  /** The field shows its blocking errors, rendered or not. */
+  readonly #errorsShown = computed(
     () => this.shouldShowErrors() && this.hasErrors(),
   );
 
+  /** The error id is in the DOM: errors show and the template renders them. */
+  readonly #errorContainerVisible = computed(
+    () => this.renders() !== 'warnings' && this.#errorsShown(),
+  );
+
   readonly #warningContainerVisible = computed(
-    () => this.shouldShowWarnings() && this.hasWarnings(),
+    () =>
+      this.renders() !== 'errors' &&
+      this.shouldShowWarnings() &&
+      this.hasWarnings(),
   );
 
   constructor() {
@@ -658,7 +690,10 @@ export class NgxHeadlessErrorState<
     // `strategy` or `warningStrategy` too.
     //
     // It registers the booleans that give the error and warning elements
-    // their ids, not a strategy for auto-ARIA to resolve again. It does
+    // their ids, not a strategy for auto-ARIA to resolve again. The
+    // `renders` input switches off the id of a channel the template does not
+    // render. `shouldShowErrors` stays on the real error state, so
+    // `aria-invalid` does not depend on which channels render. It does
     // nothing without a registry (no `[ngxSignalForm]` ancestor) or without
     // a non-blank `fieldName`. `NgxFormFieldError` does not forward
     // `fieldName` to this directive and registers by itself, so the two
@@ -676,6 +711,7 @@ export class NgxHeadlessErrorState<
           fieldName,
           errorContainerVisible: this.#errorContainerVisible,
           warningContainerVisible: this.#warningContainerVisible,
+          shouldShowErrors: this.#errorsShown,
         }),
       );
     });
