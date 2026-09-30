@@ -2,10 +2,8 @@ import { signal } from '@angular/core';
 import type { ValidationError } from '@angular/forms/signals';
 import { describe, expect, it } from 'vitest';
 import {
-  createUniqueId,
   dedupeValidationErrors,
   humanizeFieldPath,
-  readDirectErrors,
   readErrors,
   readFieldFlag,
   resolveFieldNameFromError,
@@ -309,78 +307,6 @@ describe('Headless Utilities', () => {
   });
 
   // ============================================================================
-  // readDirectErrors
-  // ============================================================================
-
-  describe('readDirectErrors', () => {
-    describe('basic usage', () => {
-      it('should return only direct errors, ignoring errorSummary', () => {
-        const directErrors: ValidationError[] = [
-          { kind: 'passwordMismatch', message: 'Passwords must match' },
-        ];
-        const summaryErrors: ValidationError[] = [
-          { kind: 'required', message: 'Password is required' },
-          { kind: 'required', message: 'Confirm password is required' },
-          { kind: 'passwordMismatch', message: 'Passwords must match' },
-        ];
-
-        const state = {
-          errors: () => directErrors,
-          errorSummary: () => summaryErrors,
-        };
-
-        const result = readDirectErrors(state);
-
-        expect(result).toEqual(directErrors);
-        expect(result).toHaveLength(1);
-        expect(result[0]?.kind).toBe('passwordMismatch');
-      });
-
-      it('should return empty array when no direct errors exist', () => {
-        const state = {
-          errors: () => [],
-          errorSummary: () => [{ kind: 'nested', message: 'Nested error' }],
-        };
-
-        const result = readDirectErrors(state);
-
-        expect(result).toEqual([]);
-      });
-    });
-
-    describe('with invalid inputs', () => {
-      it('should return empty array when state is null', () => {
-        expect(readDirectErrors(null)).toEqual([]);
-      });
-
-      it('should return empty array when state is undefined', () => {
-        expect(readDirectErrors(undefined)).toEqual([]);
-      });
-
-      it('should return empty array when state is not an object', () => {
-        expect(readDirectErrors('string')).toEqual([]);
-        expect(readDirectErrors(123)).toEqual([]);
-      });
-
-      it('should return empty array when errors is not a function', () => {
-        const state = {
-          errors: [{ kind: 'required' }], // Not a function
-        };
-
-        expect(readDirectErrors(state)).toEqual([]);
-      });
-
-      it('should return empty array when errors returns null', () => {
-        const state = {
-          errors: () => null as unknown as ValidationError[],
-        };
-
-        expect(readDirectErrors(state)).toEqual([]);
-      });
-    });
-  });
-
-  // ============================================================================
   // dedupeValidationErrors
   // ============================================================================
 
@@ -614,65 +540,6 @@ describe('Headless Utilities', () => {
       expect(
         resolveFieldNameFromError({ kind: 'passwordMismatch' }, resolver),
       ).toBe('Wachtwoord mismatch');
-    });
-  });
-
-  // ============================================================================
-  // createUniqueId
-  // ============================================================================
-
-  describe('createUniqueId', () => {
-    it('should generate sequential IDs with given prefix', () => {
-      const id1 = createUniqueId('test');
-      const id2 = createUniqueId('test');
-      const id3 = createUniqueId('test');
-
-      // IDs should be sequential (values depend on test run order)
-      expect(id1).toMatch(/^test-\d+$/);
-      expect(id2).toMatch(/^test-\d+$/);
-      expect(id3).toMatch(/^test-\d+$/);
-
-      // Each ID should be unique
-      expect(id1).not.toBe(id2);
-      expect(id2).not.toBe(id3);
-    });
-
-    it('should use the provided prefix', () => {
-      const fieldId = createUniqueId('field');
-      const fieldsetId = createUniqueId('fieldset');
-      const formId = createUniqueId('form');
-
-      expect(fieldId).toMatch(/^field-\d+$/);
-      expect(fieldsetId).toMatch(/^fieldset-\d+$/);
-      expect(formId).toMatch(/^form-\d+$/);
-    });
-
-    it('should share counter across different prefixes', () => {
-      // Counter is global, so different prefixes still get unique numbers
-      const id1 = createUniqueId('a');
-      const id2 = createUniqueId('b');
-      const id3 = createUniqueId('a');
-
-      // Extract numbers from IDs
-      const num1 = parseInt(id1.split('-')[1] ?? '', 10);
-      const num2 = parseInt(id2.split('-')[1] ?? '', 10);
-      const num3 = parseInt(id3.split('-')[1] ?? '', 10);
-
-      // Numbers should be sequential
-      expect(num2).toBe(num1 + 1);
-      expect(num3).toBe(num2 + 1);
-    });
-
-    it('should handle empty prefix', () => {
-      const id = createUniqueId('');
-
-      expect(id).toMatch(/^-\d+$/);
-    });
-
-    it('should handle special characters in prefix', () => {
-      const id = createUniqueId('my-custom-prefix');
-
-      expect(id).toMatch(/^my-custom-prefix-\d+$/);
     });
   });
 });

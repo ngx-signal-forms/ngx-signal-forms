@@ -87,8 +87,8 @@ schema-validated fields need the extra call.
 />
 ```
 
-`NgxFormFieldError`'s `presentation="panel"` mode (assistive) and
-`NgxHeadlessNotification` (headless) route tone automatically from content:
+`NgxFormFieldError`'s `presentation="panel"` mode (assistive) routes tone
+automatically from content:
 any blocking error raises the error container (`role="alert"`); a
 warning-only list raises the warning container (`role="status"`); an empty
 list hides both. Do not try to set a tone — there is
@@ -148,10 +148,10 @@ These were removed or are not public:
 
 | Removed                        | Use Instead                                                                                                     |
 | ------------------------------ | --------------------------------------------------------------------------------------------------------------- |
-| `'manual'` strategy            | `createShowErrorsComputed()` + manual signal                                                                    |
-| `computeShowErrors()`          | `createShowErrorsComputed()`                                                                                    |
-| `createShowErrorsSignal()`     | `createShowErrorsComputed()`                                                                                    |
-| `showErrors()`                 | `createShowErrorsComputed()` — same signature, gone (not deprecated)                                            |
+| `'manual'` strategy            | `createErrorVisibility()` + manual signal                                                                       |
+| `computeShowErrors()`          | `createErrorVisibility()`                                                                                       |
+| `createShowErrorsSignal()`     | `createErrorVisibility()`                                                                                       |
+| `showErrors()`                 | `createErrorVisibility()` — gone (not deprecated)                                                               |
 | `canSubmit()`                  | `canSubmitWithWarnings()`                                                                                       |
 | `isSubmitting()`               | Angular `form().submitting()` for in-flight state; toolkit `submittedStatus()` from `ngxSignalForm` for history |
 | `fieldNameResolver` config     | Control `id` or explicit wrapper `fieldName`                                                                    |
@@ -165,9 +165,8 @@ These were removed or are not public:
 The notification fold also renamed the CSS hooks: `--ngx-signal-form-notification-*`
 became `--ngx-signal-form-error-panel-*` / `--ngx-signal-form-warning-panel-*`.
 
-Use current suffix-less public class names. `NgxSignalFormControlSemanticsDirective`
-keeps its suffix to distinguish it from the `NgxSignalFormControlSemantics`
-interface. For a version upgrade, the [crossed migration guides](https://github.com/ngx-signal-forms/ngx-signal-forms/blob/main/docs/migrations/README.md)
+Use current public class names. `NgxSignalFormControl` is the directive;
+`NgxSignalFormControlSemantics` is the matching interface. For a version upgrade, the [crossed migration guides](https://github.com/ngx-signal-forms/ngx-signal-forms/blob/main/docs/migrations/README.md)
 are authoritative; this table is a quick lookup, not the upgrade checklist.
 
 ## Renamed — Update the Name, Same Behavior
@@ -342,26 +341,27 @@ resolving through their registries. Read the bundled
 <form [formRoot]="form" ngxSignalForm errorStrategy="on-submit">...</form>
 ```
 
-## Standalone `createShowErrorsComputed('on-submit')` Without `submittedStatus`
+## Standalone `createErrorVisibility()` With `'on-submit'` and No `submittedStatus`
 
 ```typescript
-// Wrong — silently never shows errors. Dev mode logs a one-shot
-// console.warn("[ngx-signal-forms] createShowErrorsComputed(): 'on-submit' strategy
-// requires an explicit submittedStatus signal. Without it, errors will never
-// surface. Wire the status from NgxSignalForm ('ngxSignalForm') or pass
-// submittedStatus explicitly.").
-const visible = createShowErrorsComputed(form.email, 'on-submit');
+// Wrong — outside an ngxSignalForm context, errors never show. Dev mode logs
+// a one-shot console.warn("[ngx-signal-forms] createShowErrorsComputed():
+// 'on-submit' strategy requires an explicit submittedStatus signal. Without
+// it, errors will never surface. Wire the status from NgxSignalForm
+// ('ngxSignalForm') or pass submittedStatus explicitly.").
+const visible = createErrorVisibility(form.email, { strategy: 'on-submit' });
 
 // Correct — pass the submitted-status signal explicitly
-const visible = createShowErrorsComputed(form.email, 'on-submit', () =>
-  submittedStatus(),
-);
+const visible = createErrorVisibility(form.email, {
+  strategy: 'on-submit',
+  submittedStatus,
+});
 ```
 
 The wrapper, auto-ARIA, and headless directives inherit `submittedStatus` from
-`form[formRoot][ngxSignalForm]`. A direct `createShowErrorsComputed()` call does
-not inject context. Always pass its status argument for `'on-submit'`, even
-inside that form's injection context.
+`form[formRoot][ngxSignalForm]`, and so does `createErrorVisibility()` when it
+runs inside that form's injection context. Outside it there is no context to
+inherit from. Always pass `submittedStatus` for `'on-submit'` there.
 
 For a manual native submit handler, use
 `createSubmittedStatusTracker(form, submitAttempted)` and pass the returned

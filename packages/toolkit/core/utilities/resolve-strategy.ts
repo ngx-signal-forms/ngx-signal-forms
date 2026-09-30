@@ -6,71 +6,29 @@ import type {
   WarningDisplayStrategy,
 } from '../types';
 import type { NgxSignalFormContext } from '../directives/ngx-signal-form';
-
-type StrategyInput = ErrorDisplayStrategy | null | undefined;
-type WarningStrategyInput = WarningDisplayStrategy | null | undefined;
-
-const isSet = <T>(value: T | null | undefined): value is T =>
-  value !== null && value !== undefined;
+import { createCascadingResolver } from './cascading-resolver';
 
 /**
- * Resolves the error display strategy from an input value, context, and
- * config default.
+ * Resolves a display strategy through the shared cascade. The error and
+ * warning channels use the same union, so one helper serves both.
  *
  * Cascade order (three tiers, plus a terminal fallback):
  * 1. explicit input strategy (if not `'inherit'`)
- * 2. form context's error strategy
- * 3. config default error strategy
+ * 2. form context's strategy
+ * 3. config default strategy
  * 4. terminal fallback `'on-touch'`
  */
-export function resolveErrorDisplayStrategy(
-  inputStrategy: StrategyInput,
-  contextStrategy?: ResolvedErrorDisplayStrategy | null,
-  configDefault?: ResolvedErrorDisplayStrategy | null,
-): ResolvedErrorDisplayStrategy {
-  if (isSet(inputStrategy) && inputStrategy !== 'inherit') {
-    return inputStrategy;
-  }
-
-  if (isSet(contextStrategy)) {
-    return contextStrategy;
-  }
-
-  if (isSet(configDefault)) {
-    return configDefault;
-  }
-
-  return 'on-touch';
-}
-
-/**
- * Resolves the warning display strategy from an input value, context, and config default.
- * This is the warning-specific counterpart to `resolveErrorDisplayStrategy`.
- *
- * Cascade order (four tiers):
- * 1. explicit input strategy (if not 'inherit')
- * 2. form context's warning strategy
- * 3. config default warning strategy
- * 4. terminal fallback 'on-touch'
- */
-export function resolveWarningStrategy(
-  inputStrategy: WarningStrategyInput,
-  contextStrategy?: ResolvedWarningDisplayStrategy | null,
-  configDefault?: ResolvedWarningDisplayStrategy | null,
-): ResolvedWarningDisplayStrategy {
-  if (isSet(inputStrategy) && inputStrategy !== 'inherit') {
-    return inputStrategy;
-  }
-
-  if (isSet(contextStrategy)) {
-    return contextStrategy;
-  }
-
-  if (isSet(configDefault)) {
-    return configDefault;
-  }
-
-  return 'on-touch';
+function resolveCascade<T extends ResolvedErrorDisplayStrategy>(
+  inputStrategy: T | 'inherit' | null | undefined,
+  contextStrategy: T | null | undefined,
+  configDefault: T | null | undefined,
+): T {
+  return createCascadingResolver<T>({
+    input: inputStrategy === 'inherit' ? null : inputStrategy,
+    context: contextStrategy,
+    configDefault,
+    fallback: 'on-touch' as T,
+  });
 }
 
 /**
@@ -85,10 +43,9 @@ export function resolveStrategyFromContext(
   formContext: NgxSignalFormContext | undefined,
   configDefault?: ResolvedErrorDisplayStrategy | null,
 ): ResolvedErrorDisplayStrategy {
-  const contextStrategy = formContext?.errorStrategy();
-  return resolveErrorDisplayStrategy(
+  return resolveCascade<ResolvedErrorDisplayStrategy>(
     inputStrategy,
-    contextStrategy,
+    formContext?.errorStrategy(),
     configDefault,
   );
 }
@@ -105,8 +62,11 @@ export function resolveWarningStrategyFromContext(
   formContext: NgxSignalFormContext | undefined,
   configDefault?: ResolvedWarningDisplayStrategy | null,
 ): ResolvedWarningDisplayStrategy {
-  const contextStrategy = formContext?.warningStrategy();
-  return resolveWarningStrategy(inputStrategy, contextStrategy, configDefault);
+  return resolveCascade<ResolvedWarningDisplayStrategy>(
+    inputStrategy,
+    formContext?.warningStrategy(),
+    configDefault,
+  );
 }
 
 /**

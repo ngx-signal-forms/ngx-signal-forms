@@ -9,7 +9,7 @@ import {
 import { TestBed } from '@angular/core/testing';
 import {
   NGX_SIGNAL_FORMS_CONFIG,
-  NgxSignalFormControlSemanticsDirective,
+  NgxSignalFormControl,
   NgxSignalFormToolkit,
   provideNgxSignalFormControlPresets,
   provideNgxSignalFormControlPresetsForComponent,
@@ -1525,10 +1525,7 @@ describe('NgxSignalFormWrapperComponent', () => {
           />
         </ngx-form-field-wrapper>`,
         {
-          imports: [
-            NgxSignalFormWrapperComponent,
-            NgxSignalFormControlSemanticsDirective,
-          ],
+          imports: [NgxSignalFormWrapperComponent, NgxSignalFormControl],
           componentProperties: {
             field: invalidField,
           },
@@ -1569,10 +1566,7 @@ describe('NgxSignalFormWrapperComponent', () => {
           />
         </ngx-form-field-wrapper>`,
         {
-          imports: [
-            NgxSignalFormWrapperComponent,
-            NgxSignalFormControlSemanticsDirective,
-          ],
+          imports: [NgxSignalFormWrapperComponent, NgxSignalFormControl],
           componentProperties: {
             field: invalidField,
           },
@@ -3850,10 +3844,7 @@ describe('NgxSignalFormWrapperComponent', () => {
             ></div>
           </ngx-form-field-wrapper>`,
           {
-            imports: [
-              NgxSignalFormWrapperComponent,
-              NgxSignalFormControlSemanticsDirective,
-            ],
+            imports: [NgxSignalFormWrapperComponent, NgxSignalFormControl],
             componentProperties: {
               field: createMockFieldState(),
             },
@@ -3893,10 +3884,7 @@ describe('NgxSignalFormWrapperComponent', () => {
             ></div>
           </ngx-form-field-wrapper>`,
           {
-            imports: [
-              NgxSignalFormWrapperComponent,
-              NgxSignalFormControlSemanticsDirective,
-            ],
+            imports: [NgxSignalFormWrapperComponent, NgxSignalFormControl],
             componentProperties: {
               field: createMockFieldState(),
             },
@@ -3966,10 +3954,7 @@ describe('NgxSignalFormWrapperComponent', () => {
             </button>
           </ngx-form-field-wrapper>`,
           {
-            imports: [
-              NgxSignalFormWrapperComponent,
-              NgxSignalFormControlSemanticsDirective,
-            ],
+            imports: [NgxSignalFormWrapperComponent, NgxSignalFormControl],
             componentProperties: {
               field: createMockFieldState(),
             },
@@ -4056,10 +4041,7 @@ describe('NgxSignalFormWrapperComponent', () => {
           />
         </ngx-form-field-wrapper>`,
         {
-          imports: [
-            NgxSignalFormWrapperComponent,
-            NgxSignalFormControlSemanticsDirective,
-          ],
+          imports: [NgxSignalFormWrapperComponent, NgxSignalFormControl],
           componentProperties: { field: createMockFieldState() },
         },
       );
@@ -4082,10 +4064,7 @@ describe('NgxSignalFormWrapperComponent', () => {
           />
         </ngx-form-field-wrapper>`,
         {
-          imports: [
-            NgxSignalFormWrapperComponent,
-            NgxSignalFormControlSemanticsDirective,
-          ],
+          imports: [NgxSignalFormWrapperComponent, NgxSignalFormControl],
           componentProperties: { field: createMockFieldState() },
         },
       );
@@ -4384,10 +4363,7 @@ describe('NgxSignalFormWrapperComponent', () => {
           ></div>
         </ngx-form-field-wrapper>`,
         {
-          imports: [
-            NgxSignalFormWrapperComponent,
-            NgxSignalFormControlSemanticsDirective,
-          ],
+          imports: [NgxSignalFormWrapperComponent, NgxSignalFormControl],
           providers: [
             provideNgxSignalFormControlPresets({
               slider: { layout: 'inline-control', ariaMode: 'manual' },
@@ -4923,7 +4899,7 @@ describe('NgxSignalFormWrapperComponent', () => {
         imports: [
           NgxSignalFormWrapperComponent,
           NgxSignalFormToolkit,
-          NgxSignalFormControlSemanticsDirective,
+          NgxSignalFormControl,
           NgxFormFieldCharacterCount,
           FormField,
         ],

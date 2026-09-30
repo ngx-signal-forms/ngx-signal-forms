@@ -11,7 +11,7 @@ import { render } from '@testing-library/angular';
 import { describe, expect, it, vi } from 'vitest';
 import { page } from 'vitest/browser';
 import { NgxSignalFormAutoAria } from './auto-aria';
-import { NgxSignalFormControlSemanticsDirective } from './control-semantics';
+import { NgxSignalFormControl } from './control-semantics';
 import { NgxFormField } from '../../form-field';
 
 @Directive({
@@ -118,7 +118,7 @@ describe('NgxSignalFormAutoAria browser mode', () => {
       imports: [
         MockFormFieldDirective,
         NgxSignalFormAutoAria,
-        NgxSignalFormControlSemanticsDirective,
+        NgxSignalFormControl,
       ],
 
       template: `

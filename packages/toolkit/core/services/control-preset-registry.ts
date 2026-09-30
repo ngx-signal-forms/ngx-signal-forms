@@ -64,7 +64,7 @@ export class NgxControlPresetRegistry {
   /**
    * Returns the registered control kinds, derived from the effective registry.
    *
-   * Consumed by `NgxSignalFormControlSemanticsDirective` as its
+   * Consumed by `NgxSignalFormControl` as its
    * recognized-kind set so the runtime list never drifts from the registry.
    *
    * @returns A readonly array of registered control kinds.

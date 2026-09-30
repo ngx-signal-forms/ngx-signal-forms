@@ -3,13 +3,11 @@ import { Component, computed, input, signal } from '@angular/core';
 import { FormField, form } from '@angular/forms/signals';
 import {
   buildAriaDescribedBy,
+  createErrorVisibility,
   createOnInvalidHandler,
   createSubmittedStatusTracker,
-  injectFormContext,
   NgxSignalFormToolkit,
   provideNgxSignalFormControlPresetsForComponent,
-  resolveStrategyFromContext,
-  shouldShowErrors,
   type ResolvedErrorDisplayStrategy,
   type FormFieldAppearance,
   type FormFieldOrientation,
@@ -90,14 +88,6 @@ export class CustomControlsFormComponent {
   readonly #handleInvalidSubmission = createOnInvalidHandler();
 
   /**
-   * Injected ngx form context. `undefined` when this component is the
-   * outermost form (the normal case for this demo). Kept so the
-   * `'inherit'` branch of `errorDisplayMode` resolves through the toolkit
-   * if the demo is ever nested under another `[ngxSignalForm]`.
-   */
-  readonly #formContext = injectFormContext();
-
-  /**
    * Error display mode input - controls when errors are shown.
    */
   readonly errorDisplayMode = input<ResolvedErrorDisplayStrategy>('on-touch');
@@ -149,23 +139,19 @@ export class CustomControlsFormComponent {
     fieldName: string,
     hintIds: readonly string[],
   ) {
-    return computed(() => {
-      const fieldState = field();
-      const resolvedMode = resolveStrategyFromContext(
-        this.errorDisplayMode(),
-        this.#formContext,
-      );
-
-      return buildAriaDescribedBy(fieldName, {
-        baseIds: [...hintIds],
-        showErrors: shouldShowErrors(
-          fieldState.invalid(),
-          fieldState.touched(),
-          resolvedMode,
-          this.submittedStatus(),
-        ),
-      });
+    // `createErrorVisibility()` resolves `errorDisplayMode` and the submit
+    // status through the toolkit, and reads any ambient `[ngxSignalForm]`.
+    const showErrors = createErrorVisibility(field, {
+      strategy: this.errorDisplayMode,
+      submittedStatus: this.submittedStatus,
     });
+
+    return computed(() =>
+      buildAriaDescribedBy(fieldName, {
+        baseIds: [...hintIds],
+        showErrors: showErrors(),
+      }),
+    );
   }
 
   protected readonly ratingDescribedBy = this.#buildRatingDescribedBy(

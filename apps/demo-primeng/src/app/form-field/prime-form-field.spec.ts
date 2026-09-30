@@ -12,7 +12,7 @@ import {
   type FieldTree,
 } from '@angular/forms/signals';
 import {
-  NgxSignalFormControlSemanticsDirective,
+  NgxSignalFormControl,
   NgxSignalFormToolkit,
   provideNgxSignalFormsConfig,
   warningError,
@@ -55,7 +55,7 @@ const warningTimingSchema = schema<WarningTimingModel>((path) => {
     FormField,
     NgxSignalFormToolkit,
     PrimeFormFieldComponent,
-    NgxSignalFormControlSemanticsDirective,
+    NgxSignalFormControl,
     InputTextModule,
   ],
   template: `
@@ -135,7 +135,7 @@ describe('PrimeFormFieldComponent warning timing (#506)', () => {
     FormField,
     NgxSignalFormToolkit,
     PrimeFormFieldComponent,
-    NgxSignalFormControlSemanticsDirective,
+    NgxSignalFormControl,
     InputTextModule,
   ],
   template: `
@@ -212,7 +212,7 @@ describe('PrimeFieldErrorComponent follows the wrapper-resolved warningStrategy 
     FormField,
     NgxSignalFormToolkit,
     PrimeFormFieldComponent,
-    NgxSignalFormControlSemanticsDirective,
+    NgxSignalFormControl,
     InputTextModule,
   ],
   template: `
@@ -305,11 +305,7 @@ const hiddenInvalidField = () => ({
  */
 @Component({
   selector: 'ngx-hidden-field-host',
-  imports: [
-    PrimeFormFieldComponent,
-    NgxSignalFormControlSemanticsDirective,
-    InputTextModule,
-  ],
+  imports: [PrimeFormFieldComponent, NgxSignalFormControl, InputTextModule],
   template: `
     <prime-form-field [ngxPrimeFormField]="field" fieldName="nickname">
       <label for="nickname">Nickname</label>

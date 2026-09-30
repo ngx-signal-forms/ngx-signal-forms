@@ -1,5 +1,5 @@
 import { signal } from '@angular/core';
-import { NgxSignalFormControlSemanticsDirective } from '@ngx-signal-forms/toolkit';
+import { NgxSignalFormControl } from '@ngx-signal-forms/toolkit';
 import { render } from '@testing-library/angular';
 import { describe, expect, it } from 'vitest';
 import { NgxFormFieldWrapper } from './form-field-wrapper';
@@ -330,7 +330,7 @@ describe('NgxFormFieldWrapper — label token coverage (#476)', () => {
         </button>
       </ngx-form-field-wrapper>`,
       {
-        imports: [NgxFormFieldWrapper, NgxSignalFormControlSemanticsDirective],
+        imports: [NgxFormFieldWrapper, NgxSignalFormControl],
         componentProperties: { field: mockField() },
       },
     );

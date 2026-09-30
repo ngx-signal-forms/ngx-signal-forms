@@ -22,24 +22,6 @@ import {
 } from '@ngx-signal-forms/toolkit/headless';
 
 /**
- * Supported value shape for the character-count `formField` input.
- *
- * Re-exports {@link CharacterCountValue} from the headless entry so the
- * styled component's input type cannot drift from what the underlying
- * `createCharacterCount()` utility actually supports.
- *
- * The component counts length of either:
- * - A `string` value (e.g. `<input>`, `<textarea>`)
- * - A `string[]` value (e.g. tokenized inputs where each array entry is
- *   one token). The displayed count is `array.length`, not the combined
- *   string length — this matches the intuitive "X of N tokens" UX.
- *
- * `null` / `undefined` are treated as length `0`. Any other value type
- * logs a dev-mode warning via `createCharacterCount` and renders `0`.
- */
-export type NgxCharacterCountValue = CharacterCountValue;
-
-/**
  * Non-`'ok'` limit states that ever produce a live-announcement string.
  * `'ok'` is intentionally excluded — no announcement is emitted for it, so
  * an {@link NgxCharacterCountAnnouncementFormatter} is never invoked with it.
@@ -423,10 +405,10 @@ export class NgxFormFieldCharacterCount {
    * Form field to track character count from.
    *
    * Supported value shapes: `string`, `readonly string[]`, `null`, or
-   * `undefined` — see {@link NgxCharacterCountValue}. Anything else
+   * `undefined` — see {@link CharacterCountValue}. Anything else
    * degrades to a displayed count of `0` and logs a dev-mode warning.
    */
-  readonly formField = input.required<FieldTree<NgxCharacterCountValue>>();
+  readonly formField = input.required<FieldTree<CharacterCountValue>>();
 
   /**
    * Maximum character length for the field.

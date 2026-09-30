@@ -289,10 +289,12 @@ describe('secondary entry point configuration', () => {
 });
 
 describe('form-field entry point surface', () => {
-  it('re-exports NgxFieldIdentityProvider used by wrapper hostDirectives', () => {
+  it('leaves NgxFieldIdentityProvider to the root entry point', () => {
+    // One home per name (#511): custom wrappers of any UI library import the
+    // provider from the root, so `/form-field` must not offer a second path.
     const formFieldEntryFile = readEntryFile(resolve(toolkitDir, 'form-field'));
     const exportedNames = collectExportedNames(formFieldEntryFile);
-    expect(exportedNames.has('NgxFieldIdentityProvider')).toBe(true);
+    expect(exportedNames.has('NgxFieldIdentityProvider')).toBe(false);
   });
 });
 

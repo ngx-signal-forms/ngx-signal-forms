@@ -1,9 +1,5 @@
 import type { ValidationError } from '@angular/forms/signals';
-import {
-  createUniqueId,
-  readDirectErrors,
-  resolveValidationErrorMessage,
-} from '@ngx-signal-forms/toolkit';
+import { resolveValidationErrorMessage } from '@ngx-signal-forms/toolkit';
 import {
   humanizeFieldPath,
   type ErrorMessageRegistry,
@@ -19,7 +15,6 @@ export {
   focusBoundControlFromError,
   resolveFieldNameFromError,
   toErrorSummaryEntry,
-  type ErrorSummaryEntryData,
 } from './error-summary-utilities';
 // Field-state duck-typing utilities live in their own module (issue #354);
 // re-exported below for the same reason.
@@ -88,16 +83,12 @@ export function dedupeValidationErrors(
   return result;
 }
 
-// Re-exported from core for convenience
-export { createUniqueId, readDirectErrors };
-
 /**
  * Resolve a validation error's display message using the toolkit's standard
  * settings (`stripWarningPrefix: true` by default).
  *
  * Shared by `NgxHeadlessErrorState` (`error-state.ts`), `createFieldsetAggregation`
- * (`fieldset.ts`), `createErrorMessageSignal`, and `NgxHeadlessNotification`
- * (`notification.ts`) so all four surfaces stay in lockstep — changing
+ * (`fieldset.ts`), and `createErrorMessageSignal` so all three surfaces stay in lockstep — changing
  * message resolution behaviour requires editing exactly one place.
  *
  * @internal

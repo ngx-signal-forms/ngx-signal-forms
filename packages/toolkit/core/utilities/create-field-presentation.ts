@@ -10,10 +10,10 @@ import type { NgxFieldIdentity } from '../services/field-identity';
 import { NGX_SIGNAL_FORMS_CONFIG } from '../tokens';
 import type {
   ErrorDisplayStrategy,
-  ReactiveOrStatic,
+  NgxReactiveOrStatic,
   ResolvedErrorDisplayStrategy,
   ResolvedWarningDisplayStrategy,
-  SignalLike,
+  NgxSignalLike,
   WarningDisplayStrategy,
 } from '../types';
 import { assertInjector } from './assert-injector';
@@ -51,14 +51,14 @@ export interface CreateFieldPresentationOptions {
    * defer to the form context, then to
    * `NGX_SIGNAL_FORMS_CONFIG.defaultErrorStrategy`, then to `'on-touch'`.
    */
-  readonly strategy?: SignalLike<ErrorDisplayStrategy | null | undefined>;
+  readonly strategy?: NgxSignalLike<ErrorDisplayStrategy | null | undefined>;
 
   /**
    * Field-level warning display strategy. It resolves through its own
    * cascade and never reads the error strategy (ADR-0007): form context
    * `warningStrategy()`, then `defaultWarningStrategy`, then `'on-touch'`.
    */
-  readonly warningStrategy?: SignalLike<
+  readonly warningStrategy?: NgxSignalLike<
     WarningDisplayStrategy | null | undefined
   >;
 
@@ -66,7 +66,7 @@ export interface CreateFieldPresentationOptions {
    * Whether the field is hidden. A hidden field shows no messages. When
    * omitted, the factory reads the field state's own `hidden()`.
    */
-  readonly hidden?: SignalLike<boolean>;
+  readonly hidden?: NgxSignalLike<boolean>;
 
   /**
    * The field identity to publish the resolved strategies to (ADR-0010).
@@ -185,7 +185,7 @@ export interface FieldPresentation {
  * @public
  */
 export function createFieldPresentation(
-  field: ReactiveOrStatic<FieldPresentationState | null | undefined>,
+  field: NgxReactiveOrStatic<FieldPresentationState | null | undefined>,
   options: CreateFieldPresentationOptions = {},
 ): FieldPresentation {
   return assertInjector(createFieldPresentation, options.injector, () => {

@@ -40,12 +40,12 @@ export class ProfileFormComponent {}
 
 The bundle contains four standalone directives:
 
-| Directive                                | Selector                        | Does                                                         |
-| ---------------------------------------- | ------------------------------- | ------------------------------------------------------------ |
-| `FormRoot`                               | `form[formRoot]`                | Angular's form directive. Handles `submit()`                 |
-| `NgxSignalForm`                          | `form[formRoot][ngxSignalForm]` | Shares error timing and submit status with the form's fields |
-| `NgxSignalFormAutoAria`                  | `[formField]` controls          | Writes `aria-invalid`, `aria-required`, `aria-describedby`   |
-| `NgxSignalFormControlSemanticsDirective` | `[ngxSignalFormControl]`        | Declares the kind of a custom control                        |
+| Directive               | Selector                        | Does                                                         |
+| ----------------------- | ------------------------------- | ------------------------------------------------------------ |
+| `FormRoot`              | `form[formRoot]`                | Angular's form directive. Handles `submit()`                 |
+| `NgxSignalForm`         | `form[formRoot][ngxSignalForm]` | Shares error timing and submit status with the form's fields |
+| `NgxSignalFormAutoAria` | `[formField]` controls          | Writes `aria-invalid`, `aria-required`, `aria-describedby`   |
+| `NgxSignalFormControl`  | `[ngxSignalFormControl]`        | Declares the kind of a custom control                        |
 
 You can also import each directive on its own.
 
@@ -187,7 +187,7 @@ provideNgxSignalFormControlPresets({
 
 No config key turns auto-ARIA off for the whole app.
 
-### NgxSignalFormControlSemanticsDirective
+### NgxSignalFormControl
 
 Tells the wrapper and auto-ARIA what kind of control a custom host is.
 
@@ -348,27 +348,22 @@ Both providers also accept a factory, for translation libraries. See
 [message resolution](../../docs/WARNINGS_SUPPORT.md#message-resolution) and
 [runtime language changes](../../docs/WARNINGS_SUPPORT.md#runtime-language-changes).
 
-For your own error UI, two functions give you the same text:
+For your own error UI, one function gives you the same text:
 
 | Function                                                    | Returns                                  |
 | ----------------------------------------------------------- | ---------------------------------------- |
 | `resolveValidationErrorMessage(error, registry?, options?)` | The message, using all three steps above |
-| `getDefaultValidationMessage(error, options?)`              | Only the built-in message (step 3)       |
 
 ## Utilities
 
 ### Show errors and warnings at the right time
 
-| Function                                                     | Does                                                                      |
-| ------------------------------------------------------------ | ------------------------------------------------------------------------- |
-| `createErrorVisibility(field, opts?)`                        | `Signal<boolean>`: show the error now? Reads the form's timing and status |
-| `createWarningVisibility(field, opts?)`                      | Same for warnings. `false` while a blocking error shows                   |
-| `createShowErrorsComputed(field, strategy, status?)`         | Same as `createErrorVisibility`, with the strategy passed in              |
-| `shouldShowErrors(invalid, touched, strategy, status)`       | Plain boolean version. Not reactive                                       |
-| `shouldShowWarnings(hasWarnings, touched, strategy, status)` | Plain boolean version for warnings                                        |
-| `combineShowErrors(signals)`                                 | `true` when any of the given signals is `true`                            |
-| `readDirectErrors(state)`                                    | The field's own errors, without errors from child fields                  |
-| `injectFormContext(injector?)`                               | The nearest `ngxSignalForm` context, or `undefined`                       |
+| Function                                | Does                                                                      |
+| --------------------------------------- | ------------------------------------------------------------------------- |
+| `createErrorVisibility(field, opts?)`   | `Signal<boolean>`: show the error now? Reads the form's timing and status |
+| `createWarningVisibility(field, opts?)` | Same for warnings. `false` while a blocking error shows                   |
+| `readDirectErrors(state)`               | The field's own errors, without errors from child fields                  |
+| `injectFormContext(injector?)`          | The nearest `ngxSignalForm` context, or `undefined`                       |
 
 `createErrorVisibility` and `createWarningVisibility` read the
 `ngxSignalForm` context through dependency injection. Call them in a component
@@ -505,14 +500,11 @@ behave like the built-in ones. Read
 
 | Export                                                                                           | Does                                                                                          |
 | ------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------- |
-| `inferNgxSignalFormControlKind(element)`                                                         | Guesses the kind from the DOM, or returns `null`                                              |
-| `readNgxSignalFormControlSemantics(element)`                                                     | Reads the kind declared on a host                                                             |
 | `resolveNgxSignalFormControlSemantics(element, presets)`                                         | Declared kind, then guessed kind, then preset. Same as the wrapper                            |
 | `NgxControlPresetRegistry`                                                                       | Service with `resolve(kind)`, `kinds()`, and `extend(overrides)`. Add it to `providers` first |
 | `NGX_SIGNAL_FORM_CONTROL_PRESETS` / `DEFAULT_NGX_SIGNAL_FORM_CONTROL_PRESETS`                    | The active presets and the built-in presets                                                   |
 | `NGX_SIGNAL_FORM_ARIA_MODE`                                                                      | The `auto` or `manual` ARIA mode of one control host                                          |
 | `isNgxSignalFormControlKind` / `isNgxSignalFormControlLayout` / `isNgxSignalFormControlAriaMode` | Type guards for preset values                                                                 |
-| `isFormFieldAppearance` / `isFormFieldOrientation`                                               | Type guards for config values                                                                 |
 
 **Ids and ARIA**
 
@@ -526,17 +518,6 @@ behave like the built-in ones. Read
 | `resolveFieldNameFromCandidates(...candidates)`           | Returns the first name that is not blank                          |
 | `isElementCssVisible(element)`                            | `true` when CSS shows the element                                 |
 | `createControlVisibilitySignal(resolveElement, injector)` | `Signal<boolean>` that tracks whether the control is visible      |
-| `injectFieldControl(element, injector?)`                  | The `FieldTree` bound to an element                               |
-
-**Timing resolution**
-
-| Export                                                                  | Returns                                             |
-| ----------------------------------------------------------------------- | --------------------------------------------------- |
-| `resolveErrorDisplayStrategy(input, context?, configDefault?)`          | Input, then context, then config, then `'on-touch'` |
-| `resolveWarningStrategy(input, context?, configDefault?)`               | Same for warnings                                   |
-| `resolveStrategyFromContext(input, formContext, configDefault?)`        | Error timing from an input and the form context     |
-| `resolveWarningStrategyFromContext(input, formContext, configDefault?)` | Warning timing from an input and the form context   |
-| `resolveSubmittedStatusFromContext(input, formContext)`                 | Submit status from an input and the form context    |
 
 Each function also has companion types exported from the root, such as
 `CreateErrorVisibilityOptions` and `OnInvalidHandlerOptions`.
@@ -563,8 +544,8 @@ violations with axe-core. See the [testing README](./testing/README.md).
 - npm publishes the root `README.md`, not this file.
 - `packages/toolkit/index.ts` lists every public root export by name. When you
   add a public symbol to `core/`, add it there and to this page.
-- `NgxSignalFormControlSemanticsDirective` keeps the `Directive` suffix. The
-  interface `NgxSignalFormControlSemantics` already uses the short name.
+- `NgxSignalFormControl` is the directive class. The interface
+  `NgxSignalFormControlSemantics` describes the same shape as data.
 - `NgxFieldIdentity` has `set*` writer methods tagged `@internal`.
   `scripts/strip-internal-members.mjs` removes them from the published
   `.d.ts`. The build does not use TypeScript's `stripInternal`, because it

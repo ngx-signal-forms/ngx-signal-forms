@@ -20,7 +20,7 @@ import {
   NGX_FORM_FIELD_ERROR_RENDERER,
   NGX_SIGNAL_FORM_FIELD_CONTEXT,
   NGX_SIGNAL_FORM_HINT_REGISTRY,
-  NgxSignalFormControlSemanticsDirective,
+  NgxSignalFormControl,
   type WarningDisplayStrategy,
 } from '@ngx-signal-forms/toolkit';
 import {
@@ -66,7 +66,7 @@ import {
  * `<input [formField]>` gets the toolkit's `FormField` directive.
  *
  * **Bound-control discovery:** pure-signal lexical content query —
- * `contentChildren(NgxSignalFormControlSemanticsDirective)` finds every
+ * `contentChildren(NgxSignalFormControl)` finds every
  * projected control that opted into the toolkit's semantics layer. The
  * directive exposes `elementRef` (per ADR-0002 §6) so the wrapper reads the
  * bound element's `id` for the third-tier `resolvedFieldName` fallback
@@ -225,7 +225,7 @@ export class PrimeFormFieldComponent<TValue = unknown> {
   /**
    * Optional explicit field name. When omitted, resolution falls back to
    * the bound control's `id` (resolved via the lexical
-   * `contentChildren(NgxSignalFormControlSemanticsDirective)` query). When
+   * `contentChildren(NgxSignalFormControl)` query). When
    * neither is available, ARIA wiring is skipped and a one-shot dev-mode
    * warning fires.
    */
@@ -253,10 +253,9 @@ export class PrimeFormFieldComponent<TValue = unknown> {
   // `elementRef` (ADR-0002 §6) so the wrapper reads the bound element
   // without imperative DOM probing.
 
-  protected readonly boundSemantics = contentChildren(
-    NgxSignalFormControlSemanticsDirective,
-    { descendants: true },
-  );
+  protected readonly boundSemantics = contentChildren(NgxSignalFormControl, {
+    descendants: true,
+  });
 
   readonly #boundControlElement = computed<HTMLElement | null>(
     () => this.boundSemantics()[0]?.elementRef.nativeElement ?? null,
@@ -413,7 +412,7 @@ export class PrimeFormFieldComponent<TValue = unknown> {
         const fieldName = this.resolvedFieldName() ?? '<unknown>';
         // oxlint-disable-next-line no-console -- dev-mode misconfiguration signal
         console.error(
-          `[prime-form-field] No NgxSignalFormControlSemanticsDirective matched inside the wrapper bound to "${fieldName}". ` +
+          `[prime-form-field] No NgxSignalFormControl matched inside the wrapper bound to "${fieldName}". ` +
             `Add \`ngxSignalFormControl="input-like"\` (or \`"checkbox"\`, \`"standalone-field-like"\`) to the projected control ` +
             `so the toolkit's auto-ARIA and tier-3 field-name resolution can wire up.`,
         );
@@ -435,5 +434,5 @@ export class PrimeFormFieldComponent<TValue = unknown> {
  */
 export const NgxPrimeFormBundle = [
   PrimeFormFieldComponent,
-  NgxSignalFormControlSemanticsDirective,
+  NgxSignalFormControl,
 ] as const;

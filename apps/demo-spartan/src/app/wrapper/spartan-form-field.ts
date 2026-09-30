@@ -20,7 +20,7 @@ import {
   NGX_FORM_FIELD_ERROR_RENDERER,
   NGX_SIGNAL_FORM_FIELD_CONTEXT,
   NGX_SIGNAL_FORM_HINT_REGISTRY,
-  NgxSignalFormControlSemanticsDirective,
+  NgxSignalFormControl,
   type WarningDisplayStrategy,
 } from '@ngx-signal-forms/toolkit';
 import { NgxFormFieldHint } from '@ngx-signal-forms/toolkit/assistive';
@@ -172,7 +172,7 @@ const assertBrnFieldA11yPublicSurfaceIsExhaustive: AssertBrnFieldA11yPublicSurfa
  * **Bound-control discovery:**
  *
  * Pure-signal lexical content query —
- * `contentChildren(NgxSignalFormControlSemanticsDirective)` finds every
+ * `contentChildren(NgxSignalFormControl)` finds every
  * projected control that opted into the toolkit's semantics layer. The
  * directive exposes `elementRef` (added per ADR-0002 §6 specifically to
  * unblock Spartan / PrimeNG / consumer custom wrappers), so the wrapper
@@ -281,7 +281,7 @@ export class NgxSpartanFormField<TValue = unknown> {
    * Explicit field name used to generate stable `aria-describedby` ids.
    * When omitted, resolution falls back to the projected `brnLabel`'s
    * `for=` attribute, then to the bound control's `id` resolved via
-   * `contentChildren(NgxSignalFormControlSemanticsDirective)`.
+   * `contentChildren(NgxSignalFormControl)`.
    */
   readonly fieldName = input<string>();
 
@@ -315,10 +315,9 @@ export class NgxSpartanFormField<TValue = unknown> {
    * element. The directive exposes `elementRef` (ADR-0002 §6) so the
    * wrapper reads the bound element without imperative DOM probing.
    */
-  protected readonly boundSemantics = contentChildren(
-    NgxSignalFormControlSemanticsDirective,
-    { descendants: true },
-  );
+  protected readonly boundSemantics = contentChildren(NgxSignalFormControl, {
+    descendants: true,
+  });
 
   readonly #boundControlElement = computed<HTMLElement | null>(
     () => this.boundSemantics()[0]?.elementRef.nativeElement ?? null,
@@ -524,7 +523,7 @@ export class NgxSpartanFormField<TValue = unknown> {
         }
         const fieldName = this.resolvedFieldName() ?? '<unknown>';
         console.error(
-          `[spartan-form-field] No NgxSignalFormControlSemanticsDirective matched inside the wrapper bound to "${fieldName}". ` +
+          `[spartan-form-field] No NgxSignalFormControl matched inside the wrapper bound to "${fieldName}". ` +
             `Add \`ngxSignalFormControl="input-like"\` (or \`"checkbox"\`) to the helm control so the toolkit's auto-ARIA, ` +
             `tier-3 field-name resolution, and the wrapper-scoped BrnFieldA11yService bridge can wire up.`,
         );
@@ -549,5 +548,5 @@ export class NgxSpartanFormField<TValue = unknown> {
  */
 export const NgxSpartanFormBundle = [
   NgxSpartanFormField,
-  NgxSignalFormControlSemanticsDirective,
+  NgxSignalFormControl,
 ] as const;

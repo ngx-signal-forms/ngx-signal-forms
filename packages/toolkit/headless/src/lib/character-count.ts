@@ -1,6 +1,9 @@
 import { computed, Directive, input, type Signal } from '@angular/core';
 import type { FieldTree } from '@angular/forms/signals';
-import { unwrapValue, type ReactiveOrStatic } from '@ngx-signal-forms/toolkit';
+import {
+  unwrapValue,
+  type NgxReactiveOrStatic,
+} from '@ngx-signal-forms/toolkit';
 import { createCharacterCountLengthSignal } from '@ngx-signal-forms/toolkit/core';
 import {
   DEFAULT_DANGER_THRESHOLD,
@@ -41,7 +44,7 @@ export interface CreateCharacterCountOptions {
    * `undefined`, `null`, or omitting the option means "no explicit limit".
    * See `useValidatorMaxLength` for the fallback that applies then.
    */
-  readonly maxLength?: ReactiveOrStatic<number | null>;
+  readonly maxLength?: NgxReactiveOrStatic<number | null>;
   /**
    * Falls back to the field's own `maxLength` validator signal when
    * `maxLength` resolves to no explicit limit. Only a present, positive
@@ -52,9 +55,9 @@ export interface CreateCharacterCountOptions {
    */
   readonly useValidatorMaxLength?: boolean;
   /** Warning threshold (0-1), default 0.8 */
-  readonly warningThreshold?: ReactiveOrStatic<number>;
+  readonly warningThreshold?: NgxReactiveOrStatic<number>;
   /** Danger threshold (0-1), default 0.95 */
-  readonly dangerThreshold?: ReactiveOrStatic<number>;
+  readonly dangerThreshold?: NgxReactiveOrStatic<number>;
   /**
    * Name reported in the unsupported-value-type dev warning, e.g.
    * `[ngx-signal-forms] <component>: unsupported value type — …`. Lets a

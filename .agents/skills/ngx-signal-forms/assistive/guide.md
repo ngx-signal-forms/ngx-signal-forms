@@ -10,7 +10,7 @@ The assistive entry point provides accessible feedback rendering that sits betwe
 
 ## Workflow
 
-1. Import from `@ngx-signal-forms/toolkit/assistive`. The `NgxFormField` bundle contains `NgxSignalFormAutoAria`, `NgxSignalFormControlSemanticsDirective`, `NgxFormFieldWrapper`, `NgxFormFieldHint`, `NgxFormFieldCharacterCount`, `NgxFormFieldError`, and `NgxFormFieldset`. It does not contain `NgxFormFieldErrorSummary` or `NgxFormMarkingLegend`; import those separately from `/assistive`.
+1. Import from `@ngx-signal-forms/toolkit/assistive`. The `NgxFormField` bundle contains `NgxSignalFormAutoAria`, `NgxSignalFormControl`, `NgxFormFieldWrapper`, `NgxFormFieldHint`, `NgxFormFieldCharacterCount`, `NgxFormFieldError`, and `NgxFormFieldset`. It does not contain `NgxFormFieldErrorSummary` or `NgxFormMarkingLegend`; import those separately from `/assistive`.
 
 2. **`NgxFormFieldError`** — displays validation errors (and optionally warnings) for a single field or a pre-aggregated, grouped error list. Two presentations:
    - `presentation="inline"` (default) — bare messages under a single control. Always provide `[formField]` for this usage.

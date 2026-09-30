@@ -100,7 +100,6 @@ export {
   stripAngularFormPrefix,
 } from './utilities/humanize-field-path';
 export { updateAt, updateNested } from './utilities/immutable-array';
-export * from './utilities/inject-field-control';
 export * from './utilities/inject-form-context';
 export * from './utilities/on-invalid-handler';
 export * from './utilities/read-direct-errors';
@@ -112,10 +111,8 @@ export {
   type StandardSchemaLikeResult,
 } from './utilities/schema/required-from-standard-schema';
 export {
-  resolveErrorDisplayStrategy,
   resolveStrategyFromContext,
   resolveSubmittedStatusFromContext,
-  resolveWarningStrategy,
   resolveWarningStrategyFromContext,
 } from './utilities/resolve-strategy';
 export {
@@ -123,10 +120,7 @@ export {
   devWarnOnce,
   type WarnOnceRef,
 } from './utilities/dev-warn-once';
-export {
-  combineShowErrors,
-  createShowErrorsComputed,
-} from './utilities/show-errors';
+export { createShowErrorsComputed } from './utilities/show-errors';
 export * from './utilities/submission-helpers';
 export { unwrapValue } from './utilities/unwrap-signal-or-value';
 export {
@@ -146,7 +140,7 @@ export {
 // Convenience imports
 import { FormRoot } from '@angular/forms/signals';
 import { NgxSignalFormAutoAria } from './directives/auto-aria';
-import { NgxSignalFormControlSemanticsDirective } from './directives/control-semantics';
+import { NgxSignalFormControl } from './directives/control-semantics';
 import { NgxSignalForm } from './directives/ngx-signal-form';
 
 /**
@@ -180,7 +174,7 @@ import { NgxSignalForm } from './directives/ngx-signal-form';
  * - {@link FormRoot} - Angular-owned submit and `novalidate` behavior
  * - {@link NgxSignalForm} - Adds toolkit context and error strategy
  * - {@link NgxSignalFormAutoAria} - Automatically applies ARIA attributes
- * - {@link NgxSignalFormControlSemanticsDirective} - Declares stable wrapper/ARIA semantics for a control
+ * - {@link NgxSignalFormControl} - Declares stable wrapper/ARIA semantics for a control
  *
  * **For error display:** Import `NgxFormFieldError` from `@ngx-signal-forms/toolkit/assistive`
  *
@@ -195,5 +189,5 @@ export const NgxSignalFormToolkit = [
   FormRoot,
   NgxSignalForm,
   NgxSignalFormAutoAria,
-  NgxSignalFormControlSemanticsDirective,
+  NgxSignalFormControl,
 ] as const;
