@@ -12,9 +12,9 @@
   },
   "tags": ["scope:lib", "type:lib"],
   "targets": {
-    "build": {
+    "build-ng-packagr": {
       "executor": "@nx/angular:package",
-      "outputs": ["{workspaceRoot}/dist/{projectRoot}"],
+      "outputs": ["{workspaceRoot}/dist/packages/toolkit-ng-packagr"],
       "options": {
         "project": "packages/toolkit/ng-package.json",
         "tsConfig": "packages/toolkit/tsconfig.lib.json"
@@ -27,12 +27,20 @@
       },
       "defaultConfiguration": "production"
     },
-    "post-build": {
+    "build": {
       "executor": "nx:run-commands",
-      "dependsOn": ["build"],
+      "dependsOn": ["build-ng-packagr"],
+      "inputs": [
+        "production",
+        "^production",
+        "{workspaceRoot}/LICENSE",
+        "{workspaceRoot}/README.md"
+      ],
+      "outputs": ["{workspaceRoot}/dist/{projectRoot}"],
       "options": {
         "commands": [
-          "mkdir -p dist/packages/toolkit",
+          "rm -rf dist/packages/toolkit",
+          "cp -R dist/packages/toolkit-ng-packagr dist/packages/toolkit",
           "node packages/toolkit/scripts/generate-readme.mjs",
           "cp LICENSE dist/packages/toolkit/LICENSE",
           "node packages/toolkit/scripts/strip-internal-members.mjs",
@@ -44,7 +52,7 @@
     },
     "check-documentation-starter": {
       "executor": "nx:run-commands",
-      "dependsOn": ["post-build"],
+      "dependsOn": ["build"],
       "options": {
         "command": "node tools/scripts/check-documentation-starter.mjs",
         "cwd": "{workspaceRoot}"
@@ -52,7 +60,7 @@
     },
     "check-published-package": {
       "executor": "nx:run-commands",
-      "dependsOn": ["post-build"],
+      "dependsOn": ["build"],
       "options": {
         "command": "node packages/toolkit/scripts/check-published-package.mjs",
         "cwd": "{workspaceRoot}"
@@ -60,7 +68,7 @@
     },
     "check-package-shape": {
       "executor": "nx:run-commands",
-      "dependsOn": ["post-build"],
+      "dependsOn": ["build"],
       "options": {
         "commands": [
           "pnpm exec publint dist/packages/toolkit --strict",
@@ -72,14 +80,14 @@
     },
     "check-size": {
       "executor": "nx:run-commands",
-      "dependsOn": ["post-build"],
+      "dependsOn": ["build"],
       "options": {
         "command": "node packages/toolkit/scripts/size-report.mjs",
         "cwd": "{workspaceRoot}"
       }
     },
     "nx-release-publish": {
-      "dependsOn": ["build", "post-build"],
+      "dependsOn": ["build"],
       "options": {
         "packageRoot": "dist/{projectRoot}",
         "args": ["--json"]
