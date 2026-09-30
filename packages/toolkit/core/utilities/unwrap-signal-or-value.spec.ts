@@ -262,19 +262,19 @@ describe('unwrapValue', () => {
 
     it('should work with configuration objects', () => {
       interface Config {
-        autoAria: boolean;
+        enabled: boolean;
         debug: boolean;
       }
 
-      const config: Config = { autoAria: true, debug: false };
+      const config: Config = { enabled: true, debug: false };
 
-      expect(unwrapValue(config)).toEqual({ autoAria: true, debug: false });
+      expect(unwrapValue(config)).toEqual({ enabled: true, debug: false });
       expect(unwrapValue(signal(config))).toEqual({
-        autoAria: true,
+        enabled: true,
         debug: false,
       });
       expect(unwrapValue(() => config)).toEqual({
-        autoAria: true,
+        enabled: true,
         debug: false,
       });
     });
