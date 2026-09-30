@@ -49,7 +49,7 @@ The toolkit is an enhancement layer, not a replacement. Angular Signal Forms own
 4. **Remember that standalone imports are template-local.** Importing `NgxSignalFormToolkit` in a parent form component does not make `NgxSignalFormAutoAria` available inside a child component's template. If a custom control renders the actual `<input [formField]>` itself, import the toolkit bundle or the directive in that child component.
 
 5. **Declare control semantics for controls outside the default native field families.** `NgxSignalFormControlSemanticsDirective` (the directive class — included in `NgxSignalFormToolkit`; the suffix-less `NgxSignalFormControlSemantics` name is the matching public _interface_ in `core/types.ts`) writes stable `data-ngx-signal-form-control-*` attributes the wrapper and auto-ARIA use to pick correct layout and ARIA behavior instead of guessing from DOM heuristics.
-   - Use `ngxSignalFormControl="switch"` on a native `input[type="checkbox"][role="switch"]` to opt it into switch wrapper styling and ARIA.
+   - A native `input[type="checkbox"][role="switch"]` needs no attribute: the toolkit infers the `switch` kind from `role="switch"`, which gives it switch wrapper styling and ARIA.
    - Use `ngxSignalFormControl="checkbox"` on a plain `input[type="checkbox"]` when it should opt in to wrapper validation display.
    - Use `ngxSignalFormControl="slider"` or `ngxSignalFormControl="composite"` on a custom component host to declare layout and ARIA ownership.
    - Pass an object for combined overrides: `[ngxSignalFormControl]="{ kind: 'slider', layout: 'stacked', ariaMode: 'manual' }"` (`'stacked'` here is a control layout, not an appearance).
@@ -142,7 +142,6 @@ export const appConfig = {
       defaultErrorStrategy: 'on-submit', // 'immediate' | 'on-touch' | 'on-submit'
       defaultWarningStrategy: 'on-submit', // warnings time independently; default: 'on-touch'
       defaultFormFieldAppearance: 'outline', // 'standard' | 'outline' | 'plain'
-      autoAria: true, // default: true
     }),
     provideErrorMessages({
       required: 'This field is required',

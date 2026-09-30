@@ -19,7 +19,6 @@ describe('FieldsetFormComponent — billing-same-as-shipping checkbox', () => {
         provideZonelessChangeDetection(),
         provideNgxSignalFormsConfig({
           defaultErrorStrategy: 'on-touch',
-          autoAria: true,
         }),
       ],
     });

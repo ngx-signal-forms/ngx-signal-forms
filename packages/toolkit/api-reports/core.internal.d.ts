@@ -22,7 +22,7 @@ import { FieldTree, NgValidationError, FieldState, ValidationError, PathKind, Sc
  * - `'submitting'` - Form is currently being submitted
  * - `'submitted'` - Form has been submitted (regardless of success/failure)
  */
-type SubmittedStatus = 'unsubmitted' | 'submitting' | 'submitted';
+type SubmittedStatus = 'submitted' | 'submitting' | 'unsubmitted';
 /**
  * A signal-like value that can be called to get the current value.
  * Represents either an Angular Signal or a zero-argument function.
@@ -46,7 +46,7 @@ type ReactiveOrStatic<T> = SignalLike<T> | T;
  *
  * This excludes `'inherit'`, which only makes sense for field-level overrides.
  */
-type ResolvedErrorDisplayStrategy = 'immediate' | 'on-touch' | 'on-submit';
+type ResolvedErrorDisplayStrategy = 'immediate' | 'on-submit' | 'on-touch';
 /**
  * Error display strategy determines when validation errors are shown to the user.
  *
@@ -61,7 +61,7 @@ type ErrorDisplayStrategy = ResolvedErrorDisplayStrategy | 'inherit';
  *
  * This excludes 'inherit', which only makes sense for field-level overrides.
  */
-type ResolvedWarningDisplayStrategy = 'immediate' | 'on-touch' | 'on-submit';
+type ResolvedWarningDisplayStrategy = 'immediate' | 'on-submit' | 'on-touch';
 /**
  * Warning display strategy determines when warnings are shown to the user.
  *
@@ -81,7 +81,7 @@ type WarningDisplayStrategy = ResolvedWarningDisplayStrategy | 'inherit';
  *
  * @public
  */
-type FormFieldAppearance = 'standard' | 'outline' | 'plain';
+type FormFieldAppearance = 'outline' | 'plain' | 'standard';
 /**
  * Form field appearance input for component-level control.
  *
@@ -120,7 +120,7 @@ type FormFieldAppearanceInput = FormFieldAppearance | 'inherit';
  *
  * @public
  */
-type FormFieldOrientation = 'vertical' | 'horizontal';
+type FormFieldOrientation = 'horizontal' | 'vertical';
 /**
  * Form field orientation input for component-level control.
  *
@@ -145,7 +145,7 @@ type FormFieldOrientationInput = FormFieldOrientation | 'inherit';
  *
  * @public
  */
-type NgxFormFieldErrorPlacement = 'top' | 'bottom';
+type NgxFormFieldErrorPlacement = 'bottom' | 'top';
 /**
  * Semantic control families understood by the toolkit wrapper layer.
  *
@@ -192,11 +192,11 @@ type NgxFormFieldErrorPlacement = 'top' | 'bottom';
  * (`packages/toolkit/core/utilities/control-semantics.ts`) is optional and
  * only needed if the new kind has a reliable DOM fingerprint.
  */
-type NgxSignalFormControlKind = 'input-like' | 'standalone-field-like' | 'switch' | 'checkbox' | 'radio-group' | 'slider' | 'composite';
+type NgxSignalFormControlKind = 'checkbox' | 'composite' | 'input-like' | 'radio-group' | 'slider' | 'standalone-field-like' | 'switch';
 /**
  * Layout presets understood by the form-field wrapper.
  */
-type NgxSignalFormControlLayout = 'stacked' | 'inline-control' | 'group' | 'custom';
+type NgxSignalFormControlLayout = 'custom' | 'group' | 'inline-control' | 'stacked';
 /**
  * Controls how the toolkit auto-ARIA layer participates for a control.
  *
@@ -241,7 +241,7 @@ type NgxSignalFormControlPresetOverrides = Partial<Record<NgxSignalFormControlKi
  *
  * @public
  */
-type FieldMarkingMode = 'required' | 'optional' | 'none';
+type FieldMarkingMode = 'none' | 'optional' | 'required';
 /**
  * The kind of marker actually rendered on a field — the markable subset of
  * {@link FieldMarkingMode} (`'none'` never produces a marker). Also the set of
@@ -265,11 +265,6 @@ interface ResolvedMarker {
  * Configuration options for the ngx-signal-forms toolkit.
  */
 interface NgxSignalFormsConfig {
-    /**
-     * Enable automatic ARIA attributes (aria-invalid, aria-describedby).
-     * @default true
-     */
-    autoAria: boolean;
     /**
      * Default error display strategy.
      * @default 'on-touch'
@@ -405,7 +400,6 @@ interface NgxSignalFormsConfig {
  * via CSS); omitting the key inherits the parent value instead.
  */
 interface NgxSignalFormsUserConfig {
-    autoAria?: boolean | undefined;
     defaultErrorStrategy?: ResolvedErrorDisplayStrategy | undefined;
     defaultWarningStrategy?: ResolvedWarningDisplayStrategy | undefined;
     defaultFormFieldAppearance?: FormFieldAppearance | undefined;
@@ -676,7 +670,6 @@ interface NgxSignalFormFieldContext {
  * @internal
  */
 declare const DEFAULT_NGX_SIGNAL_FORMS_CONFIG: {
-    readonly autoAria: true;
     readonly defaultErrorStrategy: "on-touch";
     readonly defaultWarningStrategy: "on-touch";
     readonly defaultFormFieldAppearance: "standard";
@@ -882,7 +875,9 @@ declare const NGX_SIGNAL_FORM_FIELD_VISIBILITY_REGISTRY: InjectionToken<NgxSigna
  * The wrapper instantiates the configured component via `*ngComponentOutlet`
  * and binds the relevant input set per call site. A custom renderer intended
  * to replace both must accept the union of those input names; inputs the
- * renderer doesn't declare are silently dropped by `*ngComponentOutlet`.
+ * renderer doesn't declare never reach it. Angular's `componentRef.setInput`
+ * skips them and, in dev mode, logs an `NG0303` error (it throws when the app
+ * sets `errorOnUnknownProperties`).
  *
  * Renderers may accept extra inputs beyond the contract (analytics tags,
  * theming hooks); the wrapper/fieldset ignore them and Angular accepts the
@@ -925,8 +920,9 @@ interface NgxFormFieldErrorRenderer {
  * `NgxFormFieldHint` already exposes as inputs:
  * `{ resolvedFieldName: string | null, resolvedId: string, position:
  * 'left' | 'right' | null }`. Renderers must declare all three with
- * `input()` — Angular's `componentRef.setInput` rejects writes to
- * undeclared inputs, so omitting any of them errors at runtime.
+ * `input()`. `componentRef.setInput` skips an undeclared input and, in dev
+ * mode, logs an `NG0303` error (it throws when the app sets
+ * `errorOnUnknownProperties`).
  *
  * When no provider is registered, `NgxFormFieldHint` falls back to direct
  * `<ng-content />` projection (preserving backwards compatibility for
@@ -998,7 +994,6 @@ declare const NGX_FORM_FIELD_HINT_RENDERER: InjectionToken<NgxFormFieldHintRende
  * export const appConfig: ApplicationConfig = {
  *   providers: [
  *     provideNgxSignalFormsConfig({
- *       autoAria: true,
  *       defaultErrorStrategy: 'on-touch',
  *     }),
  *   ],
@@ -2892,14 +2887,11 @@ interface CreateErrorVisibilityOptions {
      * context resolve to nothing (i.e. no `[ngxSignalForm]` host is present).
      * Typically the caller's own `NGX_SIGNAL_FORMS_CONFIG.defaultErrorStrategy`.
      *
-     * Deliberately opt-in rather than auto-injected: most callers of this
-     * generic primitive (e.g. `NgxSignalFormAutoAria`) already run inside a
-     * form context and never observe the difference, and forcing every call
-     * site to consult the global config would be an unannounced behavior
-     * change for the handful that don't. Callers that need config-default
-     * parity with `NgxHeadlessFieldset.resolvedStrategy` (e.g. the headless
-     * package's standalone factories) inject the config themselves and pass
-     * it through here.
+     * Deliberately opt-in rather than auto-injected, so this generic
+     * primitive does not read the global config behind a caller's back.
+     * Callers that must match the visible message when no form context
+     * exists (`NgxSignalFormAutoAria`, the headless package's standalone
+     * factories) inject the config themselves and pass it through here.
      */
     readonly configDefault?: ResolvedErrorDisplayStrategy | null;
     /**
@@ -3007,7 +2999,7 @@ declare function createErrorVisibility(field: ReactiveOrStatic<Partial<ErrorVisi
  *
  * @public
  */
-type FieldPresentationState = Partial<Pick<FieldState<unknown>, 'errors' | 'invalid' | 'touched' | 'hidden'>>;
+type FieldPresentationState = Partial<Pick<FieldState<unknown>, 'errors' | 'hidden' | 'invalid' | 'touched'>>;
 /**
  * Options for {@link createFieldPresentation}. All are optional.
  *
@@ -4683,7 +4675,7 @@ interface WarnOnceRef {
  *
  * @internal
  */
-declare function devWarnOnce(warned: WarnOnceRef, level: 'warn' | 'error', message: string, ...args: readonly unknown[]): void;
+declare function devWarnOnce(warned: WarnOnceRef, level: 'error' | 'warn', message: string, ...args: readonly unknown[]): void;
 /**
  * Creates a bound {@link devWarnOnce} for call sites that don't already own
  * a per-instance field to hold the {@link WarnOnceRef} — factory functions
@@ -4707,7 +4699,7 @@ declare function devWarnOnce(warned: WarnOnceRef, level: 'warn' | 'error', messa
  *
  * @internal
  */
-declare function createDevWarnOnce(): (level: 'warn' | 'error', message: string, ...args: readonly unknown[]) => void;
+declare function createDevWarnOnce(): (level: 'error' | 'warn', message: string, ...args: readonly unknown[]) => void;
 
 /**
  * Creates a reactive computed signal that determines if a form field's errors

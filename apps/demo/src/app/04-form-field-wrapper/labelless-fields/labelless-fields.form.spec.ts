@@ -51,7 +51,6 @@ describe('LabellessFieldsFormComponent — narrow inputs (no ::ng-deep)', () => 
         provideZonelessChangeDetection(),
         provideNgxSignalFormsConfig({
           defaultErrorStrategy: 'on-touch',
-          autoAria: true,
         }),
       ],
     });

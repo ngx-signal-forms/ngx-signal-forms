@@ -1,17 +1,7 @@
-import { readFileSync } from 'node:fs';
-import { resolve } from 'node:path';
 import { signal } from '@angular/core';
 import { render, screen } from '@testing-library/angular';
 import { describe, expect, it } from 'vitest';
 import { NgxFormFieldset } from './form-fieldset';
-
-// jsdom does not compute custom-property values from emulated component
-// stylesheets, so theme-default specs read the CSS source directly. Runtime
-// resolution is covered by the *.browser.spec.ts suite and e2e snapshots.
-const fieldsetCssSource = readFileSync(
-  resolve(import.meta.dirname, './form-fieldset.css'),
-  'utf8',
-);
 
 type MockState = {
   invalid: () => boolean;
@@ -542,20 +532,6 @@ describe('NgxFormFieldset', () => {
         'ngx-form-field-error[data-presentation="inline"]',
       ),
     ).toBeNull();
-
-    // Verify the danger token default and that the notification card's
-    // background (its one remaining independently-themeable color token —
-    // text color is now shared with the plain/inline presentation, see
-    // form-field-error.css) resolves through it. Asserting against the
-    // source keeps the contrast contract documented; runtime resolution is
-    // covered in browser-mode and e2e specs (jsdom can't compute custom
-    // properties from emulated component stylesheets).
-    expect(fieldsetCssSource).toMatch(
-      /--_fieldset-clr-danger:\s*light-dark\(\s*#db1818\b/,
-    );
-    expect(fieldsetCssSource).toMatch(
-      /--_fieldset-notification-error-bg:[^;]*--ngx-signal-form-error-panel-bg/,
-    );
   });
 
   it('defaults the fieldset shell appearance to outline', async () => {
