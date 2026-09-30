@@ -133,7 +133,7 @@ catalogs:
     tailwindcss: '^4.3.3'
   testing:
     jsdom: '~30.1.0'
-    msw: '~2.15.0'
+    msw: '~3.0.0'
   testing-library:
     '@testing-library/angular': '^19.5.0'
     '@testing-library/dom': '^10.4.2'
@@ -179,6 +179,9 @@ strictPeerDependencies: false
 # `pnpm peers check` runs in CI. tsconfck (via vite-tsconfig-paths) lists
 # typescript ^5 as its peer; the workspace builds and tests on TypeScript 6
 # with it. Drop this rule once tsconfck widens its range.
+# @vitest/mocker lists msw ^2.4.9 as its peer; the demo mocks run on MSW 3 and
+# Vitest never loads msw here. Drop this rule once @vitest/mocker accepts msw 3.
 peerDependencyRules:
   allowedVersions:
     'tsconfck>typescript': '6'
+    '@vitest/mocker>msw': '3'

@@ -32,7 +32,7 @@ async function enableMocking(): Promise<void> {
 
   // Start the worker with service worker options
   await worker.start({
-    onUnhandledRequest: 'bypass', // Don't warn about unhandled requests
+    onUnhandledFrame: 'bypass', // Don't warn about unhandled requests
     serviceWorker: {
       url: '/mockServiceWorker.js',
     },

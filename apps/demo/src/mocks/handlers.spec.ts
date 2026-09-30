@@ -1,4 +1,4 @@
-import { getResponse } from 'msw';
+import { getResponse } from 'msw/utils/get-response';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 /**
