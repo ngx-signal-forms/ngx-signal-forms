@@ -171,7 +171,6 @@ import { BusyButtonDirective } from '../../shared/busy-button.directive';
             id="acceptTerms"
             type="checkbox"
             role="switch"
-            ngxSignalFormControl="switch"
             [formField]="configForm.acceptTerms"
           />
         </ngx-form-field-wrapper>

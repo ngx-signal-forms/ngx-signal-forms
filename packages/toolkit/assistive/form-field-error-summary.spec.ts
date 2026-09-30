@@ -99,6 +99,25 @@ describe('NgxFormFieldErrorSummary', () => {
     ).toBeTruthy();
   });
 
+  it('does not expose warningStrategy, because the summary lists errors only (#587)', () => {
+    // `reflectComponentType` omits host-directive inputs, so read the
+    // forwarded input map from the component definition.
+    const { hostDirectives } = (
+      NgxFormFieldErrorSummary as unknown as {
+        ɵcmp: {
+          hostDirectives: readonly { inputs: Record<string, string> }[] | null;
+        };
+      }
+    ).ɵcmp;
+    const forwarded = (hostDirectives ?? []).flatMap((hostDirective) =>
+      Object.keys(hostDirective.inputs),
+    );
+
+    // Guards the lookup itself: an empty list would pass the next check.
+    expect(forwarded).toContain('strategy');
+    expect(forwarded).not.toContain('warningStrategy');
+  });
+
   it('defaults to the on-touch strategy when none is provided', async () => {
     @Component({
       selector: 'ngx-test-error-summary-default',

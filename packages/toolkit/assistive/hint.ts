@@ -33,8 +33,9 @@ import { sanitizeFieldNameForId } from '@ngx-signal-forms/toolkit/core';
  * dispatched renderer receives the metadata `<ngx-form-field-hint>` already
  * exposes as inputs: `{ resolvedFieldName: string | null, resolvedId:
  * string, position: 'left' | 'right' | null }` — renderers must declare all
- * three with `input()` because Angular's `componentRef.setInput` rejects
- * writes to undeclared inputs.
+ * three with `input()`. `componentRef.setInput` skips an undeclared input and,
+ * in dev mode, logs an `NG0303` error (it throws when the app sets
+ * `errorOnUnknownProperties`).
  *
  * The dispatch only runs in browser contexts (`afterNextRender`); SSR keeps
  * the projected fallback content. When no renderer is registered, content

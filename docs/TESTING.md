@@ -150,3 +150,54 @@ which tests
 Run it with `pnpm nx test demo`. Keep this guide and the spec in sync.
 [ADR-0004](./decisions/0004-wcag22-testing-strategy.md) explains why axe scans
 run in browser mode and the other specs run in jsdom.
+
+### Toolkit specs: jsdom or browser
+
+The toolkit has two Vitest projects. `pnpm nx test toolkit` runs `*.spec.ts`
+in jsdom. `pnpm nx run toolkit:test-browser` runs `*.browser.spec.ts` in
+Chromium. jsdom builds the DOM but does not render it. It has no layout, does
+not apply component stylesheets, does not evaluate media queries, and has no
+accessibility tree.
+
+Write a `*.browser.spec.ts` when an assertion depends on one of these. The
+example specs are under `packages/toolkit/`.
+
+| The assertion depends on                                                     | Example spec                                                          |
+| ---------------------------------------------------------------------------- | --------------------------------------------------------------------- |
+| Layout: `getBoundingClientRect()`, `checkVisibility()`, target size          | `form-field/form-field-wrapper.selection-target-size.browser.spec.ts` |
+| Computed CSS: custom properties, `light-dark()`, `:has()`, container queries | `form-field/form-field-wrapper.assistive.browser.spec.ts`             |
+| Where focus lands after toolkit code moves it                                | `assistive/form-field-error-summary.a11y.browser.spec.ts`             |
+| `:focus-visible` styles                                                      | `form-field/form-field-wrapper.state-focus-outline.browser.spec.ts`   |
+| Media emulation: color scheme, forced colors, reduced motion                 | `form-field/form-field-wrapper.color-scheme.a11y.browser.spec.ts`     |
+| The accessibility tree: an accessible name or description, an axe scan       | `form-field/form-field-wrapper.a11y.browser.spec.ts`                  |
+
+Everything else stays in jsdom. That includes signals, error strategies, DI,
+ARIA attribute values and ids, rendered text, classes, data attributes and
+dev-mode warnings. Both projects use `@testing-library/angular`.
+
+Three cases need care:
+
+- **Stylesheet source.** Do not match a regex against a `.css` file or an
+  injected `<style>` in place of a computed style. The regex still passes
+  when a more specific rule wins, a selector stops matching, or a token
+  resolves to another value. Read the computed value in a browser spec.
+- **Visibility.** jsdom has no `checkVisibility()`, so
+  `isElementCssVisible()` reports every control as visible. A jsdom spec can
+  check `aria-invalid` on a visible control. Test a hidden or collapsed
+  control in a browser spec.
+- **Accessible names.** `getByRole('button', { name })` is fine in jsdom to
+  find an element. When the name is the thing under test, use a browser spec.
+
+jsdom, an ARIA attribute value:
+
+```typescript
+expect(input).toHaveAttribute('aria-describedby', 'email-hint email-error');
+```
+
+Browser, a computed color that jsdom cannot resolve:
+
+```typescript
+await expect
+  .poll(() => getComputedStyle(content).borderTopColor)
+  .toBe('rgb(161, 98, 7)');
+```

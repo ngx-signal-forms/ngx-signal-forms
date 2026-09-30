@@ -3,5 +3,14 @@
   "dest": "../../../dist/packages/demo/spartan-ui",
   "lib": {
     "entryFile": "src/index.ts"
-  }
+  },
+  "allowedNonPeerDependencies": [
+    "@angular/cdk",
+    "@ng-icons/core",
+    "@ng-icons/lucide",
+    "@spartan-ng/brain",
+    "class-variance-authority",
+    "clsx",
+    "tailwind-merge"
+  ]
 }

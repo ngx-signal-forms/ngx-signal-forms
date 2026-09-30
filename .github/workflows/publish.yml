@@ -155,7 +155,7 @@ jobs:
         run: pnpm exec nx report --outputStyle=static
 
       - name: Build toolkit package
-        run: pnpm exec nx run toolkit:post-build --skip-nx-cache --outputStyle=static
+        run: pnpm exec nx build toolkit --skip-nx-cache --outputStyle=static
 
       - name: Validate npm trusted publishing preflight
         run: |

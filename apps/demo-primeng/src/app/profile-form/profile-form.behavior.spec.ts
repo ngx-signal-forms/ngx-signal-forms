@@ -53,7 +53,6 @@ async function renderProfileForm() {
         // Mirrors main.ts: warnings are informational, so this demo shows
         // them immediately instead of the ADR-0007 terminal ('on-touch').
         defaultWarningStrategy: 'immediate',
-        autoAria: true,
       }),
       ...provideNgxPrimeForms(),
     ],

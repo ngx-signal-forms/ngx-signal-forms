@@ -118,7 +118,7 @@ export type NgxErrorSummaryHeadingLevel = 2 | 3 | 4 | 5 | 6;
   hostDirectives: [
     {
       directive: NgxHeadlessErrorSummary,
-      inputs: ['formTree', 'strategy', 'warningStrategy', 'submittedStatus'],
+      inputs: ['formTree', 'strategy', 'submittedStatus'],
     },
   ],
   imports: [NgTemplateOutlet],

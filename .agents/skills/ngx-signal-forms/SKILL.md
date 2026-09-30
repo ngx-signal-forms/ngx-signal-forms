@@ -63,7 +63,7 @@ cases live in the branch-only [evaluation reference](references/evaluation.md).
 
 1. `@angular/forms/signals` is always the source of truth — never replace `form()`, `[formField]`, or field state signals with toolkit abstractions.
 2. Always import from the correct secondary entry point. Do not import `NgxFormField` from the root package.
-3. Basic toolkit flows can use `form[formRoot]` alone — wrappers, assistive components, and auto-ARIA fall back to default `'on-touch'` timing. Add `ngxSignalForm` when you need `'on-submit'`, `submittedStatus`, shared form context, or a form-level strategy override.
+3. Basic toolkit flows can use `form[formRoot]` alone — wrappers, assistive components, and auto-ARIA fall back to the configured `defaultErrorStrategy` (default `'on-touch'`). Add `ngxSignalForm` when you need `'on-submit'`, `submittedStatus`, shared form context, or a form-level strategy override.
 4. Do not manually add `aria-invalid`, `aria-required`, or `aria-describedby` to controls managed by `NgxSignalFormAutoAria` unless `ngxSignalFormControlAria="manual"` is explicitly set on that control.
 5. Bound controls inside `ngx-form-field-wrapper` need a stable `id` unless the wrapper gets an explicit `fieldName`.
 6. Declare `ngxSignalFormControl` semantics when native inference does not cover the control or ownership policy. Standard checkboxes/radios require explicit opt-in. Native checkbox switches with `role="switch"` already infer their kind; custom switches still need the role on the actual interactive element.
