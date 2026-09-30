@@ -18,6 +18,14 @@
   font-size: 0.875rem;
 }
 
+/* Groups the steps only to disable them together; no visual frame. */
+.wizard-fieldset {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
 /* Reserved height prevents layout shift */
 .status-row {
   height: 1.5rem;

@@ -410,6 +410,94 @@ test.describe('Advanced Wizard Demo', () => {
     await expect(page.getByLabel('First Name')).toHaveValue('');
   });
 
+  test('resumes the auto-saved draft after a reload', async ({ page }) => {
+    // Wait for the save that holds both steps, not an earlier one.
+    const bothStepsSaved = page.waitForResponse(
+      (response) => {
+        const request = response.request();
+        if (
+          !request.url().includes('/api/wizard/draft') ||
+          !['POST', 'PUT'].includes(request.method())
+        ) {
+          return false;
+        }
+        const body = request.postDataJSON() as {
+          traveler: { firstName: string };
+          destinations: { city: string }[];
+        };
+        return (
+          response.ok() &&
+          body.traveler.firstName === 'John' &&
+          body.destinations[0]?.city === 'Tokyo'
+        );
+      },
+      { timeout: 15000 },
+    );
+    await fillTravelerStep(page);
+    await page.getByRole('button', { name: 'Next' }).click();
+    await fillTripStepMinimal(page);
+    await page.getByRole('button', { name: 'Next' }).click();
+    const { draftId } = (await (await bothStepsSaved).json()) as {
+      draftId: string;
+    };
+
+    // Playwright can see the response before the store keeps the id. A reload
+    // before that would leave nothing to resume.
+    await expect
+      .poll(() =>
+        page.evaluate(() =>
+          sessionStorage.getItem('ngx-demo:advanced-wizard-draft'),
+        ),
+      )
+      .toBe(JSON.stringify({ draftId }));
+
+    await page.reload();
+
+    await expect(page.getByLabel('First Name')).toHaveValue('John');
+    await expect(page.getByLabel('Passport Number')).toHaveValue('A1234567');
+
+    await page.getByRole('button', { name: 'Next' }).click();
+    const dest1 = page.getByRole('group', { name: 'Destination 1' });
+    await expect(dest1.getByLabel(/City/i)).toHaveValue('Tokyo');
+    await expect(dest1.getByLabel(/Arrival Date/i)).toHaveValue(
+      tripDates.arrival,
+    );
+  });
+
+  test('a draft that fails to load shows an error and an empty, usable wizard', async ({
+    page,
+  }) => {
+    // Point the wizard at a draft the mock server does not have.
+    await page.addInitScript(() => {
+      sessionStorage.setItem(
+        'ngx-demo:advanced-wizard-draft',
+        JSON.stringify({ draftId: 'missing-draft' }),
+      );
+    });
+    await page.reload();
+
+    await expect(
+      page
+        .getByRole('alert')
+        .filter({ hasText: 'Your saved draft could not be loaded.' }),
+    ).toBeVisible();
+    await expect(page.getByLabel('First Name')).toHaveValue('');
+
+    // The next save starts a new draft instead of writing to the missing one.
+    const newDraft = page.waitForRequest(
+      (request) =>
+        request.url().endsWith('/api/wizard/draft') &&
+        request.method() === 'POST',
+      { timeout: 15000 },
+    );
+    await fillTravelerStep(page);
+    await page.getByRole('button', { name: 'Next' }).click();
+    await expect(
+      page.getByRole('group', { name: 'Destination 1' }),
+    ).toBeVisible();
+    await newDraft;
+  });
+
   test('review step shows all entered details', async ({ page }) => {
     await fillTravelerStep(page, {
       firstName: 'Alice',

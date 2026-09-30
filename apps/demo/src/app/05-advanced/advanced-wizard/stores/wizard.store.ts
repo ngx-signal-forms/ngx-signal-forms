@@ -16,11 +16,13 @@ import {
   Traveler,
   Trip,
   TripSchema,
+  type WizardDraft,
 } from '../schemas/wizard.schemas';
 import {
   withWizardNavigation,
   type WizardStep,
 } from './features/navigation.feature';
+import { withSavedDraft } from './features/saved-draft.feature';
 import { withTravelerManagement } from './features/traveler.feature';
 import { withTripManagement } from './features/trip.feature';
 
@@ -33,11 +35,6 @@ export type { WizardStep } from './features/navigation.feature';
 type DraftResponse = {
   draftId: string;
   savedAt: string;
-};
-
-type DraftData = {
-  traveler: Traveler;
-  destinations: Destination[];
 };
 
 type BookingResponse = {
@@ -68,6 +65,9 @@ export const WizardStore = signalStore(
 
   // Compose features (order matters - navigation first, then data features)
   withWizardNavigation(),
+  withSavedDraft(),
+
+  // Committed traveler and destinations follow `savedDraftValue`.
   withTravelerManagement(),
   withTripManagement(),
 
@@ -145,9 +145,11 @@ export const WizardStore = signalStore(
     /**
      * Save draft to server.
      */
-    saveDraft: httpMutation<DraftData, DraftResponse>({
+    saveDraft: httpMutation<WizardDraft, DraftResponse>({
       request: (data) => {
-        const draftId = store.draftId();
+        // A draft that failed to load may be gone on the server. Start a new
+        // one instead of writing to it.
+        const draftId = store.resumeFailed() ? null : store.draftId();
         return {
           url: draftId ? `/api/wizard/draft/${draftId}` : '/api/wizard/draft',
           method: draftId ? 'PUT' : 'POST',
@@ -192,6 +194,7 @@ export const WizardStore = signalStore(
 
   // Mutation state signals for template binding
   withComputed((store) => ({
+    isLoadingDraft: () => store.savedDraftIsLoading(),
     isSaving: () => store.saveDraftIsPending(),
     isSubmitting: () => store.submitBookingIsPending(),
   })),
@@ -204,6 +207,11 @@ export const WizardStore = signalStore(
         debounceTime(2000),
         distinctUntilChanged((a, b) => JSON.stringify(a) === JSON.stringify(b)),
         tap((data) => {
+          // Until the saved draft arrives, the drafts are still empty. Saving
+          // them would overwrite the draft that is loading.
+          if (store.isLoadingDraft()) {
+            return;
+          }
           if (data.traveler.firstName || data.destinations.length > 0) {
             void store.saveDraft(data);
           }
@@ -239,16 +247,9 @@ export const WizardStore = signalStore(
         patchState(store, {
           error: null,
           bookingConfirmation: null,
+          // Also clears the stored id, so a reload starts empty.
+          draftId: null,
         });
-      },
-
-      /**
-       * Initialize wizard with a destination if empty.
-       */
-      initializeIfEmpty(): void {
-        if (store.destinations().length === 0) {
-          store.setDestinations([createEmptyDestination()]);
-        }
       },
     };
   }),
@@ -259,8 +260,6 @@ export const WizardStore = signalStore(
       // Auto-save draft data when it changes. rxMethod tracks the signal
       // itself, so no hand-written effect is needed.
       store.autoSaveDraft(store.draftSummary);
-
-      store.initializeIfEmpty();
     },
   }),
 );
