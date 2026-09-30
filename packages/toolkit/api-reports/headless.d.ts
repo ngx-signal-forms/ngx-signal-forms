@@ -298,8 +298,21 @@ declare class NgxHeadlessCharacterCount implements CharacterCountState {
  * @group Utility Functions
  */
 interface ErrorSummaryEntryData {
+    /**
+     * Identity of this entry, unique within one summary list. Use it as the
+     * `@for` track key. Treat the value as opaque.
+     *
+     * Built from the field's unique name (not its label), the error `kind`
+     * and the raw validator message. The message is in the key because one
+     * field can keep two errors of one kind with different messages. A
+     * message that comes from the error-message registry does not change the
+     * key. An entry with
+     * no bound field never shares a key with a bound one.
+     */
+    readonly key: string;
     readonly kind: string;
     readonly message: string;
+    /** Display label for the field. Not unique: use {@link key} for identity. */
     readonly fieldName: string;
     readonly focus: () => void;
     /**
@@ -974,7 +987,7 @@ interface ErrorSummarySignals {
  * <div ngxHeadlessErrorSummary #summary="errorSummary" [formTree]="myForm">
  *   <ul role="alert">
  *     @if (summary.shouldShow() && summary.hasErrors()) {
- *       @for (entry of summary.entries(); track entry.kind + entry.fieldName) {
+ *       @for (entry of summary.entries(); track entry.key) {
  *         <li>
  *           @if (entry.canFocus) {
  *             <button type="button" (click)="entry.focus()">
