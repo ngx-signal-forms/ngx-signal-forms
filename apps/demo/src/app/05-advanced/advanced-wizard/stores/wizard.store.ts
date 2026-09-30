@@ -5,6 +5,7 @@ import {
   withComputed,
   withHooks,
   withMethods,
+  withProps,
   withState,
 } from '@ngrx/signals';
 import { rxMethod } from '@ngrx/signals/rxjs-interop';
@@ -140,6 +141,22 @@ export const WizardStore = signalStore(
     hasConfirmedBooking: () => store.bookingConfirmation() !== null,
   })),
 
+  // A booking or a reset ends the draft. Each save records the epoch it started
+  // in, and a save from an earlier epoch is ignored when it completes. The
+  // confirmation alone cannot do this: "Start New Booking" clears it.
+  withProps(() => {
+    const startedIn = new WeakMap<WizardDraft, number>();
+    const draftEpoch = {
+      current: 0,
+      markStarted: (data: WizardDraft): void => {
+        startedIn.set(data, draftEpoch.current);
+      },
+      isSpent: (data: WizardDraft): boolean =>
+        startedIn.get(data) !== draftEpoch.current,
+    };
+    return { draftEpoch };
+  }),
+
   // Mutations for API calls (ngrx-toolkit)
   withMutations((store) => ({
     /**
@@ -147,6 +164,7 @@ export const WizardStore = signalStore(
      */
     saveDraft: httpMutation<WizardDraft, DraftResponse>({
       request: (data) => {
+        store.draftEpoch.markStarted(data);
         // A draft that failed to load may be gone on the server. Start a new
         // one instead of writing to it.
         const draftId = store.resumeFailed() ? null : store.draftId();
@@ -156,11 +174,18 @@ export const WizardStore = signalStore(
           body: data,
         };
       },
-      onSuccess: (response) => {
+      onSuccess: (response, data) => {
+        // A save that lands after the booking or a reset must not bring the id back.
+        if (store.draftEpoch.isSpent(data)) {
+          return;
+        }
         store.setDraftSaved(response.draftId);
         patchState(store, { error: null });
       },
-      onError: (error) => {
+      onError: (error, data) => {
+        if (store.draftEpoch.isSpent(data)) {
+          return;
+        }
         patchState(store, { error: 'Failed to save draft' });
         console.error('Draft save failed:', error);
       },
@@ -176,9 +201,13 @@ export const WizardStore = signalStore(
         body: trip,
       }),
       onSuccess: (response) => {
+        store.draftEpoch.current++;
         patchState(store, {
           error: null,
           bookingConfirmation: response,
+          // The trip is booked, so the draft is spent. Clearing the id also
+          // clears the stored one, so a reload starts empty.
+          draftId: null,
         });
         console.log('Booking confirmed:', response.confirmationNumber);
       },
@@ -241,6 +270,7 @@ export const WizardStore = signalStore(
        * Reset wizard to initial state.
        */
       reset(): void {
+        store.draftEpoch.current++;
         store.resetTraveler();
         store.setDestinations([createEmptyDestination()]);
         store.goToStep('traveler');

@@ -110,24 +110,6 @@ export const TripSchema = z.object({
 // These require runtime data from other steps, so cannot be in Zod schemas
 // ══════════════════════════════════════════════════════════════════════════════
 
-// Activity Date Within Destination Range - used in form via validate()
-export function validateActivityDates(destination: Destination): string[] {
-  const errors: string[] = [];
-  const arrival = new Date(destination.arrivalDate);
-  const departure = new Date(destination.departureDate);
-
-  destination.activities.forEach((activity, index) => {
-    const activityDate = new Date(activity.date);
-    if (activityDate < arrival || activityDate > departure) {
-      errors.push(
-        `Activity ${index + 1} date must be between arrival and departure`,
-      );
-    }
-  });
-
-  return errors;
-}
-
 // Passport 6-Month Validity Rule - requires trip data from store
 // This is used in traveler-step.form.ts via validate() because
 // lastDepartureDate comes from a different step (trip step)
