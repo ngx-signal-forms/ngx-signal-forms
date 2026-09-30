@@ -1,5 +1,3 @@
-import { readFileSync } from 'node:fs';
-import { resolve } from 'node:path';
 import { Component, inputBinding, signal } from '@angular/core';
 import {
   FormField,
@@ -35,14 +33,6 @@ import {
   type MockInstance,
 } from 'vitest';
 import { NgxFormFieldWrapper as NgxSignalFormWrapperComponent } from './form-field-wrapper';
-
-// jsdom does not compute custom-property values from emulated component
-// stylesheets, so theme-default specs read the CSS source directly. Runtime
-// resolution is covered by the *.browser.spec.ts suite and e2e snapshots.
-const wrapperCssSource = readFileSync(
-  resolve(import.meta.dirname, './form-field-wrapper.css'),
-  'utf8',
-);
 
 type MockValidationError = {
   kind?: string;
@@ -4678,20 +4668,6 @@ describe('NgxSignalFormWrapperComponent', () => {
     });
   });
 
-  describe('Theming defaults (a11y)', () => {
-    it('should resolve the warning color custom property to an AA-compliant value on white', () => {
-      // The previous default of #f59e0b (Tailwind amber-500) only achieves
-      // ~2.16:1 contrast on white — fine for borders/icons, but the same
-      // token also drives warning *text*, which fails WCAG 2.2 AA (4.5:1).
-      // Locking in the darker default in the CSS source protects consumers
-      // who do not override `--ngx-form-field-color-warning` themselves.
-      // Runtime resolution is covered by the browser-mode and e2e suites.
-      expect(wrapperCssSource).toMatch(
-        /--_field-clr-warning:\s*light-dark\(\s*#a16207\b/,
-      );
-    });
-  });
-
   // The 30-line `NgxFormFieldAssistiveRow` component was inlined into the
   // wrapper template and CSS in this PR. Its standalone spec went away with
   // it; these tests reconstitute its load-bearing assertions so the layout
@@ -4773,51 +4749,6 @@ describe('NgxSignalFormWrapperComponent', () => {
       expect(right?.querySelector('[data-testid="right-custom"]')).toBeTruthy();
       expect(left?.querySelector('[data-testid="right-custom"]')).toBeNull();
       expect(left?.querySelector('[data-testid="left-hint"]')).toBeTruthy();
-    });
-
-    // jsdom does not resolve `:has()`-driven custom-property cascades from
-    // emulated component stylesheets, so the runtime flip is asserted in
-    // the browser-mode suite. Here we lock in the CSS *source* so the
-    // selector + custom-property contract cannot silently regress in
-    // refactors of this stylesheet.
-    it('declares the :has()-driven --ngx-form-field-hint-align override in CSS source', () => {
-      expect(wrapperCssSource).toMatch(
-        /\.ngx-signal-form-field-wrapper__assistive:has\(\s*\.ngx-signal-form-field-wrapper__assistive-right:not\(:empty\)\s*\)\s*\{[^}]*--ngx-form-field-hint-align:\s*left;/,
-      );
-    });
-
-    it('declares display:none for empty assistive-row slots in CSS source', () => {
-      expect(wrapperCssSource).toMatch(
-        /\.ngx-signal-form-field-wrapper__assistive-left:empty,\s*\.ngx-signal-form-field-wrapper__assistive-right:empty\s*\{\s*display:\s*none;/,
-      );
-    });
-
-    // jsdom does not evaluate `@container style()` queries from emulated
-    // component stylesheets, so the runtime collapse/reserve behavior is
-    // asserted in the browser-mode suite (#297). Here we lock in the CSS
-    // *source* so the token contract cannot silently regress in refactors
-    // of this stylesheet.
-    it('resolves --ngx-form-field-assistive-empty-behavior through a public custom property defaulting to reserve', () => {
-      expect(wrapperCssSource).toMatch(
-        /--_assistive-empty-behavior:\s*var\(\s*--ngx-form-field-assistive-empty-behavior,\s*reserve\s*\);/,
-      );
-    });
-
-    it('declares the collapse opt-in for a content-less assistive row in CSS source', () => {
-      expect(wrapperCssSource).toMatch(
-        /@container style\(--_assistive-empty-behavior:\s*collapse\)\s*\{[\s\S]*?\.ngx-signal-form-field-wrapper__assistive:not\(\s*:has\(\s*\.ngx-signal-form-field-wrapper__assistive-left\s*>\s*:not\(\.ngx-signal-form-field-wrapper__hint-slot\),\s*\.ngx-signal-form-field-wrapper__hint-slot:not\(:empty\),\s*\.ngx-signal-form-field-wrapper__assistive-right:not\(:empty\)\s*\)\s*\)\s*\{\s*min-height:\s*0;\s*margin-top:\s*0;\s*margin-bottom:\s*0;/,
-      );
-    });
-
-    // jsdom does not compute the resulting rendered geometry from emulated
-    // component stylesheets, so the runtime override is asserted in the
-    // browser-mode suite (#253). Here we lock in the CSS *source* so the
-    // token contract cannot silently regress in refactors of this
-    // stylesheet.
-    it('resolves --_field-touch-target through a public custom property defaulting to 32px', () => {
-      expect(wrapperCssSource).toMatch(
-        /--_field-touch-target:\s*var\(\s*--ngx-form-field-touch-target,\s*2rem\s*\);/,
-      );
     });
   });
 

@@ -67,6 +67,9 @@ test.describe('Demo Application UI - Page Loading', () => {
       '/',
       ...DEMO_CATEGORIES.flatMap((c) => c.links.map((l) => l.path)),
     ];
+    // One test visits every route, so its runtime grows with the route count.
+    // On a cold CI dev server it already took 29s of the default 30s.
+    test.slow();
 
     for (const route of routes) {
       const routePage = await page.context().newPage();

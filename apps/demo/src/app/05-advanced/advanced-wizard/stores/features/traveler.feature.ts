@@ -2,19 +2,28 @@ import { linkedSignal } from '@angular/core';
 import {
   patchState,
   signalStoreFeature,
+  type,
   withComputed,
   withLinkedState,
   withMethods,
-  withState,
 } from '@ngrx/signals';
 
-import { createEmptyTraveler, Traveler } from '../../schemas/wizard.schemas';
+import {
+  createEmptyTraveler,
+  Traveler,
+  type WizardDraft,
+} from '../../schemas/wizard.schemas';
 
 export function withTravelerManagement() {
   return signalStoreFeature(
-    withState({
-      traveler: createEmptyTraveler(),
-    }),
+    // Needs the saved draft from `withSavedDraft()`.
+    { state: type<{ savedDraftValue: WizardDraft | undefined }>() },
+
+    // Committed state follows the resumed draft, with no effect to copy it.
+    // It stays writable, so the methods below still patch it.
+    withLinkedState(({ savedDraftValue }) => ({
+      traveler: () => savedDraftValue()?.traveler ?? createEmptyTraveler(),
+    })),
 
     // Draft state linked to committed - form binds to this
     // Resets when committed state changes (e.g., after load from server)

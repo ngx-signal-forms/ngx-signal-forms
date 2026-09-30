@@ -551,10 +551,10 @@ declare class NgxFormFieldWrapper<TValue = unknown> {
     static ɵcmp: _angular_core.ɵɵComponentDeclaration<NgxFormFieldWrapper<any>, "ngx-form-field-wrapper", never, { "formField": { "alias": "formField"; "required": true; "isSignal": true; }; "fieldName": { "alias": "fieldName"; "required": false; "isSignal": true; }; "strategy": { "alias": "strategy"; "required": false; "isSignal": true; }; "warningStrategy": { "alias": "warningStrategy"; "required": false; "isSignal": true; }; "errorPlacement": { "alias": "errorPlacement"; "required": false; "isSignal": true; }; "appearance": { "alias": "appearance"; "required": false; "isSignal": true; }; "orientation": { "alias": "orientation"; "required": false; "isSignal": true; }; "showMarkerWhen": { "alias": "showMarkerWhen"; "required": false; "isSignal": true; }; "requiredMarker": { "alias": "requiredMarker"; "required": false; "isSignal": true; }; "optionalMarker": { "alias": "optionalMarker"; "required": false; "isSignal": true; }; "hideHintOnError": { "alias": "hideHintOnError"; "required": false; "isSignal": true; }; }, {}, ["hintChildren", "characterCountChildren"], ["label, [ngxFormFieldLabel]", "[prefix]", "*", "[suffix]", "ngx-form-field-hint", "ngx-form-field-character-count, [characterCount]"], true, [{ directive: typeof i1.NgxFieldIdentityProvider; inputs: { "fieldName": "fieldName"; }; outputs: {}; }]>;
 }
 
-type NgxFormFieldsetFeedbackAppearance = 'auto' | 'plain' | 'notification';
+type NgxFormFieldsetFeedbackAppearance = 'auto' | 'notification' | 'plain';
 type NgxFormFieldsetAppearance = 'outline' | 'plain';
-type NgxFormFieldsetSurfaceTone = 'default' | 'neutral' | 'info' | 'success' | 'warning' | 'danger';
-type NgxFormFieldsetValidationSurface = 'never' | 'always';
+type NgxFormFieldsetSurfaceTone = 'danger' | 'default' | 'info' | 'neutral' | 'success' | 'warning';
+type NgxFormFieldsetValidationSurface = 'always' | 'never';
 /**
  * Form fieldset component for grouping related form fields with aggregated error/warning display.
  *
@@ -693,7 +693,7 @@ declare class NgxFormFieldset {
     protected readonly isTopPlacement: _angular_core.Signal<boolean>;
     protected readonly showMessages: _angular_core.Signal<boolean>;
     protected readonly resolvedAppearance: _angular_core.Signal<NgxFormFieldsetAppearance>;
-    protected readonly resolvedFeedbackAppearance: _angular_core.Signal<"plain" | "notification">;
+    protected readonly resolvedFeedbackAppearance: _angular_core.Signal<'notification' | 'plain'>;
     protected readonly usesNotificationFeedback: _angular_core.Signal<boolean>;
     /**
      * Filtered errors signal for NgxFormFieldError.

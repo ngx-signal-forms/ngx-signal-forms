@@ -53,11 +53,10 @@ You do this yourself:
   `role="status"`, and the ids from the directive.
 - Use a `fieldName` that equals the control's `id`, so auto-ARIA and your
   elements agree on the ids.
-- Add `ngxSignalForm` to the form and set error timing there
-  (`errorStrategy="…"`). Auto-ARIA does not see a `strategy` input on a
-  headless directive, and without `ngxSignalForm` it ignores the app config
-  and uses `on-touch`. Either way, the ARIA would change at a different time
-  than your message.
+- Set error timing on the form (`ngxSignalForm` with `errorStrategy="…"`) or
+  in the app config. Auto-ARIA follows both. Do not set `strategy` on the
+  headless directive: auto-ARIA does not see it, so the ARIA would change at
+  a different time than your message.
 - Link hints yourself: give the hint an `id` and add it to the control's
   `aria-describedby`. Auto-ARIA keeps ids that you write.
 - Style everything.
@@ -272,9 +271,11 @@ Signals: `entries()`, `warningEntries()`, `hasErrors()`, `hasWarnings()`,
 `shouldShow()`, `shouldShowWarnings()`, `resolvedStrategy()`,
 `resolvedWarningStrategy()`. Method: `focusFirst()`.
 
-- Each entry has `kind`, `message`, `fieldName`, `focus()`, and `canFocus`.
-  Render an entry as a button only when `canFocus` is `true`. Otherwise render
-  plain text, because the error has no control to focus.
+- Each entry has `key`, `kind`, `message`, `fieldName`, `focus()`, and
+  `canFocus`. Render an entry as a button only when `canFocus` is `true`.
+  Otherwise render plain text, because the error has no control to focus.
+- Track rows by `key` (`@for (entry of summary.entries(); track entry.key)`).
+  `fieldName` is display text: two fields can share it.
 - `shouldShow()` controls error entries. `shouldShowWarnings()` controls
   warning entries. They are independent: a form that shows errors only after
   submit can still show warnings on touch.

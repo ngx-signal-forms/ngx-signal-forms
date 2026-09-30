@@ -385,27 +385,40 @@
   --ngx-signal-form-feedback-font-size: var(--_field-text-caption);
   /* Private, so an ancestor's public `--ngx-form-field-hint-color` still wins. */
   --_field-hint-color: var(--_color-label);
+}
 
-  .ngx-signal-form-field-wrapper__content {
-    border: none;
-    background-color: transparent;
-    padding: 0;
-    box-shadow: none;
+/* Keep the plain rules below flat (#557). A flat rule compiles the same on */
+/* every Angular version. Before Angular 22.2, a nested rule here got no */
+/* scoping attribute. It lost to the textual rules in */
+/* `form-field-wrapper.css` by one class, so a plain field showed the */
+/* standard border, background and focus ring. Now the resting, focus and */
+/* outline rules below have the same specificity as their textual rules. */
+/* They win by source order, because this file loads after that one. The */
+/* textual hover rule still outranks the hover rule here, but it only sets */
+/* `border-color`, and the plain container has no border. */
+:host(.ngx-signal-forms-plain) .ngx-signal-form-field-wrapper__content {
+  border: none;
+  background-color: transparent;
+  padding: 0;
+  box-shadow: none;
+}
 
-    &:hover,
-    &:focus-within {
-      border-color: transparent;
-      box-shadow: none;
-    }
+:host(.ngx-signal-forms-plain) .ngx-signal-form-field-wrapper__content:hover,
+:host(.ngx-signal-forms-plain)
+  .ngx-signal-form-field-wrapper__content:focus-within {
+  border-color: transparent;
+  box-shadow: none;
+}
 
-    /* The shared focus rule in `form-field-wrapper.css` puts a solid
-       outline on every textual field's container. Plain already draws
-       its own outline on the input itself (`#493`) — drop the
-       container's copy so a plain field doesn't show two outlines. */
-    &:has(.ngx-signal-form-field-wrapper__main :focus-visible) {
-      outline: none;
-    }
-  }
+/* The shared focus rule in `form-field-wrapper.css` puts a solid */
+/* outline on every textual field's container. Plain already draws */
+/* its own outline on the input itself (`#493`) — drop the */
+/* container's copy so a plain field doesn't show two outlines. */
+:host(.ngx-signal-forms-plain)
+  .ngx-signal-form-field-wrapper__content:has(
+    .ngx-signal-form-field-wrapper__main :focus-visible
+  ) {
+  outline: none;
 }
 
 /* Plain appearance: restore a focus indicator on the input itself. */
