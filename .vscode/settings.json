@@ -1,11 +1,60 @@
 {
-  "git.path": "/usr/bin/git",
   "oxc.fmt.configPath": ".oxfmtrc.json",
   "oxc.typeAware": true,
   "editor.defaultFormatter": "oxc.oxc-vscode",
   "editor.formatOnSave": true,
-  "editor.formatOnSaveMode": "file",
+  "files.autoSave": "off",
+  "js/ts.tsdk.path": "./node_modules/typescript",
+  "eslint.enable": false,
+  "package-json-upgrade.minimumReleaseAge": 2880,
   "editor.codeActionsOnSave": {
-    "source.fixAll.oxc": "always"
-  }
+    "source.fixAll.oxc": "explicit"
+  },
+  "files.readonlyInclude": {
+    "**/node_modules/**": true
+  },
+  "files.watcherExclude": {
+    "**/.angular/**": true,
+    "**/.cache/**": true,
+    "**/.nx/**": true,
+    "**/.pnpm-store/**": true,
+    "**/node_modules/**": true,
+    "**/coverage/**": true,
+    "**/dist/**": true,
+    "**/playwright-report/**": true,
+    "**/playwright/.cache/**": true,
+    "**/storybook-static/**": true,
+    "**/test-results/**": true,
+    "**/tmp/**": true,
+    "**/vitest-results/**": true
+  },
+  "search.exclude": {
+    "**/.angular": true,
+    "**/.cache": true,
+    "**/.nx": true,
+    "**/.playwright-mcp": true,
+    "**/.pnpm-store": true,
+    "**/.postcss-angular": true,
+    "**/blob-report": true,
+    "**/coverage": true,
+    "**/dist": true,
+    "**/playwright-report": true,
+    "**/storybook-static": true,
+    "**/test-results": true,
+    "**/tmp": true,
+    "**/vitest-results": true
+  },
+  "todo-tree.filtering.excludeGlobs": [
+    "**/node_modules/**",
+    "**/.cache/**",
+    "**/.angular/**",
+    "**/.nx/**",
+    "**/coverage/**",
+    "**/dist/**",
+    "**/tmp/**",
+    "**/test-results/**",
+    "**/playwright-report/**",
+    "**/storybook-static/**",
+    "**/vitest-results/**"
+  ]
 }
