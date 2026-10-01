@@ -447,7 +447,7 @@ above (template surface). The Angular compiler will surface any miss.
 
 In betas, `computeShowErrorsInternal` silently fell back to
 `touched ? 'submitted' : 'unsubmitted'` when no `submittedStatus` was
-wired. A consumer calling `createErrorVisibility()` / `createErrorState()`
+wired. A consumer calling `createShowErrorsComputed()` / `createErrorState()`
 with the `'on-submit'` strategy but without a status would see errors
 surface after blur, defeating the whole point of `on-submit`.
 
@@ -467,8 +467,8 @@ miswiring loud during development without throwing.
 ### Migration
 
 ```ts
-// before — relied on the accidental fallback
-const show = createErrorVisibility(field, { strategy: 'on-submit' });
+// before (beta) — relied on the accidental fallback
+const show = createShowErrorsComputed(field, 'on-submit');
 
 // after — pass the form's submittedStatus value or signal in the options object
 const show = createErrorVisibility(field, {

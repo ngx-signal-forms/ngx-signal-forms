@@ -17,7 +17,7 @@ behaviour. It is a four-step composition:
    and the config default — `resolveStrategyFromContext`
 2. resolve submission status from the same context —
    `resolveSubmittedStatusFromContext`
-3. fold the two into a visibility computed inside `createErrorVisibility`
+3. fold the two into a visibility computed — `createShowErrorsComputed`
 4. expose that computed on the consuming surface
 
 `createErrorVisibility()` (`core/utilities/create-error-visibility.ts`)
