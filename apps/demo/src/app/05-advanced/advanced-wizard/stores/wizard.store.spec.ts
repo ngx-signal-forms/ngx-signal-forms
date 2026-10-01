@@ -23,7 +23,7 @@ describe('WizardStore step validity', () => {
       lastName: 'Lovelace',
       email: 'ada@example.com',
       passportNumber: 'X1234567',
-      passportExpiry: '2099-01-01',
+      passportExpiry: '2100-01-01',
       nationality: 'UK',
     });
   }
@@ -177,6 +177,26 @@ describe('WizardStore step validity', () => {
 
       store.setTraveler({ ...store.traveler(), passportNumber: 'X1' });
       expect(store.isReadyToSubmit()).toBe(false);
+    });
+
+    it('blocks the booking when the committed passport ends within six months of the committed trip', () => {
+      const store = setup();
+      fillValidTraveler(store);
+      fillValidTrip(store);
+      store.commitDestinations();
+      expect(store.isReadyToSubmit()).toBe(true);
+
+      // Each step passes its own schema, but the pair breaks the rule that
+      // spans both. This is what a trip edit after the traveler step produces.
+      store.setTraveler({ ...store.traveler(), passportExpiry: '2099-03-01' });
+      expect(TripSchema.safeParse(store.tripData()).success).toBe(true);
+      expect(store.isReadyToSubmit()).toBe(false);
+
+      store.submit();
+      expect(store.hasConfirmedBooking()).toBe(false);
+      expect(store.error()).toBe(
+        'Passport must be valid 6 months after trip ends',
+      );
     });
   });
 

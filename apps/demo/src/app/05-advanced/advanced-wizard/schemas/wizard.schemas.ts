@@ -110,6 +110,30 @@ export const TripSchema = z.object({
 // These require runtime data from other steps, so cannot be in Zod schemas
 // ══════════════════════════════════════════════════════════════════════════════
 
+/** The latest non-empty departure date of the trips, or null when none is set. */
+export function lastDepartureDate(
+  destinations: readonly Pick<Destination, 'departureDate'>[],
+): string | null {
+  const departures = destinations.map((d) => d.departureDate).filter(Boolean);
+  // oxlint-disable-next-line unicorn/no-array-sort -- The workspace targets ES2022, so toSorted() is not available in the demo build.
+  departures.sort();
+  return departures.at(-1) ?? null;
+}
+
+/**
+ * The passport must stay valid for six months after the last departure. True
+ * when the rule does not apply yet (no expiry or no departure).
+ */
+export function isPassportValidForDeparture(
+  passportExpiry: string,
+  departure: string | null,
+): boolean {
+  if (!departure || !passportExpiry) return true;
+  const sixMonthsAfter = new Date(departure);
+  sixMonthsAfter.setMonth(sixMonthsAfter.getMonth() + 6);
+  return new Date(passportExpiry) > sixMonthsAfter;
+}
+
 // Passport 6-Month Validity Rule - requires trip data from store
 // This is used in traveler-step.form.ts via validate() because
 // lastDepartureDate comes from a different step (trip step)

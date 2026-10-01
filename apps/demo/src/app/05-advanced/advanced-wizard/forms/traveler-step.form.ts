@@ -7,7 +7,11 @@ import {
 } from '@angular/forms/signals';
 import { requiredFromStandardSchema } from '@ngx-signal-forms/toolkit';
 
-import { type Traveler, TravelerSchema } from '../schemas/wizard.schemas';
+import {
+  isPassportValidForDeparture,
+  type Traveler,
+  TravelerSchema,
+} from '../schemas/wizard.schemas';
 import type { WizardStore } from '../stores/wizard.store';
 
 /**
@@ -36,7 +40,8 @@ export type TravelerStepForm = FieldTree<Traveler>;
  * - Cross-step: validate() for passport 6-month rule
  *
  * @param store Wizard store instance
- * @param lastDepartureDate Signal for cross-step passport validation
+ * @param lastDepartureDate Signal for cross-step passport validation. Pass the
+ *   live draft's departure, not the committed one.
  */
 export function createTravelerStepForm(
   store: InstanceType<typeof WizardStore>,
@@ -69,21 +74,13 @@ export function createTravelerStepForm(
 
     // Cross-step: Passport must be valid 6 months after last departure
     validate(path.passportExpiry, (ctx) => {
-      const departure = lastDepartureDate();
-      if (!departure || !ctx.value()) return null;
-
-      const expiry = new Date(ctx.value());
-      const lastDep = new Date(departure);
-      const sixMonthsAfter = new Date(lastDep);
-      sixMonthsAfter.setMonth(sixMonthsAfter.getMonth() + 6);
-
-      if (expiry <= sixMonthsAfter) {
-        return {
-          kind: 'passport_expiry',
-          message: 'Passport must be valid 6 months after trip ends',
-        };
+      if (isPassportValidForDeparture(ctx.value(), lastDepartureDate())) {
+        return null;
       }
-      return null;
+      return {
+        kind: 'passport_expiry',
+        message: 'Passport must be valid 6 months after trip ends',
+      };
     });
   });
 

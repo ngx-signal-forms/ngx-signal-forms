@@ -14,6 +14,8 @@ import { debounceTime, distinctUntilChanged, pipe, tap } from 'rxjs';
 import {
   createEmptyDestination,
   createEmptyRequirement,
+  isPassportValidForDeparture,
+  lastDepartureDate,
   Trip,
   TripSchema,
   type WizardDraft,
@@ -178,15 +180,27 @@ export const WizardStore = signalStore(
       confirmed: false,
     }),
 
-    isReadyToSubmit: () =>
-      TripSchema.safeParse({
-        traveler: store.traveler(),
-        destinations: store.destinations(),
-      }).success,
+    /**
+     * The passport rule spans two steps, so `TripSchema` cannot hold it. It
+     * reads committed data: this is what gets booked.
+     */
+    isCommittedPassportValid: () =>
+      isPassportValidForDeparture(
+        store.traveler().passportExpiry,
+        lastDepartureDate(store.destinations()),
+      ),
 
     /** Live: the trip step shows its empty state from the typed draft. */
     hasDestinations: () => store.destinationsDraft().length > 0,
     hasConfirmedBooking: () => store.bookingConfirmation() !== null,
+  })),
+
+  withComputed((store) => ({
+    isReadyToSubmit: () =>
+      TripSchema.safeParse({
+        traveler: store.traveler(),
+        destinations: store.destinations(),
+      }).success && store.isCommittedPassportValid(),
   })),
 
   // A booking or a reset ends the draft. Each save records the epoch it started
@@ -300,7 +314,9 @@ export const WizardStore = signalStore(
           const hasContent = (part: WizardStepData): boolean =>
             hasUserData(part.traveler) || hasUserData(part.destinations);
           if (
-            store.draftId() !== null ||
+            // A failed resume means no usable server draft, so the stale id
+            // does not count: the blank initial emission must not replace it.
+            (store.draftId() !== null && !store.resumeFailed()) ||
             hasContent(data) ||
             (data.inProgress !== undefined && hasContent(data.inProgress))
           ) {
@@ -322,7 +338,11 @@ export const WizardStore = signalStore(
         }
 
         if (!store.isReadyToSubmit()) {
-          patchState(store, { error: 'Please complete all required fields' });
+          patchState(store, {
+            error: store.isCommittedPassportValid()
+              ? 'Please complete all required fields'
+              : 'Passport must be valid 6 months after trip ends',
+          });
           return;
         }
         void store.submitBooking(store.tripData());

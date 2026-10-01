@@ -354,6 +354,33 @@ describe('WizardStore live draft', () => {
       save.flush({ draftId: 'draft-1', savedAt: new Date().toISOString() });
     });
 
+    it('sends no save after a failed resume until the user types, and keeps the load error', async () => {
+      const { store, httpMock } = setup('draft-1');
+      httpMock
+        .expectOne('/api/wizard/draft/draft-1')
+        .flush('gone', { status: 404, statusText: 'Not Found' });
+      await vi.advanceTimersByTimeAsync(0);
+      expect(store.resumeFailed()).toBe(true);
+      // The stale id is still stored, which used to count as "a draft exists".
+      expect(store.draftId()).toBe('draft-1');
+
+      await vi.advanceTimersByTimeAsync(5000);
+      expect(saves(httpMock)).toHaveLength(0);
+      expect(store.resumeFailed()).toBe(true);
+      expect(store.draftId()).toBe('draft-1');
+
+      typeTraveler(store, validTraveler);
+      await vi.advanceTimersByTimeAsync(2000);
+
+      const [save] = saves(httpMock);
+      // The failed draft may be gone, so the save starts a new one.
+      expect(save.request.method).toBe('POST');
+      expect((save.request.body as WizardDraft).inProgress?.traveler).toEqual(
+        validTraveler,
+      );
+      save.flush({ draftId: 'draft-2', savedAt: new Date().toISOString() });
+    });
+
     it('saves typed, uncommitted data after the debounce', () => {
       const { store, httpMock } = setup();
       typeTraveler(store, validTraveler);

@@ -56,4 +56,45 @@ describe('WizardContainerComponent Previous', () => {
     // The typed trip survives for the way back.
     expect(store.destinationsDraft()[0].city).toBe('Tokyo');
   });
+
+  it('checks the passport against the typed trip, not the committed one, after Previous', async () => {
+    const { fixture } = await render(WizardContainerComponent, {
+      providers: [WizardStore, provideHttpClient(), provideHttpClientTesting()],
+    });
+    const store = TestBed.inject(WizardStore);
+    // Valid for the committed trip (no departure yet), so the field is clean.
+    store.setTraveler({
+      ...createEmptyTraveler(),
+      firstName: 'Ada',
+      lastName: 'Lovelace',
+      email: 'ada@example.com',
+      passportNumber: 'X1234567',
+      passportExpiry: '2099-03-01',
+      nationality: 'UK',
+    });
+    store.goToStep('trip', true);
+    fixture.detectChanges();
+    for (const block of await fixture.getDeferBlocks()) {
+      await block.render(DeferBlockState.Complete);
+    }
+    // The user edits the departure date and goes back without pressing Next.
+    store.updateDestination(0, { departureDate: '2099-01-10' });
+    expect(store.destinations()[0].departureDate).toBe('');
+
+    await userEvent.click(screen.getByRole('button', { name: 'Previous' }));
+    expect(store.currentStep()).toBe('traveler');
+    fixture.detectChanges();
+    for (const block of await fixture.getDeferBlocks()) {
+      await block.render(DeferBlockState.Complete);
+    }
+
+    const expiry = screen.getByLabelText(/Expiry Date/i);
+    await userEvent.click(expiry);
+    await userEvent.tab();
+    expect(
+      await screen.findByText(
+        'Passport must be valid 6 months after trip ends',
+      ),
+    ).toBeTruthy();
+  });
 });
