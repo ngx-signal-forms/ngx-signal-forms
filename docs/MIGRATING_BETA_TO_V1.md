@@ -468,7 +468,7 @@ miswiring loud during development without throwing.
 
 ```ts
 // before — relied on the accidental fallback
-const show = createErrorVisibility(field, 'on-submit');
+const show = createErrorVisibility(field, { strategy: 'on-submit' });
 
 // after — pass the form's submittedStatus value or signal in the options object
 const show = createErrorVisibility(field, {
