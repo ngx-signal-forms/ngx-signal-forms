@@ -191,6 +191,9 @@ describe('WizardStore step validity', () => {
       store.setTraveler({ ...store.traveler(), passportExpiry: '2099-03-01' });
       expect(TripSchema.safeParse(store.tripData()).success).toBe(true);
       expect(store.isReadyToSubmit()).toBe(false);
+      // The review step must not read as complete for a trip it cannot book.
+      expect(store.isReviewStepValid()).toBe(false);
+      expect(store.stepValidation().review).toBe(false);
 
       store.submit();
       expect(store.hasConfirmedBooking()).toBe(false);

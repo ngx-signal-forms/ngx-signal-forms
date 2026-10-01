@@ -149,6 +149,23 @@ describe('createReviewStepForm', () => {
       });
     });
 
+    it('flags a future passport that ends within six months of the last departure', () => {
+      const traveler = {
+        ...createEmptyTraveler(),
+        passportNumber: 'X1234567',
+        passportExpiry: '2031-08-01T12:00:00',
+      };
+      // Last departure 20 March 2031: the passport must outlast 20 September 2031.
+      const tooClose = setup(traveler, [populatedDestination()]);
+      expect(tooClose.travelerDisplay().passportValid).toBe(false);
+
+      const enough = setup(
+        { ...traveler, passportExpiry: '2031-10-01T12:00:00' },
+        [populatedDestination()],
+      );
+      expect(enough.travelerDisplay().passportValid).toBe(true);
+    });
+
     it('formats destinations, activities and requirement counts', () => {
       const form = setup(createEmptyTraveler(), [populatedDestination()]);
 

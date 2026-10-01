@@ -125,9 +125,25 @@ export const WizardStore = signalStore(
   })),
 
   withComputed((store) => ({
-    isReviewStepValid: () =>
-      store.isTravelerStepValid() && store.isTripStepValid(),
+    /**
+     * The passport rule spans two steps, so `TripSchema` cannot hold it. It
+     * reads committed data: this is what gets booked.
+     */
+    isCommittedPassportValid: () =>
+      isPassportValidForDeparture(
+        store.traveler().passportExpiry,
+        lastDepartureDate(store.destinations()),
+      ),
+  })),
 
+  withComputed((store) => ({
+    isReviewStepValid: () =>
+      store.isTravelerStepValid() &&
+      store.isTripStepValid() &&
+      store.isCommittedPassportValid(),
+  })),
+
+  withComputed((store) => ({
     /**
      * Completion status for all steps as a record. Reads committed data only,
      * so typing alone never marks a step as completed.
@@ -135,7 +151,7 @@ export const WizardStore = signalStore(
     stepValidation: (): Record<WizardStep, boolean> => ({
       traveler: store.isTravelerStepValid(),
       trip: store.isTripStepValid(),
-      review: store.isTravelerStepValid() && store.isTripStepValid(),
+      review: store.isReviewStepValid(),
     }),
 
     /**
@@ -180,27 +196,13 @@ export const WizardStore = signalStore(
       confirmed: false,
     }),
 
-    /**
-     * The passport rule spans two steps, so `TripSchema` cannot hold it. It
-     * reads committed data: this is what gets booked.
-     */
-    isCommittedPassportValid: () =>
-      isPassportValidForDeparture(
-        store.traveler().passportExpiry,
-        lastDepartureDate(store.destinations()),
-      ),
-
     /** Live: the trip step shows its empty state from the typed draft. */
     hasDestinations: () => store.destinationsDraft().length > 0,
     hasConfirmedBooking: () => store.bookingConfirmation() !== null,
   })),
 
   withComputed((store) => ({
-    isReadyToSubmit: () =>
-      TripSchema.safeParse({
-        traveler: store.traveler(),
-        destinations: store.destinations(),
-      }).success && store.isCommittedPassportValid(),
+    isReadyToSubmit: () => store.isReviewStepValid(),
   })),
 
   // A booking or a reset ends the draft. Each save records the epoch it started

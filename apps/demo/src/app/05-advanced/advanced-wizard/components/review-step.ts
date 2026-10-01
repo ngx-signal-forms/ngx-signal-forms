@@ -56,7 +56,7 @@ import { WizardStepInterface } from '../wizard-step.interface';
                   @if (reviewForm.travelerDisplay().passportValid) {
                     <span class="text-green-600">✓ Valid</span>
                   } @else {
-                    <span class="text-red-600">✗ Expired</span>
+                    <span class="text-red-600">✗ Not valid for this trip</span>
                   }
                 } @else {
                   <span class="text-gray-500 dark:text-gray-400"

@@ -1,6 +1,11 @@
 import { computed, Signal } from '@angular/core';
 
-import { Destination, Traveler } from '../schemas/wizard.schemas';
+import {
+  Destination,
+  isPassportValidForDeparture,
+  lastDepartureDate,
+  Traveler,
+} from '../schemas/wizard.schemas';
 
 type ReadonlyRequirement = Readonly<
   Destination['activities'][number]['requirements'][number]
@@ -101,9 +106,13 @@ export function createReviewStepForm(
       nationality: t.nationality || 'Not provided',
       age,
       hasPassport: Boolean(t.passportNumber),
-      passportValid: t.passportExpiry
-        ? new Date(t.passportExpiry) > new Date()
-        : false,
+      passportValid:
+        Boolean(t.passportExpiry) &&
+        new Date(t.passportExpiry) > new Date() &&
+        isPassportValidForDeparture(
+          t.passportExpiry,
+          lastDepartureDate(destinations()),
+        ),
     };
   });
 
