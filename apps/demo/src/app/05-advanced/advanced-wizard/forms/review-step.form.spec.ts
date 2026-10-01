@@ -13,7 +13,8 @@ import { createReviewStepForm } from './review-step.form';
 
 /**
  * The review step shows what the user entered. Empty data must read as a clear
- * fallback ("Not provided", "No dates"), never as blank or broken text.
+ * fallback ("Not provided", "Dates not set", "No destinations"), never as
+ * blank or broken text.
  * Dates use local noon so the formatted day does not depend on the time zone.
  */
 describe('createReviewStepForm', () => {
