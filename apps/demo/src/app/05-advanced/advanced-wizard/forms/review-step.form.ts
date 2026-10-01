@@ -1,5 +1,4 @@
 import { computed, Signal } from '@angular/core';
-import { z } from 'zod';
 
 import { Destination, Traveler } from '../schemas/wizard.schemas';
 
@@ -17,52 +16,41 @@ type ReadonlyDestination = Readonly<Omit<Destination, 'activities'>> & {
 type ReadonlyTraveler = Readonly<Traveler>;
 
 // ══════════════════════════════════════════════════════════════════════════════
-// DISPLAY DATA SCHEMAS (Zod-first approach for type inference)
+// DISPLAY DATA TYPES
 // ══════════════════════════════════════════════════════════════════════════════
 
-const ActivityDisplaySchema = z.object({
-  name: z.string(),
-  date: z.string(),
-  duration: z.string(),
-  cost: z.string(),
-  requirementCount: z.number(),
-});
+export type ActivityDisplayData = {
+  name: string;
+  date: string;
+  duration: string;
+  cost: string;
+  requirementCount: number;
+};
 
-/* oxlint-disable @typescript-eslint/no-unused-vars */
-const DestinationDisplaySchema = z.object({
-  name: z.string(),
-  dates: z.string(),
-  accommodation: z.string(),
-  activityCount: z.number(),
-  activities: z.array(ActivityDisplaySchema),
-});
+export type DestinationDisplayData = {
+  name: string;
+  dates: string;
+  accommodation: string;
+  activityCount: number;
+  activities: ActivityDisplayData[];
+};
 
-const TravelerDisplaySchema = z.object({
-  fullName: z.string(),
-  email: z.string(),
-  nationality: z.string(),
-  age: z.number().nullable(),
-  hasPassport: z.boolean(),
-  passportValid: z.boolean(),
-});
+export type TravelerDisplayData = {
+  fullName: string;
+  email: string;
+  nationality: string;
+  age: number | null;
+  hasPassport: boolean;
+  passportValid: boolean;
+};
 
-const ReviewStepFormSchema = z.object({
-  travelerDisplay: z.custom<Signal<TravelerDisplayData>>(),
-  destinationsDisplay: z.custom<Signal<DestinationDisplayData[]>>(),
-  totalActivities: z.custom<Signal<number>>(),
-  totalRequirements: z.custom<Signal<number>>(),
-  dateRange: z.custom<Signal<string>>(),
-});
-/* oxlint-enable @typescript-eslint/no-unused-vars */
-
-// ══════════════════════════════════════════════════════════════════════════════
-// TYPE INFERENCE FROM SCHEMAS
-// ══════════════════════════════════════════════════════════════════════════════
-
-export type ActivityDisplayData = z.infer<typeof ActivityDisplaySchema>;
-export type DestinationDisplayData = z.infer<typeof DestinationDisplaySchema>;
-export type TravelerDisplayData = z.infer<typeof TravelerDisplaySchema>;
-export type ReviewStepForm = z.infer<typeof ReviewStepFormSchema>;
+export type ReviewStepForm = {
+  travelerDisplay: Signal<TravelerDisplayData>;
+  destinationsDisplay: Signal<DestinationDisplayData[]>;
+  totalActivities: Signal<number>;
+  totalRequirements: Signal<number>;
+  dateRange: Signal<string>;
+};
 
 // ══════════════════════════════════════════════════════════════════════════════
 // UTILITIES
