@@ -1,10 +1,7 @@
-import { computed, isSignal, type Signal } from '@angular/core';
-
 type Nullable<T> = T | null | undefined;
-type MaybeSignal<T> = Signal<T> | T;
 
 /**
- * Options for a fully static cascading resolver (no signals).
+ * Options for a cascading resolver.
  *
  * Tiers are evaluated in order: `input` → `context` → `configDefault` →
  * `fallback`. The first non-nullish value wins. `fallback` is always
@@ -27,55 +24,6 @@ export interface StaticCascadingResolverOptions<T> {
 }
 
 /**
- * Options for a reactive cascading resolver (at least one Signal tier).
- *
- * Any tier may be a `Signal<T | null | undefined>`. When any tier is
- * reactive the resolver returns a `Signal<T>` instead of a plain `T`.
- *
- * @internal
- */
-export interface ReactiveCascadingResolverOptions<T> {
-  readonly input: MaybeSignal<Nullable<T>>;
-  readonly context?: MaybeSignal<Nullable<T>>;
-  readonly configDefault?: MaybeSignal<Nullable<T>>;
-  readonly fallback: MaybeSignal<T>;
-}
-
-// oxlint-disable-next-line @typescript-eslint/prefer-readonly-parameter-types -- MaybeSignal<T> includes Signal<T> (a function) which cannot be Readonly<>-wrapped
-function readNullable<T>(tier: MaybeSignal<Nullable<T>>): Nullable<T> {
-  return isSignal(tier) ? tier() : tier;
-}
-
-// oxlint-disable-next-line @typescript-eslint/prefer-readonly-parameter-types -- same Signal<T> footgun as readNullable above
-function readRequired<T>(tier: MaybeSignal<T>): T {
-  // Signal<T> is callable: tier() returns T. TypeScript narrows from Signal<T> | T.
-  return isSignal(tier) ? tier() : tier;
-}
-
-function resolveTiers<T>(
-  // oxlint-disable-next-line @typescript-eslint/prefer-readonly-parameter-types -- all properties are already readonly; Readonly<ReactiveCascadingResolverOptions<T>> is redundant
-  opts: ReactiveCascadingResolverOptions<T>,
-): T {
-  const input = readNullable(opts.input);
-  // eslint-disable-next-line eqeqeq -- intentional: single check accepts both null and undefined
-  if (input != null) return input;
-
-  if (opts.context !== undefined) {
-    const context = readNullable(opts.context);
-    // eslint-disable-next-line eqeqeq -- intentional: single check accepts both null and undefined
-    if (context != null) return context;
-  }
-
-  if (opts.configDefault !== undefined) {
-    const configDefault = readNullable(opts.configDefault);
-    // eslint-disable-next-line eqeqeq -- intentional: single check accepts both null and undefined
-    if (configDefault != null) return configDefault;
-  }
-
-  return readRequired(opts.fallback);
-}
-
-/**
  * Resolves a value from an ordered cascade of up to four tiers, using
  * nullish-only short-circuit semantics: `null` and `undefined` fall through;
  * any other value — including `''`, `0`, and `false` — wins.
@@ -85,11 +33,6 @@ function resolveTiers<T>(
  * 2. `context` — form/component context injection (optional)
  * 3. `configDefault` — injected provider default (optional)
  * 4. `fallback` — hardcoded toolkit default (always non-nullish)
- *
- * ## Return type
- * - **All tiers static** (`T | null | undefined`) → returns `T` directly.
- * - **At least one tier is a `Signal`** → returns `Signal<T>` wrapping a
- *   `computed()` that re-evaluates whenever reactive tiers change.
  *
  * @example Static cascade
  * ```typescript
@@ -101,40 +44,10 @@ function resolveTiers<T>(
  * // value: string
  * ```
  *
- * @example Reactive cascade
- * ```typescript
- * const value$ = createCascadingResolver({
- *   input: inputSignal,          // Signal<string | null | undefined>
- *   configDefault: configSignal, // Signal<string | null | undefined>
- *   fallback: 'default',
- * });
- * // value$: Signal<string>
- * ```
- *
  * @internal
  */
-// oxlint-disable @typescript-eslint/prefer-readonly-parameter-types -- all option interfaces use `readonly` properties; the outer Readonly<> wrapper is structurally equivalent and would add noise at call sites
 export function createCascadingResolver<T>(
   opts: StaticCascadingResolverOptions<T>,
-): T;
-export function createCascadingResolver<T>(
-  opts: ReactiveCascadingResolverOptions<T>,
-): Signal<T>;
-export function createCascadingResolver<T>(
-  opts: StaticCascadingResolverOptions<T> | ReactiveCascadingResolverOptions<T>,
-): T | Signal<T> {
-  const hasReactive =
-    isSignal(opts.input) ||
-    (opts.context !== undefined && isSignal(opts.context)) ||
-    (opts.configDefault !== undefined && isSignal(opts.configDefault)) ||
-    isSignal(opts.fallback);
-
-  if (hasReactive) {
-    return computed(() =>
-      resolveTiers(opts as ReactiveCascadingResolverOptions<T>),
-    );
-  }
-
-  return resolveTiers(opts as ReactiveCascadingResolverOptions<T>);
+): T {
+  return opts.input ?? opts.context ?? opts.configDefault ?? opts.fallback;
 }
-// oxlint-enable @typescript-eslint/prefer-readonly-parameter-types

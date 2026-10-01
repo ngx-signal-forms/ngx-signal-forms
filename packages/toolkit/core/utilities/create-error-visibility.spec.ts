@@ -8,11 +8,11 @@ import type {
   SubmittedStatus,
 } from '../types';
 import { createErrorVisibility } from './create-error-visibility';
-import { createShowErrorsComputed } from './show-errors';
 import {
   resolveStrategyFromContext,
   resolveSubmittedStatusFromContext,
 } from './resolve-strategy';
+import { shouldShowErrors } from './error-strategies';
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -54,9 +54,8 @@ function injectorWithoutContext(): Injector {
 // ---------------------------------------------------------------------------
 
 /**
- * Verify that createErrorVisibility produces the same result as manually
- * composing the four building blocks for every (strategy, touched, invalid,
- * submittedStatus) combination.
+ * Verify public factory behavior for every strategy and field-state
+ * combination.
  */
 describe('createErrorVisibility – behavioral parity matrix', () => {
   type MatrixRow = {
@@ -185,10 +184,6 @@ describe('createErrorVisibility – behavioral parity matrix', () => {
       const fieldState = createMockFieldState(row.invalid, row.touched);
       const statusSignal = signal<SubmittedStatus>(row.submittedStatus);
 
-      const manualResult = runInInjectionContext(injector, () =>
-        createShowErrorsComputed(fieldState, row.strategy, statusSignal),
-      );
-
       const factoryResult = runInInjectionContext(injector, () =>
         createErrorVisibility(fieldState, {
           strategy: row.strategy,
@@ -196,7 +191,14 @@ describe('createErrorVisibility – behavioral parity matrix', () => {
         }),
       );
 
-      expect(factoryResult()).toBe(manualResult());
+      expect(factoryResult()).toBe(
+        shouldShowErrors(
+          row.invalid,
+          row.touched,
+          row.strategy === 'inherit' ? 'on-touch' : row.strategy,
+          row.submittedStatus,
+        ),
+      );
     });
   }
 });
@@ -456,39 +458,5 @@ describe('createErrorVisibility – on-submit missing status warning', () => {
 
     result();
     expect(warnSpy).not.toHaveBeenCalled();
-  });
-});
-
-// ---------------------------------------------------------------------------
-// Parity with manual composition (cross-check)
-// ---------------------------------------------------------------------------
-
-describe('createErrorVisibility – parity with manual composition', () => {
-  it('produces identical boolean to manually composing the four building blocks', () => {
-    const context = createMockFormContext({
-      errorStrategy: 'on-touch',
-      submittedStatus: 'unsubmitted',
-    });
-    const injector = injectorWithContext(context);
-    const fieldState = createMockFieldState(true, true);
-
-    const manualResult = runInInjectionContext(injector, () => {
-      const resolvedStrategy = resolveStrategyFromContext(undefined, context);
-      const resolvedStatus = resolveSubmittedStatusFromContext(
-        undefined,
-        context,
-      );
-      return createShowErrorsComputed(
-        fieldState,
-        resolvedStrategy,
-        resolvedStatus,
-      );
-    });
-
-    const factoryResult = runInInjectionContext(injector, () =>
-      createErrorVisibility(fieldState),
-    );
-
-    expect(factoryResult()).toBe(manualResult());
   });
 });

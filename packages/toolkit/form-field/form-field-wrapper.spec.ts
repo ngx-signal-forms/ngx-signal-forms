@@ -2782,7 +2782,7 @@ describe('NgxSignalFormWrapperComponent', () => {
     });
 
     describe('strategy="on-submit" without a form context', () => {
-      // Regression: `createShowErrorsComputed` (core/utilities/show-errors.ts)
+      // Regression: `createErrorVisibility` (core/utilities/create-error-visibility.ts)
       // emits a one-shot dev warning when 'on-submit' is used without an
       // explicit submittedStatus, since errors will otherwise never surface.
       // The wrapper used to always supply a status signal that fell back to

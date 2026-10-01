@@ -1193,7 +1193,7 @@ declare class NgxHeadlessFieldName implements FieldNameStateSignals {
  * `showErrors`/`showWarnings` are pre-resolved visibility signals, not raw
  * strategy inputs — per ADR-0005 (factories take DI-resolved values as
  * inputs and never call `inject()` themselves). `NgxHeadlessFieldset` keeps
- * owning the single `createErrorVisibility()`/`createShowErrorsComputed()`
+ * owning the single `createErrorVisibility()` visibility seam
  * seam call (ADR-0006) and threads the results in here; this factory only
  * combines them with the (visibility-independent) presence check.
  *
@@ -1250,7 +1250,7 @@ interface FieldsetAggregationResult {
  * factories (`createFieldStateFlags`, `createCharacterCount`). Visibility
  * timing is NOT resolved here; callers pass already-resolved `showErrors`/
  * `showWarnings` signals from their own `createErrorVisibility()` /
- * `createShowErrorsComputed()` call (ADR-0006's single seam).
+ * `createErrorVisibility()` call (ADR-0006's single seam).
  *
  * @remarks Does not require an injection context — `fieldState`,
  * `showErrors`, and `showWarnings` must already be resolved. Building
