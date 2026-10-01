@@ -112,11 +112,22 @@ export const TripSchema = z.object({
 // These require runtime data from other steps, so cannot be in Zod schemas
 // ══════════════════════════════════════════════════════════════════════════════
 
+/**
+ * The calendar date (`YYYY-MM-DD`) of a date or date-time string. A date-time
+ * without an offset parses as local time, so only the date part is compared.
+ */
+function toDateOnly(value: string): string {
+  return value.slice(0, 10);
+}
+
 /** The latest non-empty departure date of the trips, or null when none is set. */
 export function lastDepartureDate(
   destinations: readonly Pick<Destination, 'departureDate'>[],
 ): string | null {
-  const departures = destinations.map((d) => d.departureDate).filter(Boolean);
+  const departures = destinations
+    .map((d) => d.departureDate)
+    .filter(Boolean)
+    .map(toDateOnly);
   // oxlint-disable-next-line unicorn/no-array-sort -- The workspace targets ES2022, so toSorted() is not available in the demo build.
   departures.sort();
   return departures.at(-1) ?? null;
@@ -146,8 +157,8 @@ export function isPassportValidForDeparture(
   departure: string | null,
 ): boolean {
   if (!departure || !passportExpiry) return true;
-  const sixMonthsAfter = addUtcMonths(new Date(departure), 6);
-  return new Date(passportExpiry) > sixMonthsAfter;
+  const sixMonthsAfter = addUtcMonths(new Date(toDateOnly(departure)), 6);
+  return new Date(toDateOnly(passportExpiry)) > sixMonthsAfter;
 }
 
 // Passport 6-Month Validity Rule - requires trip data from store
@@ -156,8 +167,8 @@ export function isPassportValidForDeparture(
 export function TravelerWithPassportValidation(lastDepartureDate: string) {
   return TravelerSchema.refine(
     (data) => {
-      const expiry = new Date(data.passportExpiry);
-      const lastDeparture = new Date(lastDepartureDate);
+      const expiry = new Date(toDateOnly(data.passportExpiry));
+      const lastDeparture = new Date(toDateOnly(lastDepartureDate));
       const sixMonthsAfter = addUtcMonths(lastDeparture, 6);
       return expiry > sixMonthsAfter;
     },

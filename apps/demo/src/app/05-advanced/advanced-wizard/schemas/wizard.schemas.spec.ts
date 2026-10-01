@@ -1,5 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { isPassportValidForDeparture } from './wizard.schemas';
+import {
+  isPassportValidForDeparture,
+  lastDepartureDate,
+} from './wizard.schemas';
 
 describe('isPassportValidForDeparture', () => {
   // Date inputs give date-only strings. JavaScript parses them as UTC
@@ -32,5 +35,49 @@ describe('isPassportValidForDeparture', () => {
   it('skips the rule when the expiry or the departure is missing', () => {
     expect(isPassportValidForDeparture('', '2099-03-01')).toBe(true);
     expect(isPassportValidForDeparture('2099-09-01', null)).toBe(true);
+  });
+
+  // Date-times without an offset parse as local time. Only the calendar date
+  // counts, in every time zone.
+  it('treats a date-time like its date-only form', () => {
+    const departure = '2099-03-01T23:30:00';
+    const expiry = '2099-09-01T00:30:00';
+    expect(isPassportValidForDeparture(expiry, departure)).toBe(
+      isPassportValidForDeparture('2099-09-01', '2099-03-01'),
+    );
+    expect(isPassportValidForDeparture('2099-09-02T00:30:00', departure)).toBe(
+      isPassportValidForDeparture('2099-09-02', '2099-03-01'),
+    );
+  });
+
+  it('clamps a late-evening month-end date-time like its date-only form', () => {
+    expect(
+      isPassportValidForDeparture('2100-03-01', '2099-08-31T22:00:00'),
+    ).toBe(true);
+    expect(
+      isPassportValidForDeparture('2100-02-28', '2099-08-31T22:00:00'),
+    ).toBe(false);
+  });
+});
+
+describe('lastDepartureDate', () => {
+  it('returns null when no departure is set', () => {
+    expect(lastDepartureDate([{ departureDate: '' }])).toBeNull();
+  });
+
+  it('picks the latest calendar date across date-only and date-time inputs', () => {
+    expect(
+      lastDepartureDate([
+        { departureDate: '2099-03-01T23:30:00' },
+        { departureDate: '2099-03-02' },
+        { departureDate: '2099-03-01' },
+      ]),
+    ).toBe('2099-03-02');
+    expect(
+      lastDepartureDate([
+        { departureDate: '2099-03-01' },
+        { departureDate: '2099-03-03T00:30:00' },
+      ]),
+    ).toBe('2099-03-03');
   });
 });
