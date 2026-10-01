@@ -460,8 +460,9 @@ miswiring loud during development without throwing.
   error-state / error-summary / fieldset directives) all already
   resolve `submittedStatus` through the `ngxSignalForm` directive, so
   they are **unaffected**.
-- **Only direct consumers** of `createErrorVisibility(field, 'on-submit')`
-  without a status see a behavior change — which is the intended fix.
+- **Only direct consumers** of `createErrorVisibility()` configured with
+  `'on-submit'` without a status see a behavior change — which is the intended
+  fix.
 
 ### Migration
 
@@ -469,13 +470,11 @@ miswiring loud during development without throwing.
 // before — relied on the accidental fallback
 const show = createErrorVisibility(field, 'on-submit');
 
-// after — pass the form's submittedStatus value or signal directly
-// (the third parameter, not an options object)
-const show = createErrorVisibility(
-  field,
-  'on-submit',
-  formDirective.submittedStatus,
-);
+// after — pass the form's submittedStatus value or signal in the options object
+const show = createErrorVisibility(field, {
+  strategy: 'on-submit',
+  submittedStatus: formDirective.submittedStatus,
+});
 ```
 
 ---
@@ -1210,7 +1209,7 @@ leaf is counted consistently whether it's `null` or populated.
   imported factory call instead, e.g. `showErrors(` or
   `import { showErrors }`, to isolate real hits.
 
-- **If you call `createErrorVisibility(field, 'on-submit')` directly**,
+- **If you call `createErrorVisibility()` directly with `strategy: 'on-submit'`,**
   pass an explicit `submittedStatus` — otherwise errors will stay hidden
   (this is the fix, not a regression).
 
