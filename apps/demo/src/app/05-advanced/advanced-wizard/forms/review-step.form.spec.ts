@@ -8,6 +8,7 @@ import {
   createEmptyTraveler,
   type Destination,
   type Traveler,
+  TravelerSchema,
 } from '../schemas/wizard.schemas';
 import { createReviewStepForm } from './review-step.form';
 
@@ -183,6 +184,33 @@ describe('createReviewStepForm', () => {
 
       const today = setup({ ...traveler, passportExpiry: '2031-05-31' }, []);
       expect(today.travelerDisplay().passportStatus).toBe('expired');
+    });
+
+    it('agrees with TravelerSchema that a passport expiring today is expired, in every time zone', () => {
+      // Local midnight is the day boundary where the old UTC and local rules
+      // split. East of UTC (for example Pacific/Auckland) a UTC-midnight
+      // expiry lies after local midnight, so the schema called it valid while
+      // the review page called it expired.
+      vi.setSystemTime(new Date(2031, 4, 31, 0, 0, 0));
+      const traveler = {
+        ...createEmptyTraveler(),
+        email: 'ada@example.com',
+        firstName: 'Ada',
+        lastName: 'Lovelace',
+        nationality: 'GB',
+        passportNumber: 'X1234567',
+      };
+      const schemaSaysExpired = (expiry: string): boolean =>
+        !TravelerSchema.safeParse({ ...traveler, passportExpiry: expiry })
+          .success;
+      const reviewSaysExpired = (expiry: string): boolean =>
+        setup({ ...traveler, passportExpiry: expiry }, []).travelerDisplay()
+          .passportStatus === 'expired';
+
+      expect(schemaSaysExpired('2031-05-31')).toBe(true);
+      expect(reviewSaysExpired('2031-05-31')).toBe(true);
+      expect(schemaSaysExpired('2031-06-01')).toBe(false);
+      expect(reviewSaysExpired('2031-06-01')).toBe(false);
     });
 
     it('formats destinations, activities and requirement counts', () => {

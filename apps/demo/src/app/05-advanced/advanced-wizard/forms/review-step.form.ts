@@ -2,6 +2,7 @@ import { computed, Signal } from '@angular/core';
 
 import {
   Destination,
+  isPassportExpired,
   isPassportValidForDeparture,
   lastDepartureDate,
   Traveler,
@@ -78,20 +79,12 @@ function formatDateRange(start: string, end: string): string {
   return `${startDate} - ${endDate}`;
 }
 
-/** Today's local calendar date as `YYYY-MM-DD`. */
-function getLocalToday(): string {
-  const now = new Date();
-  const month = String(now.getMonth() + 1).padStart(2, '0');
-  const day = String(now.getDate()).padStart(2, '0');
-  return `${now.getFullYear()}-${month}-${day}`;
-}
-
 function getPassportStatus(
   expiry: string,
   lastDeparture: string | null,
 ): PassportStatus {
   if (!expiry) return 'none';
-  if (expiry <= getLocalToday()) return 'expired';
+  if (isPassportExpired(expiry)) return 'expired';
   return isPassportValidForDeparture(expiry, lastDeparture)
     ? 'valid'
     : 'too-close';

@@ -162,6 +162,7 @@ catalogs:
     vite-tsconfig-paths: '^6.1.1'
   utilities:
     rxjs: '~7.8.2'
+    temporal-polyfill: '1.0.5'
     tslib: '^2.8.1'
   validation:
     arktype: '^2.2.3'

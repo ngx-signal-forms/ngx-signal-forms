@@ -48,6 +48,7 @@
     "@shikijs/core": "catalog:shiki",
     "rxjs": "catalog:utilities",
     "shiki": "catalog:shiki",
+    "temporal-polyfill": "catalog:utilities",
     "zod": "catalog:validation"
   },
   "devDependencies": {

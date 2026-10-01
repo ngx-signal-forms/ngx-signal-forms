@@ -11,6 +11,7 @@ import {
 
 import {
   createEmptyTraveler,
+  isPassportExpired,
   Traveler,
   type WizardDraft,
 } from '../../schemas/wizard.schemas';
@@ -65,7 +66,7 @@ export function withTravelerManagement() {
       hasValidPassport: () => {
         const passport = traveler().passportExpiry;
         if (!passport) return false;
-        return new Date(passport) > new Date();
+        return !isPassportExpired(passport);
       },
     })),
 

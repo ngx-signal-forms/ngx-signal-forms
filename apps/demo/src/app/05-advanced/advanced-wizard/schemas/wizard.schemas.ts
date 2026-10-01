@@ -1,3 +1,4 @@
+import { Temporal } from 'temporal-polyfill';
 import { z } from 'zod';
 
 // ══════════════════════════════════════════════════════════════════════════════
@@ -23,22 +24,57 @@ export const ActivitySchema = z.object({
   requirements: z.array(RequirementSchema),
 });
 
+/**
+ * The calendar date of a date or date-time string. Only the `YYYY-MM-DD` part
+ * counts, so a time or offset never moves the day.
+ */
+export function toPlainDate(value: string): Temporal.PlainDate {
+  return Temporal.PlainDate.from(value.slice(0, 10));
+}
+
+/**
+ * Like {@link toPlainDate}, but returns null for an empty or malformed value.
+ * The schemas use it so a half-typed date fails its rule instead of throwing.
+ */
+function tryPlainDate(value: string): Temporal.PlainDate | null {
+  try {
+    return toPlainDate(value);
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Compares two date strings by calendar date: negative, zero or positive.
+ * Null when either side is not a valid date.
+ */
+function compareDateStrings(a: string, b: string): number | null {
+  const first = tryPlainDate(a);
+  const second = tryPlainDate(b);
+  return first && second ? Temporal.PlainDate.compare(first, second) : null;
+}
+
+/** Today's calendar date in the local time zone. */
+export function todayPlainDate(): Temporal.PlainDate {
+  return Temporal.Now.plainDateISO();
+}
+
+/**
+ * A passport that expires today or earlier counts as expired. A malformed
+ * expiry counts as expired too.
+ */
+export function isPassportExpired(passportExpiry: string): boolean {
+  const expiry = tryPlainDate(passportExpiry);
+  return !expiry || Temporal.PlainDate.compare(expiry, todayPlainDate()) <= 0;
+}
+
 // Helper to check if date is today or in the future
 function isFutureDate(dateStr: string): boolean {
   if (!dateStr) return true; // Let required() handle empty
-  const date = new Date(dateStr);
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  return date >= today;
-}
-
-// Helper to check if passport expiry is in the future (not today)
-function isPassportNotExpired(dateStr: string): boolean {
-  if (!dateStr) return true;
-  const expiry = new Date(dateStr);
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  return expiry > today;
+  const date = tryPlainDate(dateStr);
+  return (
+    date !== null && Temporal.PlainDate.compare(date, todayPlainDate()) >= 0
+  );
 }
 
 export const DestinationSchema = z
@@ -57,24 +93,33 @@ export const DestinationSchema = z
     message: 'Arrival date cannot be in the past',
     path: ['arrivalDate'],
   })
-  .refine((data) => new Date(data.departureDate) > new Date(data.arrivalDate), {
-    message: 'Departure date must be after arrival date',
-    path: ['departureDate'],
-  })
+  .refine(
+    (data) =>
+      (compareDateStrings(data.departureDate, data.arrivalDate) ?? 0) > 0,
+    {
+      message: 'Departure date must be after arrival date',
+      path: ['departureDate'],
+    },
+  )
   // Nested cross-field rule. The issue lands on the activity's date field, so
   // the trip form (validateStandardSchema) and the wizard store share it.
   .superRefine((data, ctx) => {
     const { arrivalDate, departureDate } = data;
     if (!arrivalDate || !departureDate) return;
 
-    const arrival = new Date(arrivalDate);
-    const departure = new Date(departureDate);
+    const arrival = tryPlainDate(arrivalDate);
+    const departure = tryPlainDate(departureDate);
+    if (!arrival || !departure) return;
 
     data.activities.forEach((activity, index) => {
       if (!activity.date) return;
 
-      const activityDate = new Date(activity.date);
-      if (activityDate < arrival || activityDate > departure) {
+      const activityDate = tryPlainDate(activity.date);
+      if (!activityDate) return;
+      if (
+        Temporal.PlainDate.compare(activityDate, arrival) < 0 ||
+        Temporal.PlainDate.compare(activityDate, departure) > 0
+      ) {
         ctx.addIssue({
           code: 'custom',
           message: 'Activity date must be within destination date range',
@@ -96,10 +141,13 @@ export const TravelerSchema = z
     passportExpiry: z.string().min(1, 'Passport expiry required'),
     nationality: z.string().min(2, 'Nationality required'),
   })
-  .refine((data) => isPassportNotExpired(data.passportExpiry), {
-    message: 'Passport has expired',
-    path: ['passportExpiry'],
-  });
+  .refine(
+    (data) => !data.passportExpiry || !isPassportExpired(data.passportExpiry),
+    {
+      message: 'Passport has expired',
+      path: ['passportExpiry'],
+    },
+  );
 
 export const TripSchema = z.object({
   traveler: TravelerSchema,
@@ -112,14 +160,6 @@ export const TripSchema = z.object({
 // These require runtime data from other steps, so cannot be in Zod schemas
 // ══════════════════════════════════════════════════════════════════════════════
 
-/**
- * The calendar date (`YYYY-MM-DD`) of a date or date-time string. A date-time
- * without an offset parses as local time, so only the date part is compared.
- */
-function toDateOnly(value: string): string {
-  return value.slice(0, 10);
-}
-
 /** The latest non-empty departure date of the trips, or null when none is set. */
 export function lastDepartureDate(
   destinations: readonly Pick<Destination, 'departureDate'>[],
@@ -127,38 +167,32 @@ export function lastDepartureDate(
   const departures = destinations
     .map((d) => d.departureDate)
     .filter(Boolean)
-    .map(toDateOnly);
-  // oxlint-disable-next-line unicorn/no-array-sort -- The workspace targets ES2022, so toSorted() is not available in the demo build.
-  departures.sort();
-  return departures.at(-1) ?? null;
-}
-
-/**
- * Adds months in UTC and clamps the day to the last day of the target month,
- * so 31 August plus six months is 28 February, not 3 March.
- */
-function addUtcMonths(date: Date, months: number): Date {
-  const total = date.getUTCMonth() + months;
-  const year = date.getUTCFullYear() + Math.floor(total / 12);
-  const month = ((total % 12) + 12) % 12;
-  const daysInMonth = new Date(Date.UTC(year, month + 1, 0)).getUTCDate();
-  const result = new Date(date);
-  result.setUTCFullYear(year, month, Math.min(date.getUTCDate(), daysInMonth));
-  return result;
+    .map(tryPlainDate)
+    .filter((date) => date !== null);
+  if (departures.length === 0) return null;
+  const latest = departures.reduce((a, b) =>
+    Temporal.PlainDate.compare(a, b) >= 0 ? a : b,
+  );
+  return latest.toString();
 }
 
 /**
  * The passport must stay valid for six months after the last departure. True
- * when the rule does not apply yet (no expiry or no departure). Date-only
- * strings parse as UTC midnight, so the limit is computed in UTC.
+ * when the rule does not apply yet (no expiry or no departure). Temporal
+ * clamps the day to the last day of the target month, so 31 August plus six
+ * months is 28 February, not 3 March.
  */
 export function isPassportValidForDeparture(
   passportExpiry: string,
   departure: string | null,
 ): boolean {
   if (!departure || !passportExpiry) return true;
-  const sixMonthsAfter = addUtcMonths(new Date(toDateOnly(departure)), 6);
-  return new Date(toDateOnly(passportExpiry)) > sixMonthsAfter;
+  const departureDate = tryPlainDate(departure);
+  const expiry = tryPlainDate(passportExpiry);
+  if (!departureDate || !expiry) return false;
+  return (
+    Temporal.PlainDate.compare(expiry, departureDate.add({ months: 6 })) > 0
+  );
 }
 
 // Passport 6-Month Validity Rule - requires trip data from store
@@ -166,12 +200,8 @@ export function isPassportValidForDeparture(
 // lastDepartureDate comes from a different step (trip step)
 export function TravelerWithPassportValidation(lastDepartureDate: string) {
   return TravelerSchema.refine(
-    (data) => {
-      const expiry = new Date(toDateOnly(data.passportExpiry));
-      const lastDeparture = new Date(toDateOnly(lastDepartureDate));
-      const sixMonthsAfter = addUtcMonths(lastDeparture, 6);
-      return expiry > sixMonthsAfter;
-    },
+    (data) =>
+      isPassportValidForDeparture(data.passportExpiry, lastDepartureDate),
     {
       message: 'Passport must be valid for 6 months after your trip ends',
       path: ['passportExpiry'],
