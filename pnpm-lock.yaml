@@ -110,13 +110,7 @@ catalogs:
     '@nx/playwright':
       specifier: 23.2.1
       version: 23.2.1
-    '@nx/vite':
-      specifier: 23.2.1
-      version: 23.2.1
     '@nx/vitest':
-      specifier: 23.2.1
-      version: 23.2.1
-    '@nx/web':
       specifier: 23.2.1
       version: 23.2.1
     '@nx/workspace':
@@ -422,15 +416,9 @@ importers:
       '@nx/playwright':
         specifier: catalog:nx
         version: 23.2.1(@babel/traverse@7.29.8(supports-color@7.2.0))(@playwright/test@1.63.0)(@swc-node/register@1.12.1(@swc/core@1.16.2(@swc/helpers@0.5.23))(@swc/types@0.1.28)(@typescript/typescript6@6.0.2)(supports-color@7.2.0))(@swc/core@1.16.2(@swc/helpers@0.5.23))(@zkochan/js-yaml@0.0.7)(eslint@10.11.0(jiti@2.7.0)(supports-color@7.2.0))(nx@23.2.1(@swc-node/register@1.12.1(@swc/core@1.16.2(@swc/helpers@0.5.23))(@swc/types@0.1.28)(@typescript/typescript6@6.0.2)(supports-color@7.2.0))(@swc/core@1.16.2(@swc/helpers@0.5.23)))(supports-color@7.2.0)(verdaccio@6.10.3(encoding@0.1.13)(supports-color@7.2.0)(typanion@3.14.0))
-      '@nx/vite':
-        specifier: catalog:nx
-        version: 23.2.1(639787bd820b25f7e422895819ed5804)
       '@nx/vitest':
         specifier: catalog:nx
         version: 23.2.1(639787bd820b25f7e422895819ed5804)
-      '@nx/web':
-        specifier: catalog:nx
-        version: 23.2.1(f638e3d0642f2a74625e5b3f6decb2ec)
       '@nx/workspace':
         specifier: catalog:nx
         version: 23.2.1(@swc-node/register@1.12.1(@swc/core@1.16.2(@swc/helpers@0.5.23))(@swc/types@0.1.28)(@typescript/typescript6@6.0.2)(supports-color@7.2.0))(@swc/core@1.16.2(@swc/helpers@0.5.23))
@@ -10501,6 +10489,7 @@ snapshots:
       - typescript
       - verdaccio
       - vitest
+    optional: true
 
   '@nx/vitest@23.2.1(639787bd820b25f7e422895819ed5804)':
     dependencies:

@@ -47,23 +47,6 @@
       "options": {
         "command": "oxlint {projectRoot} --type-aware"
       }
-    },
-    "serve-static": {
-      "executor": "@nx/web:file-server",
-      "defaultConfiguration": "production",
-      "options": {
-        "buildTarget": "demo-primeng:build:production",
-        "port": 4720,
-        "staticFilePath": "dist/apps/demo-primeng",
-        "spa": true
-      }
-    },
-    "preview": {
-      "executor": "@nx/vite:preview-server",
-      "defaultConfiguration": "production",
-      "options": {
-        "buildTarget": "demo-primeng:build:production"
-      }
     }
   }
 }
