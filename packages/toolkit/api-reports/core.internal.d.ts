@@ -2857,16 +2857,17 @@ interface CreateErrorVisibilityOptions {
  *
  * ## When to use
  *
- * Use `createErrorVisibility` as the **recommended entry point** for
- * consumer-side error visibility wiring. The lower-level resolution and
- * predicate helpers remain exported for advanced composition but are no
- * longer the first choice.
+ * Use `createErrorVisibility` as the public entry point for consumer-side
+ * error visibility wiring. The lower-level resolution and predicate helpers
+ * are internal toolkit building blocks exposed only through the hidden,
+ * build-time `/core` entry point.
  *
  * ## When NOT to use
  *
- * If you need to compose the strategy and/or submission status with logic
- * beyond a flat config-default fallback (e.g. a component preset registry,
- * a multi-tier cascade) reach for the individual building blocks instead.
+ * Do not import the lower-level helpers from `/core`; that entry point is not
+ * published. For custom composition, derive `strategy` and `submittedStatus`
+ * through application-owned signals and pass them through the public options,
+ * or implement application-owned visibility logic.
  *
  * @param field Reactive or static field state. `null`/`undefined` values
  *   short-circuit the result to `false` — this is handled by the visibility
