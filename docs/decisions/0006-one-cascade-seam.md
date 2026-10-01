@@ -20,7 +20,7 @@ behaviour. It is a four-step composition:
 3. fold the two into a visibility computed inside `createErrorVisibility`
 4. expose that computed on the consuming surface
 
-`createErrorVisibility()` (`core/utilities/create-error-visibility.ts:161`)
+`createErrorVisibility()` (`core/utilities/create-error-visibility.ts`)
 exists to be that composition, once. Its own docstring says so: it _"Replaces
 the four-step manual composition … that every consumer used to inline."_
 
