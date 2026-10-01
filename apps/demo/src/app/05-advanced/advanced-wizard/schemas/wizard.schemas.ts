@@ -70,11 +70,9 @@ export function isPassportExpired(passportExpiry: string): boolean {
 
 // Helper to check if date is today or in the future
 function isFutureDate(dateStr: string): boolean {
-  if (!dateStr) return true; // Let required() handle empty
+  // Empty or malformed: not applicable yet. The required rule reports it.
   const date = tryPlainDate(dateStr);
-  return (
-    date !== null && Temporal.PlainDate.compare(date, todayPlainDate()) >= 0
-  );
+  return !date || Temporal.PlainDate.compare(date, todayPlainDate()) >= 0;
 }
 
 export const DestinationSchema = z
@@ -94,8 +92,11 @@ export const DestinationSchema = z
     path: ['arrivalDate'],
   })
   .refine(
-    (data) =>
-      (compareDateStrings(data.departureDate, data.arrivalDate) ?? 0) > 0,
+    (data) => {
+      // Not applicable until both dates parse.
+      const order = compareDateStrings(data.departureDate, data.arrivalDate);
+      return order === null || order > 0;
+    },
     {
       message: 'Departure date must be after arrival date',
       path: ['departureDate'],

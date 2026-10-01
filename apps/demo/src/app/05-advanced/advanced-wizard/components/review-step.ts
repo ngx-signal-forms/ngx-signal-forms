@@ -60,6 +60,9 @@ import { WizardStepInterface } from '../wizard-step.interface';
                     @case ('expired') {
                       <span class="text-red-600">✗ Expired</span>
                     }
+                    @case ('none') {
+                      <span class="text-red-600">✗ Expiry date missing</span>
+                    }
                     @default {
                       <span class="text-red-600"
                         >✗ Not valid for this trip</span

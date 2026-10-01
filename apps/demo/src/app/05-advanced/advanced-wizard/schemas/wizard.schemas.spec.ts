@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  DestinationSchema,
   isPassportValidForDeparture,
   lastDepartureDate,
 } from './wizard.schemas';
@@ -79,5 +80,55 @@ describe('lastDepartureDate', () => {
         { departureDate: '2099-03-03T00:30:00' },
       ]),
     ).toBe('2099-03-03');
+  });
+});
+
+describe('DestinationSchema date-order rules', () => {
+  const base = {
+    id: '3f2b8a52-6d1c-4a2e-9a55-1b2c3d4e5f60',
+    country: 'NL',
+    city: 'Amsterdam',
+    arrivalDate: '2099-03-10',
+    departureDate: '2099-03-15',
+    accommodation: '',
+    activities: [
+      {
+        id: '7c9e6679-7425-40de-944b-e07fc1f90ae7',
+        name: 'Canal tour',
+        date: '2099-03-11',
+        requirements: [],
+      },
+    ],
+  };
+
+  function messages(overrides: Record<string, unknown>): string[] {
+    const result = DestinationSchema.safeParse({ ...base, ...overrides });
+    return result.success ? [] : result.error.issues.map((i) => i.message);
+  }
+
+  const ordering = 'Departure date must be after arrival date';
+
+  it('adds no ordering error for an empty departure', () => {
+    const found = messages({ departureDate: '' });
+    expect(found).toContain('Departure date required');
+    expect(found).not.toContain(ordering);
+  });
+
+  it('adds no ordering error for an empty arrival', () => {
+    const found = messages({ arrivalDate: '' });
+    expect(found).toContain('Arrival date required');
+    expect(found).not.toContain(ordering);
+  });
+
+  it('adds no ordering or past error for a malformed arrival', () => {
+    const found = messages({ arrivalDate: 'nope' });
+    expect(found).not.toContain(ordering);
+    expect(found).not.toContain('Arrival date cannot be in the past');
+  });
+
+  it('still reports a departure before the arrival', () => {
+    expect(
+      messages({ arrivalDate: '2099-03-15', departureDate: '2099-03-10' }),
+    ).toContain(ordering);
   });
 });
