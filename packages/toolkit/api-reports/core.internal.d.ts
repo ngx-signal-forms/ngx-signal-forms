@@ -2851,14 +2851,16 @@ interface CreateErrorVisibilityOptions {
  * 4. Evaluates the visibility timing predicate and returns a reactive
  *    `Signal<boolean>`.
  *
- * No new logic is introduced — this is purely ergonomic glue over the
- * existing building blocks.
+ * This is the single composition point for the visibility cascade. It owns
+ * the reactive computed and its missing-submission-status diagnostic while
+ * delegating strategy evaluation to the shared pure predicate.
  *
  * ## When to use
  *
  * Use `createErrorVisibility` as the **recommended entry point** for
- * consumer-side error visibility wiring. The four building blocks remain
- * exported for advanced composition but are no longer the first choice.
+ * consumer-side error visibility wiring. The lower-level resolution and
+ * predicate helpers remain exported for advanced composition but are no
+ * longer the first choice.
  *
  * ## When NOT to use
  *
