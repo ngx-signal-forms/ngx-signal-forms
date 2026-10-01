@@ -34,7 +34,8 @@ describe('WizardContainerComponent Previous', () => {
     });
     store.goToStep('trip', true);
     fixture.detectChanges();
-    // The trip step is a `@defer` block; Previous commits through its ref.
+    // Render the deferred trip step, so a Previous that commits through the
+    // step ref would fail this test.
     for (const block of await fixture.getDeferBlocks()) {
       await block.render(DeferBlockState.Complete);
     }
