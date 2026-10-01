@@ -200,17 +200,17 @@ What each part does:
 
 These tokens connect a wrapper to the toolkit. Most apps never touch them.
 
-| Token                                       | Carries                                                                         | Who provides it                                                   |
-| ------------------------------------------- | ------------------------------------------------------------------------------- | ----------------------------------------------------------------- |
-| `NGX_SIGNAL_FORMS_CONFIG`                   | The resolved config (`NgxSignalFormsConfig`)                                    | `provideNgxSignalFormsConfig()`                                   |
-| `NGX_SIGNAL_FORM_CONTEXT`                   | Form-level `errorStrategy`, `warningStrategy`, and `submittedStatus`            | `ngxSignalForm`. Read it with `injectFormContext()`               |
-| `NGX_SIGNAL_FORM_FIELD_CONTEXT`             | The field name for projected hints and renderers                                | Your wrapper                                                      |
-| `NGX_SIGNAL_FORM_HINT_REGISTRY`             | Hint IDs for `aria-describedby`                                                 | Your wrapper                                                      |
-| `NGX_SIGNAL_FORM_FIELD_VISIBILITY_REGISTRY` | Whether each field's error and warning messages show now                        | `ngxSignalForm`. Message components register in it                |
-| `NGX_SIGNAL_FORM_ARIA_MODE`                 | `'auto'` or `'manual'` ARIA ownership for one control                           | `ngxSignalFormControl*` attributes, or a directive on the control |
-| `NGX_SIGNAL_FORM_CONTROL_PRESETS`           | Layout and ARIA mode per control kind (read through `NgxControlPresetRegistry`) | `provideNgxSignalFormControlPresets()`                            |
-| `NGX_FORM_FIELD_ERROR_RENDERER`             | The error component that replaces the default                                   | `provideFormFieldErrorRenderer()`                                 |
-| `NGX_FORM_FIELD_HINT_RENDERER`              | The hint component that replaces the default                                    | `provideFormFieldHintRenderer()`                                  |
+| Token                                       | Carries                                                                                      | Who provides it                                                   |
+| ------------------------------------------- | -------------------------------------------------------------------------------------------- | ----------------------------------------------------------------- |
+| `NGX_SIGNAL_FORMS_CONFIG`                   | The resolved config (`NgxSignalFormsConfig`)                                                 | `provideNgxSignalFormsConfig()`                                   |
+| `NGX_SIGNAL_FORM_CONTEXT`                   | Form-level `errorStrategy`, `warningStrategy`, and `submittedStatus`                         | `ngxSignalForm`. Read it with `injectFormContext()`               |
+| `NGX_SIGNAL_FORM_FIELD_CONTEXT`             | The field name for projected hints and renderers                                             | Your wrapper                                                      |
+| `NGX_SIGNAL_FORM_HINT_REGISTRY`             | Hint IDs for `aria-describedby`                                                              | Your wrapper                                                      |
+| `NGX_SIGNAL_FORM_FIELD_VISIBILITY_REGISTRY` | Whether each field's error and warning messages show now                                     | `ngxSignalForm`. Message components register in it                |
+| `NGX_SIGNAL_FORM_ARIA_MODE`                 | `'auto'` or `'manual'` ARIA ownership for one control                                        | `ngxSignalFormControl*` attributes, or a directive on the control |
+| `NGX_SIGNAL_FORM_CONTROL_PRESETS`           | Layout and ARIA mode per control kind. Extend them with `mergeNgxSignalFormControlPresets()` | `provideNgxSignalFormControlPresets()`                            |
+| `NGX_FORM_FIELD_ERROR_RENDERER`             | The error component that replaces the default                                                | `provideFormFieldErrorRenderer()`                                 |
+| `NGX_FORM_FIELD_HINT_RENDERER`              | The hint component that replaces the default                                                 | `provideFormFieldHintRenderer()`                                  |
 
 Each function and token also exports its option and state types from
 `@ngx-signal-forms/toolkit`, for example `NgxSignalFormFieldContext` and
@@ -378,8 +378,6 @@ auto-ARIA sees. All members are read-only:
 | `describedBy()`             | The hint IDs joined for `aria-describedby`, or `null`. It does not include message IDs.                                     |
 | `resolvedErrorStrategy()`   | The wrapper's resolved error strategy, or `null` when none was published                                                    |
 | `resolvedWarningStrategy()` | The wrapper's resolved warning strategy, or `null` when none was published                                                  |
-| `isControlVisible()`        | The wrapper's cached flag: does the bound control have a layout box                                                         |
-| `isControlVisible(element)` | A one-time, non-reactive check of `element`. It does not change the cached flag.                                            |
 | `resolveControlElement()`   | The bound control element, or `null`                                                                                        |
 
 ```typescript

@@ -6,6 +6,7 @@ import {
   NGX_SIGNAL_FORM_CONTROL_PRESETS,
 } from '../tokens';
 import {
+  mergeNgxSignalFormControlPresets,
   provideNgxSignalFormControlPresets,
   provideNgxSignalFormControlPresetsForComponent,
 } from './control-semantics.provider';
@@ -131,5 +132,45 @@ describe('provideNgxSignalFormControlPresetsForComponent', () => {
       layout: 'group',
       ariaMode: 'manual',
     });
+  });
+});
+
+describe('mergeNgxSignalFormControlPresets', () => {
+  it('merges per field and keeps kinds that are not overridden', () => {
+    const merged = mergeNgxSignalFormControlPresets(null, {
+      slider: { layout: 'custom' },
+    });
+
+    expect(merged.slider).toEqual({
+      layout: 'custom',
+      ariaMode: DEFAULT_NGX_SIGNAL_FORM_CONTROL_PRESETS.slider.ariaMode,
+    });
+    expect(merged.switch).toEqual(
+      DEFAULT_NGX_SIGNAL_FORM_CONTROL_PRESETS.switch,
+    );
+  });
+
+  it('layers overrides onto the given base instead of the defaults', () => {
+    const base = mergeNgxSignalFormControlPresets(null, {
+      slider: { ariaMode: 'manual' },
+    });
+
+    const merged = mergeNgxSignalFormControlPresets(base, {
+      slider: { layout: 'custom' },
+    });
+
+    expect(merged.slider).toEqual({ layout: 'custom', ariaMode: 'manual' });
+  });
+
+  it('does not mutate the base registry', () => {
+    const base = mergeNgxSignalFormControlPresets(null, {});
+    const snapshot = structuredClone(base);
+
+    const merged = mergeNgxSignalFormControlPresets(base, {
+      slider: { layout: 'custom', ariaMode: 'manual' },
+    });
+
+    expect(merged).not.toBe(base);
+    expect(base).toEqual(snapshot);
   });
 });

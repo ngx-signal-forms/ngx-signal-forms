@@ -59,11 +59,6 @@ describe('NgxFieldIdentity', () => {
       expect(svc.resolvedWarningStrategy()).toBeNull();
     });
 
-    it('reports control visible by default', () => {
-      const svc = createService();
-      expect(svc.isControlVisible()).toBe(true);
-    });
-
     it('resolveControlElement returns null when no element is set', () => {
       const svc = createService();
       expect(svc.resolveControlElement()).toBeNull();
@@ -223,48 +218,6 @@ describe('NgxFieldIdentity', () => {
           expect(identityWarnings).toHaveLength(1);
         },
       );
-
-      it('resets visibility to true when element is unset to null', () => {
-        const svc = createService();
-        const el = document.createElement('input');
-        el.id = 'email';
-        svc.setControlElement(el);
-        svc.setControlVisible(false);
-        expect(svc.isControlVisible()).toBe(false);
-
-        svc.setControlElement(null);
-        expect(svc.isControlVisible()).toBe(true);
-      });
-    });
-
-    describe('_setControlVisible', () => {
-      it('flips isControlVisible to false and back', () => {
-        const svc = createService();
-        svc.setControlVisible(false);
-        expect(svc.isControlVisible()).toBe(false);
-        svc.setControlVisible(true);
-        expect(svc.isControlVisible()).toBe(true);
-      });
-
-      it('is idempotent — repeated identical writes do not glitch consumers', () => {
-        const svc = createService();
-        let computeCount = 0;
-        const probe = TestBed.runInInjectionContext(() =>
-          computed(() => {
-            computeCount += 1;
-            return svc.isControlVisible();
-          }),
-        );
-        probe();
-        const before = computeCount;
-        // Angular signals already short-circuit same-primitive writes,
-        // so this mainly documents that `_setControlVisible` preserves that.
-        svc.setControlVisible(true);
-        probe();
-        svc.setControlVisible(true);
-        probe();
-        expect(computeCount - before).toBe(0);
-      });
     });
 
     describe('_setHintIds', () => {
@@ -301,55 +254,6 @@ describe('NgxFieldIdentity', () => {
         probe();
         // One recompute for the first set, zero for the second.
         expect(computeCount - before).toBe(1);
-      });
-    });
-
-    describe('isControlVisible(el) — public visibility probe', () => {
-      it('no-arg call returns the cached visibility value', () => {
-        const svc = createService();
-        expect(svc.isControlVisible()).toBe(true);
-        svc.setControlVisible(false);
-        expect(svc.isControlVisible()).toBe(false);
-      });
-
-      // The real hidden/visible answers need a layout engine and live in
-      // `field-identity.visibility.browser.spec.ts`. What jsdom *can* pin is
-      // the fail-open contract for runtimes with no `checkVisibility()`.
-      it('reports visible in an environment without checkVisibility()', () => {
-        const svc = createService();
-        const el = document.createElement('input');
-        el.style.display = 'none';
-        document.body.append(el);
-        try {
-          expect(svc.isControlVisible(el)).toBe(true);
-        } finally {
-          el.remove();
-        }
-      });
-
-      it('element-arg does not mutate the cached no-arg value', () => {
-        const svc = createService();
-        svc.setControlVisible(false);
-        const probed = document.createElement('input');
-        document.body.append(probed);
-        try {
-          // Probing an element must not flip the cached flag, which is
-          // driven exclusively by `setControlVisible`.
-          expect(svc.isControlVisible(probed)).toBe(true);
-          expect(svc.isControlVisible()).toBe(false);
-        } finally {
-          probed.remove();
-        }
-      });
-
-      it('remains a usable Signal for reactive consumers', () => {
-        const svc = createService();
-        const probe = TestBed.runInInjectionContext(() =>
-          computed(() => svc.isControlVisible()),
-        );
-        expect(probe()).toBe(true);
-        svc.setControlVisible(false);
-        expect(probe()).toBe(false);
       });
     });
 

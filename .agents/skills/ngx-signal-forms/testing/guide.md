@@ -110,7 +110,7 @@ Choose the checks for the changed behavior, not only an initial axe scan:
 - For a radio cluster, hide one option while a sibling remains visible. The
   hidden option must lose `aria-invalid`; visible siblings keep the correct
   value. Then hide the whole group and reopen it. Assert each actual carrier,
-  not only the group host or a cached identity visibility flag.
+  not only the group host.
 - Check every `aria-describedby` token against an existing unique DOM ID.
   Exercise error-only, warning-only, and mixed states with different strategies.
 - Assert live-region hosts exist before content appears. Update empty → warning

@@ -6,7 +6,6 @@ import type {
 import { resolveNgxSignalFormControlSemantics } from '@ngx-signal-forms/toolkit';
 import {
   findBoundControl,
-  isElementCssVisible,
   isHtmlElement,
   resolveBoundControlFromBindings,
   type FormFieldBindingsState,
@@ -53,14 +52,6 @@ export interface FormFieldWrapperDomSnapshot {
    * cache it across renders and skip the `querySelector` call next time.
    */
   readonly mainSlot: HTMLElement | null;
-  /**
-   * Whether `inputEl` currently has a CSS layout box. Resolved here, in the
-   * `earlyRead` phase, instead of in the wrapper's `write` phase. A `write`
-   * phase read would run after other wrappers already mutated the DOM. That
-   * forces a style recalculation this snapshot avoids by reading everything
-   * up front.
-   */
-  readonly controlVisible: boolean;
 }
 
 /**
@@ -193,7 +184,6 @@ export function readFormFieldWrapperDomSnapshot(
       ).length ?? 0,
     label,
     mainSlot,
-    controlVisible: inputEl ? isElementCssVisible(inputEl) : true,
   };
 }
 

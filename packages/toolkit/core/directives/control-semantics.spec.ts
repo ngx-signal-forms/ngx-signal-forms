@@ -1,7 +1,10 @@
 import { Component, signal, viewChild } from '@angular/core';
 import { render, screen } from '@testing-library/angular';
 import { describe, expect, it } from 'vitest';
-import { provideNgxSignalFormControlPresetsForComponent } from '../providers/control-semantics.provider';
+import {
+  provideNgxSignalFormControlPresets,
+  provideNgxSignalFormControlPresetsForComponent,
+} from '../providers/control-semantics.provider';
 import {
   DEFAULT_NGX_SIGNAL_FORM_CONTROL_PRESETS,
   NGX_SIGNAL_FORM_CONTROL_PRESETS,
@@ -246,6 +249,55 @@ describe('NgxSignalFormControl', () => {
       expect(child.getAttribute('data-ngx-signal-form-control-aria-mode')).toBe(
         'manual',
       );
+    });
+  });
+
+  describe('Component-scoped override over root presets', () => {
+    it('lets a component-scoped preset win over the root presets', async () => {
+      @Component({
+        selector: 'app-scoped-host',
+        template:
+          '<div data-testid="scoped" ngxSignalFormControl="slider"></div>',
+        imports: [NgxSignalFormControl],
+        providers: [
+          provideNgxSignalFormControlPresetsForComponent({
+            slider: { layout: 'group' },
+          }),
+        ],
+      })
+      class ScopedHostComponent {}
+
+      @Component({
+        template: `
+          <div data-testid="root" ngxSignalFormControl="slider"></div>
+          <app-scoped-host />
+        `,
+        imports: [NgxSignalFormControl, ScopedHostComponent],
+      })
+      class ParentComponent {}
+
+      await render(ParentComponent, {
+        providers: [
+          provideNgxSignalFormControlPresets({
+            slider: { layout: 'custom', ariaMode: 'manual' },
+          }),
+        ],
+      });
+
+      const root = screen.getByTestId('root');
+      const scoped = screen.getByTestId('scoped');
+
+      // The root override reaches a control outside the scoped component.
+      expect(root.getAttribute('data-ngx-signal-form-control-layout')).toBe(
+        'custom',
+      );
+      // The scoped override wins for layout and inherits the rest from root.
+      expect(scoped.getAttribute('data-ngx-signal-form-control-layout')).toBe(
+        'group',
+      );
+      expect(
+        scoped.getAttribute('data-ngx-signal-form-control-aria-mode'),
+      ).toBe('manual');
     });
   });
 

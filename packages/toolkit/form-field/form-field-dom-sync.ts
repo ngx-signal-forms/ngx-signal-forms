@@ -52,7 +52,7 @@ export interface WrapperDomState {
  */
 export type WrapperDomIdentity = Pick<
   NgxFieldIdentity,
-  'setFieldName' | 'setControlElement' | 'setControlVisible' | 'setHintIds'
+  'setFieldName' | 'setControlElement' | 'setHintIds'
 >;
 
 /**
@@ -177,12 +177,10 @@ export function applyWrapperDomSnapshot(
     );
   }
 
-  // Keep order: name → element → visible → hints. `setControlElement` reads
-  // the name for its missing-id diagnostic. `controlVisible` came from the
-  // `earlyRead` phase, so this adds no forced style recalculation.
+  // Keep order: name → element → hints. `setControlElement` reads the name
+  // for its missing-id diagnostic.
   identity.setFieldName(fieldName);
   identity.setControlElement(inputEl);
-  identity.setControlVisible(snapshot.controlVisible);
   identity.setHintIds(
     hints
       .filter((hint) => hint.fieldName === null || hint.fieldName === fieldName)
