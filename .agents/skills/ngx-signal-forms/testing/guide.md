@@ -22,7 +22,6 @@ fixture. One call per fixture scans the whole DOM subtree.
 import {
   createA11yValidator,
   expectNoA11yViolations,
-  findAlertContaining,
   WCAG_22_AA_TAGS, // ['wcag2a','wcag2aa','wcag21a','wcag21aa','wcag22aa']
   type A11yValidator,
   type WCAG_22_AA_TAG,
@@ -54,11 +53,20 @@ import {
 - `WCAG_22_AA_TAGS` — the axe tag set the harness runs. There is no `wcag22a`
   tag: the two new 2.2 Level A criteria are non-automatable, so automated
   scanning covers only a subset of full 2.2 AA conformance.
-- `findAlertContaining(container, text)` — finds the `[role="alert"]` element
-  whose text includes `text`. Toolkit surfaces mount several live regions at
-  once (some mounted-but-empty per the WCAG 4.1.3 first-insertion pattern), so
-  a bare `getByRole('alert')` is ambiguous — narrow to the region carrying the
-  expected message before asserting on it or scanning.
+
+## Asserting on one live region
+
+Toolkit surfaces mount several `[role="alert"]` regions at once. Some stay
+mounted but empty (the WCAG 4.1.3 first-insertion pattern), so a bare
+`getByRole('alert')` is ambiguous. Narrow to the region that carries the
+expected message before you assert or scan. Query it in the spec:
+
+```typescript
+const errorAlert = [
+  ...container.querySelectorAll<HTMLElement>('[role="alert"]'),
+].find((el) => el.textContent?.includes('Email is required'));
+expect(errorAlert).toBeTruthy();
+```
 
 ## Workflow
 
