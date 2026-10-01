@@ -441,23 +441,3 @@ export function expectVisibleFocusIndicator(element: Element): void {
     );
   }
 }
-
-/**
- * Finds the `[role="alert"]` element within `container` whose text content
- * includes `text`, or `undefined` if none matches.
- *
- * Several toolkit surfaces (grouped fieldsets, error summaries) render
- * alongside per-field error regions that stay mounted-but-empty per the
- * WCAG 4.1.3 first-insertion pattern (see `expectNoA11yViolations`'s own
- * doc). A bare `getByRole('alert')` query is ambiguous whenever more than
- * one such region is present; this narrows to the one actually carrying the
- * expected message, for asserting on it before running the a11y scan.
- */
-export function findAlertContaining(
-  container: ParentNode,
-  text: string,
-): HTMLElement | undefined {
-  return Array.from(
-    container.querySelectorAll<HTMLElement>('[role="alert"]'),
-  ).find((el) => el.textContent?.includes(text));
-}
