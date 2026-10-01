@@ -1,8 +1,8 @@
 import * as _angular_core from '@angular/core';
 import { Signal, Injector } from '@angular/core';
 import { FieldTree, ValidationError } from '@angular/forms/signals';
-import { NgxReactiveOrStatic, ErrorReadableState, ErrorDisplayStrategy, WarningDisplayStrategy, SubmittedStatus, NgxSignalLike, ResolvedErrorDisplayStrategy, ResolvedWarningDisplayStrategy } from '@ngx-signal-forms/toolkit';
-import { FieldLabelResolver, ErrorMessageRegistry, ErrorDisplayStrategy as ErrorDisplayStrategy$1, WarningDisplayStrategy as WarningDisplayStrategy$1, SubmittedStatus as SubmittedStatus$1 } from './ngx-signal-forms-toolkit-core.js';
+import { NgxReactiveOrStatic, ErrorDisplayStrategy, WarningDisplayStrategy, SubmittedStatus, ErrorReadableState, NgxSignalLike, ResolvedErrorDisplayStrategy, ResolvedWarningDisplayStrategy } from '@ngx-signal-forms/toolkit';
+import { ErrorMessageRegistry, FieldLabelResolver, ErrorDisplayStrategy as ErrorDisplayStrategy$1, WarningDisplayStrategy as WarningDisplayStrategy$1, SubmittedStatus as SubmittedStatus$1 } from './ngx-signal-forms-toolkit-core.js';
 export { AriaDescribedByBridge, AriaDescribedByFieldNameReader, AriaDescribedByPreservedIdsReader, AriaRequiredFieldState, BoundControlElementReader, CreateAriaDescribedByBridgeOptions, CreateAriaDescribedBySignalOptions, CreateFieldNameResolverOptions, CreateHintIdsSignalOptions, HintIdsFieldNameReader, HintIdsIdentityLike, HintIdsRegistryLike, HintIdsSignal, LabelForReader, createAriaDescribedByBridge, createAriaDescribedBySignal, createAriaInvalidSignal, createAriaRequiredSignal, createFieldNameResolver, createHintIdsSignal, humanizeFieldPath } from './ngx-signal-forms-toolkit-core.js';
 
 /**
@@ -282,197 +282,6 @@ declare class NgxHeadlessCharacterCount implements CharacterCountState {
     static ɵfac: _angular_core.ɵɵFactoryDeclaration<NgxHeadlessCharacterCount, never>;
     static ɵdir: _angular_core.ɵɵDirectiveDeclaration<NgxHeadlessCharacterCount, "[ngxHeadlessCharacterCount]", ["characterCount"], { "field": { "alias": "field"; "required": true; "isSignal": true; }; "maxLength": { "alias": "maxLength"; "required": true; "isSignal": true; }; "warningThreshold": { "alias": "warningThreshold"; "required": false; "isSignal": true; }; "dangerThreshold": { "alias": "dangerThreshold"; "required": false; "isSignal": true; }; }, {}, never, never, true, never>;
 }
-
-/**
- * Error-summary mapping utilities, split out of `utilities.ts` (issue
- * #354): turning a raw `ValidationError` into a focusable, labeled,
- * message-resolved entry ready for an error-summary list. The aggregation
- * *pipeline* that calls these (`createErrorSummaryEntries`) lives in
- * `error-summary.ts`, next to `NgxHeadlessErrorSummary` (issue #512) — this
- * module holds only the per-error mapping functions it composes.
- */
-/**
- * A resolved error-summary entry ready for rendering.
- *
- * @group Utility Functions
- */
-interface ErrorSummaryEntryData {
-    /**
-     * Identity of this entry, unique within one summary list. Use it as the
-     * `@for` track key. Treat the value as opaque.
-     *
-     * Built from the field's unique name (not its label), the error `kind`
-     * and the raw validator message. The message is in the key because one
-     * field can keep two errors of one kind with different messages. A
-     * message that comes from the error-message registry does not change the
-     * key. An entry with
-     * no bound field never shares a key with a bound one.
-     */
-    readonly key: string;
-    readonly kind: string;
-    readonly message: string;
-    /** Display label for the field. Not unique: use {@link key} for identity. */
-    readonly fieldName: string;
-    readonly focus: () => void;
-    /**
-     * Whether {@link focus} can move focus to a real control.
-     *
-     * `false` for an error with no bound field (e.g. a custom validator that
-     * does not run through `error.fieldTree()`, or a field whose state does
-     * not expose `focusBoundControl()`). A consumer should render such an
-     * entry as plain text — a link or button that calls a no-op `focus()`
-     * looks interactive but does nothing, which fails WCAG 4.1.2.
-     *
-     * **Limit**: this only checks that `focusBoundControl` exists as a
-     * function, not that it actually moves focus. A real field whose control
-     * was never bound in the DOM (no `[formField]` rendered for it) still has
-     * a working `fieldTree()`/`focusBoundControl()`, so `canFocus` is `true`
-     * even though calling `focus()` is a silent no-op in that case. This
-     * `false` path only catches errors with no `fieldTree` at all.
-     */
-    readonly canFocus: boolean;
-}
-/**
- * Resolve the field name from a `ValidationError` via duck-typed access
- * to `error.fieldTree().name()`.
- *
- * Falls back to the error's `kind` when the field tree is not available.
- *
- * @param error - The validation error to extract a field name from
- * @param resolver - Optional custom resolver; receives the field path
- *   **without** the Angular internal prefix. Falls back to
- *   `humanizeFieldPath` when `undefined`.
- *
- * @public
- * @group Utility Functions
- */
-declare function resolveFieldNameFromError(error: ValidationError, resolver?: FieldLabelResolver | null): string;
-/**
- * Focus the form control bound to the field that produced a validation error.
- *
- * Uses duck-typed access to `error.fieldTree().focusBoundControl()`, guarded
- * by {@link errorHasFocusableTarget} so the two never disagree about
- * whether an error has a focusable target.
- *
- * @public
- * @group Utility Functions
- */
-declare function focusBoundControlFromError(error: ValidationError): void;
-/**
- * Maps a `ValidationError` into an `ErrorSummaryEntryData` with resolved
- * message, field name, and focus callback.
- *
- * @param error - The validation error to map
- * @param registry - Error message registry for 3-tier message resolution
- * @param options - Settings (e.g. `{ stripWarningPrefix: true }`)
- * @param labelResolver - Optional field-label resolver; falls back to
- *   `humanizeFieldPath` when `undefined`
- *
- * @public
- * @group Utility Functions
- */
-declare function toErrorSummaryEntry(error: ValidationError, registry?: Readonly<ErrorMessageRegistry> | null, options?: Readonly<{
-    stripWarningPrefix?: boolean;
-}>, labelResolver?: FieldLabelResolver | null): ErrorSummaryEntryData;
-
-/**
- * Field-state duck-typing utilities, split out of `utilities.ts` (issue
- * #354) so the ~900-line file's domains stop sharing one module boundary.
- * Everything here reads a `FieldTree`'s return value (or a
- * `ValidationError`'s `fieldTree()`) through loose, structural access
- * instead of Angular's exact `FieldState` type — the shared reason being
- * that toolkit consumers pass mock states in tests and adapters may expose
- * `CompatFieldState` variants that only partially match.
- */
-/**
- * Boolean state keys available on FieldState.
- *
- * Angular Signal Forms exposes these as `Signal<boolean>` properties.
- * We define it locally for type-safe access via duck-typing.
- *
- * @group Utility Functions
- */
-type BooleanStateKey = 'dirty' | 'invalid' | 'pending' | 'touched' | 'valid';
-/**
- * Type representing the shape of FieldState for reading errors.
- * Used for duck-typing access to error properties.
- *
- * @group Utility Functions
- */
-type FieldStateLike$1 = {
-    invalid?: ErrorReadableState['invalid'];
-    valid?: () => boolean;
-    touched?: ErrorReadableState['touched'];
-    dirty?: () => boolean;
-    pending?: () => boolean;
-    errorSummary?: () => ValidationError[];
-    errors?: ErrorReadableState['errors'];
-};
-/**
- * Read a boolean flag from FieldState using duck-typing.
- *
- * Safely accesses FieldState boolean signals (invalid, valid, touched, dirty, pending)
- * without requiring exact type match. Useful when working with FieldTree
- * return types that may be FieldState or CompatFieldState.
- *
- * @param state - The field state object (from `fieldTree()`)
- * @param key - The boolean flag name to read
- * @returns The boolean value, or false if not accessible
- *
- * @example
- * ```typescript
- * const fieldState = myField();
- * const isInvalid = readFieldFlag(fieldState, 'invalid');
- * const isTouched = readFieldFlag(fieldState, 'touched');
- * ```
- *
- * @group Utility Functions
- */
-declare function readFieldFlag(state: unknown, key: BooleanStateKey): boolean;
-/**
- * Computed boolean state flags from a reactive field state signal.
- *
- * @group Reactive Primitives
- */
-interface FieldStateFlags {
-    readonly isInvalid: Signal<boolean>;
-    readonly isValid: Signal<boolean>;
-    readonly isTouched: Signal<boolean>;
-    readonly isDirty: Signal<boolean>;
-    readonly isPending: Signal<boolean>;
-}
-/**
- * Creates computed boolean state flags from a field state signal.
- *
- * Eliminates the repeated pattern of 5 individual `readFieldFlag` computeds
- * found in fieldset directives and components.
- *
- * @remarks Does not require an injection context (only creates `computed`s).
- *
- * @param fieldState - A signal/computed that returns the field state object
- * @returns Object with computed signals for each boolean flag
- *
- * @group Reactive Primitives
- */
-declare function createFieldStateFlags(fieldState: () => unknown): FieldStateFlags;
-/**
- * Read errors from FieldState using duck-typing.
- *
- * Tries `errorSummary()` first (aggregated errors from nested fields),
- * then falls back to `errors()` (direct field errors).
- *
- * @param state - The field state object (from `fieldTree()`)
- * @returns Array of ValidationError, empty if not accessible
- *
- * @example
- * ```typescript
- * const fieldState = addressField();
- * const allErrors = readErrors(fieldState); // Includes nested field errors
- * ```
- *
- * @group Utility Functions
- */
-declare function readErrors(state: unknown): ValidationError[];
 
 /**
  * A resolved error with kind and message.
@@ -846,6 +655,56 @@ declare class NgxHeadlessErrorState<TValue = unknown> implements ErrorStateSigna
     constructor();
     static ɵfac: _angular_core.ɵɵFactoryDeclaration<NgxHeadlessErrorState<any>, never>;
     static ɵdir: _angular_core.ɵɵDirectiveDeclaration<NgxHeadlessErrorState<any>, "[ngxHeadlessErrorState]", ["errorState"], { "field": { "alias": "field"; "required": false; "isSignal": true; }; "fieldName": { "alias": "fieldName"; "required": false; "isSignal": true; }; "strategy": { "alias": "strategy"; "required": false; "isSignal": true; }; "warningStrategy": { "alias": "warningStrategy"; "required": false; "isSignal": true; }; "submittedStatus": { "alias": "submittedStatus"; "required": false; "isSignal": true; }; "errorsOverride": { "alias": "errorsOverride"; "required": false; "isSignal": true; }; "renders": { "alias": "renders"; "required": false; "isSignal": true; }; }, {}, never, never, true, never>;
+}
+
+/**
+ * Error-summary mapping utilities, split out of `utilities.ts` (issue
+ * #354): turning a raw `ValidationError` into a focusable, labeled,
+ * message-resolved entry ready for an error-summary list. The aggregation
+ * *pipeline* that calls these (`createErrorSummaryEntries`) lives in
+ * `error-summary.ts`, next to `NgxHeadlessErrorSummary` (issue #512) — this
+ * module holds only the per-error mapping functions it composes.
+ */
+/**
+ * A resolved error-summary entry ready for rendering.
+ *
+ * @group Utility Functions
+ */
+interface ErrorSummaryEntryData {
+    /**
+     * Identity of this entry, unique within one summary list. Use it as the
+     * `@for` track key. Treat the value as opaque.
+     *
+     * Built from the field's unique name (not its label), the error `kind`
+     * and the raw validator message. The message is in the key because one
+     * field can keep two errors of one kind with different messages. A
+     * message that comes from the error-message registry does not change the
+     * key. An entry with
+     * no bound field never shares a key with a bound one.
+     */
+    readonly key: string;
+    readonly kind: string;
+    readonly message: string;
+    /** Display label for the field. Not unique: use {@link key} for identity. */
+    readonly fieldName: string;
+    readonly focus: () => void;
+    /**
+     * Whether {@link focus} can move focus to a real control.
+     *
+     * `false` for an error with no bound field (e.g. a custom validator that
+     * does not run through `error.fieldTree()`, or a field whose state does
+     * not expose `focusBoundControl()`). A consumer should render such an
+     * entry as plain text — a link or button that calls a no-op `focus()`
+     * looks interactive but does nothing, which fails WCAG 4.1.2.
+     *
+     * **Limit**: this only checks that `focusBoundControl` exists as a
+     * function, not that it actually moves focus. A real field whose control
+     * was never bound in the DOM (no `[formField]` rendered for it) still has
+     * a working `fieldTree()`/`focusBoundControl()`, so `canFocus` is `true`
+     * even though calling `focus()` is a silent no-op in that case. This
+     * `false` path only catches errors with no `fieldTree` at all.
+     */
+    readonly canFocus: boolean;
 }
 
 /**
@@ -1635,13 +1494,13 @@ interface CreateErrorMessageSignalOptions {
  * callable shape is enough at runtime, so the primitive types these as
  * plain getters and only the visibility-cascade adapter needs the brand.
  */
-interface FieldStateLike {
+interface FieldStateLike$1 {
     readonly invalid?: () => boolean;
     readonly touched?: () => boolean;
     readonly errors?: () => readonly ValidationError[];
     readonly name?: () => string;
 }
-type FieldStateInput = FieldStateLike | null | undefined;
+type FieldStateInput = FieldStateLike$1 | null | undefined;
 type FieldStateAccessor = () => FieldStateInput;
 /**
  * Reactive error-message resolution primitive for Angular Signal Forms.
@@ -1758,6 +1617,66 @@ declare function createFieldOptionalitySummary(treeSource: () => AnyFieldTree | 
 };
 
 /**
+ * Field-state duck-typing utilities, split out of `utilities.ts` (issue
+ * #354) so the ~900-line file's domains stop sharing one module boundary.
+ * Everything here reads a `FieldTree`'s return value (or a
+ * `ValidationError`'s `fieldTree()`) through loose, structural access
+ * instead of Angular's exact `FieldState` type — the shared reason being
+ * that toolkit consumers pass mock states in tests and adapters may expose
+ * `CompatFieldState` variants that only partially match.
+ */
+/**
+ * Boolean state keys available on FieldState.
+ *
+ * Angular Signal Forms exposes these as `Signal<boolean>` properties.
+ * We define it locally for type-safe access via duck-typing.
+ *
+ * @group Utility Functions
+ */
+type BooleanStateKey = 'dirty' | 'invalid' | 'pending' | 'touched' | 'valid';
+/**
+ * Type representing the shape of FieldState for reading errors.
+ * Used for duck-typing access to error properties.
+ *
+ * @group Utility Functions
+ */
+type FieldStateLike = {
+    invalid?: ErrorReadableState['invalid'];
+    valid?: () => boolean;
+    touched?: ErrorReadableState['touched'];
+    dirty?: () => boolean;
+    pending?: () => boolean;
+    errorSummary?: () => ValidationError[];
+    errors?: ErrorReadableState['errors'];
+};
+/**
+ * Computed boolean state flags from a reactive field state signal.
+ *
+ * @group Reactive Primitives
+ */
+interface FieldStateFlags {
+    readonly isInvalid: Signal<boolean>;
+    readonly isValid: Signal<boolean>;
+    readonly isTouched: Signal<boolean>;
+    readonly isDirty: Signal<boolean>;
+    readonly isPending: Signal<boolean>;
+}
+/**
+ * Creates computed boolean state flags from a field state signal.
+ *
+ * Eliminates the repeated pattern of 5 individual `readFieldFlag` computeds
+ * found in fieldset directives and components.
+ *
+ * @remarks Does not require an injection context (only creates `computed`s).
+ *
+ * @param fieldState - A signal/computed that returns the field state object
+ * @returns Object with computed signals for each boolean flag
+ *
+ * @group Reactive Primitives
+ */
+declare function createFieldStateFlags(fieldState: () => unknown): FieldStateFlags;
+
+/**
  * `@ngx-signal-forms/toolkit/headless`
  *
  * Headless (renderless) primitives for Angular Signal Forms.
@@ -1786,5 +1705,5 @@ declare function createFieldOptionalitySummary(treeSource: () => AnyFieldTree | 
  */
 declare const NgxHeadlessToolkit: readonly [typeof NgxHeadlessErrorState, typeof NgxHeadlessErrorSummary, typeof NgxHeadlessFieldset, typeof NgxHeadlessCharacterCount, typeof NgxHeadlessFieldName];
 
-export { DEFAULT_DANGER_THRESHOLD, DEFAULT_WARNING_THRESHOLD, NgxHeadlessCharacterCount, NgxHeadlessErrorState, NgxHeadlessErrorSummary, NgxHeadlessFieldName, NgxHeadlessFieldset, NgxHeadlessToolkit, createCharacterCount, createErrorMessageSignal, createErrorState, createErrorSummaryEntries, createFieldOptionalitySummary, createFieldStateFlags, createFieldsetAggregation, dedupeValidationErrors, focusBoundControlFromError, readErrors, readFieldFlag, resolveFieldNameFromError, toErrorSummaryEntry };
-export type { BooleanStateKey, CharacterCountLimitState, CharacterCountState, CharacterCountValue, CreateCharacterCountOptions, CreateErrorMessageSignalOptions, CreateErrorStateOptions, CreateErrorSummaryEntriesOptions, CreateFieldsetAggregationOptions, ErrorStateResult, ErrorStateSignals, ErrorSummaryEntriesResult, ErrorSummaryEntry, ErrorSummarySignals, FieldNameStateSignals, FieldOptionality, FieldStateFlags, FieldStateLike$1 as FieldStateLike, FieldsetAggregationResult, FieldsetStateSignals, IncludeWarningsOption, NgxHeadlessErrorChannels, ResolvedError, ResolvedFieldError };
+export { DEFAULT_DANGER_THRESHOLD, DEFAULT_WARNING_THRESHOLD, NgxHeadlessCharacterCount, NgxHeadlessErrorState, NgxHeadlessErrorSummary, NgxHeadlessFieldName, NgxHeadlessFieldset, NgxHeadlessToolkit, createCharacterCount, createErrorMessageSignal, createErrorState, createErrorSummaryEntries, createFieldOptionalitySummary, createFieldStateFlags, createFieldsetAggregation, dedupeValidationErrors };
+export type { BooleanStateKey, CharacterCountLimitState, CharacterCountState, CharacterCountValue, CreateCharacterCountOptions, CreateErrorMessageSignalOptions, CreateErrorStateOptions, CreateErrorSummaryEntriesOptions, CreateFieldsetAggregationOptions, ErrorStateResult, ErrorStateSignals, ErrorSummaryEntriesResult, ErrorSummaryEntry, ErrorSummarySignals, FieldNameStateSignals, FieldOptionality, FieldStateFlags, FieldStateLike, FieldsetAggregationResult, FieldsetStateSignals, IncludeWarningsOption, NgxHeadlessErrorChannels, ResolvedError, ResolvedFieldError };

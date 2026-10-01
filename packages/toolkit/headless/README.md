@@ -543,17 +543,15 @@ injector)` from `@ngx-signal-forms/toolkit`. If your code already runs an
 Small helpers for one-off reads:
 
 ```typescript
-readFieldFlag(field(), 'invalid'); // boolean, safe on null
-readErrors(field()); // errorSummary() or errors()
 dedupeValidationErrors(errors); // removes repeats with the same kind and message
 
 humanizeFieldPath('address.postalCode'); // 'Address / Postal code'
-
-// Error summary building blocks
-toErrorSummaryEntry(error); // ValidationError → entry with focus() and canFocus
-resolveFieldNameFromError(error); // ValidationError → readable field name
-focusBoundControlFromError(error); // focuses the error's control, if it has one
 ```
+
+For field state, use the typed field state (`field().invalid()`) or
+`createFieldStateFlags()`. For errors, use `field().errorSummary()` or
+`createErrorState()`. For a list of summary entries with `fieldName`, `focus()`
+and `canFocus`, use `createErrorSummaryEntries()`. It accepts any subtree.
 
 ## Related documentation
 

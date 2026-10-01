@@ -26,6 +26,11 @@ Choose state before markup:
   separate pre-resolved `showErrors` and `showWarnings` signals. For aggregate
   warning timing, use `hasWarnings: true` and let aggregation test presence.
   Do not pass group-wide `errorVisibility` to suppress sibling warnings.
+  Each summary entry has `fieldName`, `focus()` and `canFocus`; render an entry
+  with `canFocus: false` as plain text. Read errors with `field().errorSummary()`
+  and flags with typed field state or `createFieldStateFlags()`. The helpers
+  `readFieldFlag`, `readErrors`, `toErrorSummaryEntry`, `resolveFieldNameFromError`
+  and `focusBoundControlFromError` are not public from RC.16; do not import them.
 - `NgxHeadlessErrorState.errorsOverride` supplies already-filtered messages and
   makes both timing flags true. The caller owns timing and precedence. The
   internal `connectFieldState()` bridge is not a published consumer API.

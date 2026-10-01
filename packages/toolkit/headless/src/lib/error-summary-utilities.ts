@@ -132,43 +132,11 @@ function fieldIdentity(error: ValidationError): string | null {
 }
 
 /**
- * Resolve the field name from a `ValidationError` via duck-typed access
- * to `error.fieldTree().name()`.
- *
- * Falls back to the error's `kind` when the field tree is not available.
- *
- * @param error - The validation error to extract a field name from
- * @param resolver - Optional custom resolver; receives the field path
- *   **without** the Angular internal prefix. Falls back to
- *   `humanizeFieldPath` when `undefined`.
- *
- * @public
- * @group Utility Functions
- */
-export function resolveFieldNameFromError(
-  error: ValidationError,
-  resolver?: FieldLabelResolver | null,
-): string {
-  const resolve = resolver ?? humanizeFieldPath;
-
-  const e = error as ValidationErrorWithFieldTree;
-  if (typeof e.fieldTree === 'function') {
-    const fieldState = e.fieldTree();
-    if (fieldState && typeof fieldState.name === 'function') {
-      const stripped = stripAngularFormPrefix(fieldState.name());
-      return resolve(stripped);
-    }
-  }
-
-  return resolve(error.kind);
-}
-
-/**
  * Whether a `ValidationError` has a bound field that can actually receive
- * focus via `focusBoundControlFromError()`.
+ * focus.
  *
- * {@link focusBoundControlFromError} calls this itself before touching
- * `fieldTree()`, so the two checks cannot drift apart. Kept internal:
+ * `toErrorSummaryEntry()` calls this for `canFocus` and again before
+ * `focus()` touches `fieldTree()`, so the two cannot drift apart. Kept internal:
  * `canFocus` on `ErrorSummaryEntryData` is the public surface consumers
  * should read instead of re-deriving this themselves.
  *
@@ -183,34 +151,25 @@ export function errorHasFocusableTarget(error: ValidationError): boolean {
 }
 
 /**
- * Focus the form control bound to the field that produced a validation error.
- *
- * Uses duck-typed access to `error.fieldTree().focusBoundControl()`, guarded
- * by {@link errorHasFocusableTarget} so the two never disagree about
- * whether an error has a focusable target.
- *
- * @public
- * @group Utility Functions
- */
-export function focusBoundControlFromError(error: ValidationError): void {
-  if (!errorHasFocusableTarget(error)) return;
-
-  const e = error as ValidationErrorWithFieldTree;
-  e.fieldTree?.()?.focusBoundControl?.();
-}
-
-/**
  * Maps a `ValidationError` into an `ErrorSummaryEntryData` with resolved
  * message, field name, and focus callback.
+ *
+ * The field name comes from the duck-typed `error.fieldTree().name()` with
+ * the Angular internal prefix stripped. It falls back to the error's `kind`
+ * when the field tree is not available. `focus()` calls
+ * `error.fieldTree().focusBoundControl()`, guarded by
+ * {@link errorHasFocusableTarget} so it never disagrees with `canFocus`.
+ *
+ * Public consumers reach this through `createErrorSummaryEntries()`.
  *
  * @param error - The validation error to map
  * @param registry - Error message registry for 3-tier message resolution
  * @param options - Settings (e.g. `{ stripWarningPrefix: true }`)
- * @param labelResolver - Optional field-label resolver; falls back to
- *   `humanizeFieldPath` when `undefined`
+ * @param labelResolver - Optional field-label resolver; receives the field
+ *   path **without** the Angular internal prefix. Falls back to
+ *   `humanizeFieldPath` when `undefined`.
  *
- * @public
- * @group Utility Functions
+ * @internal
  */
 export function toErrorSummaryEntry(
   error: ValidationError,
@@ -219,7 +178,11 @@ export function toErrorSummaryEntry(
   labelResolver?: FieldLabelResolver | null,
 ): ErrorSummaryEntryData {
   const message = resolveValidationErrorMessage(error, registry, options);
-  const fieldName = resolveFieldNameFromError(error, labelResolver);
+  const resolve = labelResolver ?? humanizeFieldPath;
+  const boundName = fieldIdentity(error);
+  const fieldName = resolve(
+    boundName === null ? error.kind : stripAngularFormPrefix(boundName),
+  );
 
   return {
     key: errorSummaryEntryKey(error),
@@ -228,7 +191,11 @@ export function toErrorSummaryEntry(
     fieldName,
     canFocus: errorHasFocusableTarget(error),
     focus: () => {
-      focusBoundControlFromError(error);
+      if (!errorHasFocusableTarget(error)) return;
+
+      (error as ValidationErrorWithFieldTree)
+        .fieldTree?.()
+        ?.focusBoundControl?.();
     },
   };
 }

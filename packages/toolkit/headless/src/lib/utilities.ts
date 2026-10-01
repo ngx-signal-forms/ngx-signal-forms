@@ -1,32 +1,6 @@
 import type { ValidationError } from '@angular/forms/signals';
 import { resolveValidationErrorMessage } from '@ngx-signal-forms/toolkit';
-import {
-  humanizeFieldPath,
-  type ErrorMessageRegistry,
-} from '@ngx-signal-forms/toolkit/core';
-
-export { humanizeFieldPath };
-
-// Error-summary mapping utilities live in their own module (issue #354);
-// re-exported below so the public barrel — which imports everything from
-// `./lib/utilities` — keeps resolving unchanged.
-export {
-  dedupeValidationErrorsByField,
-  focusBoundControlFromError,
-  resolveFieldNameFromError,
-  toErrorSummaryEntry,
-} from './error-summary-utilities';
-// Field-state duck-typing utilities live in their own module (issue #354);
-// re-exported below for the same reason.
-export {
-  createFieldStateFlags,
-  isErrorOnInteractiveField,
-  readErrors,
-  readFieldFlag,
-  type BooleanStateKey,
-  type FieldStateFlags,
-  type FieldStateLike,
-} from './field-state-utilities';
+import type { ErrorMessageRegistry } from '@ngx-signal-forms/toolkit/core';
 
 /**
  * A resolved error with kind and message.

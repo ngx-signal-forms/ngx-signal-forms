@@ -72,7 +72,7 @@ function normalizeValidationErrors(errors: unknown): ValidationError[] {
  * const isTouched = readFieldFlag(fieldState, 'touched');
  * ```
  *
- * @group Utility Functions
+ * @internal
  */
 export function readFieldFlag(state: unknown, key: BooleanStateKey): boolean {
   if (!state || typeof state !== 'object') {
@@ -136,7 +136,7 @@ export function createFieldStateFlags(
  * const allErrors = readErrors(fieldState); // Includes nested field errors
  * ```
  *
- * @group Utility Functions
+ * @internal
  */
 export function readErrors(state: unknown): ValidationError[] {
   if (!state || typeof state !== 'object') {
@@ -169,8 +169,7 @@ export function readErrors(state: unknown): ValidationError[] {
  * `WithFieldTree` shape.
  *
  * Shared with `error-summary-utilities.ts`, whose mapping helpers
- * (`resolveFieldNameFromError`, `focusBoundControlFromError`,
- * `dedupeValidationErrorsByField`) read the same `fieldTree` shape.
+ * (`toErrorSummaryEntry`, `dedupeValidationErrorsByField`) read the same `fieldTree` shape.
  */
 export type ValidationErrorWithFieldTree = ValidationError & {
   fieldTree?: () =>

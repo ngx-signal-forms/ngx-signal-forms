@@ -101,19 +101,14 @@ export {
 } from '@ngx-signal-forms/toolkit/core';
 
 // Utility functions
+export { humanizeFieldPath } from '@ngx-signal-forms/toolkit/core';
 export {
   createFieldStateFlags,
-  dedupeValidationErrors,
-  focusBoundControlFromError,
-  humanizeFieldPath,
-  readErrors,
-  readFieldFlag,
-  resolveFieldNameFromError,
-  toErrorSummaryEntry,
   type BooleanStateKey,
   type FieldStateLike,
   type FieldStateFlags,
-} from './lib/utilities';
+} from './lib/field-state-utilities';
+export { dedupeValidationErrors } from './lib/utilities';
 
 /**
  * Bundle of all headless directives for easy importing.
