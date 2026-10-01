@@ -19,9 +19,11 @@ import { isBlockingError } from '../warning-error';
  *
  * The factory is unconditional and contains no DI: callers thread DI-resolved
  * values (the visibility computed from `createErrorVisibility`, and an
- * optional `isControlVisible` predicate, typically from `NgxFieldIdentity`)
- * in as inputs. The `'manual'` ARIA-mode opt-out lives in the directive
- * shell that wires this factory, not here.
+ * optional `isControlVisible` predicate, typically from
+ * `createControlVisibilitySignal()`, or from your own signal fed by
+ * `isElementCssVisible()` in an `afterEveryRender` `earlyRead`) in as
+ * inputs. The `'manual'` ARIA-mode opt-out lives in the directive shell that
+ * wires this factory, not here.
  *
  * @param fieldState A signal returning the bound `FieldState`, or `null`
  *   when no field is bound yet.
