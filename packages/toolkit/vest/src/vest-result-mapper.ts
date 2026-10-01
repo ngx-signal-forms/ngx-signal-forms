@@ -1,3 +1,4 @@
+import { isDevMode } from '@angular/core';
 import type {
   ReadonlyFieldTree,
   ValidationError,
@@ -8,7 +9,6 @@ import {
   type VestFailureMessages,
   type VestResultLike,
 } from './vest-run-coordinator';
-import { resolveVestValidationFieldTree } from './vest-adapter';
 
 /* oxlint-disable @typescript-eslint/prefer-readonly-parameter-types -- mirrors the readonly-parameter suppression on the pipeline this module was extracted from (see `./vest-adapter.ts`); the underlying Angular Signal Forms / Vest types are not modeled as readonly. */
 
@@ -21,17 +21,12 @@ import { resolveVestValidationFieldTree } from './vest-adapter';
 // hashing, occurrence dedup (keyed on the rendered segment), and sync/async
 // delta filtering.
 //
-// Field-name RESOLUTION (walking a Vest field path against the bound Angular
-// field tree) stays in `./vest-adapter.ts` per ADR-0009 -- it is a different
-// concern from mapping the already-resolved messages into validation errors.
-// `toVestValidationErrors` below still needs a per-entry resolved field tree,
-// so it imports `resolveVestValidationFieldTree` from `./vest-adapter`. That
-// import is the one deliberate two-way edge between this module and
-// `./vest-adapter.ts` (which imports the mapping entry points back): both
-// files are internal to this package, never reached directly from outside
-// it, and the shared functions are only ever invoked from within other
-// functions -- never at module top-level -- so the circular import resolves
-// safely under ESM's live-binding semantics.
+// Field-name resolution (walking a Vest field path against the bound Angular
+// field tree, with its development error and production diagnostic for
+// invalid paths) lives here as private implementation. `toVestValidationErrors`
+// is its only caller, so the result-mapping seam owns it and this module has
+// no import from `./vest-adapter.ts`. The adapter imports the mapping entry
+// points one way only.
 //
 // Not exported from `./index.ts` or any other barrel: this module has zero
 // public surface. `./vest-adapter.ts` is still the documented public home for
@@ -93,8 +88,8 @@ export interface VestValidationSnapshot {
  *
  * Mirrors the `includeErrors`/`includeWarnings` members of the adapter's
  * `VestValidationRegistrationOptions` by hand — a `Pick` would add a type
- * edge back to `./vest-adapter.ts` and deepen the module cycle. A rename
- * there must be mirrored here.
+ * edge back to `./vest-adapter.ts`, which imports this module. A rename there
+ * must be mirrored here.
  */
 export interface VestValidationFlags {
   readonly includeErrors: boolean;
@@ -313,6 +308,214 @@ function filterExistingVestEntries(
   });
 }
 
+const VEST_PATH_SEGMENT = /[^.[\]]+/gu;
+
+/**
+ * Runtime guard used to confirm that a walked field-tree path landed on a
+ * field tree node rather than a plain data leaf.
+ *
+ * Deliberately loose: it accepts ANY callable value, not just a genuine
+ * `ReadonlyFieldTree`. Field tree nodes are callable proxies, so callability
+ * is a necessary (not sufficient) condition for "is a tree node" — but the
+ * sole caller ({@link resolveVestFieldName}) only uses this to decide whether
+ * a fully walked path landed on a tree-shaped node, so a false positive still
+ * yields a tree-shaped value. Tightening this further would need a
+ * `ReadonlyFieldTree`-specific brand Angular Signal Forms does not expose.
+ */
+function isFieldTree(value: unknown): value is ReadonlyFieldTree<unknown> {
+  return typeof value === 'function';
+}
+
+/**
+ * Parses a Vest dotted/bracket field path into object/array segments that can
+ * be traversed against an Angular field tree.
+ */
+function parseVestFieldPath(fieldPath: string): Array<string | number> {
+  return Array.from(fieldPath.matchAll(VEST_PATH_SEGMENT), ([segment]) => {
+    return /^\d+$/u.test(segment) ? Number(segment) : segment;
+  });
+}
+
+/**
+ * Outcome of resolving a Vest field path against the validator's bound field
+ * tree — see {@link resolveVestFieldName}. A miss is classified by SHAPE
+ * rather than collapsed into a single fallback (ADR-0008, decision point 4):
+ *
+ * - `'virtual'`: the FIRST path segment does not resolve. Indistinguishable
+ *   from a deliberate form-level Vest field name (`test('passwordMatch', …)`)
+ *   — legitimate, and must stay silent.
+ * - `'invalid'`: a later segment does not resolve after a valid prefix, or a
+ *   proxy probe threw. Nothing but an authoring mistake explains this shape.
+ */
+type VestFieldResolution =
+  | { readonly resolved: true; readonly fieldTree: ReadonlyFieldTree<unknown> }
+  | {
+      readonly resolved: false;
+      readonly shape: 'virtual';
+    }
+  | {
+      readonly resolved: false;
+      readonly shape: 'invalid';
+      readonly reason: string;
+    };
+
+/**
+ * Normalizes a caught probe-failure value into a human-readable string for
+ * {@link VestFieldResolution}'s `'invalid'` `reason` — `Error.message` for a
+ * real `Error`, `String(value)` otherwise (a probe trap can throw a
+ * non-`Error` value). Without this, the caught value was previously dropped
+ * entirely, leaving the dev-mode throw / production `console.error`
+ * unactionable.
+ */
+function normalizeVestProbeError(error: unknown): string {
+  return error instanceof Error ? error.message : String(error);
+}
+
+/**
+ * Resolves a Vest field path to the matching Angular field tree, relative to
+ * the validator's own bound field tree (per ADR-0008, a registration's Vest
+ * field names are relative to the bound path — there is no other base, since
+ * the bound path's value is the suite input).
+ *
+ * Returns an explicit, shape-classified miss (see {@link VestFieldResolution})
+ * instead of silently substituting a fallback tree — the caller
+ * ({@link resolveVestValidationFieldTree}) decides attachment and diagnostics
+ * from the classification. No probe failure is swallowed: a thrown property
+ * access is reported as an `'invalid'` miss, not caught-and-ignored.
+ *
+ * Traversal uses an own-property guard (`Object.hasOwn`) before reading via
+ * `Reflect.get` so prototype-chain entries (e.g. `toString`, `constructor`)
+ * cannot accidentally be resolved as field tree nodes.
+ */
+function resolveVestFieldName(
+  fieldTree: ReadonlyFieldTree<unknown>,
+  fieldPath: string,
+): VestFieldResolution {
+  let current: unknown = fieldTree;
+
+  for (const [index, segment] of parseVestFieldPath(fieldPath).entries()) {
+    if (
+      current === null ||
+      current === undefined ||
+      (typeof current !== 'function' && typeof current !== 'object')
+    ) {
+      // Only reachable for index > 0: `current` starts as `fieldTree`, which
+      // is always a callable proxy. A valid prefix walked onto a leaf field
+      // (no further children) — an authoring mistake, never a virtual name.
+      return {
+        resolved: false,
+        shape: 'invalid',
+        reason: `segment "${segment}" has no children — the path up to here resolved to a leaf field.`,
+      };
+    }
+
+    // Field trees are callable proxies (functions), which are objects, so the
+    // narrowed value can be probed for own properties directly.
+    const container: object = current;
+    const segmentKey = typeof segment === 'number' ? String(segment) : segment;
+
+    // Angular Signal Forms field trees are proxies whose traps throw
+    // `Reflect.getOwnPropertyDescriptor called on non-object` when probed on a
+    // leaf node (no further children). This happens when a Vest field name
+    // resolves to (or through) a leaf the bound field tree has no further
+    // children under. A probe failure is never legitimate (see
+    // {@link VestFieldResolution}'s doc comment) — it is always reported as
+    // `'invalid'`, regardless of segment index.
+    let hasSegment: boolean;
+    let next: unknown;
+    try {
+      hasSegment = Object.hasOwn(container, segmentKey);
+      next = hasSegment ? Reflect.get(container, segmentKey) : undefined;
+    } catch (probeError) {
+      return {
+        resolved: false,
+        shape: 'invalid',
+        reason: `probing segment "${segment}" threw: ${normalizeVestProbeError(probeError)}`,
+      };
+    }
+
+    if (!hasSegment || next === undefined) {
+      if (index === 0) {
+        // The FIRST segment doesn't resolve — a virtual Vest field name
+        // (e.g. `passwordMatch`) is indistinguishable from an authoring
+        // mistake at this point, so it is treated as legitimate.
+        return { resolved: false, shape: 'virtual' };
+      }
+
+      return {
+        resolved: false,
+        shape: 'invalid',
+        reason: `segment "${segment}" does not exist on the resolved parent field.`,
+      };
+    }
+
+    current = next;
+  }
+
+  if (!isFieldTree(current)) {
+    return {
+      resolved: false,
+      shape: 'invalid',
+      reason: 'the resolved value is not a field tree.',
+    };
+  }
+
+  return { resolved: true, fieldTree: current };
+}
+
+/**
+ * Reports an `'invalid'`-shaped {@link VestFieldResolution} miss — an
+ * authoring mistake (a typo past a valid prefix, or a probe that threw), per
+ * ADR-0008 decision point 4: hard error in dev mode, `console.error` in
+ * production. Either way the caller still attaches the failure to the bound
+ * field, so it is never silently lost.
+ */
+function reportInvalidVestFieldResolution(
+  fieldPath: string,
+  reason: string,
+): void {
+  const message =
+    `[ngx-signal-forms] Vest field name "${fieldPath}" does not resolve ` +
+    `against the validator's bound field tree: ${reason} The first path ` +
+    'segment DID resolve, so this is not a virtual (form-level) Vest field ' +
+    'name — it looks like a typo in the Vest `test`/`warn` field name, or a ' +
+    'field tree shape mismatch. Fix the Vest field name so it names a real ' +
+    'child of the bound path (ADR-0008: Vest field names are relative to ' +
+    'the bound path).';
+
+  if (isDevMode()) {
+    throw new Error(message);
+  }
+
+  // oxlint-disable-next-line no-console -- production diagnostic for an authoring mistake that isDevMode() would otherwise throw for; see ADR-0008 decision point 4.
+  console.error(message);
+}
+
+/**
+ * Resolves the Angular field tree a Vest entry's failure should attach to,
+ * reporting (per {@link reportInvalidVestFieldResolution}) any `'invalid'`
+ * miss along the way. A `'virtual'` miss attaches to `fieldTree` silently —
+ * see {@link VestFieldResolution}'s doc comment.
+ *
+ * Private to this module: `toVestValidationErrors` is its only caller.
+ */
+function resolveVestValidationFieldTree(
+  fieldTree: ReadonlyFieldTree<unknown>,
+  fieldPath: string,
+): ReadonlyFieldTree<unknown> {
+  const resolution = resolveVestFieldName(fieldTree, fieldPath);
+
+  if (resolution.resolved) {
+    return resolution.fieldTree;
+  }
+
+  if (resolution.shape === 'invalid') {
+    reportInvalidVestFieldResolution(fieldPath, resolution.reason);
+  }
+
+  return fieldTree;
+}
+
 /**
  * Maps normalized Vest messages into Angular validation errors targeted at the
  * correct field tree.
@@ -362,7 +565,7 @@ export function createVestValidationSnapshot<F extends string = string>(
  * field tree (`fieldTree` — per ADR-0008, the only base there is), so no
  * separate "which fields belong to this registration" filter is needed: each
  * entry already routes to its own correct target via
- * `resolveVestValidationFieldTree` (`./vest-adapter.ts`, per ADR-0009).
+ * `resolveVestValidationFieldTree` (private to this module).
  */
 export function mapVestValidationResult<F extends string = string>(
   result: VestResultLike<F>,
