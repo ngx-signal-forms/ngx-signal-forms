@@ -1664,8 +1664,9 @@ interface FieldStateFlags {
 /**
  * Creates computed boolean state flags from a field state signal.
  *
- * Eliminates the repeated pattern of 5 individual `readFieldFlag` computeds
- * found in fieldset directives and components.
+ * Replaces five hand-written `computed` flags in fieldset directives and
+ * components. Each flag reads its signal safely: it is `false` when the state
+ * is null or malformed.
  *
  * @remarks Does not require an injection context (only creates `computed`s).
  *

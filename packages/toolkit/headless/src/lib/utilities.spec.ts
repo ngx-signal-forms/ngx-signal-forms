@@ -132,10 +132,6 @@ describe('Headless Utilities', () => {
     });
   });
 
-  // ============================================================================
-  // resolveFieldNameFromError
-  // ============================================================================
-
   describe('humanizeFieldPath', () => {
     it('should split camelCase and capitalize', () => {
       expect(humanizeFieldPath('postalCode')).toBe('Postal code');

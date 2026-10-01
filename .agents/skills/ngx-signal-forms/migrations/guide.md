@@ -45,11 +45,14 @@ guides and leave the migration incomplete rather than infer their contents.
    check notification/panel changes, renderer input union and `errorsOverride`,
    summary `showWarnings`, boolean submission results, independent warnings,
    and field-shaped controls. For RC15 to RC16, also check that nothing
-   imports `readFieldFlag`, `readErrors`, `toErrorSummaryEntry`,
-   `resolveFieldNameFromError` or `focusBoundControlFromError` from the headless
-   entry point; use `createErrorSummaryEntries()` instead. Use the [testing guide](../testing/guide.md) for
-   changed interactions. Repository `pnpm nx` tasks apply only when the user
-   explicitly requests toolkit maintenance in its own checkout.
+   imports `readFieldFlag` (use `field().invalid()` and similar, or
+   `createFieldStateFlags()`), `readErrors` (use `field().errorSummary()` or
+   `createErrorState()`), or `toErrorSummaryEntry`,
+   `resolveFieldNameFromError` and `focusBoundControlFromError` (use
+   `createErrorSummaryEntries()`) from the headless entry point. Use the
+   [testing guide](../testing/guide.md) for changed interactions. Repository
+   `pnpm nx` tasks apply only when the user explicitly requests toolkit
+   maintenance in its own checkout.
 
    **Done:** no crossed-guide removal remains, and the target validation gates
    pass.
