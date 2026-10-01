@@ -14,10 +14,7 @@ import {
   Traveler,
   type WizardDraft,
 } from '../../schemas/wizard.schemas';
-
-function isSameData(a: Traveler, b: Traveler): boolean {
-  return JSON.stringify(a) === JSON.stringify(b);
-}
+import { linkDraft } from './draft-link';
 
 export function withTravelerManagement() {
   return signalStoreFeature(
@@ -40,16 +37,7 @@ export function withTravelerManagement() {
         Traveler
       >({
         source: () => ({ committed: traveler(), saved: savedDraftValue() }),
-        computation: ({ committed, saved }, previous) => {
-          if (previous && previous.source.saved === saved) {
-            // A commit of what the draft already holds must not swap the
-            // draft for a new object: the form would lose the field in focus.
-            return isSameData(previous.value, committed)
-              ? previous.value
-              : structuredClone(committed);
-          }
-          return structuredClone(saved?.inProgress?.traveler ?? committed);
-        },
+        computation: linkDraft('traveler'),
       }),
     })),
 

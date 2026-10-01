@@ -62,4 +62,47 @@ describe('step forms write back to the store draft', () => {
 
     expect(model().destinations).toHaveLength(2);
   });
+
+  it('traveler: touched and dirty survive the write-back and a commit', () => {
+    const store = setup();
+    const { form, model } = TestBed.runInInjectionContext(() =>
+      createTravelerStepForm(store, signal(null)),
+    );
+
+    form.firstName().value.set('Ada');
+    form.firstName().markAsTouched();
+    form.firstName().markAsDirty();
+    TestBed.tick();
+    expect(form.firstName().touched()).toBe(true);
+    expect(form.firstName().dirty()).toBe(true);
+
+    // Next commits the model. The draft already holds it, so nothing resets.
+    const before = model();
+    store.setTraveler(model());
+    TestBed.tick();
+
+    expect(model()).toBe(before);
+    expect(form.firstName().touched()).toBe(true);
+    expect(form.firstName().dirty()).toBe(true);
+  });
+
+  it('trip: touched and dirty survive the write-back and a commit', () => {
+    const store = setup();
+    const { form, model } = TestBed.runInInjectionContext(() =>
+      createTripStepForm(store),
+    );
+
+    form.destinations[0].city().value.set('Tokyo');
+    form.destinations[0].city().markAsTouched();
+    form.destinations[0].city().markAsDirty();
+    TestBed.tick();
+
+    const before = model();
+    store.setDestinations(model().destinations);
+    TestBed.tick();
+
+    expect(model()).toBe(before);
+    expect(form.destinations[0].city().touched()).toBe(true);
+    expect(form.destinations[0].city().dirty()).toBe(true);
+  });
 });

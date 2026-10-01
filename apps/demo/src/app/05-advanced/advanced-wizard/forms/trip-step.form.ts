@@ -60,6 +60,8 @@ export function createTripStepForm(store: InstanceType<typeof WizardStore>): {
   // store method below copies them back. The write-back changes the draft, which
   // is the source. When the draft is the array the model already holds, keep the
   // model: a new wrapper would reset the fields the user types in.
+  // The traveler form needs no such check: its model IS the draft object.
+  // This model wraps the array in `{ destinations }`, so it needs a reference check.
   const model = linkedSignal<Destination[], TripStepData>({
     source: store.destinationsDraft,
     computation: (destinations, previous) =>

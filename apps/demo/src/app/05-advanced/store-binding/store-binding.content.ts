@@ -15,7 +15,7 @@ export const STORE_BINDING_CONTENT = {
       {
         title: 'Contrast with the Advanced Wizard',
         items: [
-          '• The <strong>Advanced Wizard</strong> uses a deliberate <code>destinationsDraft</code> → <code>commitDestinations()</code> draft/commit buffer: typed values reach the draft so autosave can keep them, but the committed data, and with it step completion, changes only when the user commits.',
+          '• The <strong>Advanced Wizard</strong> uses a deliberate <code>destinationsDraft</code> → <code>commitDestinations()</code> draft/commit buffer: typed values reach the draft, so autosave can keep them. The committed data changes only when the user commits. Step completion follows the committed data.',
           '• This example is the opposite pattern: edits write through on every change, so there is nothing to discard and nothing to commit.',
           '• Choose draft/commit when you need a cancelable editing session; choose live binding when the store should always mirror what the user sees.',
         ],

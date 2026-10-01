@@ -5,7 +5,7 @@ import {
 } from '@angular/common/http/testing';
 import { ApplicationRef, signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import {
   createEmptyDestination,
@@ -201,6 +201,8 @@ describe('WizardStore live draft', () => {
       typed.set(validTraveler);
       TestBed.tick();
       store.commitTraveler();
+      expect(store.draftSummary().traveler.firstName).toBe('Ada');
+      expect(store.draftSummary().inProgress?.traveler.firstName).toBe('Ada');
 
       store.reset();
       TestBed.tick();
@@ -210,6 +212,130 @@ describe('WizardStore live draft', () => {
       expect(summary.inProgress?.traveler.firstName).toBe('');
       expect(summary.inProgress?.destinations[0].city).toBe('');
       expect(store.draftId()).toBeNull();
+    });
+  });
+
+  describe('booking', () => {
+    const confirmed = {
+      bookingId: 'booking-1',
+      confirmationNumber: 'CONF-1',
+      status: 'confirmed',
+    };
+
+    it('starts the next store empty in both parts after a typed and committed trip is booked', async () => {
+      const { store, httpMock } = setup('draft-1');
+      httpMock.expectOne('/api/wizard/draft/draft-1').flush({
+        traveler: validTraveler,
+        destinations: typedDestinations,
+        inProgress: {
+          traveler: validTraveler,
+          destinations: typedDestinations,
+        },
+      });
+      await settle();
+      expect(store.draftSummary().inProgress?.traveler.firstName).toBe('Ada');
+
+      const booking = store.submitBooking(store.tripData());
+      httpMock.expectOne('/api/wizard/booking').flush(confirmed);
+      await booking;
+
+      // The booking spends the draft: its id is gone, so nothing resumes.
+      expect(store.draftId()).toBeNull();
+
+      TestBed.resetTestingModule();
+      const next = setup();
+      next.httpMock.expectNone((request) => request.method === 'GET');
+      const summary = next.store.draftSummary();
+      expect(summary.traveler.firstName).toBe('');
+      expect(summary.inProgress?.traveler.firstName).toBe('');
+      expect(summary.inProgress?.destinations[0].city).toBe('');
+    });
+  });
+
+  describe('autoSaveDraft', () => {
+    beforeEach(() => {
+      vi.useFakeTimers();
+    });
+
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
+    function typeTraveler(
+      store: InstanceType<typeof WizardStore>,
+      t: Traveler,
+    ) {
+      const typed = signal<Traveler>(store.travelerDraft());
+      TestBed.runInInjectionContext(() => store.syncTravelerDraft(typed));
+      typed.set(t);
+      TestBed.tick();
+    }
+
+    function saves(httpMock: HttpTestingController) {
+      return httpMock.match((request) => request.method !== 'GET');
+    }
+
+    it('saves typed, uncommitted data after the debounce', () => {
+      const { store, httpMock } = setup();
+      typeTraveler(store, validTraveler);
+
+      vi.advanceTimersByTime(1999);
+      expect(saves(httpMock)).toHaveLength(0);
+
+      vi.advanceTimersByTime(1);
+      const [save] = saves(httpMock);
+      expect((save.request.body as WizardDraft).inProgress?.traveler).toEqual(
+        validTraveler,
+      );
+      save.flush({ draftId: 'draft-1', savedAt: new Date().toISOString() });
+    });
+
+    it('saves a cleared field once a draft exists, so the server drops stale data', async () => {
+      const { store, httpMock } = setup('draft-1');
+      httpMock.expectOne('/api/wizard/draft/draft-1').flush({
+        traveler: validTraveler,
+        destinations: typedDestinations,
+      });
+      await vi.advanceTimersByTimeAsync(0);
+      await vi.advanceTimersByTimeAsync(2000);
+      // Drop the save that follows the load.
+      for (const save of saves(httpMock)) {
+        save.flush({ draftId: 'draft-1', savedAt: new Date().toISOString() });
+      }
+
+      store.setTraveler({ ...validTraveler, firstName: '' });
+      TestBed.tick();
+      await vi.advanceTimersByTimeAsync(2000);
+
+      const [save] = saves(httpMock);
+      expect(save.request.method).toBe('PUT');
+      expect((save.request.body as WizardDraft).traveler.firstName).toBe('');
+      save.flush({ draftId: 'draft-1', savedAt: new Date().toISOString() });
+    });
+
+    it('sends no save while the saved draft is loading, and the loaded draft wins over typing', async () => {
+      const { store, httpMock } = setup('draft-1');
+      const load = httpMock.expectOne('/api/wizard/draft/draft-1');
+      expect(store.isLoadingDraft()).toBe(true);
+
+      // The fields are disabled while loading, so a user cannot type. This
+      // forces the write-back anyway, to prove the guard does not rely on it.
+      typeTraveler(store, { ...validTraveler, firstName: 'Typed' });
+      await vi.advanceTimersByTimeAsync(5000);
+      expect(saves(httpMock)).toHaveLength(0);
+
+      load.flush({
+        traveler: { ...validTraveler, firstName: 'Saved' },
+        destinations: typedDestinations,
+      });
+      await vi.advanceTimersByTimeAsync(0);
+      expect(store.travelerDraft().firstName).toBe('Saved');
+
+      await vi.advanceTimersByTimeAsync(2000);
+      for (const save of saves(httpMock)) {
+        expect(JSON.stringify(save.request.body)).not.toContain('Typed');
+        save.flush({ draftId: 'draft-1', savedAt: new Date().toISOString() });
+      }
     });
   });
 });

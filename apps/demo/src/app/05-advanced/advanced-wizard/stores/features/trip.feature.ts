@@ -19,6 +19,7 @@ import {
   Requirement,
   type WizardDraft,
 } from '../../schemas/wizard.schemas';
+import { linkDraft } from './draft-link';
 
 // Compose nested updates for 3-level depth (destinations → activities → requirements)
 function updateRequirementNested(
@@ -62,15 +63,7 @@ export function withTripManagement() {
           committed: destinations(),
           saved: savedDraftValue(),
         }),
-        computation: ({ committed, saved }, previous) => {
-          if (previous && previous.source.saved === saved) {
-            // See `travelerDraft`: committing what the draft holds keeps it.
-            return JSON.stringify(previous.value) === JSON.stringify(committed)
-              ? previous.value
-              : structuredClone(committed);
-          }
-          return structuredClone(saved?.inProgress?.destinations ?? committed);
-        },
+        computation: linkDraft('destinations'),
       }),
     })),
 

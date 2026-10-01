@@ -16,11 +16,13 @@ import {
   Trip,
   TripSchema,
   type WizardDraft,
+  type WizardStepData,
 } from '../schemas/wizard.schemas';
 import {
   withWizardNavigation,
   type WizardStep,
 } from './features/navigation.feature';
+import { isSameData } from './features/draft-link';
 import { withSavedDraft } from './features/saved-draft.feature';
 import { withTravelerManagement } from './features/traveler.feature';
 import { withTripManagement } from './features/trip.feature';
@@ -248,15 +250,22 @@ export const WizardStore = signalStore(
     const autoSaveDraft = rxMethod<WizardDraft>(
       pipe(
         debounceTime(2000),
-        distinctUntilChanged((a, b) => JSON.stringify(a) === JSON.stringify(b)),
+        distinctUntilChanged(isSameData),
         tap((data) => {
           // Until the saved draft arrives, the drafts are still empty. Saving
           // them would overwrite the draft that is loading.
           if (store.isLoadingDraft()) {
             return;
           }
-          const typed = data.inProgress ?? data;
-          if (typed.traveler.firstName || typed.destinations.length > 0) {
+          // Skip only while there is nothing to save yet. Once a draft
+          // exists, clearing a field must reach the server too.
+          const hasContent = (part: WizardStepData): boolean =>
+            Boolean(part.traveler.firstName) || part.destinations.length > 0;
+          if (
+            store.draftId() !== null ||
+            hasContent(data) ||
+            (data.inProgress !== undefined && hasContent(data.inProgress))
+          ) {
             void store.saveDraft(data);
           }
         }),

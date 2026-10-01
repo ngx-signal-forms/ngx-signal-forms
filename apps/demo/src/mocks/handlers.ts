@@ -5,21 +5,13 @@ import {
   AUTOSAVE_ENDPOINT,
   AUTOSAVE_FAILURE_MARKER,
 } from '../app/05-advanced/autosave/autosave.api';
-import type {
-  Destination,
-  Traveler,
-} from '../app/05-advanced/advanced-wizard/schemas/wizard.schemas';
+import type { WizardDraft } from '../app/05-advanced/advanced-wizard/schemas/wizard.schemas';
 
 // ══════════════════════════════════════════════════════════════════════════════
 // IN-MEMORY STORAGE (simulates database)
 // ══════════════════════════════════════════════════════════════════════════════
 
-interface DraftData {
-  traveler: Traveler;
-  destinations: Destination[];
-  /** What the user has typed so far, finished or not. */
-  inProgress?: { traveler: Traveler; destinations: Destination[] };
-}
+type DraftData = WizardDraft;
 
 interface StoredDraft extends DraftData {
   draftId: string;
