@@ -102,7 +102,7 @@ export interface FieldsetAggregationResult {
  * factories (`createFieldStateFlags`, `createCharacterCount`). Visibility
  * timing is NOT resolved here; callers pass already-resolved `showErrors`/
  * `showWarnings` signals from their own `createErrorVisibility()` /
- * `createWarningVisibility()` calls (ADR-0006's single seam).
+ * `createWarningVisibility()` calls (ADR-0006 and ADR-0007).
  *
  * @remarks Does not require an injection context — `fieldState`,
  * `showErrors`, and `showWarnings` must already be resolved. Building
@@ -429,10 +429,9 @@ export class NgxHeadlessFieldset<
 
   /**
    * Show errors signal based on strategy. Routes through the shared
-   * `createErrorVisibility` seam (ADR-0006) rather than re-inlining strategy
-   * resolution, submitted-status resolution, and the visibility computation —
-   * {@link resolvedStrategy} /
-   * {@link resolvedSubmittedStatus} stay separately computed above because
+   * `createErrorVisibility` seam (ADR-0006). It does not re-inline strategy
+   * resolution, submitted-status resolution, or the visibility computation.
+   * {@link resolvedStrategy} / {@link resolvedSubmittedStatus} stay separately computed above because
    * they are part of this directive's public surface, but the raw
    * `strategy`/`submittedStatus` inputs feed the seam directly so it applies
    * the identical cascade (same function, same `configDefault`) rather than
@@ -475,8 +474,7 @@ export class NgxHeadlessFieldset<
    * already-resolved {@link #showErrorsSignal} / {@link #showWarningsSignal} rather
    * than raw strategy inputs: the factory itself never calls `inject()`
    * (ADR-0005), so visibility timing stays owned by this directive's single
-   * `createErrorVisibility()` seam call
-   * (ADR-0006).
+   * `createErrorVisibility()` call (ADR-0006).
    */
   readonly #aggregation = createFieldsetAggregation({
     fieldState: this.#fieldsetState,

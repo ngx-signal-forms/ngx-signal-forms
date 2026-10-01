@@ -13,6 +13,9 @@ type InjectionContextDebugFn = Function;
 /**
  * Runs work in the current or supplied Angular injection context.
  *
+ * This pattern is inspired by ngxtension's `assertInjector` utility.
+ * @see https://github.com/ngxtension/ngxtension-platform
+ *
  * @internal
  */
 export function assertInjector<Runner extends () => unknown>(
