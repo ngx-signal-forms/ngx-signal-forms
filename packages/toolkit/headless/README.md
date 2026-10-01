@@ -549,9 +549,10 @@ humanizeFieldPath('address.postalCode'); // 'Address / Postal code'
 ```
 
 For field state, use the typed field state (`field().invalid()`) or
-`createFieldStateFlags()`. For errors, use `field().errorSummary()` or
-`createErrorState()`. For a list of summary entries with `fieldName`, `focus()`
-and `canFocus`, use `createErrorSummaryEntries()`. It accepts any subtree.
+`createFieldStateFlags()`. For errors, use `field().errorSummary()`; it keeps the
+subtree behavior. `createErrorState()` gives one field's direct errors only, not
+descendants. For a list of summary entries with `fieldName`, `focus()` and
+`canFocus`, use `createErrorSummaryEntries()`. It accepts any subtree.
 
 ## Related documentation
 

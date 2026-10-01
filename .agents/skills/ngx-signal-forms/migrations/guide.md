@@ -49,7 +49,8 @@ guides and leave the migration incomplete rather than infer their contents.
    the query in the [testing guide](../testing/guide.md). The headless entry
    point no longer exports `readFieldFlag` (use `field().invalid()` and
    similar, or `createFieldStateFlags()`), `readErrors` (use
-   `field().errorSummary()` or `createErrorState()`), `toErrorSummaryEntry`,
+   `field().errorSummary()` for a subtree, or `createErrorState()` for one
+   field's direct errors only), `toErrorSummaryEntry`,
    `resolveFieldNameFromError` or `focusBoundControlFromError` (use
    `createErrorSummaryEntries()`). Use the testing guide for changed
    interactions. Repository `pnpm nx` tasks apply only when the user explicitly
