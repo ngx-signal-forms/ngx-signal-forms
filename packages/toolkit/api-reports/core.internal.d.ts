@@ -2688,6 +2688,9 @@ type InjectionContextDebugFn = Function;
 /**
  * Runs work in the current or supplied Angular injection context.
  *
+ * This pattern is inspired by ngxtension's `assertInjector` utility.
+ * @see https://github.com/ngxtension/ngxtension-platform
+ *
  * @internal
  */
 declare function assertInjector<Runner extends () => unknown>(fn: InjectionContextDebugFn, injector: Injector | undefined | null, runner: Runner): ReturnType<Runner>;
@@ -2834,10 +2837,10 @@ interface CreateErrorVisibilityOptions {
 /**
  * One-shot factory for error-visibility wiring.
  *
- * Replaces the four-step manual composition of
- * `resolveStrategyFromContext` → `resolveSubmittedStatusFromContext` →
- * the visibility computed that every in-tree consumer now routes through
- * this seam instead of inlining (ADR-0006) — `NgxHeadlessErrorState`,
+ * It replaces a four-step manual composition: resolve the strategy, resolve
+ * the submission status, evaluate the timing predicate, and expose the
+ * result as a computed. Every in-tree consumer now calls this factory instead
+ * of inlining those steps (ADR-0006): `NgxHeadlessErrorState`,
  * `NgxHeadlessFieldset`, `createErrorState()`, `NgxFormFieldWrapper`,
  * `NgxSignalFormAutoAria`, `createAriaInvalidSignal`,
  * `createErrorMessageSignal()`, and `NgxHeadlessErrorSummary`.
@@ -2852,8 +2855,8 @@ interface CreateErrorVisibilityOptions {
  *    `Signal<boolean>`.
  *
  * This is the single composition point for the visibility cascade. It owns
- * the reactive computed and its missing-submission-status diagnostic while
- * delegating strategy evaluation to the shared pure predicate.
+ * the reactive computed. It also owns the dev-mode warning for a missing
+ * submission status. The shared pure predicate evaluates the strategy.
  *
  * ## When to use
  *
@@ -2865,9 +2868,10 @@ interface CreateErrorVisibilityOptions {
  * ## When NOT to use
  *
  * Do not import the lower-level helpers from `/core`; that entry point is not
- * published. For custom composition, derive `strategy` and `submittedStatus`
- * through application-owned signals and pass them through the public options,
- * or implement application-owned visibility logic.
+ * published. For custom timing, compute `strategy` and `submittedStatus` in
+ * your own signals and pass them in the options. To show errors from your own
+ * rule, such as a "show after the user clicks Validate" flag, use that
+ * signal directly instead of this factory.
  *
  * @param field Reactive or static field state. `null`/`undefined` values
  *   short-circuit the result to `false` — this is handled by the visibility
