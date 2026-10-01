@@ -429,8 +429,9 @@ export class NgxHeadlessFieldset<
 
   /**
    * Show errors signal based on strategy. Routes through the shared
-   * `createErrorVisibility` seam (ADR-0006) rather than re-inlining
-   * `createErrorVisibility` — {@link resolvedStrategy} /
+   * `createErrorVisibility` seam (ADR-0006) rather than re-inlining strategy
+   * resolution, submitted-status resolution, and the visibility computation —
+   * {@link resolvedStrategy} /
    * {@link resolvedSubmittedStatus} stay separately computed above because
    * they are part of this directive's public surface, but the raw
    * `strategy`/`submittedStatus` inputs feed the seam directly so it applies
