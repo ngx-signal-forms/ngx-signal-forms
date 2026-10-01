@@ -464,6 +464,142 @@ test.describe('Advanced Wizard Demo', () => {
     );
   });
 
+  test('resumes text typed in the traveler step without clicking Next', async ({
+    page,
+  }) => {
+    const typedSaved = page.waitForResponse(
+      (response) => {
+        const request = response.request();
+        if (
+          !request.url().includes('/api/wizard/draft') ||
+          !['POST', 'PUT'].includes(request.method())
+        ) {
+          return false;
+        }
+        const body = request.postDataJSON() as {
+          traveler: { firstName: string };
+          inProgress?: { traveler: { firstName: string } };
+        };
+        return (
+          response.ok() &&
+          body.traveler.firstName === '' &&
+          body.inProgress?.traveler.firstName === 'John'
+        );
+      },
+      { timeout: 15000 },
+    );
+    await fillTravelerStep(page);
+    const { draftId } = (await (await typedSaved).json()) as {
+      draftId: string;
+    };
+    await expect
+      .poll(() =>
+        page.evaluate(() =>
+          sessionStorage.getItem('ngx-demo:advanced-wizard-draft'),
+        ),
+      )
+      .toBe(JSON.stringify({ draftId }));
+
+    await page.reload();
+
+    await expect(page.getByLabel('First Name')).toHaveValue('John');
+    await expect(page.getByLabel('Passport Number')).toHaveValue('A1234567');
+
+    // The values are valid, but the step was never finished with Next.
+    const travelerStep = page
+      .locator('.wizard-step-button')
+      .filter({ hasText: 'Traveler Info' });
+    await expect(travelerStep).not.toHaveClass(/completed/);
+
+    await page.getByRole('button', { name: 'Next' }).click();
+    await expect(
+      page.getByRole('heading', { name: 'Trip Details' }),
+    ).toBeVisible();
+    await expect(travelerStep).toHaveClass(/completed/);
+  });
+
+  test('resumes text typed in the trip step without clicking Next', async ({
+    page,
+  }) => {
+    await fillTravelerStep(page);
+    await page.getByRole('button', { name: 'Next' }).click();
+
+    const typedSaved = page.waitForResponse(
+      (response) => {
+        const request = response.request();
+        if (
+          !request.url().includes('/api/wizard/draft') ||
+          !['POST', 'PUT'].includes(request.method())
+        ) {
+          return false;
+        }
+        const body = request.postDataJSON() as {
+          destinations: { city: string }[];
+          inProgress?: { destinations: { city: string }[] };
+        };
+        return (
+          response.ok() &&
+          body.destinations[0]?.city === '' &&
+          body.inProgress?.destinations[0]?.city === 'Tokyo'
+        );
+      },
+      { timeout: 15000 },
+    );
+    await fillTripStepMinimal(page);
+    const { draftId } = (await (await typedSaved).json()) as {
+      draftId: string;
+    };
+    await expect
+      .poll(() =>
+        page.evaluate(() =>
+          sessionStorage.getItem('ngx-demo:advanced-wizard-draft'),
+        ),
+      )
+      .toBe(JSON.stringify({ draftId }));
+
+    await page.reload();
+
+    // Traveler was finished with Next, so it is committed and completed.
+    await expect(page.getByLabel('First Name')).toHaveValue('John');
+    await page.getByRole('button', { name: 'Next' }).click();
+
+    const dest1 = page.getByRole('group', { name: 'Destination 1' });
+    await expect(dest1.getByLabel(/City/i)).toHaveValue('Tokyo');
+    await expect(dest1.getByLabel(/Arrival Date/i)).toHaveValue(
+      tripDates.arrival,
+    );
+    // The trip step was never finished with Next.
+    await expect(
+      page.locator('.wizard-step-button').filter({ hasText: 'Trip Details' }),
+    ).not.toHaveClass(/completed/);
+  });
+
+  test('keeps focus and caret in a field while autosave runs', async ({
+    page,
+  }) => {
+    const firstName = page.getByLabel('First Name');
+    await firstName.fill('Johnny');
+    await firstName.press('ArrowLeft');
+    await firstName.press('ArrowLeft');
+
+    // Wait for the write-back and the autosave to run.
+    const saved = page.waitForResponse(
+      (response) =>
+        response.url().includes('/api/wizard/draft') &&
+        ['POST', 'PUT'].includes(response.request().method()) &&
+        response.ok(),
+      { timeout: 15000 },
+    );
+    await firstName.pressSequentially('X');
+    await saved;
+
+    await expect(firstName).toBeFocused();
+    await expect(firstName).toHaveValue('JohnXny');
+    expect(
+      await firstName.evaluate((el: HTMLInputElement) => el.selectionStart),
+    ).toBe(5);
+  });
+
   test('a draft that fails to load shows an error and an empty, usable wizard', async ({
     page,
   }) => {

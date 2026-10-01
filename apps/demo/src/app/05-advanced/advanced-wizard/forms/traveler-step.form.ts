@@ -14,7 +14,8 @@ import type { WizardStore } from '../stores/wizard.store';
  * Traveler step form type alias.
  *
  * Form uses local linkedSignal for writable binding to Angular Signal Forms.
- * Changes stay local until committed via store.commitTraveler().
+ * Typed values reach the store's draft (so autosave sees them) and are
+ * committed with the step on Next or Previous.
  */
 export type TravelerStepForm = FieldTree<Traveler>;
 
@@ -22,9 +23,10 @@ export type TravelerStepForm = FieldTree<Traveler>;
  * Creates traveler step form with Zod validation via StandardSchema.
  *
  * Architecture:
- * - Store owns committed state (traveler)
- * - Form uses local linkedSignal (reads from store, writes locally)
- * - Commit via store.setTraveler() transfers local changes to store
+ * - Store owns committed state (traveler) and the typed draft (travelerDraft)
+ * - Form uses local linkedSignal (reads the draft, writes locally)
+ * - store.syncTravelerDraft() copies typed values into the draft
+ * - Commit via store.setTraveler() marks the step as finished
  *
  * Note: Angular Signal Forms requires WritableSignal, not DeepSignal from
  * withLinkedState. So we create a local linkedSignal for form binding.
@@ -44,8 +46,11 @@ export function createTravelerStepForm(
   model: Signal<Traveler>;
   isValid: Signal<boolean>;
 } {
-  // Local linkedSignal: reads from store's committed state, writes stay local
-  const model = linkedSignal<Traveler>(() => store.traveler());
+  // Local linkedSignal: reads the store's draft, writes stay local until the
+  // store method below copies them back. The copy is the same object, so the
+  // linkedSignal sees an equal value and the field the user types in is not reset.
+  const model = linkedSignal<Traveler>(() => store.travelerDraft());
+  store.syncTravelerDraft(model);
 
   // Form with Zod + cross-step passport validation
   const travelerForm = form(model, (path) => {

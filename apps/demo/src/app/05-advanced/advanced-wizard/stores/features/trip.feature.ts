@@ -1,6 +1,7 @@
 import { linkedSignal } from '@angular/core';
 import {
   patchState,
+  signalMethod,
   signalStoreFeature,
   type,
   withComputed,
@@ -51,11 +52,25 @@ export function withTripManagement() {
         savedDraftValue()?.destinations ?? [createEmptyDestination()],
     })),
 
-    // Draft state linked to committed - form binds to this
-    withLinkedState(({ destinations }) => ({
-      destinationsDraft: linkedSignal({
-        source: destinations,
-        computation: (committed) => structuredClone(committed),
+    // Draft state: what the user has typed. See `travelerDraft` for the rules.
+    withLinkedState(({ destinations, savedDraftValue }) => ({
+      destinationsDraft: linkedSignal<
+        { committed: Destination[]; saved: WizardDraft | undefined },
+        Destination[]
+      >({
+        source: () => ({
+          committed: destinations(),
+          saved: savedDraftValue(),
+        }),
+        computation: ({ committed, saved }, previous) => {
+          if (previous && previous.source.saved === saved) {
+            // See `travelerDraft`: committing what the draft holds keeps it.
+            return JSON.stringify(previous.value) === JSON.stringify(committed)
+              ? previous.value
+              : structuredClone(committed);
+          }
+          return structuredClone(saved?.inProgress?.destinations ?? committed);
+        },
       }),
     })),
 
@@ -74,6 +89,17 @@ export function withTripManagement() {
       commitDestinations(): void {
         patchState(store, { destinations: store.destinationsDraft() });
       },
+
+      /**
+       * Copies the typed destinations into `destinationsDraft`, so autosave
+       * sees them. Call it with the form model in an injection context.
+       * Typing does not commit the step.
+       */
+      syncDestinationsDraft: signalMethod<Destination[]>(
+        (destinationsDraft) => {
+          patchState(store, { destinationsDraft });
+        },
+      ),
 
       // Discard draft changes
       discardDestinationChanges(): void {

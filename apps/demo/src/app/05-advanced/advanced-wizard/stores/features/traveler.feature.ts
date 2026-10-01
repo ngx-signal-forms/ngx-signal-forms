@@ -1,6 +1,7 @@
 import { linkedSignal } from '@angular/core';
 import {
   patchState,
+  signalMethod,
   signalStoreFeature,
   type,
   withComputed,
@@ -14,6 +15,10 @@ import {
   type WizardDraft,
 } from '../../schemas/wizard.schemas';
 
+function isSameData(a: Traveler, b: Traveler): boolean {
+  return JSON.stringify(a) === JSON.stringify(b);
+}
+
 export function withTravelerManagement() {
   return signalStoreFeature(
     // Needs the saved draft from `withSavedDraft()`.
@@ -25,12 +30,26 @@ export function withTravelerManagement() {
       traveler: () => savedDraftValue()?.traveler ?? createEmptyTraveler(),
     })),
 
-    // Draft state linked to committed - form binds to this
-    // Resets when committed state changes (e.g., after load from server)
-    withLinkedState(({ traveler }) => ({
-      travelerDraft: linkedSignal({
-        source: traveler,
-        computation: (committed) => structuredClone(committed),
+    // Draft state: what the user has typed. It resets to the committed value
+    // when that changes (a commit or a reset). When a saved draft loads, it
+    // takes the saved in-progress value instead, or the committed one if the
+    // draft has none.
+    withLinkedState(({ traveler, savedDraftValue }) => ({
+      travelerDraft: linkedSignal<
+        { committed: Traveler; saved: WizardDraft | undefined },
+        Traveler
+      >({
+        source: () => ({ committed: traveler(), saved: savedDraftValue() }),
+        computation: ({ committed, saved }, previous) => {
+          if (previous && previous.source.saved === saved) {
+            // A commit of what the draft already holds must not swap the
+            // draft for a new object: the form would lose the field in focus.
+            return isSameData(previous.value, committed)
+              ? previous.value
+              : structuredClone(committed);
+          }
+          return structuredClone(saved?.inProgress?.traveler ?? committed);
+        },
       }),
     })),
 
@@ -67,6 +86,15 @@ export function withTravelerManagement() {
       commitTraveler(): void {
         patchState(store, { traveler: store.travelerDraft() });
       },
+
+      /**
+       * Copies the typed traveler into `travelerDraft`, so autosave sees it.
+       * Call it with the form model in an injection context (a field
+       * initializer). Typing does not commit the step.
+       */
+      syncTravelerDraft: signalMethod<Traveler>((travelerDraft) => {
+        patchState(store, { travelerDraft });
+      }),
 
       // Discard draft changes, revert to committed
       discardTravelerChanges(): void {

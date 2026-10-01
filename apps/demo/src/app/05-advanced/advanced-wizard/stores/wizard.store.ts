@@ -13,8 +13,6 @@ import { debounceTime, distinctUntilChanged, pipe, tap } from 'rxjs';
 
 import {
   createEmptyDestination,
-  Destination,
-  Traveler,
   Trip,
   TripSchema,
   type WizardDraft,
@@ -44,11 +42,6 @@ type BookingResponse = {
   status: 'confirmed' | 'pending';
 };
 
-type TripSummary = {
-  traveler: Traveler;
-  destinations: Destination[];
-};
-
 // ══════════════════════════════════════════════════════════════════════════════
 // STORE
 // ══════════════════════════════════════════════════════════════════════════════
@@ -76,11 +69,21 @@ export const WizardStore = signalStore(
   withComputed((store) => ({
     // ══════════════════════════════════════════════════════════════════════════
     // STEP VALIDATION - the wizard Zod schemas own the rules; the store only
-    // asks them about the draft the user is editing.
+    // asks them about the data.
+    //
+    // Two kinds of data, on purpose:
+    // - Committed (`traveler`, `destinations`): set by Next, Previous or a
+    //   resumed draft. A step is "completed" only when this is valid.
+    // - Draft (`travelerDraft`, `destinationsDraft`): what the user has typed.
+    //   It answers "may I proceed from the step I am on?", never "is it done?".
     // ══════════════════════════════════════════════════════════════════════════
     isTravelerStepValid: () =>
-      TripSchema.shape.traveler.safeParse(store.travelerDraft()).success,
+      TripSchema.shape.traveler.safeParse(store.traveler()).success,
     isTripStepValid: () =>
+      TripSchema.shape.destinations.safeParse(store.destinations()).success,
+    isTravelerDraftValid: () =>
+      TripSchema.shape.traveler.safeParse(store.travelerDraft()).success,
+    isTripDraftValid: () =>
       TripSchema.shape.destinations.safeParse(store.destinationsDraft())
         .success,
   })),
@@ -90,7 +93,8 @@ export const WizardStore = signalStore(
       store.isTravelerStepValid() && store.isTripStepValid(),
 
     /**
-     * Validation status for all steps as a record.
+     * Completion status for all steps as a record. Reads committed data only,
+     * so typing alone never marks a step as completed.
      */
     stepValidation: (): Record<WizardStep, boolean> => ({
       traveler: store.isTravelerStepValid(),
@@ -99,14 +103,15 @@ export const WizardStore = signalStore(
     }),
 
     /**
-     * Whether the current step's draft is valid and user can proceed.
+     * Whether the draft of the current step is valid, so Next can commit it.
+     * Reads the live draft: the step is not committed yet.
      */
     canProceed: () => {
       switch (store.currentStep()) {
         case 'traveler':
-          return store.isTravelerStepValid();
+          return store.isTravelerDraftValid();
         case 'trip':
-          return store.isTripStepValid();
+          return store.isTripDraftValid();
         case 'review':
           return true;
         default:
@@ -115,13 +120,21 @@ export const WizardStore = signalStore(
     },
 
     // ══════════════════════════════════════════════════════════════════════════
-    // TRIP DATA - uses drafts for auto-save, committed for submission
+    // TRIP DATA - committed and in-progress data for auto-save, committed for
+    // submission
     // ══════════════════════════════════════════════════════════════════════════
 
-    /** Draft data for auto-save (saves work in progress) */
-    draftSummary: (): TripSummary => ({
-      traveler: store.travelerDraft(),
-      destinations: store.destinationsDraft(),
+    /**
+     * What auto-save sends. The committed part keeps the meaning of Next; the
+     * in-progress part carries what the user typed, so a reload gets it back.
+     */
+    draftSummary: (): WizardDraft => ({
+      traveler: store.traveler(),
+      destinations: store.destinations(),
+      inProgress: {
+        traveler: store.travelerDraft(),
+        destinations: store.destinationsDraft(),
+      },
     }),
 
     /** Committed data for final submission */
@@ -137,6 +150,7 @@ export const WizardStore = signalStore(
         destinations: store.destinations(),
       }).success,
 
+    /** Live: the trip step shows its empty state from the typed draft. */
     hasDestinations: () => store.destinationsDraft().length > 0,
     hasConfirmedBooking: () => store.bookingConfirmation() !== null,
   })),
@@ -231,7 +245,7 @@ export const WizardStore = signalStore(
   // Additional methods
   withMethods((store) => {
     // Auto-save draft data with debounce
-    const autoSaveDraft = rxMethod<TripSummary>(
+    const autoSaveDraft = rxMethod<WizardDraft>(
       pipe(
         debounceTime(2000),
         distinctUntilChanged((a, b) => JSON.stringify(a) === JSON.stringify(b)),
@@ -241,7 +255,8 @@ export const WizardStore = signalStore(
           if (store.isLoadingDraft()) {
             return;
           }
-          if (data.traveler.firstName || data.destinations.length > 0) {
+          const typed = data.inProgress ?? data;
+          if (typed.traveler.firstName || typed.destinations.length > 0) {
             void store.saveDraft(data);
           }
         }),

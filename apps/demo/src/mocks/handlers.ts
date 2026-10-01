@@ -17,6 +17,8 @@ import type {
 interface DraftData {
   traveler: Traveler;
   destinations: Destination[];
+  /** What the user has typed so far, finished or not. */
+  inProgress?: { traveler: Traveler; destinations: Destination[] };
 }
 
 interface StoredDraft extends DraftData {
@@ -197,6 +199,7 @@ export const wizardHandlers = [
     return HttpResponse.json({
       traveler: draft.traveler,
       destinations: draft.destinations,
+      inProgress: draft.inProgress,
     });
   }),
 

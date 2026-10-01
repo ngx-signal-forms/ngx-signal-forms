@@ -139,8 +139,19 @@ export type Destination = z.infer<typeof DestinationSchema>;
 export type Traveler = z.infer<typeof TravelerSchema>;
 export type Trip = z.infer<typeof TripSchema>;
 
-/** The auto-saved work in progress, as the draft API stores it. */
-export type WizardDraft = Pick<Trip, 'traveler' | 'destinations'>;
+/** The traveler and destinations of a wizard. */
+export type WizardStepData = Pick<Trip, 'traveler' | 'destinations'>;
+
+/**
+ * The auto-saved draft, as the draft API stores it.
+ *
+ * `traveler` and `destinations` hold the steps finished with Next.
+ * `inProgress` holds what the user has typed so far, finished or not. It is
+ * optional, so a draft saved without it still loads.
+ */
+export type WizardDraft = WizardStepData & {
+  inProgress?: WizardStepData;
+};
 
 // ══════════════════════════════════════════════════════════════════════════════
 // FACTORY FUNCTIONS
