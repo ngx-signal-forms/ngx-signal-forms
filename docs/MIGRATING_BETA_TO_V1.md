@@ -456,13 +456,13 @@ status is supplied. A one-shot `console.warn` is emitted in
 `ngDevMode` when `'on-submit'` is used without a status, to make the
 miswiring loud during development without throwing.
 
-- **In-toolkit surfaces** (wrapper, auto-aria, error display, headless
-  error-state / error-summary / fieldset directives) all already
-  resolve `submittedStatus` through the `ngxSignalForm` directive, so
-  they are **unaffected**.
-- **Only direct consumers** of `createErrorVisibility()` configured with
-  `'on-submit'` without a status see a behavior change — which is the intended
-  fix.
+- **Toolkit surfaces inside an `ngxSignalForm` context** (wrapper, auto-aria,
+  error display, headless error-state / error-summary / fieldset directives)
+  read `submittedStatus` from it, so they are **unaffected**.
+- **A toolkit surface with `on-submit` and no form context**, and any direct
+  `createErrorVisibility()` call with `on-submit` and no status, now keeps
+  errors hidden and warns once in dev mode. Fix: add `ngxSignalForm` to the
+  form, or pass `submittedStatus`.
 
 ### Migration
 
