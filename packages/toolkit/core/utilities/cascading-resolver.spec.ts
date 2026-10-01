@@ -128,6 +128,16 @@ describe('createCascadingResolver', () => {
       expect(result).toBe(0);
     });
 
+    it('preserves zero as context', () => {
+      const result = createCascadingResolver({
+        input: null,
+        context: 0,
+        configDefault: 5,
+        fallback: 99,
+      });
+      expect(result).toBe(0);
+    });
+
     it('preserves false as input', () => {
       const result = createCascadingResolver({
         input: false,

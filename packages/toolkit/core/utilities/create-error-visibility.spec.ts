@@ -8,11 +8,6 @@ import type {
   SubmittedStatus,
 } from '../types';
 import { createErrorVisibility } from './create-error-visibility';
-import {
-  resolveStrategyFromContext,
-  resolveSubmittedStatusFromContext,
-} from './resolve-strategy';
-import { shouldShowErrors } from './error-strategies';
 import type { ErrorVisibilityState } from './field-state-types';
 
 // ---------------------------------------------------------------------------
@@ -56,7 +51,7 @@ function injectorWithoutContext(): Injector {
 
 /**
  * Verify public factory behavior for every strategy and field-state
- * combination.
+ * combination against literal, hand-derived expectations.
  */
 describe('createErrorVisibility – behavioral parity matrix', () => {
   type MatrixRow = {
@@ -64,6 +59,7 @@ describe('createErrorVisibility – behavioral parity matrix', () => {
     touched: boolean;
     invalid: boolean;
     submittedStatus: SubmittedStatus;
+    expected: boolean;
   };
 
   const matrix: MatrixRow[] = [
@@ -73,30 +69,35 @@ describe('createErrorVisibility – behavioral parity matrix', () => {
       touched: false,
       invalid: false,
       submittedStatus: 'unsubmitted',
+      expected: false,
     },
     {
       strategy: 'immediate',
       touched: false,
       invalid: true,
       submittedStatus: 'unsubmitted',
+      expected: true,
     },
     {
       strategy: 'immediate',
       touched: true,
       invalid: false,
       submittedStatus: 'unsubmitted',
+      expected: false,
     },
     {
       strategy: 'immediate',
       touched: true,
       invalid: true,
       submittedStatus: 'unsubmitted',
+      expected: true,
     },
     {
       strategy: 'immediate',
       touched: false,
       invalid: true,
       submittedStatus: 'submitted',
+      expected: true,
     },
     // on-touch: visible when invalid AND touched
     {
@@ -104,61 +105,87 @@ describe('createErrorVisibility – behavioral parity matrix', () => {
       touched: false,
       invalid: false,
       submittedStatus: 'unsubmitted',
+      expected: false,
     },
     {
       strategy: 'on-touch',
       touched: false,
       invalid: true,
       submittedStatus: 'unsubmitted',
+      expected: false,
     },
     {
       strategy: 'on-touch',
       touched: true,
       invalid: false,
       submittedStatus: 'unsubmitted',
+      expected: false,
     },
     {
       strategy: 'on-touch',
       touched: true,
       invalid: true,
       submittedStatus: 'unsubmitted',
+      expected: true,
     },
     {
       strategy: 'on-touch',
       touched: true,
       invalid: true,
       submittedStatus: 'submitted',
+      expected: true,
     },
-    // on-submit: visible when invalid AND submittedStatus === 'submitted'
+    // on-touch ignores submission: an untouched field stays hidden after submit
+    {
+      strategy: 'on-touch',
+      touched: false,
+      invalid: true,
+      submittedStatus: 'submitted',
+      expected: false,
+    },
+    // on-submit: visible when invalid AND the form left 'unsubmitted'
+    // (so 'submitting' and 'submitted' both show it); touch alone is not enough
     {
       strategy: 'on-submit',
       touched: false,
       invalid: false,
       submittedStatus: 'submitted',
+      expected: false,
     },
     {
       strategy: 'on-submit',
       touched: false,
       invalid: true,
       submittedStatus: 'unsubmitted',
+      expected: false,
     },
     {
       strategy: 'on-submit',
       touched: false,
       invalid: true,
       submittedStatus: 'submitting',
+      expected: true,
     },
     {
       strategy: 'on-submit',
       touched: false,
       invalid: true,
       submittedStatus: 'submitted',
+      expected: true,
     },
     {
       strategy: 'on-submit',
       touched: true,
       invalid: true,
       submittedStatus: 'submitted',
+      expected: true,
+    },
+    {
+      strategy: 'on-submit',
+      touched: true,
+      invalid: true,
+      submittedStatus: 'unsubmitted',
+      expected: false,
     },
     // inherit: falls back to on-touch when no context
     {
@@ -166,12 +193,14 @@ describe('createErrorVisibility – behavioral parity matrix', () => {
       touched: false,
       invalid: true,
       submittedStatus: 'unsubmitted',
+      expected: false,
     },
     {
       strategy: 'inherit',
       touched: true,
       invalid: true,
       submittedStatus: 'unsubmitted',
+      expected: true,
     },
   ];
 
@@ -180,7 +209,7 @@ describe('createErrorVisibility – behavioral parity matrix', () => {
       `strategy=${row.strategy} touched=${row.touched} ` +
       `invalid=${row.invalid} status=${row.submittedStatus}`;
 
-    it(`[${label}] matches manual composition`, () => {
+    it(`[${label}] shows errors: ${row.expected}`, () => {
       const injector = injectorWithoutContext();
       const fieldState = createMockFieldState(row.invalid, row.touched);
       const statusSignal = signal<SubmittedStatus>(row.submittedStatus);
@@ -192,14 +221,7 @@ describe('createErrorVisibility – behavioral parity matrix', () => {
         }),
       );
 
-      expect(factoryResult()).toBe(
-        shouldShowErrors(
-          row.invalid,
-          row.touched,
-          row.strategy === 'inherit' ? 'on-touch' : row.strategy,
-          row.submittedStatus,
-        ),
-      );
+      expect(factoryResult()).toBe(row.expected);
     });
   }
 });
@@ -493,5 +515,121 @@ describe('createErrorVisibility – on-submit missing status warning', () => {
 
     result();
     expect(warnSpy).not.toHaveBeenCalled();
+  });
+
+  it('keeps errors hidden for a touched invalid field without a status', () => {
+    // Regression: a silent `touched -> submitted` fallback once made a
+    // touched field behave as if the form was submitted, defeating on-submit.
+    const injector = injectorWithoutContext();
+    const fieldState = createMockFieldState(true, true);
+
+    const result = runInInjectionContext(injector, () =>
+      createErrorVisibility(fieldState, { strategy: 'on-submit' }),
+    );
+
+    expect(result()).toBe(false);
+  });
+
+  it('does not warn for strategies other than on-submit', () => {
+    const injector = injectorWithoutContext();
+    const fieldState = createMockFieldState(true, true);
+
+    const results = runInInjectionContext(injector, () => [
+      createErrorVisibility(fieldState, { strategy: 'on-touch' }),
+      createErrorVisibility(fieldState, { strategy: 'immediate' }),
+      createErrorVisibility(fieldState, { strategy: 'inherit' }),
+    ]);
+    for (const result of results) result();
+
+    expect(warnSpy).not.toHaveBeenCalled();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// 'inherit' and unknown strategy values
+// ---------------------------------------------------------------------------
+
+describe("createErrorVisibility – 'inherit' and unknown strategies", () => {
+  it("resolves 'inherit' from the form context strategy", () => {
+    const injector = injectorWithContext(
+      createMockFormContext({ errorStrategy: 'immediate' }),
+    );
+    const fieldState = createMockFieldState(true, false); // invalid, untouched
+
+    const result = runInInjectionContext(injector, () =>
+      createErrorVisibility(fieldState, { strategy: 'inherit' }),
+    );
+
+    // The context says 'immediate', so an untouched invalid field shows.
+    expect(result()).toBe(true);
+  });
+
+  it("resolves 'inherit' from configDefault when no context exists", () => {
+    const injector = injectorWithoutContext();
+    const fieldState = createMockFieldState(true, false);
+
+    const result = runInInjectionContext(injector, () =>
+      createErrorVisibility(fieldState, {
+        strategy: 'inherit',
+        configDefault: 'immediate',
+      }),
+    );
+
+    expect(result()).toBe(true);
+  });
+
+  it('treats an unknown strategy value like on-touch', () => {
+    const injector = injectorWithoutContext();
+    const untouched = createMockFieldState(true, false);
+    const touched = createMockFieldState(true, true);
+    const unknown = 'unknown' as ErrorDisplayStrategy;
+
+    const [hidden, visible] = runInInjectionContext(injector, () => [
+      createErrorVisibility(untouched, { strategy: unknown }),
+      createErrorVisibility(touched, { strategy: unknown }),
+    ]);
+
+    expect(hidden()).toBe(false);
+    expect(visible()).toBe(true);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Initial load and submission
+// ---------------------------------------------------------------------------
+
+describe('createErrorVisibility – initial load and submission', () => {
+  it('does not show on-submit errors before the first submit', () => {
+    const injector = injectorWithContext(
+      createMockFormContext({
+        errorStrategy: 'on-submit',
+        submittedStatus: 'unsubmitted',
+      }),
+    );
+    // A pristine, invalid, untouched field, as on first render.
+    const fieldState = createMockFieldState(true, false);
+
+    const result = runInInjectionContext(injector, () =>
+      createErrorVisibility(fieldState),
+    );
+
+    expect(result()).toBe(false);
+  });
+
+  it('does not show on-touch errors for an untouched field, even after submit', () => {
+    const injector = injectorWithContext(
+      createMockFormContext({
+        errorStrategy: 'on-touch',
+        submittedStatus: 'submitted',
+      }),
+    );
+    const fieldState = createMockFieldState(true, false);
+
+    const result = runInInjectionContext(injector, () =>
+      createErrorVisibility(fieldState),
+    );
+
+    // Angular's submit() marks fields touched, so touch alone drives on-touch.
+    expect(result()).toBe(false);
   });
 });
