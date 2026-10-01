@@ -44,7 +44,9 @@ guides and leave the migration incomplete rather than infer their contents.
    relevant tests. Confirm shipped exports and peer ranges. For RC11 to RC13,
    check notification/panel changes, renderer input union and `errorsOverride`,
    summary `showWarnings`, boolean submission results, independent warnings,
-   and field-shaped controls. Use the [testing guide](../testing/guide.md) for
+   and field-shaped controls. For RC15 to RC16, the testing entry point no
+   longer exports `findAlertContaining`; replace each call with the query in the
+   [testing guide](../testing/guide.md). Use that guide for
    changed interactions. Repository `pnpm nx` tasks apply only when the user
    explicitly requests toolkit maintenance in its own checkout.
 
