@@ -9,6 +9,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import {
   createEmptyDestination,
+  createEmptyRequirement,
   createEmptyTraveler,
   type Destination,
   type Traveler,
@@ -295,6 +296,56 @@ describe('WizardStore live draft', () => {
       const typed = signal<Destination[]>(store.destinationsDraft());
       TestBed.runInInjectionContext(() => store.syncDestinationsDraft(typed));
       typed.set(typedDestinations);
+      TestBed.tick();
+      await vi.advanceTimersByTimeAsync(2000);
+
+      const [save] = saves(httpMock);
+      expect(save.request.method).toBe('POST');
+      save.flush({ draftId: 'draft-1', savedAt: new Date().toISOString() });
+    });
+
+    it('saves when a non-default requirement type is the only edit', async () => {
+      const { store, httpMock } = setup();
+      const [empty] = store.destinationsDraft();
+      const [activity] = empty.activities;
+      const typed = signal<Destination[]>(store.destinationsDraft());
+      TestBed.runInInjectionContext(() => store.syncDestinationsDraft(typed));
+      typed.set([
+        {
+          ...empty,
+          activities: [
+            {
+              ...activity,
+              requirements: [{ ...createEmptyRequirement(), type: 'visa' }],
+            },
+          ],
+        },
+      ]);
+      TestBed.tick();
+      await vi.advanceTimersByTimeAsync(2000);
+
+      const [save] = saves(httpMock);
+      expect(save.request.method).toBe('POST');
+      save.flush({ draftId: 'draft-1', savedAt: new Date().toISOString() });
+    });
+
+    it('saves when ticking a requirement as completed is the only edit', async () => {
+      const { store, httpMock } = setup();
+      const [empty] = store.destinationsDraft();
+      const [activity] = empty.activities;
+      const typed = signal<Destination[]>(store.destinationsDraft());
+      TestBed.runInInjectionContext(() => store.syncDestinationsDraft(typed));
+      typed.set([
+        {
+          ...empty,
+          activities: [
+            {
+              ...activity,
+              requirements: [{ ...createEmptyRequirement(), completed: true }],
+            },
+          ],
+        },
+      ]);
       TestBed.tick();
       await vi.advanceTimersByTimeAsync(2000);
 

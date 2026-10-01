@@ -13,6 +13,7 @@ import { debounceTime, distinctUntilChanged, pipe, tap } from 'rxjs';
 
 import {
   createEmptyDestination,
+  createEmptyRequirement,
   Trip,
   TripSchema,
   type WizardDraft,
@@ -27,12 +28,18 @@ import { withSavedDraft } from './features/saved-draft.feature';
 import { withTravelerManagement } from './features/traveler.feature';
 import { withTripManagement } from './features/trip.feature';
 
+const DEFAULT_REQUIREMENT_TYPE = createEmptyRequirement().type;
+
 /**
  * True when the value holds something the user entered. The empty factories
- * add placeholders (random ids, `type: 'other'`, `completed: false`, a blank
- * destination), so those keys and empty fields do not count.
+ * add placeholders (random ids, the default requirement `type`, `completed:
+ * false`, a blank destination), so those keys and empty fields do not count.
+ * A `type` other than the default and a `true` checkbox are user edits.
  */
 function hasUserData(value: unknown): boolean {
+  if (typeof value === 'boolean') {
+    return value;
+  }
   if (typeof value === 'string') {
     return value !== '';
   }
@@ -44,7 +51,9 @@ function hasUserData(value: unknown): boolean {
   }
   if (value !== null && typeof value === 'object') {
     return Object.entries(value).some(
-      ([key, v]) => key !== 'id' && key !== 'type' && hasUserData(v),
+      ([key, v]) =>
+        key !== 'id' &&
+        (key === 'type' ? v !== DEFAULT_REQUIREMENT_TYPE : hasUserData(v)),
     );
   }
   return false;
