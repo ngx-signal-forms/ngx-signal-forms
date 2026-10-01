@@ -13,6 +13,7 @@ import {
   resolveSubmittedStatusFromContext,
 } from './resolve-strategy';
 import { shouldShowErrors } from './error-strategies';
+import type { ErrorVisibilityState } from './field-state-types';
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -371,6 +372,29 @@ describe('createErrorVisibility – reactive opts', () => {
     touched.set(false);
     expect(result()).toBe(false);
   });
+
+  it('handles nullish and partial field state', () => {
+    const injector = injectorWithoutContext();
+    const invalid = signal(true);
+    const fieldState = signal<Partial<ErrorVisibilityState> | null | undefined>(
+      null,
+    );
+
+    const result = runInInjectionContext(injector, () =>
+      createErrorVisibility(fieldState, { strategy: 'immediate' }),
+    );
+
+    expect(result()).toBe(false);
+
+    fieldState.set(undefined);
+    expect(result()).toBe(false);
+
+    fieldState.set({});
+    expect(result()).toBe(false);
+
+    fieldState.set({ invalid });
+    expect(result()).toBe(true);
+  });
 });
 
 // ---------------------------------------------------------------------------
@@ -415,17 +439,28 @@ describe('createErrorVisibility – on-submit missing status warning', () => {
     warnSpy.mockRestore();
   });
 
-  it('emits a dev-mode console.warn when on-submit has no submittedStatus', () => {
+  it('warns once when on-submit has no submittedStatus', () => {
     const injector = injectorWithoutContext();
-    const fieldState = createMockFieldState(true, true);
+    const invalid = signal(true);
+    const fieldState = signal({
+      invalid,
+      touched: signal(true),
+    });
 
     const result = runInInjectionContext(injector, () =>
       createErrorVisibility(fieldState, { strategy: 'on-submit' }),
     );
 
     result();
+    invalid.set(false);
+    result();
+    invalid.set(true);
+    result();
+
     expect(warnSpy).toHaveBeenCalledTimes(1);
-    expect(warnSpy.mock.calls[0][0]).toContain('on-submit');
+    expect(warnSpy.mock.calls[0][0]).toContain(
+      "createErrorVisibility(): 'on-submit'",
+    );
   });
 
   it('does not warn when submittedStatus is provided', () => {

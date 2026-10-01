@@ -114,8 +114,8 @@ ngx-signal-forms — an Angular toolkit for working with Signal Forms.
 - **One cascade seam** — error-visibility timing is composed once, in
   `createErrorVisibility()`, and consumers call it rather than re-inlining the
   `resolveStrategyFromContext` → `resolveSubmittedStatusFromContext` →
-  `createShowErrorsComputed` chain. All in-tree surfaces now route through it
-  for blocking errors (`NgxHeadlessErrorState`, `NgxHeadlessFieldset`,
+  visibility-computed chain. All in-tree surfaces now route through it for
+  blocking errors (`NgxHeadlessErrorState`, `NgxHeadlessFieldset`,
   `createErrorState()`, `NgxFormFieldWrapper`, plus the pre-existing
   `NgxSignalFormAutoAria` / `createAriaInvalidSignal` /
   `createErrorMessageSignal()` / `NgxHeadlessErrorSummary` callers). Surfaces

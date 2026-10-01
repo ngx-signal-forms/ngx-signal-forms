@@ -345,7 +345,7 @@ resolving through their registries. Read the bundled
 
 ```typescript
 // Wrong — outside an ngxSignalForm context, errors never show. Dev mode logs
-// a one-shot console.warn("[ngx-signal-forms] createShowErrorsComputed():
+// a one-shot console.warn("[ngx-signal-forms] createErrorVisibility():
 // 'on-submit' strategy requires an explicit submittedStatus signal. Without
 // it, errors will never surface. Wire the status from NgxSignalForm
 // ('ngxSignalForm') or pass submittedStatus explicitly.").
