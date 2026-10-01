@@ -121,6 +121,20 @@ export function lastDepartureDate(
 }
 
 /**
+ * Adds months in UTC and clamps the day to the last day of the target month,
+ * so 31 August plus six months is 28 February, not 3 March.
+ */
+function addUtcMonths(date: Date, months: number): Date {
+  const total = date.getUTCMonth() + months;
+  const year = date.getUTCFullYear() + Math.floor(total / 12);
+  const month = ((total % 12) + 12) % 12;
+  const daysInMonth = new Date(Date.UTC(year, month + 1, 0)).getUTCDate();
+  const result = new Date(date);
+  result.setUTCFullYear(year, month, Math.min(date.getUTCDate(), daysInMonth));
+  return result;
+}
+
+/**
  * The passport must stay valid for six months after the last departure. True
  * when the rule does not apply yet (no expiry or no departure). Date-only
  * strings parse as UTC midnight, so the limit is computed in UTC.
@@ -130,8 +144,7 @@ export function isPassportValidForDeparture(
   departure: string | null,
 ): boolean {
   if (!departure || !passportExpiry) return true;
-  const sixMonthsAfter = new Date(departure);
-  sixMonthsAfter.setUTCMonth(sixMonthsAfter.getUTCMonth() + 6);
+  const sixMonthsAfter = addUtcMonths(new Date(departure), 6);
   return new Date(passportExpiry) > sixMonthsAfter;
 }
 
@@ -143,8 +156,7 @@ export function TravelerWithPassportValidation(lastDepartureDate: string) {
     (data) => {
       const expiry = new Date(data.passportExpiry);
       const lastDeparture = new Date(lastDepartureDate);
-      const sixMonthsAfter = new Date(lastDeparture);
-      sixMonthsAfter.setUTCMonth(sixMonthsAfter.getUTCMonth() + 6);
+      const sixMonthsAfter = addUtcMonths(lastDeparture, 6);
       return expiry > sixMonthsAfter;
     },
     {
