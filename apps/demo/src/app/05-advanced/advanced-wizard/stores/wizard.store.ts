@@ -106,8 +106,8 @@ export const WizardStore = signalStore(
     // asks them about the data.
     //
     // Two kinds of data, on purpose:
-    // - Committed (`traveler`, `destinations`): set by Next, Previous or a
-    //   resumed draft. A step is "completed" only when this is valid.
+    // - Committed (`traveler`, `destinations`): set by Next or a resumed
+    //   draft. A step is "completed" only when this is valid.
     // - Draft (`travelerDraft`, `destinationsDraft`): what the user has typed.
     //   It answers "may I proceed from the step I am on?", never "is it done?".
     // ══════════════════════════════════════════════════════════════════════════
@@ -287,6 +287,12 @@ export const WizardStore = signalStore(
           // Until the saved draft arrives, the drafts are still empty. Saving
           // them would overwrite the draft that is loading.
           if (store.isLoadingDraft()) {
+            return;
+          }
+          // The booked trip stays on screen for the confirmation, so it still
+          // looks like content. A save now would bring the draft id back and
+          // a reload would resume the booked trip.
+          if (store.hasConfirmedBooking()) {
             return;
           }
           // Skip only while there is nothing to save yet. Once a draft

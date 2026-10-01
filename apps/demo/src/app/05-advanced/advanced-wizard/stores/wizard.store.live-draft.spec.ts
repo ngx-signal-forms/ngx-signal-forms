@@ -369,6 +369,28 @@ describe('WizardStore live draft', () => {
       save.flush({ draftId: 'draft-1', savedAt: new Date().toISOString() });
     });
 
+    it('sends no save when the booking confirms while the debounce is pending', async () => {
+      const { store, httpMock } = setup();
+      typeTraveler(store, validTraveler);
+
+      // The booking lands before the 2 s debounce fires. The booked trip stays
+      // on screen, so the typed data still looks like content.
+      await vi.advanceTimersByTimeAsync(1000);
+      const booking = store.submitBooking(store.tripData());
+      httpMock.expectOne('/api/wizard/booking').flush({
+        bookingId: 'booking-1',
+        confirmationNumber: 'CONF-1',
+        status: 'confirmed',
+      });
+      await booking;
+      expect(store.hasConfirmedBooking()).toBe(true);
+
+      await vi.advanceTimersByTimeAsync(5000);
+
+      expect(saves(httpMock)).toHaveLength(0);
+      expect(store.draftId()).toBeNull();
+    });
+
     it('saves a cleared field once a draft exists, so the server drops stale data', async () => {
       const { store, httpMock } = setup('draft-1');
       httpMock.expectOne('/api/wizard/draft/draft-1').flush({

@@ -780,6 +780,16 @@ test.describe('Advanced Wizard Demo', () => {
       )
       .toBe(JSON.stringify({ draftId: null }));
 
+    // A debounced autosave that was pending at booking time must not bring the
+    // id back. Wait past the 2 s debounce before the reload.
+    // oxlint-disable-next-line playwright/no-wait-for-timeout -- absence of a save can only be shown by waiting
+    await page.waitForTimeout(2500);
+    expect(
+      await page.evaluate(() =>
+        sessionStorage.getItem('ngx-demo:advanced-wizard-draft'),
+      ),
+    ).toBe(JSON.stringify({ draftId: null }));
+
     const draftLoads: string[] = [];
     page.on('request', (request) => {
       if (

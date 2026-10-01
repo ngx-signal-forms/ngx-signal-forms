@@ -25,7 +25,7 @@ export type TripStepData = {
  *
  * Form uses local linkedSignal for writable binding to Angular Signal Forms.
  * Typed values reach the store's draft (so autosave sees them) and are
- * committed with the step on Next or Previous.
+ * committed with the step on Next.
  */
 export type TripStepForm = FieldTree<TripStepData>;
 

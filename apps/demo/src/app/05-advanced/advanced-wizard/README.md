@@ -19,7 +19,7 @@ The most complex demo in the app: a three-step travel-booking wizard built on a 
 - Each step owns its own `form()`: `TravelerStepForm`, `TripStepForm`.
 - Local `linkedSignal<T>(() => store.travelerDraft())` gives each form a writable model that follows the store's draft slice.
 - A `signalMethod` on the store (`syncTravelerDraft`, `syncDestinationsDraft`) copies the typed model back into the draft slice. The step component calls it in a field initializer, so Angular destroys the effect with the component.
-- Next and Previous commit the active step. Autosave observes the draft and the committed data.
+- Next commits the active step. Previous only moves back: the typed values stay in the draft. Autosave observes the draft and the committed data.
 - `withLinkedState` on the store creates draft copies that reset when the committed data changes or a saved draft loads.
 
 ## Validation rules
@@ -48,7 +48,7 @@ The most complex demo in the app: a three-step travel-booking wizard built on a 
 
 **Committed and in-progress state.** The store keeps both.
 
-- Committed (`traveler`, `destinations`): set by Next and Previous. Step completion markers (`stepValidation`) and submit read only this.
+- Committed (`traveler`, `destinations`): set by Next. Step completion markers (`stepValidation`) and submit read only this.
 - In progress (`travelerDraft`, `destinationsDraft`): what the user has typed. Step forms write here through the `signalMethod` write-back, and `canProceed` reads here because the current step is not committed yet.
 
 Typing never marks a step as completed.
