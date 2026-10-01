@@ -5,7 +5,6 @@ export { RightRailComponent } from './right-rail';
 export { OrientationToggleComponent } from './orientation-toggle';
 export {
   BadgeComponent,
-  BadgeIconDirective,
   type BadgeAppearance,
   type BadgeVariant,
 } from './badge';

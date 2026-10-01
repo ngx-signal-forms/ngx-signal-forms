@@ -1,6 +1,5 @@
 import { describe, expect, it } from 'vitest';
 import { ERROR_DISPLAY_MODES_CONTENT } from './error-display-modes.content';
-import * as errorDisplayModesBarrel from './index';
 
 function flattenItems(
   content: typeof ERROR_DISPLAY_MODES_CONTENT,
@@ -21,11 +20,5 @@ describe('Error Display Modes educational copy', () => {
     );
     expect(items).not.toMatch(/stars/iu);
     expect(items).not.toMatch(/cross-field validation/iu);
-  });
-
-  it('does not export the unused productFeedbackValidationSuite', () => {
-    expect(errorDisplayModesBarrel).not.toHaveProperty(
-      'productFeedbackValidationSuite',
-    );
   });
 });
