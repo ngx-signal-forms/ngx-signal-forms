@@ -255,8 +255,8 @@ function createErrorStateInternal<TValue = unknown>(
 
   // Routes strategy + submitted-status resolution and the visibility
   // computed itself through the shared `createErrorVisibility` seam
-  // (ADR-0006) instead of re-inlining `resolveStrategyFromContext` →
-  // `resolveSubmittedStatusFromContext` → `createErrorVisibility`.
+  // (ADR-0006) instead of re-inlining strategy resolution,
+  // submitted-status resolution, and the visibility computation.
   //
   // `strategy`/`submittedStatus` are core's `NgxReactiveOrStatic<T>`
   // (signal-or-plain-function-or-value union), which also accepts a bare
