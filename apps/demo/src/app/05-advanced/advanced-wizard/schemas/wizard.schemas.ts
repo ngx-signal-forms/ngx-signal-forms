@@ -122,7 +122,8 @@ export function lastDepartureDate(
 
 /**
  * The passport must stay valid for six months after the last departure. True
- * when the rule does not apply yet (no expiry or no departure).
+ * when the rule does not apply yet (no expiry or no departure). Date-only
+ * strings parse as UTC midnight, so the limit is computed in UTC.
  */
 export function isPassportValidForDeparture(
   passportExpiry: string,
@@ -130,7 +131,7 @@ export function isPassportValidForDeparture(
 ): boolean {
   if (!departure || !passportExpiry) return true;
   const sixMonthsAfter = new Date(departure);
-  sixMonthsAfter.setMonth(sixMonthsAfter.getMonth() + 6);
+  sixMonthsAfter.setUTCMonth(sixMonthsAfter.getUTCMonth() + 6);
   return new Date(passportExpiry) > sixMonthsAfter;
 }
 
@@ -143,7 +144,7 @@ export function TravelerWithPassportValidation(lastDepartureDate: string) {
       const expiry = new Date(data.passportExpiry);
       const lastDeparture = new Date(lastDepartureDate);
       const sixMonthsAfter = new Date(lastDeparture);
-      sixMonthsAfter.setMonth(sixMonthsAfter.getMonth() + 6);
+      sixMonthsAfter.setUTCMonth(sixMonthsAfter.getUTCMonth() + 6);
       return expiry > sixMonthsAfter;
     },
     {
