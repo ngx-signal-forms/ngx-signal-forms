@@ -24,7 +24,7 @@ import type { VestResultLike } from './vest-run-coordinator';
 /** A field tree stand-in whose Vest field paths never resolve (no own
  * properties), so every entry lands on this SAME root tree via the
  * `'virtual'` fallback documented on `resolveVestFieldName` in
- * `./vest-adapter.ts`. That fallback is field-name-resolution behaviour, not
+ * `./vest-result-mapper.ts`. That fallback is field-name-resolution behaviour, not
  * this module's concern -- these tests only assert on the mapped `kind`,
  * `message` and that `fieldTree` is passed through unchanged. */
 const fieldTree = (() => undefined) as unknown as ReadonlyFieldTree<unknown>;
