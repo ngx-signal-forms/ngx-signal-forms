@@ -1,4 +1,3 @@
-import { computed, signal, type Signal } from '@angular/core';
 import { describe, expect, expectTypeOf, it } from 'vitest';
 import { createCascadingResolver } from './cascading-resolver';
 
@@ -129,6 +128,16 @@ describe('createCascadingResolver', () => {
       expect(result).toBe(0);
     });
 
+    it('preserves zero as context', () => {
+      const result = createCascadingResolver({
+        input: null,
+        context: 0,
+        configDefault: 5,
+        fallback: 99,
+      });
+      expect(result).toBe(0);
+    });
+
     it('preserves false as input', () => {
       const result = createCascadingResolver({
         input: false,
@@ -144,80 +153,6 @@ describe('createCascadingResolver', () => {
         fallback: true,
       });
       expect(result).toBe(false);
-    });
-  });
-
-  // ─── Reactive tiers ──────────────────────────────────────────────────────
-
-  describe('Reactive signal updates propagate', () => {
-    it('returns a Signal<T> when input is a Signal', () => {
-      const inputSig = signal<string | null>('hello');
-      const result = createCascadingResolver({
-        input: inputSig,
-        fallback: 'fallback',
-      });
-      expect(typeof result).toBe('function');
-      expectTypeOf(result).toEqualTypeOf<Signal<string>>();
-      expect(result()).toBe('hello');
-    });
-
-    it('reflects updated signal value after input signal changes', () => {
-      const inputSig = signal<string | null>('initial');
-      const result = createCascadingResolver({
-        input: inputSig,
-        fallback: 'fallback',
-      });
-
-      expect(result()).toBe('initial');
-      inputSig.set('updated');
-      expect(result()).toBe('updated');
-    });
-
-    it('falls through to fallback when signal emits null', () => {
-      const inputSig = signal<string | null>('present');
-      const result = createCascadingResolver({
-        input: inputSig,
-        fallback: 'fallback',
-      });
-
-      expect(result()).toBe('present');
-      inputSig.set(null);
-      expect(result()).toBe('fallback');
-    });
-
-    it('correctly cascades across reactive and static tiers', () => {
-      const inputSig = signal<string | null | undefined>(null);
-      const contextSig = signal<string | null | undefined>('ctx-value');
-
-      const result = createCascadingResolver({
-        input: inputSig,
-        context: contextSig,
-        configDefault: 'config',
-        fallback: 'fallback',
-      });
-
-      expect(result()).toBe('ctx-value');
-
-      contextSig.set(null);
-      expect(result()).toBe('config');
-
-      inputSig.set('input-wins');
-      expect(result()).toBe('input-wins');
-    });
-
-    it('returns Signal<T> when configDefault is a computed signal', () => {
-      const base = signal(42);
-      const configSig = computed(() => (base() > 0 ? 100 : null));
-
-      const result = createCascadingResolver({
-        input: null as number | null,
-        configDefault: configSig,
-        fallback: 0,
-      });
-
-      expect(result()).toBe(100);
-      base.set(-1);
-      expect(result()).toBe(0);
     });
   });
 

@@ -187,12 +187,12 @@ removed. Replace them with the v1 equivalents.
 
 | Removed API                                 | Current replacement                                                                                                                                                                                                                                                                                                                                                    |
 | ------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `computeShowErrors()`                       | `createShowErrorsComputed()`                                                                                                                                                                                                                                                                                                                                           |
-| `createShowErrorsSignal()`                  | `createShowErrorsComputed()`                                                                                                                                                                                                                                                                                                                                           |
-| `showErrors()`                              | `createShowErrorsComputed()` — same signature; the rename itself introduces no behavior change (`showErrors` was a one-line alias and is gone, not deprecated). Separately, the underlying `on-submit`-without-`submittedStatus` fallback did change — see [§5](#5-behavior-fix-on-submit-requires-an-explicit-submittedstatus).                                       |
+| `computeShowErrors()`                       | `createErrorVisibility()`                                                                                                                                                                                                                                                                                                                                              |
+| `createShowErrorsSignal()`                  | `createErrorVisibility()`                                                                                                                                                                                                                                                                                                                                              |
+| `showErrors()`                              | `createErrorVisibility()` — use the public visibility factory. Separately, the underlying `on-submit`-without-`submittedStatus` fallback did change — see [§5](#5-behavior-fix-on-submit-requires-an-explicit-submittedstatus).                                                                                                                                        |
 | `canSubmit()`                               | `canSubmitWithWarnings()`                                                                                                                                                                                                                                                                                                                                              |
 | `isSubmitting()`                            | `submittedStatus()` from the `ngxSignalForm` directive                                                                                                                                                                                                                                                                                                                 |
-| `'manual'` error strategy                   | `createShowErrorsComputed()` + a manual `WritableSignal<boolean>`                                                                                                                                                                                                                                                                                                      |
+| `'manual'` error strategy                   | Use a `WritableSignal<boolean>` directly as the show-errors signal. `createErrorSummaryEntries()` and `createFieldsetAggregation()` from `@ngx-signal-forms/toolkit/headless` take it as `showErrors`. `createErrorVisibility()` cannot take it                                                                                                                        |
 | `fieldNameResolver` config                  | Put an `id` on the bound control element                                                                                                                                                                                                                                                                                                                               |
 | `strictFieldResolution` config              | Removed — strict by default                                                                                                                                                                                                                                                                                                                                            |
 | `debug` config field                        | Removed — use the `/debugger` entry point instead                                                                                                                                                                                                                                                                                                                      |
@@ -456,26 +456,25 @@ status is supplied. A one-shot `console.warn` is emitted in
 `ngDevMode` when `'on-submit'` is used without a status, to make the
 miswiring loud during development without throwing.
 
-- **In-toolkit surfaces** (wrapper, auto-aria, error display, headless
-  error-state / error-summary / fieldset directives) all already
-  resolve `submittedStatus` through the `ngxSignalForm` directive, so
-  they are **unaffected**.
-- **Only direct consumers** of `createShowErrorsComputed(field, 'on-submit')`
-  without a status see a behavior change — which is the intended fix.
+- **Toolkit surfaces inside an `ngxSignalForm` context** (wrapper, auto-aria,
+  error display, headless error-state / error-summary / fieldset directives)
+  read `submittedStatus` from it, so they are **unaffected**.
+- **A toolkit surface with `on-submit` and no form context**, and any direct
+  `createErrorVisibility()` call with `on-submit` and no status, now keeps
+  errors hidden and warns once in dev mode. Fix: add `ngxSignalForm` to the
+  form, or pass `submittedStatus`.
 
 ### Migration
 
 ```ts
-// before — relied on the accidental fallback
+// before (beta) — relied on the accidental fallback
 const show = createShowErrorsComputed(field, 'on-submit');
 
-// after — pass the form's submittedStatus value or signal directly
-// (the third parameter, not an options object)
-const show = createShowErrorsComputed(
-  field,
-  'on-submit',
-  formDirective.submittedStatus,
-);
+// after — pass the form's submittedStatus value or signal in the options object
+const show = createErrorVisibility(field, {
+  strategy: 'on-submit',
+  submittedStatus: formDirective.submittedStatus,
+});
 ```
 
 ---
@@ -1210,7 +1209,7 @@ leaf is counted consistently whether it's `null` or populated.
   imported factory call instead, e.g. `showErrors(` or
   `import { showErrors }`, to isolate real hits.
 
-- **If you call `createShowErrorsComputed(field, 'on-submit')` directly**,
+- **If you call `createErrorVisibility()` directly with `strategy: 'on-submit'`,**
   pass an explicit `submittedStatus` — otherwise errors will stay hidden
   (this is the fix, not a regression).
 
@@ -1234,7 +1233,10 @@ leaf is counted consistently whether it's `null` or populated.
 presentation="panel">`, and rename the `--ngx-signal-form-notification-*`
     custom properties to their `-error-panel-*` / `-warning-panel-*`
     equivalents;
-  - replace `showErrors(…)` with `createShowErrorsComputed(…)`;
+  - replace `showErrors(field, strategy, submittedStatus)` with
+    `createErrorVisibility(field, { strategy, submittedStatus })`; call the
+    replacement inside an Angular injection context, or include `injector` in
+    the options when calling it outside one;
   - move `[colorThresholds]` on `NgxFormFieldCharacterCount` into the
     `--ngx-form-field-char-count-warning-threshold` /
     `--ngx-form-field-char-count-danger-threshold` CSS tokens;

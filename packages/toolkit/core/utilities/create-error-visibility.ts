@@ -1,4 +1,4 @@
-import { type Injector, type Signal } from '@angular/core';
+import { computed, type Injector, type Signal } from '@angular/core';
 import type {
   ErrorDisplayStrategy,
   NgxReactiveOrStatic,
@@ -6,13 +6,14 @@ import type {
   SubmittedStatus,
 } from '../types';
 import { assertInjector } from './assert-injector';
+import { createDevWarnOnce } from './dev-warn-once';
+import { shouldShowErrors } from './error-strategies';
 import type { ErrorVisibilityState } from './field-state-types';
 import { injectFormContext } from './inject-form-context';
 import {
   resolveStrategyFromContext,
   resolveSubmittedStatusFromContext,
 } from './resolve-strategy';
-import { createShowErrorsComputed } from './show-errors';
 import { unwrapValue } from './unwrap-signal-or-value';
 
 /**
@@ -77,10 +78,10 @@ export interface CreateErrorVisibilityOptions {
 /**
  * One-shot factory for error-visibility wiring.
  *
- * Replaces the four-step manual composition of
- * `resolveStrategyFromContext` → `resolveSubmittedStatusFromContext` →
- * `createShowErrorsComputed` that every in-tree consumer now routes through
- * this seam instead of inlining (ADR-0006) — `NgxHeadlessErrorState`,
+ * It replaces a four-step manual composition: resolve the strategy, resolve
+ * the submission status, evaluate the timing predicate, and expose the
+ * result as a computed. Every in-tree consumer now calls this factory instead
+ * of inlining those steps (ADR-0006): `NgxHeadlessErrorState`,
  * `NgxHeadlessFieldset`, `createErrorState()`, `NgxFormFieldWrapper`,
  * `NgxSignalFormAutoAria`, `createAriaInvalidSignal`,
  * `createErrorMessageSignal()`, and `NgxHeadlessErrorSummary`.
@@ -91,27 +92,31 @@ export interface CreateErrorVisibilityOptions {
  * 2. Resolves the error display strategy: explicit opt → context →
  *    `opts.configDefault` (when supplied) → `'on-touch'`.
  * 3. Resolves the submission status: explicit opt → context → `undefined`.
- * 4. Delegates to {@link createShowErrorsComputed} and returns the resulting
+ * 4. Evaluates the visibility timing predicate and returns a reactive
  *    `Signal<boolean>`.
  *
- * No new logic is introduced — this is purely ergonomic glue over the
- * existing building blocks.
+ * This is the single composition point for the visibility cascade. It owns
+ * the reactive computed. It also owns the dev-mode warning for a missing
+ * submission status. The shared pure predicate evaluates the strategy.
  *
  * ## When to use
  *
- * Use `createErrorVisibility` as the **recommended entry point** for
- * consumer-side error visibility wiring. The four building blocks remain
- * exported for advanced composition but are no longer the first choice.
+ * Use `createErrorVisibility` as the public entry point for consumer-side
+ * error visibility wiring. The lower-level resolution and predicate helpers
+ * are internal toolkit building blocks exposed only through the hidden,
+ * build-time `/core` entry point.
  *
  * ## When NOT to use
  *
- * If you need to compose the strategy and/or submission status with logic
- * beyond a flat config-default fallback (e.g. a component preset registry,
- * a multi-tier cascade) reach for the individual building blocks instead.
+ * Do not import the lower-level helpers from `/core`; that entry point is not
+ * published. For custom timing, compute `strategy` and `submittedStatus` in
+ * your own signals and pass them in the options. To show errors from your own
+ * rule, such as a "show after the user clicks Validate" flag, use that
+ * signal directly instead of this factory.
  *
  * @param field Reactive or static field state. `null`/`undefined` values
- *   short-circuit the result to `false` — this is handled by the underlying
- *   {@link createShowErrorsComputed} building block.
+ *   short-circuit the result to `false` — this is handled by the visibility
+ *   computation inside this factory.
  * @param opts Optional overrides; all properties are optional.
  * @returns A computed `Signal<boolean>` that is `true` when the strategy says
  *   errors should be visible.
@@ -157,7 +162,6 @@ export interface CreateErrorVisibilityOptions {
  *
  * @see {@link resolveStrategyFromContext} Building block: strategy cascade
  * @see {@link resolveSubmittedStatusFromContext} Building block: submitted-status cascade
- * @see {@link createShowErrorsComputed} Building block: reactive visibility computed
  * @see {@link shouldShowErrors} Building block: pure boolean evaluation
  *
  * @public
@@ -169,10 +173,8 @@ export function createErrorVisibility(
   return assertInjector(createErrorVisibility, opts?.injector, () => {
     const formContext = injectFormContext();
 
-    // Plain getter (not `computed()`): `createShowErrorsComputed` already runs
-    // its body inside a `computed()`, so wrapping again would just add an
-    // intermediate signal node. Reading `unwrapValue()` here keeps Signal
-    // inputs reactive and context signal changes tracked.
+    // Plain getters keep signal inputs and context changes tracked by the
+    // computed below without introducing intermediate signal nodes.
     //
     // The explicit `<ErrorDisplayStrategy | undefined>` parameter accepts
     // both the static `ErrorDisplayStrategy` branch and the
@@ -199,10 +201,31 @@ export function createErrorVisibility(
       return resolveSubmittedStatusFromContext(statusValue, formContext);
     };
 
-    return createShowErrorsComputed(
-      field,
-      resolvedStrategy,
-      resolvedSubmittedStatus,
-    );
+    const warnOnce = createDevWarnOnce();
+
+    return computed(() => {
+      const fieldState = unwrapValue(field);
+      const strategyValue = resolvedStrategy();
+      const statusValue = resolvedSubmittedStatus();
+      const isInvalid = fieldState?.invalid?.() ?? false;
+      const isTouched = fieldState?.touched?.() ?? false;
+      const resolvedStatus = statusValue ?? 'unsubmitted';
+      const concreteStrategy: ResolvedErrorDisplayStrategy = strategyValue;
+
+      if (concreteStrategy === 'on-submit' && statusValue === undefined) {
+        warnOnce(
+          'warn',
+          "[ngx-signal-forms] createErrorVisibility(): 'on-submit' strategy requires an explicit submittedStatus value or signal. " +
+            "Without it, errors will never surface. Wire the status from NgxSignalForm ('ngxSignalForm') or pass submittedStatus explicitly.",
+        );
+      }
+
+      return shouldShowErrors(
+        isInvalid,
+        isTouched,
+        concreteStrategy,
+        resolvedStatus,
+      );
+    });
   });
 }

@@ -8,11 +8,7 @@ import type {
   SubmittedStatus,
 } from '../types';
 import { createErrorVisibility } from './create-error-visibility';
-import { createShowErrorsComputed } from './show-errors';
-import {
-  resolveStrategyFromContext,
-  resolveSubmittedStatusFromContext,
-} from './resolve-strategy';
+import type { ErrorVisibilityState } from './field-state-types';
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -54,9 +50,8 @@ function injectorWithoutContext(): Injector {
 // ---------------------------------------------------------------------------
 
 /**
- * Verify that createErrorVisibility produces the same result as manually
- * composing the four building blocks for every (strategy, touched, invalid,
- * submittedStatus) combination.
+ * Verify public factory behavior for every strategy and field-state
+ * combination against literal, hand-derived expectations.
  */
 describe('createErrorVisibility – behavioral parity matrix', () => {
   type MatrixRow = {
@@ -64,6 +59,7 @@ describe('createErrorVisibility – behavioral parity matrix', () => {
     touched: boolean;
     invalid: boolean;
     submittedStatus: SubmittedStatus;
+    expected: boolean;
   };
 
   const matrix: MatrixRow[] = [
@@ -73,30 +69,35 @@ describe('createErrorVisibility – behavioral parity matrix', () => {
       touched: false,
       invalid: false,
       submittedStatus: 'unsubmitted',
+      expected: false,
     },
     {
       strategy: 'immediate',
       touched: false,
       invalid: true,
       submittedStatus: 'unsubmitted',
+      expected: true,
     },
     {
       strategy: 'immediate',
       touched: true,
       invalid: false,
       submittedStatus: 'unsubmitted',
+      expected: false,
     },
     {
       strategy: 'immediate',
       touched: true,
       invalid: true,
       submittedStatus: 'unsubmitted',
+      expected: true,
     },
     {
       strategy: 'immediate',
       touched: false,
       invalid: true,
       submittedStatus: 'submitted',
+      expected: true,
     },
     // on-touch: visible when invalid AND touched
     {
@@ -104,61 +105,87 @@ describe('createErrorVisibility – behavioral parity matrix', () => {
       touched: false,
       invalid: false,
       submittedStatus: 'unsubmitted',
+      expected: false,
     },
     {
       strategy: 'on-touch',
       touched: false,
       invalid: true,
       submittedStatus: 'unsubmitted',
+      expected: false,
     },
     {
       strategy: 'on-touch',
       touched: true,
       invalid: false,
       submittedStatus: 'unsubmitted',
+      expected: false,
     },
     {
       strategy: 'on-touch',
       touched: true,
       invalid: true,
       submittedStatus: 'unsubmitted',
+      expected: true,
     },
     {
       strategy: 'on-touch',
       touched: true,
       invalid: true,
       submittedStatus: 'submitted',
+      expected: true,
     },
-    // on-submit: visible when invalid AND submittedStatus === 'submitted'
+    // on-touch ignores submission: an untouched field stays hidden after submit
+    {
+      strategy: 'on-touch',
+      touched: false,
+      invalid: true,
+      submittedStatus: 'submitted',
+      expected: false,
+    },
+    // on-submit: visible when invalid AND the form left 'unsubmitted'
+    // (so 'submitting' and 'submitted' both show it); touch alone is not enough
     {
       strategy: 'on-submit',
       touched: false,
       invalid: false,
       submittedStatus: 'submitted',
+      expected: false,
     },
     {
       strategy: 'on-submit',
       touched: false,
       invalid: true,
       submittedStatus: 'unsubmitted',
+      expected: false,
     },
     {
       strategy: 'on-submit',
       touched: false,
       invalid: true,
       submittedStatus: 'submitting',
+      expected: true,
     },
     {
       strategy: 'on-submit',
       touched: false,
       invalid: true,
       submittedStatus: 'submitted',
+      expected: true,
     },
     {
       strategy: 'on-submit',
       touched: true,
       invalid: true,
       submittedStatus: 'submitted',
+      expected: true,
+    },
+    {
+      strategy: 'on-submit',
+      touched: true,
+      invalid: true,
+      submittedStatus: 'unsubmitted',
+      expected: false,
     },
     // inherit: falls back to on-touch when no context
     {
@@ -166,12 +193,14 @@ describe('createErrorVisibility – behavioral parity matrix', () => {
       touched: false,
       invalid: true,
       submittedStatus: 'unsubmitted',
+      expected: false,
     },
     {
       strategy: 'inherit',
       touched: true,
       invalid: true,
       submittedStatus: 'unsubmitted',
+      expected: true,
     },
   ];
 
@@ -180,14 +209,10 @@ describe('createErrorVisibility – behavioral parity matrix', () => {
       `strategy=${row.strategy} touched=${row.touched} ` +
       `invalid=${row.invalid} status=${row.submittedStatus}`;
 
-    it(`[${label}] matches manual composition`, () => {
+    it(`[${label}] shows errors: ${row.expected}`, () => {
       const injector = injectorWithoutContext();
       const fieldState = createMockFieldState(row.invalid, row.touched);
       const statusSignal = signal<SubmittedStatus>(row.submittedStatus);
-
-      const manualResult = runInInjectionContext(injector, () =>
-        createShowErrorsComputed(fieldState, row.strategy, statusSignal),
-      );
 
       const factoryResult = runInInjectionContext(injector, () =>
         createErrorVisibility(fieldState, {
@@ -196,7 +221,7 @@ describe('createErrorVisibility – behavioral parity matrix', () => {
         }),
       );
 
-      expect(factoryResult()).toBe(manualResult());
+      expect(factoryResult()).toBe(row.expected);
     });
   }
 });
@@ -369,6 +394,29 @@ describe('createErrorVisibility – reactive opts', () => {
     touched.set(false);
     expect(result()).toBe(false);
   });
+
+  it('handles nullish and partial field state', () => {
+    const injector = injectorWithoutContext();
+    const invalid = signal(true);
+    const fieldState = signal<Partial<ErrorVisibilityState> | null | undefined>(
+      null,
+    );
+
+    const result = runInInjectionContext(injector, () =>
+      createErrorVisibility(fieldState, { strategy: 'immediate' }),
+    );
+
+    expect(result()).toBe(false);
+
+    fieldState.set(undefined);
+    expect(result()).toBe(false);
+
+    fieldState.set({});
+    expect(result()).toBe(false);
+
+    fieldState.set({ invalid });
+    expect(result()).toBe(true);
+  });
 });
 
 // ---------------------------------------------------------------------------
@@ -413,17 +461,28 @@ describe('createErrorVisibility – on-submit missing status warning', () => {
     warnSpy.mockRestore();
   });
 
-  it('emits a dev-mode console.warn when on-submit has no submittedStatus', () => {
+  it('warns once when on-submit has no submittedStatus', () => {
     const injector = injectorWithoutContext();
-    const fieldState = createMockFieldState(true, true);
+    const invalid = signal(true);
+    const fieldState = signal({
+      invalid,
+      touched: signal(true),
+    });
 
     const result = runInInjectionContext(injector, () =>
       createErrorVisibility(fieldState, { strategy: 'on-submit' }),
     );
 
     result();
+    invalid.set(false);
+    result();
+    invalid.set(true);
+    result();
+
     expect(warnSpy).toHaveBeenCalledTimes(1);
-    expect(warnSpy.mock.calls[0][0]).toContain('on-submit');
+    expect(warnSpy.mock.calls[0][0]).toContain(
+      "createErrorVisibility(): 'on-submit'",
+    );
   });
 
   it('does not warn when submittedStatus is provided', () => {
@@ -457,38 +516,120 @@ describe('createErrorVisibility – on-submit missing status warning', () => {
     result();
     expect(warnSpy).not.toHaveBeenCalled();
   });
+
+  it('keeps errors hidden for a touched invalid field without a status', () => {
+    // Regression: a silent `touched -> submitted` fallback once made a
+    // touched field behave as if the form was submitted, defeating on-submit.
+    const injector = injectorWithoutContext();
+    const fieldState = createMockFieldState(true, true);
+
+    const result = runInInjectionContext(injector, () =>
+      createErrorVisibility(fieldState, { strategy: 'on-submit' }),
+    );
+
+    expect(result()).toBe(false);
+  });
+
+  it('does not warn for strategies other than on-submit', () => {
+    const injector = injectorWithoutContext();
+    const fieldState = createMockFieldState(true, true);
+
+    const results = runInInjectionContext(injector, () => [
+      createErrorVisibility(fieldState, { strategy: 'on-touch' }),
+      createErrorVisibility(fieldState, { strategy: 'immediate' }),
+      createErrorVisibility(fieldState, { strategy: 'inherit' }),
+    ]);
+    for (const result of results) result();
+
+    expect(warnSpy).not.toHaveBeenCalled();
+  });
 });
 
 // ---------------------------------------------------------------------------
-// Parity with manual composition (cross-check)
+// 'inherit' and unknown strategy values
 // ---------------------------------------------------------------------------
 
-describe('createErrorVisibility – parity with manual composition', () => {
-  it('produces identical boolean to manually composing the four building blocks', () => {
-    const context = createMockFormContext({
-      errorStrategy: 'on-touch',
-      submittedStatus: 'unsubmitted',
-    });
-    const injector = injectorWithContext(context);
-    const fieldState = createMockFieldState(true, true);
+describe("createErrorVisibility – 'inherit' and unknown strategies", () => {
+  it("resolves 'inherit' from the form context strategy", () => {
+    const injector = injectorWithContext(
+      createMockFormContext({ errorStrategy: 'immediate' }),
+    );
+    const fieldState = createMockFieldState(true, false); // invalid, untouched
 
-    const manualResult = runInInjectionContext(injector, () => {
-      const resolvedStrategy = resolveStrategyFromContext(undefined, context);
-      const resolvedStatus = resolveSubmittedStatusFromContext(
-        undefined,
-        context,
-      );
-      return createShowErrorsComputed(
-        fieldState,
-        resolvedStrategy,
-        resolvedStatus,
-      );
-    });
+    const result = runInInjectionContext(injector, () =>
+      createErrorVisibility(fieldState, { strategy: 'inherit' }),
+    );
 
-    const factoryResult = runInInjectionContext(injector, () =>
+    // The context says 'immediate', so an untouched invalid field shows.
+    expect(result()).toBe(true);
+  });
+
+  it("resolves 'inherit' from configDefault when no context exists", () => {
+    const injector = injectorWithoutContext();
+    const fieldState = createMockFieldState(true, false);
+
+    const result = runInInjectionContext(injector, () =>
+      createErrorVisibility(fieldState, {
+        strategy: 'inherit',
+        configDefault: 'immediate',
+      }),
+    );
+
+    expect(result()).toBe(true);
+  });
+
+  it('treats an unknown strategy value like on-touch', () => {
+    const injector = injectorWithoutContext();
+    const untouched = createMockFieldState(true, false);
+    const touched = createMockFieldState(true, true);
+    const unknown = 'unknown' as ErrorDisplayStrategy;
+
+    const [hidden, visible] = runInInjectionContext(injector, () => [
+      createErrorVisibility(untouched, { strategy: unknown }),
+      createErrorVisibility(touched, { strategy: unknown }),
+    ]);
+
+    expect(hidden()).toBe(false);
+    expect(visible()).toBe(true);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Initial load and submission
+// ---------------------------------------------------------------------------
+
+describe('createErrorVisibility – initial load and submission', () => {
+  it('does not show on-submit errors before the first submit', () => {
+    const injector = injectorWithContext(
+      createMockFormContext({
+        errorStrategy: 'on-submit',
+        submittedStatus: 'unsubmitted',
+      }),
+    );
+    // A pristine, invalid, untouched field, as on first render.
+    const fieldState = createMockFieldState(true, false);
+
+    const result = runInInjectionContext(injector, () =>
       createErrorVisibility(fieldState),
     );
 
-    expect(factoryResult()).toBe(manualResult());
+    expect(result()).toBe(false);
+  });
+
+  it('does not show on-touch errors for an untouched field, even after submit', () => {
+    const injector = injectorWithContext(
+      createMockFormContext({
+        errorStrategy: 'on-touch',
+        submittedStatus: 'submitted',
+      }),
+    );
+    const fieldState = createMockFieldState(true, false);
+
+    const result = runInInjectionContext(injector, () =>
+      createErrorVisibility(fieldState),
+    );
+
+    // Angular's submit() marks fields touched, so touch alone drives on-touch.
+    expect(result()).toBe(false);
   });
 });

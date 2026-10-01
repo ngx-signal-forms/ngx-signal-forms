@@ -98,7 +98,7 @@ export function unwrapValue<T>(value: () => T): T;
 // to the `(value: T)` overload — which infers `T` as the entire union
 // and returns it untouched, defeating the unwrap. Keep this overload to
 // preserve the unwrapping return type at union-typed call sites (e.g.
-// `show-errors.ts` passes a `NgxReactiveOrStatic<Partial<…>>`).
+// `create-error-visibility.ts` passes a `NgxReactiveOrStatic<Partial<…>>`).
 export function unwrapValue<T>(value: NgxReactiveOrStatic<T>): T;
 export function unwrapValue<T>(value: T): T;
 export function unwrapValue<T>(value: NgxReactiveOrStatic<T>): T {

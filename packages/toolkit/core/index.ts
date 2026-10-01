@@ -120,7 +120,6 @@ export {
   devWarnOnce,
   type WarnOnceRef,
 } from './utilities/dev-warn-once';
-export { createShowErrorsComputed } from './utilities/show-errors';
 export * from './utilities/submission-helpers';
 export { unwrapValue } from './utilities/unwrap-signal-or-value';
 export {
