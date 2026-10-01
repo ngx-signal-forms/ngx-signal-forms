@@ -171,6 +171,20 @@ describe('createReviewStepForm', () => {
       expect(enough.travelerDisplay().passportValid).toBe(true);
     });
 
+    it('compares the passport expiry by calendar date, not by instant', () => {
+      // Local 20:00 is already the next UTC day in the Americas. A date input
+      // value (YYYY-MM-DD) parses as UTC midnight, so an instant comparison
+      // would call tomorrow's expiry expired.
+      vi.setSystemTime(new Date('2031-05-31T20:00:00'));
+      const traveler = { ...createEmptyTraveler(), passportNumber: 'X1234567' };
+
+      const tomorrow = setup({ ...traveler, passportExpiry: '2031-06-01' }, []);
+      expect(tomorrow.travelerDisplay().passportStatus).not.toBe('expired');
+
+      const today = setup({ ...traveler, passportExpiry: '2031-05-31' }, []);
+      expect(today.travelerDisplay().passportStatus).toBe('expired');
+    });
+
     it('formats destinations, activities and requirement counts', () => {
       const form = setup(createEmptyTraveler(), [populatedDestination()]);
 
