@@ -67,14 +67,12 @@ Thresholds therefore apply once, to the merged result, and are declared only in
 
 ## Nx and Playwright
 
-Nx does not merge coverage; Vitest does. The `@nx/vitest:test` executor has no
-`coverage` option at all — its `configFile`, `reportsDirectory`, `mode`,
-`runMode`, `testFiles`, and `watch` are the complete set. It does forward
-`reportsDirectory` into Vitest as `test.coverage.reportsDirectory`, but that
-only relocates the output directory; it neither enables coverage nor merges
-across projects. So `toolkit:test` and `toolkit:test-browser` stay plain test
-targets, and coverage runs through the dedicated `workspace:coverage` target
-instead.
+Nx does not merge coverage; Vitest does. Each Nx test target runs one Vitest
+config and measures only its own slice of the specs. For that reason
+`toolkit:test` and `toolkit:test-browser` stay plain test targets, and coverage
+runs through the dedicated `workspace:coverage` target instead. That target
+runs Vitest once with `vitest.coverage.config.mts`, which lists every Vitest
+project that exercises toolkit code.
 
 The `demo-e2e` Playwright suite is not yet part of the number. It does drive
 toolkit code through the demo app, so counting it is coherent — but it needs
