@@ -13,7 +13,7 @@ import { debounceTime, distinctUntilChanged, pipe, tap } from 'rxjs';
 
 import {
   createEmptyDestination,
-  createEmptyRequirement,
+  DEFAULT_REQUIREMENT_TYPE,
   isPassportValidForDeparture,
   lastDepartureDate,
   Trip,
@@ -29,8 +29,6 @@ import { isSameData } from './features/draft-link';
 import { withSavedDraft } from './features/saved-draft.feature';
 import { withTravelerManagement } from './features/traveler.feature';
 import { withTripManagement } from './features/trip.feature';
-
-const DEFAULT_REQUIREMENT_TYPE = createEmptyRequirement().type;
 
 /**
  * True when the value holds something the user entered. The empty factories

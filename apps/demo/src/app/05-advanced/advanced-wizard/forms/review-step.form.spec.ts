@@ -66,6 +66,7 @@ describe('createReviewStepForm', () => {
         nationality: 'Not provided',
         age: null,
         hasPassport: false,
+        passportStatus: 'none',
         passportValid: false,
       });
     });
@@ -127,6 +128,7 @@ describe('createReviewStepForm', () => {
         nationality: 'UK',
         age: 39,
         hasPassport: true,
+        passportStatus: 'valid',
         passportValid: true,
       });
     });
@@ -145,6 +147,7 @@ describe('createReviewStepForm', () => {
       expect(form.travelerDisplay()).toMatchObject({
         age: 40,
         hasPassport: true,
+        passportStatus: 'expired',
         passportValid: false,
       });
     });
@@ -157,12 +160,14 @@ describe('createReviewStepForm', () => {
       };
       // Last departure 20 March 2031: the passport must outlast 20 September 2031.
       const tooClose = setup(traveler, [populatedDestination()]);
+      expect(tooClose.travelerDisplay().passportStatus).toBe('too-close');
       expect(tooClose.travelerDisplay().passportValid).toBe(false);
 
       const enough = setup(
         { ...traveler, passportExpiry: '2031-10-01T12:00:00' },
         [populatedDestination()],
       );
+      expect(enough.travelerDisplay().passportStatus).toBe('valid');
       expect(enough.travelerDisplay().passportValid).toBe(true);
     });
 

@@ -40,12 +40,15 @@ export type DestinationDisplayData = {
   activities: ActivityDisplayData[];
 };
 
+export type PassportStatus = 'valid' | 'expired' | 'too-close' | 'none';
+
 export type TravelerDisplayData = {
   fullName: string;
   email: string;
   nationality: string;
   age: number | null;
   hasPassport: boolean;
+  passportStatus: PassportStatus;
   passportValid: boolean;
 };
 
@@ -75,6 +78,17 @@ function formatDateRange(start: string, end: string): string {
   return `${startDate} - ${endDate}`;
 }
 
+function getPassportStatus(
+  expiry: string,
+  lastDeparture: string | null,
+): PassportStatus {
+  if (!expiry) return 'none';
+  if (new Date(expiry) <= new Date()) return 'expired';
+  return isPassportValidForDeparture(expiry, lastDeparture)
+    ? 'valid'
+    : 'too-close';
+}
+
 /**
  * Creates a read-only review form that computes display data from trip summary.
  */
@@ -100,19 +114,19 @@ export function createReviewStepForm(
       }
     }
 
+    const passportStatus = getPassportStatus(
+      t.passportExpiry,
+      lastDepartureDate(destinations()),
+    );
+
     return {
       fullName: `${t.firstName} ${t.lastName}`.trim() || 'Not provided',
       email: t.email || 'Not provided',
       nationality: t.nationality || 'Not provided',
       age,
       hasPassport: Boolean(t.passportNumber),
-      passportValid:
-        Boolean(t.passportExpiry) &&
-        new Date(t.passportExpiry) > new Date() &&
-        isPassportValidForDeparture(
-          t.passportExpiry,
-          lastDepartureDate(destinations()),
-        ),
+      passportStatus,
+      passportValid: passportStatus === 'valid',
     };
   });
 

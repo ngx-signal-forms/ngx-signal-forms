@@ -4,6 +4,8 @@ import { z } from 'zod';
 // BASE SCHEMAS
 // ══════════════════════════════════════════════════════════════════════════════
 
+export const DEFAULT_REQUIREMENT_TYPE = 'other' as const;
+
 export const RequirementSchema = z.object({
   id: z.uuid(),
   type: z.enum(['visa', 'vaccination', 'insurance', 'document', 'other']),
@@ -197,7 +199,7 @@ export type WizardDraft = WizardStepData & {
 export function createEmptyRequirement(): Requirement {
   return {
     id: crypto.randomUUID(),
-    type: 'other',
+    type: DEFAULT_REQUIREMENT_TYPE,
     description: '',
     completed: false,
   };
