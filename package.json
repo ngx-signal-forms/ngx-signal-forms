@@ -31,6 +31,7 @@
     "a11y:baseline": "node tools/scripts/a11y-report-violations.mjs --update-baseline",
     "check:toolkit-peer-deps": "node tools/scripts/check-toolkit-peer-deps.mjs",
     "check:toolkit-published-package": "node packages/toolkit/scripts/check-published-package.mjs",
+    "ai:agents": "pnpm dlx skills@latest add nrwl/nx-ai-agents-config --agent universal --skill '*' --copy --yes",
     "prepare": "node tools/simple-git-hooks-worktree.cjs"
   },
   "private": true,
