@@ -275,6 +275,34 @@ describe('WizardStore live draft', () => {
       return httpMock.match((request) => request.method !== 'GET');
     }
 
+    it('sends no save for an untouched wizard', async () => {
+      const { httpMock } = setup();
+      await vi.advanceTimersByTimeAsync(5000);
+      expect(saves(httpMock)).toHaveLength(0);
+    });
+
+    it('sends no save after reset and brings no draft id back', async () => {
+      const { store, httpMock } = setup();
+      store.reset();
+      TestBed.tick();
+      await vi.advanceTimersByTimeAsync(5000);
+      expect(saves(httpMock)).toHaveLength(0);
+      expect(store.draftId()).toBeNull();
+    });
+
+    it('saves once the user types one destination field', async () => {
+      const { store, httpMock } = setup();
+      const typed = signal<Destination[]>(store.destinationsDraft());
+      TestBed.runInInjectionContext(() => store.syncDestinationsDraft(typed));
+      typed.set(typedDestinations);
+      TestBed.tick();
+      await vi.advanceTimersByTimeAsync(2000);
+
+      const [save] = saves(httpMock);
+      expect(save.request.method).toBe('POST');
+      save.flush({ draftId: 'draft-1', savedAt: new Date().toISOString() });
+    });
+
     it('saves typed, uncommitted data after the debounce', () => {
       const { store, httpMock } = setup();
       typeTraveler(store, validTraveler);

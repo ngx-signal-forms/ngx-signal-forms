@@ -27,6 +27,29 @@ import { withSavedDraft } from './features/saved-draft.feature';
 import { withTravelerManagement } from './features/traveler.feature';
 import { withTripManagement } from './features/trip.feature';
 
+/**
+ * True when the value holds something the user entered. The empty factories
+ * add placeholders (random ids, `type: 'other'`, `completed: false`, a blank
+ * destination), so those keys and empty fields do not count.
+ */
+function hasUserData(value: unknown): boolean {
+  if (typeof value === 'string') {
+    return value !== '';
+  }
+  if (typeof value === 'number') {
+    return value !== 0;
+  }
+  if (Array.isArray(value)) {
+    return value.some(hasUserData);
+  }
+  if (value !== null && typeof value === 'object') {
+    return Object.entries(value).some(
+      ([key, v]) => key !== 'id' && key !== 'type' && hasUserData(v),
+    );
+  }
+  return false;
+}
+
 export type { WizardStep } from './features/navigation.feature';
 
 // ══════════════════════════════════════════════════════════════════════════════
@@ -260,7 +283,7 @@ export const WizardStore = signalStore(
           // Skip only while there is nothing to save yet. Once a draft
           // exists, clearing a field must reach the server too.
           const hasContent = (part: WizardStepData): boolean =>
-            Boolean(part.traveler.firstName) || part.destinations.length > 0;
+            hasUserData(part.traveler) || hasUserData(part.destinations);
           if (
             store.draftId() !== null ||
             hasContent(data) ||
