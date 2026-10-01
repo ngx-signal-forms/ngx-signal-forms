@@ -44,23 +44,28 @@ guides and leave the migration incomplete rather than infer their contents.
    relevant tests. Confirm shipped exports and peer ranges. For RC11 to RC13,
    check notification/panel changes, renderer input union and `errorsOverride`,
    summary `showWarnings`, boolean submission results, independent warnings,
-   and field-shaped controls. For RC15 to RC16, check three removals. The testing
-   entry point no longer exports `findAlertContaining`; replace each call with
-   the query in the [testing guide](../testing/guide.md). The headless entry
-   point no longer exports `readFieldFlag` (use `field().invalid()` and
-   similar, or `createFieldStateFlags()`), `readErrors` (use
-   `field().errorSummary()` for a subtree, or `createErrorState()` for one
-   field's direct errors only), `toErrorSummaryEntry`,
-   `resolveFieldNameFromError` or `focusBoundControlFromError` (use
-   `createErrorSummaryEntries()`). The root entry point no longer exports
-   `NgxControlPresetRegistry` or `ControlVisibilitySignal`, and
-   `NgxFieldIdentity` no longer has `isControlVisible` or `setControlVisible`.
-   Replace a visibility read with `createControlVisibilitySignal()`, or with
-   `isElementCssVisible()` inside your own `earlyRead`. Replace
-   `NgxControlPresetRegistry` with `inject(NGX_SIGNAL_FORM_CONTROL_PRESETS)`;
-   replace `extend()` with `mergeNgxSignalFormControlPresets()`. Use the testing guide for changed
-   interactions. Repository `pnpm nx` tasks apply only when the user explicitly
-   requests toolkit maintenance in its own checkout.
+   and field-shaped controls. For RC15 to RC16, check these removals:
+
+   - Testing entry point: `findAlertContaining`. Replace each call with the
+     query in the [testing guide](../testing/guide.md).
+   - Headless entry point: `readFieldFlag`. Use `field().invalid()` and
+     similar, or `createFieldStateFlags()`.
+   - Headless entry point: `readErrors`. Use `field().errorSummary()` for a
+     subtree, or `createErrorState()` for one field's direct errors only.
+   - Headless entry point: `toErrorSummaryEntry`,
+     `resolveFieldNameFromError` and `focusBoundControlFromError`. Use
+     `createErrorSummaryEntries()`.
+   - Root entry point: `NgxFieldIdentity.isControlVisible`,
+     `NgxFieldIdentity.setControlVisible` and `ControlVisibilitySignal`. Use
+     `createControlVisibilitySignal()` for a visibility read, or
+     `isElementCssVisible()` inside your own `earlyRead`.
+   - Root entry point: `NgxControlPresetRegistry`. Use
+     `inject(NGX_SIGNAL_FORM_CONTROL_PRESETS)`, and replace `extend()` with
+     `mergeNgxSignalFormControlPresets()`.
+
+   Use the testing guide for changed interactions. Repository `pnpm nx` tasks
+   apply only when the user explicitly requests toolkit maintenance in its own
+   checkout.
 
    **Done:** no crossed-guide removal remains, and the target validation gates
    pass.

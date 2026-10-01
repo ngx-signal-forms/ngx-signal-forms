@@ -25,7 +25,7 @@ import { createCascadingResolver } from '../utilities/cascading-resolver';
  * providers use it. Call it yourself to extend a registry you read from
  * {@link NGX_SIGNAL_FORM_CONTROL_PRESETS} without mutating it.
  *
- * @param parentPresetsOrNull Base registry to merge onto, or `null` to start
+ * @param base Base registry to merge onto, or `null` to start
  *   from {@link DEFAULT_NGX_SIGNAL_FORM_CONTROL_PRESETS}.
  * @param presets Partial overrides to apply on top of the base registry.
  * @returns A new fully resolved preset registry (the input is not mutated).
@@ -42,11 +42,10 @@ import { createCascadingResolver } from '../utilities/cascading-resolver';
  * @public
  */
 export function mergeNgxSignalFormControlPresets(
-  parentPresetsOrNull: NgxSignalFormControlPresetRegistry | null,
+  base: NgxSignalFormControlPresetRegistry | null,
   presets: NgxSignalFormControlPresetOverrides,
 ): NgxSignalFormControlPresetRegistry {
-  const parentPresets =
-    parentPresetsOrNull ?? DEFAULT_NGX_SIGNAL_FORM_CONTROL_PRESETS;
+  const parentPresets = base ?? DEFAULT_NGX_SIGNAL_FORM_CONTROL_PRESETS;
   const normalized: NgxSignalFormControlPresetRegistry = {
     ...parentPresets,
   };
@@ -68,13 +67,13 @@ export function mergeNgxSignalFormControlPresets(
       layout: createCascadingResolver({
         input: override.layout,
         // NgxSignalFormControlPresetRegistry is Record<..., NgxSignalFormControlPreset>,
-        // so [rawKind].layout is always defined when parentPresetsOrNull is non-null.
-        configDefault: parentPresetsOrNull?.[rawKind].layout,
+        // so [rawKind].layout is always defined when base is non-null.
+        configDefault: base?.[rawKind].layout,
         fallback: DEFAULT_NGX_SIGNAL_FORM_CONTROL_PRESETS[rawKind].layout,
       }),
       ariaMode: createCascadingResolver({
         input: override.ariaMode,
-        configDefault: parentPresetsOrNull?.[rawKind].ariaMode,
+        configDefault: base?.[rawKind].ariaMode,
         fallback: DEFAULT_NGX_SIGNAL_FORM_CONTROL_PRESETS[rawKind].ariaMode,
       }),
     };

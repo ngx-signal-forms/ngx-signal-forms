@@ -1048,7 +1048,7 @@ declare function provideNgxSignalFormsConfigForComponent(config: NgxSignalFormsU
  * providers use it. Call it yourself to extend a registry you read from
  * {@link NGX_SIGNAL_FORM_CONTROL_PRESETS} without mutating it.
  *
- * @param parentPresetsOrNull Base registry to merge onto, or `null` to start
+ * @param base Base registry to merge onto, or `null` to start
  *   from {@link DEFAULT_NGX_SIGNAL_FORM_CONTROL_PRESETS}.
  * @param presets Partial overrides to apply on top of the base registry.
  * @returns A new fully resolved preset registry (the input is not mutated).
@@ -1064,7 +1064,7 @@ declare function provideNgxSignalFormsConfigForComponent(config: NgxSignalFormsU
  *
  * @public
  */
-declare function mergeNgxSignalFormControlPresets(parentPresetsOrNull: NgxSignalFormControlPresetRegistry | null, presets: NgxSignalFormControlPresetOverrides): NgxSignalFormControlPresetRegistry;
+declare function mergeNgxSignalFormControlPresets(base: NgxSignalFormControlPresetRegistry | null, presets: NgxSignalFormControlPresetOverrides): NgxSignalFormControlPresetRegistry;
 /**
  * Overrides semantic control presets for the current injector tree.
  *
@@ -1823,9 +1823,9 @@ declare class NgxFieldIdentity {
  * unrelated signal happened to invalidate the same computed.
  *
  * `providedIn: null` — this is never injected without an explicit provider,
- * matching `NgxFieldIdentity`'s element/directive-scoped contract. `NgxSignalForm` provides one instance
- * per `[ngxSignalForm]` host so fields in unrelated forms never collide on
- * field name.
+ * matching `NgxFieldIdentity`'s element/directive-scoped contract.
+ * `NgxSignalForm` provides one instance per `[ngxSignalForm]` host so fields
+ * in unrelated forms never collide on field name.
  *
  * @internal
  */
