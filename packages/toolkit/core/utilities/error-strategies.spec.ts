@@ -28,4 +28,8 @@ describe('shouldShowErrors', () => {
       );
     },
   );
+
+  it('treats submitting as submitted for on-submit', () => {
+    expect(shouldShowErrors(true, false, 'on-submit', 'submitting')).toBe(true);
+  });
 });
