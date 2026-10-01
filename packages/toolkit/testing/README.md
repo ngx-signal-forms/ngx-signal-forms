@@ -37,7 +37,6 @@ import {
   createA11yValidator,
   expectNoA11yViolations,
   expectVisibleFocusIndicator,
-  findAlertContaining,
   WCAG_22_AA_TAGS,
 } from '@ngx-signal-forms/toolkit/testing';
 ```
@@ -67,7 +66,6 @@ errors and warnings show.
 | `expectNoA11yViolations(context?, options?)` | Function | Run axe with the WCAG 2.2 AA tags. Rejects when axe finds a violation.                       |
 | `createA11yValidator(options?)`              | Function | Build a validator like `expectNoA11yViolations` with a smaller tag set.                      |
 | `expectVisibleFocusIndicator(element)`       | Function | Assert that the focused element shows a visible focus indicator.                             |
-| `findAlertContaining(container, text)`       | Function | Find the first `[role="alert"]` element whose text contains `text`.                          |
 | `WCAG_22_AA_TAGS`                            | Constant | The axe tags that `expectNoA11yViolations` uses.                                             |
 | `WCAG_22_AA_TAG`                             | Type     | One tag from `WCAG_22_AA_TAGS`.                                                              |
 | `A11yCheckOptions`                           | Type     | axe `RunOptions` without `runOnly`, plus `incomplete`.                                       |
@@ -167,21 +165,6 @@ The rules:
 
 The helper checks that an indicator exists. It does not measure contrast, so
 it does not cover WCAG 1.4.11 (Non-text Contrast).
-
-### `findAlertContaining(container, text)`
-
-Returns the first `[role="alert"]` element in `container` whose text contains
-`text`, or `undefined`. A form can hold several alert regions that stay in
-the page while empty, so `getByRole('alert')` can match more than one. Use
-this helper to check the message before the scan. A missing message then
-fails with a clear assertion:
-
-```typescript
-const errorAlert = findAlertContaining(container, 'Email is required');
-expect(errorAlert).toBeTruthy();
-
-await expectNoA11yViolations(container);
-```
 
 ## `WCAG_22_AA_TAGS`
 

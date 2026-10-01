@@ -29,9 +29,8 @@ import {
 } from '@ngx-signal-forms/toolkit/core';
 
 import { buildHeadlessContext } from './build-headless-context';
-import { readErrors } from './field-state-utilities';
+import { createFieldStateFlags, readErrors } from './field-state-utilities';
 import {
-  createFieldStateFlags,
   dedupeValidationErrors,
   resolveErrorMessage,
   type ResolvedError,

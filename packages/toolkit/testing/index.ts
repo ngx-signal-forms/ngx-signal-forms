@@ -8,7 +8,6 @@ export {
   createA11yValidator,
   expectNoA11yViolations,
   expectVisibleFocusIndicator,
-  findAlertContaining,
   WCAG_22_AA_TAGS,
 } from './a11y';
 export type {
