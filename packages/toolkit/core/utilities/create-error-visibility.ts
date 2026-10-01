@@ -215,7 +215,7 @@ export function createErrorVisibility(
       if (concreteStrategy === 'on-submit' && statusValue === undefined) {
         warnOnce(
           'warn',
-          "[ngx-signal-forms] createErrorVisibility(): 'on-submit' strategy requires an explicit submittedStatus signal. " +
+          "[ngx-signal-forms] createErrorVisibility(): 'on-submit' strategy requires an explicit submittedStatus value or signal. " +
             "Without it, errors will never surface. Wire the status from NgxSignalForm ('ngxSignalForm') or pass submittedStatus explicitly.",
         );
       }

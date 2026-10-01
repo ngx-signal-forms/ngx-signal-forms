@@ -346,7 +346,7 @@ resolving through their registries. Read the bundled
 ```typescript
 // Wrong — outside an ngxSignalForm context, errors never show. Dev mode logs
 // a one-shot console.warn("[ngx-signal-forms] createErrorVisibility():
-// 'on-submit' strategy requires an explicit submittedStatus signal. Without
+// 'on-submit' strategy requires an explicit submittedStatus value or signal. Without
 // it, errors will never surface. Wire the status from NgxSignalForm
 // ('ngxSignalForm') or pass submittedStatus explicitly.").
 const visible = createErrorVisibility(form.email, { strategy: 'on-submit' });
