@@ -457,8 +457,8 @@ export class NgxSignalFormAutoAria {
    * Whether this control is currently laid out, sourced from the directive's
    * own read phase.
    *
-   * Deliberately *not* the owning wrapper's published
-   * `NgxFieldIdentity.isControlVisible`. Reading that flag made the
+   * Deliberately *not* a flag published by the owning wrapper. An
+   * identity-level cached flag existed until rc.16 and was removed. Reading it made the
    * `aria-invalid` staleness fix conditional on there being a built-in
    * wrapper: a custom wrapper inside a collapsed `<details>`, an inactive
    * tab, or a non-current wizard step kept a stale `aria-invalid` on a hidden

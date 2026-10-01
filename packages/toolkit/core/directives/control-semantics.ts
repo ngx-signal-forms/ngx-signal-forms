@@ -1,6 +1,8 @@
 import { computed, Directive, ElementRef, inject, input } from '@angular/core';
-import { NgxControlPresetRegistry } from '../services/control-preset-registry';
-import { NGX_SIGNAL_FORM_ARIA_MODE } from '../tokens';
+import {
+  NGX_SIGNAL_FORM_ARIA_MODE,
+  NGX_SIGNAL_FORM_CONTROL_PRESETS,
+} from '../tokens';
 import type {
   NgxSignalFormControlAriaMode,
   NgxSignalFormControlKind,
@@ -85,7 +87,6 @@ type NgxSignalFormControlDirectiveValue =
     '[attr.data-ngx-signal-form-control-aria-mode]': 'ariaMode()',
   },
   providers: [
-    NgxControlPresetRegistry,
     {
       provide: NGX_SIGNAL_FORM_ARIA_MODE,
       useFactory: () => inject(NgxSignalFormControl).ariaMode,
@@ -93,9 +94,9 @@ type NgxSignalFormControlDirectiveValue =
   ],
 })
 export class NgxSignalFormControl {
-  // Provided at this directive's node so it observes element-scoped preset
-  // overrides; the token remains the backing source of truth.
-  readonly #presetRegistry = inject(NgxControlPresetRegistry);
+  // Resolved from this directive's own injector, so element- and
+  // component-scoped preset overrides win over the root presets.
+  readonly #presets = inject(NGX_SIGNAL_FORM_CONTROL_PRESETS);
 
   /**
    * Host element this directive is applied to.
@@ -139,7 +140,7 @@ export class NgxSignalFormControl {
   // only diverges if a consumer supplies NGX_SIGNAL_FORM_CONTROL_PRESETS with a
   // different key set, in which case validating against the registry the
   // directive actually resolves presets from is the intended contract.
-  readonly #recognizedKinds = new Set<string>(this.#presetRegistry.kinds());
+  readonly #recognizedKinds = new Set<string>(Object.keys(this.#presets));
 
   readonly kind = computed(() => {
     const kind = this.#baseSemantics().kind;
@@ -149,7 +150,7 @@ export class NgxSignalFormControl {
 
   readonly layout = computed(() => {
     const kind = this.kind();
-    const preset = kind ? this.#presetRegistry.resolve(kind) : undefined;
+    const preset = kind ? this.#presets[kind] : undefined;
     const layout =
       this.layoutOverride() ?? this.#baseSemantics().layout ?? preset?.layout;
 
@@ -158,7 +159,7 @@ export class NgxSignalFormControl {
 
   readonly ariaMode = computed(() => {
     const kind = this.kind();
-    const preset = kind ? this.#presetRegistry.resolve(kind) : undefined;
+    const preset = kind ? this.#presets[kind] : undefined;
     const ariaMode =
       this.ariaModeOverride() ??
       this.#baseSemantics().ariaMode ??

@@ -173,11 +173,10 @@ describe('NgxSignalFormAutoAria browser mode', () => {
 
   it('clears aria-invalid when the wrapper hides the bound control and restores it when shown again', async () => {
     // User Story 2: aria-invalid must not go stale on collapsed/hidden
-    // controls. The wrapper polls `Element.checkVisibility()` in its
-    // `afterEveryRender` write phase and pushes the result into
-    // `NgxFieldIdentity._setControlVisible`. Auto-aria's `ariaInvalid`
-    // computed returns null while `isControlVisible() === false`, so
-    // hiding the input via the `hidden` attribute removes the attribute.
+    // controls. Auto-aria probes its own host with `isElementCssVisible()`
+    // in its `earlyRead` phase. Its `ariaInvalid` computed returns null while
+    // the host has no layout box, so hiding the input via the `hidden`
+    // attribute removes the attribute.
     @Component({
       selector: 'ngx-test-auto-aria-browser-visibility',
       imports: [MockFormFieldDirective, NgxSignalFormAutoAria, NgxFormField],

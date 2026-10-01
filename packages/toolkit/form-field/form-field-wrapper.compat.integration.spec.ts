@@ -54,12 +54,11 @@ async function flushAutoAria(): Promise<void> {
   //
   // `aria-invalid` is deliberately NOT asserted in this jsdom spec: when a
   // control is wrapped by `NgxFormFieldWrapper`, auto-aria gates
-  // `aria-invalid` on `NgxFieldIdentity.isControlVisible`, which the wrapper
-  // derives from `isElementCssVisible()` (`Element.checkVisibility()` /
-  // `offsetParent`). jsdom does not compute layout, so `offsetParent` is
-  // unreliable for attached elements (see `field-identity.spec.ts`'s own
-  // `isElementCssVisible` suite) — regardless of compat, a wrapped control's
-  // `aria-invalid` is exercised in `*.browser.spec.ts`, where layout is real.
+  // `aria-invalid` on its own `isElementCssVisible()` probe
+  // (`Element.checkVisibility()` / `offsetParent`). jsdom does not compute
+  // layout, so `offsetParent` is unreliable for attached elements —
+  // regardless of compat, a wrapped control's `aria-invalid` is exercised in
+  // `*.browser.spec.ts`, where layout is real.
   await TestBed.inject(ApplicationRef).whenStable();
 }
 

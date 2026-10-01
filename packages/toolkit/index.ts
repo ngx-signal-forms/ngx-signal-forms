@@ -26,7 +26,6 @@ export {
   NGX_SIGNAL_FORM_HINT_REGISTRY,
   NGX_SIGNAL_FORMS_CONFIG,
   WARN_KIND_PREFIX,
-  NgxControlPresetRegistry,
   NgxFieldIdentity,
   NgxFieldIdentityProvider,
   NgxSignalFormAutoAria,
@@ -57,6 +56,7 @@ export {
   isNgxSignalFormControlKind,
   isNgxSignalFormControlLayout,
   isWarningError,
+  mergeNgxSignalFormControlPresets,
   normalizeFieldName,
   provideErrorMessages,
   provideFieldLabels,
@@ -84,7 +84,6 @@ export {
 
 export type {
   AriaDescribedByChainOptions,
-  ControlVisibilitySignal,
   CreateErrorVisibilityOptions,
   CreateFieldPresentationOptions,
   CreateWarningVisibilityOptions,

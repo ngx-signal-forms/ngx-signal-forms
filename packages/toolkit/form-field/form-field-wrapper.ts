@@ -1173,8 +1173,7 @@ export class NgxFormFieldWrapper<TValue = unknown> {
     // `findBoundControl` when nothing changed. A real swap still falls
     // through to it. The steady-state render still runs one
     // `querySelectorAll` for the selection-control count, because an `@for`
-    // can add or remove radios without swapping the control itself, and one
-    // `checkVisibility()` call for the bound control.
+    // can add or remove radios without swapping the control itself.
     afterEveryRender({
       earlyRead: () =>
         // Resolves the host element, the bound control (native binding

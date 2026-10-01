@@ -1,4 +1,4 @@
-import { computed, Injectable, signal, type Signal } from '@angular/core';
+import { computed, Injectable, signal } from '@angular/core';
 import { devWarnOnce, type WarnOnceRef } from '../utilities/dev-warn-once';
 import {
   createFieldMessageIdSignals,
@@ -68,25 +68,6 @@ export function isElementCssVisible(el: HTMLElement): boolean {
 }
 
 /**
- * A `Signal<boolean>` that is ALSO a one-shot visibility probe.
- *
- * - Called with no argument it behaves exactly like the underlying readonly
- *   signal: it returns the cached "is the bound control laid out?" value and
- *   participates in reactive dependency tracking (so it can be threaded into
- *   `computed()` / `createAriaInvalidSignal` unchanged).
- * - Called with an `HTMLElement` it delegates to {@link isElementCssVisible}
- *   for an ad-hoc, NON-reactive check of an arbitrary element — useful for a
- *   custom control that wants to reuse the wrapper's exact visibility rule
- *   for its own probe without re-implementing the CSS test.
- *
- * @public
- */
-export interface ControlVisibilitySignal extends Signal<boolean> {
-  /** Ad-hoc CSS-visibility probe for an arbitrary element. Non-reactive. */
-  (el: HTMLElement): boolean;
-}
-
-/**
  * Centralized, element-scoped field identity service that owns the load-bearing
  * a11y primitives every assistive/headless surface depends on:
  *
@@ -97,9 +78,6 @@ export interface ControlVisibilitySignal extends Signal<boolean> {
  *   `null`) and feeds it in. Wrappers that opt into the label `for=` tier do so
  *   via `createFieldNameResolver`, which exposes the same cascade with the
  *   label tier as an opt-in middle step.
- * - **Visibility** — {@link NgxFieldIdentity.isControlVisible}, a callable
- *   signal that returns the cached visibility flag with no argument and probes
- *   an arbitrary element (via {@link isElementCssVisible}) when given one.
  * - **Stable ID generation** — {@link NgxFieldIdentity.errorId} (`{name}-error`)
  *   and {@link NgxFieldIdentity.warningId} (`{name}-warning`), derived from the
  *   resolved field name and `null` when no name is available.
@@ -137,7 +115,6 @@ export class NgxFieldIdentity {
   readonly #controlElement = signal<HTMLElement | null>(null);
   readonly #controlId = signal<string | null>(null);
   readonly #hintIds = signal<readonly string[] | null>(null);
-  readonly #isControlVisible = signal(true);
   readonly #resolvedErrorStrategy = signal<ResolvedErrorDisplayStrategy | null>(
     null,
   );
@@ -210,66 +187,6 @@ export class NgxFieldIdentity {
   readonly resolvedWarningStrategy = this.#resolvedWarningStrategy.asReadonly();
 
   /**
-   * Whether the bound control currently has a CSS layout box that the
-   * user would interact with. Flips to `false` when the control is inside
-   * a collapsed `<details>`, hidden via the `hidden` attribute, or set
-   * to `display: none`. Stays `true` for elements merely scrolled off
-   * the viewport.
-   *
-   * Driven by the wrapper, which calls `setControlVisible` from its
-   * `afterEveryRender` write phase via {@link isElementCssVisible}. Defaults
-   * to `true` so consumers never strip ARIA attributes pre-visibility-eval.
-   *
-   * Nothing inside the toolkit reads this any more: `NgxSignalFormAutoAria`
-   * probes its own host element instead, so its `aria-invalid` gate works for
-   * every wrapper rather than only the built-in one, and each control in a
-   * cluster tracks its own layout state (ADR-0011). The channel stays because
-   * it is a published read surface — a consumer holding an ancestor identity
-   * can still read the wrapper's view of its bound control.
-   *
-   * This member is a {@link ControlVisibilitySignal}: a real `Signal<boolean>`
-   * (reactive, threadable into `computed()`) that additionally accepts an
-   * `HTMLElement` argument to perform an ad-hoc, non-reactive visibility probe
-   * via {@link isElementCssVisible}. Probing an element never mutates the
-   * cached flag — only `setControlVisible` does.
-   *
-   * @example No-arg: read the cached, reactive flag.
-   * ```ts
-   * effect(() => console.log('laid out?', identity.isControlVisible()));
-   * ```
-   *
-   * @example Element-arg: reuse the wrapper's exact visibility rule ad hoc.
-   * ```ts
-   * const laidOut = identity.isControlVisible(myEl);
-   * ```
-   */
-  readonly isControlVisible: ControlVisibilitySignal =
-    this.#createControlVisibilitySignal();
-
-  /**
-   * Builds the hybrid {@link ControlVisibilitySignal}: a function that probes
-   * an arbitrary element when called with one, and otherwise defers to the
-   * cached readonly signal. The readonly signal's own properties (including the
-   * Angular signal brand and `SIGNAL` node) are copied onto the function so it
-   * remains a fully-valid `Signal<boolean>` for reactive consumers.
-   */
-  #createControlVisibilitySignal(): ControlVisibilitySignal {
-    const readonly = this.#isControlVisible.asReadonly();
-    const probe = (el?: HTMLElement): boolean =>
-      el === undefined ? readonly() : isElementCssVisible(el);
-    for (const key of [
-      ...Object.getOwnPropertyNames(readonly),
-      ...Object.getOwnPropertySymbols(readonly),
-    ]) {
-      const descriptor = Object.getOwnPropertyDescriptor(readonly, key);
-      if (descriptor) {
-        Object.defineProperty(probe, key, descriptor);
-      }
-    }
-    return probe as ControlVisibilitySignal;
-  }
-
-  /**
    * Aggregated `aria-describedby` ID chain for this field, derived from
    * `hintIds`. Returns `null` when no IDs apply.
    *
@@ -327,9 +244,6 @@ export class NgxFieldIdentity {
     }
     this.#controlElement.set(el);
     if (!el) {
-      // No element to evaluate — assume visible so consumers do not strip
-      // attributes based on stale "hidden" state from the previous element.
-      this.#isControlVisible.set(true);
       return;
     }
     const isWrapperHosted = el.closest('ngx-form-field-wrapper') !== null;
@@ -343,23 +257,6 @@ export class NgxFieldIdentity {
           '`fieldName` input is added to the wrapper.',
         el,
       );
-    }
-  }
-
-  /**
-   * Updates the cached visibility of the bound control. Idempotent.
-   *
-   * The wrapper drives this from its `afterEveryRender` write phase via
-   * {@link isElementCssVisible}. Polling the
-   * visibility on each render rather than via `IntersectionObserver`
-   * avoids both the spurious "scroll = hidden" semantics IO has and the
-   * teardown/leak surface of long-lived observers.
-   *
-   * @internal
-   */
-  setControlVisible(isVisible: boolean): void {
-    if (isVisible !== this.#isControlVisible()) {
-      this.#isControlVisible.set(isVisible);
     }
   }
 

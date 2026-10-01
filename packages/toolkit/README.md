@@ -498,13 +498,13 @@ behave like the built-in ones. Read
 
 **Control kinds and presets**
 
-| Export                                                                                           | Does                                                                                          |
-| ------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------- |
-| `resolveNgxSignalFormControlSemantics(element, presets)`                                         | Declared kind, then guessed kind, then preset. Same as the wrapper                            |
-| `NgxControlPresetRegistry`                                                                       | Service with `resolve(kind)`, `kinds()`, and `extend(overrides)`. Add it to `providers` first |
-| `NGX_SIGNAL_FORM_CONTROL_PRESETS` / `DEFAULT_NGX_SIGNAL_FORM_CONTROL_PRESETS`                    | The active presets and the built-in presets                                                   |
-| `NGX_SIGNAL_FORM_ARIA_MODE`                                                                      | The `auto` or `manual` ARIA mode of one control host                                          |
-| `isNgxSignalFormControlKind` / `isNgxSignalFormControlLayout` / `isNgxSignalFormControlAriaMode` | Type guards for preset values                                                                 |
+| Export                                                                                           | Does                                                                             |
+| ------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------- |
+| `resolveNgxSignalFormControlSemantics(element, presets)`                                         | Declared kind, then guessed kind, then preset. Same as the wrapper               |
+| `mergeNgxSignalFormControlPresets(base, overrides)`                                              | Returns new presets with `overrides` merged per field. It does not change `base` |
+| `NGX_SIGNAL_FORM_CONTROL_PRESETS` / `DEFAULT_NGX_SIGNAL_FORM_CONTROL_PRESETS`                    | The active presets and the built-in presets                                      |
+| `NGX_SIGNAL_FORM_ARIA_MODE`                                                                      | The `auto` or `manual` ARIA mode of one control host                             |
+| `isNgxSignalFormControlKind` / `isNgxSignalFormControlLayout` / `isNgxSignalFormControlAriaMode` | Type guards for preset values                                                    |
 
 **Ids and ARIA**
 
