@@ -228,8 +228,8 @@ hidden inner input or combobox.
 
 The helpers fail open where `checkVisibility()` is unavailable; jsdom cannot
 prove layout behavior. The signal helper also stays true until the target is
-available. `identity.isControlVisible()` is a cached flag;
-`identity.isControlVisible(element)` is a non-reactive probe, not a render hook.
+available. `NgxFieldIdentity` has no visibility member. Use one of the two
+helpers above.
 For radios, test each option independently, then the whole collapsed group.
 Reopen after changing validation. Use [browser checks](../testing/guide.md#browser-state-checks).
 

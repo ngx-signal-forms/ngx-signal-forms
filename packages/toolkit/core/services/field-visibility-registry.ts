@@ -23,8 +23,7 @@ import type { NgxSignalFormFieldVisibilityDescriptor } from '../tokens';
  * unrelated signal happened to invalidate the same computed.
  *
  * `providedIn: null` — this is never injected without an explicit provider,
- * matching `NgxFieldIdentity`'s and `NgxControlPresetRegistry`'s
- * element/directive-scoped contract. `NgxSignalForm` provides one instance
+ * matching `NgxFieldIdentity`'s element/directive-scoped contract. `NgxSignalForm` provides one instance
  * per `[ngxSignalForm]` host so fields in unrelated forms never collide on
  * field name.
  *

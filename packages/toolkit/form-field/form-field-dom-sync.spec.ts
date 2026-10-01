@@ -54,7 +54,6 @@ function createIdentity() {
   return {
     setFieldName: vi.fn(),
     setControlElement: vi.fn(),
-    setControlVisible: vi.fn(),
     setHintIds: vi.fn(),
   } satisfies WrapperDomIdentity;
 }
@@ -76,7 +75,6 @@ function snapshot(
     selectionControlCount: 0,
     label: null,
     mainSlot: null,
-    controlVisible: true,
     ...overrides,
   };
 }
@@ -131,19 +129,6 @@ describe('applyWrapperDomSnapshot — field name and identity', () => {
       'email-hint',
       'shared-hint',
     ]);
-  });
-
-  it('passes the early-read visibility through without probing layout', () => {
-    const identity = createIdentity();
-
-    applyWrapperDomSnapshot(
-      snapshot({ controlVisible: false }),
-      createState(),
-      identity,
-      [],
-    );
-
-    expect(identity.setControlVisible).toHaveBeenCalledWith(false);
   });
 });
 
