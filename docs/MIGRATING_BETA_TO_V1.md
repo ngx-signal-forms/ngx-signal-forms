@@ -1233,7 +1233,10 @@ leaf is counted consistently whether it's `null` or populated.
 presentation="panel">`, and rename the `--ngx-signal-form-notification-*`
     custom properties to their `-error-panel-*` / `-warning-panel-*`
     equivalents;
-  - replace `showErrors(…)` with `createErrorVisibility(…)`;
+  - replace `showErrors(field, strategy, submittedStatus)` with
+    `createErrorVisibility(field, { strategy, submittedStatus })`; call the
+    replacement inside an Angular injection context, or include `injector` in
+    the options when calling it outside one;
   - move `[colorThresholds]` on `NgxFormFieldCharacterCount` into the
     `--ngx-form-field-char-count-warning-threshold` /
     `--ngx-form-field-char-count-danger-threshold` CSS tokens;
