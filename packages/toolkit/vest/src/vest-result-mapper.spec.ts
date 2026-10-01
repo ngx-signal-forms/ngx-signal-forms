@@ -21,12 +21,10 @@ import type { VestResultLike } from './vest-run-coordinator';
  * `vest-adapter.spec.ts` and `vest-adapter-guarantees.spec.ts`.
  */
 
-/** A field tree stand-in whose Vest field paths never resolve (no own
- * properties), so every entry lands on this SAME root tree via the
- * `'virtual'` fallback documented on `resolveVestFieldName` in
- * `./vest-result-mapper.ts`. That fallback is field-name-resolution behaviour, not
- * this module's concern -- these tests only assert on the mapped `kind`,
- * `message` and that `fieldTree` is passed through unchanged. */
+/** A field tree stand-in with no own properties. These tests focus on
+ * mapping: the entry `kind`, `message`, and that `fieldTree` passes through
+ * unchanged. Field-name resolution (bracket paths, virtual names, invalid
+ * tails) is covered by `vest-adapter.spec.ts`. */
 const fieldTree = (() => undefined) as unknown as ReadonlyFieldTree<unknown>;
 
 /** Builds a minimal {@link VestResultLike} from plain error/warning maps. */
