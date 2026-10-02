@@ -8,8 +8,10 @@ draft/commit buffer**. Reads stay reactive to the store through a `linkedSignal`
 seam, so an out-of-band store mutation is reflected back into the form.
 
 This is the deliberate _contrast_ to the [Advanced Wizard](../advanced-wizard/README.md),
-whose `destinationsDraft` → `commitDestinations()` draft/commit buffer keeps
-edits local until committed. Pick draft/commit when you need a cancelable
+whose `destinationsDraft` → `commitDestinations()` draft/commit buffer works
+in two parts. Typed values reach the draft, so autosave can keep them. The
+committed data changes only when the user commits. Step completion follows the
+committed data. Pick draft/commit when you need a cancelable
 editing session; pick live binding when the store should always mirror what the
 user sees.
 

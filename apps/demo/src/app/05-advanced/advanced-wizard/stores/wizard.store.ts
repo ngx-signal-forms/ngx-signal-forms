@@ -13,19 +13,51 @@ import { debounceTime, distinctUntilChanged, pipe, tap } from 'rxjs';
 
 import {
   createEmptyDestination,
-  Destination,
-  Traveler,
+  DEFAULT_REQUIREMENT_TYPE,
+  isPassportValidForDeparture,
+  lastDepartureDate,
   Trip,
   TripSchema,
   type WizardDraft,
+  type WizardStepData,
 } from '../schemas/wizard.schemas';
 import {
   withWizardNavigation,
   type WizardStep,
 } from './features/navigation.feature';
+import { isSameData } from './features/draft-link';
 import { withSavedDraft } from './features/saved-draft.feature';
 import { withTravelerManagement } from './features/traveler.feature';
 import { withTripManagement } from './features/trip.feature';
+
+/**
+ * True when the value holds something the user entered. The empty factories
+ * add placeholders (random ids, the default requirement `type`, `completed:
+ * false`, a blank destination), so those keys and empty fields do not count.
+ * A `type` other than the default and a `true` checkbox are user edits.
+ */
+function hasUserData(value: unknown): boolean {
+  if (typeof value === 'boolean') {
+    return value;
+  }
+  if (typeof value === 'string') {
+    return value !== '';
+  }
+  if (typeof value === 'number') {
+    return value !== 0;
+  }
+  if (Array.isArray(value)) {
+    return value.some(hasUserData);
+  }
+  if (value !== null && typeof value === 'object') {
+    return Object.entries(value).some(
+      ([key, v]) =>
+        key !== 'id' &&
+        (key === 'type' ? v !== DEFAULT_REQUIREMENT_TYPE : hasUserData(v)),
+    );
+  }
+  return false;
+}
 
 export type { WizardStep } from './features/navigation.feature';
 
@@ -42,11 +74,6 @@ type BookingResponse = {
   bookingId: string;
   confirmationNumber: string;
   status: 'confirmed' | 'pending';
-};
-
-type TripSummary = {
-  traveler: Traveler;
-  destinations: Destination[];
 };
 
 // ══════════════════════════════════════════════════════════════════════════════
@@ -76,37 +103,65 @@ export const WizardStore = signalStore(
   withComputed((store) => ({
     // ══════════════════════════════════════════════════════════════════════════
     // STEP VALIDATION - the wizard Zod schemas own the rules; the store only
-    // asks them about the draft the user is editing.
+    // asks them about the data.
+    //
+    // Two kinds of data, on purpose:
+    // - Committed (`traveler`, `destinations`): set by Next or a resumed
+    //   draft. A step is "completed" only when this is valid.
+    // - Draft (`travelerDraft`, `destinationsDraft`): what the user has typed.
+    //   It answers "may I proceed from the step I am on?", never "is it done?".
     // ══════════════════════════════════════════════════════════════════════════
     isTravelerStepValid: () =>
-      TripSchema.shape.traveler.safeParse(store.travelerDraft()).success,
+      TripSchema.shape.traveler.safeParse(store.traveler()).success,
     isTripStepValid: () =>
+      TripSchema.shape.destinations.safeParse(store.destinations()).success,
+    isTravelerDraftValid: () =>
+      TripSchema.shape.traveler.safeParse(store.travelerDraft()).success,
+    isTripDraftValid: () =>
       TripSchema.shape.destinations.safeParse(store.destinationsDraft())
         .success,
   })),
 
   withComputed((store) => ({
-    isReviewStepValid: () =>
-      store.isTravelerStepValid() && store.isTripStepValid(),
-
     /**
-     * Validation status for all steps as a record.
+     * The passport rule spans two steps, so `TripSchema` cannot hold it. It
+     * reads committed data: this is what gets booked.
+     */
+    isCommittedPassportValid: () =>
+      isPassportValidForDeparture(
+        store.traveler().passportExpiry,
+        lastDepartureDate(store.destinations()),
+      ),
+  })),
+
+  withComputed((store) => ({
+    isReviewStepValid: () =>
+      store.isTravelerStepValid() &&
+      store.isTripStepValid() &&
+      store.isCommittedPassportValid(),
+  })),
+
+  withComputed((store) => ({
+    /**
+     * Completion status for all steps as a record. Reads committed data only,
+     * so typing alone never marks a step as completed.
      */
     stepValidation: (): Record<WizardStep, boolean> => ({
       traveler: store.isTravelerStepValid(),
       trip: store.isTripStepValid(),
-      review: store.isTravelerStepValid() && store.isTripStepValid(),
+      review: store.isReviewStepValid(),
     }),
 
     /**
-     * Whether the current step's draft is valid and user can proceed.
+     * Whether the draft of the current step is valid, so Next can commit it.
+     * Reads the live draft: the step is not committed yet.
      */
     canProceed: () => {
       switch (store.currentStep()) {
         case 'traveler':
-          return store.isTravelerStepValid();
+          return store.isTravelerDraftValid();
         case 'trip':
-          return store.isTripStepValid();
+          return store.isTripDraftValid();
         case 'review':
           return true;
         default:
@@ -115,13 +170,21 @@ export const WizardStore = signalStore(
     },
 
     // ══════════════════════════════════════════════════════════════════════════
-    // TRIP DATA - uses drafts for auto-save, committed for submission
+    // TRIP DATA - committed and in-progress data for auto-save, committed for
+    // submission
     // ══════════════════════════════════════════════════════════════════════════
 
-    /** Draft data for auto-save (saves work in progress) */
-    draftSummary: (): TripSummary => ({
-      traveler: store.travelerDraft(),
-      destinations: store.destinationsDraft(),
+    /**
+     * What auto-save sends. The committed part keeps the meaning of Next; the
+     * in-progress part carries what the user typed, so a reload gets it back.
+     */
+    draftSummary: (): WizardDraft => ({
+      traveler: store.traveler(),
+      destinations: store.destinations(),
+      inProgress: {
+        traveler: store.travelerDraft(),
+        destinations: store.destinationsDraft(),
+      },
     }),
 
     /** Committed data for final submission */
@@ -131,14 +194,13 @@ export const WizardStore = signalStore(
       confirmed: false,
     }),
 
-    isReadyToSubmit: () =>
-      TripSchema.safeParse({
-        traveler: store.traveler(),
-        destinations: store.destinations(),
-      }).success,
-
+    /** Live: the trip step shows its empty state from the typed draft. */
     hasDestinations: () => store.destinationsDraft().length > 0,
     hasConfirmedBooking: () => store.bookingConfirmation() !== null,
+  })),
+
+  withComputed((store) => ({
+    isReadyToSubmit: () => store.isReviewStepValid(),
   })),
 
   // A booking or a reset ends the draft. Each save records the epoch it started
@@ -231,17 +293,33 @@ export const WizardStore = signalStore(
   // Additional methods
   withMethods((store) => {
     // Auto-save draft data with debounce
-    const autoSaveDraft = rxMethod<TripSummary>(
+    const autoSaveDraft = rxMethod<WizardDraft>(
       pipe(
         debounceTime(2000),
-        distinctUntilChanged((a, b) => JSON.stringify(a) === JSON.stringify(b)),
+        distinctUntilChanged(isSameData),
         tap((data) => {
           // Until the saved draft arrives, the drafts are still empty. Saving
           // them would overwrite the draft that is loading.
           if (store.isLoadingDraft()) {
             return;
           }
-          if (data.traveler.firstName || data.destinations.length > 0) {
+          // The booked trip stays on screen for the confirmation, so it still
+          // looks like content. A save now would bring the draft id back and
+          // a reload would resume the booked trip.
+          if (store.hasConfirmedBooking()) {
+            return;
+          }
+          // Skip only while there is nothing to save yet. Once a draft
+          // exists, clearing a field must reach the server too.
+          const hasContent = (part: WizardStepData): boolean =>
+            hasUserData(part.traveler) || hasUserData(part.destinations);
+          if (
+            // A failed resume means no usable server draft, so the stale id
+            // does not count: the blank initial emission must not replace it.
+            (store.draftId() !== null && !store.resumeFailed()) ||
+            hasContent(data) ||
+            (data.inProgress !== undefined && hasContent(data.inProgress))
+          ) {
             void store.saveDraft(data);
           }
         }),
@@ -260,7 +338,11 @@ export const WizardStore = signalStore(
         }
 
         if (!store.isReadyToSubmit()) {
-          patchState(store, { error: 'Please complete all required fields' });
+          patchState(store, {
+            error: store.isCommittedPassportValid()
+              ? 'Please complete all required fields'
+              : 'Passport must be valid 6 months after trip ends',
+          });
           return;
         }
         void store.submitBooking(store.tripData());

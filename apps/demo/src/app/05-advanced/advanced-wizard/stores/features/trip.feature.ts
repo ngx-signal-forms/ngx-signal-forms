@@ -1,6 +1,7 @@
 import { linkedSignal } from '@angular/core';
 import {
   patchState,
+  signalMethod,
   signalStoreFeature,
   type,
   withComputed,
@@ -18,6 +19,7 @@ import {
   Requirement,
   type WizardDraft,
 } from '../../schemas/wizard.schemas';
+import { linkDraft } from './draft-link';
 
 // Compose nested updates for 3-level depth (destinations → activities → requirements)
 function updateRequirementNested(
@@ -51,11 +53,17 @@ export function withTripManagement() {
         savedDraftValue()?.destinations ?? [createEmptyDestination()],
     })),
 
-    // Draft state linked to committed - form binds to this
-    withLinkedState(({ destinations }) => ({
-      destinationsDraft: linkedSignal({
-        source: destinations,
-        computation: (committed) => structuredClone(committed),
+    // Draft state: what the user has typed. See `travelerDraft` for the rules.
+    withLinkedState(({ destinations, savedDraftValue }) => ({
+      destinationsDraft: linkedSignal<
+        { committed: Destination[]; saved: WizardDraft | undefined },
+        Destination[]
+      >({
+        source: () => ({
+          committed: destinations(),
+          saved: savedDraftValue(),
+        }),
+        computation: linkDraft('destinations'),
       }),
     })),
 
@@ -74,6 +82,17 @@ export function withTripManagement() {
       commitDestinations(): void {
         patchState(store, { destinations: store.destinationsDraft() });
       },
+
+      /**
+       * Copies the typed destinations into `destinationsDraft`, so autosave
+       * sees them. Call it with the form model in an injection context.
+       * Typing does not commit the step.
+       */
+      syncDestinationsDraft: signalMethod<Destination[]>(
+        (destinationsDraft) => {
+          patchState(store, { destinationsDraft });
+        },
+      ),
 
       // Discard draft changes
       discardDestinationChanges(): void {

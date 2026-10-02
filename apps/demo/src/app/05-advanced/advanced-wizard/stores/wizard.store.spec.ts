@@ -23,7 +23,7 @@ describe('WizardStore step validity', () => {
       lastName: 'Lovelace',
       email: 'ada@example.com',
       passportNumber: 'X1234567',
-      passportExpiry: '2099-01-01',
+      passportExpiry: '2100-01-01',
       nationality: 'UK',
     });
   }
@@ -96,9 +96,14 @@ describe('WizardStore step validity', () => {
       fillValidTrip(store);
       store.goToStep('trip', true);
 
+      expect(store.isTripDraftValid()).toBe(true);
+      expect(store.canProceed()).toBe(true);
+
+      // The step is completed once Next commits it, not before.
+      expect(store.stepValidation().trip).toBe(false);
+      store.commitDestinations();
       expect(store.isTripStepValid()).toBe(true);
       expect(store.stepValidation().trip).toBe(true);
-      expect(store.canProceed()).toBe(true);
     });
 
     it('is invalid when the departure date is before the arrival date', () => {
@@ -107,7 +112,7 @@ describe('WizardStore step validity', () => {
       store.updateDestination(0, { departureDate: '2098-12-01' });
       store.goToStep('trip', true);
 
-      expect(store.isTripStepValid()).toBe(false);
+      expect(store.isTripDraftValid()).toBe(false);
       expect(store.canProceed()).toBe(false);
     });
 
@@ -122,7 +127,8 @@ describe('WizardStore step validity', () => {
         store.updateActivity(0, 0, { date: activityDate });
         store.goToStep('trip', true);
 
-        expect(store.isTripStepValid()).toBe(false);
+        expect(store.isTripDraftValid()).toBe(false);
+        store.commitDestinations();
         expect(store.stepValidation().trip).toBe(false);
         expect(store.canProceed()).toBe(false);
       },
@@ -134,7 +140,7 @@ describe('WizardStore step validity', () => {
       store.removeActivity(0, 0);
       store.goToStep('trip', true);
 
-      expect(store.isTripStepValid()).toBe(false);
+      expect(store.isTripDraftValid()).toBe(false);
       expect(store.canProceed()).toBe(false);
     });
 
@@ -147,12 +153,15 @@ describe('WizardStore step validity', () => {
   });
 
   describe('review step and submission', () => {
-    it('is valid only when both drafts pass their schemas', () => {
+    it('is valid only when both committed steps pass their schemas', () => {
       const store = setup();
       fillValidTraveler(store);
       expect(store.isReviewStepValid()).toBe(false);
 
       fillValidTrip(store);
+      expect(store.isReviewStepValid()).toBe(false);
+
+      store.commitDestinations();
       expect(store.isReviewStepValid()).toBe(true);
       expect(store.stepValidation().review).toBe(true);
     });
@@ -169,9 +178,32 @@ describe('WizardStore step validity', () => {
       store.setTraveler({ ...store.traveler(), passportNumber: 'X1' });
       expect(store.isReadyToSubmit()).toBe(false);
     });
+
+    it('blocks the booking when the committed passport ends within six months of the committed trip', () => {
+      const store = setup();
+      fillValidTraveler(store);
+      fillValidTrip(store);
+      store.commitDestinations();
+      expect(store.isReadyToSubmit()).toBe(true);
+
+      // Each step passes its own schema, but the pair breaks the rule that
+      // spans both. This is what a trip edit after the traveler step produces.
+      store.setTraveler({ ...store.traveler(), passportExpiry: '2099-03-01' });
+      expect(TripSchema.safeParse(store.tripData()).success).toBe(true);
+      expect(store.isReadyToSubmit()).toBe(false);
+      // The review step must not read as complete for a trip it cannot book.
+      expect(store.isReviewStepValid()).toBe(false);
+      expect(store.stepValidation().review).toBe(false);
+
+      store.submit();
+      expect(store.hasConfirmedBooking()).toBe(false);
+      expect(store.error()).toBe(
+        'Passport must be valid 6 months after trip ends',
+      );
+    });
   });
 
-  it('never disagrees with the schemas about the drafts', () => {
+  it('never disagrees with the schemas about the drafts or the committed data', () => {
     const store = setup();
     const changes: Array<() => void> = [
       () => undefined,
@@ -194,12 +226,18 @@ describe('WizardStore step validity', () => {
 
     for (const change of changes) {
       change();
-      expect(store.isTravelerStepValid()).toBe(
+      expect(store.isTravelerDraftValid()).toBe(
         TravelerSchema.safeParse(store.travelerDraft()).success,
       );
-      expect(store.isTripStepValid()).toBe(
+      expect(store.isTripDraftValid()).toBe(
         TripSchema.shape.destinations.safeParse(store.destinationsDraft())
           .success,
+      );
+      expect(store.isTravelerStepValid()).toBe(
+        TravelerSchema.safeParse(store.traveler()).success,
+      );
+      expect(store.isTripStepValid()).toBe(
+        TripSchema.shape.destinations.safeParse(store.destinations()).success,
       );
     }
   });

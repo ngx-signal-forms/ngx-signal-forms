@@ -17,9 +17,10 @@ The most complex demo in the app: a three-step travel-booking wizard built on a 
 ## Form model
 
 - Each step owns its own `form()`: `TravelerStepForm`, `TripStepForm`.
-- Local `linkedSignal<T>(() => store.stateSlice())` gives each form a writable, store-tracked model.
-- Next and Previous commit the active step. Autosave observes draft state.
-- `withLinkedState` on the store creates draft copies that reset automatically when server state reloads.
+- Local `linkedSignal<T>(() => store.travelerDraft())` gives each form a writable model that follows the store's draft slice.
+- A `signalMethod` on the store (`syncTravelerDraft`, `syncDestinationsDraft`) copies the typed model back into the draft slice. The step component calls it in a field initializer, so Angular destroys the effect with the component.
+- Next commits the active step. Previous only moves back: the typed values stay in the draft. Autosave observes the draft and the committed data.
+- `withLinkedState` on the store creates draft copies that reset when the committed data changes or a saved draft loads.
 
 ## Validation rules
 
@@ -45,15 +46,20 @@ The most complex demo in the app: a three-step travel-booking wizard built on a 
 
 ## Architecture in brief
 
-**Draft and committed state.** The store keeps both. Step forms bind drafts;
-Trip reads draft destinations. Next and Previous commit the active step.
-Autosave watches drafts, so persistence is not restricted to committed data.
+**Committed and in-progress state.** The store keeps both.
+
+- Committed (`traveler`, `destinations`): set by Next. Step completion markers (`stepValidation`) and submit read only this.
+- In progress (`travelerDraft`, `destinationsDraft`): what the user has typed. Step forms write here through the `signalMethod` write-back, and `canProceed` reads here because the current step is not committed yet.
+
+Typing never marks a step as completed.
+
+**No reset loop.** The form model is a `linkedSignal` over the draft, and the write-back changes that draft. The write-back hands over the same object the model already holds, so the `linkedSignal` sees no change and the field in focus keeps its value, caret and touched state. The trip form's `computation` returns the previous model when the array is the same one. The write-back has no debounce of its own, because autosave already debounces.
 
 **Lazy steps.** Each step is a `@defer` block so step-specific dependencies (validation libraries, data lists) ship as separate chunks. A shared `WizardStepInterface` lets the container call `validateAndFocus()` / `commitToStore()` / `focusHeading()` on whichever step is currently loaded.
 
-**Auto-save.** The store passes the `draftSummary` signal straight to an `rxMethod`, which tracks it and persists through `httpMutation`. Saving indicator uses the `onCleanup` effect pattern so debounced timers cancel on re-run.
+**Auto-save.** The store passes the `draftSummary` signal straight to an `rxMethod`, which tracks it and persists through `httpMutation`. The saved `WizardDraft` has the committed `traveler` and `destinations`, plus an optional `inProgress` part with what the user typed. Saving indicator uses the `onCleanup` effect pattern so debounced timers cancel on re-run.
 
-**Resume.** The store's `withStorageSync` keeps only the draft id in `sessionStorage`. The MSW mock server keeps the full drafts under its own `sessionStorage` key, in place of a server database. On each visit, `withResource` loads that draft through an `httpResource`, wrapped by `extendResource` with `withPreviousValueOnLoading()` and `withValueOnError(undefined)`. Committed `traveler` and `destinations` are `withLinkedState` over the loaded draft, so no effect copies it. The step buttons and fields stay disabled while the draft loads. A failed load shows an error, and the next save starts a new draft and clears the error. The draft holds only the steps you finished with Next. Text typed in the current step is not saved until you click Next.
+**Resume.** The store's `withStorageSync` keeps only the draft id in `sessionStorage`. The MSW mock server keeps the full drafts under its own `sessionStorage` key, in place of a server database. On each visit, `withResource` loads that draft through an `httpResource`, wrapped by `extendResource` with `withPreviousValueOnLoading()` and `withValueOnError(undefined)`. Committed `traveler` and `destinations` are `withLinkedState` over the loaded draft, so no effect copies it. The step buttons and fields stay disabled while the draft loads. A failed load shows an error, and the next save starts a new draft and clears the error. The committed slices come from the committed part of the draft. The draft slices come from the `inProgress` part. When a draft has no `inProgress` part, they come from the committed part. The form fields show the draft slices. So a reload brings back text typed in the current step. A step you did not finish with Next is not marked as completed. A reset clears both parts. A confirmed booking clears the stored draft id, so a reload starts empty.
 
 ## Key files
 

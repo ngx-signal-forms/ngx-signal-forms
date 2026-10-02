@@ -1,6 +1,12 @@
 import { computed, Signal } from '@angular/core';
 
-import { Destination, Traveler } from '../schemas/wizard.schemas';
+import {
+  Destination,
+  isPassportExpired,
+  isPassportValidForDeparture,
+  lastDepartureDate,
+  Traveler,
+} from '../schemas/wizard.schemas';
 
 type ReadonlyRequirement = Readonly<
   Destination['activities'][number]['requirements'][number]
@@ -35,12 +41,15 @@ export type DestinationDisplayData = {
   activities: ActivityDisplayData[];
 };
 
+export type PassportStatus = 'valid' | 'expired' | 'too-close' | 'none';
+
 export type TravelerDisplayData = {
   fullName: string;
   email: string;
   nationality: string;
   age: number | null;
   hasPassport: boolean;
+  passportStatus: PassportStatus;
   passportValid: boolean;
 };
 
@@ -70,6 +79,17 @@ function formatDateRange(start: string, end: string): string {
   return `${startDate} - ${endDate}`;
 }
 
+function getPassportStatus(
+  expiry: string,
+  lastDeparture: string | null,
+): PassportStatus {
+  if (!expiry) return 'none';
+  if (isPassportExpired(expiry)) return 'expired';
+  return isPassportValidForDeparture(expiry, lastDeparture)
+    ? 'valid'
+    : 'too-close';
+}
+
 /**
  * Creates a read-only review form that computes display data from trip summary.
  */
@@ -95,15 +115,19 @@ export function createReviewStepForm(
       }
     }
 
+    const passportStatus = getPassportStatus(
+      t.passportExpiry,
+      lastDepartureDate(destinations()),
+    );
+
     return {
       fullName: `${t.firstName} ${t.lastName}`.trim() || 'Not provided',
       email: t.email || 'Not provided',
       nationality: t.nationality || 'Not provided',
       age,
       hasPassport: Boolean(t.passportNumber),
-      passportValid: t.passportExpiry
-        ? new Date(t.passportExpiry) > new Date()
-        : false,
+      passportStatus,
+      passportValid: passportStatus === 'valid',
     };
   });
 

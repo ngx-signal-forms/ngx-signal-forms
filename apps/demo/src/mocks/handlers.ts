@@ -5,19 +5,13 @@ import {
   AUTOSAVE_ENDPOINT,
   AUTOSAVE_FAILURE_MARKER,
 } from '../app/05-advanced/autosave/autosave.api';
-import type {
-  Destination,
-  Traveler,
-} from '../app/05-advanced/advanced-wizard/schemas/wizard.schemas';
+import type { WizardDraft } from '../app/05-advanced/advanced-wizard/schemas/wizard.schemas';
 
 // ══════════════════════════════════════════════════════════════════════════════
 // IN-MEMORY STORAGE (simulates database)
 // ══════════════════════════════════════════════════════════════════════════════
 
-interface DraftData {
-  traveler: Traveler;
-  destinations: Destination[];
-}
+type DraftData = WizardDraft;
 
 interface StoredDraft extends DraftData {
   draftId: string;
@@ -197,6 +191,7 @@ export const wizardHandlers = [
     return HttpResponse.json({
       traveler: draft.traveler,
       destinations: draft.destinations,
+      inProgress: draft.inProgress,
     });
   }),
 

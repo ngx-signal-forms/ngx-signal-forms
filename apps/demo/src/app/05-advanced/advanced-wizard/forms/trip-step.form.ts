@@ -24,7 +24,8 @@ export type TripStepData = {
  * Trip step form type alias.
  *
  * Form uses local linkedSignal for writable binding to Angular Signal Forms.
- * Changes stay local until committed via store.setDestinations().
+ * Typed values reach the store's draft (so autosave sees them) and are
+ * committed with the step on Next.
  */
 export type TripStepForm = FieldTree<TripStepData>;
 
@@ -32,9 +33,11 @@ export type TripStepForm = FieldTree<TripStepData>;
  * Creates trip step form with Zod validation via StandardSchema.
  *
  * Architecture:
- * - Store owns committed state (destinations)
- * - Form uses local linkedSignal (reads from store, writes locally)
- * - Commit via store.setDestinations() transfers local changes to store
+ * - Store owns committed state (destinations) and the typed draft
+ *   (destinationsDraft)
+ * - Form uses local linkedSignal (reads the draft, writes locally)
+ * - store.syncDestinationsDraft() copies typed values into the draft
+ * - Commit via store.setDestinations() marks the step as finished
  *
  * Note: Angular Signal Forms requires WritableSignal, not DeepSignal from
  * withLinkedState. So we create a local linkedSignal for form binding.
@@ -53,11 +56,20 @@ export function createTripStepForm(store: InstanceType<typeof WizardStore>): {
   hasDestinations: Signal<boolean>;
   isValid: Signal<boolean>;
 } {
-  // Local linkedSignal: reads from store's draft, writes stay local
-  // Note: We read from destinationsDraft since that's what the user edits
-  const model = linkedSignal<TripStepData>(() => ({
-    destinations: store.destinationsDraft(),
-  }));
+  // Local linkedSignal: reads the store's draft, writes stay local until the
+  // store method below copies them back. The write-back changes the draft, which
+  // is the source. When the draft is the array the model already holds, keep the
+  // model: a new wrapper would reset the fields the user types in.
+  // The traveler form needs no such check: its model IS the draft object.
+  // This model wraps the array in `{ destinations }`, so it needs a reference check.
+  const model = linkedSignal<Destination[], TripStepData>({
+    source: store.destinationsDraft,
+    computation: (destinations, previous) =>
+      previous?.value.destinations === destinations
+        ? previous.value
+        : { destinations },
+  });
+  store.syncDestinationsDraft(() => model().destinations);
 
   // Form with nested array validation
   const tripForm = form(model, (path) => {
