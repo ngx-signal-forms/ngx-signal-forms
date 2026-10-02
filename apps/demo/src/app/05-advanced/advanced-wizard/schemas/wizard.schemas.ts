@@ -75,13 +75,24 @@ function isFutureDate(dateStr: string): boolean {
   return !date || Temporal.PlainDate.compare(date, todayPlainDate()) >= 0;
 }
 
+// Empty is valid here: the required rule reports it.
+function isEmptyOrValidDate(value: string): boolean {
+  return value === '' || tryPlainDate(value) !== null;
+}
+
 export const DestinationSchema = z
   .object({
     id: z.uuid(),
     country: z.string().min(2, 'Country required'),
     city: z.string().min(2, 'City required'),
-    arrivalDate: z.string().min(1, 'Arrival date required'),
-    departureDate: z.string().min(1, 'Departure date required'),
+    arrivalDate: z
+      .string()
+      .min(1, 'Arrival date required')
+      .refine(isEmptyOrValidDate, 'Enter a valid date'),
+    departureDate: z
+      .string()
+      .min(1, 'Departure date required')
+      .refine(isEmptyOrValidDate, 'Enter a valid date'),
     accommodation: z.string().default(''),
     activities: z
       .array(ActivitySchema)

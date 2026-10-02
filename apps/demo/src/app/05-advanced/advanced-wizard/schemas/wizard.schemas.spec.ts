@@ -131,4 +131,43 @@ describe('DestinationSchema date-order rules', () => {
       messages({ arrivalDate: '2099-03-15', departureDate: '2099-03-10' }),
     ).toContain(ordering);
   });
+
+  describe('date format', () => {
+    const format = 'Enter a valid date';
+
+    function pathsFor(
+      message: string,
+      overrides: Record<string, unknown>,
+    ): string[] {
+      const result = DestinationSchema.safeParse({ ...base, ...overrides });
+      return result.success
+        ? []
+        : result.error.issues
+            .filter((i) => i.message === message)
+            .map((i) => i.path.join('.'));
+    }
+
+    it('rejects a malformed arrival on arrivalDate only', () => {
+      const overrides = { arrivalDate: '2031-13-45' };
+      expect(pathsFor(format, overrides)).toEqual(['arrivalDate']);
+      const found = messages(overrides);
+      expect(found).not.toContain(ordering);
+      expect(found).not.toContain('Arrival date cannot be in the past');
+    });
+
+    it('rejects a malformed departure on departureDate only', () => {
+      const overrides = { departureDate: '2031-13-45' };
+      expect(pathsFor(format, overrides)).toEqual(['departureDate']);
+      expect(messages(overrides)).not.toContain(ordering);
+    });
+
+    it('leaves an empty date to the required rule', () => {
+      expect(messages({ arrivalDate: '' })).not.toContain(format);
+      expect(messages({ departureDate: '' })).not.toContain(format);
+    });
+
+    it('adds no format error for valid dates', () => {
+      expect(messages({})).not.toContain(format);
+    });
+  });
 });
