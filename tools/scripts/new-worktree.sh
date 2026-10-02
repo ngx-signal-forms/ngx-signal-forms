@@ -12,9 +12,21 @@ root=$(cd "$(git rev-parse --path-format=absolute --git-common-dir)/.." && pwd)
 dir="$root.worktrees/$branch"
 
 if [[ $base == origin/* ]]; then git -C "$root" fetch --quiet origin "${base#origin/}"; fi
+
+# On failure, remove only what this run created, so a retry starts clean.
+created_branch='' created_worktree=''
+cleanup() {
+  cd "$root"
+  if [[ -n $created_worktree ]]; then git worktree remove --force "$dir"; fi
+  if [[ -n $created_branch ]]; then git branch --quiet -D "$branch"; fi
+}
+trap cleanup ERR
+
 # --no-track: `-b` with tracking needs a .git/config lock that fails in the sandbox.
 git -C "$root" branch --no-track "$branch" "$base"
+created_branch=1
 git -C "$root" worktree add --quiet "$dir" "$branch"
+created_worktree=1
 
 cd "$dir"
 # --offline is fast, but fails when a lockfile entry is not in the store yet.
