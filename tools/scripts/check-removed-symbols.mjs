@@ -11,6 +11,7 @@
 import { execFileSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
+import ts from 'typescript';
 
 export const REMOVAL_RECORDS = [
   /^docs\/migrations\//u,
@@ -21,8 +22,36 @@ export const REMOVAL_RECORDS = [
   /^\.agents\/skills\/ngx-signal-forms\/references\/pitfalls\.md$/u,
 ];
 
-const DECLARATION =
-  /\b(?:class|function|const|let|type|interface|enum)\s+(Ngx\w+)|\bas\s+(Ngx\w+)/gu;
+const DECLARATION_KINDS = new Set([
+  ts.SyntaxKind.ClassDeclaration,
+  ts.SyntaxKind.FunctionDeclaration,
+  ts.SyntaxKind.InterfaceDeclaration,
+  ts.SyntaxKind.TypeAliasDeclaration,
+  ts.SyntaxKind.EnumDeclaration,
+  ts.SyntaxKind.VariableDeclaration,
+  // The `NgxY` in `export { x as NgxY }`.
+  ts.SyntaxKind.ExportSpecifier,
+]);
+
+/**
+ * Collects declared names from parsed syntax, so a declaration inside a
+ * comment, JSDoc example or string does not count.
+ *
+ * @param {string} source
+ * @param {Set<string>} into
+ */
+function collectDeclaredNames(source, into) {
+  const visit = (node) => {
+    if (
+      DECLARATION_KINDS.has(node.kind) &&
+      node.name &&
+      ts.isIdentifier(node.name)
+    )
+      into.add(node.name.text);
+    ts.forEachChild(node, visit);
+  };
+  visit(ts.createSourceFile('source.ts', source, ts.ScriptTarget.Latest));
+}
 
 /**
  * @param {{
@@ -43,8 +72,7 @@ export function checkRemovedSymbols({ docs, sources, apiReports, removed }) {
   }
 
   const declared = new Set();
-  for (const source of sources)
-    for (const [, a, b] of source.matchAll(DECLARATION)) declared.add(a ?? b);
+  for (const source of sources) collectDeclaredNames(source, declared);
 
   const removedPattern = new RegExp(`\\b(${removed.join('|')})\\b`, 'gu');
   for (const [path, text] of docs) {

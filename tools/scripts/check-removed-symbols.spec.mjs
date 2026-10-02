@@ -62,3 +62,21 @@ void test('flags an Ngx name that no source declares, without needing a registry
     'packages/toolkit/README.md:1: names NgxFormFieldNotification, which no .ts file declares',
   ]);
 });
+
+void test('ignores declarations in comments, JSDoc examples and strings, so a deleted class cannot hide there', () => {
+  const errors = checkRemovedSymbols({
+    ...base,
+    sources: [
+      ...base.sources,
+      '// export class NgxGone {}',
+      '/** ```ts\n * export class NgxExample {}\n * ``` */',
+      "const snippet = 'export class NgxQuoted {}';",
+    ],
+    docs: new Map([['README.md', '`NgxGone`, `NgxExample`, `NgxQuoted`']]),
+  });
+  assert.deepEqual(errors, [
+    'README.md:1: names NgxGone, which no .ts file declares',
+    'README.md:1: names NgxExample, which no .ts file declares',
+    'README.md:1: names NgxQuoted, which no .ts file declares',
+  ]);
+});
