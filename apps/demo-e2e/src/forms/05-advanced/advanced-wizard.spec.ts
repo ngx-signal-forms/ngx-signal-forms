@@ -1024,10 +1024,48 @@ test.describe('Advanced Wizard Demo', () => {
     });
   });
 
+  test('a forward header click commits the edited step, so the booking sends the edit', async ({
+    page,
+  }) => {
+    // The review step commits nothing and the booking sends committed data.
+    // A forward header click must commit like Next, or the user books the
+    // old values that the review step still shows.
+    await fillTravelerStep(page);
+    await page.getByRole('button', { name: 'Next' }).click();
+    await fillTripStepMinimal(page);
+    await page.getByRole('button', { name: 'Next' }).click();
+    await expect(
+      page.getByRole('heading', { name: 'Review Your Booking' }),
+    ).toBeVisible();
+
+    await progressStep(page, 'Traveler Info').click();
+    await expect(
+      page.getByRole('heading', { name: 'Traveler Information' }),
+    ).toBeVisible();
+    await page.getByLabel('First Name').fill('Johnny');
+    await progressStep(page, 'Review').click();
+
+    await expect(
+      page.getByRole('heading', { name: 'Review Your Booking' }),
+    ).toBeVisible();
+    await expect(page.getByText('Johnny Doe')).toBeVisible();
+
+    const bookingRequest = page.waitForRequest(
+      (request) =>
+        request.url().endsWith('/api/wizard/booking') &&
+        request.method() === 'POST',
+    );
+    await page.getByRole('button', { name: 'Confirm Booking' }).click();
+    const booking = (await bookingRequest).postDataJSON() as {
+      traveler: { firstName: string };
+    };
+    expect(booking.traveler.firstName).toBe('Johnny');
+  });
+
   test('Previous does not complete the trip step, and typed trip values survive Previous then Next', async ({
     page,
   }) => {
-    // Only Next finishes a step. If Previous committed the trip, the header
+    // Only a forward move finishes a step. If Previous committed the trip, the header
     // would show a step as done that the user never confirmed.
     await fillTravelerStep(page);
     await page.getByRole('button', { name: 'Next' }).click();
