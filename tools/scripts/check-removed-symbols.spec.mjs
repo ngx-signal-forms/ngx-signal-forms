@@ -4,7 +4,9 @@ import { checkRemovedSymbols } from './check-removed-symbols.mjs';
 
 const base = {
   sources: ['export class NgxFormFieldError {}', 'export { X as NgxAlias };'],
-  apiReports: 'export declare class NgxFormFieldError {}',
+  apiReports: new Map([
+    ['api-reports/index.d.ts', 'export declare class NgxFormFieldError {}'],
+  ]),
   removed: ['readErrors', 'SignalLike'],
 };
 
@@ -45,6 +47,27 @@ void test('rejects a registry entry the api-reports still export, so the registr
   });
   assert.deepEqual(errors, [
     'removed-symbols.json lists NgxFormFieldError, but the api-reports still export it',
+  ]);
+});
+
+void test('reads exports from export clauses, but not from JSDoc or the internal core report, so a name made internal counts as removed', () => {
+  const errors = checkRemovedSymbols({
+    ...base,
+    removed: ['readErrors', 'SignalLike', 'toHintDescriptors'],
+    apiReports: new Map([
+      [
+        'api-reports/headless.d.ts',
+        '/** Replaces the former `SignalLike`. */\ndeclare const a: 1;\nexport { a, readErrors };',
+      ],
+      [
+        'api-reports/core.internal.d.ts',
+        'declare function toHintDescriptors(): void;\nexport { toHintDescriptors };',
+      ],
+    ]),
+    docs: new Map(),
+  });
+  assert.deepEqual(errors, [
+    'removed-symbols.json lists readErrors, but the api-reports still export it',
   ]);
 });
 

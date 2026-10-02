@@ -5,7 +5,7 @@
 // that map removed names to their replacements):
 //
 // 1. A name in `removed-symbols.json` must not appear. The registry also
-//    must not name anything the api-reports still export.
+//    must not name anything a public api-report still exports.
 // 2. An `Ngx*` name must be declared in a tracked `.ts` file. This catches
 //    a renamed or deleted class, directive or type without a registry entry.
 import { execFileSync } from 'node:child_process';
@@ -54,18 +54,61 @@ function collectDeclaredNames(source, into) {
 }
 
 /**
+ * Collects the names an API report exports: its `export { … }` clauses and
+ * any top-level declaration with an `export` modifier. A name that the
+ * report only mentions in JSDoc does not count.
+ *
+ * @param {string} report
+ * @param {Set<string>} into
+ */
+function collectExportedNames(report, into) {
+  const file = ts.createSourceFile(
+    'report.d.ts',
+    report,
+    ts.ScriptTarget.Latest,
+  );
+  for (const statement of file.statements) {
+    if (
+      ts.isExportDeclaration(statement) &&
+      statement.exportClause &&
+      ts.isNamedExports(statement.exportClause)
+    ) {
+      for (const element of statement.exportClause.elements)
+        into.add(element.name.text);
+    } else if (
+      statement.modifiers?.some(
+        (modifier) => modifier.kind === ts.SyntaxKind.ExportKeyword,
+      )
+    ) {
+      if (ts.isVariableStatement(statement)) {
+        for (const declaration of statement.declarationList.declarations)
+          if (ts.isIdentifier(declaration.name))
+            into.add(declaration.name.text);
+      } else if (statement.name && ts.isIdentifier(statement.name)) {
+        into.add(statement.name.text);
+      }
+    }
+  }
+}
+
+/**
  * @param {{
  *   docs: Map<string, string>,
  *   sources: string[],
- *   apiReports: string,
+ *   apiReports: Map<string, string>,
  *   removed: string[],
- * }} input
+ * }} input `apiReports` maps each report path to its text.
  * @returns {string[]} one message per problem
  */
 export function checkRemovedSymbols({ docs, sources, apiReports, removed }) {
   const errors = [];
+  const exported = new Set();
+  for (const [path, report] of apiReports)
+    // A name that moved to the internal `/core` entry point counts as removed.
+    if (!path.endsWith('core.internal.d.ts'))
+      collectExportedNames(report, exported);
   for (const name of removed) {
-    if (new RegExp(`\\b${name}\\b`, 'u').test(apiReports))
+    if (exported.has(name))
       errors.push(
         `removed-symbols.json lists ${name}, but the api-reports still export it`,
       );
@@ -106,9 +149,12 @@ function main() {
   const errors = checkRemovedSymbols({
     docs: new Map(tracked('*.md').map((path) => [path, read(path)])),
     sources: tracked('*.ts', '*.mts').map(read),
-    apiReports: tracked('packages/toolkit/api-reports/*.d.ts')
-      .map(read)
-      .join('\n'),
+    apiReports: new Map(
+      tracked('packages/toolkit/api-reports/*.d.ts').map((path) => [
+        path,
+        read(path),
+      ]),
+    ),
     removed: symbols,
   });
   for (const error of errors) console.error(error);
