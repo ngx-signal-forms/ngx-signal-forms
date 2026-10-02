@@ -217,7 +217,11 @@ describe('publishedEntries + buildApiSurfaceSnapshot', () => {
   });
 });
 
-describe('buildTarballManifest', () => {
+// These tests spawn `npm pack`. Under a full parallel `nx test toolkit` run
+// one spawn can pass Vitest's 5 s default and fail as a flake.
+const SPAWNS_NPM = { timeout: 30_000 };
+
+describe('buildTarballManifest', SPAWNS_NPM, () => {
   let distRoot: string | undefined;
 
   afterEach(() => {
@@ -447,7 +451,7 @@ describe('writeBaseline + reading it back', () => {
   });
 });
 
-describe('main() check mode (end-to-end via a fixture dist + baseline)', () => {
+describe('main() check mode, end to end on a fixture dist', SPAWNS_NPM, () => {
   let distRoot: string | undefined;
   let baselineDir: string | undefined;
 

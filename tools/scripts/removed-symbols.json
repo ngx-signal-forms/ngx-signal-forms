@@ -1,0 +1,32 @@
+{
+  "$comment": "Public toolkit names that were removed or made internal. Add a name when you remove it from packages/toolkit/api-reports/. Keep only distinctive names: a generic word (isControlVisible, checkVisibility) also matches unrelated code in docs. See docs/CONTRIBUTING.md#removing-a-public-export.",
+  "symbols": [
+    "computeShowErrors",
+    "ControlVisibilitySignal",
+    "createErrorRendererInputs",
+    "createShowErrorsComputed",
+    "createShowErrorsSignal",
+    "fieldNameResolver",
+    "findAlertContaining",
+    "focusBoundControlFromError",
+    "injectFieldControl",
+    "injectFormConfig",
+    "isFormFieldAppearance",
+    "isFormFieldOrientation",
+    "NgxCharacterCountValue",
+    "NgxControlPresetRegistry",
+    "NgxFloatingLabelDirective",
+    "NgxFormFieldErrorListStyle",
+    "NgxHeadlessNotification",
+    "NgxSignalFormControlSemanticsDirective",
+    "ReactiveOrStatic",
+    "readErrors",
+    "readFieldFlag",
+    "resolveFieldNameFromError",
+    "setControlVisible",
+    "SignalLike",
+    "strictFieldResolution",
+    "toErrorSummaryEntry",
+    "toHintDescriptors"
+  ]
+}

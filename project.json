@@ -20,6 +20,12 @@
         "command": "node --test tools/commitlint/no-bare-mention.spec.mjs"
       }
     },
+    "check-removed-symbols": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "node --test tools/scripts/check-removed-symbols.spec.mjs && node tools/scripts/check-removed-symbols.mjs"
+      }
+    },
     "check-docs7-site": {
       "executor": "nx:run-commands",
       "options": {
