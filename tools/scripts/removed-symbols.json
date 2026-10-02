@@ -30,6 +30,8 @@
     "SignalLike",
     "strictFieldResolution",
     "toErrorSummaryEntry",
-    "toHintDescriptors"
+    "toHintDescriptors",
+    "walkFieldTree",
+    "walkFieldTreeIterable"
   ]
 }
