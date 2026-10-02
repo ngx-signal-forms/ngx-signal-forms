@@ -19,7 +19,7 @@ The most complex demo in the app: a three-step travel-booking wizard built on a 
 - Each step owns its own `form()`: `TravelerStepForm`, `TripStepForm`.
 - Local `linkedSignal<T>(() => store.travelerDraft())` gives each form a writable model that follows the store's draft slice.
 - A `signalMethod` on the store (`syncTravelerDraft`, `syncDestinationsDraft`) copies the typed model back into the draft slice. The step component calls it in a field initializer, so Angular destroys the effect with the component.
-- Next commits the active step. Previous only moves back: the typed values stay in the draft. Autosave observes the draft and the committed data.
+- Moving forward commits the active step: Next, or a click on a later step in the progress header. Both validate the step first. Previous, or a click on an earlier step, only moves back: the typed values stay in the draft. Autosave observes the draft and the committed data.
 - `withLinkedState` on the store creates draft copies that reset when the committed data changes or a saved draft loads.
 
 ## Validation rules

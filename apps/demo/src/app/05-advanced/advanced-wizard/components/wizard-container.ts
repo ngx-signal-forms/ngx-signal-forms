@@ -174,7 +174,7 @@ export class WizardContainerComponent {
     }
 
     // Previous does not commit: typed values already live in the draft, and
-    // only Next marks a step as completed.
+    // only a forward move (Next or a header click) marks a step as completed.
     if (this.store.goToPreviousStep()) {
       this.#pendingFocus.set(true);
     }
