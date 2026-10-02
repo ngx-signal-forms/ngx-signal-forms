@@ -8,6 +8,7 @@ import {
   createSubmittedStatusTracker,
   NgxSignalFormToolkit,
   provideNgxSignalFormControlPresetsForComponent,
+  type ErrorVisibilityState,
   type ResolvedErrorDisplayStrategy,
   type FormFieldAppearance,
   type FormFieldOrientation,
@@ -135,7 +136,7 @@ export class CustomControlsFormComponent {
    * them, mirroring the pattern once instead of four times.
    */
   #buildRatingDescribedBy(
-    field: () => { invalid(): boolean; touched(): boolean },
+    field: () => ErrorVisibilityState,
     fieldName: string,
     hintIds: readonly string[],
   ) {

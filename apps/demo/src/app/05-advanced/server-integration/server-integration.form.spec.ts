@@ -20,7 +20,6 @@ describe('ServerIntegrationComponent — profile load failure', () => {
         provideZonelessChangeDetection(),
         provideNgxSignalFormsConfig({
           defaultErrorStrategy: 'on-touch',
-          autoAria: true,
         }),
         {
           provide: ProfileApiService,
