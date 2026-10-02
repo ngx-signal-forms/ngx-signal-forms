@@ -162,7 +162,14 @@ describe('DestinationSchema date-order rules', () => {
     });
 
     it('leaves an empty date to the required rule', () => {
+      // An empty field must show one message, not two.
+      expect(pathsFor('Arrival date required', { arrivalDate: '' })).toEqual([
+        'arrivalDate',
+      ]);
       expect(messages({ arrivalDate: '' })).not.toContain(format);
+      expect(
+        pathsFor('Departure date required', { departureDate: '' }),
+      ).toEqual(['departureDate']);
       expect(messages({ departureDate: '' })).not.toContain(format);
     });
 
