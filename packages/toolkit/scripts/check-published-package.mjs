@@ -288,6 +288,10 @@ export function buildApiSurfaceSnapshot(distRoot) {
  * breaking on a legitimate local npm install; `result?.files` is validated
  * either way, so a genuinely unexpected shape still fails loudly below.
  *
+ * Without an `npm_config_cache` of its own, npm uses `~/.npm`. A sandboxed
+ * agent shell cannot write there, so `npm pack` fails with EPERM. The dry
+ * run needs no warm cache, so a temp directory is the default.
+ *
  * @param {string} distRoot
  * @returns {string[]}
  */
@@ -297,7 +301,17 @@ export function buildTarballManifest(distRoot) {
     raw = execFileSync(
       'npm',
       ['pack', '--dry-run', '--json', '--ignore-scripts'],
-      { cwd: distRoot, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] },
+      {
+        cwd: distRoot,
+        encoding: 'utf8',
+        stdio: ['ignore', 'pipe', 'pipe'],
+        env: {
+          ...process.env,
+          npm_config_cache:
+            process.env.npm_config_cache ??
+            join(tmpdir(), 'check-published-package-npm-cache'),
+        },
+      },
     );
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);

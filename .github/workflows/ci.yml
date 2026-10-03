@@ -130,7 +130,7 @@ jobs:
       # Do not distribute this graph. Use non-atomized e2e targets so it can
       # run without Nx Agents.
       - name: Run affected tasks (excluding demo-e2e)
-        run: pnpm exec nx affected -t lint typecheck test test-browser build e2e --exclude=demo-e2e --parallel=2 --outputStyle=static
+        run: pnpm exec nx affected -t lint typecheck test test-timezones test-browser build e2e --exclude=demo-e2e --parallel=2 --outputStyle=static
         timeout-minutes: 10
 
       # Run outside affected selection so README/docs-only changes are checked.
@@ -156,6 +156,11 @@ jobs:
       # up on its own.
       - name: Check no-bare-mention rule
         run: pnpm exec nx run workspace:check-no-bare-mention --outputStyle=static
+
+      # Same reasoning as the checks above. A docs-only change can leave a
+      # removed toolkit API in a guide or skill page, so run on every PR.
+      - name: Check docs for removed APIs
+        run: pnpm exec nx run workspace:check-removed-symbols --outputStyle=static
 
       # Same reasoning as the checks above. Building the Docs7 site fails on
       # a docs link to a missing file or anchor, so a broken link fails the

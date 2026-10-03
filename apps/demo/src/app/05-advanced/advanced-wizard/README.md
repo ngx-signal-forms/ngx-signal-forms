@@ -59,14 +59,18 @@ Typing never marks a step as completed.
 
 **Auto-save.** The store passes the `draftSummary` signal straight to an `rxMethod`, which tracks it and persists through `httpMutation`. The saved `WizardDraft` has the committed `traveler` and `destinations`, plus an optional `inProgress` part with what the user typed. Saving indicator uses the `onCleanup` effect pattern so debounced timers cancel on re-run.
 
+**Dates.** Every date rule compares `Temporal.PlainDate` values from the `temporal-polyfill` package, through the helpers in `schemas/wizard.schemas.ts`. A `Date` built from `'YYYY-MM-DD'` is UTC midnight, but "today" is local, so a mix of the two moves a rule by one day east or west of UTC. Run `pnpm nx run demo:test-timezones` after a change to a date rule. In Vitest, `vi.setSystemTime()` also sets `Temporal.Now`. In Playwright it does not, because Chromium has native Temporal: the e2e timezone tests delete `globalThis.Temporal` in an init script before `page.clock.setFixedTime()`.
+
 **Resume.** The store's `withStorageSync` keeps only the draft id in `sessionStorage`. The MSW mock server keeps the full drafts under its own `sessionStorage` key, in place of a server database. On each visit, `withResource` loads that draft through an `httpResource`, wrapped by `extendResource` with `withPreviousValueOnLoading()` and `withValueOnError(undefined)`. Committed `traveler` and `destinations` are `withLinkedState` over the loaded draft, so no effect copies it. The step buttons and fields stay disabled while the draft loads. A failed load shows an error, and the next save starts a new draft and clears the error. The committed slices come from the committed part of the draft. The draft slices come from the `inProgress` part. When a draft has no `inProgress` part, they come from the committed part. The form fields show the draft slices. So a reload brings back text typed in the current step. A step you did not finish with Next is not marked as completed. A reset clears both parts. A confirmed booking clears the stored draft id, so a reload starts empty.
 
 ## Key files
 
 - [forms/traveler-step.form.ts](forms/traveler-step.form.ts) — traveler form + cross-step passport rule.
 - [forms/trip-step.form.ts](forms/trip-step.form.ts) — destinations, activities, and cross-field rules.
-- [schemas/wizard.schemas.ts](schemas/wizard.schemas.ts) — Zod schemas and factories.
+- [forms/review-step.form.ts](forms/review-step.form.ts) — review-page data and the cross-step passport check.
+- [schemas/wizard.schemas.ts](schemas/wizard.schemas.ts) — Zod schemas, factories, and the `Temporal.PlainDate` helpers.
 - [stores/wizard.store.ts](stores/wizard.store.ts) — store composition, draft state, and auto-save.
+- [stores/features/navigation.feature.ts](stores/features/navigation.feature.ts) — current step and `goToStep()`. Previous and Next live in `wizard-container.ts`.
 - [stores/features/saved-draft.feature.ts](stores/features/saved-draft.feature.ts) — stored draft id and the draft resource.
 - [components/wizard-container.ts](components/wizard-container.ts) — step navigation, commit flow, `@defer` coordination.
 - `components/*-step.ts` — individual step UI implementations.

@@ -201,3 +201,33 @@ await expect
   .poll(() => getComputedStyle(content).borderTopColor)
   .toBe('rgb(161, 98, 7)');
 ```
+
+### Run one spec
+
+Put the file filter after `--`. Vitest does not know `--testFile`.
+
+| Project               | Command                                                                                    |
+| --------------------- | ------------------------------------------------------------------------------------------ |
+| Toolkit, jsdom        | `pnpm nx test toolkit -- core/utilities/error-strategies.spec.ts`                          |
+| Toolkit, browser      | `pnpm nx run toolkit:test-browser -- form-field/form-field-wrapper`                        |
+| Demo                  | `pnpm nx test demo -- wizard.schemas`                                                      |
+| Demo, other timezones | `pnpm nx run demo:test-timezones`                                                          |
+| Demo end-to-end       | `pnpm nx e2e demo-e2e -- src/forms/05-advanced/advanced-wizard.spec.ts --project=chromium` |
+
+- The toolkit filter is relative to `packages/toolkit`, the demo filter to
+  `apps/demo`.
+- The demo has no `typecheck` target, and its specs are not type-checked.
+  `pnpm nx build demo` type-checks the app code.
+- The demo end-to-end tests use a dev server on port 4600 that is already
+  running, or start one.
+- `demo:test-timezones` runs the `05-advanced` specs in Auckland and New York
+  time. Every other run and CI use UTC, which hides off-by-one-day bugs.
+  Date logic in the demo uses `Temporal.PlainDate`. CI runs this target when
+  the demo changes.
+- To prove a new test fails without the fix, change the code's behavior
+  (for example, make a check always return `true`). Do not delete the code:
+  the build then fails for a reason that has nothing to do with the test.
+
+`check-published-package.spec.ts` starts `npm pack`. Under a full parallel
+run it can pass the default timeout, so those blocks allow 30 seconds. If it
+still fails, run the spec alone before you debug it.

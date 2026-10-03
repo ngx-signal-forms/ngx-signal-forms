@@ -47,6 +47,19 @@
       "options": {
         "config": "./vitest.config.mts"
       }
+    },
+    "test-timezones": {
+      "executor": "nx:run-commands",
+      "cache": true,
+      "inputs": ["default", "^production"],
+      "options": {
+        "cwd": "apps/demo",
+        "commands": [
+          "TZ=Pacific/Auckland vitest run src/app/05-advanced",
+          "TZ=America/New_York vitest run src/app/05-advanced"
+        ],
+        "parallel": false
+      }
     }
   }
 }

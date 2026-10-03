@@ -30,9 +30,8 @@ Choose state before markup:
 - Render an entry with `canFocus: false` as plain text.
 - Read errors with `field().errorSummary()`. Read flags with typed field state
   or `createFieldStateFlags()`.
-- Do not import `readFieldFlag`, `readErrors`, `toErrorSummaryEntry`,
-  `resolveFieldNameFromError` or `focusBoundControlFromError`. They are not
-  public from RC.16.
+- RC.16 made five low-level headless helpers internal. The
+  [migration guide](../migrations/guide.md) maps each one to its replacement.
 - `NgxHeadlessErrorState.errorsOverride` supplies already-filtered messages and
   makes both timing flags true. The caller owns timing and precedence. The
   internal `connectFieldState()` bridge is not a published consumer API.

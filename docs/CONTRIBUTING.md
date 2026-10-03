@@ -106,7 +106,10 @@ To add a page, add it to `docs.json` and give the file `title` and
 ## Architecture decisions
 
 ADRs live in [`docs/decisions/`](./decisions/). Add one when you make a
-decision that is hard to reverse or that a reader would question.
+decision that is hard to reverse or that a reader would question. Point to
+code by file and symbol, not by line number. Line numbers go stale with the
+next edit. Older ADRs that cite lines describe the code at the time of the
+decision.
 
 ## Project tags and module boundaries
 
@@ -157,6 +160,35 @@ These checks run against the built package in `dist/packages/toolkit`, after
 
 The demo apps have no size budget. Their `build` targets wrap
 `vite build`, so an Angular CLI `budgets` block has no effect.
+
+## Removing a public export
+
+A removed or renamed export is named in many places. Do these steps in the
+same pull request:
+
+1. Remove the export. Then build and update the API baseline, as in
+   [Published package guardrails](#published-package-guardrails). A JSDoc
+   change on a public member also changes the baseline.
+2. Add the old name to
+   [`tools/scripts/removed-symbols.json`](../tools/scripts/removed-symbols.json).
+   Add only a distinctive name. A common word also matches unrelated docs.
+3. Run `pnpm nx run workspace:check-removed-symbols`. It lists each live doc
+   and skill page that still names the export, by file and line. It also
+   flags any `Ngx*` name that no `.ts` file declares, so a rename needs no
+   registry entry. CI runs it on every pull request.
+4. Add an entry at the end of the pending guide in
+   [`migrations/`](./migrations/README.md). Do not state the number of
+   changes in prose. If `main` gained an entry after you branched, renumber
+   yours when you merge `main`. Update the skill's
+   [`migrations/guide.md`](../.agents/skills/ngx-signal-forms/migrations/guide.md)
+   too, and the removed-API table in
+   [`pitfalls.md`](../.agents/skills/ngx-signal-forms/references/pitfalls.md)
+   when users may still reach for the old name.
+5. The check reads Markdown only. Search code comments yourself:
+   `git grep -n '<name>' -- packages apps`.
+6. Build every project, not only the toolkit. The debugger in
+   `packages/demo/debugger` imports the internal `/core` entry point:
+   `pnpm nx run-many -t build typecheck`.
 
 ## Toolkit isolation guarantees
 

@@ -22,8 +22,11 @@ Conventional Commits. The subject line drives `nx release` versioning **and land
 | Angular / Signal Forms          | `angular-developer` skill (`references/signal-forms.md`)                                                   |
 | A11y (WCAG 2.2 AA)              | `.github/instructions/a11y.instructions.md`                                                                |
 | Toolkit spec: jsdom or browser  | `docs/TESTING.md#toolkit-specs-jsdom-or-browser`                                                           |
+| Run one spec, timezone tests    | `docs/TESTING.md#run-one-spec`                                                                             |
+| Removing or renaming an export  | `docs/CONTRIBUTING.md#removing-a-public-export`                                                            |
+| Sandbox: env, worktrees, push   | `docs/agents/sandbox.md`                                                                                   |
 | Domain vocabulary and decisions | `CONTEXT.md` at the repo root, ADRs at `docs/decisions/` (this repo's convention, not `docs/adr/`)         |
-| Issues and PRDs                 | GitHub issues at `ngx-signal-forms/ngx-signal-forms` via the `gh` CLI — see `docs/agents/issue-tracker.md` |
+| Issues, PRDs and pull requests  | GitHub issues at `ngx-signal-forms/ngx-signal-forms` via the `gh` CLI — see `docs/agents/issue-tracker.md` |
 
 Triage labels: `needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`.
 
