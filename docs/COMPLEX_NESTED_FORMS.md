@@ -1,0 +1,284 @@
+---
+title: 'Complex and nested forms'
+---
+
+How the toolkit's fieldset, error summary, and strategy inheritance scale from
+flat forms to deeply nested groups and arrays.
+
+## Is this for me?
+
+Read this if your form has any of:
+
+- **Grouped fields** (`address`, `passwords`, `billingInfo`) with cross-field rules
+- **Nested arrays** (`invoices[]`, `lineItems[]`, `facts[][]`)
+- **Multi-step wizards** with per-step aggregation
+- **Form-level error summaries** that link back to fields
+- **Mixed per-field and per-group error display**
+
+If you're building a single flat form, the [form-field wrapper](/packages/toolkit/form-field/README)
+alone is enough — come back here when you hit the first group of related fields.
+
+> **State management is out of scope.** How the model signal is owned
+> (component-local, service, NgRx Signal Store) doesn't change the toolkit
+> patterns below. For a working example with NgRx Signal Store, see the demo's
+> [advanced wizard](https://github.com/ngx-signal-forms/ngx-signal-forms/blob/77ce2f7de996cc397982199d1b3822dedb259b29/apps/demo/src/app/05-advanced/advanced-wizard/README.md).
+
+---
+
+## The two fieldset modes
+
+`<ngx-form-fieldset>` aggregates errors from a subtree. The
+`includeNestedErrors` input picks the mode.
+
+| Mode                       | `includeNestedErrors` | Shows                                 | Use when                                              |
+| -------------------------- | --------------------- | ------------------------------------- | ----------------------------------------------------- |
+| **Group-only** _(default)_ | `false`               | Only direct group-level errors        | Nested fields render their own errors via the wrapper |
+| **Aggregated**             | `true`                | All errors including every descendant | Fields are silent; group owns the feedback            |
+
+### Group-only: cross-field errors at the group level
+
+When each field wraps itself, the fieldset only needs to show cross-field errors.
+
+```html
+<ngx-form-fieldset [field]="form.passwords">
+  <legend>Passwords</legend>
+
+  <ngx-form-field-wrapper [formField]="form.passwords.password">
+    <label for="pw">Password</label>
+    <input id="pw" type="password" [formField]="form.passwords.password" />
+  </ngx-form-field-wrapper>
+
+  <ngx-form-field-wrapper [formField]="form.passwords.confirm">
+    <label for="pw2">Confirm password</label>
+    <input id="pw2" type="password" [formField]="form.passwords.confirm" />
+  </ngx-form-field-wrapper>
+
+  <!-- The fieldset shows only the "Passwords must match" cross-field error -->
+</ngx-form-fieldset>
+```
+
+To attach a rule to the group itself — so the fieldset (not either child)
+surfaces it — use [`validateTree()`](https://angular.dev/guide/forms/signals/cross-field-logic).
+`validateTree` runs at the parent node, and returning a plain validation error
+without a `fieldTree` keeps it at the group level:
+
+```typescript
+import { signal } from '@angular/core';
+import { form, required, validateTree } from '@angular/forms/signals';
+
+const model = signal({ passwords: { password: '', confirm: '' } });
+
+form(model, (path) => {
+  required(path.passwords.password, { message: 'Password is required' });
+  required(path.passwords.confirm, { message: 'Please confirm your password' });
+
+  validateTree(path.passwords, ({ value }) => {
+    const { password, confirm } = value();
+    if (password && confirm && password !== confirm) {
+      return { kind: 'mismatch', message: 'Passwords must match' };
+    }
+    return null;
+  });
+});
+```
+
+> **Leaf vs group target.** Angular's cross-field guide recommends placing the
+> error "where the user would most likely go to fix it." When that's a specific
+> child (e.g. the _confirm_ field), use `validate(path.passwords.confirm, ...)`
+> with `ctx.valueOf(path.passwords.password)` instead — the error then shows on
+> that child's wrapper. Reach for `validateTree` only when the rule is
+> inherently about the group and you want it on the fieldset.
+
+### Aggregated: group owns all the feedback
+
+When you want a compact layout — e.g. a deep address group where individual
+fields stay plain — let the fieldset display every descendant error once.
+
+```html
+<ngx-form-fieldset [field]="form.address" [includeNestedErrors]="true">
+  <legend>Address</legend>
+  <label for="address-street">Street</label>
+  <input id="address-street" [formField]="form.address.street" />
+  <label for="address-city">City</label>
+  <input id="address-city" [formField]="form.address.city" />
+  <label for="address-postal-code">Postal code</label>
+  <input id="address-postal-code" [formField]="form.address.postalCode" />
+</ngx-form-fieldset>
+```
+
+The fieldset deduplicates identical messages and inherits the error strategy
+from its parent `ngxSignalForm`, so nothing shows up before the user has had
+a chance to interact.
+
+---
+
+## Error summaries across the whole form
+
+For wizards and long forms you usually want a single list at the top that
+links each message back to its field.
+
+```html
+<form [formRoot]="form" ngxSignalForm errorStrategy="on-submit">
+  <ngx-form-field-error-summary [formTree]="form" />
+  <!-- ...fields... -->
+</form>
+```
+
+Under the hood this wraps Angular's native `errorSummary()` so every nested
+field's errors surface at the root. The summary:
+
+- Shows messages only when the strategy allows, for example after the first
+  submit
+- Moves focus to itself the first time it appears under `on-submit` timing.
+  Set `[autoFocus]="false"` if your flow moves focus elsewhere
+- Renders each entry as a button that moves focus to the field, when the
+  field has a focusable bound control, and as plain text otherwise. The
+  button check (`canFocus`) only confirms that Angular can look up the
+  control. If the field has no rendered `[formField]`, the button moves no
+  focus
+- Renders blocking errors in `role="alert"`; it does not render warnings
+- Deduplicates by originating field, kind, and message, keeping distinct fields
+
+| Component        | Warnings                                                    | Deduplication                   | Strategy scope   |
+| ---------------- | ----------------------------------------------------------- | ------------------------------- | ---------------- |
+| Styled summary   | Not rendered                                                | Field identity + kind + message | Summary only     |
+| Headless summary | Separate warning entries                                    | Field identity + kind + message | Summary only     |
+| Fieldset         | Separate signals; styled slot gives visible errors priority | Kind + message across the group | Aggregation only |
+
+Other inputs: `summaryLabel` sets the heading text (default
+`Please fix the following errors:`), and `headingLevel` sets the heading
+element, from `2` (default) to `6`. See the
+[assistive reference](/packages/toolkit/assistive/README) for all inputs.
+
+For fully custom markup, the headless equivalent
+(`NgxHeadlessErrorSummary`) exposes the same managed state as signals
+while you own every element.
+
+---
+
+## Strategy inheritance via `ngxSignalForm`
+
+On a deeply nested form you don't want to pass `[strategy]` to every wrapper
+and fieldset. Add `ngxSignalForm` once at the root and every toolkit component
+below it — wrapper, auto-ARIA, assistive components, headless directives —
+picks up the same strategy via DI:
+
+```html
+<form [formRoot]="wizardForm" ngxSignalForm errorStrategy="on-submit">
+  <ngx-form-fieldset [field]="wizardForm.personalInfo">
+    <legend>Personal</legend>
+    <!-- wrappers inside inherit 'on-submit' automatically -->
+  </ngx-form-fieldset>
+
+  <ngx-form-fieldset [field]="wizardForm.billing">
+    <legend>Billing</legend>
+    <!-- same strategy, no extra wiring -->
+  </ngx-form-fieldset>
+</form>
+```
+
+To override one element, pass `strategy` to that wrapper, fieldset, or
+summary. A fieldset's `strategy` changes only its own group message, not the
+wrappers inside it. See [timing and configuration](/docs/WARNINGS_SUPPORT#timing-and-configuration)
+for the full order of settings.
+
+---
+
+## Field labels for deep paths
+
+For deeply nested arrays where paths vary by index (`facts.0.offenses.1.article`),
+pass a **factory** that returns a custom resolver and do the pattern matching
+yourself:
+
+```typescript
+import { humanizeFieldPath } from '@ngx-signal-forms/toolkit/headless';
+import { provideFieldLabels } from '@ngx-signal-forms/toolkit';
+
+provideFieldLabels(() => (fieldPath) => {
+  if (/^facts\.\d+\.offenses\.\d+\.article$/.test(fieldPath)) {
+    return `Legal article ${fieldPath}`;
+  }
+  if (/^facts\.\d+\.offenses\.\d+$/.test(fieldPath)) {
+    return `Offense ${fieldPath}`;
+  }
+  return humanizeFieldPath(fieldPath);
+});
+```
+
+See [field label resolution](/docs/WARNINGS_SUPPORT#field-label-resolution)
+for the default label format, the map form, translated labels, and a known
+limitation with duplicate labels.
+
+---
+
+## Arrays of field groups
+
+For repeated groups (`invoices[]`, `lineItems[]`), wrap each iteration in its
+own fieldset so errors aggregate per row:
+
+```html
+@for (item of form.lineItems; track $index; let i = $index) {
+<ngx-form-fieldset [field]="form.lineItems[i]">
+  <legend>Line {{ i + 1 }}</legend>
+  <ngx-form-field-wrapper [formField]="form.lineItems[i].description">
+    <label [for]="'line-' + i + '-desc'">Description</label>
+    <input
+      [id]="'line-' + i + '-desc'"
+      [formField]="form.lineItems[i].description"
+    />
+  </ngx-form-field-wrapper>
+  <ngx-form-field-wrapper [formField]="form.lineItems[i].quantity">
+    <label [for]="'line-' + i + '-qty'">Quantity</label>
+    <input
+      [id]="'line-' + i + '-qty'"
+      type="number"
+      [formField]="form.lineItems[i].quantity"
+    />
+  </ngx-form-field-wrapper>
+</ngx-form-fieldset>
+}
+```
+
+> `track $index` plus indexed access (`form.lineItems[i]`) keeps each row's
+> fieldset bound to the correct array element as rows are added or removed.
+> The [`complex-forms`](https://github.com/ngx-signal-forms/ngx-signal-forms/tree/77ce2f7de996cc397982199d1b3822dedb259b29/apps/demo/src/app/04-form-field-wrapper/complex-forms)
+> demo shows a related but different pattern for its `skills` and `contacts`
+> arrays: one fieldset wraps the whole `@for` loop for array-level
+> aggregation, with a `ngx-form-field-wrapper` per item inside. Reach for a
+> per-row fieldset (as above) when each row needs its own aggregated error
+> feedback instead.
+
+A root `ngx-form-field-error-summary` still picks up every row's errors and
+links to the exact field.
+
+---
+
+## Configuring defaults app-wide
+
+For complex forms, set strategy and appearance once in `app.config.ts`:
+
+```typescript
+provideNgxSignalFormsConfig({
+  defaultErrorStrategy: 'on-touch',
+  defaultFormFieldAppearance: 'outline',
+});
+```
+
+Individual forms can still override with `errorStrategy` on `ngxSignalForm`,
+and individual wrappers can override `appearance` on the element itself.
+
+---
+
+## Demos
+
+- [`complex-forms`](https://github.com/ngx-signal-forms/ngx-signal-forms/tree/77ce2f7de996cc397982199d1b3822dedb259b29/apps/demo/src/app/04-form-field-wrapper/complex-forms) — grouped fields with fieldset aggregation
+- [`cross-field-validation`](https://github.com/ngx-signal-forms/ngx-signal-forms/tree/77ce2f7de996cc397982199d1b3822dedb259b29/apps/demo/src/app/05-advanced/cross-field-validation) — cross-field rules surfacing at the group
+- [`advanced-wizard`](https://github.com/ngx-signal-forms/ngx-signal-forms/tree/77ce2f7de996cc397982199d1b3822dedb259b29/apps/demo/src/app/05-advanced/advanced-wizard) — multi-step form with summary, strategy inheritance, and per-step aggregation
+- [`async-validation`](https://github.com/ngx-signal-forms/ngx-signal-forms/tree/77ce2f7de996cc397982199d1b3822dedb259b29/apps/demo/src/app/05-advanced/async-validation) — debounced async rules inside a nested group
+
+## Related
+
+- [Form-field wrapper](/packages/toolkit/form-field/README) — the single-field primitive these patterns compose
+- [Headless primitives](/packages/toolkit/headless/README) — for custom markup of fieldset aggregation and error summary
+- [Warnings, timing, and messages](/docs/WARNINGS_SUPPORT) — how `errors()` and `errorSummary()` differ, and how messages are resolved
+- [Validation strategies](/docs/VALIDATION_STRATEGY) — layering Angular validators, Zod, and Vest in a complex form

@@ -1,0 +1,247 @@
+---
+title: 'Contributing'
+---
+
+This is the entry point for work on the repository. Code and agent rules live
+in [`AGENTS.md`](https://github.com/ngx-signal-forms/ngx-signal-forms/blob/77ce2f7de996cc397982199d1b3822dedb259b29/AGENTS.md). Repository layout and packaging live in
+[Package architecture](/docs/PACKAGE_ARCHITECTURE).
+
+## Issues and pull requests
+
+For now, only repository collaborators can open pull requests. To report a bug
+or ask for a feature, open an
+[issue](https://github.com/ngx-signal-forms/ngx-signal-forms/issues/new/choose).
+For questions and ideas, use
+[Discussions](https://github.com/ngx-signal-forms/ngx-signal-forms/discussions).
+For a security problem, follow the [security policy](https://github.com/ngx-signal-forms/ngx-signal-forms/blob/77ce2f7de996cc397982199d1b3822dedb259b29/SECURITY.md).
+
+## Setup
+
+1. Use the Node version in [`.node-version`](https://github.com/ngx-signal-forms/ngx-signal-forms/blob/77ce2f7de996cc397982199d1b3822dedb259b29/.node-version).
+2. Install the pnpm version named in `packageManager` in the root
+   `package.json`.
+3. Run `pnpm install`. This also installs the `commit-msg` hook.
+
+Run every task through Nx with `pnpm nx …`.
+
+## Common commands
+
+| Task                          | Command                                                                 |
+| ----------------------------- | ----------------------------------------------------------------------- |
+| Serve the demo app            | `pnpm nx serve demo` (or `pnpm start`)                                  |
+| Toolkit unit tests (jsdom)    | `pnpm nx test toolkit`                                                  |
+| Toolkit browser tests         | `pnpm nx run toolkit:test-browser`                                      |
+| Lint the toolkit              | `pnpm nx lint toolkit`                                                  |
+| Type-check the toolkit specs  | `pnpm nx run toolkit:typecheck`                                         |
+| Build the publishable toolkit | `pnpm nx build toolkit`                                                 |
+| Format                        | `pnpm format` (check only: `pnpm format:check`)                         |
+| Coverage                      | `pnpm nx run workspace:coverage`                                        |
+| Demo end-to-end tests         | `pnpm nx run demo-e2e:e2e-demo-app`                                     |
+| Demo accessibility scan       | `pnpm nx run demo-e2e:a11y`                                             |
+| What CI runs for the toolkit  | `pnpm nx run-many -t lint typecheck test test-browser build -p toolkit` |
+
+The toolkit build has two cached steps. `toolkit:build-ng-packagr` runs
+ng-packagr into `dist/packages/toolkit-ng-packagr`. `toolkit:build` copies
+that into `dist/packages/toolkit`, writes the npm README, copies `LICENSE`,
+and strips the `@internal` members and the `./core` export. Only
+`toolkit:build` writes `dist/packages/toolkit`, so a cache hit always
+restores the finished package.
+
+## Documentation starter check
+
+The quick start in the root [`README.md`](/README) sits between
+`documentation-starter:start` and `documentation-starter:end` markers. CI
+compiles that block and runs its submission action:
+
+```sh
+pnpm nx run toolkit:check-documentation-starter
+```
+
+Run it after you change the quick start.
+
+## Where docs live
+
+Explain each topic in one file. Elsewhere, write one sentence and a link.
+
+| Topic                                                    | File                                                                                    |
+| -------------------------------------------------------- | --------------------------------------------------------------------------------------- |
+| Benefits, install, quick start, which entry point to use | [`README.md`](/README) (published to npm)                                          |
+| What Angular owns and what the toolkit owns              | [`ANGULAR_VS_TOOLKIT.md`](/docs/ANGULAR_VS_TOOLKIT)                                      |
+| Config keys and defaults                                 | [`packages/toolkit/README.md`](/packages/toolkit/README#configuration)             |
+| Error and warning timing, warning submission, messages   | [`WARNINGS_SUPPORT.md`](/docs/WARNINGS_SUPPORT)                                          |
+| Custom controls                                          | [`CUSTOM_CONTROLS.md`](/docs/CUSTOM_CONTROLS)                                            |
+| Custom wrappers                                          | [`CUSTOM_WRAPPERS.md`](/docs/CUSTOM_WRAPPERS)                                            |
+| Fieldsets, arrays, error summaries                       | [`COMPLEX_NESTED_FORMS.md`](/docs/COMPLEX_NESTED_FORMS)                                  |
+| Inputs of each entry point                               | The README in each entry point folder under [`packages/toolkit/`](https://github.com/ngx-signal-forms/ngx-signal-forms/tree/77ce2f7de996cc397982199d1b3822dedb259b29/packages/toolkit) |
+| CSS tokens                                               | [`THEMING.md`](/packages/toolkit/form-field/THEMING)                               |
+| Bootstrap, Tailwind, Material CSS                        | [`CSS_FRAMEWORK_INTEGRATION.md`](/docs/CSS_FRAMEWORK_INTEGRATION)                        |
+| Component tests                                          | [`TESTING.md`](/docs/TESTING)                                                            |
+| Changes between versions                                 | [`migrations/`](/docs/migrations/README)                                                 |
+| Domain terms                                             | [`CONTEXT.md`](https://github.com/ngx-signal-forms/ngx-signal-forms/blob/77ce2f7de996cc397982199d1b3822dedb259b29/CONTEXT.md)                                                           |
+
+User docs describe the current state only. Put history in `migrations/`.
+Put maintainer notes in a `## For maintainers` section at the end of a file,
+or in this file.
+
+## Docs site
+
+The docs site on Docs7 is built from these markdown files. `docs.json` at the
+repo root lists the pages. Write links as normal relative links to `.md`
+files, so they work on GitHub. On each push to `main`,
+[`build-docs7-site.mjs`](https://github.com/ngx-signal-forms/ngx-signal-forms/blob/77ce2f7de996cc397982199d1b3822dedb259b29/tools/scripts/build-docs7-site.mjs) rewrites the
+links for the site and pushes the result to the `docs7` branch. Docs7
+deploys that branch.
+
+The build fails on a link to a missing file or heading. CI runs it on every
+pull request. To check the build and preview the site locally:
+
+```sh
+pnpm nx run workspace:check-docs7-site
+npx @upstash/docs7 dev dist/docs7
+```
+
+To add a page, add it to `docs.json` and give the file `title` and
+`sidebarTitle` frontmatter in place of the `#` heading.
+
+## Architecture decisions
+
+ADRs live in [`docs/decisions/`](https://github.com/ngx-signal-forms/ngx-signal-forms/tree/77ce2f7de996cc397982199d1b3822dedb259b29/docs/decisions). Add one when you make a
+decision that is hard to reverse or that a reader would question. Point to
+code by file and symbol, not by line number. Line numbers go stale with the
+next edit. Older ADRs that cite lines describe the code at the time of the
+decision.
+
+## Project tags and module boundaries
+
+Every Nx project has one `scope:*` tag and one `type:*` tag in its
+`project.json`. The `@nx/enforce-module-boundaries` rule in
+[`oxlint.config.ts`](https://github.com/ngx-signal-forms/ngx-signal-forms/blob/77ce2f7de996cc397982199d1b3822dedb259b29/oxlint.config.ts) reads them.
+
+| Tag          | Meaning                           | May depend on             |
+| ------------ | --------------------------------- | ------------------------- |
+| `scope:lib`  | Publishable library code          | `scope:lib`               |
+| `scope:demo` | Demo apps and demo-only libraries | `scope:lib`, `scope:demo` |
+| `type:lib`   | Library project                   | `type:lib`                |
+| `type:app`   | Application project               | `type:lib`, `type:app`    |
+
+The toolkit (`scope:lib`) must not import demo code. The Material, PrimeNG,
+and Spartan demos pull in design-system packages that the toolkit must never
+ship with. When you add a project, add both tags and run
+`pnpm nx run-many -t lint`.
+
+## Published package guardrails
+
+These checks run against the built package in `dist/packages/toolkit`, after
+`toolkit:build`. CI and the release workflow call them directly, so
+`nx affected` does not skip them.
+
+1. **Public API and tarball contents.**
+   `pnpm nx run toolkit:check-published-package` compares each built `.d.ts`
+   (including the internal `/core` types as `core.internal`) and the `npm pack`
+   file list with the baseline in
+   [`packages/toolkit/api-reports/`](https://github.com/ngx-signal-forms/ngx-signal-forms/tree/77ce2f7de996cc397982199d1b3822dedb259b29/packages/toolkit/api-reports). After
+   an intended change, review the diff and update the baseline. The check
+   sorts the members of literal unions (`'a' | 'b'`), so a cached and a clean
+   build give the same baseline. Build first: `toolkit:build` runs every step
+   that shapes the published package:
+
+   ```sh
+   pnpm nx build toolkit
+   pnpm run check:toolkit-published-package -- --update
+   ```
+
+2. **Package shape.** `pnpm nx run toolkit:check-package-shape` runs
+   [publint](https://publint.dev) and
+   [Are the Types Wrong](https://arethetypeswrong.github.io) (ESM only).
+3. **Bundle size.** `pnpm nx run toolkit:check-size` runs
+   [size-limit](https://github.com/ai/size-limit) per entry point. The
+   budgets and the steps to raise one are in
+   [`packages/toolkit/.size-limit.cjs`](https://github.com/ngx-signal-forms/ngx-signal-forms/blob/77ce2f7de996cc397982199d1b3822dedb259b29/packages/toolkit/.size-limit.cjs).
+
+The demo apps have no size budget. Their `build` targets wrap
+`vite build`, so an Angular CLI `budgets` block has no effect.
+
+## Removing a public export
+
+A removed or renamed export is named in many places. Do these steps in the
+same pull request:
+
+1. Remove the export. Then build and update the API baseline, as in
+   [Published package guardrails](#published-package-guardrails). A JSDoc
+   change on a public member also changes the baseline.
+2. Add the old name to
+   [`tools/scripts/removed-symbols.json`](https://github.com/ngx-signal-forms/ngx-signal-forms/blob/77ce2f7de996cc397982199d1b3822dedb259b29/tools/scripts/removed-symbols.json).
+   Add only a distinctive name. A common word also matches unrelated docs.
+3. Run `pnpm nx run workspace:check-removed-symbols`. It lists each live doc
+   and skill page that still names the export, by file and line. It also
+   flags any `Ngx*` name that no `.ts` file declares, so a rename needs no
+   registry entry. CI runs it on every pull request.
+4. Add an entry at the end of the pending guide in
+   [`migrations/`](/docs/migrations/README). Do not state the number of
+   changes in prose. If `main` gained an entry after you branched, renumber
+   yours when you merge `main`. Update the skill's
+   [`migrations/guide.md`](https://github.com/ngx-signal-forms/ngx-signal-forms/blob/77ce2f7de996cc397982199d1b3822dedb259b29/.agents/skills/ngx-signal-forms/migrations/guide.md)
+   too, and the removed-API table in
+   [`pitfalls.md`](https://github.com/ngx-signal-forms/ngx-signal-forms/blob/77ce2f7de996cc397982199d1b3822dedb259b29/.agents/skills/ngx-signal-forms/references/pitfalls.md)
+   when users may still reach for the old name.
+5. The check reads Markdown only. Search code comments yourself:
+   `git grep -n '<name>' -- packages apps`.
+6. Build every project, not only the toolkit. The debugger in
+   `packages/demo/debugger` imports the internal `/core` entry point:
+   `pnpm nx run-many -t build typecheck`.
+
+## Toolkit isolation guarantees
+
+Two CI checks keep design-system packages out of the toolkit:
+
+1. `pnpm check:toolkit-peer-deps` fails when
+   `packages/toolkit/package.json` lists `@angular/material`, `primeng`,
+   `primeicons`, `@spartan-ng/*`, `@primeuix/*`, `@primeng/*`, or
+   `@angular/cdk`.
+2. The `toolkit-isolation` job in
+   [`ci.yml`](https://github.com/ngx-signal-forms/ngx-signal-forms/blob/77ce2f7de996cc397982199d1b3822dedb259b29/.github/workflows/ci.yml) installs only the toolkit's
+   dependency graph and builds it.
+
+`pnpm nx lint toolkit` also fails on any toolkit source import of those
+packages (`bannedExternalImports` in `oxlint.config.ts`).
+Declare a design-system package in the `package.json` of the demo project
+that imports it, never in the root `package.json`.
+
+If one fails, move the dependency into the demo app that needs it. Do not
+relax the check.
+
+## Commit messages and PR titles
+
+Use [Conventional Commits](https://www.conventionalcommits.org/). `nx release`
+reads the subject to pick the version bump, and the subject goes into the
+GitHub release notes as written.
+
+- Put every `@word` in backticks. A bare `@word` becomes a GitHub mention.
+- The `commit-msg` hook runs commitlint with
+  [`commitlint.config.cjs`](https://github.com/ngx-signal-forms/ngx-signal-forms/blob/77ce2f7de996cc397982199d1b3822dedb259b29/commitlint.config.cjs). The hook does not
+  change your message. Fix it and commit again.
+- A squash merge uses the PR title as the subject. The
+  [`PR Title`](https://github.com/ngx-signal-forms/ngx-signal-forms/blob/77ce2f7de996cc397982199d1b3822dedb259b29/.github/workflows/pr-title.yml) workflow checks every PR
+  title, except Dependabot PRs.
+- The release notes renderer (`tools/release/project-changelog-renderer.ts`)
+  also escapes a bare `@word`.
+
+## Release
+
+1. Run the **Release** workflow
+   ([`release.yml`](https://github.com/ngx-signal-forms/ngx-signal-forms/blob/77ce2f7de996cc397982199d1b3822dedb259b29/.github/workflows/release.yml)) from the Actions tab.
+   Pick the bump (`prerelease` with `rc` for a release candidate). Use
+   **Dry run** first to preview. The workflow runs the checks. Then
+   `nx release version` bumps, commits and tags locally. A separate `push`
+   job checks the result and pushes the commit and tag with a GitHub App
+   token. A last job creates the GitHub release. The workflow does not
+   publish.
+2. The new `v*` tag starts the **Publish** workflow
+   ([`publish.yml`](https://github.com/ngx-signal-forms/ngx-signal-forms/blob/77ce2f7de996cc397982199d1b3822dedb259b29/.github/workflows/publish.yml)). It fails unless the
+   tagged commit is on `main`. A `build` job builds the package and uploads
+   it. A `publish` job then waits for approval on the `npm-publish`
+   environment. It installs nothing and publishes the uploaded package to npm
+   through trusted publishing (OIDC), with the dist-tag taken from the
+   version. A dry run skips the approval.
+
+Release notes are the GitHub releases. There is no `CHANGELOG.md`.
