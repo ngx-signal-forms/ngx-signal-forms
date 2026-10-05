@@ -255,6 +255,14 @@ test.describe('Focused fieldset examples', () => {
       maxDiffPixelRatio: 0.001,
     });
     await expect(warning).toHaveCSS('padding', '16px');
+    const delivery = page.locator('[fieldsetid="placement-preview-delivery"]');
+    await expect(delivery).toHaveAttribute(
+      'aria-describedby',
+      /placement-preview-delivery-warning/,
+    );
+    for (const radio of await delivery.getByRole('radio').all()) {
+      await expect(radio).not.toHaveAttribute('aria-describedby', /.+/);
+    }
   });
 });
 
