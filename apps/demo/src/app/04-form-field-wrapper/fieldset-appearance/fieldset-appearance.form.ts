@@ -139,7 +139,8 @@ const ERROR_PLACEMENT_LABELS: Record<NgxFormFieldErrorPlacement, string> = {
           color-mix(in oklab, var(--color-gray-200) 80%, transparent),
           var(--color-gray-700)
         );
-      border-radius: 9999px;
+      border-radius: 1rem;
+      corner-shape: squircle;
       background: light-dark(
         color-mix(in oklab, var(--color-white) 80%, transparent),
         color-mix(in oklab, var(--color-gray-800) 90%, transparent)
@@ -151,7 +152,8 @@ const ERROR_PLACEMENT_LABELS: Record<NgxFormFieldErrorPlacement, string> = {
 
     .fieldset-appearance-form__control-button {
       border: 0;
-      border-radius: 9999px;
+      border-radius: 0.75rem;
+      corner-shape: squircle;
       background: transparent;
       padding: 0.375rem 1rem;
       font-size: 0.875rem;

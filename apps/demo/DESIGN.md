@@ -86,7 +86,13 @@ Use the 4px grid, with the Tailwind steps 1, 2, 3, 4, 6 and 8.
 
 - Controls (inputs, buttons, badges): 6px (`rounded-md`).
 - Cards and panels: 8–12px (`rounded-lg` / `rounded-xl`).
-- Pills and segmented toggles: full.
+- Pills: full.
+- Segmented toggles: 16px outer radius (`rounded-2xl`) and 12px option radius
+  (`rounded-xl`). Use `corner-shape: squircle` directly on both. Bounded radii
+  keep wrapped rows inside a calm rectangular border. Browsers without
+  `corner-shape` support keep the rounded-corner fallback.
+- Do not clip segmented toggles with `overflow: hidden`; focus outlines must
+  stay visible.
 - `shadow-sm` for cards and buttons. `shadow-lg` only for overlays (drawer, slide-over, pin).
 
 ## Components

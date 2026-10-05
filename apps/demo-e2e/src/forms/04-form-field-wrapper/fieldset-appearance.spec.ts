@@ -66,6 +66,24 @@ test.describe('Focused fieldset examples', () => {
         await page.reload();
         await expect(controls).toBeVisible();
 
+        const cornerShape = (await page.evaluate(() =>
+          CSS.supports('corner-shape', 'squircle'),
+        ))
+          ? /^(squircle|superellipse\(2\))$/
+          : /^$/;
+        const toggleGroups = page.locator(
+          '.fieldset-appearance-form__control-group, [aria-label="Field appearance"], [aria-label="Field orientation"]',
+        );
+        for (const group of await toggleGroups.all()) {
+          await expect(group).toHaveCSS('border-radius', '16px');
+          await expect(group).toHaveCSS('corner-shape', cornerShape);
+          await expect(group).toHaveCSS('overflow', 'visible');
+          for (const button of await group.getByRole('button').all()) {
+            await expect(button).toHaveCSS('border-radius', '12px');
+            await expect(button).toHaveCSS('corner-shape', cornerShape);
+          }
+        }
+
         const reference = await page
           .getByRole('group', { name: 'Field appearance', exact: true })
           .evaluate((group) => ({
@@ -109,6 +127,8 @@ test.describe('Focused fieldset examples', () => {
           'background-color',
           reference.background,
         );
+        await expect(controls).toHaveCSS('border-radius', '16px');
+        await expect(controls).toHaveCSS('corner-shape', cornerShape);
         await page
           .getByRole('button', {
             name: 'Close configuration panel',
