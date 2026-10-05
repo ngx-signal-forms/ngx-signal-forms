@@ -21,6 +21,7 @@ Conventional Commits. The subject line drives `nx release` versioning **and land
 | Toolkit usage (non-negotiable)  | `.github/instructions/ngx-signal-forms-toolkit.instructions.md` + the `ngx-signal-forms` skill             |
 | Angular / Signal Forms          | `angular-developer` skill (`references/signal-forms.md`)                                                   |
 | A11y (WCAG 2.2 AA)              | `.github/instructions/a11y.instructions.md`                                                                |
+| Code review standards           | `CODING_STANDARDS.md`                                                                                      |
 | Toolkit spec: jsdom or browser  | `docs/TESTING.md#toolkit-specs-jsdom-or-browser`                                                           |
 | Run one spec, timezone tests    | `docs/TESTING.md#run-one-spec`                                                                             |
 | Removing or renaming an export  | `docs/CONTRIBUTING.md#removing-a-public-export`                                                            |
