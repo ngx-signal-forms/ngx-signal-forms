@@ -1,4 +1,4 @@
-import { Component, computed, signal } from '@angular/core';
+import { Component, computed, input, signal } from '@angular/core';
 import type {
   FormFieldAppearance,
   ResolvedErrorDisplayStrategy,
@@ -28,7 +28,10 @@ import {
   createOrientationSelection,
   getOrientationLabel,
 } from '../../ui/orientation-toggle';
-import { FieldsetFormComponent } from '../complex-forms/fieldset.form';
+import {
+  FieldsetFormComponent,
+  type FieldsetExample,
+} from '../complex-forms/fieldset.form';
 
 const FEEDBACK_APPEARANCE_OPTIONS: readonly NgxFormFieldsetFeedbackAppearance[] =
   ['auto', 'plain', 'notification'];
@@ -269,11 +272,9 @@ const ERROR_PLACEMENT_LABELS: Record<NgxFormFieldErrorPlacement, string> = {
   templateUrl: './fieldset-appearance.form.html',
 })
 export class FieldsetAppearanceFormComponent {
-  // Defaults to 'immediate' so the validation sandbox shows its grouped errors
-  // on load (keeping the placement comparison meaningful), while switching to
-  // 'on-touch' / 'on-submit' visibly demonstrates the error-timing control.
+  readonly example = input<FieldsetExample>('appearance');
   protected readonly selectedMode =
-    signal<ResolvedErrorDisplayStrategy>('immediate');
+    signal<ResolvedErrorDisplayStrategy>('on-touch');
   protected readonly selectedAppearance =
     signal<FormFieldAppearance>('standard');
   protected readonly selectedOrientation = createOrientationSelection(
@@ -356,29 +357,53 @@ export class FieldsetAppearanceFormComponent {
       label: 'Orientation',
       value: getOrientationLabel(this.selectedOrientation()),
     },
-    {
-      label: 'Shell',
-      value: FIELDSET_APPEARANCE_LABELS[this.selectedFieldsetAppearance()],
-    },
-    {
-      label: 'Feedback',
-      value: FEEDBACK_APPEARANCE_LABELS[this.selectedFeedbackAppearance()],
-    },
-    {
-      label: 'Tone',
-      value: SURFACE_TONE_LABELS[this.selectedSurfaceTone()],
-    },
-    {
-      label: 'Validation surface',
-      value: VALIDATION_SURFACE_LABELS[this.selectedValidationSurface()],
-    },
-    {
-      label: 'Aggregation',
-      value: this.includeNestedErrors() ? 'Include nested' : 'Group only',
-    },
-    {
-      label: 'Placement',
-      value: ERROR_PLACEMENT_LABELS[this.selectedErrorPlacement()],
-    },
+    ...(this.example() === 'feedback'
+      ? []
+      : [
+          {
+            label: 'Shell',
+            value:
+              FIELDSET_APPEARANCE_LABELS[this.selectedFieldsetAppearance()],
+          },
+        ]),
+    ...(this.example() === 'appearance'
+      ? []
+      : [
+          {
+            label: 'Feedback',
+            value:
+              FEEDBACK_APPEARANCE_LABELS[this.selectedFeedbackAppearance()],
+          },
+        ]),
+    ...(this.example() === 'feedback'
+      ? []
+      : [
+          {
+            label: 'Tone',
+            value: SURFACE_TONE_LABELS[this.selectedSurfaceTone()],
+          },
+          {
+            label: 'Validation surface',
+            value: VALIDATION_SURFACE_LABELS[this.selectedValidationSurface()],
+          },
+        ]),
+    ...(this.example() === 'composition'
+      ? [
+          {
+            label: 'Aggregation',
+            value: this.includeNestedErrors() ? 'Include nested' : 'Group only',
+          },
+        ]
+      : []),
+    ...(this.example() === 'appearance'
+      ? []
+      : [
+          {
+            label: 'Placement',
+            value: ERROR_PLACEMENT_LABELS[this.selectedErrorPlacement()],
+          },
+          { label: 'List', value: LIST_STYLE_LABELS[this.selectedListStyle()] },
+          { label: 'Title', value: this.notificationTitleChip() },
+        ]),
   ]);
 }

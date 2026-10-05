@@ -9,6 +9,8 @@ const DEMO_ROUTES = [
   '/headless/error-message-signal',
   '/form-field-wrapper/complex-forms',
   '/form-field-wrapper/fieldset-appearance',
+  '/form-field-wrapper/fieldset-appearance/feedback',
+  '/form-field-wrapper/complex-forms/fieldset',
   '/form-field-wrapper/custom-controls',
   '/form-field-wrapper/labelless-fields',
   '/form-field-wrapper/field-identity',

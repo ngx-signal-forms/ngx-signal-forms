@@ -1,10 +1,13 @@
 import { booleanAttribute, Component, input, signal } from '@angular/core';
 import {
+  apply,
   email,
   FormField,
   form,
+  hidden,
   required,
   schema,
+  validate,
 } from '@angular/forms/signals';
 import {
   createOnInvalidHandler,
@@ -36,14 +39,7 @@ interface PlacementPreviewModel {
   deliveryMethod: string;
 }
 
-interface PlacementDesignPreviewModel {
-  appointmentDate: string;
-  address: {
-    street: string;
-    city: string;
-  };
-  deliveryMethod: string;
-}
+export type FieldsetExample = 'appearance' | 'feedback' | 'composition';
 
 const createPlacementPreviewValue = (): PlacementPreviewModel => ({
   email: '',
@@ -54,26 +50,21 @@ const createPlacementPreviewValue = (): PlacementPreviewModel => ({
   deliveryMethod: '',
 });
 
-const createPlacementDesignPreviewValue = (): PlacementDesignPreviewModel => ({
-  appointmentDate: '12-03-2026',
-  address: {
-    street: 'Keizersgracht 120',
-    city: 'Amsterdam',
-  },
-  deliveryMethod: 'express',
-});
-
 const placementPreviewSchema = schema<PlacementPreviewModel>((path) => {
   required(path.email, { message: 'Email is required' });
   email(path.email, { message: 'Email format is invalid' });
   required(path.address.street, { message: 'Street is required' });
   required(path.address.city, { message: 'City is required' });
   required(path.deliveryMethod, { message: 'Delivery method is required' });
+  validate(path.deliveryMethod, ({ value }) =>
+    value() === 'express'
+      ? {
+          kind: 'warn:express-delivery',
+          message: 'Express delivery may incur extra fees',
+        }
+      : null,
+  );
 });
-
-const placementDesignPreviewSchema = schema<PlacementDesignPreviewModel>(
-  () => {},
-);
 
 /**
  * Fieldset Demo - Demonstrates NgxFormFieldset
@@ -107,6 +98,7 @@ const placementDesignPreviewSchema = schema<PlacementDesignPreviewModel>(
   styleUrls: ['./fieldset.form.scss'],
 })
 export class FieldsetFormComponent {
+  readonly example = input<FieldsetExample>('composition');
   /**
    * Error display mode input - controls when errors are shown
    */
@@ -126,18 +118,21 @@ export class FieldsetFormComponent {
   });
 
   readonly #placementPreviewModel = signal(createPlacementPreviewValue());
-  readonly #placementDesignPreviewModel = signal(
-    createPlacementDesignPreviewValue(),
-  );
-
   readonly placementPreviewForm = form(
     this.#placementPreviewModel,
-    placementPreviewSchema,
-  );
-
-  readonly placementDesignPreviewForm = form(
-    this.#placementDesignPreviewModel,
-    placementDesignPreviewSchema,
+    (path) => {
+      apply(path, placementPreviewSchema);
+      hidden(path.email, { when: () => this.example() !== 'feedback' });
+      hidden(path.deliveryMethod, {
+        when: () => this.example() !== 'feedback',
+      });
+    },
+    {
+      submission: {
+        action: () => Promise.resolve(),
+        onInvalid: createOnInvalidHandler(),
+      },
+    },
   );
 
   /**
@@ -195,6 +190,14 @@ export class FieldsetFormComponent {
   protected resetPlacementPreview(): void {
     this.placementPreviewForm().reset();
     this.#placementPreviewModel.set(createPlacementPreviewValue());
+  }
+
+  protected fillPlacementPreview(): void {
+    this.placementPreviewForm().reset({
+      email: 'reader@example.com',
+      address: { street: 'Keizersgracht 120', city: 'Amsterdam' },
+      deliveryMethod: 'express',
+    });
   }
 
   /**

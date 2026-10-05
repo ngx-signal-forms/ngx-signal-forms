@@ -3,8 +3,8 @@
      instead of sitting inline above the form. -->
 <ng-template ngxPageControls>
   <ngx-display-controls-card
-    title="Fieldset lab controls"
-    description="Drive the same grouped form patterns through the newer fieldset presentation APIs so the trade-offs stay visible instead of theoretical."
+    title="Fieldset example controls"
+    description="Change the current example without changing its validation rules."
     [chips]="currentControlChips()"
     layout="single"
   >
@@ -64,7 +64,7 @@
 
     <ngx-display-controls-section
       title="Label orientation"
-      description="Compare vertical and horizontal labels for the individual wrappers. Outline stays vertical because it uses floating-label chrome."
+      description="Compare vertical and horizontal labels. Outline stays vertical because its caption sits inside the border."
     >
       <ngx-orientation-toggle
         [(value)]="selectedOrientation"
@@ -72,6 +72,7 @@
       />
     </ngx-display-controls-section>
 
+    @if (example() !== 'feedback') {
     <ngx-display-controls-section
       title="Fieldset shell"
       description="Switch between the current bordered section shell and a semantic-only fieldset that keeps just the legend and grouped meaning."
@@ -96,7 +97,7 @@
         }
       </div>
     </ngx-display-controls-section>
-
+    } @if (example() !== 'appearance') {
     <ngx-display-controls-section
       title="Grouped feedback"
       description="Swap between the compact text renderer and surfaced notification card without changing the validation source."
@@ -121,7 +122,7 @@
         }
       </div>
     </ngx-display-controls-section>
-
+    } @if (example() !== 'feedback') {
     <ngx-display-controls-section
       title="Surface tone"
       description="Preview the neutral/info/success family independently from validation state, then compare how the grouped summary sits on top."
@@ -147,6 +148,7 @@
       </div>
     </ngx-display-controls-section>
 
+    } @if (example() !== 'feedback') {
     <ngx-display-controls-section
       title="Validation surface"
       description="Keep the message standalone or tint the full grouped surface while errors or warnings are active."
@@ -171,7 +173,7 @@
         }
       </div>
     </ngx-display-controls-section>
-
+    } @if (example() !== 'appearance') {
     <ngx-display-controls-section
       title="Summary formatting"
       description="Compare dense bullet lists against stacked plain text when a grouped summary owns multiple messages."
@@ -197,6 +199,7 @@
       </div>
     </ngx-display-controls-section>
 
+    } @if (example() !== 'appearance') {
     <ngx-display-controls-section
       title="Message placement"
       description="Move the grouped summary above or below each section to compare whether the error should lead or follow the controls."
@@ -221,7 +224,7 @@
         }
       </div>
     </ngx-display-controls-section>
-
+    } @if (example() === 'composition') {
     <ngx-display-controls-section
       title="Aggregation mode"
       description="Compare group-only feedback against a full nested summary when descendant wrappers would otherwise speak for themselves."
@@ -255,7 +258,7 @@
         </button>
       </div>
     </ngx-display-controls-section>
-
+    } @if (example() !== 'appearance') {
     <ngx-display-controls-section
       title="Notification title"
       description="Keep the section-level title visible in auto/notification mode, or strip it away to compare a quieter grouped card. Auto mode still resolves to the surfaced notification card for grouped sections."
@@ -292,12 +295,14 @@
         Current title state: {{ notificationTitleChip() }}.
       </p>
     </ngx-display-controls-section>
+    }
   </ngx-display-controls-card>
 </ng-template>
 
 <ngx-split-layout>
   <ngx-fieldset-form
     #formComponent
+    [example]="example()"
     [errorDisplayMode]="selectedMode()"
     [appearance]="selectedAppearance()"
     [orientation]="selectedOrientation()"
@@ -314,9 +319,11 @@
 
   @if (formComponent) {
   <div right>
-    @defer (on idle) {
+    @defer (on idle) { @if (example() === 'composition') {
     <ngx-signal-form-debugger [formTree]="formComponent.fieldsetForm" />
-    } @placeholder {
+    } @else {
+    <ngx-signal-form-debugger [formTree]="formComponent.placementPreviewForm" />
+    } } @placeholder {
     <div class="debugger-placeholder" aria-hidden="true"></div>
     } @error {
     <p class="debugger-placeholder">The form debugger failed to load.</p>

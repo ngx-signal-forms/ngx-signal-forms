@@ -3,6 +3,78 @@ import type { ExampleCardConfig } from '../../shared/form-example.types';
 export const FIELDSET_APPEARANCE_CONTENT: ExampleCardConfig = {
   demonstrated: {
     icon: '🧱',
+    title: 'Fieldset shells and surfaces',
+    sections: [
+      {
+        title: 'One group, one learning goal',
+        items: [
+          'Compare bordered and semantic-only fieldsets with the same address fields',
+          'Change <code>surfaceTone</code> independently of validation',
+          'Use <code>validationSurface="always"</code> to tint a group when feedback becomes visible',
+        ],
+      },
+    ],
+  },
+  learning: {
+    title: 'Try the appearance controls',
+    sections: [
+      {
+        title: 'Try this',
+        items: [
+          'Switch Fieldset shell between Bordered and Semantic only',
+          'Choose a Surface tone, then use Fill valid values to compare a clean group',
+          'Reset preview, choose Immediate, and enable Tint surface to compare the invalid state',
+          'Switch wrapper styling and label orientation without changing the fieldset shell',
+        ],
+      },
+    ],
+    nextStep: {
+      text: 'Compare feedback renderers and placement next',
+      link: '/form-field-wrapper/fieldset-appearance/feedback',
+      linkText: 'Grouped Feedback',
+    },
+  },
+};
+
+export const GROUPED_FEEDBACK_CONTENT: ExampleCardConfig = {
+  demonstrated: {
+    icon: '🧱',
+    title: 'Grouped feedback and placement',
+    sections: [
+      {
+        title: 'Compare message presentation',
+        items: [
+          'Compare <code>feedbackAppearance</code>, notification titles, and bulleted or plain lists',
+          'Move grouped summaries and a single-field message above or below their controls',
+          'Errors and warnings use distinct live regions; warnings never block validation',
+        ],
+      },
+    ],
+  },
+  learning: {
+    title: 'Try the feedback controls',
+    sections: [
+      {
+        title: 'Try this',
+        items: [
+          'Choose Immediate to preview errors, then switch between Plain and Notification',
+          'Move Message placement to Top and toggle the title and list style',
+          'Reset preview, choose On Submit, and click Validate preview to reveal the messages',
+          'Use Fill valid values, then touch the Express delivery option to show its warning',
+        ],
+      },
+    ],
+    nextStep: {
+      text: 'Explore nested and cross-field validation next',
+      link: '/form-field-wrapper/complex-forms/fieldset',
+      linkText: 'Fieldset Composition',
+    },
+  },
+};
+
+export const FIELDSET_COMPOSITION_CONTENT: ExampleCardConfig = {
+  demonstrated: {
+    icon: '🧱',
     title: 'Grouped fieldset feedback',
     sections: [
       {
@@ -35,7 +107,7 @@ export const FIELDSET_APPEARANCE_CONTENT: ExampleCardConfig = {
     title: 'When to reach for each primitive',
     sections: [
       {
-        title: 'Try This (Immediate mode, default controls)',
+        title: 'Try this (on-touch mode)',
         items: [
           '1. Type <code>1234</code> in <strong>Shipping ZIP</strong> → Tab away → grouped summary shows "ZIP code must be 5 digits (e.g., 12345 or 12345-6789)"',
           '2. Switch <strong>Grouped feedback</strong> from Notification to Plain → the same messages re-render as compact text instead of the surfaced card with its "Review the grouped fields below" title',
