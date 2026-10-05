@@ -257,6 +257,31 @@ describe('NgxFormFieldError — theme defaults and token overrides', () => {
       .toBe('rgb(253, 235, 235)');
   });
 
+  it('pads error and warning panels on every side and honours custom panel padding', async () => {
+    const { errorHost, warningHost, errorBox } = await renderMessages('panel');
+    const warningBox = warningHost.querySelector<HTMLElement>(
+      '.ngx-form-field-error--warning',
+    )!;
+
+    for (const box of [errorBox, warningBox]) {
+      await expect.poll(() => getComputedStyle(box).padding).toBe('16px');
+    }
+
+    errorHost.style.setProperty(
+      '--ngx-signal-form-error-panel-padding',
+      '12px 24px',
+    );
+    await expect
+      .poll(() => getComputedStyle(errorBox).padding)
+      .toBe('12px 24px');
+
+    const emptyBox = errorHost.querySelector<HTMLElement>(
+      '.ngx-form-field-error--empty',
+    )!;
+    expect(getComputedStyle(emptyBox).padding).toBe('0px');
+    expect(emptyBox.getBoundingClientRect().height).toBe(0);
+  });
+
   it('draws the panel error background in the public panel token when one is set', async () => {
     const { errorHost, errorBox } = await renderMessages('panel');
 

@@ -121,9 +121,6 @@
   flex-direction: column;
   gap: var(--_error-spacing);
   padding: var(--_error-padding);
-  /* Align error messages with input text start (remove left padding offset) */
-  padding-inline-start: 0;
-  padding-inline-end: 0;
   border-width: var(--_error-border-width);
   border-style: var(--_error-border-style-default);
   border-radius: var(--_error-border-radius);
@@ -132,6 +129,11 @@
   animation: var(--_error-animation);
   will-change: transform, opacity;
   transform-origin: top center;
+}
+
+:host([data-presentation='inline']) .ngx-form-field-error {
+  padding-inline-start: 0;
+  padding-inline-end: 0;
 }
 
 .ngx-form-field-error--error {

@@ -245,24 +245,24 @@ below only apply while `presentation="panel"`.
 Use `--ngx-signal-form-error-panel-*` and
 `--ngx-signal-form-warning-panel-*` to override panel defaults.
 
-| Property                                        | Default                                                                     | Description                                     |
-| :---------------------------------------------- | :-------------------------------------------------------------------------- | :---------------------------------------------- |
-| `--ngx-signal-form-error-panel-padding`         | `1rem`                                                                      | Inner padding of the card                       |
-| `--ngx-signal-form-error-panel-border-width`    | `1px`                                                                       | Border width                                    |
-| `--ngx-signal-form-error-panel-border-radius`   | `0.5rem`                                                                    | Card corner radius                              |
-| `--ngx-signal-form-error-panel-font-size`       | `0.875rem`                                                                  | Message font size (Figma body-2)                |
-| `--ngx-signal-form-error-panel-line-height`     | `1.25rem`                                                                   | Message line height                             |
-| `--ngx-signal-form-error-panel-bg`              | `light-dark(#fdebeb, rgb(127 29 29 / 0.32))`                                | Error card background                           |
-| `--ngx-signal-form-error-panel-color`           | `light-dark(#b91c1c, #fca5a5)`                                              | Error card text color                           |
-| `--ngx-signal-form-error-panel-border-color`    | `color-mix(in srgb, var(--ngx-signal-form-error-color) 50%, transparent)`   | Error card border color                         |
-| `--ngx-signal-form-warning-panel-bg`            | `light-dark(color-mix(in srgb, #a16207 10%, white), rgb(120 53 15 / 0.28))` | Warning card background                         |
-| `--ngx-signal-form-warning-panel-color`         | `light-dark(#92400e, #fcd34d)`                                              | Warning card text color                         |
-| `--ngx-signal-form-warning-panel-border-color`  | `color-mix(in srgb, var(--ngx-signal-form-warning-color) 50%, transparent)` | Warning card border color                       |
-| `--ngx-signal-form-error-panel-message-spacing` | `0.25rem`                                                                   | Spacing between grouped messages                |
-| `--ngx-signal-form-error-title-color`           | `currentColor`                                                              | Optional title color (both presentations)       |
-| `--ngx-signal-form-error-title-font-size`       | `1rem`                                                                      | Optional title font size (both presentations)   |
-| `--ngx-signal-form-error-title-line-height`     | `1.5rem`                                                                    | Optional title line height (both presentations) |
-| `--ngx-signal-form-error-title-font-weight`     | `500`                                                                       | Optional title font weight (both presentations) |
+| Property                                        | Default                                                                     | Description                                       |
+| :---------------------------------------------- | :-------------------------------------------------------------------------- | :------------------------------------------------ |
+| `--ngx-signal-form-error-panel-padding`         | `1rem`                                                                      | Inner padding on all sides; accepts CSS shorthand |
+| `--ngx-signal-form-error-panel-border-width`    | `1px`                                                                       | Border width                                      |
+| `--ngx-signal-form-error-panel-border-radius`   | `0.5rem`                                                                    | Card corner radius                                |
+| `--ngx-signal-form-error-panel-font-size`       | `0.875rem`                                                                  | Message font size (Figma body-2)                  |
+| `--ngx-signal-form-error-panel-line-height`     | `1.25rem`                                                                   | Message line height                               |
+| `--ngx-signal-form-error-panel-bg`              | `light-dark(#fdebeb, rgb(127 29 29 / 0.32))`                                | Error card background                             |
+| `--ngx-signal-form-error-panel-color`           | `light-dark(#b91c1c, #fca5a5)`                                              | Error card text color                             |
+| `--ngx-signal-form-error-panel-border-color`    | `color-mix(in srgb, var(--ngx-signal-form-error-color) 50%, transparent)`   | Error card border color                           |
+| `--ngx-signal-form-warning-panel-bg`            | `light-dark(color-mix(in srgb, #a16207 10%, white), rgb(120 53 15 / 0.28))` | Warning card background                           |
+| `--ngx-signal-form-warning-panel-color`         | `light-dark(#92400e, #fcd34d)`                                              | Warning card text color                           |
+| `--ngx-signal-form-warning-panel-border-color`  | `color-mix(in srgb, var(--ngx-signal-form-warning-color) 50%, transparent)` | Warning card border color                         |
+| `--ngx-signal-form-error-panel-message-spacing` | `0.25rem`                                                                   | Spacing between grouped messages                  |
+| `--ngx-signal-form-error-title-color`           | `currentColor`                                                              | Optional title color (both presentations)         |
+| `--ngx-signal-form-error-title-font-size`       | `1rem`                                                                      | Optional title font size (both presentations)     |
+| `--ngx-signal-form-error-title-line-height`     | `1.5rem`                                                                    | Optional title line height (both presentations)   |
+| `--ngx-signal-form-error-title-font-weight`     | `500`                                                                       | Optional title font weight (both presentations)   |
 
 List style/indent and message spacing come from the shared
 `--ngx-signal-form-error-*` / `--ngx-signal-form-warning-*` tokens in the
