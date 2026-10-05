@@ -25,8 +25,8 @@ function requireElement<T extends Element>(
 /**
  * Regression coverage for issue #472: a native checkbox or radio infers a
  * wrapper kind (`checkbox` / `radio-group`), but auto-ARIA eligibility is a
- * separate decision — see CONTEXT.md's "Inferred control kind and
- * auto-ARIA eligibility are two decisions" and
+ * separate decision — see docs/agents/domain-invariants.md, which requires
+ * keeping control-kind inference separate from auto-ARIA eligibility, and
  * `docs/decisions/0001-control-semantics-architecture.md#auto-aria-eligibility-boundary`.
  *
  * Every case below asserts BOTH halves for the same rendered control:

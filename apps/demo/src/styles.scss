@@ -838,7 +838,7 @@
   }
 }
 
-/* The parent layout owns the space between fields (CONTEXT.md). The
+/* The parent layout owns the space between fields (GLOSSARY.md). The
    wrapper's own margin rule outranks Tailwind's zero-specificity space-y-*
    margins, so every space-y-* stack of wrappers collapsed and each hint
    touched the next field. This rule must stay outside @layer to beat the

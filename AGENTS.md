@@ -25,7 +25,7 @@ Conventional Commits. The subject line drives `nx release` versioning **and land
 | Run one spec, timezone tests    | `docs/TESTING.md#run-one-spec`                                                                             |
 | Removing or renaming an export  | `docs/CONTRIBUTING.md#removing-a-public-export`                                                            |
 | Sandbox: env, worktrees, push   | `docs/agents/sandbox.md`                                                                                   |
-| Domain vocabulary and decisions | `CONTEXT.md` at the repo root, ADRs at `docs/decisions/` (this repo's convention, not `docs/adr/`)         |
+| Domain vocabulary and decisions | `GLOSSARY.md`, implementation invariants at `docs/agents/domain-invariants.md`, ADRs at `docs/decisions/`  |
 | Issues, PRDs and pull requests  | GitHub issues at `ngx-signal-forms/ngx-signal-forms` via the `gh` CLI — see `docs/agents/issue-tracker.md` |
 
 Triage labels: `needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`.

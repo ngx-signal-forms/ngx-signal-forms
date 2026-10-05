@@ -17,7 +17,7 @@ Each `NgxFormFieldError` renders its blocking errors in a `role="alert"` region.
 The fix must not break two things:
 
 - **The always-mounted live region.** A screen reader announces content that is inserted into a live region that already exists. A region that is created together with its content can miss its first announcement (the NVDA + Chrome case). `NgxFormFieldError` keeps its `role="alert"` element mounted and empty for this reason.
-- **`aria-describedby` tracks what is rendered.** The control still points at `${fieldName}-error`, so that element must exist and hold the message whenever errors show (see CONTEXT.md).
+- **`aria-describedby` tracks what is rendered.** The control still points at `${fieldName}-error`, so that element must exist and hold the message whenever errors show (see [domain invariants](../agents/domain-invariants.md#aria-and-field-identity)).
 
 ## Decision
 
