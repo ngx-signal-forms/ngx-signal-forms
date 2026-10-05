@@ -3,11 +3,10 @@ import type { Locator, Page } from '@playwright/test';
 import { BaseFormPage } from './base-form.page';
 
 /**
- * Page Object for Fieldset Appearance demo page.
- * Route: /form-field-wrapper/fieldset-appearance
+ * Page object for the full fieldset composition example.
  */
 export class FieldsetAppearancePage extends BaseFormPage {
-  readonly route = DEMO_PATHS.fieldsetAppearance;
+  readonly route = DEMO_PATHS.fieldsetComposition;
 
   readonly borderedShellButton: Locator;
   readonly semanticOnlyShellButton: Locator;

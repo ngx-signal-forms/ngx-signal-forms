@@ -299,19 +299,12 @@ describe('VestSuiteAdapter — exported-interface guarantees', () => {
   });
 
   describe('settled()', () => {
-    it('resolves even when a later focused run on the same suite supersedes the earlier run’s own runResult promise', async () => {
+    it('settles both overlapping focused runs on the same suite', async () => {
       const adapter = createVestAdapter();
       const gates: Array<() => void> = [];
 
-      // A focused run bypasses contention/FIFO gating entirely (see
-      // `isSuiteContestedByOtherKey`'s doc comment) -- two focused
-      // `runVestSuite` calls on the SAME suite both call `suite.only(...).run()`
-      // immediately, back to back. Per Vest 6.3.2's single-resolver-per-suite
-      // behaviour (documented on `awaitVestRunSettlement`), the SECOND call
-      // replaces the suite's resolver before the FIRST call's own promise ever
-      // settles -- so `first.runResult` is permanently pending, and only
-      // `first.settled()` (which races the run against the suite-wide
-      // `ALL_RUNNING_TESTS_FINISHED` bus event) recovers its outcome.
+      // Vest versions differ in whether overlapping runs settle their raw
+      // promises. The adapter must settle both handles in either case.
       const suite = create((data: { email: string; username: string }) => {
         vestTest('email', 'Email is required', async () => {
           await new Promise<void>((resolve) => gates.push(resolve));
@@ -344,18 +337,7 @@ describe('VestSuiteAdapter — exported-interface guarantees', () => {
       });
       expect(second.deferred).toBe(false);
 
-      // `.finally()` (not `.then()`) so a REJECTED runResult still marks
-      // itself settled -- the point being tested is whether the promise
-      // settles at all, not whether it resolves successfully.
-      let firstRunResultSettled = false;
-      void Promise.resolve(first.runResult).finally(() => {
-        firstRunResultSettled = true;
-      });
-
-      let firstSettled = false;
-      void Promise.resolve(first.settled()).finally(() => {
-        firstSettled = true;
-      });
+      const settlement = Promise.all([first.settled(), second.settled()]);
 
       await vi.waitFor(() => {
         expect(gates.length).toBe(2);
@@ -365,23 +347,7 @@ describe('VestSuiteAdapter — exported-interface guarantees', () => {
       firstGate();
       secondGate();
 
-      await vi.waitFor(() => {
-        expect(firstSettled).toBe(true);
-      });
-
-      // Positive control instead of a fixed wait: `second.runResult` is
-      // driven by the SAME suite resolver that superseded `first`'s, so
-      // awaiting it proves the suite's tests have actually finished and every
-      // microtask that could flip `firstRunResultSettled` has had its chance
-      // to run. One more macrotask turn (a real, zero-delay `setTimeout`)
-      // flushes anything left, and only THEN is "genuinely never settles"
-      // distinguishable from "just hasn't settled yet" -- without racing a
-      // fixed wall-clock duration.
-      await second.runResult;
-      await new Promise<void>((resolve) => {
-        setTimeout(resolve, 0);
-      });
-      expect(firstRunResultSettled).toBe(false);
+      await expect(settlement).resolves.toHaveLength(2);
     });
   });
 

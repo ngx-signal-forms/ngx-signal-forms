@@ -1,4 +1,4 @@
-import { Component, computed, signal } from '@angular/core';
+import { Component, computed, input, signal } from '@angular/core';
 import type {
   FormFieldAppearance,
   ResolvedErrorDisplayStrategy,
@@ -28,7 +28,10 @@ import {
   createOrientationSelection,
   getOrientationLabel,
 } from '../../ui/orientation-toggle';
-import { FieldsetFormComponent } from '../complex-forms/fieldset.form';
+import {
+  FieldsetFormComponent,
+  type FieldsetExample,
+} from '../complex-forms/fieldset.form';
 
 const FEEDBACK_APPEARANCE_OPTIONS: readonly NgxFormFieldsetFeedbackAppearance[] =
   ['auto', 'plain', 'notification'];
@@ -131,9 +134,17 @@ const ERROR_PLACEMENT_LABELS: Record<NgxFormFieldErrorPlacement, string> = {
       flex-wrap: wrap;
       align-items: center;
       gap: 0.25rem;
-      border: 1px solid rgb(229 231 235 / 0.8);
-      border-radius: 9999px;
-      background: rgb(255 255 255 / 0.8);
+      border: 1px solid
+        light-dark(
+          color-mix(in oklab, var(--color-gray-200) 80%, transparent),
+          var(--color-gray-700)
+        );
+      border-radius: 1rem;
+      corner-shape: squircle;
+      background: light-dark(
+        color-mix(in oklab, var(--color-white) 80%, transparent),
+        color-mix(in oklab, var(--color-gray-800) 90%, transparent)
+      );
       padding: 0.25rem;
       box-shadow: 0 1px 2px rgb(15 23 42 / 0.08);
       backdrop-filter: blur(10px);
@@ -141,13 +152,14 @@ const ERROR_PLACEMENT_LABELS: Record<NgxFormFieldErrorPlacement, string> = {
 
     .fieldset-appearance-form__control-button {
       border: 0;
-      border-radius: 9999px;
+      border-radius: 0.75rem;
+      corner-shape: squircle;
       background: transparent;
       padding: 0.375rem 1rem;
       font-size: 0.875rem;
       line-height: 1.25rem;
       font-weight: 500;
-      color: rgb(75 85 99);
+      color: light-dark(var(--color-gray-600), var(--color-gray-300));
       transition:
         color 150ms ease,
         background-color 150ms ease,
@@ -155,18 +167,18 @@ const ERROR_PLACEMENT_LABELS: Record<NgxFormFieldErrorPlacement, string> = {
     }
 
     .fieldset-appearance-form__control-button:hover {
-      color: rgb(17 24 39);
+      color: light-dark(var(--color-gray-900), var(--color-white));
     }
 
     .fieldset-appearance-form__control-button:focus-visible {
-      outline: 2px solid #005fcc;
+      outline: 2px solid var(--color-border-focus);
       outline-offset: 2px;
     }
 
     .fieldset-appearance-form__control-button--selected {
-      background: #e8f4fb;
+      background: var(--color-selected);
       box-shadow: 0 1px 2px rgb(15 23 42 / 0.08);
-      color: #005d96;
+      color: var(--color-on-selected);
     }
 
     .fieldset-appearance-form__primary-panel {
@@ -180,7 +192,7 @@ const ERROR_PLACEMENT_LABELS: Record<NgxFormFieldErrorPlacement, string> = {
       font-size: 1.125rem;
       line-height: 1.75rem;
       font-weight: 600;
-      color: rgb(17 24 39);
+      color: light-dark(var(--color-gray-900), var(--color-gray-100));
     }
 
     .fieldset-appearance-form__primary-summary,
@@ -191,89 +203,46 @@ const ERROR_PLACEMENT_LABELS: Record<NgxFormFieldErrorPlacement, string> = {
     }
 
     .fieldset-appearance-form__primary-summary {
-      border-top: 1px solid rgb(99 102 241 / 0.14);
+      border-top: 1px solid
+        light-dark(rgb(99 102 241 / 0.14), rgb(129 140 248 / 0.28));
     }
 
     .fieldset-appearance-form__primary-instructions {
-      border-top: 1px dashed rgb(245 158 11 / 0.38);
+      border-top: 1px dashed
+        light-dark(rgb(245 158 11 / 0.38), rgb(251 191 36 / 0.34));
     }
 
     .fieldset-appearance-form__primary-copy {
       font-size: 0.875rem;
       line-height: 1.5rem;
-      color: rgb(17 24 39);
+      color: light-dark(var(--color-gray-900), var(--color-gray-100));
     }
 
     .fieldset-appearance-form__primary-hint {
       font-size: 0.75rem;
       line-height: 1.25rem;
-      color: rgb(75 85 99);
+      color: light-dark(var(--color-gray-600), var(--color-gray-400));
     }
 
     .fieldset-appearance-form__primary-instruction-title {
       font-size: 0.875rem;
       line-height: 1.5rem;
       font-weight: 500;
-      color: rgb(146 64 14);
+      color: light-dark(rgb(146 64 14), rgb(253 230 138));
     }
 
     .fieldset-appearance-form__primary-instruction-copy {
       font-size: 0.75rem;
       line-height: 1.25rem;
-      color: rgb(180 83 9);
-    }
-
-    :host-context(.dark) .fieldset-appearance-form__control-group {
-      border-color: rgb(55 65 81);
-      background: rgb(31 41 55 / 0.9);
-    }
-
-    :host-context(.dark) .fieldset-appearance-form__control-button {
-      color: rgb(209 213 219);
-    }
-
-    :host-context(.dark) .fieldset-appearance-form__control-button:hover {
-      color: rgb(255 255 255);
-    }
-
-    :host-context(.dark) .fieldset-appearance-form__control-button--selected {
-      background: rgb(55 65 81);
-      color: rgb(147 197 253);
-    }
-
-    :host-context(.dark) .fieldset-appearance-form__primary-title,
-    :host-context(.dark) .fieldset-appearance-form__primary-copy {
-      color: rgb(243 244 246);
-    }
-
-    :host-context(.dark) .fieldset-appearance-form__primary-summary {
-      border-top-color: rgb(129 140 248 / 0.28);
-    }
-
-    :host-context(.dark) .fieldset-appearance-form__primary-hint {
-      color: rgb(156 163 175);
-    }
-
-    :host-context(.dark) .fieldset-appearance-form__primary-instructions {
-      border-top-color: rgb(251 191 36 / 0.34);
-    }
-
-    :host-context(.dark) .fieldset-appearance-form__primary-instruction-title {
-      color: rgb(253 230 138);
-    }
-
-    :host-context(.dark) .fieldset-appearance-form__primary-instruction-copy {
-      color: rgb(252 211 77);
+      color: light-dark(rgb(180 83 9), rgb(252 211 77));
     }
   `,
   templateUrl: './fieldset-appearance.form.html',
 })
 export class FieldsetAppearanceFormComponent {
-  // Defaults to 'immediate' so the validation sandbox shows its grouped errors
-  // on load (keeping the placement comparison meaningful), while switching to
-  // 'on-touch' / 'on-submit' visibly demonstrates the error-timing control.
+  readonly example = input<FieldsetExample>('appearance');
   protected readonly selectedMode =
-    signal<ResolvedErrorDisplayStrategy>('immediate');
+    signal<ResolvedErrorDisplayStrategy>('on-touch');
   protected readonly selectedAppearance =
     signal<FormFieldAppearance>('standard');
   protected readonly selectedOrientation = createOrientationSelection(
@@ -356,29 +325,53 @@ export class FieldsetAppearanceFormComponent {
       label: 'Orientation',
       value: getOrientationLabel(this.selectedOrientation()),
     },
-    {
-      label: 'Shell',
-      value: FIELDSET_APPEARANCE_LABELS[this.selectedFieldsetAppearance()],
-    },
-    {
-      label: 'Feedback',
-      value: FEEDBACK_APPEARANCE_LABELS[this.selectedFeedbackAppearance()],
-    },
-    {
-      label: 'Tone',
-      value: SURFACE_TONE_LABELS[this.selectedSurfaceTone()],
-    },
-    {
-      label: 'Validation surface',
-      value: VALIDATION_SURFACE_LABELS[this.selectedValidationSurface()],
-    },
-    {
-      label: 'Aggregation',
-      value: this.includeNestedErrors() ? 'Include nested' : 'Group only',
-    },
-    {
-      label: 'Placement',
-      value: ERROR_PLACEMENT_LABELS[this.selectedErrorPlacement()],
-    },
+    ...(this.example() === 'feedback'
+      ? []
+      : [
+          {
+            label: 'Shell',
+            value:
+              FIELDSET_APPEARANCE_LABELS[this.selectedFieldsetAppearance()],
+          },
+        ]),
+    ...(this.example() === 'appearance'
+      ? []
+      : [
+          {
+            label: 'Feedback',
+            value:
+              FEEDBACK_APPEARANCE_LABELS[this.selectedFeedbackAppearance()],
+          },
+        ]),
+    ...(this.example() === 'feedback'
+      ? []
+      : [
+          {
+            label: 'Tone',
+            value: SURFACE_TONE_LABELS[this.selectedSurfaceTone()],
+          },
+          {
+            label: 'Validation surface',
+            value: VALIDATION_SURFACE_LABELS[this.selectedValidationSurface()],
+          },
+        ]),
+    ...(this.example() === 'composition'
+      ? [
+          {
+            label: 'Aggregation',
+            value: this.includeNestedErrors() ? 'Include nested' : 'Group only',
+          },
+        ]
+      : []),
+    ...(this.example() === 'appearance'
+      ? []
+      : [
+          {
+            label: 'Placement',
+            value: ERROR_PLACEMENT_LABELS[this.selectedErrorPlacement()],
+          },
+          { label: 'List', value: LIST_STYLE_LABELS[this.selectedListStyle()] },
+          { label: 'Title', value: this.notificationTitleChip() },
+        ]),
   ]);
 }

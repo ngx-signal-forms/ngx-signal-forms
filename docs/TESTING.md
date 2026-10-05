@@ -204,6 +204,14 @@ await expect
 
 ### Run one spec
 
+Fieldset visual checks compare focused form, control-group, and notification
+screenshots in light and dark themes. Normal CI compares committed Linux
+baselines and never updates them. Use the **Update Snapshots** workflow on the
+feature branch with scope `playwright` and `playwright_filter` set to
+`src/forms/04-form-field-wrapper/fieldset-appearance.spec.ts` to regenerate
+only this suite. Review the image changes before merging. Local macOS
+screenshots use separate baselines; do not use them as Linux baselines.
+
 Put the file filter after `--`. Vitest does not know `--testFile`.
 
 | Project               | Command                                                                                    |
@@ -216,6 +224,8 @@ Put the file filter after `--`. Vitest does not know `--testFile`.
 
 - The toolkit filter is relative to `packages/toolkit`, the demo filter to
   `apps/demo`.
+- To use installed Chrome instead of Playwright's bundled Chromium, prefix
+  toolkit browser or demo e2e commands with `PLAYWRIGHT_BROWSER_CHANNEL=chrome`.
 - The demo has no `typecheck` target, and its specs are not type-checked.
   `pnpm nx build demo` type-checks the app code.
 - The demo end-to-end tests use a dev server on port 4600 that is already
