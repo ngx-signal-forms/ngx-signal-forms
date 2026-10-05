@@ -204,6 +204,14 @@ await expect
 
 ### Run one spec
 
+Fieldset visual checks compare focused form, control-group, and notification
+screenshots in light and dark themes. Normal CI compares committed Linux
+baselines and never updates them. Use the **Update Snapshots** workflow on the
+feature branch with scope `playwright` and `playwright_filter` set to
+`src/forms/04-form-field-wrapper/fieldset-appearance.spec.ts` to regenerate
+only this suite. Review the image changes before merging. Local macOS
+screenshots use separate baselines; do not use them as Linux baselines.
+
 Put the file filter after `--`. Vitest does not know `--testFile`.
 
 | Project               | Command                                                                                    |

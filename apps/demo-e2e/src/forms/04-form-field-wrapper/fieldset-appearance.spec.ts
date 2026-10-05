@@ -65,6 +65,13 @@ test.describe('Focused fieldset examples', () => {
         );
         await page.reload();
         await expect(controls).toBeVisible();
+        await page.evaluate(() => document.fonts.ready);
+        await expect(
+          page.locator('ngx-fieldset-appearance-form form'),
+        ).toHaveScreenshot(
+          `${route.split('/').join('-')}-${dark ? 'dark' : 'light'}.png`,
+          { maxDiffPixelRatio: 0.001 },
+        );
 
         const cornerShape = (await page.evaluate(() =>
           CSS.supports('corner-shape', 'squircle'),
@@ -116,6 +123,20 @@ test.describe('Focused fieldset examples', () => {
           await expect(
             group.locator('[aria-pressed="false"]').first(),
           ).toHaveCSS('color', reference.text);
+        }
+        await expect(controls).toHaveScreenshot(
+          `error-mode-${route.split('/').join('-')}-${dark ? 'dark' : 'light'}.png`,
+          { maxDiffPixelRatio: 0.001 },
+        );
+        if (route === DEMO_PATHS.fieldsetAppearance) {
+          const tones = page.getByRole('group', {
+            name: 'Fieldset surface tone',
+            exact: true,
+          });
+          await expect(tones).toHaveScreenshot(
+            `wrapped-surface-tone-${dark ? 'dark' : 'light'}.png`,
+            { maxDiffPixelRatio: 0.001 },
+          );
         }
 
         await page.setViewportSize({ width: 390, height: 844 });
@@ -197,6 +218,10 @@ test.describe('Focused fieldset examples', () => {
       /placementPreviewStreet-error/,
     );
     await expect(groupedError).toHaveCSS('padding', '16px');
+    await page.evaluate(() => document.fonts.ready);
+    await expect(groupedError).toHaveScreenshot('notification-errors.png', {
+      maxDiffPixelRatio: 0.001,
+    });
     await expect(street).toBeFocused();
     expect(
       warnings.filter((message) => message.includes('submittedStatus')),
@@ -226,6 +251,9 @@ test.describe('Focused fieldset examples', () => {
     await expect(warning).toContainText(
       'Express delivery may incur extra fees',
     );
+    await expect(warning).toHaveScreenshot('notification-warning.png', {
+      maxDiffPixelRatio: 0.001,
+    });
     await expect(warning).toHaveCSS('padding', '16px');
   });
 });
