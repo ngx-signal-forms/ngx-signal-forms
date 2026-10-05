@@ -8,28 +8,33 @@ This repo uses a single global context. ADRs live at `docs/decisions/` (this rep
 
 ## Before exploring, read these
 
-- **`CONTEXT.md`** at the repo root
+- **`GLOSSARY.md`** at the repo root
+- **`docs/agents/domain-invariants.md`** for implementation-level constraints
 - **`docs/decisions/`** — read ADRs that touch the area you're about to work in
 
-If any of these files don't exist or are stubs, **proceed silently**. Don't flag their absence; don't suggest creating them upfront. The producer skill (`/grill-with-docs`) creates them lazily when terms or decisions actually get resolved.
+If a file is missing or a stub, do not treat that as a problem by itself. Add or update glossary terms when work settles their meaning. Record an architectural decision when it is hard to reverse, surprising without context, and the result of a real trade-off.
 
 ## File structure
 
 ```
 /
-├── CONTEXT.md
+├── GLOSSARY.md
 ├── docs/
-│   └── decisions/
-│       └── 0001-control-semantics-architecture.md
+│   ├── decisions/
+│   │   └── 0001-control-semantics-architecture.md
+│   └── agents/
+│       └── domain-invariants.md
 ├── apps/
 └── packages/
 ```
 
 ## Use the glossary's vocabulary
 
-When your output names a domain concept (in an issue title, a refactor proposal, a hypothesis, a test name), use the term as defined in `CONTEXT.md`. Don't drift to synonyms the glossary explicitly avoids.
+When your output names a domain concept (in an issue title, a refactor proposal, a hypothesis, a test name), use the term as defined in `GLOSSARY.md`. Don't drift to synonyms the glossary explicitly avoids.
 
-If the concept you need isn't in the glossary yet, that's a signal — either you're inventing language the project doesn't use (reconsider) or there's a real gap (note it for `/grill-with-docs`).
+If the concept you need isn't in the glossary yet, decide whether it is a real
+project term. Add a concise definition to `GLOSSARY.md` when the work settles
+its meaning.
 
 ## Flag ADR conflicts
 
