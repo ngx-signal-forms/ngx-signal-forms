@@ -501,8 +501,8 @@
 /* */
 /* The grid lives on `__layout` (a structural child of `:host`, see */
 /* form-field-wrapper.ts and form-field-wrapper.css), not on `:host` itself */
-/* (#523) — see CONTEXT.md, "The horizontal form-field layout's grid lives */
-/* on a structural child, not `:host`", for why. */
+/* (#523) — see docs/agents/domain-invariants.md for why the grid lives on */
+/* this structural child rather than `:host`. */
 
 :host(.ngx-signal-form-field-wrapper--horizontal) {
   display: block;

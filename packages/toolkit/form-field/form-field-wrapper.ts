@@ -327,8 +327,8 @@ const FIELD_BOX_INTERACTIVE_SELECTOR = [
 
       Horizontal layout turns it into the real CSS Grid container and gives
       it \`container-type: inline-size\` instead of putting either on
-      \`:host\` itself — see CONTEXT.md, "The horizontal form-field layout's
-      grid lives on a structural child, not \`:host\`", for why (#523).
+      \`:host\` itself — see docs/agents/domain-invariants.md for why the grid
+      belongs on this structural child, not \`:host\` (#523).
     -->
     <div class="ngx-signal-form-field-wrapper__layout">
       <!-- Label slot (outside bordered container for standard layout, visually inside for outline via CSS) -->

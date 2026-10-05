@@ -77,7 +77,7 @@ Explain each topic in one file. Elsewhere, write one sentence and a link.
 | Bootstrap, Tailwind, Material CSS                        | [`CSS_FRAMEWORK_INTEGRATION.md`](./CSS_FRAMEWORK_INTEGRATION.md)                        |
 | Component tests                                          | [`TESTING.md`](./TESTING.md)                                                            |
 | Changes between versions                                 | [`migrations/`](./migrations/README.md)                                                 |
-| Domain terms                                             | [`CONTEXT.md`](../CONTEXT.md)                                                           |
+| Domain terms                                             | [`GLOSSARY.md`](../GLOSSARY.md)                                                         |
 
 User docs describe the current state only. Put history in `migrations/`.
 Put maintainer notes in a `## For maintainers` section at the end of a file,

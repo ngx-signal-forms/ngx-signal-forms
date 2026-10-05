@@ -3,7 +3,7 @@
   "compilerOptions": {
     "outDir": "../../dist/out-tsc",
     // Match `tsconfig.lib.json`. The toolkit narrows validation errors
-    // structurally rather than nominally (see the `CONTEXT.md` key concept),
+    // structurally rather than nominally (see docs/agents/domain-invariants.md),
     // so a mock whose shape drifts from the real Angular type is the exact
     // way a spec passes against a shape Angular never emits. Holding the
     // specs to the same strictness as the code they verify is what stops
