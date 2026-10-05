@@ -8,8 +8,9 @@
 
 <!-- Show concrete before/after evidence. Prefer screenshots for visual changes.
      Do not invent before evidence when none exists. Include exact test/build
-     commands and results for execution evidence. The /pr skill can fill this
-     section; keep commands and outcomes exact. -->
+     commands and results for execution evidence. Use reusable commands; omit
+     local sandbox flags, environment overrides, and temporary paths. The /pr
+     skill can fill this section; keep commands and outcomes exact. -->
 
 - **Before:** <!-- screenshot, output, failing test, or "not applicable" -->
   **After:** <!-- screenshot, output, passing test -->
