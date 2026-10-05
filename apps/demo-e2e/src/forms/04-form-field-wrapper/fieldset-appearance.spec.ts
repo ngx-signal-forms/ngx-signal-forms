@@ -40,6 +40,86 @@ function getMessagePlacement(
 }
 
 test.describe('Focused fieldset examples', () => {
+  for (const route of [
+    DEMO_PATHS.fieldsetAppearance,
+    DEMO_PATHS.groupedFeedback,
+    DEMO_PATHS.fieldsetComposition,
+  ]) {
+    test(`keeps projected controls consistent with shared toggles in both themes (${route})`, async ({
+      page,
+    }) => {
+      await page.setViewportSize({ width: 1440, height: 1000 });
+      await page.goto(route);
+      const controls = page.getByRole('group', {
+        name: 'Error display mode',
+        exact: true,
+      });
+      await expect(controls).toBeVisible();
+
+      for (const dark of [true, false]) {
+        await page.evaluate(
+          (theme) => {
+            localStorage.setItem('color-theme', theme);
+          },
+          dark ? 'dark' : 'light',
+        );
+        await page.reload();
+        await expect(controls).toBeVisible();
+
+        const reference = await page
+          .getByRole('group', { name: 'Field appearance', exact: true })
+          .evaluate((group) => ({
+            background: getComputedStyle(group).backgroundColor,
+            border: getComputedStyle(group).borderTopColor,
+            selected: getComputedStyle(
+              group.querySelector('[aria-pressed="true"]')!,
+            ).backgroundColor,
+            text: getComputedStyle(
+              group.querySelector('[aria-pressed="false"]')!,
+            ).color,
+          }));
+
+        const groups = page.locator('.fieldset-appearance-form__control-group');
+        for (const group of await groups.all()) {
+          await expect(group).toHaveCSS(
+            'background-color',
+            reference.background,
+          );
+          await expect(group).toHaveCSS('border-top-color', reference.border);
+          const selected = group.locator('[aria-pressed="true"]');
+          await expect(selected).toHaveCSS(
+            'background-color',
+            reference.selected,
+          );
+          await expect(selected).toHaveCSS(
+            'color',
+            dark ? 'rgb(147, 197, 253)' : 'rgb(0, 93, 150)',
+          );
+          await expect(
+            group.locator('[aria-pressed="false"]').first(),
+          ).toHaveCSS('color', reference.text);
+        }
+
+        await page.setViewportSize({ width: 390, height: 844 });
+        await page
+          .getByRole('button', { name: 'Open display controls', exact: true })
+          .click();
+        await expect(controls).toBeVisible();
+        await expect(controls).toHaveCSS(
+          'background-color',
+          reference.background,
+        );
+        await page
+          .getByRole('button', {
+            name: 'Close configuration panel',
+            exact: true,
+          })
+          .click();
+        await page.setViewportSize({ width: 1440, height: 1000 });
+      }
+    });
+  }
+
   test('starts appearance quietly and keeps composition on a separate page', async ({
     page,
   }) => {
