@@ -109,7 +109,7 @@ jobs:
           if [ -n "$PLAYWRIGHT_FILTER" ]; then
             args+=("$PLAYWRIGHT_FILTER")
           fi
-          pnpm exec nx run demo-e2e:e2e --updateSnapshots --skip-nx-cache -- "${args[@]}"
+          pnpm exec nx run demo-e2e:e2e --skip-nx-cache -- "${args[@]}" --update-snapshots
 
       - name: Update Vitest browser screenshots
         if: ${{ inputs.scope == 'all' || inputs.scope == 'vitest' }}
