@@ -216,6 +216,8 @@ Put the file filter after `--`. Vitest does not know `--testFile`.
 
 - The toolkit filter is relative to `packages/toolkit`, the demo filter to
   `apps/demo`.
+- To use installed Chrome instead of Playwright's bundled Chromium, prefix
+  toolkit browser or demo e2e commands with `PLAYWRIGHT_BROWSER_CHANNEL=chrome`.
 - The demo has no `typecheck` target, and its specs are not type-checked.
   `pnpm nx build demo` type-checks the app code.
 - The demo end-to-end tests use a dev server on port 4600 that is already

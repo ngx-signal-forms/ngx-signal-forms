@@ -52,7 +52,11 @@ export default defineConfig({
     include: [toolkitBrowserSpecFiles],
     browser: {
       enabled: true,
-      provider: playwright(),
+      provider: playwright({
+        launchOptions: {
+          channel: process.env['PLAYWRIGHT_BROWSER_CHANNEL'],
+        },
+      }),
       headless: Boolean(process.env.CI),
       screenshotDirectory: '__screenshots__',
       screenshotFailures: true,
