@@ -199,6 +199,10 @@ describe('AppComponent render-error boundaries', () => {
     );
 
     controlsShouldThrow = false;
+    // jsdom refuses focus inside a `display: none` subtree, as browsers do.
+    // Show the rail as the wide-viewport media query would, so the recovered
+    // control can take focus.
+    rail.style.display = 'block';
     await userEvent.click(
       within(rail).getByRole('button', { name: 'Try again', hidden: true }),
     );
