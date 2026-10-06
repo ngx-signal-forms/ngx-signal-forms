@@ -6,8 +6,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "[ ! -f '/Users/arjenalthoff/.agents/skills/impeccable/scripts/impeccable' ] || '/Users/arjenalthoff/.agents/skills/impeccable/scripts/impeccable' hook",
-            "commandWindows": "if exist \"/Users/arjenalthoff/.agents/skills/impeccable/scripts/impeccable.cmd\" (\"/Users/arjenalthoff/.agents/skills/impeccable/scripts/impeccable.cmd\" hook & exit /b)",
+            "command": "[ ! -x \"$HOME/.agents/skills/impeccable/scripts/impeccable\" ] || \"$HOME/.agents/skills/impeccable/scripts/impeccable\" hook",
+            "commandWindows": "if exist \"%USERPROFILE%\\.agents\\skills\\impeccable\\scripts\\impeccable.cmd\" (\"%USERPROFILE%\\.agents\\skills\\impeccable\\scripts\\impeccable.cmd\" hook & exit /b)",
             "timeout": 5,
             "statusMessage": "Checking UI changes"
           }
@@ -19,8 +19,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "[ ! -f '/Users/arjenalthoff/.agents/skills/impeccable/scripts/impeccable' ] || '/Users/arjenalthoff/.agents/skills/impeccable/scripts/impeccable' hook",
-            "commandWindows": "if exist \"/Users/arjenalthoff/.agents/skills/impeccable/scripts/impeccable.cmd\" (\"/Users/arjenalthoff/.agents/skills/impeccable/scripts/impeccable.cmd\" hook & exit /b)",
+            "command": "[ ! -x \"$HOME/.agents/skills/impeccable/scripts/impeccable\" ] || \"$HOME/.agents/skills/impeccable/scripts/impeccable\" hook",
+            "commandWindows": "if exist \"%USERPROFILE%\\.agents\\skills\\impeccable\\scripts\\impeccable.cmd\" (\"%USERPROFILE%\\.agents\\skills\\impeccable\\scripts\\impeccable.cmd\" hook & exit /b)",
             "timeout": 30,
             "statusMessage": "Design deep pass"
           }
