@@ -1,15 +1,8 @@
 import { expect, test } from '@playwright/test';
 import { DEMO_PATHS } from '@ngx-signal-forms/demo-shared';
 
+import { requireValue } from './test-helpers';
 import { FieldsetAppearancePage } from '../../page-objects/fieldset-appearance.page';
-
-function requireValue<T>(value: T | null, label: string): T {
-  if (value === null) {
-    throw new Error(`Expected ${label} to be available.`);
-  }
-
-  return value;
-}
 
 function getMessagePlacement(
   fieldset: Parameters<FieldsetAppearancePage['getGroupedMessages']>[0],

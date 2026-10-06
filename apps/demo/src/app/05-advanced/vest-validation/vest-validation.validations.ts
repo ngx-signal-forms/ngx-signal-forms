@@ -1,7 +1,8 @@
 import { create, enforce, test, warn } from 'vest';
+import { getEmailDomain } from '../../shared/validation/email-domain';
 import type { VestValidationModel } from './vest-validation.model';
 
-const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/u;
 const EU_VAT_COUNTRIES = new Set(['DE', 'NL', 'BE']);
 const FREE_EMAIL_DOMAINS = new Set(['gmail.com', 'outlook.com', 'yahoo.com']);
 const PERSONAL_TEAM_LIMIT = 10;
@@ -15,11 +16,6 @@ function parseTeamSize(value: string): number | null {
   }
 
   return Number.parseInt(normalized, 10);
-}
-
-function getEmailDomain(email: string): string | null {
-  const [, domain] = email.trim().toLowerCase().split('@');
-  return domain || null;
 }
 
 export const vestOnlyAccountSuite = create(
