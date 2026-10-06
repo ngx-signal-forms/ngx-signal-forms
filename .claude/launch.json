@@ -1,0 +1,18 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "demo-645-worktree",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": [
+        "--dir",
+        "/Users/arjenalthoff/dev/ngx-signal-forms/ngx-signal-forms.worktrees/feat/645-wizard-live-autosave",
+        "nx",
+        "serve",
+        "demo"
+      ],
+      "env": { "NX_NO_CLOUD": "true", "NX_DAEMON": "false" },
+      "port": 4600
+    }
+  ]
+}
