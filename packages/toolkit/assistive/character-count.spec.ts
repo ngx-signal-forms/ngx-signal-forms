@@ -532,6 +532,23 @@ describe('NgxFormFieldCharacterCount', () => {
       );
     });
 
+    it('should still announce the limit state when showLimitColors is false', async () => {
+      // `showLimitColors` is a visual flag. Turning colours off must not
+      // silence the announcement a screen reader user relies on.
+      const { container } = await render(TestWrapperComponent, {
+        componentInputs: {
+          textModel: 'a'.repeat(80),
+          maxLength: 100,
+          showLimitColors: false,
+          liveAnnounce: true,
+        },
+      });
+
+      expect(
+        container.querySelector('.ngx-signal-form-field-char-count__sr'),
+      ).toHaveTextContent('Approaching limit: 20 characters remaining.');
+    });
+
     it('should update announcement text when limit state changes', async () => {
       const { container, rerender } = await render(TestWrapperComponent, {
         componentInputs: {

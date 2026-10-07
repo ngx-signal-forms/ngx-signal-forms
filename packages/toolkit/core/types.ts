@@ -427,8 +427,8 @@ export interface NgxSignalFormsConfig {
   /**
    * Visually hidden text describing a character count's limit, exposed to
    * assistive technology through `aria-describedby`. `NgxFormFieldCharacterCount`
-   * renders this instead of the running count — the running and remaining
-   * count stays in the `[liveAnnounce]` live region. The literal token
+   * renders this next to the visible running count. The `[liveAnnounce]` live
+   * region holds only threshold-transition text. The literal token
    * `{max}` is replaced with the resolved `maxLength`.
    * @default 'Up to {max} characters'
    */

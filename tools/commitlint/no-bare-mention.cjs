@@ -2,7 +2,7 @@
 
 const { CODE_SPAN_OR_FENCE } = require('./code-span.cjs');
 
-// AGENTS.md requires every `@word` in a commit subject to be backticked
+// CODING_STANDARDS.md requires every `@word` in a commit subject to be backticked
 // (`` `@group` ``, not `@group`), because GitHub renders a bare `@word` in
 // release notes as a mention of a stranger's account. This local commitlint
 // rule enforces it on the header only.
