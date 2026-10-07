@@ -602,7 +602,8 @@ export class NgxFormFieldCharacterCount {
   /**
    * Visually-hidden text describing the limit, e.g. "Up to 200 characters".
    * Rendered by the `[id]="limitId()"` element that `aria-describedby` links
-   * to — the running count stays in the `[liveAnnounce]` live region (issue
+   * to — the visible running count is a separate element, and the
+   * `[liveAnnounce]` live region holds only threshold-transition text (issue
    * #499's decision). Configurable through
    * `NgxSignalFormsConfig.characterCountLimitText`'s `{max}` placeholder.
    * Empty string when no limit is resolved. Warns once in dev mode when the
@@ -644,8 +645,8 @@ export class NgxFormFieldCharacterCount {
    * Uses `createCharacterCount()`'s own default thresholds (80%/95%) — the
    * component no longer accepts a `colorThresholds` input (removed pre-v1,
    * #355). Those defaults drive `displayLimitState` (the `data-limit-state`
-   * attribute) and, in turn, the `[liveAnnounce]` announcement wording,
-   * which must stay fixed and predictable for screen reader users. The
+   * attribute) and the `[liveAnnounce]` announcement wording, which must
+   * stay fixed and predictable for screen reader users. The
    * *visible color* is independently, continuously reconfigurable via the
    * `--ngx-form-field-char-count-warning-threshold` /
    * `-danger-threshold` CSS custom properties — see the class docblock.
@@ -704,18 +705,17 @@ export class NgxFormFieldCharacterCount {
    * this replaced kept a `previous` value only to return
    * `state === prev ? prev : state`, which is just `state` (issue #510).
    *
-   * No separate "no limit" check is needed: `displayLimitState()` already
-   * returns `'disabled'` when `hasLimit()` is `false`, and the `'disabled'`
-   * branch below covers that case.
+   * It reads the real limit state, not `displayLimitState()`:
+   * `showLimitColors` is a visual flag and must not silence announcements.
    */
-  readonly #announceableState = computed<
-    CharacterCountLimitState | 'disabled' | null
-  >(() => {
-    if (!this.liveAnnounce()) return null;
+  readonly #announceableState = computed<CharacterCountLimitState | null>(
+    () => {
+      if (!this.liveAnnounce()) return null;
+      if (!this.#charCountState.hasLimit()) return null;
 
-    const state = this.displayLimitState();
-    return state === 'disabled' ? null : state;
-  });
+      return this.#charCountState.limitState();
+    },
+  );
 
   /**
    * Computed announcement text. Reads `#announceableState` as the
@@ -730,7 +730,7 @@ export class NgxFormFieldCharacterCount {
     if (max === null) return '';
 
     const state = this.#announceableState();
-    if (state === null || state === 'disabled' || state === 'ok') return '';
+    if (state === null || state === 'ok') return '';
 
     // Snapshot the current length *without* subscribing. `#announceableState`
     // only changes value on an actual state transition (see its own doc
