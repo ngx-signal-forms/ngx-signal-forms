@@ -4,6 +4,8 @@ Issues and PRDs for this repo live as GitHub issues. Use the `gh` CLI for all op
 
 ## Conventions
 
+- Use the triage labels `needs-triage`, `needs-info`, `ready-for-agent`,
+  `ready-for-human`, and `wontfix`.
 - **Create an issue**: `gh issue create --title "..." --body "..."`. Use a heredoc for multi-line bodies.
 - **Read an issue**: `gh issue view <number> --json title,body,labels,comments`. The `--comments` form can print nothing in an agent shell.
 - **List issues**: `gh issue list --state open --json number,title,body,labels,comments --jq '[.[] | {number, title, body, labels: [.labels[].name], comments: [.comments[].body]}]'` with appropriate `--label` and `--state` filters.

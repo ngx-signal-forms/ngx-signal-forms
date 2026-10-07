@@ -2,8 +2,10 @@
 title: 'Contributing'
 ---
 
-This is the entry point for work on the repository. Code and agent rules live
-in [`AGENTS.md`](../AGENTS.md). Repository layout and packaging live in
+This is the entry point for work on the repository. Agent startup and action
+routes live in [`AGENTS.md`](../AGENTS.md). Code rules and task-specific sources
+live in [coding standards](../CODING_STANDARDS.md). Repository layout and
+packaging live in
 [Package architecture](./PACKAGE_ARCHITECTURE.md).
 
 ## Issues and pull requests
@@ -212,11 +214,9 @@ relax the check.
 
 ## Commit messages and PR titles
 
-Use [Conventional Commits](https://www.conventionalcommits.org/). `nx release`
-reads the subject to pick the version bump, and the subject goes into the
-GitHub release notes as written.
+Follow the [commit standards](../CODING_STANDARDS.md#commits) for subject
+format and release-note safety.
 
-- Put every `@word` in backticks. A bare `@word` becomes a GitHub mention.
 - The `commit-msg` hook runs commitlint with
   [`commitlint.config.cjs`](../commitlint.config.cjs). The hook does not
   change your message. Fix it and commit again.
