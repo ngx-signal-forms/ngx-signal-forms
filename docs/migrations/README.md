@@ -11,14 +11,21 @@ Every published toolkit version must add `v<version>.md` in this directory
 before it is released. The guide is the authoritative upgrade path from the
 immediately preceding version to that release.
 
-| From           | To             | Guide                              |
-| -------------- | -------------- | ---------------------------------- |
-| `v1.0.0-rc.10` | `v1.0.0-rc.11` | [Upgrade guide](./v1.0.0-rc.11.md) |
-| `v1.0.0-rc.11` | `v1.0.0-rc.12` | [Upgrade guide](./v1.0.0-rc.12.md) |
-| `v1.0.0-rc.12` | `v1.0.0-rc.13` | [Upgrade guide](./v1.0.0-rc.13.md) |
-| `v1.0.0-rc.13` | `v1.0.0-rc.14` | [Upgrade guide](./v1.0.0-rc.14.md) |
-| `v1.0.0-rc.14` | `v1.0.0-rc.15` | [Upgrade guide](./v1.0.0-rc.15.md) |
-| `v1.0.0-rc.15` | `v1.0.0-rc.16` | [Upgrade guide](./v1.0.0-rc.16.md) |
+For integrations starting at `1.0.0-beta.10`, use the
+[cumulative beta-to-v1 guide](../MIGRATING_BETA_TO_V1.md) through RC.15. It
+includes the earlier CSS-token mappings in the
+[CSS migration guide](../MIGRATING_CSS_VARS.md). For a target after RC.15,
+continue with each published hop below.
+
+| From             | To             | Guide                                               |
+| ---------------- | -------------- | --------------------------------------------------- |
+| `v1.0.0-beta.10` | `v1.0.0-rc.15` | [Cumulative beta guide](../MIGRATING_BETA_TO_V1.md) |
+| `v1.0.0-rc.10`   | `v1.0.0-rc.11` | [Upgrade guide](./v1.0.0-rc.11.md)                  |
+| `v1.0.0-rc.11`   | `v1.0.0-rc.12` | [Upgrade guide](./v1.0.0-rc.12.md)                  |
+| `v1.0.0-rc.12`   | `v1.0.0-rc.13` | [Upgrade guide](./v1.0.0-rc.13.md)                  |
+| `v1.0.0-rc.13`   | `v1.0.0-rc.14` | [Upgrade guide](./v1.0.0-rc.14.md)                  |
+| `v1.0.0-rc.14`   | `v1.0.0-rc.15` | [Upgrade guide](./v1.0.0-rc.15.md)                  |
+| `v1.0.0-rc.15`   | `v1.0.0-rc.16` | [Upgrade guide](./v1.0.0-rc.16.md)                  |
 
 > **Add the guide before you cut the release, not after.** A guide written
 > against a version number that is never published strands its content: readers
@@ -37,6 +44,3 @@ Each guide starts with an `Upgrade from v<previous-version>` section:
 
 GitHub release notes must link to the matching guide. Generated changelogs
 summarize changes, but do not replace migration instructions.
-
-`docs/MIGRATING_BETA_TO_V1.md` remains the cumulative guide for beta users
-upgrading to the current v1 API.
