@@ -9,7 +9,7 @@
 // 2. An `Ngx*` name must be declared in a tracked `.ts` file. This catches
 //    a renamed or deleted class, directive or type without a registry entry.
 import { execFileSync } from 'node:child_process';
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import ts from 'typescript';
 
@@ -138,7 +138,7 @@ function tracked(...patterns) {
     encoding: 'utf8',
   })
     .split('\0')
-    .filter(Boolean);
+    .filter((path) => path && existsSync(path));
 }
 
 function main() {
