@@ -353,9 +353,7 @@ restyling `ngx-form-field-character-count` overrides the thresholds purely
 in CSS, with no template change and no input to thread through. The `exceeded`
 state (>100% used) is not configurable: it is tied to the field's actual
 `maxLength`, not a percentage. `[liveAnnounce]` announcement wording always
-uses the fixed 80/95 defaults, regardless of any threshold-token override —
-see [Migrating: beta to v1](../../../docs/MIGRATING_BETA_TO_V1.md) for the
-accessibility rationale.
+uses the fixed 80/95 defaults, regardless of any threshold-token override.
 
 Following the same pattern as the rest of the toolkit, the implementation
 resolves the two public threshold tokens into pseudo-private
