@@ -30,12 +30,14 @@ Use `@ngx-signal-forms/toolkit/headless` when you own the markup. Use
 | Programmatic messages, counters, flags, or marking legends   | [Bundled contracts](../references/headless-composition.md#visibility-and-aggregation); deeper [reactive APIs](https://github.com/ngx-signal-forms/ngx-signal-forms/blob/main/packages/toolkit/headless/README.md#reactive-primitives) |
 
 `NgxHeadlessFieldset` (`[ngxHeadlessFieldset]`, `exportAs="fieldset"`) requires
-`field`. It aggregates nested errors and warnings with separate timing. Bind
+`field`. It aggregates the field's direct errors and warnings with separate
+timing. Set `includeNestedErrors` to aggregate child-field feedback too. Bind
 `fields` to aggregate an explicit list; `fields=[]` aggregates nothing and does
 not fall back to the fieldset's own errors. Render `resolvedErrors()` and
 `resolvedWarnings()`, not `aggregatedErrors()[i].message`, which is `undefined`
-for framework-default errors. `dedupeValidationErrors()` collapses repeated
-kinds in a list you aggregate yourself.
+for framework-default errors. `dedupeValidationErrors()` removes repeated
+kind-and-message pairs from a list you aggregate yourself. A missing message
+counts as empty.
 
 `NgxHeadlessCharacterCount` requires `maxLength`. `warningThreshold` and
 `dangerThreshold` default to `DEFAULT_WARNING_THRESHOLD` (0.8) and
