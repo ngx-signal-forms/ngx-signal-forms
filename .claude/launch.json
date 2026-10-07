@@ -1,0 +1,13 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "demo",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["nx", "serve", "demo"],
+      "cwd": "${workspaceFolder}",
+      "env": { "NX_NO_CLOUD": "true", "NX_DAEMON": "false" },
+      "port": 4600
+    }
+  ]
+}
