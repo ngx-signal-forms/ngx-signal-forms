@@ -25,6 +25,8 @@ The assistive entry point provides accessible feedback rendering that sits betwe
    - Provide `[formField]` for the bound field.
    - Omit `maxLength` when a `maxLength` validator on the field provides it.
    - Without a wrapper, set `fieldName` to one id token (usually the control's `id`) and add `${fieldName}-char-count-limit` to the control's `aria-describedby` so screen readers read the limit on focus. This is an authored description id, which rule 4 allows: auto-ARIA keeps it and appends its own ids. Inner whitespace in `fieldName` becomes `-` in the id. Inside a wrapper the wrapper links the limit for you and ignores `fieldName`.
+   - `showLimitColors` (default `true`) toggles the colour progression. `liveAnnounce` (default `false`) adds polite announcements when the limit state changes. Bind `[announcementFormatter]` (`NgxCharacterCountAnnouncementFormatter`) to localize them.
+   - The visually hidden limit text comes from `characterCountLimitText` in `NGX_SIGNAL_FORMS_CONFIG` (default `'Up to {max} characters'`; `{max}` becomes the resolved `maxLength`). The running count stays in the `liveAnnounce` region.
    - Warning/danger thresholds are CSS-only (no component input): override `--ngx-form-field-char-count-warning-threshold` / `--ngx-form-field-char-count-danger-threshold` (plain numbers, percent of `maxLength`, default 80/95).
 
 5. Grouped validation notification for fieldsets, summary cards, or custom sections is `NgxFormFieldError` with `presentation="panel"` (see step 2 above) — there is no separate notification component:
@@ -44,6 +46,7 @@ The assistive entry point provides accessible feedback rendering that sits betwe
    - The label renders as a native heading (`h2`–`h6`); `headingLevel` picks the level (default `2`).
    - Inside `form[formRoot][ngxSignalForm]`, the summary announces alone after a submit. Field errors that the submit reveals render outside their `role="alert"` region, with the same id and look. Later edits announce through the field as usual.
    - Place the summary inside the `<form>` for this. In e2e tests, find a submit-revealed field error by its `${fieldName}-error` id, not by `[role="alert"]`.
+   - `autoFocus` (default `true`) moves focus to the summary after a failed submit. Set `false` to focus elsewhere. It has no effect under `'on-touch'` or `'immediate'`, which never auto-focus.
    - Opt out with `errorSummaryAnnouncesAlone: false` in `NGX_SIGNAL_FORMS_CONFIG` (ADR-0012).
 
 - Uses `role="alert"` and relies on the role's implicit live-region semantics (no explicit `aria-live` / `aria-atomic`).

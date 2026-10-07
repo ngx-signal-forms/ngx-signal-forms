@@ -22,7 +22,8 @@ fixture. One call per fixture scans the whole DOM subtree.
 import {
   createA11yValidator,
   expectNoA11yViolations,
-  WCAG_22_AA_TAGS, // ['wcag2a','wcag2aa','wcag21a','wcag21aa','wcag22aa']
+  expectVisibleFocusIndicator,
+  WCAG_22_AA_TAGS,
   type A11yValidator,
   type WCAG_22_AA_TAG,
 } from '@ngx-signal-forms/toolkit/testing';
@@ -50,6 +51,11 @@ import {
   returning a validator that would silently pass every scan. The returned
   validator keeps the same non-overridable `runOnly` guarantee as
   `expectNoA11yViolations`.
+- `expectVisibleFocusIndicator(element)` — throws unless `element` matches
+  `:focus-visible`, or, for an ancestor that draws the ring, `:focus-within`.
+  Move focus first with a real `await userEvent.tab()` from `vitest/browser`;
+  `element.focus()` can miss `:focus-visible`. It proves a ring renders, not
+  that it has 3:1 contrast, so measure contrast separately.
 - `WCAG_22_AA_TAGS` — the axe tag set the harness runs. There is no `wcag22a`
   tag: the two new 2.2 Level A criteria are non-automatable, so automated
   scanning covers only a subset of full 2.2 AA conformance.
@@ -81,7 +87,7 @@ expect(errorAlert).toBeTruthy();
    browser test that covers it without the exclusion. An unstyled fixture
    alone is not a reason to skip contrast. Apply the real theme when colors
    are part of the component's behavior.
-5. Test keyboard operation, visible focus, summary-to-control focus, and
+5. Test keyboard operation, visible focus (`expectVisibleFocusIndicator`), summary-to-control focus, and
    error/warning transitions in addition to axe. Check live-region hosts
    before message updates, then verify announcement behavior with a screen
    reader. An axe pass is not full WCAG conformance.
