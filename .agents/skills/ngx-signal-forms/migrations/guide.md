@@ -5,7 +5,7 @@ This guide migrates an existing
 
 Read the [source and version policy](../references/sources.md). The workflow is
 bundled; release-specific migration guides are online, not bundled with the
-skill. Read a published guide from the [Docs7 documentation site](https://ngx-signal-forms-ngx-signal-forms.docs7.io/docs/migrations). For a pending release, use its guide on the repository's online `main` branch; Docs7 may not include unpublished changes yet. Do not assume either source exists on the consumer's computer. Offline work can proceed only for changes supported by available evidence. Report missing guides and leave the migration incomplete rather than infer their contents.
+skill. Read published guides from the [Docs7 migration index](https://ngx-signal-forms-ngx-signal-forms.docs7.io/docs/migrations), for example the [RC.16 guide](https://ngx-signal-forms-ngx-signal-forms.docs7.io/docs/migrations/v1-0-0-rc-16). Docs7 may lag the repository during a release; for a pending release, or when a deployed guide does not reflect the current source, use the guide on the repository's online `main` branch. Do not assume either source exists on the consumer's computer. Offline work can proceed only for changes supported by available evidence. Report missing guides and leave the migration incomplete rather than infer their contents.
 
 ## Workflow
 
@@ -25,8 +25,8 @@ skill. Read a published guide from the [Docs7 documentation site](https://ngx-si
    and [RC13](https://github.com/ngx-signal-forms/ngx-signal-forms/blob/main/docs/migrations/v1.0.0-rc.13.md).
    For RC.15 to RC.16, read the
    [RC.15-to-RC.16 migration guide](https://github.com/ngx-signal-forms/ngx-signal-forms/blob/main/docs/migrations/v1.0.0-rc.16.md)
-   from the online repository: it is a pending guide and may not be on Docs7
-   yet. Resolve each hop against that guide's target release when a tag exists.
+   from the online repository when the guide is pending or Docs7 is behind.
+   Resolve each hop against that guide's target release when a tag exists.
    A source tag or manifest does not prove registry publication; verify
    availability before selecting the dependency and lockfile version. A guide
    for a pending target supports planning only; keep the migration incomplete
