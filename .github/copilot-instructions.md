@@ -7,7 +7,8 @@ applyTo: '**'
 
 This repository uses shared agent configuration to avoid per-assistant drift.
 
-- Canonical instructions: `AGENTS.md`
+- Bootstrap and action routes: `AGENTS.md`
+- Task-specific standards and source pointers: `CODING_STANDARDS.md`
 - Reusable guidance and behavior: `.agents/skills/**`
 
 If additional assistant-specific files exist, keep them as thin delegates to `AGENTS.md` rather than duplicating rules.

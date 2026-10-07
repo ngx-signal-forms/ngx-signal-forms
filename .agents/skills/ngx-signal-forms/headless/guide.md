@@ -29,7 +29,19 @@ Use `@ngx-signal-forms/toolkit/headless` when you own the markup. Use
 | Fieldsets and summaries                                      | [Aggregation and templates](../references/headless-composition.md#visibility-and-aggregation); deeper [nested forms](https://github.com/ngx-signal-forms/ngx-signal-forms/blob/main/docs/COMPLEX_NESTED_FORMS.md)                     |
 | Programmatic messages, counters, flags, or marking legends   | [Bundled contracts](../references/headless-composition.md#visibility-and-aggregation); deeper [reactive APIs](https://github.com/ngx-signal-forms/ngx-signal-forms/blob/main/packages/toolkit/headless/README.md#reactive-primitives) |
 
-`NgxHeadlessCharacterCount` requires `maxLength`. `createCharacterCount()`
+`NgxHeadlessFieldset` (`[ngxHeadlessFieldset]`, `exportAs="fieldset"`) requires
+`field`. It aggregates the field's direct errors and warnings with separate
+timing. Set `includeNestedErrors` to aggregate child-field feedback too. Bind
+`fields` to aggregate an explicit list; `fields=[]` aggregates nothing and does
+not fall back to the fieldset's own errors. Render `resolvedErrors()` and
+`resolvedWarnings()`, not `aggregatedErrors()[i].message`, which is `undefined`
+for framework-default errors. `dedupeValidationErrors()` removes repeated
+kind-and-message pairs from a list you aggregate yourself. A missing message
+counts as empty.
+
+`NgxHeadlessCharacterCount` requires `maxLength`. `warningThreshold` and
+`dangerThreshold` default to `DEFAULT_WARNING_THRESHOLD` (0.8) and
+`DEFAULT_DANGER_THRESHOLD` (0.95). `createCharacterCount()`
 does not — pass `useValidatorMaxLength: true` to fall back to the field's
 own `maxLength` schema validator instead.
 `createErrorState()` needs an injection context or explicit `injector` and
