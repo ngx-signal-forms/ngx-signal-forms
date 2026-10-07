@@ -3,7 +3,7 @@ name: PR Title
 # Squash merges use the PR title as the commit subject, so this checks it
 # against the same commitlint rules the commit-msg hook enforces locally
 # (see commitlint.config.cjs): Conventional Commits, plus every `@word`
-# backticked so GitHub does not render it as a mention (AGENTS.md).
+# backticked so GitHub does not render it as a mention (CODING_STANDARDS.md).
 #
 # Dependabot titles (e.g. `build(deps): bump @ng-icons/core from 1 to 2`)
 # contain a bare `@word` by construction - Dependabot cannot backtick it.
