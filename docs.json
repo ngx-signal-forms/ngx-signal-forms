@@ -46,6 +46,8 @@
         "pages": [
           "docs/MIGRATING_FROM_REACTIVE_FORMS",
           "docs/MIGRATING_FROM_NGX_VEST_FORMS",
+          "docs/MIGRATING_BETA_TO_V1",
+          "docs/MIGRATING_CSS_VARS",
           {
             "group": "Release candidates",
             "pages": [
