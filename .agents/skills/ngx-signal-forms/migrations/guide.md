@@ -4,9 +4,8 @@ This guide migrates an existing
 `@ngx-signal-forms/toolkit` integration between released versions.
 
 Read the [source and version policy](../references/sources.md). The workflow is
-bundled; release-specific guides are online and are not bundled. Offline work
-can proceed only for changes supported by available evidence. Report missing
-guides and leave the migration incomplete rather than infer their contents.
+bundled; release-specific migration guides are online, not bundled with the
+skill. Read a published guide from the [Docs7 documentation site](https://ngx-signal-forms-ngx-signal-forms.docs7.io/docs/migrations). For a pending release, use its guide on the repository's online `main` branch; Docs7 may not include unpublished changes yet. Do not assume either source exists on the consumer's computer. Offline work can proceed only for changes supported by available evidence. Report missing guides and leave the migration incomplete rather than infer their contents.
 
 ## Workflow
 
@@ -19,14 +18,15 @@ guides and leave the migration incomplete rather than infer their contents.
 2. **Load the complete upgrade path.** For beta sources, read the
    [beta migration](https://github.com/ngx-signal-forms/ngx-signal-forms/blob/main/docs/MIGRATING_BETA_TO_V1.md).
    For release-candidate or v1 sources, read the
-   [migration index](https://github.com/ngx-signal-forms/ngx-signal-forms/blob/main/docs/migrations/README.md)
+   [online migration index](https://ngx-signal-forms-ngx-signal-forms.docs7.io/docs/migrations)
    and every crossed version guide, not only the final target guide. For
    RC11 to RC13, load both
    [RC12](https://github.com/ngx-signal-forms/ngx-signal-forms/blob/main/docs/migrations/v1.0.0-rc.12.md)
    and [RC13](https://github.com/ngx-signal-forms/ngx-signal-forms/blob/main/docs/migrations/v1.0.0-rc.13.md).
-   For RC.15 to RC.16, also read the
-   [RC.15-to-RC.16 migration guide](https://github.com/ngx-signal-forms/ngx-signal-forms/blob/main/docs/migrations/v1.0.0-rc.16.md).
-   Resolve each hop against that guide's target release when a tag exists.
+   For RC.15 to RC.16, read the
+   [RC.15-to-RC.16 migration guide](https://github.com/ngx-signal-forms/ngx-signal-forms/blob/main/docs/migrations/v1.0.0-rc.16.md)
+   from the online repository: it is a pending guide and may not be on Docs7
+   yet. Resolve each hop against that guide's target release when a tag exists.
    A source tag or manifest does not prove registry publication; verify
    availability before selecting the dependency and lockfile version. A guide
    for a pending target supports planning only; keep the migration incomplete
