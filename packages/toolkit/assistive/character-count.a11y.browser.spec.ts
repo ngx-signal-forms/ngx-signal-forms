@@ -76,6 +76,38 @@ describe('NgxFormFieldCharacterCount — WCAG 2.2 AA conformance', () => {
     expect(container.textContent).toContain('/10');
     await expectNoA11yViolations(container);
   });
+
+  it('a count past its limit with colours off still announces and has no violations', async () => {
+    @Component({
+      selector: 'ngx-test-a11y-char-count-no-colors',
+      imports: [FormField, NgxFormFieldCharacterCount],
+      template: `
+        <label for="note">Note</label>
+        <textarea id="note" [formField]="testForm.note"></textarea>
+        <ngx-form-field-character-count
+          [formField]="testForm.note"
+          [maxLength]="10"
+          [showLimitColors]="false"
+          [liveAnnounce]="true"
+        />
+      `,
+    })
+    class TestComponent {
+      readonly #model = signal({ note: '' });
+      readonly testForm = form(this.#model);
+    }
+
+    const { container } = await render(TestComponent);
+    const textarea = container.querySelector('textarea')!;
+    await userEvent.click(textarea);
+    await userEvent.type(textarea, 'Way past the ten character limit');
+    await TestBed.inject(ApplicationRef).whenStable();
+
+    expect(
+      container.querySelector('.ngx-signal-form-field-char-count__sr'),
+    ).toHaveTextContent('Character limit exceeded by');
+    await expectNoA11yViolations(container);
+  });
 });
 
 /**
