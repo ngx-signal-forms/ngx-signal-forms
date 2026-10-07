@@ -37,6 +37,3 @@ Each guide starts with an `Upgrade from v<previous-version>` section:
 
 GitHub release notes must link to the matching guide. Generated changelogs
 summarize changes, but do not replace migration instructions.
-
-`docs/MIGRATING_BETA_TO_V1.md` remains the cumulative guide for beta users
-upgrading to the current v1 API.

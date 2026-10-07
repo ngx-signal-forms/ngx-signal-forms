@@ -16,12 +16,10 @@ guides and leave the migration incomplete rather than infer their contents.
 
    **Done:** source and target versions are explicit.
 
-2. **Load the complete upgrade path.** For beta sources, read the
-   [beta migration](https://github.com/ngx-signal-forms/ngx-signal-forms/blob/main/docs/MIGRATING_BETA_TO_V1.md).
-   For release-candidate or v1 sources, read the
+2. **Load the complete upgrade path.** Read the
    [migration index](https://github.com/ngx-signal-forms/ngx-signal-forms/blob/main/docs/migrations/README.md)
-   and every crossed version guide, not only the final target guide. For
-   RC11 to RC13, load both
+   and every crossed version guide, not only the final target guide. For RC11
+   to RC13, load both
    [RC12](https://github.com/ngx-signal-forms/ngx-signal-forms/blob/main/docs/migrations/v1.0.0-rc.12.md)
    and [RC13](https://github.com/ngx-signal-forms/ngx-signal-forms/blob/main/docs/migrations/v1.0.0-rc.13.md).
    Resolve each hop against that guide's target release when a tag exists.
