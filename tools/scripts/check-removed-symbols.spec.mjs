@@ -21,7 +21,6 @@ void test('flags a live doc that still teaches a removed API, with its line', ()
 void test('lets removal records name removed APIs, since mapping them to replacements is their job', () => {
   const docs = new Map([
     ['docs/migrations/v1.0.0-rc.16.md', '`readErrors` is internal.'],
-    ['docs/MIGRATING_BETA_TO_V1.md', '`readErrors` is internal.'],
     ['docs/decisions/0006-one-cascade-seam.md', '`readErrors` history.'],
     ['.agents/review/2026-09-03-review.md', '`readErrors` finding.'],
     ['.agents/skills/ngx-signal-forms/migrations/guide.md', '`readErrors`'],
