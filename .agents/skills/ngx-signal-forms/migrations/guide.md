@@ -24,9 +24,13 @@ guides and leave the migration incomplete rather than infer their contents.
    RC11 to RC13, load both
    [RC12](https://github.com/ngx-signal-forms/ngx-signal-forms/blob/main/docs/migrations/v1.0.0-rc.12.md)
    and [RC13](https://github.com/ngx-signal-forms/ngx-signal-forms/blob/main/docs/migrations/v1.0.0-rc.13.md).
+   For RC.15 to RC.16, also read the
+   [RC.15-to-RC.16 migration guide](https://github.com/ngx-signal-forms/ngx-signal-forms/blob/main/docs/migrations/v1.0.0-rc.16.md).
    Resolve each hop against that guide's target release when a tag exists.
    A source tag or manifest does not prove registry publication; verify
-   availability before selecting the dependency and lockfile version.
+   availability before selecting the dependency and lockfile version. A guide
+   for a pending target supports planning only; keep the migration incomplete
+   until that version is available.
 
    **Done:** every crossed guide is loaded and its required changes are listed.
 
@@ -39,33 +43,25 @@ guides and leave the migration incomplete rather than infer their contents.
    **Done:** every required migration item is either applied or explicitly
    confirmed inapplicable to the consumer.
 
-4. **Prove the target integration.** Search for every removed API named by the
-   crossed guides, then run the consumer's existing type-check, build, and
-   relevant tests. Confirm shipped exports and peer ranges. For RC11 to RC13,
-   check notification/panel changes, renderer input union and `errorsOverride`,
-   summary `showWarnings`, boolean submission results, independent warnings,
-   and field-shaped controls. For RC15 to RC16, check these removals:
+4. **Prove the target integration.** Use each crossed migration guide as the
+   exhaustive checklist. Search the consumer for every removed or renamed
+   public symbol and entry-point move named there. Check peer ranges and every
+   applicable consumer-visible behavior change, including styles, accessible
+   names and descriptions, announcements, focus, and tests or snapshots. Record
+   each item as applied, verified unchanged, or inapplicable; do not treat a
+   passing build as proof that behavior-only changes are covered.
 
-   - Testing entry point: `findAlertContaining`. Replace each call with the
-     query in the [testing guide](../testing/guide.md).
-   - Headless entry point: `readFieldFlag`. Use `field().invalid()` and
-     similar, or `createFieldStateFlags()`.
-   - Headless entry point: `readErrors`. Use `field().errorSummary()` for a
-     subtree, or `createErrorState()` for one field's direct errors only.
-   - Headless entry point: `toErrorSummaryEntry`,
-     `resolveFieldNameFromError` and `focusBoundControlFromError`. Use
-     `createErrorSummaryEntries()`.
-   - Root entry point: `NgxFieldIdentity.isControlVisible`,
-     `NgxFieldIdentity.setControlVisible` and `ControlVisibilitySignal`. Use
-     `createControlVisibilitySignal()` for a visibility read, or
-     `isElementCssVisible()` inside your own `earlyRead`.
-   - Root entry point: `NgxControlPresetRegistry`. Use
-     `inject(NGX_SIGNAL_FORM_CONTROL_PRESETS)`, and replace `extend()` with
-     `mergeNgxSignalFormControlPresets()`.
+   For RC.15 to RC.16, distinguish these visibility APIs: use
+   `createControlVisibilitySignal(resolveElement, injector)` for a reactive
+   signal; use `isElementCssVisible(element)` only in your own
+   `afterEveryRender` `earlyRead`. For removed headless error helpers, preserve
+   the distinction between subtree errors (`field().errorSummary()`) and one
+   field's direct errors (`createErrorState()`). The RC.16 guide lists all
+   other public API, peer, and behavior changes for that hop.
 
    Use the testing guide for changed interactions. Repository `pnpm nx` tasks
    apply only when the user explicitly requests toolkit maintenance in its own
    checkout.
 
-   **Done:** no crossed-guide removal remains, and the target validation gates
-   pass.
+   **Done:** every migration-guide item is accounted for, no crossed-guide
+   removal remains, and all applicable target validation gates pass.
