@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test';
 
+import { requireValue } from './test-helpers';
 import { ROLE_ALERT_SELECTOR } from '../../fixtures/aria-selectors';
 import { FormFieldWrapperComplexPage } from '../../page-objects/form-field-wrapper-complex.page';
 
@@ -28,14 +29,6 @@ const contactMethodFieldsetBottomAriaSnapshot = `
   - alert:
     - paragraph: "Error: Preferred contact method is required"
 `;
-
-function requireValue<T>(value: T | null, label: string): T {
-  if (value === null) {
-    throw new Error(`Expected ${label} to be available.`);
-  }
-
-  return value;
-}
 
 function getMessagePlacement(
   fieldset: ReturnType<FormFieldWrapperComplexPage['getFieldsetByLegend']>,

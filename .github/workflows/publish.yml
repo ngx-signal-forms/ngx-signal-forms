@@ -18,10 +18,9 @@ on:
   workflow_dispatch:
     inputs:
       ref:
-        description: 'Tag or commit SHA to publish (e.g. v1.0.0-beta.1)'
+        description: 'Exact release tag or full commit SHA (e.g. v1.2.3 or 40-character SHA)'
         required: true
         type: string
-        default: 'v1.0.0-beta.1'
       dry_run:
         description: 'Dry run (no actual publish)'
         required: false
