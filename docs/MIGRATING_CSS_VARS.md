@@ -221,5 +221,5 @@ installed version before applying this section.
   `--ngx-form-field-state-ring-opacity` no longer affects either ring.
 - Dark-mode colors now follow `color-scheme` through `light-dark()`,
   instead of a `.dark` class or the OS query. If your app relied on either
-  trigger, declare `color-scheme` explicitly (see
-  [§3 of the rc.16 guide](./migrations/v1.0.0-rc.16.md#3-dark-mode-follows-color-scheme-not-dark-or-the-os-query)).
+  trigger, declare `color-scheme` explicitly (see the
+  [rc.16 guide](./migrations/v1.0.0-rc.16.md)).
