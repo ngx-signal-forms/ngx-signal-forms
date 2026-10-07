@@ -1,5 +1,4 @@
 import {
-  ChangeDetectionStrategy,
   Component,
   computed,
   inject,
@@ -45,7 +44,6 @@ import { NgxFieldIdentity } from '@ngx-signal-forms/toolkit';
  */
 @Component({
   selector: 'ngx-rating-control',
-  changeDetection: ChangeDetectionStrategy.OnPush,
 
   host: {
     role: 'slider',

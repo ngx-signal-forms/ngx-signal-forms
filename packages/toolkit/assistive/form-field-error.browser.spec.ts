@@ -158,3 +158,140 @@ describe('NgxFormFieldError — WCAG 4.1.3 live-region first-insertion', () => {
     expect(statusAfter?.textContent).toContain('Consider 8+ characters');
   });
 });
+
+/**
+ * Theme defaults. The error and warning text colors are #db1818 (5.05:1) and
+ * #a16207 (4.92:1) on white, which meets WCAG 1.4.3 (4.5:1) for normal text.
+ * The panel background is the soft red #fdebeb. A consumer who sets none of
+ * the public tokens gets these values, and a consumer who sets a token gets
+ * theirs. jsdom applies no component stylesheet, so a browser reads the
+ * result.
+ */
+describe('NgxFormFieldError — theme defaults and token overrides', () => {
+  const renderMessages = async (
+    presentation: 'inline' | 'panel' = 'inline',
+  ) => {
+    const errors = signal([{ kind: 'required', message: 'Name is required' }]);
+    const warnings = signal([
+      { kind: 'warn:po-box', message: 'PO boxes may delay delivery' },
+    ]);
+
+    const { container } = await render(
+      `<ngx-form-field-error
+        id="errors"
+        [errors]="errors"
+        fieldName="name"
+        presentation="${presentation}"
+      />
+      <ngx-form-field-error
+        id="warnings"
+        [errors]="warnings"
+        fieldName="address"
+        strategy="on-submit"
+        submittedStatus="unsubmitted"
+        presentation="${presentation}"
+      />`,
+      {
+        imports: [NgxFormFieldError],
+        componentProperties: { errors, warnings },
+      },
+    );
+
+    const pick = (selector: string): HTMLElement => {
+      const el = container.querySelector<HTMLElement>(selector);
+      if (el === null) {
+        throw new Error(`Expected ${selector} to render.`);
+      }
+      return el;
+    };
+
+    return {
+      errorHost: pick('ngx-form-field-error#errors'),
+      warningHost: pick('ngx-form-field-error#warnings'),
+      errorMessage: pick('.ngx-form-field-error__message--error'),
+      warningMessage: pick('.ngx-form-field-error__message--warning'),
+      errorBox: pick('#errors .ngx-form-field-error--error'),
+    };
+  };
+
+  it('draws an error message in the AA-compliant red by default', async () => {
+    const { errorMessage } = await renderMessages();
+
+    expect(getComputedStyle(errorMessage).color).toBe('rgb(219, 24, 24)');
+  });
+
+  it('draws a warning message in the AA-compliant amber by default', async () => {
+    const { warningMessage } = await renderMessages();
+
+    expect(getComputedStyle(warningMessage).color).toBe('rgb(161, 98, 7)');
+  });
+
+  it('draws an error message in the public error color token when one is set', async () => {
+    const { errorHost, errorMessage } = await renderMessages();
+
+    errorHost.style.setProperty(
+      '--ngx-signal-form-error-color',
+      'rgb(1, 2, 3)',
+    );
+
+    expect(getComputedStyle(errorMessage).color).toBe('rgb(1, 2, 3)');
+  });
+
+  it('draws a warning message in the public warning color token when one is set', async () => {
+    const { warningHost, warningMessage } = await renderMessages();
+
+    warningHost.style.setProperty(
+      '--ngx-signal-form-warning-color',
+      'rgb(4, 5, 6)',
+    );
+
+    expect(getComputedStyle(warningMessage).color).toBe('rgb(4, 5, 6)');
+  });
+
+  it('draws the panel error background in soft red by default', async () => {
+    const { errorBox } = await renderMessages('panel');
+
+    // Poll: the panel card can transition its background after it mounts.
+    await expect
+      .poll(() => getComputedStyle(errorBox).backgroundColor)
+      .toBe('rgb(253, 235, 235)');
+  });
+
+  it('pads error and warning panels on every side and honours custom panel padding', async () => {
+    const { errorHost, warningHost, errorBox } = await renderMessages('panel');
+    const warningBox = warningHost.querySelector<HTMLElement>(
+      '.ngx-form-field-error--warning',
+    )!;
+
+    for (const box of [errorBox, warningBox]) {
+      await expect.poll(() => getComputedStyle(box).padding).toBe('16px');
+    }
+
+    errorHost.style.setProperty(
+      '--ngx-signal-form-error-panel-padding',
+      '12px 24px',
+    );
+    await expect
+      .poll(() => getComputedStyle(errorBox).padding)
+      .toBe('12px 24px');
+
+    const emptyBox = errorHost.querySelector<HTMLElement>(
+      '.ngx-form-field-error--empty',
+    )!;
+    expect(getComputedStyle(emptyBox).padding).toBe('0px');
+    expect(emptyBox.getBoundingClientRect().height).toBe(0);
+  });
+
+  it('draws the panel error background in the public panel token when one is set', async () => {
+    const { errorHost, errorBox } = await renderMessages('panel');
+
+    errorHost.style.setProperty(
+      '--ngx-signal-form-error-panel-bg',
+      'rgb(7, 8, 9)',
+    );
+
+    await expect
+      .poll(() => getComputedStyle(errorBox).backgroundColor)
+      .toBe('rgb(7, 8, 9)');
+  });
+});

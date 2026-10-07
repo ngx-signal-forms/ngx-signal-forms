@@ -1,6 +1,5 @@
 import {
   booleanAttribute,
-  ChangeDetectionStrategy,
   Component,
   computed,
   inject,
@@ -13,6 +12,7 @@ import {
   devWarnOnce,
   generateCharacterCountLimitId,
   NGX_SIGNAL_FORMS_CONFIG,
+  resolveFieldNameFromCandidates,
   type WarnOnceRef,
 } from '@ngx-signal-forms/toolkit/core';
 import {
@@ -20,24 +20,6 @@ import {
   type CharacterCountLimitState,
   type CharacterCountValue,
 } from '@ngx-signal-forms/toolkit/headless';
-
-/**
- * Supported value shape for the character-count `formField` input.
- *
- * Re-exports {@link CharacterCountValue} from the headless entry so the
- * styled component's input type cannot drift from what the underlying
- * `createCharacterCount()` utility actually supports.
- *
- * The component counts length of either:
- * - A `string` value (e.g. `<input>`, `<textarea>`)
- * - A `string[]` value (e.g. tokenized inputs where each array entry is
- *   one token). The displayed count is `array.length`, not the combined
- *   string length — this matches the intuitive "X of N tokens" UX.
- *
- * `null` / `undefined` are treated as length `0`. Any other value type
- * logs a dev-mode warning via `createCharacterCount` and renders `0`.
- */
-export type NgxCharacterCountValue = CharacterCountValue;
 
 /**
  * Non-`'ok'` limit states that ever produce a live-announcement string.
@@ -207,12 +189,16 @@ export type NgxCharacterCountAnnouncementFormatter = (
  *   custom wrapper's context that resolves a field name but never
  *   registers `limitId()` into its own `NGX_SIGNAL_FORM_HINT_REGISTRY` (see
  *   `docs/CUSTOM_WRAPPERS.md`).
+ * - Without a wrapper, set the `fieldName` input to render the same hidden
+ *   limit element with the id `{fieldName}-char-count-limit`, and put that
+ *   id in the control's `aria-describedby` yourself (issue #589). The
+ *   visible "n/max" text stays exposed, because the component cannot tell
+ *   whether you linked the id.
  *
  * @see {@link createCharacterCount} for the underlying headless utility
  */
 @Component({
   selector: 'ngx-form-field-character-count',
-  changeDetection: ChangeDetectionStrategy.OnPush,
 
   template: `
     <span
@@ -291,19 +277,24 @@ export type NgxCharacterCountAnnouncementFormatter = (
        * the inherited color-scheme (see THEMING.md, "Scenario C: Dark Mode"). WCAG
        * 1.4.3 contrast, light on white / dark on #1f2937: ok 4.99:1 /
        * 8.54:1, warning 4.92:1 / 10.18:1, danger 5.05:1 / 7.73:1,
-       * exceeded 8.31:1 / 5.31:1.
+       * exceeded 8.31:1 / 5.31:1. A tinted ancestor surface
+       * (NgxFormFieldset) hands in darker ok, warning and danger tones
+       * through the inherited --_tinted-surface-clr-* tokens.
        */
       --_char-count-color-ok: var(
         --ngx-form-field-char-count-color-ok,
-        light-dark(rgba(50, 65, 85, 0.75), rgba(249, 250, 251, 0.75))
+        var(
+          --_tinted-surface-clr-text-secondary,
+          light-dark(rgba(50, 65, 85, 0.75), rgba(249, 250, 251, 0.75))
+        )
       );
       --_char-count-color-warning: var(
         --ngx-form-field-char-count-color-warning,
-        light-dark(#a16207, #fcd34d)
+        var(--_tinted-surface-clr-warning, light-dark(#a16207, #fcd34d))
       );
       --_char-count-color-danger: var(
         --ngx-form-field-char-count-color-danger,
-        light-dark(#db1818, #fca5a5)
+        var(--_tinted-surface-clr-danger, light-dark(#db1818, #fca5a5))
       );
       --_char-count-color-exceeded: var(
         --ngx-form-field-char-count-color-exceeded,
@@ -414,10 +405,10 @@ export class NgxFormFieldCharacterCount {
    * Form field to track character count from.
    *
    * Supported value shapes: `string`, `readonly string[]`, `null`, or
-   * `undefined` — see {@link NgxCharacterCountValue}. Anything else
+   * `undefined` — see {@link CharacterCountValue}. Anything else
    * degrades to a displayed count of `0` and logs a dev-mode warning.
    */
-  readonly formField = input.required<FieldTree<NgxCharacterCountValue>>();
+  readonly formField = input.required<FieldTree<CharacterCountValue>>();
 
   /**
    * Maximum character length for the field.
@@ -511,14 +502,46 @@ export class NgxFormFieldCharacterCount {
   });
 
   /**
-   * Resolved field name from the wrapper's `NGX_SIGNAL_FORM_FIELD_CONTEXT`,
-   * or `null` when the component is rendered outside a wrapper. Public so a
-   * wrapper can register {@link limitId} into `NGX_SIGNAL_FORM_HINT_REGISTRY`
-   * — the same channel `NgxFormFieldHint.resolvedFieldName` feeds (issue
-   * #499).
+   * Field name for the limit id when no wrapper supplies one.
+   *
+   * Outside a wrapper, set it to mint the stable
+   * `{fieldName}-char-count-limit` id, then put that id in the control's
+   * `aria-describedby` so screen readers read the limit on focus. Inside a
+   * wrapper this input is ignored, even when the wrapper has no field name.
+   *
+   * Use one id token, such as the control's `id`. The count trims the value
+   * and replaces each run of inner whitespace with `-`, with a dev-mode
+   * warning: `"shipping notes"` mints `shipping-notes-char-count-limit`.
+   *
+   * @example Standalone count linked to its control
+   * ```html
+   * <textarea
+   *   id="bio"
+   *   aria-describedby="bio-char-count-limit"
+   *   [formField]="form.bio"
+   * ></textarea>
+   * <ngx-form-field-character-count [formField]="form.bio" fieldName="bio" />
+   * ```
+   */
+  readonly fieldName = input<string>();
+
+  /**
+   * Resolved field name: the wrapper's `NGX_SIGNAL_FORM_FIELD_CONTEXT` field
+   * name when a context is injected, else the {@link fieldName} input.
+   * Blank names count as unset (`null`).
+   *
+   * Inside a wrapper the input never applies, which reverses the usual
+   * "explicit input wins" order. A wrapper registers {@link limitId} in
+   * `NGX_SIGNAL_FORM_HINT_REGISTRY` tagged with this name, and auto-ARIA
+   * only links registry ids whose name matches the wrapper's field. An
+   * input name would never match, so the limit would not reach
+   * `aria-describedby` while `hidesVisibleText` still hid the visible
+   * count. Public so a wrapper can read it (issue #499).
    */
   readonly resolvedFieldName = computed(() => {
-    return this.#fieldContext?.fieldName() ?? null;
+    return resolveFieldNameFromCandidates(
+      this.#fieldContext ? this.#fieldContext.fieldName() : this.fieldName(),
+    );
   });
 
   /**
@@ -579,7 +602,8 @@ export class NgxFormFieldCharacterCount {
   /**
    * Visually-hidden text describing the limit, e.g. "Up to 200 characters".
    * Rendered by the `[id]="limitId()"` element that `aria-describedby` links
-   * to — the running count stays in the `[liveAnnounce]` live region (issue
+   * to — the visible running count is a separate element, and the
+   * `[liveAnnounce]` live region holds only threshold-transition text (issue
    * #499's decision). Configurable through
    * `NgxSignalFormsConfig.characterCountLimitText`'s `{max}` placeholder.
    * Empty string when no limit is resolved. Warns once in dev mode when the
@@ -621,8 +645,8 @@ export class NgxFormFieldCharacterCount {
    * Uses `createCharacterCount()`'s own default thresholds (80%/95%) — the
    * component no longer accepts a `colorThresholds` input (removed pre-v1,
    * #355). Those defaults drive `displayLimitState` (the `data-limit-state`
-   * attribute) and, in turn, the `[liveAnnounce]` announcement wording,
-   * which must stay fixed and predictable for screen reader users. The
+   * attribute) and the `[liveAnnounce]` announcement wording, which must
+   * stay fixed and predictable for screen reader users. The
    * *visible color* is independently, continuously reconfigurable via the
    * `--ngx-form-field-char-count-warning-threshold` /
    * `-danger-threshold` CSS custom properties — see the class docblock.
@@ -681,18 +705,17 @@ export class NgxFormFieldCharacterCount {
    * this replaced kept a `previous` value only to return
    * `state === prev ? prev : state`, which is just `state` (issue #510).
    *
-   * No separate "no limit" check is needed: `displayLimitState()` already
-   * returns `'disabled'` when `hasLimit()` is `false`, and the `'disabled'`
-   * branch below covers that case.
+   * It reads the real limit state, not `displayLimitState()`:
+   * `showLimitColors` is a visual flag and must not silence announcements.
    */
-  readonly #announceableState = computed<
-    CharacterCountLimitState | 'disabled' | null
-  >(() => {
-    if (!this.liveAnnounce()) return null;
+  readonly #announceableState = computed<CharacterCountLimitState | null>(
+    () => {
+      if (!this.liveAnnounce()) return null;
+      if (!this.#charCountState.hasLimit()) return null;
 
-    const state = this.displayLimitState();
-    return state === 'disabled' ? null : state;
-  });
+      return this.#charCountState.limitState();
+    },
+  );
 
   /**
    * Computed announcement text. Reads `#announceableState` as the
@@ -707,7 +730,7 @@ export class NgxFormFieldCharacterCount {
     if (max === null) return '';
 
     const state = this.#announceableState();
-    if (state === null || state === 'disabled' || state === 'ok') return '';
+    if (state === null || state === 'ok') return '';
 
     // Snapshot the current length *without* subscribing. `#announceableState`
     // only changes value on an actual state transition (see its own doc

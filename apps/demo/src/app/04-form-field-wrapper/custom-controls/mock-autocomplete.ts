@@ -1,5 +1,4 @@
 import {
-  ChangeDetectionStrategy,
   Component,
   computed,
   ElementRef,
@@ -47,7 +46,6 @@ const DEFAULT_OPTIONS: readonly MockAutocompleteOption[] = [
  */
 @Component({
   selector: 'ngx-mock-autocomplete',
-  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [FormField, NgxSignalFormToolkit],
   host: { class: 'ngx-mock-autocomplete' },
   styles: `

@@ -12,7 +12,7 @@ import {
   type FieldTree,
 } from '@angular/forms/signals';
 import {
-  NgxSignalFormControlSemanticsDirective,
+  NgxSignalFormControl,
   NgxSignalFormToolkit,
   provideNgxSignalFormsConfig,
   warningError,
@@ -55,7 +55,7 @@ const warningTimingSchema = schema<WarningTimingModel>((path) => {
     FormField,
     NgxSignalFormToolkit,
     PrimeFormFieldComponent,
-    NgxSignalFormControlSemanticsDirective,
+    NgxSignalFormControl,
     InputTextModule,
   ],
   template: `
@@ -95,7 +95,6 @@ describe('PrimeFormFieldComponent warning timing (#506)', () => {
         provideZonelessChangeDetection(),
         provideNgxSignalFormsConfig({
           defaultErrorStrategy: 'on-touch',
-          autoAria: true,
         }),
       ],
     });
@@ -136,7 +135,7 @@ describe('PrimeFormFieldComponent warning timing (#506)', () => {
     FormField,
     NgxSignalFormToolkit,
     PrimeFormFieldComponent,
-    NgxSignalFormControlSemanticsDirective,
+    NgxSignalFormControl,
     InputTextModule,
   ],
   template: `
@@ -179,7 +178,6 @@ describe('PrimeFieldErrorComponent follows the wrapper-resolved warningStrategy 
           // wrapper's resolved value reaches the renderer rather than the
           // renderer re-deciding warning timing on its own.
           defaultWarningStrategy: 'immediate',
-          autoAria: true,
         }),
         ...provideNgxPrimeForms(),
       ],
@@ -214,7 +212,7 @@ describe('PrimeFieldErrorComponent follows the wrapper-resolved warningStrategy 
     FormField,
     NgxSignalFormToolkit,
     PrimeFormFieldComponent,
-    NgxSignalFormControlSemanticsDirective,
+    NgxSignalFormControl,
     InputTextModule,
   ],
   template: `
@@ -253,7 +251,6 @@ describe('PrimeFormFieldComponent does not suppress a warning-only field (#506 C
         provideZonelessChangeDetection(),
         provideNgxSignalFormsConfig({
           defaultErrorStrategy: 'on-touch',
-          autoAria: true,
         }),
       ],
     });
@@ -308,11 +305,7 @@ const hiddenInvalidField = () => ({
  */
 @Component({
   selector: 'ngx-hidden-field-host',
-  imports: [
-    PrimeFormFieldComponent,
-    NgxSignalFormControlSemanticsDirective,
-    InputTextModule,
-  ],
+  imports: [PrimeFormFieldComponent, NgxSignalFormControl, InputTextModule],
   template: `
     <prime-form-field [ngxPrimeFormField]="field" fieldName="nickname">
       <label for="nickname">Nickname</label>

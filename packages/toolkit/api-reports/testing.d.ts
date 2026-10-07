@@ -33,7 +33,7 @@ type WCAG_22_AA_TAG = (typeof WCAG_22_AA_TAGS)[number];
  *   doc for why `color-contrast` specifically is not turned into a blanket
  *   hard-fail here.
  */
-type IncompleteResultMode = 'ignore' | 'warn' | 'fail';
+type IncompleteResultMode = 'fail' | 'ignore' | 'warn';
 /**
  * `axe.RunOptions` (minus the non-overridable `runOnly`) plus the toolkit's
  * own {@link IncompleteResultMode} switch. `incomplete` is a toolkit-level
@@ -160,18 +160,6 @@ declare function createA11yValidator(options?: {
  *   `form-field-wrapper.state-focus-outline.browser.spec.ts`).
  */
 declare function expectVisibleFocusIndicator(element: Element): void;
-/**
- * Finds the `[role="alert"]` element within `container` whose text content
- * includes `text`, or `undefined` if none matches.
- *
- * Several toolkit surfaces (grouped fieldsets, error summaries) render
- * alongside per-field error regions that stay mounted-but-empty per the
- * WCAG 4.1.3 first-insertion pattern (see `expectNoA11yViolations`'s own
- * doc). A bare `getByRole('alert')` query is ambiguous whenever more than
- * one such region is present; this narrows to the one actually carrying the
- * expected message, for asserting on it before running the a11y scan.
- */
-declare function findAlertContaining(container: ParentNode, text: string): HTMLElement | undefined;
 
-export { WCAG_22_AA_TAGS, createA11yValidator, expectNoA11yViolations, expectVisibleFocusIndicator, findAlertContaining };
+export { WCAG_22_AA_TAGS, createA11yValidator, expectNoA11yViolations, expectVisibleFocusIndicator };
 export type { A11yCheckOptions, A11yValidator, IncompleteResultMode, WCAG_22_AA_TAG };

@@ -3,7 +3,7 @@ import {
   DEFAULT_NGX_SIGNAL_FORM_CONTROL_PRESETS,
   type NgxSignalFormControlPresetRegistry,
 } from '@ngx-signal-forms/toolkit';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi, type MockInstance } from 'vitest';
 import {
   captureFormFieldWrapperDomSnapshot,
   readFormFieldWrapperDomSnapshot,
@@ -261,7 +261,7 @@ describe('readFormFieldWrapperDomSnapshot', () => {
      * must skip the query entirely.
      */
     function queriesFor(
-      spy: ReturnType<typeof vi.spyOn<HTMLElement, 'querySelector'>>,
+      spy: MockInstance<HTMLElement['querySelector']>,
       selectorFragment: string,
     ): number {
       return spy.mock.calls.filter(([selector]) =>

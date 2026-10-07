@@ -6,6 +6,8 @@ export const DEMO_PATHS = {
   errorMessageSignal: '/headless/error-message-signal',
   complexForms: '/form-field-wrapper/complex-forms',
   fieldsetAppearance: '/form-field-wrapper/fieldset-appearance',
+  groupedFeedback: '/form-field-wrapper/fieldset-appearance/feedback',
+  fieldsetComposition: '/form-field-wrapper/complex-forms/fieldset',
   customControls: '/form-field-wrapper/custom-controls',
   labellessFields: '/form-field-wrapper/labelless-fields',
   fieldIdentity: '/form-field-wrapper/field-identity',
@@ -85,8 +87,18 @@ export const DEMO_CATEGORIES = [
         hasControls: true,
       },
       {
+        path: '/form-field-wrapper/complex-forms/fieldset',
+        label: 'Fieldset Composition',
+        hasControls: true,
+      },
+      {
         path: '/form-field-wrapper/fieldset-appearance',
         label: 'Fieldset Appearance',
+        hasControls: true,
+      },
+      {
+        path: '/form-field-wrapper/fieldset-appearance/feedback',
+        label: 'Grouped Feedback and Placement',
         hasControls: true,
       },
       {

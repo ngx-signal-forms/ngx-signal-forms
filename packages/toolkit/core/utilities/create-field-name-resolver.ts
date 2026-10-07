@@ -5,7 +5,7 @@ import { resolveFieldNameFromCandidates } from './field-resolution';
 /**
  * Reactive reader of the bound control's host element. Returns `null` when
  * no control has been projected (or queried) yet. Typically a `computed`
- * over `contentChildren(NgxSignalFormControlSemanticsDirective)`.
+ * over `contentChildren(NgxSignalFormControl)`.
  *
  * @public
  * @group ARIA Composition

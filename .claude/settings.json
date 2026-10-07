@@ -1,6 +1,11 @@
 {
   "sandbox": {
+    "filesystem": {
+      "allowRead": ["/tmp/.nx", "~/.nx"],
+      "allowWrite": ["/tmp/.nx", "~/.nx"]
+    },
     "network": {
+      "allowUnixSockets": ["/tmp/.nx", "~/.nx"],
       "allowedDomains": ["www.google-analytics.com"]
     }
   },

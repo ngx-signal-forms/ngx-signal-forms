@@ -7,14 +7,19 @@ import {
 } from '@angular/forms/signals';
 import { requiredFromStandardSchema } from '@ngx-signal-forms/toolkit';
 
-import { type Traveler, TravelerSchema } from '../schemas/wizard.schemas';
+import {
+  isPassportValidForDeparture,
+  type Traveler,
+  TravelerSchema,
+} from '../schemas/wizard.schemas';
 import type { WizardStore } from '../stores/wizard.store';
 
 /**
  * Traveler step form type alias.
  *
  * Form uses local linkedSignal for writable binding to Angular Signal Forms.
- * Changes stay local until committed via store.commitTraveler().
+ * Typed values reach the store's draft (so autosave sees them) and are
+ * committed with the step on Next.
  */
 export type TravelerStepForm = FieldTree<Traveler>;
 
@@ -22,9 +27,10 @@ export type TravelerStepForm = FieldTree<Traveler>;
  * Creates traveler step form with Zod validation via StandardSchema.
  *
  * Architecture:
- * - Store owns committed state (traveler)
- * - Form uses local linkedSignal (reads from store, writes locally)
- * - Commit via store.setTraveler() transfers local changes to store
+ * - Store owns committed state (traveler) and the typed draft (travelerDraft)
+ * - Form uses local linkedSignal (reads the draft, writes locally)
+ * - store.syncTravelerDraft() copies typed values into the draft
+ * - Commit via store.setTraveler() marks the step as finished
  *
  * Note: Angular Signal Forms requires WritableSignal, not DeepSignal from
  * withLinkedState. So we create a local linkedSignal for form binding.
@@ -34,7 +40,8 @@ export type TravelerStepForm = FieldTree<Traveler>;
  * - Cross-step: validate() for passport 6-month rule
  *
  * @param store Wizard store instance
- * @param lastDepartureDate Signal for cross-step passport validation
+ * @param lastDepartureDate Signal for cross-step passport validation. Pass the
+ *   live draft's departure, not the committed one.
  */
 export function createTravelerStepForm(
   store: InstanceType<typeof WizardStore>,
@@ -44,8 +51,11 @@ export function createTravelerStepForm(
   model: Signal<Traveler>;
   isValid: Signal<boolean>;
 } {
-  // Local linkedSignal: reads from store's committed state, writes stay local
-  const model = linkedSignal<Traveler>(() => store.traveler());
+  // Local linkedSignal: reads the store's draft, writes stay local until the
+  // store method below copies them back. The copy is the same object, so the
+  // linkedSignal sees an equal value and the field the user types in is not reset.
+  const model = linkedSignal<Traveler>(() => store.travelerDraft());
+  store.syncTravelerDraft(model);
 
   // Form with Zod + cross-step passport validation
   const travelerForm = form(model, (path) => {
@@ -64,21 +74,13 @@ export function createTravelerStepForm(
 
     // Cross-step: Passport must be valid 6 months after last departure
     validate(path.passportExpiry, (ctx) => {
-      const departure = lastDepartureDate();
-      if (!departure || !ctx.value()) return null;
-
-      const expiry = new Date(ctx.value());
-      const lastDep = new Date(departure);
-      const sixMonthsAfter = new Date(lastDep);
-      sixMonthsAfter.setMonth(sixMonthsAfter.getMonth() + 6);
-
-      if (expiry <= sixMonthsAfter) {
-        return {
-          kind: 'passport_expiry',
-          message: 'Passport must be valid 6 months after trip ends',
-        };
+      if (isPassportValidForDeparture(ctx.value(), lastDepartureDate())) {
+        return null;
       }
-      return null;
+      return {
+        kind: 'passport_expiry',
+        message: 'Passport must be valid 6 months after trip ends',
+      };
     });
   });
 

@@ -42,7 +42,7 @@ describe('createFieldNameResolver', () => {
   it('leaves inner whitespace in the explicit input untouched — id builders sanitize separately', () => {
     // This resolver calls `resolveFieldNameFromCandidates` (trim/null-collapse
     // only, no whitespace sanitization) — the same primitive
-    // `injectFieldControl` and `NgxFieldIdentity.controlId` rely on. A
+    // `NgxFieldIdentity.controlId` relies on. A
     // wrapper author who binds this resolved name straight to `[id]` (as the
     // `NgxHeadlessFieldName` docs show) needs the raw characters; whatever
     // builds an ARIA id from it (`generateErrorId` and friends) sanitizes at

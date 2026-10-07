@@ -2,7 +2,7 @@ import { signal } from '@angular/core';
 import { FormField } from '@angular/forms/signals';
 import {
   NgxSignalFormAutoAria,
-  NgxSignalFormControlSemanticsDirective,
+  NgxSignalFormControl,
 } from '@ngx-signal-forms/toolkit';
 import { render } from '@testing-library/angular';
 import { describe, expect, it } from 'vitest';
@@ -13,7 +13,7 @@ import { NgxFormFieldWrapper } from './form-field-wrapper';
  * Stability + behavior contract for the `NgxFormField` convenience bundle.
  *
  * Regression coverage for the finding that `NgxFormField` included
- * `NgxSignalFormAutoAria` but not `NgxSignalFormControlSemanticsDirective` —
+ * `NgxSignalFormAutoAria` but not `NgxSignalFormControl` —
  * the very directive the wrapper's own dev-mode "could not infer a control
  * kind" warning instructs authors to use via `ngxSignalFormControl="..."`.
  * A consumer importing only `NgxFormField` (not the full
@@ -24,9 +24,9 @@ import { NgxFormFieldWrapper } from './form-field-wrapper';
  * selector — actively overriding what the author opted out of.
  */
 describe('NgxFormField bundle', () => {
-  it('includes NgxSignalFormAutoAria and NgxSignalFormControlSemanticsDirective', () => {
+  it('includes NgxSignalFormAutoAria and NgxSignalFormControl', () => {
     expect(NgxFormField).toContain(NgxSignalFormAutoAria);
-    expect(NgxFormField).toContain(NgxSignalFormControlSemanticsDirective);
+    expect(NgxFormField).toContain(NgxSignalFormControl);
   });
 
   it('includes NgxFormFieldWrapper', () => {
@@ -54,7 +54,7 @@ describe('NgxFormField bundle', () => {
         // `FormField` is Angular's own directive — required so `[formField]`
         // provides the `FORM_FIELD` token `NgxSignalFormAutoAria` (part of
         // the bundle) injects. `NgxFormField` is the only toolkit import:
-        // not `NgxSignalFormControlSemanticsDirective` directly, and not
+        // not `NgxSignalFormControl` directly, and not
         // `NgxSignalFormToolkit`. Before the fix, the `ngxSignalFormControl`
         // attribute was inert here — the directive that reads it and writes
         // the `data-ngx-signal-form-control-*` attributes was never

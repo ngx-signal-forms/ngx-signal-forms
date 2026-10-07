@@ -8,28 +8,29 @@ import {
 import type { FieldTree, ValidationError } from '@angular/forms/signals';
 import {
   createErrorVisibility,
+  createUniqueId,
   createWarningVisibility,
   readDirectErrors,
-  resolveStrategyFromContext,
-  resolveSubmittedStatusFromContext,
-  resolveWarningStrategyFromContext,
   splitByKind,
   unwrapValue,
   type ErrorDisplayStrategy,
-  type ReactiveOrStatic,
+  type NgxReactiveOrStatic,
   type ResolvedErrorDisplayStrategy,
   type ResolvedWarningDisplayStrategy,
-  type SignalLike,
+  type NgxSignalLike,
   type SubmittedStatus,
   type WarningDisplayStrategy,
 } from '@ngx-signal-forms/toolkit';
-import type { ErrorMessageRegistry } from '@ngx-signal-forms/toolkit/core';
+import {
+  resolveStrategyFromContext,
+  resolveSubmittedStatusFromContext,
+  resolveWarningStrategyFromContext,
+  type ErrorMessageRegistry,
+} from '@ngx-signal-forms/toolkit/core';
 
 import { buildHeadlessContext } from './build-headless-context';
-import { readErrors } from './field-state-utilities';
+import { createFieldStateFlags, readErrors } from './field-state-utilities';
 import {
-  createFieldStateFlags,
-  createUniqueId,
   dedupeValidationErrors,
   resolveErrorMessage,
   type ResolvedError,
@@ -41,27 +42,27 @@ import {
  * `showErrors`/`showWarnings` are pre-resolved visibility signals, not raw
  * strategy inputs — per ADR-0005 (factories take DI-resolved values as
  * inputs and never call `inject()` themselves). `NgxHeadlessFieldset` keeps
- * owning the single `createErrorVisibility()`/`createShowErrorsComputed()`
- * seam call (ADR-0006) and threads the results in here; this factory only
+ * owning the single `createErrorVisibility()` call (ADR-0006) and threads
+ * the results in here; this factory only
  * combines them with the (visibility-independent) presence check.
  *
  * @group Reactive Primitives
  */
 export interface CreateFieldsetAggregationOptions {
   /** Reactive reader for the fieldset's own field state (from `field()()`). */
-  readonly fieldState: SignalLike<unknown>;
+  readonly fieldState: NgxSignalLike<unknown>;
   /**
    * Explicit field-list override. `null`/omitted means "not provided" —
    * aggregate `fieldState`'s own errors. See `NgxHeadlessFieldset.fields`
    * for the "not provided" vs "explicitly empty" distinction this preserves.
    */
-  readonly fields?: ReactiveOrStatic<readonly FieldTree<unknown>[] | null>;
+  readonly fields?: NgxReactiveOrStatic<readonly FieldTree<unknown>[] | null>;
   /** Whether to aggregate nested field errors (`errorSummary()`) instead of direct ones (`errors()`). */
-  readonly includeNestedErrors?: ReactiveOrStatic<boolean>;
+  readonly includeNestedErrors?: NgxReactiveOrStatic<boolean>;
   /** Pre-resolved blocking-error visibility (from the caller's own visibility seam call). */
-  readonly showErrors: SignalLike<boolean>;
+  readonly showErrors: NgxSignalLike<boolean>;
   /** Pre-resolved warning visibility, timed independently of {@link showErrors}. */
-  readonly showWarnings: SignalLike<boolean>;
+  readonly showWarnings: NgxSignalLike<boolean>;
   /** Error message registry for 3-tier message resolution. */
   readonly errorMessages?: Readonly<ErrorMessageRegistry> | null;
 }
@@ -100,7 +101,7 @@ export interface FieldsetAggregationResult {
  * factories (`createFieldStateFlags`, `createCharacterCount`). Visibility
  * timing is NOT resolved here; callers pass already-resolved `showErrors`/
  * `showWarnings` signals from their own `createErrorVisibility()` /
- * `createShowErrorsComputed()` call (ADR-0006's single seam).
+ * `createWarningVisibility()` calls (ADR-0006 and ADR-0007).
  *
  * @remarks Does not require an injection context — `fieldState`,
  * `showErrors`, and `showWarnings` must already be resolved. Building
@@ -427,9 +428,9 @@ export class NgxHeadlessFieldset<
 
   /**
    * Show errors signal based on strategy. Routes through the shared
-   * `createErrorVisibility` seam (ADR-0006) rather than re-inlining
-   * `createShowErrorsComputed` — {@link resolvedStrategy} /
-   * {@link resolvedSubmittedStatus} stay separately computed above because
+   * `createErrorVisibility` seam (ADR-0006). It does not re-inline strategy
+   * resolution, submitted-status resolution, or the visibility computation.
+   * {@link resolvedStrategy} / {@link resolvedSubmittedStatus} stay separately computed above because
    * they are part of this directive's public surface, but the raw
    * `strategy`/`submittedStatus` inputs feed the seam directly so it applies
    * the identical cascade (same function, same `configDefault`) rather than
@@ -472,8 +473,7 @@ export class NgxHeadlessFieldset<
    * already-resolved {@link #showErrorsSignal} / {@link #showWarningsSignal} rather
    * than raw strategy inputs: the factory itself never calls `inject()`
    * (ADR-0005), so visibility timing stays owned by this directive's single
-   * `createErrorVisibility()` / `createShowErrorsComputed()` seam call
-   * (ADR-0006).
+   * `createErrorVisibility()` call (ADR-0006).
    */
   readonly #aggregation = createFieldsetAggregation({
     fieldState: this.#fieldsetState,

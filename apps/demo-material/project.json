@@ -56,16 +56,6 @@
       "options": {
         "command": "oxlint {projectRoot} --type-aware"
       }
-    },
-    "serve-static": {
-      "executor": "@nx/web:file-server",
-      "defaultConfiguration": "production",
-      "options": {
-        "buildTarget": "demo-material:build:production",
-        "port": 4701,
-        "staticFilePath": "dist/apps/demo-material",
-        "spa": true
-      }
     }
   }
 }

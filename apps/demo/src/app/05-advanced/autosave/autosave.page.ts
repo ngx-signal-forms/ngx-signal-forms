@@ -1,10 +1,4 @@
-import {
-  ChangeDetectionStrategy,
-  Component,
-  computed,
-  signal,
-  viewChild,
-} from '@angular/core';
+import { Component, computed, signal, viewChild } from '@angular/core';
 import {
   type ResolvedErrorDisplayStrategy,
   type FormFieldAppearance,
@@ -34,7 +28,6 @@ import { AutosaveComponent } from './autosave.form';
 
 @Component({
   selector: 'ngx-autosave-page',
-  changeDetection: ChangeDetectionStrategy.OnPush,
 
   styles: `
     :host {

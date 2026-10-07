@@ -1,8 +1,11 @@
 import { Component, signal } from '@angular/core';
 import { FormField, form } from '@angular/forms/signals';
 import { render } from '@testing-library/angular';
-import { describe, expect, it } from 'vitest';
-import { NgxFormFieldHint } from '@ngx-signal-forms/toolkit/assistive';
+import { assert, describe, expect, it } from 'vitest';
+import {
+  NgxFormFieldCharacterCount,
+  NgxFormFieldHint,
+} from '@ngx-signal-forms/toolkit/assistive';
 import { NgxFormFieldWrapper } from './form-field-wrapper';
 
 /**
@@ -53,6 +56,7 @@ describe('NgxFormFieldWrapper — assistive row reserved space', () => {
   // reporting a missing element. Resolve each node once, loudly.
   const firstAssistiveRow = (container: Element): HTMLElement => {
     const [row] = assistiveRows(container);
+    assert(row, 'expected row to exist');
     if (!row) {
       throw new Error('Expected the fixture to render an assistive row.');
     }
@@ -180,6 +184,7 @@ describe('NgxFormFieldWrapper — assistive empty-row behavior (#297)', () => {
     const { container } = await render(Host);
 
     const [bare] = assistiveRows(container);
+    assert(bare, 'expected bare to exist');
 
     expect(bare.getBoundingClientRect().height).toBeCloseTo(16, 1);
   });
@@ -188,6 +193,7 @@ describe('NgxFormFieldWrapper — assistive empty-row behavior (#297)', () => {
     const { container } = await render(Host);
 
     const [bare, hinted] = assistiveRows(container);
+    assert(bare && hinted, 'expected bare and hinted to exist');
     const wrapper = wrapperOf(bare);
     // Disable the reservation transition (as the other override tests in
     // this file do) so the height change applies synchronously instead of
@@ -202,10 +208,37 @@ describe('NgxFormFieldWrapper — assistive empty-row behavior (#297)', () => {
     expect(hinted.getBoundingClientRect().height).toBeGreaterThan(0);
   });
 
+  it('drops the consumer row margins when a content-less row collapses', async () => {
+    const { container } = await render(Host);
+
+    const [bare] = assistiveRows(container);
+    assert(bare, 'expected bare to exist');
+    const wrapper = wrapperOf(bare);
+    wrapper.style.setProperty('--ngx-form-field-assistive-transition', 'none');
+    wrapper.style.setProperty('--ngx-form-field-assistive-margin-top', '4px');
+    wrapper.style.setProperty(
+      '--ngx-form-field-assistive-margin-bottom',
+      '4px',
+    );
+
+    // Reserved, the row keeps the consumer margins.
+    expect(getComputedStyle(bare).marginTop).toBe('4px');
+    expect(getComputedStyle(bare).marginBottom).toBe('4px');
+
+    wrapper.style.setProperty(
+      '--ngx-form-field-assistive-empty-behavior',
+      'collapse',
+    );
+
+    expect(getComputedStyle(bare).marginTop).toBe('0px');
+    expect(getComputedStyle(bare).marginBottom).toBe('0px');
+  });
+
   it('reverts to the reserved height once content-less collapse is switched back to reserve', async () => {
     const { container } = await render(Host);
 
     const [bare] = assistiveRows(container);
+    assert(bare, 'expected bare to exist');
     const wrapper = wrapperOf(bare);
     wrapper.style.setProperty('--ngx-form-field-assistive-transition', 'none');
     wrapper.style.setProperty(
@@ -259,6 +292,9 @@ describe('NgxFormFieldWrapper — assistive empty-row behavior (#297)', () => {
 
     expect(container.querySelector('[id="agree-error"]')).toBeTruthy();
     expect(row.getBoundingClientRect().height).toBeGreaterThan(0);
+    // The error text alone gives the row height. The reserved minimum proves
+    // the collapse rule skipped this row.
+    expect(parseFloat(getComputedStyle(row).minHeight)).toBeCloseTo(16, 1);
   });
 
   it('does not collapse a row opted into collapse while it shows a warning', async () => {
@@ -298,5 +334,123 @@ describe('NgxFormFieldWrapper — assistive empty-row behavior (#297)', () => {
       wrapper?.classList.contains('ngx-signal-form-field-wrapper--warning'),
     ).toBe(true);
     expect(row.getBoundingClientRect().height).toBeGreaterThan(0);
+    expect(parseFloat(getComputedStyle(row).minHeight)).toBeCloseTo(16, 1);
+  });
+});
+
+/**
+ * The assistive row has a left slot (hint, error, warning) and a right slot
+ * (character count). The wrapper stylesheet hides an empty right slot, and
+ * aligns the hint left while the right slot holds a count, so the two never
+ * crowd one side.
+ */
+describe('NgxFormFieldWrapper — assistive row slots', () => {
+  @Component({
+    selector: 'ngx-test-assistive-slots',
+    imports: [
+      NgxFormFieldWrapper,
+      NgxFormFieldHint,
+      NgxFormFieldCharacterCount,
+      FormField,
+    ],
+    template: `
+      <ngx-form-field-wrapper [formField]="testForm.hinted">
+        <label for="hinted">Hinted</label>
+        <input id="hinted" [formField]="testForm.hinted" />
+        <ngx-form-field-hint>Some guidance</ngx-form-field-hint>
+      </ngx-form-field-wrapper>
+
+      <ngx-form-field-wrapper [formField]="testForm.counted">
+        <label for="counted">Counted</label>
+        <textarea id="counted" [formField]="testForm.counted"></textarea>
+        <ngx-form-field-hint>Some guidance</ngx-form-field-hint>
+        <ngx-form-field-character-count
+          [formField]="testForm.counted"
+          [maxLength]="10"
+        />
+      </ngx-form-field-wrapper>
+
+      <ngx-form-field-wrapper [formField]="testForm.countOnly">
+        <label for="count-only">Count only</label>
+        <textarea id="count-only" [formField]="testForm.countOnly"></textarea>
+        <ngx-form-field-character-count
+          [formField]="testForm.countOnly"
+          [maxLength]="10"
+        />
+      </ngx-form-field-wrapper>
+    `,
+  })
+  class Host {
+    protected readonly testForm = form(
+      signal({ hinted: '', counted: '', countOnly: '' }),
+    );
+  }
+
+  const rightSlots = (container: Element) =>
+    Array.from(
+      container.querySelectorAll<HTMLElement>(
+        '.ngx-signal-form-field-wrapper__assistive-right',
+      ),
+    );
+
+  const hints = (container: Element) =>
+    Array.from(container.querySelectorAll<HTMLElement>('ngx-form-field-hint'));
+
+  it('hides the right slot while it has no character count', async () => {
+    const { container } = await render(Host);
+
+    const [hintedRight, countedRight] = rightSlots(container);
+    assert(
+      hintedRight && countedRight,
+      'expected hintedRight and countedRight to exist',
+    );
+
+    expect(getComputedStyle(hintedRight).display).toBe('none');
+    expect(getComputedStyle(countedRight).display).not.toBe('none');
+  });
+
+  it('aligns the hint left while a character count fills the right slot', async () => {
+    const { container } = await render(Host);
+
+    // A consumer asks for right-aligned hints on both fields.
+    for (const hint of hints(container)) {
+      wrapperOf(hint).style.setProperty('--ngx-form-field-hint-align', 'right');
+    }
+
+    const [hintedHint, countedHint] = hints(container);
+    assert(
+      hintedHint && countedHint,
+      'expected hintedHint and countedHint to exist',
+    );
+
+    expect(getComputedStyle(hintedHint).textAlign).toBe('right');
+    expect(getComputedStyle(countedHint).textAlign).toBe('left');
+  });
+
+  it('keeps a row with a hint or a character count reserved when opted into collapse', async () => {
+    const { container } = await render(Host);
+
+    const rows = Array.from(
+      container.querySelectorAll<HTMLElement>(
+        '.ngx-signal-form-field-wrapper__assistive',
+      ),
+    );
+    for (const row of rows) {
+      wrapperOf(row).style.setProperty(
+        '--ngx-form-field-assistive-transition',
+        'none',
+      );
+      wrapperOf(row).style.setProperty(
+        '--ngx-form-field-assistive-empty-behavior',
+        'collapse',
+      );
+    }
+
+    // Content gives each row height anyway. The reserved minimum proves the
+    // collapse rule skipped the row.
+    expect(rows).toHaveLength(3);
+    for (const row of rows) {
+      expect(parseFloat(getComputedStyle(row).minHeight)).toBeCloseTo(16, 1);
+    }
   });
 });

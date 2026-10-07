@@ -1,9 +1,4 @@
-import {
-  ChangeDetectionStrategy,
-  Component,
-  computed,
-  signal,
-} from '@angular/core';
+import { Component, computed, signal } from '@angular/core';
 import { type ResolvedErrorDisplayStrategy } from '@ngx-signal-forms/toolkit';
 import { NgxSignalFormDebugger } from '@ngx-signal-forms/debugger';
 import {
@@ -22,7 +17,6 @@ import { ErrorDisplayModesFormComponent } from './error-display-modes.form';
 
 @Component({
   selector: 'ngx-error-display-modes-page',
-  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     ErrorDisplayModesFormComponent,
     ExampleCardsComponent,

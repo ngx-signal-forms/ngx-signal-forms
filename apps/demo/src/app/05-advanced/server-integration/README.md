@@ -10,6 +10,7 @@ The most-requested real-world flow with no runnable demo before this one: load a
 - `form(model, schema, { submission })` + `[formRoot]` — the same declarative submission lifecycle as [Submission Patterns](../submission-patterns/README.md).
 - Native `TreeValidationResult` returned from `action` — an array of `{ kind, message, fieldTree }`, mapped from the fake API's `fieldErrors` dictionary by walking a statically-typed `PROFILE_FIELD_KEYS` list (avoids the `keyof`-widening `Object.entries`/`Object.keys` would need an unsafe cast to undo).
 - `NgxFormField` wrapper — renders the server-mapped field error with zero special-case markup; it is indistinguishable from a client-side validation error.
+- `resource.hasValue()` guard and error state — the prefill effect never reads `value()` while the resource is in error (it would throw). A failed load replaces the form with a `role="alert"` message and a **Retry** button that calls `reload()`.
 - `createOnInvalidHandler()` — focuses the first invalid field on a client-side-invalid submit attempt.
 
 ## Form model
@@ -79,6 +80,7 @@ Try step 5 in "Try This" below to see this asymmetry directly.
 
 - **After a successful save**, the action rereads the current model and calls `formData().reset(formData().value())`. This is not necessarily the submitted snapshot. Inputs remain editable during the request: newer, unsaved edits can become pristine. Runtime concern R04 remains; do not copy this reset as a concurrency-safe save pattern. A regression test must edit a field during the save and verify that the later edit stays dirty.
 - The **Reset** button calls `profileForm().reset()` with no argument — this only clears `dirty()`/`touched()`, it does not change field values.
+- **Load failure:** tick **Fail the next profile load** in the page controls (`ProfileApiService.failNextLoad`), then click **Reload from server**. The next `loadProfile()` rejects once and the flag clears itself, so **Retry** succeeds and prefills a pristine form.
 - The **Reload from server** button calls `profileResource.reload()`, which re-runs the fake API's `loadProfile()`; the component's `effect()` then copies the new value into the model and calls `reset(value)` again, so a reload also lands pristine.
 
 ## Key files
@@ -99,6 +101,7 @@ Try step 5 in "Try This" below to see this asymmetry directly.
 6. Repeat the failed submission, then edit **Name** instead of Email — confirm the form-level banner clears even though Email was untouched.
 7. Set a valid, non-taken email and submit — confirm the success banner appears and `dirty()` in the state panel reads `false`.
 8. Click **Reload from server** — confirm the button reads _Reloading…_ and the form re-populates from the fake API's in-memory record.
+9. Tick **Fail the next profile load** and click **Reload from server** again — confirm an announced _Could not load profile_ alert and a **Retry** button replace the form, then click **Retry** and confirm the form returns prefilled with `dirty()` and `touched()` both `false`.
 
 ## Related
 

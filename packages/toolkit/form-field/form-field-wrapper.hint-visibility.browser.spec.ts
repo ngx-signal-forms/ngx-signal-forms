@@ -5,13 +5,7 @@ import {
   signal,
 } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
-import {
-  FormField,
-  form,
-  required,
-  schema,
-  validate,
-} from '@angular/forms/signals';
+import { FormField, form, required, validate } from '@angular/forms/signals';
 import {
   NgxSignalFormToolkit,
   provideNgxSignalFormsConfigForComponent,
@@ -51,12 +45,9 @@ describe('NgxFormFieldWrapper — hint visibility on error (issue #521)', () => 
       `,
     })
     class TestComponent {
-      readonly testForm = form(
-        signal({ email: '' }),
-        schema((path) => {
-          required(path.email, { message: 'Email is required' });
-        }),
-      );
+      readonly testForm = form(signal({ email: '' }), (path) => {
+        required(path.email, { message: 'Email is required' });
+      });
     }
 
     return render(TestComponent, { componentProviders });
@@ -83,12 +74,9 @@ describe('NgxFormFieldWrapper — hint visibility on error (issue #521)', () => 
       `,
     })
     class TestComponent {
-      readonly testForm = form(
-        signal({ email: '' }),
-        schema((path) => {
-          required(path.email, { message: 'Email is required' });
-        }),
-      );
+      readonly testForm = form(signal({ email: '' }), (path) => {
+        required(path.email, { message: 'Email is required' });
+      });
     }
 
     return render(TestComponent);
@@ -225,12 +213,9 @@ describe('NgxFormFieldWrapper — hint visibility on error (issue #521)', () => 
       `,
     })
     class TestComponent {
-      readonly testForm = form(
-        signal({ email: '' }),
-        schema((path) => {
-          required(path.email, { message: 'Email is required' });
-        }),
-      );
+      readonly testForm = form(signal({ email: '' }), (path) => {
+        required(path.email, { message: 'Email is required' });
+      });
     }
 
     const { container } = await render(TestComponent);
@@ -273,12 +258,9 @@ describe('NgxFormFieldWrapper — hint visibility on error (issue #521)', () => 
       `,
     })
     class TestComponent {
-      readonly testForm = form(
-        signal({ email: '' }),
-        schema((path) => {
-          required(path.email, { message: 'Email is required' });
-        }),
-      );
+      readonly testForm = form(signal({ email: '' }), (path) => {
+        required(path.email, { message: 'Email is required' });
+      });
     }
 
     const { container } = await render(TestComponent, {
@@ -322,21 +304,18 @@ describe('NgxFormFieldWrapper — hint visibility on error (issue #521)', () => 
       // gates the hiding mechanisms. `defaultWarningStrategy` defaults to
       // `'on-touch'`, so the warning exists as soon as the value is short
       // but is not SHOWN until the field is touched.
-      readonly field = form(
-        signal({ username: '' }),
-        schema((path) => {
-          validate(path.username, (ctx) => {
-            const value = ctx.value();
-            if (value.length > 0 && value.length < 3) {
-              return {
-                kind: 'warn:too-short',
-                message: 'Consider 3+ characters',
-              };
-            }
-            return null;
-          });
-        }),
-      );
+      readonly field = form(signal({ username: '' }), (path) => {
+        validate(path.username, (ctx) => {
+          const value = ctx.value();
+          if (value.length > 0 && value.length < 3) {
+            return {
+              kind: 'warn:too-short',
+              message: 'Consider 3+ characters',
+            };
+          }
+          return null;
+        });
+      });
     }
 
     const { container } = await render(TestComponent);
@@ -408,21 +387,18 @@ describe('NgxFormFieldWrapper — hint visibility on error (issue #521)', () => 
         `,
       })
       class TestComponent {
-        readonly field = form(
-          signal({ username: '' }),
-          schema((path) => {
-            validate(path.username, (ctx) => {
-              const value = ctx.value();
-              if (value.length > 0 && value.length < 3) {
-                return {
-                  kind: 'warn:too-short',
-                  message: 'Consider 3+ characters',
-                };
-              }
-              return null;
-            });
-          }),
-        );
+        readonly field = form(signal({ username: '' }), (path) => {
+          validate(path.username, (ctx) => {
+            const value = ctx.value();
+            if (value.length > 0 && value.length < 3) {
+              return {
+                kind: 'warn:too-short',
+                message: 'Consider 3+ characters',
+              };
+            }
+            return null;
+          });
+        });
       }
 
       const { container } = await render(TestComponent);

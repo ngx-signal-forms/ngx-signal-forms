@@ -1,96 +1,87 @@
-# Angular Signal Forms vs. `@ngx-signal-forms/toolkit`
-
-This document combines two documentation views:
-
-- **Explanation**: how Angular Signal Forms and the toolkit relate.
-- **Reference**: concise ownership and API comparison.
-
+---
+title: 'Angular Signal Forms and the toolkit'
+sidebarTitle: 'Angular vs toolkit'
 ---
 
-## Explanation
+This page explains what Angular Signal Forms does, what the toolkit adds, and
+when the toolkit is worth adding.
 
-### Ownership model
+## Ownership model
 
-The toolkit is **additive**. Angular Signal Forms still owns form creation,
-validation, field state, and submission. The toolkit layers the UX pieces
-Angular intentionally leaves to application and library authors:
-accessibility wiring, error-display timing, warning semantics, and reusable
-field UI.
+The toolkit adds to Angular. It does not replace anything. Angular Signal
+Forms owns form creation, validation, field state, and submission. The toolkit
+adds the user-facing parts that Angular leaves to you:
 
-### When to reach for the toolkit
+- when errors and warnings show,
+- the ARIA attributes that link a control to its messages,
+- non-blocking warnings,
+- reusable field UI: labels, hints, character counts, and themes.
 
-Reach for the toolkit when:
+Angular Signal Forms sets no ARIA attributes itself. Without the toolkit, you
+write `aria-invalid` and `aria-describedby` for each field.
 
-- you're writing the same `aria-invalid` / `aria-describedby` / error-timing
-  boilerplate around more than one field
-- you want errors gated by interaction (`'on-touch'`) or submission
-  (`'on-submit'`) instead of appearing immediately
-- you need non-blocking warnings alongside blocking errors
-- you want consistent field layout, hints, counters, and theming across an app
+## When to use the toolkit
 
-Skip it (for now) when you're building a single tiny form with no accessibility
-or error-timing requirements — plain Signal Forms is enough, and the toolkit
-adds nothing you'd miss. Adopting it later requires no rewrites because your
-`form()` / `[formField]` code stays the same.
+Use it when:
 
-### Side-by-side: the same field, with and without the toolkit
+- you write the same `aria-invalid`, `aria-describedby`, and error-timing code
+  for more than one field,
+- you want errors to show after the user leaves a field (`on-touch`) or after
+  submit (`on-submit`), not at once,
+- you need warnings that do not block submit,
+- you want the same field layout, hints, counters, and theme across an app.
 
-See [the root README's entry-point chooser](../README.md#which-part-of-the-toolkit-do-i-need)
-for the same email field written with plain Signal Forms versus with the
-toolkit. The wrapper handles ARIA wiring, error timing, `role="alert"` vs
-`role="status"`, and hint/counter projection automatically. Angular still owns
-`form()`, `submit()`, validation, and field state — the toolkit removes the UX
-boilerplate around them.
+You do not need it for one small form without accessibility requirements.
+You can add it later without changing your `form()` or `[formField]` code.
 
-### Why `ngxSignalForm` is additive, not a replacement
+For the same email field written with and without the toolkit, see
+[why use it](../README.md#why-use-it). To pick an entry point, see
+[choose your level](../README.md#choose-your-level).
 
-`NgxSignalForm` (selector: `form[formRoot][ngxSignalForm]`) is an **enhancer**.
-It activates on `<form>` elements that already have `[formRoot]` when you also
-add the `ngxSignalForm` attribute. It adds:
+## What `ngxSignalForm` adds
 
-1. **DI context** — child toolkit components (error display, field wrappers,
-   headless directives) access form state through `NGX_SIGNAL_FORM_CONTEXT`
-   without prop drilling.
-2. **Submitted status tracking** — derives
-   `'unsubmitted' → 'submitting' → 'submitted'` from Angular's native
-   `submitting()` signal, which Angular does not expose as a status.
-3. **Error display strategy** — the `[errorStrategy]` input controls when
-   validation feedback becomes visible (`'immediate'`, `'on-touch'`, or
-   `'on-submit'`).
+`ngxSignalForm` is a directive that you add to a `<form>` that already has
+`[formRoot]`. It does not replace `[formRoot]`. It adds:
 
-`NgxSignalFormToolkit` is a convenience bundle that combines `FormRoot` +
-`NgxSignalForm` + `NgxSignalFormAutoAria` +
-`NgxSignalFormControlSemanticsDirective`. Import it instead of `FormRoot` separately.
+1. **Form-wide timing.** `errorStrategy` and `warningStrategy` inputs set when
+   feedback shows for every field in the form.
+2. **Submitted status.** It tracks `'unsubmitted'`, `'submitting'`, and
+   `'submitted'`. Angular has only the `submitting()` signal. `on-submit`
+   timing needs this status.
+3. **Shared state for child components.** Wrappers, error components, the
+   error summary, and headless directives read the form's timing and status
+   from it, so you do not pass them down by hand.
+
+`NgxSignalFormToolkit` imports Angular's `FormRoot`, `NgxSignalForm`, and
+auto-ARIA together. Import it instead of `FormRoot`:
 
 ```typescript
 imports: [FormField, NgxSignalFormToolkit];
 ```
 
 ```html
-<form [formRoot]="myForm" ngxSignalForm errorStrategy="on-touch"></form>
+<form [formRoot]="myForm" ngxSignalForm errorStrategy="on-submit"></form>
 ```
 
----
+The [root README](../README.md#when-errors-show) says when you need
+`ngxSignalForm`.
 
-## Reference
+## Feature matrix
 
-### Feature matrix
+| Concern                                  | Angular Signal Forms                                      | Toolkit                                                                                  |
+| ---------------------------------------- | --------------------------------------------------------- | ---------------------------------------------------------------------------------------- |
+| Form model, validation, submit lifecycle | Yes                                                       | Uses Angular's. See [validation choices](./VALIDATION_STRATEGY.md)                       |
+| `[formRoot]`                             | Yes: sets `novalidate`, prevents default, runs `submit()` | `ngxSignalForm` adds form-wide timing and submitted status                               |
+| Error timing                             | No, you write it                                          | `on-touch`, `on-submit`, or `immediate`                                                  |
+| Submitted status                         | Only `submitting()`                                       | `unsubmitted`, `submitting`, `submitted`                                                 |
+| Warnings                                 | No, you need your own convention                          | `warningError()`. See [warnings](./WARNINGS_SUPPORT.md)                                  |
+| Warning timing                           | No                                                        | Separate `warningStrategy`. See [timing](./WARNINGS_SUPPORT.md#timing-and-configuration) |
+| ARIA links between control and messages  | No                                                        | Yes, automatic                                                                           |
+| Focus on the first invalid field         | No                                                        | `createOnInvalidHandler()`                                                               |
+| Reusable field UI                        | No                                                        | `/form-field` and `/assistive` components                                                |
+| CSS status classes                       | Yes, `provideSignalFormsConfig({ classes })`              | None. Use Angular's API next to the toolkit                                              |
 
-| Concern                                  | Angular Signal Forms                              | Toolkit                                                                                                                                            |
-| ---------------------------------------- | ------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Form model, validation, submit lifecycle | ✅ Native                                         | ➖ Builds on top — for choosing validators see [`VALIDATION_STRATEGY.md`](./VALIDATION_STRATEGY.md)                                                |
-| `[formRoot]` form context                | ✅ `novalidate`, `preventDefault`, `submit()`     | ✅ Adds DI context, submitted status, error strategy                                                                                               |
-| Progressive error timing                 | ❌ Manual                                         | ✅ Built in via `errorStrategy`                                                                                                                    |
-| Submitted status tracking                | ❌ Only `submitting()` signal                     | ✅ `unsubmitted → submitting → submitted`                                                                                                          |
-| Warning semantics                        | ❌ Manual convention needed                       | ✅ Built in via `warningError()` — see [`WARNINGS_SUPPORT.md`](./WARNINGS_SUPPORT.md)                                                              |
-| Warning display timing                   | ❌ Manual                                         | ✅ Independent `warningStrategy` (default `'on-touch'`) — see [`WARNINGS_SUPPORT.md`](./WARNINGS_SUPPORT.md#when-warnings-appear--warningstrategy) |
-| Automatic ARIA linking                   | ❌ Manual                                         | ✅ Built in                                                                                                                                        |
-| Reusable field UI                        | ❌ App-specific                                   | ✅ Assistive + form-field entry points                                                                                                             |
-| CSS status classes                       | ✅ Native `provideSignalFormsConfig({ classes })` | ➖ Use Angular's native API alongside toolkit                                                                                                      |
+## For maintainers
 
-### Deeper dive
-
-For the full ownership boundary — every Angular API the toolkit consumes, every
-toolkit-owned feature by entry point, the duck-typing rationale, and why the
-`/core` internal entry point is not part of the public API — see
-[`ANGULAR_PUBLIC_API_POLICY.md`](./ANGULAR_PUBLIC_API_POLICY.md).
+[Angular public API policy](./ANGULAR_PUBLIC_API_POLICY.md) lists every
+Angular API the toolkit uses and why `/core` is not public.

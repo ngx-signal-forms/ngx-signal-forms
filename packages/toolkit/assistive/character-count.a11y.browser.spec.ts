@@ -1,6 +1,7 @@
 import { ApplicationRef, Component, signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { FormField, form, maxLength, required } from '@angular/forms/signals';
+import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit';
 import { NgxFormField } from '@ngx-signal-forms/toolkit/form-field';
 import { render } from '@testing-library/angular';
 import { userEvent } from 'vitest/browser';
@@ -75,6 +76,38 @@ describe('NgxFormFieldCharacterCount — WCAG 2.2 AA conformance', () => {
     expect(container.textContent).toContain('/10');
     await expectNoA11yViolations(container);
   });
+
+  it('a count past its limit with colours off still announces and has no violations', async () => {
+    @Component({
+      selector: 'ngx-test-a11y-char-count-no-colors',
+      imports: [FormField, NgxFormFieldCharacterCount],
+      template: `
+        <label for="note">Note</label>
+        <textarea id="note" [formField]="testForm.note"></textarea>
+        <ngx-form-field-character-count
+          [formField]="testForm.note"
+          [maxLength]="10"
+          [showLimitColors]="false"
+          [liveAnnounce]="true"
+        />
+      `,
+    })
+    class TestComponent {
+      readonly #model = signal({ note: '' });
+      readonly testForm = form(this.#model);
+    }
+
+    const { container } = await render(TestComponent);
+    const textarea = container.querySelector('textarea')!;
+    await userEvent.click(textarea);
+    await userEvent.type(textarea, 'Way past the ten character limit');
+    await TestBed.inject(ApplicationRef).whenStable();
+
+    expect(
+      container.querySelector('.ngx-signal-form-field-char-count__sr'),
+    ).toHaveTextContent('Character limit exceeded by');
+    await expectNoA11yViolations(container);
+  });
 });
 
 /**
@@ -121,6 +154,49 @@ describe('NgxFormFieldCharacterCount — limit description linked via aria-descr
       'Up to 200 characters',
     );
 
+    await expectNoA11yViolations(container);
+  });
+});
+
+/**
+ * A standalone count (no wrapper) gets its field name from the `fieldName`
+ * input (issue #589). The author puts the limit id in the control's
+ * `aria-describedby`; auto-ARIA keeps that authored id. Asserted as the
+ * computed accessible description, because a DOM-only check would pass even
+ * if the browser never resolved the reference.
+ */
+describe('NgxFormFieldCharacterCount — standalone limit description (issue #589)', () => {
+  it("makes the limit part of the control's accessible description, with no violations", async () => {
+    @Component({
+      selector: 'ngx-test-a11y-char-count-standalone-limit',
+      imports: [FormField, NgxSignalFormToolkit, NgxFormFieldCharacterCount],
+      template: `
+        <form [formRoot]="testForm">
+          <label for="bio">Bio</label>
+          <textarea
+            id="bio"
+            aria-describedby="bio-char-count-limit"
+            [formField]="testForm.bio"
+          ></textarea>
+          <ngx-form-field-character-count
+            [formField]="testForm.bio"
+            fieldName="bio"
+          />
+        </form>
+      `,
+    })
+    class TestComponent {
+      readonly #model = signal({ bio: '' });
+      readonly testForm = form(this.#model, (path) => {
+        maxLength(path.bio, 500);
+      });
+    }
+
+    const { container } = await render(TestComponent);
+    await TestBed.inject(ApplicationRef).whenStable();
+
+    const textarea = container.querySelector<HTMLTextAreaElement>('#bio')!;
+    expect(textarea).toHaveAccessibleDescription('Up to 500 characters');
     await expectNoA11yViolations(container);
   });
 });

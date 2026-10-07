@@ -111,7 +111,7 @@ form:
 - a non-blocking warning on the email field, exercising the warnings
   branch of the renderer
 
-`NgxSignalFormControlSemanticsDirective` is declared on every control
+`NgxSignalFormControl` is declared on every control
 (`ngxSignalFormControl="input-like"`, `"standalone-field-like"`,
 `"checkbox"`) so the toolkit knows the control kind without DOM
 heuristics — a must-have when bound controls live inside PrimeNG's host

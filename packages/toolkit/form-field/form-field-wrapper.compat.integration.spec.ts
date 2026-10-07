@@ -2,7 +2,7 @@ import { ApplicationRef, Component, signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import type { ValidatorFn } from '@angular/forms';
 import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
-import { FormField, required } from '@angular/forms/signals';
+import { FormField, required, type SchemaPath } from '@angular/forms/signals';
 import { compatForm, SignalFormControl } from '@angular/forms/signals/compat';
 import { render, screen } from '@testing-library/angular';
 import { describe, expect, it } from 'vitest';
@@ -54,12 +54,11 @@ async function flushAutoAria(): Promise<void> {
   //
   // `aria-invalid` is deliberately NOT asserted in this jsdom spec: when a
   // control is wrapped by `NgxFormFieldWrapper`, auto-aria gates
-  // `aria-invalid` on `NgxFieldIdentity.isControlVisible`, which the wrapper
-  // derives from `isElementCssVisible()` (`Element.checkVisibility()` /
-  // `offsetParent`). jsdom does not compute layout, so `offsetParent` is
-  // unreliable for attached elements (see `field-identity.spec.ts`'s own
-  // `isElementCssVisible` suite) — regardless of compat, a wrapped control's
-  // `aria-invalid` is exercised in `*.browser.spec.ts`, where layout is real.
+  // `aria-invalid` on its own `isElementCssVisible()` probe
+  // (`Element.checkVisibility()` / `offsetParent`). jsdom does not compute
+  // layout, so `offsetParent` is unreliable for attached elements —
+  // regardless of compat, a wrapped control's `aria-invalid` is exercised in
+  // `*.browser.spec.ts`, where layout is real.
   await TestBed.inject(ApplicationRef).whenStable();
 }
 
@@ -94,7 +93,12 @@ describe('NgxFormFieldWrapper + @angular/forms/signals/compat', () => {
       // message would surface and the "shows no error…" spec below would
       // fail, catching the divergence changing out from under the guide.
       readonly nameForm = compatForm(this.nameModel, (name) => {
-        required(name.last, {
+        // Angular types a compat control leaf as `SchemaPathRules.Unsupported`,
+        // so `required()` rejects it at compile time. This spec registers it
+        // anyway on purpose: it pins what happens if a consumer bypasses that
+        // type. This is the one deliberate type violation in the spec suite.
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- deliberately bypasses Angular's `Unsupported` rule marker to test the runtime behavior.
+        required(name.last as unknown as SchemaPath<unknown>, {
           message: SCHEMA_VALIDATOR_SHOULD_NOT_SURFACE_MESSAGE,
         });
       });

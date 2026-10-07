@@ -48,18 +48,18 @@ without any directive, provider, or preset.
 Split the control-semantics contract into four cooperating pieces, each with
 a narrow purpose:
 
-### 1. `NgxSignalFormControlSemanticsDirective`
+### 1. `NgxSignalFormControl`
 
 A directive authors apply directly to a control host when they want explicit
 semantics instead of DOM inference.
 
-> **Naming exception.** The directive class keeps its `Directive` suffix
-> because the suffix-less `NgxSignalFormControlSemantics` name is occupied
-> by the matching public _interface_ in `core/types.ts` (used for typing
-> the same shape as a data value). This is the only exported class in v1
-> that does not follow the toolkit-wide "drop the `Directive` suffix"
-> convention — `imports: [...]` and `inject(...)` use the directive class
-> name, type annotations use the interface.
+> **Naming.** The class is `NgxSignalFormControl`. It matches its selector
+> `[ngxSignalFormControl]`, the way `NgxSignalForm` matches `ngxSignalForm`.
+> The suffix-less `NgxSignalFormControlSemantics` name belongs to the matching
+> public _interface_ in `core/types.ts` (the same shape as a data value). The
+> class had a `Directive` suffix until RC.16 to avoid that clash. Renaming the
+> class ended the clash. `imports: [...]` and `inject(...)` use the class;
+> type annotations use the interface.
 
 ```html
 <app-star-rating

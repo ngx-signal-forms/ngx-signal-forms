@@ -5,7 +5,7 @@ import type { SubmittedStatus } from '@ngx-signal-forms/toolkit';
 import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit';
 import { NgxFormField } from '@ngx-signal-forms/toolkit/form-field';
 import { render, screen } from '@testing-library/angular';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { userEvent } from 'vitest/browser';
 import { NgxFormFieldErrorSummary } from './form-field-error-summary';
 import {
@@ -496,5 +496,62 @@ describe('NgxFormFieldErrorSummary — heading, accessible name, and focus movem
     entry.focus();
     await userEvent.keyboard(' ');
     expect(document.activeElement).toBe(emailInput);
+  });
+});
+
+/**
+ * WCAG 2.4.3 (Focus Order): after a failed submit, focus must land on the
+ * summary host. The summary logs a dev-mode warning when `host.focus()` leaves
+ * focus elsewhere. That warning must stay silent when focus did land, or it
+ * sends consumers after a fault that does not exist. Only a real browser
+ * decides whether the host took focus, so the check lives here.
+ */
+describe('NgxFormFieldErrorSummary — focus-failure diagnostic', () => {
+  it('does not warn when focus lands on the summary host after a failed submit', async () => {
+    @Component({
+      selector: 'ngx-test-a11y-summary-focus-ok',
+      imports: [FormField, NgxFormFieldErrorSummary],
+      template: `
+        <input id="email" [formField]="testForm.email" />
+        <ngx-form-field-error-summary
+          [formTree]="testForm"
+          strategy="on-submit"
+          [submittedStatus]="submittedStatus()"
+        />
+      `,
+    })
+    class TestComponent {
+      readonly #model = signal({ email: '' });
+      readonly testForm = form(
+        this.#model,
+        schema((path) => {
+          required(path.email, { message: 'Email is required' });
+        }),
+      );
+      readonly submittedStatus = signal<SubmittedStatus>('unsubmitted');
+    }
+
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    try {
+      const { fixture } = await render(TestComponent);
+
+      fixture.componentInstance.submittedStatus.set('submitted');
+      await TestBed.inject(ApplicationRef).whenStable();
+
+      const host = (await screen.findByRole('alert')).closest(
+        'ngx-form-field-error-summary',
+      );
+      const focusFailureWarnings = warnSpy.mock.calls.filter(
+        ([message]) =>
+          typeof message === 'string' &&
+          message.includes('NgxFormFieldErrorSummary'),
+      );
+
+      // Warnings first: a stray diagnostic is the regression under test.
+      expect(focusFailureWarnings).toHaveLength(0);
+      expect(document.activeElement).toBe(host);
+    } finally {
+      warnSpy.mockRestore();
+    }
   });
 });

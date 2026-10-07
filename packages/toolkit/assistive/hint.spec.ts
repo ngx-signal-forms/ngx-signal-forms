@@ -153,7 +153,9 @@ describe('NgxFormFieldHint', () => {
 
   describe('Dynamic position updates', () => {
     it('should update position attribute when input changes', async () => {
-      const { container, rerender } = await render(
+      const { container, rerender } = await render<{
+        position: 'left' | 'right' | null;
+      }>(
         `<ngx-form-field-hint [position]="position">Hint</ngx-form-field-hint>`,
         {
           imports: [NgxFormFieldHint],
@@ -186,7 +188,9 @@ describe('NgxFormFieldHint', () => {
     });
 
     it('should transition from null to positioned', async () => {
-      const { container, rerender } = await render(
+      const { container, rerender } = await render<{
+        position: 'left' | 'right' | null;
+      }>(
         `<ngx-form-field-hint [position]="position">Hint</ngx-form-field-hint>`,
         {
           imports: [NgxFormFieldHint],
@@ -210,7 +214,9 @@ describe('NgxFormFieldHint', () => {
     });
 
     it('should transition from positioned to null', async () => {
-      const { container, rerender } = await render(
+      const { container, rerender } = await render<{
+        position: 'left' | 'right' | null;
+      }>(
         `<ngx-form-field-hint [position]="position">Hint</ngx-form-field-hint>`,
         {
           imports: [NgxFormFieldHint],

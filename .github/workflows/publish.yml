@@ -1,7 +1,16 @@
 name: Publish
 
-# Publish after a successful Release run or manually
-# Uses npm Trusted Publishers (OIDC) - no secrets required!
+# Publishes on a `v*` tag push or by hand. Uses npm Trusted Publishers (OIDC).
+#
+# Jobs, split on purpose:
+#   - build:           runs all third-party code (install, test, build).
+#                      Read-only token. It has no OIDC token.
+#   - publish:         holds the OIDC token. It installs nothing and runs no
+#                      repo script. It downloads the built package and runs
+#                      `npm publish`. It waits for approval on the
+#                      `npm-publish` environment.
+#   - publish-dry-run: the same steps for a dry run, with `--dry-run` and no
+#                      environment. The steps are duplicated on purpose.
 on:
   push:
     tags:
@@ -9,29 +18,32 @@ on:
   workflow_dispatch:
     inputs:
       ref:
-        description: 'Tag or commit SHA to publish (e.g. v1.0.0-beta.1)'
+        description: 'Exact release tag or full commit SHA (e.g. v1.2.3 or 40-character SHA)'
         required: true
         type: string
-        default: 'v1.0.0-beta.1'
       dry_run:
         description: 'Dry run (no actual publish)'
         required: false
         type: boolean
         default: false
 
-permissions:
-  contents: read
-  id-token: write # Required for npm Trusted Publishers (OIDC)
+permissions: {}
 
 concurrency:
   group: publish-${{ github.workflow }}
   cancel-in-progress: false
 
 jobs:
-  publish:
-    name: Publish to npm
+  build:
+    name: Build package
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 20
+    permissions:
+      contents: read
+    outputs:
+      tag: ${{ steps.release_info.outputs.tag }}
+      dist_tag: ${{ steps.release_info.outputs.dist_tag }}
+      node_version: ${{ steps.node_version.outputs.version }}
     steps:
       - name: Resolve and validate publish ref
         id: publish_ref
@@ -60,23 +72,39 @@ jobs:
           ref: ${{ steps.publish_ref.outputs.ref }}
           persist-credentials: false
 
+      # Runs before any install or build. Only commits that are on `main`
+      # (and so passed the `main` ruleset) can reach npm.
+      - name: Require that the release commit is on main
+        env:
+          PUBLISH_REF: ${{ steps.publish_ref.outputs.ref }}
+        run: |
+          git fetch --no-tags origin main
+          TAG_SHA=$(git rev-parse "${PUBLISH_REF}^{commit}")
+          if ! git merge-base --is-ancestor "$TAG_SHA" origin/main; then
+            echo "❌ Commit $TAG_SHA ($PUBLISH_REF) is not on main. Refusing to publish." >&2
+            exit 1
+          fi
+          echo "Commit $TAG_SHA is an ancestor of origin/main."
+
       - name: Resolve release tag and dist-tag
         id: release_info
+        env:
+          PUBLISH_REF: ${{ steps.publish_ref.outputs.ref }}
         run: |
           git fetch --tags --force
 
           # Check if ref is already a tag
-          if git rev-parse "${{ steps.publish_ref.outputs.ref }}^{tag}" >/dev/null 2>&1; then
-            TAG="${{ steps.publish_ref.outputs.ref }}"
+          if git rev-parse "${PUBLISH_REF}^{tag}" >/dev/null 2>&1; then
+            TAG="$PUBLISH_REF"
             echo "Using provided tag: $TAG"
           else
             # Find tag at the commit SHA
-            REF_SHA=$(git rev-parse "${{ steps.publish_ref.outputs.ref }}")
+            REF_SHA=$(git rev-parse "$PUBLISH_REF")
             echo "Looking for tag at commit: $REF_SHA"
             TAG=$(git tag --points-at "$REF_SHA" | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+' | head -n 1)
 
             if [ -z "$TAG" ]; then
-              echo "❌ No release tag found at ref ${{ steps.publish_ref.outputs.ref }}" >&2
+              echo "❌ No release tag found at ref $PUBLISH_REF" >&2
               echo "Only exact tagged refs are allowed for publish to avoid accidental wrong-version publishes." >&2
               echo "Available tags:" >&2
               git tag --list 'v*' --sort=-version:refname | head -5 >&2
@@ -100,6 +128,11 @@ jobs:
           fi
           echo "Resolved: tag=$TAG, dist_tag will be determined by version"
 
+      # The publish job has no checkout. It reads the Node version from here.
+      - name: Read Node version
+        id: node_version
+        run: echo "version=$(tr -d '[:space:]' < .node-version)" >> "$GITHUB_OUTPUT"
+
       - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413
         name: Install pnpm
         with:
@@ -109,28 +142,14 @@ jobs:
         with:
           node-version-file: '.node-version'
           cache: 'pnpm'
-          registry-url: 'https://registry.npmjs.org'
-          scope: '@ngx-signal-forms'
 
-      - name: Install npm for trusted publishing
-        # npm 12.0.0 omits sigstore, which breaks `npm publish --provenance`.
-        # Stay on npm 11 until the upstream packaging regression is fixed.
-        run: npm install --global npm@11
-
-      - name: Enforce OIDC auth mode for npm publish
-        run: |
-          # Clear token-based auth so npm Trusted Publisher OIDC is used.
-          echo "NODE_AUTH_TOKEN=" >> "$GITHUB_ENV"
-          echo "NPM_TOKEN=" >> "$GITHUB_ENV"
-
-          npm config delete //registry.npmjs.org/:_authToken --location=user || true
-
-          if [ -n "${NPM_CONFIG_USERCONFIG:-}" ] && [ -f "$NPM_CONFIG_USERCONFIG" ]; then
-            sed -i '/_authToken/d' "$NPM_CONFIG_USERCONFIG"
-          fi
+      - name: Set up Socket Firewall
+        uses: socketdev/action@ba6de6cc0565af1f42295590380973573297e31f # v1.3.2
+        with:
+          mode: firewall
 
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: sfw pnpm install --frozen-lockfile
 
       - name: Configure Nx Cloud access
         env:
@@ -154,13 +173,71 @@ jobs:
       - name: Nx Report
         run: pnpm exec nx report --outputStyle=static
 
+      # jsdom specs only. `test-browser` needs Playwright browsers, which this
+      # job does not install. release.yml already runs it before the tag exists.
+      - name: Test toolkit
+        run: pnpm exec nx test toolkit --outputStyle=static
+
+      # `toolkit:build` also runs the post-build steps (README, LICENSE, strip
+      # internal members and exports).
       - name: Build toolkit package
-        run: pnpm exec nx run toolkit:post-build --skip-nx-cache --outputStyle=static
+        run: pnpm exec nx build toolkit --skip-nx-cache --outputStyle=static
+
+      - name: Upload package
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: toolkit-package
+          path: dist/packages/toolkit
+          include-hidden-files: true
+          if-no-files-found: error
+          retention-days: 7
+
+  publish:
+    name: Publish to npm
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    if: ${{ inputs.dry_run != true }}
+    permissions:
+      id-token: write # Required for npm Trusted Publishers (OIDC)
+    # A real publish waits for approval on the `npm-publish` environment.
+    environment: npm-publish
+    # This job must install nothing and run no repo script: it holds the OIDC
+    # token. Do not add `pnpm install`, `npm ci`, a checkout or a build step.
+    steps:
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version: ${{ needs.build.outputs.node_version }}
+          registry-url: 'https://registry.npmjs.org'
+          scope: '@ngx-signal-forms'
+
+      - name: Download package
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: toolkit-package
+          path: dist/packages/toolkit
+
+      - name: Install npm for trusted publishing
+        # npm 12.0.0 omits sigstore, which breaks `npm publish --provenance`.
+        # Stay on an exact npm 11 release until the upstream packaging
+        # regression is fixed. Trusted publishing needs npm >= 11.5.1.
+        run: npm install --global npm@11.20.0
+
+      - name: Enforce OIDC auth mode for npm publish
+        run: |
+          # Clear token-based auth so npm Trusted Publisher OIDC is used.
+          echo "NODE_AUTH_TOKEN=" >> "$GITHUB_ENV"
+          echo "NPM_TOKEN=" >> "$GITHUB_ENV"
+
+          npm config delete //registry.npmjs.org/:_authToken --location=user || true
+
+          if [ -n "${NPM_CONFIG_USERCONFIG:-}" ] && [ -f "$NPM_CONFIG_USERCONFIG" ]; then
+            sed -i '/_authToken/d' "$NPM_CONFIG_USERCONFIG"
+          fi
 
       - name: Validate npm trusted publishing preflight
         run: |
           npm --version
-          pnpm --version
           node --version
 
           NPM_VERSION=$(npm --version)
@@ -171,28 +248,21 @@ jobs:
 
           if [ -z "${ACTIONS_ID_TOKEN_REQUEST_URL:-}" ]; then
             echo "❌ OIDC token endpoint is not available in this job." >&2
-            echo "Ensure workflow permissions include: id-token: write" >&2
+            echo "Ensure the job permissions include: id-token: write" >&2
             exit 1
           fi
           echo "OIDC and npm version requirements are satisfied for trusted publishing."
 
-      - name: Publish toolkit (Dry Run)
-        if: ${{ inputs.dry_run == true }}
-        run: |
-          echo "🔍 Dry run - would publish with tag: ${{ steps.release_info.outputs.dist_tag }}"
-          npm publish dist/packages/toolkit --tag=${{ steps.release_info.outputs.dist_tag }} --access public --provenance --dry-run
+      - name: Publish toolkit
         env:
+          DIST_TAG: ${{ needs.build.outputs.dist_tag }}
+          TAG: ${{ needs.build.outputs.tag }}
           NPM_CONFIG_PROVENANCE: true
           NODE_AUTH_TOKEN: ''
           NPM_TOKEN: ''
-
-      - name: Publish toolkit
-        if: ${{ inputs.dry_run != true }}
         run: |
           PACKAGE_NAME=$(node -p "require('./dist/packages/toolkit/package.json').name")
           PACKAGE_VERSION=$(node -p "require('./dist/packages/toolkit/package.json').version")
-          DIST_TAG='${{ steps.release_info.outputs.dist_tag }}'
-          TAG='${{ steps.release_info.outputs.tag }}'
 
           # Guard against a mis-pointed tag or a manual dispatch against the wrong
           # SHA: the npm dist-tag is derived from the git tag name, while the
@@ -217,17 +287,102 @@ jobs:
           else
             npm publish dist/packages/toolkit --tag="$DIST_TAG" --access public --provenance
           fi
-        env:
-          NPM_CONFIG_PROVENANCE: true
-          NODE_AUTH_TOKEN: ''
-          NPM_TOKEN: ''
         # npm Trusted Publisher handles authentication automatically
 
       - name: Summary
+        env:
+          TAG: ${{ needs.build.outputs.tag }}
+          DIST_TAG: ${{ needs.build.outputs.dist_tag }}
+          DRY_RUN: 'false'
         run: |
-          echo "## Publish Summary" >> $GITHUB_STEP_SUMMARY
-          echo "- Git Tag: ${{ steps.release_info.outputs.tag }}" >> $GITHUB_STEP_SUMMARY
-          echo "- npm Dist Tag: ${{ steps.release_info.outputs.dist_tag }}" >> $GITHUB_STEP_SUMMARY
-          echo "- Dry Run: ${{ inputs.dry_run || false }}" >> $GITHUB_STEP_SUMMARY
-          echo "- Publish client: npm CLI" >> $GITHUB_STEP_SUMMARY
-          echo "- Auth: npm Trusted Publishers (OIDC)" >> $GITHUB_STEP_SUMMARY
+          echo "## Publish Summary" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Git Tag: $TAG" >> "$GITHUB_STEP_SUMMARY"
+          echo "- npm Dist Tag: $DIST_TAG" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Dry Run: $DRY_RUN" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Publish client: npm CLI" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Auth: npm Trusted Publishers (OIDC)" >> "$GITHUB_STEP_SUMMARY"
+
+  publish-dry-run:
+    name: Publish to npm (dry run)
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    if: ${{ inputs.dry_run == true }}
+    permissions:
+      id-token: write # The preflight step checks that the OIDC endpoint exists
+    # No `environment:`. A dry run publishes nothing, so it needs no approval.
+    # The OIDC token of this job has no environment claim, so the Trusted
+    # Publisher (bound to `npm-publish`) rejects it for a real publish.
+    # This job must install nothing and run no repo script: it holds the OIDC
+    # token. Do not add `pnpm install`, `npm ci`, a checkout or a build step.
+    steps:
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version: ${{ needs.build.outputs.node_version }}
+          registry-url: 'https://registry.npmjs.org'
+          scope: '@ngx-signal-forms'
+
+      - name: Download package
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: toolkit-package
+          path: dist/packages/toolkit
+
+      - name: Install npm for trusted publishing
+        # npm 12.0.0 omits sigstore, which breaks `npm publish --provenance`.
+        # Stay on an exact npm 11 release until the upstream packaging
+        # regression is fixed. Trusted publishing needs npm >= 11.5.1.
+        run: npm install --global npm@11.20.0
+
+      - name: Enforce OIDC auth mode for npm publish
+        run: |
+          # Clear token-based auth so npm Trusted Publisher OIDC is used.
+          echo "NODE_AUTH_TOKEN=" >> "$GITHUB_ENV"
+          echo "NPM_TOKEN=" >> "$GITHUB_ENV"
+
+          npm config delete //registry.npmjs.org/:_authToken --location=user || true
+
+          if [ -n "${NPM_CONFIG_USERCONFIG:-}" ] && [ -f "$NPM_CONFIG_USERCONFIG" ]; then
+            sed -i '/_authToken/d' "$NPM_CONFIG_USERCONFIG"
+          fi
+
+      - name: Validate npm trusted publishing preflight
+        run: |
+          npm --version
+          node --version
+
+          NPM_VERSION=$(npm --version)
+          node -e "const [major,minor,patch]=process.argv[1].split('.').map(Number); if (major < 11 || (major === 11 && (minor < 5 || (minor === 5 && patch < 1)))) { process.exit(1); }" "$NPM_VERSION" || {
+            echo "❌ npm $NPM_VERSION is too old for npm Trusted Publisher OIDC (requires >= 11.5.1)." >&2
+            exit 1
+          }
+
+          if [ -z "${ACTIONS_ID_TOKEN_REQUEST_URL:-}" ]; then
+            echo "❌ OIDC token endpoint is not available in this job." >&2
+            echo "Ensure the job permissions include: id-token: write" >&2
+            exit 1
+          fi
+          echo "OIDC and npm version requirements are satisfied for trusted publishing."
+
+      - name: Publish toolkit (Dry Run)
+        env:
+          DIST_TAG: ${{ needs.build.outputs.dist_tag }}
+          NPM_CONFIG_PROVENANCE: true
+          NODE_AUTH_TOKEN: ''
+          NPM_TOKEN: ''
+        run: |
+          echo "🔍 Dry run - would publish with tag: $DIST_TAG"
+          npm publish dist/packages/toolkit --tag="$DIST_TAG" --access public --provenance --dry-run
+
+      - name: Summary
+        env:
+          TAG: ${{ needs.build.outputs.tag }}
+          DIST_TAG: ${{ needs.build.outputs.dist_tag }}
+          DRY_RUN: 'true'
+        run: |
+          echo "## Publish Summary" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Git Tag: $TAG" >> "$GITHUB_STEP_SUMMARY"
+          echo "- npm Dist Tag: $DIST_TAG" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Dry Run: $DRY_RUN" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Publish client: npm CLI" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Auth: npm Trusted Publishers (OIDC)" >> "$GITHUB_STEP_SUMMARY"

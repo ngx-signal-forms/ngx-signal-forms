@@ -1,27 +1,44 @@
 import { linkedSignal } from '@angular/core';
 import {
   patchState,
+  signalMethod,
   signalStoreFeature,
+  type,
   withComputed,
   withLinkedState,
   withMethods,
-  withState,
 } from '@ngrx/signals';
 
-import { createEmptyTraveler, Traveler } from '../../schemas/wizard.schemas';
+import {
+  createEmptyTraveler,
+  isPassportExpired,
+  Traveler,
+  type WizardDraft,
+} from '../../schemas/wizard.schemas';
+import { linkDraft } from './draft-link';
 
 export function withTravelerManagement() {
   return signalStoreFeature(
-    withState({
-      traveler: createEmptyTraveler(),
-    }),
+    // Needs the saved draft from `withSavedDraft()`.
+    { state: type<{ savedDraftValue: WizardDraft | undefined }>() },
 
-    // Draft state linked to committed - form binds to this
-    // Resets when committed state changes (e.g., after load from server)
-    withLinkedState(({ traveler }) => ({
-      travelerDraft: linkedSignal({
-        source: traveler,
-        computation: (committed) => structuredClone(committed),
+    // Committed state follows the resumed draft, with no effect to copy it.
+    // It stays writable, so the methods below still patch it.
+    withLinkedState(({ savedDraftValue }) => ({
+      traveler: () => savedDraftValue()?.traveler ?? createEmptyTraveler(),
+    })),
+
+    // Draft state: what the user has typed. It resets to the committed value
+    // when that changes (a commit or a reset). When a saved draft loads, it
+    // takes the saved in-progress value instead, or the committed one if the
+    // draft has none.
+    withLinkedState(({ traveler, savedDraftValue }) => ({
+      travelerDraft: linkedSignal<
+        { committed: Traveler; saved: WizardDraft | undefined },
+        Traveler
+      >({
+        source: () => ({ committed: traveler(), saved: savedDraftValue() }),
+        computation: linkDraft('traveler'),
       }),
     })),
 
@@ -49,7 +66,7 @@ export function withTravelerManagement() {
       hasValidPassport: () => {
         const passport = traveler().passportExpiry;
         if (!passport) return false;
-        return new Date(passport) > new Date();
+        return !isPassportExpired(passport);
       },
     })),
 
@@ -58,6 +75,15 @@ export function withTravelerManagement() {
       commitTraveler(): void {
         patchState(store, { traveler: store.travelerDraft() });
       },
+
+      /**
+       * Copies the typed traveler into `travelerDraft`, so autosave sees it.
+       * Call it with the form model in an injection context (a field
+       * initializer). Typing does not commit the step.
+       */
+      syncTravelerDraft: signalMethod<Traveler>((travelerDraft) => {
+        patchState(store, { travelerDraft });
+      }),
 
       // Discard draft changes, revert to committed
       discardTravelerChanges(): void {

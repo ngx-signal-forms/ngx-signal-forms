@@ -1,8 +1,8 @@
 import { isSignal, type Signal } from '@angular/core';
-import type { ReactiveOrStatic } from '../types';
+import type { NgxReactiveOrStatic } from '../types';
 
 /**
- * Unwraps a `ReactiveOrStatic<T>` value to get the actual value of type `T`.
+ * Unwraps a `NgxReactiveOrStatic<T>` value to get the actual value of type `T`.
  *
  * ## What does it do?
  * Extracts the static value from reactive (Signal/function) or static inputs,
@@ -10,7 +10,7 @@ import type { ReactiveOrStatic } from '../types';
  *
  * ## When to use it?
  * Use `unwrapValue()` when you need to:
- * - Get the actual value from a `ReactiveOrStatic<T>` parameter
+ * - Get the actual value from a `NgxReactiveOrStatic<T>` parameter
  * - Work with the concrete value inside `computed()` or `effect()`
  * - Convert flexible inputs into usable values
  *
@@ -21,7 +21,7 @@ import type { ReactiveOrStatic } from '../types';
  * 3. **Static value** (`T`) → Returns the value directly
  *
  * ## Why use this instead of manual checks?
- * - Type-safe: Properly narrows `ReactiveOrStatic<T>` to `T`
+ * - Type-safe: Properly narrows `NgxReactiveOrStatic<T>` to `T`
  * - Consistent: Handles all three cases with proper Angular signal detection
  * - Maintainable: Centralized unwrapping logic with proper type assertions
  *
@@ -43,8 +43,8 @@ import type { ReactiveOrStatic } from '../types';
  * @example Inside a computed signal
  * ```typescript
  * function resolveShowErrors<T>(
- *   field: ReactiveOrStatic<FieldState<T>>,
- *   strategy: ReactiveOrStatic<ErrorDisplayStrategy>
+ *   field: NgxReactiveOrStatic<FieldState<T>>,
+ *   strategy: NgxReactiveOrStatic<ErrorDisplayStrategy>
  * ): Signal<boolean> {
  *   return computed(() => {
  *     /// Unwrap to get actual values inside computed
@@ -61,7 +61,7 @@ import type { ReactiveOrStatic } from '../types';
  * ```typescript
  * @Component({...})
  * export class MyComponent {
- *   readonly strategy = input<ReactiveOrStatic<ErrorDisplayStrategy>>('on-touch');
+ *   readonly strategy = input<NgxReactiveOrStatic<ErrorDisplayStrategy>>('on-touch');
  *
  *   protected readonly actualStrategy = computed(() =>
  *     unwrapValue(this.strategy())
@@ -89,20 +89,20 @@ import type { ReactiveOrStatic } from '../types';
  * The runtime behavior (`isSignal()` then `typeof === 'function'`) is
  * unchanged; only the public type signature gained overloads.
  *
- * @see {@link ReactiveOrStatic} The type this function unwraps
+ * @see {@link NgxReactiveOrStatic} The type this function unwraps
  */
 export function unwrapValue<T>(value: Signal<T>): T;
 export function unwrapValue<T>(value: () => T): T;
-// `ReactiveOrStatic<T>` is `Signal<T> | (() => T) | T`. Without this
+// `NgxReactiveOrStatic<T>` is `Signal<T> | (() => T) | T`. Without this
 // overload, callers passing a value typed as the full union fall through
 // to the `(value: T)` overload — which infers `T` as the entire union
 // and returns it untouched, defeating the unwrap. Keep this overload to
 // preserve the unwrapping return type at union-typed call sites (e.g.
-// `show-errors.ts` passes a `ReactiveOrStatic<Partial<…>>`).
-export function unwrapValue<T>(value: ReactiveOrStatic<T>): T;
+// `create-error-visibility.ts` passes a `NgxReactiveOrStatic<Partial<…>>`).
+export function unwrapValue<T>(value: NgxReactiveOrStatic<T>): T;
 export function unwrapValue<T>(value: T): T;
-export function unwrapValue<T>(value: ReactiveOrStatic<T>): T {
-  // SignalLike is Signal<T> | (() => T), so check both cases
+export function unwrapValue<T>(value: NgxReactiveOrStatic<T>): T {
+  // NgxSignalLike is Signal<T> | (() => T), so check both cases
   if (isSignal(value)) {
     // isSignal returns true for Signal<unknown>, cast to get correct type
     return (value as () => T)();
@@ -110,7 +110,7 @@ export function unwrapValue<T>(value: ReactiveOrStatic<T>): T {
 
   // If it's a function but not a Signal, it must be () => T
   if (typeof value === 'function') {
-    // Type assertion needed because TypeScript can't narrow SignalLike properly
+    // Type assertion needed because TypeScript can't narrow NgxSignalLike properly
     return (value as () => T)();
   }
 

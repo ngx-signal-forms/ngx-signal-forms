@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { Component, signal } from '@angular/core';
 import {
   form,
   FormField,
@@ -61,21 +61,20 @@ const accountSchema = schema<AccountPreferences>((path) => {
  * Single representative form: text input + select + checkbox composed
  * with real `@spartan-ng/helm` components scaffolded into `packages/demo/spartan-ui`.
  *
- * Each control declares `NgxSignalFormControlSemanticsDirective` (re-exported
+ * Each control declares `NgxSignalFormControl` (re-exported
  * from `NgxSpartanFormBundle`) alongside Spartan's helm directives — the
  * toolkit reads control semantics through DI (not DOM heuristics), so
  * combining `[hlmInput] ngxSignalFormControl="…"` is the canonical
  * "alongside" composition the PRD asks the reference to exercise.
  *
  * The wrapper's bound-control discovery
- * (`contentChildren(NgxSignalFormControlSemanticsDirective)`) relies on
+ * (`contentChildren(NgxSignalFormControl)`) relies on
  * the directive being mounted on every helm input — without it, the
  * dev-mode missing-control assertion fires and tier-3 field-name
  * resolution stalls on `null`.
  */
 @Component({
   selector: 'ngx-account-preferences-form',
-  changeDetection: ChangeDetectionStrategy.OnPush,
 
   imports: [
     FormField,

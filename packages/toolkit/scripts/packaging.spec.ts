@@ -18,7 +18,10 @@ const packageJson = JSON.parse(
 const projectJson = JSON.parse(
   readFileSync(resolve(import.meta.dirname, '../project.json'), 'utf8'),
 ) as {
-  targets: { 'post-build': { options: { commands: string[] } } };
+  targets: Record<
+    string,
+    { outputs?: string[]; options?: { commands?: string[] } }
+  >;
 };
 
 const toolkitDir = resolve(import.meta.dirname, '..');
@@ -195,20 +198,56 @@ describe('packages/toolkit/package.json', () => {
     // but an unbounded-above range (e.g. ">=6.0.0") would let a future vest 7.x/8.x
     // with breaking SuiteResult/typing changes silently satisfy the peer contract,
     // contradicting the deliberate upper-bound-cap philosophy applied to Angular
-    // (see COMPATIBILITY.md) and the /vest README's "requires vest@6" wording.
+    // (see docs/COMPATIBILITY.md) and the /vest README's "requires vest@6" wording.
     const vestRange = packageJson.peerDependencies?.['vest'];
     expect(vestRange).toBeTruthy();
     expect(vestRange).toMatch(/<7\.0\.0/);
   });
 });
 
-describe('packages/toolkit/project.json post-build target', () => {
+describe('packages/toolkit/project.json build target', () => {
+  const buildCommands = projectJson.targets['build']?.options?.commands ?? [];
+
   it('copies LICENSE into the publish root alongside README.md', () => {
-    const commands = projectJson.targets['post-build'].options.commands;
-    const copiesLicense = commands.some((command) =>
+    const copiesLicense = buildCommands.some((command) =>
       /\bcp\b.*\bLICENSE\b.*dist\/packages\/toolkit/.test(command),
     );
     expect(copiesLicense).toBe(true);
+  });
+
+  // A cache hit restores only the outputs of the target that hit. If one
+  // target writes `dist/packages/toolkit` and a second one strips it in
+  // place, a cached run of the first restores the unstripped package (#560).
+  // So the target that owns the directory must also strip it.
+  it('runs both strip scripts in the build target', () => {
+    expect(buildCommands).toContain(
+      'node packages/toolkit/scripts/strip-internal-members.mjs',
+    );
+    expect(buildCommands).toContain(
+      'node packages/toolkit/scripts/strip-internal-exports.mjs',
+    );
+  });
+
+  it('is the only target that owns and strips dist/packages/toolkit', () => {
+    const targetsWhere = (
+      predicate: (target: (typeof projectJson.targets)[string]) => boolean,
+    ) =>
+      Object.entries(projectJson.targets)
+        .filter(([, target]) => predicate(target))
+        .map(([name]) => name);
+
+    expect(
+      targetsWhere((target) =>
+        (target.outputs ?? []).includes('{workspaceRoot}/dist/{projectRoot}'),
+      ),
+    ).toEqual(['build']);
+    expect(
+      targetsWhere((target) =>
+        (target.options?.commands ?? []).some((command) =>
+          command.includes('strip-internal-'),
+        ),
+      ),
+    ).toEqual(['build']);
   });
 });
 
@@ -250,17 +289,19 @@ describe('secondary entry point configuration', () => {
 });
 
 describe('form-field entry point surface', () => {
-  it('re-exports NgxFieldIdentityProvider used by wrapper hostDirectives', () => {
+  it('leaves NgxFieldIdentityProvider to the root entry point', () => {
+    // One home per name (#511): custom wrappers of any UI library import the
+    // provider from the root, so `/form-field` must not offer a second path.
     const formFieldEntryFile = readEntryFile(resolve(toolkitDir, 'form-field'));
     const exportedNames = collectExportedNames(formFieldEntryFile);
-    expect(exportedNames.has('NgxFieldIdentityProvider')).toBe(true);
+    expect(exportedNames.has('NgxFieldIdentityProvider')).toBe(false);
   });
 });
 
-describe('COMPATIBILITY.md', () => {
+describe('docs/COMPATIBILITY.md', () => {
   it('documents the same engines.node range as package.json', () => {
     const compatibilityMd = readFileSync(
-      resolve(import.meta.dirname, '../../../COMPATIBILITY.md'),
+      resolve(import.meta.dirname, '../../../docs/COMPATIBILITY.md'),
       'utf8',
     );
     expect(packageJson.engines?.node).toBeTruthy();

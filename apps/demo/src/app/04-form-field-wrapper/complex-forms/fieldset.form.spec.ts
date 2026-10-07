@@ -1,29 +1,110 @@
 import { provideZonelessChangeDetection } from '@angular/core';
 import { provideNgxSignalFormsConfig } from '@ngx-signal-forms/toolkit';
-import { render, screen } from '@testing-library/angular';
+import { render, screen, waitFor } from '@testing-library/angular';
+import userEvent from '@testing-library/user-event';
 import { describe, expect, it } from 'vitest';
 import { FieldsetFormComponent } from './fieldset.form';
 
-/**
- * Regression coverage: the "Billing address is the same as shipping"
- * checkbox used to be a raw `<input type="checkbox">` with no id, no
- * `<label for>`, and no `ngx-form-field-wrapper`/`ngxSignalFormControl`
- * wiring -- unlike every other checkbox in the demo (e.g.
- * `preferences.notifications` in `complex-forms.form.html`). It must now
- * follow that same sibling pattern.
- */
+describe('Fieldset preview feedback', () => {
+  const cases = [
+    {
+      mode: 'on-touch' as const,
+      initialInvalid: false,
+      reveal: async (
+        user: ReturnType<typeof userEvent.setup>,
+        street: HTMLElement,
+      ) => {
+        await user.click(street);
+        await user.tab();
+      },
+    },
+    {
+      mode: 'immediate' as const,
+      initialInvalid: true,
+      reveal: () => Promise.resolve(),
+    },
+    {
+      mode: 'on-submit' as const,
+      initialInvalid: false,
+      reveal: (user: ReturnType<typeof userEvent.setup>) =>
+        user.click(screen.getByRole('button', { name: 'Validate preview' })),
+    },
+  ];
+
+  it.each(cases)(
+    'keeps grouped feedback and control ARIA consistent in $mode mode',
+    async ({ mode, initialInvalid, reveal }) => {
+      const user = userEvent.setup();
+      const { container } = await render(FieldsetFormComponent, {
+        inputs: {
+          example: 'feedback',
+          includeNestedErrors: true,
+          errorDisplayMode: mode,
+        },
+        providers: [provideZonelessChangeDetection()],
+      });
+      const street = screen.getByRole('textbox', { name: 'Street' });
+      const groupError = () =>
+        container.querySelector('#placement-preview-address-error');
+
+      await waitFor(() => {
+        expect(groupError() !== null).toBe(initialInvalid);
+        expect(street).toHaveAttribute('aria-invalid', String(initialInvalid));
+      });
+      await reveal(user, street);
+
+      await waitFor(() => {
+        expect(groupError()).toHaveTextContent('Street is required');
+        expect(street).toHaveAttribute('aria-invalid', 'true');
+        expect(
+          street.getAttribute('aria-describedby')?.split(/\s+/u),
+        ).toContain('placementPreviewStreet-error');
+      });
+
+      await user.click(
+        screen.getByRole('button', { name: 'Fill valid values' }),
+      );
+      await waitFor(() => {
+        expect(groupError()).toBeNull();
+        expect(street).toHaveAttribute('aria-invalid', 'false');
+      });
+
+      await user.click(screen.getByRole('button', { name: 'Reset preview' }));
+      await waitFor(() => {
+        expect(street).toHaveValue('');
+        expect(street).toHaveAttribute('aria-invalid', String(initialInvalid));
+      });
+    },
+  );
+
+  it('validates the appearance example without requiring controls from the feedback example', async () => {
+    const user = userEvent.setup();
+    const { container } = await render(FieldsetFormComponent, {
+      inputs: { example: 'appearance' },
+      providers: [provideZonelessChangeDetection()],
+    });
+    await user.click(screen.getByRole('button', { name: 'Fill valid values' }));
+    await user.click(screen.getByRole('button', { name: 'Validate preview' }));
+
+    expect(screen.queryByRole('textbox', { name: 'Email address' })).toBeNull();
+    expect(screen.queryByRole('radio')).toBeNull();
+    await waitFor(() => {
+      const alerts = Array.from(container.querySelectorAll('[role="alert"]'));
+      expect(alerts.every((el) => !el.textContent?.trim())).toBe(true);
+    });
+  });
+});
+
 describe('FieldsetFormComponent — billing-same-as-shipping checkbox', () => {
-  async function setup() {
-    const rendered = await render(FieldsetFormComponent, {
+  function setup() {
+    return render(FieldsetFormComponent, {
       providers: [
         provideZonelessChangeDetection(),
         provideNgxSignalFormsConfig({
           defaultErrorStrategy: 'on-touch',
-          autoAria: true,
         }),
       ],
     });
-    return rendered;
   }
 
   it('is a labelled checkbox reachable by its accessible name', async () => {

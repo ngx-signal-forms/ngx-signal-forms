@@ -1,7 +1,7 @@
 import { signal } from '@angular/core';
-import { NgxSignalFormControlSemanticsDirective } from '@ngx-signal-forms/toolkit';
+import { NgxSignalFormControl } from '@ngx-signal-forms/toolkit';
 import { render } from '@testing-library/angular';
-import { describe, expect, it } from 'vitest';
+import { assert, describe, expect, it } from 'vitest';
 import { NgxFormFieldWrapper } from './form-field-wrapper';
 
 const mockField = () => {
@@ -65,17 +65,17 @@ describe('NgxFormFieldWrapper — combobox field chrome', () => {
         </button>
       </ngx-form-field-wrapper>`,
       {
-        imports: [NgxFormFieldWrapper, NgxSignalFormControlSemanticsDirective],
+        imports: [NgxFormFieldWrapper, NgxSignalFormControl],
         componentProperties: { field: mockField() },
       },
     );
 
     const native = container.querySelector<HTMLElement>('#productName');
     const custom = container.querySelector<HTMLElement>('#frameworkSelect');
-    expect(native && custom).toBeTruthy();
+    assert(native && custom, 'expected both the native and the custom control');
 
-    const nativeStyle = getComputedStyle(native!);
-    const customStyle = getComputedStyle(custom!);
+    const nativeStyle = getComputedStyle(native);
+    const customStyle = getComputedStyle(custom);
 
     expect(customStyle.fontSize).toBe(nativeStyle.fontSize);
     expect(customStyle.lineHeight).toBe(nativeStyle.lineHeight);
@@ -98,7 +98,7 @@ describe('NgxFormFieldWrapper — combobox field chrome', () => {
         </div>
       </ngx-form-field-wrapper>`,
       {
-        imports: [NgxFormFieldWrapper, NgxSignalFormControlSemanticsDirective],
+        imports: [NgxFormFieldWrapper, NgxSignalFormControl],
         componentProperties: { field: mockField() },
       },
     );

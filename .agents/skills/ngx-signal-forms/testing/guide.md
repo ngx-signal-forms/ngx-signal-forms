@@ -22,8 +22,8 @@ fixture. One call per fixture scans the whole DOM subtree.
 import {
   createA11yValidator,
   expectNoA11yViolations,
-  findAlertContaining,
-  WCAG_22_AA_TAGS, // ['wcag2a','wcag2aa','wcag21a','wcag21aa','wcag22aa']
+  expectVisibleFocusIndicator,
+  WCAG_22_AA_TAGS,
   type A11yValidator,
   type WCAG_22_AA_TAG,
 } from '@ngx-signal-forms/toolkit/testing';
@@ -51,14 +51,28 @@ import {
   returning a validator that would silently pass every scan. The returned
   validator keeps the same non-overridable `runOnly` guarantee as
   `expectNoA11yViolations`.
+- `expectVisibleFocusIndicator(element)` — throws unless `element` matches
+  `:focus-visible`, or, for an ancestor that draws the ring, `:focus-within`.
+  Move focus first with a real `await userEvent.tab()` from `vitest/browser`;
+  `element.focus()` can miss `:focus-visible`. It proves a ring renders, not
+  that it has 3:1 contrast, so measure contrast separately.
 - `WCAG_22_AA_TAGS` — the axe tag set the harness runs. There is no `wcag22a`
   tag: the two new 2.2 Level A criteria are non-automatable, so automated
   scanning covers only a subset of full 2.2 AA conformance.
-- `findAlertContaining(container, text)` — finds the `[role="alert"]` element
-  whose text includes `text`. Toolkit surfaces mount several live regions at
-  once (some mounted-but-empty per the WCAG 4.1.3 first-insertion pattern), so
-  a bare `getByRole('alert')` is ambiguous — narrow to the region carrying the
-  expected message before asserting on it or scanning.
+
+## Asserting on one live region
+
+Toolkit surfaces mount several `[role="alert"]` regions at once. Some stay
+mounted but empty (the WCAG 4.1.3 first-insertion pattern), so a bare
+`getByRole('alert')` is ambiguous. Narrow to the region that carries the
+expected message before you assert or scan. Query it in the spec:
+
+```typescript
+const errorAlert = [
+  ...container.querySelectorAll<HTMLElement>('[role="alert"]'),
+].find((el) => el.textContent?.includes('Email is required'));
+expect(errorAlert).toBeTruthy();
+```
 
 ## Workflow
 
@@ -73,7 +87,7 @@ import {
    browser test that covers it without the exclusion. An unstyled fixture
    alone is not a reason to skip contrast. Apply the real theme when colors
    are part of the component's behavior.
-5. Test keyboard operation, visible focus, summary-to-control focus, and
+5. Test keyboard operation, visible focus (`expectVisibleFocusIndicator`), summary-to-control focus, and
    error/warning transitions in addition to axe. Check live-region hosts
    before message updates, then verify announcement behavior with a screen
    reader. An axe pass is not full WCAG conformance.
@@ -102,7 +116,7 @@ Choose the checks for the changed behavior, not only an initial axe scan:
 - For a radio cluster, hide one option while a sibling remains visible. The
   hidden option must lose `aria-invalid`; visible siblings keep the correct
   value. Then hide the whole group and reopen it. Assert each actual carrier,
-  not only the group host or a cached identity visibility flag.
+  not only the group host.
 - Check every `aria-describedby` token against an existing unique DOM ID.
   Exercise error-only, warning-only, and mixed states with different strategies.
 - Assert live-region hosts exist before content appears. Update empty → warning

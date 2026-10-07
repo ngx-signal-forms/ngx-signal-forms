@@ -1,10 +1,4 @@
-import {
-  ChangeDetectionStrategy,
-  Component,
-  ElementRef,
-  inject,
-  viewChild,
-} from '@angular/core';
+import { Component, ElementRef, inject, viewChild } from '@angular/core';
 
 import {
   createReviewStepForm,
@@ -15,7 +9,6 @@ import { WizardStepInterface } from '../wizard-step.interface';
 
 @Component({
   selector: 'ngx-review-step',
-  changeDetection: ChangeDetectionStrategy.OnPush,
 
   template: `
     <div class="review-step">
@@ -60,10 +53,21 @@ import { WizardStepInterface } from '../wizard-step.interface';
               </dt>
               <dd class="font-medium">
                 @if (reviewForm.travelerDisplay().hasPassport) {
-                  @if (reviewForm.travelerDisplay().passportValid) {
-                    <span class="text-green-600">✓ Valid</span>
-                  } @else {
-                    <span class="text-red-600">✗ Expired</span>
+                  @switch (reviewForm.travelerDisplay().passportStatus) {
+                    @case ('valid') {
+                      <span class="text-green-600">✓ Valid</span>
+                    }
+                    @case ('expired') {
+                      <span class="text-red-600">✗ Expired</span>
+                    }
+                    @case ('none') {
+                      <span class="text-red-600">✗ Expiry date missing</span>
+                    }
+                    @default {
+                      <span class="text-red-600"
+                        >✗ Not valid for this trip</span
+                      >
+                    }
                   }
                 } @else {
                   <span class="text-gray-500 dark:text-gray-400"

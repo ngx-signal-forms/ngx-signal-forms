@@ -1,6 +1,7 @@
 import '@fontsource-variable/inter/wght.css';
 import { provideHttpClient } from '@angular/common/http';
 import {
+  ErrorHandler,
   importProvidersFrom,
   isDevMode,
   provideZonelessChangeDetection,
@@ -8,6 +9,7 @@ import {
 import { bootstrapApplication } from '@angular/platform-browser';
 import {
   provideRouter,
+  withAutoCleanupInjectors,
   withComponentInputBinding,
   withEnabledBlockingInitialNavigation,
   withViewTransitions,
@@ -18,6 +20,7 @@ import {
 } from '@ngx-signal-forms/toolkit';
 import { AppComponent } from './app/app';
 import { appRoutes } from './app/app.routes';
+import { DemoErrorHandler } from './app/ui/render-error';
 
 // Enable MSW mocking in development
 async function enableMocking(): Promise<void> {
@@ -29,7 +32,7 @@ async function enableMocking(): Promise<void> {
 
   // Start the worker with service worker options
   await worker.start({
-    onUnhandledRequest: 'bypass', // Don't warn about unhandled requests
+    onUnhandledFrame: 'bypass', // Don't warn about unhandled requests
     serviceWorker: {
       url: '/mockServiceWorker.js',
     },
@@ -58,11 +61,11 @@ void (async () => {
   await bootstrapApplication(AppComponent, {
     providers: [
       provideZonelessChangeDetection(),
+      { provide: ErrorHandler, useClass: DemoErrorHandler },
       importProvidersFrom(),
       provideHttpClient(),
       provideNgxSignalFormsConfig({
         defaultErrorStrategy: 'on-touch',
-        autoAria: true,
       }),
       provideNgxSignalFormControlPresets({
         switch: { layout: 'inline-control', ariaMode: 'auto' },
@@ -71,6 +74,7 @@ void (async () => {
         appRoutes,
         withEnabledBlockingInitialNavigation(),
         withComponentInputBinding(),
+        withAutoCleanupInjectors(),
         withViewTransitions(),
       ),
     ],

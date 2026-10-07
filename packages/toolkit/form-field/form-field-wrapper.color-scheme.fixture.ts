@@ -6,21 +6,9 @@
 // blocks a second time under the importing file's test run, which is not
 // what either caller wants.
 
-import {
-  ApplicationRef,
-  ChangeDetectionStrategy,
-  Component,
-  input,
-  signal,
-} from '@angular/core';
+import { ApplicationRef, Component, input, signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
-import {
-  FormField,
-  form,
-  required,
-  schema,
-  validate,
-} from '@angular/forms/signals';
+import { FormField, form, required, validate } from '@angular/forms/signals';
 import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit';
 import {
   NgxFormFieldCharacterCount,
@@ -133,15 +121,9 @@ import { NgxFormField } from './index';
       </ngx-form-field-wrapper>
     </form>
   `,
-  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ColorSchemeFixtureComponent {
-  /**
-   * Tints the invalid fieldset surface. Off for the light-scheme scans: the
-   * light tint (#fbdddd, unchanged by #494) puts wrapper labels at 4.35:1,
-   * a known light-mode gap that #494 does not change (#db1818 text on it is
-   * 3.97:1). It needs a design decision and is tracked separately.
-   */
+  /** Tints the invalid fieldset surface (`validationSurface="always"`). */
   readonly tintInvalidSurface = input(false);
   readonly testForm = form(
     signal({
@@ -154,7 +136,7 @@ export class ColorSchemeFixtureComponent {
       tagline: 'Way past the ten character limit',
       passwords: { password: 'hunter2', confirm: 'hunter3' },
     }),
-    schema((path) => {
+    (path) => {
       required(path.name, { message: 'Full name is required' });
       validate(path.passwords, (ctx) => {
         const { password, confirm } = ctx.value();
@@ -167,7 +149,7 @@ export class ColorSchemeFixtureComponent {
           ? { kind: 'warn:short-username', message: 'Consider 3+ characters' }
           : null,
       );
-    }),
+    },
   );
 }
 

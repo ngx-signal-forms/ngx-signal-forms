@@ -2,7 +2,6 @@ import { NgComponentOutlet } from '@angular/common';
 import {
   afterEveryRender,
   booleanAttribute,
-  ChangeDetectionStrategy,
   Component,
   computed,
   contentChildren,
@@ -21,7 +20,6 @@ import type {
   FormFieldAppearanceInput,
   FormFieldOrientation,
   FormFieldOrientationInput,
-  NgxFormFieldErrorPlacement,
   NgxSignalFormHintDescriptor,
   ResolvedMarker,
   WarningDisplayStrategy,
@@ -58,6 +56,7 @@ import {
 } from './form-field-dom-sync';
 import { capabilitiesFor } from './form-field.utils';
 import { resolveClusterAriaAttrs } from './form-field-cluster-aria';
+import type { NgxFormFieldErrorPlacement } from './form-field-error-placement';
 import { resolveUnionInput } from './utilities/resolve-union-input';
 
 /**
@@ -197,7 +196,6 @@ const FIELD_BOX_INTERACTIVE_SELECTOR = [
  */
 @Component({
   selector: 'ngx-form-field-wrapper',
-  changeDetection: ChangeDetectionStrategy.OnPush,
 
   // `NgxFormFieldError` is deliberately absent: the wrapper never writes the
   // element in its template, it renders whatever `#errorRendererComponent()`
@@ -329,8 +327,8 @@ const FIELD_BOX_INTERACTIVE_SELECTOR = [
 
       Horizontal layout turns it into the real CSS Grid container and gives
       it \`container-type: inline-size\` instead of putting either on
-      \`:host\` itself — see CONTEXT.md, "The horizontal form-field layout's
-      grid lives on a structural child, not \`:host\`", for why (#523).
+      \`:host\` itself — see docs/agents/domain-invariants.md for why the grid
+      belongs on this structural child, not \`:host\` (#523).
     -->
     <div class="ngx-signal-form-field-wrapper__layout">
       <!-- Label slot (outside bordered container for standard layout, visually inside for outline via CSS) -->
@@ -1175,8 +1173,7 @@ export class NgxFormFieldWrapper<TValue = unknown> {
     // `findBoundControl` when nothing changed. A real swap still falls
     // through to it. The steady-state render still runs one
     // `querySelectorAll` for the selection-control count, because an `@for`
-    // can add or remove radios without swapping the control itself, and one
-    // `checkVisibility()` call for the bound control.
+    // can add or remove radios without swapping the control itself.
     afterEveryRender({
       earlyRead: () =>
         // Resolves the host element, the bound control (native binding

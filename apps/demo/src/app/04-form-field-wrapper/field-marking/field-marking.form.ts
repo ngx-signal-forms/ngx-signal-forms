@@ -1,9 +1,4 @@
-import {
-  ChangeDetectionStrategy,
-  Component,
-  input,
-  signal,
-} from '@angular/core';
+import { Component, input, signal } from '@angular/core';
 import {
   email,
   FormField,
@@ -32,7 +27,6 @@ import {
  */
 @Component({
   selector: 'ngx-field-marking-form',
-  changeDetection: ChangeDetectionStrategy.OnPush,
 
   imports: [
     FormField,

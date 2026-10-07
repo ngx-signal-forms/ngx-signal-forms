@@ -15,7 +15,7 @@ import {
   createFieldPresentation,
   NGX_SIGNAL_FORM_FIELD_CONTEXT,
   NGX_SIGNAL_FORM_HINT_REGISTRY,
-  NgxSignalFormControlSemanticsDirective,
+  NgxSignalFormControl,
   type ErrorDisplayStrategy,
   type WarningDisplayStrategy,
 } from '@ngx-signal-forms/toolkit';
@@ -101,7 +101,7 @@ import { NgxMatErrorSlot, NgxMatHintSlot } from './slot-directives';
  *
  * @see ADR-0002 §6 for the discovery decision and the elementRef-on-toolkit
  *      rationale that lets PrimeNG / Spartan wrappers query
- *      `NgxSignalFormControlSemanticsDirective` directly.
+ *      `NgxSignalFormControl` directly.
  */
 @Directive({
   selector: 'mat-form-field[ngxMatFormField]',
@@ -446,7 +446,7 @@ export class MatFormFieldWrapper<TValue = unknown> {
  *   `<mat-error>` / `<mat-hint>` conditional rendering.
  * - `NgxMatFeedback` for non-form-field controls (`<mat-checkbox>`,
  *   `<mat-slide-toggle>`, …).
- * - `NgxSignalFormControlSemanticsDirective` — bridge to the toolkit's
+ * - `NgxSignalFormControl` — bridge to the toolkit's
  *   semantics layer (consumers can still apply this directive directly
  *   for custom Material controls that aren't covered by the per-control
  *   directives shipped here).
@@ -466,5 +466,5 @@ export const NgxMatFormBundle = [
   NgxMatHintSlot,
   NgxMatFeedback,
   NgxMatFeedbackOutlet,
-  NgxSignalFormControlSemanticsDirective,
+  NgxSignalFormControl,
 ] as const;

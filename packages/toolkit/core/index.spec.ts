@@ -1,7 +1,7 @@
 import { FormRoot } from '@angular/forms/signals';
 import { describe, expect, it } from 'vitest';
 import { NgxSignalFormAutoAria } from './directives/auto-aria';
-import { NgxSignalFormControlSemanticsDirective } from './directives/control-semantics';
+import { NgxSignalFormControl } from './directives/control-semantics';
 import { NgxSignalForm } from './directives/ngx-signal-form';
 import { NgxSignalFormToolkit } from './index';
 
@@ -25,8 +25,6 @@ describe('NgxSignalFormToolkit bundle', () => {
     expect(NgxSignalFormToolkit).toContain(FormRoot);
     expect(NgxSignalFormToolkit).toContain(NgxSignalForm);
     expect(NgxSignalFormToolkit).toContain(NgxSignalFormAutoAria);
-    expect(NgxSignalFormToolkit).toContain(
-      NgxSignalFormControlSemanticsDirective,
-    );
+    expect(NgxSignalFormToolkit).toContain(NgxSignalFormControl);
   });
 });

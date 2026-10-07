@@ -1,15 +1,18 @@
-# FAQ — building real forms with `@ngx-signal-forms/toolkit`
+---
+title: 'FAQ: building forms with @ngx-signal-forms/toolkit'
+sidebarTitle: 'FAQ'
+---
 
-This is a **use-case FAQ**: how do I actually do _X_ when building a form with Angular Signal
-Forms and this toolkit. Each answer is short and links the canonical doc plus a runnable demo. For
-conceptual "what is this / why / how does it differ from Angular's built-ins" questions, see the
-[root README](../README.md) and [docs/ANGULAR_VS_TOOLKIT.md](./ANGULAR_VS_TOOLKIT.md).
+Short answers to "how do I do X" questions. Each answer links the guide that
+explains the topic in full, and a runnable demo where one exists. For what the
+toolkit adds on top of Angular, see
+[Angular and toolkit ownership](./ANGULAR_VS_TOOLKIT.md).
 
-Throughout: primitives like `form`, `submit`, `validate`, `hidden`, `disabled`, `debounce`,
-`validateHttp`, `validateStandardSchema`, `applyEach`, and the control contracts are **Angular
-core** (`@angular/forms/signals`); everything else is the **toolkit**
-(`@ngx-signal-forms/toolkit` and its `/form-field`, `/assistive`, `/headless`, `/vest`, `/testing`
-entry points).
+`form`, `submit`, `validate`, `hidden`, `disabled`, `debounce`,
+`validateHttp`, `validateStandardSchema`, `applyEach`, and the control
+interfaces come from Angular (`@angular/forms/signals`). Everything else comes
+from the toolkit (`@ngx-signal-forms/toolkit` and its `/form-field`,
+`/assistive`, `/headless`, `/vest`, and `/testing` entry points).
 
 ## Table of contents
 
@@ -50,46 +53,39 @@ entry points).
 
 ### How do I show validation errors only after the user leaves a field (on blur) instead of while they type?
 
-You already have it — the toolkit's built-in default is `'on-touch'`, so a plain
-`ngx-form-field-wrapper` shows a field's errors only after that field is blurred. No configuration
-needed. If a field shows errors _while typing_, something upstream set `'immediate'`. The three
-values are `'immediate'` (while typing), `'on-touch'` (after blur), `'on-submit'` (after a submit
-attempt), resolved most-specific-first: field input → form directive → component provider → app
-provider → built-in default. To be explicit or override, set `strategy` on the wrapper or
-`errorStrategy` on the form directive:
+You do not need to do anything. The default strategy is `on-touch`, so
+`ngx-form-field-wrapper` shows a field's errors after the user leaves the
+field, or after submit. If errors show while the user types, a setting
+somewhere uses `immediate`. To change timing for one field, set `strategy` on
+the wrapper:
 
 ```html
-<form [formRoot]="userForm" ngxSignalForm errorStrategy="on-touch">
-  <ngx-form-field-wrapper [formField]="userForm.email" strategy="on-submit"
-    >…</ngx-form-field-wrapper
-  >
-</form>
+<ngx-form-field-wrapper [formField]="userForm.email" strategy="on-submit">
+  <label for="email">Email</label>
+  <input id="email" [formField]="userForm.email" />
+</ngx-form-field-wrapper>
 ```
 
-Warnings have an independent `warningStrategy` (default `'on-touch'`) with its own cascade that this doesn't affect. See [Warning display timing](./WARNINGS_SUPPORT.md#when-warnings-appear--warningstrategy) for details on the four-tier cascade.
-
-**See:** [docs/BEST_PRACTICES.md](./BEST_PRACTICES.md) ·
-[packages/toolkit/form-field/README.md](../packages/toolkit/form-field/README.md) ·
-[demo: error-display-modes](../apps/demo/src/app/02-toolkit-core/error-display-modes/README.md) ·
-[demo: your-first-form](../apps/demo/src/app/01-getting-started/your-first-form/README.md)
+See [timing and configuration](./WARNINGS_SUPPORT.md#timing-and-configuration)
+for the full precedence rules, and the
+[error-display-modes demo](../apps/demo/src/app/02-toolkit-core/error-display-modes/README.md).
 
 ### How do I wire up a `<select>`, a radio group, and a checkbox group with `[formField]`?
 
-A native `<select>` needs zero extra wiring — bind `[formField]="form.x"` and wrap it in
-`<ngx-form-field-wrapper>` exactly like a text `<input>`; `<input>`, `<textarea>`, and `<select>`
-are the default native families that get auto-ARIA (`aria-invalid`/`aria-required`/
-`aria-describedby`) identically. For a **radio or checkbox group**, bind every input to the _same_
-`[formField]="form.field"` (distinct `value`s, `name` for radios) inside one wrapper, and use a
-neutral `<span ngxFormFieldLabel>` instead of `<label>` since the wrapper labels the group
-container. The wrapper auto-detects the cluster and applies group-level ARIA and error styling —
-the UX contract matches a text field even though the plumbing is group-level, not per-input. A
-_single_ boolean checkbox (not a group) needs `ngxSignalFormControl="checkbox"` (or `"switch"`) so
-the wrapper treats it as that family.
+- **`<select>`:** bind `[formField]` and put it in a wrapper, the same as a
+  text `<input>`. Auto-ARIA works on it without extra attributes.
+- **Radio or checkbox group:** bind every input in the group to the same
+  field, inside one wrapper. Give radios a shared `name` and distinct `value`s.
+  Use `<span ngxFormFieldLabel>` instead of `<label>`, because the wrapper
+  labels the group container. The wrapper detects the group and puts
+  `role`, `aria-labelledby`, `aria-describedby`, and `aria-required` on the
+  container.
+- **One boolean checkbox:** add `ngxSignalFormControl="checkbox"` so auto-ARIA
+  writes to it. A native `input[type=checkbox][role=switch]` needs no extra
+  attribute.
 
-**See:** [packages/toolkit/form-field/README.md](../packages/toolkit/form-field/README.md) ·
-[docs/CUSTOM_CONTROLS.md](./CUSTOM_CONTROLS.md) ·
-[demo: complex-forms](../apps/demo/src/app/04-form-field-wrapper/complex-forms/README.md) ·
-[demo: custom-controls](../apps/demo/src/app/04-form-field-wrapper/custom-controls/README.md)
+See [control kinds and auto-ARIA](./CUSTOM_CONTROLS.md#inferred-kind-vs-auto-aria-eligibility)
+and the [complex-forms demo](../apps/demo/src/app/04-form-field-wrapper/complex-forms/README.md).
 
 ---
 
@@ -97,14 +93,13 @@ the wrapper treats it as that family.
 
 ### How do I reset my form after a successful submit, and prefill it from an HTTP call?
 
-The model `signal` you pass into `form(model, schema)` is the single source of truth, so both
-operations are just writes to (or resets of) that state.
+The model signal you pass to `form(model, schema)` holds the data. Both tasks
+write to it.
 
-- **Prefill from HTTP:** load the record, then `model.set(record)`. Because the model is the
-  source of truth, prefer building the whole object once and setting it, rather than patching
-  field-by-field.
-- **Reset after submit:** Angular's `FieldState.reset(value?)` clears `touched`/`dirty` on the
-  field and its descendants; pass a value to also set the model back to a known state. Call it on
+- **Prefill:** load the record, then call `model.set(record)`. Set the whole
+  object once rather than patching field by field.
+- **Reset:** Angular's `reset(value?)` clears `touched` and `dirty` on the
+  field and its descendants. Pass a value to also set the model. Call it on
   the root: `this.form().reset(initialValues)`.
 
 ```ts
@@ -112,30 +107,32 @@ readonly #model = signal<Profile>(EMPTY_PROFILE);
 protected readonly form = form(this.#model, profileSchema);
 
 async load(id: string) {
-  this.#model.set(await firstValueFrom(this.http.get<Profile>(`/api/profile/${id}`))); // prefill
+  this.#model.set(
+    await firstValueFrom(this.http.get<Profile>(`/api/profile/${id}`)),
+  );
 }
 
 async onSubmit() {
-  const ok = await submit(this.form, { action: async (f) => { /* … */ } });
-  if (ok) this.form().reset(this.#model()); // clear touched/dirty, keep saved values
+  const ok = await submit(this.form, {
+    action: async (tree) => {
+      await this.api.save(tree().value());
+    },
+  });
+  if (ok) {
+    this.form().reset(this.#model()); // clear touched/dirty, keep saved values
+  }
 }
 ```
 
-`reset()` only clears interaction state and (optionally) value — it does not re-run your HTTP load;
-re-fetch and `model.set(...)` if you want server-canonical values back. You can also drive the
-model from `resource()`/`httpResource()` instead of an imperative `set` — the server-integration
-demo shows the full fetch→prefill→edit→submit→reset flow with `resource()`.
-
-**See:** [packages/toolkit/README.md](../packages/toolkit/README.md) ·
-[demo: server-integration](../apps/demo/src/app/05-advanced/server-integration/README.md) ·
-[demo: field-state-patterns](../apps/demo/src/app/05-advanced/field-state-patterns/README.md) ·
-[demo: store-binding](../apps/demo/src/app/05-advanced/store-binding/README.md)
+`reset()` does not fetch again. To get the server values back, fetch and call
+`model.set(...)`. The
+[server-integration demo](../apps/demo/src/app/05-advanced/server-integration/README.md)
+shows fetch, prefill, edit, submit, and reset with `resource()`.
 
 ### How do I disable the submit button while the form is invalid or a submit is in flight?
 
-For a plain form, Angular Signal Forms gives you the two signals directly — no toolkit helper
-needed. `submitting()` is native Angular state that is `true` for the duration of a running
-`submit()` action:
+Use Angular's own signals. `submitting()` is `true` while a `submit()` action
+runs:
 
 ```html
 <button
@@ -146,36 +143,21 @@ needed. `submitting()` is native Angular state that is `true` for the duration o
 </button>
 ```
 
-If your form uses **non-blocking warnings**, don't hand-roll the gating — use the toolkit's
-`canSubmitWithWarnings(form)`, which returns a `Signal<boolean>` that is `false` while
-`submitting()` or `pending()` is true _and_ while any **blocking** error remains, but lets
-warning-only forms through:
-
-```html
-<button type="submit" [disabled]="!canSubmit()">Save</button>
-```
-
-```ts
-protected readonly canSubmit = canSubmitWithWarnings(this.userForm);
-```
-
-Pair it with `submitWithWarnings(form, action)` in the click handler — it marks all fields touched,
-waits for validation to settle, guards against double-submits, and runs `action` only when no
-blocking errors remain.
-
-**See:** [docs/BEST_PRACTICES.md](./BEST_PRACTICES.md) ·
-[docs/WARNINGS_SUPPORT.md](./WARNINGS_SUPPORT.md) ·
-[docs/ANGULAR_VS_TOOLKIT.md](./ANGULAR_VS_TOOLKIT.md) ·
-[demo: submission-patterns](../apps/demo/src/app/05-advanced/submission-patterns/README.md)
+If the form has warnings, `invalid()` is also `true` for warning-only forms.
+Use `canSubmitWithWarnings(form)` instead. It returns `false` while the form
+submits or while blocking errors remain. Pending async validators do not make
+it `false`. See [form submission behavior](./WARNINGS_SUPPORT.md#form-submission-behavior)
+and the [submission-patterns demo](../apps/demo/src/app/05-advanced/submission-patterns/README.md).
 
 ### What does `createOnInvalidHandler()` do on a failed submit, and can I customize it?
 
-It builds the `onInvalid` callback for `form(model, schema, { submission: { action, onInvalid } })`.
-On a failed submit it focuses the **first invalid, interactive field** (internally
-`focusFirstInvalid(form)`), deliberately skipping errors on hidden/disabled fields and orphan
-errors with no field. It _is_ customizable via an options object: `focusFirstInvalid` (default
-`true`; set `false` to suppress auto-focus) and `afterInvalid: (field) => void` (runs after focus —
-e.g. announce a message or scroll):
+It builds the `onInvalid` callback for Angular's `submission` options. On a
+failed submit, it moves focus to the first invalid field that the user can
+reach. It skips hidden and disabled fields. It takes two options:
+
+- `focusFirstInvalid` (default `true`): set `false` to turn off the focus move.
+- `afterInvalid: (field) => void`: runs after the focus move, for example to
+  announce a message.
 
 ```ts
 onInvalid: createOnInvalidHandler({
@@ -183,26 +165,27 @@ onInvalid: createOnInvalidHandler({
 });
 ```
 
-For fully custom behavior, skip the helper and write your own `onInvalid`, optionally calling
-`focusFirstInvalid(form)` yourself.
-
-**See:** [packages/toolkit/README.md](../packages/toolkit/README.md) ·
-[demo: submission-patterns](../apps/demo/src/app/05-advanced/submission-patterns/README.md)
+For other behavior, write your own `onInvalid` and call
+`focusFirstInvalid(form)` where you need it. See
+[submission and invalid-focus handling](../packages/toolkit/README.md).
 
 ### Can I set the error-display strategy once app-wide and override it per form or per field?
 
-Yes. Set the default with `provideNgxSignalFormsConfig({ defaultErrorStrategy: 'on-touch' })` in
-your app config. Every presentation setting resolves through one precedence chain (most specific
-wins): field/component input → form directive (`ngxSignalForm`) → component-scoped provider
-(`provideNgxSignalFormsConfigForComponent`) → app provider → built-in default. So: override a whole
-form with `errorStrategy` on `<form [formRoot] ngxSignalForm>`, a single field with `strategy` on
-`<ngx-form-field-wrapper>`, or a feature subtree with the `…ForComponent` provider. All accept the
-same `ErrorDisplayStrategy` values (`'immediate' | 'on-touch' | 'on-submit' | 'inherit'`);
-`'inherit'` (or omitting the input) falls through to the next tier.
+Yes. The most specific setting wins:
 
-**See:** [packages/toolkit/README.md](../packages/toolkit/README.md) ·
-[demo: global-configuration](../apps/demo/src/app/05-advanced/global-configuration/README.md) ·
-[demo: error-display-modes](../apps/demo/src/app/02-toolkit-core/error-display-modes/README.md)
+- **App:** `provideNgxSignalFormsConfig({ defaultErrorStrategy: 'on-touch' })`
+  in `app.config.ts`.
+- **Feature:** `provideNgxSignalFormsConfigForComponent(...)` in a
+  component's `providers`.
+- **Form:** `errorStrategy` on `<form [formRoot] ngxSignalForm>`. It accepts
+  `'immediate'`, `'on-touch'`, or `'on-submit'`.
+- **Field:** `strategy` on `<ngx-form-field-wrapper>`. It also accepts
+  `'inherit'`, which is the same as leaving it out.
+
+Only error timing, warning timing, and submitted status go through the form
+directive. Visual settings such as `appearance` skip it. See
+[timing and configuration](./WARNINGS_SUPPORT.md#timing-and-configuration)
+and the [global-configuration demo](../apps/demo/src/app/05-advanced/global-configuration/README.md).
 
 ---
 
@@ -210,103 +193,74 @@ same `ErrorDisplayStrategy` values (`'immediate' | 'on-touch' | 'on-submit' | 'i
 
 ### How do I make my own design-system inputs work inside the wrapper (aria-invalid, aria-describedby, error timing)?
 
-Implement Angular Signal Forms' native control contracts on your components, then project them
-inside `ngx-form-field-wrapper` like any input. A value-bearing control (text field, dropdown)
-implements `FormValueControl<T>` — expose `value = model<T>()`, optionally `touch = output()`, a
-`focus()` method, and `disabled`/`invalid` signal inputs (no ControlValueAccessor). A toggle
-implements `FormCheckboxControl` (`checked = model(false)`), or just wrap a native
-`input[type=checkbox][role=switch]`. Bind with `[formField]="form.x"`; `NgxSignalFormAutoAria` then
-writes `aria-invalid`/`aria-required`/`aria-describedby` on the bound host. If your widget already
-manages its own ARIA (common when the focusable element is buried in its template), opt the host
-out with `ngxSignalFormControlAria="manual"` and use `appearance="plain"` so the wrapper still
-supplies label/hint/error content without fighting the widget. Give the control a stable `id` (or
-set `fieldName` on the wrapper) so error/warning IDs resolve, and import
-`NgxSignalFormToolkit`/`NgxSignalFormAutoAria` in the component that renders the `[formField]` host
-(standalone imports are template-scoped).
+Implement Angular's control interfaces on your component and bind it with
+`[formField]` inside the wrapper. Use `FormValueControl<T>` for a value
+(`value = model<T>()`) or `FormCheckboxControl` for a toggle
+(`checked = model(false)`). Add a `focus()` method so invalid-submit focus and
+error-summary links can reach it. Give it a stable `id`. If the widget writes
+its own ARIA, add `ngxSignalFormControlAria="manual"` to it.
 
-**See:** [docs/CUSTOM_CONTROLS.md](./CUSTOM_CONTROLS.md) ·
-[packages/toolkit/form-field/README.md](../packages/toolkit/form-field/README.md) ·
-[demo: custom-controls](../apps/demo/src/app/04-form-field-wrapper/custom-controls/README.md)
+See [custom controls](./CUSTOM_CONTROLS.md) and the
+[custom-controls demo](../apps/demo/src/app/04-form-field-wrapper/custom-controls/README.md).
 
 ### How do I make a custom combobox or closed select look like the native text field?
 
-Treat it as **field-shaped**, not as a widget. Keep the trigger naked (no
-border, padding, or focus ring on the host). Let `ngx-form-field-wrapper`
-own outline, focus, invalid chrome, font size, line height, and placeholder
-color.
+Treat it as a field-shaped control. Keep the trigger without its own border,
+padding, or focus ring, and let `ngx-form-field-wrapper` draw them.
 
-- Inner `role="combobox"` with a stable `id` infers `input-like`.
-- A closed select (host `role="button"`) sets
-  `ngxSignalFormControl="input-like"` on the `[formField]` host. There is
-  no `select` kind.
-- Inner text uses `font: inherit`. Placeholder copy uses
-  `--ngx-form-field-placeholder-color` (or the wrapper's
-  `--_placeholder-color` when present).
-- Override `--ngx-form-field-input-*` / `--ngx-form-field-outline-input-*`
-  on a parent form if the page type scale is not the toolkit default.
-  Do not hardcode `rem` on the widget.
+- An inner `role="combobox"` with a stable `id` is inferred as `input-like`.
+- A closed select whose host has `role="button"` needs
+  `ngxSignalFormControl="input-like"` on the `[formField]` host. There is no
+  `select` kind.
+- Inner text uses `font: inherit`. Placeholder text uses
+  `--ngx-form-field-placeholder-color`.
+- To change the type scale, override the `--ngx-form-field-input-*` and
+  `--ngx-form-field-outline-input-*` tokens on a parent. Do not hardcode `rem`
+  on the widget.
 
-Sliders, ratings, and datepickers stay widget-shaped:
-`appearance="plain"`, usually with `ngxSignalFormControlAria="manual"`.
-
-**See:** [docs/CUSTOM_CONTROLS.md § Field-shaped vs widget-shaped](./CUSTOM_CONTROLS.md#field-shaped-vs-widget-shaped-custom-controls) ·
-[packages/toolkit/form-field/THEMING.md](../packages/toolkit/form-field/THEMING.md) ·
-[demo: custom-controls](../apps/demo/src/app/04-form-field-wrapper/custom-controls/README.md)
+Sliders, ratings, and datepickers are widget-shaped: use `appearance="plain"`,
+usually with `ngxSignalFormControlAria="manual"`. See
+[field-shaped vs widget-shaped](./CUSTOM_CONTROLS.md#field-shaped-vs-widget-shaped-custom-controls).
 
 ### We don't want the toolkit's wrapper markup at all — how do I build my own with the headless APIs?
 
-The `/headless` entry point is exactly this. Import from
-`@ngx-signal-forms/toolkit/headless`: apply `[ngxHeadlessErrorState]` to your wrapper element for
-`hasErrors()`, `shouldShowErrors()`, `resolvedErrors()`, and stable `errorId`/`warningId` signals —
-or call `createErrorMessageSignal(() => form.field, { fieldName })` directly with no directive at
-all. `[ngxHeadlessFieldset]` aggregates errors/touched/dirty/pending across descendant fields;
-`createErrorState`, `createCharacterCount`, and `createFieldStateFlags` are plain factories for the
-same state. You render 100% of the markup and wire ARIA yourself from those signals — nothing is
-rendered for you, and everything composes via `hostDirectives`. For ARIA you can either use
-`NgxSignalFormAutoAria` or compose it yourself from the pure factories `createAriaInvalidSignal`,
-`createAriaRequiredSignal`, `createAriaDescribedBySignal`, and `createHintIdsSignal`.
+Use `@ngx-signal-forms/toolkit/headless`. It gives you state as signals and
+renders nothing:
 
-**See:** [packages/toolkit/headless/README.md](../packages/toolkit/headless/README.md) ·
-[docs/CUSTOM_WRAPPERS.md](./CUSTOM_WRAPPERS.md) ·
-[demo: error-message-signal](../apps/demo/src/app/03-headless/error-message-signal/README.md) ·
-[demo: fieldset-utilities](../apps/demo/src/app/03-headless/fieldset-utilities/README.md)
+- `[ngxHeadlessErrorState]` gives `hasErrors()`, `shouldShowErrors()`,
+  `resolvedErrors()`, `errorId()`, and `warningId()`.
+- `[ngxHeadlessFieldset]` combines the state of a group of fields.
+- `createErrorMessageSignal()`, `createErrorState()`,
+  `createCharacterCount()`, and `createFieldStateFlags()` give the same state
+  without a directive.
+
+For ARIA, keep `NgxSignalFormAutoAria` on the control, or build it yourself
+with `createAriaInvalidSignal`, `createAriaRequiredSignal`,
+`createAriaDescribedBySignal`, and `createHintIdsSignal`. See the
+[headless reference](../packages/toolkit/headless/README.md) and
+[custom wrappers](./CUSTOM_WRAPPERS.md).
 
 ### How do I theme the built-in wrapper with our brand tokens?
 
-Entirely through CSS custom properties — no forking, and you never touch the `:has()`-based
-`appearance="outline"` selectors directly. Start with the semantic scale on `ngx-form-field-wrapper`
-(`--ngx-form-field-color-primary`, `-color-error`, `-color-warning`, `-color-border`, …); overriding
-these cascades into focus rings, borders, and backgrounds. Two prefixes exist:
-`--ngx-form-field-*` for wrapper chrome and `--ngx-signal-form-*` for cross-cutting feedback text
-(error/warning color/background shared by every helper surface). THEMING.md has ready-made "match my
-brand", Bootstrap/Tailwind mapping, and dark-mode recipes. This is a deep topic; treat the guide as
-canonical rather than re-deriving tokens.
-
-**See:** [packages/toolkit/form-field/THEMING.md](../packages/toolkit/form-field/THEMING.md) ·
-[docs/MIGRATING_CSS_VARS.md](./MIGRATING_CSS_VARS.md) ·
-[docs/CSS_FRAMEWORK_INTEGRATION.md](./CSS_FRAMEWORK_INTEGRATION.md) ·
-[demo: brand-theming](../apps/demo/src/app/04-form-field-wrapper/brand-theming/README.md)
+Set CSS custom properties. Start with the semantic colors on
+`ngx-form-field-wrapper`, such as `--ngx-form-field-color-primary`,
+`--ngx-form-field-color-error`, and `--ngx-form-field-color-border`. Error and
+warning text use the `--ngx-signal-form-*` tokens. See
+[theming](../packages/toolkit/form-field/THEMING.md) and the
+[brand-theming demo](../apps/demo/src/app/04-form-field-wrapper/brand-theming/README.md).
 
 ### How do I integrate a third-party datepicker (value/change API, not a native input)?
 
-Write a thin adapter that implements `FormValueControl<Date | null>` on your datepicker host:
-expose `value = model<Date | null>(null)` and sync it to/from the third-party widget's own
-value/change events (Angular's `transformedValue()` is the built-in tool for that parse/format
-boundary — see below), add a `focus()` method (needed for `focusFirstInvalid()` and error-summary
-navigation), and optional `touch`/`disabled`/`invalid`. Bind it with the standard
-`[formField]="form.birthDate"`. Because the widget owns its own visuals and ARIA, pair it with
-`ngxSignalFormControlAria="manual"` and `appearance="plain"` so the toolkit supplies label/hint/
-error content and field-identity IDs without clashing. Handle any type mismatch (e.g. `Date` vs
-ISO string) inside the adapter's read/write path, and surface unparseable input as a
-`kind: 'parse'` error. Widgets with internal popups or multiple focusable pieces (a calendar grid,
-segmented input) need a composite-aware touched hook — `(focusout)` with a `relatedTarget`
-containment check — instead of a plain `(blur)`.
+Write a small adapter component that implements `FormValueControl<Date | null>`.
+Sync its `value` model with the widget's own value and change events, and
+convert types (for example, `Date` and ISO string) inside the adapter. Add a
+`focus()` method. Because the widget draws itself and writes its own ARIA, use
+`appearance="plain"` and `ngxSignalFormControlAria="manual"`.
 
-**See:** [docs/CUSTOM_CONTROLS.md § Adapting an Existing Third-Party Widget](./CUSTOM_CONTROLS.md#adapting-an-existing-third-party-widget) ·
-runnable demo: the "Date of Birth" field in
-[demo: custom-controls](../apps/demo/src/app/04-form-field-wrapper/custom-controls/README.md)
-(`apps/demo/src/app/shared/controls/legacy-datepicker-adapter.ts`) · the Material app's README also
-notes date-picker ARIA gotchas.
+See [adapting a third-party widget](./CUSTOM_CONTROLS.md#adapting-an-existing-third-party-widget).
+The "Date of Birth" field in the
+[custom-controls demo](../apps/demo/src/app/04-form-field-wrapper/custom-controls/README.md)
+is a runnable example.
 
 ---
 
@@ -314,39 +268,20 @@ notes date-picker ARIA gotchas.
 
 ### How do I build a dynamic form array (e.g. invoice line items you can add/remove)?
 
-Keep the array in your model signal — add/remove is just a `signal.update(rows => [...])`
-mutation; there's no special array API. Loop with `@for`, wrap each row in its own
-`<ngx-form-fieldset [field]="form.lineItems[i]">` so errors aggregate per row, and put
-`<ngx-form-field-wrapper [formField]="form.lineItems[i].description">` inside it. Per-row validation
-is Angular Signal Forms' job: use `applyEach(path.lineItems, (row) => validate(row.qty, …))` (or
-`validateStandardSchema`) in the schema; the toolkit layers display/ARIA on top and inherits the
-error strategy so you don't re-wire it per row.
+Keep the array in your model signal. To add or remove a row, call
+`model.update(...)`. Loop over the rows with `@for`, and put each row in its own
+`<ngx-form-fieldset [field]="form.lineItems[i]">`. Write per-row rules with
+Angular's `applyEach(path.lineItems, (row) => ...)`. A root
+`<ngx-form-field-error-summary [formTree]="form">` still lists every row's
+errors.
 
-```html
-@for (item of form.lineItems; track $index; let i = $index) {
-<ngx-form-fieldset [field]="form.lineItems[i]">
-  <ngx-form-field-wrapper [formField]="form.lineItems[i].description">
-    <input
-      [id]="'line-' + i + '-desc'"
-      [formField]="form.lineItems[i].description"
-    />
-  </ngx-form-field-wrapper>
-</ngx-form-fieldset>
-}
-```
-
-A root `<ngx-form-field-error-summary [formTree]="form">` still collects every row's errors and
-deep-links to the field. Index-based IDs/labels recompute consistently on insert/remove; the docs
-don't yet call out a keyed (stable-row-id) alternative if you delete from the middle a lot.
-
-**See:** [docs/COMPLEX_NESTED_FORMS.md](./COMPLEX_NESTED_FORMS.md) ·
-[demo: complex-forms](../apps/demo/src/app/04-form-field-wrapper/complex-forms/README.md)
+See [arrays of field groups](./COMPLEX_NESTED_FORMS.md#arrays-of-field-groups)
+and the [complex-forms demo](../apps/demo/src/app/04-form-field-wrapper/complex-forms/README.md).
 
 ### How do I hide/disable a group of fields based on another field, so hidden fields stop blocking validity?
 
-Use Angular Signal Forms' native `hidden(path, { when })` and `disabled(path, { when })` schema
-rules from `@angular/forms/signals`, applied at whatever level you want — a single field or a whole
-nested object path:
+Use Angular's `hidden()` or `disabled()` rule on the field or on a whole
+object path:
 
 ```ts
 form(model, (path) => {
@@ -356,58 +291,48 @@ form(model, (path) => {
 });
 ```
 
-A `hidden()` subtree is excluded from the parent's validity computation, so its empty/invalid
-required fields no longer block `form().valid()` or `submit()` — this is core Signal Forms behavior,
-not something the toolkit re-implements. On the UI side `NgxFormFieldWrapper` mirrors `hidden()` to
-the host's `[hidden]` attribute, and `focusFirstInvalid()`/auto-ARIA automatically skip
-hidden/disabled fields. The field-state-patterns demo shows the shared `{ when }` syntax on leaf
-fields; applying it to a whole nested group isn't demoed yet but works identically.
-
-**See:** [demo: field-state-patterns](../apps/demo/src/app/05-advanced/field-state-patterns/README.md) ·
-[docs/BEST_PRACTICES.md](./BEST_PRACTICES.md) ·
-[docs/VALIDATION_STRATEGY.md](./VALIDATION_STRATEGY.md)
+Angular leaves a hidden subtree out of the form's validity, so its errors do
+not block `valid()` or `submit()`. The wrapper sets the `hidden` attribute on
+itself for a hidden field. `focusFirstInvalid()` and auto-ARIA skip hidden and
+disabled fields. See the
+[field-state-patterns demo](../apps/demo/src/app/05-advanced/field-state-patterns/README.md).
 
 ### For a multi-step wizard, how do I validate only the current step before "Next", with one form model?
 
-Keep one `form()` model spanning all steps, bind each step's template to its slice, and gate
-navigation on that slice's validity. The reusable wizard component's async-aware guard is the
-`canNavigate` input (`(event) => boolean | Promise<boolean>`) — return `false` to block. Don't use
-`(stepChange)` + `event.preventDefault()` for validation: `preventDefault()` is only respected
-synchronously, so an `await` before it is too late. Validate the slice of the step being _left_:
+Keep one `form()` for all steps. Before you move to the next step, touch the
+current step's part of the form and check that it is valid. The demo wizard
+component takes a `canNavigate` guard (`(event) => boolean | Promise<boolean>`)
+for this. Do not validate in `(stepChange)` with `event.preventDefault()`:
+the wizard reads `preventDefault()` only synchronously, so a call after an
+`await` comes too late.
 
 ```ts
 // <ngx-wizard [canNavigate]="guardStep" …>
 protected readonly guardStep: WizardCanNavigate = (event) => {
-  if (event.toIndex <= event.fromIndex) return true; // always allow going back
-  const step = this.formForStep(event.fromStep);     // step id → form slice (e.g. form.account)
-  step().markAsTouched();                            // surface this step's errors
+  if (event.toIndex <= event.fromIndex) {
+    return true; // always allow going back
+  }
+  const step = this.formForStep(event.fromStep); // e.g. form.account
+  step().markAsTouched(); // show this step's errors
   return step().valid();
 };
 ```
 
-Run whole-form validation at the end by touching everything (`submit()` marks all fields touched
-internally) before the final action. The maintained `advanced-wizard` demo uses a _form-per-step_ +
-NgRx architecture rather than one shared model — treat it as a reference for step orchestration.
-`single-model-wizard` is the runnable reference for the single-model pattern above, including the
-cross-step rule and the `canNavigate` guard shown here.
-
-**See:** [demo: wizard component](../apps/demo/src/app/shared/wizard/README.md) ·
-[demo: single-model-wizard](../apps/demo/src/app/05-advanced/single-model-wizard/README.md) ·
-[demo: advanced-wizard](../apps/demo/src/app/05-advanced/advanced-wizard/README.md)
+On the last step, submit the whole form. `submit()` marks every field touched.
+See the [single-model-wizard demo](../apps/demo/src/app/05-advanced/single-model-wizard/README.md).
+The [advanced-wizard demo](../apps/demo/src/app/05-advanced/advanced-wizard/README.md)
+uses one form per step with NgRx instead.
 
 ### How do I two-way sync my form model with an NgRx SignalStore without update loops?
 
-Use `linkedSignal({ source, computation })` as the **read** seam (projects the store slice into a
-writable handle that re-evaluates when the store changes) and route all **writes** through
-`patchState`/store methods — not the linked signal's own `.set`. Do **not** mirror form and store
-with `effect()`; that's the loop-causing anti-pattern the read/write seam replaces. For large forms
-that need cancelable editing, use the draft/commit variant instead: bind the form to a draft copy
-and `commit()` draft→committed on save. The store-binding demo is the runnable live-sync reference
-(keystroke sync + a "simulate remote sync" round-trip); advanced-wizard shows draft/commit.
-
-**See:** [demo: store-binding](../apps/demo/src/app/05-advanced/store-binding/README.md) ·
-[demo: advanced-wizard](../apps/demo/src/app/05-advanced/advanced-wizard/README.md) ·
-[docs/COMPLEX_NESTED_FORMS.md](./COMPLEX_NESTED_FORMS.md)
+Read with `linkedSignal({ source, computation })` from the store slice. Write
+through `patchState` or store methods, not through the linked signal's `set`.
+Do not mirror form and store with `effect()`, because that causes loops. For
+cancelable editing, bind the form to a draft copy and commit it to the store on
+save. See the [store-binding demo](../apps/demo/src/app/05-advanced/store-binding/README.md)
+for live sync, and the
+[advanced-wizard demo](../apps/demo/src/app/05-advanced/advanced-wizard/README.md)
+for draft and commit.
 
 ---
 
@@ -415,33 +340,36 @@ and `commit()` draft→committed on save. The store-binding demo is the runnable
 
 ### How do I do debounced async validation (e.g. username availability) and show the pending state?
 
-Use Angular Signal Forms' async primitives inside the schema, not manual RxJS. `debounce(path.field,
-ms)` throttles re-validation, and `validateHttp(path, { request, onSuccess, onError })` fires the
-request and auto-cancels stale in-flight calls when the value changes — no `switchMap` needed:
+Use Angular's `validateHttp()` in the schema. Its `debounce` option delays the
+request. It cancels a stale request when the value changes, so you do not need
+RxJS:
 
 ```ts
 form(model, (path) => {
-  debounce(path.username, 300);
   validateHttp(path.username, {
-    request: ({ value }) => `/api/username-available?u=${value()}`,
-    onError: () => ({ kind: 'taken', message: 'Username is taken' }),
+    request: ({ value }) =>
+      `/api/username-available?u=${encodeURIComponent(value())}`,
+    debounce: 300,
+    onSuccess: (result: { available: boolean }) =>
+      result.available ? null : { kind: 'taken', message: 'Username is taken' },
+    onError: () => ({
+      kind: 'check-failed',
+      message: 'We could not check this username',
+    }),
   });
 });
 ```
 
-The field exposes a `pending()` signal; project a loading indicator into the wrapper's `<span
-suffix>` slot with `@if (form.username().pending())`, and disable submit while `pending()` is true.
-The async-validation demo is the canonical runnable reference.
-
-**See:** [demo: async-validation](../apps/demo/src/app/05-advanced/async-validation/README.md) ·
-[docs/VALIDATION_STRATEGY.md](./VALIDATION_STRATEGY.md)
+The field's `pending()` signal is `true` while the check runs. Show a spinner
+in the wrapper's `suffix` slot with `@if (form.username().pending())`. Angular
+`submit()` does not wait for pending validators by default. If a pending check
+must block the save, check `pending()` in the submit path too. See the
+[async-validation demo](../apps/demo/src/app/05-advanced/async-validation/README.md).
 
 ### After submit my API returns field errors like `{ email: 'already taken' }` — how do I map them onto fields?
 
-The real mechanism Angular supports is the submission **action's return value**: an action returns
-`Promise<TreeValidationResult>`, which is either "success" (`null`/`undefined`) or one-or-many
-validation errors, and each error may carry a `fieldTree` pointing at the field it belongs to. So a
-caught server response becomes per-field errors by returning them from the action:
+Return the errors from the submission action. Angular attaches each error to
+the field in its `fieldTree` property:
 
 ```ts
 submit(this.form, {
@@ -451,60 +379,44 @@ submit(this.form, {
       return; // success
     } catch (err) {
       const { fieldErrors } = err as ApiError; // { email: 'already taken', … }
-      // `fieldTree` targets the field itself (form.email), not its state (form.email()).
       return Object.entries(fieldErrors).map(([field, message]) => ({
         kind: 'server',
         message,
-        fieldTree: form[field as keyof Profile],
+        fieldTree: form[field as keyof Profile], // the field, not form.email()
       }));
     }
   },
 });
 ```
 
-An error returned with **no** `fieldTree` attaches to the root — render it as a form-level banner
-by reading `form().errors()`. Submission errors **auto-clear when the owning field's value
-changes**: the email error clears as the user edits email, and a root-attached banner clears on
-_any_ edit (the root's value is the whole model). If you need different clearing behavior, the
-alternative is holding server errors in a signal read by a normal `validate(path.email, () =>
-serverErrors()['email'] ? { kind: 'server', message: … } : null)`, which re-runs on every edit.
-The server-integration demo exercises the full mapping end-to-end.
-
-**See:** [demo: server-integration](../apps/demo/src/app/05-advanced/server-integration/README.md) ·
-[demo: submission-patterns](../apps/demo/src/app/05-advanced/submission-patterns/README.md) ·
-[demo: async-validation](../apps/demo/src/app/05-advanced/async-validation/README.md)
+An error without `fieldTree` attaches to the root. Read it with
+`form().errors()` and show it as a banner. Angular clears a submission error
+when the value of its field changes. A root error clears on any edit. See the
+[server-integration demo](../apps/demo/src/app/05-advanced/server-integration/README.md).
 
 ### How do I reuse a Zod schema as the validation source, and how do Zod issues become field errors?
 
-You don't need a toolkit adapter — Angular Signal Forms has native Standard Schema support (Zod,
-Valibot, ArkType). Call `validateStandardSchema(path, yourZodSchema)` once at the **root** path
-inside your `form(model, (path) => {…})` callback; Zod validates the whole tree, its `issues[].path`
-map to the matching nested fields, and each issue's `.message` becomes that field's error (rendered
-by `ngx-form-field-wrapper`/`ngx-form-field-error`). It composes with Angular's own validators and
-with `validateVest(...)` on the same path. One gotcha: Standard Schema can't expose which keys are
-required, so `aria-required`/the required marker won't fire for Zod-required fields unless you also
-call the toolkit's `requiredFromStandardSchema(path.field, zodSchema)` per field.
+Angular supports Standard Schema libraries (Zod, Valibot, ArkType) directly.
+Call `validateStandardSchema(path, schema)` at the root of your schema
+function. Angular maps each issue's path to the matching field, and the
+wrapper shows the issue's message.
 
-**See:** [docs/VALIDATION_STRATEGY.md](./VALIDATION_STRATEGY.md) ·
-[demo: zod-validation](../apps/demo/src/app/05-advanced/zod-validation/README.md) ·
-[demo: zod-vest-validation](../apps/demo/src/app/05-advanced/zod-vest-validation/README.md)
+Standard Schema cannot tell Angular which keys are required. To get
+`aria-required` and the required marker, call the toolkit's
+`requiredFromStandardSchema(path.field, schema)` for each required field. See
+[validation choices](./VALIDATION_STRATEGY.md) and the
+[zod-validation demo](../apps/demo/src/app/05-advanced/zod-validation/README.md).
 
 ### Can I keep my existing Vest suites, and how do warnings map onto the toolkit?
 
-Yes — your `test()`/`enforce()`/`warn()` bodies carry over almost unchanged; the required step is
-upgrading Vest 5.x → 6.x first (the `/vest` adapter needs Vest 6, which implements Standard Schema).
-Drop the `ngxVestForm`/`ngModel`/`validationConfig` shell and instead call `validateVest(path, suite,
-{ includeWarnings: true })` inside your `form(...)` schema (or `validateStandardSchema(path, suite)`
-if you only need blocking validation). Angular Signal Forms has no native non-blocking concept, so
-the toolkit maps Vest `warn()` results to errors with a `warn:vest:` kind prefix, rendered with
-`role="status"` and an independent `warningStrategy`. Because Signal Forms still counts warnings
-toward `invalid()`, submit warning-only forms via `canSubmitWithWarnings`/`submitWithWarnings` (or
-`hasOnlyWarnings(form().errorSummary())` with `submission: { ignoreValidators: 'all' }`).
-
-**See:** [docs/MIGRATING_FROM_NGX_VEST_FORMS.md](./MIGRATING_FROM_NGX_VEST_FORMS.md) ·
-[docs/WARNINGS_SUPPORT.md](./WARNINGS_SUPPORT.md) ·
-[packages/toolkit/vest/README.md](../packages/toolkit/vest/README.md) ·
-[demo: vest-validation](../apps/demo/src/app/05-advanced/vest-validation/README.md)
+Yes. Your `test()`, `enforce()`, and `warn()` bodies carry over. The `/vest`
+adapter needs Vest 6. Call
+`validateVest(path, suite, { includeWarnings: true })` in your `form()`
+schema. Vest `warn()` results become toolkit warnings. Warnings still make the
+form `invalid()`, so submit with the warning-aware path in
+[warnings](./WARNINGS_SUPPORT.md#form-submission-behavior). See
+[migrating from ngx-vest-forms](./MIGRATING_FROM_NGX_VEST_FORMS.md) and the
+[`/vest` reference](../packages/toolkit/vest/README.md).
 
 ---
 
@@ -512,102 +424,51 @@ toward `invalid()`, submit warning-only forms via `canSubmitWithWarnings`/`submi
 
 ### How do I translate error messages and field labels with Transloco/`$localize`?
 
-Both go through provider factories that you can wire to your translation service.
-`provideErrorMessages(factory)` registers a message registry (keys are camelCase error kinds, values
-are a string or `(params) => string`); `provideFieldLabels(factory)` does the same for field
-labels/paths. The factory itself runs once, at injection — so the contract for a runtime language
-switch is:
+Register messages with `provideErrorMessages()` and labels with
+`provideFieldLabels()`. For a runtime language switch (Transloco,
+ngx-translate), make each entry a function that reads a language signal. A
+plain string entry is read once and does not change. `$localize` works only
+at build time, one build per locale, so it cannot switch language at runtime.
 
-- A **string** entry is captured once, at injection time, and frozen for the injector's lifetime.
-  It never changes afterward.
-- A **function** entry is invoked on every render, and re-renders on a language change only if it
-  reads a reactive signal during that call. Calling `translate.instant(...)` alone reads nothing
-  reactive — you must also read a language signal, e.g. `toSignal(translate.onLangChange)`.
-
-Make every entry a function that reads that signal:
-
-```ts
-import { inject } from '@angular/core';
-import { toSignal } from '@angular/core/rxjs-interop';
-import { TranslateService } from '@ngx-translate/core';
-import { provideFieldLabels } from '@ngx-signal-forms/toolkit';
-import { humanizeFieldPath } from '@ngx-signal-forms/toolkit/headless';
-
-provideFieldLabels(() => {
-  const t = inject(TranslateService);
-  const lang = toSignal(t.onLangChange, { initialValue: null });
-  return (path) => {
-    lang(); // reactive dependency — re-renders on language switch
-    return t.instant(`fields.${path}`) || humanizeFieldPath(path);
-  };
-});
-```
-
-Validators keep emitting plain `{ kind, message }`; the toolkit resolves display text via a 3-tier
-cascade (validator `message` → registry → built-in fallback), exposed declaratively
-(`ngx-form-field-error`, wrapper) and programmatically (`createErrorMessageSignal`,
-`resolveValidationErrorMessage`). `$localize` cannot do any of this — it's build-time only (one
-build per locale via `ng build --localize`), with no runtime language switching. Honest gap: there
-is still no end-to-end i18n demo proving a runtime language switch (tracked in
-[#231](https://github.com/ngx-signal-forms/ngx-signal-forms/issues/231)).
-
-**See:** [docs/WARNINGS_SUPPORT.md](./WARNINGS_SUPPORT.md) ·
-[packages/toolkit/README.md](../packages/toolkit/README.md) ·
-[packages/toolkit/headless/README.md](../packages/toolkit/headless/README.md)
+See [message resolution](./WARNINGS_SUPPORT.md#errors-and-message-resolution)
+and the [i18n demo](../apps/demo/src/app/05-advanced/i18n/README.md), which
+switches language at runtime.
 
 ### How do I render an accessible error summary that links to each invalid field on submit?
 
-There's a built-in primitive — don't build it from raw signals. Use `<ngx-form-field-error-summary
-[formTree]="form" summaryLabel="…" />` from `@ngx-signal-forms/toolkit/assistive` (or the headless
-`ngxHeadlessErrorSummary` if you want to own the markup). It aggregates every invalid field, renders
-as an assertive `role="alert"` live region when strategy-visible, and its entries move focus to the
-matching control on click. Pair it with `submission: { onInvalid: createOnInvalidHandler() }` and the
-`[formRoot] ngxSignalForm` directive, which handle `preventDefault`, submitting state, and focusing
-the first invalid field. Use `provideFieldLabels()` to turn raw paths into human/translated names in
-the summary.
+Use `<ngx-form-field-error-summary [formTree]="form" />` from
+`@ngx-signal-forms/toolkit/assistive`. Add `ngxSignalForm` to the form. It
+tracks submit, and it lets a submit announce the errors through the summary
+only, not once per field. Each entry moves focus to its field.
 
-**See:** [packages/toolkit/assistive/README.md](../packages/toolkit/assistive/README.md) ·
-[demo: submission-patterns](../apps/demo/src/app/05-advanced/submission-patterns/README.md) ·
-[demo: fieldset-utilities](../apps/demo/src/app/03-headless/fieldset-utilities/README.md)
+```html
+<form [formRoot]="form" ngxSignalForm errorStrategy="on-submit">
+  <ngx-form-field-error-summary [formTree]="form" />
+  <!-- fields -->
+</form>
+```
+
+Use `provideFieldLabels()` to show readable field names. See
+[error summaries](./COMPLEX_NESTED_FORMS.md#error-summaries-across-the-whole-form).
 
 ### How do I unit-test a form component (set value, touch, assert rendered error + `aria-invalid`) in Vitest/TestBed?
 
-Render the component and drive it through native DOM events — type into the control, then tab or
-click away — rather than writing the model signal or calling a field's `markAsTouched()` directly.
-A direct signal write changes the value but never marks the field touched, so an `'on-touch'` (the
-toolkit default) or `'on-submit'` strategy would never reveal the error you're asserting on. Then
-assert on the toolkit's documented, stable id/attribute contract: error containers use
-`{fieldName}-error`, and the bound input carries `aria-invalid="true"` and an `aria-describedby`
-that chains to that id. Blocking errors render inside a `role="alert"` element.
+Render the component and drive it with DOM events: type, then tab away. Do not
+write the model signal directly, because that does not mark the field touched,
+and `on-touch` timing hides the error. Wait for the attributes with `waitFor()`.
 
 ```ts
 const user = userEvent.setup();
-const { container } = await render(LoginForm);
-
-const emailInput = screen.getByLabelText(/email/i) as HTMLInputElement;
-await user.type(emailInput, 'not-an-email'); // set value
-await user.tab(); // blur → marks the field touched, triggering 'on-touch' visibility
-
-expect(await screen.findByText(/valid email/i)).toBeInTheDocument();
+await render(LoginForm);
+const email = screen.getByLabelText(/email/i);
+await user.type(email, 'not-an-email');
+await user.tab();
 await waitFor(() => {
-  expect(emailInput.getAttribute('aria-invalid')).toBe('true');
+  expect(email.getAttribute('aria-invalid')).toBe('true');
 });
-expect(container.querySelector('#email-error')).not.toBeNull();
 ```
 
-To assert a submit-time path, click the submit button through `userEvent` — Angular's own
-`submit()`, invoked internally by the form's `submission` config, marks every field touched. For
-accessibility, the toolkit ships `expectNoA11yViolations()` from
-`@ngx-signal-forms/toolkit/testing` (axe-core WCAG 2.2 AA) for use in a Vitest browser-mode spec
-after rendering a fixture.
-
-**See:** [docs/TESTING.md](./TESTING.md) — the full walkthrough, including driving controls
-through native events with `@testing-library/angular` and flushing effects before asserting ·
-[apps/demo/.../your-first-form.spec.ts](../apps/demo/src/app/01-getting-started/your-first-form/your-first-form.spec.ts) —
-the runnable example this FAQ entry and the guide are both backed by ·
-[packages/toolkit/README.md](../packages/toolkit/README.md) ·
-[packages/toolkit/headless/README.md](../packages/toolkit/headless/README.md) ·
-[docs/decisions/0004-wcag22-testing-strategy.md](./decisions/0004-wcag22-testing-strategy.md)
+See [testing form components](./TESTING.md) for the full walkthrough.
 
 ---
 
@@ -615,32 +476,20 @@ the runnable example this FAQ entry and the guide are both backed by ·
 
 ### I'm migrating from Reactive Forms — what replaces `setValue`/`patchValue`, `valueChanges`, `markAllAsTouched`, and `ValidatorFn`, and can I migrate one form at a time?
 
-Mappings (Signal Forms + this toolkit):
+- **`setValue` / `patchValue`:** write the model signal with `model.set(next)`
+  or `model.update((m) => ...)`.
+- **`valueChanges`:** read the model in `computed(() => model())`, or run a
+  side effect with `effect(() => this.autosave(model()))`.
+- **`markAllAsTouched`:** `form().markAsTouched()` marks the field and every
+  descendant. Angular's `submit()` also marks every field touched.
+- **`ValidatorFn`:** schema rules. Use `validate()` or `validateAsync()` for
+  your own rules, `validateStandardSchema()` for Zod, and `validateVest()` for
+  Vest suites.
+- **One form at a time:** `compatForm()` and `SignalFormControl` from
+  `@angular/forms/signals/compat` let Signal Forms and Reactive Forms share a
+  form, so you can migrate one field or one form at a time.
 
-- **`setValue`/`patchValue`** → write the model signal: `model.set(next)` / `model.update(m => …)`.
-  The model is the source of truth.
-- **`valueChanges`** → read the model reactively: `computed(() => model())`, or run a side effect
-  with `effect(() => this.autosave(model()))`.
-- **`markAllAsTouched`** → `form().markAsTouched()` cascades to every descendant; Angular's
-  `submit()` also marks everything touched internally.
-- **custom `ValidatorFn`** → schema functions: `validate()`/`validateAsync()` for sync/async field
-  rules, `validateStandardSchema()` for Zod/contract schemas, `validateVest()` for business policy.
-- **coexistence** → `compatForm()` (top-down) or `SignalFormControl` (bottom-up), both from
-  `@angular/forms/signals/compat`, let a Signal Form model absorb existing Reactive controls, or
-  let a Reactive `FormGroup` absorb one Signal-Forms-backed field, so you can migrate one field or
-  one form at a time rather than rewrite everything at once.
-
-Angular's own **[framework-level migration guide](https://angular.dev/guide/forms/signals/migration)**
-covers the `compat` API itself. This toolkit's
-**[docs/MIGRATING_FROM_REACTIVE_FORMS.md](./MIGRATING_FROM_REACTIVE_FORMS.md)** covers the layer
-Angular's guide doesn't: how `ngx-form-field-wrapper`, error-message resolution, the error-display
-strategy cascade, and `NG_STATUS_CLASSES` behave when a field is bridged through compat — including
-a documented divergence (a compat leaf's validity comes from the underlying `AbstractControl`'s
-own Reactive validators, not from Signal Forms schema validators registered on that same path) and
-a worked one-field-at-a-time coexistence example.
-
-**See:** [../README.md](../README.md) ·
-[docs/MIGRATING_FROM_REACTIVE_FORMS.md](./MIGRATING_FROM_REACTIVE_FORMS.md) ·
-[docs/ANGULAR_VS_TOOLKIT.md](./ANGULAR_VS_TOOLKIT.md) ·
-[docs/VALIDATION_STRATEGY.md](./VALIDATION_STRATEGY.md) ·
-[docs/ANGULAR_PUBLIC_API_POLICY.md](./ANGULAR_PUBLIC_API_POLICY.md)
+Angular's [migration guide](https://angular.dev/guide/forms/signals/migration)
+covers the `compat` API. [Migrating from Reactive Forms](./MIGRATING_FROM_REACTIVE_FORMS.md)
+covers how the toolkit behaves on a field that `compat` connects, with a worked
+example.

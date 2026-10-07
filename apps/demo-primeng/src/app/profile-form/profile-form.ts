@@ -1,9 +1,4 @@
-import {
-  ChangeDetectionStrategy,
-  Component,
-  computed,
-  signal,
-} from '@angular/core';
+import { Component, computed, signal } from '@angular/core';
 import { type FieldTree, form, FormField } from '@angular/forms/signals';
 import {
   createOnInvalidHandler,
@@ -35,7 +30,7 @@ import { profileFormSchema } from './profile-form.schema';
  * 2. **Renderer tokens** are configured at app bootstrap; the wrapper picks
  *    `PrimeFieldErrorComponent` up via `NGX_FORM_FIELD_ERROR_RENDERER` so
  *    errors render as PrimeNG's `<small class="p-error">` idiom.
- * 3. **`NgxSignalFormControlSemanticsDirective`** is declared on each control
+ * 3. **`NgxSignalFormControl`** is declared on each control
  *    (text input via `pInputText`, the `prime-select-control` compatibility
  *    host, and the `prime-checkbox-control` compatibility host)
  *    so the toolkit knows the control kind without DOM heuristics.
@@ -54,7 +49,6 @@ import { profileFormSchema } from './profile-form.schema';
  */
 @Component({
   selector: 'demo-primeng-profile-form',
-  changeDetection: ChangeDetectionStrategy.OnPush,
 
   imports: [
     FormField,

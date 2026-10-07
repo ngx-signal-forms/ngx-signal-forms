@@ -24,9 +24,7 @@ templates shows real divergence, most of it intentional:
   drop this integration, not just cosmetic styling.
 - **Restored-but-previously-dropped upstream surface (audit #148 / #182).**
   `forceInvalid` forwarding on `hlm-input` and `hlm-select-trigger`, the
-  `data-slot="input"` host attribute on `hlm-input`, and
-  `ChangeDetectionStrategy.OnPush` on `hlm-select-content`,
-  `hlm-select-trigger`, `hlm-select-item`, `hlm-checkbox`, and the
+  `data-slot="input"` host attribute on `hlm-input`, and the
   scroll-up/down affordances had drifted out of these files relative to
   upstream v1.0.4 with no accompanying reason — those have been restored
   to match upstream, since they don't conflict with the form-state

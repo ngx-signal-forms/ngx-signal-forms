@@ -19,27 +19,28 @@ Choose state before markup:
 - `createErrorVisibility()` and `createWarningVisibility()` resolve explicit
   strategy, form context, explicit `configDefault`, then `on-touch`. Pass the
   provider default when composing these low-level helpers yourself. Higher-level
-  state factories supply it. A direct `createShowErrorsComputed()` call never
-  injects form context; pass submitted status for `on-submit`.
+  state factories supply it. Outside an `ngxSignalForm` context there is no form context to
+  inherit; pass submitted status for `on-submit`.
 - `createFieldsetAggregation()` and `createErrorSummaryEntries()` are pure,
   with no DI requirement. Supply a reader of `field()` or `formTree()` plus
   separate pre-resolved `showErrors` and `showWarnings` signals. For aggregate
   warning timing, use `hasWarnings: true` and let aggregation test presence.
   Do not pass group-wide `errorVisibility` to suppress sibling warnings.
+- Each summary entry has `fieldName`, `focus()` and `canFocus`.
+- Render an entry with `canFocus: false` as plain text.
+- Read errors with `field().errorSummary()`. Read flags with typed field state
+  or `createFieldStateFlags()`.
+- RC.16 made five low-level headless helpers internal. The
+  [migration guide](../migrations/guide.md) maps each one to its replacement.
 - `NgxHeadlessErrorState.errorsOverride` supplies already-filtered messages and
   makes both timing flags true. The caller owns timing and precedence. The
   internal `connectFieldState()` bridge is not a published consumer API.
-- `NgxHeadlessNotification` accepts an array, signal, or reader through `errors`.
-  Omitted/undefined means empty; use `[]`, not `null`, for no messages. A blocking
-  error selects the alert container; a warning-only list selects status. There
-  is no `tone` input.
 - `NgxHeadlessCharacterCount` requires `field` and `maxLength`. `createCharacterCount()`
   requires only `field` — pass `useValidatorMaxLength: true` to read the
   field's own `maxLength` validator when no explicit `maxLength` is given.
   `createCharacterCount()` uses fractional thresholds, while styled counters
   expose percent-based CSS thresholds.
-- `summarizeFieldOptionality()` and `createFieldOptionalitySummary()` report
-  required/optional leaves. A mixed form can set both flags; an empty form sets
+- `createFieldOptionalitySummary()` reports required/optional leaves. A mixed form can set both flags; an empty form sets
   neither. Use them for custom legends instead of traversing the tree again.
 
 Read [headless contracts](https://github.com/ngx-signal-forms/ngx-signal-forms/blob/main/packages/toolkit/headless/README.md#reactive-primitives)
@@ -54,8 +55,8 @@ Each summary gate includes presence. Warning rows use their own gate, never
 ```html
 <section ngxHeadlessErrorSummary #summary="errorSummary" [formTree]="myForm">
   <div role="alert">
-    @if (summary.shouldShow()) { @for (entry of summary.entries(); track $index)
-    {
+    @if (summary.shouldShow()) { @for (entry of summary.entries(); track
+    entry.key) {
     <button type="button" (click)="entry.focus()">
       {{ entry.fieldName }}: {{ entry.message }}
     </button>
@@ -63,42 +64,16 @@ Each summary gate includes presence. Warning rows use their own gate, never
   </div>
   <div role="status">
     @if (summary.shouldShowWarnings()) { @for (entry of
-    summary.warningEntries(); track $index) {
+    summary.warningEntries(); track entry.key) {
     <p>{{ entry.fieldName }}: {{ entry.message }}</p>
     } }
   </div>
 </section>
 ```
 
-For a pre-filtered `addressErrors` source, import `NgxHeadlessNotification`:
-
-```html
-<section
-  ngxHeadlessNotification
-  #notice="notificationState"
-  [errors]="addressErrors"
-  fieldName="address"
->
-  <div
-    role="alert"
-    [attr.id]="notice.showErrorContainer() ? notice.errorContainerId() : null"
-  >
-    @if (notice.showErrorContainer()) { @for (message of
-    notice.resolvedMessages(); track $index) {
-    <p>{{ message.message }}</p>
-    } }
-  </div>
-  <div
-    role="status"
-    [attr.id]="notice.showWarningContainer() ? notice.warningContainerId() : null"
-  >
-    @if (notice.showWarningContainer()) { @for (message of
-    notice.resolvedMessages(); track $index) {
-    <p>{{ message.message }}</p>
-    } }
-  </div>
-</section>
-```
+For a pre-filtered `addressErrors` source, pass it to `NgxHeadlessErrorState`
+through `[errorsOverride]`. The caller owns timing. A blocking error selects the
+alert container; a warning-only list selects status.
 
 ## Manual ARIA example
 
@@ -252,8 +227,8 @@ hidden inner input or combobox.
 
 The helpers fail open where `checkVisibility()` is unavailable; jsdom cannot
 prove layout behavior. The signal helper also stays true until the target is
-available. `identity.isControlVisible()` is a cached flag;
-`identity.isControlVisible(element)` is a non-reactive probe, not a render hook.
+available. `NgxFieldIdentity` has no visibility member. Use one of the two
+helpers above.
 For radios, test each option independently, then the whole collapsed group.
 Reopen after changing validation. Use [browser checks](../testing/guide.md#browser-state-checks).
 
@@ -306,6 +281,13 @@ Publish the other channels separately:
   readers. Register the booleans gating content and active IDs, not host
   existence or a strategy for auto-ARIA to resolve again. Clean up registration
   on change/destruction. Keep error and warning timing independent.
+  `NgxHeadlessErrorState` with a `fieldName` already registers its own
+  visibility, including a local `strategy`/`warningStrategy`; do not register
+  the same field again. Set its `renders` input (`'errors'`, `'warnings'`,
+  `'both'`) when the template renders one channel only, so no `aria-describedby`
+  id points to a missing element. `aria-invalid` still follows the error state.
+  A custom registrant can publish the optional `shouldShowErrors` signal for
+  `aria-invalid` when it renders one channel.
 
 Import projected hints and auto-ARIA in the template that declares them;
 wrapper imports do not apply to consumer projection. The public identity read
@@ -341,8 +323,9 @@ container IDs. Verify that each description token reaches a unique element.
 declare `resolvedFieldName: string | null`, `resolvedId: string`, and
 `position: 'left' | 'right' | null` as inputs. They expose a default
 `<ng-content />` slot for projected content. The hint host owns the ID; copying
-it to an inner element creates a duplicate. Missing declared inputs fail at
-`componentRef.setInput()`.
+it to an inner element creates a duplicate. An input the renderer does not
+declare is skipped. In dev mode Angular logs an `NG0303` error for it, and
+`setInput()` throws only if the app sets `errorOnUnknownProperties`.
 
 For provider examples and full input-map code, read the deeper
 [renderer interface](https://github.com/ngx-signal-forms/ngx-signal-forms/blob/main/docs/CUSTOM_WRAPPERS.md#the-renderer-interface).

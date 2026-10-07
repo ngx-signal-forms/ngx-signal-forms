@@ -14,6 +14,7 @@ import {
   NGX_SIGNAL_FORM_FIELD_VISIBILITY_REGISTRY,
   NGX_SIGNAL_FORM_HINT_REGISTRY,
   NGX_SIGNAL_FORMS_CONFIG,
+  type NgxSignalFormFieldVisibilityDescriptor,
 } from '../tokens';
 import { createAriaInvalidSignal } from '../utilities/aria/create-aria-invalid-signal';
 import {
@@ -196,6 +197,10 @@ export class NgxSignalFormAutoAria {
 
   readonly #element: ElementRef<HTMLElement> = inject(ElementRef);
   readonly #injector = inject(Injector);
+  // `NGX_SIGNAL_FORMS_CONFIG` has a root `factory` (see `../tokens.ts`), so
+  // `inject()` always resolves a value here — no `{ optional: true }` needed.
+  // Declared ahead of the visibility fields, which read it on init.
+  readonly #config = inject(NGX_SIGNAL_FORMS_CONFIG);
   readonly #ariaModeSignal = inject(NGX_SIGNAL_FORM_ARIA_MODE, {
     optional: true,
     self: true,
@@ -300,8 +305,11 @@ export class NgxSignalFormAutoAria {
    * field error component.
    *
    * Uses `createErrorVisibility` to auto-consume the nearest
-   * `[ngxSignalForm]` context (strategy + submittedStatus) via DI, matching
-   * the same cascade as the form-field wrapper and headless error-state.
+   * `[ngxSignalForm]` context (strategy + submittedStatus) via DI, then the
+   * nearest `defaultErrorStrategy` config, then `'on-touch'`. That is the
+   * same cascade as the form-field wrapper and headless error-state, so a
+   * `[formRoot]`-only form still times `aria-invalid` like the visible
+   * message.
    *
    * When an owning wrapper has **published an error strategy** on the
    * identity, that wins: it already accounts for the wrapper's field-level
@@ -314,20 +322,40 @@ export class NgxSignalFormAutoAria {
    * The precedence test is on the published *value*, not on whether an
    * identity happens to be injectable — see `#registryVisibilityEntry`.
    */
-  readonly #visibilityByStrategy = computed(() => {
+  readonly #visibilityByStrategy = computed(() =>
+    this.#errorVisibilityBy((entry) => entry.errorContainerVisible()),
+  );
+
+  /**
+   * Same precedence as {@link #visibilityByStrategy}, but for `aria-invalid`:
+   * a registry entry answers with `shouldShowErrors` ("the field shows its
+   * errors") when it publishes one. A surface that renders only the warning
+   * channel sets `errorContainerVisible` to `false`, yet the field is still
+   * invalid. Entries without `shouldShowErrors` fall back to
+   * `errorContainerVisible`.
+   */
+  readonly #invalidVisibilityByStrategy = computed(() =>
+    this.#errorVisibilityBy((entry) =>
+      (entry.shouldShowErrors ?? entry.errorContainerVisible)(),
+    ),
+  );
+
+  #errorVisibilityBy(
+    fromRegistry: (entry: NgxSignalFormFieldVisibilityDescriptor) => boolean,
+  ): boolean {
     const publishedErrorStrategy =
       this.#fieldIdentity?.resolvedErrorStrategy() ?? null;
 
     if (publishedErrorStrategy === null) {
       const registryEntry = this.#registryVisibilityEntry();
-      if (registryEntry) return registryEntry.errorContainerVisible();
+      if (registryEntry) return fromRegistry(registryEntry);
     }
 
     // `#ownVisibilityByStrategy` already reads the published strategy and
     // falls back to the ambient form context when it is null, so it covers
     // both remaining branches.
     return this.#ownVisibilityByStrategy();
-  });
+  }
 
   readonly #ownVisibilityByStrategy = createErrorVisibility(
     () => this.#resolveFieldState(),
@@ -335,12 +363,9 @@ export class NgxSignalFormAutoAria {
       strategy: computed(
         () => this.#fieldIdentity?.resolvedErrorStrategy() ?? undefined,
       ),
+      configDefault: this.#config.defaultErrorStrategy,
     },
   );
-
-  // `NGX_SIGNAL_FORMS_CONFIG` has a root `factory` (see `../tokens.ts`), so
-  // `inject()` always resolves a value here — no `{ optional: true }` needed.
-  readonly #config = inject(NGX_SIGNAL_FORMS_CONFIG);
 
   /**
    * Warning-visibility timing, resolved through the **warning** cascade
@@ -432,8 +457,8 @@ export class NgxSignalFormAutoAria {
    * Whether this control is currently laid out, sourced from the directive's
    * own read phase.
    *
-   * Deliberately *not* the owning wrapper's published
-   * `NgxFieldIdentity.isControlVisible`. Reading that flag made the
+   * Deliberately *not* a flag published by the owning wrapper. An
+   * identity-level cached flag existed until rc.16 and was removed. Reading it made the
    * `aria-invalid` staleness fix conditional on there being a built-in
    * wrapper: a custom wrapper inside a collapsed `<details>`, an inactive
    * tab, or a non-current wizard step kept a stale `aria-invalid` on a hidden
@@ -448,7 +473,7 @@ export class NgxSignalFormAutoAria {
 
   readonly #factoryAriaInvalid = createAriaInvalidSignal(
     this.#fieldStateSignal,
-    this.#visibilityByStrategy,
+    this.#invalidVisibilityByStrategy,
     this.#isControlVisible,
   );
 

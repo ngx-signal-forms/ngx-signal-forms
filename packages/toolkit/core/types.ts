@@ -18,7 +18,7 @@ export type SubmittedStatus = 'unsubmitted' | 'submitting' | 'submitted';
  *
  * @template T The type of value returned when called
  */
-export type SignalLike<T> = Signal<T> | (() => T);
+export type NgxSignalLike<T> = Signal<T> | (() => T);
 
 /**
  * Accepts a reactive (Signal/function) or a plain static value.
@@ -30,7 +30,7 @@ export type SignalLike<T> = Signal<T> | (() => T);
  * @public
  * @template T The type of value when unwrapped
  */
-export type ReactiveOrStatic<T> = SignalLike<T> | T;
+export type NgxReactiveOrStatic<T> = NgxSignalLike<T> | T;
 
 /**
  * Resolved error display strategy used by forms and config defaults.
@@ -141,18 +141,6 @@ export type FormFieldOrientation = 'vertical' | 'horizontal';
 export type FormFieldOrientationInput = FormFieldOrientation | 'inherit';
 
 /**
- * Placement of the validation summary relative to the control or fieldset
- * content. Shared by `NgxFormFieldWrapper` and `NgxFormFieldset` so a
- * single value binds cleanly across both APIs.
- *
- * - `'top'`: render the summary directly below the legend / above the inputs
- * - `'bottom'`: render the summary after the projected content
- *
- * @public
- */
-export type NgxFormFieldErrorPlacement = 'top' | 'bottom';
-
-/**
  * Semantic control families understood by the toolkit wrapper layer.
  *
  * Kept intentionally small so consumers can opt into stable wrapper behavior
@@ -164,7 +152,7 @@ export type NgxFormFieldErrorPlacement = 'top' | 'bottom';
  * - **Override preset behavior** for an existing kind via
  *   `provideNgxSignalFormControlPresets({ slider: { layout: 'custom', ariaMode: 'manual' } })`.
  * - **Declare per-control semantics** on the host via the
- *   `NgxSignalFormControlSemanticsDirective` inputs:
+ *   `NgxSignalFormControl` inputs:
  *   `ngxSignalFormControl`, `ngxSignalFormControlLayout`,
  *   `ngxSignalFormControlAria`.
  * - **Custom widgets that don't fit any native kind** should use
@@ -309,12 +297,6 @@ export interface ResolvedMarker {
  */
 export interface NgxSignalFormsConfig {
   /**
-   * Enable automatic ARIA attributes (aria-invalid, aria-describedby).
-   * @default true
-   */
-  autoAria: boolean;
-
-  /**
    * Default error display strategy.
    * @default 'on-touch'
    */
@@ -445,8 +427,8 @@ export interface NgxSignalFormsConfig {
   /**
    * Visually hidden text describing a character count's limit, exposed to
    * assistive technology through `aria-describedby`. `NgxFormFieldCharacterCount`
-   * renders this instead of the running count — the running and remaining
-   * count stays in the `[liveAnnounce]` live region. The literal token
+   * renders this next to the visible running count. The `[liveAnnounce]` live
+   * region holds only threshold-transition text. The literal token
    * `{max}` is replaced with the resolved `maxLength`.
    * @default 'Up to {max} characters'
    */
@@ -471,7 +453,6 @@ export interface NgxSignalFormsConfig {
 // Declaring it keeps the type honest about the merge this interface exists
 // to feed.
 export interface NgxSignalFormsUserConfig {
-  autoAria?: boolean | undefined;
   defaultErrorStrategy?: ResolvedErrorDisplayStrategy | undefined;
   defaultWarningStrategy?: ResolvedWarningDisplayStrategy | undefined;
   defaultFormFieldAppearance?: FormFieldAppearance | undefined;

@@ -10,7 +10,7 @@ import {
 } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { FORM_FIELD } from '@angular/forms/signals';
-import { NgxSignalFormControlSemanticsDirective } from '../index';
+import { NgxSignalFormControl } from '../index';
 import { NGX_SIGNAL_FORM_HINT_REGISTRY } from '../tokens';
 import { NgxFormFieldHint } from '@ngx-signal-forms/toolkit/assistive';
 import { render } from '@testing-library/angular';
@@ -253,7 +253,7 @@ describe('NgxSignalFormAutoAria', () => {
         imports: [
           MockFormFieldDirective,
           NgxSignalFormAutoAria,
-          NgxSignalFormControlSemanticsDirective,
+          NgxSignalFormControl,
         ],
       })
       class TestComponent {
@@ -278,7 +278,7 @@ describe('NgxSignalFormAutoAria', () => {
         imports: [
           MockFormFieldDirective,
           NgxSignalFormAutoAria,
-          NgxSignalFormControlSemanticsDirective,
+          NgxSignalFormControl,
         ],
       })
       class TestComponent {
@@ -302,7 +302,7 @@ describe('NgxSignalFormAutoAria', () => {
         imports: [
           MockFormFieldDirective,
           NgxSignalFormAutoAria,
-          NgxSignalFormControlSemanticsDirective,
+          NgxSignalFormControl,
         ],
       })
       class TestComponent {
@@ -344,7 +344,7 @@ describe('NgxSignalFormAutoAria', () => {
         imports: [
           MockFormFieldDirective,
           NgxSignalFormAutoAria,
-          NgxSignalFormControlSemanticsDirective,
+          NgxSignalFormControl,
         ],
       })
       class TestComponent {
@@ -386,7 +386,7 @@ describe('NgxSignalFormAutoAria', () => {
         imports: [
           MockFormFieldDirective,
           NgxSignalFormAutoAria,
-          NgxSignalFormControlSemanticsDirective,
+          NgxSignalFormControl,
         ],
       })
       class TestComponent {
@@ -1172,7 +1172,7 @@ describe('NgxSignalFormAutoAria', () => {
         imports: [
           MockFormFieldDirective,
           NgxSignalFormAutoAria,
-          NgxSignalFormControlSemanticsDirective,
+          NgxSignalFormControl,
         ],
       })
       class TestComponent {

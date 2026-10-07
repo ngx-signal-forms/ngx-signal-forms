@@ -1,4 +1,7 @@
-# Migrating from `ngx-vest-forms` to `@ngx-signal-forms/toolkit/vest`
+---
+title: 'Migrating from ngx-vest-forms to @ngx-signal-forms/toolkit/vest'
+sidebarTitle: 'From ngx-vest-forms'
+---
 
 This guide covers the **common migration path** from `ngx-vest-forms` (typically paired with Vest 5.x) to Angular Signal Forms plus `@ngx-signal-forms/toolkit/vest`.
 
@@ -175,7 +178,7 @@ export class LegacySignupComponent {
 ### After: Angular Signal Forms + toolkit Vest adapter
 
 ```typescript
-import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { Component, signal } from '@angular/core';
 import { form, FormField } from '@angular/forms/signals';
 import {
   createOnInvalidHandler,
@@ -204,7 +207,6 @@ const signupSuite = create((data: SignupModel) => {
 @Component({
   selector: 'ngx-signup-form',
   imports: [FormField, NgxSignalFormToolkit, NgxFormField],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <form [formRoot]="signupForm" ngxSignalForm>
       <ngx-form-field-wrapper [formField]="signupForm.email">

@@ -19,15 +19,15 @@ import type {
  * - Implement custom logic that doesn't need automatic updates
  * - Reduce memory overhead when reactivity isn't needed
  *
- * **Use {@link createShowErrorsComputed} instead when you need reactive updates.**
+ * **Use {@link createErrorVisibility} instead when you need reactive updates.**
  *
  * ## Strategy contract
  * This helper accepts a {@link ResolvedErrorDisplayStrategy} — the `'inherit'`
  * value from `ErrorDisplayStrategy` is a user-facing input that must be
  * resolved to a concrete strategy (`'immediate' | 'on-touch' | 'on-submit'`)
  * before calling this function. Route user input through
- * {@link resolveErrorDisplayStrategy} or {@link resolveStrategyFromContext}
- * first. Reactive surfaces should use {@link createShowErrorsComputed},
+ * {@link resolveStrategyFromContext} first. Reactive surfaces should use
+ * {@link createErrorVisibility},
  * which accepts the wider `ErrorDisplayStrategy` and resolves `'inherit'`
  * internally.
  *
@@ -60,11 +60,11 @@ import type {
  * }
  * ```
  *
- * @see {@link createShowErrorsComputed} For reactive version that creates a computed signal
+ * @see {@link createErrorVisibility} For the reactive visibility factory
  * @see {@link ResolvedErrorDisplayStrategy} For the resolved strategy union
- * @see {@link resolveErrorDisplayStrategy} To resolve `'inherit'` before calling this
+ * @see {@link resolveStrategyFromContext} To resolve `'inherit'` before calling this
  *
- * @public
+ * @internal
  */
 export function shouldShowErrors(
   isInvalid: boolean,

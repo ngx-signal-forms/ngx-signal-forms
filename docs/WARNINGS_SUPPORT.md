@@ -1,187 +1,328 @@
-# Warnings, timing, and message resolution
+---
+title: 'Warnings, timing, and messages'
+---
 
-This guide describes the RC.13 source, including the independent warning cascade
-across headless helpers. See the
-[versioned migration guide](./migrations/v1.0.0-rc.13.md) for release scope.
+This guide covers three things. Warnings are validation results that give
+advice but do not block submit. Timing decides when errors and warnings become
+visible. Messages and field labels decide what text the user sees, including
+translated text. Read it when you add a non-blocking rule, change when feedback
+shows, or localize messages.
+
+- [The `warn:` convention](#the-warn-convention)
+- [Form submission behavior](#form-submission-behavior)
+- [Timing and configuration](#timing-and-configuration)
+- [Rendering and ARIA](#rendering-and-aria)
+- [Errors and message resolution](#errors-and-message-resolution)
+- [Field label resolution](#field-label-resolution)
 
 ## The `warn:` convention
 
-Angular validation errors have a `kind` and optional `message`. The toolkit
-treats kinds beginning with `warn:` as advisory warnings. Angular still counts
-them as errors for `invalid()` and ordinary submission.
+An Angular validation error has a `kind` and an optional `message`. The toolkit
+treats a kind that starts with `warn:` as a warning. Angular still counts a
+warning as an error for `invalid()` and for ordinary submission.
 
-| Kind            | Toolkit display                   | Ordinary Angular submission | Warning-aware submission |
-| --------------- | --------------------------------- | --------------------------- | ------------------------ |
-| Without `warn:` | Blocking error, `role="alert"`    | Blocks                      | Blocks                   |
-| With `warn:`    | Advisory warning, `role="status"` | Blocks                      | Passes                   |
-
-Use a blocking error for a rule that must hold before saving. Use a hint for
-static guidance. Use a warning only for advice that the user may ignore.
+| Kind            | Toolkit display                | Ordinary Angular submission | Warning-aware submission |
+| --------------- | ------------------------------ | --------------------------- | ------------------------ |
+| Without `warn:` | Blocking error, `role="alert"` | Blocks                      | Blocks                   |
+| With `warn:`    | Warning, `role="status"`       | Blocks                      | Passes                   |
 
 ```typescript
+import { validate } from '@angular/forms/signals';
 import { warningError } from '@ngx-signal-forms/toolkit';
 
-const advice = warningError('short-password', 'Consider using 12+ characters');
+// In the schema function
+validate(path.password, ({ value }) =>
+  value().length < 12
+    ? warningError('short-password', 'Use 12 or more characters')
+    : null,
+);
 ```
 
-Pass the bare kind to `warningError()`. It adds `warn:`. A validator can also
-return a plain `{ kind: 'warn:short-password', message: 'Consider 12+ characters' }`.
-The Vest adapter prefixes its warnings automatically. See the
-[Vest reference](../packages/toolkit/vest/README.md).
+Pass the bare kind to `warningError()`. It adds the `warn:` prefix, and it does
+not add it twice. A validator can also return a plain
+`{ kind: 'warn:short-password', message: '...' }`. The Vest adapter adds the
+prefix to Vest warnings. See the [Vest reference](../packages/toolkit/vest/README.md).
 
 ### When a warning is the wrong tool
 
-Use a blocking error when saving would violate a required rule. Use ordinary
-help text for static advice that does not depend on validity. A warning is
-conditional advice, not a way to bypass a required security or business check.
+Use a blocking error when saving would break a required rule. Use a hint for
+static advice that does not depend on the value. Use a warning only for advice
+that the user may ignore. A warning is never a way to skip a security or
+business check.
 
 ## Form submission behavior
 
-`submitWithWarnings(formTree, action)`:
+A warning is still an Angular validation error, so Angular's `submit()` blocks
+it by default. You have two ways to let warnings through. Prefer pattern A.
 
-1. Rejects overlapping calls for the same form, including native submission.
-2. Marks the form and descendants touched.
-3. Yields one microtask so synchronous validation updates can propagate.
-4. Checks the root `errorSummary()` for blocking errors.
-5. If none remain, delegates to Angular `submit()` with `ignoreValidators: 'all'`.
+### A. Declarative: `[formRoot]` with a warnings guard (preferred)
 
-Pending async validators do not block this helper. The microtask is not a wait
-for async validation settlement. `canSubmitWithWarnings()` uses the same
-settled-blocking-error policy and returns false during native submission.
-
-The helper returns `Promise<boolean>`. It returns true after the action settles,
-or false when refused or dropped. An action rejection propagates; the re-entry
-guard is released in either case. True means the action ran, not that a server
-accepted the data independently of the action's own error handling.
-
-The following is a handler excerpt for an existing form with default `on-touch`
-timing. It deliberately uses one native event owner instead of `[formRoot]`:
+Keep `[formRoot]` and `ngxSignalForm` on the form. Set
+`ignoreValidators: 'all'` in the submission options, and check for blocking
+errors at the start of the action:
 
 ```typescript
-import { submitWithWarnings } from '@ngx-signal-forms/toolkit';
+import { Component, signal } from '@angular/core';
+import { form, FormField } from '@angular/forms/signals';
+import {
+  createOnInvalidHandler,
+  hasOnlyWarnings,
+  NgxSignalFormToolkit,
+} from '@ngx-signal-forms/toolkit';
+import { NgxFormField } from '@ngx-signal-forms/toolkit/form-field';
+import { signupSchema } from './signup.validations';
 
-async function save(event: Event): Promise<void> {
-  event.preventDefault();
-  await submitWithWarnings(profileForm, async () => {
-    await api.save(profileForm().value());
+@Component({
+  selector: 'app-signup',
+  imports: [FormField, NgxSignalFormToolkit, NgxFormField],
+  templateUrl: './signup.html',
+})
+export class SignupComponent {
+  readonly #model = signal({ email: '', password: '' });
+  readonly #onInvalid = createOnInvalidHandler();
+
+  readonly signupForm = form(this.#model, signupSchema, {
+    submission: {
+      ignoreValidators: 'all',
+      action: async (tree) => {
+        if (!hasOnlyWarnings(tree().errorSummary())) {
+          this.#onInvalid(tree);
+          return;
+        }
+        // Save tree().value() here.
+      },
+    },
   });
 }
 ```
 
 ```html
+<!-- signup.html -->
+<form [formRoot]="signupForm" ngxSignalForm>
+  <ngx-form-field-wrapper [formField]="signupForm.password">
+    <label for="signup-password">Password</label>
+    <input
+      id="signup-password"
+      type="password"
+      autocomplete="new-password"
+      [formField]="signupForm.password"
+    />
+  </ngx-form-field-wrapper>
+  <button type="submit" [disabled]="signupForm().submitting()">
+    Create account
+  </button>
+</form>
+```
+
+Prefer this pattern. Angular owns the submit event, `submitting()` works, and
+`ngxSignalForm` records every submit attempt, so `on-submit` timing and the
+error summary work with no extra code. The
+[warning-support demo](../apps/demo/src/app/02-toolkit-core/warning-support/README.md)
+uses it.
+
+Never use `ignoreValidators: 'all'` without the `hasOnlyWarnings()` check. It
+would also skip real errors. Check `errorSummary()`, not `errors()`:
+`errors()` holds only the root's own errors, and `errorSummary()` includes
+every descendant. `hasOnlyWarnings([])` returns `true`.
+
+Do not call `submitWithWarnings()` from inside `submission.action`. It returns
+`false` while `submitting()` is `true`, so it does nothing there.
+
+### B. Imperative: `submitWithWarnings()` with a native `(submit)` handler
+
+Use this when you do not use `[formRoot]`, for example when you must run other
+code before submit. Write one native `(submit)` handler, and do not add
+`[formRoot]` to the same form:
+
+```typescript
+import { Component, signal } from '@angular/core';
+import { form, FormField } from '@angular/forms/signals';
+import { submitWithWarnings } from '@ngx-signal-forms/toolkit';
+import { NgxFormField } from '@ngx-signal-forms/toolkit/form-field';
+import { profileSchema } from './profile.validations';
+
+@Component({
+  selector: 'app-profile',
+  imports: [FormField, NgxFormField],
+  templateUrl: './profile.html',
+})
+export class ProfileComponent {
+  readonly #model = signal({ displayName: '' });
+  readonly profileForm = form(this.#model, profileSchema);
+
+  protected async save(event: Event): Promise<void> {
+    event.preventDefault();
+    await submitWithWarnings(this.profileForm, async () => {
+      // Save this.profileForm().value() here.
+    });
+  }
+}
+```
+
+```html
+<!-- profile.html -->
 <form novalidate (submit)="save($event)">
-  <!-- Existing labeled controls bound with [formField]. -->
+  <ngx-form-field-wrapper [formField]="profileForm.displayName">
+    <label for="profile-name">Display name</label>
+    <input id="profile-name" [formField]="profileForm.displayName" />
+  </ngx-form-field-wrapper>
   <button type="submit">Save</button>
 </form>
 ```
 
-Do not combine competing native submit handlers. A declarative alternative is
-Angular submission options with `ignoreValidators: 'all'` and a blocking-error
-guard in the action. The
-[warning-support demo](../apps/demo/src/app/02-toolkit-core/warning-support/README.md)
-uses that approach. Bypassing all validators without the guard also bypasses
-real errors.
+`submitWithWarnings(formTree, action)` does these steps:
 
-If pending checks must finish before saving, enforce that policy in the submit
-path, not only with a disabled button. Recheck settled blocking errors before
-the save. The server must validate the submitted snapshot too.
+1. Returns `false` at once if the form is already submitting or another call
+   for the same form is still running.
+2. Marks the form and all descendants touched.
+3. Waits one microtask, so synchronous validation results are up to date.
+4. Returns `false` if `errorSummary()` holds a blocking error.
+5. Calls Angular `submit()` with `ignoreValidators: 'all'`, which runs your
+   action and sets `submitting()` while it runs.
 
-Successful delegation drives Angular's `submitting()` signal and the toolkit's
-completed-submission tracker. A refused helper call does not enter Angular
-submission. An imperative `on-submit` display therefore needs explicit failed-
-attempt tracking through `createSubmittedStatusTracker(form, submitAttempted)`.
-Do not treat every false return as a validation failure; overlap also returns
-false. See the [submission API](../packages/toolkit/core/utilities/submission-helpers.ts).
+It returns `Promise<boolean>`: `true` after the action finishes, `false` when
+it refused or dropped the call. If the action throws, the error reaches the
+caller, and the form can be submitted again. `true` means only that your action
+ran.
+
+This form has no `ngxSignalForm`, so nothing records a refused submit. For
+`on-submit` timing, pass your own flag to
+`createSubmittedStatusTracker(form, submitAttempted)` and set it to `true` when
+`submitWithWarnings()` returns `false`. Do not read every `false` as a
+validation failure. A dropped double-click also returns `false`.
+
+To disable the button, use `canSubmitWithWarnings(form)`. It is `false` while
+the form is submitting or while blocking errors remain.
+
+### Pending async validators
+
+Neither pattern waits for async validators. A pending validator does not block
+`hasOnlyWarnings()`, `canSubmitWithWarnings()`, or `submitWithWarnings()`, and
+the one-microtask wait in `submitWithWarnings()` does not wait for async
+results. If a check must finish before you save, enforce that in your action.
+Always validate the submitted data on the server too.
 
 ## Timing and configuration
 
-Error timing and warning timing resolve independently:
+A strategy decides when feedback shows:
 
-| Priority            | Error channel          | Warning channel          |
-| ------------------- | ---------------------- | ------------------------ |
-| Explicit input      | `strategy`             | `warningStrategy`        |
-| Form context        | `errorStrategy`        | `warningStrategy`        |
-| Applicable provider | `defaultErrorStrategy` | `defaultWarningStrategy` |
-| Built-in fallback   | `on-touch`             | `on-touch`               |
+| Value       | Feedback shows                                   |
+| ----------- | ------------------------------------------------ |
+| `immediate` | As soon as validation reports it                 |
+| `on-touch`  | After the user leaves the field, or after submit |
+| `on-submit` | After the first submit attempt                   |
 
-Component-scoped configuration overrides app configuration per key. Visual
-settings such as appearance have no form-context tier. See
-[configuration](../packages/toolkit/README.md#configuration).
+Errors and warnings each have their own strategy. They resolve separately, so a
+form can hold errors until submit and still show warnings early.
 
-Omitting a field strategy and setting `inherit` both defer to context/config.
-The form input accepts resolved values, not `inherit`; when omitted it reads
-configuration. Global defaults also take resolved values.
+For each field, the toolkit uses the first value it finds in this order:
 
-| Value       | Visibility                               |
-| ----------- | ---------------------------------------- |
-| `immediate` | When validation reports feedback         |
-| `on-touch`  | After touch or a recorded submit attempt |
-| `on-submit` | After a recorded submit attempt          |
+| Step | Where you set it                                                       | Errors                 | Warnings                 |
+| ---- | ---------------------------------------------------------------------- | ---------------------- | ------------------------ |
+| 1    | Input on the wrapper, fieldset, error, or headless summary             | `strategy`             | `warningStrategy`        |
+| 2    | `ngxSignalForm` on the `<form>`                                        | `errorStrategy`        | `warningStrategy`        |
+| 3    | `provideNgxSignalFormsConfigForComponent()` in a component's providers | `defaultErrorStrategy` | `defaultWarningStrategy` |
+| 4    | `provideNgxSignalFormsConfig()` in the app providers                   | `defaultErrorStrategy` | `defaultWarningStrategy` |
+| 5    | Built-in default                                                       | `on-touch`             | `on-touch`               |
 
-Use `ngxSignalForm` beside `[formRoot]` for shared submitted status. Standalone
-factories using `on-submit` must receive that status explicitly.
+```typescript
+// Step 4: app.config.ts
+provideNgxSignalFormsConfig({
+  defaultErrorStrategy: 'on-submit',
+  defaultWarningStrategy: 'on-touch',
+});
+```
+
+```html
+<!-- Step 2: one form -->
+<form [formRoot]="form" ngxSignalForm errorStrategy="on-submit">
+  <!-- Step 1: one field -->
+  <ngx-form-field-wrapper [formField]="form.email" strategy="immediate">
+    <label for="email">Email</label>
+    <input id="email" [formField]="form.email" />
+  </ngx-form-field-wrapper>
+</form>
+```
+
+Details:
+
+- A field input set to `'inherit'` acts as if you left it out. The
+  `ngxSignalForm` inputs and the config keys take only real values
+  (`immediate`, `on-touch`, `on-submit`), not `'inherit'`.
+- A component provider changes only the keys you pass. Other keys come from
+  the provider above it.
+- When the form has `ngxSignalForm`, step 2 always gives a value. If you do
+  not set `errorStrategy`, it uses the configuration that the `<form>` element
+  sees. A component provider below the form does not change timing for fields
+  in that form.
+- Visual settings, such as `appearance`, `orientation`, and required or
+  optional markers, skip step 2. `ngxSignalForm` has no visual inputs, so the
+  wrapper goes from its own input to the component provider, the app
+  provider, and the built-in default.
+- If you bind `errorsOverride` on `NgxHeadlessErrorState`, you own the timing.
+  Both visibility signals are then `true`.
+
+Add `ngxSignalForm` next to `[formRoot]` to share the submit status with every
+field. A standalone factory that uses `on-submit` outside such a form must get
+the submit status through its options.
+
+The full list of configuration keys is in the
+[toolkit configuration reference](../packages/toolkit/README.md#configuration).
+
+Native `:user-invalid` uses the browser's own timing. It is not the same as
+`on-touch`, and it cannot see schema errors, server errors, or warnings.
 
 ### When warnings appear — `warningStrategy`
 
-A visible blocking error suppresses warnings in the single-field feedback
-slot. Headless aggregate signals keep warning and error visibility separate.
-The styled fieldset chooses errors when both categories are visible; the
-styled form error summary renders blocking errors only. See the
-[summary comparison](./COMPLEX_NESTED_FORMS.md#error-summaries-across-the-whole-form).
+`warningStrategy` uses the same values and the same order as the error
+strategy, with a separate built-in default of `on-touch`.
 
-Two exceptions matter when composing your own markup:
+When a field has a visible blocking error, the field's feedback slot shows the
+error and hides the warning. Other components handle both kinds like this:
 
-- `NgxHeadlessErrorState.errorsOverride` makes both visibility signals true.
-  The caller supplies already-filtered errors and owns timing and precedence.
-- Standalone auto-ARIA's error path currently omits the config-default tier.
-  Do not assume it resolves exactly like headless error state. Prefer shared
-  form context or a wrapper for consistent configured timing.
+- The styled fieldset shows errors when both errors and warnings are visible.
+- The styled error summary shows blocking errors only.
+- The headless directives keep separate visibility signals for errors and
+  warnings, so you decide what to render.
 
-Native `:user-invalid` has its own interaction policy. It is not equivalent to
-`on-touch` and cannot represent all schema, server, or warning errors.
+See the [summary comparison](./COMPLEX_NESTED_FORMS.md#error-summaries-across-the-whole-form).
 
 ## Rendering and ARIA
 
-The wrapper renders feedback automatically. In your own layout, import
-`NgxFormFieldError` from `/assistive`, give the control a label and stable ID,
-and pass that identity as `fieldName`.
+The wrapper renders errors and warnings for you. In your own layout, import
+`NgxFormFieldError` from `@ngx-signal-forms/toolkit/assistive`. Give the
+control a label and a stable `id`, and pass that `id` as `fieldName`:
 
-Let one system own ARIA. If your renderer binds the attributes, set
-`ngxSignalFormControlAria="manual"` on the bound control. Keep live-region hosts
-mounted and update their content. Use the same visibility predicate for
-feedback and its description IDs.
+```html
+<label for="email">Email</label>
+<input id="email" type="email" [formField]="form.email" />
+<ngx-form-field-error [formField]="form.email" fieldName="email" />
+```
 
-Wrapper/assistive IDs name containers, such as `email-error` and
-`email-warning`. Headless message IDs name individual entries, such as
-`email-error-required`. They are not interchangeable. Preserve the containers
-or update `aria-describedby` when changing renderers.
-
-Use occurrence-safe loop keys such as `$index` for a rendered message list.
-Several errors may share a kind. Do not use the kind alone as a key or DOM ID
-when duplicates are possible.
-
-The toolkit uses alert/status roles without redundant live-region attributes.
-These semantics do not guarantee an announcement in every browser and screen
-reader. Test the complete interaction, including focus and persistent labels.
+If you render feedback yourself or build a wrapper, see
+[custom wrappers](./CUSTOM_WRAPPERS.md) for the element IDs, live regions, and
+ARIA rules. Always test the finished form with a screen reader.
 
 ## Errors and message resolution
 
-`errors()` returns direct field errors. `errorSummary()` includes descendants.
-Submission guards must inspect the summary, not only root `errors()`.
+`errors()` returns the field's own errors. `errorSummary()` also includes the
+errors of every descendant field.
 
-Use `splitByKind()` for `{ blocking, warnings }`, or `isBlockingError()` and
-`isWarningError()` for one item. These helpers are exported from the root.
+To separate warnings from blocking errors, use `splitByKind(errors)`, which
+returns `{ blocking, warnings }`. For one error, use `isBlockingError()` or
+`isWarningError()`. All three come from `@ngx-signal-forms/toolkit`.
 
 ### Message resolution
 
-The display message resolves in this order:
+The toolkit picks the displayed text in this order:
 
-1. The validator's explicit `message`.
-2. An error-message registry entry.
-3. A built-in message for a known kind, or a humanized unknown kind.
+1. The validator's `message`.
+2. An entry in the error-message registry.
+3. A built-in message for a known kind, or the kind turned into words for an
+   unknown kind.
 
-The fallback is not always `Invalid`. An internal custom kind can become
-visible text. Supply a message or registry entry for consumer-facing rules.
+Step 3 can show an internal kind name to the user. Give every rule that users
+see a `message` or a registry entry.
 
 ```typescript
 import { provideErrorMessages } from '@ngx-signal-forms/toolkit';
@@ -193,20 +334,25 @@ provideErrorMessages({
 });
 ```
 
-Render resolved messages, not raw `error.message`, which can be absent.
+In custom markup, render the resolved message, not `error.message`, which can
+be empty.
 
 ### Runtime language changes
 
-A provider factory runs once per injector. String registry entries capture
-their text then. For runtime language changes, use function entries that read
-a reactive language signal each time they resolve a message. Calling a
-translation method without reading a signal does not establish a reactive
-dependency. See the [i18n demo](../apps/demo/src/app/05-advanced/i18n/README.md).
+A provider factory runs once per injector. A string entry keeps the text it had
+at that time. To change language at runtime, use function entries that read a
+language signal each time they run. A call to a translation method that does
+not read a signal does not update when the language changes. The
+[i18n demo](../apps/demo/src/app/05-advanced/i18n/README.md) shows the pattern.
 
-### Field label resolution
+## Field label resolution
 
-Summary labels use `humanizeFieldPath()` by default. For example,
-`address.postalCode` becomes `Address / Postal code`.
+The error summary shows a label for each field. By default,
+`humanizeFieldPath()` from `@ngx-signal-forms/toolkit/headless` builds it from
+the field path. For example, `address.postalCode` becomes
+`Address / Postal code`.
+
+To set labels, pass a map to `provideFieldLabels()`:
 
 ```typescript
 import { provideFieldLabels } from '@ngx-signal-forms/toolkit';
@@ -217,17 +363,24 @@ provideFieldLabels({
 });
 ```
 
-A factory may return a resolver for dynamic paths. That resolver must read a
-reactive language signal to update on language changes. Labels are display
-text, not field identity. The current styled summary can produce duplicate
-render keys for distinct fields with identical labels, kinds, and messages.
-Use distinct labels as a workaround; see runtime concern R02 in the
-[nested-forms guide](./COMPLEX_NESTED_FORMS.md#field-labels-for-deep-paths).
+For paths that change, such as array indexes, pass a factory that returns a
+resolver function. See
+[field labels for deep paths](./COMPLEX_NESTED_FORMS.md#field-labels-for-deep-paths).
+To translate labels at runtime, the resolver must read a language signal, the
+same as message functions. The
+[i18n demo](../apps/demo/src/app/05-advanced/i18n/README.md) translates both
+messages and labels.
+
+A label is display text only. It does not identify the field.
+
+**Known limitation:** the styled error summary tracks each entry by label,
+error kind, and message. Two different fields with the same label, kind, and
+message get the same tracking key. Give each field a distinct label.
 
 ## Related guides
 
-- [Theming](../packages/toolkit/form-field/THEMING.md)
+- [Grouped fields, arrays, and error summaries](./COMPLEX_NESTED_FORMS.md)
 - [Headless API](../packages/toolkit/headless/README.md)
-- [Custom wrappers and ARIA ownership](./CUSTOM_WRAPPERS.md)
-- [Migration from Vest Forms](./MIGRATING_FROM_NGX_VEST_FORMS.md)
-- [RC.13 changes](./migrations/v1.0.0-rc.13.md)
+- [Custom wrappers](./CUSTOM_WRAPPERS.md)
+- [Theming](../packages/toolkit/form-field/THEMING.md)
+- [Migration from ngx-vest-forms](./MIGRATING_FROM_NGX_VEST_FORMS.md)

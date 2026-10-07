@@ -1,0 +1,28 @@
+name: Feature request
+description: Suggest a new feature or a change to an existing one.
+labels: ['enhancement', 'needs-triage']
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What are you trying to do, and what stops you today? Describe the problem, not only the solution.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposal
+      description: How could the toolkit solve it? Show the API or template you would like to write.
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Workarounds and alternatives
+      description: What do you do now, and what other solutions did you consider?
+  - type: textarea
+    id: accessibility
+    attributes:
+      label: Accessibility impact
+      description: Does this change what screen reader or keyboard users experience? Name the WCAG success criterion if you know it.

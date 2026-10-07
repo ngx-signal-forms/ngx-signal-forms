@@ -1,59 +1,42 @@
-# Best practices
+---
+title: 'Best practices'
+---
 
-How to use `@ngx-signal-forms/toolkit` the way it's designed to be used. Each
-practice below states what to do, what to avoid, and why — with links to the
-guide that goes deeper. The [root README](../README.md#guides) carries
-the one-line version of this list.
+How to use `@ngx-signal-forms/toolkit` as it is designed. Each practice says
+what to do, what to avoid, and why, and links to the guide that explains more.
 
-Angular owns the model, validation, and submit lifecycle. The toolkit adds
-presentation and accessibility, plus an explicit warning-aware submission
-policy. Presentation settings resolve through their own documented chains.
+Angular owns the model, validation, and submission. The toolkit adds when
+feedback shows, ARIA, and field UI.
 
 ---
 
-## 1. Configure at the highest tier that's true
-
-Each setting has its own chain, most specific first:
-
-| Setting                                      | Resolution                                                                                        |
-| -------------------------------------------- | ------------------------------------------------------------------------------------------------- |
-| Error timing                                 | Field `strategy` → form `errorStrategy` → provider `defaultErrorStrategy` → `on-touch`            |
-| Warning timing                               | Field `warningStrategy` → form `warningStrategy` → provider `defaultWarningStrategy` → `on-touch` |
-| Submitted status                             | Explicit status → `ngxSignalForm` context → unsubmitted fallback                                  |
-| Wrapper appearance, orientation, and markers | Component input → provider config → built-in default                                              |
-| Control kind                                 | Explicit kind → DOM inference                                                                     |
-| Control layout and ARIA mode                 | Explicit values → resolved kind's preset → no resolved value                                      |
-| Error/hint renderer                          | Nearest renderer provider → inherited provider → built-in renderer                                |
-
-Component-scoped providers inherit app defaults per key. `ngxSignalForm`
-carries error strategy, warning strategy, and submitted status, not appearance
-or renderers. Low-level visibility factories accept `configDefault` explicitly;
-check their contracts rather than assuming every helper injects config.
+## 1. Set defaults once, at the widest scope
 
 **Do**
 
-- Set org-wide defaults once in `app.config.ts` with
+- Set app-wide defaults once in `app.config.ts` with
   `provideNgxSignalFormsConfig()`.
-- Use the `…ForComponent` providers for feature-level exceptions — override
-  the one key that differs and inherit the rest.
-- Reserve field-level inputs (`appearance`, `strategy`, …) for genuine
-  one-field exceptions.
+- For a feature that differs, use a `…ForComponent` provider and set only the
+  key that differs. The other keys come from the app configuration.
+- Use field inputs (`appearance`, `strategy`, …) only for a real one-field
+  exception.
 
 **Don't**
 
-- Repeat `appearance="outline"` on every wrapper in the app — that's the
-  app-wide tier's job, and per-field repetition is what the cascade exists to
-  remove.
-- Re-provide the full config in a component when you mean to change one key.
-  The merge is per-key (nullish `??`), so a partial override is the intended
-  usage.
+- Repeat `appearance="outline"` on every wrapper. Set
+  `defaultFormFieldAppearance` once instead.
+- Copy the full configuration into a component to change one key. Component
+  providers merge per key.
 
-**Why** — the setting's chain makes its value predictable, and an explicit input
-is an exception worth noticing. Explicit falsy values are respected:
-`requiredMarker: ''` clears the marker, while omitting the key inherits it.
+**Why**: a default set once gives predictable results, and an explicit input
+stands out as an exception. An explicit empty value counts:
+`requiredMarker: ''` removes the marker, while leaving the key out keeps the
+inherited marker.
 
-See [how settings resolve](../README.md#how-settings-resolve-the-cascade) and
-[per-component overrides](../packages/toolkit/README.md#configuration).
+See [configuration](../packages/toolkit/README.md#configuration) for every key
+and default, and
+[timing and configuration](./WARNINGS_SUPPORT.md#timing-and-configuration) for
+which setting wins.
 
 ---
 
@@ -62,128 +45,109 @@ See [how settings resolve](../README.md#how-settings-resolve-the-cascade) and
 **Do**
 
 - Own the model, validation, and submission with Angular's `form()`,
-  `schema()`, validators, and `submit()` — exactly as you would without the
-  toolkit.
-- Keep presentation separate from validation and choose submission policy explicitly.
-- Use `warningError()` only for advice the user may legitimately ignore;
-  anything that must hold before saving is a regular (blocking) error.
+  `schema()`, validators, and `submit()`, as you would without the toolkit.
+- Use `warningError()` only for advice the user may ignore. A rule that must
+  hold before saving is a normal, blocking error.
 
 **Don't**
 
-- Move blocking rules into warnings to "soften" the UX. Ordinary Angular
-  `submit()` rejects `warn:` errors too, because they make the form invalid.
-  `submitWithWarnings()` permits them after checking for blocking errors. See
-  [when a warning is the wrong tool](./WARNINGS_SUPPORT.md#when-a-warning-is-the-wrong-tool).
-- Treat the warning helper's microtask yield as waiting for async validation.
-  It marks descendants touched, yields once, checks blocking errors in
-  `errorSummary()`, then delegates with `ignoreValidators: 'all'`. Pending
-  validators do not block it. Enforce any stricter pending policy in the submit
-  path, not only on the button.
-- Bypass Angular validators without that blocking-error gate, or invoke the
-  helper inside an already-running `submission.action`.
+- Turn blocking rules into warnings to soften the UX. Angular's `submit()`
+  also rejects warnings, because they make the form invalid. To let warnings
+  through, use one of the warning-aware submit paths in
+  [warnings](./WARNINGS_SUPPORT.md#form-submission-behavior).
+- Skip Angular's validators (`ignoreValidators: 'all'`) without checking for
+  blocking errors yourself. That also lets real errors through.
 
-**Why** — presentation leaves Angular's state intact, but choosing warning-aware
-submission changes eligibility. Removing that helper can change whether a form
-submits. Its callback settling means the action completed, not that pending
-validators finished or a server independently accepted the data.
+**Why**: the toolkit changes only how feedback looks, so your form works the
+same without it. The one exception is a warning-aware submit path, which you
+choose on purpose.
 
-See [Angular vs toolkit](./ANGULAR_VS_TOOLKIT.md).
+See [Angular and toolkit ownership](./ANGULAR_VS_TOOLKIT.md).
 
 ---
 
-## 3. Start native, and let inference work before adding API
+## 3. Start with native HTML and add API only when you need it
 
-The zero-API path is the designed default: field identity comes from the
-control's `id`, the control kind is inferred from the DOM, and auto-ARIA wires
-`aria-invalid` / `aria-required` / `aria-describedby` on its own.
+With no extra attributes, the toolkit takes the field name from the control's
+`id`, infers the control kind from the element, and writes `aria-invalid`,
+`aria-required`, and `aria-describedby`.
 
 **Do**
 
-- Give every bound control a stable `id` — it doubles as the field name for
-  all ARIA id generation. (Or set `fieldName` on the wrapper when the control
-  can't expose one.)
-- Stay on plain `[formRoot]` and the default `'on-touch'` strategy until you
-  actually need `'on-submit'` timing or submitted-status tracking — only then
-  add `ngxSignalForm`.
-- Keep native HTML semantics (`type="email"`, `autocomplete`) on
-  real controls; a native `input[type="checkbox"][role="switch"]` is
-  recognized as a switch without an explicit semantics directive. Put required
-  constraints in the Angular schema so `[formField]` owns state synchronization.
+- Give every bound control a stable `id`. The toolkit builds all ARIA IDs from
+  it. If the control cannot have one, set `fieldName` on the wrapper.
+- Start with `[formRoot]` alone. Add `ngxSignalForm` when you need `on-submit`
+  timing, a form-wide strategy, or an error summary. The rules for when you
+  need it are in the
+  [root README](../README.md#when-errors-show).
+- Keep native HTML semantics (`type="email"`, `autocomplete`) on real controls.
+  Put required rules in the Angular schema.
 
 **Don't**
 
-- Add control overrides to ordinary native fields without a reason. Explicit
-  checkbox/radio opt-in and a native control inside a library-owned ARIA system
-  are valid exceptions.
-- Skip the `id`: missing identity degrades gracefully (no crash) but silently
-  costs you the `aria-describedby` linkage in production.
+- Add control attributes to ordinary native fields without a reason. See
+  [control kinds](./CUSTOM_CONTROLS.md#inferred-kind-vs-auto-aria-eligibility)
+  for the cases that need one.
+- Leave out the `id`. The form still works, but the control loses its
+  `aria-describedby` link to the error, without a visible failure.
 
-**Why** — every directive you don't write is one that can't be misconfigured.
-The explicit APIs are an escape hatch for custom controls, not a baseline
-requirement.
+**Why**: an attribute you do not write cannot be set wrong. The explicit APIs
+are for custom controls.
 
-See [custom controls](./CUSTOM_CONTROLS.md) — including
-[when to read it at all](./CUSTOM_CONTROLS.md#when-to-read-this-guide).
+See [custom controls](./CUSTOM_CONTROLS.md#when-to-read-this-guide).
 
 ---
 
-## 4. Pick the right surface — and exactly one ARIA owner
+## 4. Let one party write ARIA on each control
 
 **Do**
 
-- Default to `ngx-form-field-wrapper` — it's the 90% path (layout, label,
-  errors, hints, counts, ARIA in one component).
-- Use `ngx-form-fieldset` only when validation belongs to a group as a whole
-  (cross-field rules, section summaries).
-- Drop to `/assistive` for standalone feedback pieces in your own layout, and
-  `/headless` when you own every element.
-- When a widget (Material, PrimeNG, a custom composite) already manages its
-  own ARIA, hand it ownership explicitly with
-  `ngxSignalFormControlAria="manual"` — the wrapper still contributes the
-  label, errors, and field identity.
+- Start with `ngx-form-field-wrapper`. Use `ngx-form-fieldset` when a rule
+  belongs to a group of fields. To pick a different level, see
+  [choose your level](../README.md#choose-your-level).
+- When a widget (Material, PrimeNG, your own component) writes its own ARIA,
+  add `ngxSignalFormControlAria="manual"` to it. The wrapper still shows the
+  label and errors.
 
 **Don't**
 
-- Layer toolkit auto-ARIA on top of a component library's internal control
-  markup — two systems writing `aria-describedby` produce duplicate or
-  conflicting announcements.
-- Import the toolkit only in the parent form component when a custom control
-  declares the `[formField]` host inside its _own_ template — standalone
-  imports are template-local, and the miss is silent. See
-  [the most common gotcha](./CUSTOM_CONTROLS.md#standalone-imports-are-template-local-the-most-common-gotcha).
-- Forget `focus()` on a custom control — without it, `focusFirstInvalid()`
-  and error-summary links silently skip the field.
+- Let the toolkit and a component library both write `aria-describedby` on one
+  control. Screen readers then announce duplicate or conflicting text.
+- Import the toolkit only in the parent form when a custom control has the
+  `[formField]` host in its own template. Standalone imports apply only to the
+  template of the component that imports them, and nothing warns you. See
+  [standalone imports](./CUSTOM_CONTROLS.md#standalone-imports-are-template-local-the-most-common-gotcha).
+- Leave out `focus()` on a custom control. Without it, `focusFirstInvalid()`
+  and error-summary links skip the field.
 
-**Why** — each surface is a deliberate trade of convenience against control,
-and accessibility wiring must have a single writer per attribute to stay
-coherent for assistive tech.
+**Why**: assistive technology needs one consistent value per attribute.
 
-See [which part do I need](../README.md#which-part-of-the-toolkit-do-i-need)
-and [custom wrappers](./CUSTOM_WRAPPERS.md) for third-party design systems.
+See [custom controls](./CUSTOM_CONTROLS.md) and
+[custom wrappers](./CUSTOM_WRAPPERS.md).
 
 ---
 
-## 5. Layer validation deliberately
+## 5. Add validation libraries only for a reason
 
 **Do**
 
-- Start with Angular validators, including conditional, cross-field, and async
-  checks. These capabilities alone do not require another library.
-- Reuse an existing contract through `validateStandardSchema()` when useful.
-- Choose Vest for an existing suite or when its grouped business-policy rules
-  are easier to read and maintain. It can also supply advisory guidance via
-  `validateVest(path, suite, { includeWarnings: true })` (or
-  `validateVestWarnings()`).
+- Start with Angular validators. They handle conditional, cross-field, and
+  async rules without another library.
+- Use `validateStandardSchema()` to reuse a schema you already have, such as
+  Zod.
+- Use Vest for an existing suite, or when grouped business rules are easier to
+  read as Vest tests. `validateVest(path, suite, { includeWarnings: true })`
+  also gives you warnings.
 
 **Don't**
 
-- Add Angular validators, Zod, and Vest to every form by default, or duplicate
-  the same rule across libraries.
+- Add Angular validators, Zod, and Vest to every form by default, or write the
+  same rule in two libraries.
 
-**Why** — layering is optional. Add a library for a specific reuse or readability
-benefit, not because the form has an async check or several dependent fields.
+**Why**: each library adds a dependency. Add one for a specific reuse or
+readability gain.
 
-See [validation strategies](./VALIDATION_STRATEGY.md).
+See [validation choices](./VALIDATION_STRATEGY.md).
 
 ---
 
@@ -192,14 +156,11 @@ See [validation strategies](./VALIDATION_STRATEGY.md).
 For a new form, or a review of an existing one:
 
 - [ ] Every bound control has a stable `id` (or the wrapper has `fieldName`)
-- [ ] App-wide defaults set once via `provideNgxSignalFormsConfig()`; no
-      repeated per-field inputs that all say the same thing
-- [ ] Plain `[formRoot]` unless `'on-submit'` timing or submitted status is
-      actually needed
-- [ ] Blocking rules are errors; warnings are reserved for ignorable advice
-- [ ] One ARIA owner per control — auto by default, `manual` for widgets that
-      bring their own
-- [ ] Custom controls implement `focus()` and are tested with
-      `focusFirstInvalid()`
-- [ ] Auto-ARIA is imported in the component whose template declares the
-      `[formField]` host
+- [ ] App-wide defaults are set once with `provideNgxSignalFormsConfig()`
+- [ ] `ngxSignalForm` is on the form if it uses `on-submit` timing, a form-wide
+      strategy, or an error summary
+- [ ] Blocking rules are errors; warnings are only for advice the user may ignore
+- [ ] One party writes ARIA on each control: the toolkit by default, `manual`
+      for widgets that write their own
+- [ ] Custom controls have a `focus()` method, tested with `focusFirstInvalid()`
+- [ ] The component whose template has the `[formField]` host imports auto-ARIA

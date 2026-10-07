@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test';
 
+import { requireValue } from './test-helpers';
 import { ROLE_ALERT_SELECTOR } from '../../fixtures/aria-selectors';
 import { FormFieldWrapperComplexPage } from '../../page-objects/form-field-wrapper-complex.page';
 
@@ -28,14 +29,6 @@ const contactMethodFieldsetBottomAriaSnapshot = `
   - alert:
     - paragraph: "Error: Preferred contact method is required"
 `;
-
-function requireValue<T>(value: T | null, label: string): T {
-  if (value === null) {
-    throw new Error(`Expected ${label} to be available.`);
-  }
-
-  return value;
-}
 
 function getMessagePlacement(
   fieldset: ReturnType<FormFieldWrapperComplexPage['getFieldsetByLegend']>,
@@ -171,6 +164,40 @@ test.describe('Form Field Wrapper - Complex Forms', () => {
 
       await page.showOutlineAppearance();
       await expectFigmaAssistiveMetrics();
+    });
+
+    // The demo's global reset in apps/demo/src/styles.scss removes the input
+    // outline because the wrapper draws the focus ring. Plain draws none, so
+    // dropping the `:not(.ngx-signal-forms-plain)` guard would leave keyboard
+    // users without a focus indicator (WCAG 2.4.7). Toolkit specs don't load
+    // this stylesheet, so only a demo-level test can catch that.
+    test('should keep the input focus outline on Plain and leave Standard/Outline container-owned', async () => {
+      const focusedInputOutlineStyle = async (): Promise<string> => {
+        const input = page.getWrapperByControlId('firstName').locator('input');
+
+        await input.focus();
+        // Text inputs always match :focus-visible, so this is the keyboard case.
+        await expect(input).toBeFocused();
+        expect(await input.evaluate((el) => el.matches(':focus-visible'))).toBe(
+          true,
+        );
+
+        return input.evaluate((el) => getComputedStyle(el).outlineStyle);
+      };
+      const wrapper = page.getWrapperByControlId('firstName');
+
+      await page.showStandardAppearance();
+      // The appearance class lands a render after the click; wait for it.
+      await expect(wrapper).not.toHaveClass(/ngx-signal-forms-(outline|plain)/);
+      expect(await focusedInputOutlineStyle()).toBe('none');
+
+      await page.showOutlineAppearance();
+      await expect(wrapper).toHaveClass(/ngx-signal-forms-outline/);
+      expect(await focusedInputOutlineStyle()).toBe('none');
+
+      await page.showPlainAppearance();
+      await expect(wrapper).toHaveClass(/ngx-signal-forms-plain/);
+      expect(await focusedInputOutlineStyle()).not.toBe('none');
     });
   });
 
@@ -765,14 +792,18 @@ test.describe('Form Field Wrapper - Complex Forms', () => {
   });
 
   test.describe('Mixed Control Families', () => {
-    test('should render newsletter as a switch with correct data attributes', async () => {
+    test('should infer the switch layout for a native role="switch" checkbox', async () => {
       const newsletter = page.newsletterSwitch;
       await expect(newsletter).toBeVisible();
       await expect(newsletter).toHaveAttribute('role', 'switch');
-      await expect(newsletter).toHaveAttribute(
+      // The demo sets no ngxSignalFormControl attribute on the switch, so the
+      // wrapper's switch layout comes from inference alone.
+      await expect(newsletter).not.toHaveAttribute(
         'data-ngx-signal-form-control-kind',
-        'switch',
       );
+      await expect(
+        newsletter.locator('xpath=ancestor::ngx-form-field-wrapper'),
+      ).toHaveClass(/ngx-signal-form-field-wrapper--switch/);
     });
 
     test('should render notifications as a checkbox with correct data attributes', async () => {

@@ -1,6 +1,8 @@
 import {
   computed,
   Directive,
+  effect,
+  inject,
   input,
   signal,
   type Injector,
@@ -10,20 +12,22 @@ import type { FieldTree, ValidationError } from '@angular/forms/signals';
 import {
   createErrorVisibility,
   createWarningVisibility,
+  NGX_SIGNAL_FORM_FIELD_VISIBILITY_REGISTRY,
+  normalizeFieldName,
   readDirectErrors,
-  resolveSubmittedStatusFromContext,
   splitByKind,
   unwrapValue,
   type ErrorDisplayStrategy,
   type ErrorReadableState,
-  type ReactiveOrStatic,
-  type SignalLike,
+  type NgxReactiveOrStatic,
+  type NgxSignalLike,
   type SubmittedStatus,
   type WarningDisplayStrategy,
 } from '@ngx-signal-forms/toolkit';
 import {
   assertInjector,
   createFieldMessageIdSignals,
+  resolveSubmittedStatusFromContext,
 } from '@ngx-signal-forms/toolkit/core';
 
 import { buildHeadlessContext } from './build-headless-context';
@@ -67,9 +71,9 @@ interface HeadlessErrorStateCore {
  * @internal
  */
 export function buildHeadlessErrorState(
-  fieldState: SignalLike<unknown>,
-  fieldName: SignalLike<string | null>,
-  errorsOverride?: SignalLike<readonly ValidationError[] | undefined>,
+  fieldState: NgxSignalLike<unknown>,
+  fieldName: NgxSignalLike<string | null>,
+  errorsOverride?: NgxSignalLike<readonly ValidationError[] | undefined>,
 ): HeadlessErrorStateCore {
   const split = computed(() => {
     const override = errorsOverride?.();
@@ -99,7 +103,7 @@ export interface CreateErrorStateOptions<TValue = unknown> {
   /** Form field FieldTree */
   readonly field: FieldTree<TValue>;
   /** Field name for ID generation. `null` disables ID generation. */
-  readonly fieldName: ReactiveOrStatic<string | null>;
+  readonly fieldName: NgxReactiveOrStatic<string | null>;
   /**
    * Error display strategy override.
    *
@@ -110,7 +114,7 @@ export interface CreateErrorStateOptions<TValue = unknown> {
    * defaults apply consistently across headless surfaces even outside a
    * form context.
    */
-  readonly strategy?: ReactiveOrStatic<ErrorDisplayStrategy>;
+  readonly strategy?: NgxReactiveOrStatic<ErrorDisplayStrategy>;
   /**
    * Warning display strategy override, independent of {@link strategy}.
    *
@@ -120,14 +124,14 @@ export interface CreateErrorStateOptions<TValue = unknown> {
    * consults `defaultErrorStrategy`, so an ambient `'on-submit'` meant for
    * blocking errors never silently gates warnings (ADR-0007).
    */
-  readonly warningStrategy?: ReactiveOrStatic<WarningDisplayStrategy>;
+  readonly warningStrategy?: NgxReactiveOrStatic<WarningDisplayStrategy>;
   /**
    * Submitted status override.
    *
    * Resolution order: this option (when not `undefined`) → ambient
    * `NGX_SIGNAL_FORM_CONTEXT.submittedStatus` → `undefined`.
    */
-  readonly submittedStatus?: ReactiveOrStatic<SubmittedStatus | undefined>;
+  readonly submittedStatus?: NgxReactiveOrStatic<SubmittedStatus | undefined>;
   /**
    * Optional injector for use outside an Angular injection context (e.g.
    * unit tests, `runInInjectionContext` wrappers). When omitted the
@@ -251,10 +255,10 @@ function createErrorStateInternal<TValue = unknown>(
 
   // Routes strategy + submitted-status resolution and the visibility
   // computed itself through the shared `createErrorVisibility` seam
-  // (ADR-0006) instead of re-inlining `resolveStrategyFromContext` →
-  // `resolveSubmittedStatusFromContext` → `createShowErrorsComputed`.
+  // (ADR-0006) instead of re-inlining strategy resolution,
+  // submitted-status resolution, and the visibility computation.
   //
-  // `strategy`/`submittedStatus` are core's `ReactiveOrStatic<T>`
+  // `strategy`/`submittedStatus` are core's `NgxReactiveOrStatic<T>`
   // (signal-or-plain-function-or-value union), which also accepts a bare
   // `() => T` reader — a shape `createErrorVisibility`'s `Signal<T>`-typed
   // options don't structurally accept. Normalize through `computed()` so
@@ -299,6 +303,14 @@ function createErrorStateInternal<TValue = unknown>(
     fieldName: resolvedFieldName,
   };
 }
+
+/**
+ * Which message channels a headless template renders: blocking `'errors'`,
+ * non-blocking `'warnings'`, or `'both'`.
+ *
+ * @group Directives
+ */
+export type NgxHeadlessErrorChannels = 'both' | 'errors' | 'warnings';
 
 /**
  * Error state signals exposed by the headless directive.
@@ -390,6 +402,15 @@ export class NgxHeadlessErrorState<
   readonly #config = this.#context.config;
 
   /**
+   * Field-visibility registry from the nearest `[ngxSignalForm]` host, or
+   * `null` outside one. See the constructor.
+   */
+  readonly #visibilityRegistry = inject(
+    NGX_SIGNAL_FORM_FIELD_VISIBILITY_REGISTRY,
+    { optional: true },
+  );
+
+  /**
    * Bridged field-state signal, set by host components that cannot forward
    * their `[formField]` input via `hostDirectives` inputs (because
    * `[formField]` conflicts with Angular's `FormField` directive selector).
@@ -456,7 +477,22 @@ export class NgxHeadlessErrorState<
    * controls visibility through `hasErrors`/`hasWarnings`).
    */
   readonly errorsOverride =
-    input<ReactiveOrStatic<readonly ValidationError[]>>();
+    input<NgxReactiveOrStatic<readonly ValidationError[]>>();
+
+  /**
+   * Which channels the template renders. `NgxHeadlessErrorState` renders no
+   * DOM, so it cannot tell. Set `'warnings'` when the template has no error
+   * element, or `'errors'` when it has no warning element. The directive then
+   * does not put the id of the missing element in the control's
+   * `aria-describedby`, so no id points to nothing (WCAG 1.3.1).
+   *
+   * `aria-invalid` still follows the real error state. This input changes
+   * which ids auto-ARIA links. It does not change when messages show or what
+   * `shouldShowErrors()` and `shouldShowWarnings()` return.
+   *
+   * @default 'both'
+   */
+  readonly renders = input<NgxHeadlessErrorChannels>('both');
 
   /**
    * Bridges a host component's field input to this directive when the
@@ -505,9 +541,18 @@ export class NgxHeadlessErrorState<
     Partial<ErrorReadableState> | null | undefined
   >(() => this.field()?.() ?? this.#bridgedFieldState()?.());
 
+  /**
+   * `fieldName`, trimmed, or `null` when it is empty or whitespace only. The
+   * ids and the registry entry both use it, so they match the `email-error`
+   * id and the `email` key that auto-ARIA derives from the control's `id`.
+   */
+  readonly #resolvedFieldName = computed(() =>
+    normalizeFieldName(this.fieldName()),
+  );
+
   readonly #core = buildHeadlessErrorState(
     this.#fieldState,
-    this.fieldName,
+    this.#resolvedFieldName,
     computed(() => {
       const override = this.errorsOverride();
       return override === undefined ? undefined : unwrapValue(override);
@@ -619,6 +664,58 @@ export class NgxHeadlessErrorState<
       message: this.#resolveErrorMessage(warning),
     })),
   );
+
+  /** The field shows its blocking errors, rendered or not. */
+  readonly #errorsShown = computed(
+    () => this.shouldShowErrors() && this.hasErrors(),
+  );
+
+  /** The error id is in the DOM: errors show and the template renders them. */
+  readonly #errorContainerVisible = computed(
+    () => this.renders() !== 'warnings' && this.#errorsShown(),
+  );
+
+  readonly #warningContainerVisible = computed(
+    () =>
+      this.renders() !== 'errors' &&
+      this.shouldShowWarnings() &&
+      this.hasWarnings(),
+  );
+
+  constructor() {
+    // Publishes this directive's visibility to the form's field-visibility
+    // registry, under its own `fieldName`. Auto-ARIA reads that entry when
+    // no `NgxFieldIdentity` has published a strategy for the field
+    // (ADR-0010), so `aria-invalid` and `aria-describedby` follow a local
+    // `strategy` or `warningStrategy` too.
+    //
+    // It registers the booleans that give the error and warning elements
+    // their ids, not a strategy for auto-ARIA to resolve again. The
+    // `renders` input switches off the id of a channel the template does not
+    // render. `shouldShowErrors` stays on the real error state, so
+    // `aria-invalid` does not depend on which channels render. It does
+    // nothing without a registry (no `[ngxSignalForm]` ancestor) or without
+    // a non-blank `fieldName`. `NgxFormFieldError` does not forward
+    // `fieldName` to this directive and registers by itself, so the two
+    // never publish twice.
+    effect((onCleanup) => {
+      const registry = this.#visibilityRegistry;
+      const fieldName = this.#resolvedFieldName();
+
+      if (!registry || fieldName === null) {
+        return;
+      }
+
+      onCleanup(
+        registry.register({
+          fieldName,
+          errorContainerVisible: this.#errorContainerVisible,
+          warningContainerVisible: this.#warningContainerVisible,
+          shouldShowErrors: this.#errorsShown,
+        }),
+      );
+    });
+  }
 
   #resolveErrorMessage(error: ValidationError): string {
     return resolveErrorMessage(error, this.#errorMessagesRegistry);

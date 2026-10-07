@@ -4,8 +4,8 @@ import { FormField, form, required, schema } from '@angular/forms/signals';
 import {
   NgxSignalFormToolkit,
   generateErrorId,
-  inferNgxSignalFormControlKind,
 } from '@ngx-signal-forms/toolkit';
+import { inferNgxSignalFormControlKind } from '@ngx-signal-forms/toolkit/core';
 import { render } from '@testing-library/angular';
 import { describe, expect, it, vi } from 'vitest';
 import { NgxFormFieldWrapper } from '../../form-field/form-field-wrapper';
@@ -25,8 +25,8 @@ function requireElement<T extends Element>(
 /**
  * Regression coverage for issue #472: a native checkbox or radio infers a
  * wrapper kind (`checkbox` / `radio-group`), but auto-ARIA eligibility is a
- * separate decision — see CONTEXT.md's "Inferred control kind and
- * auto-ARIA eligibility are two decisions" and
+ * separate decision — see docs/agents/domain-invariants.md, which requires
+ * keeping control-kind inference separate from auto-ARIA eligibility, and
  * `docs/decisions/0001-control-semantics-architecture.md#auto-aria-eligibility-boundary`.
  *
  * Every case below asserts BOTH halves for the same rendered control:
@@ -56,7 +56,7 @@ describe('NgxSignalFormAutoAria — native checkbox/radio inference vs. eligibil
     })
     class Host {
       readonly testForm = form(
-        signal({ agree: false }),
+        signal<{ agree: boolean }>({ agree: false }),
         schema((path) => {
           required(path.agree, { message: 'Agreement is required' });
         }),
@@ -94,7 +94,7 @@ describe('NgxSignalFormAutoAria — native checkbox/radio inference vs. eligibil
     })
     class Host {
       readonly testForm = form(
-        signal({ emailUpdates: false }),
+        signal<{ emailUpdates: boolean }>({ emailUpdates: false }),
         schema((path) => {
           required(path.emailUpdates, { message: 'Updates opt-in required' });
         }),
@@ -150,7 +150,7 @@ describe('NgxSignalFormAutoAria — native checkbox/radio inference vs. eligibil
     })
     class Host {
       readonly testForm = form(
-        signal({ delivery: '' }),
+        signal<{ delivery: string }>({ delivery: '' }),
         schema((path) => {
           required(path.delivery, { message: 'Delivery method is required' });
         }),
@@ -198,7 +198,7 @@ describe('NgxSignalFormAutoAria — native checkbox/radio inference vs. eligibil
     })
     class Host {
       readonly testForm = form(
-        signal({ terms: false }),
+        signal<{ terms: boolean }>({ terms: false }),
         schema((path) => {
           required(path.terms, { message: 'Terms acceptance is required' });
         }),
@@ -267,7 +267,7 @@ describe('NgxSignalFormAutoAria — native checkbox/radio inference vs. eligibil
     })
     class Host {
       readonly testForm = form(
-        signal({ delivery: '' }),
+        signal<{ delivery: string }>({ delivery: '' }),
         schema((path) => {
           required(path.delivery, { message: 'Delivery method is required' });
         }),

@@ -1,62 +1,43 @@
-# Unit-testing a form component
+---
+title: 'Unit-testing a form component'
+sidebarTitle: 'Testing'
+---
 
-This guide shows how to unit-test a component built with Angular Signal
-Forms' `form()` and the toolkit's error-rendering components — set a field
-value, mark it touched, and assert the rendered error text, `aria-invalid`,
-`aria-describedby`, and live-region markup. It also covers triggering submit
-and asserting `on-submit`-strategy behavior.
-
-The condensed version of this pattern lives in the [use-case FAQ, "How do I
-unit-test a form component…"](./FAQ.md#how-do-i-unit-test-a-form-component-set-value-touch-assert-rendered-error--aria-invalid-in-vitesttestbed).
-This guide is the full walkthrough that answer links to.
+This guide shows how to unit-test a component that uses Angular Signal Forms'
+`form()` and the toolkit's error components. You set a field value, touch the
+field, and check the error text, `aria-invalid`, `aria-describedby`, and the
+live region. It also covers submit.
 
 ## When to read this guide
 
-Read this if your project uses Vitest (this repo's test runner) and you want
-to unit-test a component that renders a Signal Forms field — asserting that
-an invalid field shows the right error message, carries the right ARIA
-attributes, and that submitting the form behaves correctly.
+Read it when you test a form component with Vitest and
+`@testing-library/angular`, and you want to check that an invalid field shows
+the right message and ARIA attributes.
 
-This guide does not cover:
+Use something else for:
 
-- **Accessibility conformance scans.** For an automated WCAG 2.2 AA audit of
-  a rendered fixture, use `expectNoA11yViolations()` from
+- **Accessibility scans.** For an axe-core WCAG 2.2 AA scan of a rendered
+  fixture, use `expectNoA11yViolations()` from
   [`@ngx-signal-forms/toolkit/testing`](../packages/toolkit/testing/README.md)
-  in a Vitest **browser-mode** spec (`*.a11y.browser.spec.ts` in this repo).
-  This guide's specs run in jsdom instead — assertions target specific
-  attributes and text, not a full accessibility tree scan. See
-  [ADR-0004](./decisions/0004-wcag22-testing-strategy.md) for why the two run
-  in different modes. A custom wrapper that only needs part of the WCAG 2.2
-  AA tag set checked at a given call site should use
-  `createA11yValidator({ tags })` from the same entry point instead. It
-  builds a scoped validator without bypassing `expectNoA11yViolations`'s
-  baseline through a raw `axe.RunOptions`. See the testing package's README
-  for the scoped-validator example.
-- **End-to-end tests.** Playwright specs (`*.e2e.spec.ts`) drive a real
-  browser and are out of scope here.
+  in a Vitest browser-mode spec. The specs in this guide run in jsdom and check
+  single attributes and text, not a full scan.
+- **End-to-end tests.** Playwright tests that drive a real browser are out of
+  scope.
 
-## The runnable example
+## Setup
 
-The example below is not inlined from a copy — it is the real spec, kept
-runnable so it cannot drift from what the guide describes:
+Install `@testing-library/angular`, `@testing-library/dom`,
+`@testing-library/user-event`, and `@testing-library/jest-dom` as dev
+dependencies. Register the jest-dom matchers (`toBeInTheDocument()`,
+`toHaveAttribute()`, and others) in your Vitest setup file:
 
-**[`apps/demo/src/app/01-getting-started/your-first-form/your-first-form.spec.ts`](../apps/demo/src/app/01-getting-started/your-first-form/your-first-form.spec.ts)**
-
-It tests
-[`YourFirstFormComponent`](../apps/demo/src/app/01-getting-started/your-first-form/your-first-form.form.ts),
-the toolkit's own "hello world" contact form, and runs as part of the demo
-app's normal test target:
-
-```bash
-pnpm nx test demo
+```typescript
+// test-setup.ts
+import '@testing-library/jest-dom/vitest';
 ```
 
-## Setup: TestBed + a component using `form()` and the wrapper
-
-Render the component the same way `@testing-library/angular`'s `render()`
-does under the hood — through `TestBed` — and provide the same toolkit
-configuration your app bootstraps with (`main.ts`), so strategy defaults
-match:
+Render the component with the same toolkit configuration your app uses, so the
+error timing matches:
 
 ```typescript
 import { provideZonelessChangeDetection } from '@angular/core';
@@ -68,28 +49,18 @@ async function setup() {
   return render(YourFirstFormComponent, {
     providers: [
       provideZonelessChangeDetection(),
-      provideNgxSignalFormsConfig({
-        defaultErrorStrategy: 'on-touch',
-        autoAria: true,
-      }),
+      provideNgxSignalFormsConfig({ defaultErrorStrategy: 'on-touch' }),
     ],
   });
 }
 ```
 
-`@testing-library/angular`, `@testing-library/dom`, and
-`@testing-library/user-event` are already workspace dependencies (see
-`package.json`'s `testing-library` catalog group) — no extra install is
-needed inside this repo. In your own project, install them as dev
-dependencies alongside Vitest.
+## Drive controls through DOM events
 
-## Drive controls through native events, not signal writes
-
-Write to the field through the DOM — click, type, tab — not by writing
-`model.set(...)` or calling the field's signals directly. A direct signal
-write changes the value but never marks the field `touched`, so an
-`'on-touch'` (the toolkit default) or `'on-submit'` strategy would never
-reveal the error your test is trying to observe:
+Change the field through the DOM: click, type, and tab. Do not call
+`model.set(...)` or write the field's signals. A signal write changes the
+value but does not mark the field touched. With `on-touch` (the default) or
+`on-submit` timing, the error then never shows.
 
 ```typescript
 const user = userEvent.setup();
@@ -97,19 +68,17 @@ await setup();
 
 const nameInput = screen.getByLabelText(/name/i) as HTMLInputElement;
 
-// Focus in, then tab out — this is what flips the field's `touched` signal.
+// Focus the field, then tab away. This marks the field touched.
 await user.click(nameInput);
 await user.tab();
 ```
 
-## Flush effects before asserting
+## Wait before you assert
 
-The toolkit's ARIA attributes and error visibility are written from
-`afterEveryRender` and `effect()` callbacks, not synchronously on the event
-that triggered them. Under zoneless change detection (the default in this
-repo's demos), a `userEvent` interaction schedules that work but does not
-wait for it. Use `screen.findByText(...)` (which polls) for text, and wrap
-attribute reads in `waitFor(...)`:
+The toolkit writes ARIA attributes and error visibility after Angular renders,
+not during the event. With zoneless change detection, `userEvent` does not wait
+for that work. Use `screen.findByText(...)`, which retries, for text. Wrap
+attribute checks in `waitFor(...)`:
 
 ```typescript
 const errorText = await screen.findByText(/name is required/i);
@@ -120,26 +89,21 @@ await waitFor(() => {
 });
 ```
 
-## Asserting the id/ARIA contract
+## Check the ID and ARIA contract
 
-The toolkit's error id, `aria-invalid`, and `aria-describedby` wiring is a
-stable, documented contract:
+These IDs and attributes are stable, so tests can rely on them:
 
-- Error containers use the id `{fieldName}-error` (warnings use
-  `{fieldName}-warning`).
-- The bound control carries `aria-invalid="true"` and an `aria-describedby`
-  that includes that id, once the error should be visible under the active
-  strategy. `aria-describedby` is a space-separated id list — the toolkit may
-  compose it from preserved ids, hints, and the error/warning ids together —
-  so assert membership rather than an exact string match.
-- Blocking errors render inside a `role="alert"` element (see
-  [`NgxFormFieldError`](../packages/toolkit/assistive/form-field-error.ts)) —
-  an implicit assertive live region, so no error is missed even on its first
-  appearance.
+- The error container has the ID `{fieldName}-error`. The warning container
+  has `{fieldName}-warning`.
+- When the error is visible, the control has `aria-invalid="true"` and an
+  `aria-describedby` that contains the error ID. `aria-describedby` is a
+  space-separated list that can also hold hint IDs and your own IDs, so check
+  that it contains the ID. Do not compare the whole string.
+- Blocking errors render in a `role="alert"` element. Warnings render in a
+  `role="status"` element.
 
 ```typescript
 const describedBy = nameInput.getAttribute('aria-describedby');
-expect(describedBy).not.toBeNull();
 expect(describedBy?.split(/\s+/)).toContain('contact-name-error');
 
 const errorContainer = document.querySelector('#contact-name-error');
@@ -147,19 +111,16 @@ expect(errorContainer).toHaveAttribute('role', 'alert');
 expect(errorContainer).toContainElement(errorText);
 ```
 
-`{fieldName}` is whichever field name resolves for the control — the
-element's own `id` when using `NgxFormFieldError` directly (as in the
-example spec), or the wrapper's resolved field name when using
-`ngx-form-field-wrapper`. See
-[`docs/CUSTOM_WRAPPERS.md`](./CUSTOM_WRAPPERS.md) if you're testing a custom
-wrapper instead of the built-in one.
+`{fieldName}` is the control's `id` when you use `ngx-form-field-error`
+without a wrapper, as in this example. Inside `ngx-form-field-wrapper`, it is
+the wrapper's `fieldName` input, or the control's `id` when you leave the
+input out. For a custom wrapper, see [custom wrappers](./CUSTOM_WRAPPERS.md).
 
-## Triggering submit and asserting `on-submit`-strategy behavior
+## Test submit
 
-Click the submit button through `userEvent`, the same as any other control —
-Angular's own `submit()` (invoked internally by the form's `submission`
-config) marks every field touched, which is what reveals every field's
-error at once under any of the toolkit's strategies:
+Click the submit button with `userEvent`. Angular's `submit()` marks every
+interactive field touched, so the error of each interactive field shows,
+whatever the timing. Hidden, disabled, and readonly fields stay untouched:
 
 ```typescript
 const submitButton = screen.getByRole('button', { name: /send message/i });
@@ -169,19 +130,114 @@ expect(await screen.findByText(/name is required/i)).toBeInTheDocument();
 expect(await screen.findByText(/email is required/i)).toBeInTheDocument();
 ```
 
-To assert a form's declarative `submission.action` actually ran (rather than
-being blocked by validation), fill every field with valid data first, submit,
-and assert on the resulting state change. A pending label the component
-renders while its action is in flight (`contactForm().submitting()`, in the
-example) is a reliable, fast signal that the action started — prefer it over
-awaiting the action's own delay in the test, which only makes the spec slower
-without proving anything more. The example spec's last test does this against
-`YourFirstFormComponent`'s async `submission.action`.
+To check that the submission action ran, fill every field with valid data,
+submit, and check the result. If the component shows a pending label while
+`submitting()` is `true`, check for that label. It proves the action started,
+and the test does not have to wait for the action to finish.
 
 ## Related documentation
 
-- [Use-case FAQ — unit-testing a form component](./FAQ.md#how-do-i-unit-test-a-form-component-set-value-touch-assert-rendered-error--aria-invalid-in-vitesttestbed) — the condensed version of this guide
-- [`packages/toolkit/testing/README.md`](../packages/toolkit/testing/README.md) — `expectNoA11yViolations()` for WCAG 2.2 AA conformance scans (browser-mode specs)
-- [ADR-0004](./decisions/0004-wcag22-testing-strategy.md) — why conformance scans run in browser mode and everything else in jsdom
-- [`docs/BEST_PRACTICES.md`](./BEST_PRACTICES.md) — the toolkit's five best practices
-- [`docs/CUSTOM_WRAPPERS.md`](./CUSTOM_WRAPPERS.md) — testing considerations when the id/ARIA contract is produced by a custom wrapper instead of the built-in one
+- [`/testing` reference](../packages/toolkit/testing/README.md): `expectNoA11yViolations()` and `createA11yValidator()` for WCAG 2.2 AA scans
+- [Custom wrappers](./CUSTOM_WRAPPERS.md): the ID contract when your own wrapper renders the errors
+- [Best practices](./BEST_PRACTICES.md)
+
+## For maintainers
+
+The examples come from a runnable spec,
+[`your-first-form.spec.ts`](../apps/demo/src/app/01-getting-started/your-first-form/your-first-form.spec.ts),
+which tests
+[`YourFirstFormComponent`](../apps/demo/src/app/01-getting-started/your-first-form/your-first-form.form.ts).
+Run it with `pnpm nx test demo`. Keep this guide and the spec in sync.
+[ADR-0004](./decisions/0004-wcag22-testing-strategy.md) explains why axe scans
+run in browser mode and the other specs run in jsdom.
+
+### Toolkit specs: jsdom or browser
+
+The toolkit has two Vitest projects. `pnpm nx test toolkit` runs `*.spec.ts`
+in jsdom. `pnpm nx run toolkit:test-browser` runs `*.browser.spec.ts` in
+Chromium. jsdom builds the DOM but does not render it. It has no layout, does
+not apply component stylesheets, does not evaluate media queries, and has no
+accessibility tree.
+
+Write a `*.browser.spec.ts` when an assertion depends on one of these. The
+example specs are under `packages/toolkit/`.
+
+| The assertion depends on                                                     | Example spec                                                          |
+| ---------------------------------------------------------------------------- | --------------------------------------------------------------------- |
+| Layout: `getBoundingClientRect()`, `checkVisibility()`, target size          | `form-field/form-field-wrapper.selection-target-size.browser.spec.ts` |
+| Computed CSS: custom properties, `light-dark()`, `:has()`, container queries | `form-field/form-field-wrapper.assistive.browser.spec.ts`             |
+| Where focus lands after toolkit code moves it                                | `assistive/form-field-error-summary.a11y.browser.spec.ts`             |
+| `:focus-visible` styles                                                      | `form-field/form-field-wrapper.state-focus-outline.browser.spec.ts`   |
+| Media emulation: color scheme, forced colors, reduced motion                 | `form-field/form-field-wrapper.color-scheme.a11y.browser.spec.ts`     |
+| The accessibility tree: an accessible name or description, an axe scan       | `form-field/form-field-wrapper.a11y.browser.spec.ts`                  |
+
+Everything else stays in jsdom. That includes signals, error strategies, DI,
+ARIA attribute values and ids, rendered text, classes, data attributes and
+dev-mode warnings. Both projects use `@testing-library/angular`.
+
+Three cases need care:
+
+- **Stylesheet source.** Do not match a regex against a `.css` file or an
+  injected `<style>` in place of a computed style. The regex still passes
+  when a more specific rule wins, a selector stops matching, or a token
+  resolves to another value. Read the computed value in a browser spec.
+- **Visibility.** jsdom has no `checkVisibility()`, so
+  `isElementCssVisible()` reports every control as visible. A jsdom spec can
+  check `aria-invalid` on a visible control. Test a hidden or collapsed
+  control in a browser spec.
+- **Accessible names.** `getByRole('button', { name })` is fine in jsdom to
+  find an element. When the name is the thing under test, use a browser spec.
+
+jsdom, an ARIA attribute value:
+
+```typescript
+expect(input).toHaveAttribute('aria-describedby', 'email-hint email-error');
+```
+
+Browser, a computed color that jsdom cannot resolve:
+
+```typescript
+await expect
+  .poll(() => getComputedStyle(content).borderTopColor)
+  .toBe('rgb(161, 98, 7)');
+```
+
+### Run one spec
+
+Fieldset visual checks compare focused form, control-group, and notification
+screenshots in light and dark themes. Normal CI compares committed Linux
+baselines and never updates them. Use the **Update Snapshots** workflow on the
+feature branch with scope `playwright` and `playwright_filter` set to
+`src/forms/04-form-field-wrapper/fieldset-appearance.spec.ts` to regenerate
+only this suite. Review the image changes before merging. Local macOS
+screenshots use separate baselines; do not use them as Linux baselines.
+
+Put the file filter after `--`. Vitest does not know `--testFile`.
+
+| Project               | Command                                                                                    |
+| --------------------- | ------------------------------------------------------------------------------------------ |
+| Toolkit, jsdom        | `pnpm nx test toolkit -- core/utilities/error-strategies.spec.ts`                          |
+| Toolkit, browser      | `pnpm nx run toolkit:test-browser -- form-field/form-field-wrapper`                        |
+| Demo                  | `pnpm nx test demo -- wizard.schemas`                                                      |
+| Demo, other timezones | `pnpm nx run demo:test-timezones`                                                          |
+| Demo end-to-end       | `pnpm nx e2e demo-e2e -- src/forms/05-advanced/advanced-wizard.spec.ts --project=chromium` |
+
+- The toolkit filter is relative to `packages/toolkit`, the demo filter to
+  `apps/demo`.
+- To use installed Chrome instead of Playwright's bundled Chromium, prefix
+  toolkit browser or demo e2e commands with `PLAYWRIGHT_BROWSER_CHANNEL=chrome`.
+- The demo has no `typecheck` target, and its specs are not type-checked.
+  `pnpm nx build demo` type-checks the app code.
+- The demo end-to-end tests use a dev server on port 4600 that is already
+  running, or start one.
+- `demo:test-timezones` runs the `05-advanced` specs in Auckland and New York
+  time. Every other run and CI use UTC, which hides off-by-one-day bugs.
+  Date logic in the demo uses `Temporal.PlainDate`. CI runs this target when
+  the demo changes.
+- To prove a new test fails without the fix, change the code's behavior
+  (for example, make a check always return `true`). Do not delete the code:
+  the build then fails for a reason that has nothing to do with the test.
+
+`check-published-package.spec.ts` starts `npm pack`. Under a full parallel
+run it can pass the default timeout, so those blocks allow 30 seconds. If it
+still fails, run the spec alone before you debug it.

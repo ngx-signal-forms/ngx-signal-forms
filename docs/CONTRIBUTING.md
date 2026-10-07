@@ -1,179 +1,247 @@
-# Contributing
+---
+title: 'Contributing'
+---
 
-This document captures workspace-level conventions every contributor (and AI
-agent) must follow when changing project layout, adding apps, or wiring CI.
-For code-level conventions, see [`AGENTS.md`](../AGENTS.md), the per-package
-READMEs, and ADRs in [`docs/decisions/`](./decisions).
+This is the entry point for work on the repository. Agent startup and action
+routes live in [`AGENTS.md`](../AGENTS.md). Code rules and task-specific sources
+live in [coding standards](../CODING_STANDARDS.md). Repository layout and
+packaging live in
+[Package architecture](./PACKAGE_ARCHITECTURE.md).
 
-## Project tags & module boundaries
+## Issues and pull requests
 
-Every Nx project declares a `tags` array in its `project.json`. Tags drive the
-`@nx/enforce-module-boundaries` lint rule defined in
-[`oxlint.config.ts`](../oxlint.config.ts) and protect the published toolkit
-bundle from accidental contamination by demo-only code.
+For now, only repository collaborators can open pull requests. To report a bug
+or ask for a feature, open an
+[issue](https://github.com/ngx-signal-forms/ngx-signal-forms/issues/new/choose).
+For questions and ideas, use
+[Discussions](https://github.com/ngx-signal-forms/ngx-signal-forms/discussions).
+For a security problem, follow the [security policy](../SECURITY.md).
 
-### Tag vocabulary
+## Setup
 
-| Tag          | Meaning                                                |
-| ------------ | ------------------------------------------------------ |
-| `scope:lib`  | Publishable library code. Toolkit and any future libs. |
-| `scope:demo` | Demo apps and demo-only support libs.                  |
-| `type:lib`   | Library project (`projectType: "library"`).            |
-| `type:app`   | Application project (`projectType: "application"`).    |
+1. Use the Node version in [`.node-version`](../.node-version).
+2. Install the pnpm version named in `packageManager` in the root
+   `package.json`.
+3. Run `pnpm install`. This also installs the `commit-msg` hook.
 
-Each project carries one `scope:*` tag and one `type:*` tag.
+Run every task through Nx with `pnpm nx …`.
 
-### Constraints
+## Common commands
 
-- `scope:lib` may only depend on other `scope:lib` projects.
-- `scope:demo` may depend on both `scope:lib` and `scope:demo` projects.
-- `type:lib` may only depend on other `type:lib` projects.
-- `type:app` may depend on both `type:lib` and `type:app` projects.
+| Task                          | Command                                                                 |
+| ----------------------------- | ----------------------------------------------------------------------- |
+| Serve the demo app            | `pnpm nx serve demo` (or `pnpm start`)                                  |
+| Toolkit unit tests (jsdom)    | `pnpm nx test toolkit`                                                  |
+| Toolkit browser tests         | `pnpm nx run toolkit:test-browser`                                      |
+| Lint the toolkit              | `pnpm nx lint toolkit`                                                  |
+| Type-check the toolkit specs  | `pnpm nx run toolkit:typecheck`                                         |
+| Build the publishable toolkit | `pnpm nx build toolkit`                                                 |
+| Format                        | `pnpm format` (check only: `pnpm format:check`)                         |
+| Coverage                      | `pnpm nx run workspace:coverage`                                        |
+| Demo end-to-end tests         | `pnpm nx run demo-e2e:e2e-demo-app`                                     |
+| Demo accessibility scan       | `pnpm nx run demo-e2e:a11y`                                             |
+| What CI runs for the toolkit  | `pnpm nx run-many -t lint typecheck test test-browser build -p toolkit` |
 
-The constraint that bites hardest:
+The toolkit build has two cached steps. `toolkit:build-ng-packagr` runs
+ng-packagr into `dist/packages/toolkit-ng-packagr`. `toolkit:build` copies
+that into `dist/packages/toolkit`, writes the npm README, copies `LICENSE`,
+and strips the `@internal` members and the `./core` export. Only
+`toolkit:build` writes `dist/packages/toolkit`, so a cache hit always
+restores the finished package.
 
-> **`scope:lib` cannot depend on `scope:demo`.** A demo import inside the
-> toolkit fails lint, which fails CI. This guardrail exists because the
-> reference demo apps (Material, PrimeNG, Spartan — see #40) will pull in
-> design-system packages the toolkit must never ship with.
+## Documentation starter check
 
-### Adding a new project
+The quick start in the root [`README.md`](../README.md) sits between
+`documentation-starter:start` and `documentation-starter:end` markers. CI
+compiles that block and runs its submission action:
 
-1. Create the project (Nx generator or manual).
-2. Edit its `project.json` and add the appropriate `scope:*` + `type:*` tags.
-3. Run `pnpm nx run-many -t lint` to confirm boundaries hold.
+```sh
+pnpm nx run toolkit:check-documentation-starter
+```
 
-## Demo app bundle size
+Run it after you change the quick start.
 
-There is currently no automated bundle-size budget for any `apps/demo-*` app.
-The toolkit package itself is covered — see
-[Published package guardrails](#published-package-guardrails) below.
+## Where docs live
 
-`apps/demo-material`, `apps/demo-primeng`, and `apps/demo-spartan` are the
-existing reference demo apps (tracked by #40). Their `build` targets use
-`nx:run-commands` wrapping `vite build --mode production` rather than the
-Angular CLI application builder, so the builder's
-`configurations.production.budgets` option has no effect in this workspace —
-adding one to a demo app's `project.json` would be silently ignored.
+Explain each topic in one file. Elsewhere, write one sentence and a link.
 
-If you want to add bundle-size guardrails for a demo app, it needs to be a
-Vite-based mechanism (e.g. a `rollup-plugin-visualizer` report or a custom
-size-check script), not an Angular CLI budgets block.
+| Topic                                                    | File                                                                                    |
+| -------------------------------------------------------- | --------------------------------------------------------------------------------------- |
+| Benefits, install, quick start, which entry point to use | [`README.md`](../README.md) (published to npm)                                          |
+| What Angular owns and what the toolkit owns              | [`ANGULAR_VS_TOOLKIT.md`](./ANGULAR_VS_TOOLKIT.md)                                      |
+| Config keys and defaults                                 | [`packages/toolkit/README.md`](../packages/toolkit/README.md#configuration)             |
+| Error and warning timing, warning submission, messages   | [`WARNINGS_SUPPORT.md`](./WARNINGS_SUPPORT.md)                                          |
+| Custom controls                                          | [`CUSTOM_CONTROLS.md`](./CUSTOM_CONTROLS.md)                                            |
+| Custom wrappers                                          | [`CUSTOM_WRAPPERS.md`](./CUSTOM_WRAPPERS.md)                                            |
+| Fieldsets, arrays, error summaries                       | [`COMPLEX_NESTED_FORMS.md`](./COMPLEX_NESTED_FORMS.md)                                  |
+| Inputs of each entry point                               | The README in each entry point folder under [`packages/toolkit/`](../packages/toolkit/) |
+| CSS tokens                                               | [`THEMING.md`](../packages/toolkit/form-field/THEMING.md)                               |
+| Bootstrap, Tailwind, Material CSS                        | [`CSS_FRAMEWORK_INTEGRATION.md`](./CSS_FRAMEWORK_INTEGRATION.md)                        |
+| Component tests                                          | [`TESTING.md`](./TESTING.md)                                                            |
+| Changes between versions                                 | [`migrations/`](./migrations/README.md)                                                 |
+| Domain terms                                             | [`GLOSSARY.md`](../GLOSSARY.md)                                                         |
+
+User docs describe the current state only. Put history in `migrations/`.
+Put maintainer notes in a `## For maintainers` section at the end of a file,
+or in this file.
+
+## Docs site
+
+The docs site on Docs7 is built from these markdown files. `docs.json` at the
+repo root lists the pages. Write links as normal relative links to `.md`
+files, so they work on GitHub. On each push to `main`,
+[`build-docs7-site.mjs`](../tools/scripts/build-docs7-site.mjs) rewrites the
+links for the site and pushes the result to the `docs7` branch. Docs7
+deploys that branch.
+
+The build fails on a link to a missing file or heading. CI runs it on every
+pull request. To check the build and preview the site locally:
+
+```sh
+pnpm nx run workspace:check-docs7-site
+npx @upstash/docs7 dev dist/docs7
+```
+
+To add a page, add it to `docs.json` and give the file `title` and
+`sidebarTitle` frontmatter in place of the `#` heading.
+
+## Architecture decisions
+
+ADRs live in [`docs/decisions/`](./decisions/). Add one when you make a
+decision that is hard to reverse or that a reader would question. Point to
+code by file and symbol, not by line number. Line numbers go stale with the
+next edit. Older ADRs that cite lines describe the code at the time of the
+decision.
+
+## Project tags and module boundaries
+
+Every Nx project has one `scope:*` tag and one `type:*` tag in its
+`project.json`. The `@nx/enforce-module-boundaries` rule in
+[`oxlint.config.ts`](../oxlint.config.ts) reads them.
+
+| Tag          | Meaning                           | May depend on             |
+| ------------ | --------------------------------- | ------------------------- |
+| `scope:lib`  | Publishable library code          | `scope:lib`               |
+| `scope:demo` | Demo apps and demo-only libraries | `scope:lib`, `scope:demo` |
+| `type:lib`   | Library project                   | `type:lib`                |
+| `type:app`   | Application project               | `type:lib`, `type:app`    |
+
+The toolkit (`scope:lib`) must not import demo code. The Material, PrimeNG,
+and Spartan demos pull in design-system packages that the toolkit must never
+ship with. When you add a project, add both tags and run
+`pnpm nx run-many -t lint`.
 
 ## Published package guardrails
 
-Three CI checks guard the toolkit's PUBLISHED package (`dist/packages/toolkit`,
-after `toolkit:post-build` runs the `@internal`/`/core` strip scripts) —
-`packages/toolkit/scripts/packaging.spec.ts` only reads checked-in source and
-never opens `dist/`, so none of this overlaps with it:
+These checks run against the built package in `dist/packages/toolkit`, after
+`toolkit:build`. CI and the release workflow call them directly, so
+`nx affected` does not skip them.
 
-1. **Public API surface + tarball contents** —
-   `pnpm nx run toolkit:check-published-package` (script at
-   [`packages/toolkit/scripts/check-published-package.mjs`](../packages/toolkit/scripts/check-published-package.mjs))
-   diffs every built `.d.ts` in `dist/packages/toolkit/types/` — every entry in
-   the published `exports` map, plus the build-time-only `/core` entry under
-   the name `core.internal` (it ships no `exports` entry, but every published
-   entry imports its types via a relative specifier, so a breaking change
-   there — see #551 — can slip past a guard that only reads published
-   entries) — and the file list `npm pack` would publish, against the
-   committed baseline in
-   [`packages/toolkit/api-reports/`](../packages/toolkit/api-reports). A
-   surface or tarball-structure change without a baseline update fails CI
-   with a capped diff and the exact command to run.
-
-   To update the baseline after an intentional change: review the failing
-   diff, then run
+1. **Public API and tarball contents.**
+   `pnpm nx run toolkit:check-published-package` compares each built `.d.ts`
+   (including the internal `/core` types as `core.internal`) and the `npm pack`
+   file list with the baseline in
+   [`packages/toolkit/api-reports/`](../packages/toolkit/api-reports). After
+   an intended change, review the diff and update the baseline. The check
+   sorts the members of literal unions (`'a' | 'b'`), so a cached and a clean
+   build give the same baseline. Build first: `toolkit:build` runs every step
+   that shapes the published package:
 
    ```sh
-   pnpm nx run toolkit:post-build
+   pnpm nx build toolkit
    pnpm run check:toolkit-published-package -- --update
    ```
 
-   and commit the updated files under `packages/toolkit/api-reports/`.
+2. **Package shape.** `pnpm nx run toolkit:check-package-shape` runs
+   [publint](https://publint.dev) and
+   [Are the Types Wrong](https://arethetypeswrong.github.io) (ESM only).
+3. **Bundle size.** `pnpm nx run toolkit:check-size` runs
+   [size-limit](https://github.com/ai/size-limit) per entry point. The
+   budgets and the steps to raise one are in
+   [`packages/toolkit/.size-limit.cjs`](../packages/toolkit/.size-limit.cjs).
 
-2. **Package shape** — `pnpm nx run toolkit:check-package-shape` runs
-   [`publint`](https://publint.dev) and
-   [`@arethetypeswrong/cli`](https://arethetypeswrong.github.io) (`--profile
-esm-only`, since the toolkit ships no CommonJS entry) against the built
-   package, catching a broken `exports` map, a `types` condition pointing at
-   the wrong file, or a subpath that resolves to nothing.
+The demo apps have no size budget. Their `build` targets wrap
+`vite build`, so an Angular CLI `budgets` block has no effect.
 
-3. **Bundle size budget** — `pnpm nx run toolkit:check-size` runs
-   [`size-limit`](https://github.com/ai/size-limit) against the FESM output of
-   each entry point, configured in
-   [`packages/toolkit/.size-limit.cjs`](../packages/toolkit/.size-limit.cjs),
-   and prints the result as a Markdown table
-   ([`packages/toolkit/scripts/size-report.mjs`](../packages/toolkit/scripts/size-report.mjs))
-   that `ci.yml` also appends to the job summary, so a size change is visible
-   on the PR. Each budget is the entry's built (brotli) size plus roughly 25%
-   headroom; the config file's header comment has the exact steps to raise a
-   budget after an intentional size increase.
+## Removing a public export
 
-None of these three are `lint`, `test`, or `build` targets, so `nx affected -t
-lint test build` never runs them on its own — `ci.yml` and `release.yml` call
-them directly instead, unaffected by what changed.
+A removed or renamed export is named in many places. Do these steps in the
+same pull request:
+
+1. Remove the export. Then build and update the API baseline, as in
+   [Published package guardrails](#published-package-guardrails). A JSDoc
+   change on a public member also changes the baseline.
+2. Add the old name to
+   [`tools/scripts/removed-symbols.json`](../tools/scripts/removed-symbols.json).
+   Add only a distinctive name. A common word also matches unrelated docs.
+3. Run `pnpm nx run workspace:check-removed-symbols`. It lists each live doc
+   and skill page that still names the export, by file and line. It also
+   flags any `Ngx*` name that no `.ts` file declares, so a rename needs no
+   registry entry. CI runs it on every pull request.
+4. Add an entry at the end of the pending guide in
+   [`migrations/`](./migrations/README.md). Do not state the number of
+   changes in prose. If `main` gained an entry after you branched, renumber
+   yours when you merge `main`. Update the skill's
+   [`migrations/guide.md`](../.agents/skills/ngx-signal-forms/migrations/guide.md)
+   too, and the removed-API table in
+   [`pitfalls.md`](../.agents/skills/ngx-signal-forms/references/pitfalls.md)
+   when users may still reach for the old name.
+5. The check reads Markdown only. Search code comments yourself:
+   `git grep -n '<name>' -- packages apps`.
+6. Build every project, not only the toolkit. The debugger in
+   `packages/demo/debugger` imports the internal `/core` entry point:
+   `pnpm nx run-many -t build typecheck`.
 
 ## Toolkit isolation guarantees
 
-Two CI mechanisms keep the toolkit publishable and design-system-free:
+Two CI checks keep design-system packages out of the toolkit:
 
-1. **Static check** — `pnpm check:toolkit-peer-deps` (script at
-   [`tools/scripts/check-toolkit-peer-deps.mjs`](../tools/scripts/check-toolkit-peer-deps.mjs))
-   asserts `packages/toolkit/package.json` declares no `@angular/material`,
-   `primeng`, `primeicons`, or `@spartan-ng/*` entries in `dependencies` or
-   `peerDependencies`.
-2. **Pruned build** — the `toolkit-isolation` job in
-   [`.github/workflows/ci.yml`](../.github/workflows/ci.yml) runs
-   `pnpm install --frozen-lockfile --filter "@ngx-signal-forms/toolkit..."`
-   followed by `pnpm nx run toolkit:post-build`. The filter excludes demo apps from
-   the install graph, so even if a demo declares a design-system dep, the
-   toolkit build proves it can compile without that dep present.
+1. `pnpm check:toolkit-peer-deps` fails when
+   `packages/toolkit/package.json` lists `@angular/material`, `primeng`,
+   `primeicons`, `@spartan-ng/*`, `@primeuix/*`, `@primeng/*`, or
+   `@angular/cdk`.
+2. The `toolkit-isolation` job in
+   [`ci.yml`](../.github/workflows/ci.yml) installs only the toolkit's
+   dependency graph and builds it.
 
-If either check fails, the right fix is almost never to relax the check —
-move the offending dep into the demo app that needs it.
+`pnpm nx lint toolkit` also fails on any toolkit source import of those
+packages (`bannedExternalImports` in `oxlint.config.ts`).
+Declare a design-system package in the `package.json` of the demo project
+that imports it, never in the root `package.json`.
+
+If one fails, move the dependency into the demo app that needs it. Do not
+relax the check.
 
 ## Commit messages and PR titles
 
-Commit subjects follow [Conventional Commits](https://www.conventionalcommits.org/).
-`nx release` reads the subject to pick the version bump, and the subject
-lands verbatim in the GitHub release notes (see [`AGENTS.md`](../AGENTS.md)).
+Follow the [commit standards](../CODING_STANDARDS.md#commits) for subject
+format and release-note safety.
 
-A `commit-msg` git hook checks every commit with
-[commitlint](https://commitlint.js.org/), configured in
-[`commitlint.config.cjs`](../commitlint.config.cjs):
+- The `commit-msg` hook runs commitlint with
+  [`commitlint.config.cjs`](../commitlint.config.cjs). The hook does not
+  change your message. Fix it and commit again.
+- A squash merge uses the PR title as the subject. The
+  [`PR Title`](../.github/workflows/pr-title.yml) workflow checks every PR
+  title, except Dependabot PRs.
+- The release notes renderer (`tools/release/project-changelog-renderer.ts`)
+  also escapes a bare `@word`.
 
-- The type must be one of the [Conventional Commits](https://www.conventionalcommits.org/)
-  types (`feat`, `fix`, `docs`, `refactor`, and so on).
-- Every `@word` in the subject must be backticked — write `` `@group` ``,
-  not `@group`. A bare `@word` renders as a GitHub mention of a stranger's
-  account. This rule lives in
-  [`tools/commitlint/no-bare-mention.cjs`](../tools/commitlint/no-bare-mention.cjs),
-  strips code spans before checking, and does not flag an email's local part
-  (`me@example.com`).
+## Release
 
-`commitlint.config.cjs` turns off `footer-max-line-length`,
-`body-max-line-length`, `header-max-length`, and `subject-case` from
-`@commitlint/config-conventional` — history already has long single-line
-`BREAKING CHANGE:` footers and bodies, subjects over 100 characters, and one
-non-lower-case subject, and rewriting old commits to fit is not worth it.
+1. Run the **Release** workflow
+   ([`release.yml`](../.github/workflows/release.yml)) from the Actions tab.
+   Pick the bump (`prerelease` with `rc` for a release candidate). Use
+   **Dry run** first to preview. The workflow runs the checks. Then
+   `nx release version` bumps, commits and tags locally. A separate `push`
+   job checks the result and pushes the commit and tag with a GitHub App
+   token. A last job creates the GitHub release. The workflow does not
+   publish.
+2. The new `v*` tag starts the **Publish** workflow
+   ([`publish.yml`](../.github/workflows/publish.yml)). It fails unless the
+   tagged commit is on `main`. A `build` job builds the package and uploads
+   it. A `publish` job then waits for approval on the `npm-publish`
+   environment. It installs nothing and publishes the uploaded package to npm
+   through trusted publishing (OIDC), with the dist-tag taken from the
+   version. A dry run skips the approval.
 
-`pnpm install` installs the hook through `simple-git-hooks` (see
-[`tools/simple-git-hooks-worktree.cjs`](../tools/simple-git-hooks-worktree.cjs),
-which points the hook at the shared `.git/hooks` directory so it also runs in
-git worktrees). If a commit fails the check, fix the subject and commit
-again — the hook does not rewrite the message for you. In a worktree that
-predates this hook (no `commitlint` installed, no `commitlint.config.cjs`),
-the hook prints a warning and skips the check instead of blocking the
-commit — run `pnpm install` to pick up the check there too.
-
-A squash merge uses the PR title as the commit subject, so the `PR Title`
-workflow ([`.github/workflows/pr-title.yml`](../.github/workflows/pr-title.yml))
-runs the same commitlint check against every PR title, except for Dependabot
-PRs (their titles can contain a bare `@word` from a package name, and
-`build` commits do not reach the changelog anyway).
-
-As a second guard, `tools/release/project-changelog-renderer.ts` escapes a
-bare `@word` in the change-list line (`formatChange`) and the
-breaking-change line and explanation (`formatBreakingChangeBase`,
-`extractBreakingChangeExplanation`) it renders for each commit. It does not
-touch `renderAuthors`, whose ` @username` is a deliberate GitHub mention.
+Release notes are the GitHub releases. There is no `CHANGELOG.md`.

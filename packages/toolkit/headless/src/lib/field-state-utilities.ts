@@ -67,12 +67,11 @@ function normalizeValidationErrors(errors: unknown): ValidationError[] {
  *
  * @example
  * ```typescript
- * const fieldState = myField();
- * const isInvalid = readFieldFlag(fieldState, 'invalid');
- * const isTouched = readFieldFlag(fieldState, 'touched');
+ * // Internal: `createFieldStateFlags()` calls this once per flag.
+ * const isInvalid = readFieldFlag(myField(), 'invalid');
  * ```
  *
- * @group Utility Functions
+ * @internal
  */
 export function readFieldFlag(state: unknown, key: BooleanStateKey): boolean {
   if (!state || typeof state !== 'object') {
@@ -99,8 +98,9 @@ export interface FieldStateFlags {
 /**
  * Creates computed boolean state flags from a field state signal.
  *
- * Eliminates the repeated pattern of 5 individual `readFieldFlag` computeds
- * found in fieldset directives and components.
+ * Replaces five hand-written `computed` flags in fieldset directives and
+ * components. Each flag reads its signal safely: it is `false` when the state
+ * is null or malformed.
  *
  * @remarks Does not require an injection context (only creates `computed`s).
  *
@@ -132,11 +132,11 @@ export function createFieldStateFlags(
  *
  * @example
  * ```typescript
- * const fieldState = addressField();
- * const allErrors = readErrors(fieldState); // Includes nested field errors
+ * // Internal: includes nested field errors.
+ * const allErrors = readErrors(addressField());
  * ```
  *
- * @group Utility Functions
+ * @internal
  */
 export function readErrors(state: unknown): ValidationError[] {
   if (!state || typeof state !== 'object') {
@@ -169,8 +169,8 @@ export function readErrors(state: unknown): ValidationError[] {
  * `WithFieldTree` shape.
  *
  * Shared with `error-summary-utilities.ts`, whose mapping helpers
- * (`resolveFieldNameFromError`, `focusBoundControlFromError`,
- * `dedupeValidationErrorsByField`) read the same `fieldTree` shape.
+ * (`toErrorSummaryEntry`, `dedupeValidationErrorsByField`) read the same
+ * `fieldTree` shape.
  */
 export type ValidationErrorWithFieldTree = ValidationError & {
   fieldTree?: () =>

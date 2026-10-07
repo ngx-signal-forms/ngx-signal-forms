@@ -1,6 +1,5 @@
 import {
   afterRenderEffect,
-  ChangeDetectionStrategy,
   Component,
   computed,
   effect,
@@ -55,7 +54,6 @@ import { singleModelWizardSchema } from './single-model-wizard.validations';
  */
 @Component({
   selector: 'ngx-single-model-wizard',
-  changeDetection: ChangeDetectionStrategy.OnPush,
 
   imports: [
     FormField,

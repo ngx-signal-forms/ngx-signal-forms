@@ -141,7 +141,7 @@ interface VestRunnableSuite<TValue, F extends string = string> {
  * `run()` returns — see {@link waitForSuiteIdle} and
  * {@link awaitVestRunSettlement}.
  */
-type VestCoordinatedSuite<TValue, F extends string = string> = Pick<VestRunnableSuite<TValue, F>, 'run' | 'only' | 'subscribe' | 'get'>;
+type VestCoordinatedSuite<TValue, F extends string = string> = Pick<VestRunnableSuite<TValue, F>, 'get' | 'only' | 'run' | 'subscribe'>;
 
 /**
  * Public constant kind prefix used for Vest `warn()` messages surfaced through
@@ -248,12 +248,13 @@ interface RunVestSuiteParams<TValue, F extends string = string> {
  * previously cached execution for the identical `(suite, fieldTree, value,
  * focus)` tuple.
  *
- * **Do not `await runResult` directly.** Vest 6's `suite.run()` promise
+ * **Do not `await runResult` directly.** In older Vest 6 releases, `suite.run()` promises
  * resolves through a single resolver tracked per suite instance: a LATER
  * `suite.run()` call on the SAME suite (e.g. a second `runVestSuite` call, or
  * a second focused `validateVest` registration on the same suite) replaces
  * that resolver before an earlier, still-pending call's promise ever settles
- * — empirically verified against `vest@6.3.2`. Await {@link settled} instead;
+ * — empirically verified against `vest@6.3.2`. Newer releases can settle both
+ * raw promises. Await {@link settled} for a version-independent guarantee;
  * it recovers from that supersession the same way the built-in
  * `validateVest`/`validateVestWarnings` pipeline does. See
  * {@link VestRunHandle.settled}.
@@ -469,7 +470,7 @@ interface ValidateVestOptions<TValue = unknown, F extends string = string> {
  * });
  * ```
  */
-declare function validateVestWarnings<TValue, F extends string = string>(path: VestFieldPath<TValue>, suite: VestRunnableSuite<TValue, F>, options?: Pick<ValidateVestOptions<TValue, F>, 'resetOnDestroy' | 'only'>): void;
+declare function validateVestWarnings<TValue, F extends string = string>(path: VestFieldPath<TValue>, suite: VestRunnableSuite<TValue, F>, options?: Pick<ValidateVestOptions<TValue, F>, 'only' | 'resetOnDestroy'>): void;
 /**
  * Register a Vest suite as a first-class Angular Signal Forms validator.
  *

@@ -41,21 +41,59 @@ async function fillTravelerStep(
   await page.getByLabel('Nationality').fill(data.nationality);
 }
 
-async function fillTripStepMinimal(page: Page): Promise<void> {
+async function fillTripStepMinimal(
+  page: Page,
+  dates: { arrival: string; departure: string; activity: string } = tripDates,
+): Promise<void> {
   const dest1 = page.getByRole('group', { name: 'Destination 1' });
   await dest1.getByLabel(/Country/i).fill('Japan');
   await dest1.getByLabel(/City/i).fill('Tokyo');
-  await dest1.getByLabel(/Arrival Date/i).fill(tripDates.arrival);
-  await dest1.getByLabel(/Departure Date/i).fill(tripDates.departure);
+  await dest1.getByLabel(/Arrival Date/i).fill(dates.arrival);
+  await dest1.getByLabel(/Departure Date/i).fill(dates.departure);
 
   const activity1 = dest1
     .locator('.activity-card')
     .filter({ hasText: 'Activity 1' });
   await activity1.getByLabel('Activity Name').fill('Sushi Making');
-  await activity1.getByLabel('Date', { exact: true }).fill(tripDates.activity);
+  await activity1.getByLabel('Date', { exact: true }).fill(dates.activity);
   await activity1.getByLabel('Date', { exact: true }).blur();
   await activity1.getByPlaceholder('Description').fill('Empty Stomach');
   await activity1.getByPlaceholder('Description').blur();
+}
+
+function progressStep(page: Page, name: string) {
+  return page.locator('.wizard-step-button').filter({ hasText: name });
+}
+
+/**
+ * Previous, then wait until the traveler step has rendered. The step loads
+ * with `@defer`, and a Next click before it renders validates nothing.
+ */
+async function backToTravelerStep(page: Page): Promise<void> {
+  await page.getByRole('button', { name: 'Previous' }).click();
+  await expect(
+    page.getByRole('heading', { name: 'Traveler Information' }),
+  ).toBeVisible();
+}
+
+const passportTooCloseMessage =
+  'Passport must be valid 6 months after trip ends';
+
+/**
+ * Next was blocked on the traveler step because the passport expires too soon
+ * after the trip: the step stays, the Expiry Date field is invalid and has
+ * focus, and the error is announced.
+ */
+async function expectPassportTooCloseBlocked(page: Page): Promise<void> {
+  const expiry = page.getByLabel(/Expiry Date/i);
+  await expect(
+    page.getByRole('heading', { name: 'Traveler Information' }),
+  ).toBeVisible();
+  await expect(expiry).toHaveAttribute('aria-invalid', 'true');
+  await expect(
+    page.getByRole('alert').filter({ hasText: passportTooCloseMessage }),
+  ).toBeVisible();
+  await expect(expiry).toBeFocused();
 }
 
 test.describe('Advanced Wizard Demo', () => {
@@ -377,6 +415,279 @@ test.describe('Advanced Wizard Demo', () => {
     await expect(statusRow).toContainText(/Last saved: \d{1,2}:\d{2}/);
   });
 
+  test('leaving the route stops autosave and returning starts with a fresh store', async ({
+    page,
+  }) => {
+    const draftSaves: string[] = [];
+    page.on('request', (request) => {
+      if (
+        request.url().includes('/api/wizard/draft') &&
+        ['POST', 'PUT'].includes(request.method())
+      ) {
+        draftSaves.push(request.method());
+      }
+    });
+
+    // Change the draft, then leave inside the 2 s autosave debounce. A store
+    // that outlives the route would still fire the pending save.
+    await page.getByLabel('First Name').fill('Ada');
+    const nav = page.getByRole('navigation', {
+      name: 'Documentation sections',
+    });
+    await nav.getByRole('link', { name: 'Global Configuration' }).click();
+    await expect(page).toHaveURL(/\/advanced-scenarios\/global-configuration$/);
+
+    // Wait past the debounce window, then check that nothing was sent.
+    // oxlint-disable-next-line playwright/no-wait-for-timeout -- absence of a request can only be shown by waiting
+    await page.waitForTimeout(3000);
+    expect(draftSaves).toEqual([]);
+
+    // Coming back builds a new store, so the earlier input is gone.
+    await nav.getByRole('link', { name: 'Advanced Wizard' }).click();
+    await expect(page).toHaveURL(/\/advanced-scenarios\/advanced-wizard$/);
+    await expect(page.getByLabel('First Name')).toHaveValue('');
+  });
+
+  test('resumes the auto-saved draft after a reload', async ({ page }) => {
+    // Wait for the save that holds both steps, not an earlier one.
+    const bothStepsSaved = page.waitForResponse(
+      (response) => {
+        const request = response.request();
+        if (
+          !request.url().includes('/api/wizard/draft') ||
+          !['POST', 'PUT'].includes(request.method())
+        ) {
+          return false;
+        }
+        const body = request.postDataJSON() as {
+          traveler: { firstName: string };
+          destinations: { city: string }[];
+        };
+        return (
+          response.ok() &&
+          body.traveler.firstName === 'John' &&
+          body.destinations[0]?.city === 'Tokyo'
+        );
+      },
+      { timeout: 15000 },
+    );
+    await fillTravelerStep(page);
+    await page.getByRole('button', { name: 'Next' }).click();
+    await fillTripStepMinimal(page);
+    await page.getByRole('button', { name: 'Next' }).click();
+    const { draftId } = (await (await bothStepsSaved).json()) as {
+      draftId: string;
+    };
+
+    // Playwright can see the response before the store keeps the id. A reload
+    // before that would leave nothing to resume.
+    await expect
+      .poll(() =>
+        page.evaluate(() =>
+          sessionStorage.getItem('ngx-demo:advanced-wizard-draft'),
+        ),
+      )
+      .toBe(JSON.stringify({ draftId }));
+
+    await page.reload();
+
+    await expect(page.getByLabel('First Name')).toHaveValue('John');
+    await expect(page.getByLabel('Passport Number')).toHaveValue('A1234567');
+
+    await page.getByRole('button', { name: 'Next' }).click();
+    const dest1 = page.getByRole('group', { name: 'Destination 1' });
+    await expect(dest1.getByLabel(/City/i)).toHaveValue('Tokyo');
+    await expect(dest1.getByLabel(/Arrival Date/i)).toHaveValue(
+      tripDates.arrival,
+    );
+  });
+
+  test('resumes text typed in the traveler step without clicking Next', async ({
+    page,
+  }) => {
+    const typedSaved = page.waitForResponse(
+      (response) => {
+        const request = response.request();
+        if (
+          !request.url().includes('/api/wizard/draft') ||
+          !['POST', 'PUT'].includes(request.method())
+        ) {
+          return false;
+        }
+        const body = request.postDataJSON() as {
+          traveler: { firstName: string };
+          inProgress?: { traveler: { firstName: string } };
+        };
+        return (
+          response.ok() &&
+          body.traveler.firstName === '' &&
+          body.inProgress?.traveler.firstName === 'John'
+        );
+      },
+      { timeout: 15000 },
+    );
+    await fillTravelerStep(page);
+    const { draftId } = (await (await typedSaved).json()) as {
+      draftId: string;
+    };
+    await expect
+      .poll(() =>
+        page.evaluate(() =>
+          sessionStorage.getItem('ngx-demo:advanced-wizard-draft'),
+        ),
+      )
+      .toBe(JSON.stringify({ draftId }));
+
+    await page.reload();
+
+    await expect(page.getByLabel('First Name')).toHaveValue('John');
+    await expect(page.getByLabel('Passport Number')).toHaveValue('A1234567');
+
+    // The values are valid, but the step was never finished with Next.
+    const travelerStep = page
+      .locator('.wizard-step-button')
+      .filter({ hasText: 'Traveler Info' });
+    await expect(travelerStep).not.toHaveClass(/completed/);
+
+    await page.getByRole('button', { name: 'Next' }).click();
+    await expect(
+      page.getByRole('heading', { name: 'Trip Details' }),
+    ).toBeVisible();
+    await expect(travelerStep).toHaveClass(/completed/);
+  });
+
+  test('resumes text typed in the trip step without clicking Next', async ({
+    page,
+  }) => {
+    await fillTravelerStep(page);
+    await page.getByRole('button', { name: 'Next' }).click();
+
+    const typedSaved = page.waitForResponse(
+      (response) => {
+        const request = response.request();
+        if (
+          !request.url().includes('/api/wizard/draft') ||
+          !['POST', 'PUT'].includes(request.method())
+        ) {
+          return false;
+        }
+        const body = request.postDataJSON() as {
+          destinations: { city: string }[];
+          inProgress?: { destinations: { city: string }[] };
+        };
+        return (
+          response.ok() &&
+          body.destinations[0]?.city === '' &&
+          body.inProgress?.destinations[0]?.city === 'Tokyo'
+        );
+      },
+      { timeout: 15000 },
+    );
+    await fillTripStepMinimal(page);
+    const { draftId } = (await (await typedSaved).json()) as {
+      draftId: string;
+    };
+    await expect
+      .poll(() =>
+        page.evaluate(() =>
+          sessionStorage.getItem('ngx-demo:advanced-wizard-draft'),
+        ),
+      )
+      .toBe(JSON.stringify({ draftId }));
+
+    await page.reload();
+
+    // Traveler was finished with Next, so it is committed and completed.
+    await expect(page.getByLabel('First Name')).toHaveValue('John');
+    await page.getByRole('button', { name: 'Next' }).click();
+
+    const dest1 = page.getByRole('group', { name: 'Destination 1' });
+    await expect(dest1.getByLabel(/City/i)).toHaveValue('Tokyo');
+    await expect(dest1.getByLabel(/Arrival Date/i)).toHaveValue(
+      tripDates.arrival,
+    );
+    // The trip step was never finished with Next.
+    await expect(
+      page.locator('.wizard-step-button').filter({ hasText: 'Trip Details' }),
+    ).not.toHaveClass(/completed/);
+  });
+
+  test('keeps focus and caret in a field while autosave runs', async ({
+    page,
+  }) => {
+    const firstName = page.getByLabel('First Name');
+    await firstName.fill('Johnny');
+    await firstName.press('ArrowLeft');
+    await firstName.press('ArrowLeft');
+
+    // Wait for the write-back and the autosave to run.
+    const saved = page.waitForResponse(
+      (response) =>
+        response.url().includes('/api/wizard/draft') &&
+        ['POST', 'PUT'].includes(response.request().method()) &&
+        response.ok(),
+      { timeout: 15000 },
+    );
+    await firstName.pressSequentially('X');
+    await saved;
+
+    await expect(firstName).toBeFocused();
+    await expect(firstName).toHaveValue('JohnXny');
+    expect(
+      await firstName.evaluate((el: HTMLInputElement) => el.selectionStart),
+    ).toBe(5);
+  });
+
+  test('a draft that fails to load shows an error and an empty, usable wizard', async ({
+    page,
+  }) => {
+    // Point the wizard at a draft the mock server does not have.
+    await page.addInitScript(() => {
+      sessionStorage.setItem(
+        'ngx-demo:advanced-wizard-draft',
+        JSON.stringify({ draftId: 'missing-draft' }),
+      );
+    });
+    await page.reload();
+
+    await expect(
+      page
+        .getByRole('alert')
+        .filter({ hasText: 'Your saved draft could not be loaded.' }),
+    ).toBeVisible();
+    await expect(page.getByLabel('First Name')).toHaveValue('');
+
+    // The wizard still holds its blank initial state. Saving it would replace
+    // the draft the user could not load, so nothing may be sent until the user
+    // types.
+    const blankSaves: string[] = [];
+    page.on('request', (request) => {
+      if (
+        request.url().includes('/api/wizard/draft') &&
+        ['POST', 'PUT'].includes(request.method())
+      ) {
+        blankSaves.push(request.method());
+      }
+    });
+    // oxlint-disable-next-line playwright/no-wait-for-timeout -- absence of a request can only be shown by waiting past the 2 s debounce
+    await page.waitForTimeout(3000);
+    expect(blankSaves).toEqual([]);
+
+    // The next save starts a new draft instead of writing to the missing one.
+    const newDraft = page.waitForRequest(
+      (request) =>
+        request.url().endsWith('/api/wizard/draft') &&
+        request.method() === 'POST',
+      { timeout: 15000 },
+    );
+    await fillTravelerStep(page);
+    await page.getByRole('button', { name: 'Next' }).click();
+    await expect(
+      page.getByRole('group', { name: 'Destination 1' }),
+    ).toBeVisible();
+    await newDraft;
+  });
+
   test('review step shows all entered details', async ({ page }) => {
     await fillTravelerStep(page, {
       firstName: 'Alice',
@@ -480,6 +791,78 @@ test.describe('Advanced Wizard Demo', () => {
       page.getByRole('button', { name: 'Start New Booking' }),
     ).toBeVisible();
     await expect(page.locator('.error-message')).toHaveCount(0);
+  });
+
+  test('a reload after the booking is confirmed starts a fresh wizard', async ({
+    page,
+  }) => {
+    // The booking must confirm after the draft has an id, or there is nothing
+    // to clear.
+    const draftSaved = page.waitForResponse(
+      (response) =>
+        response.url().includes('/api/wizard/draft') &&
+        ['POST', 'PUT'].includes(response.request().method()) &&
+        response.ok(),
+      { timeout: 15000 },
+    );
+    await fillTravelerStep(page);
+    await page.getByRole('button', { name: 'Next' }).click();
+    await fillTripStepMinimal(page);
+    await page.getByRole('button', { name: 'Next' }).click();
+    const { draftId } = (await (await draftSaved).json()) as {
+      draftId: string;
+    };
+    await expect
+      .poll(() =>
+        page.evaluate(() =>
+          sessionStorage.getItem('ngx-demo:advanced-wizard-draft'),
+        ),
+      )
+      .toBe(JSON.stringify({ draftId }));
+
+    await page.getByRole('button', { name: 'Confirm Booking' }).click();
+    await expect(
+      page.getByRole('status').filter({ hasText: 'Booking confirmed' }),
+    ).toBeVisible();
+
+    // The booked trip is not a draft any more.
+    await expect
+      .poll(() =>
+        page.evaluate(() =>
+          sessionStorage.getItem('ngx-demo:advanced-wizard-draft'),
+        ),
+      )
+      .toBe(JSON.stringify({ draftId: null }));
+
+    // A debounced autosave that was pending at booking time must not bring the
+    // id back. Wait past the 2 s debounce before the reload.
+    // oxlint-disable-next-line playwright/no-wait-for-timeout -- absence of a save can only be shown by waiting
+    await page.waitForTimeout(2500);
+    expect(
+      await page.evaluate(() =>
+        sessionStorage.getItem('ngx-demo:advanced-wizard-draft'),
+      ),
+    ).toBe(JSON.stringify({ draftId: null }));
+
+    const draftLoads: string[] = [];
+    page.on('request', (request) => {
+      if (
+        request.method() === 'GET' &&
+        request.url().includes('/api/wizard/draft/')
+      ) {
+        draftLoads.push(request.url());
+      }
+    });
+    await page.reload();
+
+    await expect(page.getByLabel('First Name')).toHaveValue('');
+    await expect(
+      page.getByRole('heading', { name: 'Review Your Booking' }),
+    ).toHaveCount(0);
+    await expect(
+      page.getByRole('alert').filter({ hasText: 'saved draft' }),
+    ).toHaveCount(0);
+    expect(draftLoads).toEqual([]);
   });
 
   test('progress-header step click cannot skip validation on an invalid current step (#166 finding #3)', async ({
@@ -640,4 +1023,286 @@ test.describe('Advanced Wizard Demo', () => {
       await expect(tripStep).toHaveClass(/completed/);
     });
   });
+
+  test('a forward header click commits the edited step, so the booking sends the edit', async ({
+    page,
+  }) => {
+    // The review step commits nothing and the booking sends committed data.
+    // A forward header click must commit like Next, or the user books the
+    // old values that the review step still shows.
+    await fillTravelerStep(page);
+    await page.getByRole('button', { name: 'Next' }).click();
+    await fillTripStepMinimal(page);
+    await page.getByRole('button', { name: 'Next' }).click();
+    await expect(
+      page.getByRole('heading', { name: 'Review Your Booking' }),
+    ).toBeVisible();
+
+    await progressStep(page, 'Traveler Info').click();
+    await expect(
+      page.getByRole('heading', { name: 'Traveler Information' }),
+    ).toBeVisible();
+    await page.getByLabel('First Name').fill('Johnny');
+    await progressStep(page, 'Review').click();
+
+    await expect(
+      page.getByRole('heading', { name: 'Review Your Booking' }),
+    ).toBeVisible();
+    await expect(page.getByText('Johnny Doe')).toBeVisible();
+
+    const bookingRequest = page.waitForRequest(
+      (request) =>
+        request.url().endsWith('/api/wizard/booking') &&
+        request.method() === 'POST',
+    );
+    await page.getByRole('button', { name: 'Confirm Booking' }).click();
+    const booking = (await bookingRequest).postDataJSON() as {
+      traveler: { firstName: string };
+    };
+    expect(booking.traveler.firstName).toBe('Johnny');
+  });
+
+  test('Previous does not complete the trip step, and typed trip values survive Previous then Next', async ({
+    page,
+  }) => {
+    // Only a forward move finishes a step. If Previous committed the trip, the header
+    // would show a step as done that the user never confirmed.
+    await fillTravelerStep(page);
+    await page.getByRole('button', { name: 'Next' }).click();
+    await fillTripStepMinimal(page);
+
+    await backToTravelerStep(page);
+    await expect(progressStep(page, 'Trip Details')).not.toHaveClass(
+      /completed/,
+    );
+
+    // The values stay in the draft, so nothing typed is lost.
+    await page.getByRole('button', { name: 'Next' }).click();
+    const dest1 = page.getByRole('group', { name: 'Destination 1' });
+    await expect(dest1.getByLabel(/Country/i)).toHaveValue('Japan');
+    await expect(dest1.getByLabel(/City/i)).toHaveValue('Tokyo');
+    await expect(dest1.getByLabel(/Arrival Date/i)).toHaveValue(
+      tripDates.arrival,
+    );
+  });
+
+  test('the passport rule reads the trip that is typed but not committed', async ({
+    page,
+  }) => {
+    // The passport is valid on its own, so only the typed trip can make it
+    // fail. A rule that read the committed trip would let this through.
+    await fillTravelerStep(page, { expiry: tripDates.passportExpiryTooSoon });
+    await page.getByRole('button', { name: 'Next' }).click();
+    await fillTripStepMinimal(page);
+
+    await backToTravelerStep(page);
+    await page.getByRole('button', { name: 'Next' }).click();
+
+    await expectPassportTooCloseBlocked(page);
+  });
+
+  test('review flags a passport the committed trip outgrew, and booking is refused', async ({
+    page,
+  }) => {
+    // The trip step does not check the passport, so a later departure can make
+    // a once-valid passport too short. Review and submit must catch it.
+    await fillTravelerStep(page);
+    await page.getByRole('button', { name: 'Next' }).click();
+    await fillTripStepMinimal(page);
+    await page.getByRole('button', { name: 'Next' }).click();
+    await expect(
+      page.getByRole('heading', { name: 'Review Your Booking' }),
+    ).toBeVisible();
+    await expect(page.getByText('✓ Valid')).toBeVisible();
+
+    await page.getByRole('button', { name: 'Previous' }).click();
+    // Departure + 6 months is now after the passport expiry. The activity date
+    // stays inside the new range.
+    await page
+      .getByRole('group', { name: 'Destination 1' })
+      .getByLabel(/Departure Date/i)
+      .fill(`${tripYear}-09-15`);
+    await page.getByRole('button', { name: 'Next' }).click();
+
+    await expect(
+      page.getByRole('heading', { name: 'Review Your Booking' }),
+    ).toBeVisible();
+    await expect(page.getByText('✗ Not valid for this trip')).toBeVisible();
+
+    const bookingRequests: string[] = [];
+    page.on('request', (request) => {
+      if (request.url().endsWith('/api/wizard/booking')) {
+        bookingRequests.push(request.method());
+      }
+    });
+    await page.getByRole('button', { name: 'Confirm Booking' }).click();
+
+    await expect(
+      page.getByRole('alert').filter({ hasText: passportTooCloseMessage }),
+    ).toBeVisible();
+    expect(bookingRequests).toEqual([]);
+  });
+
+  test('a malformed date in a server draft does not complete the trip step and blocks Next', async ({
+    page,
+  }) => {
+    // Put a draft on the mock server that the form could never have produced.
+    // The mock API answers only once the MSW worker controls the page.
+    await page.waitForFunction(
+      () => navigator.serviceWorker.controller !== null,
+    );
+    const seededDraftId = await page.evaluate(async () => {
+      const response = await fetch('/api/wizard/draft', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          traveler: {
+            id: crypto.randomUUID(),
+            firstName: 'John',
+            lastName: 'Doe',
+            email: 'john.doe@example.com',
+            passportNumber: 'A1234567',
+            passportExpiry: '2099-01-01',
+            nationality: 'Dutch',
+          },
+          destinations: [
+            {
+              id: crypto.randomUUID(),
+              country: 'Japan',
+              city: 'Tokyo',
+              arrivalDate: '2031-13-45',
+              departureDate: '2031-14-02',
+              accommodation: '',
+              activities: [
+                {
+                  id: crypto.randomUUID(),
+                  name: 'Sushi Making',
+                  date: '2031-08-02',
+                  duration: 0,
+                  requirements: [
+                    {
+                      id: crypto.randomUUID(),
+                      type: 'other',
+                      description: 'Empty Stomach',
+                      completed: false,
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        }),
+      });
+      const { draftId } = (await response.json()) as { draftId: string };
+      sessionStorage.setItem(
+        'ngx-demo:advanced-wizard-draft',
+        JSON.stringify({ draftId }),
+      );
+      return draftId;
+    });
+    expect(seededDraftId).toBeTruthy();
+    await page.reload();
+
+    await expect(page.getByLabel('First Name')).toHaveValue('John');
+    // Committed data that fails the schema must not count as a finished step.
+    await expect(progressStep(page, 'Traveler Info')).toHaveClass(/completed/);
+    await expect(progressStep(page, 'Trip Details')).not.toHaveClass(
+      /completed/,
+    );
+
+    await page.getByRole('button', { name: 'Next' }).click();
+    const dest1 = page.getByRole('group', { name: 'Destination 1' });
+    // `<input type="date">` drops a malformed value and the form writes the
+    // empty value back, so the user sees the required error. The schema's
+    // "Enter a valid date" rule guards committed data, not the screen.
+    await expect(dest1.getByLabel(/Arrival Date/i)).toHaveValue('');
+
+    await page.getByRole('button', { name: 'Next' }).click();
+    await expect(
+      page.getByRole('heading', { name: 'Trip Details', exact: true }),
+    ).toBeVisible();
+    await expect(dest1.getByLabel(/Arrival Date/i)).toHaveAttribute(
+      'aria-invalid',
+      'true',
+    );
+    await expect(
+      page.getByRole('alert').filter({ hasText: 'Arrival date required' }),
+    ).toBeVisible();
+  });
 });
+
+// Calendar dates must not shift with the browser time zone. The fixed instant
+// is 2027-01-16 in Auckland and 2027-01-15 in New York. `setFixedTime` leaves
+// timers running, so the autosave debounce still works.
+const fixedNow = new Date('2027-01-15T11:30:00Z');
+const zones = [
+  // A passport that expires on 2027-01-16 is "today" in Auckland, so expired.
+  { timezoneId: 'Pacific/Auckland', expiringOn0116IsExpired: true },
+  { timezoneId: 'America/New_York', expiringOn0116IsExpired: false },
+];
+
+for (const { timezoneId, expiringOn0116IsExpired } of zones) {
+  test.describe(`Advanced Wizard Demo in ${timezoneId}`, () => {
+    test.use({ timezoneId });
+
+    test.beforeEach(async ({ page }) => {
+      // Chromium has a native Temporal, which `temporal-polyfill` prefers, and
+      // the Playwright clock does not fake `Temporal.Now`. Without the native
+      // one, the polyfill reads the faked `Date`.
+      await page.addInitScript(() => {
+        Reflect.deleteProperty(globalThis, 'Temporal');
+      });
+      await page.clock.setFixedTime(fixedNow);
+      await page.goto('/advanced-scenarios/advanced-wizard');
+    });
+
+    test('a passport expiring on the local date of "today" counts as expired', async ({
+      page,
+    }) => {
+      await fillTravelerStep(page, { expiry: '2027-01-16' });
+      await page.getByRole('button', { name: 'Next' }).click();
+
+      const expiredAlert = page
+        .getByRole('alert')
+        .filter({ hasText: 'Passport has expired' });
+      if (expiringOn0116IsExpired) {
+        await expect(expiredAlert).toBeVisible();
+        await expect(
+          page.getByRole('heading', { name: 'Traveler Information' }),
+        ).toBeVisible();
+      } else {
+        // No trip is set yet, so nothing else blocks the step.
+        await expect(
+          page.getByRole('heading', { name: 'Trip Details', exact: true }),
+        ).toBeVisible();
+        await expect(expiredAlert).toHaveCount(0);
+      }
+    });
+
+    test('six months after 31 August ends on the last day of February', async ({
+      page,
+    }) => {
+      const trip = {
+        arrival: '2027-08-20',
+        departure: '2027-08-31',
+        activity: '2027-08-22',
+      };
+
+      // Departure 2027-08-31 plus six months clamps to 2028-02-29. The
+      // passport must expire after that day, so 2028-02-29 is too early.
+      await fillTravelerStep(page, { expiry: '2028-02-29' });
+      await page.getByRole('button', { name: 'Next' }).click();
+      await fillTripStepMinimal(page, trip);
+      await backToTravelerStep(page);
+      await page.getByRole('button', { name: 'Next' }).click();
+      await expectPassportTooCloseBlocked(page);
+
+      // One day later passes.
+      await page.getByLabel(/Expiry Date/i).fill('2028-03-01');
+      await page.getByRole('button', { name: 'Next' }).click();
+      await expect(
+        page.getByRole('heading', { name: 'Trip Details', exact: true }),
+      ).toBeVisible();
+    });
+  });
+}

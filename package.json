@@ -1,6 +1,6 @@
 {
   "name": "ngx-signal-forms",
-  "packageManager": "pnpm@11.23.0+sha512.f00082e5b283a199b74e079da28d155c008fe232f44c8a06ea7ddfa014ecf719fc362f790ecc67b28106ddac2afb24c49a9a079159da560b2ce7d1e98efd11af",
+  "packageManager": "pnpm@12.8.1+sha512.f64ba907507f5ceafe06c8d38e6052d0179444580ec1279ddd5bfc11cb48aa8a2644b66598e07e761da84872a9fc57d5f902b87fa49d024198d558612aabbe45",
   "engines": {
     "node": "^22.22.3 || ^24.15.0 || >=26.0.0"
   },
@@ -20,7 +20,6 @@
     "build:all": "nx run-many --target=build --all",
     "lint": "nx run workspace:lint",
     "lint:fix": "nx run workspace:lint-fix",
-    "lint:all:fix": "nx run workspace:lint-fix",
     "format": "nx run workspace:format",
     "format:check": "nx run workspace:format-check",
     "test:all": "nx run-many --target=test --all",
@@ -36,7 +35,6 @@
   "private": true,
   "dependencies": {
     "@angular/aria": "catalog:angular",
-    "@angular/cdk": "catalog:angular",
     "@angular/common": "catalog:angular",
     "@angular/compiler": "catalog:angular",
     "@angular/core": "catalog:angular",
@@ -44,17 +42,12 @@
     "@angular/platform-browser": "catalog:angular",
     "@angular/router": "catalog:angular",
     "@fontsource-variable/inter": "catalog:fonts",
-    "@ng-icons/core": "catalog:spartan",
-    "@ng-icons/lucide": "catalog:spartan",
     "@ngrx-toolkit/core": "catalog:ngrx",
     "@ngrx/signals": "catalog:ngrx",
     "@shikijs/core": "catalog:shiki",
-    "@spartan-ng/brain": "catalog:spartan",
-    "class-variance-authority": "catalog:spartan",
-    "clsx": "catalog:spartan",
     "rxjs": "catalog:utilities",
     "shiki": "catalog:shiki",
-    "tailwind-merge": "catalog:spartan",
+    "temporal-polyfill": "catalog:utilities",
     "zod": "catalog:validation"
   },
   "devDependencies": {
@@ -78,9 +71,7 @@
     "@nx/eslint-plugin": "catalog:nx",
     "@nx/js": "catalog:nx",
     "@nx/playwright": "catalog:nx",
-    "@nx/vite": "catalog:nx",
     "@nx/vitest": "catalog:nx",
-    "@nx/web": "catalog:nx",
     "@nx/workspace": "catalog:nx",
     "@oxc-project/runtime": "catalog:tooling",
     "@playwright/test": "catalog:playwright",
@@ -122,7 +113,6 @@
     "size-limit": "catalog:tooling",
     "tailwindcss": "catalog:tailwind",
     "tslib": "catalog:utilities",
-    "tw-animate-css": "catalog:spartan",
     "typescript": "catalog:tooling",
     "verdaccio": "catalog:tooling",
     "vest": "catalog:validation",

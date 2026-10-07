@@ -107,12 +107,33 @@ export const appRoutes: Routes = [
         title: getRouteTitle('/form-field-wrapper/complex-forms'),
       },
       {
+        path: 'complex-forms/fieldset',
+        loadComponent: () =>
+          import('./04-form-field-wrapper/fieldset-appearance/fieldset-appearance.page').then(
+            (m) => m.FieldsetAppearancePage,
+          ),
+        data: { example: 'composition' },
+        title: getRouteTitle('/form-field-wrapper/complex-forms/fieldset'),
+      },
+      {
+        path: 'fieldset-appearance/feedback',
+        loadComponent: () =>
+          import('./04-form-field-wrapper/fieldset-appearance/fieldset-appearance.page').then(
+            (m) => m.FieldsetAppearancePage,
+          ),
+        data: { example: 'feedback' },
+        title: getRouteTitle(
+          '/form-field-wrapper/fieldset-appearance/feedback',
+        ),
+      },
+      {
         path: 'fieldset-appearance',
         loadComponent: () =>
           import('./04-form-field-wrapper/fieldset-appearance/fieldset-appearance.page').then(
             (m) => m.FieldsetAppearancePage,
           ),
         title: getRouteTitle('/form-field-wrapper/fieldset-appearance'),
+        data: { example: 'appearance' },
       },
       {
         path: 'custom-controls',
@@ -216,9 +237,8 @@ export const appRoutes: Routes = [
       },
       {
         path: 'advanced-wizard',
-        loadComponent: () =>
-          import('./05-advanced/advanced-wizard/advanced-wizard.page'),
-        title: getRouteTitle('/advanced-scenarios/advanced-wizard'),
+        loadChildren: () =>
+          import('./05-advanced/advanced-wizard/advanced-wizard.routes'),
       },
       {
         path: 'single-model-wizard',

@@ -1,4 +1,7 @@
-# CSS Framework Integration
+---
+title: 'CSS Framework Integration'
+sidebarTitle: 'CSS frameworks'
+---
 
 > How to integrate `@ngx-signal-forms/toolkit` with Bootstrap, Tailwind CSS, and Angular Material
 
@@ -18,7 +21,7 @@ See [Angular Forms Signals Migration Guide](https://angular.dev/guide/forms/sign
 When enabled, `invalid()` reflects validation errors immediately, so those classes apply as soon as validation fails:
 
 ```console
-❌ Default Behavior (Poor UX):
+Default behavior (poor UX):
 ┌─────────────────────────────┐
 │ Email [red border]          │  ← Field turns red immediately
 └─────────────────────────────┘
@@ -184,9 +187,8 @@ Angular Material uses `mat-form-field` with its own error handling via `ErrorSta
 
 ### Signal Forms error matching
 
-In Angular/Material 22.1.4, Signal Forms supplies interoperability and Material
-calls the public `ErrorStateMatcher.isSignalErrorState(field)` hook for signal
-fields. Do not assume only the Reactive Forms `isErrorState` hook runs.
+For Signal Forms fields, Angular Material calls the public
+`ErrorStateMatcher.isSignalErrorState(field)` hook. Do not assume only the Reactive Forms `isErrorState` hook runs.
 
 Align both Material's error-state predicate and the rendered message visibility.
 Status classes alone do not establish that contract. Use the maintained
@@ -213,82 +215,16 @@ The toolkit automatically manages ARIA attributes regardless of CSS framework:
 These associations support assistive technology. Test announcements with the
 target browser and screen reader; DOM attributes alone cannot prove them.
 
-### Disabling Auto-ARIA
+If a library sets its own ARIA, as Angular Material does, add
+`ngxSignalFormControlAria="manual"` to the control. See
+[custom controls](./CUSTOM_CONTROLS.md) for who writes ARIA on which control.
 
-For Angular Material (which handles its own ARIA):
+### Switches
 
-```html
-<input
-  matInput
-  [formField]="userForm.email"
-  ngxSignalFormControlAria="manual"
-/>
-```
-
-Import the root toolkit bundle or its control-semantics directive in this
-template. Known runtime concern R01: configuration stores `autoAria: false`,
-but the current auto-ARIA directive does not consume it. Use per-control manual
-ownership instead. This limitation still needs a runtime regression test and fix.
-
-## Switch / Toggle Components Across UI Libraries
-
-If a control is visually presented as an on/off switch, the important question
-is not the styling library — it is whether the **rendered, focusable control**
-exposes real switch semantics.
-
-Reference:
-
-- [MDN: ARIA `switch` role](https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Reference/Roles/switch_role)
-
-### Recommended toolkit-friendly pattern
-
-Prefer a native checkbox with `role="switch"` on the actual bound control:
-
-```html
-<label for="emailUpdates">Email updates</label>
-<input
-  id="emailUpdates"
-  type="checkbox"
-  role="switch"
-  [formField]="form.emailUpdates"
-/>
-```
-
-That gives you:
-
-- native focus and keyboard behavior
-- native checked state
-- toolkit auto-ARIA enhancement on the same element
-
-### Angular Material
-
-`mat-slide-toggle` should generally keep using Material's own accessibility and
-error model.
-
-- let Material own the switch semantics
-- do not stack toolkit auto-ARIA on top of Material's internal switch control
-- if you need toolkit-managed wrapper markup, build a dedicated adapter instead
-  of mixing `mat-form-field` semantics with toolkit field semantics
-
-### PrimeNG
-
-PrimeNG switch/toggle components should be treated as library-owned widgets.
-
-- if the rendered widget already exposes switch semantics, keep PrimeNG in
-  charge of ARIA
-- if you wrap it with toolkit primitives, inspect the final DOM and verify the
-  accessible name and described-by chain
-- if the DOM does not expose switch semantics cleanly, prefer a native checkbox
-  adapter
-
-### ng-bootstrap / Bootstrap switch styling
-
-Bootstrap-style switches are usually native checkboxes with styling, which fits
-the toolkit well.
-
-- keep the checkbox as the real bound control
-- add `role="switch"` when the interaction is conceptually a switch
-- allow toolkit auto-ARIA to enhance the same native element
+Style a switch as a native checkbox with `role="switch"` on the bound
+`<input>`. Keep library switch widgets, such as `mat-slide-toggle`, in charge
+of their own ARIA. See [custom controls](./CUSTOM_CONTROLS.md) for the switch
+pattern and library notes.
 
 ---
 

@@ -102,7 +102,6 @@ describe('NgxSpartanFormField warning timing (#506)', () => {
         provideZonelessChangeDetection(),
         provideNgxSignalFormsConfig({
           defaultErrorStrategy: 'on-touch',
-          autoAria: true,
         }),
       ],
     });
@@ -190,7 +189,6 @@ describe('NgxSpartanFormFieldError follows the wrapper-resolved warningStrategy 
           // the renderer rather than the renderer re-deciding warning
           // timing on its own.
           defaultWarningStrategy: 'immediate',
-          autoAria: true,
         }),
         ...provideNgxSpartanForms(),
       ],
@@ -266,7 +264,6 @@ describe('NgxSpartanFormField does not suppress a warning-only field (#506 C2)',
         provideZonelessChangeDetection(),
         provideNgxSignalFormsConfig({
           defaultErrorStrategy: 'on-touch',
-          autoAria: true,
         }),
       ],
     });
@@ -307,7 +304,6 @@ describe('NgxSpartanFormField toolkitAriaDescribedBy tracks the warning region (
         provideZonelessChangeDetection(),
         provideNgxSignalFormsConfig({
           defaultErrorStrategy: 'on-touch',
-          autoAria: true,
         }),
       ],
     });
@@ -409,7 +405,6 @@ describe('NgxSpartanFormFieldError applies blocking-error precedence to the rend
         provideZonelessChangeDetection(),
         provideNgxSignalFormsConfig({
           defaultErrorStrategy: 'on-touch',
-          autoAria: true,
         }),
         ...provideNgxSpartanForms(),
       ],

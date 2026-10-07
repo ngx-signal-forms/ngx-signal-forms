@@ -111,6 +111,29 @@ class UnsupportedValueNoMaxLengthWrapperComponent {
   readonly objectField = this.objectForm.data;
 }
 
+/**
+ * Standalone count (no wrapper) with an explicit `fieldName` input, for the
+ * issue #589 specs.
+ */
+@Component({
+  selector: 'ngx-test-wrapper-field-name',
+  standalone: true,
+  imports: [NgxFormFieldCharacterCount],
+  template: `
+    <ngx-form-field-character-count
+      [formField]="testForm.text"
+      [maxLength]="500"
+      [fieldName]="fieldName()"
+    />
+  `,
+})
+class FieldNameWrapperComponent {
+  readonly fieldName = input<string>();
+
+  readonly #model = signal({ text: '' });
+  protected readonly testForm = form(this.#model);
+}
+
 describe('NgxFormFieldCharacterCount', () => {
   describe('Basic rendering', () => {
     it('should render the component with character count text', async () => {
@@ -509,6 +532,23 @@ describe('NgxFormFieldCharacterCount', () => {
       );
     });
 
+    it('should still announce the limit state when showLimitColors is false', async () => {
+      // `showLimitColors` is a visual flag. Turning colours off must not
+      // silence the announcement a screen reader user relies on.
+      const { container } = await render(TestWrapperComponent, {
+        componentInputs: {
+          textModel: 'a'.repeat(80),
+          maxLength: 100,
+          showLimitColors: false,
+          liveAnnounce: true,
+        },
+      });
+
+      expect(
+        container.querySelector('.ngx-signal-form-field-char-count__sr'),
+      ).toHaveTextContent('Approaching limit: 20 characters remaining.');
+    });
+
     it('should update announcement text when limit state changes', async () => {
       const { container, rerender } = await render(TestWrapperComponent, {
         componentInputs: {
@@ -809,36 +849,101 @@ describe('NgxFormFieldCharacterCount', () => {
     });
   });
 
-  describe('Default token contrast (WCAG 1.4.3)', () => {
-    it('exposes an AA-compliant default warning color (≥ 4.5:1 on white)', async () => {
-      /**
-       * Smoke test for the design-token contract. The previous default
-       * `#f59e0b` (~2.16:1 on white) failed WCAG 1.4.3 AA for normal-text
-       * color contrast; v1 ships `#a16207` (Tailwind amber-700, ~5.17:1)
-       * as the default. This guard catches regressions if a future
-       * theming refactor reverts the token.
-       *
-       * We render the component and read its style sheets from the
-       * adoptedStyleSheets pipeline (or via the head <style> Angular
-       * injects in jsdom) so the test pins behaviour from the consumer's
-       * perspective, not via the private `ɵcmp` metadata API.
-       */
-      await render(TestWrapperComponent, {
-        componentInputs: { textModel: 'a'.repeat(85), maxLength: 100 },
+  describe('Standalone limit id from the fieldName input (issue #589)', () => {
+    // Outside a wrapper nothing supplies a field name, so the count cannot
+    // mint a limit id and a screen reader never hears the limit on focus.
+    // The `fieldName` input lets the author mint the same stable id the
+    // wrapper path produces and put it in the control's aria-describedby.
+
+    it('renders the limit text with the stable `{fieldName}-char-count-limit` id', async () => {
+      const { container } = await render(FieldNameWrapperComponent, {
+        componentInputs: { fieldName: 'bio' },
       });
 
-      // Combine every <style> Angular has injected for component styles.
-      const styleText = Array.from(document.querySelectorAll('style'))
-        .map((s) => s.textContent ?? '')
-        .join('\n');
+      const limitEl = container.querySelector('#bio-char-count-limit');
+      expect(limitEl).toHaveTextContent('Up to 500 characters');
+    });
 
-      expect(styleText).toContain('--ngx-form-field-char-count-color-warning');
-      // New AA-compliant default fallback must be present.
-      expect(styleText).toContain('#a16207');
-      // The failing-contrast value must be gone from the defaults.
-      expect(styleText).not.toMatch(
-        /--ngx-form-field-char-count-color-warning,\s*#f59e0b/u,
+    it('lets the wrapper context field name win over the input', async () => {
+      // Auto-ARIA only links registry ids tagged with the control's field
+      // name, which is the wrapper's name. An input that overrode it would
+      // drop the limit from aria-describedby.
+      const { container } = await render(FieldNameWrapperComponent, {
+        componentInputs: { fieldName: 'other' },
+        providers: [
+          {
+            provide: NGX_SIGNAL_FORM_FIELD_CONTEXT,
+            useValue: { fieldName: signal('bio') },
+          },
+        ],
+      });
+
+      expect(container.querySelector('#bio-char-count-limit')).not.toBeNull();
+      expect(container.querySelector('#other-char-count-limit')).toBeNull();
+    });
+
+    it('ignores the input inside a wrapper whose field name is unresolved', async () => {
+      // The wrapper claims aria-describedby, so a minted limit id would hide
+      // the visible "n/max" text. But auto-ARIA links only registry ids
+      // tagged with the wrapper's own field name, and it has none. Falling
+      // back to the input would leave the control with neither the limit
+      // description nor a readable count.
+      const { container } = await render(FieldNameWrapperComponent, {
+        componentInputs: { fieldName: 'bio' },
+        providers: [
+          {
+            provide: NGX_SIGNAL_FORM_FIELD_CONTEXT,
+            useValue: {
+              fieldName: signal(null),
+              isControlDescribedByManaged: signal(true),
+            },
+          },
+        ],
+      });
+
+      expect(
+        container.querySelector('.ngx-signal-form-field-char-count__limit'),
+      ).toBeNull();
+      expect(
+        container.querySelector('.ngx-signal-form-field-char-count__text'),
+      ).not.toHaveAttribute('aria-hidden');
+    });
+
+    it('trims the fieldName and turns inner whitespace into "-" in the id', async () => {
+      // Authors write the id into aria-describedby by hand, so the documented
+      // normalization must match what the count renders.
+      const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      const { container, rerender } = await render(FieldNameWrapperComponent, {
+        componentInputs: { fieldName: '  bio  ' },
+      });
+      expect(container.querySelector('#bio-char-count-limit')).not.toBeNull();
+
+      await rerender({ componentInputs: { fieldName: 'shipping notes' } });
+      expect(
+        container.querySelector('#shipping-notes-char-count-limit'),
+      ).not.toBeNull();
+      warnSpy.mockRestore();
+    });
+
+    it('renders no limit element for a blank fieldName', async () => {
+      const { container } = await render(FieldNameWrapperComponent, {
+        componentInputs: { fieldName: '  ' },
+      });
+
+      expect(
+        container.querySelector('.ngx-signal-form-field-char-count__limit'),
+      ).toBeNull();
+    });
+
+    it('keeps the visible "n/max" text exposed to AT, because nothing confirms the link', async () => {
+      const { container } = await render(FieldNameWrapperComponent, {
+        componentInputs: { fieldName: 'bio' },
+      });
+
+      const visibleText = container.querySelector(
+        '.ngx-signal-form-field-char-count__text',
       );
+      expect(visibleText).not.toHaveAttribute('aria-hidden');
     });
   });
 

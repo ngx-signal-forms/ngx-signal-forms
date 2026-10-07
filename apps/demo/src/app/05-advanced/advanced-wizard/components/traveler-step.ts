@@ -1,5 +1,4 @@
 import {
-  ChangeDetectionStrategy,
   Component,
   computed,
   ElementRef,
@@ -17,7 +16,7 @@ import {
   submitWithWarnings,
 } from '@ngx-signal-forms/toolkit';
 import { NgxFormField } from '@ngx-signal-forms/toolkit/form-field';
-import type { Destination } from '../schemas/wizard.schemas';
+import { type Destination, lastDepartureDate } from '../schemas/wizard.schemas';
 
 import { createTravelerStepForm } from '../forms/traveler-step.form';
 import { WizardStore } from '../stores/wizard.store';
@@ -37,7 +36,6 @@ type ReadonlyDestination = Readonly<Omit<Destination, 'activities'>> & {
 
 @Component({
   selector: 'ngx-traveler-step',
-  changeDetection: ChangeDetectionStrategy.OnPush,
 
   imports: [FormField, NgxSignalFormToolkit, NgxFormField],
   template: `
@@ -158,21 +156,12 @@ export class TravelerStepComponent implements WizardStepInterface {
   protected readonly stepHeading =
     viewChild<ElementRef<HTMLHeadingElement>>('stepHeading');
 
-  // Compute latest departure date for passport cross-field validation
-  readonly #lastDepartureDate = computed(() => {
-    const destinations = this.#store.destinations();
-    if (destinations.length === 0) return null;
-
-    const departures = destinations
-      .map((d: ReadonlyDestination) => d.departureDate)
-      .filter(Boolean)
-      .slice();
-
-    // oxlint-disable-next-line unicorn/no-array-sort -- The workspace targets ES2022, so toSorted() is not available in the demo build.
-    departures.sort();
-
-    return departures.length > 0 ? departures[departures.length - 1] : null;
-  });
+  // Latest departure date for the passport cross-step rule. It reads the live
+  // trip draft, not the committed trip: the user may have edited a date on the
+  // trip step and pressed Previous without committing.
+  readonly #lastDepartureDate = computed(() =>
+    lastDepartureDate(this.#store.destinationsDraft()),
+  );
 
   // Create form using factory function
   readonly #travelerStepForm = createTravelerStepForm(

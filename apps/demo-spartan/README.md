@@ -5,7 +5,7 @@ A runnable end-to-end example showing how to integrate
 **Spartan Components** (`@spartan-ng/brain` + `@spartan-ng/helm`). This is
 the canonical "host directive" example for the toolkit's renderer-token
 seam — Spartan's directive-first composition model maps directly onto how
-the toolkit exposes its own seams (`NgxSignalFormControlSemanticsDirective`,
+the toolkit exposes its own seams (`NgxSignalFormControl`,
 `NgxSignalFormAutoAria`).
 
 The four contracts from
@@ -86,7 +86,7 @@ export class MyForm {
 ```
 
 `NgxSpartanFormBundle` is the import bundle for the wrapper itself plus
-`NgxSignalFormControlSemanticsDirective`. The error renderer
+`NgxSignalFormControl`. The error renderer
 (`NgxSpartanFormFieldError`) is mounted dynamically via
 `*ngComponentOutlet` and resolved through `NGX_FORM_FIELD_ERROR_RENDERER`,
 so it is intentionally not in the bundle — see
@@ -116,7 +116,7 @@ src/app/
     live regions).
   - Hint output flows through `<ngx-form-field-hint>` projected as
     `<small data-slot="form-description">`-style copy.
-- `NgxSignalFormControlSemanticsDirective` declared **alongside** the
+- `NgxSignalFormControl` declared **alongside** the
   helm directives (`[hlmInput]` / `<hlm-select>` / `<hlm-checkbox>`) —
   the toolkit reads control semantics through DI, not DOM heuristics, so
   layering both directives on the same host element is the canonical
@@ -162,7 +162,9 @@ export class CheckoutForm {}
 ```
 
 A custom renderer receives the toolkit's standard renderer-input contract
-(`{ formField, strategy, submittedStatus }`). See
+(the wrapper binds `{ formField, strategy, submittedStatus, warningStrategy,
+fieldName }`, the fieldset binds `{ errors, fieldName, strategy,
+submittedStatus, listStyle }`). See
 [CUSTOM_WRAPPERS.md → The renderer interface](../../docs/CUSTOM_WRAPPERS.md#the-renderer-interface).
 
 ## Spartan-specific gotchas
@@ -422,13 +424,16 @@ root element next to the `.dark` class.
 
 ## Pinned versions
 
-| Package             | Version               |
-| ------------------- | --------------------- |
-| `@spartan-ng/brain` | `1.0.4`               |
-| `@spartan-ng/cli`   | (catalog: `spartan:`) |
-| `@ng-icons/core`    | `>=33.4.0 <34.0.0`    |
-| `@ng-icons/lucide`  | `>=33.4.0 <34.0.0`    |
-| `tw-animate-css`    | (catalog: `spartan:`) |
+Versions come from the `spartan:` pnpm catalog in `pnpm-workspace.yaml`.
+The resolved column is from `pnpm-lock.yaml`.
+
+| Package             | Declared in                                     | Catalog pin | Resolved |
+| ------------------- | ----------------------------------------------- | ----------- | -------- |
+| `@spartan-ng/brain` | `apps/demo-spartan`, `packages/demo/spartan-ui` | `1.4.1`     | `1.4.1`  |
+| `@spartan-ng/cli`   | root `package.json`                             | `1.4.1`     | `1.4.1`  |
+| `@ng-icons/core`    | `packages/demo/spartan-ui`                      | `36.0.0`    | `36.0.0` |
+| `@ng-icons/lucide`  | `packages/demo/spartan-ui`                      | `36.0.0`    | `36.0.0` |
+| `tw-animate-css`    | `apps/demo-spartan` (dev)                       | `^1.4.0`    | `1.4.0`  |
 
 The toolkit itself is consumed in-tree via the workspace tsconfig path
 alias (no `@spartan-ng/*` reaches `packages/toolkit/package.json`).

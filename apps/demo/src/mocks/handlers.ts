@@ -1,22 +1,17 @@
-import { delay, http, HttpResponse } from 'msw';
+import { http, HttpResponse } from 'msw/http';
+import { delay } from 'msw/utils/delay';
 
 import {
   AUTOSAVE_ENDPOINT,
   AUTOSAVE_FAILURE_MARKER,
 } from '../app/05-advanced/autosave/autosave.api';
-import type {
-  Destination,
-  Traveler,
-} from '../app/05-advanced/advanced-wizard/schemas/wizard.schemas';
+import type { WizardDraft } from '../app/05-advanced/advanced-wizard/schemas/wizard.schemas';
 
 // ══════════════════════════════════════════════════════════════════════════════
 // IN-MEMORY STORAGE (simulates database)
 // ══════════════════════════════════════════════════════════════════════════════
 
-interface DraftData {
-  traveler: Traveler;
-  destinations: Destination[];
-}
+type DraftData = WizardDraft;
 
 interface StoredDraft extends DraftData {
   draftId: string;
@@ -31,7 +26,31 @@ interface StoredBooking {
   createdAt: string;
 }
 
-const drafts = new Map<string, StoredDraft>();
+// MSW runs in the page, so module memory is gone after a reload. Keep the
+// drafts in `sessionStorage`, the way a real server would keep them, so the
+// wizard can resume one after a reload.
+const DRAFTS_STORAGE_KEY = 'ngx-demo:mock-wizard-drafts';
+const drafts = readStoredDrafts();
+
+// `main.ts` awaits this module before it starts Angular. A bad stored value
+// must not stop the demo, so it only costs the stored drafts.
+function readStoredDrafts(): Map<string, StoredDraft> {
+  try {
+    return new Map(
+      JSON.parse(sessionStorage.getItem(DRAFTS_STORAGE_KEY) ?? '[]') as [
+        string,
+        StoredDraft,
+      ][],
+    );
+  } catch {
+    return new Map();
+  }
+}
+
+function persistDrafts(): void {
+  sessionStorage.setItem(DRAFTS_STORAGE_KEY, JSON.stringify([...drafts]));
+}
+
 const bookings = new Map<string, StoredBooking>();
 
 // ══════════════════════════════════════════════════════════════════════════════
@@ -117,6 +136,7 @@ export const wizardHandlers = [
     };
 
     drafts.set(draftId, draft);
+    persistDrafts();
 
     console.log('[MSW] Created draft:', draftId);
 
@@ -145,6 +165,7 @@ export const wizardHandlers = [
     };
 
     drafts.set(draftId, draft);
+    persistDrafts();
 
     console.log('[MSW] Updated draft:', draftId);
 
@@ -170,6 +191,7 @@ export const wizardHandlers = [
     return HttpResponse.json({
       traveler: draft.traveler,
       destinations: draft.destinations,
+      inProgress: draft.inProgress,
     });
   }),
 
@@ -184,6 +206,7 @@ export const wizardHandlers = [
     }
 
     drafts.delete(draftId);
+    persistDrafts();
 
     console.log('[MSW] Deleted draft:', draftId);
 

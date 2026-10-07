@@ -1,11 +1,5 @@
 import { Component, signal } from '@angular/core';
-import {
-  FormField,
-  form,
-  required,
-  schema,
-  validate,
-} from '@angular/forms/signals';
+import { FormField, form, required, validate } from '@angular/forms/signals';
 import { render } from '@testing-library/angular';
 import { page, userEvent } from 'vitest/browser';
 import { describe, expect, it } from 'vitest';
@@ -117,12 +111,9 @@ describe('NgxFormFieldWrapper — state focus outline contrast (#495)', () => {
     `,
   })
   class InvalidFocusOutlineComponent {
-    protected readonly field = form(
-      signal({ username: '' }),
-      schema((path) => {
-        required(path.username, { message: 'Username is required' });
-      }),
-    );
+    protected readonly field = form(signal({ username: '' }), (path) => {
+      required(path.username, { message: 'Username is required' });
+    });
   }
 
   @Component({
@@ -145,21 +136,18 @@ describe('NgxFormFieldWrapper — state focus outline contrast (#495)', () => {
     `,
   })
   class WarningFocusOutlineComponent {
-    protected readonly field = form(
-      signal({ username: 'ab' }),
-      schema((path) => {
-        validate(path.username, (ctx) => {
-          const value = ctx.value();
-          if (value.length > 0 && value.length < 3) {
-            return {
-              kind: 'warn:too-short',
-              message: 'Consider 3+ characters',
-            };
-          }
-          return null;
-        });
-      }),
-    );
+    protected readonly field = form(signal({ username: 'ab' }), (path) => {
+      validate(path.username, (ctx) => {
+        const value = ctx.value();
+        if (value.length > 0 && value.length < 3) {
+          return {
+            kind: 'warn:too-short',
+            message: 'Consider 3+ characters',
+          };
+        }
+        return null;
+      });
+    });
   }
 
   const tabIntoInput = async (container: HTMLElement) => {

@@ -1,7 +1,6 @@
 import { NgTemplateOutlet } from '@angular/common';
 import {
   afterEveryRender,
-  ChangeDetectionStrategy,
   Component,
   computed,
   effect,
@@ -27,11 +26,6 @@ import {
 import { NgxHeadlessErrorState } from '@ngx-signal-forms/toolkit/headless';
 
 export type NgxFormFieldListStyle = 'plain' | 'bullets';
-
-/**
- * @deprecated Use {@link NgxFormFieldListStyle} instead.
- */
-export type NgxFormFieldErrorListStyle = NgxFormFieldListStyle;
 
 /**
  * Visual treatment for the rendered live regions.
@@ -96,7 +90,7 @@ export type NgxFormFieldErrorPresentation = 'inline' | 'panel';
  *
  * @example Simplest Usage (no NgxSignalFormToolkit needed!)
  * ```html
- * <form (submit)="save($event)" novalidate>
+ * <form [formRoot]="form">
  *   <input [formField]="form.email" />
  *   <ngx-form-field-error [formField]="form.email" fieldName="email" />
  *   <button type="submit">Submit</button>
@@ -132,7 +126,6 @@ export type NgxFormFieldErrorPresentation = 'inline' | 'panel';
  */
 @Component({
   selector: 'ngx-form-field-error',
-  changeDetection: ChangeDetectionStrategy.OnPush,
 
   host: {
     // The role="alert"/role="status" containers stay mounted (see the

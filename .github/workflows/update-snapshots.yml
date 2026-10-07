@@ -12,6 +12,10 @@ on:
           - all
           - playwright
           - vitest
+      playwright_filter:
+        description: 'Optional Playwright spec path (empty runs all specs)'
+        required: false
+        type: string
 
 permissions:
   contents: write
@@ -60,8 +64,13 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
+      - name: Set up Socket Firewall
+        uses: socketdev/action@ba6de6cc0565af1f42295590380973573297e31f # v1.3.2
+        with:
+          mode: firewall
+
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: sfw pnpm install --frozen-lockfile
 
       - name: Install Playwright browsers
         run: pnpm exec playwright install --with-deps
@@ -93,7 +102,14 @@ jobs:
         # `e2e`, not `e2e-ci`: the latter is the Playwright plugin's atomized
         # target and Nx refuses to run it without Nx Agents, which this
         # workspace stopped using in #252.
-        run: pnpm exec nx run demo-e2e:e2e --updateSnapshots --skip-nx-cache
+        env:
+          PLAYWRIGHT_FILTER: ${{ inputs.playwright_filter }}
+        run: |
+          args=()
+          if [ -n "$PLAYWRIGHT_FILTER" ]; then
+            args+=("$PLAYWRIGHT_FILTER")
+          fi
+          pnpm exec nx run demo-e2e:e2e --skip-nx-cache -- "${args[@]}" --update-snapshots
 
       - name: Update Vitest browser screenshots
         if: ${{ inputs.scope == 'all' || inputs.scope == 'vitest' }}

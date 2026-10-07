@@ -24,13 +24,11 @@ export {
   type NgxCharacterCountAnnouncementFormatter,
   type NgxCharacterCountAnnouncementInfo,
   type NgxCharacterCountAnnouncementState,
-  type NgxCharacterCountValue,
 } from './character-count';
 export {
   NgxFormFieldError,
   type NgxFormFieldErrorPresentation,
   type NgxFormFieldListStyle,
-  type NgxFormFieldErrorListStyle,
 } from './form-field-error';
 export {
   NgxFormFieldErrorSummary,

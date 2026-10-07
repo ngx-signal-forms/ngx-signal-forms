@@ -7,7 +7,7 @@ import { NgxFormFieldWrapper } from './form-field-wrapper';
 /**
  * Coverage for #471: `--ngx-form-field-margin` defaults to `0` so a form
  * field contributes no outer margin of its own (container-owned spacing,
- * see CONTEXT.md). The parent layout — grid or flex `gap` — owns the space
+ * see GLOSSARY.md). The parent layout — grid or flex `gap` — owns the space
  * between fields; a consumer opts back into the old rhythm by setting
  * `--ngx-form-field-margin` at whatever scope they choose.
  */

@@ -27,7 +27,6 @@ describe('ContactFormComponent (Material reference, smoke)', () => {
         provideZonelessChangeDetection(),
         provideNgxSignalFormsConfig({
           defaultErrorStrategy: 'on-touch',
-          autoAria: true,
         }),
         // Matches main.ts — registers MaterialFeedbackRenderer/
         // MaterialHintRenderer AND NgxMatWarningAwareErrorStateMatcher.

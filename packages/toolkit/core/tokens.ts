@@ -81,7 +81,6 @@ export interface NgxSignalFormFieldContext {
  * @internal
  */
 export const DEFAULT_NGX_SIGNAL_FORMS_CONFIG = {
-  autoAria: true,
   defaultErrorStrategy: 'on-touch',
   defaultWarningStrategy: 'on-touch',
   defaultFormFieldAppearance: 'standard',
@@ -184,7 +183,7 @@ export const NGX_SIGNAL_FORM_FIELD_CONTEXT =
 
 /**
  * Injection token for the resolved ARIA ownership mode for a single control
- * host. Provided by `NgxSignalFormControlSemanticsDirective` at its own
+ * host. Provided by `NgxSignalFormControl` at its own
  * directive level, and read by `NgxSignalFormAutoAria` via
  * `{ optional: true, self: true }`.
  *
@@ -260,6 +259,15 @@ export const NGX_SIGNAL_FORM_HINT_REGISTRY =
  * `NgxFormFieldError`'s own `errorContainerVisible`/`warningContainerVisible`
  * signals verbatim, so the publish/read seam is grep-traceable end to end.
  *
+ * `errorContainerVisible` answers "is the error ID in the DOM?", so it drives
+ * `aria-describedby`. `shouldShowErrors` answers "does the field show its
+ * errors?", so it drives `aria-invalid`. They differ when a surface renders
+ * only one channel: a warning-only template has no error element (container
+ * `false`), yet the field is still invalid (`shouldShowErrors` `true`).
+ * `shouldShowErrors` is optional. When a registrant leaves it out,
+ * auto-ARIA uses `errorContainerVisible` for `aria-invalid` too, which is the
+ * behavior before this signal existed.
+ *
  * Public wire format for the {@link NgxSignalFormFieldVisibilityRegistry}
  * contract.
  *
@@ -269,6 +277,12 @@ export interface NgxSignalFormFieldVisibilityDescriptor {
   readonly fieldName: string;
   readonly errorContainerVisible: Signal<boolean>;
   readonly warningContainerVisible: Signal<boolean>;
+  /**
+   * Whether the field shows its blocking errors, whether or not this surface
+   * renders an error element. Drives `aria-invalid`. Optional: when absent,
+   * auto-ARIA falls back to {@link errorContainerVisible}.
+   */
+  readonly shouldShowErrors?: Signal<boolean>;
 }
 
 /**
@@ -329,7 +343,9 @@ export const NGX_SIGNAL_FORM_FIELD_VISIBILITY_REGISTRY =
  * The wrapper instantiates the configured component via `*ngComponentOutlet`
  * and binds the relevant input set per call site. A custom renderer intended
  * to replace both must accept the union of those input names; inputs the
- * renderer doesn't declare are silently dropped by `*ngComponentOutlet`.
+ * renderer doesn't declare never reach it. Angular's `componentRef.setInput`
+ * skips them and, in dev mode, logs an `NG0303` error (it throws when the app
+ * sets `errorOnUnknownProperties`).
  *
  * Renderers may accept extra inputs beyond the contract (analytics tags,
  * theming hooks); the wrapper/fieldset ignore them and Angular accepts the
@@ -373,8 +389,9 @@ export interface NgxFormFieldErrorRenderer {
  * `NgxFormFieldHint` already exposes as inputs:
  * `{ resolvedFieldName: string | null, resolvedId: string, position:
  * 'left' | 'right' | null }`. Renderers must declare all three with
- * `input()` — Angular's `componentRef.setInput` rejects writes to
- * undeclared inputs, so omitting any of them errors at runtime.
+ * `input()`. `componentRef.setInput` skips an undeclared input and, in dev
+ * mode, logs an `NG0303` error (it throws when the app sets
+ * `errorOnUnknownProperties`).
  *
  * When no provider is registered, `NgxFormFieldHint` falls back to direct
  * `<ng-content />` projection (preserving backwards compatibility for

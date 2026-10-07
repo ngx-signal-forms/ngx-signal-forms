@@ -1,19 +1,13 @@
-import {
-  ChangeDetectionStrategy,
-  Component,
-  computed,
-  input,
-  signal,
-} from '@angular/core';
+import { Component, computed, input, signal } from '@angular/core';
 import type { FieldState, FieldTree } from '@angular/forms/signals';
 import { form, FormField } from '@angular/forms/signals';
 import {
+  createErrorVisibility,
   createOnInvalidHandler,
   injectFormContext,
   NgxSignalFormToolkit,
   type ErrorDisplayStrategy,
   type ResolvedErrorDisplayStrategy,
-  createShowErrorsComputed,
   type SubmittedStatus,
 } from '@ngx-signal-forms/toolkit';
 import { NgxFormFieldHint } from '@ngx-signal-forms/toolkit/assistive';
@@ -39,7 +33,6 @@ const INITIAL_MODEL: ProductFeedbackModel = {
 
 @Component({
   selector: 'ngx-error-display-helpers',
-  changeDetection: ChangeDetectionStrategy.OnPush,
 
   template: `
     <div
@@ -60,7 +53,7 @@ const INITIAL_MODEL: ProductFeedbackModel = {
           </span>
         </div>
         <span class="text-xs text-indigo-700 dark:text-indigo-300">
-          Powered by injectFormContext + createShowErrorsComputed
+          Powered by injectFormContext + createErrorVisibility
         </span>
       </div>
 
@@ -128,16 +121,20 @@ export class ErrorDisplayHelpersComponent {
     () => this.#formContext?.submittedStatus() ?? 'unsubmitted',
   );
 
-  protected readonly showNameErrors = createShowErrorsComputed(
+  protected readonly showNameErrors = createErrorVisibility(
     this.#nameFieldState,
-    this.resolvedStrategy,
-    this.submittedStatus,
+    {
+      strategy: this.resolvedStrategy,
+      submittedStatus: this.submittedStatus,
+    },
   );
 
-  protected readonly showEmailErrors = createShowErrorsComputed(
+  protected readonly showEmailErrors = createErrorVisibility(
     this.#emailFieldState,
-    this.resolvedStrategy,
-    this.submittedStatus,
+    {
+      strategy: this.resolvedStrategy,
+      submittedStatus: this.submittedStatus,
+    },
   );
 
   protected readonly showPersonalInfoErrors = computed(
@@ -156,7 +153,6 @@ export class ErrorDisplayHelpersComponent {
  */
 @Component({
   selector: 'ngx-error-display-modes-form',
-  changeDetection: ChangeDetectionStrategy.OnPush,
 
   imports: [
     BusyButtonDirective,

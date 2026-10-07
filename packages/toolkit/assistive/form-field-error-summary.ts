@@ -1,7 +1,6 @@
 import { NgTemplateOutlet } from '@angular/common';
 import {
   afterRenderEffect,
-  ChangeDetectionStrategy,
   Component,
   computed,
   DestroyRef,
@@ -97,7 +96,6 @@ export type NgxErrorSummaryHeadingLevel = 2 | 3 | 4 | 5 | 6;
  */
 @Component({
   selector: 'ngx-form-field-error-summary',
-  changeDetection: ChangeDetectionStrategy.OnPush,
 
   host: {
     // `tabindex="-1"` makes the host programmatically focusable without
@@ -120,7 +118,7 @@ export type NgxErrorSummaryHeadingLevel = 2 | 3 | 4 | 5 | 6;
   hostDirectives: [
     {
       directive: NgxHeadlessErrorSummary,
-      inputs: ['formTree', 'strategy', 'warningStrategy', 'submittedStatus'],
+      inputs: ['formTree', 'strategy', 'submittedStatus'],
     },
   ],
   imports: [NgTemplateOutlet],
@@ -174,10 +172,7 @@ export type NgxErrorSummaryHeadingLevel = 2 | 3 | 4 | 5 | 6;
           }
         }
         <ul class="ngx-form-field-error-summary__list" role="list">
-          @for (
-            entry of summary.entries();
-            track entry.fieldName + '::' + entry.kind + '::' + entry.message
-          ) {
+          @for (entry of summary.entries(); track entry.key) {
             <li class="ngx-form-field-error-summary__item">
               @if (entry.canFocus) {
                 <button

@@ -83,6 +83,11 @@
     rgba(50, 65, 85, 0.75),
     rgba(249, 250, 251, 0.75)
   ); /* Labels, hints, placeholders (4.99:1 on white, 8.54:1 on #1f2937) */
+  /* Optional marker base. The marker paints at 70% opacity, so it needs a */
+  /* darker base than the label: #1e293b at 0.7 is 5.52:1 on white and 4.92:1 */
+  /* on the invalid fieldset tint. Dark mode keeps the label color (4.97:1 on */
+  /* #1f2937 at 0.7). */
+  --_field-clr-optional-marker: light-dark(#1e293b, currentColor);
   --_field-clr-surface: light-dark(#ffffff, #1f2937); /* Input background */
   --_field-clr-border: light-dark(
     rgba(50, 65, 85, 0.7),
@@ -149,6 +154,14 @@
     var(--_field-clr-primary)
   );
   --_color-error: var(--ngx-form-field-color-error, var(--_field-clr-danger));
+  /* Text around the control (label, marker, plain hint) sits on the page, */
+  /* not on the input. A tinted ancestor surface (NgxFormFieldset) hands in */
+  /* darker tones for it through the inherited `--_tinted-surface-clr-*` */
+  /* tokens. Borders, placeholders and prefixes keep the base tones. */
+  --_color-error-text: var(
+    --ngx-form-field-color-error,
+    var(--_tinted-surface-clr-danger, var(--_field-clr-danger))
+  );
   --_color-warning: var(
     --ngx-form-field-color-warning,
     var(--_field-clr-warning)
@@ -157,6 +170,10 @@
   --_color-text-secondary: var(
     --ngx-form-field-color-text-secondary,
     var(--_field-clr-text-secondary)
+  );
+  --_color-label: var(
+    --ngx-form-field-color-text-secondary,
+    var(--_tinted-surface-clr-text-secondary, var(--_field-clr-text-secondary))
   );
   --_color-surface: var(
     --ngx-form-field-color-surface,
@@ -195,7 +212,7 @@
 :host {
   /* Layout */
   --_gap: var(--ngx-form-field-gap, var(--_field-space-3xs));
-  /* Container-owned spacing (see CONTEXT.md): the wrapper contributes no
+  /* Container-owned spacing (see GLOSSARY.md): the wrapper contributes no
      outer margin of its own by default. The space between fields belongs to
      the parent layout (`gap` on a grid or flex container). Consumers who
      want the wrapper to own that space opt in with `--ngx-form-field-margin`
@@ -221,10 +238,7 @@
     var(--_field-weight-normal)
   );
   --_label-font-family: var(--ngx-form-field-label-font-family, inherit);
-  --_label-color: var(
-    --ngx-form-field-label-color,
-    var(--_color-text-secondary)
-  );
+  --_label-color: var(--ngx-form-field-label-color, var(--_color-label));
   --_label-line-height: var(
     --ngx-form-field-label-line-height,
     var(--_field-line-height-caption)
@@ -260,7 +274,7 @@
   /* Required marker */
   --_required-marker-color: var(
     --ngx-form-field-required-marker-color,
-    var(--_color-error)
+    var(--_color-error-text)
   );
   --_required-marker-weight: var(
     --ngx-form-field-required-marker-weight,
@@ -271,7 +285,7 @@
      annotates the exception rather than flagging a problem. */
   --_optional-marker-color: var(
     --ngx-form-field-optional-marker-color,
-    var(--_color-label-muted, currentColor)
+    var(--_field-clr-optional-marker)
   );
   --_optional-marker-weight: var(
     --ngx-form-field-optional-marker-weight,
@@ -346,6 +360,10 @@
      default to `none` so the two focus signals don't overlap, but they stay
      public and overridable for consumers who want the ring back. */
   --_invalid-color: var(--ngx-form-field-invalid-color, var(--_color-error));
+  --_invalid-text-color: var(
+    --ngx-form-field-invalid-color,
+    var(--_color-error-text)
+  );
   --_invalid-box-shadow: var(--ngx-form-field-invalid-box-shadow, none);
   --_warning-color: var(--ngx-form-field-warning-color, var(--_color-warning));
   --_warning-box-shadow: var(--ngx-form-field-warning-box-shadow, none);
@@ -540,7 +558,7 @@
 
 /* Keep this focus rule flat. Angular 22.2 adds a scoping attribute to */
 /* nested `&` rules, which raises their specificity. The forced-colors focus */
-/* rule at the end of this file has the same specificity as this flat rule */
+/* rule near the end of this file has the same specificity as this flat rule */
 /* and wins by source order. A nested copy of this rule would beat it (#556). */
 :host(.ngx-signal-form-field-wrapper--textual)
   .ngx-signal-form-field-wrapper__content:focus-within {
@@ -1167,7 +1185,6 @@
  */
 
 /* Hide empty slots to prevent unnecessary spacing */
-.ngx-signal-form-field-wrapper__assistive-left:empty,
 .ngx-signal-form-field-wrapper__assistive-right:empty {
   display: none;
 }
@@ -1276,12 +1293,38 @@
 /* soft state backgrounds flatten to system colors, erasing the invalid/ */
 /* warning distinction. Map states to explicit system colors instead. */
 @media (forced-colors: active) {
+  /* A media query adds no specificity. The outline appearance's rules carry */
+  /* a two-class `:host()` compound, so they outrank these one-class rules */
+  /* in any source order. The resting and focus rules below list the outline */
+  /* selector too, at equal specificity, and win by source order (#550). */
+  /* The nested hover and `:has(:disabled)` rules outrank the rules here, by */
+  /* a margin that differs per Angular version. So these rules set the */
+  /* tokens that hover and disabled read, not the properties. Hover and */
+  /* disabled then paint system colors on every Angular version (#558). */
   :host(.ngx-signal-form-field-wrapper--textual)
+    .ngx-signal-form-field-wrapper__content,
+  :host(.ngx-signal-forms-outline.ngx-signal-form-field-wrapper--textual)
     .ngx-signal-form-field-wrapper__content {
     forced-color-adjust: none;
     background: Field;
     color: FieldText;
     border: 2px solid FieldText;
+    --_hover-border-color: FieldText;
+    --_disabled-bg: Field;
+  }
+
+  /* Neutralize color-mix() box-shadow and border-color overrides from the */
+  /* normal focus rules — the outline: Highlight below is the sole focus */
+  /* signal in forced-colors mode. This rule sits above the invalid and */
+  /* warning rules: its outline selector has the same specificity as their */
+  /* `:focus-within` rules before Angular 22.2, so source order keeps their */
+  /* state border color. */
+  :host(.ngx-signal-form-field-wrapper--textual)
+    .ngx-signal-form-field-wrapper__content:focus-within,
+  :host(.ngx-signal-forms-outline.ngx-signal-form-field-wrapper--textual)
+    .ngx-signal-form-field-wrapper__content:focus-within {
+    box-shadow: none;
+    border-color: Highlight;
   }
 
   :host(
@@ -1289,6 +1332,7 @@
     )
     .ngx-signal-form-field-wrapper__content {
     border-color: Mark;
+    --_hover-border-color: Mark;
 
     &:focus-within {
       border-color: Mark;
@@ -1301,20 +1345,12 @@
     )
     .ngx-signal-form-field-wrapper__content {
     border-color: CanvasText;
+    --_hover-border-color: CanvasText;
 
     &:focus-within {
       border-color: CanvasText;
       box-shadow: none;
     }
-  }
-
-  /* Neutralize color-mix() box-shadow and border-color overrides from the */
-  /* normal focus rules — the outline: Highlight below is the sole focus */
-  /* signal in forced-colors mode. */
-  :host(.ngx-signal-form-field-wrapper--textual)
-    .ngx-signal-form-field-wrapper__content:focus-within {
-    box-shadow: none;
-    border-color: Highlight;
   }
 
   :host(.ngx-signal-form-field-wrapper--textual)

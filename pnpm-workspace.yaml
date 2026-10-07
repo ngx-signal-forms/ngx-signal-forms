@@ -14,43 +14,76 @@ allowBuilds:
   simple-git-hooks: true
 autoInstallPeers: true
 catalogMode: 'prefer'
-# pnpm 11 defaults this to `install`, which runs an implicit `pnpm install`
+# pnpm defaults this to `install`, which runs an implicit `pnpm install`
 # before commands such as `pnpm nx ...`. That is unsafe in git worktrees where
 # `node_modules` may be symlinked to the main checkout, and CI should use the
 # explicit install step instead of command-time dependency repair.
 verifyDepsBeforeRun: false
+# Supply-chain settings.
+# Refuse a version whose publish trust is weaker than earlier versions of the
+# same package, such as a provenance-signed package that suddenly publishes
+# without provenance. Add `trustPolicyExclude` entries only for named cases.
+trustPolicy: no-downgrade
+trustPolicyExclude:
+  # 9.13.x and 10.x publish with GitHub provenance; the 9.14.0 backport to the
+  # 9.x line does not. Reached only through verdaccio (local release dry runs).
+  - pino@9.14.0
+  # The 6.x line is a 2023 backport that predates npm provenance, so it looks
+  # like a downgrade next to 7.x. Reached only through @babel/core.
+  - semver@6.3.1
+# Transitive dependencies cannot come from git, tarball URLs or other
+# non-registry sources.
+blockExoticSubdeps: true
+# Fail the install when a dependency with build scripts is missing from
+# `allowBuilds`, instead of skipping its scripts silently.
+strictDepBuilds: true
+# Skip versions younger than two days (in minutes). Keep this equal to the
+# Dependabot `cooldown.default-days` in .github/dependabot.yml.
+minimumReleaseAge: 2880
+# pnpm 12.3+ turns strict mode on whenever `minimumReleaseAge` is set. Strict
+# mode refuses `pnpm update --no-save`, which is what Dependabot runs, so every
+# Dependabot update fails (dependabot-core#16375). The two-day window still
+# applies; strict mode only adds an approval prompt a bot cannot answer.
+# Remove this once dependabot-core#16376 ships.
+minimumReleaseAgeStrict: false
+# pnpm 12 writes the lockfile as two YAML documents. Dependabot reads only the
+# first and sees no dependencies (dependabot-core#15904). This keeps the
+# lockfile to one document. It also stops pnpm from enforcing `packageManager`,
+# so CI and `pnpm/action-setup` are the only pins for the pnpm version. Remove
+# this once dependabot-core#15904 is fixed.
+pmOnFail: ignore
 catalogs:
   analogjs:
-    '@analogjs/vite-plugin-angular': '2.7.5'
-    '@analogjs/vitest-angular': '2.7.5'
+    '@analogjs/vite-plugin-angular': '2.8.0'
+    '@analogjs/vitest-angular': '2.8.0'
   axe:
     '@axe-core/playwright': '^4.13.0'
     axe-core: '^4.13.0'
   angular:
-    '@angular/animations': '22.2.0'
-    '@angular/aria': '22.2.0'
-    '@angular/cdk': '22.2.0'
-    '@angular/common': 22.2.0
-    '@angular/compiler': 22.2.0
-    '@angular/core': 22.2.0
-    '@angular/forms': 22.2.0
-    '@angular/platform-browser': 22.2.0
-    '@angular/router': 22.2.0
+    '@angular/animations': '22.2.1'
+    '@angular/aria': '22.2.1'
+    '@angular/cdk': '22.2.1'
+    '@angular/common': 22.2.1
+    '@angular/compiler': 22.2.1
+    '@angular/core': 22.2.1
+    '@angular/forms': 22.2.1
+    '@angular/platform-browser': 22.2.1
+    '@angular/router': 22.2.1
   angular-build:
-    '@angular-devkit/core': '22.2.0'
-    '@angular-devkit/schematics': '22.2.0'
-    '@angular/build': '22.2.0'
-    '@angular/cli': '22.2.0'
-    '@angular/compiler-cli': '22.2.0'
-    '@angular/language-service': '22.2.0'
-    '@schematics/angular': '22.2.0'
+    '@angular-devkit/core': '22.2.1'
+    '@angular-devkit/schematics': '22.2.1'
+    '@angular/build': '22.2.1'
+    '@angular/cli': '22.2.1'
+    '@angular/compiler-cli': '22.2.1'
+    '@angular/language-service': '22.2.1'
+    '@schematics/angular': '22.2.1'
     ng-packagr: '22.1.1'
   angular-eslint:
     '@angular-eslint/eslint-plugin': '22.5.0'
     '@angular-eslint/eslint-plugin-template': '22.5.0'
     '@angular-eslint/template-parser': '22.5.0'
   angular-material:
-    '@angular/material': '22.2.0'
+    '@angular/material': '22.2.1'
   ngrx:
     '@ngrx-toolkit/core': '22.0.1'
     '@ngrx/signals': '22.0.1'
@@ -60,9 +93,7 @@ catalogs:
     '@nx/eslint-plugin': '23.2.1'
     '@nx/js': '23.2.1'
     '@nx/playwright': '23.2.1'
-    '@nx/vite': '23.2.1'
     '@nx/vitest': '23.2.1'
-    '@nx/web': '23.2.1'
     '@nx/workspace': '23.2.1'
     nx: '23.2.1'
   playwright:
@@ -70,24 +101,24 @@ catalogs:
     eslint-plugin-playwright: '^2.12.0'
   primeng:
     '@primeuix/themes': '3.0.1'
-    primeicons: '8.0.1'
-    primeng: '22.1.1'
+    primeicons: '8.0.2'
+    primeng: '22.1.2'
   shiki:
-    '@shikijs/core': '^4.4.3'
-    '@shikijs/types': '^4.4.3'
-    shiki: '^4.4.3'
+    '@shikijs/core': '^4.5.0'
+    '@shikijs/types': '^4.5.0'
+    shiki: '^4.5.0'
   spartan:
-    '@ng-icons/core': '36.0.0'
-    '@ng-icons/lucide': '36.0.0'
-    '@spartan-ng/brain': '1.4.1'
-    '@spartan-ng/cli': '1.4.1'
+    '@ng-icons/core': '36.1.0'
+    '@ng-icons/lucide': '36.1.0'
+    '@spartan-ng/brain': '1.5.0'
+    '@spartan-ng/cli': '1.5.0'
     class-variance-authority: '^0.7.1'
     clsx: '^2.1.1'
     tailwind-merge: '^3.7.0'
     tw-animate-css: '^1.4.0'
   swc:
     '@swc-node/register': '1.12.1'
-    '@swc/core': '1.16.2'
+    '@swc/core': '1.16.13'
     '@swc/helpers': '0.5.23'
   fonts:
     '@fontsource-variable/inter': '^5.3.0'
@@ -99,8 +130,8 @@ catalogs:
     postcss-url: '~10.1.3'
     tailwindcss: '^4.3.3'
   testing:
-    jsdom: '~30.1.0'
-    msw: '~2.15.0'
+    jsdom: '~30.1.2'
+    msw: '~3.0.2'
   testing-library:
     '@testing-library/angular': '^19.5.0'
     '@testing-library/dom': '^10.4.2'
@@ -110,31 +141,32 @@ catalogs:
     '@arethetypeswrong/cli': '^0.18.5'
     '@commitlint/cli': '^21.2.3'
     '@commitlint/config-conventional': '^21.2.3'
-    '@oxc-project/runtime': '^0.150.0'
+    '@oxc-project/runtime': '^0.152.0'
     # Exact pin: 14.1.x is newer than pnpm's minimum release age. Move both
     # size-limit entries to ^14 once 14.1 passes it.
-    '@size-limit/file': '14.0.0'
+    '@size-limit/file': '14.1.0'
     '@typescript/native': 'npm:typescript@~7.0.2'
-    '@types/node': '26.6.2'
-    eslint: '^10.11.0'
+    '@types/node': '26.6.4'
+    eslint: '^10.12.0'
     jiti: '2.7.0'
-    lint-staged: '^17.5.1'
-    oxfmt: '^0.68.0'
-    oxlint: '^1.83.0'
-    oxlint-tsgolint: '^7.0.2002'
-    publint: '^0.3.24'
+    lint-staged: '^17.6.0'
+    oxfmt: '^0.71.0'
+    oxlint: '^1.86.0'
+    oxlint-tsgolint: '^7.0.2003'
+    publint: '^0.3.25'
     simple-git-hooks: '^2.14.0'
-    size-limit: '14.0.0'
+    size-limit: '14.1.0'
     typescript: 'npm:@typescript/typescript6@~6.0.2'
     verdaccio: '^6.10.3'
-    vite: '^8.3.0'
+    vite: '^8.3.2'
     vite-tsconfig-paths: '^6.1.1'
   utilities:
     rxjs: '~7.8.2'
+    temporal-polyfill: '1.0.5'
     tslib: '^2.8.1'
   validation:
-    arktype: '^2.2.3'
-    vest: '6.3.2'
+    arktype: '^2.2.7'
+    vest: '6.3.4'
     zod: '^4.6.5'
   vitest:
     '@vitest/browser-playwright': '~4.1.11'
@@ -142,33 +174,13 @@ catalogs:
     '@vitest/ui': '~4.1.11'
     vitest: '~4.1.11'
 
-overrides:
-  '@babel/plugin-transform-modules-systemjs@>=7.12.0 <=7.29.3': '^7.29.4'
-  ajv@>=7.0.0-alpha.0 <8.18.0: '^8.18.0'
-  axios@>=1.0.0 <1.16.0: '^1.16.0'
-  brace-expansion@>=4.0.0 <5.0.5: '^5.0.5'
-  brace-expansion@>=5.0.0 <5.0.6: '^5.0.6'
-  fast-uri@<=3.1.1: '^3.1.2'
-  follow-redirects@<=1.15.11: '^1.15.12'
-  ip-address@<=10.1.0: '^10.1.1'
-  picomatch@>=4.0.0 <4.0.4: '^4.0.4'
-  qs@>=6.11.1 <=6.15.1: '^6.15.2'
-  tmp@<0.2.7: '^0.2.7'
-  uuid@<11.1.1: '^11.1.1'
-  webpack-dev-server@<5.2.5: '^5.2.5'
-  ws@>=8.0.0 <8.20.1: '^8.20.1'
-  yaml@>=2.0.0 <2.8.3: '^2.8.3'
-  # Transitive CVE pins — Dependabot cannot auto-bump these through pnpm catalogs,
-  # so they are pinned here by range. Review when the parent tooling updates.
-  '@babel/core@<=7.29.0': '^7.29.1'
-  esbuild@>=0.27.3 <0.28.1: '^0.28.1'
-  form-data@>=4.0.0 <4.0.6: '^4.0.6'
-  hono@<4.12.25: '^4.12.25'
-  http-proxy-middleware@>=0.16.0 <2.0.10: '^2.0.10'
-  http-proxy-middleware@>=3.0.0 <3.0.7: '^3.0.7'
-  js-yaml@<=4.1.1: '^4.1.2'
-  piscina@>=5.0.0-alpha.0 <=5.1.4: '^5.1.5'
-  undici@<6.27.0: '^6.27.0'
-  undici@>=7.0.0 <7.28.0: '^7.28.0'
-  vite@>=7.0.0 <7.3.5: '>=7.3.5 <9'
 strictPeerDependencies: false
+# `pnpm peers check` runs in CI. tsconfck (via vite-tsconfig-paths) lists
+# typescript ^5 as its peer; the workspace builds and tests on TypeScript 6
+# with it. Drop this rule once tsconfck widens its range.
+# @vitest/mocker lists msw ^2.4.9 as its peer; the demo mocks run on MSW 3 and
+# Vitest never loads msw here. Drop this rule once @vitest/mocker accepts msw 3.
+peerDependencyRules:
+  allowedVersions:
+    'tsconfck>typescript': '6'
+    '@vitest/mocker>msw': '3'

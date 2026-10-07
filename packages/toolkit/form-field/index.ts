@@ -1,16 +1,11 @@
 // Core form field components
 export * from './form-field-wrapper';
 export * from './form-fieldset';
-
-// Re-export the shared placement type from core so consumers importing from
-// `@ngx-signal-forms/toolkit/form-field` keep resolving it after the type
-// moved to the core barrel during v1 hardening.
-export type { NgxFormFieldErrorPlacement } from '@ngx-signal-forms/toolkit';
-export { NgxFieldIdentityProvider } from '@ngx-signal-forms/toolkit';
+export type * from './form-field-error-placement';
 
 import {
   NgxSignalFormAutoAria,
-  NgxSignalFormControlSemanticsDirective,
+  NgxSignalFormControl,
 } from '@ngx-signal-forms/toolkit';
 import {
   NgxFormFieldCharacterCount,
@@ -29,7 +24,7 @@ import { NgxFormFieldset } from './form-fieldset';
  * `NgxSignalFormToolkit`. The directive is idempotent — importing it twice
  * (e.g. via both bundles) is safe.
  *
- * Also includes `NgxSignalFormControlSemanticsDirective` so the
+ * Also includes `NgxSignalFormControl` so the
  * `ngxSignalFormControl="..."` / `ngxSignalFormControlAria="manual"`
  * attributes the wrapper's own dev-mode warning instructs authors to add
  * (see the "unresolved control kind" diagnostic in `NgxFormFieldWrapper`)
@@ -63,7 +58,7 @@ import { NgxFormFieldset } from './form-fieldset';
  */
 export const NgxFormField = [
   NgxSignalFormAutoAria,
-  NgxSignalFormControlSemanticsDirective,
+  NgxSignalFormControl,
   NgxFormFieldWrapper,
   NgxFormFieldHint,
   NgxFormFieldCharacterCount,

@@ -1,5 +1,4 @@
 import {
-  ChangeDetectionStrategy,
   Component,
   ElementRef,
   inject,
@@ -123,7 +122,6 @@ function formatLegacyDate(value: Date | null): string {
  */
 @Component({
   selector: 'ngx-legacy-datepicker-adapter',
-  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [LegacyDatepickerComponent],
   host: {
     '(focusout)': 'onHostFocusOut($event)',

@@ -15,7 +15,6 @@ import { NgxHeadlessErrorState } from './lib/error-state';
 import { NgxHeadlessErrorSummary } from './lib/error-summary';
 import { NgxHeadlessFieldName } from './lib/field-name';
 import { NgxHeadlessFieldset } from './lib/fieldset';
-import { NgxHeadlessNotification } from './lib/notification';
 
 // Reactive primitives
 export {
@@ -25,11 +24,6 @@ export {
   type ResolvedFieldError,
 } from './lib/create-error-message-signal';
 
-// Re-exported from the root entrypoint (NOT `/core`, which is stripped from
-// the published exports map) so `CreateErrorMessageSignalOptions.errorMessages`
-// (a `Signal<ErrorMessageRegistry>`) is fully resolvable from `/headless`.
-export { type ErrorMessageRegistry } from '@ngx-signal-forms/toolkit';
-
 // Directives
 export {
   createErrorState,
@@ -37,6 +31,7 @@ export {
   type CreateErrorStateOptions,
   type ErrorStateResult,
   type ErrorStateSignals,
+  type NgxHeadlessErrorChannels,
   type ResolvedError,
 } from './lib/error-state';
 
@@ -74,14 +69,7 @@ export {
 } from './lib/field-name';
 
 export {
-  NgxHeadlessNotification,
-  type NotificationStateSignals,
-  type ResolvedNotificationMessage,
-} from './lib/notification';
-
-export {
   createFieldOptionalitySummary,
-  summarizeFieldOptionality,
   type FieldOptionality,
 } from './lib/field-optionality';
 
@@ -113,22 +101,14 @@ export {
 } from '@ngx-signal-forms/toolkit/core';
 
 // Utility functions
+export { humanizeFieldPath } from '@ngx-signal-forms/toolkit/core';
 export {
   createFieldStateFlags,
-  createUniqueId,
-  dedupeValidationErrors,
-  focusBoundControlFromError,
-  humanizeFieldPath,
-  readDirectErrors,
-  readErrors,
-  readFieldFlag,
-  resolveFieldNameFromError,
-  toErrorSummaryEntry,
   type BooleanStateKey,
-  type ErrorSummaryEntryData,
   type FieldStateLike,
   type FieldStateFlags,
-} from './lib/utilities';
+} from './lib/field-state-utilities';
+export { dedupeValidationErrors } from './lib/utilities';
 
 /**
  * Bundle of all headless directives for easy importing.
@@ -152,5 +132,4 @@ export const NgxHeadlessToolkit = [
   NgxHeadlessFieldset,
   NgxHeadlessCharacterCount,
   NgxHeadlessFieldName,
-  NgxHeadlessNotification,
 ] as const;

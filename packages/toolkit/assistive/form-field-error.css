@@ -67,7 +67,12 @@
     --ngx-signal-form-error-animation,
     var(--_error-animation-default)
   );
-  --_error-color: var(--ngx-signal-form-error-color, var(--_error-clr-danger));
+  /* A tinted ancestor surface (NgxFormFieldset) hands in darker tones */
+  /* through the inherited `--_tinted-surface-clr-*` tokens. */
+  --_error-color: var(
+    --ngx-signal-form-error-color,
+    var(--_tinted-surface-clr-danger, var(--_error-clr-danger))
+  );
   --_error-bg: var(--ngx-signal-form-error-bg, var(--_error-token-transparent));
   --_error-border-color: var(
     --ngx-signal-form-error-border-color,
@@ -75,7 +80,7 @@
   );
   --_warning-color: var(
     --ngx-signal-form-warning-color,
-    var(--_error-clr-warning)
+    var(--_tinted-surface-clr-warning, var(--_error-clr-warning))
   );
   --_warning-bg: var(
     --ngx-signal-form-warning-bg,
@@ -116,9 +121,6 @@
   flex-direction: column;
   gap: var(--_error-spacing);
   padding: var(--_error-padding);
-  /* Align error messages with input text start (remove left padding offset) */
-  padding-inline-start: 0;
-  padding-inline-end: 0;
   border-width: var(--_error-border-width);
   border-style: var(--_error-border-style-default);
   border-radius: var(--_error-border-radius);
@@ -127,6 +129,11 @@
   animation: var(--_error-animation);
   will-change: transform, opacity;
   transform-origin: top center;
+}
+
+:host([data-presentation='inline']) .ngx-form-field-error {
+  padding-inline-start: 0;
+  padding-inline-end: 0;
 }
 
 .ngx-form-field-error--error {

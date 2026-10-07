@@ -3,7 +3,7 @@ name: PR Title
 # Squash merges use the PR title as the commit subject, so this checks it
 # against the same commitlint rules the commit-msg hook enforces locally
 # (see commitlint.config.cjs): Conventional Commits, plus every `@word`
-# backticked so GitHub does not render it as a mention (AGENTS.md).
+# backticked so GitHub does not render it as a mention (CODING_STANDARDS.md).
 #
 # Dependabot titles (e.g. `build(deps): bump @ng-icons/core from 1 to 2`)
 # contain a bare `@word` by construction - Dependabot cannot backtick it.
@@ -94,9 +94,15 @@ jobs:
           node-version-file: '.node-version'
           cache: 'pnpm'
 
+      - name: Set up Socket Firewall
+        if: steps.config.outputs.exists == 'true'
+        uses: socketdev/action@ba6de6cc0565af1f42295590380973573297e31f # v1.3.2
+        with:
+          mode: firewall
+
       - name: Install dependencies
         if: steps.config.outputs.exists == 'true'
-        run: pnpm install --frozen-lockfile --ignore-scripts
+        run: sfw pnpm install --frozen-lockfile --ignore-scripts
 
       - name: Lint PR title
         if: steps.config.outputs.exists == 'true'

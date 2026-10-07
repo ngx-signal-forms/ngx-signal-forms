@@ -6,58 +6,13 @@ fieldset + fieldset {
   margin-top: 2rem;
 }
 
-.playground-shell {
-  border: 1px solid rgba(172, 178, 187, 0.38);
-  border-radius: 1.5rem;
-  background: linear-gradient(
-    180deg,
-    rgba(255, 255, 255, 0.98) 0%,
-    rgba(248, 250, 252, 0.98) 100%
-  );
-  padding: 1.25rem;
-  box-shadow: 0 20px 45px -32px rgba(50, 65, 85, 0.45);
-}
-
-.playground-shell--accent {
-  background: linear-gradient(
-    180deg,
-    rgba(248, 251, 255, 0.98) 0%,
-    rgba(255, 255, 255, 0.98) 100%
-  );
-}
-
 .playground-section-header {
   display: flex;
   flex-direction: column;
   gap: 0.375rem;
 }
 
-.playground-eyebrow {
-  font-size: 0.75rem;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: #5f7897;
-}
-
-.playground-reference-grid,
-.playground-preview-grid,
-.playground-selector-grid {
-  display: grid;
-  gap: 1rem;
-}
-
-.playground-reference-grid,
-.playground-preview-grid {
-  grid-template-columns: repeat(auto-fit, minmax(min(16rem, 100%), 1fr));
-}
-
-.playground-selector-grid {
-  grid-template-columns: repeat(auto-fit, minmax(min(13rem, 100%), 1fr));
-}
-
-.playground-preview-card,
-.playground-selector-card {
+.playground-preview-card {
   border: 1px solid rgba(172, 178, 187, 0.38);
   border-radius: 1.125rem;
   background: rgba(255, 255, 255, 0.95);
@@ -68,61 +23,6 @@ fieldset + fieldset {
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
-}
-
-.playground-selector-card {
-  padding: 0.875rem 1rem 1rem;
-}
-
-.playground-segmented {
-  display: inline-flex;
-  flex-wrap: wrap;
-  gap: 0.25rem;
-  padding: 0.25rem;
-  border-radius: 9999px;
-  background: rgba(232, 236, 241, 0.88);
-}
-
-.playground-option {
-  border: none;
-  border-radius: 9999px;
-  background: transparent;
-  color: #5d6978;
-  padding: 0.45rem 0.95rem;
-  font-size: 0.875rem;
-  font-weight: 600;
-  line-height: 1;
-  transition:
-    background-color 150ms ease,
-    color 150ms ease,
-    box-shadow 150ms ease;
-}
-
-.playground-option:hover {
-  color: var(--color-text);
-}
-
-.playground-option[data-active='true'] {
-  background: #e8f4fb;
-  color: #005d96;
-  box-shadow: 0 1px 2px rgba(50, 65, 85, 0.18);
-}
-
-.playground-option:focus-visible {
-  outline: 2px solid #005fcc;
-  outline-offset: 2px;
-}
-
-.playground-note {
-  border-radius: 1rem;
-  background: rgba(232, 244, 251, 0.8);
-  padding: 0.875rem 1rem;
-  color: #47627e;
-}
-
-.playground-icon {
-  inline-size: 1.25rem;
-  block-size: 1.25rem;
 }
 
 .playground-radio-option {
@@ -152,42 +52,8 @@ fieldset + fieldset {
 }
 
 :host-context(.dark) {
-  .playground-shell,
-  .playground-shell--accent,
-  .playground-preview-card,
-  .playground-selector-card {
+  .playground-preview-card {
     border-color: rgba(148, 163, 184, 0.28);
     background: rgba(17, 24, 39, 0.94);
-  }
-
-  .playground-shell,
-  .playground-shell--accent {
-    box-shadow: 0 24px 48px -36px rgba(15, 23, 42, 0.75);
-  }
-
-  .playground-eyebrow {
-    color: #9dc2ea;
-  }
-
-  .playground-segmented {
-    background: rgba(31, 41, 55, 0.96);
-  }
-
-  .playground-option {
-    color: #cbd5e1;
-  }
-
-  .playground-option:hover {
-    color: #f8fafc;
-  }
-
-  .playground-option[data-active='true'] {
-    background: rgba(59, 130, 246, 0.2);
-    color: #bfdbfe;
-  }
-
-  .playground-note {
-    background: rgba(30, 58, 138, 0.2);
-    color: #cbd5f5;
   }
 }

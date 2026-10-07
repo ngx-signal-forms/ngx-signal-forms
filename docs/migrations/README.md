@@ -1,4 +1,7 @@
-# Versioned migration guides
+---
+title: 'Versioned migration guides'
+sidebarTitle: 'Overview'
+---
 
 RC.11 to RC.15 are released guides. RC.16 documents the next release; its
 guide does not establish publication. Check the installed version

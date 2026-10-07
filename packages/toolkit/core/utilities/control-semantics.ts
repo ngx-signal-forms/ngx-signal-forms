@@ -123,14 +123,14 @@ export function isNgxSignalFormControlAriaMode(
 /* oxlint-disable @typescript-eslint/prefer-readonly-parameter-types -- HTMLElement is a mutable DOM API surface; these helpers only inspect it. */
 /**
  * Reads explicit control semantics from the stable `data-ngx-signal-form-*`
- * attributes written by `NgxSignalFormControlSemanticsDirective`.
+ * attributes written by `NgxSignalFormControl`.
  *
  * The wrapper layer uses this to read projected-control semantics from the DOM
  * instead of injecting the directive directly, so projected controls, custom
  * elements, and plain DOM lookups all share the same transport format.
  *
  * Note: the auto-ARIA directive reads semantics via Angular DI
- * (`inject(NgxSignalFormControlSemanticsDirective)`) rather than this function.
+ * (`inject(NgxSignalFormControl)`) rather than this function.
  *
  * @param element Rendered control host to inspect.
  * @returns The explicit semantics declared on the host, or an empty object.

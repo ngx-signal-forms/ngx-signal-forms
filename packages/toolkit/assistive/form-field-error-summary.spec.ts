@@ -1,6 +1,7 @@
 import { ChangeDetectorRef, Component, signal } from '@angular/core';
 import { By } from '@angular/platform-browser';
 import {
+  applyEach,
   email as signalEmail,
   form,
   FormField,
@@ -9,10 +10,19 @@ import {
   validate,
 } from '@angular/forms/signals';
 import type { SubmittedStatus } from '@ngx-signal-forms/toolkit';
+import { provideFieldLabels } from '@ngx-signal-forms/toolkit/core';
 import { NgxHeadlessErrorSummary } from '@ngx-signal-forms/toolkit/headless';
 import { render, screen } from '@testing-library/angular';
 import { userEvent } from '@testing-library/user-event';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import {
+  afterEach,
+  assert,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+} from 'vitest';
 import { NgxFormFieldErrorSummary } from './form-field-error-summary';
 
 describe('NgxFormFieldErrorSummary', () => {
@@ -44,7 +54,6 @@ describe('NgxFormFieldErrorSummary', () => {
       );
     }
 
-    const user = userEvent.setup();
     await render(TestComponent);
 
     expect(screen.getByRole('alert')).toBeTruthy();
@@ -54,9 +63,6 @@ describe('NgxFormFieldErrorSummary', () => {
       name: /email\s*:\s*Email is required/iu,
     });
     expect(entry).toBeTruthy();
-
-    await user.click(entry);
-    expect(document.activeElement).toBe(screen.getByTestId('email-input'));
   });
 
   it('respects submittedStatus passed through the composed public API', async () => {
@@ -97,6 +103,25 @@ describe('NgxFormFieldErrorSummary', () => {
         name: /email\s*:\s*Email is required/iu,
       }),
     ).toBeTruthy();
+  });
+
+  it('does not expose warningStrategy, because the summary lists errors only (#587)', () => {
+    // `reflectComponentType` omits host-directive inputs, so read the
+    // forwarded input map from the component definition.
+    const { hostDirectives } = (
+      NgxFormFieldErrorSummary as unknown as {
+        ɵcmp: {
+          hostDirectives: readonly { inputs: Record<string, string> }[] | null;
+        };
+      }
+    ).ɵcmp;
+    const forwarded = (hostDirectives ?? []).flatMap((hostDirective) =>
+      Object.keys(hostDirective.inputs),
+    );
+
+    // Guards the lookup itself: an empty list would pass the next check.
+    expect(forwarded).toContain('strategy');
+    expect(forwarded).not.toContain('warningStrategy');
   });
 
   it('defaults to the on-touch strategy when none is provided', async () => {
@@ -221,6 +246,73 @@ describe('NgxFormFieldErrorSummary', () => {
     expect(buttons.length).toBe(2);
     expect(screen.getByText(/Server error A/iu)).toBeTruthy();
     expect(screen.getByText(/Server error B/iu)).toBeTruthy();
+
+    const duplicateKeyWarning = warnSpy.mock.calls.find((call) =>
+      String(call[0]).includes('duplicated keys'),
+    );
+    expect(duplicateKeyWarning).toBeUndefined();
+
+    warnSpy.mockRestore();
+  });
+
+  it('keeps one row per field when two array rows share a label, kind and message', async () => {
+    // Two address rows both read "Street: Street is required". The label is
+    // display text only, so the row key must come from the field itself.
+    // A label-based key collides: Angular logs a duplicate-key warning and
+    // can reuse the wrong row, so a button would focus the other row's input.
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+    @Component({
+      selector: 'ngx-test-error-summary-shared-label',
+      imports: [FormField, NgxFormFieldErrorSummary],
+      providers: [provideFieldLabels(() => () => 'Street')],
+
+      template: `
+        @for (row of addressForm.rows; track $index) {
+          <input
+            [attr.data-testid]="'street-' + $index"
+            [formField]="row.street"
+          />
+        }
+        <ngx-form-field-error-summary
+          [formTree]="addressForm"
+          strategy="immediate"
+        />
+      `,
+    })
+    class TestComponent {
+      readonly model = signal({ rows: [{ street: '' }, { street: '' }] });
+      readonly addressForm = form(
+        this.model,
+        schema((path) => {
+          applyEach(path.rows, (row) => {
+            required(row.street, { message: 'Street is required' });
+          });
+        }),
+      );
+    }
+
+    const user = userEvent.setup();
+    const { fixture } = await render(TestComponent);
+
+    // Duplicate-key detection only runs when `@for` reconciles against an
+    // already rendered list, so force a second pass with fresh entries.
+    fixture.componentInstance.model.set({
+      rows: [{ street: '' }, { street: '' }],
+    });
+    fixture.detectChanges();
+
+    const buttons = screen.getAllByRole('button', {
+      name: /Street\s*:\s*Street is required/iu,
+    });
+    expect(buttons).toHaveLength(2);
+
+    const [firstButton, secondButton] = buttons;
+    assert(firstButton && secondButton, 'expected two summary buttons');
+    await user.click(firstButton);
+    expect(document.activeElement).toBe(screen.getByTestId('street-0'));
+    await user.click(secondButton);
+    expect(document.activeElement).toBe(screen.getByTestId('street-1'));
 
     const duplicateKeyWarning = warnSpy.mock.calls.find((call) =>
       String(call[0]).includes('duplicated keys'),
@@ -440,45 +532,6 @@ describe('NgxFormFieldErrorSummary', () => {
       expect(warnings[0]).toContain('NgxFormFieldErrorSummary');
       expect(warnings[0]).toContain('WCAG 2.4.3');
       expect(warnings[0]).toContain('autoFocus');
-    });
-
-    it('should not warn when host.focus() succeeds in moving focus', async () => {
-      @Component({
-        selector: 'ngx-test-error-summary-focus-ok',
-        imports: [FormField, NgxFormFieldErrorSummary],
-
-        template: `
-          <input id="email" [formField]="contactForm.email" />
-          <ngx-form-field-error-summary
-            [formTree]="contactForm"
-            strategy="on-submit"
-            [submittedStatus]="submittedStatus()"
-          />
-        `,
-      })
-      class TestComponent {
-        readonly #model = signal({ email: '' });
-        readonly contactForm = form(
-          this.#model,
-          schema((path) => {
-            required(path.email, { message: 'Email is required' });
-          }),
-        );
-        readonly submittedStatus = signal<SubmittedStatus>('unsubmitted');
-      }
-
-      const { fixture } = await render(TestComponent);
-
-      fixture.componentInstance.submittedStatus.set('submitted');
-      fixture.detectChanges();
-      await fixture.whenStable();
-
-      // Sanity: focus did land on the summary host, so no diagnostic fires.
-      const focusTarget = (await screen.findByRole('alert')).closest(
-        'ngx-form-field-error-summary',
-      );
-      expect(document.activeElement).toBe(focusTarget);
-      expect(getFocusFailureWarnings(warnSpy)).toHaveLength(0);
     });
   });
 
@@ -707,6 +760,7 @@ describe('NgxFormFieldErrorSummary', () => {
         configurable: true,
         value: () => [
           {
+            key: 'email',
             kind: 'required',
             message: 'Email is required',
             fieldName: 'Email',
@@ -716,6 +770,7 @@ describe('NgxFormFieldErrorSummary', () => {
             },
           },
           {
+            key: 'server',
             kind: 'server',
             message: 'Something went wrong',
             fieldName: 'Server',

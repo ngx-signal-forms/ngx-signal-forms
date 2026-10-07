@@ -1,18 +1,17 @@
 import type { ValidationError } from '@angular/forms/signals';
+import { humanizeFieldPath } from '@ngx-signal-forms/toolkit/core';
 import { describe, expect, it, vi } from 'vitest';
 import {
   dedupeValidationErrorsByField,
   errorHasFocusableTarget,
-  focusBoundControlFromError,
   toErrorSummaryEntry,
 } from './error-summary-utilities';
 
 /**
  * Direct unit tests for the error-summary mapping utilities, split out of
- * `utilities.ts` in issue #354 (headless module split in #512/#545). Only
- * `resolveFieldNameFromError` had a direct spec (via `utilities.spec.ts`,
- * which re-exercises it through `./utilities`); this file covers the other
- * four exports directly, at their own module.
+ * `utilities.ts` in issue #354 (headless module split in #512/#545).
+ * Field-name resolution and focus delegation are steps inside
+ * `toErrorSummaryEntry`, so they are covered through it.
  */
 
 function errorWithFieldTree(
@@ -122,45 +121,6 @@ describe('errorHasFocusableTarget', () => {
   });
 });
 
-describe('focusBoundControlFromError', () => {
-  it('calls focusBoundControl() on the error field tree', () => {
-    const focusSpy = vi.fn();
-    const error = errorWithFieldTree({ focusBoundControl: focusSpy });
-
-    focusBoundControlFromError(error);
-
-    expect(focusSpy).toHaveBeenCalledOnce();
-  });
-
-  it('does nothing when the error has no focusable target', () => {
-    // `focusBoundControl` here is a non-function truthy value, not merely
-    // absent: `?.()` optional chaining alone would NOT protect a blind call
-    // against this (it only guards a nullish callee, not a non-callable
-    // one) — that call would throw "focusBoundControl is not a function".
-    // Not throwing here proves `focusBoundControlFromError` actually checks
-    // `errorHasFocusableTarget` first, agreeing with it, rather than calling
-    // through unconditionally.
-    const error = {
-      kind: 'required',
-      message: 'Required',
-      fieldTree: () => ({
-        name: () => 'email',
-        focusBoundControl: 'not-a-function',
-      }),
-    } as unknown as ValidationError.WithFieldTree;
-
-    expect(() => {
-      focusBoundControlFromError(error);
-    }).not.toThrow();
-  });
-
-  it('does nothing when the error has no fieldTree at all', () => {
-    expect(() => {
-      focusBoundControlFromError({ kind: 'custom', message: 'x' });
-    }).not.toThrow();
-  });
-});
-
 describe('toErrorSummaryEntry', () => {
   it('maps kind, resolved message, resolved field name, and canFocus onto one entry', () => {
     const error = errorWithFieldTree({
@@ -185,7 +145,7 @@ describe('toErrorSummaryEntry', () => {
     expect(entry.canFocus).toBe(false);
   });
 
-  it('calling the returned focus() delegates to focusBoundControlFromError', () => {
+  it('calling the returned focus() calls focusBoundControl() on the field tree', () => {
     const focusSpy = vi.fn();
     const error = errorWithFieldTree({ focusBoundControl: focusSpy });
 
@@ -206,5 +166,171 @@ describe('toErrorSummaryEntry', () => {
     );
 
     expect(entry.fieldName).toBe('E-mail');
+  });
+});
+
+describe('ErrorSummaryEntryData.key', () => {
+  const sameLabel = (): string => 'Street';
+
+  it('differs for two fields that share a label, kind and message', () => {
+    // The key is the `@for` track key. A label-based key would collide here.
+    const first = toErrorSummaryEntry(
+      errorWithFieldTree({ fieldName: 'ngf-0.rows.0.street' }),
+      undefined,
+      undefined,
+      sameLabel,
+    );
+    const second = toErrorSummaryEntry(
+      errorWithFieldTree({ fieldName: 'ngf-0.rows.1.street' }),
+      undefined,
+      undefined,
+      sameLabel,
+    );
+
+    expect(first.fieldName).toBe(second.fieldName);
+    expect(first.key).not.toBe(second.key);
+  });
+
+  it('stays the same when the same error is mapped again on a later render', () => {
+    const error = errorWithFieldTree({ fieldName: 'ngf-0.email' });
+
+    expect(toErrorSummaryEntry(error).key).toBe(toErrorSummaryEntry(error).key);
+  });
+
+  it('changes with the message, because one field can keep two errors of one kind', () => {
+    // Dedupe keeps both of these, so their keys must differ.
+    const required = errorWithFieldTree({ message: 'Required' });
+    const format = errorWithFieldTree({ message: 'Invalid format' });
+
+    expect(dedupeValidationErrorsByField([required, format])).toHaveLength(2);
+    expect(toErrorSummaryEntry(required).key).not.toBe(
+      toErrorSummaryEntry(format).key,
+    );
+  });
+
+  it('never matches a bound field, even one with an empty name', () => {
+    const unbound: ValidationError = { kind: 'required', message: 'Required' };
+    const emptyName = errorWithFieldTree({ fieldName: '' });
+
+    expect(toErrorSummaryEntry(unbound).key).not.toBe(
+      toErrorSummaryEntry(emptyName).key,
+    );
+  });
+
+  it('keeps the name, kind and message apart when they contain separators', () => {
+    // A plain `name::kind::message` join would make these two identical.
+    const a = errorWithFieldTree({ fieldName: 'a::b', kind: 'c' });
+    const b = errorWithFieldTree({ fieldName: 'a', kind: 'b::c' });
+
+    expect(toErrorSummaryEntry(a).key).not.toBe(toErrorSummaryEntry(b).key);
+  });
+});
+
+describe('toErrorSummaryEntry focus()', () => {
+  it('calls focusBoundControl() on the error field tree', () => {
+    const focusSpy = vi.fn();
+    const error = errorWithFieldTree({ focusBoundControl: focusSpy });
+
+    toErrorSummaryEntry(error).focus();
+
+    expect(focusSpy).toHaveBeenCalledOnce();
+  });
+
+  it('does nothing when the error has no focusable target', () => {
+    // `focusBoundControl` here is a non-function truthy value, not merely
+    // absent: `?.()` optional chaining alone would NOT protect a blind call
+    // against this (it only guards a nullish callee, not a non-callable
+    // one) — that call would throw "focusBoundControl is not a function".
+    // Not throwing here proves `focus()` actually checks
+    // `errorHasFocusableTarget` first, agreeing with it, rather than calling
+    // through unconditionally.
+    const error = {
+      kind: 'required',
+      message: 'Required',
+      fieldTree: () => ({
+        name: () => 'email',
+        focusBoundControl: 'not-a-function',
+      }),
+    } as unknown as ValidationError.WithFieldTree;
+
+    expect(() => {
+      toErrorSummaryEntry(error).focus();
+    }).not.toThrow();
+  });
+
+  it('does nothing when the error has no fieldTree at all', () => {
+    expect(() => {
+      toErrorSummaryEntry({ kind: 'custom', message: 'x' }).focus();
+    }).not.toThrow();
+  });
+});
+
+function fieldNameOf(
+  error: ValidationError,
+  resolver?: (path: string) => string,
+): string {
+  return toErrorSummaryEntry(error, undefined, undefined, resolver).fieldName;
+}
+
+describe('toErrorSummaryEntry field name', () => {
+  it('should strip Angular internal form prefixes and humanize nested paths', () => {
+    const error = {
+      kind: 'required',
+      message: 'Postal code is required',
+      fieldTree: () => ({
+        name: () => 'ng.form0.address.postalCode',
+      }),
+    } as ValidationError;
+
+    expect(fieldNameOf(error)).toBe('Address / Postal code');
+  });
+
+  it('should humanize fallback kinds when no field tree is available', () => {
+    expect(fieldNameOf({ kind: 'passwordMismatch' })).toBe('Password mismatch');
+  });
+
+  it('should use a custom resolver when provided', () => {
+    const dutchLabels: Record<string, string> = {
+      'address.postalCode': 'Postcode',
+      contactEmail: 'E-mailadres',
+    };
+    const resolver = (path: string) =>
+      dutchLabels[path] ?? humanizeFieldPath(path);
+
+    const error = {
+      kind: 'required',
+      message: 'required',
+      fieldTree: () => ({
+        name: () => 'ng.form0.address.postalCode',
+      }),
+    } as ValidationError;
+
+    expect(fieldNameOf(error, resolver)).toBe('Postcode');
+  });
+
+  it('should fall back to humanizeFieldPath for unmapped paths in custom resolver', () => {
+    const resolver = (path: string) => {
+      const map: Record<string, string> = { email: 'E-mail' };
+      return map[path] ?? humanizeFieldPath(path);
+    };
+
+    const error = {
+      kind: 'required',
+      message: 'required',
+      fieldTree: () => ({
+        name: () => 'ng.form0.address.street',
+      }),
+    } as ValidationError;
+
+    expect(fieldNameOf(error, resolver)).toBe('Address / Street');
+  });
+
+  it('should pass the kind to the resolver when no fieldTree exists', () => {
+    const resolver = (path: string) =>
+      path === 'passwordMismatch' ? 'Wachtwoord mismatch' : path;
+
+    expect(fieldNameOf({ kind: 'passwordMismatch' }, resolver)).toBe(
+      'Wachtwoord mismatch',
+    );
   });
 });

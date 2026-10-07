@@ -8,7 +8,7 @@
 // .d.ts changing. Snapshotted here so check-published-package.mjs still
 // catches it. See that script's header for the full explanation.
 // ---8<--- byte-identical snapshot of the built .d.ts below ---8<---
-import * as i0 from '@angular/core';
+import * as _angular_core from '@angular/core';
 import { Signal, InjectionToken, Type, EnvironmentProviders, Provider, Injector, ElementRef, WritableSignal } from '@angular/core';
 import { FieldTree, NgValidationError, FieldState, ValidationError, PathKind, SchemaPath, SchemaPathRules, LogicFn, FormRoot } from '@angular/forms/signals';
 
@@ -22,14 +22,14 @@ import { FieldTree, NgValidationError, FieldState, ValidationError, PathKind, Sc
  * - `'submitting'` - Form is currently being submitted
  * - `'submitted'` - Form has been submitted (regardless of success/failure)
  */
-type SubmittedStatus = 'unsubmitted' | 'submitting' | 'submitted';
+type SubmittedStatus = 'submitted' | 'submitting' | 'unsubmitted';
 /**
  * A signal-like value that can be called to get the current value.
  * Represents either an Angular Signal or a zero-argument function.
  *
  * @template T The type of value returned when called
  */
-type SignalLike<T> = Signal<T> | (() => T);
+type NgxSignalLike<T> = Signal<T> | (() => T);
 /**
  * Accepts a reactive (Signal/function) or a plain static value.
  *
@@ -40,13 +40,13 @@ type SignalLike<T> = Signal<T> | (() => T);
  * @public
  * @template T The type of value when unwrapped
  */
-type ReactiveOrStatic<T> = SignalLike<T> | T;
+type NgxReactiveOrStatic<T> = NgxSignalLike<T> | T;
 /**
  * Resolved error display strategy used by forms and config defaults.
  *
  * This excludes `'inherit'`, which only makes sense for field-level overrides.
  */
-type ResolvedErrorDisplayStrategy = 'immediate' | 'on-touch' | 'on-submit';
+type ResolvedErrorDisplayStrategy = 'immediate' | 'on-submit' | 'on-touch';
 /**
  * Error display strategy determines when validation errors are shown to the user.
  *
@@ -61,7 +61,7 @@ type ErrorDisplayStrategy = ResolvedErrorDisplayStrategy | 'inherit';
  *
  * This excludes 'inherit', which only makes sense for field-level overrides.
  */
-type ResolvedWarningDisplayStrategy = 'immediate' | 'on-touch' | 'on-submit';
+type ResolvedWarningDisplayStrategy = 'immediate' | 'on-submit' | 'on-touch';
 /**
  * Warning display strategy determines when warnings are shown to the user.
  *
@@ -81,7 +81,7 @@ type WarningDisplayStrategy = ResolvedWarningDisplayStrategy | 'inherit';
  *
  * @public
  */
-type FormFieldAppearance = 'standard' | 'outline' | 'plain';
+type FormFieldAppearance = 'outline' | 'plain' | 'standard';
 /**
  * Form field appearance input for component-level control.
  *
@@ -120,7 +120,7 @@ type FormFieldAppearanceInput = FormFieldAppearance | 'inherit';
  *
  * @public
  */
-type FormFieldOrientation = 'vertical' | 'horizontal';
+type FormFieldOrientation = 'horizontal' | 'vertical';
 /**
  * Form field orientation input for component-level control.
  *
@@ -136,17 +136,6 @@ type FormFieldOrientation = 'vertical' | 'horizontal';
  */
 type FormFieldOrientationInput = FormFieldOrientation | 'inherit';
 /**
- * Placement of the validation summary relative to the control or fieldset
- * content. Shared by `NgxFormFieldWrapper` and `NgxFormFieldset` so a
- * single value binds cleanly across both APIs.
- *
- * - `'top'`: render the summary directly below the legend / above the inputs
- * - `'bottom'`: render the summary after the projected content
- *
- * @public
- */
-type NgxFormFieldErrorPlacement = 'top' | 'bottom';
-/**
  * Semantic control families understood by the toolkit wrapper layer.
  *
  * Kept intentionally small so consumers can opt into stable wrapper behavior
@@ -158,7 +147,7 @@ type NgxFormFieldErrorPlacement = 'top' | 'bottom';
  * - **Override preset behavior** for an existing kind via
  *   `provideNgxSignalFormControlPresets({ slider: { layout: 'custom', ariaMode: 'manual' } })`.
  * - **Declare per-control semantics** on the host via the
- *   `NgxSignalFormControlSemanticsDirective` inputs:
+ *   `NgxSignalFormControl` inputs:
  *   `ngxSignalFormControl`, `ngxSignalFormControlLayout`,
  *   `ngxSignalFormControlAria`.
  * - **Custom widgets that don't fit any native kind** should use
@@ -192,11 +181,11 @@ type NgxFormFieldErrorPlacement = 'top' | 'bottom';
  * (`packages/toolkit/core/utilities/control-semantics.ts`) is optional and
  * only needed if the new kind has a reliable DOM fingerprint.
  */
-type NgxSignalFormControlKind = 'input-like' | 'standalone-field-like' | 'switch' | 'checkbox' | 'radio-group' | 'slider' | 'composite';
+type NgxSignalFormControlKind = 'checkbox' | 'composite' | 'input-like' | 'radio-group' | 'slider' | 'standalone-field-like' | 'switch';
 /**
  * Layout presets understood by the form-field wrapper.
  */
-type NgxSignalFormControlLayout = 'stacked' | 'inline-control' | 'group' | 'custom';
+type NgxSignalFormControlLayout = 'custom' | 'group' | 'inline-control' | 'stacked';
 /**
  * Controls how the toolkit auto-ARIA layer participates for a control.
  *
@@ -241,7 +230,7 @@ type NgxSignalFormControlPresetOverrides = Partial<Record<NgxSignalFormControlKi
  *
  * @public
  */
-type FieldMarkingMode = 'required' | 'optional' | 'none';
+type FieldMarkingMode = 'none' | 'optional' | 'required';
 /**
  * The kind of marker actually rendered on a field — the markable subset of
  * {@link FieldMarkingMode} (`'none'` never produces a marker). Also the set of
@@ -265,11 +254,6 @@ interface ResolvedMarker {
  * Configuration options for the ngx-signal-forms toolkit.
  */
 interface NgxSignalFormsConfig {
-    /**
-     * Enable automatic ARIA attributes (aria-invalid, aria-describedby).
-     * @default true
-     */
-    autoAria: boolean;
     /**
      * Default error display strategy.
      * @default 'on-touch'
@@ -387,8 +371,8 @@ interface NgxSignalFormsConfig {
     /**
      * Visually hidden text describing a character count's limit, exposed to
      * assistive technology through `aria-describedby`. `NgxFormFieldCharacterCount`
-     * renders this instead of the running count — the running and remaining
-     * count stays in the `[liveAnnounce]` live region. The literal token
+     * renders this next to the visible running count. The `[liveAnnounce]` live
+     * region holds only threshold-transition text. The literal token
      * `{max}` is replaced with the resolved `maxLength`.
      * @default 'Up to {max} characters'
      */
@@ -405,7 +389,6 @@ interface NgxSignalFormsConfig {
  * via CSS); omitting the key inherits the parent value instead.
  */
 interface NgxSignalFormsUserConfig {
-    autoAria?: boolean | undefined;
     defaultErrorStrategy?: ResolvedErrorDisplayStrategy | undefined;
     defaultWarningStrategy?: ResolvedWarningDisplayStrategy | undefined;
     defaultFormFieldAppearance?: FormFieldAppearance | undefined;
@@ -566,7 +549,7 @@ declare class NgxSignalForm {
      * because `'inherit'` is a field-level-only value — there is nothing above
      * the form root to inherit from — so binding it here is a compile-time error.
      */
-    readonly errorStrategy: i0.InputSignal<ResolvedErrorDisplayStrategy | null | undefined>;
+    readonly errorStrategy: _angular_core.InputSignal<ResolvedErrorDisplayStrategy | null | undefined>;
     /**
      * Resolved error display strategy (form-level or global default).
      */
@@ -579,7 +562,7 @@ declare class NgxSignalForm {
      * because `'inherit'` is a field-level-only value — there is nothing above
      * the form root to inherit from — so binding it here is a compile-time error.
      */
-    readonly warningStrategy: i0.InputSignal<ResolvedWarningDisplayStrategy | null | undefined>;
+    readonly warningStrategy: _angular_core.InputSignal<ResolvedWarningDisplayStrategy | null | undefined>;
     /**
      * Resolved warning display strategy (form-level or global default).
      */
@@ -600,8 +583,8 @@ declare class NgxSignalForm {
      */
     readonly submittedStatus: Signal<SubmittedStatus>;
     protected onSubmitAttempt(): void;
-    static ɵfac: i0.ɵɵFactoryDeclaration<NgxSignalForm, never>;
-    static ɵdir: i0.ɵɵDirectiveDeclaration<NgxSignalForm, "form[formRoot][ngxSignalForm]", ["ngxSignalForm"], { "errorStrategy": { "alias": "errorStrategy"; "required": false; "isSignal": true; }; "warningStrategy": { "alias": "warningStrategy"; "required": false; "isSignal": true; }; }, {}, never, never, true, never>;
+    static ɵfac: _angular_core.ɵɵFactoryDeclaration<NgxSignalForm, never>;
+    static ɵdir: _angular_core.ɵɵDirectiveDeclaration<NgxSignalForm, "form[formRoot][ngxSignalForm]", ["ngxSignalForm"], { "errorStrategy": { "alias": "errorStrategy"; "required": false; "isSignal": true; }; "warningStrategy": { "alias": "warningStrategy"; "required": false; "isSignal": true; }; }, {}, never, never, true, never>;
 }
 
 /**
@@ -676,7 +659,6 @@ interface NgxSignalFormFieldContext {
  * @internal
  */
 declare const DEFAULT_NGX_SIGNAL_FORMS_CONFIG: {
-    readonly autoAria: true;
     readonly defaultErrorStrategy: "on-touch";
     readonly defaultWarningStrategy: "on-touch";
     readonly defaultFormFieldAppearance: "standard";
@@ -753,7 +735,7 @@ declare const NGX_SIGNAL_FORM_CONTEXT: InjectionToken<NgxSignalFormContext>;
 declare const NGX_SIGNAL_FORM_FIELD_CONTEXT: InjectionToken<NgxSignalFormFieldContext>;
 /**
  * Injection token for the resolved ARIA ownership mode for a single control
- * host. Provided by `NgxSignalFormControlSemanticsDirective` at its own
+ * host. Provided by `NgxSignalFormControl` at its own
  * directive level, and read by `NgxSignalFormAutoAria` via
  * `{ optional: true, self: true }`.
  *
@@ -820,6 +802,15 @@ declare const NGX_SIGNAL_FORM_HINT_REGISTRY: InjectionToken<NgxSignalFormHintReg
  * `NgxFormFieldError`'s own `errorContainerVisible`/`warningContainerVisible`
  * signals verbatim, so the publish/read seam is grep-traceable end to end.
  *
+ * `errorContainerVisible` answers "is the error ID in the DOM?", so it drives
+ * `aria-describedby`. `shouldShowErrors` answers "does the field show its
+ * errors?", so it drives `aria-invalid`. They differ when a surface renders
+ * only one channel: a warning-only template has no error element (container
+ * `false`), yet the field is still invalid (`shouldShowErrors` `true`).
+ * `shouldShowErrors` is optional. When a registrant leaves it out,
+ * auto-ARIA uses `errorContainerVisible` for `aria-invalid` too, which is the
+ * behavior before this signal existed.
+ *
  * Public wire format for the {@link NgxSignalFormFieldVisibilityRegistry}
  * contract.
  *
@@ -829,6 +820,12 @@ interface NgxSignalFormFieldVisibilityDescriptor {
     readonly fieldName: string;
     readonly errorContainerVisible: Signal<boolean>;
     readonly warningContainerVisible: Signal<boolean>;
+    /**
+     * Whether the field shows its blocking errors, whether or not this surface
+     * renders an error element. Drives `aria-invalid`. Optional: when absent,
+     * auto-ARIA falls back to {@link errorContainerVisible}.
+     */
+    readonly shouldShowErrors?: Signal<boolean>;
 }
 /**
  * Registry of field-level error/warning visibility, keyed by field name.
@@ -882,7 +879,9 @@ declare const NGX_SIGNAL_FORM_FIELD_VISIBILITY_REGISTRY: InjectionToken<NgxSigna
  * The wrapper instantiates the configured component via `*ngComponentOutlet`
  * and binds the relevant input set per call site. A custom renderer intended
  * to replace both must accept the union of those input names; inputs the
- * renderer doesn't declare are silently dropped by `*ngComponentOutlet`.
+ * renderer doesn't declare never reach it. Angular's `componentRef.setInput`
+ * skips them and, in dev mode, logs an `NG0303` error (it throws when the app
+ * sets `errorOnUnknownProperties`).
  *
  * Renderers may accept extra inputs beyond the contract (analytics tags,
  * theming hooks); the wrapper/fieldset ignore them and Angular accepts the
@@ -925,8 +924,9 @@ interface NgxFormFieldErrorRenderer {
  * `NgxFormFieldHint` already exposes as inputs:
  * `{ resolvedFieldName: string | null, resolvedId: string, position:
  * 'left' | 'right' | null }`. Renderers must declare all three with
- * `input()` — Angular's `componentRef.setInput` rejects writes to
- * undeclared inputs, so omitting any of them errors at runtime.
+ * `input()`. `componentRef.setInput` skips an undeclared input and, in dev
+ * mode, logs an `NG0303` error (it throws when the app sets
+ * `errorOnUnknownProperties`).
  *
  * When no provider is registered, `NgxFormFieldHint` falls back to direct
  * `<ng-content />` projection (preserving backwards compatibility for
@@ -998,7 +998,6 @@ declare const NGX_FORM_FIELD_HINT_RENDERER: InjectionToken<NgxFormFieldHintRende
  * export const appConfig: ApplicationConfig = {
  *   providers: [
  *     provideNgxSignalFormsConfig({
- *       autoAria: true,
  *       defaultErrorStrategy: 'on-touch',
  *     }),
  *   ],
@@ -1045,18 +1044,27 @@ declare function provideNgxSignalFormsConfigForComponent(config: NgxSignalFormsU
  * ignored (with a dev-mode warning) so the result always satisfies the full
  * {@link NgxSignalFormControlPresetRegistry} shape.
  *
- * This is the single source of truth for preset cascade logic — both the DI
- * providers and {@link NgxControlPresetRegistry} reuse it instead of
- * duplicating the merge rules.
+ * This is the single source of truth for preset cascade logic. The DI
+ * providers use it. Call it yourself to extend a registry you read from
+ * {@link NGX_SIGNAL_FORM_CONTROL_PRESETS} without mutating it.
  *
- * @param parentPresetsOrNull Base registry to merge onto, or `null` to start
+ * @param base Base registry to merge onto, or `null` to start
  *   from {@link DEFAULT_NGX_SIGNAL_FORM_CONTROL_PRESETS}.
  * @param presets Partial overrides to apply on top of the base registry.
  * @returns A new fully resolved preset registry (the input is not mutated).
  *
- * @internal
+ * @example Extend the effective presets
+ * ```ts
+ * const presets = inject(NGX_SIGNAL_FORM_CONTROL_PRESETS);
+ * // Only `slider.layout` changes. Every other kind and field is kept.
+ * const next = mergeNgxSignalFormControlPresets(presets, {
+ *   slider: { layout: 'custom' },
+ * });
+ * ```
+ *
+ * @public
  */
-declare function mergeNgxSignalFormControlPresets(parentPresetsOrNull: NgxSignalFormControlPresetRegistry | null, presets: NgxSignalFormControlPresetOverrides): NgxSignalFormControlPresetRegistry;
+declare function mergeNgxSignalFormControlPresets(base: NgxSignalFormControlPresetRegistry | null, presets: NgxSignalFormControlPresetOverrides): NgxSignalFormControlPresetRegistry;
 /**
  * Overrides semantic control presets for the current injector tree.
  *
@@ -1601,78 +1609,6 @@ declare function provideFormFieldHintRenderer(override: NgxFormFieldHintRenderer
 declare function provideFormFieldHintRendererForComponent(override: NgxFormFieldHintRendererOverride): Provider[];
 
 /**
- * Injectable read/merge surface over the {@link NGX_SIGNAL_FORM_CONTROL_PRESETS}
- * token.
- *
- * The token stays the source of truth: this service reads whatever effective
- * registry the *calling injector* resolves, so component- and feature-scoped
- * `provideNgxSignalFormControlPresetsForComponent(...)` overrides are observed
- * exactly like a direct token injection would. Because it is
- * `providedIn: null`, the service must be listed in a `providers` array (or
- * environment injector); each provided node captures the presets effective at
- * that node.
- *
- * It exposes an ergonomic, typed alternative to reaching into the token
- * directly:
- *
- * - {@link resolve} — the effective preset for a single control kind.
- * - {@link kinds} — the registered control kinds (drives the control-semantics
- *   directive's recognized-kind set).
- * - {@link extend} — a merge-not-replace helper that layers partial overrides
- *   on top of the current registry without discarding untouched kinds.
- *
- * @example Read the effective preset for a kind
- * ```ts
- * const registry = inject(NgxControlPresetRegistry);
- * const slider = registry.resolve('slider'); // { layout, ariaMode }
- * ```
- *
- * @example Merge-not-replace extension
- * ```ts
- * const registry = inject(NgxControlPresetRegistry);
- * // Only `slider.layout` changes; every other kind (and `slider.ariaMode`)
- * // is preserved from the current registry.
- * const next = registry.extend({ slider: { layout: 'custom' } });
- * ```
- *
- * @public
- */
-declare class NgxControlPresetRegistry {
-    #private;
-    /**
-     * Returns the effective preset for a control kind in the calling injector.
-     *
-     * @param kind Control kind to look up.
-     * @returns The resolved preset (`layout` + `ariaMode`) for the kind.
-     */
-    resolve(kind: NgxSignalFormControlKind): NgxSignalFormControlPreset;
-    /**
-     * Returns the registered control kinds, derived from the effective registry.
-     *
-     * Consumed by `NgxSignalFormControlSemanticsDirective` as its
-     * recognized-kind set so the runtime list never drifts from the registry.
-     *
-     * @returns A readonly array of registered control kinds.
-     */
-    kinds(): readonly NgxSignalFormControlKind[];
-    /**
-     * Merges partial overrides on top of the current registry and returns a new
-     * fully resolved registry. Untouched kinds (and untouched fields within an
-     * overridden kind) keep their current values — this merges rather than
-     * replacing the whole map. The service's own state is not mutated.
-     *
-     * Reuses {@link mergeNgxSignalFormControlPresets} so cascade rules stay in
-     * one place.
-     *
-     * @param overrides Partial preset overrides to layer on the current registry.
-     * @returns A new fully resolved preset registry.
-     */
-    extend(overrides: NgxSignalFormControlPresetOverrides): NgxSignalFormControlPresetRegistry;
-    static ɵfac: i0.ɵɵFactoryDeclaration<NgxControlPresetRegistry, never>;
-    static ɵprov: i0.ɵɵInjectableDeclaration<any>;
-}
-
-/**
  * Track whether the element that carries `aria-invalid` still has a CSS
  * layout box, and publish the answer as a `Signal<boolean>` — the shape
  * `createAriaInvalidSignal`'s third parameter expects.
@@ -1749,24 +1685,6 @@ declare function createControlVisibilitySignal(resolveElement: () => HTMLElement
  */
 declare function isElementCssVisible(el: HTMLElement): boolean;
 /**
- * A `Signal<boolean>` that is ALSO a one-shot visibility probe.
- *
- * - Called with no argument it behaves exactly like the underlying readonly
- *   signal: it returns the cached "is the bound control laid out?" value and
- *   participates in reactive dependency tracking (so it can be threaded into
- *   `computed()` / `createAriaInvalidSignal` unchanged).
- * - Called with an `HTMLElement` it delegates to {@link isElementCssVisible}
- *   for an ad-hoc, NON-reactive check of an arbitrary element — useful for a
- *   custom control that wants to reuse the wrapper's exact visibility rule
- *   for its own probe without re-implementing the CSS test.
- *
- * @public
- */
-interface ControlVisibilitySignal extends Signal<boolean> {
-    /** Ad-hoc CSS-visibility probe for an arbitrary element. Non-reactive. */
-    (el: HTMLElement): boolean;
-}
-/**
  * Centralized, element-scoped field identity service that owns the load-bearing
  * a11y primitives every assistive/headless surface depends on:
  *
@@ -1777,9 +1695,6 @@ interface ControlVisibilitySignal extends Signal<boolean> {
  *   `null`) and feeds it in. Wrappers that opt into the label `for=` tier do so
  *   via `createFieldNameResolver`, which exposes the same cascade with the
  *   label tier as an opt-in middle step.
- * - **Visibility** — {@link NgxFieldIdentity.isControlVisible}, a callable
- *   signal that returns the cached visibility flag with no argument and probes
- *   an arbitrary element (via {@link isElementCssVisible}) when given one.
  * - **Stable ID generation** — {@link NgxFieldIdentity.errorId} (`{name}-error`)
  *   and {@link NgxFieldIdentity.warningId} (`{name}-warning`), derived from the
  *   resolved field name and `null` when no name is available.
@@ -1817,22 +1732,22 @@ declare class NgxFieldIdentity {
      * Resolved field name. Null when no field name can be determined.
      * Updated by `NgxFormFieldWrapper` via `setFieldName`.
      */
-    readonly fieldName: Signal<string | null>;
+    readonly fieldName: _angular_core.Signal<string | null>;
     /**
      * The bound control element's `id` attribute.
      * Null when no control is found or when the control has no `id`.
      */
-    readonly controlId: Signal<string | null>;
+    readonly controlId: _angular_core.Signal<string | null>;
     /**
      * Generated error element ID for the field (`{fieldName}-error`).
      * Null when no field name is available.
      */
-    readonly errorId: Signal<string | null>;
+    readonly errorId: _angular_core.Signal<string | null>;
     /**
      * Generated warning element ID for the field (`{fieldName}-warning`).
      * Null when no field name is available.
      */
-    readonly warningId: Signal<string | null>;
+    readonly warningId: _angular_core.Signal<string | null>;
     /**
      * Hint IDs contributed by the surrounding hint registry, filtered for
      * this field. Updated by `NgxFormFieldWrapper` when `hintDescriptors` changes.
@@ -1843,7 +1758,7 @@ declare class NgxFieldIdentity {
      * channel *was* published and this field genuinely has no hints, which is
      * authoritative and suppresses the fallback. See ADR-0010.
      */
-    readonly hintIds: Signal<readonly string[] | null>;
+    readonly hintIds: _angular_core.Signal<readonly string[] | null>;
     /**
      * The owning wrapper's fully-resolved blocking-error display strategy, or
      * `null` when no wrapper has published one (standalone auto-aria usage).
@@ -1858,7 +1773,7 @@ declare class NgxFieldIdentity {
      * Published by `createFieldPresentation()` when it gets this identity: the
      * built-in wrapper does, and so can any custom wrapper.
      */
-    readonly resolvedErrorStrategy: Signal<ResolvedErrorDisplayStrategy | null>;
+    readonly resolvedErrorStrategy: _angular_core.Signal<ResolvedErrorDisplayStrategy | null>;
     /**
      * The owning wrapper's fully-resolved warning display strategy, or `null`
      * when no wrapper has published one.
@@ -1867,42 +1782,7 @@ declare class NgxFieldIdentity {
      * independent (ADR-0007): a field can show warnings on `'immediate'` while
      * its blocking errors wait for `'on-submit'`.
      */
-    readonly resolvedWarningStrategy: Signal<ResolvedWarningDisplayStrategy | null>;
-    /**
-     * Whether the bound control currently has a CSS layout box that the
-     * user would interact with. Flips to `false` when the control is inside
-     * a collapsed `<details>`, hidden via the `hidden` attribute, or set
-     * to `display: none`. Stays `true` for elements merely scrolled off
-     * the viewport.
-     *
-     * Driven by the wrapper, which calls `setControlVisible` from its
-     * `afterEveryRender` write phase via {@link isElementCssVisible}. Defaults
-     * to `true` so consumers never strip ARIA attributes pre-visibility-eval.
-     *
-     * Nothing inside the toolkit reads this any more: `NgxSignalFormAutoAria`
-     * probes its own host element instead, so its `aria-invalid` gate works for
-     * every wrapper rather than only the built-in one, and each control in a
-     * cluster tracks its own layout state (ADR-0011). The channel stays because
-     * it is a published read surface — a consumer holding an ancestor identity
-     * can still read the wrapper's view of its bound control.
-     *
-     * This member is a {@link ControlVisibilitySignal}: a real `Signal<boolean>`
-     * (reactive, threadable into `computed()`) that additionally accepts an
-     * `HTMLElement` argument to perform an ad-hoc, non-reactive visibility probe
-     * via {@link isElementCssVisible}. Probing an element never mutates the
-     * cached flag — only `setControlVisible` does.
-     *
-     * @example No-arg: read the cached, reactive flag.
-     * ```ts
-     * effect(() => console.log('laid out?', identity.isControlVisible()));
-     * ```
-     *
-     * @example Element-arg: reuse the wrapper's exact visibility rule ad hoc.
-     * ```ts
-     * const laidOut = identity.isControlVisible(myEl);
-     * ```
-     */
-    readonly isControlVisible: ControlVisibilitySignal;
+    readonly resolvedWarningStrategy: _angular_core.Signal<ResolvedWarningDisplayStrategy | null>;
     /**
      * Aggregated `aria-describedby` ID chain for this field, derived from
      * `hintIds`. Returns `null` when no IDs apply.
@@ -1912,13 +1792,13 @@ declare class NgxFieldIdentity {
      * does not encode `shouldShowErrors` because that decision is owned by
      * the consumer, not the identity service.
      */
-    readonly describedBy: Signal<string | null>;
+    readonly describedBy: _angular_core.Signal<string | null>;
     /**
      * Returns the currently bound control element, or null if not yet resolved.
      */
     resolveControlElement(): HTMLElement | null;
-    static ɵfac: i0.ɵɵFactoryDeclaration<NgxFieldIdentity, never>;
-    static ɵprov: i0.ɵɵInjectableDeclaration<any>;
+    static ɵfac: _angular_core.ɵɵFactoryDeclaration<NgxFieldIdentity, never>;
+    static ɵprov: _angular_core.ɵɵInjectableDeclaration<any>;
 }
 
 /**
@@ -1943,10 +1823,9 @@ declare class NgxFieldIdentity {
  * unrelated signal happened to invalidate the same computed.
  *
  * `providedIn: null` — this is never injected without an explicit provider,
- * matching `NgxFieldIdentity`'s and `NgxControlPresetRegistry`'s
- * element/directive-scoped contract. `NgxSignalForm` provides one instance
- * per `[ngxSignalForm]` host so fields in unrelated forms never collide on
- * field name.
+ * matching `NgxFieldIdentity`'s element/directive-scoped contract.
+ * `NgxSignalForm` provides one instance per `[ngxSignalForm]` host so fields
+ * in unrelated forms never collide on field name.
  *
  * @internal
  */
@@ -1954,8 +1833,8 @@ declare class NgxFieldVisibilityRegistry {
     #private;
     register(descriptor: NgxSignalFormFieldVisibilityDescriptor): () => void;
     get(fieldName: string): NgxSignalFormFieldVisibilityDescriptor | undefined;
-    static ɵfac: i0.ɵɵFactoryDeclaration<NgxFieldVisibilityRegistry, never>;
-    static ɵprov: i0.ɵɵInjectableDeclaration<any>;
+    static ɵfac: _angular_core.ɵɵFactoryDeclaration<NgxFieldVisibilityRegistry, never>;
+    static ɵprov: _angular_core.ɵɵInjectableDeclaration<any>;
 }
 
 /**
@@ -1992,8 +1871,8 @@ declare class NgxSubmitAnnouncements {
      * function; call it when the summary is destroyed.
      */
     registerSummary(showsErrors: Signal<boolean>): () => void;
-    static ɵfac: i0.ɵɵFactoryDeclaration<NgxSubmitAnnouncements, never>;
-    static ɵprov: i0.ɵɵInjectableDeclaration<any>;
+    static ɵfac: _angular_core.ɵɵFactoryDeclaration<NgxSubmitAnnouncements, never>;
+    static ɵprov: _angular_core.ɵɵInjectableDeclaration<any>;
 }
 
 /**
@@ -2043,7 +1922,7 @@ declare class NgxSignalFormAutoAria {
      * (e.g. inside a collapsed fieldset), returns null so `aria-invalid` is
      * removed from the hidden control rather than going stale.
      */
-    protected readonly ariaInvalid: i0.Signal<string | null>;
+    protected readonly ariaInvalid: _angular_core.Signal<string | null>;
     /**
      * Computed ARIA required state. Returns `'true'` or `null`.
      *
@@ -2072,7 +1951,7 @@ declare class NgxSignalFormAutoAria {
      * See https://github.com/ngx-signal-forms/ngx-signal-forms/issues/300 and
      * https://github.com/ngx-signal-forms/ngx-signal-forms/issues/496.
      */
-    protected readonly ariaRequired: i0.Signal<string | null>;
+    protected readonly ariaRequired: _angular_core.Signal<string | null>;
     /**
      * Computed ARIA describedby attribute.
      * Links to error/warning message elements for screen readers.
@@ -2083,10 +1962,10 @@ declare class NgxSignalFormAutoAria {
      * stays in this directive shell so the factory contract stays
      * unconditional.
      */
-    protected readonly ariaDescribedBy: i0.Signal<string | null>;
+    protected readonly ariaDescribedBy: _angular_core.Signal<string | null>;
     constructor();
-    static ɵfac: i0.ɵɵFactoryDeclaration<NgxSignalFormAutoAria, never>;
-    static ɵdir: i0.ɵɵDirectiveDeclaration<NgxSignalFormAutoAria, "    input[type=\"checkbox\"][ngxSignalFormControl][formField]:not([ngxSignalFormAutoAriaDisabled]),    input[type=\"radio\"][ngxSignalFormControl][formField]:not([ngxSignalFormAutoAriaDisabled]),    input[type=\"checkbox\"][role=\"switch\"][formField]:not([ngxSignalFormAutoAriaDisabled]),    input[formField]:not([ngxSignalFormAutoAriaDisabled]):not([type=\"radio\"]):not([type=\"checkbox\"]),    textarea[formField]:not([ngxSignalFormAutoAriaDisabled]),    select[formField]:not([ngxSignalFormAutoAriaDisabled]),    [formField]:not(input):not(textarea):not(select):not(ngx-form-field-error):not([ngxSignalFormAutoAriaDisabled])  ", never, {}, {}, never, never, true, never>;
+    static ɵfac: _angular_core.ɵɵFactoryDeclaration<NgxSignalFormAutoAria, never>;
+    static ɵdir: _angular_core.ɵɵDirectiveDeclaration<NgxSignalFormAutoAria, "    input[type=\"checkbox\"][ngxSignalFormControl][formField]:not([ngxSignalFormAutoAriaDisabled]),    input[type=\"radio\"][ngxSignalFormControl][formField]:not([ngxSignalFormAutoAriaDisabled]),    input[type=\"checkbox\"][role=\"switch\"][formField]:not([ngxSignalFormAutoAriaDisabled]),    input[formField]:not([ngxSignalFormAutoAriaDisabled]):not([type=\"radio\"]):not([type=\"checkbox\"]),    textarea[formField]:not([ngxSignalFormAutoAriaDisabled]),    select[formField]:not([ngxSignalFormAutoAriaDisabled]),    [formField]:not(input):not(textarea):not(select):not(ngx-form-field-error):not([ngxSignalFormAutoAriaDisabled])  ", never, {}, {}, never, never, true, never>;
 }
 
 /**
@@ -2198,10 +2077,10 @@ declare class NgxFieldIdentityProvider {
      * because the control's `id` is the usual source — so requiring it here
      * would break every field that relies on that fallback.
      */
-    readonly fieldName: i0.InputSignal<string | null | undefined>;
+    readonly fieldName: _angular_core.InputSignal<string | null | undefined>;
     constructor();
-    static ɵfac: i0.ɵɵFactoryDeclaration<NgxFieldIdentityProvider, never>;
-    static ɵdir: i0.ɵɵDirectiveDeclaration<NgxFieldIdentityProvider, never, never, { "fieldName": { "alias": "fieldName"; "required": false; "isSignal": true; }; }, {}, never, never, true, never>;
+    static ɵfac: _angular_core.ɵɵFactoryDeclaration<NgxFieldIdentityProvider, never>;
+    static ɵdir: _angular_core.ɵɵDirectiveDeclaration<NgxFieldIdentityProvider, never, never, { "fieldName": { "alias": "fieldName"; "required": false; "isSignal": true; }; }, {}, never, never, true, never>;
 }
 
 type NgxSignalFormControlDirectiveValue = NgxSignalFormControlKind | NgxSignalFormControlSemantics | '' | null | undefined;
@@ -2260,28 +2139,28 @@ type NgxSignalFormControlDirectiveValue = NgxSignalFormControlKind | NgxSignalFo
  * />
  * ```
  */
-declare class NgxSignalFormControlSemanticsDirective {
+declare class NgxSignalFormControl {
     #private;
     /**
      * Host element this directive is applied to.
      *
      * Exposed so parent wrappers can locate the bound control via
-     * `contentChildren(NgxSignalFormControlSemanticsDirective)` and read the
+     * `contentChildren(NgxSignalFormControl)` and read the
      * host's tag, `id`, or current attributes (e.g. Material's
      * `aria-describedby` for the `preservedIds` reader of
      * `createAriaDescribedBySignal`). This is the canonical signal-native
      * alternative to imperative DOM probing from a render hook.
      */
     readonly elementRef: ElementRef<any>;
-    readonly semanticsInput: i0.InputSignal<NgxSignalFormControlDirectiveValue>;
-    readonly layoutOverride: i0.InputSignal<NgxSignalFormControlLayout | null>;
-    readonly ariaModeOverride: i0.InputSignal<NgxSignalFormControlAriaMode | null>;
-    readonly kind: i0.Signal<NgxSignalFormControlKind | null>;
-    readonly layout: i0.Signal<NgxSignalFormControlLayout | null>;
-    readonly ariaMode: i0.Signal<NgxSignalFormControlAriaMode | null>;
-    readonly hasSemantics: i0.Signal<boolean>;
-    static ɵfac: i0.ɵɵFactoryDeclaration<NgxSignalFormControlSemanticsDirective, never>;
-    static ɵdir: i0.ɵɵDirectiveDeclaration<NgxSignalFormControlSemanticsDirective, "[ngxSignalFormControl],[ngxSignalFormControlLayout],[ngxSignalFormControlAria]", never, { "semanticsInput": { "alias": "ngxSignalFormControl"; "required": false; "isSignal": true; }; "layoutOverride": { "alias": "ngxSignalFormControlLayout"; "required": false; "isSignal": true; }; "ariaModeOverride": { "alias": "ngxSignalFormControlAria"; "required": false; "isSignal": true; }; }, {}, never, never, true, never>;
+    readonly semanticsInput: _angular_core.InputSignal<NgxSignalFormControlDirectiveValue>;
+    readonly layoutOverride: _angular_core.InputSignal<NgxSignalFormControlLayout | null>;
+    readonly ariaModeOverride: _angular_core.InputSignal<NgxSignalFormControlAriaMode | null>;
+    readonly kind: _angular_core.Signal<NgxSignalFormControlKind | null>;
+    readonly layout: _angular_core.Signal<NgxSignalFormControlLayout | null>;
+    readonly ariaMode: _angular_core.Signal<NgxSignalFormControlAriaMode | null>;
+    readonly hasSemantics: _angular_core.Signal<boolean>;
+    static ɵfac: _angular_core.ɵɵFactoryDeclaration<NgxSignalFormControl, never>;
+    static ɵdir: _angular_core.ɵɵDirectiveDeclaration<NgxSignalFormControl, "[ngxSignalFormControl],[ngxSignalFormControlLayout],[ngxSignalFormControlAria]", never, { "semanticsInput": { "alias": "ngxSignalFormControl"; "required": false; "isSignal": true; }; "layoutOverride": { "alias": "ngxSignalFormControlLayout"; "required": false; "isSignal": true; }; "ariaModeOverride": { "alias": "ngxSignalFormControlAria"; "required": false; "isSignal": true; }; }, {}, never, never, true, never>;
 }
 
 /**
@@ -2502,9 +2381,11 @@ declare function createAriaDescribedBySignal(options: CreateAriaDescribedBySigna
  *
  * The factory is unconditional and contains no DI: callers thread DI-resolved
  * values (the visibility computed from `createErrorVisibility`, and an
- * optional `isControlVisible` predicate, typically from `NgxFieldIdentity`)
- * in as inputs. The `'manual'` ARIA-mode opt-out lives in the directive
- * shell that wires this factory, not here.
+ * optional `isControlVisible` predicate, typically from
+ * `createControlVisibilitySignal()`, or from your own signal fed by
+ * `isElementCssVisible()` in an `afterEveryRender` `earlyRead`) in as
+ * inputs. The `'manual'` ARIA-mode opt-out lives in the directive shell that
+ * wires this factory, not here.
  *
  * @param fieldState A signal returning the bound `FieldState`, or `null`
  *   when no field is bound yet.
@@ -2687,59 +2568,18 @@ declare function createHintIdsSignal(options?: CreateHintIdsSignalOptions): Hint
 
 type InjectionContextDebugFn = Function;
 /**
- * `assertInjector` extends Angular's `assertInInjectionContext` with an optional `Injector`.
- * After assertion, it runs the `runner` function with a guaranteed `Injector`,
- * whether it's the default one within the current Injection Context or a custom one passed in.
+ * Runs work in the current or supplied Angular injection context.
  *
  * This pattern is inspired by ngxtension's `assertInjector` utility.
  * @see https://github.com/ngxtension/ngxtension-platform
- *
- * @template Runner - A function that can return anything
- * @param fn - The function to pass to `assertInInjectionContext`
- * @param injector - Optional custom Injector
- * @param runner - The runner function to execute in the injection context
- * @returns The result of the runner function
- *
- * @example
- * ```typescript
- * export function injectFormConfig(injector?: Injector) {
- *   return assertInjector(injectFormConfig, injector, () => {
- *     return inject(NGX_SIGNAL_FORMS_CONFIG, { optional: true });
- *   });
- * }
- * ```
  *
  * @internal
  */
 declare function assertInjector<Runner extends () => unknown>(fn: InjectionContextDebugFn, injector: Injector | undefined | null, runner: Runner): ReturnType<Runner>;
-/**
- * `assertInjector` extends Angular's `assertInInjectionContext` with an optional `Injector`.
- * After assertion, it returns a guaranteed `Injector` whether it is the default one
- * within the current Injection Context or the custom one that was passed in.
- *
- * This pattern is inspired by ngxtension's `assertInjector` utility.
- * @see https://github.com/ngxtension/ngxtension-platform
- *
- * @param fn - The function to pass to `assertInInjectionContext`
- * @param injector - Optional custom Injector
- * @returns A guaranteed Injector
- *
- * @example
- * ```typescript
- * export function injectFormConfig(injector?: Injector) {
- *   injector = assertInjector(injectFormConfig, injector);
- *   return runInInjectionContext(injector, () => {
- *     return inject(NGX_SIGNAL_FORMS_CONFIG, { optional: true });
- *   });
- * }
- * ```
- */
-declare function assertInjector(fn: InjectionContextDebugFn, injector: Injector | undefined | null): Injector;
 
 type Nullable<T> = T | null | undefined;
-type MaybeSignal<T> = Signal<T> | T;
 /**
- * Options for a fully static cascading resolver (no signals).
+ * Options for a cascading resolver.
  *
  * Tiers are evaluated in order: `input` → `context` → `configDefault` →
  * `fallback`. The first non-nullish value wins. `fallback` is always
@@ -2761,20 +2601,6 @@ interface StaticCascadingResolverOptions<T> {
     readonly fallback: T;
 }
 /**
- * Options for a reactive cascading resolver (at least one Signal tier).
- *
- * Any tier may be a `Signal<T | null | undefined>`. When any tier is
- * reactive the resolver returns a `Signal<T>` instead of a plain `T`.
- *
- * @internal
- */
-interface ReactiveCascadingResolverOptions<T> {
-    readonly input: MaybeSignal<Nullable<T>>;
-    readonly context?: MaybeSignal<Nullable<T>>;
-    readonly configDefault?: MaybeSignal<Nullable<T>>;
-    readonly fallback: MaybeSignal<T>;
-}
-/**
  * Resolves a value from an ordered cascade of up to four tiers, using
  * nullish-only short-circuit semantics: `null` and `undefined` fall through;
  * any other value — including `''`, `0`, and `false` — wins.
@@ -2784,11 +2610,6 @@ interface ReactiveCascadingResolverOptions<T> {
  * 2. `context` — form/component context injection (optional)
  * 3. `configDefault` — injected provider default (optional)
  * 4. `fallback` — hardcoded toolkit default (always non-nullish)
- *
- * ## Return type
- * - **All tiers static** (`T | null | undefined`) → returns `T` directly.
- * - **At least one tier is a `Signal`** → returns `Signal<T>` wrapping a
- *   `computed()` that re-evaluates whenever reactive tiers change.
  *
  * @example Static cascade
  * ```typescript
@@ -2800,20 +2621,9 @@ interface ReactiveCascadingResolverOptions<T> {
  * // value: string
  * ```
  *
- * @example Reactive cascade
- * ```typescript
- * const value$ = createCascadingResolver({
- *   input: inputSignal,          // Signal<string | null | undefined>
- *   configDefault: configSignal, // Signal<string | null | undefined>
- *   fallback: 'default',
- * });
- * // value$: Signal<string>
- * ```
- *
  * @internal
  */
 declare function createCascadingResolver<T>(opts: StaticCascadingResolverOptions<T>): T;
-declare function createCascadingResolver<T>(opts: ReactiveCascadingResolverOptions<T>): Signal<T>;
 
 /**
  * Creates a `computed()` signal counting a character-count value's length:
@@ -2892,14 +2702,11 @@ interface CreateErrorVisibilityOptions {
      * context resolve to nothing (i.e. no `[ngxSignalForm]` host is present).
      * Typically the caller's own `NGX_SIGNAL_FORMS_CONFIG.defaultErrorStrategy`.
      *
-     * Deliberately opt-in rather than auto-injected: most callers of this
-     * generic primitive (e.g. `NgxSignalFormAutoAria`) already run inside a
-     * form context and never observe the difference, and forcing every call
-     * site to consult the global config would be an unannounced behavior
-     * change for the handful that don't. Callers that need config-default
-     * parity with `NgxHeadlessFieldset.resolvedStrategy` (e.g. the headless
-     * package's standalone factories) inject the config themselves and pass
-     * it through here.
+     * Deliberately opt-in rather than auto-injected, so this generic
+     * primitive does not read the global config behind a caller's back.
+     * Callers that must match the visible message when no form context
+     * exists (`NgxSignalFormAutoAria`, the headless package's standalone
+     * factories) inject the config themselves and pass it through here.
      */
     readonly configDefault?: ResolvedErrorDisplayStrategy | null;
     /**
@@ -2912,10 +2719,10 @@ interface CreateErrorVisibilityOptions {
 /**
  * One-shot factory for error-visibility wiring.
  *
- * Replaces the four-step manual composition of
- * `resolveStrategyFromContext` → `resolveSubmittedStatusFromContext` →
- * `createShowErrorsComputed` that every in-tree consumer now routes through
- * this seam instead of inlining (ADR-0006) — `NgxHeadlessErrorState`,
+ * It replaces a four-step manual composition: resolve the strategy, resolve
+ * the submission status, evaluate the timing predicate, and expose the
+ * result as a computed. Every in-tree consumer now calls this factory instead
+ * of inlining those steps (ADR-0006): `NgxHeadlessErrorState`,
  * `NgxHeadlessFieldset`, `createErrorState()`, `NgxFormFieldWrapper`,
  * `NgxSignalFormAutoAria`, `createAriaInvalidSignal`,
  * `createErrorMessageSignal()`, and `NgxHeadlessErrorSummary`.
@@ -2926,27 +2733,31 @@ interface CreateErrorVisibilityOptions {
  * 2. Resolves the error display strategy: explicit opt → context →
  *    `opts.configDefault` (when supplied) → `'on-touch'`.
  * 3. Resolves the submission status: explicit opt → context → `undefined`.
- * 4. Delegates to {@link createShowErrorsComputed} and returns the resulting
+ * 4. Evaluates the visibility timing predicate and returns a reactive
  *    `Signal<boolean>`.
  *
- * No new logic is introduced — this is purely ergonomic glue over the
- * existing building blocks.
+ * This is the single composition point for the visibility cascade. It owns
+ * the reactive computed. It also owns the dev-mode warning for a missing
+ * submission status. The shared pure predicate evaluates the strategy.
  *
  * ## When to use
  *
- * Use `createErrorVisibility` as the **recommended entry point** for
- * consumer-side error visibility wiring. The four building blocks remain
- * exported for advanced composition but are no longer the first choice.
+ * Use `createErrorVisibility` as the public entry point for consumer-side
+ * error visibility wiring. The lower-level resolution and predicate helpers
+ * are internal toolkit building blocks exposed only through the hidden,
+ * build-time `/core` entry point.
  *
  * ## When NOT to use
  *
- * If you need to compose the strategy and/or submission status with logic
- * beyond a flat config-default fallback (e.g. a component preset registry,
- * a multi-tier cascade) reach for the individual building blocks instead.
+ * Do not import the lower-level helpers from `/core`; that entry point is not
+ * published. For custom timing, compute `strategy` and `submittedStatus` in
+ * your own signals and pass them in the options. To show errors from your own
+ * rule, such as a "show after the user clicks Validate" flag, use that
+ * signal directly instead of this factory.
  *
  * @param field Reactive or static field state. `null`/`undefined` values
- *   short-circuit the result to `false` — this is handled by the underlying
- *   {@link createShowErrorsComputed} building block.
+ *   short-circuit the result to `false` — this is handled by the visibility
+ *   computation inside this factory.
  * @param opts Optional overrides; all properties are optional.
  * @returns A computed `Signal<boolean>` that is `true` when the strategy says
  *   errors should be visible.
@@ -2992,12 +2803,11 @@ interface CreateErrorVisibilityOptions {
  *
  * @see {@link resolveStrategyFromContext} Building block: strategy cascade
  * @see {@link resolveSubmittedStatusFromContext} Building block: submitted-status cascade
- * @see {@link createShowErrorsComputed} Building block: reactive visibility computed
  * @see {@link shouldShowErrors} Building block: pure boolean evaluation
  *
  * @public
  */
-declare function createErrorVisibility(field: ReactiveOrStatic<Partial<ErrorVisibilityState> | null | undefined>, opts?: CreateErrorVisibilityOptions): Signal<boolean>;
+declare function createErrorVisibility(field: NgxReactiveOrStatic<Partial<ErrorVisibilityState> | null | undefined>, opts?: CreateErrorVisibilityOptions): Signal<boolean>;
 
 /**
  * The part of a `FieldState` that {@link createFieldPresentation} reads.
@@ -3007,7 +2817,7 @@ declare function createErrorVisibility(field: ReactiveOrStatic<Partial<ErrorVisi
  *
  * @public
  */
-type FieldPresentationState = Partial<Pick<FieldState<unknown>, 'errors' | 'invalid' | 'touched' | 'hidden'>>;
+type FieldPresentationState = Partial<Pick<FieldState<unknown>, 'errors' | 'hidden' | 'invalid' | 'touched'>>;
 /**
  * Options for {@link createFieldPresentation}. All are optional.
  *
@@ -3019,18 +2829,18 @@ interface CreateFieldPresentationOptions {
      * defer to the form context, then to
      * `NGX_SIGNAL_FORMS_CONFIG.defaultErrorStrategy`, then to `'on-touch'`.
      */
-    readonly strategy?: SignalLike<ErrorDisplayStrategy | null | undefined>;
+    readonly strategy?: NgxSignalLike<ErrorDisplayStrategy | null | undefined>;
     /**
      * Field-level warning display strategy. It resolves through its own
      * cascade and never reads the error strategy (ADR-0007): form context
      * `warningStrategy()`, then `defaultWarningStrategy`, then `'on-touch'`.
      */
-    readonly warningStrategy?: SignalLike<WarningDisplayStrategy | null | undefined>;
+    readonly warningStrategy?: NgxSignalLike<WarningDisplayStrategy | null | undefined>;
     /**
      * Whether the field is hidden. A hidden field shows no messages. When
      * omitted, the factory reads the field state's own `hidden()`.
      */
-    readonly hidden?: SignalLike<boolean>;
+    readonly hidden?: NgxSignalLike<boolean>;
     /**
      * The field identity to publish the resolved strategies to (ADR-0010).
      * `NgxSignalFormAutoAria` reads them, so `aria-describedby` follows the
@@ -3142,7 +2952,7 @@ interface FieldPresentation {
  *
  * @public
  */
-declare function createFieldPresentation(field: ReactiveOrStatic<FieldPresentationState | null | undefined>, options?: CreateFieldPresentationOptions): FieldPresentation;
+declare function createFieldPresentation(field: NgxReactiveOrStatic<FieldPresentationState | null | undefined>, options?: CreateFieldPresentationOptions): FieldPresentation;
 
 /**
  * Options for {@link createWarningVisibility}.
@@ -3188,7 +2998,7 @@ interface CreateWarningVisibilityOptions {
      * fieldset's own `errors()`, and `createFieldsetAggregation` already
      * returns `showWarnings() && hasWarnings()`.
      */
-    readonly hasWarnings?: ReactiveOrStatic<boolean>;
+    readonly hasWarnings?: NgxReactiveOrStatic<boolean>;
     /**
      * Whether a blocking error is currently visible on the **same field**.
      * While it reads `true` the warning stays hidden: errors and warnings are
@@ -3200,7 +3010,7 @@ interface CreateWarningVisibilityOptions {
      * omitted on purpose — they span a subtree, and a blocking error on one
      * member field must not silence a warning on a sibling.
      */
-    readonly errorVisibility?: ReactiveOrStatic<boolean>;
+    readonly errorVisibility?: NgxReactiveOrStatic<boolean>;
     /**
      * Optional injector for use outside an Angular injection context (e.g.
      * unit tests, `runInInjectionContext` wrappers).
@@ -3227,8 +3037,9 @@ interface CreateWarningVisibilityOptions {
  * ## When NOT to use
  *
  * Reach for `resolveWarningStrategyFromContext()` + `shouldShowWarnings()`
- * directly when a surface needs the resolved strategy as public API, or
- * composes the presence check into a larger pipeline of its own.
+ * from `@ngx-signal-forms/toolkit/core` (toolkit-internal) when a surface needs
+ * the resolved strategy as public API, or composes the presence check into a
+ * larger pipeline of its own.
  *
  * @param field Reactive or static field state. Nullish values short-circuit
  *   the result to `false`.
@@ -3260,12 +3071,12 @@ interface CreateWarningVisibilityOptions {
  *
  * @public
  */
-declare function createWarningVisibility(field: ReactiveOrStatic<Partial<WarningVisibilityState> | null | undefined>, opts?: CreateWarningVisibilityOptions): Signal<boolean>;
+declare function createWarningVisibility(field: NgxReactiveOrStatic<Partial<WarningVisibilityState> | null | undefined>, opts?: CreateWarningVisibilityOptions): Signal<boolean>;
 
 /**
  * Reactive reader of the bound control's host element. Returns `null` when
  * no control has been projected (or queried) yet. Typically a `computed`
- * over `contentChildren(NgxSignalFormControlSemanticsDirective)`.
+ * over `contentChildren(NgxSignalFormControl)`.
  *
  * @public
  * @group ARIA Composition
@@ -3383,8 +3194,8 @@ declare class NgxSignalFormIdCounter {
      * Returns the next id for `prefix`, starting at `1` on a fresh injector.
      */
     next(prefix: string): string;
-    static ɵfac: i0.ɵɵFactoryDeclaration<NgxSignalFormIdCounter, never>;
-    static ɵprov: i0.ɵɵInjectableDeclaration<any>;
+    static ɵfac: _angular_core.ɵɵFactoryDeclaration<NgxSignalFormIdCounter, never>;
+    static ɵprov: _angular_core.ɵɵInjectableDeclaration<any>;
 }
 /**
  * Mints a stable, per-injector unique id for ARIA wiring.
@@ -3478,14 +3289,14 @@ declare function isNgxSignalFormControlLayout(value: string | null | undefined):
 declare function isNgxSignalFormControlAriaMode(value: string | null | undefined): value is NgxSignalFormControlAriaMode;
 /**
  * Reads explicit control semantics from the stable `data-ngx-signal-form-*`
- * attributes written by `NgxSignalFormControlSemanticsDirective`.
+ * attributes written by `NgxSignalFormControl`.
  *
  * The wrapper layer uses this to read projected-control semantics from the DOM
  * instead of injecting the directive directly, so projected controls, custom
  * elements, and plain DOM lookups all share the same transport format.
  *
  * Note: the auto-ARIA directive reads semantics via Angular DI
- * (`inject(NgxSignalFormControlSemanticsDirective)`) rather than this function.
+ * (`inject(NgxSignalFormControl)`) rather than this function.
  *
  * @param element Rendered control host to inspect.
  * @returns The explicit semantics declared on the host, or an empty object.
@@ -3571,7 +3382,7 @@ declare function isHtmlButtonElement(value: unknown): value is HTMLButtonElement
 /**
  * The supported `appearance` literals, in the order they should be listed in
  * dev-mode diagnostics. Shared with {@link resolveUnionInput} call sites so
- * the runtime membership check and the guard below can't drift apart.
+ * the runtime membership check and the `appearance` type can't drift apart.
  *
  * @internal
  */
@@ -3579,35 +3390,11 @@ declare const FORM_FIELD_APPEARANCE_VALUES: readonly ["standard", "outline", "pl
 /**
  * The supported `orientation` literals, in the order they should be listed
  * in dev-mode diagnostics. Shared with {@link resolveUnionInput} call sites
- * so the runtime membership check and the guard below can't drift apart.
+ * so the runtime membership check and the `orientation` type can't drift apart.
  *
  * @internal
  */
 declare const FORM_FIELD_ORIENTATION_VALUES: readonly ["vertical", "horizontal"];
-/**
- * Checks whether a raw value is one of the supported form-field appearances.
- *
- * Used by the wrapper to validate the `appearance` input at runtime so that
- * dynamic bindings (template attribute strings, JIT compiled templates, value
- * crossings from external config) cannot silently feed an unknown literal
- * into the resolution branch.
- *
- * @param value Raw value to validate.
- * @returns True when the value matches a supported appearance literal.
- */
-declare function isFormFieldAppearance(value: string | null | undefined): value is FormFieldAppearance;
-/**
- * Checks whether a raw value is one of the supported form-field orientations.
- *
- * Mirrors {@link isFormFieldAppearance} for the `orientation` input. Lets the
- * wrapper convert silent rendering bugs (typo `"horizonal"`, leftover legacy
- * literals) into one-shot dev-mode diagnostics with a clear remediation
- * message.
- *
- * @param value Raw value to validate.
- * @returns True when the value matches a supported orientation literal.
- */
-declare function isFormFieldOrientation(value: string | null | undefined): value is FormFieldOrientation;
 
 /**
  * Determines if errors should be shown immediately without creating a reactive signal.
@@ -3624,15 +3411,15 @@ declare function isFormFieldOrientation(value: string | null | undefined): value
  * - Implement custom logic that doesn't need automatic updates
  * - Reduce memory overhead when reactivity isn't needed
  *
- * **Use {@link createShowErrorsComputed} instead when you need reactive updates.**
+ * **Use {@link createErrorVisibility} instead when you need reactive updates.**
  *
  * ## Strategy contract
  * This helper accepts a {@link ResolvedErrorDisplayStrategy} — the `'inherit'`
  * value from `ErrorDisplayStrategy` is a user-facing input that must be
  * resolved to a concrete strategy (`'immediate' | 'on-touch' | 'on-submit'`)
  * before calling this function. Route user input through
- * {@link resolveErrorDisplayStrategy} or {@link resolveStrategyFromContext}
- * first. Reactive surfaces should use {@link createShowErrorsComputed},
+ * {@link resolveStrategyFromContext} first. Reactive surfaces should use
+ * {@link createErrorVisibility},
  * which accepts the wider `ErrorDisplayStrategy` and resolves `'inherit'`
  * internally.
  *
@@ -3665,11 +3452,11 @@ declare function isFormFieldOrientation(value: string | null | undefined): value
  * }
  * ```
  *
- * @see {@link createShowErrorsComputed} For reactive version that creates a computed signal
+ * @see {@link createErrorVisibility} For the reactive visibility factory
  * @see {@link ResolvedErrorDisplayStrategy} For the resolved strategy union
- * @see {@link resolveErrorDisplayStrategy} To resolve `'inherit'` before calling this
+ * @see {@link resolveStrategyFromContext} To resolve `'inherit'` before calling this
  *
- * @public
+ * @internal
  */
 declare function shouldShowErrors(isInvalid: boolean, isTouched: boolean, strategy: ResolvedErrorDisplayStrategy, submittedStatus: SubmittedStatus): boolean;
 /**
@@ -3760,8 +3547,8 @@ declare function isFieldStateRequired(fieldState: Pick<FieldState<unknown>, 'req
  * a name as the basis for an `id` or `aria-describedby` chain.
  *
  * Deliberately does NOT touch inner whitespace. This is also the primitive
- * that path navigation (`injectFieldControl`) and DOM-id reporting
- * (`NgxFieldIdentity.controlId`) rely on, so the returned string must
+ * that DOM-id reporting
+ * (`NgxFieldIdentity.controlId`) relies on, so the returned string must
  * round-trip a data-driven name exactly — a field literally named
  * `"x other-id"` must still be injectable, and a control's reported id must
  * still match its actual DOM `id` attribute. See
@@ -3788,7 +3575,7 @@ declare function normalizeFieldName(fieldName: string | null | undefined): strin
  * {@link generateRequiredHintId}, and the hint / selection-cluster-label id
  * builders all apply it internally. Everything that resolves or looks up a
  * field name ({@link normalizeFieldName}, {@link resolveFieldName},
- * {@link resolveFieldNameFromCandidates}, `injectFieldControl`,
+ * {@link resolveFieldNameFromCandidates},
  * `NgxFieldIdentity.controlId`) deliberately stays raw, because those
  * consumers need the exact characters the form model or the DOM `id`
  * attribute carries.
@@ -3889,7 +3676,7 @@ declare function resolveFieldNameFromCandidates(...fieldNameCandidates: readonly
  *   empty strings collapse to `null`, treated as "no id".
  *
  * Returns the raw (trimmed-only) id, unchanged otherwise — this is the
- * primitive `injectFieldControl` walks form paths with and
+ * primitive
  * `NgxFieldIdentity.controlId` reports, so it must match the DOM `id`
  * attribute and the form model's own key exactly. ARIA id generation
  * applies {@link sanitizeFieldNameForId} separately, at the point an id is
@@ -4061,7 +3848,7 @@ declare function generateCharacterCountLimitId(fieldName: string): string;
  *   input serializes to a string. Kept as a courtesy branch for those
  *   applications; nothing in the toolkit depends on it.
  * - `[id][data-ngx-signal-form-control]` — the stable attribute written
- *   by `NgxSignalFormControlSemanticsDirective`. Recommended fallback for
+ *   by `NgxSignalFormControl`. Recommended fallback for
  *   custom control hosts that don't carry a native `[formField]` binding
  *   themselves.
  *
@@ -4314,53 +4101,6 @@ declare function updateAt<T>(array: readonly T[], index: number, updater: (item:
 declare function updateNested<T extends Record<K, U[]>, K extends keyof T, U>(array: readonly T[], index: number, nestedKey: K, nestedIndex: number, updater: (item: U) => U): T[];
 
 /**
- * Custom Inject Function (CIF) for retrieving a specific field control from the form.
- * Works both inside and outside Angular injection context when an injector is provided.
- *
- * This pattern is inspired by ngxtension's Custom Inject Functions.
- * @see https://github.com/ngxtension/ngxtension-platform
- *
- * @param element - The HTML element or ElementRef to resolve the field name from
- * @param injector - Optional injector for use outside injection context
- * @returns The resolved `FieldTree<TValue>` from the form
- * @throws Error if field cannot be resolved, the resolved value does not
- *   satisfy the runtime `FieldTree` contract (see `isFieldTreeLike`), or form
- *   context is not found
- *
- * @remarks
- * Resolution is a **one-shot, non-reactive** lookup: the form instance and
- * the element's `id` are both read once, at injection/call time. Swapping
- * the underlying form instance or assigning the element's `id` after this
- * call resolves will NOT be reflected — the returned `FieldTree` reference
- * is fixed for the lifetime of the caller. Re-invoke this function (e.g. in
- * a fresh `computed()`) if you need to track a form or id that can change.
- *
- * @example
- * ```typescript
- * /// Inside a directive — typed result
- * @Directive({ selector: '[myDirective]' })
- * export class MyDirective {
- *   readonly #element = inject(ElementRef);
- *   readonly fieldControl = injectFieldControl<string>(this.#element);
- *   // fieldControl is FieldTree<string>
- *
- *   constructor() {
- *     effect(() => {
- *       console.log('Value:', this.fieldControl().value());
- *     });
- *   }
- * }
- *
- * /// Outside injection context
- * function myUtility(element: HTMLElement, injector: Injector) {
- *   const fieldControl = injectFieldControl<number>(element, injector);
- *   // fieldControl is FieldTree<number>
- * }
- * ```
- */
-declare function injectFieldControl<TValue = unknown>(element: HTMLElement | ElementRef<HTMLElement>, injector?: Injector): FieldTree<TValue>;
-
-/**
  * Custom Inject Function (CIF) for retrieving the form context from FormProviderDirective.
  * Works both inside and outside Angular injection context when an injector is provided.
  *
@@ -4602,30 +4342,6 @@ interface StandardSchemaLikeResult<TInput> {
  */
 declare function requiredFromStandardSchema<TValue, TModel = unknown, TPathKind extends PathKind = PathKind.Root>(path: SchemaPath<TValue, SchemaPathRules.Supported, TPathKind>, schema: StandardSchemaLike<TModel> | LogicFn<TValue, StandardSchemaLike<TModel> | undefined, TPathKind>): void;
 
-type StrategyInput = ErrorDisplayStrategy | null | undefined;
-type WarningStrategyInput = WarningDisplayStrategy | null | undefined;
-/**
- * Resolves the error display strategy from an input value, context, and
- * config default.
- *
- * Cascade order (three tiers, plus a terminal fallback):
- * 1. explicit input strategy (if not `'inherit'`)
- * 2. form context's error strategy
- * 3. config default error strategy
- * 4. terminal fallback `'on-touch'`
- */
-declare function resolveErrorDisplayStrategy(inputStrategy: StrategyInput, contextStrategy?: ResolvedErrorDisplayStrategy | null, configDefault?: ResolvedErrorDisplayStrategy | null): ResolvedErrorDisplayStrategy;
-/**
- * Resolves the warning display strategy from an input value, context, and config default.
- * This is the warning-specific counterpart to `resolveErrorDisplayStrategy`.
- *
- * Cascade order (four tiers):
- * 1. explicit input strategy (if not 'inherit')
- * 2. form context's warning strategy
- * 3. config default warning strategy
- * 4. terminal fallback 'on-touch'
- */
-declare function resolveWarningStrategy(inputStrategy: WarningStrategyInput, contextStrategy?: ResolvedWarningDisplayStrategy | null, configDefault?: ResolvedWarningDisplayStrategy | null): ResolvedWarningDisplayStrategy;
 /**
  * Resolves the error display strategy from a component/directive's input,
  * falling back to form context, then to the default.
@@ -4683,7 +4399,7 @@ interface WarnOnceRef {
  *
  * @internal
  */
-declare function devWarnOnce(warned: WarnOnceRef, level: 'warn' | 'error', message: string, ...args: readonly unknown[]): void;
+declare function devWarnOnce(warned: WarnOnceRef, level: 'error' | 'warn', message: string, ...args: readonly unknown[]): void;
 /**
  * Creates a bound {@link devWarnOnce} for call sites that don't already own
  * a per-instance field to hold the {@link WarnOnceRef} — factory functions
@@ -4707,178 +4423,7 @@ declare function devWarnOnce(warned: WarnOnceRef, level: 'warn' | 'error', messa
  *
  * @internal
  */
-declare function createDevWarnOnce(): (level: 'warn' | 'error', message: string, ...args: readonly unknown[]) => void;
-
-/**
- * Creates a reactive computed signal that determines if a form field's errors
- * should be shown to the user based on the error display strategy.
- *
- * This is the shared visibility-timing primitive: `createErrorState()`,
- * `NgxHeadlessErrorState`, `NgxHeadlessErrorSummary`,
- * `NgxSignalFormAutoAria`, `NgxFormFieldError`, and the
- * form-field wrapper all route their visibility decisions through
- * `shouldShowErrors()` (via this computed) so the when-to-show rule stays
- * identical across surfaces. Individual consumers may layer their own
- * short-circuits on top — the wrapper additionally suppresses output when
- * `isFieldHidden()` or the `errors` array is empty — but the underlying
- * strategy evaluation is not reimplemented anywhere. Add layer-specific
- * filters at the call site rather than forking this primitive.
- *
- * **Not the same as {@link shouldShowErrors}.** That function is a pure,
- * synchronous boolean predicate — no signals, no reactivity, for imperative
- * one-off checks. This one returns a `Signal<boolean>` that recomputes as
- * the field's `invalid()` / `touched()` state changes. The `create*` prefix
- * is deliberate: it is the toolkit's convention for signal factories
- * (`createErrorVisibility`, `createUniqueId`, `createCharacterCount`,
- * `createCascadingResolver`, …), which reads unambiguously next to
- * `shouldShowErrors`'s different name and different return type.
- *
- * ## Simplified Architecture (aligned with Angular Signal Forms)
- *
- * Angular's `submit()` helper calls `markAsTouched()` on the submitted node,
- * which cascades to every descendant, so `field.touched()` is true across the
- * tree after a submit. That makes `submittedStatus` **optional** for the
- * default `'on-touch'` strategy — checking `field.touched()` is enough.
- *
- * ## How does it work?
- * 1. Accepts field state, error display strategy, and optional submission status
- * 2. Evaluates whether errors should be shown based on the strategy:
- *    - `'immediate'`: Errors shown as soon as field is invalid
- *    - `'on-touch'`: Errors shown after blur or submit (WCAG recommended) - **default**
- *    - `'on-submit'`: Errors shown only after form submission
- * 3. Returns a computed signal that updates when field state changes
- *
- * @param field - The form field state (FieldTree from Angular Signal Forms)
- * @param strategy - The error display strategy (defaults to 'on-touch')
- * @param submittedStatus - Optional for `'on-touch'` and `'immediate'`.
- *   **Required** for `'on-submit'`: without it the helper defaults to
- *   `'unsubmitted'` and errors will never surface. In dev mode a one-shot
- *   `console.warn` is emitted to flag the miswiring.
- * @returns A computed signal returning `true` when errors should be displayed
- *
- * @example Simple usage (recommended - no submittedStatus needed)
- * ```typescript
- * import { createShowErrorsComputed } from '@ngx-signal-forms/toolkit';
- *
- * @Component({
- *   template: `
- *     @if (shouldShowErrors()) {
- *       <span>{{ form.email().errors()[0].message }}</span>
- *     }
- *   `
- * })
- * class MyComponent {
- *   readonly #model = signal({ email: '' });
- *   protected readonly form = form(this.#model, emailSchema);
- *
- *   // Simple! Angular's submit() marks fields touched, so this just works.
- *   protected readonly shouldShowErrors = createShowErrorsComputed(
- *     this.form.email,
- *     'on-touch'
- *   );
- * }
- * ```
- *
- * @example With on-submit strategy (needs submittedStatus)
- * ```typescript
- * protected readonly shouldShowErrors = createShowErrorsComputed(
- *   this.form.email,
- *   'on-submit',
- *   computed<SubmittedStatus>(() => {
- *     const state = this.form();
- *     if (state.submitting()) return 'submitting';
- *     return state.touched() ? 'submitted' : 'unsubmitted';
- *   })
- * );
- * ```
- *
- * @see {@link combineShowErrors} For combining multiple error signals
- *
- * @public
- */
-declare function createShowErrorsComputed(field: ReactiveOrStatic<Partial<ErrorVisibilityState> | null | undefined>, strategy: ReactiveOrStatic<ErrorDisplayStrategy>, submittedStatus?: ReactiveOrStatic<SubmittedStatus | undefined>): Signal<boolean>;
-/**
- * Combines multiple error visibility signals into a single signal.
- *
- * ## What does it do?
- * Creates a computed signal that returns `true` if ANY of the provided error
- * visibility signals are `true`. This is useful for showing aggregate error
- * states, form-level validation, or section-level error indicators.
- *
- * ## When to use it?
- * Use `combineShowErrors()` when you need to:
- * - Show form-level error indicator if any field has errors
- * - Disable submit button when any field should show errors
- * - Display section-level validation status (e.g., "Address has errors")
- * - Implement custom error aggregation logic
- *
- * ## How does it work?
- * 1. Accepts an array of error visibility signals
- * 2. Creates a computed signal that checks all inputs
- * 3. Returns `true` if ANY signal is `true` (logical OR operation)
- * 4. Updates automatically when any input signal changes
- *
- * @param showErrorsSignals - Array of error visibility signals to combine
- * @returns A computed signal that is `true` if any input signal is `true`
- *
- * @example Form-level error indicator
- * ```typescript
- * const showAnyFormErrors = combineShowErrors([
- *   createShowErrorsComputed(form.email, 'on-touch', submitted),
- *   createShowErrorsComputed(form.password, 'on-touch', submitted),
- *   createShowErrorsComputed(form.confirmPassword, 'on-touch', submitted)
- * ]);
- *
- * /// Use in template
- * @if (showAnyFormErrors()) {
- *   <div class="form-error-banner">
- *     Please fix the errors below before submitting
- *   </div>
- * }
- * ```
- *
- * @example Disable submit button
- * ```typescript
- * const hasVisibleErrors = combineShowErrors([
- *   createShowErrorsComputed(form.username, strategy, submitted),
- *   createShowErrorsComputed(form.email, strategy, submitted)
- * ]);
- *
- * /// In template
- * <button [disabled]="hasVisibleErrors()">Submit</button>
- * ```
- *
- * @example Section-level validation
- * ```typescript
- * const showAddressErrors = combineShowErrors([
- *   createShowErrorsComputed(form.street, strategy, submitted),
- *   createShowErrorsComputed(form.city, strategy, submitted),
- *   createShowErrorsComputed(form.zipCode, strategy, submitted)
- * ]);
- *
- * const showPaymentErrors = combineShowErrors([
- *   createShowErrorsComputed(form.cardNumber, strategy, submitted),
- *   createShowErrorsComputed(form.cvv, strategy, submitted)
- * ]);
- * ```
- *
- * @example Custom error count
- * ```typescript
- * const errorSignals = [
- *   createShowErrorsComputed(form.field1, 'on-touch', submitted),
- *   createShowErrorsComputed(form.field2, 'on-touch', submitted),
- *   createShowErrorsComputed(form.field3, 'on-touch', submitted)
- * ];
- *
- * const hasErrors = combineShowErrors(errorSignals);
- * const errorCount = computed(() =>
- *   errorSignals.filter(signal => signal()).length
- * );
- * ```
- *
- * @see {@link createShowErrorsComputed} For creating individual error visibility signals
- */
-declare function combineShowErrors(showErrorsSignals: readonly Signal<boolean>[]): Signal<boolean>;
+declare function createDevWarnOnce(): (level: 'error' | 'warn', message: string, ...args: readonly unknown[]) => void;
 
 /**
  * Tracks completed-once submission history on top of native
@@ -4997,7 +4542,7 @@ declare function canSubmitWithWarnings(formTree: FieldTree<unknown>): Signal<boo
 declare function submitWithWarnings<TModel>(formTree: FieldTree<TModel>, action: () => Promise<void>): Promise<boolean>;
 
 /**
- * Unwraps a `ReactiveOrStatic<T>` value to get the actual value of type `T`.
+ * Unwraps a `NgxReactiveOrStatic<T>` value to get the actual value of type `T`.
  *
  * ## What does it do?
  * Extracts the static value from reactive (Signal/function) or static inputs,
@@ -5005,7 +4550,7 @@ declare function submitWithWarnings<TModel>(formTree: FieldTree<TModel>, action:
  *
  * ## When to use it?
  * Use `unwrapValue()` when you need to:
- * - Get the actual value from a `ReactiveOrStatic<T>` parameter
+ * - Get the actual value from a `NgxReactiveOrStatic<T>` parameter
  * - Work with the concrete value inside `computed()` or `effect()`
  * - Convert flexible inputs into usable values
  *
@@ -5016,7 +4561,7 @@ declare function submitWithWarnings<TModel>(formTree: FieldTree<TModel>, action:
  * 3. **Static value** (`T`) → Returns the value directly
  *
  * ## Why use this instead of manual checks?
- * - Type-safe: Properly narrows `ReactiveOrStatic<T>` to `T`
+ * - Type-safe: Properly narrows `NgxReactiveOrStatic<T>` to `T`
  * - Consistent: Handles all three cases with proper Angular signal detection
  * - Maintainable: Centralized unwrapping logic with proper type assertions
  *
@@ -5038,8 +4583,8 @@ declare function submitWithWarnings<TModel>(formTree: FieldTree<TModel>, action:
  * @example Inside a computed signal
  * ```typescript
  * function resolveShowErrors<T>(
- *   field: ReactiveOrStatic<FieldState<T>>,
- *   strategy: ReactiveOrStatic<ErrorDisplayStrategy>
+ *   field: NgxReactiveOrStatic<FieldState<T>>,
+ *   strategy: NgxReactiveOrStatic<ErrorDisplayStrategy>
  * ): Signal<boolean> {
  *   return computed(() => {
  *     /// Unwrap to get actual values inside computed
@@ -5056,7 +4601,7 @@ declare function submitWithWarnings<TModel>(formTree: FieldTree<TModel>, action:
  * ```typescript
  * @Component({...})
  * export class MyComponent {
- *   readonly strategy = input<ReactiveOrStatic<ErrorDisplayStrategy>>('on-touch');
+ *   readonly strategy = input<NgxReactiveOrStatic<ErrorDisplayStrategy>>('on-touch');
  *
  *   protected readonly actualStrategy = computed(() =>
  *     unwrapValue(this.strategy())
@@ -5084,11 +4629,11 @@ declare function submitWithWarnings<TModel>(formTree: FieldTree<TModel>, action:
  * The runtime behavior (`isSignal()` then `typeof === 'function'`) is
  * unchanged; only the public type signature gained overloads.
  *
- * @see {@link ReactiveOrStatic} The type this function unwraps
+ * @see {@link NgxReactiveOrStatic} The type this function unwraps
  */
 declare function unwrapValue<T>(value: Signal<T>): T;
 declare function unwrapValue<T>(value: () => T): T;
-declare function unwrapValue<T>(value: ReactiveOrStatic<T>): T;
+declare function unwrapValue<T>(value: NgxReactiveOrStatic<T>): T;
 declare function unwrapValue<T>(value: T): T;
 
 type WalkFieldTreeEntry = {
@@ -5304,7 +4849,7 @@ declare function warningError(kind: string, message?: string): ValidationError;
  * - {@link FormRoot} - Angular-owned submit and `novalidate` behavior
  * - {@link NgxSignalForm} - Adds toolkit context and error strategy
  * - {@link NgxSignalFormAutoAria} - Automatically applies ARIA attributes
- * - {@link NgxSignalFormControlSemanticsDirective} - Declares stable wrapper/ARIA semantics for a control
+ * - {@link NgxSignalFormControl} - Declares stable wrapper/ARIA semantics for a control
  *
  * **For error display:** Import `NgxFormFieldError` from `@ngx-signal-forms/toolkit/assistive`
  *
@@ -5315,7 +4860,7 @@ declare function warningError(kind: string, message?: string): ValidationError;
  *
  * @public
  */
-declare const NgxSignalFormToolkit: readonly [typeof FormRoot, typeof NgxSignalForm, typeof NgxSignalFormAutoAria, typeof NgxSignalFormControlSemanticsDirective];
+declare const NgxSignalFormToolkit: readonly [typeof FormRoot, typeof NgxSignalForm, typeof NgxSignalFormAutoAria, typeof NgxSignalFormControl];
 
-export { BOUND_CONTROL_SELECTOR, DEFAULT_NGX_SIGNAL_FORMS_CONFIG, DEFAULT_NGX_SIGNAL_FORM_CONTROL_PRESETS, FORM_FIELD_APPEARANCE_VALUES, FORM_FIELD_ORIENTATION_VALUES, InvalidFieldTreeError, NGX_ERROR_MESSAGES, NGX_FIELD_LABEL_RESOLVER, NGX_FORM_FIELD_ERROR_RENDERER, NGX_FORM_FIELD_HINT_RENDERER, NGX_SIGNAL_FORMS_CONFIG, NGX_SIGNAL_FORM_ARIA_MODE, NGX_SIGNAL_FORM_CONTEXT, NGX_SIGNAL_FORM_CONTROL_KIND_VALUES, NGX_SIGNAL_FORM_CONTROL_PRESETS, NGX_SIGNAL_FORM_FIELD_CONTEXT, NGX_SIGNAL_FORM_FIELD_VISIBILITY_REGISTRY, NGX_SIGNAL_FORM_HINT_REGISTRY, NgxControlPresetRegistry, NgxFieldIdentity, NgxFieldIdentityProvider, NgxFieldVisibilityRegistry, NgxSignalForm, NgxSignalFormAutoAria, NgxSignalFormControlSemanticsDirective, NgxSignalFormIdCounter, NgxSignalFormToolkit, NgxSubmitAnnouncements, WARN_KIND_PREFIX, assertInjector, buildAriaDescribedBy, canSubmitWithWarnings, combineShowErrors, createAriaDescribedByBridge, createAriaDescribedBySignal, createAriaInvalidSignal, createAriaRequiredSignal, createCascadingResolver, createCharacterCountLengthSignal, createControlVisibilitySignal, createDevWarnOnce, createErrorVisibility, createFieldMessageIdSignals, createFieldNameResolver, createFieldPresentation, createHintIdsSignal, createOnInvalidHandler, createShowErrorsComputed, createSubmittedStatusTracker, createUniqueId, createWarningVisibility, devWarnOnce, findBoundControl, focusFirstInvalid, generateCharacterCountLimitId, generateErrorId, generateRequiredHintId, generateWarningId, getBlockingErrors, getDefaultValidationMessage, hasOnlyWarnings, hasSubmitted, humanizeFieldPath, inferNgxSignalFormControlKind, injectFieldControl, injectFormContext, isBlockingError, isElementCssVisible, isFieldStateHidden, isFieldStateInteractive, isFieldStateRequired, isFieldTreeLike, isFormFieldAppearance, isFormFieldOrientation, isHtmlButtonElement, isHtmlElement, isHtmlInputElement, isHtmlSelectElement, isHtmlTextAreaElement, isNgxSignalFormControlAriaMode, isNgxSignalFormControlKind, isNgxSignalFormControlLayout, isWarningError, mergeNgxSignalFormControlPresets, normalizeFieldName, provideErrorMessages, provideFieldLabels, provideFormFieldErrorRenderer, provideFormFieldErrorRendererForComponent, provideFormFieldHintRenderer, provideFormFieldHintRendererForComponent, provideNgxSignalFormControlPresets, provideNgxSignalFormControlPresetsForComponent, provideNgxSignalFormsConfig, provideNgxSignalFormsConfigForComponent, readDirectErrors, readNgxSignalFormControlSemantics, requiredFromStandardSchema, resolveBoundControlFromBindings, resolveErrorDisplayStrategy, resolveFieldName, resolveFieldNameFromCandidates, resolveNgxSignalFormControlSemantics, resolveStrategyFromContext, resolveSubmittedStatusFromContext, resolveValidationErrorMessage, resolveWarningStrategy, resolveWarningStrategyFromContext, sanitizeFieldNameForId, shouldShowErrors, shouldShowWarnings, splitByKind, stripAngularFormPrefix, submitWithWarnings, unwrapValue, updateAt, updateNested, walkFieldTreeEntries, warningError };
-export type { AriaDescribedByBridge, AriaDescribedByChainOptions, AriaDescribedByFieldNameReader, AriaDescribedByPreservedIdsReader, AriaRequiredFieldState, BoundControlElementReader, ControlVisibilitySignal, CreateAriaDescribedByBridgeOptions, CreateAriaDescribedBySignalOptions, CreateErrorVisibilityOptions, CreateFieldNameResolverOptions, CreateFieldPresentationOptions, CreateHintIdsSignalOptions, CreateWarningVisibilityOptions, ErrorDisplayStrategy, ErrorMessageRegistry, ErrorReadableState, ErrorVisibilityState, FieldLabelMap, FieldLabelResolver, FieldMarkingMode, FieldMessageIdSignals, FieldPresentation, FieldPresentationState, FormFieldAppearance, FormFieldAppearanceInput, FormFieldBindingsState, FormFieldOrientation, FormFieldOrientationInput, HintIdsFieldNameReader, HintIdsIdentityLike, HintIdsRegistryLike, HintIdsSignal, LabelForReader, MarkerKind, NgxFormFieldErrorPlacement, NgxFormFieldErrorRenderer, NgxFormFieldErrorRendererOverride, NgxFormFieldHintRenderer, NgxFormFieldHintRendererOverride, NgxSignalFormContext, NgxSignalFormControlAriaMode, NgxSignalFormControlKind, NgxSignalFormControlLayout, NgxSignalFormControlPreset, NgxSignalFormControlPresetOverrides, NgxSignalFormControlPresetRegistry, NgxSignalFormControlSemantics, NgxSignalFormFieldContext, NgxSignalFormFieldVisibilityDescriptor, NgxSignalFormFieldVisibilityRegistry, NgxSignalFormHintDescriptor, NgxSignalFormHintRegistry, NgxSignalFormsConfig, NgxSignalFormsUserConfig, OnInvalidHandlerOptions, ReactiveCascadingResolverOptions, ReactiveOrStatic, ResolvableValidationError, ResolveErrorMessageOptions, ResolvedErrorDisplayStrategy, ResolvedMarker, ResolvedNgxSignalFormControlSemantics, ResolvedWarningDisplayStrategy, SignalLike, SplitErrors, StandardSchemaLike, StandardSchemaLikeIssue, StandardSchemaLikeResult, StaticCascadingResolverOptions, SubmittedStatus, WarnOnceRef, WarningDisplayStrategy, WarningVisibilityState };
+export { BOUND_CONTROL_SELECTOR, DEFAULT_NGX_SIGNAL_FORMS_CONFIG, DEFAULT_NGX_SIGNAL_FORM_CONTROL_PRESETS, FORM_FIELD_APPEARANCE_VALUES, FORM_FIELD_ORIENTATION_VALUES, InvalidFieldTreeError, NGX_ERROR_MESSAGES, NGX_FIELD_LABEL_RESOLVER, NGX_FORM_FIELD_ERROR_RENDERER, NGX_FORM_FIELD_HINT_RENDERER, NGX_SIGNAL_FORMS_CONFIG, NGX_SIGNAL_FORM_ARIA_MODE, NGX_SIGNAL_FORM_CONTEXT, NGX_SIGNAL_FORM_CONTROL_KIND_VALUES, NGX_SIGNAL_FORM_CONTROL_PRESETS, NGX_SIGNAL_FORM_FIELD_CONTEXT, NGX_SIGNAL_FORM_FIELD_VISIBILITY_REGISTRY, NGX_SIGNAL_FORM_HINT_REGISTRY, NgxFieldIdentity, NgxFieldIdentityProvider, NgxFieldVisibilityRegistry, NgxSignalForm, NgxSignalFormAutoAria, NgxSignalFormControl, NgxSignalFormIdCounter, NgxSignalFormToolkit, NgxSubmitAnnouncements, WARN_KIND_PREFIX, assertInjector, buildAriaDescribedBy, canSubmitWithWarnings, createAriaDescribedByBridge, createAriaDescribedBySignal, createAriaInvalidSignal, createAriaRequiredSignal, createCascadingResolver, createCharacterCountLengthSignal, createControlVisibilitySignal, createDevWarnOnce, createErrorVisibility, createFieldMessageIdSignals, createFieldNameResolver, createFieldPresentation, createHintIdsSignal, createOnInvalidHandler, createSubmittedStatusTracker, createUniqueId, createWarningVisibility, devWarnOnce, findBoundControl, focusFirstInvalid, generateCharacterCountLimitId, generateErrorId, generateRequiredHintId, generateWarningId, getBlockingErrors, getDefaultValidationMessage, hasOnlyWarnings, hasSubmitted, humanizeFieldPath, inferNgxSignalFormControlKind, injectFormContext, isBlockingError, isElementCssVisible, isFieldStateHidden, isFieldStateInteractive, isFieldStateRequired, isFieldTreeLike, isHtmlButtonElement, isHtmlElement, isHtmlInputElement, isHtmlSelectElement, isHtmlTextAreaElement, isNgxSignalFormControlAriaMode, isNgxSignalFormControlKind, isNgxSignalFormControlLayout, isWarningError, mergeNgxSignalFormControlPresets, normalizeFieldName, provideErrorMessages, provideFieldLabels, provideFormFieldErrorRenderer, provideFormFieldErrorRendererForComponent, provideFormFieldHintRenderer, provideFormFieldHintRendererForComponent, provideNgxSignalFormControlPresets, provideNgxSignalFormControlPresetsForComponent, provideNgxSignalFormsConfig, provideNgxSignalFormsConfigForComponent, readDirectErrors, readNgxSignalFormControlSemantics, requiredFromStandardSchema, resolveBoundControlFromBindings, resolveFieldName, resolveFieldNameFromCandidates, resolveNgxSignalFormControlSemantics, resolveStrategyFromContext, resolveSubmittedStatusFromContext, resolveValidationErrorMessage, resolveWarningStrategyFromContext, sanitizeFieldNameForId, shouldShowErrors, shouldShowWarnings, splitByKind, stripAngularFormPrefix, submitWithWarnings, unwrapValue, updateAt, updateNested, walkFieldTreeEntries, warningError };
+export type { AriaDescribedByBridge, AriaDescribedByChainOptions, AriaDescribedByFieldNameReader, AriaDescribedByPreservedIdsReader, AriaRequiredFieldState, BoundControlElementReader, CreateAriaDescribedByBridgeOptions, CreateAriaDescribedBySignalOptions, CreateErrorVisibilityOptions, CreateFieldNameResolverOptions, CreateFieldPresentationOptions, CreateHintIdsSignalOptions, CreateWarningVisibilityOptions, ErrorDisplayStrategy, ErrorMessageRegistry, ErrorReadableState, ErrorVisibilityState, FieldLabelMap, FieldLabelResolver, FieldMarkingMode, FieldMessageIdSignals, FieldPresentation, FieldPresentationState, FormFieldAppearance, FormFieldAppearanceInput, FormFieldBindingsState, FormFieldOrientation, FormFieldOrientationInput, HintIdsFieldNameReader, HintIdsIdentityLike, HintIdsRegistryLike, HintIdsSignal, LabelForReader, MarkerKind, NgxFormFieldErrorRenderer, NgxFormFieldErrorRendererOverride, NgxFormFieldHintRenderer, NgxFormFieldHintRendererOverride, NgxReactiveOrStatic, NgxSignalFormContext, NgxSignalFormControlAriaMode, NgxSignalFormControlKind, NgxSignalFormControlLayout, NgxSignalFormControlPreset, NgxSignalFormControlPresetOverrides, NgxSignalFormControlPresetRegistry, NgxSignalFormControlSemantics, NgxSignalFormFieldContext, NgxSignalFormFieldVisibilityDescriptor, NgxSignalFormFieldVisibilityRegistry, NgxSignalFormHintDescriptor, NgxSignalFormHintRegistry, NgxSignalFormsConfig, NgxSignalFormsUserConfig, NgxSignalLike, OnInvalidHandlerOptions, ResolvableValidationError, ResolveErrorMessageOptions, ResolvedErrorDisplayStrategy, ResolvedMarker, ResolvedNgxSignalFormControlSemantics, ResolvedWarningDisplayStrategy, SplitErrors, StandardSchemaLike, StandardSchemaLikeIssue, StandardSchemaLikeResult, StaticCascadingResolverOptions, SubmittedStatus, WarnOnceRef, WarningDisplayStrategy, WarningVisibilityState };
