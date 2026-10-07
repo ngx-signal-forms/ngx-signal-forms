@@ -5,7 +5,7 @@ import ProjectChangelogRenderer, {
   escapeBareMentions,
 } from './project-changelog-renderer.ts';
 
-// AGENTS.md requires every `@word` in a commit subject to be backticked,
+// CODING_STANDARDS.md requires every `@word` in a commit subject to be backticked,
 // because GitHub renders a bare one as a mention of a stranger's account.
 // Dependabot subjects such as `build(deps): bump @ng-icons/core …` reach
 // this renderer with a bare `@word` regardless (see commitlint.config.cjs
