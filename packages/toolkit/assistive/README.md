@@ -335,7 +335,8 @@ Behavior:
   100%). Change the colour thresholds with CSS; see
   [character count tokens](../form-field/THEMING.md#character-count).
 - `[liveAnnounce]` announces only when the state changes, not on each key. It
-  always uses the 80% and 95% thresholds, also when CSS changes the colours.
+  always uses the 80% and 95% thresholds, also when CSS changes the colours or
+  `showLimitColors` is `false`.
 - Inside a wrapper, the component also adds a hidden "Up to 500 characters"
   text to the control's `aria-describedby`. Change that text with
   `characterCountLimitText` (`{max}` placeholder) in

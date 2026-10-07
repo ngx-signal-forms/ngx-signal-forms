@@ -330,7 +330,8 @@ declare class NgxFormFieldCharacterCount {
     /**
      * Visually-hidden text describing the limit, e.g. "Up to 200 characters".
      * Rendered by the `[id]="limitId()"` element that `aria-describedby` links
-     * to — the running count stays in the `[liveAnnounce]` live region (issue
+     * to — the visible running count is a separate element, and the
+     * `[liveAnnounce]` live region holds only threshold-transition text (issue
      * #499's decision). Configurable through
      * `NgxSignalFormsConfig.characterCountLimitText`'s `{max}` placeholder.
      * Empty string when no limit is resolved. Warns once in dev mode when the
