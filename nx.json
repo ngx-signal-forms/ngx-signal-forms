@@ -31,11 +31,6 @@
       "dependsOn": ["^build"],
       "inputs": ["production", "^production"]
     },
-    "@angular/build:application": {
-      "cache": true,
-      "dependsOn": ["^build"],
-      "inputs": ["production", "^production"]
-    },
     "lint": {
       "cache": true,
       "inputs": ["default", "^production", "{workspaceRoot}/oxlint.config.ts"]
