@@ -92,6 +92,7 @@ catalogs:
     '@nx/devkit': '23.3.0'
     '@nx/eslint-plugin': '23.3.0'
     '@nx/js': '23.3.0'
+    '@nx/oxlint': '23.3.0'
     '@nx/playwright': '23.3.0'
     '@nx/vitest': '23.3.0'
     '@nx/workspace': '23.3.0'
