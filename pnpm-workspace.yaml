@@ -158,7 +158,8 @@ catalogs:
     simple-git-hooks: '^2.14.0'
     size-limit: '14.1.0'
     typescript: 'npm:@typescript/typescript6@~6.0.2'
-    verdaccio: '^6.10.3'
+    # Exact pin: 6.10.5 has no provenance and trustPolicy rejects it.
+    verdaccio: '6.10.4'
     vite: '^8.3.3'
     vite-tsconfig-paths: '^6.1.1'
   utilities:
