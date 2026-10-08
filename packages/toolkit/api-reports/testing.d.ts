@@ -1,5 +1,4 @@
-import axe from 'axe-core';
-
+import axe from "axe-core";
 /**
  * axe-core tag set that maps to **WCAG 2.2 Level AA** conformance.
  *
@@ -14,7 +13,7 @@ import axe from 'axe-core';
  * @see https://www.w3.org/TR/WCAG22/
  * @see https://github.com/dequelabs/axe-core/blob/develop/doc/API.md#axe-core-tags
  */
-declare const WCAG_22_AA_TAGS: readonly ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"];
+export declare const WCAG_22_AA_TAGS: readonly ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"];
 type WCAG_22_AA_TAG = (typeof WCAG_22_AA_TAGS)[number];
 /**
  * How {@link expectNoA11yViolations} and {@link createA11yValidator} treat
@@ -41,7 +40,7 @@ type IncompleteResultMode = 'fail' | 'ignore' | 'warn';
  * out before the remaining options reach `axe.run`.
  */
 type A11yCheckOptions = Omit<axe.RunOptions, 'runOnly'> & {
-    incomplete?: IncompleteResultMode;
+  incomplete?: IncompleteResultMode;
 };
 /**
  * Runs an axe-core audit against `context` and throws when any WCAG 2.2 AA
@@ -65,7 +64,7 @@ type A11yCheckOptions = Omit<axe.RunOptions, 'runOnly'> & {
  *   axe `incomplete` results are neither logged nor checked unless a caller
  *   opts in.
  */
-declare function expectNoA11yViolations(context?: axe.ElementContext, options?: A11yCheckOptions): Promise<void>;
+export declare function expectNoA11yViolations(context?: axe.ElementContext, options?: A11yCheckOptions): Promise<void>;
 /**
  * Shape shared by {@link expectNoA11yViolations} and the validator returned
  * by {@link createA11yValidator} — a `context`/`options` pair (mirroring
@@ -121,8 +120,8 @@ type A11yValidator = (context?: axe.ElementContext, options?: A11yCheckOptions) 
  * await expectBaselineOnly(document.body);
  * ```
  */
-declare function createA11yValidator(options?: {
-    tags?: readonly WCAG_22_AA_TAG[];
+export declare function createA11yValidator(options?: {
+  tags?: readonly WCAG_22_AA_TAG[];
 }): A11yValidator;
 /**
  * Asserts that `element` is the current keyboard focus target (or a
@@ -159,7 +158,5 @@ declare function createA11yValidator(options?: {
  *   `:focus-within` ancestor that renders the ring instead (see
  *   `form-field-wrapper.state-focus-outline.browser.spec.ts`).
  */
-declare function expectVisibleFocusIndicator(element: Element): void;
-
-export { WCAG_22_AA_TAGS, createA11yValidator, expectNoA11yViolations, expectVisibleFocusIndicator };
+export declare function expectVisibleFocusIndicator(element: Element): void;
 export type { A11yCheckOptions, A11yValidator, IncompleteResultMode, WCAG_22_AA_TAG };

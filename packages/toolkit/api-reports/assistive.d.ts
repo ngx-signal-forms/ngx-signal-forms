@@ -1,9 +1,8 @@
-import * as _angular_core from '@angular/core';
-import { FieldTree } from '@angular/forms/signals';
-import * as _ngx_signal_forms_toolkit_headless from '@ngx-signal-forms/toolkit/headless';
-import { CharacterCountLimitState, CharacterCountValue, NgxHeadlessErrorState, NgxHeadlessErrorSummary } from '@ngx-signal-forms/toolkit/headless';
-import { FieldMarkingMode } from '@ngx-signal-forms/toolkit';
-
+import { FieldTree } from "@angular/forms/signals";
+import * as i1 from "@ngx-signal-forms/toolkit/headless";
+import { CharacterCountLimitState, CharacterCountValue, NgxHeadlessErrorState, NgxHeadlessErrorSummary } from "@ngx-signal-forms/toolkit/headless";
+import * as i0 from "@angular/core";
+import { FieldMarkingMode } from "@ngx-signal-forms/toolkit";
 /**
  * Non-`'ok'` limit states that ever produce a live-announcement string.
  * `'ok'` is intentionally excluded — no announcement is emitted for it, so
@@ -14,14 +13,14 @@ type NgxCharacterCountAnnouncementState = Exclude<CharacterCountLimitState, 'ok'
  * Details passed to a custom {@link NgxCharacterCountAnnouncementFormatter}.
  */
 interface NgxCharacterCountAnnouncementInfo {
-    /** Current character/token count. */
-    readonly current: number;
-    /** The resolved maximum length. */
-    readonly max: number;
-    /** Characters remaining before the limit (`0` once at or past it). */
-    readonly remaining: number;
-    /** Characters over the limit (`0` unless `state === 'exceeded'`). */
-    readonly over: number;
+  /** Current character/token count. */
+  readonly current: number;
+  /** The resolved maximum length. */
+  readonly max: number;
+  /** Characters remaining before the limit (`0` once at or past it). */
+  readonly remaining: number;
+  /** Characters over the limit (`0` unless `state === 'exceeded'`). */
+  readonly over: number;
 }
 /**
  * Formats the polite live-announcement text for a given limit-state
@@ -171,204 +170,239 @@ type NgxCharacterCountAnnouncementFormatter = (state: NgxCharacterCountAnnouncem
  *
  * @see {@link createCharacterCount} for the underlying headless utility
  */
-declare class NgxFormFieldCharacterCount {
-    #private;
-    /**
-     * Form field to track character count from.
-     *
-     * Supported value shapes: `string`, `readonly string[]`, `null`, or
-     * `undefined` — see {@link CharacterCountValue}. Anything else
-     * degrades to a displayed count of `0` and logs a dev-mode warning.
-     */
-    readonly formField: _angular_core.InputSignal<FieldTree<CharacterCountValue>>;
-    /**
-     * Maximum character length for the field.
-     *
-     * If not provided, the component will attempt to auto-detect the limit
-     * from the field's validation rules (maxLength validator).
-     *
-     * **Auto-detection:**
-     * - Checks field state for `maxLength()` signal
-     * - Only accepts a positive `number`; any other shape falls through to
-     *   "no explicit limit"
-     *
-     * **When to provide manually:**
-     * - Display limit differs from validation limit
-     * - No maxLength validator defined
-     * - Custom validation logic determines limit
-     *
-     * @example Auto-detect from validation
-     * ```typescript
-     * // In form schema:
-     * maxLength(path.bio, 500);
-     * ```
-     * ```html
-     * <!-- maxLength auto-detected as 500 -->
-     * <ngx-form-field-character-count [formField]="form.bio" />
-     * ```
-     *
-     * @example Manual override
-     * ```html
-     * <!-- Display limit is 300, even if validation allows 500 -->
-     * <ngx-form-field-character-count
-     *   [formField]="form.bio"
-     *   [maxLength]="300"
-     * />
-     * ```
-     */
-    readonly maxLength: _angular_core.InputSignal<number | undefined>;
-    /**
-     * Text alignment position.
-     *
-     * @default 'right'
-     */
-    readonly position: _angular_core.InputSignal<'left' | 'right'>;
-    /**
-     * Enable/disable color progression based on character limit.
-     *
-     * When disabled, the character count displays in the default color
-     * regardless of how close to the limit the user is.
-     *
-     * @default true
-     */
-    readonly showLimitColors: _angular_core.InputSignal<boolean>;
-    /**
-     * Enable polite live announcements when approaching or exceeding the limit.
-     *
-     * Announcements are only triggered when the limit state changes.
-     *
-     * @default false
-     */
-    readonly liveAnnounce: _angular_core.InputSignalWithTransform<boolean, unknown>;
-    /**
-     * Optional formatter for the polite live-announcement text, for
-     * localizing the built-in English strings. See
-     * {@link NgxCharacterCountAnnouncementFormatter}.
-     *
-     * @default undefined — falls back to the built-in English strings.
-     */
-    readonly announcementFormatter: _angular_core.InputSignal<NgxCharacterCountAnnouncementFormatter | undefined>;
-    /**
-     * Field name for the limit id when no wrapper supplies one.
-     *
-     * Outside a wrapper, set it to mint the stable
-     * `{fieldName}-char-count-limit` id, then put that id in the control's
-     * `aria-describedby` so screen readers read the limit on focus. Inside a
-     * wrapper this input is ignored, even when the wrapper has no field name.
-     *
-     * Use one id token, such as the control's `id`. The count trims the value
-     * and replaces each run of inner whitespace with `-`, with a dev-mode
-     * warning: `"shipping notes"` mints `shipping-notes-char-count-limit`.
-     *
-     * @example Standalone count linked to its control
-     * ```html
-     * <textarea
-     *   id="bio"
-     *   aria-describedby="bio-char-count-limit"
-     *   [formField]="form.bio"
-     * ></textarea>
-     * <ngx-form-field-character-count [formField]="form.bio" fieldName="bio" />
-     * ```
-     */
-    readonly fieldName: _angular_core.InputSignal<string | undefined>;
-    /**
-     * Resolved field name: the wrapper's `NGX_SIGNAL_FORM_FIELD_CONTEXT` field
-     * name when a context is injected, else the {@link fieldName} input.
-     * Blank names count as unset (`null`).
-     *
-     * Inside a wrapper the input never applies, which reverses the usual
-     * "explicit input wins" order. A wrapper registers {@link limitId} in
-     * `NGX_SIGNAL_FORM_HINT_REGISTRY` tagged with this name, and auto-ARIA
-     * only links registry ids whose name matches the wrapper's field. An
-     * input name would never match, so the limit would not reach
-     * `aria-describedby` while `hidesVisibleText` still hid the visible
-     * count. Public so a wrapper can read it (issue #499).
-     */
-    readonly resolvedFieldName: _angular_core.Signal<string | null>;
-    /**
-     * Stable id of the visually-hidden limit description, or `null` when a
-     * wrapper cannot register it — no field name resolved, or no limit
-     * resolved. `null` means "register nothing": a wrapper must not add a
-     * dangling id to `aria-describedby`.
-     *
-     * Public so a wrapper can forward it to `NGX_SIGNAL_FORM_HINT_REGISTRY`
-     * without reading the DOM, mirroring `NgxFormFieldHint.resolvedId`.
-     *
-     * Derived from `resolvedFieldName` alone (no per-instance ordinal, unlike
-     * `NgxFormFieldHint.resolvedId`): two counts projected for the same field
-     * would collide on this id, an authoring mistake the toolkit does not
-     * guard against — a field has exactly one length limit to describe, so
-     * more than one `NgxFormFieldCharacterCount` per field is not a supported
-     * configuration.
-     */
-    readonly limitId: _angular_core.Signal<string | null>;
-    /**
-     * Whether it is safe to hide the visible "n/max" text from assistive
-     * technology, i.e. whether the limit description {@link limitId} mints
-     * will actually reach the control's `aria-describedby`.
-     *
-     * `limitId` only proves an id *can* be minted — a wrapper's bound control
-     * with `ngxSignalFormControlAria="manual"` leaves `aria-describedby`
-     * entirely author-owned, so `NgxSignalFormAutoAria` never appends a
-     * registry id there even though the wrapper still registers it (see
-     * `NgxSignalFormFieldContext.isControlDescribedByManaged`). Hiding the
-     * visible text in that case would silence the count for assistive
-     * technology with nothing replacing it — the exact regression this
-     * signal exists to prevent. `NgxFormFieldHint` has no equivalent gate
-     * because its content stays directly visible either way.
-     *
-     * Missing `isControlDescribedByManaged` (a context that doesn't publish
-     * it) defaults to `false`, not `true`. `NgxFormFieldWrapper` always
-     * publishes it, so the only contexts that omit it are custom wrappers —
-     * `docs/CUSTOM_WRAPPERS.md` requires them to opt in by registering
-     * `limitId()` into their `NGX_SIGNAL_FORM_HINT_REGISTRY` themselves, a
-     * step nothing forces them to add. A wrapper that resolves a field name
-     * but skips that registration would otherwise get "safe to hide" for
-     * free — silencing the count exactly like the manual-ARIA case above.
-     */
-    protected readonly hidesVisibleText: _angular_core.Signal<boolean>;
-    /**
-     * Visually-hidden text describing the limit, e.g. "Up to 200 characters".
-     * Rendered by the `[id]="limitId()"` element that `aria-describedby` links
-     * to — the visible running count is a separate element, and the
-     * `[liveAnnounce]` live region holds only threshold-transition text (issue
-     * #499's decision). Configurable through
-     * `NgxSignalFormsConfig.characterCountLimitText`'s `{max}` placeholder.
-     * Empty string when no limit is resolved. Warns once in dev mode when the
-     * configured text carries no `{max}` placeholder — the rendered text would
-     * silently never state a number.
-     */
-    protected readonly limitText: _angular_core.Signal<string>;
-    protected readonly currentLength: _angular_core.Signal<number>;
-    /**
-     * Percentage of `maxLength` used (0-100+), published as the
-     * `--ngx-form-field-char-count-percent-used` custom property (see the
-     * `host` binding) so the pure-CSS threshold comparison in `styles` above
-     * can pick a color. `0` when no limit is resolved — the `disabled`
-     * `data-limit-state` attribute selector takes over the color in that
-     * case, so this value never actually feeds the color-mix() expression
-     * for "no limit configured" fields.
-     */
-    protected readonly percentUsed: _angular_core.Signal<number>;
-    /**
-     * Formatted character count text (e.g., "42/500").
-     */
-    protected readonly characterCountText: _angular_core.Signal<string>;
-    /**
-     * Current limit state for display, accounting for disabled color progression.
-     */
-    protected readonly displayLimitState: _angular_core.Signal<CharacterCountLimitState | "disabled">;
-    /**
-     * Computed announcement text. Reads `#announceableState` as the
-     * change-trigger and produces a string per limit state. Unlike the
-     * previous `effect()` + `signal.set` loop, this stays pure and
-     * side-effect-free — Angular 21 idiom.
-     */
-    protected readonly announcementText: _angular_core.Signal<string>;
-    static ɵfac: _angular_core.ɵɵFactoryDeclaration<NgxFormFieldCharacterCount, never>;
-    static ɵcmp: _angular_core.ɵɵComponentDeclaration<NgxFormFieldCharacterCount, "ngx-form-field-character-count", never, { "formField": { "alias": "formField"; "required": true; "isSignal": true; }; "maxLength": { "alias": "maxLength"; "required": false; "isSignal": true; }; "position": { "alias": "position"; "required": false; "isSignal": true; }; "showLimitColors": { "alias": "showLimitColors"; "required": false; "isSignal": true; }; "liveAnnounce": { "alias": "liveAnnounce"; "required": false; "isSignal": true; }; "announcementFormatter": { "alias": "announcementFormatter"; "required": false; "isSignal": true; }; "fieldName": { "alias": "fieldName"; "required": false; "isSignal": true; }; }, {}, never, never, true, never>;
+export declare class NgxFormFieldCharacterCount {
+  #private;
+  /**
+   * Form field to track character count from.
+   *
+   * Supported value shapes: `string`, `readonly string[]`, `null`, or
+   * `undefined` — see {@link CharacterCountValue}. Anything else
+   * degrades to a displayed count of `0` and logs a dev-mode warning.
+   */
+  readonly formField: import("@angular/core").InputSignal<FieldTree<CharacterCountValue>>;
+  /**
+   * Maximum character length for the field.
+   *
+   * If not provided, the component will attempt to auto-detect the limit
+   * from the field's validation rules (maxLength validator).
+   *
+   * **Auto-detection:**
+   * - Checks field state for `maxLength()` signal
+   * - Only accepts a positive `number`; any other shape falls through to
+   *   "no explicit limit"
+   *
+   * **When to provide manually:**
+   * - Display limit differs from validation limit
+   * - No maxLength validator defined
+   * - Custom validation logic determines limit
+   *
+   * @example Auto-detect from validation
+   * ```typescript
+   * // In form schema:
+   * maxLength(path.bio, 500);
+   * ```
+   * ```html
+   * <!-- maxLength auto-detected as 500 -->
+   * <ngx-form-field-character-count [formField]="form.bio" />
+   * ```
+   *
+   * @example Manual override
+   * ```html
+   * <!-- Display limit is 300, even if validation allows 500 -->
+   * <ngx-form-field-character-count
+   *   [formField]="form.bio"
+   *   [maxLength]="300"
+   * />
+   * ```
+   */
+  readonly maxLength: import("@angular/core").InputSignal<number | undefined>;
+  /**
+   * Text alignment position.
+   *
+   * @default 'right'
+   */
+  readonly position: import("@angular/core").InputSignal<'left' | 'right'>;
+  /**
+   * Enable/disable color progression based on character limit.
+   *
+   * When disabled, the character count displays in the default color
+   * regardless of how close to the limit the user is.
+   *
+   * @default true
+   */
+  readonly showLimitColors: import("@angular/core").InputSignal<boolean>;
+  /**
+   * Enable polite live announcements when approaching or exceeding the limit.
+   *
+   * Announcements are only triggered when the limit state changes.
+   *
+   * @default false
+   */
+  readonly liveAnnounce: import("@angular/core").InputSignalWithTransform<boolean, unknown>;
+  /**
+   * Optional formatter for the polite live-announcement text, for
+   * localizing the built-in English strings. See
+   * {@link NgxCharacterCountAnnouncementFormatter}.
+   *
+   * @default undefined — falls back to the built-in English strings.
+   */
+  readonly announcementFormatter: import("@angular/core").InputSignal<NgxCharacterCountAnnouncementFormatter | undefined>;
+  /**
+   * Field name for the limit id when no wrapper supplies one.
+   *
+   * Outside a wrapper, set it to mint the stable
+   * `{fieldName}-char-count-limit` id, then put that id in the control's
+   * `aria-describedby` so screen readers read the limit on focus. Inside a
+   * wrapper this input is ignored, even when the wrapper has no field name.
+   *
+   * Use one id token, such as the control's `id`. The count trims the value
+   * and replaces each run of inner whitespace with `-`, with a dev-mode
+   * warning: `"shipping notes"` mints `shipping-notes-char-count-limit`.
+   *
+   * @example Standalone count linked to its control
+   * ```html
+   * <textarea
+   *   id="bio"
+   *   aria-describedby="bio-char-count-limit"
+   *   [formField]="form.bio"
+   * ></textarea>
+   * <ngx-form-field-character-count [formField]="form.bio" fieldName="bio" />
+   * ```
+   */
+  readonly fieldName: import("@angular/core").InputSignal<string | undefined>;
+  /**
+   * Resolved field name: the wrapper's `NGX_SIGNAL_FORM_FIELD_CONTEXT` field
+   * name when a context is injected, else the {@link fieldName} input.
+   * Blank names count as unset (`null`).
+   *
+   * Inside a wrapper the input never applies, which reverses the usual
+   * "explicit input wins" order. A wrapper registers {@link limitId} in
+   * `NGX_SIGNAL_FORM_HINT_REGISTRY` tagged with this name, and auto-ARIA
+   * only links registry ids whose name matches the wrapper's field. An
+   * input name would never match, so the limit would not reach
+   * `aria-describedby` while `hidesVisibleText` still hid the visible
+   * count. Public so a wrapper can read it (issue #499).
+   */
+  readonly resolvedFieldName: import("@angular/core").Signal<string | null>;
+  /**
+   * Stable id of the visually-hidden limit description, or `null` when a
+   * wrapper cannot register it — no field name resolved, or no limit
+   * resolved. `null` means "register nothing": a wrapper must not add a
+   * dangling id to `aria-describedby`.
+   *
+   * Public so a wrapper can forward it to `NGX_SIGNAL_FORM_HINT_REGISTRY`
+   * without reading the DOM, mirroring `NgxFormFieldHint.resolvedId`.
+   *
+   * Derived from `resolvedFieldName` alone (no per-instance ordinal, unlike
+   * `NgxFormFieldHint.resolvedId`): two counts projected for the same field
+   * would collide on this id, an authoring mistake the toolkit does not
+   * guard against — a field has exactly one length limit to describe, so
+   * more than one `NgxFormFieldCharacterCount` per field is not a supported
+   * configuration.
+   */
+  readonly limitId: import("@angular/core").Signal<string | null>;
+  /**
+   * Whether it is safe to hide the visible "n/max" text from assistive
+   * technology, i.e. whether the limit description {@link limitId} mints
+   * will actually reach the control's `aria-describedby`.
+   *
+   * `limitId` only proves an id *can* be minted — a wrapper's bound control
+   * with `ngxSignalFormControlAria="manual"` leaves `aria-describedby`
+   * entirely author-owned, so `NgxSignalFormAutoAria` never appends a
+   * registry id there even though the wrapper still registers it (see
+   * `NgxSignalFormFieldContext.isControlDescribedByManaged`). Hiding the
+   * visible text in that case would silence the count for assistive
+   * technology with nothing replacing it — the exact regression this
+   * signal exists to prevent. `NgxFormFieldHint` has no equivalent gate
+   * because its content stays directly visible either way.
+   *
+   * Missing `isControlDescribedByManaged` (a context that doesn't publish
+   * it) defaults to `false`, not `true`. `NgxFormFieldWrapper` always
+   * publishes it, so the only contexts that omit it are custom wrappers —
+   * `docs/CUSTOM_WRAPPERS.md` requires them to opt in by registering
+   * `limitId()` into their `NGX_SIGNAL_FORM_HINT_REGISTRY` themselves, a
+   * step nothing forces them to add. A wrapper that resolves a field name
+   * but skips that registration would otherwise get "safe to hide" for
+   * free — silencing the count exactly like the manual-ARIA case above.
+   */
+  protected readonly hidesVisibleText: import("@angular/core").Signal<boolean>;
+  /**
+   * Visually-hidden text describing the limit, e.g. "Up to 200 characters".
+   * Rendered by the `[id]="limitId()"` element that `aria-describedby` links
+   * to — the visible running count is a separate element, and the
+   * `[liveAnnounce]` live region holds only threshold-transition text (issue
+   * #499's decision). Configurable through
+   * `NgxSignalFormsConfig.characterCountLimitText`'s `{max}` placeholder.
+   * Empty string when no limit is resolved. Warns once in dev mode when the
+   * configured text carries no `{max}` placeholder — the rendered text would
+   * silently never state a number.
+   */
+  protected readonly limitText: import("@angular/core").Signal<string>;
+  protected readonly currentLength: import("@angular/core").Signal<number>;
+  /**
+   * Percentage of `maxLength` used (0-100+), published as the
+   * `--ngx-form-field-char-count-percent-used` custom property (see the
+   * `host` binding) so the pure-CSS threshold comparison in `styles` above
+   * can pick a color. `0` when no limit is resolved — the `disabled`
+   * `data-limit-state` attribute selector takes over the color in that
+   * case, so this value never actually feeds the color-mix() expression
+   * for "no limit configured" fields.
+   */
+  protected readonly percentUsed: import("@angular/core").Signal<number>;
+  /**
+   * Formatted character count text (e.g., "42/500").
+   */
+  protected readonly characterCountText: import("@angular/core").Signal<string>;
+  /**
+   * Current limit state for display, accounting for disabled color progression.
+   */
+  protected readonly displayLimitState: import("@angular/core").Signal<CharacterCountLimitState | "disabled">;
+  /**
+   * Computed announcement text. Reads `#announceableState` as the
+   * change-trigger and produces a string per limit state. Unlike the
+   * previous `effect()` + `signal.set` loop, this stays pure and
+   * side-effect-free — Angular 21 idiom.
+   */
+  protected readonly announcementText: import("@angular/core").Signal<string>;
+  static ɵfac: i0.ɵɵFactoryDeclaration<NgxFormFieldCharacterCount, never>;
+  static ɵcmp: i0.ɵɵComponentDeclaration<NgxFormFieldCharacterCount, "ngx-form-field-character-count", never, {
+    "formField": {
+      "alias": "formField";
+      "required": true;
+      "isSignal": true;
+    };
+    "maxLength": {
+      "alias": "maxLength";
+      "required": false;
+      "isSignal": true;
+    };
+    "position": {
+      "alias": "position";
+      "required": false;
+      "isSignal": true;
+    };
+    "showLimitColors": {
+      "alias": "showLimitColors";
+      "required": false;
+      "isSignal": true;
+    };
+    "liveAnnounce": {
+      "alias": "liveAnnounce";
+      "required": false;
+      "isSignal": true;
+    };
+    "announcementFormatter": {
+      "alias": "announcementFormatter";
+      "required": false;
+      "isSignal": true;
+    };
+    "fieldName": {
+      "alias": "fieldName";
+      "required": false;
+      "isSignal": true;
+    };
+  }, {}, never, never, true, never>;
 }
-
 type NgxFormFieldListStyle = 'bullets' | 'plain';
 /**
  * Visual treatment for the rendered live regions.
@@ -466,160 +500,194 @@ type NgxFormFieldErrorPresentation = 'inline' | 'panel';
  * - Structured rendering from Signal Forms
  * - Auto-generated IDs for aria-describedby linking
  */
-declare class NgxFormFieldError {
-    #private;
-    /**
-     * Injected headless error state directive (composed via hostDirectives).
-     * All strategy resolution, error splitting, message priority, and resolved
-     * message computation delegates to this instance.
-     */
-    protected readonly headless: NgxHeadlessErrorState<any>;
-    /**
-     * The Signal Forms field to observe for errors and strategy-based visibility.
-     *
-     * Kept as a direct class input (not forwarded via `hostDirectives`) to
-     * preserve Angular's `FormField` directive pass-through check
-     * (`passThroughInput: "formField"`). The value is bridged to
-     * `NgxHeadlessErrorState` via `headless.connectFieldState()` in the
-     * constructor.
-     */
-    readonly formField: _angular_core.InputSignal<FieldTree<unknown> | undefined>;
-    /**
-     * The field name used for generating error/warning IDs.
-     *
-     * When omitted the field name is inherited from the parent
-     * `ngx-form-field-wrapper` via `NGX_SIGNAL_FORM_FIELD_CONTEXT`.
-     */
-    readonly fieldName: _angular_core.InputSignal<string | undefined>;
-    /**
-     * Visual layout for rendered validation messages.
-     *
-     * - `plain` (default): stacked paragraph messages for inline field feedback
-     * - `bullets`: unordered list for grouped summaries such as fieldsets
-     */
-    readonly listStyle: _angular_core.InputSignal<NgxFormFieldListStyle>;
-    /**
-     * Optional title rendered above the message list when a container is
-     * visible. Additive to both presentation modes; most useful in
-     * `presentation="panel"`, where the folded-in `NgxFormFieldNotification`
-     * used it for grouped fieldset feedback and custom summary cards.
-     */
-    readonly title: _angular_core.InputSignal<string | null | undefined>;
-    /**
-     * Visual treatment for the rendered live regions — see
-     * {@link NgxFormFieldErrorPresentation}.
-     */
-    readonly presentation: _angular_core.InputSignal<NgxFormFieldErrorPresentation>;
-    /**
-     * Blocking errors and warnings, read straight off the host directive.
-     *
-     * Both signals are un-gated message lists: the directive splits the
-     * field's (or `errorsOverride`'s) entries by kind and applies the 3-tier
-     * message cascade, and nothing else. Timing lives in
-     * `errorContainerVisible` / `warningContainerVisible` below, which read
-     * the same directive's `shouldShowErrors()` / `shouldShowWarnings()`. One
-     * cascade per channel, resolved once (ADR-0006).
-     */
-    protected readonly resolvedErrors: _angular_core.Signal<readonly _ngx_signal_forms_toolkit_headless.ResolvedError[]>;
-    protected readonly resolvedWarnings: _angular_core.Signal<readonly _ngx_signal_forms_toolkit_headless.ResolvedError[]>;
-    /**
-     * Visually hidden "Error:" prefix rendered inside each blocking-error
-     * message, sourced from `NgxSignalFormsConfig.errorPrefixText`. It sits
-     * inside the same element `aria-describedby` points to, so a screen
-     * reader announces "Error: …" instead of relying on colour to tell an
-     * error apart from a warning (WCAG 1.4.1, 1.3.1).
-     *
-     * Carries its own trailing separator space so the rendered text reads
-     * "Error: message" with exactly one space, with no reliance on HTML
-     * whitespace between the `<span>` and `{{ error.message }}` (which
-     * Angular's template compiler collapses to a single space, or trims
-     * entirely at a block edge) or on an `&#32;` entity (which decodes to a
-     * plain space before that same trimming pass runs, so it gets swept up
-     * as if it were source whitespace too — both confirmed empirically
-     * against this file's own a11y specs, including after a `pnpm format`
-     * reflow). A literal space *inside* an interpolated binding's string
-     * value is never trimmed, regardless of surrounding source formatting.
-     * The template renders the `<span>` unconditionally (no `@if`) and glues
-     * its closing `>` directly to `{{ error.message }}` for the same reason:
-     * an empty string collapses the visually-hidden span to nothing.
-     *
-     * Empty only when `errorPrefixText` is `''` (per-channel opt-out).
-     * Rendered even when a `title` is shown: the title names the group (e.g.
-     * "Delivery notes"), not the channel of a given message, so it cannot
-     * stand in for the per-message prefix — `NgxFormFieldset` passes a title
-     * to both the error and warning container, and a titled warning would
-     * otherwise be colour-only again (WCAG 1.4.1, 1.3.1).
-     */
-    protected readonly resolvedErrorPrefix: _angular_core.Signal<string>;
-    /**
-     * Same as {@link resolvedErrorPrefix}, for warning messages, sourced from
-     * `NgxSignalFormsConfig.warningPrefixText`.
-     */
-    protected readonly resolvedWarningPrefix: _angular_core.Signal<string>;
-    constructor();
-    protected readonly errorId: _angular_core.Signal<string | null>;
-    protected readonly warningId: _angular_core.Signal<string | null>;
-    /**
-     * Warning visibility now uses the headless directive's shouldShowWarnings
-     * which follows the warning-specific strategy cascade, independent of errors.
-     */
-    protected readonly showWarnings: _angular_core.Signal<boolean>;
-    protected readonly usesBulletList: _angular_core.Signal<boolean>;
-    /**
-     * True when the blocking errors are on screen, in the role="alert"
-     * container or, after a submit with a summary, in the quiet container
-     * (see {@link errorsQuiet}). The role="alert" container always stays in
-     * the DOM for WCAG 4.1.3 live-region first-insertion semantics.
-     */
-    protected readonly errorContainerVisible: _angular_core.Signal<boolean>;
-    /**
-     * True while the visible blocking errors were revealed by a submit and an
-     * error summary on the same form announces them (ADR-0012). The errors
-     * then render outside the `role="alert"` region, so one submit makes one
-     * announcement, the summary's, instead of one per field.
-     *
-     * The state starts when the errors appear or change in the render that
-     * follows a submit attempt, including when this component mounts in that
-     * render (the wrapper mounts its error slot only while messages show). It
-     * ends when the errors change or hide, so the next error the user causes
-     * by editing enters the always-mounted live region and announces as
-     * usual. It also ends when no summary of the form shows errors any more
-     * (the summary was removed or hid), because nothing else announces them. Without a summary, outside a
-     * `[ngxSignalForm]` form, or with `errorSummaryAnnouncesAlone: false`, it
-     * is never true and the component renders exactly as before.
-     */
-    protected readonly errorsQuiet: _angular_core.WritableSignal<boolean>;
-    /** Errors render inside the `role="alert"` region and announce. */
-    protected readonly liveErrorsVisible: _angular_core.Signal<boolean>;
-    /** Errors render outside the live region. See {@link errorsQuiet}. */
-    protected readonly quietErrorsVisible: _angular_core.Signal<boolean>;
-    /**
-     * Same as `errorContainerVisible` but for the warnings live region.
-     *
-     * Guarded by `!errorContainerVisible()` — the README's "Warning support"
-     * section documents "blocking errors present → warnings hidden", and
-     * `NgxFormFieldset` already enforces this ("UX best practice", see
-     * `filteredErrorsSignal`). Without the guard, a field with both blocking
-     * errors and warnings would render BOTH the `role="alert"` and
-     * `role="status"` containers at once — an assertive *and* a polite
-     * announcement for the same field — and `createAriaDescribedBySignal`
-     * would still compose `${fieldName}-warning` into a control's
-     * `aria-describedby` even while this container is visible, so the two
-     * are guarded in lockstep.
-     */
-    protected readonly warningContainerVisible: _angular_core.Signal<boolean>;
-    /**
-     * True when neither the alert nor the status container has visible
-     * content. Drives the `ngx-form-field-error-host--empty` host class so
-     * the CSS can zero `:host`'s own `margin-top` — see the `host` binding
-     * above for why that margin needs a separate collapse from the inner
-     * containers' `--empty` class.
-     */
-    protected readonly hostEmpty: _angular_core.Signal<boolean>;
-    static ɵfac: _angular_core.ɵɵFactoryDeclaration<NgxFormFieldError, never>;
-    static ɵcmp: _angular_core.ɵɵComponentDeclaration<NgxFormFieldError, "ngx-form-field-error", never, { "formField": { "alias": "formField"; "required": false; "isSignal": true; }; "fieldName": { "alias": "fieldName"; "required": false; "isSignal": true; }; "listStyle": { "alias": "listStyle"; "required": false; "isSignal": true; }; "title": { "alias": "title"; "required": false; "isSignal": true; }; "presentation": { "alias": "presentation"; "required": false; "isSignal": true; }; }, {}, never, never, true, [{ directive: typeof _ngx_signal_forms_toolkit_headless.NgxHeadlessErrorState; inputs: { "strategy": "strategy"; "warningStrategy": "warningStrategy"; "submittedStatus": "submittedStatus"; "errorsOverride": "errors"; }; outputs: {}; }]>;
+export declare class NgxFormFieldError {
+  #private;
+  /**
+   * Injected headless error state directive (composed via hostDirectives).
+   * All strategy resolution, error splitting, message priority, and resolved
+   * message computation delegates to this instance.
+   */
+  protected readonly headless: NgxHeadlessErrorState<any>;
+  /**
+   * The Signal Forms field to observe for errors and strategy-based visibility.
+   *
+   * Kept as a direct class input (not forwarded via `hostDirectives`) to
+   * preserve Angular's `FormField` directive pass-through check
+   * (`passThroughInput: "formField"`). The value is bridged to
+   * `NgxHeadlessErrorState` via `headless.connectFieldState()` in the
+   * constructor.
+   */
+  readonly formField: import("@angular/core").InputSignal<FieldTree<unknown> | undefined>;
+  /**
+   * The field name used for generating error/warning IDs.
+   *
+   * When omitted the field name is inherited from the parent
+   * `ngx-form-field-wrapper` via `NGX_SIGNAL_FORM_FIELD_CONTEXT`.
+   */
+  readonly fieldName: import("@angular/core").InputSignal<string | undefined>;
+  /**
+   * Visual layout for rendered validation messages.
+   *
+   * - `plain` (default): stacked paragraph messages for inline field feedback
+   * - `bullets`: unordered list for grouped summaries such as fieldsets
+   */
+  readonly listStyle: import("@angular/core").InputSignal<NgxFormFieldListStyle>;
+  /**
+   * Optional title rendered above the message list when a container is
+   * visible. Additive to both presentation modes; most useful in
+   * `presentation="panel"`, where the folded-in `NgxFormFieldNotification`
+   * used it for grouped fieldset feedback and custom summary cards.
+   */
+  readonly title: import("@angular/core").InputSignal<string | null | undefined>;
+  /**
+   * Visual treatment for the rendered live regions — see
+   * {@link NgxFormFieldErrorPresentation}.
+   */
+  readonly presentation: import("@angular/core").InputSignal<NgxFormFieldErrorPresentation>;
+  /**
+   * Blocking errors and warnings, read straight off the host directive.
+   *
+   * Both signals are un-gated message lists: the directive splits the
+   * field's (or `errorsOverride`'s) entries by kind and applies the 3-tier
+   * message cascade, and nothing else. Timing lives in
+   * `errorContainerVisible` / `warningContainerVisible` below, which read
+   * the same directive's `shouldShowErrors()` / `shouldShowWarnings()`. One
+   * cascade per channel, resolved once (ADR-0006).
+   */
+  protected readonly resolvedErrors: import("@angular/core").Signal<readonly import("@ngx-signal-forms/toolkit/headless").ResolvedError[]>;
+  protected readonly resolvedWarnings: import("@angular/core").Signal<readonly import("@ngx-signal-forms/toolkit/headless").ResolvedError[]>;
+  /**
+   * Visually hidden "Error:" prefix rendered inside each blocking-error
+   * message, sourced from `NgxSignalFormsConfig.errorPrefixText`. It sits
+   * inside the same element `aria-describedby` points to, so a screen
+   * reader announces "Error: …" instead of relying on colour to tell an
+   * error apart from a warning (WCAG 1.4.1, 1.3.1).
+   *
+   * Carries its own trailing separator space so the rendered text reads
+   * "Error: message" with exactly one space, with no reliance on HTML
+   * whitespace between the `<span>` and `{{ error.message }}` (which
+   * Angular's template compiler collapses to a single space, or trims
+   * entirely at a block edge) or on an `&#32;` entity (which decodes to a
+   * plain space before that same trimming pass runs, so it gets swept up
+   * as if it were source whitespace too — both confirmed empirically
+   * against this file's own a11y specs, including after a `pnpm format`
+   * reflow). A literal space *inside* an interpolated binding's string
+   * value is never trimmed, regardless of surrounding source formatting.
+   * The template renders the `<span>` unconditionally (no `@if`) and glues
+   * its closing `>` directly to `{{ error.message }}` for the same reason:
+   * an empty string collapses the visually-hidden span to nothing.
+   *
+   * Empty only when `errorPrefixText` is `''` (per-channel opt-out).
+   * Rendered even when a `title` is shown: the title names the group (e.g.
+   * "Delivery notes"), not the channel of a given message, so it cannot
+   * stand in for the per-message prefix — `NgxFormFieldset` passes a title
+   * to both the error and warning container, and a titled warning would
+   * otherwise be colour-only again (WCAG 1.4.1, 1.3.1).
+   */
+  protected readonly resolvedErrorPrefix: import("@angular/core").Signal<string>;
+  /**
+   * Same as {@link resolvedErrorPrefix}, for warning messages, sourced from
+   * `NgxSignalFormsConfig.warningPrefixText`.
+   */
+  protected readonly resolvedWarningPrefix: import("@angular/core").Signal<string>;
+  constructor();
+  protected readonly errorId: import("@angular/core").Signal<string | null>;
+  protected readonly warningId: import("@angular/core").Signal<string | null>;
+  /**
+   * Warning visibility now uses the headless directive's shouldShowWarnings
+   * which follows the warning-specific strategy cascade, independent of errors.
+   */
+  protected readonly showWarnings: import("@angular/core").Signal<boolean>;
+  protected readonly usesBulletList: import("@angular/core").Signal<boolean>;
+  /**
+   * True when the blocking errors are on screen, in the role="alert"
+   * container or, after a submit with a summary, in the quiet container
+   * (see {@link errorsQuiet}). The role="alert" container always stays in
+   * the DOM for WCAG 4.1.3 live-region first-insertion semantics.
+   */
+  protected readonly errorContainerVisible: import("@angular/core").Signal<boolean>;
+  /**
+   * True while the visible blocking errors were revealed by a submit and an
+   * error summary on the same form announces them (ADR-0012). The errors
+   * then render outside the `role="alert"` region, so one submit makes one
+   * announcement, the summary's, instead of one per field.
+   *
+   * The state starts when the errors appear or change in the render that
+   * follows a submit attempt, including when this component mounts in that
+   * render (the wrapper mounts its error slot only while messages show). It
+   * ends when the errors change or hide, so the next error the user causes
+   * by editing enters the always-mounted live region and announces as
+   * usual. It also ends when no summary of the form shows errors any more
+   * (the summary was removed or hid), because nothing else announces them. Without a summary, outside a
+   * `[ngxSignalForm]` form, or with `errorSummaryAnnouncesAlone: false`, it
+   * is never true and the component renders exactly as before.
+   */
+  protected readonly errorsQuiet: import("@angular/core").WritableSignal<boolean>;
+  /** Errors render inside the `role="alert"` region and announce. */
+  protected readonly liveErrorsVisible: import("@angular/core").Signal<boolean>;
+  /** Errors render outside the live region. See {@link errorsQuiet}. */
+  protected readonly quietErrorsVisible: import("@angular/core").Signal<boolean>;
+  /**
+   * Same as `errorContainerVisible` but for the warnings live region.
+   *
+   * Guarded by `!errorContainerVisible()` — the README's "Warning support"
+   * section documents "blocking errors present → warnings hidden", and
+   * `NgxFormFieldset` already enforces this ("UX best practice", see
+   * `filteredErrorsSignal`). Without the guard, a field with both blocking
+   * errors and warnings would render BOTH the `role="alert"` and
+   * `role="status"` containers at once — an assertive *and* a polite
+   * announcement for the same field — and `createAriaDescribedBySignal`
+   * would still compose `${fieldName}-warning` into a control's
+   * `aria-describedby` even while this container is visible, so the two
+   * are guarded in lockstep.
+   */
+  protected readonly warningContainerVisible: import("@angular/core").Signal<boolean>;
+  /**
+   * True when neither the alert nor the status container has visible
+   * content. Drives the `ngx-form-field-error-host--empty` host class so
+   * the CSS can zero `:host`'s own `margin-top` — see the `host` binding
+   * above for why that margin needs a separate collapse from the inner
+   * containers' `--empty` class.
+   */
+  protected readonly hostEmpty: import("@angular/core").Signal<boolean>;
+  static ɵfac: i0.ɵɵFactoryDeclaration<NgxFormFieldError, never>;
+  static ɵcmp: i0.ɵɵComponentDeclaration<NgxFormFieldError, "ngx-form-field-error", never, {
+    "formField": {
+      "alias": "formField";
+      "required": false;
+      "isSignal": true;
+    };
+    "fieldName": {
+      "alias": "fieldName";
+      "required": false;
+      "isSignal": true;
+    };
+    "listStyle": {
+      "alias": "listStyle";
+      "required": false;
+      "isSignal": true;
+    };
+    "title": {
+      "alias": "title";
+      "required": false;
+      "isSignal": true;
+    };
+    "presentation": {
+      "alias": "presentation";
+      "required": false;
+      "isSignal": true;
+    };
+  }, {}, never, never, true, [{
+    directive: typeof i1.NgxHeadlessErrorState;
+    inputs: {
+      "strategy": "strategy";
+      "warningStrategy": "warningStrategy";
+      "submittedStatus": "submittedStatus";
+      "errorsOverride": "errors";
+    };
+    outputs: {};
+  }]>;
 }
-
 /**
  * Heading levels `NgxFormFieldErrorSummary` can render its label as.
  *
@@ -696,64 +764,87 @@ type NgxErrorSummaryHeadingLevel = 2 | 3 | 4 | 5 | 6;
  * </form>
  * ```
  */
-declare class NgxFormFieldErrorSummary {
-    #private;
-    protected readonly summary: NgxHeadlessErrorSummary;
-    /**
-     * Stable id for the label heading, minted once in the injection context
-     * (class-field initializer — see `createUniqueId`'s SSR-safety notes).
-     * Used both as the heading's `id` and as the target of the host's
-     * `aria-labelledby`.
-     */
-    protected readonly headingId: string;
-    /**
-     * Label displayed above the error list.
-     * @default 'Please fix the following errors:'
-     */
-    readonly summaryLabel: _angular_core.InputSignal<string>;
-    /**
-     * Heading level the label renders as (a native `h2`–`h6` element).
-     *
-     * @default 2
-     */
-    readonly headingLevel: _angular_core.InputSignal<NgxErrorSummaryHeadingLevel>;
-    /**
-     * The host's `aria-labelledby`, pointing at the label heading. `null`
-     * whenever the heading is not actually in the DOM — either the summary
-     * itself is empty/hidden (`summary.shouldShow() && summary.hasErrors()`
-     * is `false`, e.g. before the first submit) or `summaryLabel` is empty.
-     * The heading only renders inside that same visibility condition (see
-     * the template), so this must match it exactly: pointing `aria-
-     * labelledby` at an id that is not yet in the DOM is an invalid ARIA
-     * reference.
-     */
-    protected readonly ariaLabelledBy: _angular_core.Signal<string | null>;
-    /**
-     * Whether to programmatically focus the summary host the first time it
-     * appears with non-zero entries **under the resolved `'on-submit'`
-     * strategy**.
-     *
-     * The default (`true`) follows the GOV.UK / WAI error-summary pattern so
-     * screen-reader users hear the announcement and arrive at the summary
-     * after a failed submit. Set to `false` if your flow already moves focus
-     * elsewhere (e.g. straight to the first invalid field) or if focus
-     * theft is undesirable in your design.
-     *
-     * This input has no effect under `'on-touch'` or `'immediate'` strategies
-     * — auto-focus is always skipped for those, regardless of this value,
-     * because the summary can appear mid-fill (e.g. on blurring the first
-     * invalid field) and stealing focus then would be an unexpected context
-     * change (WCAG 3.2.1/3.2.2), not the documented "arrive after a failed
-     * submit" contract.
-     *
-     * @default true
-     */
-    readonly autoFocus: _angular_core.InputSignal<boolean>;
-    constructor();
-    static ɵfac: _angular_core.ɵɵFactoryDeclaration<NgxFormFieldErrorSummary, never>;
-    static ɵcmp: _angular_core.ɵɵComponentDeclaration<NgxFormFieldErrorSummary, "ngx-form-field-error-summary", never, { "summaryLabel": { "alias": "summaryLabel"; "required": false; "isSignal": true; }; "headingLevel": { "alias": "headingLevel"; "required": false; "isSignal": true; }; "autoFocus": { "alias": "autoFocus"; "required": false; "isSignal": true; }; }, {}, never, never, true, [{ directive: typeof _ngx_signal_forms_toolkit_headless.NgxHeadlessErrorSummary; inputs: { "formTree": "formTree"; "strategy": "strategy"; "submittedStatus": "submittedStatus"; }; outputs: {}; }]>;
+export declare class NgxFormFieldErrorSummary {
+  #private;
+  protected readonly summary: NgxHeadlessErrorSummary;
+  /**
+   * Stable id for the label heading, minted once in the injection context
+   * (class-field initializer — see `createUniqueId`'s SSR-safety notes).
+   * Used both as the heading's `id` and as the target of the host's
+   * `aria-labelledby`.
+   */
+  protected readonly headingId: string;
+  /**
+   * Label displayed above the error list.
+   * @default 'Please fix the following errors:'
+   */
+  readonly summaryLabel: import("@angular/core").InputSignal<string>;
+  /**
+   * Heading level the label renders as (a native `h2`–`h6` element).
+   *
+   * @default 2
+   */
+  readonly headingLevel: import("@angular/core").InputSignal<NgxErrorSummaryHeadingLevel>;
+  /**
+   * The host's `aria-labelledby`, pointing at the label heading. `null`
+   * whenever the heading is not actually in the DOM — either the summary
+   * itself is empty/hidden (`summary.shouldShow() && summary.hasErrors()`
+   * is `false`, e.g. before the first submit) or `summaryLabel` is empty.
+   * The heading only renders inside that same visibility condition (see
+   * the template), so this must match it exactly: pointing `aria-
+   * labelledby` at an id that is not yet in the DOM is an invalid ARIA
+   * reference.
+   */
+  protected readonly ariaLabelledBy: import("@angular/core").Signal<string | null>;
+  /**
+   * Whether to programmatically focus the summary host the first time it
+   * appears with non-zero entries **under the resolved `'on-submit'`
+   * strategy**.
+   *
+   * The default (`true`) follows the GOV.UK / WAI error-summary pattern so
+   * screen-reader users hear the announcement and arrive at the summary
+   * after a failed submit. Set to `false` if your flow already moves focus
+   * elsewhere (e.g. straight to the first invalid field) or if focus
+   * theft is undesirable in your design.
+   *
+   * This input has no effect under `'on-touch'` or `'immediate'` strategies
+   * — auto-focus is always skipped for those, regardless of this value,
+   * because the summary can appear mid-fill (e.g. on blurring the first
+   * invalid field) and stealing focus then would be an unexpected context
+   * change (WCAG 3.2.1/3.2.2), not the documented "arrive after a failed
+   * submit" contract.
+   *
+   * @default true
+   */
+  readonly autoFocus: import("@angular/core").InputSignal<boolean>;
+  constructor();
+  static ɵfac: i0.ɵɵFactoryDeclaration<NgxFormFieldErrorSummary, never>;
+  static ɵcmp: i0.ɵɵComponentDeclaration<NgxFormFieldErrorSummary, "ngx-form-field-error-summary", never, {
+    "summaryLabel": {
+      "alias": "summaryLabel";
+      "required": false;
+      "isSignal": true;
+    };
+    "headingLevel": {
+      "alias": "headingLevel";
+      "required": false;
+      "isSignal": true;
+    };
+    "autoFocus": {
+      "alias": "autoFocus";
+      "required": false;
+      "isSignal": true;
+    };
+  }, {}, never, never, true, [{
+    directive: typeof i1.NgxHeadlessErrorSummary;
+    inputs: {
+      "formTree": "formTree";
+      "strategy": "strategy";
+      "submittedStatus": "submittedStatus";
+    };
+    outputs: {};
+  }]>;
 }
-
 /**
  * Form-level legend that explains the field marker (e.g. "* indicates a
  * required field").
@@ -794,35 +885,60 @@ declare class NgxFormFieldErrorSummary {
  * <ngx-form-marking-legend [formTree]="userForm" />
  * ```
  */
-declare class NgxFormMarkingLegend {
-    #private;
-    /**
-     * The form tree the legend reflects. Optional — falls back to the ambient
-     * form context (`NgxSignalForm` on `form[formRoot]`). When neither is
-     * available the legend renders nothing and emits a dev-mode error.
-     */
-    readonly formTree: _angular_core.InputSignal<FieldTree<unknown> | undefined>;
-    /** Override the marking mode. Falls back to config `showMarkerWhen`. */
-    readonly showMarkerWhen: _angular_core.InputSignal<FieldMarkingMode | undefined>;
-    /**
-     * Override the legend text entirely. `{marker}` is still substituted with the
-     * resolved marker for the active mode.
-     */
-    readonly text: _angular_core.InputSignal<string | undefined>;
-    /** Override the required marker used for `{marker}`. Falls back to config. */
-    readonly requiredMarker: _angular_core.InputSignal<string | undefined>;
-    /** Override the optional marker used for `{marker}`. Falls back to config. */
-    readonly optionalMarker: _angular_core.InputSignal<string | undefined>;
-    constructor();
-    /**
-     * The legend text to render, or `null` when nothing should show (mode is
-     * `'none'`, no form tree, or the form has no field of the relevant kind).
-     */
-    protected readonly resolvedText: _angular_core.Signal<string | null>;
-    static ɵfac: _angular_core.ɵɵFactoryDeclaration<NgxFormMarkingLegend, never>;
-    static ɵcmp: _angular_core.ɵɵComponentDeclaration<NgxFormMarkingLegend, "ngx-form-marking-legend", never, { "formTree": { "alias": "formTree"; "required": false; "isSignal": true; }; "showMarkerWhen": { "alias": "showMarkerWhen"; "required": false; "isSignal": true; }; "text": { "alias": "text"; "required": false; "isSignal": true; }; "requiredMarker": { "alias": "requiredMarker"; "required": false; "isSignal": true; }; "optionalMarker": { "alias": "optionalMarker"; "required": false; "isSignal": true; }; }, {}, never, never, true, never>;
+export declare class NgxFormMarkingLegend {
+  #private;
+  /**
+   * The form tree the legend reflects. Optional — falls back to the ambient
+   * form context (`NgxSignalForm` on `form[formRoot]`). When neither is
+   * available the legend renders nothing and emits a dev-mode error.
+   */
+  readonly formTree: import("@angular/core").InputSignal<FieldTree<unknown> | undefined>;
+  /** Override the marking mode. Falls back to config `showMarkerWhen`. */
+  readonly showMarkerWhen: import("@angular/core").InputSignal<FieldMarkingMode | undefined>;
+  /**
+   * Override the legend text entirely. `{marker}` is still substituted with the
+   * resolved marker for the active mode.
+   */
+  readonly text: import("@angular/core").InputSignal<string | undefined>;
+  /** Override the required marker used for `{marker}`. Falls back to config. */
+  readonly requiredMarker: import("@angular/core").InputSignal<string | undefined>;
+  /** Override the optional marker used for `{marker}`. Falls back to config. */
+  readonly optionalMarker: import("@angular/core").InputSignal<string | undefined>;
+  constructor();
+  /**
+   * The legend text to render, or `null` when nothing should show (mode is
+   * `'none'`, no form tree, or the form has no field of the relevant kind).
+   */
+  protected readonly resolvedText: import("@angular/core").Signal<string | null>;
+  static ɵfac: i0.ɵɵFactoryDeclaration<NgxFormMarkingLegend, never>;
+  static ɵcmp: i0.ɵɵComponentDeclaration<NgxFormMarkingLegend, "ngx-form-marking-legend", never, {
+    "formTree": {
+      "alias": "formTree";
+      "required": false;
+      "isSignal": true;
+    };
+    "showMarkerWhen": {
+      "alias": "showMarkerWhen";
+      "required": false;
+      "isSignal": true;
+    };
+    "text": {
+      "alias": "text";
+      "required": false;
+      "isSignal": true;
+    };
+    "requiredMarker": {
+      "alias": "requiredMarker";
+      "required": false;
+      "isSignal": true;
+    };
+    "optionalMarker": {
+      "alias": "optionalMarker";
+      "required": false;
+      "isSignal": true;
+    };
+  }, {}, never, never, true, never>;
 }
-
 /**
  * Form field hint component for displaying helper text.
  *
@@ -897,37 +1013,46 @@ declare class NgxFormMarkingLegend {
  * - Ensure sufficient color contrast (4.5:1 minimum)
  * - Consider using aria-describedby to link hint to input (handled by parent component)
  */
-declare class NgxFormFieldHint {
-    #private;
-    /**
-     * Text alignment position.
-     *
-     * @default null (hint aligns to the start/left; pass `position="right"` to
-     * opt into end alignment. The assistive row also forces start alignment when
-     * a character count shares the row.)
-     */
-    readonly position: _angular_core.InputSignal<"left" | "right" | null>;
-    /**
-     * Explicit id, accepted as either a static `id="…"` attribute or a
-     * property-bound `[id]="expr"`. Angular maps both forms onto this input
-     * (static attributes matching a declared input are read as the input's
-     * initial value), so a parent-computed id is picked up reactively instead
-     * of being missed the way a one-shot constructor `getAttribute('id')` read
-     * misses it. Falls through to {@link resolvedId}'s other sources when
-     * `null` or empty.
-     */
-    readonly id: _angular_core.InputSignal<string | null>;
-    /**
-     * Resolved field name from the wrapper's `NGX_SIGNAL_FORM_FIELD_CONTEXT`,
-     * or `null` when the hint is rendered outside a wrapper. Public so wrappers
-     * can expose it through `NGX_SIGNAL_FORM_HINT_REGISTRY` for auto-ARIA.
-     */
-    readonly resolvedFieldName: _angular_core.Signal<string | null>;
-    readonly resolvedId: _angular_core.Signal<string>;
-    constructor();
-    static ɵfac: _angular_core.ɵɵFactoryDeclaration<NgxFormFieldHint, never>;
-    static ɵcmp: _angular_core.ɵɵComponentDeclaration<NgxFormFieldHint, "ngx-form-field-hint", never, { "position": { "alias": "position"; "required": false; "isSignal": true; }; "id": { "alias": "id"; "required": false; "isSignal": true; }; }, {}, never, ["*"], true, never>;
+export declare class NgxFormFieldHint {
+  #private;
+  /**
+   * Text alignment position.
+   *
+   * @default null (hint aligns to the start/left; pass `position="right"` to
+   * opt into end alignment. The assistive row also forces start alignment when
+   * a character count shares the row.)
+   */
+  readonly position: import("@angular/core").InputSignal<"left" | "right" | null>;
+  /**
+   * Explicit id, accepted as either a static `id="…"` attribute or a
+   * property-bound `[id]="expr"`. Angular maps both forms onto this input
+   * (static attributes matching a declared input are read as the input's
+   * initial value), so a parent-computed id is picked up reactively instead
+   * of being missed the way a one-shot constructor `getAttribute('id')` read
+   * misses it. Falls through to {@link resolvedId}'s other sources when
+   * `null` or empty.
+   */
+  readonly id: import("@angular/core").InputSignal<string | null>;
+  /**
+   * Resolved field name from the wrapper's `NGX_SIGNAL_FORM_FIELD_CONTEXT`,
+   * or `null` when the hint is rendered outside a wrapper. Public so wrappers
+   * can expose it through `NGX_SIGNAL_FORM_HINT_REGISTRY` for auto-ARIA.
+   */
+  readonly resolvedFieldName: import("@angular/core").Signal<string | null>;
+  readonly resolvedId: import("@angular/core").Signal<string>;
+  constructor();
+  static ɵfac: i0.ɵɵFactoryDeclaration<NgxFormFieldHint, never>;
+  static ɵcmp: i0.ɵɵComponentDeclaration<NgxFormFieldHint, "ngx-form-field-hint", never, {
+    "position": {
+      "alias": "position";
+      "required": false;
+      "isSignal": true;
+    };
+    "id": {
+      "alias": "id";
+      "required": false;
+      "isSignal": true;
+    };
+  }, {}, never, ["*"], true, never>;
 }
-
-export { NgxFormFieldCharacterCount, NgxFormFieldError, NgxFormFieldErrorSummary, NgxFormFieldHint, NgxFormMarkingLegend };
 export type { NgxCharacterCountAnnouncementFormatter, NgxCharacterCountAnnouncementInfo, NgxCharacterCountAnnouncementState, NgxErrorSummaryHeadingLevel, NgxFormFieldErrorPresentation, NgxFormFieldListStyle };
