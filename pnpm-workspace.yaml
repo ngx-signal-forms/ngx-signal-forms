@@ -58,7 +58,7 @@ catalogs:
     '@analogjs/vitest-angular': '2.8.0'
   axe:
     '@axe-core/playwright': '^4.13.0'
-    axe-core: '^4.13.0'
+    axe-core: '^4.14.0'
   angular:
     '@angular/animations': '22.2.1'
     '@angular/aria': '22.2.1'
