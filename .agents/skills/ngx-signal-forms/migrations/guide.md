@@ -15,17 +15,20 @@ skill. Read published guides from the [Docs7 migration index](https://ngx-signal
 
    **Done:** source and target versions are explicit.
 
-2. **Load the complete upgrade path.** For beta sources, read the
-   [beta migration](https://github.com/ngx-signal-forms/ngx-signal-forms/blob/main/docs/MIGRATING_BETA_TO_V1.md).
-   For release-candidate or v1 sources, read the
-   [online migration index](https://ngx-signal-forms-ngx-signal-forms.docs7.io/docs/migrations)
-   and every crossed version guide, not only the final target guide. For
-   RC11 to RC13, load both
+2. **Load the complete upgrade path.** Read the
+   [migration index](https://ngx-signal-forms-ngx-signal-forms.docs7.io/docs/migrations)
+   and every crossed version guide, not only the final target guide. For RC11
+   to RC13, load both
    [RC12](https://github.com/ngx-signal-forms/ngx-signal-forms/blob/main/docs/migrations/v1.0.0-rc.12.md)
    and [RC13](https://github.com/ngx-signal-forms/ngx-signal-forms/blob/main/docs/migrations/v1.0.0-rc.13.md).
+   For beta sources, also load the
+   [cumulative beta-to-v1 guide](https://github.com/ngx-signal-forms/ngx-signal-forms/blob/main/docs/MIGRATING_BETA_TO_V1.md).
+   Check current CSS token names and supported overrides in
+   [THEMING.md](https://github.com/ngx-signal-forms/ngx-signal-forms/blob/main/packages/toolkit/form-field/THEMING.md).
    For RC.15 to RC.16, read the
-   [RC.15-to-RC.16 migration guide](https://github.com/ngx-signal-forms/ngx-signal-forms/blob/main/docs/migrations/v1.0.0-rc.16.md)
-   from the online repository when the guide is pending or Docs7 is behind.
+   [RC.15-to-RC.16 migration guide](https://ngx-signal-forms-ngx-signal-forms.docs7.io/docs/migrations/v1-0-0-rc-16)
+   when available. If Docs7 is behind or the guide is pending, use the guide
+   on the repository's online `main` branch instead.
    Resolve each hop against that guide's target release when a tag exists.
    A source tag or manifest does not prove registry publication; verify
    availability before selecting the dependency and lockfile version. A guide
@@ -51,13 +54,24 @@ skill. Read published guides from the [Docs7 migration index](https://ngx-signal
    each item as applied, verified unchanged, or inapplicable; do not treat a
    passing build as proof that behavior-only changes are covered.
 
-   For RC.15 to RC.16, distinguish these visibility APIs: use
-   `createControlVisibilitySignal(resolveElement, injector)` for a reactive
-   signal; use `isElementCssVisible(element)` only in your own
-   `afterEveryRender` `earlyRead`. For removed headless error helpers, preserve
-   the distinction between subtree errors (`field().errorSummary()`) and one
-   field's direct errors (`createErrorState()`). The RC.16 guide lists all
-   other public API, peer, and behavior changes for that hop.
+   For RC15 to RC16, check these removals:
+
+   - Testing entry point: `findAlertContaining`. Replace each call with the
+     query in the [testing guide](../testing/guide.md).
+   - Headless entry point: `readFieldFlag`. Use `field().invalid()` and
+     similar, or `createFieldStateFlags()`.
+   - Headless entry point: `readErrors`. Use `field().errorSummary()` for a
+     subtree, or `createErrorState()` for one field's direct errors only.
+   - Headless entry point: `toErrorSummaryEntry`,
+     `resolveFieldNameFromError` and `focusBoundControlFromError`. Use
+     `createErrorSummaryEntries()`.
+   - Root entry point: `NgxFieldIdentity.isControlVisible`,
+     `NgxFieldIdentity.setControlVisible` and `ControlVisibilitySignal`. Use
+     `createControlVisibilitySignal()` for a visibility read, or
+     `isElementCssVisible()` inside your own `earlyRead`.
+   - Root entry point: `NgxControlPresetRegistry`. Use
+     `inject(NGX_SIGNAL_FORM_CONTROL_PRESETS)`, and replace `extend()` with
+     `mergeNgxSignalFormControlPresets()`.
 
    Use the testing guide for changed interactions. Repository `pnpm nx` tasks
    apply only when the user explicitly requests toolkit maintenance in its own

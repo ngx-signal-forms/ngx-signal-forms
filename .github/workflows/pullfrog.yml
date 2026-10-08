@@ -27,7 +27,7 @@ jobs:
           fetch-depth: 1
           persist-credentials: false
       - name: Run agent
-        uses: pullfrog/pullfrog@d46191b27741017dfac20431107fb3c6588ca667 # v0.1.92
+        uses: pullfrog/pullfrog@ed800018463e1b84e8e3377f662173aed1da98b0 # v0.1.95
         with:
           prompt: ${{ inputs.prompt }}
         # Provider keys live in the Pullfrog dashboard (encrypted).
