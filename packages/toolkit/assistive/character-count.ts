@@ -314,15 +314,19 @@ export type NgxCharacterCountAnnouncementFormatter = (
        */
       --_char-count-is-warning: clamp(
         0,
-        (var(--ngx-form-field-char-count-percent-used, 0) -
-            var(--_char-count-warning-threshold) + 0.0001) *
+        (
+            var(--ngx-form-field-char-count-percent-used, 0) -
+              var(--_char-count-warning-threshold) + 0.0001
+          ) *
           1000000,
         1
       );
       --_char-count-is-danger: clamp(
         0,
-        (var(--ngx-form-field-char-count-percent-used, 0) -
-            var(--_char-count-danger-threshold) + 0.0001) *
+        (
+            var(--ngx-form-field-char-count-percent-used, 0) -
+              var(--_char-count-danger-threshold) + 0.0001
+          ) *
           1000000,
         1
       );

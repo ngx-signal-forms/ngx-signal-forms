@@ -154,7 +154,7 @@ interaction policy; it is not equivalent to toolkit `on-touch`.
     <input
       id="email"
       type="email"
-      class="mt-1 block w-full rounded-md border border-gray-500 shadow-sm aria-invalid:border-red-700 aria-invalid:text-red-700 focus:outline-2 focus:outline-indigo-600"
+      class="mt-1 block w-full rounded-md border border-gray-500 shadow-sm focus:outline-2 focus:outline-indigo-600 aria-invalid:border-red-700 aria-invalid:text-red-700"
       [formField]="userForm.email"
     />
     <ngx-form-field-error
