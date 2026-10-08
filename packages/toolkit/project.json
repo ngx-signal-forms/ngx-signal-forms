@@ -119,12 +119,6 @@
         "command": "pnpm exec tsc6 -p packages/toolkit/tsconfig.spec.json --noEmit",
         "cwd": "{workspaceRoot}"
       }
-    },
-    "lint": {
-      "executor": "nx:run-commands",
-      "options": {
-        "command": "oxlint {projectRoot} --type-aware"
-      }
     }
   }
 }

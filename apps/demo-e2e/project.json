@@ -6,12 +6,6 @@
   "tags": ["scope:demo", "type:app"],
   "implicitDependencies": ["demo"],
   "targets": {
-    "lint": {
-      "executor": "nx:run-commands",
-      "options": {
-        "command": "oxlint {projectRoot} --type-aware"
-      }
-    },
     "e2e-toolkit": {
       "executor": "nx:run-commands",
       "options": {

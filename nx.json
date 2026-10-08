@@ -185,6 +185,12 @@
         "packages/demo/debugger/**/*",
         "packages/demo/shared/**/*"
       ]
+    },
+    {
+      "plugin": "@nx/oxlint",
+      "options": {
+        "targetName": "lint"
+      }
     }
   ]
 }

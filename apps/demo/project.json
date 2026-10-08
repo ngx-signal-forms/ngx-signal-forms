@@ -37,12 +37,6 @@
         }
       }
     },
-    "lint": {
-      "executor": "nx:run-commands",
-      "options": {
-        "command": "oxlint {projectRoot} --type-aware"
-      }
-    },
     "test": {
       "options": {
         "config": "./vitest.config.mts"
