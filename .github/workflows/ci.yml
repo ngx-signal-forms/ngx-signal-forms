@@ -143,22 +143,22 @@ jobs:
           NX_NO_CLOUD: 'true'
           NX_DAEMON: 'false'
         run: |
-          targets="lint typecheck test test-timezones test-browser build e2e"
+          targets="lint,typecheck,test,test-timezones,test-browser,build,e2e"
           {
             echo '### Affected selection: projects vs tasks'
             echo
             echo 'Project selection (current gate):'
             echo '```'
-            pnpm exec nx show projects --affected -t $targets --exclude=demo-e2e || true
+            pnpm exec nx show projects --affected -t "$targets" --exclude=demo-e2e || true
             echo '```'
             echo 'Task selection (`NX_LEGACY_AFFECTED=false`):'
             echo '```'
-            NX_LEGACY_AFFECTED=false pnpm exec nx show projects --affected -t $targets --exclude=demo-e2e || true
+            NX_LEGACY_AFFECTED=false pnpm exec nx show projects --affected -t "$targets" --exclude=demo-e2e || true
             echo '```'
             echo '<details><summary>Why (--explain)</summary>'
             echo
             echo '```'
-            NX_LEGACY_AFFECTED=false pnpm exec nx affected -t $targets --exclude=demo-e2e --explain || true
+            NX_LEGACY_AFFECTED=false pnpm exec nx affected -t "$targets" --exclude=demo-e2e --explain || true
             echo '```'
             echo '</details>'
           } >> "$GITHUB_STEP_SUMMARY"
