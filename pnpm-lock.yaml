@@ -157,11 +157,11 @@ catalogs:
       specifier: 36.1.0
       version: 36.1.0
     '@spartan-ng/brain':
-      specifier: 1.5.0
-      version: 1.5.0
+      specifier: 1.6.1
+      version: 1.6.1
     '@spartan-ng/cli':
-      specifier: 1.5.0
-      version: 1.5.0
+      specifier: 1.6.1
+      version: 1.6.1
     class-variance-authority:
       specifier: ^0.7.1
       version: 0.7.1
@@ -451,7 +451,7 @@ importers:
         version: 14.1.0(size-limit@14.1.0)
       '@spartan-ng/cli':
         specifier: catalog:spartan
-        version: 1.5.0(57f01f2afb2afb8b2ab37294518a8574)
+        version: 1.6.1(57f01f2afb2afb8b2ab37294518a8574)
       '@swc-node/register':
         specifier: catalog:swc
         version: 1.12.1(@swc/core@1.16.13(@swc/helpers@0.5.23))(@swc/types@0.1.28)(@typescript/typescript6@6.0.2)(supports-color@7.2.0)
@@ -598,7 +598,7 @@ importers:
     dependencies:
       '@spartan-ng/brain':
         specifier: catalog:spartan
-        version: 1.5.0(fe729d844a15000ffd656ab9d74e7403)
+        version: 1.6.1(fe729d844a15000ffd656ab9d74e7403)
     devDependencies:
       tw-animate-css:
         specifier: catalog:spartan
@@ -635,7 +635,7 @@ importers:
         version: 36.1.0(@ng-icons/core@36.1.0(@angular-devkit/schematics@22.2.1(chokidar@5.0.0))(@angular/common@22.2.1(@angular/core@22.2.1(@angular/compiler@22.2.1)(rxjs@7.8.2))(rxjs@7.8.2))(@angular/core@22.2.1(@angular/compiler@22.2.1)(rxjs@7.8.2))(@schematics/angular@22.2.1(chokidar@5.0.0))(rxjs@7.8.2))
       '@spartan-ng/brain':
         specifier: catalog:spartan
-        version: 1.5.0(fe729d844a15000ffd656ab9d74e7403)
+        version: 1.6.1(fe729d844a15000ffd656ab9d74e7403)
       class-variance-authority:
         specifier: catalog:spartan
         version: 0.7.1
@@ -3982,8 +3982,8 @@ packages:
     peerDependencies:
       size-limit: 14.1.0
 
-  '@spartan-ng/brain@1.5.0':
-    resolution: {integrity: sha512-h/8PhelvtU5Evdbj1n8pgQfli8GPAWpHSJrsYMMpMNyM8o5bHRHot2nOD7k9aQGZp1JkClzcwSb9Au//p7jIAQ==}
+  '@spartan-ng/brain@1.6.1':
+    resolution: {integrity: sha512-LYUaJ23DWC2ejLvKfSTWQKoqyL3Jv9pHVQp2JmvrduKFSXGZ5uo2EKBhpd8cnRM1C3tU7rN6Nm12xOZM6nPJIQ==}
     peerDependencies:
       '@angular/cdk': '>=21.0.0 <23.0.0'
       '@angular/common': '>=21.0.0 <23.0.0'
@@ -3998,8 +3998,8 @@ packages:
       luxon:
         optional: true
 
-  '@spartan-ng/cli@1.5.0':
-    resolution: {integrity: sha512-yDfXvWejluM0K68DTW/qkO8tI5g5EnfdjxYrqTUG3kqnmqMPEcMHMp9axkJ805lyPK/oq8u9tpPGrxknjjUpmg==}
+  '@spartan-ng/cli@1.6.1':
+    resolution: {integrity: sha512-DjBNLOHOqboJU+XT6/uRQvFM+h9rSo6BRJwbgryWPnAzP8E0qp0e4sKx9HtqCWflROlZ7aJyEIRr8VTbYcyk6g==}
     peerDependencies:
       tslib: ^2.3.0
 
@@ -11337,7 +11337,7 @@ snapshots:
     dependencies:
       size-limit: 14.1.0
 
-  '@spartan-ng/brain@1.5.0(fe729d844a15000ffd656ab9d74e7403)':
+  '@spartan-ng/brain@1.6.1(fe729d844a15000ffd656ab9d74e7403)':
     dependencies:
       '@angular/cdk': 22.2.1(@angular/common@22.2.1(@angular/core@22.2.1(@angular/compiler@22.2.1)(rxjs@7.8.2))(rxjs@7.8.2))(@angular/core@22.2.1(@angular/compiler@22.2.1)(rxjs@7.8.2))(@angular/forms@22.2.1(@angular/common@22.2.1(@angular/core@22.2.1(@angular/compiler@22.2.1)(rxjs@7.8.2))(rxjs@7.8.2))(@angular/core@22.2.1(@angular/compiler@22.2.1)(rxjs@7.8.2))(@angular/platform-browser@22.2.1(@angular/common@22.2.1(@angular/core@22.2.1(@angular/compiler@22.2.1)(rxjs@7.8.2))(rxjs@7.8.2))(@angular/core@22.2.1(@angular/compiler@22.2.1)(rxjs@7.8.2)))(rxjs@7.8.2))(@angular/platform-browser@22.2.1(@angular/common@22.2.1(@angular/core@22.2.1(@angular/compiler@22.2.1)(rxjs@7.8.2))(rxjs@7.8.2))(@angular/core@22.2.1(@angular/compiler@22.2.1)(rxjs@7.8.2)))(rxjs@7.8.2)
       '@angular/common': 22.2.1(@angular/core@22.2.1(@angular/compiler@22.2.1)(rxjs@7.8.2))(rxjs@7.8.2)
@@ -11351,7 +11351,7 @@ snapshots:
     optionalDependencies:
       luxon: 3.7.2
 
-  '@spartan-ng/cli@1.5.0(57f01f2afb2afb8b2ab37294518a8574)':
+  '@spartan-ng/cli@1.6.1(57f01f2afb2afb8b2ab37294518a8574)':
     dependencies:
       '@angular/core': 22.2.1(@angular/compiler@22.2.1)(rxjs@7.8.2)
       '@nx/angular': 23.3.0(2f562a633abdb4f5f492d6700f08c969)
