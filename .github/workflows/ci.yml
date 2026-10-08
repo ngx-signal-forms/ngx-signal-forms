@@ -133,6 +133,36 @@ jobs:
         run: pnpm exec nx affected -t lint typecheck test test-timezones test-browser build e2e --exclude=demo-e2e --parallel=2 --outputStyle=static
         timeout-minutes: 10
 
+      # Informational only. Nx 24 makes task-based affected the default, so
+      # this reports how its selection differs from project selection on
+      # every PR. It never gates and never runs tasks.
+      - name: Compare project and task affected selection
+        continue-on-error: true
+        timeout-minutes: 3
+        env:
+          NX_NO_CLOUD: 'true'
+          NX_DAEMON: 'false'
+        run: |
+          targets="lint typecheck test test-timezones test-browser build e2e"
+          {
+            echo '### Affected selection: projects vs tasks'
+            echo
+            echo 'Project selection (current gate):'
+            echo '```'
+            pnpm exec nx show projects --affected -t $targets --exclude=demo-e2e || true
+            echo '```'
+            echo 'Task selection (`NX_LEGACY_AFFECTED=false`):'
+            echo '```'
+            NX_LEGACY_AFFECTED=false pnpm exec nx show projects --affected -t $targets --exclude=demo-e2e || true
+            echo '```'
+            echo '<details><summary>Why (--explain)</summary>'
+            echo
+            echo '```'
+            NX_LEGACY_AFFECTED=false pnpm exec nx affected -t $targets --exclude=demo-e2e --explain || true
+            echo '```'
+            echo '</details>'
+          } >> "$GITHUB_STEP_SUMMARY"
+
       # Run outside affected selection so README/docs-only changes are checked.
       # The build dependency can reuse the affected build's cache.
       - name: Check README starter
