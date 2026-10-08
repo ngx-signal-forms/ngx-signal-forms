@@ -58,7 +58,7 @@ catalogs:
     '@analogjs/vitest-angular': '2.8.0'
   axe:
     '@axe-core/playwright': '^4.13.0'
-    axe-core: '^4.14.0'
+    axe-core: '^4.13.0'
   angular:
     '@angular/animations': '22.2.1'
     '@angular/aria': '22.2.1'
@@ -175,10 +175,6 @@ catalogs:
     '@vitest/coverage-v8': '~5.0.3'
     '@vitest/ui': '~5.0.3'
     vitest: '~5.0.3'
-
-# @axe-core/playwright 4.13.0 depends on axe-core ~4.13.0; run one axe-core (4.14) everywhere.
-overrides:
-  '@axe-core/playwright>axe-core': '^4.14.0'
 
 strictPeerDependencies: false
 # `pnpm peers check` runs in CI. tsconfck (via vite-tsconfig-paths) lists
