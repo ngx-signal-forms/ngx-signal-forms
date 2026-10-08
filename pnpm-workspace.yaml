@@ -171,10 +171,10 @@ catalogs:
     vest: '6.3.4'
     zod: '^4.6.5'
   vitest:
-    '@vitest/browser-playwright': '~4.1.11'
-    '@vitest/coverage-v8': '~4.1.11'
-    '@vitest/ui': '~4.1.11'
-    vitest: '~4.1.11'
+    '@vitest/browser-playwright': '~5.0.3'
+    '@vitest/coverage-v8': '~5.0.3'
+    '@vitest/ui': '~5.0.3'
+    vitest: '~5.0.3'
 
 strictPeerDependencies: false
 # `pnpm peers check` runs in CI. tsconfck (via vite-tsconfig-paths) lists

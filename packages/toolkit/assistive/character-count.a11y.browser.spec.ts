@@ -105,7 +105,7 @@ describe('NgxFormFieldCharacterCount — WCAG 2.2 AA conformance', () => {
 
     expect(
       container.querySelector('.ngx-signal-form-field-char-count__sr'),
-    ).toHaveTextContent('Character limit exceeded by');
+    ).toMatchTextContent('Character limit exceeded by');
     await expectNoA11yViolations(container);
   });
 });
@@ -150,7 +150,7 @@ describe('NgxFormFieldCharacterCount — limit description linked via aria-descr
     expect(textarea?.getAttribute('aria-describedby')).toBe(
       'bio-hint bio-char-count-limit bio-error',
     );
-    expect(container.querySelector('#bio-char-count-limit')).toHaveTextContent(
+    expect(container.querySelector('#bio-char-count-limit')).toMatchTextContent(
       'Up to 200 characters',
     );
 

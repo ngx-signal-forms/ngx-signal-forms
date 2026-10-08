@@ -10,37 +10,44 @@ import {
 
 /**
  * Sets the emulated OS color scheme (`prefers-color-scheme`) for the test
- * page. `null` clears the emulation. Vitest's `page` API has no media emulation, so specs call this
- * through `commands.emulateColorScheme(...)`. It runs in Node, where the
- * Playwright page is available.
+ * page. `'reset'` clears the emulation (`test-setup.browser.ts` sends it for a
+ * `null` argument, which Vitest 5.0.3 cannot pass to a command). Vitest's
+ * `page` API has no media emulation, so specs call this through
+ * `commands.emulateColorScheme(...)`. It runs in Node, where the Playwright
+ * page is available.
  */
-const emulateColorScheme: BrowserCommand<['light' | 'dark' | null]> = async (
+const emulateColorScheme: BrowserCommand<['light' | 'dark' | 'reset']> = async (
   context,
   colorScheme,
 ) => {
-  await context.page.emulateMedia({ colorScheme });
+  await context.page.emulateMedia({
+    colorScheme: colorScheme === 'reset' ? null : colorScheme,
+  });
 };
 
 /**
- * Sets the emulated `forced-colors` media feature. `null` clears the
+ * Sets the emulated `forced-colors` media feature. `'reset'` clears the
  * emulation. Same rationale as {@link emulateColorScheme}: Vitest's `page`
  * API has no media emulation of its own.
  */
-const emulateForcedColors: BrowserCommand<['active' | 'none' | null]> = async (
-  context,
-  forcedColors,
-) => {
-  await context.page.emulateMedia({ forcedColors });
+const emulateForcedColors: BrowserCommand<
+  ['active' | 'none' | 'reset']
+> = async (context, forcedColors) => {
+  await context.page.emulateMedia({
+    forcedColors: forcedColors === 'reset' ? null : forcedColors,
+  });
 };
 
 /**
- * Sets the emulated `prefers-reduced-motion` media feature. `null` clears
+ * Sets the emulated `prefers-reduced-motion` media feature. `'reset'` clears
  * the emulation.
  */
 const emulateReducedMotion: BrowserCommand<
-  ['reduce' | 'no-preference' | null]
+  ['reduce' | 'no-preference' | 'reset']
 > = async (context, reducedMotion) => {
-  await context.page.emulateMedia({ reducedMotion });
+  await context.page.emulateMedia({
+    reducedMotion: reducedMotion === 'reset' ? null : reducedMotion,
+  });
 };
 
 export default defineConfig({

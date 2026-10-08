@@ -78,6 +78,8 @@ graphify-out/
 !apps/demo-e2e/src/__screenshots__/
 !apps/demo-e2e/src/__screenshots__/**
 **/.vitest-attachments/
+# Vitest 5 writes failure screenshots and attachments here
+**/.vitest/
 
 # Dated review records written by agents are committed on purpose
 !.agents/review/

@@ -1,0 +1,8 @@
+{
+  // Typecheck/lint program for the browser-mode specs; see
+  // `tsconfig.spec.jsdom.json` for why it is separate. No jest-dom types here.
+  "extends": "./tsconfig.spec.json",
+  "include": ["./**/*.browser.spec.ts", "./**/*.d.ts"],
+  "exclude": ["./api-reports/**"],
+  "files": ["test-setup.browser.ts"]
+}

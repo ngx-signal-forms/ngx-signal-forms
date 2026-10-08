@@ -108,7 +108,7 @@ describe('NgxFormFieldWrapper — hint visibility on error (issue #521)', () => 
 
     await expect
       .element(page.getByRole('alert'))
-      .toHaveTextContent('Email is required');
+      .toMatchTextContent('Email is required');
     await expect.element(hintLocator(container)).toBeVisible();
     await expectNoA11yViolations(container);
   });
@@ -134,7 +134,7 @@ describe('NgxFormFieldWrapper — hint visibility on error (issue #521)', () => 
 
       await expect
         .element(page.getByRole('alert'))
-        .toHaveTextContent('Email is required');
+        .toMatchTextContent('Email is required');
       await expect.element(hintLocator(container)).not.toBeVisible();
 
       // Mechanism 1: the CSS variable read by `ngx-form-field-hint` itself.
@@ -179,7 +179,7 @@ describe('NgxFormFieldWrapper — hint visibility on error (issue #521)', () => 
 
     await expect
       .element(page.getByRole('alert'))
-      .toHaveTextContent('Email is required');
+      .toMatchTextContent('Email is required');
     await expect.element(hintLocator(container)).not.toBeVisible();
     await expectNoA11yViolations(container);
   });
@@ -224,7 +224,7 @@ describe('NgxFormFieldWrapper — hint visibility on error (issue #521)', () => 
 
     await expect
       .element(page.getByRole('alert'))
-      .toHaveTextContent('Email is required');
+      .toMatchTextContent('Email is required');
     await expect.element(hintLocator(container)).not.toBeVisible();
     const wrapper = container.querySelector('ngx-form-field-wrapper');
     expect(wrapper).toHaveClass(HIDE_HINT_ON_ERROR_CLASS);
@@ -273,7 +273,7 @@ describe('NgxFormFieldWrapper — hint visibility on error (issue #521)', () => 
 
     await expect
       .element(page.getByRole('alert'))
-      .toHaveTextContent('Email is required');
+      .toMatchTextContent('Email is required');
     await expect.element(hintLocator(container)).toBeVisible();
     const wrapper = container.querySelector('ngx-form-field-wrapper');
     expect(wrapper).not.toHaveClass(HIDE_HINT_ON_ERROR_CLASS);

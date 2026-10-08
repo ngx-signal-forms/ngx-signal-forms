@@ -154,7 +154,7 @@ describe('form-field wrapper — WCAG 2.2 AA conformance', () => {
 
     await expect
       .element(page.getByRole('alert'))
-      .toHaveTextContent('Name is required');
+      .toMatchTextContent('Name is required');
     await expectNoA11yViolations(container);
   });
 
@@ -302,7 +302,7 @@ describe('form-field wrapper — WCAG 2.2 AA conformance', () => {
         .toBeVisible();
       await expect
         .element(page.getByRole('alert'))
-        .toHaveTextContent('Delivery method is required');
+        .toMatchTextContent('Delivery method is required');
       await expectNoA11yViolations(container);
     });
 
@@ -342,7 +342,7 @@ describe('form-field wrapper — WCAG 2.2 AA conformance', () => {
 
       await expect
         .element(page.getByRole('alert'))
-        .toHaveTextContent('Consent is required');
+        .toMatchTextContent('Consent is required');
 
       // Regression coverage for
       // https://github.com/ngx-signal-forms/ngx-signal-forms/issues/300: a
@@ -366,7 +366,7 @@ describe('form-field wrapper — WCAG 2.2 AA conformance', () => {
       expect(describedBy.split(' ')).toContain(requiredHintId);
 
       const requiredHint = container.querySelector(`#${requiredHintId}`);
-      expect(requiredHint).toHaveTextContent('required');
+      expect(requiredHint).toMatchTextContent('required');
       // The hint must actually be exposed to the accessibility tree — unlike
       // the visual `*` marker, it is NOT `aria-hidden`.
       expect(requiredHint).not.toHaveAttribute('aria-hidden');
@@ -534,7 +534,7 @@ describe('form-field wrapper — WCAG 2.2 AA conformance', () => {
       const wrapper = container.querySelector('ngx-form-field-wrapper');
       await expect
         .element(page.getByRole('status'))
-        .toHaveTextContent('Basic plan has limited features');
+        .toMatchTextContent('Basic plan has limited features');
       expect(wrapper).toHaveAttribute('aria-describedby', 'plan-warning');
       await expectNoA11yViolations(container);
     });
@@ -602,7 +602,7 @@ describe('form-field wrapper — WCAG 2.2 AA conformance', () => {
       const wrapper = container.querySelector('ngx-form-field-wrapper');
       await expect
         .element(page.getByRole('alert'))
-        .toHaveTextContent('This plan is no longer available');
+        .toMatchTextContent('This plan is no longer available');
       // Errors suppress the warning live region's content and id entirely,
       // so the composed `aria-describedby` must reference only the error id
       // — never a dangling `plan-warning`.
@@ -644,7 +644,7 @@ describe('form-field wrapper — WCAG 2.2 AA conformance', () => {
 
       await expect
         .element(page.getByRole('alert'))
-        .toHaveTextContent('Username is required');
+        .toMatchTextContent('Username is required');
       await expectNoA11yViolations(container);
     });
 
@@ -686,7 +686,7 @@ describe('form-field wrapper — WCAG 2.2 AA conformance', () => {
       expect(wrapper).toHaveClass('ngx-signal-forms-outline');
       await expect
         .element(page.getByRole('alert'))
-        .toHaveTextContent('Email is required');
+        .toMatchTextContent('Email is required');
       await expectNoA11yViolations(container);
     });
 
@@ -814,7 +814,7 @@ describe('form-field wrapper — additional variant coverage (#501)', () => {
 
     await expect
       .element(page.getByRole('alert'))
-      .toHaveTextContent('Country is required');
+      .toMatchTextContent('Country is required');
     await expectNoA11yViolations(container);
   });
 
@@ -842,7 +842,7 @@ describe('form-field wrapper — additional variant coverage (#501)', () => {
 
     await expect
       .element(page.getByRole('alert'))
-      .toHaveTextContent('Bio is required');
+      .toMatchTextContent('Bio is required');
     await expectNoA11yViolations(container);
   });
 
@@ -880,7 +880,7 @@ describe('form-field wrapper — additional variant coverage (#501)', () => {
 
     await expect
       .element(page.getByRole('alert'))
-      .toHaveTextContent('You must agree to the terms');
+      .toMatchTextContent('You must agree to the terms');
     await expectNoA11yViolations(container);
   });
 
@@ -916,7 +916,7 @@ describe('form-field wrapper — additional variant coverage (#501)', () => {
 
     await expect
       .element(page.getByRole('alert'))
-      .toHaveTextContent('Choose a preference');
+      .toMatchTextContent('Choose a preference');
     await expectNoA11yViolations(container);
   });
 
@@ -948,7 +948,7 @@ describe('form-field wrapper — additional variant coverage (#501)', () => {
 
     await expect
       .element(page.getByRole('alert'))
-      .toHaveTextContent('Nickname is required');
+      .toMatchTextContent('Nickname is required');
     await expectNoA11yViolations(container);
   });
 
@@ -982,7 +982,7 @@ describe('form-field wrapper — additional variant coverage (#501)', () => {
 
     await expect
       .element(page.getByRole('alert'))
-      .toHaveTextContent('City is required');
+      .toMatchTextContent('City is required');
 
     const wrapper = container.querySelector('ngx-form-field-wrapper');
     expect(wrapper).toHaveAttribute('data-orientation', 'horizontal');
@@ -1120,7 +1120,7 @@ describe('form-field wrapper — additional variant coverage (#501)', () => {
 
     await expect
       .element(page.getByRole('alert'))
-      .toHaveTextContent('Choose a rating');
+      .toMatchTextContent('Choose a rating');
 
     // Confirm auto-ARIA actually wired the role-less host up before trusting
     // the axe scan below to prove it: `aria-invalid` reflects the invalid
@@ -2058,7 +2058,7 @@ describe('form-field wrapper — additional variant coverage (#501)', () => {
 
       await expect
         .element(page.getByRole('alert'))
-        .toHaveTextContent('Country is required');
+        .toMatchTextContent('Country is required');
       await expectNoA11yViolations(container);
     } finally {
       document.documentElement.classList.remove('dark');
