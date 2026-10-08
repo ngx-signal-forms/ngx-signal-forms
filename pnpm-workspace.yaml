@@ -111,8 +111,8 @@ catalogs:
   spartan:
     '@ng-icons/core': '36.1.0'
     '@ng-icons/lucide': '36.1.0'
-    '@spartan-ng/brain': '1.6.1'
-    '@spartan-ng/cli': '1.6.1'
+    '@spartan-ng/brain': '1.6.3'
+    '@spartan-ng/cli': '1.6.3'
     class-variance-authority: '^0.7.1'
     clsx: '^2.1.1'
     tailwind-merge: '^3.7.0'
@@ -160,7 +160,7 @@ catalogs:
     typescript: 'npm:@typescript/typescript6@~6.0.2'
     # Exact pin: 6.10.5 has no provenance and trustPolicy rejects it.
     verdaccio: '6.10.4'
-    vite: '^8.3.3'
+    vite: '^8.3.4'
     vite-tsconfig-paths: '^6.1.1'
   utilities:
     rxjs: '~7.8.2'
@@ -186,10 +186,10 @@ peerDependencyRules:
   allowedVersions:
     'tsconfck>typescript': '6'
     '@vitest/mocker>msw': '3'
-# Temporary: exact `name@version` pins for the `nx` 23.3.0 packages already locked,
-# so the 48 h release-age gate lets them install. Exact versions only, so later
-# Nx releases stay gated. Remove this block after 2026-10-09 15:30 UTC, when the
-# 48 h window has passed.
+# Temporary: exact `name@version` pins for the `nx` 23.3.0 packages, `vite` 8.3.4
+# and the Spartan 1.6.3 packages, so the 48 h release-age gate lets them install.
+# Exact versions only, so later releases stay gated. Remove this block after
+# 2026-10-10 13:40 UTC, when the 48 h window has passed for all of them.
 minimumReleaseAgeExclude:
   - '@nx/angular@23.3.0'
   - '@nx/devkit@23.3.0'
@@ -212,3 +212,6 @@ minimumReleaseAgeExclude:
   - '@nx/web@23.3.0'
   - '@nx/workspace@23.3.0'
   - 'nx@23.3.0'
+  - 'vite@8.3.4'
+  - '@spartan-ng/brain@1.6.3'
+  - '@spartan-ng/cli@1.6.3'
