@@ -24,7 +24,10 @@
       "path": "./tsconfig.lib.json"
     },
     {
-      "path": "./tsconfig.spec.json"
+      "path": "./tsconfig.spec.jsdom.json"
+    },
+    {
+      "path": "./tsconfig.spec.browser.json"
     }
   ]
 }

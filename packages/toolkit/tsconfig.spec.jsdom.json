@@ -1,0 +1,23 @@
+{
+  // Typecheck/lint program for the jsdom specs. `tsconfig.spec.json` stays the
+  // single program Vitest's Analog plugin compiles with, so it keeps listing
+  // every spec; this file and `tsconfig.spec.browser.json` only split the two
+  // sets of matcher types. `@testing-library/jest-dom/vitest` (loaded by
+  // `test-setup.ts`) augments Vitest's `Assertion` with signatures written for
+  // Vitest 4's generic order; next to `@vitest/browser`'s own matcher types
+  // they make `expect.element(...).toX()` resolve to the element instead of a
+  // Promise (so `@typescript-eslint/await-thenable` flags every `await`). The
+  // two sets of types must not share a program.
+  "extends": "./tsconfig.spec.json",
+  "compilerOptions": {
+    "types": [
+      "vitest/globals",
+      "vitest/importMeta",
+      "vite/client",
+      "node",
+      "vitest"
+    ]
+  },
+  "exclude": ["./**/*.browser.spec.ts", "./api-reports/**"],
+  "files": ["test-setup.ts"]
+}

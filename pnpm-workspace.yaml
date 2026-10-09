@@ -77,7 +77,7 @@ catalogs:
     '@angular/compiler-cli': '22.2.1'
     '@angular/language-service': '22.2.1'
     '@schematics/angular': '22.2.1'
-    ng-packagr: '22.1.1'
+    ng-packagr: '22.2.4'
   angular-eslint:
     '@angular-eslint/eslint-plugin': '22.5.0'
     '@angular-eslint/eslint-plugin-template': '22.5.0'
@@ -88,17 +88,18 @@ catalogs:
     '@ngrx-toolkit/core': '22.0.1'
     '@ngrx/signals': '22.0.1'
   nx:
-    '@nx/angular': '23.2.1'
-    '@nx/devkit': '23.2.1'
-    '@nx/eslint-plugin': '23.2.1'
-    '@nx/js': '23.2.1'
-    '@nx/playwright': '23.2.1'
-    '@nx/vitest': '23.2.1'
-    '@nx/workspace': '23.2.1'
-    nx: '23.2.1'
+    '@nx/angular': '23.3.0'
+    '@nx/devkit': '23.3.0'
+    '@nx/eslint-plugin': '23.3.0'
+    '@nx/js': '23.3.0'
+    '@nx/oxlint': '23.3.0'
+    '@nx/playwright': '23.3.0'
+    '@nx/vitest': '23.3.0'
+    '@nx/workspace': '23.3.0'
+    nx: '23.3.0'
   playwright:
     '@playwright/test': '^1.63.0'
-    eslint-plugin-playwright: '^2.12.0'
+    eslint-plugin-playwright: '^2.12.1'
   primeng:
     '@primeuix/themes': '3.0.1'
     primeicons: '8.0.2'
@@ -110,8 +111,8 @@ catalogs:
   spartan:
     '@ng-icons/core': '36.1.0'
     '@ng-icons/lucide': '36.1.0'
-    '@spartan-ng/brain': '1.5.0'
-    '@spartan-ng/cli': '1.5.0'
+    '@spartan-ng/brain': '1.6.3'
+    '@spartan-ng/cli': '1.6.3'
     class-variance-authority: '^0.7.1'
     clsx: '^2.1.1'
     tailwind-merge: '^3.7.0'
@@ -126,7 +127,7 @@ catalogs:
     '@tailwindcss/forms': '^0.5.11'
     '@tailwindcss/postcss': '^4.3.3'
     autoprefixer: '^10.6.1'
-    postcss: '^8.5.28'
+    postcss: '^8.5.29'
     postcss-url: '~10.1.3'
     tailwindcss: '^4.3.3'
   testing:
@@ -141,7 +142,7 @@ catalogs:
     '@arethetypeswrong/cli': '^0.18.5'
     '@commitlint/cli': '^21.2.3'
     '@commitlint/config-conventional': '^21.2.3'
-    '@oxc-project/runtime': '^0.152.0'
+    '@oxc-project/runtime': '^0.153.0'
     # Exact pin: 14.1.x is newer than pnpm's minimum release age. Move both
     # size-limit entries to ^14 once 14.1 passes it.
     '@size-limit/file': '14.1.0'
@@ -150,15 +151,16 @@ catalogs:
     eslint: '^10.12.0'
     jiti: '2.7.0'
     lint-staged: '^17.6.0'
-    oxfmt: '^0.71.0'
-    oxlint: '^1.86.0'
+    oxfmt: '^0.72.0'
+    oxlint: '^1.87.0'
     oxlint-tsgolint: '^7.0.2003'
     publint: '^0.3.25'
     simple-git-hooks: '^2.14.0'
     size-limit: '14.1.0'
     typescript: 'npm:@typescript/typescript6@~6.0.2'
-    verdaccio: '^6.10.3'
-    vite: '^8.3.2'
+    # Exact pin: 6.10.5 has no provenance and trustPolicy rejects it.
+    verdaccio: '6.10.4'
+    vite: '^8.3.4'
     vite-tsconfig-paths: '^6.1.1'
   utilities:
     rxjs: '~7.8.2'
@@ -169,10 +171,10 @@ catalogs:
     vest: '6.3.4'
     zod: '^4.6.5'
   vitest:
-    '@vitest/browser-playwright': '~4.1.11'
-    '@vitest/coverage-v8': '~4.1.11'
-    '@vitest/ui': '~4.1.11'
-    vitest: '~4.1.11'
+    '@vitest/browser-playwright': '~5.0.3'
+    '@vitest/coverage-v8': '~5.0.3'
+    '@vitest/ui': '~5.0.3'
+    vitest: '~5.0.3'
 
 strictPeerDependencies: false
 # `pnpm peers check` runs in CI. tsconfck (via vite-tsconfig-paths) lists
@@ -184,3 +186,32 @@ peerDependencyRules:
   allowedVersions:
     'tsconfck>typescript': '6'
     '@vitest/mocker>msw': '3'
+# Temporary: exact `name@version` pins for the `nx` 23.3.0 packages, `vite` 8.3.4
+# and the Spartan 1.6.3 packages, so the 48 h release-age gate lets them install.
+# Exact versions only, so later releases stay gated. Remove this block after
+# 2026-10-10 13:40 UTC, when the 48 h window has passed for all of them.
+minimumReleaseAgeExclude:
+  - '@nx/angular@23.3.0'
+  - '@nx/devkit@23.3.0'
+  - '@nx/eslint-plugin@23.3.0'
+  - '@nx/eslint@23.3.0'
+  - '@nx/js@23.3.0'
+  - '@nx/nx-darwin-arm64@23.3.0'
+  - '@nx/nx-darwin-x64@23.3.0'
+  - '@nx/nx-freebsd-x64@23.3.0'
+  - '@nx/nx-linux-arm-gnueabihf@23.3.0'
+  - '@nx/nx-linux-arm64-gnu@23.3.0'
+  - '@nx/nx-linux-arm64-musl@23.3.0'
+  - '@nx/nx-linux-x64-gnu@23.3.0'
+  - '@nx/nx-linux-x64-musl@23.3.0'
+  - '@nx/nx-win32-arm64-msvc@23.3.0'
+  - '@nx/nx-win32-x64-msvc@23.3.0'
+  - '@nx/oxlint@23.3.0'
+  - '@nx/playwright@23.3.0'
+  - '@nx/vitest@23.3.0'
+  - '@nx/web@23.3.0'
+  - '@nx/workspace@23.3.0'
+  - 'nx@23.3.0'
+  - 'vite@8.3.4'
+  - '@spartan-ng/brain@1.6.3'
+  - '@spartan-ng/cli@1.6.3'

@@ -938,7 +938,7 @@ import { NgxFormField } from '@ngx-signal-forms/toolkit/form-field';
 - `only: (ctx) => VestFieldExclusion` — a field name, a list of field names,
   `undefined` for a whole-suite run, or `false` to focus nothing — threaded
   into `suite.only(field).run(...)` (falling back to `suite.run(value,
-fieldName)`, single field name only, when the suite exposes no `only`),
+  fieldName)`, single field name only, when the suite exposes no `only`),
   enabling per-field Vest runs for large suites. `false` throws: Vest has no
   way to express "focus nothing" through either form.
 - Exported kind prefixes `VEST_ERROR_KIND_PREFIX` (`'vest:'`) and
@@ -951,11 +951,11 @@ fieldName)`, single field name only, when the suite exposes no `only`),
   `undefined`, producing a permanent blocking error on a valid value — see
   [ADR-0008](decisions/0008-vest-suite-input-is-the-bound-path.md)).
   **Action:** replace `validateVest(path.email, suite, { focusCurrentField:
-true })` with `validateVest(path, suite, { only: () => activeField })`,
+  true })` with `validateVest(path, suite, { only: () => activeField })`,
   where `activeField` is a field name your own code tracks (e.g. on
   `(focus)`/`(blur)`). Subtree binding is still supported when the suite is
   authored for that subtree's value (e.g. `validateVest(path.address,
-addressSuite)` where `addressSuite` takes `{ city: string, … }`).
+  addressSuite)` where `addressSuite` takes `{ city: string, … }`).
 
 - **BREAKING — a typed suite's field-name union now flows through `only`
   (#292, PR #308).** Vest ≥6.3.2 propagates a field-name union `F` through
@@ -1230,7 +1230,7 @@ leaf is counted consistently whether it's `null` or populated.
 - **Apply the current rc.12 API changes** when upgrading from any earlier
   release candidate:
   - replace `<ngx-form-field-notification>` with `<ngx-form-field-error
-presentation="panel">`, and rename the `--ngx-signal-form-notification-*`
+    presentation="panel">`, and rename the `--ngx-signal-form-notification-*`
     custom properties to their `-error-panel-*` / `-warning-panel-*`
     equivalents;
   - replace `showErrors(field, strategy, submittedStatus)` with

@@ -31,14 +31,9 @@
       "dependsOn": ["^build"],
       "inputs": ["production", "^production"]
     },
-    "@angular/build:application": {
-      "cache": true,
-      "dependsOn": ["^build"],
-      "inputs": ["production", "^production"]
-    },
     "lint": {
       "cache": true,
-      "inputs": ["default", "{workspaceRoot}/oxlint.config.ts"]
+      "inputs": ["...", "^production", "{workspaceRoot}/oxlint.config.ts"]
     },
     "test": {
       "cache": true,
@@ -185,6 +180,12 @@
         "packages/demo/debugger/**/*",
         "packages/demo/shared/**/*"
       ]
+    },
+    {
+      "plugin": "@nx/oxlint",
+      "options": {
+        "targetName": "lint"
+      }
     }
   ]
 }

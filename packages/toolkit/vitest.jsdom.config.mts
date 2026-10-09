@@ -3,6 +3,7 @@
 import { defineConfig } from 'vitest/config';
 import {
   toolkitBrowserSpecFiles,
+  toolkitReporters,
   toolkitSharedConfig,
   toolkitSpecFiles,
 } from './vitest.shared.mts';
@@ -12,6 +13,7 @@ export default defineConfig({
   test: {
     ...toolkitSharedConfig.test,
     name: 'toolkit-jsdom',
+    reporters: toolkitReporters('jsdom'),
     setupFiles: ['./test-setup.ts'],
     environment: 'jsdom',
     include: [toolkitSpecFiles],

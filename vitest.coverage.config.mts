@@ -2,7 +2,7 @@
 import { defineConfig } from 'vitest/config';
 
 /**
- * Merged Coverage Configuration (Vitest 4)
+ * Merged Coverage Configuration (Vitest 5)
  *
  * One run, one number. Vitest instruments once across every project listed
  * below and emits a single merged report — no external merge step is needed.

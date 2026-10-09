@@ -18,7 +18,7 @@
   "scripts": {
     "start": "nx serve demo",
     "build:all": "nx run-many --target=build --all",
-    "lint": "nx run workspace:lint",
+    "lint": "nx run-many -t lint",
     "lint:fix": "nx run workspace:lint-fix",
     "format": "nx run workspace:format",
     "format:check": "nx run workspace:format-check",
@@ -70,6 +70,7 @@
     "@nx/devkit": "catalog:nx",
     "@nx/eslint-plugin": "catalog:nx",
     "@nx/js": "catalog:nx",
+    "@nx/oxlint": "catalog:nx",
     "@nx/playwright": "catalog:nx",
     "@nx/vitest": "catalog:nx",
     "@nx/workspace": "catalog:nx",

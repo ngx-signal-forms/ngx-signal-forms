@@ -241,3 +241,16 @@ Put the file filter after `--`. Vitest does not know `--testFile`.
 `check-published-package.spec.ts` starts `npm pack`. Under a full parallel
 run it can pass the default timeout, so those blocks allow 30 seconds. If it
 still fails, run the spec alone before you debug it.
+
+### Repeat a test to find a flake
+
+`--repeats=<n>` runs each selected test `n` more times, whatever the result.
+One failing run fails the test. `-t` narrows the run to the suspect. Vitest 5
+matches `-t` against the full name, with describe titles and the test title
+joined by `>`.
+
+```bash
+pnpm nx run toolkit:test -- error-strategies --repeats=20 -t 'shouldShowErrors > evaluates on-touch'
+```
+
+The same flags work with `toolkit:test-browser`.

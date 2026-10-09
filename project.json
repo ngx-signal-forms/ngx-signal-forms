@@ -35,7 +35,7 @@
     "lint": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "oxlint ."
+        "command": "oxlint . --ignore-pattern 'apps/**' --ignore-pattern 'packages/**'"
       }
     },
     "lint-fix": {

@@ -183,7 +183,7 @@ describe('NgxHeadlessErrorState — local strategy reaches auto-ARIA (#586)', ()
     expect(screen.getByText('Email is required')).toBeVisible();
     expect(email).toHaveAttribute('aria-invalid', 'true');
     expect(email.getAttribute('aria-describedby')).toContain('email-error');
-    expect(container.querySelector('#email-error')).toHaveTextContent(
+    expect(container.querySelector('#email-error')).toMatchTextContent(
       'Email is required',
     );
 
@@ -235,7 +235,7 @@ describe('NgxHeadlessErrorState — local strategy reaches auto-ARIA (#586)', ()
     // id the template rendered.
     expect(email).toHaveAttribute('aria-invalid', 'true');
     expect(email.getAttribute('aria-describedby')).toContain('email-error');
-    expect(container.querySelector('#email-error')).toHaveTextContent(
+    expect(container.querySelector('#email-error')).toMatchTextContent(
       'Email is required',
     );
 
