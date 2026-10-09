@@ -33,7 +33,7 @@
     },
     "lint": {
       "cache": true,
-      "inputs": ["default", "^production", "{workspaceRoot}/oxlint.config.ts"]
+      "inputs": ["...", "^production", "{workspaceRoot}/oxlint.config.ts"]
     },
     "test": {
       "cache": true,
