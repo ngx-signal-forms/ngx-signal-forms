@@ -238,6 +238,19 @@ jobs:
           if-no-files-found: ignore
           retention-days: 14
 
+      # Written by the CI-only `html` reporter in packages/toolkit/vitest.shared.mts.
+      # Failure-only: each single-file report is 1-2 MB. `.vitest` is a hidden
+      # directory, which upload-artifact skips unless told otherwise.
+      - name: Upload toolkit Vitest reports
+        if: ${{ failure() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: toolkit-vitest-report-${{ github.run_id }}-${{ github.run_attempt }}
+          path: packages/toolkit/.vitest/report-*/index.html
+          include-hidden-files: true
+          if-no-files-found: ignore
+          retention-days: 14
+
       # https://nx.dev/ci/features/self-healing-ci
       # continue-on-error: fix-ci requires Nx Cloud, may fail if quota exceeded
       - run: pnpm exec nx fix-ci --outputStyle=static

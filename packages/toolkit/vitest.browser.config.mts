@@ -5,6 +5,7 @@ import { defineConfig } from 'vitest/config';
 import type { BrowserCommand } from 'vitest/node';
 import {
   toolkitBrowserSpecFiles,
+  toolkitReporters,
   toolkitSharedConfig,
 } from './vitest.shared.mts';
 
@@ -55,6 +56,7 @@ export default defineConfig({
   test: {
     ...toolkitSharedConfig.test,
     name: 'toolkit-browser',
+    reporters: toolkitReporters('browser'),
     setupFiles: ['./test-setup.browser.ts'],
     include: [toolkitBrowserSpecFiles],
     browser: {

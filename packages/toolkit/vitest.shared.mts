@@ -43,6 +43,19 @@ export const toolkitEntryAliases = [
   },
 ];
 
+/**
+ * Reporters for one toolkit Vitest run. CI adds a self-contained HTML report
+ * under `.vitest/report-<run>/`. Each run gets its own directory so the jsdom
+ * and browser runs do not overwrite each other's `index.html`.
+ */
+export const toolkitReporters = (run: string) =>
+  process.env['CI'] === 'true'
+    ? [
+        'default',
+        ['html', { singleFile: true, outputDir: `.vitest/report-${run}` }],
+      ]
+    : ['default'];
+
 const sharedProjectTestConfig = {
   alias: toolkitEntryAliases,
   globals: true,
