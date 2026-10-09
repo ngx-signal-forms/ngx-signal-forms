@@ -66,6 +66,9 @@ export default defineConfig({
       }),
       headless: Boolean(process.env.CI),
       screenshotFailures: true,
+      locators: {
+        errorFormat: 'aria',
+      },
       commands: {
         emulateColorScheme,
         emulateForcedColors,
