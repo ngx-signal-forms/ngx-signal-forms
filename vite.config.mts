@@ -2,7 +2,7 @@
 import { defineConfig } from 'vitest/config';
 
 /**
- * Root Vitest Configuration (Vitest 4)
+ * Root Vitest Configuration (Vitest 5)
  *
  * Uses the modern `test.projects` approach (recommended since Vitest 3.2)
  * instead of the deprecated `vitest.workspace.ts` file.
@@ -12,7 +12,7 @@ import { defineConfig } from 'vitest/config';
  * or defaulting unit-test runs into Vitest browser mode.
  *
  * @see https://vitest.dev/blog/vitest-3-2.html#workspace-is-deprecated
- * @see https://vitest.dev/guide/migration.html#vitest-4
+ * @see https://vitest.dev/guide/migration.html#vitest-5
  */
 export default defineConfig({
   test: {

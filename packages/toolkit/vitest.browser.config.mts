@@ -65,7 +65,6 @@ export default defineConfig({
         },
       }),
       headless: Boolean(process.env.CI),
-      screenshotDirectory: '__screenshots__',
       screenshotFailures: true,
       commands: {
         emulateColorScheme,
