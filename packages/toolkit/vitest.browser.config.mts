@@ -67,6 +67,8 @@ export default defineConfig({
         },
       }),
       headless: Boolean(process.env.CI),
+      // Experimental. The traces are embedded in the CI `html` report.
+      traceView: Boolean(process.env.CI),
       screenshotFailures: true,
       locators: {
         errorFormat: 'aria',
