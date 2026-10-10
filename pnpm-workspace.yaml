@@ -186,32 +186,3 @@ peerDependencyRules:
   allowedVersions:
     'tsconfck>typescript': '6'
     '@vitest/mocker>msw': '3'
-# Temporary: exact `name@version` pins for the `nx` 23.3.0 packages, `vite` 8.3.4
-# and the Spartan 1.6.3 packages, so the 48 h release-age gate lets them install.
-# Exact versions only, so later releases stay gated. Remove this block after
-# 2026-10-10 13:40 UTC, when the 48 h window has passed for all of them.
-minimumReleaseAgeExclude:
-  - '@nx/angular@23.3.0'
-  - '@nx/devkit@23.3.0'
-  - '@nx/eslint-plugin@23.3.0'
-  - '@nx/eslint@23.3.0'
-  - '@nx/js@23.3.0'
-  - '@nx/nx-darwin-arm64@23.3.0'
-  - '@nx/nx-darwin-x64@23.3.0'
-  - '@nx/nx-freebsd-x64@23.3.0'
-  - '@nx/nx-linux-arm-gnueabihf@23.3.0'
-  - '@nx/nx-linux-arm64-gnu@23.3.0'
-  - '@nx/nx-linux-arm64-musl@23.3.0'
-  - '@nx/nx-linux-x64-gnu@23.3.0'
-  - '@nx/nx-linux-x64-musl@23.3.0'
-  - '@nx/nx-win32-arm64-msvc@23.3.0'
-  - '@nx/nx-win32-x64-msvc@23.3.0'
-  - '@nx/oxlint@23.3.0'
-  - '@nx/playwright@23.3.0'
-  - '@nx/vitest@23.3.0'
-  - '@nx/web@23.3.0'
-  - '@nx/workspace@23.3.0'
-  - 'nx@23.3.0'
-  - 'vite@8.3.4'
-  - '@spartan-ng/brain@1.6.3'
-  - '@spartan-ng/cli@1.6.3'
