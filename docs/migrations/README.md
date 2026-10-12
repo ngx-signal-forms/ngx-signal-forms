@@ -3,8 +3,8 @@ title: 'Versioned migration guides'
 sidebarTitle: 'Overview'
 ---
 
-RC.11 to RC.16 are released guides. Check the installed version before
-applying a hop.
+Each guide covers one hop. Check the installed version before applying a
+hop.
 
 A toolkit release with breaking changes must add `v<version>.md` in this
 directory before it is released; the release fails without it. Other

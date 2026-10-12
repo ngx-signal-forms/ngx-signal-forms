@@ -4,9 +4,8 @@ sidebarTitle: 'Beta to v1'
 ---
 
 This guide covers every breaking change between the last beta
-(`1.0.0-beta.10`) and the current v1 release-candidate surface.
-`1.0.0-rc.16` is the latest released version. Historical beta examples below
-remain migration examples, not current API recipes.
+(`1.0.0-beta.10`) and the current v1 release-candidate surface. Historical
+beta examples below remain migration examples, not current API recipes.
 
 That means this document does **not** walk through interim RC-to-RC
 waypoints. Every “before → after” example below shows the migration from
