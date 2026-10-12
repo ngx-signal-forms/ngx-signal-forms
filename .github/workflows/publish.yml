@@ -191,8 +191,9 @@ jobs:
         run: pnpm exec nx report --outputStyle=static
 
       # This step is also the release pre-flight. It runs the changelog
-      # renderer, which requires `docs/migrations/v<version>.md`. `--dry-run`
-      # writes nothing and creates no release.
+      # renderer, which requires `docs/migrations/v<version>.md` when the
+      # release has breaking changes. `--dry-run` writes nothing and creates
+      # no release.
       - name: Preview release notes
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

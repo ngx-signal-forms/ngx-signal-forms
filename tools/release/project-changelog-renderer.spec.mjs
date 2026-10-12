@@ -136,11 +136,14 @@ void test('leaves a scoped package inside a markdown link target untouched', () 
 // spec missed - `toSingleLine` (the Highlights summary) escaped a bare
 // `@word`, but `formatChange` and `formatBreakingChange` did not.
 
-function createRenderer(changes) {
+function createRenderer(
+  changes,
+  { project = null, version = '1.0.0-rc.16' } = {},
+) {
   return new ProjectChangelogRenderer({
     changes,
-    changelogEntryVersion: '1.0.0-rc.16',
-    project: null,
+    changelogEntryVersion: version,
+    project,
     entryWhenNoChanges: false,
     isVersionPlans: false,
     changelogRenderOptions: {},
@@ -176,4 +179,57 @@ void test('formatBreakingChange escapes a bare @word in the description and the 
     line,
     '- **core:** drop `@legacy-api` support\n  the `@legacy-api` export is removed.',
   );
+});
+
+// A migration guide is required only when a release breaks consumers. The
+// release fails without one, so a breaking change never ships without
+// upgrade steps. Other releases link the guide when it exists.
+
+const fix = {
+  type: 'fix',
+  scope: 'toolkit',
+  description: 'keep focus on the first invalid field',
+  body: '',
+  isBreaking: false,
+  affectedProjects: '*',
+};
+
+const breakingFeat = {
+  type: 'feat',
+  scope: 'toolkit',
+  description: 'rename the error strategy input',
+  body: 'BREAKING CHANGE: `errorStrategy` is now `strategy`.',
+  isBreaking: true,
+  affectedProjects: '*',
+};
+
+// `docs/migrations/v9.9.9.md` does not exist; `v1.0.0-rc.15.md` does.
+const versionWithoutGuide = '9.9.9';
+const versionWithGuide = '1.0.0-rc.15';
+
+void test('a release with a breaking change fails without a migration guide', async () => {
+  const renderer = createRenderer([breakingFeat], {
+    project: 'toolkit',
+    version: versionWithoutGuide,
+  });
+  await assert.rejects(renderer.render(), /docs\/migrations\/v9\.9\.9\.md/u);
+});
+
+void test('a release without breaking changes renders without a migration guide', async () => {
+  const renderer = createRenderer([fix], {
+    project: 'toolkit',
+    version: versionWithoutGuide,
+  });
+  const notes = await renderer.render();
+  assert.match(notes, /^## 9\.9\.9/u);
+  assert.doesNotMatch(notes, /Migration notes/u);
+});
+
+void test('a release links its migration guide when one exists', async () => {
+  const renderer = createRenderer([fix], {
+    project: 'toolkit',
+    version: versionWithGuide,
+  });
+  const notes = await renderer.render();
+  assert.match(notes, /docs\/migrations\/v1\.0\.0-rc\.15\.md/u);
 });

@@ -228,16 +228,16 @@ format and release-note safety.
 
 ## Release
 
-1. Open a release-prep PR. It adds the migration guide
-   (`docs/migrations/v<version>.md`, see the
-   [migrations README](./migrations/README.md)) and bumps the version:
+1. Open a release-prep PR that bumps the version:
 
    ```bash
    pnpm nx release version prerelease --preid=rc   # or patch, minor, major, 1.0.0
    ```
 
    The command changes only `packages/toolkit/package.json`. It does not
-   commit or tag. Merge the PR like any other.
+   commit or tag. If the release has breaking changes, the PR also adds the
+   migration guide (`docs/migrations/v<version>.md`, see the
+   [migrations README](./migrations/README.md)). Merge the PR like any other.
 
 2. Tag the prep PR's merge commit and push the tag. Tag that commit, not
    `origin/main`, because another PR may have merged since:
@@ -255,7 +255,7 @@ format and release-note safety.
    ([`publish.yml`](../.github/workflows/publish.yml)):
    - `build` fails unless the tagged commit is on `main` and the tag matches
      the version in `package.json`. It previews the release notes, which
-     fails without the migration guide. It then runs the release checks
+     fails when a breaking change has no migration guide. It then runs the release checks
      (format, the full toolkit suite, coverage, published-package checks,
      size, isolation build, and e2e affected since the previous tag),
      builds the package and uploads it.

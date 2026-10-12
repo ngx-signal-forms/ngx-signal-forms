@@ -136,11 +136,10 @@ export default class ProjectChangelogRenderer extends DefaultChangelogRenderer {
       return super.render();
     }
 
-    this.assertMigrationGuideExists();
-
     const sections: Array<readonly string[]> = [];
 
     this.preprocessChanges();
+    this.assertMigrationGuideForBreakingChanges();
 
     if (this.shouldRenderEmptyEntry()) {
       return this.renderEmptyEntry();
@@ -241,11 +240,15 @@ export default class ProjectChangelogRenderer extends DefaultChangelogRenderer {
   }
 
   private renderMigrationNotes(): string[] {
+    if (!this.hasMigrationGuide()) {
+      return [];
+    }
+
     const count = new Set(this.breakingChanges).size;
     const suffix = count === 1 ? '' : 's';
     const guideUrl =
       `https://github.com/ngx-signal-forms/ngx-signal-forms/blob/main/` +
-      `docs/migrations/v${this.changelogEntryVersion}.md`;
+      this.migrationGuidePath();
     const summary =
       count === 0
         ? 'Review consumer-visible changes and upgrade steps in the'
@@ -259,14 +262,22 @@ export default class ProjectChangelogRenderer extends DefaultChangelogRenderer {
     ];
   }
 
-  private assertMigrationGuideExists(): void {
-    const guidePath = `docs/migrations/v${this.changelogEntryVersion}.md`;
-    // oxlint-disable-next-line strict-boolean-expressions, no-unsafe-call -- Oxc cannot resolve Node's existsSync type through this ESM renderer.
-    if (!existsSync(guidePath)) {
+  /** A release that breaks consumers must ship with upgrade steps. */
+  private assertMigrationGuideForBreakingChanges(): void {
+    if (this.hasBreakingChanges() && !this.hasMigrationGuide()) {
       throw new Error(
-        `Missing required migration guide: ${guidePath}. Add it before releasing.`,
+        `This release has breaking changes, so it needs a migration guide: ${this.migrationGuidePath()}. Add it before releasing.`,
       );
     }
+  }
+
+  private hasMigrationGuide(): boolean {
+    // oxlint-disable-next-line no-unsafe-return, no-unsafe-call -- Oxc cannot resolve Node's existsSync type through this ESM renderer.
+    return existsSync(this.migrationGuidePath());
+  }
+
+  private migrationGuidePath(): string {
+    return `docs/migrations/v${this.changelogEntryVersion}.md`;
   }
 
   private renderChangesByAreaThenType(): string[] {
