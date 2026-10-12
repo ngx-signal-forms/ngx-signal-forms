@@ -43,5 +43,5 @@ Each guide starts with an `Upgrade from v<previous-version>` section:
 - State explicitly when no consumer migration is needed.
 - Separate additions and bug fixes from required migration work.
 
-GitHub release notes must link to the matching guide. Generated changelogs
-summarize changes, but do not replace migration instructions.
+When a guide exists, the GitHub release notes link to it. Generated
+changelogs summarize changes, but do not replace migration instructions.
