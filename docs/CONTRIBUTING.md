@@ -265,8 +265,10 @@ format and release-note safety.
    - `github-release` creates the GitHub release, only after npm accepted the
      package.
 
-To check an existing tag without publishing, dispatch a dry run:
-`gh workflow run publish.yml --ref <tag> -f ref=<tag> -f dry_run=true`.
+To check an existing tag without publishing, dispatch a dry run from `main`:
+`gh workflow run publish.yml --ref main -f ref=<tag> -f dry_run=true`. The
+`--ref` picks which `publish.yml` runs, so `main` runs the current checks
+against the tag's tree.
 
 Release notes are the GitHub releases. There is no `CHANGELOG.md`.
 
