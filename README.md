@@ -358,7 +358,7 @@ validation feedback."
 
 ## For maintainers and contributors
 
-- [Contributing](./docs/CONTRIBUTING.md): setup, commands, and release flow
+- [Contributing](./docs/CONTRIBUTING.md): setup and commands
 - [Package architecture](./docs/PACKAGE_ARCHITECTURE.md): repository layout,
   build, and publishing
 - [Angular public API policy](./docs/ANGULAR_PUBLIC_API_POLICY.md): which

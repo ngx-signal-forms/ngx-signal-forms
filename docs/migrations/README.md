@@ -7,8 +7,9 @@ RC.11 to RC.15 are released guides. RC.16 documents the next release; its
 guide does not establish publication. Check the installed version
 before applying a hop.
 
-Every published toolkit version must add `v<version>.md` in this directory
-before it is released. The guide is the authoritative upgrade path from the
+A toolkit release with breaking changes must add `v<version>.md` in this
+directory before it is released; the release fails without it. Other
+releases may add one. The guide is the authoritative upgrade path from the
 immediately preceding version to that release.
 
 For integrations starting at `1.0.0-beta.10`, use the
@@ -42,5 +43,5 @@ Each guide starts with an `Upgrade from v<previous-version>` section:
 - State explicitly when no consumer migration is needed.
 - Separate additions and bug fixes from required migration work.
 
-GitHub release notes must link to the matching guide. Generated changelogs
-summarize changes, but do not replace migration instructions.
+When a guide exists, the GitHub release notes link to it. Generated
+changelogs summarize changes, but do not replace migration instructions.

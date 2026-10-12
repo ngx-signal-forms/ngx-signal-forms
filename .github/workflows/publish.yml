@@ -1,16 +1,67 @@
 name: Publish
 
-# Publishes on a `v*` tag push or by hand. Uses npm Trusted Publishers (OIDC).
+# Publishes the toolkit on a `v*` tag push or by hand, through npm Trusted
+# Publishers (OIDC). Only the maintainer releases.
+#
+# How to release:
+#   1. Open a release-prep pull request that bumps the version:
+#        pnpm nx release version prerelease --preid=rc  # or patch, minor, major, 1.0.0
+#      It changes only `packages/toolkit/package.json` and does not commit or
+#      tag. A release with breaking changes also adds
+#      `docs/migrations/v<version>.md`; `build` fails without it.
+#   2. Tag the prep PR's merge commit and push the tag. Tag that commit, not
+#      `origin/main`, because another PR may have merged since. The tag must
+#      match the version in `packages/toolkit/package.json`. Only admins can
+#      create, move or delete `v*` tags.
+#        SHA=$(gh pr view <prep-pr> --json mergeCommit --jq .mergeCommit.oid)
+#        git tag -a v<version> -m "Release <version>" "$SHA"
+#        git push origin v<version>
+#   3. Approve the `npm-publish` deployment when `publish` waits for it.
+#
+# Release notes are the GitHub releases. There is no CHANGELOG.md.
+#
+# To check an existing tag without publishing, dispatch a dry run from `main`.
+# The dispatch `--ref` picks which `publish.yml` runs, so `main` runs the
+# current checks against the tag's tree:
+#   gh workflow run publish.yml --ref main -f ref=<tag> -f dry_run=true
+#
+# When a release fails. Immutable releases lock a tag once its GitHub release
+# exists. Until then, the tag can be deleted and pushed again
+# (`git push origin :refs/tags/<tag>` and `git tag -d <tag>`).
+#   - `build` fails: nothing is published. Delete the tag, fix it in a PR and
+#     tag again.
+#   - `publish` approval rejected: nothing is published. Delete the tag.
+#   - `publish` fails: check `npm view @ngx-signal-forms/toolkit@<version>`.
+#     If the version is not on npm, re-run the failed jobs for a transient
+#     failure, or delete the tag. If it is, re-run the failed jobs: `publish`
+#     skips the upload when npm holds this run's exact package, and
+#     `github-release` follows. npm can take a few minutes to list a new
+#     version, and the uploaded package expires after 7 days.
+#   - `github-release` fails: re-run the failed job. Do not dispatch the
+#     workflow again: a new run builds the package again, and `publish`
+#     refuses a version npm already has unless the rebuilt package is
+#     identical.
+#   - A published version has a defect: keep the tag. npm never reuses a
+#     version. Run `npm deprecate` on it and release a fix. Within 72 hours, a
+#     version with no dependents can be unpublished. Moving a dist-tag needs an
+#     authenticated `npm dist-tag add`.
+#   - To re-run a publish by hand, dispatch on the tag, not on `main`. The
+#     `npm-publish` environment only accepts `v*` tags:
+#       gh workflow run publish.yml --ref <tag> -f ref=<tag>
 #
 # Jobs, split on purpose:
-#   - build:           runs all third-party code (install, test, build).
-#                      Read-only token. It has no OIDC token.
+#   - build:           runs all third-party code (install, release checks,
+#                      build). Read-only token. It has no OIDC token.
 #   - publish:         holds the OIDC token. It installs nothing and runs no
 #                      repo script. It downloads the built package and runs
 #                      `npm publish`. It waits for approval on the
 #                      `npm-publish` environment.
-#   - publish-dry-run: the same steps for a dry run, with `--dry-run` and no
-#                      environment. The steps are duplicated on purpose.
+#   - github-release:  runs only after a successful publish.
+#                      `nx release changelog` creates the GitHub release with
+#                      the workflow's own `GITHUB_TOKEN`.
+#   - publish-dry-run: the same steps as `publish` for a dry run, with
+#                      `--dry-run` and no environment. The steps are
+#                      duplicated on purpose.
 on:
   push:
     tags:
@@ -35,13 +86,16 @@ concurrency:
 
 jobs:
   build:
-    name: Build package
+    name: Check and build package
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    # The release checks run every affected e2e suite in this one job,
+    # including demo-e2e unsharded (ci.yml splits it across a 4-way matrix).
+    timeout-minutes: 45
     permissions:
       contents: read
     outputs:
       tag: ${{ steps.release_info.outputs.tag }}
+      previous_tag: ${{ steps.release_info.outputs.previous_tag }}
       dist_tag: ${{ steps.release_info.outputs.dist_tag }}
       node_version: ${{ steps.node_version.outputs.version }}
     steps:
@@ -113,6 +167,18 @@ jobs:
           fi
           echo "tag=$TAG" >> "$GITHUB_OUTPUT"
 
+          # Fail before the long checks if the tag points at a commit without
+          # the version bump from the release-prep pull request.
+          PACKAGE_VERSION=$(jq -r '.version' packages/toolkit/package.json)
+          if [ "v$PACKAGE_VERSION" != "$TAG" ]; then
+            echo "❌ Tag '$TAG' does not match packages/toolkit/package.json version '$PACKAGE_VERSION'." >&2
+            exit 1
+          fi
+
+          # Release notes and affected e2e both start at the previous release.
+          PREVIOUS_TAG=$(git describe --tags --abbrev=0 --match 'v*' "${TAG}^")
+          echo "previous_tag=$PREVIOUS_TAG" >> "$GITHUB_OUTPUT"
+
           # Determine npm dist-tag based on version
           VERSION="${TAG#v}"
           if [[ "$VERSION" == *"-next"* ]]; then
@@ -126,7 +192,7 @@ jobs:
           else
             echo "dist_tag=latest" >> "$GITHUB_OUTPUT"
           fi
-          echo "Resolved: tag=$TAG, dist_tag will be determined by version"
+          echo "Resolved: tag=$TAG, previous_tag=$PREVIOUS_TAG"
 
       # The publish job has no checkout. It reads the Node version from here.
       - name: Read Node version
@@ -151,20 +217,15 @@ jobs:
       - name: Install dependencies
         run: sfw pnpm install --frozen-lockfile
 
+      # Read-only: a publish run reads the Nx Cloud cache and never writes it.
       - name: Configure Nx Cloud access
         env:
-          NX_CLOUD_ACCESS_TOKEN_RW: ${{ secrets['NX_CLOUD_ACCESS_TOKEN_RW'] }}
           NX_CLOUD_ACCESS_TOKEN_RO: ${{ secrets['NX_CLOUD_ACCESS_TOKEN_RO'] }}
         run: |
-          TOKEN="$NX_CLOUD_ACCESS_TOKEN_RW"
-          if [ -z "$TOKEN" ]; then
-            TOKEN="$NX_CLOUD_ACCESS_TOKEN_RO"
-          fi
-
-          if [ -n "$TOKEN" ]; then
-            echo "NX_CLOUD_ACCESS_TOKEN=$TOKEN" >> "$GITHUB_ENV"
+          if [ -n "$NX_CLOUD_ACCESS_TOKEN_RO" ]; then
+            echo "NX_CLOUD_ACCESS_TOKEN=$NX_CLOUD_ACCESS_TOKEN_RO" >> "$GITHUB_ENV"
             echo "NX_NO_CLOUD=false" >> "$GITHUB_ENV"
-            echo "Nx Cloud enabled for publish workflow."
+            echo "Nx Cloud enabled (read-only) for publish workflow."
           else
             echo "NX_NO_CLOUD=true" >> "$GITHUB_ENV"
             echo "No Nx Cloud token configured. Running publish workflow without Nx Cloud."
@@ -173,10 +234,122 @@ jobs:
       - name: Nx Report
         run: pnpm exec nx report --outputStyle=static
 
-      # jsdom specs only. `test-browser` needs Playwright browsers, which this
-      # job does not install. release.yml already runs it before the tag exists.
-      - name: Test toolkit
-        run: pnpm exec nx test toolkit --outputStyle=static
+      # This step is also the release pre-flight. It runs the changelog
+      # renderer, which requires `docs/migrations/v<version>.md` when the
+      # release has breaking changes. `--dry-run` writes nothing and creates
+      # no release.
+      - name: Preview release notes
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ steps.release_info.outputs.tag }}
+          PREVIOUS_TAG: ${{ steps.release_info.outputs.previous_tag }}
+        run: |
+          set +e
+          pnpm exec nx release changelog "${TAG#v}" --from "$PREVIOUS_TAG" \
+            --git-commit=false --git-tag=false --git-push=false --dry-run > "$RUNNER_TEMP/release-preview.txt" 2>&1
+          STATUS=$?
+          set -e
+
+          {
+            echo "## 📋 Release Preview"
+            echo ""
+            echo "Running: \`nx release changelog ${TAG#v} --dry-run\`"
+            echo "\`\`\`"
+            head -n 100 "$RUNNER_TEMP/release-preview.txt"
+            echo "\`\`\`"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+          if [ "$STATUS" -ne 0 ]; then
+            echo "❌ Release notes preview failed with exit code $STATUS." >&2
+            tail -n 20 "$RUNNER_TEMP/release-preview.txt" >&2
+            exit "$STATUS"
+          fi
+
+      - name: Cache Playwright browsers
+        id: playwright-cache
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('**/pnpm-lock.yaml') }}
+
+      - name: Install Playwright browsers
+        run: pnpm exec playwright install --with-deps
+        if: steps.playwright-cache.outputs.cache-hit != 'true'
+
+      - name: Install Playwright system dependencies
+        run: pnpm exec playwright install-deps
+        if: steps.playwright-cache.outputs.cache-hit == 'true'
+
+      - name: Check formatting
+        env:
+          NX_NO_CLOUD: 'true'
+          NX_DAEMON: 'false'
+        run: pnpm run format:check
+
+      - name: Verify toolkit quality (lint, test, test-browser, build)
+        # A release must prove the full toolkit suite passes at the tagged
+        # commit, not just the projects `nx affected` thinks changed. Runs
+        # every toolkit target directly with `run-many -p toolkit`.
+        run: pnpm exec nx run-many -t lint test test-browser build -p toolkit --outputStyle=static
+
+      - name: Enforce coverage thresholds
+        # A tag push does not wait for ci.yml's `coverage` job, so check the
+        # thresholds here too.
+        run: pnpm exec nx run workspace:coverage --outputStyle=static
+
+      - name: Check README starter
+        run: pnpm exec nx run toolkit:check-documentation-starter --outputStyle=static
+
+      # Guards the PUBLISHED package (dist/packages/toolkit), same as the
+      # matching ci.yml steps: an unreviewed public API/tarball change, a
+      # broken exports map/types condition, or a bundle-size regression must
+      # block a release, not just a PR (#514). See docs/CONTRIBUTING.md
+      # "Published package guardrails" for how to update a baseline. Run via
+      # `run-many` so `toolkit:build` (their shared dependency) runs
+      # once instead of once per `nx run`.
+      - name: Check published API surface, tarball contents, and package shape
+        run: pnpm exec nx run-many -t check-published-package check-package-shape -p toolkit --outputStyle=static
+
+      - name: Check bundle size budget
+        run: pnpm exec nx run toolkit:check-size --outputStyle=static
+
+      # Same isolation check as ci.yml's `toolkit-isolation` job: prove the
+      # published toolkit stays design-system-free.
+      #
+      # Unlike that job, this one already ran a full `pnpm install` above, so
+      # this filtered install is a no-op ("Already up to date") and does not
+      # remove any package the full install added. The check still catches a
+      # leak, because pnpm's default (non-hoisted) linker only symlinks a
+      # project's own declared dependencies into that project's own
+      # node_modules folder. A demo app's design-system package (for example
+      # apps/demo-material/node_modules/@angular/material) is never linked
+      # into packages/toolkit/node_modules or the workspace root, so an
+      # accidental `import` of it from toolkit source still fails to resolve
+      # at build time, confirmed by reproducing the leak locally. `pnpm
+      # check:toolkit-peer-deps` covers the other case, a design-system
+      # package declared in the toolkit's own package.json. The workspace
+      # ROOT declares no design-system package, so nothing resolves from the
+      # toolkit by walking up to the root.
+      - name: Assert toolkit declares no design-system deps
+        run: pnpm check:toolkit-peer-deps
+
+      - name: Install only toolkit + its dependencies
+        run: sfw pnpm install --frozen-lockfile --filter "@ngx-signal-forms/toolkit..."
+
+      - name: Build toolkit in isolation
+        # Skip the cache: the earlier build step already cached this hash, and
+        # a cache hit would never build against the pruned node_modules.
+        run: pnpm exec nx build toolkit --skip-nx-cache
+
+      - name: Restore full workspace install
+        run: sfw pnpm install --frozen-lockfile
+
+      - name: Verify e2e (affected since the previous release)
+        # e2e suites are slow; keep this one affected so release run time
+        # does not regress. The rest of the checks above always run in full.
+        env:
+          PREVIOUS_TAG: ${{ steps.release_info.outputs.previous_tag }}
+        run: pnpm exec nx affected -t e2e --base="$PREVIOUS_TAG" --head=HEAD --outputStyle=static
 
       # `toolkit:build` also runs the post-build steps (README, LICENSE, strip
       # internal members and exports).
@@ -204,6 +377,8 @@ jobs:
     environment: npm-publish
     # This job must install nothing and run no repo script: it holds the OIDC
     # token. Do not add `pnpm install`, `npm ci`, a checkout or a build step.
+    # It publishes with the npm bundled with Node (from `.node-version`); the
+    # preflight step checks that version.
     steps:
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
         with:
@@ -216,12 +391,6 @@ jobs:
         with:
           name: toolkit-package
           path: dist/packages/toolkit
-
-      - name: Install npm for trusted publishing
-        # npm 12.0.0 omits sigstore, which breaks `npm publish --provenance`.
-        # Stay on an exact npm 11 release until the upstream packaging
-        # regression is fixed. Trusted publishing needs npm >= 11.5.1.
-        run: npm install --global npm@11.20.0
 
       - name: Enforce OIDC auth mode for npm publish
         run: |
@@ -274,19 +443,29 @@ jobs:
             exit 1
           fi
 
-          if npm view "$PACKAGE_NAME@$PACKAGE_VERSION" version --json >/dev/null 2>&1; then
-            # npm Trusted Publisher (OIDC) only mints credentials for the
-            # `npm publish` operation - this job intentionally has no
-            # NODE_AUTH_TOKEN/NPM_TOKEN, so `npm dist-tag add` cannot
-            # authenticate here and would fail with ENEEDAUTH. Fail with a
-            # clear message instead of attempting (and silently breaking).
-            echo "❌ $PACKAGE_NAME@$PACKAGE_VERSION is already published." >&2
-            echo "Re-pointing the '$DIST_TAG' dist-tag requires a granular npm token and cannot be done via OIDC trusted publishing in this workflow." >&2
-            echo "Run 'npm dist-tag add $PACKAGE_NAME@$PACKAGE_VERSION $DIST_TAG' manually with an authenticated npm session." >&2
-            exit 1
-          else
+          PUBLISHED_INTEGRITY=$(npm view "$PACKAGE_NAME@$PACKAGE_VERSION" dist.integrity 2>/dev/null || true)
+          if [ -z "$PUBLISHED_INTEGRITY" ]; then
             npm publish dist/packages/toolkit --tag="$DIST_TAG" --access public --provenance
+            exit 0
           fi
+
+          # npm can accept the package while this job still fails (a lost
+          # response, a cancelled runner). "Re-run failed jobs" then lands
+          # here with the same package. If npm holds exactly this package,
+          # succeed so `github-release` runs. The `./` keeps npm from reading
+          # the path as a GitHub shorthand. `first(.[])` reads both the array
+          # (npm 11) and the object (npm 12) that `npm pack --json` prints.
+          BUILT_INTEGRITY=$(npm pack ./dist/packages/toolkit --dry-run --json --ignore-scripts | jq -r 'first(.[]).integrity')
+          if [ "$BUILT_INTEGRITY" = "$PUBLISHED_INTEGRITY" ]; then
+            echo "$PACKAGE_NAME@$PACKAGE_VERSION is already on npm with this exact package. Skipping the upload."
+            exit 0
+          fi
+
+          # The trusted publisher does not allow `npm dist-tag`, so this job
+          # cannot move a dist-tag either.
+          echo "❌ $PACKAGE_NAME@$PACKAGE_VERSION is already on npm with different contents." >&2
+          echo "npm never reuses a version. Release a new version instead." >&2
+          exit 1
         # npm Trusted Publisher handles authentication automatically
 
       - name: Summary
@@ -301,6 +480,54 @@ jobs:
           echo "- Dry Run: $DRY_RUN" >> "$GITHUB_STEP_SUMMARY"
           echo "- Publish client: npm CLI" >> "$GITHUB_STEP_SUMMARY"
           echo "- Auth: npm Trusted Publishers (OIDC)" >> "$GITHUB_STEP_SUMMARY"
+
+  # `nx release changelog` runs third-party code (Nx, the renderer). It gets
+  # only the workflow's own `GITHUB_TOKEN`, and only in the step that needs
+  # it. It runs after npm accepts the package, because immutable releases
+  # lock the tag once the release exists.
+  github-release:
+    name: Create GitHub release
+    needs: [build, publish]
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ needs.build.outputs.tag }}
+          fetch-depth: 0
+          filter: tree:0
+          persist-credentials: false
+
+      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413
+        name: Install pnpm
+        with:
+          run_install: false
+
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version-file: '.node-version'
+          cache: 'pnpm'
+
+      - name: Set up Socket Firewall
+        uses: socketdev/action@ba6de6cc0565af1f42295590380973573297e31f # v1.3.2
+        with:
+          mode: firewall
+
+      - name: Install dependencies
+        run: sfw pnpm install --frozen-lockfile
+
+      - name: Create GitHub release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NX_NO_CLOUD: 'true'
+          NX_DAEMON: 'false'
+          TAG: ${{ needs.build.outputs.tag }}
+          PREVIOUS_TAG: ${{ needs.build.outputs.previous_tag }}
+        run: |
+          pnpm exec nx release changelog "${TAG#v}" --from "$PREVIOUS_TAG" \
+            --git-commit=false --git-tag=false --git-push=false
 
   publish-dry-run:
     name: Publish to npm (dry run)
@@ -327,12 +554,6 @@ jobs:
         with:
           name: toolkit-package
           path: dist/packages/toolkit
-
-      - name: Install npm for trusted publishing
-        # npm 12.0.0 omits sigstore, which breaks `npm publish --provenance`.
-        # Stay on an exact npm 11 release until the upstream packaging
-        # regression is fixed. Trusted publishing needs npm >= 11.5.1.
-        run: npm install --global npm@11.20.0
 
       - name: Enforce OIDC auth mode for npm publish
         run: |
