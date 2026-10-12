@@ -205,14 +205,14 @@ for the full before/after detail.
   `--ngx-form-field-label-color`) instead of the input tokens. A default
   install renders these labels smaller and in the secondary text color.
 
-## 7. RC.16: upgrade from RC.15 (pending release)
+## 7. RC.16: upgrade from RC.15
 
 `1.0.0-rc.16` changes several wrapper and feedback color defaults: the
 border color, the warning and invalid box-shadow rings, and the dark-mode
 defaults. No token is renamed. See
 [`docs/migrations/v1.0.0-rc.16.md`](./migrations/v1.0.0-rc.16.md) for the
-full before/after detail. `v1.0.0-rc.16` has not shipped yet; check the
-installed version before applying this section.
+full before/after detail. Check the installed version before applying this
+section.
 
 - `--ngx-form-field-border-color` defaults to a darker (light mode) or
   lighter (dark mode) value for WCAG contrast.
