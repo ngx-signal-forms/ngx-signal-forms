@@ -1,9 +1,53 @@
 name: Publish
 
-# Publishes on a `v*` tag push or by hand. Uses npm Trusted Publishers (OIDC).
-# The version comes from `packages/toolkit/package.json`, which the
-# release-prep pull request bumps, and the tag must match it. See
-# docs/CONTRIBUTING.md, section "Release".
+# Publishes the toolkit on a `v*` tag push or by hand, through npm Trusted
+# Publishers (OIDC). Only the maintainer releases.
+#
+# How to release:
+#   1. Open a release-prep pull request that bumps the version:
+#        pnpm nx release version prerelease --preid=rc  # or patch, minor, major, 1.0.0
+#      It changes only `packages/toolkit/package.json` and does not commit or
+#      tag. A release with breaking changes also adds
+#      `docs/migrations/v<version>.md`; `build` fails without it.
+#   2. Tag the prep PR's merge commit and push the tag. Tag that commit, not
+#      `origin/main`, because another PR may have merged since. The tag must
+#      match the version in `packages/toolkit/package.json`. Only admins can
+#      create, move or delete `v*` tags.
+#        SHA=$(gh pr view <prep-pr> --json mergeCommit --jq .mergeCommit.oid)
+#        git tag -a v<version> -m "Release <version>" "$SHA"
+#        git push origin v<version>
+#   3. Approve the `npm-publish` deployment when `publish` waits for it.
+#
+# Release notes are the GitHub releases. There is no CHANGELOG.md.
+#
+# To check an existing tag without publishing, dispatch a dry run from `main`.
+# The dispatch `--ref` picks which `publish.yml` runs, so `main` runs the
+# current checks against the tag's tree:
+#   gh workflow run publish.yml --ref main -f ref=<tag> -f dry_run=true
+#
+# When a release fails. Immutable releases lock a tag once its GitHub release
+# exists. Until then, the tag can be deleted and pushed again
+# (`git push origin :refs/tags/<tag>` and `git tag -d <tag>`).
+#   - `build` fails: nothing is published. Delete the tag, fix it in a PR and
+#     tag again.
+#   - `publish` approval rejected: nothing is published. Delete the tag.
+#   - `publish` fails: check `npm view @ngx-signal-forms/toolkit@<version>`.
+#     If the version is not on npm, re-run the failed jobs for a transient
+#     failure, or delete the tag. If it is, re-run the failed jobs: `publish`
+#     skips the upload when npm holds this run's exact package, and
+#     `github-release` follows. npm can take a few minutes to list a new
+#     version, and the uploaded package expires after 7 days.
+#   - `github-release` fails: re-run the failed job. Do not dispatch the
+#     workflow again: a new run builds the package again, and `publish`
+#     refuses a version npm already has unless the rebuilt package is
+#     identical.
+#   - A published version has a defect: keep the tag. npm never reuses a
+#     version. Run `npm deprecate` on it and release a fix. Within 72 hours, a
+#     version with no dependents can be unpublished. Moving a dist-tag needs an
+#     authenticated `npm dist-tag add`.
+#   - To re-run a publish by hand, dispatch on the tag, not on `main`. The
+#     `npm-publish` environment only accepts `v*` tags:
+#       gh workflow run publish.yml --ref <tag> -f ref=<tag>
 #
 # Jobs, split on purpose:
 #   - build:           runs all third-party code (install, release checks,
