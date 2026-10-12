@@ -82,8 +82,7 @@ Explain each topic in one file. Elsewhere, write one sentence and a link.
 | Domain terms                                             | [`GLOSSARY.md`](../GLOSSARY.md)                                                         |
 
 User docs describe the current state only. Put history in `migrations/`.
-Put maintainer notes in a `## For maintainers` section at the end of a file,
-or in this file.
+Put maintainer notes in a `## For maintainers` section at the end of a file.
 
 ## Docs site
 
@@ -134,7 +133,7 @@ ship with. When you add a project, add both tags and run
 ## Published package guardrails
 
 These checks run against the built package in `dist/packages/toolkit`, after
-`toolkit:build`. CI and the release workflow call them directly, so
+`toolkit:build`. CI and the publish workflow call them directly, so
 `nx affected` does not skip them.
 
 1. **Public API and tarball contents.**
