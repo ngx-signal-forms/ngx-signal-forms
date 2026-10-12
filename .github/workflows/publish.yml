@@ -399,19 +399,29 @@ jobs:
             exit 1
           fi
 
-          if npm view "$PACKAGE_NAME@$PACKAGE_VERSION" version --json >/dev/null 2>&1; then
-            # npm Trusted Publisher (OIDC) only mints credentials for the
-            # `npm publish` operation - this job intentionally has no
-            # NODE_AUTH_TOKEN/NPM_TOKEN, so `npm dist-tag add` cannot
-            # authenticate here and would fail with ENEEDAUTH. Fail with a
-            # clear message instead of attempting (and silently breaking).
-            echo "❌ $PACKAGE_NAME@$PACKAGE_VERSION is already published." >&2
-            echo "Re-pointing the '$DIST_TAG' dist-tag requires a granular npm token and cannot be done via OIDC trusted publishing in this workflow." >&2
-            echo "Run 'npm dist-tag add $PACKAGE_NAME@$PACKAGE_VERSION $DIST_TAG' manually with an authenticated npm session." >&2
-            exit 1
-          else
+          PUBLISHED_INTEGRITY=$(npm view "$PACKAGE_NAME@$PACKAGE_VERSION" dist.integrity 2>/dev/null || true)
+          if [ -z "$PUBLISHED_INTEGRITY" ]; then
             npm publish dist/packages/toolkit --tag="$DIST_TAG" --access public --provenance
+            exit 0
           fi
+
+          # npm can accept the package while this job still fails (a lost
+          # response, a cancelled runner). "Re-run failed jobs" then lands
+          # here with the same package. If npm holds exactly this package,
+          # succeed so `github-release` runs. The `./` keeps npm from reading
+          # the path as a GitHub shorthand. `first(.[])` reads both the array
+          # (npm 11) and the object (npm 12) that `npm pack --json` prints.
+          BUILT_INTEGRITY=$(npm pack ./dist/packages/toolkit --dry-run --json --ignore-scripts | jq -r 'first(.[]).integrity')
+          if [ "$BUILT_INTEGRITY" = "$PUBLISHED_INTEGRITY" ]; then
+            echo "$PACKAGE_NAME@$PACKAGE_VERSION is already on npm with this exact package. Skipping the upload."
+            exit 0
+          fi
+
+          # The trusted publisher does not allow `npm dist-tag`, so this job
+          # cannot move a dist-tag either.
+          echo "❌ $PACKAGE_NAME@$PACKAGE_VERSION is already on npm with different contents." >&2
+          echo "npm never reuses a version. Release a new version instead." >&2
+          exit 1
         # npm Trusted Publisher handles authentication automatically
 
       - name: Summary
