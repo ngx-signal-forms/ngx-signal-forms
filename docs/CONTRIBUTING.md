@@ -228,20 +228,60 @@ format and release-note safety.
 
 ## Release
 
-1. Run the **Release** workflow
-   ([`release.yml`](../.github/workflows/release.yml)) from the Actions tab.
-   Pick the bump (`prerelease` with `rc` for a release candidate). Use
-   **Dry run** first to preview. The workflow runs the checks. Then
-   `nx release version` bumps, commits and tags locally. A separate `push`
-   job checks the result and pushes the commit and tag with a GitHub App
-   token. A last job creates the GitHub release. The workflow does not
-   publish.
-2. The new `v*` tag starts the **Publish** workflow
-   ([`publish.yml`](../.github/workflows/publish.yml)). It fails unless the
-   tagged commit is on `main`. A `build` job builds the package and uploads
-   it. A `publish` job then waits for approval on the `npm-publish`
-   environment. It installs nothing and publishes the uploaded package to npm
-   through trusted publishing (OIDC), with the dist-tag taken from the
-   version. A dry run skips the approval.
+1. Open a release-prep PR. It adds the migration guide
+   (`docs/migrations/v<version>.md`, see the
+   [migrations README](./migrations/README.md)) and bumps the version:
+
+   ```bash
+   pnpm nx release version prerelease --preid=rc   # or patch, minor, major, 1.0.0
+   ```
+
+   The command changes only `packages/toolkit/package.json`. It does not
+   commit or tag. Merge the PR like any other.
+
+2. Tag the prep PR's merge commit and push the tag. Tag that commit, not
+   `origin/main`, because another PR may have merged since:
+
+   ```bash
+   git fetch origin main
+   SHA=$(gh pr view <prep-pr-number> --json mergeCommit --jq .mergeCommit.oid)
+   git tag -a v1.0.0-rc.16 -m "Release 1.0.0-rc.16" "$SHA"
+   git push origin v1.0.0-rc.16
+   ```
+
+   A ruleset lets only admins create, move or delete `v*` tags.
+
+3. The tag starts the **Publish** workflow
+   ([`publish.yml`](../.github/workflows/publish.yml)):
+   - `build` fails unless the tagged commit is on `main` and the tag matches
+     the version in `package.json`. It previews the release notes, which
+     fails without the migration guide. It then runs the release checks
+     (format, the full toolkit suite, coverage, published-package checks,
+     size, isolation build, and e2e affected since the previous tag),
+     builds the package and uploads it.
+   - `publish` waits for approval on the `npm-publish` environment. It
+     installs nothing and publishes the uploaded package through trusted
+     publishing (OIDC), with the dist-tag taken from the version.
+   - `github-release` creates the GitHub release, only after npm accepted the
+     package.
+
+To check an existing tag without publishing, dispatch a dry run:
+`gh workflow run publish.yml --ref <tag> -f ref=<tag> -f dry_run=true`.
 
 Release notes are the GitHub releases. There is no `CHANGELOG.md`.
+
+### When a release fails
+
+Immutable releases lock a tag once its GitHub release exists. Until then, the
+tag can be deleted and pushed again.
+
+| Where it stops                                  | What to do                                                                                                                                                                                                                     |
+| ----------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `build` fails                                   | Nothing is published. Delete the tag (`git push origin :refs/tags/<tag>` and `git tag -d <tag>`), fix it in a PR, and tag again.                                                                                               |
+| `publish` approval rejected, or `publish` fails | Nothing is published and there is no GitHub release. For a transient failure, re-run the failed jobs. Otherwise delete the tag as above.                                                                                       |
+| `publish` succeeds, `github-release` fails      | Re-run the failed job. Do not dispatch the workflow again: `publish` refuses a version that is already on npm.                                                                                                                 |
+| A published version has a defect                | Do not delete the tag. npm never reuses a version. Run `npm deprecate` on it and release a fix. Within 72 hours, a version with no dependents can be unpublished. Moving a dist-tag needs an authenticated `npm dist-tag add`. |
+
+To re-run a publish by hand, dispatch on the tag, not on `main`. The
+`npm-publish` environment only accepts `v*` tags:
+`gh workflow run publish.yml --ref <tag> -f ref=<tag>`.
