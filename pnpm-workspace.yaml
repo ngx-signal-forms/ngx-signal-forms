@@ -19,6 +19,12 @@ catalogMode: 'prefer'
 # `node_modules` may be symlinked to the main checkout, and CI should use the
 # explicit install step instead of command-time dependency repair.
 verifyDepsBeforeRun: false
+# One virtual store per machine instead of one per checkout. A worktree's
+# `node_modules` holds only symlinks into `$(pnpm store path)/links`, so
+# `new-worktree.sh` and agent worktrees install in seconds and share disk. pnpm
+# turns this off in CI, where it slows installs. Do not share a writable store
+# between mutually untrusted agents or users.
+virtualStoreType: global
 # Supply-chain settings.
 # Refuse a version whose publish trust is weaker than earlier versions of the
 # same package, such as a provenance-signed package that suddenly publishes
@@ -176,6 +182,17 @@ catalogs:
     '@vitest/ui': '~5.0.3'
     vitest: '~5.0.3'
 
+# With `virtualStoreType: global` a package resolves only what it declares.
+# `@analogjs/vitest-angular` imports `tslib`, `@angular/core` and
+# `@angular/platform-browser` from `setup-testbed.js` without declaring them,
+# and Vite's resolver rejects the imports. Peers make it share the workspace's
+# single Angular instance. Drop this entry once the package declares them.
+packageExtensions:
+  '@analogjs/vitest-angular':
+    peerDependencies:
+      '@angular/core': '*'
+      '@angular/platform-browser': '*'
+      tslib: '*'
 strictPeerDependencies: false
 # `pnpm peers check` runs in CI. tsconfck (via vite-tsconfig-paths) lists
 # typescript ^5 as its peer; the workspace builds and tests on TypeScript 6
