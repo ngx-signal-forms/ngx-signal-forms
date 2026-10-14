@@ -82,7 +82,7 @@ catalogs:
     '@angular/cli': '22.2.1'
     '@angular/compiler-cli': '22.2.1'
     '@angular/language-service': '22.2.1'
-    '@schematics/angular': '22.2.1'
+    '@schematics/angular': '22.2.2'
     ng-packagr: '22.2.4'
   angular-eslint:
     '@angular-eslint/eslint-plugin': '22.5.0'
