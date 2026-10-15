@@ -87,8 +87,13 @@ export function createTripStepForm(store: InstanceType<typeof WizardStore>): {
       applyEach(destPath.activities, (actPath) => {
         validateStandardSchema(actPath, ActivitySchema);
 
+        // Same reason as the destination fields above (WCAG 3.3.2).
+        requiredFromStandardSchema(actPath.name, ActivitySchema);
+        requiredFromStandardSchema(actPath.date, ActivitySchema);
+
         applyEach(actPath.requirements, (reqPath) => {
           validateStandardSchema(reqPath, RequirementSchema);
+          requiredFromStandardSchema(reqPath.description, RequirementSchema);
         });
       });
     });

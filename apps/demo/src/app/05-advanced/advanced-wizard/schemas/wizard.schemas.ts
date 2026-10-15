@@ -60,6 +60,14 @@ export function todayPlainDate(): Temporal.PlainDate {
 }
 
 /**
+ * The day after `value` as `YYYY-MM-DD`, for a native date `min`. Null when
+ * `value` is empty or malformed, so the attribute is left off.
+ */
+export function dayAfter(value: string): string | null {
+  return tryPlainDate(value)?.add({ days: 1 }).toString() ?? null;
+}
+
+/**
  * A passport that expires today or earlier counts as expired. A malformed
  * expiry counts as expired too.
  */

@@ -1,9 +1,34 @@
 import { describe, expect, it } from 'vitest';
 import {
+  dayAfter,
   DestinationSchema,
   isPassportValidForDeparture,
   lastDepartureDate,
 } from './wizard.schemas';
+
+describe('dayAfter', () => {
+  // The native `min` on the departure input must equal the first date the
+  // schema accepts: strictly after arrival. Calendar math, so month, year and
+  // leap-day rollovers must not depend on the machine's time zone.
+  it.each([
+    ['2099-03-10', '2099-03-11'],
+    ['2099-01-31', '2099-02-01'],
+    ['2099-12-31', '2100-01-01'],
+    ['2096-02-28', '2096-02-29'],
+    ['2099-02-28', '2099-03-01'],
+  ])('returns the day after %s', (value, expected) => {
+    expect(dayAfter(value)).toBe(expected);
+  });
+
+  it('ignores a time part so an ISO timestamp keeps its calendar day', () => {
+    expect(dayAfter('2099-03-10T23:30:00Z')).toBe('2099-03-11');
+  });
+
+  it('returns null for an empty or half-typed date so no min is set', () => {
+    expect(dayAfter('')).toBeNull();
+    expect(dayAfter('2099-03')).toBeNull();
+  });
+});
 
 describe('isPassportValidForDeparture', () => {
   // Date inputs give date-only strings. JavaScript parses them as UTC

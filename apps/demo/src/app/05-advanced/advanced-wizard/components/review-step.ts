@@ -1,3 +1,4 @@
+import { I18nPluralPipe } from '@angular/common';
 import { Component, ElementRef, inject, viewChild } from '@angular/core';
 
 import {
@@ -10,6 +11,7 @@ import { WizardStepInterface } from '../wizard-step.interface';
 @Component({
   selector: 'ngx-review-step',
 
+  imports: [I18nPluralPipe],
   template: `
     <div class="review-step">
       <h2 #stepHeading class="mb-4 text-xl font-semibold" tabindex="-1">
@@ -98,9 +100,17 @@ import { WizardStepInterface } from '../wizard-step.interface';
                 >Statistics</span
               >
               <p class="font-medium">
-                {{ reviewForm.destinationsDisplay().length }} destinations,
-                {{ reviewForm.totalActivities() }} activities,
-                {{ reviewForm.totalRequirements() }} requirements
+                {{
+                  reviewForm.destinationsDisplay().length
+                    | i18nPlural: plurals.destinations
+                }},
+                {{
+                  reviewForm.totalActivities() | i18nPlural: plurals.activities
+                }},
+                {{
+                  reviewForm.totalRequirements()
+                    | i18nPlural: plurals.requirements
+                }}
               </p>
             </div>
           </div>
@@ -122,7 +132,9 @@ import { WizardStepInterface } from '../wizard-step.interface';
                   {{ dest.dates }}
                 </p>
               </div>
-              <span class="badge">{{ dest.activityCount }} activities</span>
+              <span class="badge">{{
+                dest.activityCount | i18nPlural: plurals.activities
+              }}</span>
             </div>
 
             @if (dest.accommodation) {
@@ -157,7 +169,10 @@ import { WizardStepInterface } from '../wizard-step.interface';
                           <span
                             class="ml-2 text-xs text-gray-500 dark:text-gray-400"
                           >
-                            ({{ activity.requirementCount }} requirements)
+                            ({{
+                              activity.requirementCount
+                                | i18nPlural: plurals.requirements
+                            }})
                           </span>
                         }
                       </div>
@@ -240,6 +255,13 @@ export class ReviewStepComponent implements WizardStepInterface {
     this.#store.traveler,
     this.#store.destinations,
   );
+
+  /** `i18nPlural` maps for the counts shown in the overview and badges. */
+  protected readonly plurals = {
+    destinations: { '=1': '# destination', other: '# destinations' },
+    activities: { '=1': '# activity', other: '# activities' },
+    requirements: { '=1': '# requirement', other: '# requirements' },
+  };
 
   // No effects needed - review step validation is computed from store data
 

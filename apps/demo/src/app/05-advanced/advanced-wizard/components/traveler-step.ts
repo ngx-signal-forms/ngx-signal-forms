@@ -16,7 +16,12 @@ import {
   submitWithWarnings,
 } from '@ngx-signal-forms/toolkit';
 import { NgxFormField } from '@ngx-signal-forms/toolkit/form-field';
-import { type Destination, lastDepartureDate } from '../schemas/wizard.schemas';
+import {
+  dayAfter,
+  type Destination,
+  lastDepartureDate,
+  todayPlainDate,
+} from '../schemas/wizard.schemas';
 
 import { createTravelerStepForm } from '../forms/traveler-step.form';
 import { WizardStore } from '../stores/wizard.store';
@@ -55,6 +60,7 @@ type ReadonlyDestination = Readonly<Omit<Destination, 'activities'>> & {
           <input
             id="firstName"
             type="text"
+            autocomplete="given-name"
             [formField]="travelerForm.firstName"
           />
           <ngx-form-field-hint>
@@ -72,6 +78,7 @@ type ReadonlyDestination = Readonly<Omit<Destination, 'activities'>> & {
           <input
             id="lastName"
             type="text"
+            autocomplete="family-name"
             [formField]="travelerForm.lastName"
           />
         </ngx-form-field-wrapper>
@@ -83,7 +90,12 @@ type ReadonlyDestination = Readonly<Omit<Destination, 'activities'>> & {
           [orientation]="orientation()"
         >
           <label for="email">Email</label>
-          <input id="email" type="email" [formField]="travelerForm.email" />
+          <input
+            id="email"
+            type="email"
+            autocomplete="email"
+            [formField]="travelerForm.email"
+          />
           <ngx-form-field-hint>
             We'll send booking confirmation to this address
           </ngx-form-field-hint>
@@ -103,8 +115,8 @@ type ReadonlyDestination = Readonly<Omit<Destination, 'activities'>> & {
           />
         </ngx-form-field-wrapper>
 
-        <div class="mt-4 border-t pt-4">
-          <h3 class="mb-3 text-lg font-medium">Passport Information</h3>
+        <fieldset class="mt-4 border-t pt-4">
+          <legend class="mb-3 text-lg font-medium">Passport Information</legend>
 
           <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <!-- Passport Number -->
@@ -117,6 +129,8 @@ type ReadonlyDestination = Readonly<Omit<Destination, 'activities'>> & {
               <input
                 id="passportNumber"
                 type="text"
+                autocapitalize="characters"
+                spellcheck="false"
                 [formField]="travelerForm.passportNumber"
               />
             </ngx-form-field-wrapper>
@@ -131,6 +145,7 @@ type ReadonlyDestination = Readonly<Omit<Destination, 'activities'>> & {
               <input
                 id="passportExpiry"
                 type="date"
+                [attr.min]="passportExpiryMin"
                 [formField]="travelerForm.passportExpiry"
               />
               <ngx-form-field-hint>
@@ -138,7 +153,7 @@ type ReadonlyDestination = Readonly<Omit<Destination, 'activities'>> & {
               </ngx-form-field-hint>
             </ngx-form-field-wrapper>
           </div>
-        </div>
+        </fieldset>
       </form>
     </div>
   `,
@@ -155,6 +170,12 @@ export class TravelerStepComponent implements WizardStepInterface {
   readonly #store = inject(WizardStore);
   protected readonly stepHeading =
     viewChild<ElementRef<HTMLHeadingElement>>('stepHeading');
+
+  /**
+   * Native `min` for the date picker. A passport that expires today counts as
+   * expired, so the first valid day is tomorrow. Zod stays the source of truth.
+   */
+  protected readonly passportExpiryMin = dayAfter(todayPlainDate().toString());
 
   // Latest departure date for the passport cross-step rule. It reads the live
   // trip draft, not the committed trip: the user may have edited a date on the
