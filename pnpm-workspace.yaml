@@ -64,32 +64,32 @@ catalogs:
     '@analogjs/vitest-angular': '2.8.0'
   axe:
     '@axe-core/playwright': '^4.13.0'
-    axe-core: '^4.13.0'
+    axe-core: '^4.14.0'
   angular:
     '@angular/animations': '22.2.1'
-    '@angular/aria': '22.2.1'
-    '@angular/cdk': '22.2.1'
-    '@angular/common': 22.2.1
-    '@angular/compiler': 22.2.1
-    '@angular/core': 22.2.1
-    '@angular/forms': 22.2.1
-    '@angular/platform-browser': 22.2.1
-    '@angular/router': 22.2.1
+    '@angular/aria': '22.2.2'
+    '@angular/cdk': '22.2.2'
+    '@angular/common': 22.2.2
+    '@angular/compiler': 22.2.2
+    '@angular/core': 22.2.2
+    '@angular/forms': 22.2.2
+    '@angular/platform-browser': 22.2.2
+    '@angular/router': 22.2.2
   angular-build:
-    '@angular-devkit/core': '22.2.1'
-    '@angular-devkit/schematics': '22.2.1'
-    '@angular/build': '22.2.1'
-    '@angular/cli': '22.2.1'
-    '@angular/compiler-cli': '22.2.1'
-    '@angular/language-service': '22.2.1'
+    '@angular-devkit/core': '22.2.2'
+    '@angular-devkit/schematics': '22.2.2'
+    '@angular/build': '22.2.2'
+    '@angular/cli': '22.2.2'
+    '@angular/compiler-cli': '22.2.2'
+    '@angular/language-service': '22.2.2'
     '@schematics/angular': '22.2.1'
     ng-packagr: '22.2.4'
   angular-eslint:
-    '@angular-eslint/eslint-plugin': '22.5.0'
-    '@angular-eslint/eslint-plugin-template': '22.5.0'
-    '@angular-eslint/template-parser': '22.5.0'
+    '@angular-eslint/eslint-plugin': '22.6.0'
+    '@angular-eslint/eslint-plugin-template': '22.6.0'
+    '@angular-eslint/template-parser': '22.6.0'
   angular-material:
-    '@angular/material': '22.2.1'
+    '@angular/material': '22.2.2'
   ngrx:
     '@ngrx-toolkit/core': '22.0.1'
     '@ngrx/signals': '22.0.1'
@@ -104,7 +104,7 @@ catalogs:
     '@nx/workspace': '23.3.0'
     nx: '23.3.0'
   playwright:
-    '@playwright/test': '^1.63.0'
+    '@playwright/test': '^1.64.0'
     eslint-plugin-playwright: '^2.12.1'
   primeng:
     '@primeuix/themes': '3.0.1'
@@ -125,7 +125,7 @@ catalogs:
     tw-animate-css: '^1.4.0'
   swc:
     '@swc-node/register': '1.12.1'
-    '@swc/core': '1.16.13'
+    '@swc/core': '1.16.18'
     '@swc/helpers': '0.5.23'
   fonts:
     '@fontsource-variable/inter': '^5.3.0'
@@ -133,36 +133,36 @@ catalogs:
     '@tailwindcss/forms': '^0.5.11'
     '@tailwindcss/postcss': '^4.3.3'
     autoprefixer: '^10.6.1'
-    postcss: '^8.5.29'
+    postcss: '^8.5.30'
     postcss-url: '~10.1.3'
     tailwindcss: '^4.3.3'
   testing:
     jsdom: '~30.1.2'
-    msw: '~3.0.2'
+    msw: '~3.0.3'
   testing-library:
     '@testing-library/angular': '^19.5.0'
     '@testing-library/dom': '^10.4.2'
     '@testing-library/jest-dom': '^7.0.1'
-    '@testing-library/user-event': '^14.6.7'
+    '@testing-library/user-event': '^14.6.8'
   tooling:
     '@arethetypeswrong/cli': '^0.18.5'
     '@commitlint/cli': '^21.2.3'
     '@commitlint/config-conventional': '^21.2.3'
-    '@oxc-project/runtime': '^0.153.0'
+    '@oxc-project/runtime': '^0.154.0'
     # Exact pin: 14.1.x is newer than pnpm's minimum release age. Move both
     # size-limit entries to ^14 once 14.1 passes it.
-    '@size-limit/file': '14.1.0'
+    '@size-limit/file': '14.2.0'
     '@typescript/native': 'npm:typescript@~7.0.2'
-    '@types/node': '26.6.4'
+    '@types/node': '26.6.5'
     eslint: '^10.12.0'
     jiti: '2.7.0'
     lint-staged: '^17.6.0'
     oxfmt: '^0.72.0'
     oxlint: '^1.87.0'
-    oxlint-tsgolint: '^7.0.2003'
+    oxlint-tsgolint: '^7.0.2004'
     publint: '^0.3.25'
     simple-git-hooks: '^2.14.0'
-    size-limit: '14.1.0'
+    size-limit: '14.2.0'
     typescript: 'npm:@typescript/typescript6@~6.0.2'
     # Exact pin: 6.10.5 has no provenance and trustPolicy rejects it.
     verdaccio: '6.10.4'
@@ -173,9 +173,9 @@ catalogs:
     temporal-polyfill: '1.0.5'
     tslib: '^2.8.1'
   validation:
-    arktype: '^2.2.7'
+    arktype: '^2.2.8'
     vest: '6.3.4'
-    zod: '^4.6.5'
+    zod: '^4.6.7'
   vitest:
     '@vitest/browser-playwright': '~5.0.3'
     '@vitest/coverage-v8': '~5.0.3'
