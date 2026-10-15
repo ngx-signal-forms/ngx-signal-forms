@@ -4,18 +4,15 @@ sidebarTitle: 'Beta to v1'
 ---
 
 This guide covers every breaking change between the last beta
-(`1.0.0-beta.10`) and the current v1 release-candidate surface.
-`1.0.0-rc.15` is the latest released version. Historical beta examples below
-remain migration examples, not current API recipes.
+(`1.0.0-beta.10`) and the current v1 release-candidate surface. Historical
+beta examples below remain migration examples, not current API recipes.
 
 That means this document does **not** walk through interim RC-to-RC
 waypoints. Every “before → after” example below shows the migration from
 beta-era usage to the current source API. For an RC-to-RC upgrade,
 read the applicable guide in [`docs/migrations/`](./migrations/README.md);
-for example, [`v1.0.0-rc.15`](./migrations/v1.0.0-rc.15.md) documents the
-upgrade from rc.14. `v1.0.0-rc.16` is the next release and is not yet
-published; its guide at [`v1.0.0-rc.16`](./migrations/v1.0.0-rc.16.md)
-documents the upcoming hop from rc.15.
+for example, [`v1.0.0-rc.16`](./migrations/v1.0.0-rc.16.md) documents the
+upgrade from rc.15.
 
 `v1.0.0-rc.13` adds no new beta-to-v1 breaking TypeScript API. Combobox
 hosts now infer `input-like` instead of `composite`. See that hop guide if

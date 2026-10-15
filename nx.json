@@ -81,10 +81,8 @@
     "projects": ["toolkit"],
     "version": {
       "git": {
-        "commit": true,
-        "commitMessage": "chore(release): publish {version}",
-        "tag": true,
-        "tagMessage": "Release {version}"
+        "commit": false,
+        "tag": false
       }
     },
     "changelog": {
