@@ -19,8 +19,12 @@ export default defineConfig({
     include: [toolkitSpecFiles],
     exclude: [toolkitBrowserSpecFiles],
     /**
-     * Angular TestBed stays most predictable when jsdom specs run in isolated forks.
+     * `vmThreads` runs each spec file in its own VM context, which keeps
+     * Angular TestBed state isolated and cut the toolkit jsdom run from about
+     * 30 s to about 13 s. Cross-realm `instanceof` checks against Node
+     * built-ins are the known caveat. If a spec fails that way, fix the spec
+     * or move it to `forks` rather than switching the whole project back.
      */
-    pool: 'forks',
+    pool: 'vmThreads',
   },
 });

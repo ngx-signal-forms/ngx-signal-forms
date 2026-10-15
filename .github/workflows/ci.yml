@@ -235,6 +235,7 @@ jobs:
             apps/*-e2e/playwright-report/
             dist/.playwright/apps/*-e2e/test-output/
             lint-report.json
+          include-hidden-files: true
           if-no-files-found: ignore
           retention-days: 14
 
@@ -331,6 +332,7 @@ jobs:
           path: |
             apps/demo-e2e/playwright-report/
             dist/.playwright/apps/demo-e2e/test-output/
+          include-hidden-files: true
           if-no-files-found: ignore
           retention-days: 14
 
@@ -562,6 +564,7 @@ jobs:
           path: |
             dist/.a11y/
             apps/*/playwright-report/
+          include-hidden-files: true
           if-no-files-found: ignore
           retention-days: 14
 
