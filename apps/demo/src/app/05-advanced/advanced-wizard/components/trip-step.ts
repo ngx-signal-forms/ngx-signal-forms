@@ -11,6 +11,7 @@ import {
 import { NgxFormField } from '@ngx-signal-forms/toolkit/form-field';
 
 import { createTripStepForm } from '../forms/trip-step.form';
+import { dayAfter, todayPlainDate } from '../schemas/wizard.schemas';
 import { WizardStore } from '../stores/wizard.store';
 import { WizardStepInterface } from '../wizard-step.interface';
 
@@ -104,6 +105,7 @@ import { WizardStepInterface } from '../wizard-step.interface';
               <input
                 [id]="'dest-arrival-' + destIdx"
                 type="date"
+                [attr.min]="today"
                 [formField]="tripForm.destinations[destIdx].arrivalDate"
               />
             </ngx-form-field-wrapper>
@@ -120,6 +122,7 @@ import { WizardStepInterface } from '../wizard-step.interface';
               <input
                 [id]="'dest-departure-' + destIdx"
                 type="date"
+                [attr.min]="dayAfter(destination.arrivalDate)"
                 [formField]="tripForm.destinations[destIdx].departureDate"
               />
               <ngx-form-field-hint>
@@ -164,9 +167,15 @@ import { WizardStepInterface } from '../wizard-step.interface';
               track activity.id;
               let actIdx = $index
             ) {
-              <div class="activity-card mb-3 rounded bg-gray-50 p-3">
+              <div
+                class="activity-card mb-3 rounded bg-gray-50 p-3"
+                role="group"
+                [attr.aria-labelledby]="'act-label-' + destIdx + '-' + actIdx"
+              >
                 <div class="mb-2 flex items-start justify-between">
-                  <span class="text-sm text-gray-600 dark:text-gray-300"
+                  <span
+                    class="text-sm text-gray-600 dark:text-gray-300"
+                    [id]="'act-label-' + destIdx + '-' + actIdx"
                     >Activity {{ actIdx + 1 }}</span
                   >
                   <button
@@ -225,6 +234,8 @@ import { WizardStepInterface } from '../wizard-step.interface';
                     <input
                       [id]="'act-date-' + destIdx + '-' + actIdx"
                       type="date"
+                      [attr.min]="destination.arrivalDate || null"
+                      [attr.max]="destination.departureDate || null"
                       [formField]="
                         tripForm.destinations[destIdx].activities[actIdx].date
                       "
@@ -248,6 +259,7 @@ import { WizardStepInterface } from '../wizard-step.interface';
                     <input
                       [id]="'act-duration-' + destIdx + '-' + actIdx"
                       type="number"
+                      min="0"
                       [formField]="
                         tripForm.destinations[destIdx].activities[actIdx]
                           .duration
@@ -259,9 +271,13 @@ import { WizardStepInterface } from '../wizard-step.interface';
                 <!-- Requirements Section -->
                 <div
                   class="requirements-section mt-2 border-l border-gray-300 pl-3"
+                  role="group"
+                  [attr.aria-labelledby]="'req-label-' + destIdx + '-' + actIdx"
                 >
                   <div class="mb-2 flex items-center justify-between">
-                    <span class="text-xs text-gray-500 dark:text-gray-400"
+                    <span
+                      class="text-xs text-gray-500 dark:text-gray-400"
+                      [id]="'req-label-' + destIdx + '-' + actIdx"
                       >Requirements</span
                     >
                     <button
@@ -403,6 +419,13 @@ export class TripStepComponent implements WizardStepInterface {
   protected readonly store = inject(WizardStore);
   protected readonly stepHeading =
     viewChild<ElementRef<HTMLHeadingElement>>('stepHeading');
+
+  /**
+   * Native date constraints help the picker and mobile keyboards. The Zod
+   * schema stays the source of truth: the form is `novalidate`.
+   */
+  protected readonly today = todayPlainDate().toString();
+  protected readonly dayAfter = dayAfter;
   protected readonly addDestinationButton = viewChild<
     ElementRef<HTMLButtonElement>
   >('addDestinationButton');

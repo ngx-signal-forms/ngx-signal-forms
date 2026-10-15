@@ -4,7 +4,8 @@
     @if (store.isLoadingDraft()) {
     <span class="saving-indicator">Loading saved draft...</span>
     } @else if (showSavingIndicator()) {
-    <span class="saving-indicator">Saving draft...</span>
+    <!-- Visual only: the live region announces the result, not each save. -->
+    <span class="saving-indicator" aria-hidden="true">Saving draft...</span>
     } @else if (store.lastSavedAt()) {
     <span class="saved-indicator">
       Last saved: {{ store.lastSavedAt() | date: 'shortTime' }}
@@ -151,7 +152,7 @@
     } }
   </div>
 
-  <div role="alert" aria-live="assertive" aria-atomic="true">
+  <div role="alert">
     @if (store.error(); as errorMessage) {
     <div class="error-message mt-4">{{ errorMessage }}</div>
     } @if (store.resumeFailed()) {
