@@ -48,6 +48,13 @@ updates:
           ['version-update:semver-major', 'version-update:semver-minor']
       - dependency-name: '@angular-eslint/*'
         update-types: ['version-update:semver-major']
+      # Vitest 5.0.4 fails 11 demo unit suites with `Cannot find module
+      # '/@id/__x00__virtual:angular:jit:style:inline;…'`. 5.0.3 passes. Drop
+      # this once a later patch is verified.
+      - dependency-name: 'vitest'
+        versions: ['5.0.4']
+      - dependency-name: '@vitest/*'
+        versions: ['5.0.4']
     # Each dependency joins the FIRST matching group, so the lockstep families
     # (Angular, Nx) are listed before the catch-all dev/prod groups.
     groups:
