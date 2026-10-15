@@ -3,7 +3,6 @@
 import { resolve } from 'node:path';
 import angular from '@analogjs/vite-plugin-angular';
 import { type UserWorkspaceConfig } from 'vitest/config';
-import tsconfigPaths from 'vite-tsconfig-paths';
 
 process.env['NX_DAEMON'] ??= 'false';
 
@@ -15,31 +14,31 @@ export const toolkitBrowserSpecFiles = `${toolkitSpecRoots}/**/*.browser.{test,s
 export const toolkitEntryAliases = [
   {
     find: /^@ngx-signal-forms\/toolkit\/assistive$/,
-    replacement: resolve(__dirname, 'assistive/index.ts'),
+    replacement: resolve(import.meta.dirname, 'assistive/index.ts'),
   },
   {
     find: /^@ngx-signal-forms\/toolkit\/core$/,
-    replacement: resolve(__dirname, 'core/index.ts'),
+    replacement: resolve(import.meta.dirname, 'core/index.ts'),
   },
   {
     find: /^@ngx-signal-forms\/toolkit\/form-field$/,
-    replacement: resolve(__dirname, 'form-field/index.ts'),
+    replacement: resolve(import.meta.dirname, 'form-field/index.ts'),
   },
   {
     find: /^@ngx-signal-forms\/toolkit\/headless$/,
-    replacement: resolve(__dirname, 'headless/src/index.ts'),
+    replacement: resolve(import.meta.dirname, 'headless/src/index.ts'),
   },
   {
     find: /^@ngx-signal-forms\/toolkit\/vest$/,
-    replacement: resolve(__dirname, 'vest/src/index.ts'),
+    replacement: resolve(import.meta.dirname, 'vest/src/index.ts'),
   },
   {
     find: /^@ngx-signal-forms\/toolkit\/testing$/,
-    replacement: resolve(__dirname, 'testing/index.ts'),
+    replacement: resolve(import.meta.dirname, 'testing/index.ts'),
   },
   {
     find: /^@ngx-signal-forms\/toolkit$/,
-    replacement: resolve(__dirname, 'index.ts'),
+    replacement: resolve(import.meta.dirname, 'index.ts'),
   },
 ];
 
@@ -63,11 +62,12 @@ const sharedProjectTestConfig = {
 };
 
 export const toolkitSharedConfig = {
-  root: __dirname,
+  root: import.meta.dirname,
   cacheDir: '../../node_modules/.vite/packages/toolkit',
-  plugins: [angular(), tsconfigPaths()],
+  plugins: [angular()],
   resolve: {
-    // The tsconfig paths plugin resolves the package tsconfig first during Vitest runs.
+    tsconfigPaths: true,
+    // Vite resolves the package tsconfig paths first during Vitest runs.
     // These explicit self-import aliases keep toolkit secondary entrypoints stable.
     alias: toolkitEntryAliases,
   },
