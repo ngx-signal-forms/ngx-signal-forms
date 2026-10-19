@@ -611,7 +611,9 @@ export function createVestAdapter(
       // no diagnostic. Policy:
       //   - blocking validator (`validateVest`, `includeErrors: true`):
       //     synthesize a `vest:internal-error` so the form stays invalid
-      //     and the misconfiguration is visible to tooling.
+      //     and the misconfiguration is visible to tooling. Its message is
+      //     the thrown `Error.message` in dev mode and a generic text in
+      //     production.
       //   - warning-only bridge (`validateVestWarnings`): log in dev but do
       //     not synthesize — warnings are best-effort guidance, and a
       //     broken warning suite should not flip a field into an error
@@ -627,10 +629,13 @@ export function createVestAdapter(
         if (!validationOptions.includeErrors) {
           return [];
         }
+        // The message renders under the field and is announced to screen
+        // readers. A thrown error can carry internal URLs, query data or
+        // stack fragments, so only dev mode shows it.
         const message =
-          error instanceof Error
+          isDevMode() && error instanceof Error
             ? error.message
-            : 'Vest async validation crashed.';
+            : 'Validation could not be completed.';
         return [
           {
             kind: `${VEST_ERROR_KIND_PREFIX}internal-error`,

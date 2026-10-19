@@ -218,10 +218,75 @@ describe('createVestAdapter', () => {
     const rootErrors = fixture.componentInstance.f().errors();
     const emailErrors = fixture.componentInstance.f.email().errors();
     const allErrors = [...rootErrors, ...emailErrors];
-    expect(allErrors.some((e) => e.kind === 'vest:internal-error')).toBe(true);
+    const internalError = allErrors.find(
+      (e) => e.kind === 'vest:internal-error',
+    );
+    expect(internalError?.message).toBe('Async validator blew up');
     expect(consoleErrorSpy).toHaveBeenCalled();
 
     consoleErrorSpy.mockRestore();
+  });
+
+  it('shows a generic vest:internal-error message in production mode', async () => {
+    // The thrown message can carry internal URLs or query data. Production
+    // must not render it under the field.
+    vestFieldResolutionDevMode.value = false;
+    let consoleErrorSpy: { mockRestore: () => void } | undefined;
+    try {
+      const adapter = createVestAdapter();
+      consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+      const crashingSuite = {
+        ...create((_data: { email: string }) => {
+          vestTest('email', 'never reached', () => {
+            /* sync pass pending; async run rejects */
+          });
+        }),
+        run: () => {
+          const rejected = Promise.reject(
+            new Error(
+              'GET https://internal.example/users?email=a@b.test failed',
+            ),
+          );
+          void rejected.catch(() => {});
+          return rejected;
+        },
+      };
+
+      @Component({
+        selector: 'ngx-test-adapter-block-reject-prod',
+        imports: [FormField],
+
+        template: `<input [formField]="f.email" />`,
+      })
+      class TestComponent {
+        readonly model = signal({ email: '' });
+        readonly f = form(this.model, (path) => {
+          adapter.register(path, crashingSuite, { includeErrors: true });
+        });
+      }
+
+      const { fixture } = await render(TestComponent);
+      const user = userEvent.setup();
+      await user.type(screen.getByRole('textbox'), 'x');
+      await user.tab();
+      await TestBed.inject(ApplicationRef).whenStable();
+      await Promise.resolve();
+      await Promise.resolve();
+      await TestBed.inject(ApplicationRef).whenStable();
+
+      const allErrors = [
+        ...fixture.componentInstance.f().errors(),
+        ...fixture.componentInstance.f.email().errors(),
+      ];
+      const internalError = allErrors.find(
+        (e) => e.kind === 'vest:internal-error',
+      );
+      expect(internalError?.message).toBe('Validation could not be completed.');
+    } finally {
+      consoleErrorSpy?.mockRestore();
+      vestFieldResolutionDevMode.value = true;
+    }
   });
 
   it('runVestSuite returns the cached run for identical (suite, fieldTree, value, focus) and a fresh run when value/focus changes', async () => {
@@ -471,10 +536,18 @@ describe('createVestAdapter', () => {
       await TestBed.inject(ApplicationRef).whenStable();
 
       // No throw reached here -- production logs and continues.
+      // The field path travels as a separate argument, never inside the
+      // message text, so data-built Vest field names stay out of log
+      // messages.
       expect(consoleErrorSpy).toHaveBeenCalledWith(
         expect.stringContaining(
           "does not resolve against the validator's bound field tree",
         ),
+        expect.objectContaining({ fieldPath: 'address.cityy' }),
+      );
+      expect(consoleErrorSpy).not.toHaveBeenCalledWith(
+        expect.stringContaining('address.cityy'),
+        expect.anything(),
       );
 
       // The mis-resolved entry attaches to the validator's bound field
@@ -564,7 +637,10 @@ describe('createVestAdapter', () => {
       // The propagated detail (not just the generic wrapper message) must be
       // present in the logged diagnostic.
       expect(consoleErrorSpy).toHaveBeenCalledWith(
-        expect.stringMatching(/probing segment "street" threw: .+/),
+        expect.any(String),
+        expect.objectContaining({
+          reason: expect.stringMatching(/probing segment "street" threw: .+/),
+        }),
       );
 
       // Still attaches to the bound field rather than being dropped.
