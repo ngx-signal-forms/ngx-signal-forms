@@ -24,6 +24,43 @@ function alignBaseHref(): Plugin {
   };
 }
 
+// GitHub Pages cannot send response headers, so production builds carry the
+// Content-Security-Policy as a meta tag. A meta CSP cannot set
+// `frame-ancestors`. The dev server gets no policy: Angular's JIT compiler,
+// which dev and e2e runs load, needs `eval`. Inline styles stay allowed for
+// Angular component styles.
+const productionContentSecurityPolicy = [
+  "default-src 'self'",
+  "script-src 'self'",
+  "style-src 'self' 'unsafe-inline'",
+  "img-src 'self' data:",
+  "font-src 'self' data:",
+  "connect-src 'self'",
+  "worker-src 'self'",
+  "object-src 'none'",
+  "base-uri 'self'",
+  "form-action 'self'",
+].join('; ');
+
+function productionCsp(): Plugin {
+  return {
+    name: 'ngx-production-csp',
+    apply: 'build',
+    transformIndexHtml() {
+      return [
+        {
+          tag: 'meta',
+          attrs: {
+            'http-equiv': 'Content-Security-Policy',
+            content: productionContentSecurityPolicy,
+          },
+          injectTo: 'head-prepend',
+        },
+      ];
+    },
+  };
+}
+
 export default defineConfig({
   root: join(appDir, 'src'),
   publicDir: join(appDir, 'public'),
@@ -46,5 +83,6 @@ export default defineConfig({
     }),
     tsconfigPaths(),
     alignBaseHref(),
+    productionCsp(),
   ],
 });

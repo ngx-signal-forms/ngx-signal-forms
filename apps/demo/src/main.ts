@@ -18,9 +18,15 @@ import {
   provideNgxSignalFormControlPresets,
   provideNgxSignalFormsConfig,
 } from '@ngx-signal-forms/toolkit';
+import { z } from 'zod';
 import { AppComponent } from './app/app';
 import { appRoutes } from './app/app.routes';
 import { DemoErrorHandler } from './app/ui/render-error';
+
+// The production build's CSP blocks `eval`. Without `jitless`, Zod probes
+// `new Function` and the browser reports a CSP violation, even though Zod
+// catches the error and falls back.
+z.config({ jitless: true });
 
 // Enable MSW mocking in development
 async function enableMocking(): Promise<void> {
