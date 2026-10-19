@@ -85,6 +85,11 @@ updates:
     schedule:
       interval: weekly
       day: monday
+    # Actions run with the workflows' tokens, including the publish and Pages
+    # jobs. Wait a week so a hijacked release is likely found and pulled
+    # before Dependabot proposes it.
+    cooldown:
+      default-days: 7
     labels:
       - dependencies
       - github-actions

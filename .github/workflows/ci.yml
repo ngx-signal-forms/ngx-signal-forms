@@ -439,8 +439,9 @@ jobs:
   # anyway. The toolkit's own WCAG conformance is a hard gate in the `main`
   # job's `test-browser` task. On a push to the `main` branch this job stays
   # non-blocking end to end (job-level `continue-on-error`, unchanged from
-  # before ADR-0013): it opens a GitHub issue per new violation instead of
-  # failing, and a `gh` outage there cannot fail the `main` branch build.
+  # before ADR-0013): the `a11y-issues` job opens a GitHub issue per new
+  # violation instead of failing, and a `gh` outage there cannot fail the
+  # `main` branch build.
   a11y:
     name: Accessibility (WCAG 2.2 AA demo scan)
     runs-on: ubuntu-latest
@@ -448,7 +449,6 @@ jobs:
     continue-on-error: ${{ github.event_name != 'pull_request' }}
     permissions:
       contents: read
-      issues: write
     env:
       NX_NO_CLOUD: 'true'
       NX_DAEMON: 'false'
@@ -522,18 +522,6 @@ jobs:
         if: ${{ github.event_name == 'pull_request' && !cancelled() }}
         run: node tools/scripts/a11y-report-violations.mjs --check
 
-      # main: ensure the triage labels exist, then open an issue per new
-      # violation (deduped by title inside the script). The job-level
-      # `continue-on-error` above already keeps this non-blocking on push.
-      - name: Open issues for new violations (push)
-        if: ${{ github.event_name != 'pull_request' && !cancelled() }}
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          gh label create a11y --color 1d76db --description "Accessibility (WCAG) issue" --force
-          gh label create needs-triage --color d93f0b --description "Needs maintainer triage" --force
-          node tools/scripts/a11y-report-violations.mjs --create-issues
-
       - name: Upload a11y artifacts
         if: ${{ always() && !cancelled() }}
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
@@ -546,13 +534,57 @@ jobs:
           if-no-files-found: ignore
           retention-days: 14
 
+  # Opens an issue per new a11y violation. It holds `issues: write`, so it
+  # runs only outside pull requests, installs nothing and runs only a
+  # Node built-ins script on the scan results that the `a11y` job uploaded.
+  a11y-issues:
+    name: Open a11y issues
+    needs: a11y
+    if: >-
+      ${{
+        github.event_name != 'pull_request' && !cancelled() &&
+        needs.a11y.result != 'skipped'
+      }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    continue-on-error: true
+    permissions:
+      contents: read
+      issues: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          filter: tree:0
+          persist-credentials: false
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
+        with:
+          node-version-file: '.node-version'
+
+      - name: Download a11y results
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: a11y-artifacts-${{ github.run_id }}-${{ github.run_attempt }}
+          path: .
+
+      # Ensure the triage labels exist, then open an issue per new violation
+      # (deduped by title inside the script).
+      - name: Open issues for new violations
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh label create a11y --color 1d76db --description "Accessibility (WCAG) issue" --force
+          gh label create needs-triage --color d93f0b --description "Needs maintainer triage" --force
+          node tools/scripts/a11y-report-violations.mjs --create-issues
+
   # One stable check name for the `main` ruleset and Dependabot auto-merge.
   # It fails when any CI job failed or was cancelled. A skipped job passes.
   # Add every new CI job to `needs` so the required check cannot miss it.
   ci-success:
     name: ci-success
     if: ${{ always() }}
-    needs: [main, demo-e2e-sharded, toolkit-isolation, coverage, a11y]
+    needs:
+      [main, demo-e2e-sharded, toolkit-isolation, coverage, a11y, a11y-issues]
     runs-on: ubuntu-latest
     timeout-minutes: 5
     permissions: {}
