@@ -211,7 +211,8 @@ export function resolveFieldName(element: HTMLElement): string | null {
  *
  * Applies {@link sanitizeFieldNameForId} to `fieldName` first, so a name
  * with inner whitespace still produces a single-token id. Logs a one-time
- * dev-mode warning when it does.
+ * dev-mode warning when it does. Whitespace in `kind` (custom and Vest kinds
+ * are free text) is replaced with `-` too, without a warning.
  *
  * @param fieldName - The field name
  * @param kind - Optional error kind (e.g. `'required'`); appended after the
@@ -230,7 +231,7 @@ export function generateErrorId(fieldName: string, kind?: string): string {
   const safeFieldName = sanitizeFieldNameForId(fieldName);
   return kind === undefined
     ? `${safeFieldName}-error`
-    : `${safeFieldName}-error-${kind}`;
+    : `${safeFieldName}-error-${kind.replaceAll(/\s+/gu, '-')}`;
 }
 
 /**
