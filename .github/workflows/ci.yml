@@ -534,16 +534,17 @@ jobs:
           if-no-files-found: ignore
           retention-days: 14
 
-  # Opens an issue per new a11y violation. It holds `issues: write`, so it
-  # runs only outside pull requests, installs nothing and runs only a
-  # Node built-ins script on the scan results that the `a11y` job uploaded.
+  # Opens an issue per new a11y violation. It holds `issues: write` and runs
+  # the checked-out report script, so it runs only on a push to `main`, never
+  # on a pull request or a manual run of another branch. It installs nothing
+  # and works from the scan results that the `a11y` job uploaded.
   a11y-issues:
     name: Open a11y issues
     needs: a11y
     if: >-
       ${{
-        github.event_name != 'pull_request' && !cancelled() &&
-        needs.a11y.result != 'skipped'
+        github.event_name == 'push' && github.ref == 'refs/heads/main' &&
+        !cancelled() && needs.a11y.result != 'skipped'
       }}
     runs-on: ubuntu-latest
     timeout-minutes: 10
