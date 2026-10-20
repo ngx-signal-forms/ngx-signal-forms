@@ -627,10 +627,13 @@ export function createVestAdapter(
         if (!validationOptions.includeErrors) {
           return [];
         }
+        // The message renders under the field and is announced to screen
+        // readers. A thrown error can carry internal URLs, query data or
+        // stack fragments, so only dev mode shows it.
         const message =
-          error instanceof Error
+          isDevMode() && error instanceof Error
             ? error.message
-            : 'Vest async validation crashed.';
+            : 'Validation could not be completed.';
         return [
           {
             kind: `${VEST_ERROR_KIND_PREFIX}internal-error`,

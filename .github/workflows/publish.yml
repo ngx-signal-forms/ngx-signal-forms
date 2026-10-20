@@ -515,8 +515,10 @@ jobs:
         with:
           mode: firewall
 
+      # The changelog needs no build step, so skip dependency lifecycle scripts
+      # in a job that holds a write token.
       - name: Install dependencies
-        run: sfw pnpm install --frozen-lockfile
+        run: sfw pnpm install --frozen-lockfile --ignore-scripts
 
       - name: Create GitHub release
         env:

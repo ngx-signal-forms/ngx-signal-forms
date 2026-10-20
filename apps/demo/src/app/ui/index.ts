@@ -21,11 +21,4 @@ export { PageHeaderComponent } from './page-header';
 export { SplitLayoutComponent } from './split-layout/split-layout';
 
 export { NgxThemeSwitcherComponent } from './theme-switcher/theme-switcher';
-
-// Code highlighting - consolidated service
-export {
-  ShikiHighlightDirective,
-  type SupportedLanguage,
-  type SupportedTheme,
-} from './code-highlight';
 export { SubmitStatusComponent } from './submit-status/submit-status';

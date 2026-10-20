@@ -17,8 +17,7 @@ on:
         required: false
         type: string
 
-permissions:
-  contents: write
+permissions: {}
 
 concurrency:
   group: update-snapshots-${{ github.ref_name }}
@@ -26,11 +25,17 @@ concurrency:
 
 jobs:
   update:
+    # Runs the dispatched branch's install scripts, git hooks and tests, which
+    # may come from a bot or a contributor. It gets a read-only token and hands
+    # the snapshot changes to the `push` job as a patch.
+    #
     # Only allow regenerating snapshots on feature branches. The default branch
     # is blocked outright, and long-lived release/beta/rc/production refs are
-    # allowlisted out so a dispatched run can never auto-push to them.
+    # allowlisted out so a dispatched run can never auto-push to them. A run
+    # dispatched on a tag is refused, so it cannot create a branch from it.
     if: >-
       ${{
+        github.ref_type == 'branch' &&
         github.ref_name != github.event.repository.default_branch &&
         !startsWith(github.ref_name, 'release/') &&
         !startsWith(github.ref_name, 'beta/') &&
@@ -39,12 +44,21 @@ jobs:
       }}
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    permissions:
+      contents: read
+    # The push job reads the artifact name from here, so re-running only a
+    # failed push job still finds the patch from this job's attempt.
+    outputs:
+      changed: ${{ steps.export.outputs.changed }}
+      artifact: snapshot-patch-${{ github.run_id }}-${{ github.run_attempt }}
 
     steps:
+      # Pin both jobs to the dispatched commit, so the patch applies to the
+      # tree it was made from.
       - name: Checkout branch
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
-          ref: ${{ github.ref_name }}
+          ref: ${{ github.sha }}
           fetch-depth: 0
           filter: tree:0
           persist-credentials: false
@@ -58,11 +72,6 @@ jobs:
         with:
           node-version-file: '.node-version'
           cache: 'pnpm'
-
-      - name: Configure Git author
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
       - name: Set up Socket Firewall
         uses: socketdev/action@ba6de6cc0565af1f42295590380973573297e31f # v1.3.2
@@ -115,11 +124,8 @@ jobs:
         if: ${{ inputs.scope == 'all' || inputs.scope == 'vitest' }}
         run: pnpm nx test-browser toolkit -- --update
 
-      - name: Commit snapshot updates
-        id: commit
-        env:
-          INPUT_SCOPE: ${{ inputs.scope }}
-          TARGET_BRANCH: ${{ github.ref_name }}
+      - name: Export snapshot changes
+        id: export
         run: |
           # Stage only known snapshot directories so stray working-tree changes
           # (install artifacts, generated caches, etc.) can never ride along.
@@ -149,24 +155,92 @@ jobs:
             exit 0
           fi
 
-          git commit -m "test(snapshots): update ${INPUT_SCOPE} baselines"
-
-          git remote set-url origin "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git"
-          git push origin "${TARGET_BRANCH}"
+          mkdir -p "$RUNNER_TEMP/snapshots"
+          git diff --cached --binary > "$RUNNER_TEMP/snapshots/snapshots.patch"
           echo "changed=true" >> "$GITHUB_OUTPUT"
 
-      - name: Summary
+      - name: Upload snapshot patch
+        if: ${{ steps.export.outputs.changed == 'true' }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: snapshot-patch-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/snapshots/snapshots.patch
+          if-no-files-found: error
+          retention-days: 1
+
+  # Installs nothing and runs no repository code, so the branch cannot reach
+  # the write token. The patch is untrusted, so any path outside the snapshot
+  # directories fails the job.
+  push:
+    needs: update
+    if: ${{ needs.update.outputs.changed == 'true' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout branch
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.sha }}
+          filter: tree:0
+          persist-credentials: false
+
+      - name: Download snapshot patch
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: ${{ needs.update.outputs.artifact }}
+          path: ${{ runner.temp }}/snapshots
+
+      - name: Commit and push snapshot updates
         env:
-          CHANGED: ${{ steps.commit.outputs.changed }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           INPUT_SCOPE: ${{ inputs.scope }}
           TARGET_BRANCH: ${{ github.ref_name }}
         run: |
-          if [[ "$CHANGED" == "true" ]]; then
+          patch="$RUNNER_TEMP/snapshots/snapshots.patch"
+
+          # Keep in sync with the pathspecs in the `update` job.
+          allowed='^(apps/demo-e2e/src/__screenshots__/|apps/demo-e2e/src/__snapshots__/|apps/demo-e2e/src/(.+/)?[^/]+\.spec\.ts-snapshots/|packages/toolkit/(.+/)?__screenshots__/|packages/toolkit/(.+/)?__snapshots__/)'
+          git apply --index -- "$patch"
+          while IFS= read -r -d '' path; do
+            if [[ ! "$path" =~ $allowed ]]; then
+              printf 'Refusing a change outside the snapshot directories: %s\n' "$path" >&2
+              exit 1
+            fi
+          done < <(git diff --cached --name-only --no-renames -z)
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit --no-verify -m "test(snapshots): update ${INPUT_SCOPE} baselines"
+
+          auth=$(printf 'x-access-token:%s' "$GH_TOKEN" | base64 -w0)
+          echo "::add-mask::$auth"
+          git -c "http.https://github.com/.extraheader=AUTHORIZATION: basic $auth" \
+            push --no-verify origin "HEAD:refs/heads/${TARGET_BRANCH}"
+
+  summary:
+    needs: [update, push]
+    if: ${{ !cancelled() && needs.update.result == 'success' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions: {}
+    steps:
+      - name: Summary
+        env:
+          CHANGED: ${{ needs.update.outputs.changed }}
+          PUSH_RESULT: ${{ needs.push.result }}
+          INPUT_SCOPE: ${{ inputs.scope }}
+          TARGET_BRANCH: ${{ github.ref_name }}
+        run: |
+          if [[ "$CHANGED" == "true" && "$PUSH_RESULT" == "success" ]]; then
             {
               echo "### Snapshot baselines updated"
               echo "- Scope: $INPUT_SCOPE"
               echo "- Branch: $TARGET_BRANCH"
             } >> "$GITHUB_STEP_SUMMARY"
+          elif [[ "$CHANGED" == "true" ]]; then
+            echo "### Snapshot changes found, but the push job did not succeed" >> "$GITHUB_STEP_SUMMARY"
           else
             echo "### No snapshot changes detected" >> "$GITHUB_STEP_SUMMARY"
           fi

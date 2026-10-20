@@ -335,6 +335,12 @@ request-scoped provider.
   that promise.
 - Only the latest run reaches the form. A new value cancels older async
   work.
+- If an async run throws or rejects, `validateVest` adds a
+  `vest:internal-error` error so the field stays invalid. In development mode
+  its message is the thrown `Error.message`. In production it is
+  `Validation could not be completed.`, because a thrown message can carry
+  internal URLs or request data. `validateVestWarnings` adds nothing and logs
+  the failure in development mode.
 - **Warnings wait for async tests.** Angular starts async validators only
   when the field has no sync errors, and a warning counts as an error there.
   So while async tests are pending, `validateVest` holds back its warnings

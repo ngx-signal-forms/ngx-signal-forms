@@ -44,9 +44,7 @@
     "@fontsource-variable/inter": "catalog:fonts",
     "@ngrx-toolkit/core": "catalog:ngrx",
     "@ngrx/signals": "catalog:ngrx",
-    "@shikijs/core": "catalog:shiki",
     "rxjs": "catalog:utilities",
-    "shiki": "catalog:shiki",
     "temporal-polyfill": "catalog:utilities",
     "zod": "catalog:validation"
   },
@@ -77,7 +75,6 @@
     "@oxc-project/runtime": "catalog:tooling",
     "@playwright/test": "catalog:playwright",
     "@schematics/angular": "catalog:angular-build",
-    "@shikijs/types": "catalog:shiki",
     "@size-limit/file": "catalog:tooling",
     "@spartan-ng/cli": "catalog:spartan",
     "@swc-node/register": "catalog:swc",

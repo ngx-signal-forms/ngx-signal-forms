@@ -58,6 +58,21 @@ minimumReleaseAgeStrict: false
 # so CI and `pnpm/action-setup` are the only pins for the pnpm version. Remove
 # this once dependabot-core#15904 is fixed.
 pmOnFail: ignore
+# Transitive security fixes (see .github/dependabot.yml). Each entry forces a
+# patched version of a dev-tooling dependency that a direct dependency still
+# pins to a vulnerable range. Remove an entry once `pnpm why <name>` shows
+# only patched versions without it.
+overrides:
+  # GHSA-w293-vg96-wgc3 and others, through nx.
+  'undici@>=7.0.0 <7.29.1': '^7.29.1'
+  # Critical, through verdaccio (local release dry runs).
+  'handlebars@<4.7.10': '^4.7.10'
+  'brace-expansion@>=2.0.0 <2.1.7': '^2.1.7'
+  'brace-expansion@>=4.0.0 <5.0.12': '^5.0.12'
+  'compression@<1.8.2': '^1.8.2'
+  'probe-image-size@<7.4.0': '^7.4.0'
+  'qs@<6.16.0': '^6.16.0'
+  'js-yaml@>=5.0.0 <5.4.1': '^5.4.1'
 catalogs:
   analogjs:
     '@analogjs/vite-plugin-angular': '2.8.0'
@@ -110,10 +125,6 @@ catalogs:
     '@primeuix/themes': '3.0.1'
     primeicons: '8.0.2'
     primeng: '22.1.2'
-  shiki:
-    '@shikijs/core': '^4.5.0'
-    '@shikijs/types': '^4.5.0'
-    shiki: '^4.5.0'
   spartan:
     '@ng-icons/core': '36.1.0'
     '@ng-icons/lucide': '36.1.0'

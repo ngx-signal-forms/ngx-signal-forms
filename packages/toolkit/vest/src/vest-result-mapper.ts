@@ -469,26 +469,35 @@ function resolveVestFieldName(
  * ADR-0008 decision point 4: hard error in dev mode, `console.error` in
  * production. Either way the caller still attaches the failure to the bound
  * field, so it is never silently lost.
+ *
+ * The production log keeps the field path and reason out of the message text
+ * and passes them as a separate argument. An app can build Vest field names
+ * from user data, and log collectors often index only the message string.
  */
 function reportInvalidVestFieldResolution(
   fieldPath: string,
   reason: string,
 ): void {
-  const message =
-    `[ngx-signal-forms] Vest field name "${fieldPath}" does not resolve ` +
-    `against the validator's bound field tree: ${reason} The first path ` +
-    'segment DID resolve, so this is not a virtual (form-level) Vest field ' +
-    'name — it looks like a typo in the Vest `test`/`warn` field name, or a ' +
-    'field tree shape mismatch. Fix the Vest field name so it names a real ' +
-    'child of the bound path (ADR-0008: Vest field names are relative to ' +
-    'the bound path).';
+  const guidance =
+    'The first path segment DID resolve, so this is not a virtual ' +
+    '(form-level) Vest field name — it looks like a typo in the Vest ' +
+    '`test`/`warn` field name, or a field tree shape mismatch. Fix the Vest ' +
+    'field name so it names a real child of the bound path (ADR-0008: Vest ' +
+    'field names are relative to the bound path).';
 
   if (isDevMode()) {
-    throw new Error(message);
+    throw new Error(
+      `[ngx-signal-forms] Vest field name "${fieldPath}" does not resolve ` +
+        `against the validator's bound field tree: ${reason} ${guidance}`,
+    );
   }
 
   // oxlint-disable-next-line no-console -- production diagnostic for an authoring mistake that isDevMode() would otherwise throw for; see ADR-0008 decision point 4.
-  console.error(message);
+  console.error(
+    '[ngx-signal-forms] A Vest field name does not resolve against the ' +
+      `validator's bound field tree. ${guidance}`,
+    { fieldPath, reason },
+  );
 }
 
 /**
