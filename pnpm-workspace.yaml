@@ -75,36 +75,36 @@ overrides:
   'js-yaml@>=5.0.0 <5.4.1': '^5.4.1'
 catalogs:
   analogjs:
-    '@analogjs/vite-plugin-angular': '2.8.0'
-    '@analogjs/vitest-angular': '2.8.0'
+    '@analogjs/vite-plugin-angular': '2.8.1'
+    '@analogjs/vitest-angular': '2.8.1'
   axe:
-    '@axe-core/playwright': '^4.13.0'
+    '@axe-core/playwright': '^4.14.0'
     axe-core: '^4.14.0'
   angular:
-    '@angular/animations': '22.2.1'
-    '@angular/aria': '22.2.2'
-    '@angular/cdk': '22.2.2'
-    '@angular/common': 22.2.2
-    '@angular/compiler': 22.2.2
-    '@angular/core': 22.2.2
-    '@angular/forms': 22.2.2
-    '@angular/platform-browser': 22.2.2
-    '@angular/router': 22.2.2
+    '@angular/animations': '22.2.3'
+    '@angular/aria': '22.2.3'
+    '@angular/cdk': '22.2.3'
+    '@angular/common': 22.2.3
+    '@angular/compiler': 22.2.3
+    '@angular/core': 22.2.3
+    '@angular/forms': 22.2.3
+    '@angular/platform-browser': 22.2.3
+    '@angular/router': 22.2.3
   angular-build:
-    '@angular-devkit/core': '22.2.2'
-    '@angular-devkit/schematics': '22.2.2'
-    '@angular/build': '22.2.2'
-    '@angular/cli': '22.2.2'
-    '@angular/compiler-cli': '22.2.2'
-    '@angular/language-service': '22.2.2'
-    '@schematics/angular': '22.2.2'
+    '@angular-devkit/core': '22.2.3'
+    '@angular-devkit/schematics': '22.2.3'
+    '@angular/build': '22.2.3'
+    '@angular/cli': '22.2.3'
+    '@angular/compiler-cli': '22.2.3'
+    '@angular/language-service': '22.2.3'
+    '@schematics/angular': '22.2.3'
     ng-packagr: '22.2.4'
   angular-eslint:
     '@angular-eslint/eslint-plugin': '22.6.0'
     '@angular-eslint/eslint-plugin-template': '22.6.0'
     '@angular-eslint/template-parser': '22.6.0'
   angular-material:
-    '@angular/material': '22.2.2'
+    '@angular/material': '22.2.3'
   ngrx:
     '@ngrx-toolkit/core': '22.0.1'
     '@ngrx/signals': '22.0.1'
@@ -119,7 +119,7 @@ catalogs:
     '@nx/workspace': '23.3.0'
     nx: '23.3.0'
   playwright:
-    '@playwright/test': '^1.64.0'
+    '@playwright/test': '^1.64.1'
     eslint-plugin-playwright: '^2.12.1'
   primeng:
     '@primeuix/themes': '3.0.1'
@@ -128,8 +128,8 @@ catalogs:
   spartan:
     '@ng-icons/core': '36.1.0'
     '@ng-icons/lucide': '36.1.0'
-    '@spartan-ng/brain': '1.6.3'
-    '@spartan-ng/cli': '1.6.3'
+    '@spartan-ng/brain': '1.8.0'
+    '@spartan-ng/cli': '1.8.0'
     class-variance-authority: '^0.7.1'
     clsx: '^2.1.1'
     tailwind-merge: '^3.7.0'
@@ -148,10 +148,10 @@ catalogs:
     postcss-url: '~10.1.3'
     tailwindcss: '^4.3.3'
   testing:
-    jsdom: '~30.1.2'
+    jsdom: '~30.1.3'
     msw: '~3.0.3'
   testing-library:
-    '@testing-library/angular': '^19.5.0'
+    '@testing-library/angular': '^19.6.0'
     '@testing-library/dom': '^10.4.2'
     '@testing-library/jest-dom': '^7.0.1'
     '@testing-library/user-event': '^14.6.8'
@@ -165,11 +165,11 @@ catalogs:
     '@size-limit/file': '14.2.0'
     '@typescript/native': 'npm:typescript@~7.0.2'
     '@types/node': '26.6.5'
-    eslint: '^10.12.0'
+    eslint: '^10.13.0'
     jiti: '2.7.0'
     lint-staged: '^17.6.0'
-    oxfmt: '^0.72.0'
-    oxlint: '^1.87.0'
+    oxfmt: '^0.73.0'
+    oxlint: '^1.88.0'
     oxlint-tsgolint: '^7.0.2004'
     publint: '^0.3.25'
     simple-git-hooks: '^2.14.0'
@@ -181,17 +181,17 @@ catalogs:
     vite-tsconfig-paths: '^6.1.1'
   utilities:
     rxjs: '~7.8.2'
-    temporal-polyfill: '1.0.5'
+    temporal-polyfill: '1.0.6'
     tslib: '^2.8.1'
   validation:
     arktype: '^2.2.8'
     vest: '6.3.4'
     zod: '^4.6.7'
   vitest:
-    '@vitest/browser-playwright': '~5.0.3'
-    '@vitest/coverage-v8': '~5.0.3'
-    '@vitest/ui': '~5.0.3'
-    vitest: '~5.0.3'
+    '@vitest/browser-playwright': '~5.0.5'
+    '@vitest/coverage-v8': '~5.0.5'
+    '@vitest/ui': '~5.0.5'
+    vitest: '~5.0.5'
 
 # With `virtualStoreType: global` a package resolves only what it declares.
 # `@analogjs/vitest-angular` imports `tslib`, `@angular/core` and
