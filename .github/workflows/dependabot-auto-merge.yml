@@ -1,6 +1,6 @@
 name: Dependabot auto-merge
 
-# Auto-approve and enable auto-merge for low-risk Dependabot PRs:
+# Enable auto-merge for low-risk Dependabot PRs:
 #   - any patch bump (incl. patch security fixes)
 #   - any security fix (GHSA-tagged) that is not a major bump
 #   - minor bumps for dev-dependencies
@@ -77,11 +77,12 @@ jobs:
           echo "Ecosystem: $ECOSYSTEM; update: $UPDATE_TYPE; eligible: $eligible"
           echo "eligible=$eligible" >> "$GITHUB_OUTPUT"
 
-      - name: Approve and enable auto-merge
+      # There is no approval step. The repository does not let GitHub Actions
+      # approve pull requests, and the `main` ruleset requires checks, not
+      # approvals.
+      - name: Enable auto-merge
         if: ${{ steps.policy.outputs.eligible == 'true' }}
-        run: |
-          gh pr review --approve "$PR_URL"
-          gh pr merge --auto --squash "$PR_URL"
+        run: gh pr merge --auto --squash "$PR_URL"
         env:
           PR_URL: ${{ github.event.pull_request.html_url }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
