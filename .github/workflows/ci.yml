@@ -114,7 +114,7 @@ jobs:
           fi
 
       # Set BASE/HEAD for affected commands.
-      - uses: nrwl/nx-set-shas@afb73a62d26e41464e9254689e1fd6122ee683c1
+      - uses: nrwl/nx-set-shas@e602fada7ad5987b0f7b1905e7a99ea1c661514c
 
       - name: Nx Report
         run: pnpm exec nx report
@@ -503,7 +503,7 @@ jobs:
         if: steps.playwright-cache.outputs.cache-hit == 'true'
         timeout-minutes: 10
 
-      - uses: nrwl/nx-set-shas@afb73a62d26e41464e9254689e1fd6122ee683c1
+      - uses: nrwl/nx-set-shas@e602fada7ad5987b0f7b1905e7a99ea1c661514c
 
       # PRs: only the affected demo apps, for fast feedback.
       - name: Scan affected demo apps (pull request)
