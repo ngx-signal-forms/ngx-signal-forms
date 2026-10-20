@@ -45,7 +45,10 @@ const productionContentSecurityPolicy = [
 function productionCsp(): Plugin {
   return {
     name: 'ngx-production-csp',
-    apply: 'build',
+    // `vite build --mode development` keeps Angular's JIT compiler, so only a
+    // production build gets the policy.
+    apply: (_config, { command, mode }) =>
+      command === 'build' && mode === 'production',
     transformIndexHtml() {
       return [
         {
