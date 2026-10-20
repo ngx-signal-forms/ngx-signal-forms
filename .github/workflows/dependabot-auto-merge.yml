@@ -37,6 +37,12 @@ jobs:
       - name: Fetch Dependabot metadata
         id: meta
         uses: dependabot/fetch-metadata@25dd0e34f4fe68f24cc83900b1fe3fe149efef98
+        # `GITHUB_TOKEN` cannot read Dependabot alerts, so `ghsa-id` stays empty
+        # without this token. It is a fine-grained PAT with only "Dependabot
+        # alerts: read", stored as a Dependabot secret.
+        with:
+          alert-lookup: true
+          github-token: ${{ secrets.DEPENDABOT_ALERTS_TOKEN }}
 
       - name: Check the auto-merge policy
         id: policy
