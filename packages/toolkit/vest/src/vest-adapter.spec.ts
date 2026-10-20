@@ -228,8 +228,7 @@ describe('createVestAdapter', () => {
   });
 
   it('shows a generic vest:internal-error message in production mode', async () => {
-    // The thrown message can carry internal URLs or query data. Production
-    // must not render it under the field.
+    // The thrown message can carry internal URLs or query data.
     vestFieldResolutionDevMode.value = false;
     let consoleErrorSpy: { mockRestore: () => void } | undefined;
     try {
@@ -536,9 +535,6 @@ describe('createVestAdapter', () => {
       await TestBed.inject(ApplicationRef).whenStable();
 
       // No throw reached here -- production logs and continues.
-      // The field path travels as a separate argument, never inside the
-      // message text, so data-built Vest field names stay out of log
-      // messages.
       expect(consoleErrorSpy).toHaveBeenCalledWith(
         expect.stringContaining(
           "does not resolve against the validator's bound field tree",

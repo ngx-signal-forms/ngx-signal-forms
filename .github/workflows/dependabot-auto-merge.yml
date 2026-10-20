@@ -23,10 +23,8 @@ permissions: {}
 jobs:
   auto-merge:
     runs-on: ubuntu-latest
-    # Check the actor too: a person who pushes to a Dependabot branch must not
-    # get the bot's approval for their commit. zizmor reports `github.actor`
-    # as spoofable. That is true on its own, but here it only narrows the
-    # PR-author check, so it cannot let a non-Dependabot PR through.
+    # The actor check stops a person who pushes to a Dependabot branch from
+    # getting the bot's approval for their commit.
     if: >-
       ${{
         github.event.pull_request.user.login == 'dependabot[bot]' &&

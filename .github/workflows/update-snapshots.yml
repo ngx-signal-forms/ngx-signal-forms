@@ -17,8 +17,6 @@ on:
         required: false
         type: string
 
-# The job that runs the branch's code gets a read-only token. Only the
-# `push` job, which installs nothing and runs no repository code, can write.
 permissions: {}
 
 concurrency:
@@ -28,8 +26,8 @@ concurrency:
 jobs:
   update:
     # Runs the dispatched branch's install scripts, git hooks and tests, which
-    # may come from a bot or a contributor. It never holds a write token: it
-    # exports the snapshot changes as a patch for the `push` job.
+    # may come from a bot or a contributor. It gets a read-only token and hands
+    # the snapshot changes to the `push` job as a patch.
     #
     # Only allow regenerating snapshots on feature branches. The default branch
     # is blocked outright, and long-lived release/beta/rc/production refs are
@@ -167,9 +165,9 @@ jobs:
           if-no-files-found: error
           retention-days: 1
 
-  # Applies the patch and pushes it. This job installs nothing and runs no
-  # repository code, so the branch cannot reach its write token. It treats the
-  # patch as untrusted and refuses any path outside the snapshot directories.
+  # Installs nothing and runs no repository code, so the branch cannot reach
+  # the write token. The patch is untrusted, so any path outside the snapshot
+  # directories fails the job.
   push:
     needs: update
     if: ${{ needs.update.outputs.changed == 'true' }}
