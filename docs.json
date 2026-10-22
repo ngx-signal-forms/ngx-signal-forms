@@ -1,0 +1,76 @@
+{
+  "$schema": "https://context7.com/schema/docs7.json",
+  "name": "ngx-signal-forms",
+  "colors": {
+    "primary": "#4f46e5"
+  },
+  "filterSidebar": true,
+  "navigation": {
+    "groups": [
+      {
+        "group": "Get started",
+        "pages": [
+          "README",
+          "docs/ANGULAR_VS_TOOLKIT",
+          "docs/BEST_PRACTICES",
+          "docs/FAQ",
+          "docs/COMPATIBILITY"
+        ]
+      },
+      {
+        "group": "Guides",
+        "pages": [
+          "docs/VALIDATION_STRATEGY",
+          "docs/WARNINGS_SUPPORT",
+          "docs/CUSTOM_CONTROLS",
+          "docs/CUSTOM_WRAPPERS",
+          "docs/COMPLEX_NESTED_FORMS",
+          "docs/CSS_FRAMEWORK_INTEGRATION",
+          "docs/TESTING"
+        ]
+      },
+      {
+        "group": "Packages",
+        "pages": [
+          "packages/toolkit/README",
+          "packages/toolkit/assistive/README",
+          "packages/toolkit/form-field/README",
+          "packages/toolkit/form-field/THEMING",
+          "packages/toolkit/headless/README",
+          "packages/toolkit/testing/README",
+          "packages/toolkit/vest/README"
+        ]
+      },
+      {
+        "group": "Migration",
+        "pages": [
+          "docs/MIGRATING_FROM_REACTIVE_FORMS",
+          "docs/MIGRATING_FROM_NGX_VEST_FORMS",
+          "docs/MIGRATING_BETA_TO_V1",
+          "docs/MIGRATING_CSS_VARS",
+          {
+            "group": "Release candidates",
+            "pages": [
+              "docs/migrations/README",
+              "docs/migrations/v1-0-0-rc-16",
+              "docs/migrations/v1-0-0-rc-15",
+              "docs/migrations/v1-0-0-rc-14",
+              "docs/migrations/v1-0-0-rc-13",
+              "docs/migrations/v1-0-0-rc-12",
+              "docs/migrations/v1-0-0-rc-11"
+            ]
+          }
+        ]
+      },
+      {
+        "group": "Contributing",
+        "pages": [
+          "docs/CONTRIBUTING",
+          "docs/PACKAGE_ARCHITECTURE",
+          "docs/ANGULAR_PUBLIC_API_POLICY",
+          "docs/COVERAGE"
+        ]
+      }
+    ]
+  }
+}
