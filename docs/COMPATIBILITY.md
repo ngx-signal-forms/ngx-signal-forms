@@ -74,7 +74,9 @@ The axe-core integration is optional and only required when importing
 The toolkit's `engines.node` is `^22.23.4 || ^24.22.1 || >=26.12.1`. Each
 floor is the first release of its line with the
 [October 2026 security fixes](https://nodejs.org/en/blog/vulnerability/october-2026-security-releases),
-which is stricter than `@angular/core@22`'s own `engines` field. Consumers
+which is stricter than `@angular/core@22`'s own `engines` field. Raising a
+floor to a Node security release ships as a patch, without a migration guide,
+because the releases below the floor have known vulnerabilities. Consumers
 should use an active LTS Node version compatible with Angular 22 and their
 package manager/tooling stack.
 
