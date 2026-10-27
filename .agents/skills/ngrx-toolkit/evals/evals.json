@@ -1,0 +1,102 @@
+{
+  "skill_name": "ngrx-toolkit",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Build a new SignalStore-backed ticket editor. The target project already has compatible Angular 22.1, NgRx 22, and @ngrx-toolkit/core 22.0.1 installed. Load the selected ticket, look up tags by id, and save edits over HTTP.",
+      "expected_output": "The ngrx-signals workflow hands off to ngrx-toolkit. It prefers withResource for detail, withEntityResources for the lookup array, and withMutations/httpMutation for saving, then reads only the relevant shared references.",
+      "files": [],
+      "assertions": [
+        "The ngrx-signals entry point reaches the sibling Toolkit skill before selecting adapters.",
+        "Uses withResource singular, withEntityResources for id lookups, and withMutations with httpMutation.",
+        "Reads the resource/mutation and editor references for contracts and response guards.",
+        "Does not hand-roll parallel loading/error state already supplied by the selected adapters."
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "The ngrx-toolkit skill is available, but this NgRx 22 project has no Toolkit dependency. Add a core-only resource-backed search store.",
+      "expected_output": "Skill discovery does not imply a library dependency. Uses native resource integration and any needed NgRx resource extensions without installing or importing Toolkit.",
+      "files": [],
+      "assertions": [
+        "Distinguishes skill availability from package installation.",
+        "Honors core-only scope and introduces no Toolkit dependency or import.",
+        "Uses native resources and follows the native error-policy reference when needed."
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "Toolkit is installed, but our existing rxMethod plus withEntities search flow works. Fix only its error message. Also keep the component-local httpResource local and add an error fallback.",
+      "expected_output": "Preserves both working ownership choices. Fixes the current RxJS error path and uses a native resource extension or guard locally rather than migrating either flow into Toolkit adapters.",
+      "files": [],
+      "assertions": [
+        "Treats the Toolkit preference as a default for new integration, not a migration mandate.",
+        "Preserves the existing rxMethod/withEntities flow for this scoped fix.",
+        "Keeps the component resource local and follows native extension/guard semantics."
+      ]
+    },
+    {
+      "id": 4,
+      "prompt": "Adopt Toolkit for a new store. The project has Angular and NgRx 21, but someone suggested importing @ngrx-toolkit/core 22 and withResources. What should we do before writing code?",
+      "expected_output": "Checks the target versions, corrects the adapter to withResource, and selects a compatible Toolkit version/package or plans an explicit aligned upgrade. It does not silently mix majors.",
+      "files": [],
+      "assertions": [
+        "Consults the shared version gates before selecting imports.",
+        "Uses withResource, not withResources.",
+        "Retains the older Toolkit package for a compatible v21 choice or proposes an explicit aligned v22 upgrade.",
+        "Does not infer installed dependencies from the skill's documentation baseline."
+      ]
+    },
+    {
+      "id": 5,
+      "prompt": "Configure Toolkit IndexedDB draft persistence, reset, undo, and Events DevTools. Follow the ngrx-toolkit skill directly, without first loading ngrx-signals.",
+      "expected_output": "The new skill is independently discoverable and routes directly to shared lifecycle and version references. It applies hydration, reset/history, SSR, and tracking contracts without restarting the ngrx-signals workflow.",
+      "files": [],
+      "assertions": [
+        "Toolkit description covers this invocation without relying on ngrx-signals discovery.",
+        "Reaches the extension catalog and version gates through resolvable relative links.",
+        "Uses one shared API reference source rather than duplicated instructions.",
+        "Does not loop between the two skill workflows; follows the lifecycle checks in the selected reference."
+      ]
+    },
+    {
+      "id": 6,
+      "prompt": "In an external monorepo, ngrx-signals and ngrx-toolkit are installed together under .github/skills/. Neither skill folder has a package.json. The target application is apps/crm, which resolves Angular 22.1, NgRx 22, and @ngrx-toolkit/core 22.0.1. Add new SignalStore detail loading and HTTP saving, preserving native resource composition where needed. Where should dependency checks run, and which integration should be preferred?",
+      "expected_output": "Checks dependency declarations, workspace configuration, lockfile, and package resolution for apps/crm in the external monorepo, not the skill folder. With compatible Toolkit resolved for that target, prefers withResource and withMutations/httpMutation for the new store integration while retaining native resource composition and guards where needed.",
+      "files": [],
+      "assertions": [
+        "Resolves dependencies in the apps/crm target context, including applicable monorepo root declarations and lockfile.",
+        "Does not treat a skill folder without package.json as evidence that Toolkit is absent from the target application.",
+        "Uses the paired sibling skill and shared reference links relative to .github/skills/ rather than assuming a user-level installation path.",
+        "Prefers withResource singular and withMutations/httpMutation for new store reads and writes after confirming target compatibility.",
+        "Keeps needed native resource composition and guards instead of treating Toolkit as a replacement for native resources."
+      ]
+    },
+    {
+      "id": 7,
+      "prompt": "Only the ngrx-toolkit skill folder was installed into a host's skill directory. The target application resolves a compatible @ngrx-toolkit/core npm package, but the skill's ../ngrx-signals/references/ links fail because no ngrx-signals sibling was included. Diagnose the failure and say what must be checked before publishing this skill bundle. Can publication guarantee skill invocation or application runtime behavior?",
+      "expected_output": "Reports a missing ngrx-signals sibling reference bundle, not a missing npm dependency. Requires the paired skill directories and intact references, verifies that the host can discover the entry points and access sibling files, and checks redistribution license and provenance before publication. Distinguishes those packaging checks from invocation reliability and runtime correctness, neither of which is guaranteed.",
+      "files": [],
+      "assertions": [
+        "Diagnoses broken shared links as a missing ngrx-signals sibling bundle rather than absence of the installed Toolkit npm package.",
+        "Requires both skill directories with intact shared references and resolvable relative paths before publication.",
+        "Requires verification of host discovery and filesystem access to sibling references.",
+        "Requires verification of redistribution license and source provenance before publication rather than assuming permission.",
+        "Makes no guarantee of automatic skill invocation or application runtime correctness from successful packaging."
+      ]
+    },
+    {
+      "id": 8,
+      "prompt": "The target application resolves compatible Angular 22.1, NgRx 22, and @ngrx-toolkit/core 22.0.1, and both skills are installed. The project's explicit instruction is core-only for this change: use native Angular resources and NgRx SignalStore commands, with no Toolkit adapters. Add a new detail read and save command. Which route and command contract should govern the work?",
+      "expected_output": "Honors the explicit core-only project scope despite compatible installed Toolkit. Routes to native resource integration and native command contracts in ngrx-signals, preserving native error and response guards. Does not select Toolkit adapters or impose a Toolkit MutationResult contract on the native command.",
+      "files": [],
+      "assertions": [
+        "Treats explicit core-only project instructions as overriding the default preference for compatible installed Toolkit.",
+        "Uses native Angular resources and NgRx SignalStore commands without introducing Toolkit adapters or imports.",
+        "Reads the relevant native resource and command references rather than forcing a Toolkit workflow.",
+        "Uses the native command's declared completion and error contract, not Toolkit MutationResult status handling.",
+        "Preserves applicable native error-policy and stale-response guards within the requested scope."
+      ]
+    }
+  ]
+}
