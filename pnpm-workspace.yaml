@@ -190,7 +190,7 @@ catalogs:
   vitest:
     '@vitest/browser-playwright': '~5.0.3'
     '@vitest/coverage-v8': '~5.0.3'
-    '@vitest/ui': '~5.0.3'
+    '@vitest/ui': '~5.0.5'
     vitest: '~5.0.3'
 
 # With `virtualStoreType: global` a package resolves only what it declares.
