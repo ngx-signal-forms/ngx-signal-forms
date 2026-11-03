@@ -1,88 +1,12 @@
-import { ErrorDisplayStrategy, FieldMarkingMode, FormFieldAppearance, FormFieldAppearanceInput, FormFieldOrientation, FormFieldOrientationInput, NgxFieldIdentity, NgxSignalFormAutoAria, NgxSignalFormControl, NgxSignalFormControlPresetRegistry, NgxSignalFormHintDescriptor, ResolvedMarker, ResolvedNgxSignalFormControlSemantics, WarningDisplayStrategy } from "@ngx-signal-forms/toolkit";
+import { ErrorDisplayStrategy, FieldMarkingMode, FormFieldAppearance, FormFieldAppearanceInput, FormFieldOrientation, FormFieldOrientationInput, NgxSignalFormAutoAria, NgxSignalFormControl, NgxSignalFormHintDescriptor, ResolvedMarker, ResolvedNgxSignalFormControlSemantics, WarningDisplayStrategy } from "@ngx-signal-forms/toolkit";
 import * as i0 from "@angular/core";
 import { ElementRef, Type, WritableSignal } from "@angular/core";
 import { FieldTree } from "@angular/forms/signals";
 import { NgxFormFieldCharacterCount, NgxFormFieldError, NgxFormFieldHint, NgxFormFieldListStyle } from "@ngx-signal-forms/toolkit/assistive";
 import * as i1$1 from "./ngx-signal-forms-toolkit-core.js";
-import { FormFieldBindingsState, WarnOnceRef } from "./ngx-signal-forms-toolkit-core.js";
+import { WarnOnceRef } from "./ngx-signal-forms-toolkit-core.js";
 import * as i1 from "@ngx-signal-forms/toolkit/headless";
 import { NgxHeadlessFieldset } from "@ngx-signal-forms/toolkit/headless";
-/**
- * Wrapper-visible control families derived from resolved control semantics.
- */
-type FormFieldControlKind = ResolvedNgxSignalFormControlSemantics['kind'];
-/**
- * Wrapper-visible capability flags for a control kind.
- *
- * Each flag answers one rendering question the wrapper has to make a
- * decision about. Keep the flag set small and orthogonal — adding a flag
- * forces every entry in {@link CONTROL_KIND_CAPABILITIES} plus
- * {@link UNKNOWN_CONTROL_CAPABILITIES} to declare its value, which is the
- * point of the exhaustiveness guard.
- *
- * - `textual` — the wrapper should render the default textual field shell
- *   (border, padding, focus ring via `:focus-within`).
- * - `supportsOutline` — `appearance="outline"` is meaningful for this
- *   control family. Selection-group controls (checkbox, radio-group,
- *   switch) keep `false` because the outline chrome doesn't frame them
- *   correctly.
- * - `selectionGroup` — the control uses grouped selection-row layout
- *   (checkbox + label inline, radio group stack).
- * - `paddedContent` — the wrapper should keep shared content padding
- *   around the control. True for controls whose host is a widget that
- *   benefits from the wrapper's padding (slider, composite) rather than
- *   managing its own.
- * - `forcesVertical` — the wrapper should force `'vertical'` layout
- *   regardless of the requested orientation. True for the selection-control
- *   kinds (checkbox, switch, radio-group), whose rows don't read well
- *   side-by-side with their label.
- * - `clusterRole` — the ARIA role a *selection group* of this kind takes:
- *   `'radiogroup'` for radio-group, `'group'` for a multi-checkbox group.
- *   `null` means the kind never forms a group. The kind alone does not
- *   decide whether a group forms. `NgxFormFieldWrapper`'s
- *   `isSelectionCluster` also checks the projected control count for
- *   `'group'`. This flag only names the role once a group is confirmed.
- */
-interface ControlKindCapabilities {
-  readonly textual: boolean;
-  readonly supportsOutline: boolean;
-  readonly selectionGroup: boolean;
-  readonly paddedContent: boolean;
-  readonly forcesVertical: boolean;
-  readonly clusterRole: 'radiogroup' | 'group' | null;
-}
-/**
- * Looks up the capability flags for a control kind. `null` (unresolved
- * control kind) falls back to {@link UNKNOWN_CONTROL_CAPABILITIES} so legacy
- * markup and custom controls without registered semantics keep rendering
- * with the default textual field shell.
- */
-declare function capabilitiesFor(controlKind: FormFieldControlKind): ControlKindCapabilities;
-/**
- * Raw inputs `NgxFormFieldWrapper` collects across several of its own
- * signals to compute the selection-cluster ARIA contract. Kept as a flat,
- * plain-value interface (not signals) so {@link resolveClusterAriaAttrs}
- * stays a pure function the component's `computed()` reads from — see that
- * function's doc comment for why the four related host bindings
- * (`role`, `aria-labelledby`, `aria-describedby`, and the visually-hidden
- * `groupRequiredHintId` node) are resolved together instead of as four
- * separately-guarded computeds.
- *
- * @internal
- */
-interface ClusterAriaInputs {
-  readonly isSelectionCluster: boolean;
-  readonly controlKind: FormFieldControlKind;
-  readonly boundControlIsRequired: boolean;
-  readonly requiredHintText: string;
-  readonly fieldName: string | null;
-  readonly selectionClusterLabelId: string | null;
-  readonly initialAriaLabelledby: string | null;
-  readonly initialAriaDescribedby: string | null;
-  readonly showInvalidState: boolean;
-  readonly showWarningState: boolean;
-  readonly shouldShowWarnings: boolean;
-}
 /**
  * The whole selection-cluster ARIA contract `NgxFormFieldWrapper`'s host
  * bindings read from, resolved together by {@link resolveClusterAriaAttrs}.
@@ -104,107 +28,6 @@ interface ClusterAriaAttrs {
   /** `[attr.aria-describedby]`. */
   readonly describedBy: string | null;
 }
-/**
- * Resolves the entire selection-cluster ARIA contract — `role`,
- * `aria-labelledby`, `aria-describedby`, and the visually-hidden
- * required-hint id — in one pure computation.
- *
- * Extracted from `NgxFormFieldWrapper` (issue #354), which used to spread
- * this across four separately-guarded `computed()`s
- * (`selectionClusterRole`, `groupRequiredHintId`, `selectionClusterLabelledBy`,
- * `selectionClusterDescribedBy`) that each re-checked `isSelectionCluster`
- * and silently depended on being read in the right order (`describedBy`
- * reads the already-resolved `groupRequiredHintId`). Folding them into one
- * function makes that dependency explicit and keeps the four outputs
- * consistent with each other by construction — a caller can no longer read
- * `describedBy` computed from a stale `groupRequiredHintId`.
- *
- * Deliberately pure (no signal reads, no `inject()`) — the component wraps
- * this in a single `computed()` and projects each field from that one
- * result. See `NgxFormFieldWrapper`'s original inline doc comments (now
- * folded into this module) for the accessibility rationale:
- *
- * - `aria-required` is not valid ARIA on the `group` role (only
- *   `radiogroup`), so a `group` cluster's required-ness is relocated to a
- *   visually-hidden node wired into `aria-describedby` instead
- *   (WCAG 1.3.1 / 4.1.2, see
- *   https://github.com/ngx-signal-forms/ngx-signal-forms/issues/300).
- * - `aria-describedby`/`aria-labelledby` merge with (never replace) any
- *   author-supplied initial values, mirroring how auto-aria preserves
- *   author-supplied values on the bound control itself.
- * - The error/warning id appended to `describedBy` is gated on
- *   `shouldShowWarnings` (not just `showWarningState`) because that signal
- *   also gates whether the projected error renderer's warning live region
- *   is actually in the DOM — appending the id unconditionally would leave a
- *   dangling `aria-describedby` reference for warning-only clusters gated
- *   by a non-`'immediate'` `warningStrategy`.
- *
- * @internal
- */
-declare function resolveClusterAriaAttrs(inputs: Readonly<ClusterAriaInputs>): ClusterAriaAttrs;
-/**
- * Resolve the host element from an `ElementRef`, asserting that it is an
- * `HTMLElement`. The wrapper component can't do useful DOM work otherwise,
- * so a host that is not an element is a contract violation this surfaces
- * loudly.
- *
- * The check goes through {@link isHtmlElement}, which reads a server-side
- * element as an element instead of throwing on the missing `HTMLElement`
- * global. This function only ever runs inside `afterEveryRender`, which a
- * server pass skips, but a direct caller must not crash the render either.
- *
- * @internal
- */
-declare function requireHostElement(elementRef: ElementRef<unknown>): HTMLElement;
-/**
- * DOM snapshot consumed by `NgxFormFieldWrapper`'s render hook.
- *
- * @internal
- */
-interface FormFieldWrapperDomSnapshot {
-  readonly inputEl: HTMLElement | null;
-  readonly inputId: string | null;
-  readonly semantics: ResolvedNgxSignalFormControlSemantics;
-  readonly selectionControlCount: number;
-  readonly label: Element | null;
-  /**
-   * The resolved `__main` projected-content slot. Returned so the caller can
-   * cache it across renders and skip the `querySelector` call next time.
-   */
-  readonly mainSlot: HTMLElement | null;
-}
-/**
- * Read the wrapper's projected-control DOM snapshot in one place.
- *
- * Called from `NgxFormFieldWrapper`'s `afterEveryRender` early-read phase, so
- * this must stay synchronous and free of reactive reads. `controlPresets` is
- * passed as a plain registry (not a signal) for the same reason — the
- * wrapper resolves it once at construction and reuses it here.
- *
- * Kept as a standalone, pure function (rather than folded into
- * {@link captureFormFieldWrapperDomSnapshot}) so its native-vs-fallback
- * precedence rules stay directly unit-testable without an `ElementRef` or a
- * `FieldTree` fixture — see `form-field.utils.spec.ts`.
- *
- * @internal
- */
-declare function readFormFieldWrapperDomSnapshot(hostEl: HTMLElement, cachedControl: HTMLElement | null, controlPresets: NgxSignalFormControlPresetRegistry, nativeControl: HTMLElement | null, cachedMainSlot?: HTMLElement | null, cachedLabel?: Element | null): FormFieldWrapperDomSnapshot;
-/**
- * Single entry point for `NgxFormFieldWrapper`'s `afterEveryRender`
- * `earlyRead` phase: resolves the host element, looks up the bound control
- * via Angular's native binding registry, then folds in the DOM-probe
- * fallback via {@link readFormFieldWrapperDomSnapshot}.
- *
- * Extracted (issue #354) so the wrapper component's constructor only calls
- * one function to capture render state, instead of composing
- * `requireHostElement` + `resolveBoundControlFromBindings` +
- * `readFormFieldWrapperDomSnapshot` inline. Must stay synchronous and free
- * of reactive reads — it runs inside `afterEveryRender`'s `earlyRead`
- * callback, before Angular's write phase.
- *
- * @internal
- */
-declare function captureFormFieldWrapperDomSnapshot(elementRef: ElementRef<unknown>, cachedControl: HTMLElement | null, controlPresets: NgxSignalFormControlPresetRegistry, fieldState: FormFieldBindingsState | null | undefined, cachedMainSlot?: HTMLElement | null, cachedLabel?: Element | null): FormFieldWrapperDomSnapshot;
 /**
  * The wrapper state that {@link applyWrapperDomSnapshot} writes, plus the
  * readers it needs. The wrapper owns the signals; this function only sets
@@ -235,29 +58,6 @@ interface WrapperDomState {
   readonly warnedUnresolvedKind: WarnOnceRef;
   readonly warnedUnresolvedFieldName: WarnOnceRef;
 }
-/**
- * The identity writers {@link applyWrapperDomSnapshot} drives. The resolved
- * strategies are not here: `createFieldPresentation()` publishes those.
- *
- * @internal
- */
-type WrapperDomIdentity = Pick<NgxFieldIdentity, 'setControlElement' | 'setFieldName' | 'setHintIds'>;
-/**
- * The write phase of `NgxFormFieldWrapper`'s `afterEveryRender` hook.
- *
- * Turns a DOM snapshot from the `earlyRead` phase into state updates. It
- * makes no DOM queries and needs no injection context, so unit tests call
- * it with plain signals and elements. The only DOM writes are the two the
- * wrapper owns on projected content: a generated label `id` for a
- * selection cluster, and `data-signal-field` on the bound control.
- *
- * Signal writes use `set`, which is a no-op for an equal value, so a
- * steady-state render notifies nobody. See ADR-0011 for why the wrapper,
- * and not the identity provider, publishes the tier-2 field name.
- *
- * @internal
- */
-declare function applyWrapperDomSnapshot(snapshot: FormFieldWrapperDomSnapshot, state: WrapperDomState, identity: WrapperDomIdentity, hints: readonly NgxSignalFormHintDescriptor[]): void;
 /**
  * Placement of the validation summary relative to the control or fieldset
  * content. Shared by `NgxFormFieldWrapper` and `NgxFormFieldset` so a

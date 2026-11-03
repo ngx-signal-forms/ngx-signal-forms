@@ -184,6 +184,7 @@ const DEFAULT_OPTIONS: readonly AriaSelectOption[] = [
   `,
   template: `
     <span
+      [id]="valueId"
       class="select__value"
       [class.select__value--placeholder]="!selectedLabel()"
     >
@@ -230,6 +231,7 @@ const DEFAULT_OPTIONS: readonly AriaSelectOption[] = [
 export class AriaSelectComponent implements FormValueControl<string> {
   readonly #host = inject<ElementRef<HTMLElement>>(ElementRef);
   protected readonly host = this.#host;
+  protected readonly valueId = `${this.#host.nativeElement.id}-value`;
 
   readonly value = model.required<string>();
   readonly touched = input(false);
