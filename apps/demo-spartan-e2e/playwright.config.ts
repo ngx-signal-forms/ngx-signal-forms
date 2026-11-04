@@ -1,4 +1,4 @@
-import { workspaceRoot } from '@nx/devkit';
+import { getReadyUrl, workspaceRoot } from '@nx/devkit';
 import { nxE2EPreset } from '@nx/playwright/preset';
 import { defineConfig, devices } from '@playwright/test';
 
@@ -7,7 +7,8 @@ import { defineConfig, devices } from '@playwright/test';
 // routed through that proxy (which answers 405) and never sees the dev server.
 process.env['NO_PROXY'] ??= 'localhost,127.0.0.1';
 
-const baseURL = process.env['BASE_URL'] ?? 'http://127.0.0.1:4621';
+const webServerAddress = getReadyUrl('http://127.0.0.1:4621');
+const baseURL = process.env['BASE_URL'] ?? webServerAddress;
 const isCI = Boolean(process.env['CI']);
 
 const preset = nxE2EPreset(__filename, { testDir: './src' });
@@ -31,13 +32,15 @@ export default defineConfig({
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
   },
-  webServer: {
-    command: 'pnpm nx serve demo-spartan',
-    url: 'http://127.0.0.1:4621',
-    reuseExistingServer: !isCI,
-    cwd: workspaceRoot,
-    timeout: 120000,
-  },
+  webServer: process.env['BASE_URL']
+    ? undefined
+    : {
+        command: 'pnpm nx serve demo-spartan',
+        url: webServerAddress,
+        reuseExistingServer: true,
+        cwd: workspaceRoot,
+        timeout: 120000,
+      },
   projects: [
     {
       name: 'chromium',

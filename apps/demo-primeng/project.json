@@ -24,16 +24,22 @@
     },
     "serve": {
       "executor": "nx:run-commands",
+      "readyWhen": {
+        "url": "http://127.0.0.1:{options.port}",
+        "timeout": 240000
+      },
       "defaultConfiguration": "development",
       "options": {
         "cwd": "apps/demo-primeng"
       },
       "configurations": {
         "production": {
-          "command": "vite preview --port 4720 --strictPort"
+          "command": "vite preview --strictPort",
+          "port": 4720
         },
         "development": {
-          "command": "vite --port 4620 --strictPort"
+          "command": "vite --strictPort",
+          "port": 4620
         }
       }
     },

@@ -214,6 +214,21 @@ screenshots use separate baselines; do not use them as Linux baselines.
 
 Put the file filter after `--`. Vitest does not know `--testFile`.
 
+Nx test targets run once by default. Add `--watch` after `--` for an
+interactive watch run, for example `pnpm nx test demo -- --watch`.
+The toolkit keeps separate explicit jsdom and browser targets because the
+Nx Vitest plugin discovers standard `vitest.config.*` filenames, not the
+toolkit's two custom config names.
+
+Nx 24 selects affected tasks from their inputs in local runs and CI.
+Use `pnpm nx affected -t build test --explain` to inspect the selection.
+Vite build configs are production inputs; Vitest configs, test setup files,
+and spec tsconfigs are not. Inferred test inputs retain the compiler options,
+setup files, dependency outputs, and CI environment supplied by the plugin.
+Nx also tracks plugin configuration files. A standard `vitest.config.*`
+change can still select a build as a project-configuration change; use
+`--explain` to distinguish that from a production input.
+
 | Project               | Command                                                                                    |
 | --------------------- | ------------------------------------------------------------------------------------------ |
 | Toolkit, jsdom        | `pnpm nx test toolkit -- core/utilities/error-strategies.spec.ts`                          |
@@ -230,6 +245,20 @@ Put the file filter after `--`. Vitest does not know `--testFile`.
   `pnpm nx build demo` type-checks the app code.
 - The demo end-to-end tests use a dev server on port 4600 that is already
   running, or start one.
+- Local and CI e2e tasks depend on an Nx continuous server task and wait for
+  readiness. Playwright uses `reuseExistingServer: true` to reuse that
+  Nx-owned server; Nx stops it after the consuming tasks finish.
+- Use one Nx invocation to run suites together. Do not overlap local and CI
+  runs in the same checkout: Nx shares continuous tasks by target ID, even
+  when their environment variables select different ports.
+- The main demo uses `serve-e2e` to keep port 4600 locally and port 4300 in
+  CI (`PLAYWRIGHT_DEMO_PORT` overrides the CI port). The reference demos use
+  their existing `serve` targets. Servers stay in development mode to
+  preserve the tested behavior; this change does not switch to built-app tests.
+- `getReadyUrl()` resolves the server address. Set `BASE_URL` to test a
+  deployed app without the inferred local server. Custom shard and a11y
+  targets declare server dependencies explicitly because the Playwright
+  plugin does not infer those targets.
 - `demo:test-timezones` runs the `05-advanced` specs in Auckland and New York
   time. Every other run and CI use UTC, which hides off-by-one-day bugs.
   Date logic in the demo uses `Temporal.PlainDate`. CI runs this target when
@@ -254,3 +283,12 @@ pnpm nx run toolkit:test -- error-strategies --repeats=20 -t 'shouldShowErrors >
 ```
 
 The same flags work with `toolkit:test-browser`.
+
+### Mock calendar dates
+
+Vitest 5.1 replaces `globalThis.Temporal` when fake timers start. A namespace
+already imported from `temporal-polyfill` can retain its original clock.
+When a test uses that namespace, spy on its `Temporal.Now.plainDateISO` and
+derive the date from the fake local `Date`. Restore the spy after the test.
+The review-step specs use this pattern and keep the same date-boundary
+assertions in UTC, Auckland, and New York.

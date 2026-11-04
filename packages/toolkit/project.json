@@ -95,6 +95,7 @@
     },
     "test": {
       "executor": "nx:run-commands",
+      "outputs": ["{projectRoot}/.vitest/report-jsdom"],
       "options": {
         "command": "vitest run --config vitest.jsdom.config.mts",
         "cwd": "packages/toolkit"
