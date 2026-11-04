@@ -761,10 +761,17 @@ test.describe('Custom Signal Forms Controls', () => {
     });
 
     test('should pick a select option and close the popup', async () => {
+      await expect(page.frameworkSelectTrigger).toHaveAccessibleName(
+        'Preferred framework (select) Select a framework',
+      );
+
       await page.frameworkSelectTrigger.click();
       await page.page.getByRole('option', { name: 'Angular' }).click();
 
       await expect(page.frameworkSelectTrigger).toContainText('Angular');
+      await expect(page.frameworkSelectTrigger).toHaveAccessibleName(
+        'Preferred framework (select) Angular',
+      );
       await expect(page.frameworkSelectTrigger).toHaveAttribute(
         'aria-expanded',
         'false',

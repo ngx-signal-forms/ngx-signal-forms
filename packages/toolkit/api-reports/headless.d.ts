@@ -327,48 +327,6 @@ interface ResolvedError {
  */
 export declare function dedupeValidationErrors(errors: readonly ValidationError[]): ValidationError[];
 /**
- * Resolve a validation error's display message using the toolkit's standard
- * settings (`stripWarningPrefix: true` by default).
- *
- * Shared by `NgxHeadlessErrorState` (`error-state.ts`), `createFieldsetAggregation`
- * (`fieldset.ts`), and `createErrorMessageSignal` so all three surfaces stay in lockstep — changing
- * message resolution behaviour requires editing exactly one place.
- *
- * @internal
- */
-declare function resolveErrorMessage(error: ValidationError, registry: Readonly<ErrorMessageRegistry> | null | undefined, stripWarningPrefix?: boolean): string;
-/**
- * Core error-state signals shared between `createErrorState()` (the
- * standalone factory) and `NgxHeadlessErrorState` (the directive
- * variant). The split on `readDirectErrors()` is intentionally the safer
- * path: it handles a field state whose `errors()` is missing or not an
- * array, which matters for tests and for custom control adapters.
- *
- * @internal
- */
-interface HeadlessErrorStateCore {
-  readonly errors: Signal<readonly ValidationError[]>;
-  readonly warnings: Signal<readonly ValidationError[]>;
-  readonly hasErrors: Signal<boolean>;
-  readonly hasWarnings: Signal<boolean>;
-  readonly errorId: Signal<string | null>;
-  readonly warningId: Signal<string | null>;
-}
-/**
- * Shared builder used by both `createErrorState()` and
- * `NgxHeadlessErrorState` to derive the error/warning split,
- * presence flags, and ARIA region IDs.
- *
- * When `errorsOverride` is provided and returns a defined array, that array
- * replaces the field-based error extraction entirely. This enables the
- * `NgxFormFieldError.errors` direct-input mode (pre-aggregated errors from
- * fieldsets) to flow through the same split/resolution pipeline as
- * field-derived errors.
- *
- * @internal
- */
-declare function buildHeadlessErrorState(fieldState: NgxSignalLike<unknown>, fieldName: NgxSignalLike<string | null>, errorsOverride?: NgxSignalLike<readonly ValidationError[] | undefined>): HeadlessErrorStateCore;
-/**
  * Options for creating error state signals.
  *
  * @group Reactive Primitives
@@ -788,67 +746,6 @@ interface ErrorSummaryEntryData {
    */
   readonly canFocus: boolean;
 }
-/**
- * Deduplicate validation errors **per originating field** by kind + message
- * + field identity.
- *
- * This is deliberately distinct from `dedupeValidationErrors` (kept in
- * `utilities.ts`), which `NgxHeadlessFieldset` uses to collapse the *same*
- * message repeated across a group into one grouped entry — a documented
- * feature, not a bug. An error-summary entry, by contrast, represents one
- * field's error; two different fields that both fail `required()` with no
- * custom message (Angular's default `ValidationError.message` is
- * `undefined`) share the key `'required::'` under a message-blind dedupe
- * and one of them would be silently dropped from the summary, violating
- * WCAG 3.3.1 (the dropped field's error is never listed and never
- * reachable via `focus()`).
- *
- * Errors without a resolvable `fieldTree` (e.g. from custom validators)
- * fall back to the field-blind key so they still dedupe sensibly among
- * themselves.
- *
- * @param errors - Array of ValidationError to deduplicate
- * @returns Deduplicated array preserving first occurrence order
- *
- * @internal
- */
-declare function dedupeValidationErrorsByField(errors: readonly ValidationError[]): ValidationError[];
-/**
- * Whether a `ValidationError` has a bound field that can actually receive
- * focus.
- *
- * `toErrorSummaryEntry()` calls this for `canFocus` and again before
- * `focus()` touches `fieldTree()`, so the two cannot drift apart. Kept internal:
- * `canFocus` on `ErrorSummaryEntryData` is the public surface consumers
- * should read instead of re-deriving this themselves.
- *
- * @internal
- */
-declare function errorHasFocusableTarget(error: ValidationError): boolean;
-/**
- * Maps a `ValidationError` into an `ErrorSummaryEntryData` with resolved
- * message, field name, and focus callback.
- *
- * The field name comes from the duck-typed `error.fieldTree().name()` with
- * the Angular internal prefix stripped. It falls back to the error's `kind`
- * when the field tree is not available. `focus()` calls
- * `error.fieldTree().focusBoundControl()`, guarded by
- * {@link errorHasFocusableTarget} so it never disagrees with `canFocus`.
- *
- * Public consumers reach this through `createErrorSummaryEntries()`.
- *
- * @param error - The validation error to map
- * @param registry - Error message registry for 3-tier message resolution
- * @param options - Settings (e.g. `{ stripWarningPrefix: true }`)
- * @param labelResolver - Optional field-label resolver; receives the field
- *   path **without** the Angular internal prefix. Falls back to
- *   `humanizeFieldPath` when `undefined`.
- *
- * @internal
- */
-declare function toErrorSummaryEntry(error: ValidationError, registry?: Readonly<ErrorMessageRegistry> | null, options?: Readonly<{
-  stripWarningPrefix?: boolean;
-}>, labelResolver?: FieldLabelResolver | null): ErrorSummaryEntryData;
 /**
  * A resolved error-summary entry with kind, message, and focus capability.
  *
@@ -1794,17 +1691,6 @@ interface FieldOptionality {
 }
 type AnyFieldTree = FieldTree<unknown>;
 /**
- * Synchronously summarise whether a form tree has any required / optional leaf
- * fields. Reads each leaf's `required()` signal, so calling this inside a
- * `computed()` (or `effect()`) makes the result reactive — conditionally
- * required fields update it automatically.
- *
- * @param tree A form `FieldTree` (typically a form root or a subtree).
- * @public
- * @group Reactive Primitives
- */
-declare function summarizeFieldOptionality(tree: AnyFieldTree): FieldOptionality;
-/**
  * Reactive summary of required / optional leaf fields across a form tree.
  *
  * Accepts a reader so the source tree can be reactive (e.g. an `input()` that
@@ -1861,26 +1747,6 @@ type FieldStateLike = {
   errors?: ErrorReadableState['errors'];
 };
 /**
- * Read a boolean flag from FieldState using duck-typing.
- *
- * Safely accesses FieldState boolean signals (invalid, valid, touched, dirty, pending)
- * without requiring exact type match. Useful when working with FieldTree
- * return types that may be FieldState or CompatFieldState.
- *
- * @param state - The field state object (from `fieldTree()`)
- * @param key - The boolean flag name to read
- * @returns The boolean value, or false if not accessible
- *
- * @example
- * ```typescript
- * // Internal: `createFieldStateFlags()` calls this once per flag.
- * const isInvalid = readFieldFlag(myField(), 'invalid');
- * ```
- *
- * @internal
- */
-declare function readFieldFlag(state: unknown, key: BooleanStateKey): boolean;
-/**
  * Computed boolean state flags from a reactive field state signal.
  *
  * @group Reactive Primitives
@@ -1907,68 +1773,6 @@ interface FieldStateFlags {
  * @group Reactive Primitives
  */
 export declare function createFieldStateFlags(fieldState: () => unknown): FieldStateFlags;
-/**
- * Read errors from FieldState using duck-typing.
- *
- * Tries `errorSummary()` first (aggregated errors from nested fields),
- * then falls back to `errors()` (direct field errors).
- *
- * @param state - The field state object (from `fieldTree()`)
- * @returns Array of ValidationError, empty if not accessible
- *
- * @example
- * ```typescript
- * // Internal: includes nested field errors.
- * const allErrors = readErrors(addressField());
- * ```
- *
- * @internal
- */
-declare function readErrors(state: unknown): ValidationError[];
-/**
- * Minimal structural view of the `fieldTree` members read off a
- * `ValidationError` via duck-typing (`name()`, `focusBoundControl()`).
- *
- * As of Angular 22.0.0 the framework *does* export `ValidationError.WithFieldTree`
- * publicly (the Vest adapter consumes it directly), so this is no longer bridging
- * a missing type. It is kept as a deliberately narrow, **all-optional** structural
- * type because these helpers accept a bare `ValidationError`: errors emitted by
- * custom validators / Vest need not carry a `fieldTree`, so every access stays
- * guarded at runtime rather than asserting the framework's non-optional
- * `WithFieldTree` shape.
- *
- * Shared with `error-summary-utilities.ts`, whose mapping helpers
- * (`toErrorSummaryEntry`, `dedupeValidationErrorsByField`) read the same
- * `fieldTree` shape.
- */
-type ValidationErrorWithFieldTree = ValidationError & {
-  fieldTree?: () => {
-    name?: () => string;
-    focusBoundControl?: (options?: Readonly<FocusOptions>) => void;
-  } | undefined;
-};
-/**
- * Predicate: returns `true` when the field behind a `ValidationError` is
- * interactive (not hidden, not disabled). Composes the shared
- * {@link isFieldStateInteractive} predicate from core with the duck-typed
- * `error.fieldTree()` extraction that Angular doesn't expose on the public
- * `ValidationError` type.
- *
- * ## Default-policy asymmetry vs `focusFirstInvalid`
- *
- * When an error has no `fieldTree` (or a malformed one), this function
- * returns `true` — **show** the error. Silently hiding a validation
- * message from the user is the worst outcome, so the default errs on the
- * side of surfacing even malformed errors. `focusFirstInvalid` in
- * `packages/toolkit/core/utilities/focus-first-invalid.ts` takes the
- * inverse default and **skips** unknown-fieldTree errors, because there
- * is nothing to focus and silently focusing an unrelated field would be
- * worse than skipping. Both policies are deliberate; do not "normalize"
- * them.
- *
- * @internal
- */
-declare function isErrorOnInteractiveField(error: ValidationError): boolean;
 /**
  * Bundle of all headless directives for easy importing.
  *
