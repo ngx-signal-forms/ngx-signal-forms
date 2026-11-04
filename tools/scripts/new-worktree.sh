@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# Creates a worktree for <branch> in the sibling `<repo>.worktrees/` folder
-# and installs its dependencies. See docs/agents/sandbox.md.
+# Creates a worktree for <branch> in the sibling `<repo>.worktrees/` folder,
+# or under $WORKTREE_ROOT, and installs its dependencies. See docs/agents/sandbox.md.
 #
 # Run it outside the agent sandbox: it writes .git/config and the pnpm store.
 set -euo pipefail
@@ -9,7 +9,12 @@ branch=${1:?usage: tools/scripts/new-worktree.sh <branch> [base, default origin/
 base=${2:-origin/main}
 
 root=$(cd "$(git rev-parse --path-format=absolute --git-common-dir)/.." && pwd)
-dir="$root.worktrees/$branch"
+# WORKTREE_ROOT moves worktrees to <root>/<repo>/<tool>-<branch>; WORKTREE_TOOL names the tool.
+if [[ -n ${WORKTREE_ROOT:-} ]]; then
+  dir="$WORKTREE_ROOT/$(basename "$root")/${WORKTREE_TOOL:-manual}-${branch//\//-}"
+else
+  dir="$root.worktrees/$branch"
+fi
 
 if [[ $base == origin/* ]]; then git -C "$root" fetch --quiet origin "${base#origin/}"; fi
 

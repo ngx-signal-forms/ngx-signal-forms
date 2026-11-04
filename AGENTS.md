@@ -1,14 +1,14 @@
 # Agent instructions
 
 Start here. Keep provider files as thin delegates; shared rules live here,
-in [coding standards](CODING_STANDARDS.md), and in `.agents/skills/**`.
+in [coding standards](CODING_STANDARDS.md), and in `.agents/skills/`
+(`.claude/skills` is a symlink to it).
 
 ## Startup
 
-- Scaffolding: invoke `nx-generate` before exploration or Nx tools. Otherwise,
-  invoke `nx-workspace` before workspace exploration.
 - Editing or reviewing: read the applicable [coding standards](CODING_STANDARDS.md)
   sections and their triggered sources before editing or judging code.
+- Code that uses this library: load the `ngx-signal-forms` skill first.
 
 ## Action routes
 
