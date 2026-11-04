@@ -181,7 +181,7 @@ catalogs:
     size-limit: '14.3.0'
     typescript: 'npm:@typescript/typescript6@~6.0.2'
     # Exact pin: 6.10.5 has no provenance and trustPolicy rejects it.
-    verdaccio: '6.10.4'
+    verdaccio: '6.11.1'
     vite: '^8.3.5'
     vite-tsconfig-paths: '^6.1.1'
   utilities:
