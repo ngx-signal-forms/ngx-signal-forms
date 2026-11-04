@@ -36,7 +36,7 @@ function createConfigFactory(
     return Object.fromEntries(
       keys.map((key) => [
         key,
-        createCascadingResolver<unknown>({
+        createCascadingResolver({
           input: userConfig[key],
           configDefault: parent?.[key],
           fallback: DEFAULT_NGX_SIGNAL_FORMS_CONFIG[key],
