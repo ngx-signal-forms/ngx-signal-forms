@@ -7,11 +7,11 @@ settings:
 catalogs:
   analogjs:
     '@analogjs/vite-plugin-angular':
-      specifier: 2.9.4
-      version: 2.9.4
+      specifier: 2.9.5
+      version: 2.9.5
     '@analogjs/vitest-angular':
-      specifier: 2.9.4
-      version: 2.9.4
+      specifier: 2.9.5
+      version: 2.9.5
   angular:
     '@angular/aria':
       specifier: 22.2.5
@@ -127,8 +127,8 @@ catalogs:
       specifier: ^1.64.1
       version: 1.64.1
     eslint-plugin-playwright:
-      specifier: ^2.12.1
-      version: 2.12.1
+      specifier: ^2.12.2
+      version: 2.12.2
   primeng:
     '@primeuix/themes':
       specifier: 3.1.0
@@ -365,10 +365,10 @@ importers:
     devDependencies:
       '@analogjs/vite-plugin-angular':
         specifier: catalog:analogjs
-        version: 2.9.4(cf9ae715590387f9338bcc73d8f9f4de)
+        version: 2.9.5(cf9ae715590387f9338bcc73d8f9f4de)
       '@analogjs/vitest-angular':
         specifier: catalog:analogjs
-        version: 2.9.4(@analogjs/vite-plugin-angular@2.9.4(cf9ae715590387f9338bcc73d8f9f4de))(@angular-devkit/architect@0.2202.5(chokidar@5.0.0))(@angular-devkit/schematics@22.2.5(chokidar@5.0.0))(@angular/core@22.2.4(@angular/compiler@22.2.4)(rxjs@7.8.2))(@angular/platform-browser@22.2.4(@angular/common@22.2.4(@angular/core@22.2.4(@angular/compiler@22.2.4)(rxjs@7.8.2))(rxjs@7.8.2))(@angular/core@22.2.4(@angular/compiler@22.2.4)(rxjs@7.8.2)))(tslib@2.9.1)(vitest@5.0.5)
+        version: 2.9.5(@analogjs/vite-plugin-angular@2.9.5(cf9ae715590387f9338bcc73d8f9f4de))(@angular-devkit/architect@0.2202.5(chokidar@5.0.0))(@angular-devkit/schematics@22.2.5(chokidar@5.0.0))(@angular/core@22.2.4(@angular/compiler@22.2.4)(rxjs@7.8.2))(@angular/platform-browser@22.2.4(@angular/common@22.2.4(@angular/core@22.2.4(@angular/compiler@22.2.4)(rxjs@7.8.2))(rxjs@7.8.2))(@angular/core@22.2.4(@angular/compiler@22.2.4)(rxjs@7.8.2)))(tslib@2.9.1)(vitest@5.0.5)
       '@angular-devkit/core':
         specifier: catalog:angular-build
         version: 22.2.5(chokidar@5.0.0)
@@ -503,7 +503,7 @@ importers:
         version: 10.14.0(jiti@2.7.0)(supports-color@7.2.0)
       eslint-plugin-playwright:
         specifier: catalog:playwright
-        version: 2.12.1(eslint@10.14.0(jiti@2.7.0)(supports-color@7.2.0))
+        version: 2.12.2(eslint@10.14.0(jiti@2.7.0)(supports-color@7.2.0))
       jiti:
         specifier: catalog:tooling
         version: 2.7.0
@@ -679,8 +679,8 @@ packages:
     resolution: {integrity: sha512-30iZtAPgz+LTIYoeivqYo853f02jBYSd5uGnGpkFV0M3xOt9aN73erkgYAmZU43x4VfqcnLxW9Kpg3R5LC4YYw==}
     engines: {node: '>=6.0.0'}
 
-  '@analogjs/vite-plugin-angular@2.9.4':
-    resolution: {integrity: sha512-YiCyGQPOs7+9ZdKM0eCPK6J1oGZs+1UxqHM1UyuVj4b5l7y7vAgID3QV1ZZWvZ2TFGr0XENknYr9bxTocDnJQQ==}
+  '@analogjs/vite-plugin-angular@2.9.5':
+    resolution: {integrity: sha512-iGhtiViuLMhQleH/MMeG1LXXmeWcDggf6OB6F17X8SbPsGKbjZPC8DrdJMAQ7lg1DaxqYsN0spu0oY6akZFJiQ==}
     peerDependencies:
       '@angular-devkit/build-angular': ^17.0.0 || ^18.0.0 || ^19.0.0 || ^20.0.0 || ^21.0.0 || ^22.0.0
       '@angular/build': ^18.0.0 || ^19.0.0 || ^20.0.0 || ^21.0.0 || ^22.0.0
@@ -693,8 +693,8 @@ packages:
       vite:
         optional: true
 
-  '@analogjs/vitest-angular@2.9.4':
-    resolution: {integrity: sha512-wUEKijoDR5SHz67MqeZaEjaw82MoPy4xqZKKhKZyh/sTvsBoHblPtAX2YsJWQiVwQHp33+PwBqcLeigTKIv+KA==}
+  '@analogjs/vitest-angular@2.9.5':
+    resolution: {integrity: sha512-B8NAQBGogC5q6hvoLP8AmmYvJqIRwqmmKU1mst/qmPHwRkY9CXH7w97/GblGjmj2pCRhe8mPp1vPjz//7tzQGQ==}
     peerDependencies:
       '@analogjs/vite-plugin-angular': '*'
       '@angular-devkit/architect': '>=0.1700.0 < 0.2300.0 || >=0.2200.0 < 0.2300.0'
@@ -5523,8 +5523,8 @@ packages:
     resolution: {integrity: sha512-TtpcNJ3XAzx3Gq8sWRzJaVajRs0uVxA2YAkdb1jm2YkPz4G6egUFAyA3n5vtEIZefPk5Wa4UXbKuS5fKkJWdgA==}
     engines: {node: '>=10'}
 
-  eslint-plugin-playwright@2.12.1:
-    resolution: {integrity: sha512-JhavNuYBIq7SE/Zg9Esf9RGHkXoDbzrEKS383cowzMyvZ4JMbmdNCN6CoW+RU1Cjzwcoea1tou0je58uXmT/9A==}
+  eslint-plugin-playwright@2.12.2:
+    resolution: {integrity: sha512-sYRCyAEACD3URVoFTfldZcvZNdlJ1r5414gilOTsDCu26PY7l4dUl/3o9ohIEltZgaDS1VXD1mG5xU1KlIGJSw==}
     engines: {node: '>=16.9.0'}
     peerDependencies:
       eslint: '>=8.40.0'
@@ -8180,7 +8180,7 @@ snapshots:
       '@jridgewell/gen-mapping': 0.3.13
       '@jridgewell/trace-mapping': 0.3.31
 
-  '@analogjs/vite-plugin-angular@2.9.4(cf9ae715590387f9338bcc73d8f9f4de)':
+  '@analogjs/vite-plugin-angular@2.9.5(cf9ae715590387f9338bcc73d8f9f4de)':
     dependencies:
       magic-string: 0.30.21
       obug: 2.1.4
@@ -8193,9 +8193,9 @@ snapshots:
       - '@emnapi/core'
       - '@emnapi/runtime'
 
-  '@analogjs/vitest-angular@2.9.4(@analogjs/vite-plugin-angular@2.9.4(cf9ae715590387f9338bcc73d8f9f4de))(@angular-devkit/architect@0.2202.5(chokidar@5.0.0))(@angular-devkit/schematics@22.2.5(chokidar@5.0.0))(@angular/core@22.2.4(@angular/compiler@22.2.4)(rxjs@7.8.2))(@angular/platform-browser@22.2.4(@angular/common@22.2.4(@angular/core@22.2.4(@angular/compiler@22.2.4)(rxjs@7.8.2))(rxjs@7.8.2))(@angular/core@22.2.4(@angular/compiler@22.2.4)(rxjs@7.8.2)))(tslib@2.9.1)(vitest@5.0.5)':
+  '@analogjs/vitest-angular@2.9.5(@analogjs/vite-plugin-angular@2.9.5(cf9ae715590387f9338bcc73d8f9f4de))(@angular-devkit/architect@0.2202.5(chokidar@5.0.0))(@angular-devkit/schematics@22.2.5(chokidar@5.0.0))(@angular/core@22.2.4(@angular/compiler@22.2.4)(rxjs@7.8.2))(@angular/platform-browser@22.2.4(@angular/common@22.2.4(@angular/core@22.2.4(@angular/compiler@22.2.4)(rxjs@7.8.2))(rxjs@7.8.2))(@angular/core@22.2.4(@angular/compiler@22.2.4)(rxjs@7.8.2)))(tslib@2.9.1)(vitest@5.0.5)':
     dependencies:
-      '@analogjs/vite-plugin-angular': 2.9.4(cf9ae715590387f9338bcc73d8f9f4de)
+      '@analogjs/vite-plugin-angular': 2.9.5(cf9ae715590387f9338bcc73d8f9f4de)
       '@angular-devkit/architect': 0.2202.5(chokidar@5.0.0)
       '@angular-devkit/schematics': 22.2.5(chokidar@5.0.0)
       '@angular/core': 22.2.4(@angular/compiler@22.2.4)(rxjs@7.8.2)
@@ -12826,7 +12826,7 @@ snapshots:
 
   escape-string-regexp@4.0.0: {}
 
-  eslint-plugin-playwright@2.12.1(eslint@10.14.0(jiti@2.7.0)(supports-color@7.2.0)):
+  eslint-plugin-playwright@2.12.2(eslint@10.14.0(jiti@2.7.0)(supports-color@7.2.0)):
     dependencies:
       eslint: 10.14.0(jiti@2.7.0)(supports-color@7.2.0)
       globals: 17.11.0

@@ -78,8 +78,8 @@ overrides:
   '@oxc-parser/binding-wasm32-wasi@0.150.0>@emnapi/runtime': '2.0.0-beta.2'
 catalogs:
   analogjs:
-    '@analogjs/vite-plugin-angular': '2.9.4'
-    '@analogjs/vitest-angular': '2.9.4'
+    '@analogjs/vite-plugin-angular': '2.9.5'
+    '@analogjs/vitest-angular': '2.9.5'
   axe:
     '@axe-core/playwright': '^4.14.0'
     axe-core: '^4.14.0'
@@ -123,7 +123,7 @@ catalogs:
     nx: '23.3.0'
   playwright:
     '@playwright/test': ^1.64.1
-    eslint-plugin-playwright: '^2.12.1'
+    eslint-plugin-playwright: '^2.12.2'
   primeng:
     '@primeuix/themes': '3.1.0'
     primeicons: '8.0.2'
