@@ -119,7 +119,7 @@ catalogs:
     '@nx/oxlint': '23.3.0'
     '@nx/playwright': '23.3.0'
     '@nx/vitest': '23.3.0'
-    '@nx/workspace': '23.3.0'
+    '@nx/workspace': '24.0.3'
     nx: '23.3.0'
   playwright:
     '@playwright/test': ^1.64.1
