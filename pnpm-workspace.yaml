@@ -115,7 +115,7 @@ catalogs:
     '@nx/angular': '23.3.0'
     '@nx/devkit': '23.3.0'
     '@nx/eslint-plugin': '23.3.0'
-    '@nx/js': '23.3.0'
+    '@nx/js': '24.0.3'
     '@nx/oxlint': '23.3.0'
     '@nx/playwright': '23.3.0'
     '@nx/vitest': '23.3.0'
