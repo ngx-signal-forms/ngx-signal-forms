@@ -3,7 +3,6 @@
 import { resolve } from 'node:path';
 import angular from '@analogjs/vite-plugin-angular';
 import { defineConfig } from 'vitest/config';
-import tsconfigPaths from 'vite-tsconfig-paths';
 
 const toolkitRoot = resolve(import.meta.dirname, '../../packages/toolkit');
 
@@ -43,9 +42,9 @@ export default defineConfig({
     angular({
       tsconfig: resolve(import.meta.dirname, 'tsconfig.spec.json'),
     }),
-    tsconfigPaths(),
   ],
   resolve: {
+    tsconfigPaths: true,
     alias: toolkitEntryAliases,
   },
   optimizeDeps: {

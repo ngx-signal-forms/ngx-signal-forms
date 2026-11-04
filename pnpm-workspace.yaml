@@ -78,8 +78,8 @@ overrides:
   '@oxc-parser/binding-wasm32-wasi@0.150.0>@emnapi/runtime': '2.0.0-beta.2'
 catalogs:
   analogjs:
-    '@analogjs/vite-plugin-angular': '2.9.4'
-    '@analogjs/vitest-angular': '2.9.4'
+    '@analogjs/vite-plugin-angular': '2.9.5'
+    '@analogjs/vitest-angular': '2.9.5'
   axe:
     '@axe-core/playwright': '^4.14.0'
     axe-core: '^4.14.0'
@@ -163,8 +163,7 @@ catalogs:
     '@commitlint/cli': '^21.2.4'
     '@commitlint/config-conventional': '^21.2.4'
     '@oxc-project/runtime': '^0.156.0'
-    # Exact pin: 14.1.x is newer than pnpm's minimum release age. Move both
-    # size-limit entries to ^14 once 14.1 passes it.
+    # Keep the CLI and file plugin on the same release.
     '@size-limit/file': '14.3.0'
     '@typescript/native': 'npm:typescript@~7.0.2'
     '@types/node': '26.6.6'
@@ -181,7 +180,6 @@ catalogs:
     # Exact pin: 6.10.5 has no provenance and trustPolicy rejects it.
     verdaccio: '6.10.4'
     vite: '^8.3.5'
-    vite-tsconfig-paths: '^6.1.1'
   utilities:
     rxjs: '~7.8.2'
     temporal-polyfill: '1.0.6'
@@ -191,10 +189,10 @@ catalogs:
     vest: '6.3.4'
     zod: '^4.6.7'
   vitest:
-    '@vitest/browser-playwright': '~5.0.5'
-    '@vitest/coverage-v8': '~5.0.5'
-    '@vitest/ui': '~5.0.5'
-    vitest: '~5.0.5'
+    '@vitest/browser-playwright': '~5.1.0'
+    '@vitest/coverage-v8': '~5.1.0'
+    '@vitest/ui': '~5.1.0'
+    vitest: '~5.1.0'
 
 # With `virtualStoreType: global` a package resolves only what it declares.
 # `@analogjs/vitest-angular` imports `tslib`, `@angular/core` and
@@ -208,12 +206,9 @@ packageExtensions:
       '@angular/platform-browser': '*'
       tslib: '*'
 strictPeerDependencies: false
-# `pnpm peers check` runs in CI. tsconfck (via vite-tsconfig-paths) lists
-# typescript ^5 as its peer; the workspace builds and tests on TypeScript 6
-# with it. Drop this rule once tsconfck widens its range.
+# `pnpm peers check` runs in CI.
 # @vitest/mocker lists msw ^2.4.9 as its peer; the demo mocks run on MSW 3 and
 # Vitest never loads msw here. Drop this rule once @vitest/mocker accepts msw 3.
 peerDependencyRules:
   allowedVersions:
-    'tsconfck>typescript': '6'
     '@vitest/mocker>msw': '3'

@@ -1,7 +1,6 @@
 import { defineConfig } from 'vite';
 import analog from '@analogjs/vite-plugin-angular';
 import { join } from 'node:path';
-import tsconfigPaths from 'vite-tsconfig-paths';
 
 const appDir = import.meta.dirname;
 
@@ -9,6 +8,9 @@ export default defineConfig({
   root: join(appDir, 'src'),
   publicDir: join(appDir, 'public'),
   cacheDir: '../../node_modules/.vite/apps/demo-material',
+  resolve: {
+    tsconfigPaths: true,
+  },
   server: {
     port: 4601,
     host: '127.0.0.1',
@@ -25,6 +27,5 @@ export default defineConfig({
     analog({
       tsconfig: '../tsconfig.app.json',
     }),
-    tsconfigPaths(),
   ],
 });

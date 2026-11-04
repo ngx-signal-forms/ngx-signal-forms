@@ -1,7 +1,6 @@
 import { defineConfig, type Plugin } from 'vite';
 import analog from '@analogjs/vite-plugin-angular';
 import { join } from 'node:path';
-import tsconfigPaths from 'vite-tsconfig-paths';
 
 const appDir = import.meta.dirname;
 
@@ -68,8 +67,13 @@ export default defineConfig({
   root: join(appDir, 'src'),
   publicDir: join(appDir, 'public'),
   cacheDir: '../../node_modules/.vite/apps/demo',
+  resolve: {
+    tsconfigPaths: true,
+  },
   server: {
-    port: 4600,
+    port: process.env['CI']
+      ? Number(process.env['PLAYWRIGHT_DEMO_PORT'] ?? '4300')
+      : 4600,
     host: '127.0.0.1',
   },
   preview: {
@@ -84,7 +88,6 @@ export default defineConfig({
     analog({
       tsconfig: '../tsconfig.app.json',
     }),
-    tsconfigPaths(),
     alignBaseHref(),
     productionCsp(),
   ],
