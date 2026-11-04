@@ -13,6 +13,12 @@ A validation error produced by an application validator or an external validatio
 **Warning**:
 A non-blocking validation message. _Avoid_: soft error
 
+**Message timing**:
+Whether a field's display strategy currently allows the messages of one channel, errors or warnings, to appear. _Avoid_: should show
+
+**Visible message**:
+A message that is actually on screen: its timing allows it, it exists, its template renders that channel, and, for a warning, no visible error on the same field hides it. _Avoid_: shown message, visible container
+
 ## Vest
 
 **Bound path**:
