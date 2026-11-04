@@ -55,9 +55,7 @@ export const DEFAULT_DANGER_THRESHOLD = 0.95;
  * Character count state shared by `createCharacterCount()`,
  * `NgxHeadlessCharacterCount`, and `NgxFormFieldCharacterCount`.
  *
- * Replaces the former `CharacterCountResult` (factory) and
- * `CharacterCountStateSignals` (directive) types, which had identical
- * fields — one shared shape for one shared algorithm (issue #510).
+ * One shared shape for one shared algorithm.
  *
  * `resolvedMaxLength` is `null` when no limit is configured and none is
  * auto-detected from the field's `maxLength` validator — check `hasLimit`

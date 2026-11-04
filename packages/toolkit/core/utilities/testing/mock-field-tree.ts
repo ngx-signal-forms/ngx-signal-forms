@@ -39,7 +39,7 @@ export interface MockFieldTreeOptions<TValue> {
  * spec that reads a member this helper's callers didn't think to override
  * gets a typed, harmless value instead of `undefined` reaching through an
  * unsafe cast. Matches `FieldState<TValue>` structurally, the same
- * discipline `tsconfig.spec.json` calls for (issue #286): a mock whose shape
+ * discipline `tsconfig.spec.json` calls for: a mock whose shape
  * drifts from the real Angular type is the exact way a spec could pass
  * against a shape Angular never emits.
  *

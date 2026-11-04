@@ -88,8 +88,7 @@ export interface CreateAriaDescribedBySignalOptions {
  * Pure-signal factory that composes the `aria-describedby` attribute value
  * for a Signal Forms control.
  *
- * Mirrors the resolution previously inlined in
- * `NgxSignalFormAutoAria.ariaDescribedBy`:
+ * `NgxSignalFormAutoAria.ariaDescribedBy` uses this resolution:
  *
  * 1. Read the preserved (non-managed) ID list — these are IDs the toolkit
  *    does not own (template-stamped hints, descriptions, etc.).

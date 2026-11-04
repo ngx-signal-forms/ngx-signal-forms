@@ -58,7 +58,7 @@ export { VEST_ERROR_KIND_PREFIX, VEST_WARNING_KIND_PREFIX };
  * is inferred from the {@link VestRunnableSuite} passed alongside this
  * selector (`validateVest`, `validateVestWarnings`,
  * `VestSuiteAdapter.register`) — callers never write it explicitly. See
- * ADR-0008 and issue #292.
+ * ADR-0008.
  */
 export type VestOnlyFieldSelector<TValue, F extends string = string> = (
   ctx: FieldContext<TValue>,
@@ -580,8 +580,8 @@ export function createVestAdapter(
               // Throw so this lands in the validator's `onError` handler below,
               // which already encodes the right policy: blocking validators
               // synthesize `vest:internal-error`, warning-only ones log and
-              // skip. Returning `undefined` here used to silently report
-              // valid (no result -> no errors), which was the worst outcome:
+              // skip. Returning `undefined` here would silently report
+              // valid (no result -> no errors), which is the worst outcome:
               // the form would submit with broken validation and zero signal.
               throw new Error(
                 '[ngx-signal-forms] Vest async run resolved with a payload that does ' +

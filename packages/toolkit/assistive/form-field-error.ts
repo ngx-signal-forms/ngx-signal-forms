@@ -34,9 +34,7 @@ export type NgxFormFieldListStyle = 'plain' | 'bullets';
  *   chrome. The shape `NgxFormFieldWrapper` and per-field usage render.
  * - `'panel'` — a bordered, padded card with its own theme tokens
  *   (`--ngx-signal-form-error-panel-*`). For grouped fieldset feedback and
- *   custom summary blocks — what `NgxFormFieldNotification` used to render
- *   as a standalone component, folded here as a presentation mode instead
- *   (pre-1.0, no alias kept — see `docs/migrations/`).
+ *   custom summary blocks.
  */
 export type NgxFormFieldErrorPresentation = 'inline' | 'panel';
 
@@ -452,9 +450,9 @@ export class NgxFormFieldError {
   // form-field-wrapper.ts). This component's template (`errorId()` /
   // `warningId()`, both derived from `#resolvedFieldName`) can render on
   // that very first pass whenever errors are already visible (e.g.
-  // `strategy="immediate"`), which used to fire this component's own
-  // `console.error` purely because of the one-render race — even for a
-  // correctly configured field. The diagnostic is emitted from
+  // `strategy="immediate"`). A check at that point would fire this
+  // component's own `console.error` because of the one-render race, even
+  // for a correctly configured field. The diagnostic is emitted from
   // `afterEveryRender` below instead, once the wrapper (if any) has had a
   // chance to settle.
   /**
@@ -548,7 +546,7 @@ export class NgxFormFieldError {
   protected readonly warningId = this.#fieldMessageIds.warningId;
 
   /**
-   * Warning visibility now uses the headless directive's shouldShowWarnings
+   * Warning visibility uses the headless directive's shouldShowWarnings,
    * which follows the warning-specific strategy cascade, independent of errors.
    */
   protected readonly showWarnings = this.headless.shouldShowWarnings;

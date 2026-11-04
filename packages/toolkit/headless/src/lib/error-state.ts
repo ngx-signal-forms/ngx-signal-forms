@@ -278,8 +278,8 @@ function createErrorStateInternal<TValue = unknown>(
   const core = buildHeadlessErrorState(fieldState, resolvedFieldName);
 
   // The warning channel gets its own seam call (ADR-0006) running the warning
-  // cascade of ADR-0007, so an ambient `'on-submit'` error strategy no longer
-  // holds a weak-password warning back until submit. Presence comes from the
+  // cascade of ADR-0007, so an ambient `'on-submit'` error strategy does not
+  // hold a weak-password warning back until submit. Presence comes from the
   // split (`core.hasWarnings`) rather than `invalid()`, and a blocking error
   // that is actually on screen owns the message region until it clears.
   const showWarningsSignal = createWarningVisibility(fieldState, {
