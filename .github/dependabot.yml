@@ -64,6 +64,12 @@ updates:
           ['version-update:semver-major', 'version-update:semver-minor']
       - dependency-name: '@angular-eslint/*'
         update-types: ['version-update:semver-major']
+      # An Nx major needs `nx migrate` and a matching ng-packagr and Angular
+      # plugin set. Move to it by hand, never through a Dependabot PR.
+      - dependency-name: 'nx'
+        update-types: ['version-update:semver-major']
+      - dependency-name: '@nx/*'
+        update-types: ['version-update:semver-major']
     # Each dependency joins the FIRST matching group, so the order matters:
     # patches first, then the lockstep families, then dev tooling.
     groups:

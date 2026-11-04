@@ -215,7 +215,8 @@ screenshots use separate baselines; do not use them as Linux baselines.
 Put the file filter after `--`. Vitest does not know `--testFile`.
 
 Nx test targets run once by default. Add `--watch` after `--` for an
-interactive watch run, for example `pnpm nx test demo -- --watch`.
+interactive watch run, and skip the Nx cache so the task starts, for example
+`pnpm nx test demo --skip-nx-cache -- --watch`.
 The toolkit keeps separate explicit jsdom and browser targets because the
 Nx Vitest plugin discovers standard `vitest.config.*` filenames, not the
 toolkit's two custom config names.

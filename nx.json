@@ -36,7 +36,13 @@
     },
     "test": {
       "cache": true,
-      "inputs": ["...", "default", "^production", { "env": "CI" }]
+      "inputs": [
+        "...",
+        "default",
+        "^production",
+        { "env": "CI" },
+        { "dependentTasksOutputFiles": "**/*.mjs", "transitive": true }
+      ]
     },
     "test-browser": {
       "cache": true,

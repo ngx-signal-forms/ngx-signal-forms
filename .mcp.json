@@ -2,8 +2,8 @@
   "mcpServers": {
     "nx-mcp": {
       "type": "stdio",
-      "command": "npx",
-      "args": ["nx-mcp@latest"]
+      "command": "pnpm",
+      "args": ["exec", "nx", "mcp"]
     },
     "angular-cli": {
       "type": "stdio",

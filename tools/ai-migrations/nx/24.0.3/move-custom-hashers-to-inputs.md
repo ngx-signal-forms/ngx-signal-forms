@@ -69,10 +69,20 @@ A target that declares its own `inputs` replaces the `inputs` from
 `targetDefaults` rather than merging with them. So a `targetDefaults` edit alone
 does not reach a target that already declares `inputs`.
 
+Nx selects one applicable `targetDefaults` entry by specificity. An
+executor-keyed entry takes precedence over a target-name or glob entry; Nx does
+not merge the displaced entry's other fields into it. Before adding an
+executor-keyed entry, record each consumer's resolved configuration and
+preserve required settings such as `cache`, `dependsOn`, and `outputs` in the
+new entry or on the consuming target. Use filtered entries or target-level
+configuration when those settings differ between consumers.
+
 1. Set the inputs in `nx.json` `targetDefaults` under the executor name. If that
-   key already exists, add `inputs` to it, and merge with any `inputs` it already
-   declares rather than replacing them. If its value is an array of filtered
-   entries, add the inputs to every entry that applies to a consuming target.
+   key already exists, add `inputs` to it and merge with any inputs it already
+   declares rather than replacing them. Preserve the non-input settings from
+   any less-specific entry that the executor key will displace. If its value is
+   an array of filtered entries, update every entry that applies to a consuming
+   target.
 2. For every consuming target that declares its own `inputs`, add the
    replacement inputs to that target as well, keeping the inputs it already has.
    It is declared in `project.json`, in the `nx.targets` block of

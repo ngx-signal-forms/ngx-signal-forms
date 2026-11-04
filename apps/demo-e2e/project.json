@@ -8,9 +8,6 @@
   "targets": {
     "e2e-toolkit": {
       "executor": "nx:run-commands",
-      "dependsOn": [
-        { "projects": ["demo"], "target": "serve-e2e", "waitFor": "ready" }
-      ],
       "options": {
         "commands": [
           "pnpm exec playwright test apps/demo-e2e/src/forms --grep-invert @layout --config apps/demo-e2e/playwright.config.ts --project=chromium"
@@ -20,9 +17,6 @@
     },
     "e2e-demo-app": {
       "executor": "nx:run-commands",
-      "dependsOn": [
-        { "projects": ["demo"], "target": "serve-e2e", "waitFor": "ready" }
-      ],
       "options": {
         "commands": [
           "pnpm exec playwright test apps/demo-e2e/src/ui --config apps/demo-e2e/playwright.config.ts --project=chromium"
@@ -32,9 +26,6 @@
     },
     "e2e-layout": {
       "executor": "nx:run-commands",
-      "dependsOn": [
-        { "projects": ["demo"], "target": "serve-e2e", "waitFor": "ready" }
-      ],
       "options": {
         "commands": [
           "pnpm exec playwright test apps/demo-e2e/src/ui --config apps/demo-e2e/playwright.config.ts --project=chromium",
@@ -45,9 +36,6 @@
     },
     "e2e-ci-shard": {
       "executor": "nx:run-commands",
-      "dependsOn": [
-        { "projects": ["demo"], "target": "serve-e2e", "waitFor": "ready" }
-      ],
       "outputs": ["{workspaceRoot}/dist/.playwright/apps/demo-e2e"],
       "options": {
         "command": "bash -lc 'pnpm exec playwright test --config apps/demo-e2e/playwright.config.ts --project=chromium --shard=${SHARD_INDEX:-1}/${SHARD_TOTAL:-4}'"
@@ -55,9 +43,6 @@
     },
     "a11y": {
       "executor": "nx:run-commands",
-      "dependsOn": [
-        { "projects": ["demo"], "target": "serve-e2e", "waitFor": "ready" }
-      ],
       "cache": true,
       "inputs": ["default", "^production"],
       "outputs": [

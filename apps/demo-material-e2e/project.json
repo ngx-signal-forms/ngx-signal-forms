@@ -8,9 +8,6 @@
   "targets": {
     "a11y": {
       "executor": "nx:run-commands",
-      "dependsOn": [
-        { "projects": ["demo-material"], "target": "serve", "waitFor": "ready" }
-      ],
       "cache": true,
       "inputs": ["default", "^production"],
       "outputs": [
