@@ -3,8 +3,10 @@ import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { test } from 'node:test';
 
+/** Resolve a monitor script path relative to this test file. */
 const scriptPath = (name) => fileURLToPath(new URL(name, import.meta.url));
 
+/** Run a monitor script and parse its JSON result. */
 function runScript(name, args) {
   const result = spawnSync(process.execPath, [scriptPath(name), ...args], {
     encoding: 'utf8',
@@ -14,6 +16,7 @@ function runScript(name, args) {
   return JSON.parse(result.stdout);
 }
 
+/** Invoke a budget gate with the supplied arguments. */
 function runGate(type, ...args) {
   return runScript('ci-state-update.mjs', [
     'gate',
@@ -23,6 +26,7 @@ function runGate(type, ...args) {
   ]);
 }
 
+/** Check the cycle budget for a completed status. */
 function runCycleCheck(code, ...args) {
   return runScript('ci-state-update.mjs', [
     'cycle-check',
@@ -32,6 +36,7 @@ function runCycleCheck(code, ...args) {
   ]);
 }
 
+/** Run the polling decision script with an invalid CI response. */
 function runPoll(args) {
   return runScript('ci-poll-decide.mjs', ['not-json', '0', 'minimal', ...args]);
 }
