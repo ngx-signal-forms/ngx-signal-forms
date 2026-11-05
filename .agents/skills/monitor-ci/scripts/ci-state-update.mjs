@@ -114,7 +114,7 @@ function postAction() {
 
 // --- cycle-check ---
 // Cycle classification + counter resets when a new "done" code is received.
-// Called at the start of handling each actionable code.
+// Called before handling each completed status.
 
 function cycleCheck() {
   const status = getArg('--code');
@@ -123,16 +123,30 @@ function cycleCheck() {
   const maxCycles = parseInt(getArg('--max-cycles') || '10', 10);
   let envRerunCount = parseInt(getArg('--env-rerun-count') || '0', 10);
 
+  const cycleStartingStatuses = new Set([
+    'fix_auto_apply_skipped',
+    'fix_apply_ready',
+    'fix_needs_local_verify',
+    'fix_needs_review',
+    'fix_failed',
+    'no_fix',
+    'environment_issue',
+    'self_healing_throttled',
+    'no_new_cipe',
+    'cipe_no_tasks',
+  ]);
+  const cycleCanStart = cycleStartingStatuses.has(status);
+
   // Cycle classification: if previous cycle was agent-triggered, count it
   if (wasAgentTriggered) cycleCount++;
 
   // Reset env_rerun_count on non-environment status
   if (status !== 'environment_issue') envRerunCount = 0;
 
-  // Cycle limit gates. limitReached is a terminal stop; approachingLimit is an
-  // advisory warning emitted in the two cycles before the cap.
-  const limitReached = cycleCount >= maxCycles;
-  const approachingLimit = cycleCount >= maxCycles - 2;
+  // Apply the cycle limit only when handling this status could start another
+  // remediation cycle. Terminal statuses must still be reported at the cap.
+  const limitReached = cycleCanStart && cycleCount >= maxCycles;
+  const approachingLimit = cycleCanStart && cycleCount >= maxCycles - 2;
 
   output({
     cycleCount,

@@ -137,6 +137,10 @@ jobs:
         run: pnpm exec nx affected -t lint typecheck test test-timezones test-browser build e2e --exclude=demo-e2e --parallel=2 --outputStyle=static
         timeout-minutes: 10
 
+      # These tests cover the CI monitor's deterministic budget and timeout logic.
+      - name: Check CI monitor scripts
+        run: pnpm exec nx run workspace:check-monitor-ci-scripts --outputStyle=static
+
       # Run outside affected selection so README/docs-only changes are checked.
       # The build dependency can reuse the affected build's cache.
       - name: Check README starter

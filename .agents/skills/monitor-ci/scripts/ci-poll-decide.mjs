@@ -57,6 +57,7 @@ const prevCipeStatus = getArg('--prev-cipe-status');
 const prevShStatus = getArg('--prev-sh-status');
 const prevVerificationStatus = getArg('--prev-verification-status');
 const prevFailureClassification = getArg('--prev-failure-classification');
+const MAX_NO_PROGRESS_POLLS = 13;
 
 // --- Parse CI info ---
 
@@ -64,12 +65,23 @@ let ci;
 try {
   ci = JSON.parse(ciInfoJson);
 } catch {
+  const noProgressCount = inputNoProgressCount + 1;
+  const code = isTimedOut()
+    ? 'polling_timeout'
+    : noProgressCount >= MAX_NO_PROGRESS_POLLS
+      ? 'circuit_breaker'
+      : 'error';
+  const messages = {
+    polling_timeout: 'Polling timeout exceeded.',
+    circuit_breaker: `No progress after ${MAX_NO_PROGRESS_POLLS} consecutive polls. Stopping.`,
+    error: 'Failed to parse ci_information JSON',
+  };
   console.log(
     JSON.stringify({
       action: 'done',
-      code: 'error',
-      message: 'Failed to parse ci_information JSON',
-      noProgressCount: inputNoProgressCount + 1,
+      code,
+      message: messages[code],
+      noProgressCount,
       envRerunCount,
     }),
   );
@@ -204,7 +216,8 @@ function classify() {
 
   // --- Guards ---
   if (isTimedOut()) return { action: 'done', code: 'polling_timeout' };
-  if (noProgressCount >= 13) return { action: 'done', code: 'circuit_breaker' };
+  if (noProgressCount >= MAX_NO_PROGRESS_POLLS)
+    return { action: 'done', code: 'circuit_breaker' };
 
   // --- Terminal CI states ---
   if (cipeStatus === 'SUCCEEDED') return { action: 'done', code: 'ci_success' };
@@ -319,7 +332,8 @@ const messages = {
 
   // guards
   polling_timeout: () => 'Polling timeout exceeded.',
-  circuit_breaker: () => 'No progress after 13 consecutive polls. Stopping.',
+  circuit_breaker: () =>
+    `No progress after ${MAX_NO_PROGRESS_POLLS} consecutive polls. Stopping.`,
 
   // terminal
   ci_success: () => 'CI passed successfully!',
