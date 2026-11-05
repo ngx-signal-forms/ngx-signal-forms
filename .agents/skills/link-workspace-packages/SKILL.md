@@ -23,7 +23,7 @@ Alternatively check lockfile in repo root:
 1. Identify consumer package (the one importing)
 2. Identify provider package(s) (being imported)
 3. Add dependency using package manager's workspace syntax
-4. Verify symlinks created in consumer's `node_modules/`
+4. Verify package resolution with the selected package manager; inspect a symlink only when the configured linker creates one.
 
 ---
 
@@ -119,9 +119,10 @@ npm install @org/data-access @org/ui --workspace @org/dashboard
 
 ## Notes
 
-- Symlinks appear in `<consumer>/node_modules/@org/<package>`
+- Symlink locations vary by package manager and configured linker; use package-manager-aware checks for PnP and hoisted layouts.
 - **Hoisting differs by manager:**
-  - npm/bun: hoist shared deps to root `node_modules`
+  - npm: link workspace packages through the root `node_modules`
+  - bun: new workspaces default to isolated installs; the layout depends on `configVersion` and the configured linker
   - pnpm: no hoisting (strict isolation, prevents phantom deps)
   - yarn berry: uses Plug'n'Play by default (no `node_modules`)
 - Root `package.json` should have `"private": true` to prevent accidental publish

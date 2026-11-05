@@ -3,7 +3,7 @@
 Find projects affected by changes in the current branch.
 
 ```bash
-# Affected since base branch (auto-detected)
+# Affected using nx.json defaultBase
 pnpm nx show projects --affected
 
 # Affected with explicit base
