@@ -31,9 +31,6 @@ virtualStoreType: global
 # without provenance. Add `trustPolicyExclude` entries only for named cases.
 trustPolicy: no-downgrade
 trustPolicyExclude:
-  # 9.13.x and 10.x publish with GitHub provenance; the 9.14.0 backport to the
-  # 9.x line does not. Reached only through verdaccio (local release dry runs).
-  - pino@9.14.0
   # The 6.x line is a 2023 backport that predates npm provenance, so it looks
   # like a downgrade next to 7.x. Reached only through @babel/core.
   - semver@6.3.1
@@ -46,6 +43,10 @@ strictDepBuilds: true
 # Skip versions younger than two days (in minutes). Keep this equal to the
 # Dependabot `cooldown.default-days` in .github/dependabot.yml.
 minimumReleaseAge: 2880
+# Packages that may skip the age window. Keep this list short.
+minimumReleaseAgeExclude:
+  - oxlint
+  - '@oxlint/binding-*'
 # pnpm 12.3+ turns strict mode on whenever `minimumReleaseAge` is set. Strict
 # mode refuses `pnpm update --no-save`, which is what Dependabot runs, so every
 # Dependabot update fails (dependabot-core#16375). The two-day window still
@@ -179,8 +180,8 @@ catalogs:
     simple-git-hooks: '^2.14.0'
     size-limit: '14.3.0'
     typescript: 'npm:@typescript/typescript6@~6.0.2'
-    # Exact pin: 6.10.5 has no provenance and trustPolicy rejects it.
-    verdaccio: '6.10.4'
+    # 7.x requires Node.js 24 or newer; used only by the local-registry target.
+    verdaccio: '^7.0.2'
     vite: '^8.3.5'
   utilities:
     rxjs: '~7.8.2'
@@ -214,3 +215,6 @@ strictPeerDependencies: false
 peerDependencyRules:
   allowedVersions:
     '@vitest/mocker>msw': '3'
+    # @nx/js still declares verdaccio ^6. Verdaccio 7 runs the same CLI and
+    # config for the local-registry target. Drop this once @nx/js accepts 7.
+    '@nx/js>verdaccio': '7'
