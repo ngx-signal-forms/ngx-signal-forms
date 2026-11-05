@@ -16,6 +16,9 @@ A non-blocking validation message. _Avoid_: soft error
 **Message timing**:
 Whether a field's display strategy currently allows the messages of one channel, errors or warnings, to appear. _Avoid_: should show
 
+**Field feedback state**:
+Whether a field can currently present a blocking error, a warning, or neither after applying message timing and error precedence. It does not mean that a message is rendered.
+
 **Visible message**:
 A message that is actually on screen: its timing allows it, it exists, its template renders that channel, and, for a warning, no visible error on the same field hides it. _Avoid_: shown message, visible container
 
