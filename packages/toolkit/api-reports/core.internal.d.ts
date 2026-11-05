@@ -641,8 +641,7 @@ export interface NgxSignalFormFieldContext {
    * still readable. `NgxFormFieldCharacterCount` reads this signal because
    * it does the opposite — it hides its own visible "n/max" text once a
    * limit description exists to replace it — and hiding that text without a
-   * working link would silence the count for assistive technology (issue
-   * #499 hardening).
+   * working link would silence the count for assistive technology.
    *
    * Omitted by contexts that don't track control ARIA ownership. Callers
    * default to `false` when this is absent — a context that cannot confirm
@@ -1835,7 +1834,7 @@ export declare class NgxFieldVisibilityRegistry {
 /**
  * Per-form channel that lets an error summary and the field errors of the
  * same form find each other, so a submit announces through the summary
- * alone (issue #522, ADR-0012).
+ * alone (ADR-0012).
  *
  * `NgxSignalForm` provides one instance per `[ngxSignalForm]` host and
  * reports each submit attempt here. `NgxFormFieldErrorSummary` registers
@@ -1885,7 +1884,7 @@ export declare class NgxSubmitAnnouncements {
  *
  * A standalone `<ngx-form-field-error [formField]>` also takes `[formField]`,
  * but it is feedback, not a control. The catch-all selector excludes it, so
- * its host gets no `aria-invalid` and no missing-role warning (#566).
+ * its host gets no `aria-invalid` and no missing-role warning.
  *
  * **Ownership model**:
  * - default: toolkit owns `aria-invalid`, `aria-required`, and `aria-describedby`
@@ -2349,8 +2348,7 @@ interface CreateAriaDescribedBySignalOptions {
  * Pure-signal factory that composes the `aria-describedby` attribute value
  * for a Signal Forms control.
  *
- * Mirrors the resolution previously inlined in
- * `NgxSignalFormAutoAria.ariaDescribedBy`:
+ * `NgxSignalFormAutoAria.ariaDescribedBy` uses this resolution:
  *
  * 1. Read the preserved (non-managed) ID list — these are IDs the toolkit
  *    does not own (template-stamped hints, descriptions, etc.).
@@ -3803,7 +3801,7 @@ export declare function generateWarningId(fieldName: string): string;
 export declare function generateRequiredHintId(fieldName: string): string;
 /**
  * Generates the ID for a character count's visually-hidden limit
- * description (issue #499).
+ * description.
  *
  * `NgxFormFieldCharacterCount` renders an element with this id whenever a
  * limit is resolved, and registers it through `NGX_SIGNAL_FORM_HINT_REGISTRY`
@@ -3908,8 +3906,8 @@ type FormFieldBindingsState = Pick<FieldState<unknown>, 'formFieldBindings'>;
  * ## Why the `id` guard is load-bearing (native-vs-fallback invariant)
  *
  * The legacy discovery path (`findBoundControl`'s `BOUND_CONTROL_SELECTOR`)
- * only ever matches elements that carry an `[id]`. To preserve PR #92's
- * "identical output" invariant, the native path must agree: it may only win
+ * only ever matches elements that carry an `[id]`. Both paths must give
+ * identical output, so the native path must agree: it may only win
  * for an element the fallback could also have produced. Without this guard, an
  * id-less `[formField]` host — e.g. `<my-control formField><input id="x">…` —
  * would let the wrapper element (`my-control`, no id) win over the inner

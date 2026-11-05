@@ -261,11 +261,10 @@ export class NgxFormFieldset {
     this.#elementRef.nativeElement.getAttribute('aria-labelledby');
   readonly #initialAriaLabel =
     this.#elementRef.nativeElement.getAttribute('aria-label');
-  // Same preservation rule for `aria-describedby`: `describedByIds()` below
-  // used to return the managed error/warning id (or `null`) unconditionally,
-  // clobbering an author-supplied value (a common pattern:
-  // `<fieldset ngxFormFieldset aria-describedby="pw-rules">`). Capture it
-  // here and prepend it in `describedByIds()`.
+  // Same preservation rule for `aria-describedby`: capture an author-supplied
+  // value (a common pattern:
+  // `<fieldset ngxFormFieldset aria-describedby="pw-rules">`) and prepend it
+  // in `describedByIds()` so the managed error/warning id does not replace it.
   readonly #initialAriaDescribedby =
     this.#elementRef.nativeElement.getAttribute('aria-describedby');
   // `<fieldset>` natively implies role="group" and associates a child <legend>.

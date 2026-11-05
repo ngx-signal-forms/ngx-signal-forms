@@ -58,20 +58,13 @@ export interface ClusterAriaAttrs {
  * `aria-labelledby`, `aria-describedby`, and the visually-hidden
  * required-hint id — in one pure computation.
  *
- * Extracted from `NgxFormFieldWrapper` (issue #354), which used to spread
- * this across four separately-guarded `computed()`s
- * (`selectionClusterRole`, `groupRequiredHintId`, `selectionClusterLabelledBy`,
- * `selectionClusterDescribedBy`) that each re-checked `isSelectionCluster`
- * and silently depended on being read in the right order (`describedBy`
- * reads the already-resolved `groupRequiredHintId`). Folding them into one
- * function makes that dependency explicit and keeps the four outputs
- * consistent with each other by construction — a caller can no longer read
- * `describedBy` computed from a stale `groupRequiredHintId`.
+ * One function keeps the four outputs consistent by construction:
+ * `describedBy` depends on the resolved required-hint id, and a caller
+ * cannot read `describedBy` computed from a stale hint id.
  *
  * Deliberately pure (no signal reads, no `inject()`) — the component wraps
  * this in a single `computed()` and projects each field from that one
- * result. See `NgxFormFieldWrapper`'s original inline doc comments (now
- * folded into this module) for the accessibility rationale:
+ * result. Accessibility rationale:
  *
  * - `aria-required` is not valid ARIA on the `group` role (only
  *   `radiogroup`), so a `group` cluster's required-ness is relocated to a

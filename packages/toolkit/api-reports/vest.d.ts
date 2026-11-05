@@ -68,14 +68,14 @@ interface VestResultLike<F extends string = string> extends Pick<SuiteResult, 'i
  * {@link only} and {@link get}'s `VestResultLike<F>` return, which is what
  * lets `VestOnlyFieldSelector`'s return type narrow at the call site without
  * the caller writing an explicit type argument — `F` is inferred from the
- * `suite` value itself. See ADR-0008 and issue #292.
+ * `suite` value itself. See ADR-0008.
  */
 interface VestRunnableSuite<TValue, F extends string = string> {
   /**
    * Declared as a readonly function property (not method shorthand) so its
    * parameter is contravariant under `strictFunctionTypes` — method
-   * parameters stay bivariant regardless of that flag, which is what
-   * previously let a suite typed for one value (e.g. the whole model) be
+   * parameters stay bivariant regardless of that flag, which would
+   * let a suite typed for one value (e.g. the whole model) be
    * assigned where a suite for a narrower value (e.g. a single field) was
    * expected. See ADR-0008.
    *
@@ -167,7 +167,7 @@ export declare const VEST_ERROR_KIND_PREFIX = "vest:";
  * is inferred from the {@link VestRunnableSuite} passed alongside this
  * selector (`validateVest`, `validateVestWarnings`,
  * `VestSuiteAdapter.register`) — callers never write it explicitly. See
- * ADR-0008 and issue #292.
+ * ADR-0008.
  */
 type VestOnlyFieldSelector<TValue, F extends string = string> = (ctx: FieldContext<TValue>) => VestFieldExclusion<F>;
 /**

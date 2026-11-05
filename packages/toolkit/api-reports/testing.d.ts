@@ -22,8 +22,7 @@ type WCAG_22_AA_TAG = (typeof WCAG_22_AA_TAGS)[number];
  * reduce to one flat color.
  *
  * - `'ignore'` (the default): incomplete results are not inspected at all.
- *   This is the toolkit's pre-#501 behavior — a bare `expectNoA11yViolations`
- *   call for an external consumer sees no change.
+ *   A bare `expectNoA11yViolations` call reports violations only.
  * - `'warn'`: every incomplete result is logged via `console.warn` for manual
  *   review, but never fails the scan.
  * - `'fail'`: same logging as `'warn'`, and additionally throws if any

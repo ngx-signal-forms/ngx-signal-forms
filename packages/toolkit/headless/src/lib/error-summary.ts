@@ -85,8 +85,7 @@ export interface ErrorSummaryEntriesResult {
  * non-interactive (hidden/disabled) fields → dedupe per field → split by
  * kind → map to focusable {@link ErrorSummaryEntryData} entries.
  *
- * Extracted from `NgxHeadlessErrorSummary`, which used to inline this
- * pipeline (issue #351). Deliberately pure — no `inject()` calls — so it is
+ * `NgxHeadlessErrorSummary` delegates to this pipeline. Deliberately pure — no `inject()` calls — so it is
  * testable with plain signal mocks and no `TestBed`, matching the other
  * headless factories (`createFieldStateFlags`, `createCharacterCount`,
  * `createFieldsetAggregation`).

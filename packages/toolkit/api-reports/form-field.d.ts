@@ -452,7 +452,7 @@ export declare class NgxFormFieldWrapper<TValue = unknown> {
    * A textual field draws a box of about 32–44px, but the control inside it
    * is only one line tall. Without this handler a click on the box padding
    * does nothing, so the real target is much smaller than the one the user
-   * sees (#567, WCAG 2.5.8).
+   * sees (WCAG 2.5.8).
    *
    * The handler does nothing when:
    * - the field is not textual (selection rows manage their own clicks),

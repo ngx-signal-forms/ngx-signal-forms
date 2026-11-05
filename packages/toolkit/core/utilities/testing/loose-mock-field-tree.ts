@@ -12,8 +12,7 @@ import type { FieldTree } from '@angular/forms/signals';
  * spread-and-back-reference shape per spec file.
  *
  * Shared by `submission-helpers.delegate.spec.ts` and
- * `submission-helpers.coverage.spec.ts`, which used to each define this
- * function identically.
+ * `submission-helpers.coverage.spec.ts`.
  *
  * @internal
  */

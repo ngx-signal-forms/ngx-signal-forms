@@ -107,7 +107,7 @@ export function readFormFieldWrapperDomSnapshot(
   // assumption about where the element comes from. It lets steady-state
   // renders skip the `querySelector` call for both.
   // `> .ngx-signal-form-field-wrapper__layout >` accounts for the structural
-  // wrapper the template renders around `__content`/`__label` (#523): it
+  // wrapper the template renders around `__content`/`__label`: it
   // stays `display: contents` for every non-horizontal appearance, so it
   // never appears in the *rendered* box tree, but it is still a real DOM
   // node one level below `hostEl`, and `:scope >` is a DOM-structure
@@ -151,8 +151,8 @@ export function readFormFieldWrapperDomSnapshot(
   // OF the label into `__label`, not `__main`, so a real, singly-nested
   // control legitimately has no `__main` match to find.
   //
-  // The native-vs-fallback invariant (PR #92: native and CSS-selector paths
-  // must produce identical output) is upheld upstream in
+  // The native-vs-fallback invariant (native and CSS-selector paths must
+  // produce identical output) is upheld upstream in
   // `resolveBoundControlFromBindings`, which only returns a binding element
   // that carries a non-empty `id` — exactly the constraint the
   // `findBoundControl` selector enforces. An id-less `[formField]` host
@@ -211,10 +211,10 @@ function resolveProjectedControlSemantics(
  * via Angular's native binding registry, then folds in the DOM-probe
  * fallback via {@link readFormFieldWrapperDomSnapshot}.
  *
- * Extracted (issue #354) so the wrapper component's constructor only calls
- * one function to capture render state, instead of composing
- * `requireHostElement` + `resolveBoundControlFromBindings` +
- * `readFormFieldWrapperDomSnapshot` inline. Must stay synchronous and free
+ * The wrapper component's constructor calls this one function to capture
+ * render state, instead of composing `requireHostElement` +
+ * `resolveBoundControlFromBindings` + `readFormFieldWrapperDomSnapshot`
+ * inline. Must stay synchronous and free
  * of reactive reads — it runs inside `afterEveryRender`'s `earlyRead`
  * callback, before Angular's write phase.
  *

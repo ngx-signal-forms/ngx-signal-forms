@@ -131,7 +131,7 @@ const DESCENDANT_CONTROL_SELECTOR = [
  *
  * A standalone `<ngx-form-field-error [formField]>` also takes `[formField]`,
  * but it is feedback, not a control. The catch-all selector excludes it, so
- * its host gets no `aria-invalid` and no missing-role warning (#566).
+ * its host gets no `aria-invalid` and no missing-role warning.
  *
  * **Ownership model**:
  * - default: toolkit owns `aria-invalid`, `aria-required`, and `aria-describedby`
@@ -780,7 +780,6 @@ export class NgxSignalFormAutoAria {
     // still belongs to whichever element `[formField]` sits on, so a sibling
     // `<ngx-form-field-error fieldName="…">` (which has no way to see the
     // inner combobox's id) and auto-aria agree on the same generated ids.
-    // See issue #436.
     //
     // When the host has *no* id at all, fall back to the target's id rather
     // than resolving to `null`. Some field-shaped custom controls put the
@@ -789,8 +788,8 @@ export class NgxSignalFormAutoAria {
     // shim that writes its own ARIA and derives its field name from injected
     // wrapper context, not from its own host's `id`) — treating a nameless
     // host as authoritative would silently drop the field name auto-aria
-    // agrees on with the rest of that composition (regression caught in
-    // demo-primeng's `PrimeSelectControlComponent` shim, PR #446).
+    // agrees on with the rest of that composition (demo-primeng's
+    // `PrimeSelectControlComponent` shim relies on this).
     const ariaTarget = this.#ariaTarget();
     const fieldName = this.#fieldIdentity
       ? this.#fieldIdentity.fieldName()

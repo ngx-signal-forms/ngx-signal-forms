@@ -149,7 +149,7 @@ type NgxCharacterCountAnnouncementFormatter = (state: NgxCharacterCountAnnouncem
  *   actually manages, a resolved limit renders a visually-hidden element
  *   stating the limit (e.g. "Up to 200 characters") and links it into the
  *   control's `aria-describedby`, so a screen reader user hears the limit on
- *   focus even with `liveAnnounce` off (issue #499). The visible "n/max"
+ *   focus even with `liveAnnounce` off. The visible "n/max"
  *   text becomes `aria-hidden` **only once that link exists** — it is not
  *   read twice, and never as "n slash max". The visible text stays exposed
  *   to assistive technology unless the field context explicitly confirms
@@ -164,7 +164,7 @@ type NgxCharacterCountAnnouncementFormatter = (state: NgxCharacterCountAnnouncem
  *   `docs/CUSTOM_WRAPPERS.md`).
  * - Without a wrapper, set the `fieldName` input to render the same hidden
  *   limit element with the id `{fieldName}-char-count-limit`, and put that
- *   id in the control's `aria-describedby` yourself (issue #589). The
+ *   id in the control's `aria-describedby` yourself. The
  *   visible "n/max" text stays exposed, because the component cannot tell
  *   whether you linked the id.
  *
@@ -281,7 +281,7 @@ export declare class NgxFormFieldCharacterCount {
    * only links registry ids whose name matches the wrapper's field. An
    * input name would never match, so the limit would not reach
    * `aria-describedby` while `hidesVisibleText` still hid the visible
-   * count. Public so a wrapper can read it (issue #499).
+   * count. Public so a wrapper can read it.
    */
   readonly resolvedFieldName: import("@angular/core").Signal<string | null>;
   /**
@@ -330,8 +330,8 @@ export declare class NgxFormFieldCharacterCount {
    * Visually-hidden text describing the limit, e.g. "Up to 200 characters".
    * Rendered by the `[id]="limitId()"` element that `aria-describedby` links
    * to — the visible running count is a separate element, and the
-   * `[liveAnnounce]` live region holds only threshold-transition text (issue
-   * #499's decision). Configurable through
+   * `[liveAnnounce]` live region holds only threshold-transition text.
+   * Configurable through
    * `NgxSignalFormsConfig.characterCountLimitText`'s `{max}` placeholder.
    * Empty string when no limit is resolved. Warns once in dev mode when the
    * configured text carries no `{max}` placeholder — the rendered text would
@@ -411,9 +411,7 @@ type NgxFormFieldListStyle = 'bullets' | 'plain';
  *   chrome. The shape `NgxFormFieldWrapper` and per-field usage render.
  * - `'panel'` — a bordered, padded card with its own theme tokens
  *   (`--ngx-signal-form-error-panel-*`). For grouped fieldset feedback and
- *   custom summary blocks — what `NgxFormFieldNotification` used to render
- *   as a standalone component, folded here as a presentation mode instead
- *   (pre-1.0, no alias kept — see `docs/migrations/`).
+ *   custom summary blocks.
  */
 type NgxFormFieldErrorPresentation = 'inline' | 'panel';
 /**
@@ -594,7 +592,7 @@ export declare class NgxFormFieldError {
   protected readonly errorId: import("@angular/core").Signal<string | null>;
   protected readonly warningId: import("@angular/core").Signal<string | null>;
   /**
-   * Warning visibility now uses the headless directive's shouldShowWarnings
+   * Warning visibility uses the headless directive's shouldShowWarnings,
    * which follows the warning-specific strategy cascade, independent of errors.
    */
   protected readonly showWarnings: import("@angular/core").Signal<boolean>;

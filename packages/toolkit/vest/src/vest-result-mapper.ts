@@ -363,7 +363,7 @@ type VestFieldResolution =
  * Normalizes a caught probe-failure value into a human-readable string for
  * {@link VestFieldResolution}'s `'invalid'` `reason` — `Error.message` for a
  * real `Error`, `String(value)` otherwise (a probe trap can throw a
- * non-`Error` value). Without this, the caught value was previously dropped
+ * non-`Error` value). Without this, the caught value would be dropped
  * entirely, leaving the dev-mode throw / production `console.error`
  * unactionable.
  */

@@ -365,7 +365,7 @@ export function generateRequiredHintId(fieldName: string): string {
 
 /**
  * Generates the ID for a character count's visually-hidden limit
- * description (issue #499).
+ * description.
  *
  * `NgxFormFieldCharacterCount` renders an element with this id whenever a
  * limit is resolved, and registers it through `NGX_SIGNAL_FORM_HINT_REGISTRY`
