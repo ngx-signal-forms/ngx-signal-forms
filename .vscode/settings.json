@@ -4,7 +4,7 @@
   "editor.defaultFormatter": "oxc.oxc-vscode",
   "editor.formatOnSave": true,
   "files.autoSave": "off",
-  "js/ts.tsdk.path": "./node_modules/typescript",
+  "js/ts.tsdk.path": "./node_modules/typescript/lib",
   "eslint.enable": false,
   "package-json-upgrade.minimumReleaseAge": 2880,
   "editor.codeActionsOnSave": {
@@ -26,7 +26,7 @@
     "**/storybook-static/**": true,
     "**/test-results/**": true,
     "**/tmp/**": true,
-    "**/vitest-results/**": true
+    "**/.vitest/**": true
   },
   "search.exclude": {
     "**/.angular": true,
@@ -42,7 +42,7 @@
     "**/storybook-static": true,
     "**/test-results": true,
     "**/tmp": true,
-    "**/vitest-results": true
+    "**/.vitest": true
   },
   "todo-tree.filtering.excludeGlobs": [
     "**/node_modules/**",
@@ -55,6 +55,6 @@
     "**/test-results/**",
     "**/playwright-report/**",
     "**/storybook-static/**",
-    "**/vitest-results/**"
+    "**/.vitest/**"
   ]
 }
