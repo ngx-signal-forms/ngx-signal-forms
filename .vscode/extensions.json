@@ -1,8 +1,12 @@
 {
   "recommendations": [
+    "angular.ng-template",
+    "antfu.pnpm-catalog-lens",
+    "bradlc.vscode-tailwindcss",
+    "editorconfig.editorconfig",
     "nrwl.angular-console",
     "oxc.oxc-vscode",
     "ms-playwright.playwright",
-    "firsttris.vscode-jest-runner"
+    "vitest.explorer"
   ]
 }
