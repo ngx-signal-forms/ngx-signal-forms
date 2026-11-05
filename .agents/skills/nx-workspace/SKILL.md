@@ -7,61 +7,61 @@ description: "Explore and understand Nx workspaces. USE WHEN answering questions
 
 This skill provides read-only exploration of Nx workspaces. Use it to understand workspace structure, project configuration, available targets, and dependencies.
 
-Keep in mind that you might have to prefix commands with `npx`/`pnpx`/`yarn` if nx isn't installed globally. Check the lockfile to determine the package manager in use.
+Use this workspace's pinned Nx CLI with `pnpm nx` to avoid running a different transient Nx version.
 
 ## Listing Projects
 
-Use `nx show projects` to list projects in the workspace.
+Use `pnpm nx show projects` to list projects in the workspace.
 
-The project filtering syntax (`-p`/`--projects`) works across many Nx commands including `nx run-many`, `nx release`, `nx show projects`, and more. Filters support explicit names, glob patterns, tag references (e.g. `tag:name`), directories, and negation (e.g. `!project-name`).
+The project filtering syntax (`-p`/`--projects`) works across many Nx commands including `pnpm nx run-many`, `pnpm nx release`, `pnpm nx show projects`, and more. Filters support explicit names, glob patterns, tag references (e.g. `tag:name`), directories, and negation (e.g. `!project-name`).
 
 ```bash
 # List all projects
-nx show projects
+pnpm nx show projects
 
 # Filter by pattern (glob)
-nx show projects --projects "apps/*"
-nx show projects --projects "shared-*"
+pnpm nx show projects --projects "apps/*"
+pnpm nx show projects --projects "shared-*"
 
 # Filter by tag
-nx show projects --projects "tag:publishable"
-nx show projects -p 'tag:publishable,!tag:internal'
+pnpm nx show projects --projects "tag:publishable"
+pnpm nx show projects -p 'tag:publishable,!tag:internal'
 
 # Filter by target (projects that have a specific target)
-nx show projects --withTarget build
+pnpm nx show projects --withTarget build
 
 # Combine filters
-nx show projects --type lib --withTarget test
-nx show projects --affected --exclude="*-e2e"
-nx show projects -p "tag:scope:client,packages/*"
+pnpm nx show projects --type lib --withTarget test
+pnpm nx show projects --affected --exclude="*-e2e"
+pnpm nx show projects -p "tag:scope:client,packages/*"
 
 # Negate patterns
-nx show projects -p '!tag:private'
-nx show projects -p '!*-e2e'
+pnpm nx show projects -p '!tag:private'
+pnpm nx show projects -p '!*-e2e'
 
 # Output as JSON
-nx show projects --json
+pnpm nx show projects --json
 ```
 
 ## Project Configuration
 
-Use `nx show project <name> --json` to get the full resolved configuration for a project.
+Use `pnpm nx show project <name> --json` to get the full resolved configuration for a project.
 
-**Important**: Do NOT read `project.json` directly - it only contains partial configuration. The `nx show project --json` command returns the full resolved config including inferred targets from plugins.
+**Important**: Do NOT read `project.json` directly - it only contains partial configuration. The `pnpm nx show project --json` command returns the full resolved config including inferred targets from plugins.
 
 You can read the full project schema at `node_modules/nx/schemas/project-schema.json` to understand nx project configuration options.
 
 ```bash
 # Get full project configuration
-nx show project my-app --json
+pnpm nx show project my-app --json
 
 # Extract specific parts from the JSON
-nx show project my-app --json | jq '.targets'
-nx show project my-app --json | jq '.targets.build'
-nx show project my-app --json | jq '.targets | keys'
+pnpm nx show project my-app --json | jq '.targets'
+pnpm nx show project my-app --json | jq '.targets.build'
+pnpm nx show project my-app --json | jq '.targets | keys'
 
 # Check project metadata
-nx show project my-app --json | jq '{name, root, sourceRoot, projectType, tags}'
+pnpm nx show project my-app --json | jq '{name, root, sourceRoot, projectType, tags}'
 ```
 
 ## Target Information
@@ -70,25 +70,25 @@ Targets define what tasks can be run on a project.
 
 ```bash
 # List all targets for a project
-nx show project my-app --json | jq '.targets | keys'
+pnpm nx show project my-app --json | jq '.targets | keys'
 
 # Get full target configuration
-nx show project my-app --json | jq '.targets.build'
+pnpm nx show project my-app --json | jq '.targets.build'
 
 # Check target executor/command
-nx show project my-app --json | jq '.targets.build.executor'
-nx show project my-app --json | jq '.targets.build.command'
+pnpm nx show project my-app --json | jq '.targets.build.executor'
+pnpm nx show project my-app --json | jq '.targets.build.command'
 
 # View target options
-nx show project my-app --json | jq '.targets.build.options'
+pnpm nx show project my-app --json | jq '.targets.build.options'
 
 # Check target inputs/outputs (for caching)
-nx show project my-app --json | jq '.targets.build.inputs'
-nx show project my-app --json | jq '.targets.build.outputs'
+pnpm nx show project my-app --json | jq '.targets.build.inputs'
+pnpm nx show project my-app --json | jq '.targets.build.outputs'
 
 # Find projects with a specific target
-nx show projects --withTarget serve
-nx show projects --withTarget e2e
+pnpm nx show projects --withTarget serve
+pnpm nx show projects --withTarget e2e
 ```
 
 ## Workspace Configuration
@@ -123,23 +123,23 @@ If the user is asking about affected projects, read the [affected projects refer
 ### "What's in this workspace?"
 
 ```bash
-nx show projects
-nx show projects --type app
-nx show projects --type lib
+pnpm nx show projects
+pnpm nx show projects --type app
+pnpm nx show projects --type lib
 ```
 
 ### "How do I build/test/lint project X?"
 
 ```bash
-nx show project X --json | jq '.targets | keys'
-nx show project X --json | jq '.targets.build'
+pnpm nx show project X --json | jq '.targets | keys'
+pnpm nx show project X --json | jq '.targets.build'
 ```
 
 ### "What depends on library Y?"
 
 ```bash
 # Use the project graph to find dependents
-nx graph --print | jq '.graph.dependencies | to_entries[] | select(.value[].target == "Y") | .key'
+pnpm nx graph --print | jq '.graph.dependencies | to_entries[] | select(.value[].target == "Y") | .key'
 ```
 
 ## Programmatic Answers
@@ -149,7 +149,7 @@ When processing nx CLI results, use command-line tools to compute the answer pro
 ### Listing Projects
 
 ```bash
-nx show projects --json
+pnpm nx show projects --json
 ```
 
 Example output:
@@ -162,19 +162,19 @@ Common operations:
 
 ```bash
 # Count projects
-nx show projects --json | jq 'length'
+pnpm nx show projects --json | jq 'length'
 
 # Filter by pattern
-nx show projects --json | jq '.[] | select(startswith("shared-"))'
+pnpm nx show projects --json | jq '.[] | select(startswith("shared-"))'
 
 # Get affected projects as array
-nx show projects --affected --json | jq '.'
+pnpm nx show projects --affected --json | jq '.'
 ```
 
 ### Project Details
 
 ```bash
-nx show project my-app --json
+pnpm nx show project my-app --json
 ```
 
 Example output:
@@ -196,7 +196,7 @@ Example output:
       "options": { "cwd": "apps/my-app" }
     },
     "test": {
-      "command": "vitest",
+      "command": "vitest run",
       "options": { "cwd": "apps/my-app" }
     }
   },
@@ -208,22 +208,22 @@ Common operations:
 
 ```bash
 # Get target names
-nx show project my-app --json | jq '.targets | keys'
+pnpm nx show project my-app --json | jq '.targets | keys'
 
 # Get specific target config
-nx show project my-app --json | jq '.targets.build'
+pnpm nx show project my-app --json | jq '.targets.build'
 
 # Get tags
-nx show project my-app --json | jq '.tags'
+pnpm nx show project my-app --json | jq '.tags'
 
 # Get project root
-nx show project my-app --json | jq -r '.root'
+pnpm nx show project my-app --json | jq -r '.root'
 ```
 
 ### Project Graph
 
 ```bash
-nx graph --print
+pnpm nx graph --print
 ```
 
 Example output:
@@ -257,13 +257,13 @@ Common operations:
 
 ```bash
 # Get all project names from graph
-nx graph --print | jq '.graph.nodes | keys'
+pnpm nx graph --print | jq '.graph.nodes | keys'
 
 # Find dependencies of a project
-nx graph --print | jq '.graph.dependencies["my-app"]'
+pnpm nx graph --print | jq '.graph.dependencies["my-app"]'
 
 # Find projects that depend on a library
-nx graph --print | jq '.graph.dependencies | to_entries[] | select(.value[].target == "shared-ui") | .key'
+pnpm nx graph --print | jq '.graph.dependencies | to_entries[] | select(.value[].target == "shared-ui") | .key'
 ```
 
 ## Troubleshooting
@@ -272,15 +272,15 @@ nx graph --print | jq '.graph.dependencies | to_entries[] | select(.value[].targ
 
 ```bash
 # Check what targets exist on the project
-nx show project X --json | jq '.targets | keys'
+pnpm nx show project X --json | jq '.targets | keys'
 
 # Check if any projects have that target
-nx show projects --withTarget target
+pnpm nx show projects --withTarget target
 ```
 
 ### "The workspace is out of sync"
 
 ```bash
-nx sync
-nx reset  # if sync doesn't fix stale cache
+pnpm nx sync
+pnpm nx reset  # if sync doesn't fix stale cache
 ```

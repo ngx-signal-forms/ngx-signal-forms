@@ -1,11 +1,10 @@
 ## Gradle
 
-- If you import an entire Gradle repository into a subfolder, files like `gradlew`, `gradlew.bat`, and `gradle/wrapper` will end up inside that imported subfolder.
-- The `@nx/gradle` plugin expects those files at the workspace root to infer Gradle projects/tasks automatically.
-- If the target workspace has no Gradle setup yet, consider moving those files to the root (especially when using `@nx/gradle`).
-- If the target workspace already has Gradle configured, avoid duplicate wrappers: remove imported duplicates from the subfolder or merge carefully.
+- Keep each Gradle wrapper with its Gradle project or in a parent directory used by that project. Do not assume every imported project's wrapper belongs at the workspace root.
+- The `@nx/gradle` plugin can use a wrapper from a configured directory. Set `gradleExecutableDirectory` to the directory containing the wrapper when it is outside the default project lookup.
+- If the target workspace already has Gradle configured, check each project's wrapper resolution before moving or removing a wrapper.
 - Because the import lands in a subfolder, Gradle project references can break; review settings and project path references, then fix any errors.
-- If `@nx/gradle` is installed, run `nx show projects` to verify that Gradle projects are being inferred.
+- If `@nx/gradle` is installed, run `pnpm nx show projects` to verify that Gradle projects are being inferred.
 
 Helpful docs:
 
