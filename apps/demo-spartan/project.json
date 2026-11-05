@@ -24,23 +24,23 @@
     },
     "serve": {
       "executor": "nx:run-commands",
+      "readyWhen": {
+        "url": "http://127.0.0.1:{options.port}",
+        "timeout": 240000
+      },
       "defaultConfiguration": "development",
       "options": {
         "cwd": "apps/demo-spartan"
       },
       "configurations": {
         "production": {
-          "command": "vite preview --port 4721 --strictPort"
+          "command": "vite preview --strictPort",
+          "port": 4721
         },
         "development": {
-          "command": "vite --port 4621 --strictPort"
+          "command": "vite --strictPort",
+          "port": 4621
         }
-      }
-    },
-    "lint": {
-      "executor": "nx:run-commands",
-      "options": {
-        "command": "oxlint {projectRoot} --type-aware"
       }
     },
     "test": {

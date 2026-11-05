@@ -3,9 +3,9 @@ name: nx-run-tasks
 description: Helps with running tasks in an Nx workspace. USE WHEN the user wants to execute build, test, lint, serve, or run any other tasks defined in the workspace.
 ---
 
-Use the Nx MCP server first to discover available targets and execute tasks. Fall back to the CLI only when MCP is unavailable or cannot run the needed target.
+You can run tasks with Nx in the following way.
 
-This workspace uses pnpm and has Nx installed locally, so prefix CLI fallback commands with `pnpm nx` rather than relying on a global or transient Nx installation.
+Use this workspace's pinned Nx CLI with `pnpm nx` to avoid running a different transient Nx version.
 
 For more details on any command, run it with `--help` (e.g. `pnpm nx run-many --help`, `pnpm nx affected --help`).
 

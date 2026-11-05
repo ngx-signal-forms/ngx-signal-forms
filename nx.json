@@ -10,12 +10,11 @@
       "default",
       "!{workspaceRoot}/oxlint.config.ts",
       "!{workspaceRoot}/.oxfmtrc.json",
-      "!{projectRoot}/vite.config.{js,cjs,mjs,ts,cts,mts}",
-      "!{projectRoot}/vitest.config.{js,cjs,mjs,ts,cts,mts}",
+      "!{projectRoot}/vitest*.{js,cjs,mjs,ts,cts,mts}",
       "!{projectRoot}/**/?(*.)+(spec|test).[jt]s?(x)?(.snap)",
       "!{projectRoot}/tsconfig.spec.json",
-      "!{projectRoot}/src/test-setup.[jt]s",
-      "!{projectRoot}/test-setup.[jt]s",
+      "!{projectRoot}/tsconfig.spec.*.json",
+      "!{projectRoot}/**/test-setup*.{js,cjs,mjs,ts,cts,mts}",
       // Committed baseline snapshots (#514) and their size-budget config are
       // build-output artifacts and check tooling, not build input — a
       // no-op glob on every project that doesn't have them.
@@ -31,22 +30,29 @@
       "dependsOn": ["^build"],
       "inputs": ["production", "^production"]
     },
-    "@angular/build:application": {
-      "cache": true,
-      "dependsOn": ["^build"],
-      "inputs": ["production", "^production"]
-    },
     "lint": {
       "cache": true,
-      "inputs": ["default", "{workspaceRoot}/oxlint.config.ts"]
+      "inputs": ["...", "^production", "{workspaceRoot}/oxlint.config.ts"]
     },
     "test": {
       "cache": true,
-      "inputs": ["default", "^production"]
+      "inputs": [
+        "...",
+        "default",
+        "^production",
+        { "env": "CI" },
+        { "dependentTasksOutputFiles": "**/*.mjs", "transitive": true }
+      ]
     },
     "test-browser": {
       "cache": true,
-      "inputs": ["default", "^production"]
+      "inputs": [
+        "default",
+        "^production",
+        { "env": "CI" },
+        { "env": "PLAYWRIGHT_BROWSER_CHANNEL" }
+      ],
+      "outputs": ["{projectRoot}/.vitest/report-browser"]
     },
     "serve": {
       "continuous": true
@@ -86,10 +92,8 @@
     "projects": ["toolkit"],
     "version": {
       "git": {
-        "commit": true,
-        "commitMessage": "chore(release): publish {version}",
-        "tag": true,
-        "tagMessage": "Release {version}"
+        "commit": false,
+        "tag": false
       }
     },
     "changelog": {
@@ -176,15 +180,22 @@
       "plugin": "@nx/vitest",
       "options": {
         "testTargetName": "test",
-        "testMode": "watch"
+        "testMode": "run"
       },
       "include": [
         "apps/demo/**/*",
+        "apps/demo-material/**/*",
         "apps/demo-primeng/**/*",
         "apps/demo-spartan/**/*",
         "packages/demo/debugger/**/*",
         "packages/demo/shared/**/*"
       ]
+    },
+    {
+      "plugin": "@nx/oxlint",
+      "options": {
+        "targetName": "lint"
+      }
     }
   ]
 }

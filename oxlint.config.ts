@@ -445,20 +445,5 @@ export default defineConfig({
         '@typescript-eslint/strict-void-return': 'off',
       },
     },
-    {
-      files: ['packages/toolkit/**/*.json', 'packages/demo/shared/**/*.json'],
-      jsPlugins: ['@nx/eslint-plugin'],
-      rules: {
-        '@nx/dependency-checks': [
-          'error',
-          {
-            ignoredFiles: [
-              '{projectRoot}/vite.config.{js,cjs,mjs,ts,cts,mts}',
-              '{projectRoot}/test-setup.ts',
-            ],
-          },
-        ],
-      },
-    },
   ],
 });

@@ -1,0 +1,237 @@
+{
+  "skill_name": "ngrx-signals",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Build a SignalStore for a searchable user list. The search input should update query state, the list should refetch from /api/users when query changes, and the component must show loading and error states.",
+      "expected_output": "A protected SignalStore with a public query boundary and a resource whose request reads query state; native resource props or optional Toolkit integration are both valid, with safe component rendering.",
+      "files": [],
+      "assertions": [
+        "Query updates go through a public method, using signalMethod when reactive inputs are needed; no patchState from the component.",
+        "The resource request factory reads the query signal, so the refetch is declarative.",
+        "The component renders all three of loading, error, and value.",
+        "A stated native guard, NgRx extension, or Toolkit errorHandling policy, with matching value reads."
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "In Angular 22.1+, connect an Angular Signal Form for editing a user profile to a protected SignalStore draft. The form must update the draft as the user types, a save action must PUT the profile, and the visible profile must reconcile with the server result.",
+      "expected_output": "A linkedSignal custom setter routes model writes through a public store method, with no synchronisation effect. A PUT command uses the existing async strategy or optional Toolkit mutation and guards success reconciliation against newer edits.",
+      "files": [],
+      "assertions": [
+        "A linkedSignal custom set routes form model writes through a public store method.",
+        "No effect copies form values into the store.",
+        "A command performs the PUT with an explicit concurrency and visible error policy; Toolkit is optional.",
+        "Confirmed success states a reconciliation policy for the resource-backed value and the draft, using onSuccess when Toolkit is chosen.",
+        "When Toolkit is used, the submit result branches on success, error, and aborted; otherwise the chosen command's failure/cancellation contract is handled."
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "Two independent feature stores must react when the active organization changes. One controls navigation state and the other reloads organization-specific reports. Choose an NgRx Signals design and include tests.",
+      "expected_output": "An event-based design only if the cross-feature boundary is justified, a reducer that updates resource request state, a resource reacting to that state, and focused tests for the end-to-end flow.",
+      "files": [],
+      "assertions": [
+        "Events are chosen only with a stated cross-feature justification.",
+        "A withReducer case updates the request state; no manual copy into the consumer.",
+        "The resource refetches by reading that state, not by an event handler calling reload.",
+        "State precedes both reducer and resource; ordering follows member dependencies, not a claimed universal reducer-before-resource rule.",
+        "Tests assert both consuming stores reacted to one dispatch."
+      ]
+    },
+    {
+      "id": 4,
+      "prompt": "Our flight detail screen loads a flight with httpResource and saves it with a POST. When the API returns 409 the user sees nothing, and when the load fails the page throws. Fix the error handling.",
+      "expected_output": "Native guarded reads, NgRx v22 resource extensions, or Toolkit errorHandling prevent thrown value reads; narrow unknown HTTP errors and surface the 409. Preserve the existing form strategy, returning action errors through submit() when Signal Forms is used.",
+      "files": [],
+      "assertions": [
+        "An unextended httpResource has native error behavior; extending in place or guarding is valid without lifting it into a store.",
+        "The selected native or wrapper error policy matches value reads.",
+        "No unsafe casts bypass absent or throwing values.",
+        "HttpErrorResponse narrowing before reading status or message.",
+        "The 409 is visible; Signal Forms action errors are returned through submit() if that form strategy is in use."
+      ]
+    },
+    {
+      "id": 5,
+      "prompt": "Four of our stores each declare the same selectedId state plus a setSelected method and a selectedEntity computed over their withEntities collection. Tidy this up.",
+      "expected_output": "One signalStoreFeature extracted because the shape repeats, connected with withFeature or with a type<...>() input constraint on the entity state. Standalone updaters are recommended for composition, but feature methods remain valid. No use of the deprecated withFeatureFactory.",
+      "files": [],
+      "assertions": [
+        "One signalStoreFeature is extracted because the shape repeats.",
+        "Connected with withFeature or a type<...>() input constraint on the entity state.",
+        "Standalone updater functions are considered for composition, not required in place of feature methods.",
+        "No use of the deprecated withFeatureFactory.",
+        "The selected-id check uses != null, not a truthy test."
+      ]
+    },
+    {
+      "id": 6,
+      "prompt": "Build one ticket-workspace feature: searchable and paged tickets, a selected detail, assignee and tag lookups, a mapped editor view, a Signal Form that updates a protected draft while typing, and a save flow that also supports an optional autosave mode.",
+      "expected_output": "The combined-flows reference provides dependency ordering and guarded save reconciliation. Each changed value has one owner; submit and autosave share an explicit ordering/deduplication policy or use exclusive modes. Failures are visible and focused tests cover the changed transitions.",
+      "files": [],
+      "assertions": [
+        "The combined-flows reference is used rather than stitching single recipes together.",
+        "Request inputs, resources, entity-backed lookups, draft, view model, and mutations each have one owner.",
+        "Save and autosave use exclusive modes or share one explicitly serialized, deduplicated trigger policy.",
+        "Every resource and mutation has a visible error surface.",
+        "Feature order follows dependencies and compiles.",
+        "Combined derivation reports absence for missing required data, while missing optional enrichment uses its declared fallback."
+      ]
+    },
+    {
+      "id": 7,
+      "prompt": "Our OpenAPI generator produces TypeScript types and Zod schemas. Validate a ticket GET response and the POST, PUT, and PATCH ticket bodies in a SignalStore with Signal Forms.",
+      "expected_output": "Generated schemas are used at every HTTP boundary: httpResource and mutation response parse callbacks use schema.parse; operation-specific generated request schemas validate POST, PUT, and PATCH bodies after pure form-to-request mapping; the form declares the generated request schema through validateStandardSchema rather than a hand-written safeParse and manual issue-path mapping; no local duplicate DTO schema or as cast appears.",
+      "files": [],
+      "assertions": [
+        "httpResource and mutation responses parse through the generated schema.",
+        "Operation-specific generated request schemas validate POST, PUT, and PATCH bodies after a pure mapping.",
+        "The form binds the generated schema via validateStandardSchema, not a hand-written safeParse with manual path mapping.",
+        "No local duplicate DTO schema and no as cast at any HTTP boundary.",
+        "The field-name/schema-key mismatch risk is acknowledged."
+      ]
+    },
+    {
+      "id": 8,
+      "prompt": "Our save button uses exhaustOp. A user double-clicks it, the form clears and we navigate away, but the record is sometimes unchanged. Find the cause and fix it.",
+      "expected_output": "The awaited mutation result is diagnosed as having three branches, and the dropped second call resolves 'aborted' rather than 'error'. The fix branches on success, error, and aborted so an aborted call never takes the success path, and disables the button on the mutation's IsPending signal. A test fires the duplicate call and asserts the form is not marked saved.",
+      "files": [],
+      "assertions": [
+        "The dropped second call is identified as resolving 'aborted', not 'error'.",
+        "The fix branches on all three statuses so an abort never takes the success path.",
+        "The button is disabled on the mutation's IsPending signal.",
+        "Navigation is gated on submit()'s boolean, which is false when an error is returned.",
+        "A test fires the duplicate call and asserts the form is not marked saved."
+      ]
+    },
+    {
+      "id": 9,
+      "prompt": "The work-order editor has a lines array. Each row needs a product and a quantity of at least one, and the whole payload must match our generated Zod request schema. Wire up the Signal Form.",
+      "expected_output": "validateStandardSchema binds the generated request contract, with verified field-path mapping. A reusable schema() and applyEach add row interaction rules only when needed, without duplicating product/quantity constraints already generated. Rows change through the writable model.",
+      "files": [],
+      "assertions": [
+        "When row interaction rules are needed, schema() and applyEach compose them; generated contract rules are not repeated.",
+        "validateStandardSchema binds the generated request schema alongside it.",
+        "Hand-written rules cover interaction only; contract rules are not duplicated.",
+        "Rows are added and removed on the model, not on the form tree.",
+        "Per-row binding uses @for over the array path with [formField] per field."
+      ]
+    },
+    {
+      "id": 10,
+      "prompt": "On NgRx 22 without Toolkit, keep old list results during reload and return an empty fallback on errors. Apply defaults at route scope but let one detail resource override them. Does the provider change all httpResources?",
+      "expected_output": "Experimental @ngrx/signals/resource extensions wrap resources with extendResource, preserving identity/type. Scoped defaults affect only extended resources; local same-type extensions win. Detail identity and errors remain visible.",
+      "files": [],
+      "assertions": [
+        "Imports extendResource, provideResourceExtensions and policies from @ngrx/signals/resource, not Toolkit.",
+        "Marks resource extensions experimental in v22 and does not add Toolkit.",
+        "States only extendResource opt-ins receive provider defaults and the original resource is patched in place.",
+        "Explains parent/child/local composition and last same-type extension precedence.",
+        "Tests first-load error, reload fallback, visible errors, and stale detail identity."
+      ]
+    },
+    {
+      "id": 11,
+      "prompt": "After upgrading NgRx 21 to 22, a generic selectedEntity: Entity | null feature no longer fits its old deep-signal annotation. Fix the typing, show a safe nested property read, and reuse another feature's output contract without repeating its shape.",
+      "expected_output": "Explains distributed union deep signals, DeepSignalOf<T>, reactive in-operator narrowing of the signal object or local value narrowing, and SignalStoreFeatureType<typeof factory> input contracts.",
+      "files": [],
+      "assertions": [
+        "Uses DeepSignalOf<Entity | null> where an explicit generic annotation is needed; preserves nullable state.",
+        "Narrows the signal object before nested access, or reads/narrows a local value; does not assume a value guard narrows the signal object.",
+        "Uses SignalStoreFeatureType<typeof featureFactory> with type<Contract>() and correct feature order.",
+        "Tests concrete generic consumers and union transitions without casts or placeholder entities."
+      ]
+    },
+    {
+      "id": 12,
+      "prompt": "Migrate Angular 22.1 with NgRx 21 and @angular-architects/ngrx-toolkit 21 to aligned v22 packages. We previously added peer overrides and use positional tapResponse callbacks. Tell us what to change and what to verify.",
+      "expected_output": "Aligns majors, renames Toolkit to @ngrx-toolkit/core including secondary paths, removes only temporary cross-major overrides, migrates tapResponse to observer objects, and checks TypeScript/RxJS/ESLint compatibility and installed declarations.",
+      "files": [],
+      "assertions": [
+        "Uses NgRx migration tooling and @ngrx-toolkit/core for v22, retaining old scope only for older versions.",
+        "Does not assert an unverified automatic Toolkit rename migration.",
+        "Removes only obsolete compatibility overrides and validates peers normally.",
+        "Uses observer-object tapResponse and checks TypeScript 6, compatible RxJS 7, and ESLint flat 9/10 when applicable.",
+        "Distinguishes source verification from executed install/typecheck/tests."
+      ]
+    },
+    {
+      "id": 13,
+      "prompt": "With Toolkit 22.0.1, show the generated members for a named user resource and saveUser mutation. Can userHasValue narrow userValue, can I read saveUserValue, and does userSnapshot include my patchState edit?",
+      "expected_output": "Lists userSnapshot and narrowing resource guard; saveUser exposes only callable method and pending/status/error aliases. Snapshot forwards the source resource rather than reconstructing patched/proxied values. Awaited mutation result supplies the saved value.",
+      "files": [],
+      "assertions": [
+        "Names userValue/userStatus/userError/userIsLoading/userHasValue/userSnapshot/_userReload correctly.",
+        "Confirms named and unnamed resource guards narrow in 22.0.1 without generalizing to mutation guards.",
+        "Rejects saveUserValue/saveUserHasValue/saveUserIsSuccess as generated aliases.",
+        "Does not invent userResource or mutation-object properties on saveUser.",
+        "Explains source snapshot versus linked/proxied value and uses all three awaited result branches.",
+        "Distinguishes the named mutation error alias declaration Error | undefined from unknown runtime errors and narrows defensively."
+      ]
+    },
+    {
+      "id": 14,
+      "prompt": "Our switchOp autosave sends partial PATCHes. A cancelled request sometimes lands after the latest edit, and switching records mid-save overwrites the new draft. Fix the design.",
+      "expected_output": "Cancellation is not server rollback. Queue partial writes or use backend revision/ETag rejection and an explicit replacement policy. Capture record id and draft revision in commands and gate response application, preserving newer edits and current selection.",
+      "files": [],
+      "assertions": [
+        "Does not claim switchOp guarantees server order or that aborted means nothing reached the server.",
+        "Queues partial writes or specifies a server-enforced version policy, including conflicts.",
+        "Captures command identity and revision; late success cannot overwrite new selection/new edits.",
+        "Covers out-of-order completion, selection change, edits while pending, and aborted outcomes."
+      ]
+    },
+    {
+      "id": 15,
+      "prompt": "Add Toolkit IndexedDB draft persistence, reset-to-loaded-record, undo history, and native Events DevTools tracking. Must work with SSR and keep history bounded. Can an async onInit make hydration synchronous?",
+      "expected_output": "Uses explicit storage readiness, reset baseline policy, and separate history clearing. Native Events tracking uses withTrackedReducer plus withDevtools(name, withGlitchTracking()). Flags tagged SSR/history-limit discrepancies for verification rather than promising safety.",
+      "files": [],
+      "assertions": [
+        "Uses a storage strategy as the second argument rather than deprecated storage config.",
+        "Exposes hydration readiness; does not claim async onInit blocks store construction.",
+        "Distinguishes reset baseline, state reset, and soft/hard clearUndoRedo; does not imply request cancellation.",
+        "Verifies SSR initialization and actual maxStackSize enforcement against the installed implementation.",
+        "Includes glitch tracking for withTrackedReducer and reviews production DevTools/redaction."
+      ]
+    },
+    {
+      "id": 16,
+      "prompt": "Our editor starts with saved baseline S0. We submit draft S1, then type S2 while that save is pending. The S1 save succeeds, and a same-record refetch later returns different data or transient undefined. Fix dirty tracking and reconciliation without losing S2.",
+      "expected_output": "For the matching edit session, confirmed success advances a stable baseline to the saved S1 while retaining newer draft S2. Dirty tracking compares the draft to that baseline rather than the live resource. Refetches preserve both; stale-session responses cannot change either.",
+      "files": [],
+      "assertions": [
+        "After S1 succeeds, the baseline is the saved S1 and the newer draft remains S2.",
+        "Dirty state compares S2 against S1, not S0 or the current resource value; setting the draft to S1 is clean and reverting to S0 is dirty.",
+        "Same-session refetches and transient undefined do not replace the seeded draft or saved baseline.",
+        "Record identity and edit-session guards prevent late responses from changing another session, including reopening the same record.",
+        "Tests cover edits while pending, baseline advancement, refetch absence, and stale-session success."
+      ]
+    },
+    {
+      "id": 17,
+      "prompt": "With Toolkit 22.0.1 errorHandling: 'previous value', can we read a resource-backed value unconditionally on first-load failure and rely on the last defined result surviving an observed undefined during a later load? Explain and test the policy.",
+      "expected_output": "The previous-value cache records each successful observed read, including undefined. It is not a last-defined-value cache, and a first read in error may throw. Guard reads or choose an explicit nonthrowing fallback, retaining visible errors.",
+      "files": [],
+      "assertions": [
+        "States that a first read in error may throw when no successful observed read has populated the cache.",
+        "States that a successful observed undefined replaces the cached value; it does not promise the last defined value.",
+        "Tests first-read error separately from defined-value then observed-undefined then error.",
+        "Matches guards or an explicit fallback policy to value reads and keeps errors visible."
+      ]
+    },
+    {
+      "id": 18,
+      "prompt": "In Angular 22.1 with NgRx Signals and no Toolkit, connect a Signal Form to a protected draft. Our existing saveProfile command returns Promise<Profile>, rejects on HTTP failure, and exposes pending state. Keep that command and show a 409 error without navigating or clearing the draft on failure.",
+      "expected_output": "Uses a linkedSignal custom setter through the store boundary and preserves the native command. The async submit action maps caught errors into kind/message form errors, reconciles confirmed success safely, and handles submit rejection. No Toolkit dependency or MutationResult adapter is introduced.",
+      "files": [],
+      "assertions": [
+        "Keeps the core-only dependency set and existing command; does not install Toolkit or import MutationResult/toSubmitResult for this native command.",
+        "Routes live model writes through a public store method without a synchronization effect.",
+        "Maps caught unknown errors, narrowed to HttpErrorResponse for 409, to visible kind/message form errors.",
+        "Only confirmed command success with the required validation gate permits navigation; failure preserves the draft.",
+        "Uses the command's own pending/outcome contract and guards reconciliation against newer edits rather than inventing Toolkit statuses."
+      ]
+    }
+  ]
+}

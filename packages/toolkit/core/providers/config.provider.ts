@@ -8,20 +8,13 @@ import type { NgxSignalFormsConfig, NgxSignalFormsUserConfig } from '../types';
 import { createCascadingResolver } from '../utilities/cascading-resolver';
 
 /**
- * Factory that merges the parent-scope `NGX_SIGNAL_FORMS_CONFIG` (if one is
- * provided higher up the injector tree) with the caller-supplied user
- * overrides. Used by both the environment-level and component-level
- * providers so the inheritance contract is identical across DI scopes:
- * parent config bubbles down, child overrides win per property.
+ * Merges each config property in three tiers: `userConfig`, then the parent
+ * scope's `NGX_SIGNAL_FORMS_CONFIG`, then `DEFAULT_NGX_SIGNAL_FORMS_CONFIG`.
+ * The environment-level and component-level providers both use this factory,
+ * so inheritance works the same in every DI scope.
  *
- * Mirrors the factory-with-skipSelf pattern in
- * `provideNgxSignalFormControlPresetsForComponent` to keep the two providers
- * behaviorally symmetric.
- *
- * Tiers per property: `userConfig` → `parentConfig` → `DEFAULT_NGX_SIGNAL_FORMS_CONFIG`.
- * Uses nullish-only short-circuit so falsy overrides (e.g. `requiredMarker: ''`,
- * `errorSummaryAnnouncesAlone: false`) are preserved and do not fall through
- * to parent defaults.
+ * Only `null` and `undefined` fall through. Falsy overrides such as
+ * `requiredMarker: ''` or `errorSummaryAnnouncesAlone: false` stay in effect.
  *
  * @internal
  */
@@ -29,88 +22,27 @@ function createConfigFactory(
   userConfig: NgxSignalFormsUserConfig,
 ): () => NgxSignalFormsConfig {
   return () => {
-    const parentOrNull = inject(NGX_SIGNAL_FORMS_CONFIG, {
+    const parent = inject(NGX_SIGNAL_FORMS_CONFIG, {
       optional: true,
       skipSelf: true,
     });
 
-    return {
-      defaultErrorStrategy: createCascadingResolver({
-        input: userConfig.defaultErrorStrategy,
-        configDefault: parentOrNull?.defaultErrorStrategy,
-        fallback: DEFAULT_NGX_SIGNAL_FORMS_CONFIG.defaultErrorStrategy,
-      }),
-      defaultWarningStrategy: createCascadingResolver({
-        input: userConfig.defaultWarningStrategy,
-        configDefault: parentOrNull?.defaultWarningStrategy,
-        fallback: DEFAULT_NGX_SIGNAL_FORMS_CONFIG.defaultWarningStrategy,
-      }),
-      defaultFormFieldAppearance: createCascadingResolver({
-        input: userConfig.defaultFormFieldAppearance,
-        configDefault: parentOrNull?.defaultFormFieldAppearance,
-        fallback: DEFAULT_NGX_SIGNAL_FORMS_CONFIG.defaultFormFieldAppearance,
-      }),
-      defaultFormFieldOrientation: createCascadingResolver({
-        input: userConfig.defaultFormFieldOrientation,
-        configDefault: parentOrNull?.defaultFormFieldOrientation,
-        fallback: DEFAULT_NGX_SIGNAL_FORMS_CONFIG.defaultFormFieldOrientation,
-      }),
-      showMarkerWhen: createCascadingResolver({
-        input: userConfig.showMarkerWhen,
-        configDefault: parentOrNull?.showMarkerWhen,
-        fallback: DEFAULT_NGX_SIGNAL_FORMS_CONFIG.showMarkerWhen,
-      }),
-      requiredMarker: createCascadingResolver({
-        input: userConfig.requiredMarker,
-        configDefault: parentOrNull?.requiredMarker,
-        fallback: DEFAULT_NGX_SIGNAL_FORMS_CONFIG.requiredMarker,
-      }),
-      optionalMarker: createCascadingResolver({
-        input: userConfig.optionalMarker,
-        configDefault: parentOrNull?.optionalMarker,
-        fallback: DEFAULT_NGX_SIGNAL_FORMS_CONFIG.optionalMarker,
-      }),
-      requiredLegendText: createCascadingResolver({
-        input: userConfig.requiredLegendText,
-        configDefault: parentOrNull?.requiredLegendText,
-        fallback: DEFAULT_NGX_SIGNAL_FORMS_CONFIG.requiredLegendText,
-      }),
-      optionalLegendText: createCascadingResolver({
-        input: userConfig.optionalLegendText,
-        configDefault: parentOrNull?.optionalLegendText,
-        fallback: DEFAULT_NGX_SIGNAL_FORMS_CONFIG.optionalLegendText,
-      }),
-      requiredHintText: createCascadingResolver({
-        input: userConfig.requiredHintText,
-        configDefault: parentOrNull?.requiredHintText,
-        fallback: DEFAULT_NGX_SIGNAL_FORMS_CONFIG.requiredHintText,
-      }),
-      errorPrefixText: createCascadingResolver({
-        input: userConfig.errorPrefixText,
-        configDefault: parentOrNull?.errorPrefixText,
-        fallback: DEFAULT_NGX_SIGNAL_FORMS_CONFIG.errorPrefixText,
-      }),
-      warningPrefixText: createCascadingResolver({
-        input: userConfig.warningPrefixText,
-        configDefault: parentOrNull?.warningPrefixText,
-        fallback: DEFAULT_NGX_SIGNAL_FORMS_CONFIG.warningPrefixText,
-      }),
-      errorSummaryAnnouncesAlone: createCascadingResolver({
-        input: userConfig.errorSummaryAnnouncesAlone,
-        configDefault: parentOrNull?.errorSummaryAnnouncesAlone,
-        fallback: DEFAULT_NGX_SIGNAL_FORMS_CONFIG.errorSummaryAnnouncesAlone,
-      }),
-      characterCountLimitText: createCascadingResolver({
-        input: userConfig.characterCountLimitText,
-        configDefault: parentOrNull?.characterCountLimitText,
-        fallback: DEFAULT_NGX_SIGNAL_FORMS_CONFIG.characterCountLimitText,
-      }),
-      hideHintOnError: createCascadingResolver({
-        input: userConfig.hideHintOnError,
-        configDefault: parentOrNull?.hideHintOnError,
-        fallback: DEFAULT_NGX_SIGNAL_FORMS_CONFIG.hideHintOnError,
-      }),
-    };
+    const keys = Object.keys(
+      DEFAULT_NGX_SIGNAL_FORMS_CONFIG,
+    ) as (keyof NgxSignalFormsConfig)[];
+
+    // `Object.fromEntries` drops key types. Every key comes from the defaults,
+    // which `satisfies NgxSignalFormsConfig`, so the result is complete.
+    return Object.fromEntries(
+      keys.map((key) => [
+        key,
+        createCascadingResolver({
+          input: userConfig[key],
+          configDefault: parent?.[key],
+          fallback: DEFAULT_NGX_SIGNAL_FORMS_CONFIG[key],
+        }),
+      ]),
+    ) as unknown as NgxSignalFormsConfig;
   };
 }
 

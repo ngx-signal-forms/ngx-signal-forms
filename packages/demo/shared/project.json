@@ -19,12 +19,6 @@
       "options": {
         "config": "./vitest.config.mts"
       }
-    },
-    "lint": {
-      "executor": "nx:run-commands",
-      "options": {
-        "command": "oxlint {projectRoot} --type-aware"
-      }
     }
   }
 }

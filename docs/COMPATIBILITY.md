@@ -71,17 +71,23 @@ The axe-core integration is optional and only required when importing
 
 ## Runtime and tooling baseline
 
-The toolkit's `engines.node` matches the Angular 22 toolchain used in this repo:
-`^22.22.3 || ^24.15.0 || >=26.0.0` (mirrors `@angular/core@22`'s own `engines`
-field). Consumers should use an active LTS Node version compatible with
-Angular 22 and their package manager/tooling stack.
+The toolkit's `engines.node` is `^22.23.4 || ^24.22.1 || >=26.12.1`. The
+22.x and 24.x floors are the first releases of their lines with the
+[October 2026 security fixes](https://nodejs.org/en/blog/vulnerability/october-2026-security-releases).
+The 26.x floor is `26.12.1`; Node.js 26.13.0 is a metadata-only LTS release,
+not the November 2026 security release.
+These floors are stricter than `@angular/core@22`'s own `engines` field.
+Raising a floor to a Node security release ships as a patch, without a
+migration guide, because the releases below the floor have known
+vulnerabilities. Consumers should use an active LTS Node version compatible
+with Angular 22 and their package manager/tooling stack.
 
 The repository currently validates and publishes with the following Node
 version:
 
 | Use case               | Version used in automation                                           |
 | ---------------------- | -------------------------------------------------------------------- |
-| CI + Publish workflows | Node, from [`.node-version`](../.node-version) (currently `24.18.0`) |
+| CI + Publish workflows | Node, from [`.node-version`](../.node-version) (currently `26.13.0`) |
 
 ## Compatibility matrix
 
@@ -98,12 +104,12 @@ into `pnpm-workspace.yaml`'s `overrides` map for that job only, using
 then runs `toolkit:test` and `toolkit:test-browser`. Nothing is committed
 back to the repository.
 
-| Dimension | Versions tested                                                                  |
-| --------- | -------------------------------------------------------------------------------- |
-| Node      | `22.22.3`, `24.15.0`, `26.0.0` (each declared `engines` floor), `26.x` (current) |
-| Angular   | `22.0.0` (declared floor), latest `22.x`                                         |
-| axe-core  | `4.13.0` (declared floor), latest `<5`                                           |
-| vest      | `6.3.0` (declared floor), latest `<7.0.0`                                        |
+| Dimension | Versions tested                                                                   |
+| --------- | --------------------------------------------------------------------------------- |
+| Node      | `22.23.4`, `24.22.1`, `26.12.1` (each declared `engines` floor), `26.x` (current) |
+| Angular   | `22.0.0` (declared floor), latest `22.x`                                          |
+| axe-core  | `4.13.0` (declared floor), latest `<5`                                            |
+| vest      | `6.3.0` (declared floor), latest `<7.0.0`                                         |
 
 ## Browser support
 

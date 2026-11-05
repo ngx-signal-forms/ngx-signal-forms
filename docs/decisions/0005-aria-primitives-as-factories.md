@@ -203,6 +203,22 @@ returns an object `{ ariaInvalid, ariaRequired, ariaDescribedBy, hintIds }`.
 - Each factory has a `*.spec.ts` next to its source documenting reactive
   transitions on a stub `FieldState`.
 
+## Planned feedback-ID composition refactor
+
+The [feedback-ID composition specification](../specs/feedback-id-composition.md)
+records the direction agreed on 2026-11-05. Implementation is pending; this
+addendum does not change the accepted decision above.
+
+Reuse the pure ARIA composition path to centralize toolkit-owned hint/count
+preparation and description ordering. Keep ID creation, registration lifecycle,
+visibility resolution and manual-mode DOM ownership with their current
+owners. Do not introduce a field-name-keyed registration service or a public
+count input merely for this refactor.
+
+Counts remain part of the existing flat hint channel across identity and
+registry boundaries. Preserve ADR-0010's publication semantics. Fieldset
+aggregation and the design-system bridge retain their distinct policies.
+
 ## Related
 
 - PRD #38 — Auto-ARIA composition refactor

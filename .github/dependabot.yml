@@ -10,6 +10,21 @@
 # block in pnpm-workspace.yaml — pin the patched range there and run
 # `pnpm install`. Dependabot below handles DIRECT dependency version bumps and
 # GitHub Actions; it is not relied on for transitive security patching.
+#
+# Grouping and auto-merge:
+# `.github/workflows/dependabot-auto-merge.yml` reads the highest update type in
+# a PR, so one minor bump in a group makes the whole PR manual. The npm groups
+# below therefore split by UPDATE TYPE, not by dependency type. Dependabot
+# reports every `catalog:` entry as `direct:production`, so a "dev-dependencies"
+# group never matched anything.
+#   - `patch-updates`: every patch bump in one PR. Auto-merges.
+#   - `tooling`: minor bumps of dev tooling, by name. Auto-merges. CI is the
+#     gate: a tool that changes lint or format output fails `ci-success`.
+#   - `angular`, `nx`: minor bumps of the lockstep families. Manual.
+#   - Every other minor gets its own PR, so one breaking library does not
+#     block the rest. Manual.
+# The workflow matches the `tooling` group by its branch name
+# (`dependabot/npm_and_yarn/tooling-<hash>`). Rename both together.
 version: 2
 updates:
   - package-ecosystem: npm
@@ -17,7 +32,7 @@ updates:
     schedule:
       interval: weekly
       day: monday
-    open-pull-requests-limit: 10
+    open-pull-requests-limit: 15
     # Skip versions younger than pnpm's minimumReleaseAge supply-chain window,
     # otherwise Dependabot commits lockfiles that pnpm rejects at install time
     # (ERR_PNPM_MINIMUM_RELEASE_AGE_VIOLATION, see PR #132). Keep
@@ -39,18 +54,30 @@ updates:
         update-types: ['version-update:semver-major']
       - dependency-name: '@schematics/angular'
         update-types: ['version-update:semver-major']
-      # Hold ng-packagr at 22.1.x. 22.2 breaks the Nx `ng-packagr-lite` build
-      # of the Spartan helm library (TS6059 rootDir on secondary entry points)
-      # and reformats the toolkit .d.ts output. Bump it by hand together with
-      # an Nx version that supports it, and regenerate the API reports.
+      # Hold ng-packagr at its current minor (22.2.x). An earlier minor bump
+      # broke the Nx `ng-packagr-lite` build of the Spartan helm library
+      # (TS6059 rootDir on secondary entry points) and reformatted the toolkit
+      # .d.ts output. Bump it by hand together with an Nx version that supports
+      # it, and regenerate the API reports.
       - dependency-name: 'ng-packagr'
         update-types:
           ['version-update:semver-major', 'version-update:semver-minor']
       - dependency-name: '@angular-eslint/*'
         update-types: ['version-update:semver-major']
-    # Each dependency joins the FIRST matching group, so the lockstep families
-    # (Angular, Nx) are listed before the catch-all dev/prod groups.
+      # An Nx major needs `nx migrate` and a matching ng-packagr and Angular
+      # plugin set. Move to it by hand, never through a Dependabot PR.
+      - dependency-name: 'nx'
+        update-types: ['version-update:semver-major']
+      - dependency-name: '@nx/*'
+        update-types: ['version-update:semver-major']
+    # Each dependency joins the FIRST matching group, so the order matters:
+    # patches first, then the lockstep families, then dev tooling.
     groups:
+      patch-updates:
+        patterns:
+          - '*'
+        update-types:
+          - patch
       angular:
         patterns:
           - '@angular/*'
@@ -58,32 +85,58 @@ updates:
           - '@schematics/angular'
           - 'ng-packagr'
           - '@angular-eslint/*'
+        update-types:
+          - minor
       nx:
         patterns:
           - '@nx/*'
           - 'nx'
-      dev-dependencies:
-        dependency-type: development
         update-types:
           - minor
-          - patch
-      production-dependencies:
-        dependency-type: production
+      tooling:
+        patterns:
+          - 'eslint'
+          - 'eslint-plugin-*'
+          - '@eslint/*'
+          - 'oxlint'
+          - 'oxlint-tsgolint'
+          - 'oxfmt'
+          - '@oxc-project/*'
+          - 'vitest'
+          - '@vitest/*'
+          - '@commitlint/*'
+          - '@types/*'
+          - 'size-limit'
+          - '@size-limit/*'
+          - 'autoprefixer'
+          - 'postcss'
+          - 'jsdom'
         update-types:
           - minor
-          - patch
 
   - package-ecosystem: github-actions
     directory: /
     schedule:
       interval: weekly
       day: monday
+    # Actions run with the workflows' tokens, including the publish and Pages
+    # jobs. Wait a week so a hijacked release is likely found and pulled
+    # before Dependabot proposes it.
+    cooldown:
+      default-days: 7
     labels:
       - dependencies
       - github-actions
     commit-message:
       prefix: ci(deps)
+    # First-party actions are their own group so the auto-merge workflow can
+    # merge them. Any third-party action keeps its group, and its bump, manual.
     groups:
+      github-actions-first-party:
+        patterns:
+          - 'actions/*'
+          - 'github/*'
+          - 'dependabot/*'
       github-actions:
         patterns:
           - '*'

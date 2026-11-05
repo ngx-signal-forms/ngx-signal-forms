@@ -61,7 +61,7 @@ import { resolveUnionInput } from './utilities/resolve-union-input';
 
 /**
  * Elements inside the field box that handle their own clicks. A click on one
- * of these must not move focus to the bound control (#567).
+ * of these must not move focus to the bound control.
  */
 const FIELD_BOX_INTERACTIVE_SELECTOR = [
   'input',
@@ -223,7 +223,7 @@ const FIELD_BOX_INTERACTIVE_SELECTOR = [
         const component = inject(NgxFormFieldWrapper);
         return {
           fieldName: component.resolvedFieldName,
-          // Disambiguates the generated hint fallback id (issue #435): a
+          // Disambiguates the generated hint fallback id: a
           // hint that needs `${fieldName}-hint` asks for its ordinal among
           // sibling hints that also need it, so a second unnamed hint
           // doesn't collide with the first on the DOM id (WCAG 1.3.1).
@@ -328,7 +328,7 @@ const FIELD_BOX_INTERACTIVE_SELECTOR = [
       Horizontal layout turns it into the real CSS Grid container and gives
       it \`container-type: inline-size\` instead of putting either on
       \`:host\` itself — see docs/agents/domain-invariants.md for why the grid
-      belongs on this structural child, not \`:host\` (#523).
+      belongs on this structural child, not \`:host\`.
     -->
     <div class="ngx-signal-form-field-wrapper__layout">
       <!-- Label slot (outside bordered container for standard layout, visually inside for outline via CSS) -->
@@ -925,7 +925,7 @@ export class NgxFormFieldWrapper<TValue = unknown> {
    * A textual field draws a box of about 32–44px, but the control inside it
    * is only one line tall. Without this handler a click on the box padding
    * does nothing, so the real target is much smaller than the one the user
-   * sees (#567, WCAG 2.5.8).
+   * sees (WCAG 2.5.8).
    *
    * The handler does nothing when:
    * - the field is not textual (selection rows manage their own clicks),
@@ -1042,7 +1042,7 @@ export class NgxFormFieldWrapper<TValue = unknown> {
    * Character-count children projected into this wrapper. Queried
    * separately from {@link hintChildren} — `NgxFormFieldCharacterCount` is
    * its own component, not an `NgxFormFieldHint` — but its resolved limit id
-   * joins the same `NGX_SIGNAL_FORM_HINT_REGISTRY` channel (issue #499), so
+   * joins the same `NGX_SIGNAL_FORM_HINT_REGISTRY` channel, so
    * auto-aria never needs a second describedby path.
    *
    * @internal
@@ -1058,7 +1058,7 @@ export class NgxFormFieldWrapper<TValue = unknown> {
    *
    * Character-count limit ids are appended *after* the hint ids — required
    * `aria-describedby` order is author ids, hints, count, then error or
-   * warning (issue #499) — and filtered to drop `null` (no limit resolved,
+   * warning — and filtered to drop `null` (no limit resolved,
    * or no field name yet), so a field with no `maxLength` registers nothing
    * for its count.
    *

@@ -1,12 +1,13 @@
 /// <reference types='vitest' />
 
 import { defineConfig } from 'vitest/config';
-import tsconfigPaths from 'vite-tsconfig-paths';
 
 export default defineConfig({
   root: import.meta.dirname,
   cacheDir: '../../../node_modules/.vite/packages/demo/shared',
-  plugins: [tsconfigPaths()],
+  resolve: {
+    tsconfigPaths: true,
+  },
   test: {
     name: 'demo-shared',
     globals: true,

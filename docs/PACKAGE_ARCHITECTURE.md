@@ -159,4 +159,3 @@ The form debugger is not part of the published package. It lives in
 - The package follows semantic versioning from `1.0.0`. Releases before
   that are release candidates (`1.0.0-rc.*`), and an RC can still break.
 - `core/` stays internal even though it exists in source.
-- Release and publish steps are in [Contributing](./CONTRIBUTING.md#release).

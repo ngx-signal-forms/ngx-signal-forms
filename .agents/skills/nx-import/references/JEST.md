@@ -24,9 +24,9 @@ Jest-specific guidance for `nx import`. For the basic "Jest Preset Missing" fix 
 1. **Registers `@nx/jest/plugin` in `nx.json`** — without this, no `test` targets are inferred
 2. Updates `namedInputs.production` to exclude test files
 
-**Gotcha**: `nx add @nx/jest` does NOT create `jest.preset.js` — that file is only generated when you run a generator (e.g. `@nx/jest:configuration`). For imports, you must create it manually (see "Jest Preset" section below).
+**Gotcha**: `pnpm nx add @nx/jest` does NOT create `jest.preset.js` — that file is only generated when you run a generator (e.g. `@nx/jest:configuration`). For imports, you must create it manually (see "Jest Preset" section below).
 
-**Other gotcha**: If you create `jest.preset.js` manually but skip `npx nx add @nx/jest`, the plugin won't be registered and `nx run PROJECT:test` will fail with "Cannot find target 'test'". You need both.
+**Other gotcha**: If you create `jest.preset.js` manually but skip `pnpm nx add @nx/jest`, the plugin won't be registered and `pnpm nx run PROJECT:test` will fail with "Cannot find target 'test'". You need both.
 
 ---
 
@@ -130,7 +130,7 @@ Workspaces can have both:
 - **Jest**: Next.js apps, older React libs, Node libraries
 - **Vitest**: Vite-based React/Vue apps and libs
 
-Both `@nx/jest/plugin` and `@nx/vitest` coexist without conflicts — they detect different config files (`jest.config.*` vs Vitest config files).
+Both `@nx/jest/plugin` and `@nx/vitest` can coexist without conflicts. The Jest plugin detects `jest.config.*`; the Vitest plugin detects `vitest.config.*` or a Vite config with test settings.
 
 **Target naming**: Both default to `test`. If a project somehow has both config files, rename one:
 
@@ -170,7 +170,7 @@ Nx rewrites `package.json` scripts during init. Test scripts get broken:
 - `"test": "jest"` → `"test": "nx test"` (circular if no executor configured)
 - `"test": "vitest run"` → `"test": "nx test run"` (broken — `run` becomes an argument)
 
-**Fix**: Remove all rewritten test scripts. `@nx/jest/plugin` and `@nx/vitest` infer test targets from config files.
+**Fix**: Remove rewritten test scripts only after registering the matching plugin. `@nx/jest/plugin` infers Jest targets, and `@nx/vitest` infers Vitest targets from their config files.
 
 ---
 
@@ -215,7 +215,7 @@ This creates `test-ci--src/lib/foo.spec.ts` targets for each test file, enabling
 3. Install deps: `pnpm add -wD jest jest-environment-jsdom ts-jest @types/jest`
 4. Install framework test deps: `@testing-library/react @testing-library/jest-dom` (React), `@vue/test-utils` (Vue)
 5. Verify `tsconfig.spec.json` has `"types": ["jest", "node"]`
-6. `nx run-many -t test`
+6. `pnpm nx run-many -t test`
 
 ### Whole-Repo Import (Non-Nx Source)
 
@@ -225,4 +225,4 @@ This creates `test-ci--src/lib/foo.spec.ts` targets for each test file, enabling
 4. Install deps (same as above)
 5. Verify/fix `jest.config.*` — ensure `preset` path points to root `jest.preset.js`
 6. Verify/fix `tsconfig.spec.json` — add `types`, `module`, `include` if missing
-7. `nx run-many -t test`
+7. `pnpm nx run-many -t test`

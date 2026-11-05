@@ -46,6 +46,6 @@ describe('validateVest browser mode', () => {
     expect(input).toHaveValue('');
     await expect
       .element(page.getByRole('alert'))
-      .toHaveTextContent('Email is required');
+      .toMatchTextContent('Email is required');
   });
 });

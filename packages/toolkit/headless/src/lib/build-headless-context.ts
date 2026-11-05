@@ -39,7 +39,7 @@ export interface HeadlessContext {
  * `NgxHeadlessErrorState`, `NgxHeadlessFieldset`, `NgxHeadlessErrorSummary`,
  * `createErrorState()`, and `createErrorMessageSignal()` — in one place.
  *
- * Each of those five call sites used to independently re-run the same
+ * Each of those five call sites needs the same
  * `injectFormContext()` + `inject(NGX_SIGNAL_FORMS_CONFIG, { optional: true })
  * ?? DEFAULT_NGX_SIGNAL_FORMS_CONFIG` + `inject(NGX_ERROR_MESSAGES, {
  * optional: true })` sequence (and `NgxHeadlessErrorSummary` additionally

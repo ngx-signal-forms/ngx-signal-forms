@@ -6,8 +6,7 @@ import {
 } from '@ngx-signal-forms/toolkit';
 
 /**
- * Field-state duck-typing utilities, split out of `utilities.ts` (issue
- * #354) so the ~900-line file's domains stop sharing one module boundary.
+ * Field-state duck-typing utilities.
  * Everything here reads a `FieldTree`'s return value (or a
  * `ValidationError`'s `fieldTree()`) through loose, structural access
  * instead of Angular's exact `FieldState` type — the shared reason being
@@ -160,9 +159,8 @@ export function readErrors(state: unknown): ValidationError[] {
  * Minimal structural view of the `fieldTree` members read off a
  * `ValidationError` via duck-typing (`name()`, `focusBoundControl()`).
  *
- * As of Angular 22.0.0 the framework *does* export `ValidationError.WithFieldTree`
- * publicly (the Vest adapter consumes it directly), so this is no longer bridging
- * a missing type. It is kept as a deliberately narrow, **all-optional** structural
+ * Angular exports `ValidationError.WithFieldTree` publicly (the Vest adapter
+ * consumes it directly). This type is kept as a deliberately narrow, **all-optional** structural
  * type because these helpers accept a bare `ValidationError`: errors emitted by
  * custom validators / Vest need not carry a `fieldTree`, so every access stays
  * guarded at runtime rather than asserting the framework's non-optional

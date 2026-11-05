@@ -62,7 +62,14 @@ This guide records implementation-level constraints behind the terms in
   a name-only identity must leave visibility to the registry.
 - The described-by id order is authored ids, hints (including the character
   count limit), then the visible error or warning. Do not add a new id channel
-  without deciding its place in this order.
+  without deciding its place in this order. The design-system bridge keeps
+  its own order (toolkit ids first, then registered ids); do not unify the
+  two. See
+  [ADR-0017](../decisions/0017-feedback-id-composition-stays-internal.md).
+- Do not hide a visible character count from assistive technology unless an
+  equivalent description is confirmed to reach the control, such as a
+  managed limit id. Manual ARIA and custom contexts keep the count exposed.
+  See [MDN `aria-hidden`](https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Reference/Attributes/aria-hidden).
 - The provider of `NgxFieldIdentity` owns the field name. A `null` name means
   the name is unresolved; do not silently fall back to the control id.
   Wrappers expose the identity provider as a host directive. See

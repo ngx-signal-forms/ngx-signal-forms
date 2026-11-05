@@ -60,6 +60,21 @@ The `set*` writers stay `@internal` and stay stripped from the published `.d.ts`
 
 **Make `hintIds` stay `readonly string[]` and add `hasPublishedHints`.** Rejected for the same reason, and because it leaves the misleading `[]` default in place for anyone who reads only the array.
 
+## Planned feedback-ID composition refactor
+
+The [feedback-ID composition specification](../specs/feedback-id-composition.md)
+records the direction agreed on 2026-11-05. Implementation is pending; the
+accepted shadowing decision above remains unchanged.
+
+Character-count limit IDs already travel inside the flat hint channel. Shared
+composition must preserve that boundary: `null` permits registry fallback,
+`[]` suppresses registered hints and counts, and a published non-empty list
+remains authoritative in its supplied order. Do not append registered counts
+through a separate path or infer feedback kinds from ID suffixes.
+
+The planned refactor adds no identity channel or publication flag. A separate
+count channel would require a separately agreed contract change.
+
 ## Related
 
 - [ADR-0007](0007-warning-display-timing-cascade.md) — the independence of the error and warning cascades, which this ADR must preserve per channel.

@@ -56,8 +56,7 @@ export interface NgxSignalFormFieldContext {
    * still readable. `NgxFormFieldCharacterCount` reads this signal because
    * it does the opposite — it hides its own visible "n/max" text once a
    * limit description exists to replace it — and hiding that text without a
-   * working link would silence the count for assistive technology (issue
-   * #499 hardening).
+   * working link would silence the count for assistive technology.
    *
    * Omitted by contexts that don't track control ARIA ownership. Callers
    * default to `false` when this is absent — a context that cannot confirm

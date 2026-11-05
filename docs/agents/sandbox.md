@@ -65,8 +65,16 @@ Ask for escalation per command. These always fail inside:
 
 `new-worktree.sh` puts the worktree in the sibling
 `ngx-signal-forms.worktrees/<branch>` folder, which the sandbox can write.
+Set `WORKTREE_ROOT` (and `WORKTREE_TOOL`, such as `claude` or `codex`) to use
+`$WORKTREE_ROOT/ngx-signal-forms/<tool>-<branch>` instead.
 A commit in a worktree with no `node_modules` fails with
 `Command "lint-staged" not found`.
+
+The workspace sets `virtualStoreType: global`, so every worktree's
+`node_modules` is a set of symlinks into the shared pnpm store
+(`pnpm store path`, under `links/`). A second worktree installs in seconds and
+adds little disk. CI turns the setting off. After pulling a change to it, delete
+`node_modules` and reinstall in each checkout.
 
 `browser-tests` is the maintainer's wrapper for Chromium, which cannot start
 in the sandbox. Never write a brief that forbids it.

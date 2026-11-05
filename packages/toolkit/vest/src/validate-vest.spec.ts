@@ -1421,11 +1421,13 @@ describe('validateVest', () => {
     };
     const suite: VestRunnableSuite<RunValue> = {
       run(value, fieldName) {
+        expect(
+          fieldName === undefined ? activeWholeSuiteRun : undefined,
+        ).toBeUndefined();
         if (fieldName === undefined) {
           // A queued whole-suite run may only begin after its predecessor has
           // settled. Focused runs intentionally remain immediate and supersede
           // the hand-rolled suite's prior active resolver.
-          expect(activeWholeSuiteRun).toBeUndefined();
           activeWholeSuiteRun = value.id;
           wholeSuiteStarts.push(value.id);
         } else {

@@ -7,8 +7,8 @@
 // `incomplete` to `'warn'` instead of the public default `'ignore'` (see
 // `a11y.ts`'s own doc on `IncompleteResultMode`). The toolkit's own test
 // suite wants every axe `incomplete` result surfaced for review; a consumer
-// importing the public entry point should see the exact pre-#501
-// zero-incomplete-noise behavior unless they opt in themselves.
+// importing the public entry point gets no incomplete-result noise unless
+// they opt in themselves.
 //
 // `findAlertContaining` lives here because only the toolkit's own specs use it.
 

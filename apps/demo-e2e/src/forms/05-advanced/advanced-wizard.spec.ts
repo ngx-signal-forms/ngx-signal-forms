@@ -718,9 +718,9 @@ test.describe('Advanced Wizard Demo', () => {
     const tripSection = page.locator('.review-section', {
       has: page.getByRole('heading', { name: /Trip Overview/ }),
     });
-    await expect(tripSection).toContainText(/1 destinations/);
-    await expect(tripSection).toContainText(/1 activities/);
-    await expect(tripSection).toContainText(/1 requirements/);
+    await expect(tripSection).toContainText(/1 destination\b/);
+    await expect(tripSection).toContainText(/1 activity\b/);
+    await expect(tripSection).toContainText(/1 requirement\b/);
 
     // Destinations detail
     const destinationsSection = page.locator('.review-section', {
@@ -729,7 +729,7 @@ test.describe('Advanced Wizard Demo', () => {
     await expect(destinationsSection).toContainText(/Japan|Tokyo/);
     await expect(destinationsSection).toContainText('Sushi Making');
     await expect(destinationsSection.locator('.badge')).toContainText(
-      /1 activities/,
+      /1 activity\b/,
     );
   });
 

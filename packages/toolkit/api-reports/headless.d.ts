@@ -1,21 +1,8 @@
-import * as _angular_core from '@angular/core';
-import { Signal, Injector } from '@angular/core';
-import { FieldTree, ValidationError } from '@angular/forms/signals';
-import { NgxReactiveOrStatic, ErrorDisplayStrategy, WarningDisplayStrategy, SubmittedStatus, ErrorReadableState, NgxSignalLike, ResolvedErrorDisplayStrategy, ResolvedWarningDisplayStrategy } from '@ngx-signal-forms/toolkit';
-import { ErrorMessageRegistry, FieldLabelResolver, ErrorDisplayStrategy as ErrorDisplayStrategy$1, WarningDisplayStrategy as WarningDisplayStrategy$1, SubmittedStatus as SubmittedStatus$1 } from './ngx-signal-forms-toolkit-core.js';
-export { AriaDescribedByBridge, AriaDescribedByFieldNameReader, AriaDescribedByPreservedIdsReader, AriaRequiredFieldState, BoundControlElementReader, CreateAriaDescribedByBridgeOptions, CreateAriaDescribedBySignalOptions, CreateFieldNameResolverOptions, CreateHintIdsSignalOptions, HintIdsFieldNameReader, HintIdsIdentityLike, HintIdsRegistryLike, HintIdsSignal, LabelForReader, createAriaDescribedByBridge, createAriaDescribedBySignal, createAriaInvalidSignal, createAriaRequiredSignal, createFieldNameResolver, createHintIdsSignal, humanizeFieldPath } from './ngx-signal-forms-toolkit-core.js';
-
-/**
- * Types and defaults for the character-count pair
- * (`NgxHeadlessCharacterCount` / `createCharacterCount`), both defined in
- * `character-count.ts`, which is the only file that imports this module
- * directly (everything else — `assistive/character-count.ts` included —
- * imports the re-exported names from `character-count.ts` or the public
- * `@ngx-signal-forms/toolkit/headless` barrel instead). Kept in its own file
- * to give these declarations one self-contained definition, separate from
- * the directive and the factory that consume them.
- */
-
+import * as i0 from "@angular/core";
+import { Injector, Signal } from "@angular/core";
+import { FieldTree, ValidationError } from "@angular/forms/signals";
+import { ErrorDisplayStrategy, ErrorReadableState, NgxReactiveOrStatic, NgxSignalLike, ResolvedErrorDisplayStrategy, ResolvedWarningDisplayStrategy, SubmittedStatus, WarningDisplayStrategy } from "@ngx-signal-forms/toolkit";
+import { AriaDescribedByBridge, AriaDescribedByFieldNameReader, AriaDescribedByPreservedIdsReader, AriaRequiredFieldState, BoundControlElementReader, CreateAriaDescribedByBridgeOptions, CreateAriaDescribedBySignalOptions, CreateFieldNameResolverOptions, CreateHintIdsSignalOptions, ErrorDisplayStrategy as ErrorDisplayStrategy$1, ErrorMessageRegistry, FieldLabelResolver, HintIdsFieldNameReader, HintIdsIdentityLike, HintIdsRegistryLike, HintIdsSignal, LabelForReader, SubmittedStatus as SubmittedStatus$1, WarningDisplayStrategy as WarningDisplayStrategy$1, createAriaDescribedByBridge, createAriaDescribedBySignal, createAriaInvalidSignal, createAriaRequiredSignal, createFieldNameResolver, createHintIdsSignal, humanizeFieldPath } from "./ngx-signal-forms-toolkit-core.js";
 /**
  * Value types supported by the character-count utilities.
  *
@@ -45,20 +32,18 @@ type CharacterCountLimitState = 'danger' | 'exceeded' | 'ok' | 'warning';
  *
  * @group Directives
  */
-declare const DEFAULT_WARNING_THRESHOLD = 0.8;
+export declare const DEFAULT_WARNING_THRESHOLD = 0.8;
 /**
  * Default danger threshold percentage.
  *
  * @group Directives
  */
-declare const DEFAULT_DANGER_THRESHOLD = 0.95;
+export declare const DEFAULT_DANGER_THRESHOLD = 0.95;
 /**
  * Character count state shared by `createCharacterCount()`,
  * `NgxHeadlessCharacterCount`, and `NgxFormFieldCharacterCount`.
  *
- * Replaces the former `CharacterCountResult` (factory) and
- * `CharacterCountStateSignals` (directive) types, which had identical
- * fields — one shared shape for one shared algorithm (issue #510).
+ * One shared shape for one shared algorithm.
  *
  * `resolvedMaxLength` is `null` when no limit is configured and none is
  * auto-detected from the field's `maxLength` validator — check `hasLimit`
@@ -69,65 +54,64 @@ declare const DEFAULT_DANGER_THRESHOLD = 0.95;
  * @group Directives
  */
 interface CharacterCountState {
-    /** Current value length. */
-    readonly currentLength: Signal<number>;
-    /** Resolved maximum length, or `null` when no limit applies. */
-    readonly resolvedMaxLength: Signal<number | null>;
-    /** Remaining characters until limit. `0` when no limit applies. */
-    readonly remaining: Signal<number>;
-    /** Current limit state. `'ok'` when no limit applies. */
-    readonly limitState: Signal<CharacterCountLimitState>;
-    /** Whether a limit is configured or auto-detected. */
-    readonly hasLimit: Signal<boolean>;
-    /** Whether the limit has been exceeded. `false` when no limit applies. */
-    readonly isExceeded: Signal<boolean>;
-    /** Percentage of limit used (0-100+). `0` when no limit applies. */
-    readonly percentUsed: Signal<number>;
+  /** Current value length. */
+  readonly currentLength: Signal<number>;
+  /** Resolved maximum length, or `null` when no limit applies. */
+  readonly resolvedMaxLength: Signal<number | null>;
+  /** Remaining characters until limit. `0` when no limit applies. */
+  readonly remaining: Signal<number>;
+  /** Current limit state. `'ok'` when no limit applies. */
+  readonly limitState: Signal<CharacterCountLimitState>;
+  /** Whether a limit is configured or auto-detected. */
+  readonly hasLimit: Signal<boolean>;
+  /** Whether the limit has been exceeded. `false` when no limit applies. */
+  readonly isExceeded: Signal<boolean>;
+  /** Percentage of limit used (0-100+). `0` when no limit applies. */
+  readonly percentUsed: Signal<number>;
 }
-
 /**
  * Options for creating character count signals.
  *
  * @group Reactive Primitives
  */
 interface CreateCharacterCountOptions {
-    /** Form field producing a {@link CharacterCountValue}. */
-    readonly field: FieldTree<CharacterCountValue>;
-    /**
-     * Maximum length for the character count.
-     *
-     * `0` and negative numbers count as an explicit limit too. They are real
-     * values, not "no limit" — see {@link createCharacterCount}'s non-positive
-     * `maxLength` handling. An explicit value, of any sign, always wins and
-     * blocks the `useValidatorMaxLength` fallback below.
-     *
-     * `undefined`, `null`, or omitting the option means "no explicit limit".
-     * See `useValidatorMaxLength` for the fallback that applies then.
-     */
-    readonly maxLength?: NgxReactiveOrStatic<number | null>;
-    /**
-     * Falls back to the field's own `maxLength` validator signal when
-     * `maxLength` resolves to no explicit limit. Only a present, positive
-     * validator value counts. Lets a caller auto-detect the limit from the
-     * form schema instead of passing an explicit `maxLength`.
-     *
-     * @default false
-     */
-    readonly useValidatorMaxLength?: boolean;
-    /** Warning threshold (0-1), default 0.8 */
-    readonly warningThreshold?: NgxReactiveOrStatic<number>;
-    /** Danger threshold (0-1), default 0.95 */
-    readonly dangerThreshold?: NgxReactiveOrStatic<number>;
-    /**
-     * Name reported in the unsupported-value-type dev warning, e.g.
-     * `[ngx-signal-forms] <component>: unsupported value type — …`. Lets a
-     * delegating caller (`NgxHeadlessCharacterCount`, `NgxFormFieldCharacterCount`)
-     * report its own name instead of `'createCharacterCount'`, since the
-     * message text is asserted in specs on both sides.
-     *
-     * @default 'createCharacterCount'
-     */
-    readonly component?: string;
+  /** Form field producing a {@link CharacterCountValue}. */
+  readonly field: FieldTree<CharacterCountValue>;
+  /**
+   * Maximum length for the character count.
+   *
+   * `0` and negative numbers count as an explicit limit too. They are real
+   * values, not "no limit" — see {@link createCharacterCount}'s non-positive
+   * `maxLength` handling. An explicit value, of any sign, always wins and
+   * blocks the `useValidatorMaxLength` fallback below.
+   *
+   * `undefined`, `null`, or omitting the option means "no explicit limit".
+   * See `useValidatorMaxLength` for the fallback that applies then.
+   */
+  readonly maxLength?: NgxReactiveOrStatic<number | null>;
+  /**
+   * Falls back to the field's own `maxLength` validator signal when
+   * `maxLength` resolves to no explicit limit. Only a present, positive
+   * validator value counts. Lets a caller auto-detect the limit from the
+   * form schema instead of passing an explicit `maxLength`.
+   *
+   * @default false
+   */
+  readonly useValidatorMaxLength?: boolean;
+  /** Warning threshold (0-1), default 0.8 */
+  readonly warningThreshold?: NgxReactiveOrStatic<number>;
+  /** Danger threshold (0-1), default 0.95 */
+  readonly dangerThreshold?: NgxReactiveOrStatic<number>;
+  /**
+   * Name reported in the unsupported-value-type dev warning, e.g.
+   * `[ngx-signal-forms] <component>: unsupported value type — …`. Lets a
+   * delegating caller (`NgxHeadlessCharacterCount`, `NgxFormFieldCharacterCount`)
+   * report its own name instead of `'createCharacterCount'`, since the
+   * message text is asserted in specs on both sides.
+   *
+   * @default 'createCharacterCount'
+   */
+  readonly component?: string;
 }
 /**
  * Creates character count signals for a form field.
@@ -160,7 +144,7 @@ interface CreateCharacterCountOptions {
  *
  * @group Reactive Primitives
  */
-declare function createCharacterCount(options: Readonly<CreateCharacterCountOptions>): CharacterCountState;
+export declare function createCharacterCount(options: Readonly<CreateCharacterCountOptions>): CharacterCountState;
 /**
  * Headless character count directive for form field length tracking.
  *
@@ -215,74 +199,94 @@ declare function createCharacterCount(options: Readonly<CreateCharacterCountOpti
  *
  * @group Directives
  */
-declare class NgxHeadlessCharacterCount implements CharacterCountState {
-    #private;
-    /**
-     * The form field to track character count.
-     */
-    readonly field: _angular_core.InputSignal<FieldTree<CharacterCountValue>>;
-    /**
-     * Maximum length for the character count.
-     */
-    readonly maxLength: _angular_core.InputSignal<number>;
-    /**
-     * Warning threshold as percentage (0-1). Default: 0.8 (80%).
-     */
-    readonly warningThreshold: _angular_core.InputSignal<number>;
-    /**
-     * Danger threshold as percentage (0-1). Default: 0.95 (95%).
-     */
-    readonly dangerThreshold: _angular_core.InputSignal<number>;
-    /**
-     * Current value length.
-     */
-    readonly currentLength: Signal<number>;
-    /**
-     * Resolved maximum length.
-     *
-     * The directive requires a `maxLength` input, so `createCharacterCount()`
-     * always resolves a real limit here — never `null`. Narrowed back to
-     * `Signal<number>`, unlike `CharacterCountState.resolvedMaxLength` (which
-     * is nullable for callers that allow no limit), so directive consumers
-     * see no type change from before `createCharacterCount()` started
-     * supporting an optional `maxLength`.
-     */
-    readonly resolvedMaxLength: Signal<number>;
-    /**
-     * Whether a limit is configured.
-     *
-     * The directive requires a `maxLength` input, so this always resolves to
-     * `true`. Retained as a signal for API symmetry with
-     * `createCharacterCount()` and for consumer templates that may swap
-     * directive/factory wiring.
-     */
-    readonly hasLimit: Signal<boolean>;
-    /**
-     * Remaining characters until limit.
-     */
-    readonly remaining: Signal<number>;
-    /**
-     * Percentage of limit used (0-100+).
-     *
-     * @see {@link createCharacterCount} for the non-positive `maxLength`
-     *   edge-case handling.
-     */
-    readonly percentUsed: Signal<number>;
-    /**
-     * Whether the limit has been exceeded.
-     */
-    readonly isExceeded: Signal<boolean>;
-    /**
-     * Current limit state based on thresholds (ok → warning → danger →
-     * exceeded).
-     *
-     * @see {@link createCharacterCount} for the threshold/edge-case algorithm.
-     */
-    readonly limitState: Signal<CharacterCountLimitState>;
-    static ɵfac: _angular_core.ɵɵFactoryDeclaration<NgxHeadlessCharacterCount, never>;
-    static ɵdir: _angular_core.ɵɵDirectiveDeclaration<NgxHeadlessCharacterCount, "[ngxHeadlessCharacterCount]", ["characterCount"], { "field": { "alias": "field"; "required": true; "isSignal": true; }; "maxLength": { "alias": "maxLength"; "required": true; "isSignal": true; }; "warningThreshold": { "alias": "warningThreshold"; "required": false; "isSignal": true; }; "dangerThreshold": { "alias": "dangerThreshold"; "required": false; "isSignal": true; }; }, {}, never, never, true, never>;
+export declare class NgxHeadlessCharacterCount implements CharacterCountState {
+  #private;
+  /**
+   * The form field to track character count.
+   */
+  readonly field: import("@angular/core").InputSignal<FieldTree<CharacterCountValue>>;
+  /**
+   * Maximum length for the character count.
+   */
+  readonly maxLength: import("@angular/core").InputSignal<number>;
+  /**
+   * Warning threshold as percentage (0-1). Default: 0.8 (80%).
+   */
+  readonly warningThreshold: import("@angular/core").InputSignal<number>;
+  /**
+   * Danger threshold as percentage (0-1). Default: 0.95 (95%).
+   */
+  readonly dangerThreshold: import("@angular/core").InputSignal<number>;
+  /**
+   * Current value length.
+   */
+  readonly currentLength: Signal<number>;
+  /**
+   * Resolved maximum length.
+   *
+   * The directive requires a `maxLength` input, so `createCharacterCount()`
+   * always resolves a real limit here — never `null`. Narrowed back to
+   * `Signal<number>`, unlike `CharacterCountState.resolvedMaxLength` (which
+   * is nullable for callers that allow no limit), so directive consumers
+   * see no type change from before `createCharacterCount()` started
+   * supporting an optional `maxLength`.
+   */
+  readonly resolvedMaxLength: Signal<number>;
+  /**
+   * Whether a limit is configured.
+   *
+   * The directive requires a `maxLength` input, so this always resolves to
+   * `true`. Retained as a signal for API symmetry with
+   * `createCharacterCount()` and for consumer templates that may swap
+   * directive/factory wiring.
+   */
+  readonly hasLimit: Signal<boolean>;
+  /**
+   * Remaining characters until limit.
+   */
+  readonly remaining: Signal<number>;
+  /**
+   * Percentage of limit used (0-100+).
+   *
+   * @see {@link createCharacterCount} for the non-positive `maxLength`
+   *   edge-case handling.
+   */
+  readonly percentUsed: Signal<number>;
+  /**
+   * Whether the limit has been exceeded.
+   */
+  readonly isExceeded: Signal<boolean>;
+  /**
+   * Current limit state based on thresholds (ok → warning → danger →
+   * exceeded).
+   *
+   * @see {@link createCharacterCount} for the threshold/edge-case algorithm.
+   */
+  readonly limitState: Signal<CharacterCountLimitState>;
+  static ɵfac: i0.ɵɵFactoryDeclaration<NgxHeadlessCharacterCount, never>;
+  static ɵdir: i0.ɵɵDirectiveDeclaration<NgxHeadlessCharacterCount, "[ngxHeadlessCharacterCount]", ["characterCount"], {
+    "field": {
+      "alias": "field";
+      "required": true;
+      "isSignal": true;
+    };
+    "maxLength": {
+      "alias": "maxLength";
+      "required": true;
+      "isSignal": true;
+    };
+    "warningThreshold": {
+      "alias": "warningThreshold";
+      "required": false;
+      "isSignal": true;
+    };
+    "dangerThreshold": {
+      "alias": "dangerThreshold";
+      "required": false;
+      "isSignal": true;
+    };
+  }, {}, never, never, true, never>;
 }
-
 /**
  * A resolved error with kind and message.
  *
@@ -294,8 +298,8 @@ declare class NgxHeadlessCharacterCount implements CharacterCountState {
  * @group Directives
  */
 interface ResolvedError {
-    readonly kind: string;
-    readonly message: string;
+  readonly kind: string;
+  readonly message: string;
 }
 /**
  * Deduplicate validation errors by kind + message combination.
@@ -319,54 +323,53 @@ interface ResolvedError {
  *
  * @group Utility Functions
  */
-declare function dedupeValidationErrors(errors: readonly ValidationError[]): ValidationError[];
-
+export declare function dedupeValidationErrors(errors: readonly ValidationError[]): ValidationError[];
 /**
  * Options for creating error state signals.
  *
  * @group Reactive Primitives
  */
 interface CreateErrorStateOptions<TValue = unknown> {
-    /** Form field FieldTree */
-    readonly field: FieldTree<TValue>;
-    /** Field name for ID generation. `null` disables ID generation. */
-    readonly fieldName: NgxReactiveOrStatic<string | null>;
-    /**
-     * Error display strategy override.
-     *
-     * Resolution order: this option (when not `'inherit'`) → ambient
-     * `NGX_SIGNAL_FORM_CONTEXT.errorStrategy` → the global
-     * `NGX_SIGNAL_FORMS_CONFIG.defaultErrorStrategy` → `'on-touch'`. This
-     * mirrors `NgxHeadlessFieldset.resolvedStrategy`'s cascade so config-level
-     * defaults apply consistently across headless surfaces even outside a
-     * form context.
-     */
-    readonly strategy?: NgxReactiveOrStatic<ErrorDisplayStrategy>;
-    /**
-     * Warning display strategy override, independent of {@link strategy}.
-     *
-     * Resolution order: this option (when not `'inherit'`) → ambient
-     * `NGX_SIGNAL_FORM_CONTEXT.warningStrategy` → the global
-     * `NGX_SIGNAL_FORMS_CONFIG.defaultWarningStrategy` → `'on-touch'`. No tier
-     * consults `defaultErrorStrategy`, so an ambient `'on-submit'` meant for
-     * blocking errors never silently gates warnings (ADR-0007).
-     */
-    readonly warningStrategy?: NgxReactiveOrStatic<WarningDisplayStrategy>;
-    /**
-     * Submitted status override.
-     *
-     * Resolution order: this option (when not `undefined`) → ambient
-     * `NGX_SIGNAL_FORM_CONTEXT.submittedStatus` → `undefined`.
-     */
-    readonly submittedStatus?: NgxReactiveOrStatic<SubmittedStatus | undefined>;
-    /**
-     * Optional injector for use outside an Angular injection context (e.g.
-     * unit tests, `runInInjectionContext` wrappers). When omitted the
-     * function must be called inside a DI context. Mirrors the `injector`
-     * escape hatch on the sibling factories `createErrorVisibility()` and
-     * `createErrorMessageSignal()`.
-     */
-    readonly injector?: Injector;
+  /** Form field FieldTree */
+  readonly field: FieldTree<TValue>;
+  /** Field name for ID generation. `null` disables ID generation. */
+  readonly fieldName: NgxReactiveOrStatic<string | null>;
+  /**
+   * Error display strategy override.
+   *
+   * Resolution order: this option (when not `'inherit'`) → ambient
+   * `NGX_SIGNAL_FORM_CONTEXT.errorStrategy` → the global
+   * `NGX_SIGNAL_FORMS_CONFIG.defaultErrorStrategy` → `'on-touch'`. This
+   * mirrors `NgxHeadlessFieldset.resolvedStrategy`'s cascade so config-level
+   * defaults apply consistently across headless surfaces even outside a
+   * form context.
+   */
+  readonly strategy?: NgxReactiveOrStatic<ErrorDisplayStrategy>;
+  /**
+   * Warning display strategy override, independent of {@link strategy}.
+   *
+   * Resolution order: this option (when not `'inherit'`) → ambient
+   * `NGX_SIGNAL_FORM_CONTEXT.warningStrategy` → the global
+   * `NGX_SIGNAL_FORMS_CONFIG.defaultWarningStrategy` → `'on-touch'`. No tier
+   * consults `defaultErrorStrategy`, so an ambient `'on-submit'` meant for
+   * blocking errors never silently gates warnings (ADR-0007).
+   */
+  readonly warningStrategy?: NgxReactiveOrStatic<WarningDisplayStrategy>;
+  /**
+   * Submitted status override.
+   *
+   * Resolution order: this option (when not `undefined`) → ambient
+   * `NGX_SIGNAL_FORM_CONTEXT.submittedStatus` → `undefined`.
+   */
+  readonly submittedStatus?: NgxReactiveOrStatic<SubmittedStatus | undefined>;
+  /**
+   * Optional injector for use outside an Angular injection context (e.g.
+   * unit tests, `runInInjectionContext` wrappers). When omitted the
+   * function must be called inside a DI context. Mirrors the `injector`
+   * escape hatch on the sibling factories `createErrorVisibility()` and
+   * `createErrorMessageSignal()`.
+   */
+  readonly injector?: Injector;
 }
 /**
  * Error state signals returned by createErrorState.
@@ -374,24 +377,24 @@ interface CreateErrorStateOptions<TValue = unknown> {
  * @group Reactive Primitives
  */
 interface ErrorStateResult {
-    /** Whether to show errors */
-    readonly shouldShowErrors: Signal<boolean>;
-    /** Whether to show warnings */
-    readonly shouldShowWarnings: Signal<boolean>;
-    /** Raw blocking errors */
-    readonly errors: Signal<readonly ValidationError[]>;
-    /** Raw warning errors */
-    readonly warnings: Signal<readonly ValidationError[]>;
-    /** Whether there are blocking errors */
-    readonly hasErrors: Signal<boolean>;
-    /** Whether there are warnings */
-    readonly hasWarnings: Signal<boolean>;
-    /** Generated error region ID, or `null` when no fieldName is resolvable */
-    readonly errorId: Signal<string | null>;
-    /** Generated warning region ID, or `null` when no fieldName is resolvable */
-    readonly warningId: Signal<string | null>;
-    /** Resolved field name */
-    readonly fieldName: Signal<string | null>;
+  /** Whether to show errors */
+  readonly shouldShowErrors: Signal<boolean>;
+  /** Whether to show warnings */
+  readonly shouldShowWarnings: Signal<boolean>;
+  /** Raw blocking errors */
+  readonly errors: Signal<readonly ValidationError[]>;
+  /** Raw warning errors */
+  readonly warnings: Signal<readonly ValidationError[]>;
+  /** Whether there are blocking errors */
+  readonly hasErrors: Signal<boolean>;
+  /** Whether there are warnings */
+  readonly hasWarnings: Signal<boolean>;
+  /** Generated error region ID, or `null` when no fieldName is resolvable */
+  readonly errorId: Signal<string | null>;
+  /** Generated warning region ID, or `null` when no fieldName is resolvable */
+  readonly warningId: Signal<string | null>;
+  /** Resolved field name */
+  readonly fieldName: Signal<string | null>;
 }
 /**
  * Creates error state signals for a form field.
@@ -452,7 +455,7 @@ interface ErrorStateResult {
  *
  * @group Reactive Primitives
  */
-declare function createErrorState<TValue = unknown>(options: Readonly<CreateErrorStateOptions<TValue>>): ErrorStateResult;
+export declare function createErrorState<TValue = unknown>(options: Readonly<CreateErrorStateOptions<TValue>>): ErrorStateResult;
 /**
  * Which message channels a headless template renders: blocking `'errors'`,
  * non-blocking `'warnings'`, or `'both'`.
@@ -468,26 +471,26 @@ type NgxHeadlessErrorChannels = 'both' | 'errors' | 'warnings';
  * @group Directives
  */
 interface ErrorStateSignals {
-    /** Whether to show errors based on the current strategy */
-    readonly shouldShowErrors: Signal<boolean>;
-    /** Whether to show warnings based on the current strategy */
-    readonly shouldShowWarnings: Signal<boolean>;
-    /** Raw blocking errors from the field */
-    readonly errors: Signal<readonly ValidationError[]>;
-    /** Raw warning errors from the field */
-    readonly warnings: Signal<readonly ValidationError[]>;
-    /** Resolved errors with messages */
-    readonly resolvedErrors: Signal<readonly ResolvedError[]>;
-    /** Resolved warnings with messages */
-    readonly resolvedWarnings: Signal<readonly ResolvedError[]>;
-    /** Whether the field has blocking errors */
-    readonly hasErrors: Signal<boolean>;
-    /** Whether the field has warnings */
-    readonly hasWarnings: Signal<boolean>;
-    /** Generated error ID for aria-describedby, or `null` when no fieldName is resolvable */
-    readonly errorId: Signal<string | null>;
-    /** Generated warning ID for aria-describedby, or `null` when no fieldName is resolvable */
-    readonly warningId: Signal<string | null>;
+  /** Whether to show errors based on the current strategy */
+  readonly shouldShowErrors: Signal<boolean>;
+  /** Whether to show warnings based on the current strategy */
+  readonly shouldShowWarnings: Signal<boolean>;
+  /** Raw blocking errors from the field */
+  readonly errors: Signal<readonly ValidationError[]>;
+  /** Raw warning errors from the field */
+  readonly warnings: Signal<readonly ValidationError[]>;
+  /** Resolved errors with messages */
+  readonly resolvedErrors: Signal<readonly ResolvedError[]>;
+  /** Resolved warnings with messages */
+  readonly resolvedWarnings: Signal<readonly ResolvedError[]>;
+  /** Whether the field has blocking errors */
+  readonly hasErrors: Signal<boolean>;
+  /** Whether the field has warnings */
+  readonly hasWarnings: Signal<boolean>;
+  /** Generated error ID for aria-describedby, or `null` when no fieldName is resolvable */
+  readonly errorId: Signal<string | null>;
+  /** Generated warning ID for aria-describedby, or `null` when no fieldName is resolvable */
+  readonly warningId: Signal<string | null>;
 }
 /**
  * Headless error state directive for custom error display implementations.
@@ -536,133 +539,167 @@ interface ErrorStateSignals {
  *
  * @group Directives
  */
-declare class NgxHeadlessErrorState<TValue = unknown> implements ErrorStateSignals {
-    #private;
-    /**
-     * The Signal Forms field to track error state for.
-     *
-     * Optional when `errorsOverride` is provided (direct-errors mode) or when
-     * the host component calls `connectFieldState()`. When neither is supplied
-     * the directive renders as an empty, always-visible shell — the host
-     * component controls visibility via its own conditions.
-     */
-    readonly field: _angular_core.InputSignal<FieldTree<TValue> | undefined>;
-    /**
-     * The field name for generating error/warning IDs.
-     * Pass `null` (or omit) to disable ID generation (e.g. when the field name
-     * cannot be resolved yet).
-     *
-     * @default null
-     */
-    readonly fieldName: _angular_core.InputSignal<string | null>;
-    /**
-     * Error display strategy override.
-     * If undefined, inherits from form context or defaults to 'on-touch'.
-     */
-    readonly strategy: _angular_core.InputSignal<ErrorDisplayStrategy | undefined>;
-    /**
-     * Warning display strategy override, independent of {@link strategy}.
-     *
-     * Cascade: this input → form context `warningStrategy()` →
-     * `NGX_SIGNAL_FORMS_CONFIG.defaultWarningStrategy` → `'on-touch'`. No tier
-     * consults `defaultErrorStrategy`.
-     */
-    readonly warningStrategy: _angular_core.InputSignal<WarningDisplayStrategy | undefined>;
-    /**
-     * Form submission status (optional).
-     * Only needed for 'on-submit' strategy.
-     */
-    readonly submittedStatus: _angular_core.InputSignal<SubmittedStatus | undefined>;
-    /**
-     * Pre-aggregated errors that replace field-based error extraction.
-     *
-     * Accepts a plain array or a reactive source (`Signal<…>` / `() => …`) —
-     * unwrapped internally via {@link unwrapValue}. When provided, errors and
-     * warnings are derived from this value rather than from `field`. Useful
-     * for fieldsets or custom components that compute their own error lists
-     * (e.g. `NgxFormFieldset.filteredErrorsSignal`). In this mode `field` is
-     * not required and `shouldShowErrors` always returns `true` (the caller
-     * controls visibility through `hasErrors`/`hasWarnings`).
-     */
-    readonly errorsOverride: _angular_core.InputSignal<NgxReactiveOrStatic<readonly ValidationError[]> | undefined>;
-    /**
-     * Which channels the template renders. `NgxHeadlessErrorState` renders no
-     * DOM, so it cannot tell. Set `'warnings'` when the template has no error
-     * element, or `'errors'` when it has no warning element. The directive then
-     * does not put the id of the missing element in the control's
-     * `aria-describedby`, so no id points to nothing (WCAG 1.3.1).
-     *
-     * `aria-invalid` still follows the real error state. This input changes
-     * which ids auto-ARIA links. It does not change when messages show or what
-     * `shouldShowErrors()` and `shouldShowWarnings()` return.
-     *
-     * @default 'both'
-     */
-    readonly renders: _angular_core.InputSignal<NgxHeadlessErrorChannels>;
-    /**
-     * Resolved submission status after applying form-context defaults.
-     * Exposed so that host components composing this directive via
-     * `hostDirectives` can reuse the resolved value without re-calling
-     * `resolveSubmittedStatusFromContext`.
-     */
-    readonly resolvedSubmittedStatus: Signal<SubmittedStatus | undefined>;
-    readonly errorId: Signal<string | null>;
-    readonly warningId: Signal<string | null>;
-    readonly errors: Signal<readonly ValidationError[]>;
-    readonly warnings: Signal<readonly ValidationError[]>;
-    readonly hasErrors: Signal<boolean>;
-    readonly hasWarnings: Signal<boolean>;
-    /**
-     * Whether errors should be shown based on strategy.
-     *
-     * Returns `true` unconditionally in two cases:
-     * 1. **Direct-errors mode** — `errorsOverride` is bound. Strategy gating
-     *    is intentionally bypassed here: callers using `errorsOverride` (e.g.
-     *    `NgxFormFieldset.filteredErrorsSignal`) already aggregate and gate
-     *    their own error lists upstream, so a second strategy filter here
-     *    would double-gate. Visibility is delegated to the caller via
-     *    `hasErrors`/`hasWarnings`.
-     * 2. **No field state available** — neither `field` nor a bridged value
-     *    via `connectFieldState()` is set. The host controls visibility
-     *    through its own template conditions.
-     *
-     * The bridge slot is checked by *value*, not by presence: host components
-     * that compose this directive via `hostDirectives` always call
-     * `connectFieldState()` in their constructor, so the slot is non-null
-     * even when the host's `[formField]` input is unbound.
-     */
-    readonly shouldShowErrors: Signal<boolean>;
-    /**
-     * Whether warnings should be shown, timed by {@link warningStrategy}'s own
-     * cascade rather than the blocking-error one.
-     *
-     * The two unconditional-`true` cases are the same as
-     * {@link shouldShowErrors}, and for the same reasons — direct-errors mode
-     * delegates gating upstream, and with no field state the host owns
-     * visibility. The strategy branch differs: it runs the warning cascade,
-     * gates on warning presence rather than `invalid()`, and stays `false`
-     * while a blocking error is visible on this field (ADR-0007).
-     */
-    readonly shouldShowWarnings: Signal<boolean>;
-    /**
-     * Resolved error messages using 3-tier priority.
-     */
-    readonly resolvedErrors: Signal<readonly ResolvedError[]>;
-    /**
-     * Resolved warning messages.
-     */
-    readonly resolvedWarnings: Signal<readonly ResolvedError[]>;
-    constructor();
-    static ɵfac: _angular_core.ɵɵFactoryDeclaration<NgxHeadlessErrorState<any>, never>;
-    static ɵdir: _angular_core.ɵɵDirectiveDeclaration<NgxHeadlessErrorState<any>, "[ngxHeadlessErrorState]", ["errorState"], { "field": { "alias": "field"; "required": false; "isSignal": true; }; "fieldName": { "alias": "fieldName"; "required": false; "isSignal": true; }; "strategy": { "alias": "strategy"; "required": false; "isSignal": true; }; "warningStrategy": { "alias": "warningStrategy"; "required": false; "isSignal": true; }; "submittedStatus": { "alias": "submittedStatus"; "required": false; "isSignal": true; }; "errorsOverride": { "alias": "errorsOverride"; "required": false; "isSignal": true; }; "renders": { "alias": "renders"; "required": false; "isSignal": true; }; }, {}, never, never, true, never>;
+export declare class NgxHeadlessErrorState<TValue = unknown> implements ErrorStateSignals {
+  #private;
+  /**
+   * The Signal Forms field to track error state for.
+   *
+   * Optional when `errorsOverride` is provided (direct-errors mode) or when
+   * the host component calls `connectFieldState()`. When neither is supplied
+   * the directive renders as an empty, always-visible shell — the host
+   * component controls visibility via its own conditions.
+   */
+  readonly field: import("@angular/core").InputSignal<FieldTree<TValue> | undefined>;
+  /**
+   * The field name for generating error/warning IDs.
+   * Pass `null` (or omit) to disable ID generation (e.g. when the field name
+   * cannot be resolved yet).
+   *
+   * @default null
+   */
+  readonly fieldName: import("@angular/core").InputSignal<string | null>;
+  /**
+   * Error display strategy override.
+   * If undefined, inherits from form context or defaults to 'on-touch'.
+   */
+  readonly strategy: import("@angular/core").InputSignal<ErrorDisplayStrategy | undefined>;
+  /**
+   * Warning display strategy override, independent of {@link strategy}.
+   *
+   * Cascade: this input → form context `warningStrategy()` →
+   * `NGX_SIGNAL_FORMS_CONFIG.defaultWarningStrategy` → `'on-touch'`. No tier
+   * consults `defaultErrorStrategy`.
+   */
+  readonly warningStrategy: import("@angular/core").InputSignal<WarningDisplayStrategy | undefined>;
+  /**
+   * Form submission status (optional).
+   * Only needed for 'on-submit' strategy.
+   */
+  readonly submittedStatus: import("@angular/core").InputSignal<SubmittedStatus | undefined>;
+  /**
+   * Pre-aggregated errors that replace field-based error extraction.
+   *
+   * Accepts a plain array or a reactive source (`Signal<…>` / `() => …`) —
+   * unwrapped internally via {@link unwrapValue}. When provided, errors and
+   * warnings are derived from this value rather than from `field`. Useful
+   * for fieldsets or custom components that compute their own error lists
+   * (e.g. `NgxFormFieldset.filteredErrorsSignal`). In this mode `field` is
+   * not required and `shouldShowErrors` always returns `true` (the caller
+   * controls visibility through `hasErrors`/`hasWarnings`).
+   */
+  readonly errorsOverride: import("@angular/core").InputSignal<NgxReactiveOrStatic<readonly ValidationError[]> | undefined>;
+  /**
+   * Which channels the template renders. `NgxHeadlessErrorState` renders no
+   * DOM, so it cannot tell. Set `'warnings'` when the template has no error
+   * element, or `'errors'` when it has no warning element. The directive then
+   * does not put the id of the missing element in the control's
+   * `aria-describedby`, so no id points to nothing (WCAG 1.3.1).
+   *
+   * `aria-invalid` still follows the real error state. This input changes
+   * which ids auto-ARIA links. It does not change when messages show or what
+   * `shouldShowErrors()` and `shouldShowWarnings()` return.
+   *
+   * @default 'both'
+   */
+  readonly renders: import("@angular/core").InputSignal<NgxHeadlessErrorChannels>;
+  /**
+   * Resolved submission status after applying form-context defaults.
+   * Exposed so that host components composing this directive via
+   * `hostDirectives` can reuse the resolved value without re-calling
+   * `resolveSubmittedStatusFromContext`.
+   */
+  readonly resolvedSubmittedStatus: Signal<SubmittedStatus | undefined>;
+  readonly errorId: Signal<string | null>;
+  readonly warningId: Signal<string | null>;
+  readonly errors: Signal<readonly ValidationError[]>;
+  readonly warnings: Signal<readonly ValidationError[]>;
+  readonly hasErrors: Signal<boolean>;
+  readonly hasWarnings: Signal<boolean>;
+  /**
+   * Whether errors should be shown based on strategy.
+   *
+   * Returns `true` unconditionally in two cases:
+   * 1. **Direct-errors mode** — `errorsOverride` is bound. Strategy gating
+   *    is intentionally bypassed here: callers using `errorsOverride` (e.g.
+   *    `NgxFormFieldset.filteredErrorsSignal`) already aggregate and gate
+   *    their own error lists upstream, so a second strategy filter here
+   *    would double-gate. Visibility is delegated to the caller via
+   *    `hasErrors`/`hasWarnings`.
+   * 2. **No field state available** — neither `field` nor a bridged value
+   *    via `connectFieldState()` is set. The host controls visibility
+   *    through its own template conditions.
+   *
+   * The bridge slot is checked by *value*, not by presence: host components
+   * that compose this directive via `hostDirectives` always call
+   * `connectFieldState()` in their constructor, so the slot is non-null
+   * even when the host's `[formField]` input is unbound.
+   */
+  readonly shouldShowErrors: Signal<boolean>;
+  /**
+   * Whether warnings should be shown, timed by {@link warningStrategy}'s own
+   * cascade rather than the blocking-error one.
+   *
+   * The two unconditional-`true` cases are the same as
+   * {@link shouldShowErrors}, and for the same reasons — direct-errors mode
+   * delegates gating upstream, and with no field state the host owns
+   * visibility. The strategy branch differs: it runs the warning cascade,
+   * gates on warning presence rather than `invalid()`, and stays `false`
+   * while a blocking error is visible on this field (ADR-0007).
+   */
+  readonly shouldShowWarnings: Signal<boolean>;
+  /**
+   * Resolved error messages using 3-tier priority.
+   */
+  readonly resolvedErrors: Signal<readonly ResolvedError[]>;
+  /**
+   * Resolved warning messages.
+   */
+  readonly resolvedWarnings: Signal<readonly ResolvedError[]>;
+  constructor();
+  static ɵfac: i0.ɵɵFactoryDeclaration<NgxHeadlessErrorState<any>, never>;
+  static ɵdir: i0.ɵɵDirectiveDeclaration<NgxHeadlessErrorState<any>, "[ngxHeadlessErrorState]", ["errorState"], {
+    "field": {
+      "alias": "field";
+      "required": false;
+      "isSignal": true;
+    };
+    "fieldName": {
+      "alias": "fieldName";
+      "required": false;
+      "isSignal": true;
+    };
+    "strategy": {
+      "alias": "strategy";
+      "required": false;
+      "isSignal": true;
+    };
+    "warningStrategy": {
+      "alias": "warningStrategy";
+      "required": false;
+      "isSignal": true;
+    };
+    "submittedStatus": {
+      "alias": "submittedStatus";
+      "required": false;
+      "isSignal": true;
+    };
+    "errorsOverride": {
+      "alias": "errorsOverride";
+      "required": false;
+      "isSignal": true;
+    };
+    "renders": {
+      "alias": "renders";
+      "required": false;
+      "isSignal": true;
+    };
+  }, {}, never, never, true, never>;
 }
-
 /**
- * Error-summary mapping utilities, split out of `utilities.ts` (issue
- * #354): turning a raw `ValidationError` into a focusable, labeled,
+ * Error-summary mapping utilities: turning a raw `ValidationError` into a focusable, labeled,
  * message-resolved entry ready for an error-summary list. The aggregation
  * *pipeline* that calls these (`createErrorSummaryEntries`) lives in
- * `error-summary.ts`, next to `NgxHeadlessErrorSummary` (issue #512) — this
+ * `error-summary.ts`, next to `NgxHeadlessErrorSummary` — this
  * module holds only the per-error mapping functions it composes.
  */
 /**
@@ -671,42 +708,41 @@ declare class NgxHeadlessErrorState<TValue = unknown> implements ErrorStateSigna
  * @group Utility Functions
  */
 interface ErrorSummaryEntryData {
-    /**
-     * Identity of this entry, unique within one summary list. Use it as the
-     * `@for` track key. Treat the value as opaque.
-     *
-     * Built from the field's unique name (not its label), the error `kind`
-     * and the raw validator message. The message is in the key because one
-     * field can keep two errors of one kind with different messages. A
-     * message that comes from the error-message registry does not change the
-     * key. An entry with
-     * no bound field never shares a key with a bound one.
-     */
-    readonly key: string;
-    readonly kind: string;
-    readonly message: string;
-    /** Display label for the field. Not unique: use {@link key} for identity. */
-    readonly fieldName: string;
-    readonly focus: () => void;
-    /**
-     * Whether {@link focus} can move focus to a real control.
-     *
-     * `false` for an error with no bound field (e.g. a custom validator that
-     * does not run through `error.fieldTree()`, or a field whose state does
-     * not expose `focusBoundControl()`). A consumer should render such an
-     * entry as plain text — a link or button that calls a no-op `focus()`
-     * looks interactive but does nothing, which fails WCAG 4.1.2.
-     *
-     * **Limit**: this only checks that `focusBoundControl` exists as a
-     * function, not that it actually moves focus. A real field whose control
-     * was never bound in the DOM (no `[formField]` rendered for it) still has
-     * a working `fieldTree()`/`focusBoundControl()`, so `canFocus` is `true`
-     * even though calling `focus()` is a silent no-op in that case. This
-     * `false` path only catches errors with no `fieldTree` at all.
-     */
-    readonly canFocus: boolean;
+  /**
+   * Identity of this entry, unique within one summary list. Use it as the
+   * `@for` track key. Treat the value as opaque.
+   *
+   * Built from the field's unique name (not its label), the error `kind`
+   * and the raw validator message. The message is in the key because one
+   * field can keep two errors of one kind with different messages. A
+   * message that comes from the error-message registry does not change the
+   * key. An entry with
+   * no bound field never shares a key with a bound one.
+   */
+  readonly key: string;
+  readonly kind: string;
+  readonly message: string;
+  /** Display label for the field. Not unique: use {@link key} for identity. */
+  readonly fieldName: string;
+  readonly focus: () => void;
+  /**
+   * Whether {@link focus} can move focus to a real control.
+   *
+   * `false` for an error with no bound field (e.g. a custom validator that
+   * does not run through `error.fieldTree()`, or a field whose state does
+   * not expose `focusBoundControl()`). A consumer should render such an
+   * entry as plain text — a link or button that calls a no-op `focus()`
+   * looks interactive but does nothing, which fails WCAG 4.1.2.
+   *
+   * **Limit**: this only checks that `focusBoundControl` exists as a
+   * function, not that it actually moves focus. A real field whose control
+   * was never bound in the DOM (no `[formField]` rendered for it) still has
+   * a working `fieldTree()`/`focusBoundControl()`, so `canFocus` is `true`
+   * even though calling `focus()` is a silent no-op in that case. This
+   * `false` path only catches errors with no `fieldTree` at all.
+   */
+  readonly canFocus: boolean;
 }
-
 /**
  * A resolved error-summary entry with kind, message, and focus capability.
  *
@@ -726,16 +762,16 @@ type ErrorSummaryEntry = ErrorSummaryEntryData;
  * @group Reactive Primitives
  */
 interface CreateErrorSummaryEntriesOptions {
-    /** Reactive reader for the root field state (from `formTree()()`). */
-    readonly fieldState: NgxSignalLike<unknown>;
-    /** Pre-resolved blocking-error visibility. */
-    readonly showErrors: NgxSignalLike<boolean>;
-    /** Pre-resolved warning visibility, timed independently of {@link showErrors}. */
-    readonly showWarnings: NgxSignalLike<boolean>;
-    /** Error message registry for 3-tier message resolution. */
-    readonly errorMessages?: Readonly<ErrorMessageRegistry> | null;
-    /** Optional field-label resolver; falls back to `humanizeFieldPath`. */
-    readonly labelResolver?: FieldLabelResolver | null;
+  /** Reactive reader for the root field state (from `formTree()()`). */
+  readonly fieldState: NgxSignalLike<unknown>;
+  /** Pre-resolved blocking-error visibility. */
+  readonly showErrors: NgxSignalLike<boolean>;
+  /** Pre-resolved warning visibility, timed independently of {@link showErrors}. */
+  readonly showWarnings: NgxSignalLike<boolean>;
+  /** Error message registry for 3-tier message resolution. */
+  readonly errorMessages?: Readonly<ErrorMessageRegistry> | null;
+  /** Optional field-label resolver; falls back to `humanizeFieldPath`. */
+  readonly labelResolver?: FieldLabelResolver | null;
 }
 /**
  * Error-summary entry-mapping result.
@@ -743,26 +779,25 @@ interface CreateErrorSummaryEntriesOptions {
  * @group Reactive Primitives
  */
 interface ErrorSummaryEntriesResult {
-    /** Resolved blocking error entries ready for rendering. */
-    readonly entries: Signal<readonly ErrorSummaryEntryData[]>;
-    /** Resolved warning entries. */
-    readonly warningEntries: Signal<readonly ErrorSummaryEntryData[]>;
-    /** Whether there are any blocking errors. */
-    readonly hasErrors: Signal<boolean>;
-    /** Whether there are any warnings. */
-    readonly hasWarnings: Signal<boolean>;
-    /** `showErrors() && hasErrors()`. */
-    readonly shouldShow: Signal<boolean>;
-    /** `showWarnings() && hasWarnings()`. */
-    readonly shouldShowWarnings: Signal<boolean>;
+  /** Resolved blocking error entries ready for rendering. */
+  readonly entries: Signal<readonly ErrorSummaryEntryData[]>;
+  /** Resolved warning entries. */
+  readonly warningEntries: Signal<readonly ErrorSummaryEntryData[]>;
+  /** Whether there are any blocking errors. */
+  readonly hasErrors: Signal<boolean>;
+  /** Whether there are any warnings. */
+  readonly hasWarnings: Signal<boolean>;
+  /** `showErrors() && hasErrors()`. */
+  readonly shouldShow: Signal<boolean>;
+  /** `showWarnings() && hasWarnings()`. */
+  readonly shouldShowWarnings: Signal<boolean>;
 }
 /**
  * Builds the `errorSummary()` entry-mapping pipeline: read → filter out
  * non-interactive (hidden/disabled) fields → dedupe per field → split by
  * kind → map to focusable {@link ErrorSummaryEntryData} entries.
  *
- * Extracted from `NgxHeadlessErrorSummary`, which used to inline this
- * pipeline (issue #351). Deliberately pure — no `inject()` calls — so it is
+ * `NgxHeadlessErrorSummary` delegates to this pipeline. Deliberately pure — no `inject()` calls — so it is
  * testable with plain signal mocks and no `TestBed`, matching the other
  * headless factories (`createFieldStateFlags`, `createCharacterCount`,
  * `createFieldsetAggregation`).
@@ -789,51 +824,51 @@ interface ErrorSummaryEntriesResult {
  *
  * @group Reactive Primitives
  */
-declare function createErrorSummaryEntries(options: Readonly<CreateErrorSummaryEntriesOptions>): ErrorSummaryEntriesResult;
+export declare function createErrorSummaryEntries(options: Readonly<CreateErrorSummaryEntriesOptions>): ErrorSummaryEntriesResult;
 /**
  * Error summary signals exposed by the headless directive.
  *
  * @group Directives
  */
 interface ErrorSummarySignals {
-    /** Resolved blocking error entries ready for rendering */
-    readonly entries: Signal<readonly ErrorSummaryEntry[]>;
-    /** Resolved warning entries */
-    readonly warningEntries: Signal<readonly ErrorSummaryEntry[]>;
-    /** Whether there are any blocking errors */
-    readonly hasErrors: Signal<boolean>;
-    /** Whether there are any warnings */
-    readonly hasWarnings: Signal<boolean>;
-    /** Whether the summary should be visible based on strategy */
-    readonly shouldShow: Signal<boolean>;
-    /**
-     * Whether the warning list should be visible, timed by
-     * {@link resolvedWarningStrategy}.
-     *
-     * Independent of {@link shouldShow} in both directions: a warnings-only
-     * form has `hasErrors() === false`, so `shouldShow()` never gates
-     * `warningEntries()`, and the warning cascade never consults the
-     * blocking-error strategy (ADR-0007). Consumers rendering
-     * `warningEntries()` should gate on this signal instead of `shouldShow()`.
-     */
-    readonly shouldShowWarnings: Signal<boolean>;
-    /**
-     * The fully-resolved error display strategy: explicit `strategy` input →
-     * form context → `'on-touch'` default. Consumers that need to distinguish
-     * a submit-driven appearance (e.g. to decide whether to move focus) from
-     * an on-touch/immediate one should read this rather than the raw
-     * `strategy` input, which may be `undefined`.
-     */
-    readonly resolvedStrategy: Signal<ResolvedErrorDisplayStrategy>;
-    /**
-     * The fully-resolved warning display strategy, independent of
-     * {@link resolvedStrategy}: `warningStrategy` input → form context
-     * `warningStrategy()` → `NGX_SIGNAL_FORMS_CONFIG.defaultWarningStrategy` →
-     * `'on-touch'`.
-     */
-    readonly resolvedWarningStrategy: Signal<ResolvedWarningDisplayStrategy>;
-    /** Focus the control for the first error entry */
-    readonly focusFirst: () => void;
+  /** Resolved blocking error entries ready for rendering */
+  readonly entries: Signal<readonly ErrorSummaryEntry[]>;
+  /** Resolved warning entries */
+  readonly warningEntries: Signal<readonly ErrorSummaryEntry[]>;
+  /** Whether there are any blocking errors */
+  readonly hasErrors: Signal<boolean>;
+  /** Whether there are any warnings */
+  readonly hasWarnings: Signal<boolean>;
+  /** Whether the summary should be visible based on strategy */
+  readonly shouldShow: Signal<boolean>;
+  /**
+   * Whether the warning list should be visible, timed by
+   * {@link resolvedWarningStrategy}.
+   *
+   * Independent of {@link shouldShow} in both directions: a warnings-only
+   * form has `hasErrors() === false`, so `shouldShow()` never gates
+   * `warningEntries()`, and the warning cascade never consults the
+   * blocking-error strategy (ADR-0007). Consumers rendering
+   * `warningEntries()` should gate on this signal instead of `shouldShow()`.
+   */
+  readonly shouldShowWarnings: Signal<boolean>;
+  /**
+   * The fully-resolved error display strategy: explicit `strategy` input →
+   * form context → `'on-touch'` default. Consumers that need to distinguish
+   * a submit-driven appearance (e.g. to decide whether to move focus) from
+   * an on-touch/immediate one should read this rather than the raw
+   * `strategy` input, which may be `undefined`.
+   */
+  readonly resolvedStrategy: Signal<ResolvedErrorDisplayStrategy>;
+  /**
+   * The fully-resolved warning display strategy, independent of
+   * {@link resolvedStrategy}: `warningStrategy` input → form context
+   * `warningStrategy()` → `NGX_SIGNAL_FORMS_CONFIG.defaultWarningStrategy` →
+   * `'on-touch'`.
+   */
+  readonly resolvedWarningStrategy: Signal<ResolvedWarningDisplayStrategy>;
+  /** Focus the control for the first error entry */
+  readonly focusFirst: () => void;
 }
 /**
  * Headless error-summary directive for form-level validation summaries.
@@ -885,71 +920,91 @@ interface ErrorSummarySignals {
  *
  * @group Directives
  */
-declare class NgxHeadlessErrorSummary implements ErrorSummarySignals {
-    #private;
-    /**
-     * The root form FieldTree to aggregate errors from.
-     */
-    readonly formTree: _angular_core.InputSignal<FieldTree<unknown>>;
-    /**
-     * Error display strategy override.
-     * If undefined, inherits from form context or defaults to 'on-touch'.
-     */
-    readonly strategy: _angular_core.InputSignal<ErrorDisplayStrategy | undefined>;
-    /**
-     * Warning display strategy override, independent of {@link strategy}
-     * (which only governs blocking errors).
-     *
-     * Cascade: this input → the ambient form context's `warningStrategy()` →
-     * `NGX_SIGNAL_FORMS_CONFIG.defaultWarningStrategy` → `'on-touch'`. No tier
-     * consults `defaultErrorStrategy`, so a form that defers its errors to
-     * submit still surfaces summary warnings on touch (ADR-0007).
-     *
-     * @default `'on-touch'`
-     */
-    readonly warningStrategy: _angular_core.InputSignal<WarningDisplayStrategy | undefined>;
-    /**
-     * Form submission status (optional).
-     * If not provided, inherits from form context.
-     */
-    readonly submittedStatus: _angular_core.InputSignal<SubmittedStatus | undefined>;
-    /**
-     * Resolution order: `strategy` input (when not `'inherit'`) → ambient
-     * form context → the global `NGX_SIGNAL_FORMS_CONFIG.defaultErrorStrategy`
-     * → `'on-touch'`. Mirrors `NgxHeadlessFieldset.resolvedStrategy`'s cascade
-     * so standalone usage (no `[ngxSignalForm]` host) behaves consistently
-     * regardless of which headless surface a consumer reaches for.
-     */
-    readonly resolvedStrategy: Signal<ResolvedErrorDisplayStrategy>;
-    /**
-     * Resolved warning display strategy — the warning cascade, run with the
-     * same tiers `NgxHeadlessFieldset.resolvedWarningStrategy` uses so
-     * `'inherit'` gives one answer across headless surfaces.
-     */
-    readonly resolvedWarningStrategy: Signal<ResolvedWarningDisplayStrategy>;
-    readonly entries: Signal<readonly ErrorSummaryEntryData[]>;
-    readonly warningEntries: Signal<readonly ErrorSummaryEntryData[]>;
-    readonly hasErrors: Signal<boolean>;
-    readonly hasWarnings: Signal<boolean>;
-    readonly shouldShow: Signal<boolean>;
-    readonly shouldShowWarnings: Signal<boolean>;
-    readonly focusFirst: () => void;
-    static ɵfac: _angular_core.ɵɵFactoryDeclaration<NgxHeadlessErrorSummary, never>;
-    static ɵdir: _angular_core.ɵɵDirectiveDeclaration<NgxHeadlessErrorSummary, "[ngxHeadlessErrorSummary]", ["errorSummary"], { "formTree": { "alias": "formTree"; "required": true; "isSignal": true; }; "strategy": { "alias": "strategy"; "required": false; "isSignal": true; }; "warningStrategy": { "alias": "warningStrategy"; "required": false; "isSignal": true; }; "submittedStatus": { "alias": "submittedStatus"; "required": false; "isSignal": true; }; }, {}, never, never, true, never>;
+export declare class NgxHeadlessErrorSummary implements ErrorSummarySignals {
+  #private;
+  /**
+   * The root form FieldTree to aggregate errors from.
+   */
+  readonly formTree: import("@angular/core").InputSignal<FieldTree<unknown>>;
+  /**
+   * Error display strategy override.
+   * If undefined, inherits from form context or defaults to 'on-touch'.
+   */
+  readonly strategy: import("@angular/core").InputSignal<ErrorDisplayStrategy | undefined>;
+  /**
+   * Warning display strategy override, independent of {@link strategy}
+   * (which only governs blocking errors).
+   *
+   * Cascade: this input → the ambient form context's `warningStrategy()` →
+   * `NGX_SIGNAL_FORMS_CONFIG.defaultWarningStrategy` → `'on-touch'`. No tier
+   * consults `defaultErrorStrategy`, so a form that defers its errors to
+   * submit still surfaces summary warnings on touch (ADR-0007).
+   *
+   * @default `'on-touch'`
+   */
+  readonly warningStrategy: import("@angular/core").InputSignal<WarningDisplayStrategy | undefined>;
+  /**
+   * Form submission status (optional).
+   * If not provided, inherits from form context.
+   */
+  readonly submittedStatus: import("@angular/core").InputSignal<SubmittedStatus | undefined>;
+  /**
+   * Resolution order: `strategy` input (when not `'inherit'`) → ambient
+   * form context → the global `NGX_SIGNAL_FORMS_CONFIG.defaultErrorStrategy`
+   * → `'on-touch'`. Mirrors `NgxHeadlessFieldset.resolvedStrategy`'s cascade
+   * so standalone usage (no `[ngxSignalForm]` host) behaves consistently
+   * regardless of which headless surface a consumer reaches for.
+   */
+  readonly resolvedStrategy: Signal<ResolvedErrorDisplayStrategy>;
+  /**
+   * Resolved warning display strategy — the warning cascade, run with the
+   * same tiers `NgxHeadlessFieldset.resolvedWarningStrategy` uses so
+   * `'inherit'` gives one answer across headless surfaces.
+   */
+  readonly resolvedWarningStrategy: Signal<ResolvedWarningDisplayStrategy>;
+  readonly entries: Signal<readonly ErrorSummaryEntryData[]>;
+  readonly warningEntries: Signal<readonly ErrorSummaryEntryData[]>;
+  readonly hasErrors: Signal<boolean>;
+  readonly hasWarnings: Signal<boolean>;
+  readonly shouldShow: Signal<boolean>;
+  readonly shouldShowWarnings: Signal<boolean>;
+  readonly focusFirst: () => void;
+  static ɵfac: i0.ɵɵFactoryDeclaration<NgxHeadlessErrorSummary, never>;
+  static ɵdir: i0.ɵɵDirectiveDeclaration<NgxHeadlessErrorSummary, "[ngxHeadlessErrorSummary]", ["errorSummary"], {
+    "formTree": {
+      "alias": "formTree";
+      "required": true;
+      "isSignal": true;
+    };
+    "strategy": {
+      "alias": "strategy";
+      "required": false;
+      "isSignal": true;
+    };
+    "warningStrategy": {
+      "alias": "warningStrategy";
+      "required": false;
+      "isSignal": true;
+    };
+    "submittedStatus": {
+      "alias": "submittedStatus";
+      "required": false;
+      "isSignal": true;
+    };
+  }, {}, never, never, true, never>;
 }
-
 /**
  * Field name state signals exposed by the headless directive.
  *
  * @group Directives
  */
 interface FieldNameStateSignals {
-    /** Resolved field name from input or override; `null` when no name is resolvable. */
-    readonly resolvedFieldName: Signal<string | null>;
-    /** Generated error region ID; `null` when no field name is resolvable. */
-    readonly errorId: Signal<string | null>;
-    /** Generated warning region ID; `null` when no field name is resolvable. */
-    readonly warningId: Signal<string | null>;
+  /** Resolved field name from input or override; `null` when no name is resolvable. */
+  readonly resolvedFieldName: Signal<string | null>;
+  /** Generated error region ID; `null` when no field name is resolvable. */
+  readonly errorId: Signal<string | null>;
+  /** Generated warning region ID; `null` when no field name is resolvable. */
+  readonly warningId: Signal<string | null>;
 }
 /**
  * Headless field name directive for label and ID resolution.
@@ -1012,40 +1067,45 @@ interface FieldNameStateSignals {
  *
  * @group Directives
  */
-declare class NgxHeadlessFieldName implements FieldNameStateSignals {
-    #private;
-    /**
-     * The field name to use for ID generation.
-     * If not provided, uses the host element `id`.
-     */
-    readonly fieldName: _angular_core.InputSignal<string | undefined>;
-    /**
-     * Resolved field name.
-     *
-     * Tier 1 (explicit input) → tier 2 (bound-control id) of the toolkit's
-     * canonical field-name cascade — this directive is attached directly to
-     * the control, so it never needs tier 3 (inherited context). See
-     * {@link resolveFieldNameFromCandidates} for the full cascade.
-     *
-     * Returns `null` when neither a non-empty `fieldName` input nor a
-     * non-empty host `id` is available. A `console.error` is emitted in
-     * dev mode (once) to flag the misconfiguration — consumers should
-     * gate ARIA wiring on a non-null value rather than producing unstable
-     * IDs like `"-error"`.
-     */
-    readonly resolvedFieldName: Signal<string | null>;
-    /**
-     * Generated error region ID, or `null` when no field name is resolvable.
-     */
-    readonly errorId: Signal<string | null>;
-    /**
-     * Generated warning region ID, or `null` when no field name is resolvable.
-     */
-    readonly warningId: Signal<string | null>;
-    static ɵfac: _angular_core.ɵɵFactoryDeclaration<NgxHeadlessFieldName, never>;
-    static ɵdir: _angular_core.ɵɵDirectiveDeclaration<NgxHeadlessFieldName, "[ngxHeadlessFieldName]", ["fieldName"], { "fieldName": { "alias": "fieldName"; "required": false; "isSignal": true; }; }, {}, never, never, true, never>;
+export declare class NgxHeadlessFieldName implements FieldNameStateSignals {
+  #private;
+  /**
+   * The field name to use for ID generation.
+   * If not provided, uses the host element `id`.
+   */
+  readonly fieldName: import("@angular/core").InputSignal<string | undefined>;
+  /**
+   * Resolved field name.
+   *
+   * Tier 1 (explicit input) → tier 2 (bound-control id) of the toolkit's
+   * canonical field-name cascade — this directive is attached directly to
+   * the control, so it never needs tier 3 (inherited context). See
+   * {@link resolveFieldNameFromCandidates} for the full cascade.
+   *
+   * Returns `null` when neither a non-empty `fieldName` input nor a
+   * non-empty host `id` is available. A `console.error` is emitted in
+   * dev mode (once) to flag the misconfiguration — consumers should
+   * gate ARIA wiring on a non-null value rather than producing unstable
+   * IDs like `"-error"`.
+   */
+  readonly resolvedFieldName: Signal<string | null>;
+  /**
+   * Generated error region ID, or `null` when no field name is resolvable.
+   */
+  readonly errorId: Signal<string | null>;
+  /**
+   * Generated warning region ID, or `null` when no field name is resolvable.
+   */
+  readonly warningId: Signal<string | null>;
+  static ɵfac: i0.ɵɵFactoryDeclaration<NgxHeadlessFieldName, never>;
+  static ɵdir: i0.ɵɵDirectiveDeclaration<NgxHeadlessFieldName, "[ngxHeadlessFieldName]", ["fieldName"], {
+    "fieldName": {
+      "alias": "fieldName";
+      "required": false;
+      "isSignal": true;
+    };
+  }, {}, never, never, true, never>;
 }
-
 /**
  * Options for {@link createFieldsetAggregation}.
  *
@@ -1059,22 +1119,22 @@ declare class NgxHeadlessFieldName implements FieldNameStateSignals {
  * @group Reactive Primitives
  */
 interface CreateFieldsetAggregationOptions {
-    /** Reactive reader for the fieldset's own field state (from `field()()`). */
-    readonly fieldState: NgxSignalLike<unknown>;
-    /**
-     * Explicit field-list override. `null`/omitted means "not provided" —
-     * aggregate `fieldState`'s own errors. See `NgxHeadlessFieldset.fields`
-     * for the "not provided" vs "explicitly empty" distinction this preserves.
-     */
-    readonly fields?: NgxReactiveOrStatic<readonly FieldTree<unknown>[] | null>;
-    /** Whether to aggregate nested field errors (`errorSummary()`) instead of direct ones (`errors()`). */
-    readonly includeNestedErrors?: NgxReactiveOrStatic<boolean>;
-    /** Pre-resolved blocking-error visibility (from the caller's own visibility seam call). */
-    readonly showErrors: NgxSignalLike<boolean>;
-    /** Pre-resolved warning visibility, timed independently of {@link showErrors}. */
-    readonly showWarnings: NgxSignalLike<boolean>;
-    /** Error message registry for 3-tier message resolution. */
-    readonly errorMessages?: Readonly<ErrorMessageRegistry> | null;
+  /** Reactive reader for the fieldset's own field state (from `field()()`). */
+  readonly fieldState: NgxSignalLike<unknown>;
+  /**
+   * Explicit field-list override. `null`/omitted means "not provided" —
+   * aggregate `fieldState`'s own errors. See `NgxHeadlessFieldset.fields`
+   * for the "not provided" vs "explicitly empty" distinction this preserves.
+   */
+  readonly fields?: NgxReactiveOrStatic<readonly FieldTree<unknown>[] | null>;
+  /** Whether to aggregate nested field errors (`errorSummary()`) instead of direct ones (`errors()`). */
+  readonly includeNestedErrors?: NgxReactiveOrStatic<boolean>;
+  /** Pre-resolved blocking-error visibility (from the caller's own visibility seam call). */
+  readonly showErrors: NgxSignalLike<boolean>;
+  /** Pre-resolved warning visibility, timed independently of {@link showErrors}. */
+  readonly showWarnings: NgxSignalLike<boolean>;
+  /** Error message registry for 3-tier message resolution. */
+  readonly errorMessages?: Readonly<ErrorMessageRegistry> | null;
 }
 /**
  * Fieldset error/warning aggregation result.
@@ -1082,29 +1142,28 @@ interface CreateFieldsetAggregationOptions {
  * @group Reactive Primitives
  */
 interface FieldsetAggregationResult {
-    /** Aggregated and deduplicated blocking errors. */
-    readonly aggregatedErrors: Signal<readonly ValidationError[]>;
-    /** Aggregated and deduplicated warnings. */
-    readonly aggregatedWarnings: Signal<readonly ValidationError[]>;
-    /** {@link aggregatedErrors}, resolved to display messages. */
-    readonly resolvedErrors: Signal<readonly ResolvedError[]>;
-    /** {@link aggregatedWarnings}, resolved to display messages. */
-    readonly resolvedWarnings: Signal<readonly ResolvedError[]>;
-    /** Whether there are blocking errors. */
-    readonly hasErrors: Signal<boolean>;
-    /** Whether there are warnings. */
-    readonly hasWarnings: Signal<boolean>;
-    /** `showErrors() && hasErrors()`. */
-    readonly shouldShowErrors: Signal<boolean>;
-    /** `showWarnings() && hasWarnings()`. */
-    readonly shouldShowWarnings: Signal<boolean>;
+  /** Aggregated and deduplicated blocking errors. */
+  readonly aggregatedErrors: Signal<readonly ValidationError[]>;
+  /** Aggregated and deduplicated warnings. */
+  readonly aggregatedWarnings: Signal<readonly ValidationError[]>;
+  /** {@link aggregatedErrors}, resolved to display messages. */
+  readonly resolvedErrors: Signal<readonly ResolvedError[]>;
+  /** {@link aggregatedWarnings}, resolved to display messages. */
+  readonly resolvedWarnings: Signal<readonly ResolvedError[]>;
+  /** Whether there are blocking errors. */
+  readonly hasErrors: Signal<boolean>;
+  /** Whether there are warnings. */
+  readonly hasWarnings: Signal<boolean>;
+  /** `showErrors() && hasErrors()`. */
+  readonly shouldShowErrors: Signal<boolean>;
+  /** `showWarnings() && hasWarnings()`. */
+  readonly shouldShowWarnings: Signal<boolean>;
 }
 /**
  * Aggregates, deduplicates, and resolves field/warning errors for a
  * fieldset-shaped surface.
  *
- * Extracted from `NgxHeadlessFieldset`, which used to inline this pipeline
- * (issue #351). Deliberately pure — no `inject()` calls — so it is testable
+ * `NgxHeadlessFieldset` delegates to this pipeline. Deliberately pure — no `inject()` calls — so it is testable
  * with plain signal mocks and no `TestBed`, matching the other headless
  * factories (`createFieldStateFlags`, `createCharacterCount`). Visibility
  * timing is NOT resolved here; callers pass already-resolved `showErrors`/
@@ -1133,57 +1192,57 @@ interface FieldsetAggregationResult {
  *
  * @group Reactive Primitives
  */
-declare function createFieldsetAggregation(options: Readonly<CreateFieldsetAggregationOptions>): FieldsetAggregationResult;
+export declare function createFieldsetAggregation(options: Readonly<CreateFieldsetAggregationOptions>): FieldsetAggregationResult;
 /**
  * Fieldset state signals exposed by the headless directive.
  *
  * @group Directives
  */
 interface FieldsetStateSignals {
-    /** Aggregated and deduplicated errors from all fields */
-    readonly aggregatedErrors: Signal<readonly ValidationError[]>;
-    /** Aggregated and deduplicated warnings from all fields */
-    readonly aggregatedWarnings: Signal<readonly ValidationError[]>;
-    /**
-     * {@link aggregatedErrors}, resolved to display messages via the same
-     * 3-tier priority (validator message → `NGX_ERROR_MESSAGES` registry →
-     * default) as `NgxHeadlessErrorState.resolvedErrors`. Framework-default
-     * errors (e.g. `required(path.x)` with no `message` option) have an
-     * `undefined` `ValidationError.message` — reach for this instead of
-     * rendering `error.message` directly.
-     */
-    readonly resolvedErrors: Signal<readonly ResolvedError[]>;
-    /** {@link aggregatedWarnings}, resolved the same way as {@link resolvedErrors}. */
-    readonly resolvedWarnings: Signal<readonly ResolvedError[]>;
-    /** Whether the fieldset has blocking errors */
-    readonly hasErrors: Signal<boolean>;
-    /** Whether the fieldset has warnings */
-    readonly hasWarnings: Signal<boolean>;
-    /** Whether to show errors based on strategy */
-    readonly shouldShowErrors: Signal<boolean>;
-    /** Whether to show warnings based on {@link resolvedWarningStrategy} */
-    readonly shouldShowWarnings: Signal<boolean>;
-    /**
-     * Resolved error display strategy. Always a concrete strategy
-     * (`'immediate'`, `'on-touch'`, or `'on-submit'`) — `'inherit'` is
-     * resolved against the form context / config default before exposure.
-     */
-    readonly resolvedStrategy: Signal<ResolvedErrorDisplayStrategy>;
-    /**
-     * Resolved warning display strategy, independent of {@link resolvedStrategy}
-     * (which only governs blocking errors). Always a concrete strategy.
-     */
-    readonly resolvedWarningStrategy: Signal<ResolvedWarningDisplayStrategy>;
-    /** Resolved submitted status (from input override, form context, or default) */
-    readonly resolvedSubmittedStatus: Signal<SubmittedStatus>;
-    /** Fieldset validation state flags */
-    readonly isInvalid: Signal<boolean>;
-    readonly isValid: Signal<boolean>;
-    readonly isTouched: Signal<boolean>;
-    readonly isDirty: Signal<boolean>;
-    readonly isPending: Signal<boolean>;
-    /** Resolved fieldset ID */
-    readonly resolvedFieldsetId: Signal<string>;
+  /** Aggregated and deduplicated errors from all fields */
+  readonly aggregatedErrors: Signal<readonly ValidationError[]>;
+  /** Aggregated and deduplicated warnings from all fields */
+  readonly aggregatedWarnings: Signal<readonly ValidationError[]>;
+  /**
+   * {@link aggregatedErrors}, resolved to display messages via the same
+   * 3-tier priority (validator message → `NGX_ERROR_MESSAGES` registry →
+   * default) as `NgxHeadlessErrorState.resolvedErrors`. Framework-default
+   * errors (e.g. `required(path.x)` with no `message` option) have an
+   * `undefined` `ValidationError.message` — reach for this instead of
+   * rendering `error.message` directly.
+   */
+  readonly resolvedErrors: Signal<readonly ResolvedError[]>;
+  /** {@link aggregatedWarnings}, resolved the same way as {@link resolvedErrors}. */
+  readonly resolvedWarnings: Signal<readonly ResolvedError[]>;
+  /** Whether the fieldset has blocking errors */
+  readonly hasErrors: Signal<boolean>;
+  /** Whether the fieldset has warnings */
+  readonly hasWarnings: Signal<boolean>;
+  /** Whether to show errors based on strategy */
+  readonly shouldShowErrors: Signal<boolean>;
+  /** Whether to show warnings based on {@link resolvedWarningStrategy} */
+  readonly shouldShowWarnings: Signal<boolean>;
+  /**
+   * Resolved error display strategy. Always a concrete strategy
+   * (`'immediate'`, `'on-touch'`, or `'on-submit'`) — `'inherit'` is
+   * resolved against the form context / config default before exposure.
+   */
+  readonly resolvedStrategy: Signal<ResolvedErrorDisplayStrategy>;
+  /**
+   * Resolved warning display strategy, independent of {@link resolvedStrategy}
+   * (which only governs blocking errors). Always a concrete strategy.
+   */
+  readonly resolvedWarningStrategy: Signal<ResolvedWarningDisplayStrategy>;
+  /** Resolved submitted status (from input override, form context, or default) */
+  readonly resolvedSubmittedStatus: Signal<SubmittedStatus>;
+  /** Fieldset validation state flags */
+  readonly isInvalid: Signal<boolean>;
+  readonly isValid: Signal<boolean>;
+  readonly isTouched: Signal<boolean>;
+  readonly isDirty: Signal<boolean>;
+  readonly isPending: Signal<boolean>;
+  /** Resolved fieldset ID */
+  readonly resolvedFieldsetId: Signal<string>;
 }
 /**
  * Headless fieldset directive for aggregated error state across field groups.
@@ -1237,140 +1296,174 @@ interface FieldsetStateSignals {
  *
  * @group Directives
  */
-declare class NgxHeadlessFieldset<TFieldset = unknown> implements FieldsetStateSignals {
-    #private;
-    /**
-     * The primary fieldset field from Signal Forms.
-     */
-    readonly field: _angular_core.InputSignal<FieldTree<TFieldset>>;
-    /**
-     * Optional explicit list of fields to aggregate errors from.
-     *
-     * `null` (default/unbound) means "not provided" — the fieldset aggregates
-     * its own field's errors (via `errorSummary()`/`errors()`, gated by
-     * {@link includeNestedErrors}). An explicitly bound empty array (`[]`) is
-     * a distinct, intentional state — "aggregate nothing" — for consumers that
-     * dynamically compute the field list and it can legitimately become
-     * empty; it does not fall back to the fieldset's own errors.
-     */
-    readonly fields: _angular_core.InputSignal<readonly FieldTree<unknown>[] | null>;
-    /**
-     * Unique identifier for the fieldset.
-     */
-    readonly fieldsetId: _angular_core.InputSignal<string | undefined>;
-    /**
-     * Error display strategy override.
-     * If undefined, inherits from form context or defaults to 'on-touch'.
-     */
-    readonly strategy: _angular_core.InputSignal<ErrorDisplayStrategy | undefined>;
-    /**
-     * Warning display strategy override, independent of {@link strategy}
-     * (which only governs blocking errors). Mirrors the contract established
-     * by `NgxFormFieldWrapper.warningStrategy` /
-     * `NgxFormFieldError.warningStrategy`.
-     *
-     * Resolves through the warning cascade, which parallels {@link strategy}'s
-     * cascade but never reaches into the error channel:
-     *
-     * 1. this input, when set and not `'inherit'`
-     * 2. the ambient form context's `warningStrategy()`
-     * 3. `NGX_SIGNAL_FORMS_CONFIG.defaultWarningStrategy`
-     * 4. `'on-touch'`
-     *
-     * No tier consults `defaultErrorStrategy`, so an ambient `'on-submit'`
-     * meant for blocking errors never silently gates warnings.
-     *
-     * @default `'on-touch'`
-     */
-    readonly warningStrategy: _angular_core.InputSignal<WarningDisplayStrategy | undefined>;
-    /**
-     * Form submission status override.
-     * If not provided, inherits from form context.
-     */
-    readonly submittedStatus: _angular_core.InputSignal<SubmittedStatus | undefined>;
-    /**
-     * Whether to include nested field errors in the aggregated display.
-     *
-     * - `false` (default): Surface direct group-level errors via `errors()`.
-     *   Matches the styled `NgxFormFieldset` default so composing the
-     *   directive via `hostDirectives` keeps behavior identical. Use this
-     *   when nested fields display their own errors (avoids duplication).
-     * - `true`: Aggregate all errors via `errorSummary()`, including nested
-     *   field errors. Use this when nested fields do not display their own
-     *   errors (plain `<input>` without a wrapper).
-     *
-     * @default false
-     */
-    readonly includeNestedErrors: _angular_core.InputSignalWithTransform<boolean, unknown>;
-    /**
-     * Resolved fieldset ID.
-     */
-    readonly resolvedFieldsetId: Signal<string>;
-    /**
-     * Resolved error display strategy.
-     */
-    readonly resolvedStrategy: Signal<ResolvedErrorDisplayStrategy>;
-    /**
-     * Resolved warning display strategy. Uses the full warning cascade:
-     * explicit input → form context warning strategy → config default →
-     * `'on-touch'`.
-     */
-    readonly resolvedWarningStrategy: Signal<ResolvedWarningDisplayStrategy>;
-    /**
-     * Resolved submitted status, exposed as a concrete {@link SubmittedStatus}
-     * on the public API. Falls back to `'unsubmitted'` when no explicit input
-     * is provided and no form context is available — this keeps standalone
-     * fieldsets (outside an `ngxSignalForm`) from surfacing errors under the
-     * `'on-submit'` strategy until the consumer wires submission explicitly.
-     *
-     * Note: `NgxHeadlessErrorSummary` preserves `undefined` in its
-     * internal computation; this directive narrows the surface to a concrete
-     * value because consumer templates typically bind the result directly.
-     */
-    readonly resolvedSubmittedStatus: Signal<SubmittedStatus>;
-    readonly aggregatedErrors: Signal<readonly ValidationError[]>;
-    readonly aggregatedWarnings: Signal<readonly ValidationError[]>;
-    /**
-     * {@link aggregatedErrors}, resolved to display messages. See the class
-     * doc's usage note for why this (not `error.message`) is the recommended
-     * rendering surface.
-     */
-    readonly resolvedErrors: Signal<readonly ResolvedError[]>;
-    /** {@link aggregatedWarnings}, resolved the same way as {@link resolvedErrors}. */
-    readonly resolvedWarnings: Signal<readonly ResolvedError[]>;
-    readonly hasErrors: Signal<boolean>;
-    readonly hasWarnings: Signal<boolean>;
-    /**
-     * Whether to show errors based on strategy.
-     */
-    readonly shouldShowErrors: Signal<boolean>;
-    /**
-     * Whether to show warnings, timed by {@link resolvedWarningStrategy}.
-     *
-     * **Independent of {@link shouldShowErrors}** — this directive used to
-     * suppress warnings outright whenever blocking errors were visible. That
-     * was inconsistent with `NgxHeadlessErrorSummary.shouldShowWarnings`
-     * (`error-summary.ts`), which never gates warning visibility on error
-     * presence because a summary aggregates across a whole subtree and a
-     * warnings-only region shouldn't have its `hasErrors() === false` case
-     * accidentally coupled to a sibling's blocking errors. Fieldsets aggregate
-     * the same way, so this directive now matches that contract: consumers
-     * that want "errors take visual priority" (e.g. a single message slot
-     * that can only render one category at a time, or CSS state classes)
-     * apply that priority themselves — see `NgxFormFieldset`'s
-     * `filteredErrorsSignal` and its `--warning` host class, which explicitly
-     * guard on `!shouldShowErrors()` for that reason.
-     */
-    readonly shouldShowWarnings: Signal<boolean>;
-    readonly isInvalid: Signal<boolean>;
-    readonly isValid: Signal<boolean>;
-    readonly isTouched: Signal<boolean>;
-    readonly isDirty: Signal<boolean>;
-    readonly isPending: Signal<boolean>;
-    static ɵfac: _angular_core.ɵɵFactoryDeclaration<NgxHeadlessFieldset<any>, never>;
-    static ɵdir: _angular_core.ɵɵDirectiveDeclaration<NgxHeadlessFieldset<any>, "[ngxHeadlessFieldset]", ["fieldset"], { "field": { "alias": "field"; "required": true; "isSignal": true; }; "fields": { "alias": "fields"; "required": false; "isSignal": true; }; "fieldsetId": { "alias": "fieldsetId"; "required": false; "isSignal": true; }; "strategy": { "alias": "strategy"; "required": false; "isSignal": true; }; "warningStrategy": { "alias": "warningStrategy"; "required": false; "isSignal": true; }; "submittedStatus": { "alias": "submittedStatus"; "required": false; "isSignal": true; }; "includeNestedErrors": { "alias": "includeNestedErrors"; "required": false; "isSignal": true; }; }, {}, never, never, true, never>;
+export declare class NgxHeadlessFieldset<TFieldset = unknown> implements FieldsetStateSignals {
+  #private;
+  /**
+   * The primary fieldset field from Signal Forms.
+   */
+  readonly field: import("@angular/core").InputSignal<FieldTree<TFieldset>>;
+  /**
+   * Optional explicit list of fields to aggregate errors from.
+   *
+   * `null` (default/unbound) means "not provided" — the fieldset aggregates
+   * its own field's errors (via `errorSummary()`/`errors()`, gated by
+   * {@link includeNestedErrors}). An explicitly bound empty array (`[]`) is
+   * a distinct, intentional state — "aggregate nothing" — for consumers that
+   * dynamically compute the field list and it can legitimately become
+   * empty; it does not fall back to the fieldset's own errors.
+   */
+  readonly fields: import("@angular/core").InputSignal<readonly FieldTree<unknown>[] | null>;
+  /**
+   * Unique identifier for the fieldset.
+   */
+  readonly fieldsetId: import("@angular/core").InputSignal<string | undefined>;
+  /**
+   * Error display strategy override.
+   * If undefined, inherits from form context or defaults to 'on-touch'.
+   */
+  readonly strategy: import("@angular/core").InputSignal<ErrorDisplayStrategy | undefined>;
+  /**
+   * Warning display strategy override, independent of {@link strategy}
+   * (which only governs blocking errors). Mirrors the contract established
+   * by `NgxFormFieldWrapper.warningStrategy` /
+   * `NgxFormFieldError.warningStrategy`.
+   *
+   * Resolves through the warning cascade, which parallels {@link strategy}'s
+   * cascade but never reaches into the error channel:
+   *
+   * 1. this input, when set and not `'inherit'`
+   * 2. the ambient form context's `warningStrategy()`
+   * 3. `NGX_SIGNAL_FORMS_CONFIG.defaultWarningStrategy`
+   * 4. `'on-touch'`
+   *
+   * No tier consults `defaultErrorStrategy`, so an ambient `'on-submit'`
+   * meant for blocking errors never silently gates warnings.
+   *
+   * @default `'on-touch'`
+   */
+  readonly warningStrategy: import("@angular/core").InputSignal<WarningDisplayStrategy | undefined>;
+  /**
+   * Form submission status override.
+   * If not provided, inherits from form context.
+   */
+  readonly submittedStatus: import("@angular/core").InputSignal<SubmittedStatus | undefined>;
+  /**
+   * Whether to include nested field errors in the aggregated display.
+   *
+   * - `false` (default): Surface direct group-level errors via `errors()`.
+   *   Matches the styled `NgxFormFieldset` default so composing the
+   *   directive via `hostDirectives` keeps behavior identical. Use this
+   *   when nested fields display their own errors (avoids duplication).
+   * - `true`: Aggregate all errors via `errorSummary()`, including nested
+   *   field errors. Use this when nested fields do not display their own
+   *   errors (plain `<input>` without a wrapper).
+   *
+   * @default false
+   */
+  readonly includeNestedErrors: import("@angular/core").InputSignalWithTransform<boolean, unknown>;
+  /**
+   * Resolved fieldset ID.
+   */
+  readonly resolvedFieldsetId: Signal<string>;
+  /**
+   * Resolved error display strategy.
+   */
+  readonly resolvedStrategy: Signal<ResolvedErrorDisplayStrategy>;
+  /**
+   * Resolved warning display strategy. Uses the full warning cascade:
+   * explicit input → form context warning strategy → config default →
+   * `'on-touch'`.
+   */
+  readonly resolvedWarningStrategy: Signal<ResolvedWarningDisplayStrategy>;
+  /**
+   * Resolved submitted status, exposed as a concrete {@link SubmittedStatus}
+   * on the public API. Falls back to `'unsubmitted'` when no explicit input
+   * is provided and no form context is available — this keeps standalone
+   * fieldsets (outside an `ngxSignalForm`) from surfacing errors under the
+   * `'on-submit'` strategy until the consumer wires submission explicitly.
+   *
+   * Note: `NgxHeadlessErrorSummary` preserves `undefined` in its
+   * internal computation; this directive narrows the surface to a concrete
+   * value because consumer templates typically bind the result directly.
+   */
+  readonly resolvedSubmittedStatus: Signal<SubmittedStatus>;
+  readonly aggregatedErrors: Signal<readonly ValidationError[]>;
+  readonly aggregatedWarnings: Signal<readonly ValidationError[]>;
+  /**
+   * {@link aggregatedErrors}, resolved to display messages. See the class
+   * doc's usage note for why this (not `error.message`) is the recommended
+   * rendering surface.
+   */
+  readonly resolvedErrors: Signal<readonly ResolvedError[]>;
+  /** {@link aggregatedWarnings}, resolved the same way as {@link resolvedErrors}. */
+  readonly resolvedWarnings: Signal<readonly ResolvedError[]>;
+  readonly hasErrors: Signal<boolean>;
+  readonly hasWarnings: Signal<boolean>;
+  /**
+   * Whether to show errors based on strategy.
+   */
+  readonly shouldShowErrors: Signal<boolean>;
+  /**
+   * Whether to show warnings, timed by {@link resolvedWarningStrategy}.
+   *
+   * **Independent of {@link shouldShowErrors}**, the same as
+   * `NgxHeadlessErrorSummary.shouldShowWarnings` (`error-summary.ts`),
+   * which never gates warning visibility on error
+   * presence because a summary aggregates across a whole subtree and a
+   * warnings-only region shouldn't have its `hasErrors() === false` case
+   * accidentally coupled to a sibling's blocking errors. Fieldsets aggregate
+   * the same way. Consumers
+   * that want "errors take visual priority" (e.g. a single message slot
+   * that can only render one category at a time, or CSS state classes)
+   * apply that priority themselves — see `NgxFormFieldset`'s
+   * `filteredErrorsSignal` and its `--warning` host class, which explicitly
+   * guard on `!shouldShowErrors()` for that reason.
+   */
+  readonly shouldShowWarnings: Signal<boolean>;
+  readonly isInvalid: Signal<boolean>;
+  readonly isValid: Signal<boolean>;
+  readonly isTouched: Signal<boolean>;
+  readonly isDirty: Signal<boolean>;
+  readonly isPending: Signal<boolean>;
+  static ɵfac: i0.ɵɵFactoryDeclaration<NgxHeadlessFieldset<any>, never>;
+  static ɵdir: i0.ɵɵDirectiveDeclaration<NgxHeadlessFieldset<any>, "[ngxHeadlessFieldset]", ["fieldset"], {
+    "field": {
+      "alias": "field";
+      "required": true;
+      "isSignal": true;
+    };
+    "fields": {
+      "alias": "fields";
+      "required": false;
+      "isSignal": true;
+    };
+    "fieldsetId": {
+      "alias": "fieldsetId";
+      "required": false;
+      "isSignal": true;
+    };
+    "strategy": {
+      "alias": "strategy";
+      "required": false;
+      "isSignal": true;
+    };
+    "warningStrategy": {
+      "alias": "warningStrategy";
+      "required": false;
+      "isSignal": true;
+    };
+    "submittedStatus": {
+      "alias": "submittedStatus";
+      "required": false;
+      "isSignal": true;
+    };
+    "includeNestedErrors": {
+      "alias": "includeNestedErrors";
+      "required": false;
+      "isSignal": true;
+    };
+  }, {}, never, never, true, never>;
 }
-
 /**
  * One resolved validation error, ready for rendering.
  *
@@ -1389,10 +1482,10 @@ declare class NgxHeadlessFieldset<TFieldset = unknown> implements FieldsetStateS
  * @group Reactive Primitives
  */
 interface ResolvedFieldError {
-    readonly kind: string;
-    readonly message: string;
-    readonly id: string;
-    readonly error: ValidationError;
+  readonly kind: string;
+  readonly message: string;
+  readonly id: string;
+  readonly error: ValidationError;
 }
 /**
  * Controls which subset of a field's errors `createErrorMessageSignal`
@@ -1413,75 +1506,75 @@ type IncludeWarningsOption = boolean | 'only';
  * @group Reactive Primitives
  */
 interface CreateErrorMessageSignalOptions {
-    /**
-     * Strip the `warn:` prefix from default messages for unknown kinds.
-     *
-     * Defaults to `true` because this primitive is display-oriented — users
-     * shouldn't see internal `warn:` prefixes leaking into rendered text.
-     * This is a small but deliberate divergence from
-     * {@link resolveValidationErrorMessage}, whose default is `false`
-     * (debugging-oriented).
-     *
-     * @default true
-     */
-    readonly stripWarningPrefix?: boolean;
-    /**
-     * Whether to include warnings in the resolved list.
-     *
-     * @default false
-     * @see {@link IncludeWarningsOption}
-     */
-    readonly includeWarnings?: IncludeWarningsOption;
-    /**
-     * Explicit error-message registry override.
-     *
-     * When provided, the primitive uses this signal **instead of** injecting
-     * `NGX_ERROR_MESSAGES`. Useful for tests, headless utilities, or call
-     * sites that need a different registry per usage. Reactive: changes are
-     * tracked.
-     */
-    readonly errorMessages?: Signal<ErrorMessageRegistry>;
-    /**
-     * Field name used to build per-error DOM IDs via
-     * {@link generateErrorId}. When omitted the primitive falls back to the
-     * field's own `name()` if the field state exposes one; otherwise IDs are
-     * built from the empty string (yielding `-error-{kind}`), which is rarely
-     * useful — supply `fieldName` explicitly when consumers care about
-     * `aria-describedby` wiring.
-     */
-    readonly fieldName?: string | Signal<string | null | undefined>;
-    /**
-     * Error display strategy override forwarded to {@link createErrorVisibility}.
-     *
-     * Static value or `Signal<ErrorDisplayStrategy | undefined>`. Omit to
-     * inherit from the form context (or fall back to `'on-touch'`).
-     */
-    readonly strategy?: ErrorDisplayStrategy$1 | Signal<ErrorDisplayStrategy$1 | undefined>;
-    /**
-     * Warning display strategy override forwarded to
-     * {@link createWarningVisibility}. Only affects the entries selected by
-     * {@link includeWarnings}.
-     *
-     * Static value or `Signal<WarningDisplayStrategy | undefined>`. Omit to
-     * inherit from the form context's `warningStrategy()`, then
-     * `NGX_SIGNAL_FORMS_CONFIG.defaultWarningStrategy`, then `'on-touch'`. No
-     * tier consults the blocking-error strategy (ADR-0007).
-     */
-    readonly warningStrategy?: WarningDisplayStrategy$1 | Signal<WarningDisplayStrategy$1 | undefined>;
-    /**
-     * Submission status override forwarded to both {@link createErrorVisibility}
-     * and {@link createWarningVisibility} — one status feeds both cascades.
-     *
-     * Only relevant for the `'on-submit'` strategy on either channel. Omit to
-     * inherit from the form context.
-     */
-    readonly submittedStatus?: SubmittedStatus$1 | Signal<SubmittedStatus$1 | undefined>;
-    /**
-     * Optional injector for use outside an Angular injection context (e.g.
-     * unit tests, `runInInjectionContext` wrappers). When omitted the
-     * function must be called inside a DI context.
-     */
-    readonly injector?: Injector;
+  /**
+   * Strip the `warn:` prefix from default messages for unknown kinds.
+   *
+   * Defaults to `true` because this primitive is display-oriented — users
+   * shouldn't see internal `warn:` prefixes leaking into rendered text.
+   * This is a small but deliberate divergence from
+   * {@link resolveValidationErrorMessage}, whose default is `false`
+   * (debugging-oriented).
+   *
+   * @default true
+   */
+  readonly stripWarningPrefix?: boolean;
+  /**
+   * Whether to include warnings in the resolved list.
+   *
+   * @default false
+   * @see {@link IncludeWarningsOption}
+   */
+  readonly includeWarnings?: IncludeWarningsOption;
+  /**
+   * Explicit error-message registry override.
+   *
+   * When provided, the primitive uses this signal **instead of** injecting
+   * `NGX_ERROR_MESSAGES`. Useful for tests, headless utilities, or call
+   * sites that need a different registry per usage. Reactive: changes are
+   * tracked.
+   */
+  readonly errorMessages?: Signal<ErrorMessageRegistry>;
+  /**
+   * Field name used to build per-error DOM IDs via
+   * {@link generateErrorId}. When omitted the primitive falls back to the
+   * field's own `name()` if the field state exposes one; otherwise IDs are
+   * built from the empty string (yielding `-error-{kind}`), which is rarely
+   * useful — supply `fieldName` explicitly when consumers care about
+   * `aria-describedby` wiring.
+   */
+  readonly fieldName?: string | Signal<string | null | undefined>;
+  /**
+   * Error display strategy override forwarded to {@link createErrorVisibility}.
+   *
+   * Static value or `Signal<ErrorDisplayStrategy | undefined>`. Omit to
+   * inherit from the form context (or fall back to `'on-touch'`).
+   */
+  readonly strategy?: ErrorDisplayStrategy$1 | Signal<ErrorDisplayStrategy$1 | undefined>;
+  /**
+   * Warning display strategy override forwarded to
+   * {@link createWarningVisibility}. Only affects the entries selected by
+   * {@link includeWarnings}.
+   *
+   * Static value or `Signal<WarningDisplayStrategy | undefined>`. Omit to
+   * inherit from the form context's `warningStrategy()`, then
+   * `NGX_SIGNAL_FORMS_CONFIG.defaultWarningStrategy`, then `'on-touch'`. No
+   * tier consults the blocking-error strategy (ADR-0007).
+   */
+  readonly warningStrategy?: WarningDisplayStrategy$1 | Signal<WarningDisplayStrategy$1 | undefined>;
+  /**
+   * Submission status override forwarded to both {@link createErrorVisibility}
+   * and {@link createWarningVisibility} — one status feeds both cascades.
+   *
+   * Only relevant for the `'on-submit'` strategy on either channel. Omit to
+   * inherit from the form context.
+   */
+  readonly submittedStatus?: SubmittedStatus$1 | Signal<SubmittedStatus$1 | undefined>;
+  /**
+   * Optional injector for use outside an Angular injection context (e.g.
+   * unit tests, `runInInjectionContext` wrappers). When omitted the
+   * function must be called inside a DI context.
+   */
+  readonly injector?: Injector;
 }
 /**
  * Minimal field-state surface the primitive reads. Intentionally looser than
@@ -1495,10 +1588,10 @@ interface CreateErrorMessageSignalOptions {
  * plain getters and only the visibility-cascade adapter needs the brand.
  */
 interface FieldStateLike$1 {
-    readonly invalid?: () => boolean;
-    readonly touched?: () => boolean;
-    readonly errors?: () => readonly ValidationError[];
-    readonly name?: () => string;
+  readonly invalid?: () => boolean;
+  readonly touched?: () => boolean;
+  readonly errors?: () => readonly ValidationError[];
+  readonly name?: () => string;
 }
 type FieldStateInput = FieldStateLike$1 | null | undefined;
 type FieldStateAccessor = () => FieldStateInput;
@@ -1576,8 +1669,7 @@ type FieldStateAccessor = () => FieldStateInput;
  * @public
  * @group Reactive Primitives
  */
-declare function createErrorMessageSignal(field: FieldStateAccessor, options?: CreateErrorMessageSignalOptions): Signal<readonly ResolvedFieldError[]>;
-
+export declare function createErrorMessageSignal(field: FieldStateAccessor, options?: CreateErrorMessageSignalOptions): Signal<readonly ResolvedFieldError[]>;
 /**
  * Whether a form tree contains any required and/or any optional leaf field.
  *
@@ -1588,8 +1680,8 @@ declare function createErrorMessageSignal(field: FieldStateAccessor, options?: C
  * @group Reactive Primitives
  */
 interface FieldOptionality {
-    readonly hasRequired: boolean;
-    readonly hasOptional: boolean;
+  readonly hasRequired: boolean;
+  readonly hasOptional: boolean;
 }
 type AnyFieldTree = FieldTree<unknown>;
 /**
@@ -1611,14 +1703,12 @@ type AnyFieldTree = FieldTree<unknown>;
  * @public
  * @group Reactive Primitives
  */
-declare function createFieldOptionalitySummary(treeSource: () => AnyFieldTree | null | undefined): {
-    readonly hasRequired: Signal<boolean>;
-    readonly hasOptional: Signal<boolean>;
+export declare function createFieldOptionalitySummary(treeSource: () => AnyFieldTree | null | undefined): {
+  readonly hasRequired: Signal<boolean>;
+  readonly hasOptional: Signal<boolean>;
 };
-
 /**
- * Field-state duck-typing utilities, split out of `utilities.ts` (issue
- * #354) so the ~900-line file's domains stop sharing one module boundary.
+ * Field-state duck-typing utilities.
  * Everything here reads a `FieldTree`'s return value (or a
  * `ValidationError`'s `fieldTree()`) through loose, structural access
  * instead of Angular's exact `FieldState` type — the shared reason being
@@ -1641,13 +1731,13 @@ type BooleanStateKey = 'dirty' | 'invalid' | 'pending' | 'touched' | 'valid';
  * @group Utility Functions
  */
 type FieldStateLike = {
-    invalid?: ErrorReadableState['invalid'];
-    valid?: () => boolean;
-    touched?: ErrorReadableState['touched'];
-    dirty?: () => boolean;
-    pending?: () => boolean;
-    errorSummary?: () => ValidationError[];
-    errors?: ErrorReadableState['errors'];
+  invalid?: ErrorReadableState['invalid'];
+  valid?: () => boolean;
+  touched?: ErrorReadableState['touched'];
+  dirty?: () => boolean;
+  pending?: () => boolean;
+  errorSummary?: () => ValidationError[];
+  errors?: ErrorReadableState['errors'];
 };
 /**
  * Computed boolean state flags from a reactive field state signal.
@@ -1655,11 +1745,11 @@ type FieldStateLike = {
  * @group Reactive Primitives
  */
 interface FieldStateFlags {
-    readonly isInvalid: Signal<boolean>;
-    readonly isValid: Signal<boolean>;
-    readonly isTouched: Signal<boolean>;
-    readonly isDirty: Signal<boolean>;
-    readonly isPending: Signal<boolean>;
+  readonly isInvalid: Signal<boolean>;
+  readonly isValid: Signal<boolean>;
+  readonly isTouched: Signal<boolean>;
+  readonly isDirty: Signal<boolean>;
+  readonly isPending: Signal<boolean>;
 }
 /**
  * Creates computed boolean state flags from a field state signal.
@@ -1675,19 +1765,7 @@ interface FieldStateFlags {
  *
  * @group Reactive Primitives
  */
-declare function createFieldStateFlags(fieldState: () => unknown): FieldStateFlags;
-
-/**
- * `@ngx-signal-forms/toolkit/headless`
- *
- * Headless (renderless) primitives for Angular Signal Forms.
- *
- * These directives expose state signals without rendering any UI,
- * enabling custom form implementations with full control over styling.
- *
- * @packageDocumentation
- */
-
+export declare function createFieldStateFlags(fieldState: () => unknown): FieldStateFlags;
 /**
  * Bundle of all headless directives for easy importing.
  *
@@ -1704,7 +1782,5 @@ declare function createFieldStateFlags(fieldState: () => unknown): FieldStateFla
  *
  * @group Directives
  */
-declare const NgxHeadlessToolkit: readonly [typeof NgxHeadlessErrorState, typeof NgxHeadlessErrorSummary, typeof NgxHeadlessFieldset, typeof NgxHeadlessCharacterCount, typeof NgxHeadlessFieldName];
-
-export { DEFAULT_DANGER_THRESHOLD, DEFAULT_WARNING_THRESHOLD, NgxHeadlessCharacterCount, NgxHeadlessErrorState, NgxHeadlessErrorSummary, NgxHeadlessFieldName, NgxHeadlessFieldset, NgxHeadlessToolkit, createCharacterCount, createErrorMessageSignal, createErrorState, createErrorSummaryEntries, createFieldOptionalitySummary, createFieldStateFlags, createFieldsetAggregation, dedupeValidationErrors };
-export type { BooleanStateKey, CharacterCountLimitState, CharacterCountState, CharacterCountValue, CreateCharacterCountOptions, CreateErrorMessageSignalOptions, CreateErrorStateOptions, CreateErrorSummaryEntriesOptions, CreateFieldsetAggregationOptions, ErrorStateResult, ErrorStateSignals, ErrorSummaryEntriesResult, ErrorSummaryEntry, ErrorSummarySignals, FieldNameStateSignals, FieldOptionality, FieldStateFlags, FieldStateLike, FieldsetAggregationResult, FieldsetStateSignals, IncludeWarningsOption, NgxHeadlessErrorChannels, ResolvedError, ResolvedFieldError };
+export declare const NgxHeadlessToolkit: readonly [typeof NgxHeadlessErrorState, typeof NgxHeadlessErrorSummary, typeof NgxHeadlessFieldset, typeof NgxHeadlessCharacterCount, typeof NgxHeadlessFieldName];
+export { type AriaDescribedByBridge, type AriaDescribedByFieldNameReader, type AriaDescribedByPreservedIdsReader, type AriaRequiredFieldState, type BooleanStateKey, type BoundControlElementReader, type CharacterCountLimitState, type CharacterCountState, type CharacterCountValue, type CreateAriaDescribedByBridgeOptions, type CreateAriaDescribedBySignalOptions, type CreateCharacterCountOptions, type CreateErrorMessageSignalOptions, type CreateErrorStateOptions, type CreateErrorSummaryEntriesOptions, type CreateFieldNameResolverOptions, type CreateFieldsetAggregationOptions, type CreateHintIdsSignalOptions, type ErrorStateResult, type ErrorStateSignals, type ErrorSummaryEntriesResult, type ErrorSummaryEntry, type ErrorSummarySignals, type FieldNameStateSignals, type FieldOptionality, type FieldStateFlags, type FieldStateLike, type FieldsetAggregationResult, type FieldsetStateSignals, type HintIdsFieldNameReader, type HintIdsIdentityLike, type HintIdsRegistryLike, type HintIdsSignal, type IncludeWarningsOption, type LabelForReader, type NgxHeadlessErrorChannels, type ResolvedError, type ResolvedFieldError, createAriaDescribedByBridge, createAriaDescribedBySignal, createAriaInvalidSignal, createAriaRequiredSignal, createFieldNameResolver, createHintIdsSignal, humanizeFieldPath };

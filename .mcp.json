@@ -1,5 +1,15 @@
 {
   "mcpServers": {
+    "nx-mcp": {
+      "type": "stdio",
+      "command": "pnpm",
+      "args": ["exec", "nx", "mcp"]
+    },
+    "angular-cli": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "@angular/cli", "mcp"]
+    },
     "playwright-test": {
       "type": "stdio",
       "command": "npx",

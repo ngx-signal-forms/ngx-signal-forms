@@ -227,6 +227,14 @@ describe('field-resolution', () => {
       expect(generateErrorId('email', '')).toBe('email-error-');
     });
 
+    it('replaces whitespace in kind so the id stays one token', () => {
+      // A space would split an `aria-describedby` list into two tokens.
+      expect(generateErrorId('email', 'too long')).toBe('email-error-too-long');
+      expect(generateErrorId('email', 'too \t long').split(/\s/u)).toHaveLength(
+        1,
+      );
+    });
+
     it('sanitizes inner whitespace in fieldName so the id stays one token', () => {
       const consoleWarnSpy = vi
         .spyOn(console, 'warn')

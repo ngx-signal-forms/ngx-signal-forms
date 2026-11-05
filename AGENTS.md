@@ -1,14 +1,35 @@
 # Agent instructions
 
 Start here. Keep provider files as thin delegates; shared rules live here,
-in [coding standards](CODING_STANDARDS.md), and in `.agents/skills/**`.
+in [coding standards](CODING_STANDARDS.md), and in `.agents/skills/`
+(`.claude/skills` is a symlink to it).
+
+## Shared skills
+
+- Keep all workspace skills in `.agents/skills/`. Do not copy them into
+  provider folders or install the Nx Claude plugin alongside them.
+- Codex, GitHub Copilot, and Mistral Vibe read this directory directly.
+  Vibe loads project skills only in trusted folders.
+- Claude Code reads the same skills through `.claude/skills`. Keep this
+  symlink; it does not duplicate the skills.
+- Claude Code loads `AGENTS.md` natively from v2.1.277. Use v2.1.281 or later
+  for broader session support. Do not add a `CLAUDE.md` delegate.
+  Keep native AGENTS support enabled. In `/config`, use the default
+  `claude-md-or-agents-md` mode with no `CLAUDE.md`, `.claude/CLAUDE.md`, or
+  `CLAUDE.local.md` in the working directory or its ancestors. Those files
+  prevent the default AGENTS fallback. See the
+  [Claude instruction-loading guide](https://code.claude.com/docs/en/memory#agents-md).
+- `nx configure-ai-agents` creates provider configuration and can restore
+  duplicate skills or the Claude plugin. Review its output before accepting it.
+- MCP connections are separate from skill discovery. The shared `.mcp.json`
+  configures Claude Code; other clients need their own MCP connection if they
+  do not already get it from Nx Console.
 
 ## Startup
 
-- Scaffolding: invoke `nx-generate` before exploration or Nx tools. Otherwise,
-  invoke `nx-workspace` before workspace exploration.
 - Editing or reviewing: read the applicable [coding standards](CODING_STANDARDS.md)
   sections and their triggered sources before editing or judging code.
+- Code that uses this library: load the `ngx-signal-forms` skill first.
 
 ## Action routes
 

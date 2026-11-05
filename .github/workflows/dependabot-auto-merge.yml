@@ -1,45 +1,116 @@
 name: Dependabot auto-merge
 
-# Auto-approve and enable auto-merge for low-risk Dependabot PRs:
-#   - any patch bump (incl. patch security fixes)
+# Enable auto-merge for low-risk Dependabot PRs:
+#   - any patch bump (incl. patch security fixes). The `patch-updates` group in
+#     dependabot.yml puts every patch in one PR, so a PR is "patch" as a whole.
 #   - any security fix (GHSA-tagged) that is not a major bump
-#   - minor bumps for dev-dependencies and GitHub Actions
-# Everything else (prod minors, all majors) stays manual.
+#   - minor bumps of dev tooling: the `tooling` group in dependabot.yml, found
+#     by its branch name. Dependabot reports every pnpm catalog entry as a
+#     production dependency, so the dependency type cannot tell tooling apart.
+#   - minor bumps of direct development dependencies outside the catalog
+# GitHub Actions bumps auto-merge only when every action in the PR is
+# first-party (`actions/*`, `github/*`, `dependabot/*`) and the bump is not
+# major. Third-party actions run with the workflows' tokens, so a person
+# reviews each of their bumps. Everything else (other minors, all majors)
+# stays manual.
 #
-# The actual merge is still gated by branch protection: `--auto` waits for the
-# required CI checks to pass before merging. Requires two one-time repo settings:
+# The actual merge is still gated by the `main` ruleset: `--auto` waits for the
+# required CI checks to pass before merging. One-time repo setup:
 #   1. Settings → General → Pull Requests → "Allow auto-merge" enabled.
 #   2. Settings → Rules → the `main` ruleset requires the `ci-success` status
 #      check. The `ci-success` job in ci.yml reports it.
+#   3. The ruleset also requires an approval and a code-owner review, and
+#      `CODEOWNERS` covers the lockfile and workspace file that every
+#      dependency PR changes. GitHub Actions cannot approve, so without a
+#      bypass the queued merge waits for a person. To remove that wait, create
+#      a GitHub App, add it to the ruleset's bypass list, and set:
+#        - repository variable `AUTO_MERGE_APP_CLIENT_ID`
+#        - Dependabot secret `AUTO_MERGE_APP_PRIVATE_KEY`
+#      (Dependabot-triggered runs read Dependabot secrets, not Actions
+#      secrets.) The App needs "Contents" and "Pull requests" write access.
+#      The workflow then queues the merge as the App. When the variable is
+#      empty it falls back to `GITHUB_TOKEN` and a person approves.
 
 on: pull_request
 
-permissions:
-  contents: write
-  pull-requests: write
+permissions: {}
 
 jobs:
   auto-merge:
     runs-on: ubuntu-latest
-    if: ${{ github.event.pull_request.user.login == 'dependabot[bot]' }}
+    # The actor check stops a person who pushes to a Dependabot branch from
+    # getting the bot's approval for their commit.
+    if: >-
+      ${{
+        github.event.pull_request.user.login == 'dependabot[bot]' &&
+        github.actor == 'dependabot[bot]'
+      }}
+    permissions:
+      contents: write
+      pull-requests: write
     steps:
       - name: Fetch Dependabot metadata
         id: meta
         uses: dependabot/fetch-metadata@25dd0e34f4fe68f24cc83900b1fe3fe149efef98
+        # `GITHUB_TOKEN` cannot read Dependabot alerts, so `ghsa-id` stays empty
+        # without this token. It is a fine-grained PAT with only "Dependabot
+        # alerts: read", stored as a Dependabot secret.
+        with:
+          alert-lookup: true
+          github-token: ${{ secrets.DEPENDABOT_ALERTS_TOKEN }}
 
-      - name: Approve and enable auto-merge
-        if: >-
-          ${{
-            steps.meta.outputs.update-type == 'version-update:semver-patch' ||
-            (steps.meta.outputs.ghsa-id != '' &&
-              steps.meta.outputs.update-type != 'version-update:semver-major') ||
-            (steps.meta.outputs.update-type == 'version-update:semver-minor' &&
-              (steps.meta.outputs.dependency-type == 'direct:development' ||
-               steps.meta.outputs.ecosystem == 'github_actions'))
-          }}
+      - name: Check the auto-merge policy
+        id: policy
+        env:
+          UPDATE_TYPE: ${{ steps.meta.outputs.update-type }}
+          GHSA_ID: ${{ steps.meta.outputs.ghsa-id }}
+          DEPENDENCY_TYPE: ${{ steps.meta.outputs.dependency-type }}
+          ECOSYSTEM: ${{ steps.meta.outputs.package-ecosystem }}
+          DEPENDENCY_NAMES: ${{ steps.meta.outputs.dependency-names }}
+          HEAD_REF: ${{ github.head_ref }}
         run: |
-          gh pr review --approve "$PR_URL"
-          gh pr merge --auto --squash "$PR_URL"
+          eligible=false
+          if [[ "$ECOSYSTEM" == "github_actions" ]]; then
+            first_party=true
+            IFS=',' read -ra names <<< "$DEPENDENCY_NAMES"
+            for name in "${names[@]}"; do
+              name="${name// /}"
+              case "$name" in
+                actions/* | github/* | dependabot/*) ;;
+                *) first_party=false ;;
+              esac
+            done
+            if [[ "$first_party" == "true" && "$UPDATE_TYPE" != "version-update:semver-major" ]]; then
+              eligible=true
+            fi
+          elif [[ "$UPDATE_TYPE" == "version-update:semver-patch" ]]; then
+            eligible=true
+          elif [[ -n "$GHSA_ID" && "$UPDATE_TYPE" != "version-update:semver-major" ]]; then
+            eligible=true
+          elif [[ "$UPDATE_TYPE" == "version-update:semver-minor" && "$DEPENDENCY_TYPE" == "direct:development" ]]; then
+            eligible=true
+          elif [[ "$UPDATE_TYPE" == "version-update:semver-minor" && "$HEAD_REF" == dependabot/npm_and_yarn/tooling-* ]]; then
+            eligible=true
+          fi
+          echo "Ecosystem: $ECOSYSTEM; update: $UPDATE_TYPE; eligible: $eligible"
+          echo "eligible=$eligible" >> "$GITHUB_OUTPUT"
+
+      # There is no approval step. The repository does not let GitHub Actions
+      # approve pull requests. See the header for the GitHub App that lets the
+      # merge go through without a person.
+      - name: Create the merge token
+        id: app-token
+        if: ${{ steps.policy.outputs.eligible == 'true' && vars.AUTO_MERGE_APP_CLIENT_ID != '' }}
+        uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510 # v3.3.0
+        with:
+          client-id: ${{ vars.AUTO_MERGE_APP_CLIENT_ID }}
+          private-key: ${{ secrets.AUTO_MERGE_APP_PRIVATE_KEY }}
+          permission-contents: write
+          permission-pull-requests: write
+
+      - name: Enable auto-merge
+        if: ${{ steps.policy.outputs.eligible == 'true' }}
+        run: gh pr merge --auto --squash "$PR_URL"
         env:
           PR_URL: ${{ github.event.pull_request.html_url }}
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ steps.app-token.outputs.token || secrets.GITHUB_TOKEN }}

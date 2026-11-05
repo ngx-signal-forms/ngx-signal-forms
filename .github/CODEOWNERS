@@ -1,0 +1,8 @@
+# Changes to CI, release and dependency settings need a code owner's review.
+# A ruleset on `main` must require code-owner review for this to take effect.
+/.github/ @the-ult
+/pnpm-workspace.yaml @the-ult
+/pnpm-lock.yaml @the-ult
+/package.json @the-ult
+/packages/toolkit/package.json @the-ult
+/tools/scripts/ @the-ult

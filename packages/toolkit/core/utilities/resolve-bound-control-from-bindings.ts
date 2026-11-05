@@ -36,8 +36,8 @@ export type FormFieldBindingsState = Pick<
  * ## Why the `id` guard is load-bearing (native-vs-fallback invariant)
  *
  * The legacy discovery path (`findBoundControl`'s `BOUND_CONTROL_SELECTOR`)
- * only ever matches elements that carry an `[id]`. To preserve PR #92's
- * "identical output" invariant, the native path must agree: it may only win
+ * only ever matches elements that carry an `[id]`. Both paths must give
+ * identical output, so the native path must agree: it may only win
  * for an element the fallback could also have produced. Without this guard, an
  * id-less `[formField]` host — e.g. `<my-control formField><input id="x">…` —
  * would let the wrapper element (`my-control`, no id) win over the inner

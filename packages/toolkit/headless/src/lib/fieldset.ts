@@ -95,8 +95,7 @@ export interface FieldsetAggregationResult {
  * Aggregates, deduplicates, and resolves field/warning errors for a
  * fieldset-shaped surface.
  *
- * Extracted from `NgxHeadlessFieldset`, which used to inline this pipeline
- * (issue #351). Deliberately pure — no `inject()` calls — so it is testable
+ * `NgxHeadlessFieldset` delegates to this pipeline. Deliberately pure — no `inject()` calls — so it is testable
  * with plain signal mocks and no `TestBed`, matching the other headless
  * factories (`createFieldStateFlags`, `createCharacterCount`). Visibility
  * timing is NOT resolved here; callers pass already-resolved `showErrors`/
@@ -510,14 +509,13 @@ export class NgxHeadlessFieldset<
   /**
    * Whether to show warnings, timed by {@link resolvedWarningStrategy}.
    *
-   * **Independent of {@link shouldShowErrors}** — this directive used to
-   * suppress warnings outright whenever blocking errors were visible. That
-   * was inconsistent with `NgxHeadlessErrorSummary.shouldShowWarnings`
-   * (`error-summary.ts`), which never gates warning visibility on error
+   * **Independent of {@link shouldShowErrors}**, the same as
+   * `NgxHeadlessErrorSummary.shouldShowWarnings` (`error-summary.ts`),
+   * which never gates warning visibility on error
    * presence because a summary aggregates across a whole subtree and a
    * warnings-only region shouldn't have its `hasErrors() === false` case
    * accidentally coupled to a sibling's blocking errors. Fieldsets aggregate
-   * the same way, so this directive now matches that contract: consumers
+   * the same way. Consumers
    * that want "errors take visual priority" (e.g. a single message slot
    * that can only render one category at a time, or CSS state classes)
    * apply that priority themselves — see `NgxFormFieldset`'s

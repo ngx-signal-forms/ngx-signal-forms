@@ -1,6 +1,5 @@
-import { ReadonlyFieldTree, FieldContext, SchemaPath, SchemaPathTree } from '@angular/forms/signals';
-import { SuiteResult } from 'vest';
-
+import { FieldContext, ReadonlyFieldTree, SchemaPath, SchemaPathTree } from "@angular/forms/signals";
+import { SuiteResult } from "vest";
 /**
  * Vest 6.3.2's real field-exclusion argument, mirrored locally because the
  * public `vest` package entrypoint exports the `only()` *hook function* but
@@ -49,14 +48,14 @@ type VestFieldMessages = readonly string[];
  * `fields` union without affecting untyped suites.
  */
 interface VestResultLike<F extends string = string> extends Pick<SuiteResult, 'isPending'> {
-    readonly getErrors: {
-        (): VestFailureMessages;
-        (fieldName: F): VestFieldMessages;
-    };
-    readonly getWarnings: {
-        (): VestFailureMessages;
-        (fieldName: F): VestFieldMessages;
-    };
+  readonly getErrors: {
+    (): VestFailureMessages;
+    (fieldName: F): VestFieldMessages;
+  };
+  readonly getWarnings: {
+    (): VestFailureMessages;
+    (fieldName: F): VestFieldMessages;
+  };
 }
 /**
  * Narrow runtime contract used by the adapter. The local type preserves the
@@ -69,64 +68,64 @@ interface VestResultLike<F extends string = string> extends Pick<SuiteResult, 'i
  * {@link only} and {@link get}'s `VestResultLike<F>` return, which is what
  * lets `VestOnlyFieldSelector`'s return type narrow at the call site without
  * the caller writing an explicit type argument — `F` is inferred from the
- * `suite` value itself. See ADR-0008 and issue #292.
+ * `suite` value itself. See ADR-0008.
  */
 interface VestRunnableSuite<TValue, F extends string = string> {
-    /**
-     * Declared as a readonly function property (not method shorthand) so its
-     * parameter is contravariant under `strictFunctionTypes` — method
-     * parameters stay bivariant regardless of that flag, which is what
-     * previously let a suite typed for one value (e.g. the whole model) be
-     * assigned where a suite for a narrower value (e.g. a single field) was
-     * expected. See ADR-0008.
-     *
-     * `fieldName` is deliberately `string` (not `string | string[]`, and not
-     * {@link VestFieldExclusion}): a real Vest suite's own `run()` signature is
-     * derived from its callback's second parameter, which the documented
-     * idiom types as plain `field?: string` (`create((data, field?: string) =>
-     * {...})`). Contravariance means widening this beyond what real suites
-     * declare would make an ordinary `create()` suite fail assignment here —
-     * the same reasoning as {@link only}'s narrower-than-{@link
-     * VestFieldExclusion} parameter type. Multi-field and `false` focus both
-     * go through `only` instead — see {@link executeVestRun}. The returned
-     * result's `getErrors`/`getWarnings` still narrow to `F` — only the focus
-     * argument stays `string` here, not the result shape.
-     */
-    readonly run: (value: TValue, fieldName?: string) => VestResultLike<F> | PromiseLike<VestResultLike<F>>;
-    reset?: () => void;
-    /**
-     * Declared as a readonly function property for the same contravariance
-     * reason as {@link run}.
-     *
-     * Deliberately narrower than {@link VestFieldExclusion} (which the
-     * public-facing `VestOnlyFieldSelector` and `RunVestSuiteParams.focus` DO
-     * use): Vest 6.3.2's real `Suite.only()` method itself only accepts
-     * `FieldExclusion<F>` (a field name, a list of field names, or
-     * `undefined`) — no `false`, no readonly arrays. Widening this member's
-     * parameter type to match {@link VestFieldExclusion} would make a real,
-     * unwrapped `create()` suite (whose own `only` is that narrower type) fail
-     * structural assignment to this interface, breaking the common case this
-     * whole contract exists to describe. The coordinator narrows a wider
-     * `VestFieldExclusion` value down to this shape before ever calling
-     * `suite.only(...)` — see {@link executeVestRun}. `field` narrows from
-     * `string | string[]` to `F | F[]` — matching Vest's real `Suite.only()` —
-     * so a mistyped focus name is a compile error at the point the coordinator
-     * calls it, not just at the caller-facing `VestOnlyFieldSelector`.
-     */
-    readonly only?: (field: F | F[]) => Pick<VestRunnableSuite<TValue, F>, 'run'>;
-    /**
-     * Optional Vest bus subscription (`suite.subscribe`). Used alongside {@link
-     * get} to recover from a superseded run — see
-     * {@link awaitVestRunSettlement}. Suites created via Vest's `create()`
-     * expose this; hand-rolled suite shapes may omit it.
-     */
-    subscribe?: (event: 'ALL_RUNNING_TESTS_FINISHED', callback: () => void) => () => void;
-    /**
-     * Optional synchronous accessor for the suite's current accumulated result
-     * (`suite.get`). Used alongside {@link subscribe} to recover from a
-     * superseded run — see {@link awaitVestRunSettlement}.
-     */
-    get?: () => VestResultLike<F>;
+  /**
+   * Declared as a readonly function property (not method shorthand) so its
+   * parameter is contravariant under `strictFunctionTypes` — method
+   * parameters stay bivariant regardless of that flag, which would
+   * let a suite typed for one value (e.g. the whole model) be
+   * assigned where a suite for a narrower value (e.g. a single field) was
+   * expected. See ADR-0008.
+   *
+   * `fieldName` is deliberately `string` (not `string | string[]`, and not
+   * {@link VestFieldExclusion}): a real Vest suite's own `run()` signature is
+   * derived from its callback's second parameter, which the documented
+   * idiom types as plain `field?: string` (`create((data, field?: string) =>
+   * {...})`). Contravariance means widening this beyond what real suites
+   * declare would make an ordinary `create()` suite fail assignment here —
+   * the same reasoning as {@link only}'s narrower-than-{@link
+   * VestFieldExclusion} parameter type. Multi-field and `false` focus both
+   * go through `only` instead — see {@link executeVestRun}. The returned
+   * result's `getErrors`/`getWarnings` still narrow to `F` — only the focus
+   * argument stays `string` here, not the result shape.
+   */
+  readonly run: (value: TValue, fieldName?: string) => VestResultLike<F> | PromiseLike<VestResultLike<F>>;
+  reset?: () => void;
+  /**
+   * Declared as a readonly function property for the same contravariance
+   * reason as {@link run}.
+   *
+   * Deliberately narrower than {@link VestFieldExclusion} (which the
+   * public-facing `VestOnlyFieldSelector` and `RunVestSuiteParams.focus` DO
+   * use): Vest 6.3.2's real `Suite.only()` method itself only accepts
+   * `FieldExclusion<F>` (a field name, a list of field names, or
+   * `undefined`) — no `false`, no readonly arrays. Widening this member's
+   * parameter type to match {@link VestFieldExclusion} would make a real,
+   * unwrapped `create()` suite (whose own `only` is that narrower type) fail
+   * structural assignment to this interface, breaking the common case this
+   * whole contract exists to describe. The coordinator narrows a wider
+   * `VestFieldExclusion` value down to this shape before ever calling
+   * `suite.only(...)` — see {@link executeVestRun}. `field` narrows from
+   * `string | string[]` to `F | F[]` — matching Vest's real `Suite.only()` —
+   * so a mistyped focus name is a compile error at the point the coordinator
+   * calls it, not just at the caller-facing `VestOnlyFieldSelector`.
+   */
+  readonly only?: (field: F | F[]) => Pick<VestRunnableSuite<TValue, F>, 'run'>;
+  /**
+   * Optional Vest bus subscription (`suite.subscribe`). Used alongside {@link
+   * get} to recover from a superseded run — see
+   * {@link awaitVestRunSettlement}. Suites created via Vest's `create()`
+   * expose this; hand-rolled suite shapes may omit it.
+   */
+  subscribe?: (event: 'ALL_RUNNING_TESTS_FINISHED', callback: () => void) => () => void;
+  /**
+   * Optional synchronous accessor for the suite's current accumulated result
+   * (`suite.get`). Used alongside {@link subscribe} to recover from a
+   * superseded run — see {@link awaitVestRunSettlement}.
+   */
+  get?: () => VestResultLike<F>;
 }
 /**
  * The exact slice of {@link VestRunnableSuite} the run coordinator drives:
@@ -142,7 +141,6 @@ interface VestRunnableSuite<TValue, F extends string = string> {
  * {@link awaitVestRunSettlement}.
  */
 type VestCoordinatedSuite<TValue, F extends string = string> = Pick<VestRunnableSuite<TValue, F>, 'get' | 'only' | 'run' | 'subscribe'>;
-
 /**
  * Public constant kind prefix used for Vest `warn()` messages surfaced through
  * the toolkit. Exported so downstream code (error strategies, tests, debug
@@ -150,14 +148,13 @@ type VestCoordinatedSuite<TValue, F extends string = string> = Pick<VestRunnable
  * string literal. Built from the shared {@link WARN_KIND_PREFIX} so the
  * `warn:` convention has one source of truth across the toolkit.
  */
-declare const VEST_WARNING_KIND_PREFIX = "warn:vest:";
+export declare const VEST_WARNING_KIND_PREFIX = "warn:vest:";
 /**
  * Public constant kind prefix used for blocking Vest errors surfaced through
  * the toolkit. Mirrors {@link VEST_WARNING_KIND_PREFIX} so consumers can match
  * both shapes with a single source of truth.
  */
-declare const VEST_ERROR_KIND_PREFIX = "vest:";
-
+export declare const VEST_ERROR_KIND_PREFIX = "vest:";
 /**
  * Callback supplied via {@link VestRegisterOptions.only} to enable per-field
  * focused runs. Receives the Angular Signal Forms field context and returns
@@ -170,7 +167,7 @@ declare const VEST_ERROR_KIND_PREFIX = "vest:";
  * is inferred from the {@link VestRunnableSuite} passed alongside this
  * selector (`validateVest`, `validateVestWarnings`,
  * `VestSuiteAdapter.register`) — callers never write it explicitly. See
- * ADR-0008 and issue #292.
+ * ADR-0008.
  */
 type VestOnlyFieldSelector<TValue, F extends string = string> = (ctx: FieldContext<TValue>) => VestFieldExclusion<F>;
 /**
@@ -182,62 +179,62 @@ type VestFieldPath<TValue> = SchemaPath<TValue> & SchemaPathTree<TValue>;
  * Options accepted by {@link createVestAdapter}.
  */
 interface VestAdapterOptions {
-    /**
-     * Whether the adapter's `register` should default to clearing suite state on
-     * destroy. Individual `register` calls can still override this per-field via
-     * {@link VestRegisterOptions.resetOnDestroy}.
-     *
-     * @default true
-     */
-    readonly resetOnDestroy?: boolean;
+  /**
+   * Whether the adapter's `register` should default to clearing suite state on
+   * destroy. Individual `register` calls can still override this per-field via
+   * {@link VestRegisterOptions.resetOnDestroy}.
+   *
+   * @default true
+   */
+  readonly resetOnDestroy?: boolean;
 }
 /**
  * Per-field registration options accepted by {@link VestSuiteAdapter.register}.
  */
 interface VestRegisterOptions<TValue = unknown, F extends string = string> {
-    /**
-     * Map Vest blocking `test()` failures onto the field as Angular validation
-     * errors.
-     *
-     * @default true
-     */
-    readonly includeErrors?: boolean;
-    /**
-     * Map Vest warn-only `warn()` results onto the field as non-blocking
-     * `warn:vest:*` validation errors.
-     *
-     * @default false
-     */
-    readonly includeWarnings?: boolean;
-    /**
-     * Call `suite.reset()` (and invalidate the shared run cache) when the
-     * injection context that registered the validator is destroyed. Falls back
-     * to the adapter-level default from {@link VestAdapterOptions.resetOnDestroy}
-     * when omitted.
-     */
-    readonly resetOnDestroy?: boolean;
-    /**
-     * Enable per-field focused runs by deriving the Vest field name from the
-     * supplied selector. See {@link VestOnlyFieldSelector}.
-     */
-    readonly only?: VestOnlyFieldSelector<TValue, F>;
+  /**
+   * Map Vest blocking `test()` failures onto the field as Angular validation
+   * errors.
+   *
+   * @default true
+   */
+  readonly includeErrors?: boolean;
+  /**
+   * Map Vest warn-only `warn()` results onto the field as non-blocking
+   * `warn:vest:*` validation errors.
+   *
+   * @default false
+   */
+  readonly includeWarnings?: boolean;
+  /**
+   * Call `suite.reset()` (and invalidate the shared run cache) when the
+   * injection context that registered the validator is destroyed. Falls back
+   * to the adapter-level default from {@link VestAdapterOptions.resetOnDestroy}
+   * when omitted.
+   */
+  readonly resetOnDestroy?: boolean;
+  /**
+   * Enable per-field focused runs by deriving the Vest field name from the
+   * supplied selector. See {@link VestOnlyFieldSelector}.
+   */
+  readonly only?: VestOnlyFieldSelector<TValue, F>;
 }
 /**
  * Input describing a single shared, cache-aware Vest run. Consumed by
  * {@link VestSuiteAdapter.runVestSuite}.
  */
 interface RunVestSuiteParams<TValue, F extends string = string> {
-    /**
-     * The exact slice of {@link VestRunnableSuite} the run coordinator drives —
-     * see {@link VestCoordinatedSuite}'s doc comment. Using that one named type
-     * here (rather than re-spelling the identical `Pick` inline) keeps this
-     * public parameter and the coordinator's own internal request shape
-     * structurally and nominally the same type.
-     */
-    readonly suite: VestCoordinatedSuite<TValue, F>;
-    readonly fieldTree: ReadonlyFieldTree<TValue>;
-    readonly value: TValue;
-    readonly focus?: VestFieldExclusion<F>;
+  /**
+   * The exact slice of {@link VestRunnableSuite} the run coordinator drives —
+   * see {@link VestCoordinatedSuite}'s doc comment. Using that one named type
+   * here (rather than re-spelling the identical `Pick` inline) keeps this
+   * public parameter and the coordinator's own internal request shape
+   * structurally and nominally the same type.
+   */
+  readonly suite: VestCoordinatedSuite<TValue, F>;
+  readonly fieldTree: ReadonlyFieldTree<TValue>;
+  readonly value: TValue;
+  readonly focus?: VestFieldExclusion<F>;
 }
 /**
  * Result of a shared, cache-aware single Vest run. `initialResult` is the
@@ -260,29 +257,29 @@ interface RunVestSuiteParams<TValue, F extends string = string> {
  * {@link VestRunHandle.settled}.
  */
 interface RunVestSuiteResult<TValue, F extends string = string> {
-    readonly value: TValue;
-    /**
-     * The `focus` exactly as requested in {@link RunVestSuiteParams.focus} — a
-     * field name, a list of field names, `false`, or `undefined` for a
-     * whole-suite run. Not the coordinator's internal, NUL-joined cache key.
-     */
-    readonly focus: VestFieldExclusion<F>;
-    readonly runResult: VestResultLike<F> | PromiseLike<VestResultLike<F>>;
-    readonly initialResult: VestResultLike<F> | undefined;
-    readonly fromCache: boolean;
-    /**
-     * `true` when this run was queued behind another field tree's pending run
-     * on the SAME suite instead of starting immediately. Forwarded from
-     * {@link VestRunHandle.deferred}.
-     */
-    readonly deferred: boolean;
-    /**
-     * Resolves once this run's outcome is observable, recovering from a
-     * superseded Vest resolver where the suite makes that possible. The safe
-     * thing to await for a manual flow — see this interface's doc comment.
-     * Forwarded from {@link VestRunHandle.settled}.
-     */
-    readonly settled: () => PromiseLike<unknown>;
+  readonly value: TValue;
+  /**
+   * The `focus` exactly as requested in {@link RunVestSuiteParams.focus} — a
+   * field name, a list of field names, `false`, or `undefined` for a
+   * whole-suite run. Not the coordinator's internal, NUL-joined cache key.
+   */
+  readonly focus: VestFieldExclusion<F>;
+  readonly runResult: VestResultLike<F> | PromiseLike<VestResultLike<F>>;
+  readonly initialResult: VestResultLike<F> | undefined;
+  readonly fromCache: boolean;
+  /**
+   * `true` when this run was queued behind another field tree's pending run
+   * on the SAME suite instead of starting immediately. Forwarded from
+   * {@link VestRunHandle.deferred}.
+   */
+  readonly deferred: boolean;
+  /**
+   * Resolves once this run's outcome is observable, recovering from a
+   * superseded Vest resolver where the suite makes that possible. The safe
+   * thing to await for a manual flow — see this interface's doc comment.
+   * Forwarded from {@link VestRunHandle.settled}.
+   */
+  readonly settled: () => PromiseLike<unknown>;
 }
 /**
  * A documented, public adapter around the per-(suite + field-tree) shared run
@@ -301,23 +298,23 @@ interface RunVestSuiteResult<TValue, F extends string = string> {
  * cache for a suite (the `resetOnDestroy` hook calls this internally).
  */
 interface VestSuiteAdapter {
-    /**
-     * Wire a Vest suite into Angular Signal Forms for the given field path,
-     * registering both the synchronous (`validateTree`) and asynchronous
-     * (`validateAsync`) phases against the shared run cache.
-     */
-    register<TValue, F extends string = string>(path: VestFieldPath<TValue>, suite: VestRunnableSuite<TValue, F>, options?: VestRegisterOptions<TValue, F>): void;
-    /**
-     * Run a Vest suite once through the shared cache. Returns the cached run for
-     * an identical `(suite, fieldTree, value, focus)` tuple, or executes a fresh
-     * run (and caches it) when any of those change.
-     */
-    runVestSuite<TValue, F extends string = string>(params: RunVestSuiteParams<TValue, F>): RunVestSuiteResult<TValue, F>;
-    /**
-     * Drop the shared run cache for a suite so the next run re-executes
-     * `suite.run()` even when the field tree reference is reused.
-     */
-    invalidate(suite: object): void;
+  /**
+   * Wire a Vest suite into Angular Signal Forms for the given field path,
+   * registering both the synchronous (`validateTree`) and asynchronous
+   * (`validateAsync`) phases against the shared run cache.
+   */
+  register<TValue, F extends string = string>(path: VestFieldPath<TValue>, suite: VestRunnableSuite<TValue, F>, options?: VestRegisterOptions<TValue, F>): void;
+  /**
+   * Run a Vest suite once through the shared cache. Returns the cached run for
+   * an identical `(suite, fieldTree, value, focus)` tuple, or executes a fresh
+   * run (and caches it) when any of those change.
+   */
+  runVestSuite<TValue, F extends string = string>(params: RunVestSuiteParams<TValue, F>): RunVestSuiteResult<TValue, F>;
+  /**
+   * Drop the shared run cache for a suite so the next run re-executes
+   * `suite.run()` even when the field tree reference is reused.
+   */
+  invalidate(suite: object): void;
 }
 /**
  * Create a {@link VestSuiteAdapter} backed by its own shared run cache.
@@ -345,7 +342,7 @@ interface VestSuiteAdapter {
  * });
  * ```
  */
-declare function createVestAdapter(options?: VestAdapterOptions): VestSuiteAdapter;
+export declare function createVestAdapter(options?: VestAdapterOptions): VestSuiteAdapter;
 /**
  * The shared {@link VestSuiteAdapter} instance used by the built-in
  * `validateVest` / `validateVestWarnings` entry points. Exposed so advanced
@@ -374,66 +371,65 @@ declare function createVestAdapter(options?: VestAdapterOptions): VestSuiteAdapt
  * });
  * ```
  */
-declare const sharedVestAdapter: VestSuiteAdapter;
-
+export declare const sharedVestAdapter: VestSuiteAdapter;
 /**
  * Options accepted by {@link validateVest} (and the focus/reset subset by
  * {@link validateVestWarnings}). Controls warning surfacing, suite-state reset
  * on destroy, and per-field focused runs.
  */
 interface ValidateVestOptions<TValue = unknown, F extends string = string> {
-    /**
-     * Include Vest warn-only tests as toolkit warnings.
-     *
-     * Warning messages are translated into Angular Signal Forms `ValidationError`
-     * objects with a `kind` prefixed by `warn:` so existing toolkit components
-     * render them as non-blocking guidance.
-     *
-     * While the suite has pending async tests AND this registration also maps
-     * blocking errors (`includeErrors: true`, `validateVest`'s default), a sync
-     * warning is deferred (not yet surfaced) and re-emitted together with the
-     * settled result once they finish — see the vest README's "Async caveats"
-     * section for why. A warning-only registration (`validateVestWarnings`, or
-     * `includeErrors: false`) has no blocking error of its own to protect and
-     * never defers: its warnings surface immediately.
-     *
-     * @default false
-     */
-    includeWarnings?: boolean;
-    /**
-     * Call `suite.reset()` when the injection context that registered the
-     * validator is destroyed.
-     *
-     * Vest suites created with `create()` retain state across runs (last result,
-     * pending async tests, test memoization). When consumers declare suites at
-     * module scope (the recommended pattern), that state leaks across component
-     * mounts. The toolkit registers a `DestroyRef.onDestroy()` hook **by default**
-     * that clears suite state when the hosting component tears down.
-     *
-     * Set to `false` only when you deliberately want suite state to persist
-     * across mounts.
-     *
-     * @default true
-     */
-    resetOnDestroy?: boolean;
-    /**
-     * Enable per-field focused runs. The callback receives the field context
-     * for the current validation pass and returns a {@link VestFieldExclusion}:
-     * a single field name, a list of field names, `undefined` for a
-     * whole-suite run, or `false` to focus nothing.
-     *
-     * The adapter prefers the canonical `suite.only(field).run(value)` form.
-     * When the suite does not expose `only`, it falls back to the legacy
-     * `suite.run(value, fieldName)` form, which supports a single field name
-     * only — a returned array collapses to its first element. Vest has no way
-     * to express "focus nothing" through either form (an empty selection runs
-     * the WHOLE suite, not zero tests — verified against vest@6.3.2), so a
-     * `false` return throws a descriptive error instead of silently doing the
-     * opposite of what was asked.
-     *
-     * @default undefined (full-suite run)
-     */
-    only?: VestOnlyFieldSelector<TValue, F>;
+  /**
+   * Include Vest warn-only tests as toolkit warnings.
+   *
+   * Warning messages are translated into Angular Signal Forms `ValidationError`
+   * objects with a `kind` prefixed by `warn:` so existing toolkit components
+   * render them as non-blocking guidance.
+   *
+   * While the suite has pending async tests AND this registration also maps
+   * blocking errors (`includeErrors: true`, `validateVest`'s default), a sync
+   * warning is deferred (not yet surfaced) and re-emitted together with the
+   * settled result once they finish — see the vest README's "Async caveats"
+   * section for why. A warning-only registration (`validateVestWarnings`, or
+   * `includeErrors: false`) has no blocking error of its own to protect and
+   * never defers: its warnings surface immediately.
+   *
+   * @default false
+   */
+  includeWarnings?: boolean;
+  /**
+   * Call `suite.reset()` when the injection context that registered the
+   * validator is destroyed.
+   *
+   * Vest suites created with `create()` retain state across runs (last result,
+   * pending async tests, test memoization). When consumers declare suites at
+   * module scope (the recommended pattern), that state leaks across component
+   * mounts. The toolkit registers a `DestroyRef.onDestroy()` hook **by default**
+   * that clears suite state when the hosting component tears down.
+   *
+   * Set to `false` only when you deliberately want suite state to persist
+   * across mounts.
+   *
+   * @default true
+   */
+  resetOnDestroy?: boolean;
+  /**
+   * Enable per-field focused runs. The callback receives the field context
+   * for the current validation pass and returns a {@link VestFieldExclusion}:
+   * a single field name, a list of field names, `undefined` for a
+   * whole-suite run, or `false` to focus nothing.
+   *
+   * The adapter prefers the canonical `suite.only(field).run(value)` form.
+   * When the suite does not expose `only`, it falls back to the legacy
+   * `suite.run(value, fieldName)` form, which supports a single field name
+   * only — a returned array collapses to its first element. Vest has no way
+   * to express "focus nothing" through either form (an empty selection runs
+   * the WHOLE suite, not zero tests — verified against vest@6.3.2), so a
+   * `false` return throws a descriptive error instead of silently doing the
+   * opposite of what was asked.
+   *
+   * @default undefined (full-suite run)
+   */
+  only?: VestOnlyFieldSelector<TValue, F>;
 }
 /**
  * Register only the warning bridge for a Vest suite.
@@ -470,7 +466,7 @@ interface ValidateVestOptions<TValue = unknown, F extends string = string> {
  * });
  * ```
  */
-declare function validateVestWarnings<TValue, F extends string = string>(path: VestFieldPath<TValue>, suite: VestRunnableSuite<TValue, F>, options?: Pick<ValidateVestOptions<TValue, F>, 'only' | 'resetOnDestroy'>): void;
+export declare function validateVestWarnings<TValue, F extends string = string>(path: VestFieldPath<TValue>, suite: VestRunnableSuite<TValue, F>, options?: Pick<ValidateVestOptions<TValue, F>, 'only' | 'resetOnDestroy'>): void;
 /**
  * Register a Vest suite as a first-class Angular Signal Forms validator.
  *
@@ -533,7 +529,5 @@ declare function validateVestWarnings<TValue, F extends string = string>(path: V
  * });
  * ```
  */
-declare function validateVest<TValue, F extends string = string>(path: VestFieldPath<TValue>, suite: VestRunnableSuite<TValue, F>, options?: ValidateVestOptions<TValue, F>): void;
-
-export { VEST_ERROR_KIND_PREFIX, VEST_WARNING_KIND_PREFIX, createVestAdapter, sharedVestAdapter, validateVest, validateVestWarnings };
+export declare function validateVest<TValue, F extends string = string>(path: VestFieldPath<TValue>, suite: VestRunnableSuite<TValue, F>, options?: ValidateVestOptions<TValue, F>): void;
 export type { RunVestSuiteParams, RunVestSuiteResult, ValidateVestOptions, VestAdapterOptions, VestCoordinatedSuite, VestFieldExclusion, VestFieldPath, VestOnlyFieldSelector, VestRegisterOptions, VestResultLike, VestRunnableSuite, VestSuiteAdapter };

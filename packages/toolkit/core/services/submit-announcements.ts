@@ -11,7 +11,7 @@ import {
 /**
  * Per-form channel that lets an error summary and the field errors of the
  * same form find each other, so a submit announces through the summary
- * alone (issue #522, ADR-0012).
+ * alone (ADR-0012).
  *
  * `NgxSignalForm` provides one instance per `[ngxSignalForm]` host and
  * reports each submit attempt here. `NgxFormFieldErrorSummary` registers

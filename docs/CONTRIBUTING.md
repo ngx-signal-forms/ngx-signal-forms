@@ -82,8 +82,7 @@ Explain each topic in one file. Elsewhere, write one sentence and a link.
 | Domain terms                                             | [`GLOSSARY.md`](../GLOSSARY.md)                                                         |
 
 User docs describe the current state only. Put history in `migrations/`.
-Put maintainer notes in a `## For maintainers` section at the end of a file,
-or in this file.
+Put maintainer notes in a `## For maintainers` section at the end of a file.
 
 ## Docs site
 
@@ -134,7 +133,7 @@ ship with. When you add a project, add both tags and run
 ## Published package guardrails
 
 These checks run against the built package in `dist/packages/toolkit`, after
-`toolkit:build`. CI and the release workflow call them directly, so
+`toolkit:build`. CI and the publish workflow call them directly, so
 `nx affected` does not skip them.
 
 1. **Public API and tarball contents.**
@@ -225,23 +224,3 @@ format and release-note safety.
   title, except Dependabot PRs.
 - The release notes renderer (`tools/release/project-changelog-renderer.ts`)
   also escapes a bare `@word`.
-
-## Release
-
-1. Run the **Release** workflow
-   ([`release.yml`](../.github/workflows/release.yml)) from the Actions tab.
-   Pick the bump (`prerelease` with `rc` for a release candidate). Use
-   **Dry run** first to preview. The workflow runs the checks. Then
-   `nx release version` bumps, commits and tags locally. A separate `push`
-   job checks the result and pushes the commit and tag with a GitHub App
-   token. A last job creates the GitHub release. The workflow does not
-   publish.
-2. The new `v*` tag starts the **Publish** workflow
-   ([`publish.yml`](../.github/workflows/publish.yml)). It fails unless the
-   tagged commit is on `main`. A `build` job builds the package and uploads
-   it. A `publish` job then waits for approval on the `npm-publish`
-   environment. It installs nothing and publishes the uploaded package to npm
-   through trusted publishing (OIDC), with the dist-tag taken from the
-   version. A dry run skips the approval.
-
-Release notes are the GitHub releases. There is no `CHANGELOG.md`.

@@ -6,12 +6,6 @@
   "tags": ["scope:demo", "type:app"],
   "implicitDependencies": ["demo-primeng"],
   "targets": {
-    "lint": {
-      "executor": "nx:run-commands",
-      "options": {
-        "command": "oxlint {projectRoot} --type-aware"
-      }
-    },
     "a11y": {
       "executor": "nx:run-commands",
       "cache": true,

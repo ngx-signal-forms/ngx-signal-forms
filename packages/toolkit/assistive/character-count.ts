@@ -176,7 +176,7 @@ export type NgxCharacterCountAnnouncementFormatter = (
  *   actually manages, a resolved limit renders a visually-hidden element
  *   stating the limit (e.g. "Up to 200 characters") and links it into the
  *   control's `aria-describedby`, so a screen reader user hears the limit on
- *   focus even with `liveAnnounce` off (issue #499). The visible "n/max"
+ *   focus even with `liveAnnounce` off. The visible "n/max"
  *   text becomes `aria-hidden` **only once that link exists** — it is not
  *   read twice, and never as "n slash max". The visible text stays exposed
  *   to assistive technology unless the field context explicitly confirms
@@ -191,7 +191,7 @@ export type NgxCharacterCountAnnouncementFormatter = (
  *   `docs/CUSTOM_WRAPPERS.md`).
  * - Without a wrapper, set the `fieldName` input to render the same hidden
  *   limit element with the id `{fieldName}-char-count-limit`, and put that
- *   id in the control's `aria-describedby` yourself (issue #589). The
+ *   id in the control's `aria-describedby` yourself. The
  *   visible "n/max" text stays exposed, because the component cannot tell
  *   whether you linked the id.
  *
@@ -259,8 +259,8 @@ export type NgxCharacterCountAnnouncementFormatter = (
        * through every downstream expression.
        *
        * Default: Tailwind amber-700 (#a16207) for warning — ~4.92:1 on
-       * white meets WCAG 1.4.3 AA for normal text (#f59e0b previously used
-       * was 2.16:1). Kept consistent with the warning color in
+       * white meets WCAG 1.4.3 AA for normal text (amber-500 #f59e0b is
+       * only 2.16:1). Kept consistent with the warning color in
        * form-field-error.css.
        */
       --_char-count-warning-threshold: var(
@@ -314,15 +314,19 @@ export type NgxCharacterCountAnnouncementFormatter = (
        */
       --_char-count-is-warning: clamp(
         0,
-        (var(--ngx-form-field-char-count-percent-used, 0) -
-            var(--_char-count-warning-threshold) + 0.0001) *
+        (
+            var(--ngx-form-field-char-count-percent-used, 0) -
+              var(--_char-count-warning-threshold) + 0.0001
+          ) *
           1000000,
         1
       );
       --_char-count-is-danger: clamp(
         0,
-        (var(--ngx-form-field-char-count-percent-used, 0) -
-            var(--_char-count-danger-threshold) + 0.0001) *
+        (
+            var(--ngx-form-field-char-count-percent-used, 0) -
+              var(--_char-count-danger-threshold) + 0.0001
+          ) *
           1000000,
         1
       );
@@ -536,7 +540,7 @@ export class NgxFormFieldCharacterCount {
    * only links registry ids whose name matches the wrapper's field. An
    * input name would never match, so the limit would not reach
    * `aria-describedby` while `hidesVisibleText` still hid the visible
-   * count. Public so a wrapper can read it (issue #499).
+   * count. Public so a wrapper can read it.
    */
   readonly resolvedFieldName = computed(() => {
     return resolveFieldNameFromCandidates(
@@ -603,8 +607,8 @@ export class NgxFormFieldCharacterCount {
    * Visually-hidden text describing the limit, e.g. "Up to 200 characters".
    * Rendered by the `[id]="limitId()"` element that `aria-describedby` links
    * to — the visible running count is a separate element, and the
-   * `[liveAnnounce]` live region holds only threshold-transition text (issue
-   * #499's decision). Configurable through
+   * `[liveAnnounce]` live region holds only threshold-transition text.
+   * Configurable through
    * `NgxSignalFormsConfig.characterCountLimitText`'s `{max}` placeholder.
    * Empty string when no limit is resolved. Warns once in dev mode when the
    * configured text carries no `{max}` placeholder — the rendered text would
@@ -633,18 +637,17 @@ export class NgxFormFieldCharacterCount {
    * instance field, not inside a `computed` — `createCharacterCount()`
    * builds its own internal signal graph, so recreating it on every
    * `maxLength` change would tear that graph down and rebuild it instead of
-   * letting it react on its own (issue #510).
+   * letting it react on its own.
    *
    * The `field` and `maxLength` options are trampoline closures (same
    * pattern as `NgxHeadlessCharacterCount`) so the factory stays reactive to
    * rebound inputs without being recreated. `useValidatorMaxLength` lets the
    * factory itself fall back to the field's `maxLength` validator when
-   * `#explicitMaxLength` resolves to `null` — the auto-detection this
-   * component used to duplicate.
+   * `#explicitMaxLength` resolves to `null`, so this component does not
+   * detect the validator limit itself.
    *
-   * Uses `createCharacterCount()`'s own default thresholds (80%/95%) — the
-   * component no longer accepts a `colorThresholds` input (removed pre-v1,
-   * #355). Those defaults drive `displayLimitState` (the `data-limit-state`
+   * Uses `createCharacterCount()`'s own default thresholds (80%/95%). The
+   * component has no `colorThresholds` input. Those defaults drive `displayLimitState` (the `data-limit-state`
    * attribute) and the `[liveAnnounce]` announcement wording, which must
    * stay fixed and predictable for screen reader users. The
    * *visible color* is independently, continuously reconfigurable via the
@@ -701,9 +704,8 @@ export class NgxFormFieldCharacterCount {
    * `announcementText()` already gives "recompute only on an actual state
    * change": `computed()` skips notifying consumers when its result is
    * referentially equal to the previous one, and a string value already is
-   * equal across renders that don't change the state. The `linkedSignal`
-   * this replaced kept a `previous` value only to return
-   * `state === prev ? prev : state`, which is just `state` (issue #510).
+   * equal across renders that don't change the state, so a `linkedSignal`
+   * that keeps the previous value adds nothing.
    *
    * It reads the real limit state, not `displayLimitState()`:
    * `showLimitColors` is a visual flag and must not silence announcements.

@@ -611,7 +611,7 @@ function toPath(url: string): string {
             href="https://github.com/ngx-signal-forms/ngx-signal-forms/tree/main/packages/toolkit"
             target="_blank"
             rel="noopener"
-            aria-label="Toolkit docs"
+            aria-label="TK — Toolkit docs"
             class="shell__footer-link font-mono text-[10px] font-bold tracking-wide"
           >
             TK

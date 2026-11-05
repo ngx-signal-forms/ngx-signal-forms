@@ -2,7 +2,6 @@
 
 import angular from '@analogjs/vite-plugin-angular';
 import { defineConfig } from 'vitest/config';
-import tsconfigPaths from 'vite-tsconfig-paths';
 
 export default defineConfig({
   root: import.meta.dirname,
@@ -11,8 +10,10 @@ export default defineConfig({
     angular({
       tsconfig: './tsconfig.spec.json',
     }),
-    tsconfigPaths(),
   ],
+  resolve: {
+    tsconfigPaths: true,
+  },
   test: {
     name: 'demo-spartan',
     globals: true,

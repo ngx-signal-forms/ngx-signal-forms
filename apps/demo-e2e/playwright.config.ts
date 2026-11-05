@@ -1,4 +1,4 @@
-import { workspaceRoot } from '@nx/devkit';
+import { getReadyUrl, workspaceRoot } from '@nx/devkit';
 import { nxE2EPreset } from '@nx/playwright/preset';
 import { defineConfig, devices } from '@playwright/test';
 
@@ -10,9 +10,10 @@ process.env['NO_PROXY'] ??= 'localhost,127.0.0.1';
 
 const isCI = Boolean(process.env['CI']);
 const ciPort = process.env['PLAYWRIGHT_DEMO_PORT'] ?? '4300';
-const baseURL =
-  process.env['BASE_URL'] ??
-  (isCI ? `http://127.0.0.1:${ciPort}` : 'http://127.0.0.1:4600');
+const webServerAddress = getReadyUrl(
+  isCI ? `http://127.0.0.1:${ciPort}` : 'http://127.0.0.1:4600',
+);
+const baseURL = process.env['BASE_URL'] ?? webServerAddress;
 const shouldStartWebServer = !process.env['BASE_URL'];
 const browserChannel =
   process.env['PLAYWRIGHT_BROWSER_CHANNEL'] ??
@@ -84,11 +85,9 @@ export default defineConfig({
   /* Run your local dev server before starting the tests */
   webServer: shouldStartWebServer
     ? {
-        command: isCI
-          ? `pnpm exec vite --host 127.0.0.1 --port ${ciPort} --strictPort --config apps/demo/vite.config.mts`
-          : 'pnpm nx serve demo',
-        url: baseURL,
-        reuseExistingServer: !isCI,
+        command: 'pnpm nx run demo:serve-e2e',
+        url: webServerAddress,
+        reuseExistingServer: true,
         cwd: workspaceRoot,
         timeout: 240000,
       }

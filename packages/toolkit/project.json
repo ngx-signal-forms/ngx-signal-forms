@@ -95,6 +95,7 @@
     },
     "test": {
       "executor": "nx:run-commands",
+      "outputs": ["{projectRoot}/.vitest/report-jsdom"],
       "options": {
         "command": "vitest run --config vitest.jsdom.config.mts",
         "cwd": "packages/toolkit"
@@ -116,14 +117,8 @@
         "{workspaceRoot}/tsconfig.base.json"
       ],
       "options": {
-        "command": "pnpm exec tsc6 -p packages/toolkit/tsconfig.spec.json --noEmit",
+        "command": "pnpm exec tsc6 -p packages/toolkit/tsconfig.spec.jsdom.json --noEmit && pnpm exec tsc6 -p packages/toolkit/tsconfig.spec.browser.json --noEmit",
         "cwd": "{workspaceRoot}"
-      }
-    },
-    "lint": {
-      "executor": "nx:run-commands",
-      "options": {
-        "command": "oxlint {projectRoot} --type-aware"
       }
     }
   }

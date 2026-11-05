@@ -10,11 +10,10 @@ import {
 import type { ValidationErrorWithFieldTree } from './field-state-utilities';
 
 /**
- * Error-summary mapping utilities, split out of `utilities.ts` (issue
- * #354): turning a raw `ValidationError` into a focusable, labeled,
+ * Error-summary mapping utilities: turning a raw `ValidationError` into a focusable, labeled,
  * message-resolved entry ready for an error-summary list. The aggregation
  * *pipeline* that calls these (`createErrorSummaryEntries`) lives in
- * `error-summary.ts`, next to `NgxHeadlessErrorSummary` (issue #512) — this
+ * `error-summary.ts`, next to `NgxHeadlessErrorSummary` — this
  * module holds only the per-error mapping functions it composes.
  */
 

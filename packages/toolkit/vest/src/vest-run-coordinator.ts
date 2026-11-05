@@ -81,14 +81,14 @@ export interface VestResultLike<F extends string = string> extends Pick<
  * {@link only} and {@link get}'s `VestResultLike<F>` return, which is what
  * lets `VestOnlyFieldSelector`'s return type narrow at the call site without
  * the caller writing an explicit type argument — `F` is inferred from the
- * `suite` value itself. See ADR-0008 and issue #292.
+ * `suite` value itself. See ADR-0008.
  */
 export interface VestRunnableSuite<TValue, F extends string = string> {
   /**
    * Declared as a readonly function property (not method shorthand) so its
    * parameter is contravariant under `strictFunctionTypes` — method
-   * parameters stay bivariant regardless of that flag, which is what
-   * previously let a suite typed for one value (e.g. the whole model) be
+   * parameters stay bivariant regardless of that flag, which would
+   * let a suite typed for one value (e.g. the whole model) be
    * assigned where a suite for a narrower value (e.g. a single field) was
    * expected. See ADR-0008.
    *
@@ -171,8 +171,7 @@ export type VestCoordinatedSuite<TValue, F extends string = string> = Pick<
  * Deliberately a bare object reference rather than
  * `ReadonlyFieldTree<unknown>`: the coordinator never reads the key, it only
  * compares it by identity and uses it as a `WeakMap` key. Keeping it opaque
- * is what removes the `unknown`-typed field-tree casts the cache used to
- * need, and it lets a spec drive the coordinator with a plain `{}` instead of
+ * is what avoids `unknown`-typed field-tree casts in the cache, and it lets a spec drive the coordinator with a plain `{}` instead of
  * a rendered Angular form.
  *
  * The built-in registration path passes the validator's bound
@@ -735,7 +734,7 @@ export function createVestRunCoordinator(): VestRunCoordinator {
    * before the earlier one settles (see {@link awaitVestRunSettlement}'s doc
    * comment) -- if that overlap involves two DIFFERENT field trees, either
    * one's final result can end up reflecting a blend of both trees' data
-   * (issue #214). When no OTHER cache key is currently pending, the shared
+   * When no OTHER cache key is currently pending, the shared
    * path is safe and preserves full Vest statefulness (memoization, retained
    * `warn()` state across runs, etc.) for the common single-tree-per-suite
    * case.
@@ -745,10 +744,10 @@ export function createVestRunCoordinator(): VestRunCoordinator {
    * function's caller): a suite backing several `only`-focused registrations
    * for DIFFERENT fields of the SAME overall form (each bound to its own
    * child `ReadonlyFieldTree`) is the documented, intentional
-   * wave-3 (#174) pattern -- Vest's `only()` mode is SUPPOSED to retain other
+   * multi-field pattern -- Vest's `only()` mode is SUPPOSED to retain other
    * fields' state on the one shared suite there, and that pattern already has
    * its own settlement recovery via `awaitVestRunSettlement`'s subscribe/get
-   * race. It is indistinguishable from the issue #214 shape (same suite
+   * race. It is indistinguishable from the cross-tree shape (same suite
    * object, different cache key) by key identity alone; `focus` is the one
    * signal the coordinator has that tells them apart -- two unrelated forms
    * sharing a suite have no reason to pass a focus field name, while the
@@ -985,7 +984,7 @@ export function createVestRunCoordinator(): VestRunCoordinator {
    * Before executing a NEW run, checks whether `suite` currently has another
    * cache key's run pending (`isSuiteContestedByOtherKey`) -- i.e. the same
    * suite instance backs two concurrently-live field trees with overlapping
-   * in-flight validation (issue #214). When contested, the run is deferred
+   * in-flight validation. When contested, the run is deferred
    * until the suite is idle (`deferVestRunUntilIdle`) so it can never overlap
    * with -- and thus never observe or corrupt -- the other tree's in-flight
    * state; otherwise it runs against the suite's normal shared state
@@ -1043,10 +1042,10 @@ export function createVestRunCoordinator(): VestRunCoordinator {
       runResult: runResult as VestResultLike | PromiseLike<VestResultLike>,
       // Vest 6's `suite.run(...)` returns a dual-shaped object that is *both*
       // a synchronous `SuiteResult` (with `getErrors`/`isPending`) and a
-      // thenable. Previously we gated `initialResult` with `!isThenable(...)`,
-      // which would always be false for Vest 6 suites and forced every
-      // validation run through the async pipeline — hiding sync errors until
-      // the next microtask. Check the sync surface directly instead. A
+      // thenable. Gating `initialResult` with `!isThenable(...)` would always
+      // be false for Vest 6 suites and force every validation run through the
+      // async pipeline, hiding sync errors until the next microtask. Check the
+      // sync surface directly instead. A
       // deferred (contested) run's `runResult` is a plain `Promise` (not
       // Vest-result-like) until it actually starts, so it correctly falls
       // into the "no sync result yet" branch below regardless.
