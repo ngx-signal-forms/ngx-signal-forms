@@ -19,7 +19,7 @@ ESLint-specific guidance for `nx import`. For generic import issues (root deps, 
 }
 ```
 
-**Auto-installation**: `pnpm nx import` can detect ESLint config files and offer to install `@nx/eslint`. Before approving, review the package identity, version, source, and compatibility; install it only after explicit approval. It registers the plugin and updates `namedInputs.production` to exclude ESLint config files.
+**Auto-installation**: `nx import` may detect ESLint config files and offer to install `@nx/eslint`. Review the package identity, version, source, and compatibility, then get explicit user approval before installing it. Do not auto-accept the offer. The install registers the plugin and updates `namedInputs.production` to exclude ESLint config files.
 
 ---
 

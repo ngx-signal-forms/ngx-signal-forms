@@ -71,21 +71,23 @@ The axe-core integration is optional and only required when importing
 
 ## Runtime and tooling baseline
 
-The toolkit's `engines.node` is `^22.23.4 || ^24.22.1 || >=26.12.1`. Each
-floor is the first release of its line with the
-[October 2026 security fixes](https://nodejs.org/en/blog/vulnerability/october-2026-security-releases),
-which is stricter than `@angular/core@22`'s own `engines` field. Raising a
-floor to a Node security release ships as a patch, without a migration guide,
-because the releases below the floor have known vulnerabilities. Consumers
-should use an active LTS Node version compatible with Angular 22 and their
-package manager/tooling stack.
+The toolkit's `engines.node` is `^22.23.4 || ^24.22.1 || >=26.12.1`. The
+22.x and 24.x floors are the first releases of their lines with the
+[October 2026 security fixes](https://nodejs.org/en/blog/vulnerability/october-2026-security-releases).
+The 26.x floor is `26.12.1`; Node.js 26.13.0 is a metadata-only LTS release,
+not the November 2026 security release.
+These floors are stricter than `@angular/core@22`'s own `engines` field.
+Raising a floor to a Node security release ships as a patch, without a
+migration guide, because the releases below the floor have known
+vulnerabilities. Consumers should use an active LTS Node version compatible
+with Angular 22 and their package manager/tooling stack.
 
 The repository currently validates and publishes with the following Node
 version:
 
 | Use case               | Version used in automation                                           |
 | ---------------------- | -------------------------------------------------------------------- |
-| CI + Publish workflows | Node, from [`.node-version`](../.node-version) (currently `24.22.1`) |
+| CI + Publish workflows | Node, from [`.node-version`](../.node-version) (currently `26.13.0`) |
 
 ## Compatibility matrix
 

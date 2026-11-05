@@ -1,4 +1,5 @@
 import { signal } from '@angular/core';
+import { Temporal } from 'temporal-polyfill';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import {
@@ -22,9 +23,19 @@ describe('createReviewStepForm', () => {
   beforeEach(() => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date('2030-06-15T12:00:00'));
+    // Vitest replaces global Temporal, but the imported namespace retains its clock.
+    vi.spyOn(Temporal.Now, 'plainDateISO').mockImplementation(() => {
+      const now = new Date();
+      return Temporal.PlainDate.from({
+        year: now.getFullYear(),
+        month: now.getMonth() + 1,
+        day: now.getDate(),
+      });
+    });
   });
 
   afterEach(() => {
+    vi.restoreAllMocks();
     vi.useRealTimers();
   });
 

@@ -2,14 +2,16 @@
 
 import angular from '@analogjs/vite-plugin-angular';
 import { defineConfig } from 'vitest/config';
-import tsconfigPaths from 'vite-tsconfig-paths';
 
 process.env['NX_DAEMON'] ??= 'false';
 
 export default defineConfig({
   root: import.meta.dirname,
   cacheDir: '../../../node_modules/.vite/packages/demo/debugger',
-  plugins: [angular(), tsconfigPaths()],
+  plugins: [angular({ tsconfig: './tsconfig.spec.json' })],
+  resolve: {
+    tsconfigPaths: true,
+  },
   optimizeDeps: {
     include: [
       '@analogjs/vitest-angular/setup-serializers',
