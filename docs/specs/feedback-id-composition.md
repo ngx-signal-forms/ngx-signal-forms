@@ -4,6 +4,12 @@ Status: agreed specification; implementation pending.
 
 Agreed on 2026-11-05. This document does not describe a shipped refactor.
 
+Implementation is tracked by [#760](https://github.com/ngx-signal-forms/ngx-signal-forms/issues/760).
+It is blocked by [#761](https://github.com/ngx-signal-forms/ngx-signal-forms/issues/761),
+which plans to change the ownership of visible-message state and error/warning IDs.
+After #761 merges, check its resulting contracts before starting #760. Do not
+undo intentional changes made by #761.
+
 ## Goal
 
 Give toolkit-owned feedback-ID composition one pure policy owner. Remove
@@ -22,6 +28,9 @@ character-count IDs within the hint channel.
 - [ADR-0010](../decisions/0010-field-identity-shadows-registries-per-channel.md)
   resolves identity and registry values independently for each channel.
   Published hint IDs are authoritative, including an empty list.
+- [ADR-0017](../decisions/0017-feedback-id-composition-stays-internal.md)
+  keeps feedback-ID composition internal and preserves the distinct
+  auto-ARIA and design-system bridge orders.
 - [Issue #499](https://github.com/ngx-signal-forms/ngx-signal-forms/issues/499)
   establishes character-limit discoverability and description ordering.
 - [Issue #589](https://github.com/ngx-signal-forms/ngx-signal-forms/issues/589)
@@ -47,7 +56,8 @@ supplies descriptors rather than defining another ordering policy.
 Keep the existing public factory signatures and exports compatible. Do not add
 a public count input merely to support this refactor. The internal helper
 shape must follow the actual repeated policy, not introduce a general-purpose
-registration framework.
+registration framework. These limits apply to #760; #761 can make its own
+separately approved API changes.
 
 Preserve the existing flat descriptor and identity boundaries:
 
@@ -84,10 +94,17 @@ For toolkit-prepared feedback, preserve this order:
 3. Eligible character-count limit-description IDs, in their existing order.
 4. The eligible blocking-error ID, or the eligible warning ID.
 
-Deduplicate the final list by first occurrence. Preserve the existing
-no-description return value. A blocking error suppresses the warning reference
-according to the current visibility rules; error and warning timing remain
-independently resolved.
+When the field name is resolved, split preserved IDs on whitespace and retain
+their existing duplicates. Add each managed ID only if it is not already in
+the list. For example, preserved IDs `notes notes` and hints `notes`, `hint`,
+`hint` produce `notes notes hint`.
+
+When the field name is unresolved or empty, return the preserved value verbatim,
+including whitespace and duplicates. Do not append managed hint, count, error
+or warning IDs. Preserve the existing no-description return value.
+
+A blocking error suppresses the warning reference according to the current
+visibility rules; error and warning timing remain independently resolved.
 
 The flat hint-channel boundary carries the already prepared hint/count order.
 The final composer must not split that list to enforce an order on arbitrary
@@ -128,8 +145,9 @@ auto-ARIA shell retains manual-mode opt-out and existing render phasing.
 4. Check existing direct factory consumers and custom-wrapper examples for
    compatibility. Update documentation that would otherwise describe an
    obsolete ownership boundary.
-5. Run the relevant checks from [Testing](../TESTING.md). Record the exact
-   commands and results with the implementation.
+5. Apply the detailed acceptance and testing decisions in #760 as well as the
+   cases below. Run the relevant checks from [Testing](../TESTING.md). Record
+   the exact commands and results with the implementation.
 
 If inspection shows a proposed extraction only relocates code and removes no
 duplicated policy, report that finding before expanding scope. A new
@@ -142,7 +160,8 @@ abstraction is not evidence that the goal has been met.
 | Author IDs, multiple hints, a count and an error             | Exact final order; matching IDs; no warning reference.                                        |
 | Warning eligible without a blocking error                    | Warning reference follows the prepared hint/count list.                                       |
 | Error and warning use different timing strategies            | Each follows its existing cascade; no premature reference.                                    |
-| IDs repeat within or across inputs                           | First occurrence wins; no duplicate output tokens.                                            |
+| IDs repeat within or across inputs                           | With a resolved name, preserve duplicate authored IDs; skip a managed ID already in the list. |
+| Field name is unresolved or empty                            | Return the preserved value verbatim; append no managed hint, count, error or warning IDs.     |
 | No eligible descriptions                                     | Existing empty-result behavior is unchanged.                                                  |
 | Identity hint value changes between `null`, `[]` and a list  | Exact fallback, suppression and publication behavior from the table above.                    |
 | Custom published hint list                                   | Supplied relative order is unchanged, including IDs that resemble count IDs.                  |
