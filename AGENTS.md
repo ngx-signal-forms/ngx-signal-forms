@@ -21,6 +21,8 @@ in [coding standards](CODING_STANDARDS.md), and in `.agents/skills/`
   [Claude instruction-loading guide](https://code.claude.com/docs/en/memory#agents-md).
 - `nx configure-ai-agents` creates provider configuration and can restore
   duplicate skills or the Claude plugin. Review its output before accepting it.
+  Refresh the Nx-provided skills with `pnpm ai:agents` instead — see
+  [Nx AI agent files](docs/agents/nx-ai-agents.md).
 - MCP connections are separate from skill discovery. The shared `.mcp.json`
   configures Claude Code; other clients need their own MCP connection if they
   do not already get it from Nx Console.
@@ -37,6 +39,7 @@ in [coding standards](CODING_STANDARDS.md), and in `.agents/skills/`
 - Creating commits or PR titles: read [Commits](CODING_STANDARDS.md#commits).
 - Executing Nx tasks, using Nx plugins, or changing Nx configuration: read [Nx workflow](CODING_STANDARDS.md#nx-workflow).
 - Handling issues, PRDs, or pull requests: read [issue tracker](docs/agents/issue-tracker.md).
+- Refreshing Nx AI agent files or skills: read [Nx AI agent files](docs/agents/nx-ai-agents.md) — run `pnpm ai:agents`, never bare `nx configure-ai-agents`.
 - Running sandboxed commands, managing worktrees, or pushing: read [sandbox guidance](docs/agents/sandbox.md).
 
 <!-- nx configuration start-->
