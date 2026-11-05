@@ -46,9 +46,15 @@ by the most demanding features used:
 | :--------------------------------------------- | :----- | :--- | :----- | :------ |
 | CSS custom properties                          | 49     | 15   | 9.1    | 31      |
 | `:has(...)` (required by `appearance=outline`) | 105    | 105  | 15.4   | 121     |
-| Native CSS nesting                             | 112    | 112  | 16.5   | 117     |
+| Native CSS nesting                             | 120    | 120  | 17.2   | 117     |
 | `color-mix()`                                  | 111    | 111  | 16.2   | 113     |
 | `light-dark()` (dark mode, see Scenario C)     | 123    | 123  | 17.5   | 120     |
+
+> **On the nesting row.** This is the complete-support floor, not the partial
+> implementation: the package's stylesheets nest rules that start with a type
+> selector (for example `svg { … }` inside the form-field wrapper), which the
+> partial implementations in Chrome/Edge 112–119 and Safari 16.5–17.1 do not
+> parse. Firefox shipped nesting complete in 117.
 
 The effective baseline is the **most demanding** row, not any single
 feature. Every color default is a `light-dark()` pair, and `:has(...)`
