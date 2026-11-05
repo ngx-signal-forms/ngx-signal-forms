@@ -281,6 +281,10 @@ pnpm nx show projects --withTarget target
 ### "The workspace is out of sync"
 
 ```bash
-pnpm nx sync
-pnpm nx reset  # if sync doesn't fix stale cache
+pnpm nx sync:check
 ```
+
+`pnpm nx sync:check` checks sync status without applying changes. `pnpm nx sync`
+may modify workspace files, and `pnpm nx reset` clears cache and workspace
+metadata; do not run either during read-only diagnosis without explicit user
+approval.

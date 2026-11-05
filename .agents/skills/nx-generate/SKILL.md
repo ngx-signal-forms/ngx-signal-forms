@@ -54,10 +54,11 @@ Pay attention to required options, defaults that might need overriding, and opti
 
 **Default to non-buildable libraries** unless there's a specific reason for buildable.
 
-| Type                        | When to use                                                       | Generator flags                     |
-| --------------------------- | ----------------------------------------------------------------- | ----------------------------------- |
-| **Non-buildable** (default) | Internal monorepo libs consumed by apps                           | No `--bundler` flag                 |
-| **Buildable**               | Publishing to npm, cross-repo sharing, stable libs for cache hits | `--bundler=vite` or `--bundler=swc` |
+| Type                        | When to use                                    | Generator flags                             |
+| --------------------------- | ---------------------------------------------- | ------------------------------------------- |
+| **Non-buildable** (default) | Internal monorepo libs consumed by apps        | No `--bundler` flag                         |
+| **Buildable**               | Cross-repo sharing, stable libs for cache hits | `--bundler=vite` or `--bundler=swc`         |
+| **Publishable**             | Publishing to npm                              | `--publishable --importPath=<package-name>` |
 
 Non-buildable libs:
 
@@ -69,7 +70,7 @@ Buildable libs:
 
 - Have their own build target
 - Useful for stable libs that rarely change (cache hits)
-- Required for npm publishing
+- Use `--publishable` with a valid `--importPath` for npm distribution; publishing is a separate step
 
 **If unclear, ask the user:** "Should this library be buildable (own build step, better caching) or non-buildable (source consumed directly, simpler setup)?"
 

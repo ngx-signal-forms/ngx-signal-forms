@@ -56,7 +56,7 @@ The config package centralizes ESLint plugin dependencies and exports composable
 ## Key Pitfalls
 
 - **Trace the full inheritance chain** before inlining — check what each variant inherits from the base.
-- **Module resolution changes** — from Node package resolution (`@repo/...`) to relative paths (`../../tsconfig.base.json`).
+- **Module resolution changes** — update config inheritance to relative paths (`../../tsconfig.base.json`), but preserve Node package resolution for cross-project imports.
 - **ESLint configs are JavaScript, not JSON** — handle JS imports, array spreading, and plugin objects when merging.
 
 Helpful docs:
