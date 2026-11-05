@@ -5,8 +5,8 @@ description: Import, merge, or combine repositories into an Nx workspace using n
 
 ## Quick Start
 
-- `pnpm nx import` brings code from a source repository or folder into the current workspace, preserving commit history.
-- `nx import` responds with .ndjson outputs and follow-up questions. If it waits on a prompt, run it again with `--no-interactive` and specify all flags directly.
+- `nx import` brings code from a source repository or folder into the current workspace, preserving commit history.
+- After nx `22.6.0`, `nx import` responds with .ndjson outputs and follow-up questions. For earlier versions, always run with `--no-interactive` and specify all flags directly.
 - Run `pnpm nx import --help` for available options.
 - Make sure the destination directory is empty before importing.
   EXAMPLE: target has `libs/utils` and `libs/models`; source has `libs/ui` and `libs/data-access` — you cannot import `libs/` into `libs/` directly. Import each source library individually.
@@ -20,13 +20,13 @@ Read the nx docs if you have the tools for it.
 
 ## Import Strategy
 
-**Subdirectory-at-a-time** (`pnpm nx import <source> apps/<project> --source=apps/<project>`):
+**Subdirectory-at-a-time** (`pnpm nx import <source> apps --source=apps`):
 
 - **Recommended for monorepo sources** — files land at top level, no redundant config
-- Caveats: multiple import commands (separate merge commits each); each destination must be empty; root configs (deps, plugins, targetDefaults) are not imported
+- Caveats: multiple import commands (separate merge commits each); dest must not have conflicting directories; root configs (deps, plugins, targetDefaults) not imported
 - **Directory conflicts**: Import into alternate-named dir (e.g. `imported-apps/`), then rename
 
-**Whole repo** (`nx import <source> imported --source=.`):
+**Whole repo** (`pnpm nx import <source> imported --source=.`):
 
 - **Only for non-monorepo sources** (single-project repos)
 - For monorepos, creates messy nested config (`imported/nx.json`, `imported/tsconfig.base.json`, etc.)
@@ -34,7 +34,7 @@ Read the nx docs if you have the tools for it.
 
 ### Directory Conventions
 
-- **Always prefer the destination's existing conventions.** Source uses `libs/`but dest uses `packages/`? Import into `packages/` (`nx import <source> packages/foo --source=libs/foo`).
+- **Always prefer the destination's existing conventions.** Source uses `libs/`but dest uses `packages/`? Import into `packages/` (`pnpm nx import <source> packages/foo --source=libs/foo`).
 - If dest has no convention (empty workspace), ask the user.
 
 ### Application vs Library Detection
@@ -53,7 +53,7 @@ Before importing, identify whether the source is an **application** or a **libra
 
 - Applications → `apps/<name>`. Check workspace globs (e.g. `pnpm-workspace.yaml`, `workspaces` in root `package.json`) for an existing `apps/*` entry.
   - If `apps/*` is **not** present, add it before importing: update the workspace glob config and commit (or stage) the change.
-  - Example: `nx import <source> apps/my-app --source=packages/my-app`
+  - Example: `pnpm nx import <source> apps/my-app --source=packages/my-app`
 - Libraries → follow the dest's existing convention (`packages/`, `libs/`, etc.).
 
 ## Common Issues
@@ -77,7 +77,7 @@ Before importing, identify whether the source is an **application** or a **libra
 
 ### TypeScript Project References
 
-After import, run `nx sync --yes`. If it reports nothing but typecheck still fails, `nx reset` first, then `nx sync --yes` again.
+After import, run `pnpm nx sync --yes`. If it reports nothing but typecheck still fails, run `pnpm nx reset`, then `pnpm nx sync --yes` again.
 
 ### Explicit Executor Path Fixups
 
@@ -85,8 +85,8 @@ Inferred targets (via Nx plugins) resolve config relative to project root — no
 
 ### Plugin Detection
 
-- **Whole-repo import**: `pnpm nx import` can offer to install plugins. Before approving, review each package's identity, version, source, and workspace compatibility; install only explicitly approved packages.
-- **Subdirectory import**: Plugins are not auto-detected. After the same review, add approved plugins with `pnpm nx add @nx/PLUGIN`. Check `include`/`exclude` patterns — defaults won't match alternate directories (e.g. `apps-beta/`).
+- **Whole-repo import**: `nx import` may detect and offer plugins. Review each package's identity, version, source, and compatibility. Install only after explicit user approval; do not auto-accept plugin installation.
+- **Subdirectory import**: Plugins are not auto-detected. Review the plugin package, then get explicit user approval before adding it. Check `include`/`exclude` patterns because defaults may not match alternate directories (e.g. `apps-beta/`).
 - Run `pnpm nx reset` after any plugin config changes.
 
 ### Redundant Root Files (Whole-Repo Only)
@@ -114,11 +114,12 @@ Subdirectory import doesn't bring the source's root `eslint.config.mjs`, but pro
 
 Install `typescript-eslint` explicitly — pnpm's strict hoisting won't auto-resolve this transitive dep of `@nx/eslint-plugin`.
 
-### ESLint Version Compatibility (Critical)
+### ESLint Version Compatibility
 
-Validate ESLint compatibility for every imported package before changing versions. Legacy `.eslintrc.*` projects can require ESLint 8 while flat-config projects use ESLint 9; both can coexist.
+Check the peer dependency ranges of `@nx/eslint` and the imported ESLint plugins before choosing a version. Use a version accepted by all affected packages. Do not force a downgrade or add an override unless the affected packages have been checked and the conflict is confirmed.
 
-Do not add a workspace-wide `pnpm.overrides.eslint` by default: it forces one version on every package. If a single version is required after validating all affected packages, use an exact reviewed version rather than a range; otherwise, keep package-level ESLint versions compatible with each project's configuration.
+If no compatible shared version exists, add an override with a range you have
+verified against every affected package.
 
 ### Dependency Version Conflicts
 
@@ -180,7 +181,7 @@ When importing a project with existing npm scripts (`build`, `dev`, `start`, `li
 
 **Fix**: Remove the Nx-rewritten npm scripts from the imported `package.json`, then either:
 
-- Accept the prefixed names (e.g. `nx run app:next:build`)
+- Accept the prefixed names (e.g. `pnpm nx run app:next:build`)
 - Rename plugin target names in `nx.json` to use unprefixed names
 
 ## Non-Nx Source Issues

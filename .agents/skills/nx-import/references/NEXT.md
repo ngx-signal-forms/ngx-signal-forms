@@ -1,6 +1,6 @@
 ## Next.js
 
-Next.js-specific guidance for `nx import`. For generic import issues (pnpm globs, root deps, project references, name collisions, ESLint, frontend tsconfig base settings, `@nx/react` typings, Jest preset, target name prefixing, non-Nx source handling), see `SKILL.md`.
+Next.js-specific guidance for `pnpm nx import`. For generic import issues (pnpm globs, root deps, project references, name collisions, ESLint, frontend tsconfig base settings, `@nx/react` typings, Jest preset, target name prefixing, non-Nx source handling), see `SKILL.md`.
 
 ---
 
@@ -77,7 +77,7 @@ This is the standard "npm Script Rewriting" issue from SKILL.md, but triggered b
 For single-project `create-next-app` repos, use whole-repo import into a subdirectory:
 
 ```bash
-nx import /path/to/source apps/web --ref=main --source=. --no-interactive
+pnpm nx import /path/to/source apps/web --ref=main --source=. --no-interactive
 ```
 
 ### `next-env.d.ts`
@@ -116,7 +116,7 @@ When both Next.js and Vite projects exist in the same workspace.
 
 ### Plugin Coexistence
 
-Both `@nx/next/plugin` and `@nx/vite/plugin` can coexist in `nx.json`. They detect different config files (`next.config.*` vs `vite.config.*`) so there are no conflicts. The `@nx/js/typescript` plugin handles libraries.
+Both `@nx/next/plugin` and `@nx/vite/plugin` can coexist in `nx.json`. They detect different config files (`next.config.*` vs `vite.config.*`) so there are no conflicts. In Nx 24, register `@nx/js/typescript` before `@nx/vite/plugin` for TypeScript and Vite typecheck targets; the Vite plugin adds a `vue-tsc` target for Vue projects. Register `@nx/vitest` for Vitest tests.
 
 ### Vite Standalone Project tsconfig Fixes
 
@@ -131,11 +131,11 @@ Vite standalone projects (imported as whole-repo) have self-contained tsconfigs 
 
 ### Typecheck Target Names
 
-- `@nx/vite/plugin` defaults `typecheckTargetName` to `"vite:typecheck"`
-- `@nx/js/typescript` uses `"typecheck"`
+- `@nx/js/typescript` provides the `typecheck` target for TypeScript and non-Vue Vite projects.
+- `@nx/vite/plugin` adds a `vue-tsc` typecheck target for Vue projects and defaults its target name to `"typecheck"`.
 - Next.js projects have NO standalone typecheck target — Next.js runs type checking during `next build`
 
-No naming conflicts between frameworks.
+Register `@nx/js/typescript` before `@nx/vite/plugin` so the Vue-specific `vue-tsc` target takes precedence.
 
 ---
 
@@ -146,14 +146,14 @@ No naming conflicts between frameworks.
 3. Install Next.js-specific deps: `pnpm add -wD @next/eslint-plugin-next`
 4. ESLint setup (see SKILL.md: "Root ESLint Config Missing")
 5. Jest setup (see SKILL.md: "Jest Preset Missing")
-6. `nx reset && nx sync --yes && nx run-many -t typecheck,build,test,lint`
+6. `pnpm nx reset && pnpm nx sync --yes && pnpm nx run-many -t typecheck,build,test,lint`
 
 ## Fix Order — Non-Nx Source (create-next-app)
 
 1. Import into `apps/<name>` (see SKILL.md: "Application vs Library Detection")
 2. Generic fixes from SKILL.md (pnpm globs, stale files cleanup, script rewriting, target name prefixing)
 3. (Optional) If app needs to export types for other workspace projects: fix `noEmit` → `composite` (see SKILL.md)
-4. `nx reset && nx run-many -t next:build,eslint:lint` (or unprefixed names if renamed)
+4. `pnpm nx reset && pnpm nx run-many -t next:build,eslint:lint` (or unprefixed names if renamed)
 
 ---
 

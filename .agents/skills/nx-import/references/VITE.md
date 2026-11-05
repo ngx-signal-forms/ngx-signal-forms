@@ -4,15 +4,17 @@ Vite-specific guidance for `nx import`. For generic import issues (pnpm globs, r
 
 ---
 
-### `@nx/vite/plugin` Typecheck Target
+### Vite build, test, and typecheck targets
 
-`@nx/vite/plugin` defaults `typecheckTargetName` to `"typecheck"`. If `@nx/js/typescript` is also registered, reserve it for non-Vite pure TypeScript libraries and rename its target if needed (for example, `"tsc-typecheck"`).
-
-Keep both plugins only if the workspace has non-Vite pure TS libraries — `@nx/js/typescript` handles those while `@nx/vite/plugin` owns Vite project typechecking.
+In Nx 24, `@nx/vite/plugin` provides Vite build and serve targets. Register
+`@nx/vitest` for Vitest test targets and `@nx/js/typescript` for TypeScript
+typecheck targets. The Vite plugin adds a `vue-tsc` target for Vue projects.
+Register `@nx/js/typescript` before `@nx/vite/plugin` so the Vue target takes
+precedence. The Vite plugin's `typecheckTargetName` defaults to `"typecheck"`.
 
 ### @nx/vite Plugin Install Failure
 
-Plugin init loads `vite.config.ts` before deps are available. **Fix**: `pnpm add -wD vite @vitejs/plugin-react` (or `@vitejs/plugin-vue`) first, then `pnpm exec nx add @nx/vite`.
+Plugin init loads `vite.config.ts` before deps are available. **Fix**: `pnpm add -wD vite @vitejs/plugin-react` (or `@vitejs/plugin-vue`) first, then `pnpm nx add @nx/vite`.
 
 ### Vite `resolve.alias` and `__dirname` (Non-Nx Sources)
 
@@ -45,13 +47,13 @@ See SKILL.md for the generic noEmit→composite fix. Vite-specific additions:
 
 ## React Router 7 (Vite-Based)
 
-React Router 7 (`@react-router/dev`) uses Vite under the hood with a `vite.config.ts` and a `react-router.config.ts`. The `@nx/vite/plugin` detects `vite.config.ts` and creates inferred targets.
+React Router 7 (`@react-router/dev`) uses Vite under the hood with a `vite.config.ts` and a `react-router.config.ts`. The `@nx/vite/plugin` detects `vite.config.ts` and creates Vite build and serve targets. Register `@nx/vitest` when the project has Vitest tests.
 
 ### Targets
 
 `@nx/vite/plugin` creates `build`, `dev`, `serve` targets. The `build` target invokes the script defined in `package.json` (usually `react-router build`), not `vite build` directly.
 
-**Custom typecheck command required** — React Router 7 typegen must run before TypeScript (for example, `react-router typegen && tsc`). Keep or configure that command as the project's `typecheck` target rather than replacing it with a generic TypeScript invocation.
+`@nx/js/typescript` provides the `typecheck` target for this non-Vue project. React Router 7 typegen must run before `tsc` (for example, `react-router typegen && tsc`). Keep that script in `package.json` if the target does not preserve the required command.
 
 ### tsconfig Notes
 
@@ -77,7 +79,7 @@ TanStack Start uses Vinxi under the hood, which wraps Vite. Projects have a stan
 
 ### Targets
 
-`@nx/vite/plugin` creates `build`, `dev`, `preview`, `serve-static`, `typecheck` targets. The `build` target runs `vite build` which invokes the TanStack Start Vinxi pipeline (produces both client and SSR bundles).
+`@nx/vite/plugin` creates Vite build and serve targets. Register `@nx/js/typescript` for the `typecheck` target and `@nx/vitest` for tests when the project has Vitest configuration. The build target runs `vite build`, which invokes the TanStack Start Vinxi pipeline and produces client and SSR bundles.
 
 ### tsconfig Notes
 
@@ -185,7 +187,7 @@ Both `@nx/js/typescript` and `@nx/vite/plugin` auto-detect `vue-tsc` when instal
 
 1. `pnpm add -wD eslint@^9 eslint-plugin-vue vue-eslint-parser @vue/eslint-config-typescript @typescript-eslint/parser @nx/eslint-plugin typescript-eslint`
 2. Create root `eslint.config.mjs`
-3. Then `npx nx add @nx/eslint`
+3. Then `pnpm nx add @nx/eslint`
 
 ### Vue ESLint Config Pattern
 
@@ -226,27 +228,35 @@ When both frameworks coexist, several settings become per-project.
 - Vue: `"jsx": "preserve"`, `"jsxImportSource": "vue"` in project tsconfig
 - Root: **NO** `jsx` setting
 
-### Typecheck — Auto-Detects Framework
+### Typecheck — Vue and other Vite projects
 
-`@nx/vite/plugin` uses `vue-tsc` for Vue projects and `tsc` for React automatically.
+Register `@nx/js/typescript` before `@nx/vite/plugin`. The JS plugin provides
+`typecheck` for Vite projects; the Vite plugin supplies `vue-tsc` for Vue
+projects.
 
 ```json
 {
   "plugins": [
     { "plugin": "@nx/eslint/plugin", "options": { "targetName": "lint" } },
     {
+      "plugin": "@nx/js/typescript",
+      "options": { "typecheck": { "targetName": "typecheck" } }
+    },
+    {
       "plugin": "@nx/vite/plugin",
       "options": {
         "buildTargetName": "build",
-        "typecheckTargetName": "typecheck",
-        "testTargetName": "test"
+        "typecheckTargetName": "typecheck"
       }
-    }
+    },
+    { "plugin": "@nx/vitest", "options": { "testTargetName": "test" } }
   ]
 }
 ```
 
-Remove `@nx/js/typescript` if all projects use Vite. Keep it (renamed to `"tsc-typecheck"`) only for non-Vite pure TS libs.
+Keep `@nx/js/typescript` even if all projects use Vite. It infers typecheck
+targets for non-Vue Vite projects. Do not rename its target to avoid a conflict
+with the Vue target; register it before `@nx/vite/plugin`.
 
 ### ESLint — Three-Tier Config
 
@@ -262,22 +272,26 @@ Remove `@nx/js/typescript` if all projects use Vite. Keep it (renamed to `"tsc-t
 
 ## Redundant npm Scripts After Import
 
-`nx import` copies `package.json` verbatim, so npm scripts come along. For Vite-based projects `@nx/vite/plugin` already infers the same targets from `vite.config.ts` — the npm scripts just shadow the plugin with weaker `nx:run-script` wrappers (no first-class caching inputs/outputs). Remove them after import.
+`nx import` copies `package.json` verbatim, so npm scripts come along. The `@nx/vite/plugin` infers Vite build and serve targets; `@nx/vitest` infers test targets when a Vitest config exists. Remove each script only when the matching target is inferred, since npm scripts can shadow plugin targets with weaker `nx:run-script` wrappers.
 
 ### Standalone Vite App (`create-vite`)
 
-Remove the following scripts — every one is redundant:
+Remove scripts only when the matching inferred targets exist. Keep a test
+script if the project does not have a Vitest config or an `@nx/vitest` target.
 
 | Script                        | Plugin replacement                                                           |
 | ----------------------------- | ---------------------------------------------------------------------------- |
 | `dev: vite`                   | `@nx/vite/plugin` → `dev`                                                    |
 | `build: tsc -b && vite build` | `@nx/vite/plugin` → `build`; `typecheck` via `@nx/js/typescript` handles tsc |
 | `preview: vite preview`       | `@nx/vite/plugin` → `preview`                                                |
+| `test: vitest`                | `@nx/vitest` → `test`                                                        |
 | `lint: eslint .`              | `@nx/eslint/plugin` → `eslint:lint`                                          |
 
 ### TanStack Start
 
-Remove `build`, `dev`, `preview`, and `test` scripts, but move any hardcoded `--port` flag to `vite.config.ts` first:
+Remove `build`, `dev`, and `preview` scripts when the Vite targets are inferred.
+Remove `test` only when `@nx/vitest` infers the target and it runs tests once.
+Move any hardcoded `--port` flag to `vite.config.ts` first:
 
 ```ts
 // vite.config.ts
@@ -301,11 +315,13 @@ Do **not** remove React Router 7 scripts. They use the framework CLI (`react-rou
 ### Nx Source
 
 1. Generic fixes from SKILL.md (pnpm globs, root deps, executor paths, frontend tsconfig base settings, `@nx/react` typings)
-2. Configure `@nx/vite/plugin` typecheck target
+2. Register `@nx/js/typescript` before `@nx/vite/plugin` for typecheck targets,
+   and register `@nx/vitest` for Vitest tests
 3. **React**: `jsx: "react-jsx"` (root or per-project)
 4. **Vue**: `jsx: "preserve"` + `jsxImportSource: "vue"`; verify `vue-shims.d.ts`; install ESLint deps before `@nx/eslint`
-5. **Mixed**: `jsx` per-project; remove/rename `@nx/js/typescript`
-6. `nx sync --yes && nx reset && nx run-many -t typecheck,build,test,lint`
+5. **Mixed**: `jsx` per-project; keep `@nx/js/typescript` before
+   `@nx/vite/plugin` for typecheck targets
+6. `pnpm nx sync --yes && pnpm nx reset && pnpm nx run-many -t typecheck,build,test,lint`
 
 ### Non-Nx Source (additional steps)
 
@@ -316,7 +332,8 @@ Do **not** remove React Router 7 scripts. They use the framework CLI (`react-rou
 4. Fix `resolve.alias` / `__dirname` / `baseUrl`
 5. Ensure `types` include `vite/client` and `node`
 6. Install `@nx/vite` manually if it failed during import
-7. Remove redundant npm scripts so `@nx/vite/plugin` infers them natively (see "Redundant npm Scripts" section)
+7. Remove redundant build and serve scripts when `@nx/vite/plugin` infers them.
+   Remove test scripts only when `@nx/vitest` infers their targets.
 8. **Vue**: Add `outDir` + `**/*.vue.d.ts` to ESLint ignores
 9. Full verification
 
@@ -327,24 +344,25 @@ See SKILL.md for generic multi-import (name collisions, dep refs). Vite-specific
 ### Non-Nx Source: React Router 7
 
 1. Ensure source has at least one commit (see SKILL.md: "Source Repo Has No Commits")
-2. `nx import` whole-repo into `apps/<name>` (see SKILL.md: "Application vs Library Detection") → auto-installs `@nx/vite`, `@nx/react`
+2. `pnpm nx import` whole-repo into `apps/<name>` (see SKILL.md: "Application vs Library Detection") → auto-installs `@nx/vite`, `@nx/react`
 3. Stale file cleanup: `node_modules/`, `package-lock.json`, `.gitignore`
 4. Fix `tsconfig.json`: `noEmit` → `composite + emitDeclarationOnly + outDir + tsBuildInfoFile`
 5. Add `build` and `.react-router` to dest root `.gitignore`
 6. **Keep all npm scripts** — React Router 7 uses framework CLI (`react-router build/dev`), not plain vite (see "Redundant npm Scripts" above)
-7. `npm install && nx reset && nx sync --yes`
+7. `npm install && pnpm nx reset && pnpm nx sync --yes`
 
 ### Non-Nx Source: TanStack Start
 
 1. Ensure source has at least one commit — `create-tan-stack` does NOT auto-commit (see SKILL.md)
-2. `nx import` whole-repo into `apps/<name>` (see SKILL.md: "Application vs Library Detection") → auto-installs `@nx/vite`, `@nx/vitest`
+2. `pnpm nx import` whole-repo into `apps/<name>` (see SKILL.md: "Application vs Library Detection") → auto-installs `@nx/vite`, `@nx/vitest`
 3. Stale file cleanup: `node_modules/`, `package-lock.json`, `.gitignore`
 4. Fix `tsconfig.json`: `noEmit` → `composite + emitDeclarationOnly + outDir + tsBuildInfoFile`
 5. Keep `allowImportingTsExtensions` — compatible with `emitDeclarationOnly: true`
 6. Add `.vinxi`, `.tanstack`, `.nitro`, `.output` to dest root `.gitignore`
 7. Move hardcoded `--port` from `dev` script into `vite.config.ts` (`server: { port: N }`)
-8. Remove redundant build, dev, and preview scripts; `@nx/vite/plugin` infers those targets and `@nx/vitest` infers `test` (see "Redundant npm Scripts" above)
-9. `npm install && nx reset && nx sync --yes`
+8. Remove redundant build and serve scripts when `@nx/vite/plugin` infers them.
+   Remove test scripts only when `@nx/vitest` infers the target.
+9. `npm install && pnpm nx reset && pnpm nx sync --yes`
 
 ### Quick Reference: React vs Vue
 
@@ -360,14 +378,14 @@ See SKILL.md for generic multi-import (name collisions, dep refs). Vite-specific
 
 ### Quick Reference: Vite-Based React Frameworks
 
-| Aspect              | Vite (standalone)        | React Router 7          | TanStack Start           |
-| ------------------- | ------------------------ | ----------------------- | ------------------------ |
-| Build config        | `vite.config.ts`         | `vite.config.ts`        | `vite.config.ts`         |
-| Build output        | `dist/`                  | `build/`                | `dist/`                  |
-| SSR bundle          | No                       | Yes (`build/server/`)   | Yes (`dist/server/`)     |
-| tsconfig layout     | app + node split         | Single tsconfig         | Single tsconfig          |
-| Auto-committed      | Depends on tool          | Usually yes             | **No — commit first**    |
-| `nx import` plugins | `@nx/vite`, `@nx/vitest` | `@nx/vite`, `@nx/react` | `@nx/vite`, `@nx/vitest` |
+| Aspect                  | Vite (standalone) | React Router 7          | TanStack Start           |
+| ----------------------- | ----------------- | ----------------------- | ------------------------ |
+| Build config            | `vite.config.ts`  | `vite.config.ts`        | `vite.config.ts`         |
+| Build output            | `dist/`           | `build/`                | `dist/`                  |
+| SSR bundle              | No                | Yes (`build/server/`)   | Yes (`dist/server/`)     |
+| tsconfig layout         | app + node split  | Single tsconfig         | Single tsconfig          |
+| Auto-committed          | Depends on tool   | Usually yes             | **No — commit first**    |
+| `pnpm nx import` plugin | `@nx/vite`        | `@nx/vite`, `@nx/react` | `@nx/vite`, `@nx/vitest` |
 
 ---
 

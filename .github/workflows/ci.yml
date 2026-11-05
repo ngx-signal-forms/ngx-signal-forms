@@ -134,10 +134,12 @@ jobs:
       # project selection for every code change and selected nothing only for
       # docs, workflow and Dependabot-config changes, which no target reads.
       - name: Run affected tasks (excluding demo-e2e)
-        env:
-          NX_LEGACY_AFFECTED: 'false'
         run: pnpm exec nx affected -t lint typecheck test test-timezones test-browser build e2e --exclude=demo-e2e --parallel=2 --outputStyle=static
         timeout-minutes: 10
+
+      # These tests cover the CI monitor's deterministic budget and timeout logic.
+      - name: Check CI monitor scripts
+        run: pnpm exec nx run workspace:check-monitor-ci-scripts --outputStyle=static
 
       # Run outside affected selection so README/docs-only changes are checked.
       # The build dependency can reuse the affected build's cache.
@@ -508,8 +510,6 @@ jobs:
       # PRs: only the affected demo apps, for fast feedback.
       - name: Scan affected demo apps (pull request)
         if: ${{ github.event_name == 'pull_request' }}
-        env:
-          NX_LEGACY_AFFECTED: 'false'
         run: pnpm exec nx affected -t a11y --parallel=2 --outputStyle=static
 
       # main: every demo app, so issue creation sees the full picture.
