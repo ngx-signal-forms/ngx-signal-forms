@@ -26,8 +26,6 @@
   --_error-border-width-default: 0;
   --_error-border-radius-default: 0;
   --_error-border-style-default: solid;
-  --_error-animation-default: ngx-status-slide-in 300ms
-    cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
 
   /* Resolved pseudo-private variables */
   --_error-margin-top: var(
@@ -54,10 +52,6 @@
   --_error-line-height: var(
     --ngx-signal-form-error-line-height,
     var(--_feedback-line-height)
-  );
-  --_error-animation: var(
-    --ngx-signal-form-error-animation,
-    var(--_error-animation-default)
   );
   /* A tinted ancestor surface (NgxFormFieldset) hands in darker tones */
   /* through the inherited `--_tinted-surface-clr-*` tokens. */
@@ -118,9 +112,18 @@
   border-radius: var(--_error-border-radius);
   font-size: var(--_error-font-size);
   line-height: var(--_error-line-height);
-  animation: var(--_error-animation);
-  will-change: transform, opacity;
-  transform-origin: top center;
+  /* The keyframe name must appear in the `animation` declaration itself:
+     emulated encapsulation renames `@keyframes` and only rewrites names it
+     finds there, not in custom-property values. Panel mode sets
+     `--_error-animation: none`. */
+  animation: var(
+    --_error-animation,
+    var(
+      --ngx-signal-form-error-animation,
+      ngx-status-slide-in var(--_motion-duration-enter)
+        var(--_motion-easing-enter) both
+    )
+  );
 }
 
 :host([data-presentation='inline']) .ngx-form-field-error {
@@ -257,8 +260,8 @@
     color-mix(in srgb, #a16207 10%, white),
     rgb(120 53 15 / 0.28)
   );
-  --_error-panel-motion-duration: 180ms;
-  --_error-panel-motion-easing: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --_error-panel-motion-duration: var(--_motion-duration-enter);
+  --_error-panel-motion-easing: var(--_motion-easing-enter);
   --_error-panel-motion-distance: 0.25rem;
 
   --_error-padding: var(
@@ -321,11 +324,9 @@
       var(--_error-panel-motion-easing),
     transform var(--_error-panel-motion-duration)
       var(--_error-panel-motion-easing),
-    padding var(--_error-panel-motion-duration)
-      var(--_error-panel-motion-easing),
-    border-color 0.15s ease-in-out,
-    background-color 0.15s ease-in-out,
-    color 0.15s ease-in-out;
+    border-color var(--_motion-duration-state) var(--_motion-easing-state),
+    background-color var(--_motion-duration-state) var(--_motion-easing-state),
+    color var(--_motion-duration-state) var(--_motion-easing-state);
 }
 
 :host([data-presentation='panel']) .ngx-form-field-error--empty {
@@ -334,10 +335,12 @@
   pointer-events: none;
 }
 
+/* Reduced motion keeps the fade and drops only the movement. */
 @media (prefers-reduced-motion: reduce) {
-  :host([data-presentation='panel']) .ngx-form-field-error {
-    transition: none;
+  :host([data-presentation='panel']) .ngx-form-field-error,
+  :host([data-presentation='panel']) .ngx-form-field-error--empty {
     transform: none;
+    transition-property: opacity, border-color, background-color, color;
   }
 }
 
@@ -381,11 +384,12 @@
   }
 }
 
-/* Reduced Motion Support */
+/* Reduced motion swaps the slide for a fade. Only the keyframes change, so
+ * the duration and timing from the (possibly consumer-set) animation stay,
+ * and `none` still means no animation. */
 @media (prefers-reduced-motion: reduce) {
   .ngx-form-field-error {
-    transition: none;
-    animation: none;
+    animation-name: ngx-status-fade-in;
   }
 }
 
@@ -393,11 +397,13 @@
 @keyframes ngx-status-slide-in {
   from {
     opacity: 0;
-    transform: translateY(-0.5rem) scale(0.98);
+    transform: translateY(-0.25rem);
   }
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
+}
+
+@keyframes ngx-status-fade-in {
+  from {
+    opacity: 0;
   }
 }
 

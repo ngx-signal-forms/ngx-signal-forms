@@ -409,12 +409,16 @@
     --ngx-form-field-selection-group-warning-bg,
     color-mix(in srgb, var(--_warning-color) 12%, transparent)
   );
-  --_transition-color: color 0.15s ease-in-out;
+  --_transition-color: color var(--_motion-duration-state)
+    var(--_motion-easing-state);
   --_transition-chrome:
-    border-color 0.15s ease-in-out, background-color 0.15s ease-in-out,
-    color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+    border-color var(--_motion-duration-state) var(--_motion-easing-state),
+    background-color var(--_motion-duration-state) var(--_motion-easing-state),
+    color var(--_motion-duration-state) var(--_motion-easing-state),
+    box-shadow var(--_motion-duration-state) var(--_motion-easing-state);
   --_transition-surface:
-    background-color 0.15s ease-in-out, color 0.15s ease-in-out;
+    background-color var(--_motion-duration-state) var(--_motion-easing-state),
+    color var(--_motion-duration-state) var(--_motion-easing-state);
   --_selection-row-min-block-size: calc(
     var(--_field-touch-target) + (var(--_selection-row-padding-block) * 2)
   );
@@ -825,8 +829,8 @@
   border-radius: var(--_outline-radius);
   cursor: text;
   transition:
-    border-color 0.15s ease-in-out,
-    box-shadow 0.15s ease-in-out;
+    border-color var(--_motion-duration-state) var(--_motion-easing-state),
+    box-shadow var(--_motion-duration-state) var(--_motion-easing-state);
   min-height: var(--_outline-min-height);
 }
 
@@ -988,6 +992,7 @@
   }
 }
 
+
 /* Warning state styling (applied via host class when field has warnings but no errors) */
 :host(
     .ngx-signal-form-field-wrapper--warning.ngx-signal-form-field-wrapper--textual
@@ -1140,8 +1145,8 @@
   /* A scoped transition lets consumers collapse the reserved space smoothly. */
   transition: var(
     --ngx-form-field-assistive-transition,
-    min-height 0.15s ease-out,
-    margin-block 0.15s ease-out
+    min-height var(--_motion-duration-state) ease-out,
+    margin-block var(--_motion-duration-state) ease-out
   );
   width: 100%;
 }

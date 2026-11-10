@@ -1744,7 +1744,7 @@ describe('form-field wrapper — additional variant coverage (#501)', () => {
       await commands.emulateReducedMotion(null);
     });
 
-    it('disables the inline error message entrance animation', async () => {
+    it('swaps the inline error slide-in for a fade', async () => {
       const TestComponent = defineFixtureComponent(
         'ngx-test-a11y-reduced-motion-error',
         `
@@ -1775,16 +1775,19 @@ describe('form-field wrapper — additional variant coverage (#501)', () => {
         '.ngx-form-field-error--error',
       )!;
       expect(errorEl.textContent).toContain('Full name is required');
-      // form-field-error.css's default `--_error-animation-default` plays
-      // `ngx-status-slide-in` on every non-empty error message.
-      expect(getComputedStyle(errorEl).animationName).toBe(
+      // Emulated encapsulation renames the keyframes, so a name that matches
+      // no `@keyframes` rule would still compute but never create an animation.
+      expect(getComputedStyle(errorEl).animationName).toContain(
         'ngx-status-slide-in',
       );
+      expect(errorEl.getAnimations()).not.toHaveLength(0);
 
       await commands.emulateReducedMotion('reduce');
       await TestBed.inject(ApplicationRef).whenStable();
 
-      expect(getComputedStyle(errorEl).animationName).toBe('none');
+      expect(getComputedStyle(errorEl).animationName).toContain(
+        'ngx-status-fade-in',
+      );
     });
 
     it("disables the wrapper's assistive-row transition", async () => {

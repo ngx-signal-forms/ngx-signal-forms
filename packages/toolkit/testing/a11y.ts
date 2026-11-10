@@ -59,7 +59,8 @@ export type A11yCheckOptions = Omit<axe.RunOptions, 'runOnly'> & {
  * Toolkit components are published primitives, so accessibility violations in
  * them are bugs: this helper is a **hard fail** by design. Use it inside Vitest
  * browser-mode specs after rendering a component fixture — one call per
- * rendered fixture is enough; it scans the whole subtree.
+ * rendered fixture is enough; it scans the whole subtree. It waits for
+ * running finite animations first, so fading text is checked at full contrast.
  *
  * @param context Element (or axe context spec) to scan. Defaults to the whole
  *   document body so a bare `await expectNoA11yViolations()` covers the render.
@@ -177,6 +178,34 @@ export function createA11yValidator(
  */
 const FAILING_INCOMPLETE_RULES = new Set(['color-contrast']);
 
+/**
+ * Waits for running finite animations, such as an error message fading in.
+ * axe reads computed colors, so text sampled mid-fade fails color-contrast
+ * even though it settles at full contrast. Infinite animations and animations
+ * on unrendered elements (for example inside a closed `<details>`) are
+ * skipped because they never finish, and the wait is capped as a safeguard.
+ */
+async function settleFiniteAnimations(): Promise<void> {
+  const pending = document.getAnimations().filter((animation) => {
+    const effect = animation.effect;
+    const target = effect instanceof KeyframeEffect ? effect.target : null;
+    return (
+      animation.playState === 'running' &&
+      Number.isFinite(effect?.getComputedTiming().endTime) &&
+      (target?.checkVisibility() ?? false)
+    );
+  });
+  if (pending.length === 0) return;
+
+  // `finished` rejects when an animation is cancelled; that also settles it.
+  await Promise.race([
+    Promise.allSettled(pending.map((animation) => animation.finished)),
+    new Promise((resolve) => setTimeout(resolve, ANIMATION_SETTLE_LIMIT_MS)),
+  ]);
+}
+
+const ANIMATION_SETTLE_LIMIT_MS = 1000;
+
 async function runA11yCheck(
   tags: readonly WCAG_22_AA_TAG[],
   context: axe.ElementContext,
@@ -185,6 +214,8 @@ async function runA11yCheck(
 ): Promise<void> {
   const { incomplete: incompleteMode = 'ignore', ...axeOptions } = options;
   const runOnly: axe.RunOnly = { type: 'tag', values: [...tags] };
+
+  await settleFiniteAnimations();
 
   const results = await axe.run(context, {
     // `resultTypes` before `...axeOptions` so callers can still override it.

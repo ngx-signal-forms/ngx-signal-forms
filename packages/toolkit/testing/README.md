@@ -44,7 +44,9 @@ import {
 ## Quick start
 
 `expectNoA11yViolations` scans an element and its children. Without an
-argument, it scans `document.body`. Call it once per rendered fixture:
+argument, it scans `document.body`. It first waits for running finite
+animations, so text that fades in is checked at its final contrast. Call it
+once per rendered fixture:
 
 ```typescript
 import { expectNoA11yViolations } from '@ngx-signal-forms/toolkit/testing';

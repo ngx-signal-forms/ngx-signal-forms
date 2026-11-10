@@ -69,8 +69,6 @@
     rgb(161 98 7 / 0.2),
     rgb(252 211 77 / 0.3)
   );
-  --_fieldset-message-animation-default: ngx-status-slide-in 300ms
-    cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
 
   /* Resolved pseudo-private variables */
   --_fieldset-gap: var(
@@ -155,26 +153,14 @@
     --ngx-signal-form-fieldset-notification-list-padding-inline-start,
     var(--_feedback-list-indent)
   );
-  --_fieldset-message-animation: var(
-    --ngx-signal-form-fieldset-message-animation,
-    var(--_fieldset-message-animation-default)
-  );
-  --_fieldset-transition-duration: 180ms;
-  --_fieldset-transition-easing: ease-in-out;
   --_fieldset-transition-chrome:
-    border-color var(--_fieldset-transition-duration)
-      var(--_fieldset-transition-easing),
-    background-color var(--_fieldset-transition-duration)
-      var(--_fieldset-transition-easing),
-    color var(--_fieldset-transition-duration)
-      var(--_fieldset-transition-easing),
-    box-shadow var(--_fieldset-transition-duration)
-      var(--_fieldset-transition-easing);
+    border-color var(--_motion-duration-state) var(--_motion-easing-state),
+    background-color var(--_motion-duration-state) var(--_motion-easing-state),
+    color var(--_motion-duration-state) var(--_motion-easing-state),
+    box-shadow var(--_motion-duration-state) var(--_motion-easing-state);
   --_fieldset-transition-spacing:
-    margin-top var(--_fieldset-transition-duration)
-      var(--_fieldset-transition-easing),
-    margin-bottom var(--_fieldset-transition-duration)
-      var(--_fieldset-transition-easing);
+    margin-top var(--_motion-duration-enter) var(--_motion-easing-enter),
+    margin-bottom var(--_motion-duration-enter) var(--_motion-easing-enter);
   --_fieldset-radius: var(
     --ngx-signal-form-fieldset-border-radius,
     var(--_fieldset-radius-lg)
@@ -540,7 +526,11 @@
   --ngx-signal-form-error-list-padding-inline-start: var(
     --_fieldset-message-list-padding-inline-start
   );
-  --ngx-signal-form-error-animation: var(--_fieldset-message-animation);
+  /* No fallback: when unset, the error falls back to its own encapsulated
+     slide-in keyframes, which a name written here could not reach. */
+  --ngx-signal-form-error-animation: var(
+    --ngx-signal-form-fieldset-message-animation
+  );
   --ngx-signal-form-error-color: var(--_fieldset-message-error-color);
   --ngx-signal-form-error-bg: var(--_fieldset-message-error-bg);
   --ngx-signal-form-error-border-color: var(--_fieldset-message-error-border);
@@ -603,4 +593,12 @@
   .ngx-signal-form-fieldset__messages {
   margin-top: 0;
   margin-bottom: var(--_fieldset-message-margin-bottom);
+}
+
+/* The spacing transition moves the content around the fieldset, so reduced
+ * motion drops it. The color transitions stay. */
+@media (prefers-reduced-motion: reduce) {
+  .ngx-signal-form-fieldset__messages {
+    transition: none;
+  }
 }
