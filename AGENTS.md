@@ -4,6 +4,12 @@ Start here. Keep provider files as thin delegates; shared rules live here,
 in [coding standards](CODING_STANDARDS.md), and in `.agents/skills/`
 (`.claude/skills` is a symlink to it).
 
+## Ownership
+
+This codebase is yours to shape and keep improving: follow the boy scout rule
+and leave code you touch or reuse simpler than you found it, changing working
+code only when that removes real complexity or a real defect.
+
 ## Shared skills
 
 - Keep all workspace skills in `.agents/skills/`. Do not copy them into
