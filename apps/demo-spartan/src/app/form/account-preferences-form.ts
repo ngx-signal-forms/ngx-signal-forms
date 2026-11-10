@@ -28,9 +28,15 @@ import {
 } from '@spartan-ng/helm/select';
 import { NgxSpartanFormBundle } from '../wrapper/spartan-form-field';
 
+const plans = [
+  { value: 'starter', label: 'Starter' },
+  { value: 'pro', label: 'Pro' },
+  { value: 'enterprise', label: 'Enterprise' },
+] as const;
+
 interface AccountPreferences {
   readonly displayName: string;
-  readonly plan: '' | 'starter' | 'pro' | 'enterprise';
+  readonly plan: '' | (typeof plans)[number]['value'];
   readonly newsletter: boolean;
 }
 
@@ -241,15 +247,11 @@ export class AccountPreferencesForm {
 
   protected readonly lastSubmission = signal<string | null>(null);
 
-  protected readonly plans = [
-    { value: 'starter', label: 'Starter' },
-    { value: 'pro', label: 'Pro' },
-    { value: 'enterprise', label: 'Enterprise' },
-  ] as const;
+  protected readonly plans = plans;
 
   /** The select trigger shows this label, not the stored value. */
   protected readonly planLabel = (value: string): string =>
-    this.plans.find((plan) => plan.value === value)?.label ?? value;
+    plans.find((plan) => plan.value === value)?.label ?? value;
 
   /**
    * Drives the `<details>` around the plan select. Bound both ways so a
