@@ -82,8 +82,6 @@ pnpm nx run demo-e2e:e2e-toolkit
 
 This lane excludes tests tagged with `@layout`, so large look-and-feel/layout
 refactors should not fail toolkit behavior coverage.
-The target includes a preflight port cleanup for `127.0.0.1:4600` before
-starting Playwright.
 
 Run demo app UI/look-and-feel/content tests only:
 
@@ -91,15 +89,11 @@ Run demo app UI/look-and-feel/content tests only:
 pnpm nx run demo-e2e:e2e-demo-app
 ```
 
-This target includes the same preflight port cleanup before test startup.
-
 Run all layout-sensitive checks (demo app UI + form tests tagged `@layout`):
 
 ```bash
 pnpm nx run demo-e2e:e2e-layout
 ```
-
-This target also performs preflight port cleanup.
 
 Run WCAG route-sweep accessibility tests:
 
