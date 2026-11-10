@@ -223,6 +223,7 @@ const PROFILE_FIELD_KEYS: readonly (keyof ProfileFormModel)[] = [
             <label for="server-integration-email">Email</label>
             <input
               id="server-integration-email"
+              autocomplete="email"
               type="email"
               [formField]="profileForm.email"
             />

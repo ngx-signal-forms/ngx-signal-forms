@@ -43,6 +43,7 @@
           <label for="email">Email</label>
           <input
             id="email"
+            autocomplete="email"
             type="email"
             [formField]="wizardForm.account.email"
           />
@@ -72,6 +73,7 @@
           <label for="street">Street address</label>
           <input
             id="street"
+            autocomplete="street-address"
             type="text"
             [formField]="wizardForm.shipping.street"
           />
@@ -83,7 +85,12 @@
           [orientation]="orientation()"
         >
           <label for="city">City</label>
-          <input id="city" type="text" [formField]="wizardForm.shipping.city" />
+          <input
+            id="city"
+            autocomplete="address-level2"
+            type="text"
+            [formField]="wizardForm.shipping.city"
+          />
         </ngx-form-field-wrapper>
 
         <ngx-form-field-wrapper
@@ -94,6 +101,7 @@
           <label for="postalCode">Postal code</label>
           <input
             id="postalCode"
+            autocomplete="postal-code"
             type="text"
             [formField]="wizardForm.shipping.postalCode"
           />

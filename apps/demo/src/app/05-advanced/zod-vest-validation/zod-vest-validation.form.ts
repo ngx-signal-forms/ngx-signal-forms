@@ -115,6 +115,7 @@ const zodVestValidationSchema: SchemaFn<Readonly<ZodVestValidationModel>> = (
             <label for="zod-vest-first-name">First name</label>
             <input
               id="zod-vest-first-name"
+              autocomplete="given-name"
               type="text"
               [formField]="accountForm.firstName"
             />
@@ -128,6 +129,7 @@ const zodVestValidationSchema: SchemaFn<Readonly<ZodVestValidationModel>> = (
             <label for="zod-vest-last-name">Last name</label>
             <input
               id="zod-vest-last-name"
+              autocomplete="family-name"
               type="text"
               [formField]="accountForm.lastName"
             />
@@ -143,6 +145,7 @@ const zodVestValidationSchema: SchemaFn<Readonly<ZodVestValidationModel>> = (
             <label for="zod-vest-email">Email</label>
             <input
               id="zod-vest-email"
+              autocomplete="email"
               type="email"
               [formField]="accountForm.email"
               placeholder="name@example.com"
@@ -206,6 +209,7 @@ const zodVestValidationSchema: SchemaFn<Readonly<ZodVestValidationModel>> = (
             <label for="zod-vest-company-name">Company name</label>
             <input
               id="zod-vest-company-name"
+              autocomplete="organization"
               type="text"
               [formField]="accountForm.companyName"
             />

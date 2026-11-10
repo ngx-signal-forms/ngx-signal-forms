@@ -120,6 +120,7 @@ import { BusyButtonDirective } from '../../shared/busy-button.directive';
           <label for="userEmail">Email Address</label>
           <input
             id="userEmail"
+            autocomplete="email"
             type="email"
             [formField]="configForm.userEmail"
             placeholder="user@example.com"
@@ -135,6 +136,7 @@ import { BusyButtonDirective } from '../../shared/busy-button.directive';
           <label for="userPhone">Phone Number</label>
           <input
             id="userPhone"
+            autocomplete="tel"
             type="tel"
             [formField]="configForm.userPhone"
             placeholder="123-456-7890"

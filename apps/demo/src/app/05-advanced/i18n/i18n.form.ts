@@ -152,7 +152,12 @@ import { SubmitStatusComponent } from '../../ui/submit-status/submit-status';
             [orientation]="orientation()"
           >
             <label for="i18n-email">{{ fieldLabel('email', 'Email') }}</label>
-            <input id="i18n-email" type="email" [formField]="demoForm.email" />
+            <input
+              id="i18n-email"
+              autocomplete="email"
+              type="email"
+              [formField]="demoForm.email"
+            />
           </ngx-form-field-wrapper>
 
           <div class="flex gap-4">

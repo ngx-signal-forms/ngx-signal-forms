@@ -56,6 +56,7 @@
           <label for="placementPreviewStreet">Street</label>
           <input
             id="placementPreviewStreet"
+            autocomplete="street-address"
             type="text"
             [formField]="placementPreviewForm.address.street"
             placeholder="123 Main Street"
@@ -70,6 +71,7 @@
           <label for="placementPreviewCity">City</label>
           <input
             id="placementPreviewCity"
+            autocomplete="address-level2"
             type="text"
             [formField]="placementPreviewForm.address.city"
             placeholder="Amsterdam"
@@ -220,6 +222,7 @@
         <label for="shippingStreet">Street Address</label>
         <input
           id="shippingStreet"
+          autocomplete="street-address"
           type="text"
           [formField]="fieldsetForm.shippingAddress.street"
           placeholder="123 Main Street"
@@ -234,6 +237,7 @@
         <label for="shippingCity">City</label>
         <input
           id="shippingCity"
+          autocomplete="address-level2"
           type="text"
           [formField]="fieldsetForm.shippingAddress.city"
           placeholder="New York"
@@ -248,6 +252,7 @@
         <label for="shippingZipCode">ZIP Code</label>
         <input
           id="shippingZipCode"
+          autocomplete="postal-code"
           type="text"
           [formField]="fieldsetForm.shippingAddress.zipCode"
           placeholder="10001"
