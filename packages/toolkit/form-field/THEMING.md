@@ -680,6 +680,7 @@ The form field wrapper supports three appearance modes via the `appearance` inpu
 
 - Keeps wrapper semantics, labels, hints, and errors
 - Removes border and background chrome from the field container
+- Leaves projected control styles intact. Native controls keep browser styling, and consumer CSS can style them without competing with a toolkit reset.
 - Uses `--ngx-form-field-label-*` properties (same token set as standard)
 - Draws a focus outline on native text inputs (2px, 2px offset, colored by
   `--ngx-form-field-focus-color`, or the invalid or warning color when the
@@ -688,6 +689,9 @@ The form field wrapper supports three appearance modes via the `appearance` inpu
   container-level focus outline that other appearances draw (see
   [States & Focus](#states--focus)) is suppressed here, so a plain field
   never shows two outlines at once.
+
+If your app resets native control styles, ensure plain text controls retain a
+visible boundary and keyboard focus indicator.
 
 ```html
 <!-- Standard (default) -->

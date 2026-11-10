@@ -1303,6 +1303,60 @@ describe('form-field wrapper — additional variant coverage (#501)', () => {
       expect(styles.borderWidth).toBe('2px');
     });
 
+    it('lets plain controls use the forced-colors palette', async () => {
+      const TestComponent = defineFixtureComponent(
+        'ngx-test-a11y-forced-colors-plain',
+        `
+          <button type="button" id="forced-colors-plain-anchor">Before</button>
+          <form [formRoot]="testForm" ngxSignalForm>
+            <ngx-form-field-wrapper
+              [formField]="testForm.name"
+              fieldName="name"
+              appearance="plain"
+            >
+              <label for="forced-colors-plain-name">Full name</label>
+              <input
+                id="forced-colors-plain-name"
+                type="text"
+                [formField]="testForm.name"
+              />
+            </ngx-form-field-wrapper>
+          </form>
+        `,
+        () => form(signal({ name: '' })),
+      );
+
+      const { container } = await render(TestComponent);
+      await commands.emulateForcedColors('active');
+      await TestBed.inject(ApplicationRef).whenStable();
+
+      expect(window.matchMedia('(forced-colors: active)').matches).toBe(true);
+
+      const content = container.querySelector<HTMLElement>(
+        '.ngx-signal-form-field-wrapper__content',
+      )!;
+      const input = container.querySelector<HTMLInputElement>(
+        '#forced-colors-plain-name',
+      )!;
+      expect(getComputedStyle(content).borderTopWidth).toBe('0px');
+      expect(getComputedStyle(content).outlineStyle).toBe('none');
+      expect(getComputedStyle(input).forcedColorAdjust).toBe('auto');
+
+      await userEvent.click(
+        container.querySelector<HTMLButtonElement>(
+          '#forced-colors-plain-anchor',
+        )!,
+      );
+      await userEvent.tab();
+      await settleTransitions();
+
+      expect(document.activeElement).toBe(input);
+      const inputStyles = getComputedStyle(input);
+      expect(inputStyles.outlineStyle).toBe('solid');
+      expect(inputStyles.outlineWidth).toBe('2px');
+      expect(inputStyles.outlineColor).toBe(resolveSystemColor('Highlight'));
+    });
+
     /**
      * #550: the outline appearance's own border rule has a two-class
      * `:host()` compound, so it outranks a one-class forced-colors rule in

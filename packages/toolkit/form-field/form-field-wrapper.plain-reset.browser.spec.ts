@@ -32,7 +32,7 @@ const renderPlainField = async () => {
     `<button type="button" id="plain-reset-anchor">Before</button>
     <ngx-form-field-wrapper [formField]="field" appearance="plain">
       <label for="plain-reset-input">Name</label>
-      <input id="plain-reset-input" type="text" />
+      <input id="plain-reset-input" class="plain-input" type="text" />
     </ngx-form-field-wrapper>`,
     {
       imports: [NgxFormFieldWrapper],
@@ -125,5 +125,39 @@ describe('NgxFormFieldWrapper — plain appearance container reset (#557)', () =
 
     // The plain appearance's own focus indicator stays on the input (#493).
     expect(getComputedStyle(input).outlineStyle).toBe('solid');
+  });
+
+  it('keeps native browser chrome on a plain input', async () => {
+    const { input } = await renderPlainField();
+    const styles = getComputedStyle(input);
+
+    expect(parseFloat(styles.borderTopWidth)).toBeGreaterThan(0);
+    expect(styles.borderTopStyle).not.toBe('none');
+  });
+
+  it('preserves layered styles on the projected input', async () => {
+    const style = document.createElement('style');
+    style.textContent = `
+      @layer app-components {
+        .plain-input {
+          border: 2px solid rgb(0, 0, 0);
+          padding: 8px;
+          background-color: rgb(255, 255, 255);
+        }
+      }
+    `;
+    document.head.append(style);
+
+    try {
+      const { input } = await renderPlainField();
+      const styles = getComputedStyle(input);
+
+      expect(styles.borderTopWidth).toBe('2px');
+      expect(styles.borderTopColor).toBe('rgb(0, 0, 0)');
+      expect(styles.paddingTop).toBe('8px');
+      expect(styles.backgroundColor).toBe('rgb(255, 255, 255)');
+    } finally {
+      style.remove();
+    }
   });
 });

@@ -676,7 +676,7 @@
 /* `::ng-deep` reaches into projected form controls (also `<ng-content>`); the */
 /* consumer's `<input>`/`<textarea>`/`<select>` are scoped to their template, */
 /* not ours. */
-:host(.ngx-signal-form-field-wrapper--textual)
+:host(.ngx-signal-form-field-wrapper--textual:not(.ngx-signal-forms-plain))
   ::ng-deep
   .ngx-signal-form-field-wrapper__main
   :is(
@@ -721,25 +721,25 @@
   }
 }
 
-:host(.ngx-signal-form-field-wrapper--textual)
+:host(.ngx-signal-form-field-wrapper--textual:not(.ngx-signal-forms-plain))
   ::ng-deep
   .ngx-signal-form-field-wrapper__main
   input:not([type='radio']):not([type='checkbox']):not(
     [role='switch']
   ):focus-visible,
-:host(.ngx-signal-form-field-wrapper--textual)
+:host(.ngx-signal-form-field-wrapper--textual:not(.ngx-signal-forms-plain))
   ::ng-deep
   .ngx-signal-form-field-wrapper__main
   textarea:focus-visible,
-:host(.ngx-signal-form-field-wrapper--textual)
+:host(.ngx-signal-form-field-wrapper--textual:not(.ngx-signal-forms-plain))
   ::ng-deep
   .ngx-signal-form-field-wrapper__main
   select:focus-visible,
-:host(.ngx-signal-form-field-wrapper--textual)
+:host(.ngx-signal-form-field-wrapper--textual:not(.ngx-signal-forms-plain))
   ::ng-deep
   .ngx-signal-form-field-wrapper__main
   [role='combobox']:focus-visible,
-:host(.ngx-signal-form-field-wrapper--textual)
+:host(.ngx-signal-form-field-wrapper--textual:not(.ngx-signal-forms-plain))
   ::ng-deep
   .ngx-signal-form-field-wrapper__main
   [data-ngx-signal-form-control-kind='input-like']:focus-visible {
@@ -1301,7 +1301,9 @@
   /* a margin that differs per Angular version. So these rules set the */
   /* tokens that hover and disabled read, not the properties. Hover and */
   /* disabled then paint system colors on every Angular version (#558). */
-  :host(.ngx-signal-form-field-wrapper--textual)
+  :host(.ngx-signal-form-field-wrapper--textual):where(
+      :not(.ngx-signal-forms-plain)
+    )
     .ngx-signal-form-field-wrapper__content,
   :host(.ngx-signal-forms-outline.ngx-signal-form-field-wrapper--textual)
     .ngx-signal-form-field-wrapper__content {
@@ -1319,7 +1321,9 @@
   /* warning rules: its outline selector has the same specificity as their */
   /* `:focus-within` rules before Angular 22.2, so source order keeps their */
   /* state border color. */
-  :host(.ngx-signal-form-field-wrapper--textual)
+  :host(.ngx-signal-form-field-wrapper--textual):where(
+      :not(.ngx-signal-forms-plain)
+    )
     .ngx-signal-form-field-wrapper__content:focus-within,
   :host(.ngx-signal-forms-outline.ngx-signal-form-field-wrapper--textual)
     .ngx-signal-form-field-wrapper__content:focus-within {
@@ -1353,7 +1357,9 @@
     }
   }
 
-  :host(.ngx-signal-form-field-wrapper--textual)
+  :host(.ngx-signal-form-field-wrapper--textual):where(
+      :not(.ngx-signal-forms-plain)
+    )
     .ngx-signal-form-field-wrapper__content:has(
       .ngx-signal-form-field-wrapper__main :focus-visible
     ) {

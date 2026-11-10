@@ -181,11 +181,11 @@ through `aria-describedby`.
 
 ### Appearance and orientation
 
-| Appearance | Look                                                                                                  | With `orientation="horizontal"` |
-| ---------- | ----------------------------------------------------------------------------------------------------- | ------------------------------- |
-| `standard` | Label above a bordered control.                                                                       | Label in a column to the left.  |
-| `outline`  | One border around label and control. The label sits inside it, above the control, and does not move.  | Stays vertical.                 |
-| `plain`    | No field border. Labels, messages, and ARIA still work. Good for custom controls with their own look. | Label in a column to the left.  |
+| Appearance | Look                                                                                                                        | With `orientation="horizontal"` |
+| ---------- | --------------------------------------------------------------------------------------------------------------------------- | ------------------------------- |
+| `standard` | Label above a bordered control.                                                                                             | Label in a column to the left.  |
+| `outline`  | One border around label and control. The label sits inside it, above the control, and does not move.                        | Stays vertical.                 |
+| `plain`    | No wrapper chrome. Labels, messages, and ARIA still work; projected controls keep their native or consumer-defined styling. | Label in a column to the left.  |
 
 Checkbox, switch, and radio-group controls keep their own inline layout and
 ignore `orientation`. Orientation changes one wrapper, not the layout of the
@@ -225,6 +225,11 @@ A widget such as a slider or a star rating declares its control kind on the
 its own ARIA. A control that should look like a text field, such as a
 combobox, keeps the default appearance and lets the wrapper draw the border.
 A native `input[type="checkbox"][role="switch"]` needs no extra attribute.
+
+In the `plain` appearance, the wrapper does not reset projected control
+styles. Native text controls keep their browser styling, and consumer styles
+can define their own border, padding, and background. If your app resets native
+control styles, keep a visible field boundary and keyboard focus indicator.
 [Custom controls](../../../docs/CUSTOM_CONTROLS.md) explains control kinds,
 when the toolkit writes ARIA on a control, and field-shaped versus
 widget-shaped controls.
