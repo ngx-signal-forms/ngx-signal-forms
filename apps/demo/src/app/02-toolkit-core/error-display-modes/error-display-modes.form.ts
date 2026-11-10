@@ -188,12 +188,10 @@ export class ErrorDisplayHelpersComponent {
         <!-- Name Field -->
         <ngx-form-field-wrapper
           class="form-field"
-          appearance="plain"
           [formField]="productForm.name"
         >
           <label for="name">Full Name</label>
           <input
-            class="form-input"
             id="name"
             type="text"
             autocomplete="name"
@@ -208,12 +206,10 @@ export class ErrorDisplayHelpersComponent {
         <!-- Email Field -->
         <ngx-form-field-wrapper
           class="form-field"
-          appearance="plain"
           [formField]="productForm.email"
         >
           <label for="email">Email Address</label>
           <input
-            class="form-input"
             id="email"
             type="email"
             autocomplete="email"
@@ -228,12 +224,10 @@ export class ErrorDisplayHelpersComponent {
         <!-- Company Field -->
         <ngx-form-field-wrapper
           class="form-field"
-          appearance="plain"
           [formField]="productForm.company"
         >
           <label for="company">Company</label>
           <input
-            class="form-input"
             id="company"
             type="text"
             autocomplete="organization"
@@ -257,15 +251,10 @@ export class ErrorDisplayHelpersComponent {
         <!-- Product Used -->
         <ngx-form-field-wrapper
           class="form-field"
-          appearance="plain"
           [formField]="productForm.productUsed"
         >
           <label for="productUsed">Which product did you use?</label>
-          <select
-            class="form-input"
-            id="productUsed"
-            [formField]="productForm.productUsed"
-          >
+          <select id="productUsed" [formField]="productForm.productUsed">
             <option value="">Select a product…</option>
             <option value="Web App">Web Application</option>
             <option value="Mobile App">Mobile Application</option>
@@ -281,12 +270,10 @@ export class ErrorDisplayHelpersComponent {
         <!-- Overall Rating -->
         <ngx-form-field-wrapper
           class="form-field"
-          appearance="plain"
           [formField]="productForm.overallRating"
         >
           <label for="overallRating">Overall Rating</label>
           <input
-            class="form-input"
             id="overallRating"
             type="number"
             [formField]="productForm.overallRating"
@@ -301,12 +288,10 @@ export class ErrorDisplayHelpersComponent {
         @if (showImprovementSuggestions()) {
           <ngx-form-field-wrapper
             class="form-field"
-            appearance="plain"
             [formField]="productForm.improvementSuggestions"
           >
             <label for="improvementSuggestions"> What could we improve? </label>
             <textarea
-              class="form-input"
               id="improvementSuggestions"
               rows="4"
               [formField]="productForm.improvementSuggestions"
@@ -330,12 +315,10 @@ export class ErrorDisplayHelpersComponent {
         <!-- Detailed Feedback -->
         <ngx-form-field-wrapper
           class="form-field"
-          appearance="plain"
           [formField]="productForm.detailedFeedback"
         >
           <label for="detailedFeedback"> Additional Comments </label>
           <textarea
-            class="form-input"
             id="detailedFeedback"
             rows="4"
             [formField]="productForm.detailedFeedback"
