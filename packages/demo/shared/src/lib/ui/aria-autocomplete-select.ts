@@ -291,6 +291,3 @@ export class AriaAutocompleteComponent implements FormValueControl<string> {
     this.touch.emit();
   }
 }
-
-/** @deprecated Use `AriaAutocompleteComponent` instead. */
-export { AriaAutocompleteComponent as AriaAutocompleteSelectComponent };

@@ -786,7 +786,7 @@ export declare class NgxFormFieldErrorSummary {
   /**
    * The host's `aria-labelledby`, pointing at the label heading. `null`
    * whenever the heading is not actually in the DOM — either the summary
-   * itself is empty/hidden (`summary.shouldShow() && summary.hasErrors()`
+   * itself is empty/hidden (`summary.shouldShow()`
    * is `false`, e.g. before the first submit) or `summaryLabel` is empty.
    * The heading only renders inside that same visibility condition (see
    * the template), so this must match it exactly: pointing `aria-

@@ -28,9 +28,15 @@ import {
 } from '@spartan-ng/helm/select';
 import { NgxSpartanFormBundle } from '../wrapper/spartan-form-field';
 
+const plans = [
+  { value: 'starter', label: 'Starter' },
+  { value: 'pro', label: 'Pro' },
+  { value: 'enterprise', label: 'Enterprise' },
+] as const;
+
 interface AccountPreferences {
   readonly displayName: string;
-  readonly plan: '' | 'starter' | 'pro' | 'enterprise';
+  readonly plan: '' | (typeof plans)[number]['value'];
   readonly newsletter: boolean;
 }
 
@@ -149,15 +155,18 @@ const accountSchema = schema<AccountPreferences>((path) => {
           <hlm-select
             id="plan"
             ngxSignalFormControl="input-like"
+            [itemToString]="planLabel"
             [formField]="form.plan"
           >
             <hlm-select-trigger buttonId="plan-trigger" class="w-full">
               <hlm-select-value placeholder="Select a plan" />
             </hlm-select-trigger>
             <hlm-select-content *hlmSelectPortal>
-              <hlm-select-item value="starter">Starter</hlm-select-item>
-              <hlm-select-item value="pro">Pro</hlm-select-item>
-              <hlm-select-item value="enterprise">Enterprise</hlm-select-item>
+              @for (plan of plans; track plan.value) {
+                <hlm-select-item [value]="plan.value">{{
+                  plan.label
+                }}</hlm-select-item>
+              }
             </hlm-select-content>
           </hlm-select>
         </spartan-form-field>
@@ -237,6 +246,12 @@ export class AccountPreferencesForm {
   );
 
   protected readonly lastSubmission = signal<string | null>(null);
+
+  protected readonly plans = plans;
+
+  /** The select trigger shows this label, not the stored value. */
+  protected readonly planLabel = (value: string): string =>
+    plans.find((plan) => plan.value === value)?.label ?? value;
 
   /**
    * Drives the `<details>` around the plan select. Bound both ways so a

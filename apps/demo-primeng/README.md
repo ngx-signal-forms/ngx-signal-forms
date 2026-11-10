@@ -60,7 +60,7 @@ and the error-renderer inputs map are each a single inline `computed()`
 bootstrapApplication(AppComponent, {
   providers: [
     provideNgxPrimeForms(),
-    // …PrimeNG / animations / signal-forms-config
+    // …PrimeNG / signal-forms-config
   ],
 });
 ```
@@ -120,11 +120,8 @@ tier-3 field-name resolution and the dev-mode missing-control assertion.
 
 ## Design-system version pin
 
-| Package            | Version pinned by this demo |
-| ------------------ | --------------------------- |
-| `primeng`          | `21.1.9`                    |
-| `@primeuix/themes` | `2.0.3`                     |
-| `primeicons`       | `7.0.0`                     |
+The `primeng:` pnpm catalog in `pnpm-workspace.yaml` pins `primeng`,
+`@primeuix/themes`, and `primeicons`. Read the versions there.
 
 The toolkit itself is unchanged — `packages/toolkit/package.json` declares
 no `primeng` / `primeicons` / `@primeuix/*` entries, and the

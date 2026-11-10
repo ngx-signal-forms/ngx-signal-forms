@@ -23,6 +23,7 @@
         <label for="firstName">First Name</label>
         <input
           id="firstName"
+          autocomplete="given-name"
           type="text"
           [formField]="complexForm.personalInfo.firstName"
         />
@@ -36,6 +37,7 @@
         <label for="lastName">Last Name</label>
         <input
           id="lastName"
+          autocomplete="family-name"
           type="text"
           [formField]="complexForm.personalInfo.lastName"
         />
@@ -64,6 +66,7 @@
         <label for="email">Email</label>
         <input
           id="email"
+          autocomplete="email"
           type="email"
           [formField]="complexForm.personalInfo.email"
         />
@@ -131,6 +134,7 @@
         <label for="street">Street Address</label>
         <input
           id="street"
+          autocomplete="street-address"
           type="text"
           [formField]="complexForm.addressInfo.street"
         />
@@ -145,6 +149,7 @@
           <label for="city">City</label>
           <input
             id="city"
+            autocomplete="address-level2"
             type="text"
             [formField]="complexForm.addressInfo.city"
           />
@@ -158,6 +163,7 @@
           <label for="zipCode">Zip Code</label>
           <input
             id="zipCode"
+            autocomplete="postal-code"
             type="text"
             [formField]="complexForm.addressInfo.zipCode"
             placeholder="12345"

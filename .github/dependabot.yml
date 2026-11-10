@@ -108,7 +108,6 @@ updates:
           - '@types/*'
           - 'size-limit'
           - '@size-limit/*'
-          - 'autoprefixer'
           - 'postcss'
           - 'jsdom'
         update-types:

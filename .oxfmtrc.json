@@ -13,6 +13,14 @@
     // must stay byte-identical to what ng-packagr emits, so the API-surface
     // guard's diff is meaningful; reformatting them would fight every build.
     "packages/toolkit/api-reports/**",
+    // Vendored skills must stay byte-identical to their upstream source
+    // (`skills-lock.json` hashes, `nx configure-ai-agents`). Do not format
+    // them. Repo-owned skills (`ngx-signal-forms`, `ngrx-*`) are formatted.
+    ".agents/skills/accessibility-a11y/**",
+    ".agents/skills/angular-developer/**",
+    ".agents/skills/link-workspace-packages/**",
+    ".agents/skills/monitor-ci/**",
+    ".agents/skills/nx-*/**",
     ".nx/cache/**",
     ".nx/workspace-data/**",
     ".angular/**",

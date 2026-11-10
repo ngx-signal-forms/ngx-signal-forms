@@ -50,7 +50,9 @@
       >
         <input
           id="phoneCountry"
+          autocomplete="tel-country-code"
           type="text"
+          inputmode="tel"
           aria-label="Country code"
           placeholder="+1"
           [formField]="labellessForm.phoneCountry"
@@ -78,7 +80,9 @@
       >
         <input
           id="phoneExtension"
+          autocomplete="tel-extension"
           type="text"
+          inputmode="numeric"
           aria-label="Extension"
           placeholder="ext"
           [formField]="labellessForm.phoneExtension"
@@ -167,6 +171,7 @@
         >
           <input
             id="zipCode"
+            autocomplete="postal-code"
             type="text"
             aria-label="Zip code"
             placeholder="Zip"

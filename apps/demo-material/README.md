@@ -432,12 +432,5 @@ which Nx schedules automatically via the `test` target's `dependsOn` in
 
 ## Pinned versions
 
-Versions are pinned via the workspace's pnpm catalogs (`pnpm-workspace.yaml`),
-not hard-coded here, so they stay in sync automatically. At the time of
-writing:
-
-| Package               | Version  |
-| --------------------- | -------- |
-| `@angular/material`   | `22.0.4` |
-| `@angular/cdk`        | `22.0.4` |
-| `@angular/animations` | `22.0.5` |
+The pnpm catalogs in `pnpm-workspace.yaml` pin `@angular/material`
+(`angular-material:`) and `@angular/cdk` (`angular:`). Read the versions there.

@@ -127,6 +127,7 @@ const fieldStatePatternsSchema = schema<FieldStatePatternsModel>((path) => {
             <label for="field-state-work-email">Work email</label>
             <input
               id="field-state-work-email"
+              autocomplete="email"
               type="email"
               [formField]="stateForm.workEmail"
             />
@@ -163,6 +164,7 @@ const fieldStatePatternsSchema = schema<FieldStatePatternsModel>((path) => {
             <label for="field-state-mobile-number">Mobile number</label>
             <input
               id="field-state-mobile-number"
+              autocomplete="tel"
               type="tel"
               [formField]="stateForm.mobileNumber"
               placeholder="Enabled only for SMS"

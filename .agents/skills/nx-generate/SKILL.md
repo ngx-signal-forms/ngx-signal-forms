@@ -25,10 +25,10 @@ This skill applies when the user wants to:
 
 ### 1. Discover Available Generators
 
-Use this workspace's pinned Nx CLI to discover available generators:
+Use the Nx CLI to discover available generators:
 
-- List all generators for a plugin: `pnpm nx list @nx/react`
-- View available plugins: `pnpm nx list`
+- List all generators for a plugin: `npx nx list @nx/react`
+- View available plugins: `npx nx list`
 
 This includes plugin generators (e.g., `@nx/react:library`) and local workspace generators.
 
@@ -45,7 +45,7 @@ If no suitable generator exists, you can stop using this skill. However, the bur
 Use the `--help` flag to understand available options:
 
 ```bash
-pnpm nx g @nx/react:library --help
+npx nx g @nx/react:library --help
 ```
 
 Pay attention to required options, defaults that might need overriding, and options relevant to the user's request.
@@ -54,11 +54,10 @@ Pay attention to required options, defaults that might need overriding, and opti
 
 **Default to non-buildable libraries** unless there's a specific reason for buildable.
 
-| Type                        | When to use                                    | Generator flags                             |
-| --------------------------- | ---------------------------------------------- | ------------------------------------------- |
-| **Non-buildable** (default) | Internal monorepo libs consumed by apps        | No `--bundler` flag                         |
-| **Buildable**               | Cross-repo sharing, stable libs for cache hits | `--bundler=vite` or `--bundler=swc`         |
-| **Publishable**             | Publishing to npm                              | `--publishable --importPath=<package-name>` |
+| Type                        | When to use                                                       | Generator flags                     |
+| --------------------------- | ----------------------------------------------------------------- | ----------------------------------- |
+| **Non-buildable** (default) | Internal monorepo libs consumed by apps                           | No `--bundler` flag                 |
+| **Buildable**               | Publishing to npm, cross-repo sharing, stable libs for cache hits | `--bundler=vite` or `--bundler=swc` |
 
 Non-buildable libs:
 
@@ -70,7 +69,7 @@ Buildable libs:
 
 - Have their own build target
 - Useful for stable libs that rarely change (cache hits)
-- Use `--publishable` with a valid `--importPath` for npm distribution; publishing is a separate step
+- Required for npm publishing
 
 **If unclear, ask the user:** "Should this library be buildable (own build step, better caching) or non-buildable (source consumed directly, simpler setup)?"
 
@@ -96,11 +95,11 @@ After reading the source, reconsider: Is this the right generator? If not, go ba
 >
 > ```bash
 > # ✅ Correct - directory is the full path for the library
-> pnpm nx g @nx/react:library --directory=libs/my-lib
+> nx g @nx/react:library --directory=libs/my-lib
 > # generates libs/my-lib/package.json and more
 >
 > # ❌ Wrong - this will create files at libs and libs/src/...
-> pnpm nx g @nx/react:library --name=my-lib --directory=libs
+> nx g @nx/react:library --name=my-lib --directory=libs
 > # generates libs/package.json and more
 > ```
 
@@ -118,7 +117,7 @@ Before generating, examine the target area of the codebase:
 **Always run with `--dry-run` first** to verify files will be created in the correct location:
 
 ```bash
-pnpm nx g @nx/react:library --directory=libs/my-lib --dry-run --no-interactive
+npx nx g @nx/react:library --directory=libs/my-lib --dry-run --no-interactive
 ```
 
 Review the output carefully. If files would be created in the wrong location, adjust your options based on what you learned from the generator source code.
@@ -130,7 +129,7 @@ Note: Some generators don't support dry-run (e.g., if they install npm packages)
 Execute the generator:
 
 ```bash
-pnpm nx generate <generator-name> <options> --no-interactive
+nx generate <generator-name> <options> --no-interactive
 ```
 
 > **Tip:** New packages often need workspace dependencies wired up (e.g., importing shared types, being consumed by apps). The `link-workspace-packages` skill can help add these correctly.
@@ -150,7 +149,7 @@ Generators provide a starting point. Modify the output as needed to:
 Format all generated/modified files:
 
 ```bash
-pnpm nx format --fix
+nx format --fix
 ```
 
 This example is for built-in nx formatting with prettier. There might be other formatting tools for this workspace, use these when appropriate.
@@ -159,7 +158,7 @@ Then verify the generated code works. Keep in mind that the changes you make wit
 
 ```bash
 # these targets are just an example!
-pnpm nx run-many -t build,lint,test,typecheck
+nx run-many -t build,lint,test,typecheck
 ```
 
 These targets are common examples used across many workspaces. You should do research into other targets available for this workspace and its projects. CI configuration is usually a good guide for what the critical targets are that have to pass.

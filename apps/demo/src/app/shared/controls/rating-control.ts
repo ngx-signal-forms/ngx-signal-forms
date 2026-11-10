@@ -7,8 +7,17 @@ import {
   output,
   signal,
 } from '@angular/core';
-import type { FormValueControl, ValidationError } from '@angular/forms/signals';
-import { NgxFieldIdentity } from '@ngx-signal-forms/toolkit';
+import {
+  FORM_FIELD,
+  type FieldState,
+  type FormValueControl,
+  type ValidationError,
+} from '@angular/forms/signals';
+import {
+  createErrorVisibility,
+  NgxFieldIdentity,
+} from '@ngx-signal-forms/toolkit';
+import { createAriaInvalidSignal } from '@ngx-signal-forms/toolkit/headless';
 
 /**
  * Custom star rating control implementing Angular Signal Forms FormValueControl interface.
@@ -54,7 +63,7 @@ import { NgxFieldIdentity } from '@ngx-signal-forms/toolkit';
     '[attr.aria-valuenow]': 'currentValue()',
     '[attr.aria-valuetext]': 'valueText()',
     '[attr.aria-describedby]': 'resolvedDescribedBy()',
-    '[attr.aria-invalid]': 'invalid() ? "true" : "false"',
+    '[attr.aria-invalid]': 'ariaInvalid()',
     '[attr.aria-disabled]': 'disabled() ? "true" : "false"',
     '[attr.aria-required]': 'required() ? "true" : null',
     '[class.rating-control--disabled]': 'disabled()',
@@ -162,6 +171,13 @@ export class RatingControlComponent implements FormValueControl<number> {
    */
   readonly #identity = inject(NgxFieldIdentity, { optional: true });
 
+  readonly #formField = inject(FORM_FIELD, { optional: true });
+
+  /** The bound field state. `null` until the `[formField]` binding resolves. */
+  readonly #fieldState = computed<FieldState<unknown> | null>(
+    () => this.#formField?.state() ?? null,
+  );
+
   /**
    * Optional aria-labelledby source for visible labels projected outside
    * the custom control host.
@@ -237,6 +253,16 @@ export class RatingControlComponent implements FormValueControl<number> {
    * label linkage must pass `[labelledBy]` explicitly, matching the toolkit
    * README's canonical custom-control recipe.
    */
+  /**
+   * `aria-invalid` follows the error display strategy: `'true'` only while a
+   * blocking error is visible. Binding the raw `invalid()` flag would announce
+   * an invalid entry on a pristine field.
+   */
+  protected readonly ariaInvalid = createAriaInvalidSignal(
+    this.#fieldState,
+    createErrorVisibility(this.#fieldState),
+  );
+
   protected readonly resolvedLabelledBy = computed(
     () => this.labelledBy() ?? null,
   );

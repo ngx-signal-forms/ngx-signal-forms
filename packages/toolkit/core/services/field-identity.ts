@@ -82,7 +82,8 @@ export function isElementCssVisible(el: HTMLElement): boolean {
  *   and {@link NgxFieldIdentity.warningId} (`{name}-warning`), derived from the
  *   resolved field name and `null` when no name is available.
  *
- * Provided at the `NgxFormFieldWrapper` level via `providers: [NgxFieldIdentity]`.
+ * Provided by the `NgxFieldIdentityProvider` host directive, which
+ * `NgxFormFieldWrapper` composes (ADR-0011).
  * `NgxSignalFormAutoAria` and hint directives inject it optionally, falling
  * back to their registry-driven behavior when absent.
  *

@@ -59,7 +59,7 @@ const insertion = pairs
   .map(({ pkg, version }) => `  '${pkg}': '${version}'\n`)
   .join('');
 const insertAt = original.indexOf(marker);
-// The workspace keeps no permanent `overrides:` map, so add one when missing.
+// Add the `overrides:` map when the workspace file has none.
 const updated =
   insertAt === -1
     ? `${original.endsWith('\n') ? original : `${original}\n`}${marker}${insertion}`

@@ -39,14 +39,6 @@
     var(--_error-space-2xs)
   );
   --_error-padding: var(--ngx-signal-form-error-padding, var(--_error-space-0));
-  --_error-padding-inline-start: var(
-    --ngx-signal-form-error-padding-inline-start,
-    var(--_feedback-padding-horizontal)
-  );
-  --_error-padding-inline-end: var(
-    --ngx-signal-form-error-padding-inline-end,
-    var(--_feedback-padding-horizontal)
-  );
   --_error-border-width: var(
     --ngx-signal-form-error-border-width,
     var(--_error-border-width-default)

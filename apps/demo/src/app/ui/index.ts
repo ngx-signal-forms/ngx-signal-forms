@@ -3,11 +3,6 @@ export { NavTreeComponent } from './nav-tree';
 export { PageControlsService, NgxPageControlsDirective } from './page-controls';
 export { RightRailComponent } from './right-rail';
 export { OrientationToggleComponent } from './orientation-toggle';
-export {
-  BadgeComponent,
-  type BadgeAppearance,
-  type BadgeVariant,
-} from './badge';
 export { CardComponent } from './card';
 export {
   DisplayControlsCardComponent,

@@ -103,12 +103,10 @@
   --_field-space-sm: 0.75rem; /* 12px - medium gaps */
   --_field-space-md: 0.5rem; /* 8px - default gaps */
   --_field-space-lg: 0.75rem; /* 12px - larger gaps */
-  --_field-space-xl: 1rem; /* 16px - section spacing */
 
   /* Typography scale */
   --_field-text-caption: 0.75rem; /* 12px - labels, hints (caption style) */
   --_field-text-body: 0.875rem; /* 14px - input text (body style) */
-  --_field-text-base: 1rem; /* 16px - fallback */
 
   /* Line-height scale */
   --_field-line-height-caption: 1rem; /* 16px - for caption text */
@@ -116,7 +114,6 @@
 
   /* Font-weight scale */
   --_field-weight-normal: 400; /* Regular text */
-  --_field-weight-medium: 500; /* Emphasized labels (stacked layout) */
   --_field-weight-semibold: 600; /* Required marker, strong emphasis */
 
   /* Other tokens */
@@ -130,14 +127,6 @@
    * 24px minimum) — public override, rationale, and ownership boundary are
    * documented in THEMING.md's "Selection target size" section (#253). */
   --_field-touch-target: var(--ngx-form-field-touch-target, 2rem); /* 32px */
-
-  /* Legacy aliases (for backward compatibility) */
-  --_field-text-xs: var(--_field-text-caption);
-  --_field-text-sm: var(--_field-text-body);
-  --_field-line-height-s: var(--_field-line-height-caption);
-  --_field-line-height-m: var(--_field-line-height-body);
-  --_field-clr-text-muted: var(--_field-clr-text-secondary);
-  --_field-clr-text-subtle: var(--_field-clr-text-secondary);
 }
 
 /* ============================================================================ */
@@ -601,7 +590,7 @@
   align-items: center;
   flex-shrink: 0;
   color: var(--_prefix-color);
-  font-size: var(--_field-text-sm);
+  font-size: var(--_field-text-body);
   line-height: 1;
   user-select: none;
 
@@ -621,11 +610,6 @@
   gap: var(--_suffix-gap);
   padding-inline-start: var(--_field-space-md);
 }
-
-/* Modern :has() based dynamic padding - adjust main content when prefix/suffix present */
-/* NOTE: main content has no intrinsic horizontal padding, so we don't need */
-/* conditional padding shims when prefix/suffix exist. Removing the blocks */
-/* above reduces CSS without changing behavior. */
 
 /* Prefix/suffix content styling. */
 /* `::ng-deep` is required: prefix/suffix are projected via `<ng-content>` from */

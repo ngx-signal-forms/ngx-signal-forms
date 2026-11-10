@@ -9,7 +9,7 @@
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.05em;
-    color: var(--ngx-muted-color, #6b7280);
+    color: var(--ngx-muted-color, var(--color-text-muted));
     margin-block-end: 0.5rem;
   }
 }

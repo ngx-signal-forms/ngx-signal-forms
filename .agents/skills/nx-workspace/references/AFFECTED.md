@@ -3,25 +3,25 @@
 Find projects affected by changes in the current branch.
 
 ```bash
-# Affected using Nx's default base (main unless configured)
-pnpm nx show projects --affected
+# Affected since base branch (auto-detected)
+nx show projects --affected
 
 # Affected with explicit base
-pnpm nx show projects --affected --base=main
-pnpm nx show projects --affected --base=origin/main
+nx show projects --affected --base=main
+nx show projects --affected --base=origin/main
 
 # Affected between two commits
-pnpm nx show projects --affected --base=abc123 --head=def456
+nx show projects --affected --base=abc123 --head=def456
 
 # Affected apps only
-pnpm nx show projects --affected --type app
+nx show projects --affected --type app
 
 # Affected excluding e2e projects
-pnpm nx show projects --affected --exclude="*-e2e"
+nx show projects --affected --exclude="*-e2e"
 
 # Affected by uncommitted changes
-pnpm nx show projects --affected --uncommitted
+nx show projects --affected --uncommitted
 
 # Affected by untracked files
-pnpm nx show projects --affected --untracked
+nx show projects --affected --untracked
 ```

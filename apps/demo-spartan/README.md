@@ -425,15 +425,15 @@ root element next to the `.dark` class.
 ## Pinned versions
 
 Versions come from the `spartan:` pnpm catalog in `pnpm-workspace.yaml`.
-The resolved column is from `pnpm-lock.yaml`.
+Read the versions there.
 
-| Package             | Declared in                                     | Catalog pin | Resolved |
-| ------------------- | ----------------------------------------------- | ----------- | -------- |
-| `@spartan-ng/brain` | `apps/demo-spartan`, `packages/demo/spartan-ui` | `1.4.1`     | `1.4.1`  |
-| `@spartan-ng/cli`   | root `package.json`                             | `1.4.1`     | `1.4.1`  |
-| `@ng-icons/core`    | `packages/demo/spartan-ui`                      | `36.0.0`    | `36.0.0` |
-| `@ng-icons/lucide`  | `packages/demo/spartan-ui`                      | `36.0.0`    | `36.0.0` |
-| `tw-animate-css`    | `apps/demo-spartan` (dev)                       | `^1.4.0`    | `1.4.0`  |
+| Package             | Declared in                                     |
+| ------------------- | ----------------------------------------------- |
+| `@spartan-ng/brain` | `apps/demo-spartan`, `packages/demo/spartan-ui` |
+| `@spartan-ng/cli`   | root `package.json`                             |
+| `@ng-icons/core`    | `packages/demo/spartan-ui`                      |
+| `@ng-icons/lucide`  | `packages/demo/spartan-ui`                      |
+| `tw-animate-css`    | `apps/demo-spartan` (dev)                       |
 
 The toolkit itself is consumed in-tree via the workspace tsconfig path
 alias (no `@spartan-ng/*` reaches `packages/toolkit/package.json`).

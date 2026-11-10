@@ -215,20 +215,6 @@ export function isPassportValidForDeparture(
   );
 }
 
-// Passport 6-Month Validity Rule - requires trip data from store
-// This is used in traveler-step.form.ts via validate() because
-// lastDepartureDate comes from a different step (trip step)
-export function TravelerWithPassportValidation(lastDepartureDate: string) {
-  return TravelerSchema.refine(
-    (data) =>
-      isPassportValidForDeparture(data.passportExpiry, lastDepartureDate),
-    {
-      message: 'Passport must be valid for 6 months after your trip ends',
-      path: ['passportExpiry'],
-    },
-  );
-}
-
 // ══════════════════════════════════════════════════════════════════════════════
 // TYPE INFERENCE
 // ══════════════════════════════════════════════════════════════════════════════
