@@ -2,7 +2,6 @@ import '@fontsource-variable/inter/wght.css';
 import { provideHttpClient } from '@angular/common/http';
 import {
   ErrorHandler,
-  importProvidersFrom,
   isDevMode,
   provideZonelessChangeDetection,
 } from '@angular/core';
@@ -68,7 +67,6 @@ void (async () => {
     providers: [
       provideZonelessChangeDetection(),
       { provide: ErrorHandler, useClass: DemoErrorHandler },
-      importProvidersFrom(),
       provideHttpClient(),
       provideNgxSignalFormsConfig({
         defaultErrorStrategy: 'on-touch',
