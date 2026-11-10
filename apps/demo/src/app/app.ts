@@ -530,7 +530,7 @@ function toPath(url: string): string {
         [attr.inert]="navInert() ? '' : null"
         (click)="onNavAreaClick($event)"
       >
-        <div class="shell__nav-header">
+        <header class="shell__nav-header">
           <div>
             <a
               [routerLink]="'/getting-started/your-first-form'"
@@ -561,13 +561,13 @@ function toPath(url: string): string {
               <path d="M1 1l12 12M13 1L1 13" />
             </svg>
           </button>
-        </div>
+        </header>
 
         <div class="shell__nav-tree">
           <ngx-nav-tree />
         </div>
 
-        <div class="shell__nav-footer">
+        <footer class="shell__nav-footer">
           <a
             href="https://angular.dev/api/forms/signals"
             target="_blank"
@@ -618,7 +618,7 @@ function toPath(url: string): string {
           </a>
 
           <ngx-theme-switcher class="ml-auto" />
-        </div>
+        </footer>
       </div>
 
       <!-- ── Main content ── -->
