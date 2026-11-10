@@ -5,6 +5,7 @@ import type {
   SubmittedStatus,
   WarningDisplayStrategy,
 } from '../types';
+import { injectIsEditingField } from '../services/edited-control';
 import { assertInjector } from './assert-injector';
 import { shouldShowWarnings } from './error-strategies';
 import type { WarningVisibilityState } from './field-state-types';
@@ -110,6 +111,9 @@ export interface CreateWarningVisibilityOptions {
  *    invalid on its own.
  * 5. Applies the **suppression** rule — a visible blocking error on the same
  *    field hides the warning (`opts.errorVisibility`).
+ * 6. While the user edits a control bound to the field, hides an
+ *    `'on-touch'` warning (matching `createErrorVisibility()`) and any
+ *    warning on a field that also has a blocking error.
  *
  * ## When NOT to use
  *
@@ -156,6 +160,7 @@ export function createWarningVisibility(
 ): Signal<boolean> {
   return assertInjector(createWarningVisibility, opts?.injector, () => {
     const formContext = injectFormContext();
+    const isEditing = injectIsEditingField();
 
     return computed(() => {
       const fieldState = unwrapValue(field);
@@ -193,16 +198,25 @@ export function createWarningVisibility(
           ? undefined
           : unwrapValue<SubmittedStatus | undefined>(opts.submittedStatus);
 
-      return shouldShowWarnings(
+      const strategy = resolveWarningStrategyFromContext(
+        strategyValue,
+        formContext,
+        opts?.configDefault,
+      );
+      const visible = shouldShowWarnings(
         hasWarnings,
         isTouched,
-        resolveWarningStrategyFromContext(
-          strategyValue,
-          formContext,
-          opts?.configDefault,
-        ),
+        strategy,
         resolveSubmittedStatusFromContext(statusValue, formContext) ??
           'unsubmitted',
+      );
+
+      // While the user types, an 'on-touch' warning waits like its error,
+      // and no warning stands in for a blocking error hidden mid-edit.
+      if (!visible || !isEditing(fieldState)) return visible;
+      return (
+        strategy !== 'on-touch' &&
+        !readDirectErrors(fieldState).some((error) => !isWarningError(error))
       );
     });
   });

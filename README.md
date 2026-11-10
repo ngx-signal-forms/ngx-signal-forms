@@ -228,6 +228,11 @@ message outside a wrapper, or show an error summary.
 `on-submit` needs the directive because the directive tracks the submit. The
 directive is already in `NgxSignalFormToolkit`, so you only add the attribute.
 
+With `on-touch`, a touched field hides its error while the user types in it,
+and an `on-touch` warning waits too.
+The toolkit checks the field again when focus moves or the form submits, so
+screen readers announce an error once, not on every keystroke.
+
 Warnings have their own `warningStrategy` with the same three values. The
 default is `on-touch`, so a form can hold errors until submit and still show
 warnings early. See [timing and messages](./docs/WARNINGS_SUPPORT.md#timing-and-configuration)
