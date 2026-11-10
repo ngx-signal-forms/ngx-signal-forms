@@ -187,7 +187,7 @@ const zodValidationSchema: SchemaFn<Readonly<ZodValidationModel>> = (
         <div class="flex gap-4">
           <button type="submit" class="btn-primary">
             @if (accountForm().submitting()) {
-              Saving...
+              Saving…
             } @else {
               Save baseline form
             }

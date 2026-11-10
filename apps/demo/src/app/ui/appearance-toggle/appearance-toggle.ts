@@ -19,7 +19,7 @@ import { APPEARANCE_LABELS, APPEARANCE_OPTIONS } from './appearance.constants';
           [class.bg-selected]="value() === appearance"
           [class.shadow-sm]="value() === appearance"
           [class.text-on-selected]="value() === appearance"
-          class="focus-visible:outline-border-focus rounded-xl px-3 py-1.5 text-sm font-medium text-gray-600 transition-all [corner-shape:squircle] hover:text-gray-900 focus-visible:outline-2 focus-visible:outline-offset-2 dark:text-gray-300 dark:hover:text-white"
+          class="focus-visible:outline-border-focus rounded-xl px-3 py-1.5 text-sm font-medium text-gray-600 transition-colors [corner-shape:squircle] hover:text-gray-900 focus-visible:outline-2 focus-visible:outline-offset-2 dark:text-gray-300 dark:hover:text-white"
         >
           {{ appearanceLabels[appearance] }}
         </button>

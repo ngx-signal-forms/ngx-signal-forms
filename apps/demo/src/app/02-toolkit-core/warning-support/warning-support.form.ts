@@ -81,7 +81,7 @@ import { SubmitStatusComponent } from '../../ui/submit-status/submit-status';
           [ngxBusy]="passwordForm().submitting()"
         >
           @if (passwordForm().submitting()) {
-            Creating Account...
+            Creating Account…
           } @else {
             Create Account
           }

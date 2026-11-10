@@ -81,7 +81,7 @@ test.describe('Advanced Scenarios - Async Validation', () => {
     });
 
     await test.step('Type in username field', async () => {
-      const checkingIndicator = page.getByText('Checking...', { exact: true });
+      const checkingIndicator = page.getByText('Checking…', { exact: true });
 
       await typingUsernameInput(page).fill('testuser');
 

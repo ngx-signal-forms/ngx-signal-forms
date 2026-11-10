@@ -266,7 +266,7 @@ export class ErrorDisplayHelpersComponent {
             id="productUsed"
             [formField]="productForm.productUsed"
           >
-            <option value="">Select a product...</option>
+            <option value="">Select a product…</option>
             <option value="Web App">Web Application</option>
             <option value="Mobile App">Mobile Application</option>
             <option value="API">API Documentation</option>
@@ -310,7 +310,7 @@ export class ErrorDisplayHelpersComponent {
               id="improvementSuggestions"
               rows="4"
               [formField]="productForm.improvementSuggestions"
-              placeholder="Please help us understand what went wrong..."
+              placeholder="Please help us understand what went wrong…"
             ></textarea>
             <ngx-form-field-hint id="improvement-hint">
               Please help us understand what went wrong
@@ -339,7 +339,7 @@ export class ErrorDisplayHelpersComponent {
             id="detailedFeedback"
             rows="4"
             [formField]="productForm.detailedFeedback"
-            placeholder="Share your detailed experience..."
+            placeholder="Share your detailed experience…"
           ></textarea>
           <ngx-form-field-hint id="detailed-hint">
             Any additional thoughts or suggestions
@@ -451,7 +451,7 @@ export class ErrorDisplayHelpersComponent {
             aria-live="polite"
           >
             <div class="text-sm font-medium text-blue-800 dark:text-blue-200">
-              Still validating... Please wait a moment.
+              Still validating… Please wait a moment.
             </div>
           </div>
         }
@@ -467,7 +467,7 @@ export class ErrorDisplayHelpersComponent {
           "
         >
           @if (productForm().submitting()) {
-            Submitting...
+            Submitting…
           } @else {
             Submit Feedback
           }

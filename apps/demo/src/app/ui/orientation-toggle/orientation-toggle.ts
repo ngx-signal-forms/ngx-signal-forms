@@ -27,7 +27,7 @@ import {
           [class.bg-selected]="value() === orientation"
           [class.shadow-sm]="value() === orientation"
           [class.text-on-selected]="value() === orientation"
-          class="focus-visible:outline-border-focus rounded-xl px-3 py-1.5 text-sm font-medium text-gray-600 transition-all [corner-shape:squircle] hover:text-gray-900 focus-visible:outline-2 focus-visible:outline-offset-2 disabled:cursor-not-allowed disabled:opacity-50 dark:text-gray-300 dark:hover:text-white"
+          class="focus-visible:outline-border-focus rounded-xl px-3 py-1.5 text-sm font-medium text-gray-600 transition-colors [corner-shape:squircle] hover:text-gray-900 focus-visible:outline-2 focus-visible:outline-offset-2 disabled:cursor-not-allowed disabled:opacity-50 dark:text-gray-300 dark:hover:text-white"
         >
           {{ orientationLabels[orientation] }}
         </button>

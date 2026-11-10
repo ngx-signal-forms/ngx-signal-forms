@@ -123,7 +123,7 @@ const FIELDSET_ERROR_PLACEMENT_LABELS: Record<
                 [class.dark:text-blue-300]="
                   selectedFieldsetErrorPlacement() === placement
                 "
-                class="rounded-full px-4 py-1.5 text-sm font-medium text-gray-600 transition-all hover:text-gray-900 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 dark:text-gray-300 dark:hover:text-white"
+                class="rounded-full px-4 py-1.5 text-sm font-medium text-gray-600 transition-colors hover:text-gray-900 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 dark:text-gray-300 dark:hover:text-white"
               >
                 {{ fieldsetErrorPlacementLabels[placement] }}
               </button>

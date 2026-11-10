@@ -258,7 +258,7 @@
       <textarea
         id="feedback"
         [formField]="reviewForm.feedback"
-        placeholder="Tell us more about your experience..."
+        placeholder="Tell us more about your experience…"
         rows="3"
       ></textarea>
     </ngx-form-field-wrapper>
@@ -274,8 +274,7 @@
         type="submit"
         [ngxBusy]="reviewForm().submitting()"
       >
-        @if (reviewForm().submitting()) { Submitting... } @else { Submit Review
-        }
+        @if (reviewForm().submitting()) { Submitting… } @else { Submit Review }
       </button>
 
       <button class="btn-secondary" type="reset" (click)="resetForm()">

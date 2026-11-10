@@ -85,7 +85,7 @@ import { SubmitStatusComponent } from '../../ui/submit-status/submit-status';
       <div class="form-actions">
         <button type="submit" class="btn-primary">
           @if (contactForm().submitting()) {
-            Sending...
+            Sending…
           } @else {
             Send Message
           }

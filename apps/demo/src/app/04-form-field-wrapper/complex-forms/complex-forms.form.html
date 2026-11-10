@@ -178,7 +178,7 @@
       >
         <label for="country">Country</label>
         <select id="country" [formField]="complexForm.addressInfo.country">
-          <option value="">Select...</option>
+          <option value="">Select…</option>
           <option value="US">United States</option>
           <option value="CA">Canada</option>
           <option value="UK">United Kingdom</option>
@@ -284,7 +284,7 @@
           [id]="'contact-' + i + '-type'"
           [formField]="complexForm.contacts[i].type"
         >
-          <option value="">Select...</option>
+          <option value="">Select…</option>
           <option value="email">Email</option>
           <option value="phone">Phone</option>
         </select>
@@ -521,7 +521,7 @@
       class="btn-primary"
       [ngxBusy]="complexForm().submitting()"
     >
-      @if (complexForm().submitting()) { Submitting... } @else { Submit
+      @if (complexForm().submitting()) { Submitting… } @else { Submit
       Application }
     </button>
     <button type="button" (click)="resetForm()" class="btn-secondary">

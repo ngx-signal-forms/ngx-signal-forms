@@ -84,14 +84,17 @@ import { createAriaInvalidSignal } from '@ngx-signal-forms/toolkit/headless';
       outline: none;
       cursor: pointer;
       transition:
-        background-color 0.15s ease-in-out,
-        box-shadow 0.15s ease-in-out,
-        transform 0.15s ease-in-out;
+        background-color 0.15s ease,
+        box-shadow 0.15s ease;
     }
 
+    /* Forced-colors mode drops box-shadow but paints the transparent
+       outline in a system color, so focus stays visible. */
     :host(:focus-visible) {
       background-color: color-mix(in srgb, #fbbf24 10%, transparent);
       box-shadow: 0 0 0 3px color-mix(in srgb, #007bc7 55%, transparent);
+      outline: 2px solid transparent;
+      outline-offset: 2px;
     }
 
     :host([data-signal-field]:focus-visible) {
@@ -112,17 +115,20 @@ import { createAriaInvalidSignal } from '@ngx-signal-forms/toolkit/headless';
       font-size: 1.625rem;
       line-height: 1;
       transition:
-        transform 0.1s ease-in-out,
-        color 0.15s ease-in-out,
-        filter 0.15s ease-in-out;
+        transform 0.15s ease-out,
+        color 0.15s ease,
+        filter 0.15s ease;
       user-select: none;
     }
 
-    .star:hover:not(.star--disabled) {
-      transform: scale(1.14);
-      filter: drop-shadow(
-        0 0 0.35rem color-mix(in srgb, #fbbf24 35%, transparent)
-      );
+    /* Touch devices keep a tapped star in :hover, so only scale on real hover. */
+    @media (hover: hover) and (pointer: fine) {
+      .star:hover:not(.star--disabled) {
+        transform: scale(1.14);
+        filter: drop-shadow(
+          0 0 0.35rem color-mix(in srgb, #fbbf24 35%, transparent)
+        );
+      }
     }
 
     .star--filled {

@@ -2,10 +2,10 @@
   <!-- Status indicator with reserved space (no layout shift) -->
   <div class="status-row" aria-live="polite">
     @if (store.isLoadingDraft()) {
-    <span class="saving-indicator">Loading saved draft...</span>
+    <span class="saving-indicator">Loading saved draft…</span>
     } @else if (showSavingIndicator()) {
     <!-- Visual only: the live region announces the result, not each save. -->
-    <span class="saving-indicator" aria-hidden="true">Saving draft...</span>
+    <span class="saving-indicator" aria-hidden="true">Saving draft…</span>
     } @else if (store.lastSavedAt()) {
     <span class="saved-indicator">
       Last saved: {{ store.lastSavedAt() | date: 'shortTime' }}
@@ -147,7 +147,7 @@
       [ngxBusy]="store.isSubmitting() || store.isLoadingDraft()"
       (click)="submit()"
     >
-      @if (store.isSubmitting()) { Submitting... } @else { Confirm Booking }
+      @if (store.isSubmitting()) { Submitting… } @else { Confirm Booking }
     </button>
     } }
   </div>
