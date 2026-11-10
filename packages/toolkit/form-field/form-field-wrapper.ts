@@ -12,7 +12,7 @@ import {
   type Type,
   viewChild,
 } from '@angular/core';
-import type { FieldTree } from '@angular/forms/signals';
+import type { FieldState, FieldTree } from '@angular/forms/signals';
 import type {
   ErrorDisplayStrategy,
   FieldMarkingMode,
@@ -295,6 +295,7 @@ const FIELD_BOX_INTERACTIVE_SELECTOR = [
     '[class.ngx-signal-form-field-wrapper--invalid]':
       'presentation.showErrors()',
     '[class.ngx-signal-form-field-wrapper--warning]': 'showWarningState()',
+    '[class.ngx-signal-form-field-wrapper--valid]': 'showValidState()',
     '[class.ngx-signal-form-field-wrapper--hide-hint-on-error]':
       'resolvedHideHintOnError() && (presentation.showErrors() || presentation.showWarnings())',
     '[class.ngx-signal-form-field-wrapper--messages-top]': 'isTopPlacement()',
@@ -1130,6 +1131,23 @@ export class NgxFormFieldWrapper<TValue = unknown> {
    */
   protected readonly showWarningState = computed(() => {
     return this.presentation.hasWarnings() && !this.presentation.showErrors();
+  });
+
+  /**
+   * Whether the field has been touched and holds a valid value with no
+   * warnings. Drives the opt-in `--ngx-form-field-valid-border-color` cue.
+   * Uses the field's own validity rather than native `:user-valid`, which
+   * does not see Signal Forms validators.
+   */
+  protected readonly showValidState = computed(() => {
+    // Custom controls and tests can pass partial field states.
+    const state: Partial<Pick<FieldState<unknown>, 'touched' | 'valid'>> =
+      this.#fieldState();
+    return (
+      (state.touched?.() ?? false) &&
+      (state.valid?.() ?? false) &&
+      !this.presentation.hasWarnings()
+    );
   });
 
   protected readonly isTopPlacement = computed(() => {

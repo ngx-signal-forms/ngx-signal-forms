@@ -992,6 +992,17 @@
   }
 }
 
+/* Opt-in valid cue: unset `--ngx-form-field-valid-border-color` keeps the */
+/* regular border, so nothing changes until a consumer sets the token. */
+:host(
+    .ngx-signal-form-field-wrapper--valid.ngx-signal-form-field-wrapper--textual
+  )
+  .ngx-signal-form-field-wrapper__content:not(:hover, :focus-within) {
+  border-color: var(
+    --ngx-form-field-valid-border-color,
+    var(--_input-border-color)
+  );
+}
 
 /* Warning state styling (applied via host class when field has warnings but no errors) */
 :host(

@@ -969,6 +969,7 @@ bring the ring back.
 | `--ngx-form-field-invalid-box-shadow`   | `none`                                                              | Invalid ring (off by default — the solid outline is the focus signal)                         |
 | `--ngx-form-field-warning-color`        | `var(--ngx-form-field-color-warning)`                               | Warning border color                                                                          |
 | `--ngx-form-field-warning-box-shadow`   | `none`                                                              | Warning ring (off by default — the solid outline is the focus signal)                         |
+| `--ngx-form-field-valid-border-color`   | unset (regular border)                                              | Opt-in border for a touched, valid field without warnings; does not apply while focused       |
 | `--ngx-form-field-disabled-bg`          | `var(--ngx-form-field-color-disabled)`                              | Disabled background                                                                           |
 | `--ngx-form-field-disabled-opacity`     | `0.6`                                                               | Disabled opacity                                                                              |
 | `--ngx-form-field-state-ring-opacity`   | `25%`                                                               | Opacity used by `--ngx-form-field-focus-box-shadow`'s color-mix (registered via `@property`)  |
