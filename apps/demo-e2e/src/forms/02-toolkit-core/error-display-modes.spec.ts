@@ -19,6 +19,26 @@ test.describe('Error Display Modes', () => {
     await expect(formPage.form).toBeVisible();
   });
 
+  test('renders visible field boundaries around native controls', async ({
+    page,
+  }) => {
+    for (const fieldId of [
+      'name',
+      'productUsed',
+      'overallRating',
+      'detailedFeedback',
+    ]) {
+      const field = page
+        .locator('ngx-form-field-wrapper')
+        .filter({ has: page.locator(`#${fieldId}`) })
+        .locator('.ngx-signal-form-field-wrapper__content');
+
+      await expect(field).toBeVisible();
+      await expect(field).toHaveCSS('border-top-style', 'solid');
+      await expect(field).not.toHaveCSS('border-top-width', '0px');
+    }
+  });
+
   test('should allow switching between all 3 modes', async () => {
     await test.step('Switch through all error display modes', async () => {
       const modes = ['immediate', 'onTouch', 'onSubmit'] as const;
