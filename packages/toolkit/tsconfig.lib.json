@@ -29,30 +29,5 @@
     "./**/*.test.jsx",
     "./**/*.spec.jsx"
   ],
-  "include": ["./**/*.ts"],
-  "angularCompilerOptions": {
-    // Angular merges `angularCompilerOptions` shallowly across `extends`: this
-    // block replaces the one in `tsconfig.base.json`. Keep every base check
-    // here, or the library build reports it as a warning only.
-    "extendedDiagnostics": {
-      "checks": {
-        "controlFlowPreventingContentProjection": "error",
-        "interpolatedSignalNotInvoked": "error",
-        "invalidBananaInBox": "error",
-        "missingControlFlowDirective": "error",
-        "missingNgForOfLet": "error",
-        "missingStructuralDirective": "error",
-        "nullishCoalescingNotNullable": "suppress",
-        "optionalChainNotNullable": "suppress",
-        "skipHydrationNotStatic": "error",
-        "suffixNotSupported": "error",
-        "textAttributeNotBinding": "error",
-        "uninvokedFunctionInEventBinding": "error",
-        "uninvokedTrackFunction": "error",
-        "unparenthesizedNullishCoalescing": "error",
-        "unusedLetDeclaration": "error",
-        "unusedStandaloneImports": "error"
-      }
-    }
-  }
+  "include": ["./**/*.ts"]
 }
