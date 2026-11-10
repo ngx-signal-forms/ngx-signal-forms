@@ -179,22 +179,6 @@ export class NgxSignalFormAutoAria {
     return fieldState ?? null;
   }
 
-  #shouldShowBy(errorType: 'blocking' | 'warning'): boolean {
-    if (errorType === 'warning') {
-      return this.#warningVisibilityByStrategy();
-    }
-
-    const fieldState = this.#resolveFieldState();
-
-    if (!fieldState) {
-      return false;
-    }
-
-    if (!fieldState.errors().some(isBlockingError)) return false;
-
-    return this.#visibilityByStrategy();
-  }
-
   readonly #element: ElementRef<HTMLElement> = inject(ElementRef);
   readonly #injector = inject(Injector);
   // `NGX_SIGNAL_FORMS_CONFIG` has a root `factory` (see `../tokens.ts`), so
@@ -300,7 +284,7 @@ export class NgxSignalFormAutoAria {
 
   /**
    * Shared visibility-timing computed. Centralizes the `shouldShowErrors`
-   * decision so `#shouldShowBy` only contributes the per-error-type filter.
+   * decision so `#shouldShowErrors` only contributes the blocking-error filter.
    * Keeps auto-aria in lockstep with the wrapper component and the form
    * field error component.
    *
@@ -445,12 +429,15 @@ export class NgxSignalFormAutoAria {
 
   /** Delegates to `#visibilityByStrategy` after filtering to blocking errors. */
   readonly #shouldShowErrors = computed(() => {
-    return this.#shouldShowBy('blocking');
-  });
+    const fieldState = this.#resolveFieldState();
 
-  /** Delegates to `#visibilityByStrategy` after filtering to warnings. */
-  readonly #shouldShowWarnings = computed(() => {
-    return this.#shouldShowBy('warning');
+    if (!fieldState) {
+      return false;
+    }
+
+    if (!fieldState.errors().some(isBlockingError)) return false;
+
+    return this.#visibilityByStrategy();
   });
 
   /**
@@ -672,7 +659,7 @@ export class NgxSignalFormAutoAria {
     // error would have this "which ids does the toolkit own" computation
     // diverge from the DOM-writing factory — composing a dangling
     // `${fieldName}-warning` reference (axe `aria-valid-attr-value`).
-    if (!showsBlockingError && this.#shouldShowWarnings()) {
+    if (!showsBlockingError && this.#warningVisibilityByStrategy()) {
       managedIds.push(generateWarningId(snapshot.fieldName));
     }
 

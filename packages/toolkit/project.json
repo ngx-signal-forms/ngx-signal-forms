@@ -2,7 +2,7 @@
   "name": "toolkit",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "packages/toolkit",
-  "prefix": "sft",
+  "prefix": "ngx",
   "projectType": "library",
   "release": {
     "version": {

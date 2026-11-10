@@ -15,7 +15,7 @@
 // `"./core"` from `exports`, because self-references are still subject to
 // the exports map.
 //
-// This script runs after the `toolkit:build` target and:
+// This script runs as the last step of the `toolkit:build` target and:
 //   1. Rewrites every sibling `.mjs` / `.d.ts` that still references
 //      `'@ngx-signal-forms/toolkit/core'` to use a relative specifier
 //      pointing at the `core` bundle that sits beside it in the same

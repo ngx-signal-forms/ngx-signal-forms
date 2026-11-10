@@ -30,10 +30,8 @@ import {
  * primitives.  These assertions fail `pnpm nx test toolkit` immediately when
  * Angular moves the contract.
  *
- * **`expectTypeOf` assertions** (compile-time documentation): inert today
- * because spec files are currently not typechecked (see plans/README.md for
- * the payoff plan), but they become enforced once that debt is cleared and
- * serve as living documentation of what the Pick types are supposed to surface.
+ * **`expectTypeOf` assertions** (compile-time): `pnpm nx typecheck toolkit`
+ * enforces them. They document what the Pick types are supposed to surface.
  *
  * @see ./field-state-types.ts — the two Pick types guarded here
  * @see ./submission-helpers.drift.spec.ts — real-form drift guard for the
