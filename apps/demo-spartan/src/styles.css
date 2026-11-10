@@ -160,3 +160,14 @@
   white-space: pre-wrap;
   overflow-wrap: break-word;
 }
+
+/*
+ * Visual required marker. The bound control already carries `aria-required`
+ * (the wrapper mirrors it as `data-spartan-required`), so the star is
+ * decorative: the empty alt text after the slash keeps it out of the
+ * accessibility tree.
+ */
+spartan-form-field[data-spartan-required='true'] > label[hlmLabel]::after {
+  content: '*' / '';
+  color: var(--destructive);
+}

@@ -246,11 +246,9 @@ test.describe('Spartan account preferences form', () => {
 
       await plan.press('Enter');
 
-      // BrnSelectValue's default itemToString renders the raw option value
-      // (not the item's projected "Enterprise" label content) when no
-      // custom itemToString is configured — the same value shown in the
-      // submitted JSON payload elsewhere in this spec.
-      await expect(plan).toHaveText('enterprise');
+      // The form passes `itemToString`, so the trigger shows the option
+      // label. Without it, BrnSelectValue falls back to the raw value.
+      await expect(plan).toHaveText('Enterprise');
       await expect(page.getByRole('option')).toHaveCount(0);
     });
   });
