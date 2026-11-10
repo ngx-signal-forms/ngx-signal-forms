@@ -60,7 +60,7 @@ and the error-renderer inputs map are each a single inline `computed()`
 bootstrapApplication(AppComponent, {
   providers: [
     provideNgxPrimeForms(),
-    // …PrimeNG / animations / signal-forms-config
+    // …PrimeNG / signal-forms-config
   ],
 });
 ```

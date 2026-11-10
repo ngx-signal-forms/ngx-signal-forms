@@ -95,6 +95,7 @@ import { profileFormSchema } from './profile-form.schema';
               id="profile-email"
               pInputText
               type="email"
+              autocomplete="email"
               placeholder="you@example.com"
               ngxSignalFormControl="input-like"
               [formField]="emailField"
