@@ -5,6 +5,11 @@ The Nx skills in `.agents/skills` (`nx-*`, `monitor-ci`,
 rules of this workspace. Where a rule here differs from a skill, this file
 wins.
 
+## All Nx skills
+
+Run every `nx` command in a skill as `pnpm nx`. This uses the pinned Nx
+version of the workspace.
+
 ## link-workspace-packages
 
 Internal projects resolve through `paths` in `tsconfig.base.json`
