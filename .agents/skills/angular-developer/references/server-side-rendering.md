@@ -7,8 +7,8 @@ Angular applications can combine server-side rendering (SSR), build-time prerend
 Choose CSR (`RenderMode.Client`), SSG (`RenderMode.Prerender`), or SSR (`RenderMode.Server`) for each route with `ServerRoute`:
 
 ```ts
-import { inject } from '@angular/core';
-import { PrerenderFallback, RenderMode, ServerRoute } from '@angular/ssr';
+import {inject} from '@angular/core';
+import {PrerenderFallback, RenderMode, ServerRoute} from '@angular/ssr';
 
 export const serverRoutes: ServerRoute[] = [
   {
@@ -23,7 +23,7 @@ export const serverRoutes: ServerRoute[] = [
       const catalog = inject(ProductCatalog);
       const ids = await catalog.getProductIds();
 
-      return ids.map((id) => ({ id: String(id) }));
+      return ids.map((id) => ({id: String(id)}));
     },
   },
   {

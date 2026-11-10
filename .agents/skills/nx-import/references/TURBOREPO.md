@@ -1,8 +1,8 @@
 ## Turborepo
 
-- Nx replaces Turborepo task orchestration, but shared configuration packages may still be used by imported projects.
+- Nx replaces Turborepo task orchestration, but a clean migration requires handling Turborepo's config packages.
 - Migration guide: https://nx.dev/docs/guides/adopting-nx/from-turborepo#easy-automated-migration-example
-- Remove Turborepo-specific orchestration files and dependencies. Check all consumers before removing shared TypeScript or ESLint config packages, and keep each package until its consumers have migrated.
+- Since Nx replaces Turborepo, all turbo config files and config packages become dead code and should be removed.
 
 ## The Config-as-Package Pattern
 
@@ -32,8 +32,7 @@ The config package contains a hierarchy of tsconfig files. Each project extends 
    - Change `"extends"` from `"@repo/typescript-config/<variant>.json"` to the relative path to root `tsconfig.base.json`.
    - Inline variant-specific overrides from the intermediate config (e.g., Next.js: `"module": "ESNext"`, `"moduleResolution": "Bundler"`, `"jsx": "preserve"`, `"noEmit": true`; React library: `"jsx": "react-jsx"`).
    - Preserve project-specific settings (`outDir`, `include`, `exclude`, etc.).
-4. After every consumer has migrated, delete the config package and remove it
-   from all `devDependencies`.
+4. **Delete the config package** and remove it from all `devDependencies`.
 
 ## Merging ESLint Config (Only When Root eslint.config Exists)
 
@@ -44,19 +43,18 @@ The config package centralizes ESLint plugin dependencies and exports composable
 3. **Update each project's `eslint.config.mjs`** — switch from importing `@repo/eslint-config/<variant>` to extending the root config, adding framework-specific plugins inline.
 4. **Move ESLint plugin dependencies** from the config package to root `devDependencies`.
 5. If `@nx/eslint` plugin is configured with inferred targets, remove `"lint"` scripts from project `package.json` files.
-6. After every consumer has migrated, delete the config package and remove it
-   from all `devDependencies`.
+6. **Delete the config package** and remove it from all `devDependencies`.
 
 ## General Cleanup
 
 - Remove turbo-specific dependencies: `turbo`, `eslint-plugin-turbo`.
 - Delete all `turbo.json` files (root and per-package).
-- Run workspace validation (`pnpm nx run-many -t build lint test typecheck`) to confirm nothing broke.
+- Run workspace validation (`nx run-many -t build lint test typecheck`) to confirm nothing broke.
 
 ## Key Pitfalls
 
 - **Trace the full inheritance chain** before inlining — check what each variant inherits from the base.
-- **Module resolution changes** — update config inheritance to relative paths (`../../tsconfig.base.json`), but preserve Node package resolution for cross-project imports.
+- **Module resolution changes** — from Node package resolution (`@repo/...`) to relative paths (`../../tsconfig.base.json`).
 - **ESLint configs are JavaScript, not JSON** — handle JS imports, array spreading, and plugin objects when merging.
 
 Helpful docs:

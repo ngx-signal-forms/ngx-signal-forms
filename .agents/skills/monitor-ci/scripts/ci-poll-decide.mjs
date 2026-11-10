@@ -13,7 +13,7 @@
  * Usage:
  *   node ci-poll-decide.mjs '<ci_info_json>' <poll_count> <verbosity> \
  *     [--wait-mode] [--prev-cipe-url <url>] [--expected-sha <sha>] \
- *     [--timeout <minutes>] [--new-cipe-timeout <minutes>] \
+ *     [--prev-status <status>] [--timeout <minutes>] [--new-cipe-timeout <minutes>] \
  *     [--elapsed-seconds <n>] [--env-rerun-count <n>] [--no-progress-count <n>] \
  *     [--prev-cipe-status <status>] [--prev-sh-status <status>] \
  *     [--prev-verification-status <status>] [--prev-failure-classification <status>]
@@ -43,6 +43,7 @@ function getArg(name) {
 const waitMode = getFlag('--wait-mode');
 const prevCipeUrl = getArg('--prev-cipe-url');
 const expectedSha = getArg('--expected-sha');
+const prevStatus = getArg('--prev-status');
 // Flags are documented in minutes; convert to seconds for internal comparison.
 const timeoutSeconds = parseInt(getArg('--timeout') || '0', 10) * 60;
 const newCipeTimeoutSeconds =
@@ -57,7 +58,6 @@ const prevCipeStatus = getArg('--prev-cipe-status');
 const prevShStatus = getArg('--prev-sh-status');
 const prevVerificationStatus = getArg('--prev-verification-status');
 const prevFailureClassification = getArg('--prev-failure-classification');
-const MAX_NO_PROGRESS_POLLS = 13;
 
 // --- Parse CI info ---
 
@@ -65,25 +65,14 @@ let ci;
 try {
   ci = JSON.parse(ciInfoJson);
 } catch {
-  const noProgressCount = inputNoProgressCount + 1;
-  const code = isTimedOut()
-    ? 'polling_timeout'
-    : noProgressCount >= MAX_NO_PROGRESS_POLLS
-      ? 'circuit_breaker'
-      : 'error';
-  const messages = {
-    polling_timeout: 'Polling timeout exceeded.',
-    circuit_breaker: `No progress after ${MAX_NO_PROGRESS_POLLS} consecutive polls. Stopping.`,
-    error: 'Failed to parse ci_information JSON',
-  };
   console.log(
     JSON.stringify({
       action: 'done',
-      code,
-      message: messages[code],
-      noProgressCount,
+      code: 'error',
+      message: 'Failed to parse ci_information JSON',
+      noProgressCount: inputNoProgressCount + 1,
       envRerunCount,
-    }),
+    })
   );
   process.exit(0);
 }
@@ -216,8 +205,7 @@ function classify() {
 
   // --- Guards ---
   if (isTimedOut()) return { action: 'done', code: 'polling_timeout' };
-  if (noProgressCount >= MAX_NO_PROGRESS_POLLS)
-    return { action: 'done', code: 'circuit_breaker' };
+  if (noProgressCount >= 13) return { action: 'done', code: 'circuit_breaker' };
 
   // --- Terminal CI states ---
   if (cipeStatus === 'SUCCEEDED') return { action: 'done', code: 'ci_success' };
@@ -332,8 +320,7 @@ const messages = {
 
   // guards
   polling_timeout: () => 'Polling timeout exceeded.',
-  circuit_breaker: () =>
-    `No progress after ${MAX_NO_PROGRESS_POLLS} consecutive polls. Stopping.`,
+  circuit_breaker: () => 'No progress after 13 consecutive polls. Stopping.',
 
   // terminal
   ci_success: () => 'CI passed successfully!',
@@ -396,12 +383,8 @@ const resetProgressCodes = new Set([
 
 function formatMessage(msg) {
   if (verbosity === 'minimal') {
-    const hasPreviousState =
-      prevCipeStatus ||
-      prevShStatus ||
-      prevVerificationStatus ||
-      prevFailureClassification;
-    if (hasPreviousState && !hasStateChanged()) return null;
+    const currentStatus = `${cipeStatus}|${selfHealingStatus}|${verificationStatus}`;
+    if (currentStatus === (prevStatus || '')) return null;
     return msg;
   }
   if (verbosity === 'verbose') {

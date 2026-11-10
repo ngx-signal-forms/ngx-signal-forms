@@ -21,6 +21,12 @@ in [coding standards](CODING_STANDARDS.md), and in `.agents/skills/`
   [Claude instruction-loading guide](https://code.claude.com/docs/en/memory#agents-md).
 - `nx configure-ai-agents` creates provider configuration and can restore
   duplicate skills or the Claude plugin. Review its output before accepting it.
+- Keep vendored skills byte-identical to upstream; `oxfmt` skips them.
+  `skills-lock.json` tracks `angular-developer` and `accessibility-a11y`
+  (update: `npx skills update -p -y`). `nx configure-ai-agents` owns and
+  overwrites the Nx skills (`nx-*`, `monitor-ci`, `link-workspace-packages`).
+  Put a workspace rule for a vendored skill in `.agents/overrides/` and send
+  skill corrections upstream.
 - MCP connections are separate from skill discovery. The shared `.mcp.json`
   configures Claude Code; other clients need their own MCP connection if they
   do not already get it from Nx Console.
@@ -36,6 +42,7 @@ in [coding standards](CODING_STANDARDS.md), and in `.agents/skills/`
 - Writing prose: read [Writing](CODING_STANDARDS.md#writing).
 - Creating commits or PR titles: read [Commits](CODING_STANDARDS.md#commits).
 - Executing Nx tasks, using Nx plugins, or changing Nx configuration: read [Nx workflow](CODING_STANDARDS.md#nx-workflow).
+- Following an Nx skill (`nx-*`, `monitor-ci`, `link-workspace-packages`): read [Nx skill overrides](.agents/overrides/nx.md) first. It wins over the skill text.
 - Handling issues, PRDs, or pull requests: read [issue tracker](docs/agents/issue-tracker.md).
 - Running sandboxed commands, managing worktrees, or pushing: read [sandbox guidance](docs/agents/sandbox.md).
 
