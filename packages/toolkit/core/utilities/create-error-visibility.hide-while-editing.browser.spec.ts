@@ -55,7 +55,11 @@ class HoldWhileFocusedHost {
   template: `
     <form [formRoot]="testForm" ngxSignalForm errorStrategy="on-touch">
       <label for="late-email">Email</label>
-      <input id="late-email" [formField]="testForm.email" />
+      <input
+        id="late-email"
+        [formField]="testForm.email"
+        (keydown)="revealError()"
+      />
       @if (showError()) {
         <ngx-form-field-error
           [formField]="testForm.email"
@@ -74,6 +78,10 @@ class LateErrorHost {
       required(path.email, { message: 'Email is required' });
     }),
   );
+
+  protected revealError(): void {
+    this.showError.set(true);
+  }
 }
 
 async function stable(): Promise<void> {
@@ -144,13 +152,13 @@ describe('createErrorVisibility on-touch — hide while editing', () => {
   });
 
   it('shows an error rendered while its touched control already has focus', async () => {
-    const { fixture } = await render(LateErrorHost);
+    await render(LateErrorHost);
     const emailInput = page.getByRole('textbox', { name: 'Email' });
 
     await userEvent.click(emailInput);
     await userEvent.tab();
     await userEvent.click(emailInput);
-    fixture.componentInstance.showError.set(true);
+    await userEvent.keyboard('{Escape}');
     await stable();
 
     expect(document.activeElement?.id).toBe('late-email');

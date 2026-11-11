@@ -168,7 +168,7 @@ describe('NgxFormFieldWrapper — warning display timing (issue #264)', () => {
     `,
     providers: [
       provideNgxSignalFormsConfigForComponent({
-        defaultWarningStrategy: 'immediate',
+        defaultWarningStrategy: 'on-touch',
       }),
     ],
   })
@@ -310,12 +310,29 @@ describe('NgxFormFieldWrapper — warning display timing (issue #264)', () => {
     const status = container.querySelector('[role="status"]');
     expect(status?.getAttribute('id')).not.toBe('confirm-warning');
 
-    // Now type a value that triggers a warning
+    // Fix the blocking error while still editing. The warning must not
+    // replace the hidden error before the user commits the value.
     await userEvent.type(input, 'abc');
 
-    // Required error is still present, so warning should still be hidden
+    // Neither the hidden error nor a warning should stand in while editing.
+    expect(container.querySelector('[role="alert"]')?.textContent).toBe('');
     expect(
       container.querySelector('[role="status"]')?.getAttribute('id'),
     ).not.toBe('confirm-warning');
+
+    await userEvent.tab();
+    expect(container.querySelector('[role="status"]')?.textContent).toContain(
+      'Consider 8+ characters',
+    );
+
+    // A visible on-touch warning also waits while the user continues editing.
+    await userEvent.click(input);
+    await userEvent.type(input, 'd');
+
+    expect(container.querySelector('[role="status"]')?.textContent).toBe('');
+    await userEvent.tab();
+    expect(container.querySelector('[role="status"]')?.textContent).toContain(
+      'Consider 8+ characters',
+    );
   });
 });

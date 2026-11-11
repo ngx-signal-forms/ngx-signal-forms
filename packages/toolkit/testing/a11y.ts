@@ -186,6 +186,8 @@ const FAILING_INCOMPLETE_RULES = new Set(['color-contrast']);
  * skipped because they never finish, and the wait is capped as a safeguard.
  */
 async function settleFiniteAnimations(): Promise<void> {
+  if (typeof document.getAnimations !== 'function') return;
+
   const pending = document.getAnimations().filter((animation) => {
     const effect = animation.effect;
     const target = effect instanceof KeyframeEffect ? effect.target : null;

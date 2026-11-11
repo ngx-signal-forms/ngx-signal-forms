@@ -1303,6 +1303,58 @@ describe('form-field wrapper — additional variant coverage (#501)', () => {
       expect(styles.borderWidth).toBe('2px');
     });
 
+    it('keeps the system border color on touched valid fields under forced colors', async () => {
+      const TestComponent = defineFixtureComponent(
+        'ngx-test-a11y-forced-colors-valid-border',
+        `
+          <button type="button" id="forced-colors-valid-before">Before</button>
+          <form [formRoot]="testForm" ngxSignalForm>
+            <ngx-form-field-wrapper
+              [formField]="testForm.name"
+              fieldName="name"
+              style="--ngx-form-field-valid-border-color: rgb(255, 0, 0)"
+            >
+              <label for="forced-colors-valid-name">Full name</label>
+              <input
+                id="forced-colors-valid-name"
+                type="text"
+                [formField]="testForm.name"
+              />
+            </ngx-form-field-wrapper>
+            <button type="button" id="forced-colors-valid-after">After</button>
+          </form>
+        `,
+        () =>
+          form(signal({ name: 'Ada' }), (path) => {
+            required(path.name, { message: 'Name is required' });
+          }),
+      );
+
+      const { container } = await render(TestComponent);
+      await commands.emulateForcedColors('active');
+      await TestBed.inject(ApplicationRef).whenStable();
+
+      const before = container.querySelector<HTMLButtonElement>(
+        '#forced-colors-valid-before',
+      )!;
+      await userEvent.click(before);
+      await userEvent.tab();
+      await userEvent.tab();
+      await TestBed.inject(ApplicationRef).whenStable();
+
+      const wrapper = container.querySelector<HTMLElement>(
+        'ngx-form-field-wrapper',
+      )!;
+      expect(wrapper).toHaveClass('ngx-signal-form-field-wrapper--valid');
+
+      const content = wrapper.querySelector<HTMLElement>(
+        '.ngx-signal-form-field-wrapper__content',
+      )!;
+      expect(getComputedStyle(content).borderTopColor).toBe(
+        resolveSystemColor('FieldText'),
+      );
+    });
+
     it('lets plain controls use the forced-colors palette', async () => {
       const TestComponent = defineFixtureComponent(
         'ngx-test-a11y-forced-colors-plain',

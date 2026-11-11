@@ -97,10 +97,6 @@ import { createAriaInvalidSignal } from '@ngx-signal-forms/toolkit/headless';
       outline-offset: 2px;
     }
 
-    :host([data-signal-field]:focus-visible) {
-      box-shadow: none;
-    }
-
     :host(.rating-control--disabled) {
       opacity: 0.5;
       cursor: not-allowed;

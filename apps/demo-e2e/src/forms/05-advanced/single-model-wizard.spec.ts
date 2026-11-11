@@ -142,7 +142,7 @@ test.describe('Advanced Scenarios - Single-Model Wizard', () => {
       // at 2/3 (~67%).
       await expect(wizard.progressFill).toHaveAttribute(
         'style',
-        /width:\s*100%/,
+        /transform:\s*scaleX\(1\)/,
       );
       await expect(wizard.progressFill).toHaveAttribute('aria-valuenow', '100');
     });

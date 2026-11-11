@@ -1,4 +1,5 @@
 import { afterEach, describe, expect, it } from 'vitest';
+import { expectNoA11yViolations } from './a11y';
 import { findAlertContaining } from './a11y-internal';
 
 /**
@@ -43,5 +44,14 @@ describe('findAlertContaining', () => {
     `);
 
     expect(findAlertContaining(host, 'Password is required')).toBeUndefined();
+  });
+});
+
+describe('expectNoA11yViolations in jsdom', () => {
+  it('runs when the Web Animations API is unavailable', async () => {
+    const host = mount('<button type="button">Continue</button>');
+
+    expect(typeof document.getAnimations).toBe('undefined');
+    await expectNoA11yViolations(host);
   });
 });

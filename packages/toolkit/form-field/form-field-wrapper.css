@@ -1357,6 +1357,13 @@
     }
   }
 
+  :host(
+      .ngx-signal-form-field-wrapper--valid.ngx-signal-form-field-wrapper--textual
+    )
+    .ngx-signal-form-field-wrapper__content:not(:hover, :focus-within) {
+    border-color: FieldText;
+  }
+
   :host(.ngx-signal-form-field-wrapper--textual):where(
       :not(.ngx-signal-forms-plain)
     )

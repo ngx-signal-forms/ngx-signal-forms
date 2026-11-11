@@ -384,12 +384,18 @@
   }
 }
 
-/* Reduced motion swaps the slide for a fade. Only the keyframes change, so
- * the duration and timing from the (possibly consumer-set) animation stay,
- * and `none` still means no animation. */
+/* Reduced motion swaps the default slide for a fade. Keep the resolved
+ * animation in one var cascade so explicit `none` opt-outs still win. */
 @media (prefers-reduced-motion: reduce) {
   .ngx-form-field-error {
-    animation-name: ngx-status-fade-in;
+    animation: var(
+      --_error-animation,
+      var(
+        --ngx-signal-form-error-animation,
+        ngx-status-fade-in var(--_motion-duration-enter)
+          var(--_motion-easing-enter) both
+      )
+    );
   }
 }
 
