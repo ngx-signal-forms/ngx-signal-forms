@@ -3,10 +3,11 @@
     "angular.ng-template",
     "antfu.pnpm-catalog-lens",
     "bradlc.vscode-tailwindcss",
+    "dbaeumer.vscode-eslint",
     "editorconfig.editorconfig",
+    "ms-playwright.playwright",
     "nrwl.angular-console",
     "oxc.oxc-vscode",
-    "ms-playwright.playwright",
     "vitest.explorer"
   ]
 }
