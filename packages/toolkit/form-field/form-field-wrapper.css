@@ -1359,7 +1359,7 @@
 
   :host(
       .ngx-signal-form-field-wrapper--valid.ngx-signal-form-field-wrapper--textual
-    )
+    ):not(.ngx-signal-forms-plain)
     .ngx-signal-form-field-wrapper__content:not(:hover, :focus-within) {
     border-color: FieldText;
   }

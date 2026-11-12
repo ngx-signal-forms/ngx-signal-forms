@@ -1341,6 +1341,9 @@ describe('form-field wrapper — additional variant coverage (#501)', () => {
       await userEvent.tab();
       await userEvent.tab();
       await TestBed.inject(ApplicationRef).whenStable();
+      // Blur starts a border-color transition from Highlight to FieldText;
+      // wait for it to settle before reading the computed color.
+      await settleTransitions();
 
       const wrapper = container.querySelector<HTMLElement>(
         'ngx-form-field-wrapper',

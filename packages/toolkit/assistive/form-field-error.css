@@ -385,9 +385,12 @@
 }
 
 /* Reduced motion swaps the default slide for a fade. Keep the resolved
- * animation in one var cascade so explicit `none` opt-outs still win. */
+ * animation in one var cascade so explicit `none` opt-outs still win.
+ * Empty live regions are excluded: their `animation: none` above must not
+ * be overridden, so each reveal starts the fade instead of inheriting one
+ * that already ran while the region was empty. */
 @media (prefers-reduced-motion: reduce) {
-  .ngx-form-field-error {
+  .ngx-form-field-error:not(.ngx-form-field-error--empty) {
     animation: var(
       --_error-animation,
       var(
