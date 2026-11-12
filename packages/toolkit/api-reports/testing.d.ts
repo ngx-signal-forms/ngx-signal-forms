@@ -48,7 +48,8 @@ type A11yCheckOptions = Omit<axe.RunOptions, 'runOnly'> & {
  * Toolkit components are published primitives, so accessibility violations in
  * them are bugs: this helper is a **hard fail** by design. Use it inside Vitest
  * browser-mode specs after rendering a component fixture — one call per
- * rendered fixture is enough; it scans the whole subtree.
+ * rendered fixture is enough; it scans the whole subtree. It waits for
+ * running finite animations first, so fading text is checked at full contrast.
  *
  * @param context Element (or axe context spec) to scan. Defaults to the whole
  *   document body so a bare `await expectNoA11yViolations()` covers the render.
