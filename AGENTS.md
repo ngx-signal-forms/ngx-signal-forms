@@ -41,14 +41,21 @@ code only when that removes real complexity or a real defect.
 
 - Editing or reviewing: read the applicable [coding standards](CODING_STANDARDS.md)
   sections and their triggered sources before editing or judging code.
-- Code that uses this library: load the `ngx-signal-forms` skill first.
+- For toolkit use or demo-app changes, load the `ngx-signal-forms` skill before
+  making changes. This includes consumers and examples that import
+  `@ngx-signal-forms/toolkit`. This rule alone does not require the skill for
+  work only on the toolkit implementation or unrelated packages.
 
 ## Action routes
 
 - Writing prose: read [Writing](CODING_STANDARDS.md#writing).
 - Creating commits or PR titles: read [Commits](CODING_STANDARDS.md#commits).
 - Executing Nx tasks, using Nx plugins, or changing Nx configuration: read [Nx workflow](CODING_STANDARDS.md#nx-workflow).
-- Following an Nx skill (`nx-*`, `monitor-ci`, `link-workspace-packages`): read [Nx skill overrides](.agents/overrides/nx.md) first. It wins over the skill text.
+- Following an Nx skill (`nx-*`, `monitor-ci`, `link-workspace-packages`):
+  1. Read [Nx skill overrides](.agents/overrides/nx.md). It wins over the skill text.
+  2. Invoke the specific skill: `nx-generate` for scaffolding or `nx-workspace`
+     for workspace exploration.
+  3. Then explore the workspace or call MCP tools.
 - Handling issues, PRDs, or pull requests: read [issue tracker](docs/agents/issue-tracker.md).
 - Running sandboxed commands, managing worktrees, or pushing: read [sandbox guidance](docs/agents/sandbox.md).
 
@@ -57,7 +64,7 @@ code only when that removes real complexity or a real defect.
 
 ## General Guidelines for working with Nx
 
-- For navigating/exploring the workspace, invoke the `nx-workspace` skill first - it has patterns for querying projects, targets, and dependencies
+- For navigating/exploring the workspace, invoke the `nx-workspace` skill before exploration, following the Nx skill order in Action routes - it has patterns for querying projects, targets, and dependencies
 - When running tasks (for example build, lint, test, e2e, etc.), always prefer running the task through `nx` (i.e. `nx run`, `nx run-many`, `nx affected`) instead of using the underlying tooling directly
 - Prefix nx commands with the workspace's package manager (e.g., `pnpm nx build`, `npm exec nx test`) - avoids using globally installed CLI
 - You have access to the Nx MCP server and its tools, use them to help the user
@@ -66,7 +73,7 @@ code only when that removes real complexity or a real defect.
 
 ## Scaffolding & Generators
 
-- For scaffolding tasks (creating apps, libs, project structure, setup), ALWAYS invoke the `nx-generate` skill FIRST before exploring or calling MCP tools
+- For scaffolding tasks (creating apps, libs, project structure, setup), invoke the `nx-generate` skill before exploring or calling MCP tools, following the Nx skill order in Action routes
 
 ## When to use nx_docs
 
