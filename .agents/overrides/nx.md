@@ -10,6 +10,40 @@ wins.
 Run every `nx` command in a skill as `pnpm nx`. This uses the pinned Nx
 version of the workspace.
 
+## Updating Nx skills
+
+Do not use `pnpm nx configure-ai-agents` for shared-only updates. Its
+`--agents` option selects providers, not destinations. The current command
+has no skills-only or output-directory option. `--no-interactive` removes
+input prompts but can still configure the detected agent and update other
+configured agents.
+
+Use the upstream
+[Nx AI agents configuration](https://github.com/nrwl/nx-ai-agents-config)
+instead. Download it to a temporary checkout under `$TMPDIR`. Copy only
+`generated/.agents/skills/` into this workspace's `.agents/skills/`.
+Keep those files byte-identical to upstream and preserve the other workspace
+skills. Do not copy the generated provider directories, commands, subagents,
+or MCP configuration. Remove the temporary checkout after the update.
+
+Decline provider setup/update prompts. The installed Nx CLI and workspace
+schema have no persistent shared-only provider allowlist. Do not use
+`.gitignore` as an installation control: it hides files but does not prevent
+Nx from writing them.
+
+Nx does not save the initial provider selection as a workspace setting.
+It infers configuration from existing rules and each provider's MCP setup.
+Shared `AGENTS.md` can therefore make an unused provider appear partially
+configured. Removing provider files does not remove it from the setup prompt.
+For a future `pnpm nx init`, pass `--aiAgents=none` to skip agent setup for
+that invocation. This is not a persistent opt-out for `configure-ai-agents`.
+
+Keep sandbox grants separate from skill installation. The existing
+`.claude/settings.json` grants Nx socket access without enabling the Nx
+Claude plugin. Copilot CLI reads sandbox policy from user-level settings,
+not from a committed workspace file. See the
+[Nx sandbox guide](https://nx.dev/docs/kb/nx-sandbox-unix-sockets).
+
 ## link-workspace-packages
 
 Internal projects resolve through `paths` in `tsconfig.base.json`

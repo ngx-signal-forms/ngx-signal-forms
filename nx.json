@@ -15,15 +15,15 @@
       "!{projectRoot}/tsconfig.spec.json",
       "!{projectRoot}/tsconfig.spec.*.json",
       "!{projectRoot}/**/test-setup*.{js,cjs,mjs,ts,cts,mts}",
-      // Committed baseline snapshots (#514) and their size-budget config are
-      // build-output artifacts and check tooling, not build input — a
-      // no-op glob on every project that doesn't have them.
       "!{projectRoot}/api-reports/**",
-      "!{projectRoot}/.size-limit.cjs"
+      "!{projectRoot}/.size-limit.cjs",
+      "!{projectRoot}/src/test-setup.[jt]s",
+      "!{projectRoot}/.eslintrc.json",
+      "!{projectRoot}/eslint.config.mjs"
     ],
     "sharedGlobals": []
   },
-  "nxCloudId": "6996105d7ca3ad8352dfd299",
+  "nxCloudId": "6af4748bf10a963b9ec5c72c",
   "targetDefaults": {
     "build": {
       "cache": true,
@@ -40,8 +40,13 @@
         "...",
         "default",
         "^production",
-        { "env": "CI" },
-        { "dependentTasksOutputFiles": "**/*.mjs", "transitive": true }
+        {
+          "env": "CI"
+        },
+        {
+          "dependentTasksOutputFiles": "**/*.mjs",
+          "transitive": true
+        }
       ]
     },
     "test-browser": {
@@ -49,8 +54,12 @@
       "inputs": [
         "default",
         "^production",
-        { "env": "CI" },
-        { "env": "PLAYWRIGHT_BROWSER_CHANNEL" }
+        {
+          "env": "CI"
+        },
+        {
+          "env": "PLAYWRIGHT_BROWSER_CHANNEL"
+        }
       ],
       "outputs": ["{projectRoot}/.vitest/report-browser"]
     },
@@ -193,6 +202,33 @@
     },
     {
       "plugin": "@nx/oxlint",
+      "options": {
+        "targetName": "lint"
+      }
+    },
+    {
+      "plugin": "@nx/js/typescript",
+      "options": {
+        "typecheck": {
+          "targetName": "typecheck"
+        }
+      }
+    },
+    {
+      "plugin": "@nx/vite/plugin",
+      "options": {
+        "buildTargetName": "build",
+        "serveTargetName": "serve",
+        "devTargetName": "dev",
+        "previewTargetName": "preview",
+        "serveStaticTargetName": "serve-static",
+        "typecheckTargetName": "typecheck",
+        "buildDepsTargetName": "build-deps",
+        "watchDepsTargetName": "watch-deps"
+      }
+    },
+    {
+      "plugin": "@nx/eslint/plugin",
       "options": {
         "targetName": "lint"
       }
