@@ -232,7 +232,7 @@ const vestValidationSchema: SchemaFn<Readonly<VestValidationModel>> = (
         <div class="flex gap-4">
           <button type="submit" class="btn-primary">
             @if (accountForm().submitting()) {
-              Saving...
+              Saving…
             } @else {
               Create account
             }

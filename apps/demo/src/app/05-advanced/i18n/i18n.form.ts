@@ -111,7 +111,7 @@ import { SubmitStatusComponent } from '../../ui/submit-status/submit-status';
               [class.bg-selected]="langService.lang() === lang"
               [class.shadow-sm]="langService.lang() === lang"
               [class.text-on-selected]="langService.lang() === lang"
-              class="focus-visible:outline-border-focus rounded-full px-3 py-1.5 text-sm font-medium text-gray-600 transition-all hover:text-gray-900 focus-visible:outline-2 focus-visible:outline-offset-2 dark:text-gray-300 dark:hover:text-white"
+              class="focus-visible:outline-border-focus rounded-full px-3 py-1.5 text-sm font-medium text-gray-600 transition-colors hover:text-gray-900 focus-visible:outline-2 focus-visible:outline-offset-2 dark:text-gray-300 dark:hover:text-white"
             >
               {{ langLabels[lang] }}
             </button>

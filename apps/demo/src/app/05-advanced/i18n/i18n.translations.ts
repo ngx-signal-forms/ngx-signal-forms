@@ -68,14 +68,14 @@ export const UI_STRINGS: Record<
 > = {
   en: {
     submit: 'Submit',
-    saving: 'Saving...',
+    saving: 'Saving…',
     reset: 'Reset',
     languageGroupLabel: 'Language',
     summaryLabel: 'Please fix the following errors before submitting:',
   },
   nl: {
     submit: 'Verzenden',
-    saving: 'Bezig met opslaan...',
+    saving: 'Bezig met opslaan…',
     reset: 'Resetten',
     languageGroupLabel: 'Taal',
     summaryLabel: 'Los de volgende fouten op voordat u verzendt:',

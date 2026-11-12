@@ -2739,6 +2739,12 @@ export interface CreateErrorVisibilityOptions {
  * 4. Evaluates the visibility timing predicate and returns a reactive
  *    `Signal<boolean>`.
  *
+ * With `'on-touch'`, a field's error is hidden while the user edits one of
+ * its bound controls, and re-checked when focus leaves the control or the
+ * form is submitted. Refocusing a field without typing keeps its error
+ * visible. This keeps a touched field from announcing and animating its error
+ * on every keystroke.
+ *
  * This is the single composition point for the visibility cascade. It owns
  * the reactive computed. It also owns the dev-mode warning for a missing
  * submission status. The shared pure predicate evaluates the strategy.
@@ -3034,6 +3040,9 @@ export interface CreateWarningVisibilityOptions {
  *    invalid on its own.
  * 5. Applies the **suppression** rule — a visible blocking error on the same
  *    field hides the warning (`opts.errorVisibility`).
+ * 6. While the user edits a control bound to the field, hides an
+ *    `'on-touch'` warning (matching `createErrorVisibility()`) and any
+ *    warning on a field that also has a blocking error.
  *
  * ## When NOT to use
  *

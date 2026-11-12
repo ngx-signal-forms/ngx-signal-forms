@@ -29,7 +29,7 @@
   <div class="wizard-progress-bar">
     <div
       class="wizard-progress-fill"
-      [style.width.%]="progress()"
+      [style.transform]="'scaleX(' + progress() / 100 + ')'"
       role="progressbar"
       [attr.aria-valuenow]="progress()"
       aria-valuemin="0"

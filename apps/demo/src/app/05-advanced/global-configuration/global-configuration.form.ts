@@ -186,7 +186,7 @@ import { BusyButtonDirective } from '../../shared/busy-button.directive';
           [ngxBusy]="configForm().submitting()"
         >
           @if (configForm().submitting()) {
-            Saving...
+            Saving…
           } @else {
             Submit Form
           }

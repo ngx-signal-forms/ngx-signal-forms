@@ -253,7 +253,7 @@ const fieldStatePatternsSchema = schema<FieldStatePatternsModel>((path) => {
         <div class="flex gap-4">
           <button type="submit" class="btn-primary">
             @if (stateForm().submitting()) {
-              Saving...
+              Saving…
             } @else {
               Save preferences
             }

@@ -79,7 +79,7 @@ void (async () => {
         withEnabledBlockingInitialNavigation(),
         withComponentInputBinding(),
         withAutoCleanupInjectors(),
-        withViewTransitions(),
+        withViewTransitions({ skipInitialTransition: true }),
       ),
     ],
   });

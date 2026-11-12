@@ -1303,6 +1303,115 @@ describe('form-field wrapper — additional variant coverage (#501)', () => {
       expect(styles.borderWidth).toBe('2px');
     });
 
+    it('keeps the system border color on touched valid fields under forced colors', async () => {
+      const TestComponent = defineFixtureComponent(
+        'ngx-test-a11y-forced-colors-valid-border',
+        `
+          <button type="button" id="forced-colors-valid-before">Before</button>
+          <form [formRoot]="testForm" ngxSignalForm>
+            <ngx-form-field-wrapper
+              [formField]="testForm.name"
+              fieldName="name"
+              style="--ngx-form-field-valid-border-color: rgb(255, 0, 0)"
+            >
+              <label for="forced-colors-valid-name">Full name</label>
+              <input
+                id="forced-colors-valid-name"
+                type="text"
+                [formField]="testForm.name"
+              />
+            </ngx-form-field-wrapper>
+            <button type="button" id="forced-colors-valid-after">After</button>
+          </form>
+        `,
+        () =>
+          form(signal({ name: 'Ada' }), (path) => {
+            required(path.name, { message: 'Name is required' });
+          }),
+      );
+
+      const { container } = await render(TestComponent);
+      await commands.emulateForcedColors('active');
+      await TestBed.inject(ApplicationRef).whenStable();
+
+      const before = container.querySelector<HTMLButtonElement>(
+        '#forced-colors-valid-before',
+      )!;
+      await userEvent.click(before);
+      await userEvent.tab();
+      await userEvent.tab();
+      await TestBed.inject(ApplicationRef).whenStable();
+      // Blur starts a border-color transition from Highlight to FieldText;
+      // wait for it to settle before reading the computed color.
+      await settleTransitions();
+
+      const wrapper = container.querySelector<HTMLElement>(
+        'ngx-form-field-wrapper',
+      )!;
+      expect(wrapper).toHaveClass('ngx-signal-form-field-wrapper--valid');
+
+      const content = wrapper.querySelector<HTMLElement>(
+        '.ngx-signal-form-field-wrapper__content',
+      )!;
+      expect(getComputedStyle(content).borderTopColor).toBe(
+        resolveSystemColor('FieldText'),
+      );
+    });
+
+    it('lets plain controls use the forced-colors palette', async () => {
+      const TestComponent = defineFixtureComponent(
+        'ngx-test-a11y-forced-colors-plain',
+        `
+          <button type="button" id="forced-colors-plain-anchor">Before</button>
+          <form [formRoot]="testForm" ngxSignalForm>
+            <ngx-form-field-wrapper
+              [formField]="testForm.name"
+              fieldName="name"
+              appearance="plain"
+            >
+              <label for="forced-colors-plain-name">Full name</label>
+              <input
+                id="forced-colors-plain-name"
+                type="text"
+                [formField]="testForm.name"
+              />
+            </ngx-form-field-wrapper>
+          </form>
+        `,
+        () => form(signal({ name: '' })),
+      );
+
+      const { container } = await render(TestComponent);
+      await commands.emulateForcedColors('active');
+      await TestBed.inject(ApplicationRef).whenStable();
+
+      expect(window.matchMedia('(forced-colors: active)').matches).toBe(true);
+
+      const content = container.querySelector<HTMLElement>(
+        '.ngx-signal-form-field-wrapper__content',
+      )!;
+      const input = container.querySelector<HTMLInputElement>(
+        '#forced-colors-plain-name',
+      )!;
+      expect(getComputedStyle(content).borderTopWidth).toBe('0px');
+      expect(getComputedStyle(content).outlineStyle).toBe('none');
+      expect(getComputedStyle(input).forcedColorAdjust).toBe('auto');
+
+      await userEvent.click(
+        container.querySelector<HTMLButtonElement>(
+          '#forced-colors-plain-anchor',
+        )!,
+      );
+      await userEvent.tab();
+      await settleTransitions();
+
+      expect(document.activeElement).toBe(input);
+      const inputStyles = getComputedStyle(input);
+      expect(inputStyles.outlineStyle).toBe('solid');
+      expect(inputStyles.outlineWidth).toBe('2px');
+      expect(inputStyles.outlineColor).toBe(resolveSystemColor('Highlight'));
+    });
+
     /**
      * #550: the outline appearance's own border rule has a two-class
      * `:host()` compound, so it outranks a one-class forced-colors rule in
@@ -1744,7 +1853,7 @@ describe('form-field wrapper — additional variant coverage (#501)', () => {
       await commands.emulateReducedMotion(null);
     });
 
-    it('disables the inline error message entrance animation', async () => {
+    it('swaps the inline error slide-in for a fade', async () => {
       const TestComponent = defineFixtureComponent(
         'ngx-test-a11y-reduced-motion-error',
         `
@@ -1775,16 +1884,19 @@ describe('form-field wrapper — additional variant coverage (#501)', () => {
         '.ngx-form-field-error--error',
       )!;
       expect(errorEl.textContent).toContain('Full name is required');
-      // form-field-error.css's default `--_error-animation-default` plays
-      // `ngx-status-slide-in` on every non-empty error message.
-      expect(getComputedStyle(errorEl).animationName).toBe(
+      // Emulated encapsulation renames the keyframes, so a name that matches
+      // no `@keyframes` rule would still compute but never create an animation.
+      expect(getComputedStyle(errorEl).animationName).toContain(
         'ngx-status-slide-in',
       );
+      expect(errorEl.getAnimations()).not.toHaveLength(0);
 
       await commands.emulateReducedMotion('reduce');
       await TestBed.inject(ApplicationRef).whenStable();
 
-      expect(getComputedStyle(errorEl).animationName).toBe('none');
+      expect(getComputedStyle(errorEl).animationName).toContain(
+        'ngx-status-fade-in',
+      );
     });
 
     it("disables the wrapper's assistive-row transition", async () => {

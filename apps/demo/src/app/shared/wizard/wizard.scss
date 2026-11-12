@@ -93,7 +93,13 @@
 .wizard-progress-fill {
   height: 100%;
   background: var(--wizard-color-primary, var(--gradient-brand));
-  transition: width 0.3s ease;
+  /* Scale instead of animating width so the bar stays on the compositor. */
+  transform-origin: left;
+  transition: transform 0.3s cubic-bezier(0.23, 1, 0.32, 1);
+
+  &:dir(rtl) {
+    transform-origin: right;
+  }
 }
 
 .wizard-content {

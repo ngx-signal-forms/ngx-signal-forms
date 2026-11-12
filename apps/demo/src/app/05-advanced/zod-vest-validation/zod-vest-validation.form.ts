@@ -260,7 +260,7 @@ const zodVestValidationSchema: SchemaFn<Readonly<ZodVestValidationModel>> = (
         <div class="flex gap-4">
           <button type="submit" class="btn-primary">
             @if (accountForm().submitting()) {
-              Provisioning...
+              Provisioning…
             } @else {
               Provision account
             }

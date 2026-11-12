@@ -127,6 +127,10 @@ const bookingSchema = schema<Booking>((path) => {
           <input
             id="promo"
             type="text"
+            autocomplete="off"
+            autocapitalize="characters"
+            autocorrect="off"
+            spellcheck="false"
             [formField]="bookingForm.promoCode"
             placeholder="Try 'SMALLGROUP'"
             class="uppercase"
@@ -141,7 +145,7 @@ const bookingSchema = schema<Booking>((path) => {
             [ngxBusy]="bookingForm().submitting()"
           >
             @if (bookingForm().submitting()) {
-              Booking...
+              Booking…
             } @else {
               Book Stay
             }

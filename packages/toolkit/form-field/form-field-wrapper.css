@@ -409,12 +409,16 @@
     --ngx-form-field-selection-group-warning-bg,
     color-mix(in srgb, var(--_warning-color) 12%, transparent)
   );
-  --_transition-color: color 0.15s ease-in-out;
+  --_transition-color: color var(--_motion-duration-state)
+    var(--_motion-easing-state);
   --_transition-chrome:
-    border-color 0.15s ease-in-out, background-color 0.15s ease-in-out,
-    color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+    border-color var(--_motion-duration-state) var(--_motion-easing-state),
+    background-color var(--_motion-duration-state) var(--_motion-easing-state),
+    color var(--_motion-duration-state) var(--_motion-easing-state),
+    box-shadow var(--_motion-duration-state) var(--_motion-easing-state);
   --_transition-surface:
-    background-color 0.15s ease-in-out, color 0.15s ease-in-out;
+    background-color var(--_motion-duration-state) var(--_motion-easing-state),
+    color var(--_motion-duration-state) var(--_motion-easing-state);
   --_selection-row-min-block-size: calc(
     var(--_field-touch-target) + (var(--_selection-row-padding-block) * 2)
   );
@@ -672,7 +676,7 @@
 /* `::ng-deep` reaches into projected form controls (also `<ng-content>`); the */
 /* consumer's `<input>`/`<textarea>`/`<select>` are scoped to their template, */
 /* not ours. */
-:host(.ngx-signal-form-field-wrapper--textual)
+:host(.ngx-signal-form-field-wrapper--textual:not(.ngx-signal-forms-plain))
   ::ng-deep
   .ngx-signal-form-field-wrapper__main
   :is(
@@ -717,25 +721,25 @@
   }
 }
 
-:host(.ngx-signal-form-field-wrapper--textual)
+:host(.ngx-signal-form-field-wrapper--textual:not(.ngx-signal-forms-plain))
   ::ng-deep
   .ngx-signal-form-field-wrapper__main
   input:not([type='radio']):not([type='checkbox']):not(
     [role='switch']
   ):focus-visible,
-:host(.ngx-signal-form-field-wrapper--textual)
+:host(.ngx-signal-form-field-wrapper--textual:not(.ngx-signal-forms-plain))
   ::ng-deep
   .ngx-signal-form-field-wrapper__main
   textarea:focus-visible,
-:host(.ngx-signal-form-field-wrapper--textual)
+:host(.ngx-signal-form-field-wrapper--textual:not(.ngx-signal-forms-plain))
   ::ng-deep
   .ngx-signal-form-field-wrapper__main
   select:focus-visible,
-:host(.ngx-signal-form-field-wrapper--textual)
+:host(.ngx-signal-form-field-wrapper--textual:not(.ngx-signal-forms-plain))
   ::ng-deep
   .ngx-signal-form-field-wrapper__main
   [role='combobox']:focus-visible,
-:host(.ngx-signal-form-field-wrapper--textual)
+:host(.ngx-signal-form-field-wrapper--textual:not(.ngx-signal-forms-plain))
   ::ng-deep
   .ngx-signal-form-field-wrapper__main
   [data-ngx-signal-form-control-kind='input-like']:focus-visible {
@@ -825,8 +829,8 @@
   border-radius: var(--_outline-radius);
   cursor: text;
   transition:
-    border-color 0.15s ease-in-out,
-    box-shadow 0.15s ease-in-out;
+    border-color var(--_motion-duration-state) var(--_motion-easing-state),
+    box-shadow var(--_motion-duration-state) var(--_motion-easing-state);
   min-height: var(--_outline-min-height);
 }
 
@@ -988,6 +992,18 @@
   }
 }
 
+/* Opt-in valid cue: unset `--ngx-form-field-valid-border-color` keeps the */
+/* regular border, so nothing changes until a consumer sets the token. */
+:host(
+    .ngx-signal-form-field-wrapper--valid.ngx-signal-form-field-wrapper--textual
+  )
+  .ngx-signal-form-field-wrapper__content:not(:hover, :focus-within) {
+  border-color: var(
+    --ngx-form-field-valid-border-color,
+    var(--_input-border-color)
+  );
+}
+
 /* Warning state styling (applied via host class when field has warnings but no errors) */
 :host(
     .ngx-signal-form-field-wrapper--warning.ngx-signal-form-field-wrapper--textual
@@ -1140,8 +1156,8 @@
   /* A scoped transition lets consumers collapse the reserved space smoothly. */
   transition: var(
     --ngx-form-field-assistive-transition,
-    min-height 0.15s ease-out,
-    margin-block 0.15s ease-out
+    min-height var(--_motion-duration-state) ease-out,
+    margin-block var(--_motion-duration-state) ease-out
   );
   width: 100%;
 }
@@ -1285,7 +1301,9 @@
   /* a margin that differs per Angular version. So these rules set the */
   /* tokens that hover and disabled read, not the properties. Hover and */
   /* disabled then paint system colors on every Angular version (#558). */
-  :host(.ngx-signal-form-field-wrapper--textual)
+  :host(.ngx-signal-form-field-wrapper--textual):where(
+      :not(.ngx-signal-forms-plain)
+    )
     .ngx-signal-form-field-wrapper__content,
   :host(.ngx-signal-forms-outline.ngx-signal-form-field-wrapper--textual)
     .ngx-signal-form-field-wrapper__content {
@@ -1303,7 +1321,9 @@
   /* warning rules: its outline selector has the same specificity as their */
   /* `:focus-within` rules before Angular 22.2, so source order keeps their */
   /* state border color. */
-  :host(.ngx-signal-form-field-wrapper--textual)
+  :host(.ngx-signal-form-field-wrapper--textual):where(
+      :not(.ngx-signal-forms-plain)
+    )
     .ngx-signal-form-field-wrapper__content:focus-within,
   :host(.ngx-signal-forms-outline.ngx-signal-form-field-wrapper--textual)
     .ngx-signal-form-field-wrapper__content:focus-within {
@@ -1337,7 +1357,16 @@
     }
   }
 
-  :host(.ngx-signal-form-field-wrapper--textual)
+  :host(
+      .ngx-signal-form-field-wrapper--valid.ngx-signal-form-field-wrapper--textual
+    ):not(.ngx-signal-forms-plain)
+    .ngx-signal-form-field-wrapper__content:not(:hover, :focus-within) {
+    border-color: FieldText;
+  }
+
+  :host(.ngx-signal-form-field-wrapper--textual):where(
+      :not(.ngx-signal-forms-plain)
+    )
     .ngx-signal-form-field-wrapper__content:has(
       .ngx-signal-form-field-wrapper__main :focus-visible
     ) {

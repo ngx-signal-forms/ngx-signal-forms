@@ -199,6 +199,23 @@
       box-shadow: none !important;
     }
   }
+
+  /* Textareas grow with their content where supported; `rows` stays the
+     fixed-height fallback elsewhere. */
+  @supports (field-sizing: content) {
+    textarea {
+      field-sizing: content;
+      min-block-size: calc(3lh + 1rem);
+      max-block-size: calc(12lh + 1rem);
+    }
+
+    /* The wrapper drops textarea padding and sets an unlayered one-line
+       minimum, which would beat this layer without `!important`. */
+    ngx-form-field-wrapper textarea {
+      min-block-size: 3lh !important;
+      max-block-size: 12lh;
+    }
+  }
 }
 
 /* Components: semantic classes used by examples */
@@ -278,15 +295,7 @@
       color: var(--color-placeholder);
       opacity: 1;
     }
-    /* Remove inner focus ring; rely on container focus styles (e.g., form-field wrapper) */
-    @apply focus:border-transparent;
     @apply transition-colors duration-200;
-  }
-
-  /* Eliminate default outline on focused inputs/textareas/selects
-     so the visible focus is driven by the parent container (e.g., :focus-within). */
-  .form-input:focus-visible {
-    outline: none;
   }
 
   /* Invalid state — solid danger border (Expo: interaction/danger/enabled

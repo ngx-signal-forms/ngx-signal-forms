@@ -14,7 +14,7 @@ The toolkit is an enhancement layer, not a replacement. Angular Signal Forms own
 
 2. **Choose error strategy deliberately:**
 
-- `'on-touch'` — show errors after user interaction (default, good for most forms, and works with or without `ngxSignalForm`)
+- `'on-touch'` — show errors after user interaction (default, good for most forms, and works with or without `ngxSignalForm`). While the user types in a touched control, its error, `aria-invalid`, and any `on-touch` warning are hidden; other warnings also wait if the value has a blocking error. The toolkit checks the control again when focus moves or a DOM `submit` event fires. A programmatic `submit()` with no DOM event does not end editing. Controls that fire no `input` event keep live updates.
 - `'immediate'` — show errors from first load (useful for live guidance or sign-up flows)
 - `'on-submit'` — show errors only after submission attempt. Inside `form[formRoot][ngxSignalForm]` the wrapper, auto-ARIA, and headless directives inherit `submittedStatus` automatically. **Standalone callers of `createErrorVisibility()` outside an `ngxSignalForm` context MUST pass `submittedStatus` explicitly when using `'on-submit'`** — otherwise the helper stays at `'unsubmitted'` and errors never surface (dev mode logs a one-shot `console.warn` to flag the silent failure).
 

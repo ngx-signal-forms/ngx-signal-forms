@@ -130,6 +130,23 @@ test.describe('Custom Signal Forms Controls', () => {
         );
       });
     });
+
+    test('keeps a visible keyboard focus indicator on the plain-wrapped rating control', async ({
+      page: playwrightPage,
+    }) => {
+      await page.ratingControl.focus();
+      await playwrightPage.keyboard.press('Tab');
+      await playwrightPage.keyboard.press('Shift+Tab');
+
+      await expect(page.ratingControl).toBeFocused();
+      await expect
+        .poll(() =>
+          page.ratingControl.evaluate(
+            (element) => getComputedStyle(element).boxShadow,
+          ),
+        )
+        .not.toBe('none');
+    });
   });
 
   test.describe('Rating Control Interaction', () => {
