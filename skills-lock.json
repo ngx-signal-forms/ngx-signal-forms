@@ -1,17 +1,17 @@
 {
-  "version": 1,
+  "version": 2,
   "skills": {
     "accessibility-a11y": {
       "source": "mindrally/skills",
       "sourceType": "github",
       "skillPath": "accessibility-a11y/SKILL.md",
-      "computedHash": "c38c72e62054742b01d4d2cd05ed0bb2d09525053cf69630187626ca45db0c5d"
+      "computedHash": "165361e8afe93bce6c7e85ca3a01d0c8d294fd38a1ed538048e683c8ab06dc8c"
     },
     "angular-developer": {
       "source": "angular/skills",
       "sourceType": "github",
       "skillPath": "angular-developer/SKILL.md",
-      "computedHash": "06f89c855e544fe306e8e08cae83a667e54fbb81509e8a1e631bff308f268cbd"
+      "computedHash": "50ac5be541125767b4864c31ecf2947558bf4a897b54cedd1d43e04b857f4e42"
     }
   }
 }
