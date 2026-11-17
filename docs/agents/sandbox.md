@@ -79,7 +79,6 @@ Ask for escalation per command. These always fail inside:
 | Install or add a dependency | `pnpm install --frozen-lockfile`, `pnpm add -w <pkg>` (`-w` for the root) |
 | Start or stop the Nx Daemon | `pnpm nx daemon --start`, `pnpm nx daemon --stop`                         |
 | Browser specs, e2e and a11y | `browser-tests <project> <test-browser\|e2e\|e2e-ci\|a11y> [-- <spec>]`   |
-| Push                        | `agent-push <branch>`, see [Push](#push)                                  |
 
 `new-worktree.sh` puts the worktree in the sibling
 `ngx-signal-forms.worktrees/<branch>` folder, which the sandbox can write.
@@ -99,15 +98,16 @@ in the sandbox. Never write a brief that forbids it.
 
 ## Push
 
-Push with the maintainer's wrapper: `agent-push <branch>`. Run it as a single
-command, from the worktree of the branch. It runs outside the sandbox and
-pushes plain branches to the allowed remote only. It refuses a default branch,
-a tag, a delete, and `--force`. Use `agent-push --dry-run <branch>` to test.
+Push a feature branch with `git push -u origin <branch>`. Run it as a single
+command, from the worktree of the branch. The maintainer's settings run it
+outside the sandbox, where the SSH key is available; inside the sandbox it
+fails on `~/.ssh`. Use `git push --dry-run origin <branch>` to test.
 
-The maintainer's Claude Code settings deny `git push`, and the sandbox cannot
-read `~/.ssh` or the `gh` login, so a direct push always fails. An HTTPS push
-URL does not help either: the maintainer's global git config rewrites
-`https://github.com/` to SSH.
+A guard in the maintainer's Claude Code settings refuses every other form:
+the default branch, a tag, a delete, a refspec, another remote and `--force`
+(`--force-with-lease` is allowed). GitHub rulesets also refuse a direct push,
+a force push and a delete on `main`, so `main` changes only through a pull
+request. The `agent-push` wrapper is deprecated.
 
 The push goes over SSH, which needs the 1Password agent. When it is locked,
 the push hangs: stop and ask the maintainer to unlock it.
