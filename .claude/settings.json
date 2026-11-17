@@ -1,12 +1,14 @@
 {
+  "env": {
+    "NG_CLI_ANALYTICS": "false"
+  },
   "sandbox": {
     "filesystem": {
       "allowRead": ["/tmp/.nx", "~/.nx"],
-      "allowWrite": ["/tmp/.nx", "~/.nx"]
+      "allowWrite": ["/tmp/.nx", "~/.nx", "~/dev/.pnpm-store"]
     },
     "network": {
-      "allowUnixSockets": ["/tmp/.nx", "~/.nx"],
-      "allowedDomains": ["www.google-analytics.com"]
+      "allowUnixSockets": ["/tmp/.nx", "~/.nx"]
     }
   },
   "enabledPlugins": {

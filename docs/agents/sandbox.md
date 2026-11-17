@@ -123,9 +123,9 @@ Issue and pull request commands are in [issue tracker](./issue-tracker.md).
 - Run `gh` as a single command. The maintainer's settings run `gh *` outside
   the sandbox, but a chain (`;`, `&&`, a pipe) stays inside, where `gh` cannot
   read its login.
-- `gh run view --log-failed` needs a writable cache:
-  `XDG_CACHE_HOME=$TMPDIR/ghcache`. Job logs download from
-  `*.blob.core.windows.net`, so allow that host.
+- Run `gh run view <id> --log-failed` as a plain command too. Outside the
+  sandbox it needs no cache path and no extra host. An environment prefix
+  such as `XDG_CACHE_HOME=...` keeps it inside the sandbox.
 - Pass a full commit SHA to `gh pr merge --match-head-commit`.
 
 ## Tests
