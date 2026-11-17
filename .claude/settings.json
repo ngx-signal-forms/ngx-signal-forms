@@ -5,7 +5,7 @@
   "sandbox": {
     "filesystem": {
       "allowRead": ["/tmp/.nx", "~/.nx"],
-      "allowWrite": ["/tmp/.nx", "~/.nx", "~/dev/.pnpm-store"]
+      "allowWrite": ["/tmp/.nx", "~/.nx"]
     },
     "network": {
       "allowUnixSockets": ["/tmp/.nx", "~/.nx"]
