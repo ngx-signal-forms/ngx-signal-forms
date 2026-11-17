@@ -68,6 +68,9 @@ Omit `NX_NO_CLOUD` where Cloud access is configured. If npm cannot write to
 
 Keep the Nx cache. If a result looks stale, run `pnpm nx reset` once.
 
+`.claude/settings.json` turns off Angular CLI analytics
+(`NG_CLI_ANALYTICS=false`), so the sandbox needs no analytics host.
+
 ## Run outside the sandbox
 
 Ask for escalation per command. These always fail inside:
@@ -103,11 +106,12 @@ command, from the worktree of the branch. The maintainer's settings run it
 outside the sandbox, where the SSH key is available; inside the sandbox it
 fails on `~/.ssh`. Use `git push --dry-run origin <branch>` to test.
 
-A guard in the maintainer's Claude Code settings refuses every other form:
-the default branch, a tag, a delete, a refspec, another remote and `--force`
-(`--force-with-lease` is allowed). GitHub rulesets also refuse a direct push,
-a force push and a delete on `main`, so `main` changes only through a pull
-request. The `agent-push` wrapper is deprecated.
+A guard in the maintainer's Claude Code settings refuses every other form. It
+refuses a long-lived branch (such as `main`, `release/*`, `beta` or `rc`), a
+tag, a delete, a refspec, another remote and `--force`. It allows
+`--force-with-lease`. GitHub rulesets also refuse a direct push, a force push
+and a delete on `main`, so `main` changes only through a pull request. Do not
+use the old `agent-push` wrapper.
 
 The push goes over SSH, which needs the 1Password agent. When it is locked,
 the push hangs: stop and ask the maintainer to unlock it.
@@ -124,8 +128,7 @@ Issue and pull request commands are in [issue tracker](./issue-tracker.md).
   the sandbox, but a chain (`;`, `&&`, a pipe) stays inside, where `gh` cannot
   read its login.
 - Run `gh run view <id> --log-failed` as a plain command too. Outside the
-  sandbox it needs no cache path and no extra host. An environment prefix
-  such as `XDG_CACHE_HOME=...` keeps it inside the sandbox.
+  sandbox it needs no cache path and no extra host.
 - Pass a full commit SHA to `gh pr merge --match-head-commit`.
 
 ## Tests
