@@ -302,6 +302,7 @@ overrides:
   probe-image-size@<7.4.0: ^7.4.0
   qs@<6.16.1: ^6.16.1
   minimatch@>=9.0.0 <11.0.1: ^11.0.1
+  nx>minimatch: 10.2.5
   js-yaml@>=5.0.0 <5.4.1: ^5.4.1
   '@oxc-parser/binding-wasm32-wasi@0.150.0>@emnapi/core': 2.0.0-beta.2
   '@oxc-parser/binding-wasm32-wasi@0.150.0>@emnapi/runtime': 2.0.0-beta.2
@@ -6264,6 +6265,10 @@ packages:
   min-indent@1.0.1:
     resolution: {integrity: sha512-I9jwMn07Sy/IwOj3zVkVik2JTvgpaykDZEigL6Rx6N9LbMywwUSMtxET+7lVoDLLd3O3IXwJwvuuns8UB/HeAg==}
     engines: {node: '>=4'}
+
+  minimatch@10.2.5:
+    resolution: {integrity: sha512-MULkVLfKGYDFYejP07QOurDLLQpcjk7Fw+7jXS2R2czRQzR56yHRveU5NDJEOviH+hETZKSkIk5c+T23GjFUMg==}
+    engines: {node: 18 || 20 || >=22}
 
   minimatch@11.0.4:
     resolution: {integrity: sha512-/UJ1dEoVQTjPNDh6SGlUo+ueLMmoHTas4q+8yaAR/5t6nLAIiBDJtoYUh20IYleix7ehiQkgczb84PE3uzHkxg==}
@@ -13271,6 +13276,10 @@ snapshots:
 
   min-indent@1.0.1: {}
 
+  minimatch@10.2.5:
+    dependencies:
+      brace-expansion: 5.0.12
+
   minimatch@11.0.4:
     dependencies:
       '@isaacs/nonrecursive-glob-match': 1.0.3
@@ -13502,7 +13511,7 @@ snapshots:
       lines-and-columns: 2.0.3
       log-symbols: 4.1.0
       mimic-fn: 2.1.0
-      minimatch: 11.0.4
+      minimatch: 10.2.5
       minimist: 1.2.8
       npm-run-path: 4.0.1
       once: 1.4.0
