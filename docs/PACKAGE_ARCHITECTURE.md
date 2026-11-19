@@ -1,5 +1,5 @@
 ---
-title: 'Package Architecture'
+title: 'Package architecture'
 ---
 
 This is a maintainer document. It describes how the repository and the
@@ -26,7 +26,7 @@ post-build step removes it from the published `exports` map. An import from
 
 ## Package layout
 
-A curated overview, not an exhaustive listing — it groups files by role and
+A curated overview, not an exhaustive listing. It groups files by role and
 calls out the ones contributors ask about most. Run `find packages/toolkit`
 for the full tree.
 
@@ -74,7 +74,6 @@ packages/toolkit/
 │   │       ├── field-optionality.ts
 │   │       ├── field-state-utilities.ts
 │   │       ├── fieldset.ts
-│   │       ├── notification.ts
 │   │       └── utilities.ts
 │   ├── ng-package.json
 │   └── README.md

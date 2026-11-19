@@ -27,7 +27,7 @@ from the toolkit (`@ngx-signal-forms/toolkit` and its `/form-field`,
 - **[Custom controls & design systems](#custom-controls--design-systems)**
   - [How do I make my own design-system inputs work inside the wrapper (aria-invalid, aria-describedby, error timing)?](#how-do-i-make-my-own-design-system-inputs-work-inside-the-wrapper-aria-invalid-aria-describedby-error-timing)
   - [How do I make a custom combobox or closed select look like the native text field?](#how-do-i-make-a-custom-combobox-or-closed-select-look-like-the-native-text-field)
-  - [We don't want the toolkit's wrapper markup at all — how do I build my own with the headless APIs?](#we-dont-want-the-toolkits-wrapper-markup-at-all--how-do-i-build-my-own-with-the-headless-apis)
+  - [How do I build my own wrapper with the headless APIs instead of using the toolkit wrapper?](#how-do-i-build-my-own-wrapper-with-the-headless-apis-instead-of-using-the-toolkit-wrapper)
   - [How do I theme the built-in wrapper with our brand tokens?](#how-do-i-theme-the-built-in-wrapper-with-our-brand-tokens)
   - [How do I integrate a third-party datepicker (value/change API, not a native input)?](#how-do-i-integrate-a-third-party-datepicker-valuechange-api-not-a-native-input)
 - **[Complex & dynamic forms](#complex--dynamic-forms)**
@@ -37,7 +37,7 @@ from the toolkit (`@ngx-signal-forms/toolkit` and its `/form-field`,
   - [How do I two-way sync my form model with an NgRx SignalStore without update loops?](#how-do-i-two-way-sync-my-form-model-with-an-ngrx-signalstore-without-update-loops)
 - **[Validation](#validation)**
   - [How do I do debounced async validation (e.g. username availability) and show the pending state?](#how-do-i-do-debounced-async-validation-eg-username-availability-and-show-the-pending-state)
-  - [After submit my API returns field errors like `{ email: 'already taken' }` — how do I map them onto fields?](#after-submit-my-api-returns-field-errors-like--email-already-taken---how-do-i-map-them-onto-fields)
+  - [How do I map API field errors like `{ email: 'already taken' }` onto fields after submit?](#how-do-i-map-api-field-errors-like--email-already-taken--onto-fields-after-submit)
   - [How do I reuse a Zod schema as the validation source, and how do Zod issues become field errors?](#how-do-i-reuse-a-zod-schema-as-the-validation-source-and-how-do-zod-issues-become-field-errors)
   - [Can I keep my existing Vest suites, and how do warnings map onto the toolkit?](#can-i-keep-my-existing-vest-suites-and-how-do-warnings-map-onto-the-toolkit)
 - **[i18n, a11y & testing](#i18n-a11y--testing)**
@@ -45,7 +45,7 @@ from the toolkit (`@ngx-signal-forms/toolkit` and its `/form-field`,
   - [How do I render an accessible error summary that links to each invalid field on submit?](#how-do-i-render-an-accessible-error-summary-that-links-to-each-invalid-field-on-submit)
   - [How do I unit-test a form component (set value, touch, assert rendered error + `aria-invalid`) in Vitest/TestBed?](#how-do-i-unit-test-a-form-component-set-value-touch-assert-rendered-error--aria-invalid-in-vitesttestbed)
 - **[Migration](#migration)**
-  - [I'm migrating from Reactive Forms — what replaces `setValue`/`patchValue`, `valueChanges`, `markAllAsTouched`, and `ValidatorFn`, and can I migrate one form at a time?](#im-migrating-from-reactive-forms--what-replaces-setvaluepatchvalue-valuechanges-markallastouched-and-validatorfn-and-can-i-migrate-one-form-at-a-time)
+  - [What replaces `setValue`/`patchValue`, `valueChanges`, `markAllAsTouched`, and `ValidatorFn` when migrating from Reactive Forms?](#what-replaces-setvaluepatchvalue-valuechanges-markallastouched-and-validatorfn-when-migrating-from-reactive-forms)
 
 ---
 
@@ -55,7 +55,9 @@ from the toolkit (`@ngx-signal-forms/toolkit` and its `/form-field`,
 
 You do not need to do anything. The default strategy is `on-touch`, so
 `ngx-form-field-wrapper` shows a field's errors after the user leaves the
-field, or after submit. If errors show while the user types, a setting
+field, or after submit. Once a field is touched, typing in it hides the error
+again until focus moves or the form submits, so screen readers do not announce
+errors on every keystroke. If errors show while the user types, a setting
 somewhere uses `immediate`. To change timing for one field, set `strategy` on
 the wrapper:
 
@@ -222,7 +224,7 @@ Sliders, ratings, and datepickers are widget-shaped: use `appearance="plain"`,
 usually with `ngxSignalFormControlAria="manual"`. See
 [field-shaped vs widget-shaped](./CUSTOM_CONTROLS.md#field-shaped-vs-widget-shaped-custom-controls).
 
-### We don't want the toolkit's wrapper markup at all — how do I build my own with the headless APIs?
+### How do I build my own wrapper with the headless APIs instead of using the toolkit wrapper?
 
 Use `@ngx-signal-forms/toolkit/headless`. It gives you state as signals and
 renders nothing:
@@ -300,14 +302,14 @@ disabled fields. See the
 ### For a multi-step wizard, how do I validate only the current step before "Next", with one form model?
 
 Keep one `form()` for all steps. Before you move to the next step, touch the
-current step's part of the form and check that it is valid. The demo wizard
-component takes a `canNavigate` guard (`(event) => boolean | Promise<boolean>`)
-for this. Do not validate in `(stepChange)` with `event.preventDefault()`:
-the wizard reads `preventDefault()` only synchronously, so a call after an
-`await` comes too late.
+current step's part of the form and check that it is valid. The demo app builds
+this with an app-local `<ngx-wizard>` helper (not a published toolkit export)
+that accepts a `canNavigate` guard (`(event) => boolean | Promise<boolean>`).
+Do not validate in a synchronous event handler with `event.preventDefault()` if
+your check awaits async work:
 
 ```ts
-// <ngx-wizard [canNavigate]="guardStep" …>
+// Demo-app helper pattern: <ngx-wizard [canNavigate]="guardStep" ...>
 protected readonly guardStep: WizardCanNavigate = (event) => {
   if (event.toIndex <= event.fromIndex) {
     return true; // always allow going back
@@ -366,7 +368,7 @@ in the wrapper's `suffix` slot with `@if (form.username().pending())`. Angular
 must block the save, check `pending()` in the submit path too. See the
 [async-validation demo](../apps/demo/src/app/05-advanced/async-validation/README.md).
 
-### After submit my API returns field errors like `{ email: 'already taken' }` — how do I map them onto fields?
+### How do I map API field errors like `{ email: 'already taken' }` onto fields after submit?
 
 Return the errors from the submission action. Angular attaches each error to
 the field in its `fieldTree` property:
@@ -474,7 +476,7 @@ See [testing form components](./TESTING.md) for the full walkthrough.
 
 ## Migration
 
-### I'm migrating from Reactive Forms — what replaces `setValue`/`patchValue`, `valueChanges`, `markAllAsTouched`, and `ValidatorFn`, and can I migrate one form at a time?
+### What replaces `setValue`/`patchValue`, `valueChanges`, `markAllAsTouched`, and `ValidatorFn` when migrating from Reactive Forms?
 
 - **`setValue` / `patchValue`:** write the model signal with `model.set(next)`
   or `model.update((m) => ...)`.

@@ -15,8 +15,8 @@ Read this if your form has any of:
 - **Form-level error summaries** that link back to fields
 - **Mixed per-field and per-group error display**
 
-If you're building a single flat form, the [form-field wrapper](../packages/toolkit/form-field/README.md)
-alone is enough — come back here when you hit the first group of related fields.
+If you are building a single flat form, the [form-field wrapper](../packages/toolkit/form-field/README.md)
+alone is enough. Come back here when you add your first group of related fields.
 
 > **State management is out of scope.** How the model signal is owned
 > (component-local, service, NgRx Signal Store) doesn't change the toolkit
@@ -57,8 +57,8 @@ When each field wraps itself, the fieldset only needs to show cross-field errors
 </ngx-form-fieldset>
 ```
 
-To attach a rule to the group itself — so the fieldset (not either child)
-surfaces it — use [`validateTree()`](https://angular.dev/guide/forms/signals/cross-field-logic).
+To attach a rule to the group itself so the fieldset surfaces it instead of a
+child field, use [`validateTree()`](https://angular.dev/guide/forms/signals/cross-field-logic).
 `validateTree` runs at the parent node, and returning a plain validation error
 without a `fieldTree` keeps it at the group level:
 
@@ -83,16 +83,16 @@ form(model, (path) => {
 ```
 
 > **Leaf vs group target.** Angular's cross-field guide recommends placing the
-> error "where the user would most likely go to fix it." When that's a specific
-> child (e.g. the _confirm_ field), use `validate(path.passwords.confirm, ...)`
-> with `ctx.valueOf(path.passwords.password)` instead — the error then shows on
-> that child's wrapper. Reach for `validateTree` only when the rule is
-> inherently about the group and you want it on the fieldset.
+> error "where the user would most likely go to fix it." When that is a specific
+> child (such as the confirm field), use `validate(path.passwords.confirm, ...)`
+> with `ctx.valueOf(path.passwords.password)` instead. The error then shows on
+> that child's wrapper. Reach for `validateTree` only when the rule belongs to
+> the group and should appear on the fieldset.
 
 ### Aggregated: group owns all the feedback
 
-When you want a compact layout — e.g. a deep address group where individual
-fields stay plain — let the fieldset display every descendant error once.
+When you want a compact layout, such as a deep address group where individual
+fields stay plain, let the fieldset display every descendant error once.
 
 ```html
 <ngx-form-fieldset [field]="form.address" [includeNestedErrors]="true">
@@ -158,10 +158,10 @@ while you own every element.
 
 ## Strategy inheritance via `ngxSignalForm`
 
-On a deeply nested form you don't want to pass `[strategy]` to every wrapper
-and fieldset. Add `ngxSignalForm` once at the root and every toolkit component
-below it — wrapper, auto-ARIA, assistive components, headless directives —
-picks up the same strategy via DI:
+On a deeply nested form you do not want to pass `[strategy]` to every wrapper
+and fieldset. Add `ngxSignalForm` once at the root so every toolkit component
+below it (wrappers, auto-ARIA, assistive components, and headless directives)
+inherits the same strategy through DI:
 
 ```html
 <form [formRoot]="wizardForm" ngxSignalForm errorStrategy="on-submit">
@@ -271,14 +271,14 @@ and individual wrappers can override `appearance` on the element itself.
 
 ## Demos
 
-- [`complex-forms`](../apps/demo/src/app/04-form-field-wrapper/complex-forms) — grouped fields with fieldset aggregation
-- [`cross-field-validation`](../apps/demo/src/app/05-advanced/cross-field-validation) — cross-field rules surfacing at the group
-- [`advanced-wizard`](../apps/demo/src/app/05-advanced/advanced-wizard) — multi-step form with summary, strategy inheritance, and per-step aggregation
-- [`async-validation`](../apps/demo/src/app/05-advanced/async-validation) — debounced async rules inside a nested group
+- [`complex-forms`](../apps/demo/src/app/04-form-field-wrapper/complex-forms/README.md): grouped fields with fieldset aggregation
+- [`cross-field-validation`](../apps/demo/src/app/05-advanced/cross-field-validation/README.md): cross-field rules surfacing at the group
+- [`advanced-wizard`](../apps/demo/src/app/05-advanced/advanced-wizard/README.md): multi-step form with summary, strategy inheritance, and per-step aggregation
+- [`async-validation`](../apps/demo/src/app/05-advanced/async-validation/README.md): debounced async rules inside a nested group
 
 ## Related
 
-- [Form-field wrapper](../packages/toolkit/form-field/README.md) — the single-field primitive these patterns compose
-- [Headless primitives](../packages/toolkit/headless/README.md) — for custom markup of fieldset aggregation and error summary
-- [Warnings, timing, and messages](./WARNINGS_SUPPORT.md) — how `errors()` and `errorSummary()` differ, and how messages are resolved
-- [Validation strategies](./VALIDATION_STRATEGY.md) — layering Angular validators, Zod, and Vest in a complex form
+- [Form-field wrapper](../packages/toolkit/form-field/README.md): the single-field component these patterns compose
+- [Headless primitives](../packages/toolkit/headless/README.md): custom markup for fieldset aggregation and error summaries
+- [Warnings, timing, and messages](./WARNINGS_SUPPORT.md): how `errors()` and `errorSummary()` differ, and how messages resolve
+- [Validation strategies](./VALIDATION_STRATEGY.md): layering Angular validators, Zod, and Vest in a complex form

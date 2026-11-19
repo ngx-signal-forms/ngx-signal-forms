@@ -65,21 +65,26 @@ Run it after you change the quick start.
 
 Explain each topic in one file. Elsewhere, write one sentence and a link.
 
-| Topic                                                    | File                                                                                    |
-| -------------------------------------------------------- | --------------------------------------------------------------------------------------- |
-| Benefits, install, quick start, which entry point to use | [`README.md`](../README.md) (published to npm)                                          |
-| What Angular owns and what the toolkit owns              | [`ANGULAR_VS_TOOLKIT.md`](./ANGULAR_VS_TOOLKIT.md)                                      |
-| Config keys and defaults                                 | [`packages/toolkit/README.md`](../packages/toolkit/README.md#configuration)             |
-| Error and warning timing, warning submission, messages   | [`WARNINGS_SUPPORT.md`](./WARNINGS_SUPPORT.md)                                          |
-| Custom controls                                          | [`CUSTOM_CONTROLS.md`](./CUSTOM_CONTROLS.md)                                            |
-| Custom wrappers                                          | [`CUSTOM_WRAPPERS.md`](./CUSTOM_WRAPPERS.md)                                            |
-| Fieldsets, arrays, error summaries                       | [`COMPLEX_NESTED_FORMS.md`](./COMPLEX_NESTED_FORMS.md)                                  |
-| Inputs of each entry point                               | The README in each entry point folder under [`packages/toolkit/`](../packages/toolkit/) |
-| CSS tokens                                               | [`THEMING.md`](../packages/toolkit/form-field/THEMING.md)                               |
-| Bootstrap, Tailwind, Material CSS                        | [`CSS_FRAMEWORK_INTEGRATION.md`](./CSS_FRAMEWORK_INTEGRATION.md)                        |
-| Component tests                                          | [`TESTING.md`](./TESTING.md)                                                            |
-| Changes between versions                                 | [`migrations/`](./migrations/README.md)                                                 |
-| Domain terms                                             | [`GLOSSARY.md`](../GLOSSARY.md)                                                         |
+| Topic                                                    | File                                                                                                                                               |
+| -------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Benefits, install, quick start, which entry point to use | [`README.md`](../README.md) (published to npm)                                                                                                     |
+| What Angular owns and what the toolkit owns              | [`ANGULAR_VS_TOOLKIT.md`](./ANGULAR_VS_TOOLKIT.md)                                                                                                 |
+| Supported Angular, Node, peer, and browser versions      | [`COMPATIBILITY.md`](./COMPATIBILITY.md)                                                                                                           |
+| Recommended patterns and pitfalls                        | [`BEST_PRACTICES.md`](./BEST_PRACTICES.md)                                                                                                         |
+| Short "how do I..." answers with demo links              | [`FAQ.md`](./FAQ.md)                                                                                                                               |
+| Choosing Angular validators, Standard Schema, or Vest    | [`VALIDATION_STRATEGY.md`](./VALIDATION_STRATEGY.md)                                                                                               |
+| Config keys and defaults                                 | [`packages/toolkit/README.md`](../packages/toolkit/README.md#configuration)                                                                        |
+| Error and warning timing, warning submission, messages   | [`WARNINGS_SUPPORT.md`](./WARNINGS_SUPPORT.md)                                                                                                     |
+| Custom controls                                          | [`CUSTOM_CONTROLS.md`](./CUSTOM_CONTROLS.md)                                                                                                       |
+| Custom wrappers                                          | [`CUSTOM_WRAPPERS.md`](./CUSTOM_WRAPPERS.md)                                                                                                       |
+| Fieldsets, arrays, error summaries                       | [`COMPLEX_NESTED_FORMS.md`](./COMPLEX_NESTED_FORMS.md)                                                                                             |
+| Inputs of each entry point                               | The README in each entry point folder under [`packages/toolkit/`](../packages/toolkit/)                                                            |
+| CSS tokens                                               | [`THEMING.md`](../packages/toolkit/form-field/THEMING.md)                                                                                          |
+| Bootstrap, Tailwind, Material CSS                        | [`CSS_FRAMEWORK_INTEGRATION.md`](./CSS_FRAMEWORK_INTEGRATION.md)                                                                                   |
+| Component tests                                          | [`TESTING.md`](./TESTING.md)                                                                                                                       |
+| Migrating from Reactive Forms or `ngx-vest-forms`        | [`MIGRATING_FROM_REACTIVE_FORMS.md`](./MIGRATING_FROM_REACTIVE_FORMS.md), [`MIGRATING_FROM_NGX_VEST_FORMS.md`](./MIGRATING_FROM_NGX_VEST_FORMS.md) |
+| Changes between toolkit versions                         | [`migrations/`](./migrations/README.md)                                                                                                            |
+| Domain terms                                             | [`GLOSSARY.md`](../GLOSSARY.md)                                                                                                                    |
 
 User docs describe the current state only. Put history in `migrations/`.
 Put maintainer notes in a `## For maintainers` section at the end of a file.
