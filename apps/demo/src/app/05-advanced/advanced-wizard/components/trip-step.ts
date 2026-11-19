@@ -259,7 +259,6 @@ import { WizardStepInterface } from '../wizard-step.interface';
                     <input
                       [id]="'act-duration-' + destIdx + '-' + actIdx"
                       type="number"
-                      min="0"
                       [formField]="
                         tripForm.destinations[destIdx].activities[actIdx]
                           .duration

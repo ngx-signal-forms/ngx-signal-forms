@@ -125,11 +125,13 @@
       </p>
     </ng-container>
 
+    <!-- MatCheckbox types `aria-describedby` as `string`, but only `null`
+         removes the attribute, so the binding goes through `$any`. -->
     <mat-checkbox
       id="contact-agree"
       [formField]="contactForm.agree"
       ngxMatCheckboxControl
-      [aria-describedby]="agreeFeedback()?.describedByIds() ?? null"
+      [aria-describedby]="$any(agreeFeedback()?.describedByIds() ?? null)"
     >
       I agree to be contacted
     </mat-checkbox>

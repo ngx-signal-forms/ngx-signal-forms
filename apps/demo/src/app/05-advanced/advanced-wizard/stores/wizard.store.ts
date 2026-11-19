@@ -296,7 +296,7 @@ export const WizardStore = signalStore(
     const autoSaveDraft = rxMethod<WizardDraft>(
       pipe(
         debounceTime(2000),
-        distinctUntilChanged(isSameData),
+        distinctUntilChanged<WizardDraft>(isSameData),
         tap((data) => {
           // Until the saved draft arrives, the drafts are still empty. Saving
           // them would overwrite the draft that is loading.
