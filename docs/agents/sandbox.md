@@ -1,7 +1,8 @@
 # Agent sandbox
 
-Facts an agent needs to run tasks in this repo from a sandboxed shell
-(Claude Code on the maintainer's machine). Each one cost earlier sessions
+Facts an agent needs to run tasks in this repo from a sandboxed shell.
+The sections after Environment describe Claude Code on the maintainer's
+machine. Each one cost earlier sessions
 retries.
 
 ## Environment
@@ -29,8 +30,36 @@ For Claude Code, add those roots to the sandbox settings in
 }
 ```
 
-For other agents, follow Nx's platform-specific sandbox guidance. Prefer a
-scoped socket allowlist; some sandboxes cannot scope socket access by path.
+Codex and the Copilot CLI read sandbox policy only from user-level files, so
+each developer sets it once:
+
+- Codex, in `~/.codex/config.toml`. Use absolute paths, because Codex does not
+  expand `~`. Codex cannot scope sockets by path, so `network_access = true`
+  also opens general network access.
+
+  ```toml
+  [sandbox_workspace_write]
+  network_access = true
+  writable_roots = ["/tmp/.nx", "/Users/<you>/.nx"]
+  ```
+
+- Copilot CLI, in `~/.copilot/settings.json`. Its sandbox is experimental:
+  start with `--experimental` and run `/sandbox enable`. It gates sockets on
+  the filesystem policy, so network settings do not help.
+
+  ```json
+  {
+    "sandbox": {
+      "enabled": true,
+      "userPolicy": {
+        "filesystem": { "readwritePaths": ["/tmp/.nx", "~/.nx"] }
+      }
+    }
+  }
+  ```
+
+For any other sandbox, allow the same two roots. See the
+[Nx sandbox guide](https://nx.dev/docs/kb/nx-sandbox-unix-sockets).
 
 Avoid setting `NX_SOCKET_DIR`: it replaces Nx's default socket roots. If an
 environment requires an override, use a private directory only your user can
@@ -68,6 +97,9 @@ Omit `NX_NO_CLOUD` where Cloud access is configured. If npm cannot write to
 
 Keep the Nx cache. If a result looks stale, run `pnpm nx reset` once.
 
+`.claude/settings.json` turns off Angular CLI analytics
+(`NG_CLI_ANALYTICS=false`), so the sandbox needs no analytics host.
+
 ## Run outside the sandbox
 
 Ask for escalation per command. These always fail inside:
@@ -79,7 +111,6 @@ Ask for escalation per command. These always fail inside:
 | Install or add a dependency | `pnpm install --frozen-lockfile`, `pnpm add -w <pkg>` (`-w` for the root) |
 | Start or stop the Nx Daemon | `pnpm nx daemon --start`, `pnpm nx daemon --stop`                         |
 | Browser specs, e2e and a11y | `browser-tests <project> <test-browser\|e2e\|e2e-ci\|a11y> [-- <spec>]`   |
-| Push                        | `agent-push <branch>`, see [Push](#push)                                  |
 
 `new-worktree.sh` puts the worktree in the sibling
 `ngx-signal-forms.worktrees/<branch>` folder, which the sandbox can write.
@@ -99,15 +130,17 @@ in the sandbox. Never write a brief that forbids it.
 
 ## Push
 
-Push with the maintainer's wrapper: `agent-push <branch>`. Run it as a single
-command, from the worktree of the branch. It runs outside the sandbox and
-pushes plain branches to the allowed remote only. It refuses a default branch,
-a tag, a delete, and `--force`. Use `agent-push --dry-run <branch>` to test.
+Push a feature branch with `git push -u origin <branch>`. Run it as a single
+command, from the worktree of the branch. The maintainer's settings run it
+outside the sandbox, where the SSH key is available; inside the sandbox it
+fails on `~/.ssh`. Use `git push --dry-run origin <branch>` to test.
 
-The maintainer's Claude Code settings deny `git push`, and the sandbox cannot
-read `~/.ssh` or the `gh` login, so a direct push always fails. An HTTPS push
-URL does not help either: the maintainer's global git config rewrites
-`https://github.com/` to SSH.
+A guard in the maintainer's Claude Code settings refuses every other form. It
+refuses a long-lived branch (such as `main`, `release/*`, `beta` or `rc`), a
+tag, a delete, a refspec, another remote and `--force`. It allows
+`--force-with-lease`. GitHub rulesets also refuse a direct push, a force push
+and a delete on `main`, so `main` changes only through a pull request. Do not
+use the old `agent-push` wrapper.
 
 The push goes over SSH, which needs the 1Password agent. When it is locked,
 the push hangs: stop and ask the maintainer to unlock it.
@@ -123,9 +156,8 @@ Issue and pull request commands are in [issue tracker](./issue-tracker.md).
 - Run `gh` as a single command. The maintainer's settings run `gh *` outside
   the sandbox, but a chain (`;`, `&&`, a pipe) stays inside, where `gh` cannot
   read its login.
-- `gh run view --log-failed` needs a writable cache:
-  `XDG_CACHE_HOME=$TMPDIR/ghcache`. Job logs download from
-  `*.blob.core.windows.net`, so allow that host.
+- Run `gh run view <id> --log-failed` as a plain command too. Outside the
+  sandbox it needs no cache path and no extra host.
 - Pass a full commit SHA to `gh pr merge --match-head-commit`.
 
 ## Tests

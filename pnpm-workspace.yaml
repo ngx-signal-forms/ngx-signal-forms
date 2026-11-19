@@ -75,6 +75,9 @@ overrides:
   'qs@<6.16.1': '^6.16.1'
   # GHSA-g3hv-75wg-m249, through nx, eslint and ts-morph. The fix exists only in 11.x.
   'minimatch@>=9.0.0 <11.0.1': '^11.0.1'
+  # Nx 24.0 calls minimatch.makeRe, which 11.x removed, so keep Nx on the
+  # version it pins. Remove this entry once Nx moves to minimatch 11 (24.1).
+  'nx>minimatch': '10.2.5'
   'js-yaml@>=5.0.0 <5.4.1': '^5.4.1'
   # Keep the optional OXC WASI bindings within the wasm-runtime peer range.
   '@oxc-parser/binding-wasm32-wasi@0.150.0>@emnapi/core': '2.0.0-beta.2'
