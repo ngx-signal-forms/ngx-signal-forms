@@ -7,7 +7,7 @@ Angular maintains the framework-level migration guide for moving off `ReactiveFo
 
 This page covers only the toolkit layer: how `ngx-form-field-wrapper`, `ngxSignalForm`, `provideErrorMessages`, error-display timing, and auto-ARIA behave when `[formField]` binds to a compat-bridged Reactive control instead of a native Signal Forms leaf.
 
-Claims below are verified against Angular 22 (`@angular/forms@22.2.4`) and covered by [`form-field-wrapper.compat.integration.spec.ts`](../packages/toolkit/form-field/form-field-wrapper.compat.integration.spec.ts). For the short summary, see the [migration FAQ](./FAQ.md#what-replaces-setvaluepatchvalue-valuechanges-markallastouched-and-validatorfn-when-migrating-from-reactive-forms).
+Claims below are verified against Angular 22 (`@angular/forms`) and covered by [`form-field-wrapper.compat.integration.spec.ts`](../packages/toolkit/form-field/form-field-wrapper.compat.integration.spec.ts). For the short summary, see the [migration FAQ](./FAQ.md#what-replaces-setvaluepatchvalue-valuechanges-markallastouched-and-validatorfn-when-migrating-from-reactive-forms).
 
 ## Choose a migration direction
 

@@ -250,7 +250,7 @@ token override; everything else is stock Aura.
 
 ### Compatibility shim status (PrimeNG 22)
 
-This workspace runs on PrimeNG 22 (`primeng@22.1.4`), which supports Angular's
+This workspace runs on PrimeNG 22, which supports Angular's
 template-driven and reactive forms APIs (`ngModel`, `formControlName`) but does
 not yet ship native Angular Signal Forms bindings on every component. Angular's
 Signal Forms guidance explicitly supports custom `FormValueControl` adapters for
