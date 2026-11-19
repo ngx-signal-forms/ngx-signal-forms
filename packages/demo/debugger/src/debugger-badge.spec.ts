@@ -1,38 +1,26 @@
 import { ComponentRef } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import {
-  NgxSignalFormDebuggerBadge,
-  NgxSignalFormDebuggerBadgeIcon,
-} from './debugger-badge';
+import { NgxSignalFormDebuggerBadge } from './debugger-badge';
 
 describe('NgxSignalFormDebuggerBadge', () => {
   let fixture: ComponentFixture<NgxSignalFormDebuggerBadge>;
-  let component: NgxSignalFormDebuggerBadge;
   let componentRef: ComponentRef<NgxSignalFormDebuggerBadge>;
   let badgeEl: HTMLElement;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [NgxSignalFormDebuggerBadge, NgxSignalFormDebuggerBadgeIcon],
+      imports: [NgxSignalFormDebuggerBadge],
     }).compileComponents();
 
     fixture = TestBed.createComponent(NgxSignalFormDebuggerBadge);
-    component = fixture.componentInstance;
     componentRef = fixture.componentRef;
     badgeEl = fixture.nativeElement;
     fixture.detectChanges();
   });
 
-  it('should create', () => {
-    expect(component).toBeTruthy();
-  });
-
   it('should have default solid/neutral styling', () => {
     expect(badgeEl.getAttribute('data-variant')).toBe('solid');
     expect(badgeEl.getAttribute('data-appearance')).toBe('neutral');
-    // The host retains the base `ngx-debugger-badge` class but no longer emits
-    // the per-variant/appearance class couplets — selectors target the
-    // `data-*` attributes instead.
     expect(badgeEl.classList.contains('ngx-debugger-badge')).toBe(true);
   });
 
