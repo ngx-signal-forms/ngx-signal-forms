@@ -18,6 +18,8 @@ Choose individual patterns. The wizard and server-save demos document known runt
   - What you'll learn: `createOnInvalidHandler()` · submitting state · GOV.UK-style error summary with click-to-focus.
 - **[advanced-wizard](./advanced-wizard/README.md)** — canonical multi-step wizard with NgRx Signal Store, Zod schemas, and lazy step loading.
   - What you'll learn: form-per-step architecture · draft vs. committed state · cross-step validation · `@defer` lazy loading.
+- **[routed-steps](./routed-steps/README.md)** — one `form()` above the outlet of three step routes, with a router error boundary for each step.
+  - What you'll learn: `withErrorBoundaries()` and `errorComponent` · toolkit form context through `<router-outlet>` · a step gate in a `canActivate` guard · retry with `onSameUrlNavigation: 'reload'`.
 - **[async-validation](./async-validation/README.md)** — `validateHttp` with automatic cancellation and pending state.
   - Two username variants, request versus blur debounce, `pending()` indicators, and submission gating. Request failures create warnings, which ordinary submission still blocks.
 - **[field-state-patterns](./field-state-patterns/README.md)** — dynamic `hidden`, `disabled`, and `readonly` state driven by the same `{ when }` syntax as validation rules.
@@ -48,6 +50,7 @@ Choose individual patterns. The wizard and server-save demos document known runt
 - Use `global-configuration` + `submission-patterns` together as the foundation of any production form.
 - Visit the dedicated Validation section before this one when you are deciding between Standard Schema baselines, Vest policy rules, or a layered approach.
 - Use `advanced-wizard` as the reference when cross-step validation, draft state, or lazy step loading is on the table.
+- Use `routed-steps` when each step needs its own URL, or when a failed step must not take the rest of the form with it.
 - Use `server-integration` as the reference for the full "load, edit, submit, handle server rejection" loop end to end.
 
 ## ➡️ Next steps

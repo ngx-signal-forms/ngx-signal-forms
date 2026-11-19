@@ -1,6 +1,7 @@
 import {
   DEMO_CATEGORIES,
   DEMO_PATHS,
+  getExamplePath,
   getRouteTitle,
   SITE_NAME,
 } from './routes.metadata';
@@ -36,5 +37,31 @@ describe('routes.metadata', () => {
     expect(advertised[DEMO_PATHS.storeBinding]).toBe(true);
     expect(advertised[DEMO_PATHS.errorMessageSignal]).toBe(false);
     expect(advertised[DEMO_PATHS.singleModelWizard]).toBe(false);
+  });
+
+  it('maps a child route to the example that owns it', () => {
+    expect(getExamplePath(`${DEMO_PATHS.routedSteps}/time-slot`)).toBe(
+      DEMO_PATHS.routedSteps,
+    );
+    expect(getExamplePath(DEMO_PATHS.routedSteps)).toBe(DEMO_PATHS.routedSteps);
+  });
+
+  it('picks the longest example path when two examples share a prefix', () => {
+    expect(getExamplePath(`${DEMO_PATHS.groupedFeedback}/child`)).toBe(
+      DEMO_PATHS.groupedFeedback,
+    );
+    expect(getExamplePath(DEMO_PATHS.fieldsetAppearance)).toBe(
+      DEMO_PATHS.fieldsetAppearance,
+    );
+  });
+
+  it('returns an unknown path unchanged', () => {
+    expect(getExamplePath('/not-a-demo-route/child')).toBe(
+      '/not-a-demo-route/child',
+    );
+    // A shared text prefix is not ownership.
+    expect(getExamplePath(`${DEMO_PATHS.autosave}-draft`)).toBe(
+      `${DEMO_PATHS.autosave}-draft`,
+    );
   });
 });
