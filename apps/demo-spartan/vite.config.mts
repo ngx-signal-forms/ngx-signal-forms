@@ -4,7 +4,7 @@ import { join } from 'node:path';
 
 const appDir = import.meta.dirname;
 
-export default defineConfig({
+export default defineConfig(({ command }) => ({
   root: join(appDir, 'src'),
   publicDir: join(appDir, 'public'),
   cacheDir: '../../node_modules/.vite/apps/demo-spartan',
@@ -26,6 +26,10 @@ export default defineConfig({
   plugins: [
     analog({
       tsconfig: '../tsconfig.app.json',
+      // Analog skips type checking by default. A build turns it on, so
+      // TypeScript and template errors fail the build. The dev server keeps
+      // the fast path.
+      disableTypeChecking: command !== 'build',
     }),
   ],
-});
+}));
