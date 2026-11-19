@@ -200,7 +200,7 @@ catalogs:
     size-limit: '14.3.0'
     typescript: 'npm:@typescript/typescript6@~6.0.2'
     # 7.x requires Node.js 24 or newer; used only by the local-registry target.
-    verdaccio: '^7.0.2'
+    verdaccio: '^7.1.1'
     vite: '^8.3.8'
   utilities:
     rxjs: '~7.8.2'
