@@ -52,7 +52,7 @@ With the toolkit, you write this:
 </ngx-form-field-wrapper>
 ```
 
-The wrapper adds:
+The toolkit adds:
 
 - **Error timing.** Errors show after the user leaves a field, after submit, or
   at once. You pick one rule per app, form, or field.
@@ -144,11 +144,11 @@ export class ContactComponent {
 
 What each import does:
 
-| Import                 | From                                   | Gives you                                                          |
-| ---------------------- | -------------------------------------- | ------------------------------------------------------------------ |
-| `FormField`            | `@angular/forms/signals`               | Angular's `[formField]` binding on the control                     |
-| `NgxSignalFormToolkit` | `@ngx-signal-forms/toolkit`            | Angular's `FormRoot`, the `ngxSignalForm` directive, and auto-ARIA |
-| `NgxFormField`         | `@ngx-signal-forms/toolkit/form-field` | The wrapper, fieldset, error, hint, and character count            |
+| Import                 | From                                   | Gives you                                                                    |
+| ---------------------- | -------------------------------------- | ---------------------------------------------------------------------------- |
+| `FormField`            | `@angular/forms/signals`               | Angular's `[formField]` binding on the control                               |
+| `NgxSignalFormToolkit` | `@ngx-signal-forms/toolkit`            | Angular's `FormRoot`, `ngxSignalForm`, auto-ARIA, and `NgxSignalFormControl` |
+| `NgxFormField`         | `@ngx-signal-forms/toolkit/form-field` | The wrapper, fieldset, error, hint, and character count                      |
 
 `[formField]` appears twice. On the `<input>`, it is Angular's binding. On the
 wrapper, it tells the wrapper which field's state to show.
@@ -213,10 +213,9 @@ provideNgxSignalFormsConfig({ defaultErrorStrategy: 'on-submit' });
 <!-- One form: add ngxSignalForm next to [formRoot] -->
 <form [formRoot]="form" ngxSignalForm errorStrategy="on-submit">
   <!-- One field -->
-  <ngx-form-field-wrapper
-    [formField]="form.email"
-    strategy="immediate"
-  ></ngx-form-field-wrapper>
+  <ngx-form-field-wrapper [formField]="form.email" strategy="immediate">
+    <!-- label and input -->
+  </ngx-form-field-wrapper>
 </form>
 ```
 
