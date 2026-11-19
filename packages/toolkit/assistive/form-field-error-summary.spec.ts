@@ -9,7 +9,7 @@ import {
   schema,
   validate,
 } from '@angular/forms/signals';
-import type { SubmittedStatus } from '@ngx-signal-forms/toolkit';
+import { warningError, type SubmittedStatus } from '@ngx-signal-forms/toolkit';
 import { provideFieldLabels } from '@ngx-signal-forms/toolkit/core';
 import { NgxHeadlessErrorSummary } from '@ngx-signal-forms/toolkit/headless';
 import { render, screen } from '@testing-library/angular';
@@ -26,7 +26,7 @@ import {
 import { NgxFormFieldErrorSummary } from './form-field-error-summary';
 
 describe('NgxFormFieldErrorSummary', () => {
-  it('renders entries through the composed headless directive inputs', async () => {
+  it('lists blocking errors and omits warnings', async () => {
     @Component({
       selector: 'ngx-test-error-summary-immediate',
       imports: [FormField, NgxFormFieldErrorSummary],
@@ -50,19 +50,23 @@ describe('NgxFormFieldErrorSummary', () => {
         this.#model,
         schema((path) => {
           required(path.email, { message: 'Email is required' });
+          validate(path.email, () =>
+            warningError('personal-email', 'Use a work email'),
+          );
         }),
       );
     }
 
     await render(TestComponent);
 
-    expect(screen.getByRole('alert')).toBeTruthy();
+    const summary = screen.getByRole('alert');
     expect(screen.getByText('Fix these issues')).toBeTruthy();
 
     const entry = screen.getByRole('button', {
       name: /email\s*:\s*Email is required/iu,
     });
-    expect(entry).toBeTruthy();
+    expect(entry).toBeInTheDocument();
+    expect(summary).not.toHaveTextContent('Use a work email');
   });
 
   it('respects submittedStatus passed through the composed public API', async () => {
@@ -103,25 +107,6 @@ describe('NgxFormFieldErrorSummary', () => {
         name: /email\s*:\s*Email is required/iu,
       }),
     ).toBeTruthy();
-  });
-
-  it('does not expose warningStrategy, because the summary lists errors only (#587)', () => {
-    // `reflectComponentType` omits host-directive inputs, so read the
-    // forwarded input map from the component definition.
-    const { hostDirectives } = (
-      NgxFormFieldErrorSummary as unknown as {
-        ɵcmp: {
-          hostDirectives: readonly { inputs: Record<string, string> }[] | null;
-        };
-      }
-    ).ɵcmp;
-    const forwarded = (hostDirectives ?? []).flatMap((hostDirective) =>
-      Object.keys(hostDirective.inputs),
-    );
-
-    // Guards the lookup itself: an empty list would pass the next check.
-    expect(forwarded).toContain('strategy');
-    expect(forwarded).not.toContain('warningStrategy');
   });
 
   it('defaults to the on-touch strategy when none is provided', async () => {

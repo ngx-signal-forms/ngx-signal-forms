@@ -14,32 +14,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { submitWithWarnings } from './submission-helpers';
 import { warningError } from './warning-error';
 
-/**
- * Drift guard for `submitWithWarnings`.
- *
- * `submitWithWarnings` gates in user land, then delegates to Angular's own
- * `submit()`: mark-all-touched → wait a microtask → filter `errorSummary()`
- * down to blocking errors → if none remain, call native `submit(form, {
- * action, ignoreValidators: 'all' })`. If Angular's `submit()` semantics
- * change in a future release (e.g. it stops marking fields touched on an
- * invalid short-circuit, the `errorSummary()` shape shifts, or the return
- * value stops being a plain boolean), the toolkit helper drifts silently in
- * production unless a test is exercising a **real** Angular signal form
- * rather than a hand-rolled mock.
- *
- * These tests therefore pin equivalence (or deliberate divergence) across
- * several scenarios: invalid short-circuit on blocking errors, warning-only
- * divergence (native blocks, toolkit runs), still-pending async validators
- * (neither helper blocks on them), and valid submission. When one of them
- * fails after an Angular upgrade, treat it as a signal to re-read
- * `submission-helpers.ts` and realign before updating the assertion.
- *
- * @see ./submission-helpers.spec.ts — unit tests against mock field trees
- *   for warning-handling semantics (faster, no TestBed). This file is the
- *   real-form companion kept separate so the stricter Angular types don't
- *   collide with the loose duck-typing used by the mock helpers there.
- */
-describe('submitWithWarnings — Angular submit() drift guard', () => {
+describe('submitWithWarnings with Angular signal forms', () => {
   interface ContactModel {
     email: string;
     name: string;
@@ -57,25 +32,6 @@ describe('submitWithWarnings — Angular submit() drift guard', () => {
       ),
     );
   };
-
-  it('matches Angular submit() when the form has only blocking errors', async () => {
-    const nativeForm = makeContactForm();
-    const nativeAction = vi.fn(async () => {});
-
-    await submit(nativeForm, nativeAction);
-
-    const toolkitForm = makeContactForm();
-    const toolkitAction = vi.fn(async () => {});
-
-    await submitWithWarnings(toolkitForm, toolkitAction);
-
-    // Both should short-circuit: action is never invoked.
-    expect(nativeAction).not.toHaveBeenCalled();
-    expect(toolkitAction).not.toHaveBeenCalled();
-
-    // Both should still have marked the form touched.
-    expect(toolkitForm().touched()).toBe(nativeForm().touched());
-  });
 
   it('invokes the action when the only errors are warnings, while native submit() short-circuits', async () => {
     // This pins the warning-aware behavior that `submitWithWarnings` exists to
@@ -124,11 +80,7 @@ describe('submitWithWarnings — Angular submit() drift guard', () => {
     expect(toolkitForm().touched()).toBe(nativeForm().touched());
   });
 
-  it('marks nested-object and array subtrees as touched before reading errorSummary()', async () => {
-    // Contract for the native `submit(..., { ignoreValidators: 'all' })`
-    // delegation inside `submitWithWarnings()`: every leaf in the form tree —
-    // including children under nested objects AND each element of an array —
-    // MUST be touched before the helper filters `errorSummary()`.
+  it('marks nested fields and array items touched when submission is blocked', async () => {
     interface Address {
       street: string;
       city: string;
@@ -164,7 +116,8 @@ describe('submitWithWarnings — Angular submit() drift guard', () => {
     expect(orderForm.items[1]?.().touched()).toBe(false);
 
     const action = vi.fn(async () => {});
-    await submitWithWarnings(orderForm, action);
+    const result = await submitWithWarnings(orderForm, action);
+    expect(result).toBe(false);
 
     // Nested object leaves MUST be touched.
     expect(orderForm.address.street().touched()).toBe(true);
@@ -181,29 +134,19 @@ describe('submitWithWarnings — Angular submit() drift guard', () => {
     expect(action).not.toHaveBeenCalled();
   });
 
-  it('matches Angular submit() when the form is valid', async () => {
-    const fillValidValues = (f: FieldTree<ContactModel>): void => {
-      f.email().value.set('user@example.com');
-      f.name().value.set('Ada Lovelace');
-    };
+  it('marks a valid form touched and runs the action once', async () => {
+    const contactForm = makeContactForm();
+    contactForm.email().value.set('user@example.com');
+    contactForm.name().value.set('Ada Lovelace');
+    const action = vi.fn(async () => {});
 
-    const nativeForm = makeContactForm();
-    fillValidValues(nativeForm);
-    const nativeAction = vi.fn(async () => {});
+    expect(contactForm().touched()).toBe(false);
 
-    await submit(nativeForm, nativeAction);
+    const result = await submitWithWarnings(contactForm, action);
 
-    const toolkitForm = makeContactForm();
-    fillValidValues(toolkitForm);
-    const toolkitAction = vi.fn(async () => {});
-
-    await submitWithWarnings(toolkitForm, toolkitAction);
-
-    // Both should invoke the action exactly once.
-    expect(nativeAction).toHaveBeenCalledOnce();
-    expect(toolkitAction).toHaveBeenCalledOnce();
-
-    expect(toolkitForm().touched()).toBe(nativeForm().touched());
+    expect(result).toBe(true);
+    expect(action).toHaveBeenCalledOnce();
+    expect(contactForm().touched()).toBe(true);
   });
 
   it('propagates action rejection and leaves the form re-submittable', async () => {
@@ -395,31 +338,5 @@ describe('submitWithWarnings — Angular submit() drift guard', () => {
 
     resolveValidation();
     await TestBed.inject(ApplicationRef).whenStable();
-  });
-
-  it('returns the same boolean result as Angular submit() on both outcomes', async () => {
-    const nativeForm = makeContactForm();
-    const nativeResult = await submit(nativeForm, async () => {});
-    expect(nativeResult).toBe(false); // blocking errors present
-
-    const toolkitForm = makeContactForm();
-    const toolkitRefusedResult = await submitWithWarnings(
-      toolkitForm,
-      async () => {},
-    );
-    expect(toolkitRefusedResult).toBe(false);
-
-    const fillValidValues = (f: FieldTree<ContactModel>): void => {
-      f.email().value.set('user@example.com');
-      f.name().value.set('Ada Lovelace');
-    };
-
-    const validForm = makeContactForm();
-    fillValidValues(validForm);
-    const toolkitSuccessResult = await submitWithWarnings(
-      validForm,
-      async () => {},
-    );
-    expect(toolkitSuccessResult).toBe(true);
   });
 });

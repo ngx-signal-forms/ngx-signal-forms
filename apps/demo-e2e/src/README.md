@@ -9,7 +9,7 @@ This directory contains end-to-end tests for the ngx-signal-forms demo applicati
 These tests verify the **demo application's specific UI implementation**:
 
 - **`navigation.spec.ts`** - Navigation system, theme switching, route handling
-- **`responsive.spec.ts`** - Page loading, responsive design, scroll behavior
+- **`responsive.spec.ts`** - Narrow-screen layout, scrolling, and focus management
 - **`page-chrome-content.spec.ts`** - App-shell/content contract across routes (sidenav, config bar, page titles)
 
 ### 2. Form Tests (`forms/`)
@@ -18,15 +18,13 @@ These tests verify **form/toolkit behavior** (validation, submission, debugger i
 
 - **`01-getting-started/`** - Onboarding and basic form examples
   - `nav-tree.spec.ts` - Navigation tree interaction
-  - `your-first-form.spec.ts` - First form with toolkit
+  - `your-first-form.spec.ts` - First form validation and keyboard submission
 
 - **`02-toolkit-core/`** - Core toolkit features
   - `aria-attributes.spec.ts` - ARIA accessibility attributes
   - `aria-strategy-integration.spec.ts` - ARIA strategy integration
   - `error-display-modes.spec.ts` - Error display strategy modes
   - `form-accessibility.spec.ts` - Form accessibility features
-  - `keyboard-navigation.spec.ts` - Keyboard navigation
-  - `visual-accessibility.spec.ts` - Visual accessibility
   - `warning-support.spec.ts` - Warning support
 
 - **`03-headless/`** - Headless primitives
@@ -50,8 +48,9 @@ These tests verify **form/toolkit behavior** (validation, submission, debugger i
   - `vest-validation.spec.ts` - Vest validation
   - `zod-validation.spec.ts` - Zod validation
   - `zod-vest-validation.spec.ts` - Combined Zod + Vest validation
-  - (no dedicated spec yet for `server-integration` — covered generically by
-    `ui/navigation.spec.ts` and `accessibility.spec.ts` via `DEMO_PATHS`)
+  - `server-integration.spec.ts` - Loading, retry, and server validation
+
+- **`route-sweep.spec.ts`** - Every demo route renders without browser errors
 
 ### 3. Accessibility Tests (`accessibility.spec.ts`)
 
