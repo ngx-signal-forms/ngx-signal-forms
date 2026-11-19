@@ -1,60 +1,38 @@
-# Advanced Scenarios
+# Advanced scenarios
 
-Configuration, submission, async state, cross-field rules, and multi-step demos.
+Independent, real-world form patterns: app-wide configuration, declarative submission, async validation, server errors, store binding, autosave, i18n, and multi-step wizards.
 
-## 🎯 Purpose
+This folder also holds the source for the three `/validation/*` demos ([zod-validation](./zod-validation/README.md), [vest-validation](./vest-validation/README.md), and [zod-vest-validation](./zod-vest-validation/README.md)).
 
-This is the production frontier of the demo app. Each demo here stands on its own and targets a concrete real-world pattern you'd hit when shipping a non-trivial form: app-wide configuration, declarative submission UX, async server-backed validation, dependent fields, and multi-step flows with shared store state.
+Prerequisites: familiarity with [02-toolkit-core](../02-toolkit-core/README.md) and [04-form-field-wrapper](../04-form-field-wrapper/README.md).
 
-Choose individual patterns. The wizard and server-save demos document known runtime limits.
+## Demos in this section
 
-**Prereqs:** familiarity with [02-toolkit-core](../02-toolkit-core/README.md) (strategies + warnings) and ideally [04-form-field-wrapper](../04-form-field-wrapper/README.md) (wrapper).
+- **[global-configuration](./global-configuration/README.md):** `provideNgxSignalFormsConfig()`, `provideErrorMessages()`, `provideFieldLabels()`, and control presets with local overrides.
+- **[submission-patterns](./submission-patterns/README.md):** declarative `form(..., { submission })` with `[formRoot]`, `createOnInvalidHandler()`, submitting state, and `NgxFormFieldErrorSummary`.
+- **[advanced-wizard](./advanced-wizard/README.md):** multi-step wizard with one form per step, NgRx SignalStore draft/commit state, Zod schemas, and `@defer` lazy steps.
+- **[single-model-wizard](./single-model-wizard/README.md):** multi-step wizard backed by one shared `form()` model with per-step validation guards.
+- **[async-validation](./async-validation/README.md):** `validateHttp()` with automatic cancellation, request vs. blur debounce, `pending()` indicators, and request-failure warnings.
+- **[field-state-patterns](./field-state-patterns/README.md):** conditional `hidden()`, `disabled()`, and `readonly()` rules using Angular's `{ when }` syntax.
+- **[cross-field-validation](./cross-field-validation/README.md):** sibling-aware rules with `ctx.valueOf()` and field-level vs. group-level error placement.
+- **[server-integration](./server-integration/README.md):** `resource()` prefill, declarative submission, server `TreeValidationResult` errors, and `reset(value)` after save.
+- **[store-binding](./store-binding/README.md):** two-way binding between a Signal Form and an `@ngrx/signals` store through `linkedSignal`.
+- **[autosave](./autosave/README.md):** debounced field-level saves via `debounce(path, 500)` and `HttpClient.patch()`, gated on `dirty()` and `valid()`.
+- **[i18n](./i18n/README.md):** `provideErrorMessages()` and `provideFieldLabels()` factories reading a runtime language signal.
 
-## 📂 Demos in this section
+## Core concepts
 
-- **[global-configuration](./global-configuration/README.md)** — `provideNgxSignalFormsConfig()` + control-family presets with a local override.
-  - App-level defaults and local overrides. The explanation panel is not a resolved-config inspector.
-- **[submission-patterns](./submission-patterns/README.md)** — declarative submission via `form(..., { submission })` + `[formRoot]`.
-  - What you'll learn: `createOnInvalidHandler()` · submitting state · GOV.UK-style error summary with click-to-focus.
-- **[advanced-wizard](./advanced-wizard/README.md)** — canonical multi-step wizard with NgRx Signal Store, Zod schemas, and lazy step loading.
-  - What you'll learn: form-per-step architecture · draft vs. committed state · cross-step validation · `@defer` lazy loading.
-- **[async-validation](./async-validation/README.md)** — `validateHttp` with automatic cancellation and pending state.
-  - Two username variants, request versus blur debounce, `pending()` indicators, and submission gating. Request failures create warnings, which ordinary submission still blocks.
-- **[field-state-patterns](./field-state-patterns/README.md)** — dynamic `hidden`, `disabled`, and `readonly` state driven by the same `{ when }` syntax as validation rules.
-  - Choose participation state separately from rendering. The template uses `@if` for hidden controls; their values remain in the model.
-- **[cross-field-validation](./cross-field-validation/README.md)** — validators that read sibling values via `ctx.valueOf(path.*)`.
-  - What you'll learn: schema-level cross-field rules · reactive re-validation · field-vs-group error placement.
-- **[server-integration](./server-integration/README.md)** — `resource()` prefill + declarative submission + server errors mapped onto `TreeValidationResult`.
-  - What you'll learn: `resource()`-driven prefill · form-level vs. field-level server errors · the auto-clear semantics of submission errors · `reset(value)` after a successful save.
-- **[store-binding](./store-binding/README.md)** — honest two-way binding between a Signal Form and an `@ngrx/signals` store via `linkedSignal`, contrasted with the wizard's draft/commit buffer.
-  - Uses the native options-level `set` callback to write through to `patchState`; it does not replace the signal's setter methods.
-- **[autosave](./autosave/README.md)** — debounced, field-level save via `debounce(path, 500)` + `HttpClient.patch()`, with no submit button.
-  - What you'll learn: the native `debounce()` schema rule · gating a save on `dirty()` **and** `valid()` · why a save is a write and never a resource · accessible save-status live regions.
-- **[i18n](./i18n/README.md)** — `provideErrorMessages()`/`provideFieldLabels()` factories reacting to a runtime language signal.
-  - What you'll learn: the string-vs-function registry contract · why `$localize` can't do a runtime switch · a parameterised, translated `minLength` message.
+- **Declarative submission.** `form(model, schema, { submission: { action, onInvalid } })` with `[formRoot]` handles submit lifecycle and focus on invalid fields. See the [toolkit README](../../../../../packages/toolkit/README.md).
+- **Async validators.** `validateHttp()` cancels in-flight requests on value change and exposes `pending()`.
+- **Global configuration.** `provideNgxSignalFormsConfig()` and `provideNgxSignalFormControlPresets()` set app-wide defaults with component- and field-level overrides.
+- **Warning-tolerant submission.** Use declarative `ignoreValidators: 'all'` with `hasOnlyWarnings()`, or imperative `submitWithWarnings()`.
+- **Server error mapping.** Return a `TreeValidationResult` from `action`; include `fieldTree` for a field error or omit it for a form-level error.
+- **Validation layering.** Compare Angular validators, Standard Schema (Zod), and Vest in [docs/VALIDATION_STRATEGY.md](../../../../../docs/VALIDATION_STRATEGY.md).
 
-## 🧠 Core concepts
+## Next steps
 
-- **Declarative submission** — `form(model, schema, { submission: { action, onInvalid } })` with `[formRoot]` removes manual `preventDefault`, submitting flags, and invalid-focus plumbing. See [toolkit README](../../../../../packages/toolkit/README.md).
-- **Async validators** — `validateHttp(path, { request, onSuccess, onError })` cancels in-flight work on value change; the toolkit reflects `pending()` in its rendering surface.
-- **Global configuration** — `provideNgxSignalFormsConfig()` and `provideNgxSignalFormControlPresets()` apply to every form unless locally overridden.
-- **Warning-tolerant submission** — two supported paths: `submitWithWarnings()` (manual) and declarative `ignoreValidators: 'all'` + `hasOnlyWarnings()` (preferred when using `{ submission }`).
-- **Server error mapping** — `action` can return a native `TreeValidationResult` (a `ValidationError` or array of them); set `fieldTree` to route an error to a specific field, or omit it to attach the error to the submitted field itself (the form root under `[formRoot]`).
-- **Validation strategies** — Standard Schema (Zod/OpenAPI) and Vest now have a dedicated Validation section when you want to compare contract vs. policy layers directly. Full guide: [docs/VALIDATION_STRATEGY.md](../../../../../docs/VALIDATION_STRATEGY.md).
-
-## 🤔 When to use this section
-
-- Use each demo à la carte — they are independent patterns, not a progression.
-- Use `global-configuration` + `submission-patterns` together as the foundation of any production form.
-- Visit the dedicated Validation section before this one when you are deciding between Standard Schema baselines, Vest policy rules, or a layered approach.
-- Use `advanced-wizard` as the reference when cross-step validation, draft state, or lazy step loading is on the table.
-- Use `server-integration` as the reference for the full "load, edit, submit, handle server rejection" loop end to end.
-
-## ➡️ Next steps
-
-- You're at the end of the guided path. Browse the package docs for deeper reference:
-  - [Core toolkit](../../../../../packages/toolkit/README.md)
-  - [Form field wrapper](../../../../../packages/toolkit/form-field/README.md)
-  - [Headless primitives](../../../../../packages/toolkit/headless/README.md)
-  - [Vest integration](../../../../../packages/toolkit/vest/README.md)
-- Or revisit the [root README](../../../../../README.md) for the full "which part do I need" decision table.
+- [Toolkit reference](../../../../../packages/toolkit/README.md)
+- [Form field wrapper](../../../../../packages/toolkit/form-field/README.md)
+- [Headless primitives](../../../../../packages/toolkit/headless/README.md)
+- [Vest integration](../../../../../packages/toolkit/vest/README.md)
+- [Root README](../../../../../README.md)

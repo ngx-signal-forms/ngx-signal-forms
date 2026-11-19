@@ -1,50 +1,30 @@
-# Form Field Wrapper
+# Form field wrapper
 
-> **Production Ready:** Wrapper-based form composition with `NgxFormField`.
+Wrapper-based form composition with `@ngx-signal-forms/toolkit/form-field`. One component (`ngx-form-field-wrapper`) handles labels, layout, errors, warnings, hints, character counts, and ARIA.
 
-## 🎯 Purpose
+## Demos in this section
 
-This section demonstrates the batteries-included path: one component (`ngx-form-field-wrapper`) gives you labels, layout, errors, hints, character counts, and full ARIA in a single projection-friendly shell. It's the right default for most apps.
+- **[complex-forms](./complex-forms/README.md):** nested objects, dynamic arrays, `NgxFormFieldset`, and mixed controls (including `ngxSignalFormControl="checkbox"`).
+- **[fieldset-appearance](./fieldset-appearance/README.md):** `feedbackAppearance`, `surfaceTone`, `validationSurface`, `listStyle`, and `includeNestedErrors`.
+- **[custom-controls](./custom-controls/README.md):** `FormValueControl` controls, field-shaped comboboxes, sliders with `ariaMode: 'manual'`, and component-scoped presets.
+- **[field-marking](./field-marking/README.md):** `showMarkerWhen` (`required`, `optional`, `none`), custom markers, and `NgxFormMarkingLegend`.
+- **[labelless-fields](./labelless-fields/README.md):** wrappers without projected labels, `aria-label` accessible names, and `role="group"` layouts.
+- **[brand-theming](./brand-theming/README.md):** public CSS custom properties, light and dark mode, and stateful colors.
+- **[field-identity](./field-identity/README.md):** a custom wrapper composing `NgxFieldIdentityProvider` inside a collapsible container.
 
-Uses the root bundle and form-field entry point.
+## Core concepts
 
-**Focus:** wrapper composition in realistic long forms and custom-control integration with explicit semantics.
+- **The wrapper.** `ngx-form-field-wrapper` projects labels, controls, hints, and counters into a consistent layout. See the [form-field README](../../../../../packages/toolkit/form-field/README.md).
+- **Appearances.** `standard`, `outline`, and `plain`. Theme with CSS custom properties; see the [theming guide](../../../../../packages/toolkit/form-field/THEMING.md).
+- **Control semantics.** Declare `ngxSignalFormControl` when native inference does not cover the control. Native checkboxes with `role="switch"` infer automatically, while third-party switches (`mat-slide-toggle`, `p-toggleswitch`, Spartan switch) put `role="switch"` on an inner element and need `ngxSignalFormControl="switch"`. See [ADR-0001](../../../../../docs/decisions/0001-control-semantics-architecture.md) and [docs/CUSTOM_CONTROLS.md](../../../../../docs/CUSTOM_CONTROLS.md).
+- **Fieldset grouping.** `<ngx-form-fieldset>` aggregates group-level errors and optional nested errors. See [docs/COMPLEX_NESTED_FORMS.md](../../../../../docs/COMPLEX_NESTED_FORMS.md).
 
-## 📂 Demos in this section
+## When to use this section
 
-- **[complex-forms](./complex-forms/README.md)** — realistic form with nested objects, dynamic arrays, grouped fieldsets, and mixed control families.
-  - What you'll learn: nested schemas · array add/remove wiring · `NgxFormFieldset` aggregation · explicit `ngxSignalFormControl="checkbox"` semantics for projection-safe rows (native switches are recognized automatically).
-- **[fieldset-appearance](./fieldset-appearance/README.md)** — focused showroom for grouped summaries, surface tones, and nested aggregation.
-  - What you'll learn: `feedbackAppearance` · `surfaceTone` · `validationSurface` · `listStyle` · `includeNestedErrors` trade-offs in one place.
-- **[custom-controls](./custom-controls/README.md)** — star rating, native switch, and slider integrated into the wrapper.
-  - What you'll learn: `FormValueControl` contract (no `ControlValueAccessor`) · `ngxSignalFormControl="slider"` with `ariaMode: 'manual'` · component-scoped presets.
-- **[field-marking](./field-marking/README.md)** — the toolkit's required/optional marker modes and the form-aware `NgxFormMarkingLegend`.
-  - What you'll learn: `showMarkerWhen` modes (`required`/`optional`/`none`) · configurable marker text · legend auto-hide when no relevant field exists.
-- **[labelless-fields](./labelless-fields/README.md)** — where the wrapper's reserved label row can legitimately collapse.
-  - What you'll learn: `aria-label`-only accessible names · `role="group"` field grouping · keeping the error region at full wrapper width around narrowed inputs.
-- **[brand-theming](./brand-theming/README.md)** — theming the wrapper through brand tokens, with dark mode and stateful colors.
-  - What you'll learn: which CSS custom properties are the public theming surface · how state colors (invalid, warning, disabled) resolve.
-- **[field-identity](./field-identity/README.md)** — the one page that does not use the built-in wrapper: a third-party-style one that owns its own field name, inside a collapsible container.
-  - What you'll learn: composing `NgxFieldIdentityProvider` via `hostDirectives` · why the field name is not the control's generated `id` · per-channel resolution (name here, hints and display timing through their registries) · `aria-invalid` on a control with no layout box.
+- You want one reusable field shell with built-in layout, markers, hints, errors, and theming.
+- Skip when your design system owns all field markup; use [03-headless](../03-headless/README.md) instead.
 
-## 🧠 Core concepts
+## Next steps
 
-- **The wrapper** — `ngx-form-field-wrapper` projects label, control, hints, and errors into a consistent layout. API reference in [form-field README](../../../../../packages/toolkit/form-field/README.md).
-- **Appearances** — `standard` / `outline` / `plain` via the `appearance` input. Theme with CSS custom properties; see [theming guide](../../../../../packages/toolkit/form-field/THEMING.md).
-- **Control semantics** — `ngxSignalFormControl="checkbox|slider"` makes projection explicit instead of guessed. If the `[formField]` host is a native checkbox with `role="switch"`, or has `role="switch"` itself, it needs no attribute. Any other switch host needs `ngxSignalFormControl="switch"`: inference reads the host, not its descendants. Material `mat-slide-toggle`, PrimeNG `p-toggleswitch`, and a Spartan switch put `role="switch"` on an inner element, so they need it. Background in [ADR-0001](../../../../../docs/decisions/0001-control-semantics-architecture.md) and [docs/CUSTOM_CONTROLS.md](../../../../../docs/CUSTOM_CONTROLS.md).
-- **Fieldset grouping** — `<ngx-form-fieldset>` aggregates descendant errors for grouped layouts, and the dedicated [fieldset-appearance](./fieldset-appearance/README.md) page compares grouped summary modes, surfaced tones, and nested aggregation. See [docs/COMPLEX_NESTED_FORMS.md](../../../../../docs/COMPLEX_NESTED_FORMS.md).
-
-## 🤔 When to use this section
-
-- Use when you want one component to cover every field without handwiring labels, errors, and hints.
-- Use when your form has nested objects, arrays, or mixed control types (switches, checkboxes, custom sliders).
-- Skip when your design system forbids the wrapper's DOM shape — use [03-headless](../03-headless/README.md) instead.
-
-## 📦 Consolidated from earlier demos
-
-Older isolated pages (`basic-usage`, `fieldset-grouping`) were removed. Their teaching goals live inside `complex-forms` now.
-
-## ➡️ Next steps
-
-- Continue to **[05-advanced](../05-advanced/README.md)** — submission patterns, async validation, multi-step wizards, and business-rule validators.
-- Or revisit **[02-toolkit-core](../02-toolkit-core/README.md)** if you need to compare error strategies before picking a default.
+- Continue to [05-advanced](../05-advanced/README.md) for submission patterns, async validation, server errors, and wizards.
+- Or revisit [02-toolkit-core](../02-toolkit-core/README.md) to compare error display strategies.
