@@ -147,6 +147,31 @@ export class SwitchControlComponent {
 Import `NgxSignalFormToolkit` for the full bundle, or `NgxSignalFormAutoAria`
 if you only need auto-ARIA.
 
+### Let the compiler find a missing control import
+
+The opposite mistake passes the build. The parent form uses
+`<app-switch-control [formField]="…" />`, but `SwitchControlComponent` is not
+in the parent's `imports`. The compiler accepts the unknown element, because
+the `FormField` directive matches its attribute. The mistake shows only at run
+time, when that template renders and Angular throws `NG01914`.
+
+From Angular 22.3, the `strictUnknownElements` compiler option reports this
+case as `NG8001`. Angular plans to turn it on by default in version 23. Set it
+now in `tsconfig.json`:
+
+```json
+{
+  "angularCompilerOptions": {
+    "strictTemplates": true,
+    "strictUnknownElements": true
+  }
+}
+```
+
+The option has an effect only where templates are type-checked. The Angular
+CLI does this in each build. The Analog Vite plugin skips it unless you set
+`disableTypeChecking: false`.
+
 ## Control kinds
 
 The toolkit sorts each control into a **kind**. The wrapper uses the kind to
