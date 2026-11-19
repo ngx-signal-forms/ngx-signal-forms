@@ -108,7 +108,7 @@ catalogs:
     '@analogjs/vitest-angular': '2.9.7'
   axe:
     '@axe-core/playwright': '^4.14.0'
-    axe-core: '^4.14.0'
+    axe-core: '^4.14.1'
   angular:
     '@angular/aria': '22.3.0'
     '@angular/cdk': '22.3.0'
@@ -174,12 +174,12 @@ catalogs:
     tailwindcss: '^4.3.5'
   testing:
     jsdom: '~30.1.3'
-    msw: '~3.0.5'
+    msw: '~3.0.6'
   testing-library:
     '@testing-library/angular': '^19.6.0'
     '@testing-library/dom': '^10.4.2'
     '@testing-library/jest-dom': '^7.0.1'
-    '@testing-library/user-event': '^14.6.10'
+    '@testing-library/user-event': '^14.6.12'
   tooling:
     '@arethetypeswrong/cli': '^0.18.5'
     '@commitlint/cli': '^21.2.4'
@@ -191,7 +191,7 @@ catalogs:
     '@types/node': '26.6.6'
     eslint: '^10.14.0'
     jiti: '2.7.0'
-    lint-staged: '^17.6.0'
+    lint-staged: '^17.6.1'
     oxfmt: '^0.76.0'
     oxlint: '^1.91.0'
     oxlint-tsgolint: '^7.0.2007'
