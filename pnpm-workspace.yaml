@@ -128,9 +128,9 @@ catalogs:
     '@schematics/angular': '22.3.0'
     ng-packagr: '22.3.0'
   angular-eslint:
-    '@angular-eslint/eslint-plugin': '22.6.0'
-    '@angular-eslint/eslint-plugin-template': '22.6.0'
-    '@angular-eslint/template-parser': '22.6.0'
+    '@angular-eslint/eslint-plugin': '22.7.0'
+    '@angular-eslint/eslint-plugin-template': '22.7.0'
+    '@angular-eslint/template-parser': '22.7.0'
   angular-material:
     '@angular/material': '22.3.0'
   ngrx:
