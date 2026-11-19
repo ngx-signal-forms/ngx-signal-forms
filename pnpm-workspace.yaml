@@ -147,7 +147,7 @@ catalogs:
     '@nx/workspace': '24.0.6'
     nx: '24.0.6'
   playwright:
-    '@playwright/test': ^1.64.1
+    '@playwright/test': ^1.65.1
     eslint-plugin-playwright: '^2.12.2'
   primeng:
     '@primeuix/themes': '3.1.1'
