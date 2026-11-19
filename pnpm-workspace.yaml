@@ -47,6 +47,26 @@ minimumReleaseAge: 2880
 minimumReleaseAgeExclude:
   - oxlint
   - '@oxlint/binding-*'
+  # Angular 22.3.0, published on 2026-11-18 and 2026-11-19. Remove these
+  # entries after 2026-11-21, when the age window has passed.
+  - '@angular-devkit/architect@0.2203.0'
+  - '@angular-devkit/core@22.3.0'
+  - '@angular-devkit/schematics@22.3.0'
+  - '@angular/aria@22.3.0'
+  - '@angular/build@22.3.0'
+  - '@angular/cdk@22.3.0'
+  - '@angular/cli@22.3.0'
+  - '@angular/common@22.3.0'
+  - '@angular/compiler@22.3.0'
+  - '@angular/compiler-cli@22.3.0'
+  - '@angular/core@22.3.0'
+  - '@angular/forms@22.3.0'
+  - '@angular/language-service@22.3.0'
+  - '@angular/material@22.3.0'
+  - '@angular/platform-browser@22.3.0'
+  - '@angular/router@22.3.0'
+  - '@schematics/angular@22.3.0'
+  - 'ng-packagr@22.3.0'
 # pnpm 12.3+ turns strict mode on whenever `minimumReleaseAge` is set. Strict
 # mode refuses `pnpm update --no-save`, which is what Dependabot runs, so every
 # Dependabot update fails (dependabot-core#16375). The two-day window still
@@ -90,29 +110,29 @@ catalogs:
     '@axe-core/playwright': '^4.14.0'
     axe-core: '^4.14.0'
   angular:
-    '@angular/aria': '22.2.7'
-    '@angular/cdk': '22.2.7'
-    '@angular/common': 22.2.6
-    '@angular/compiler': 22.2.6
-    '@angular/core': 22.2.6
-    '@angular/forms': 22.2.6
-    '@angular/platform-browser': 22.2.6
-    '@angular/router': 22.2.6
+    '@angular/aria': '22.3.0'
+    '@angular/cdk': '22.3.0'
+    '@angular/common': 22.3.0
+    '@angular/compiler': 22.3.0
+    '@angular/core': 22.3.0
+    '@angular/forms': 22.3.0
+    '@angular/platform-browser': 22.3.0
+    '@angular/router': 22.3.0
   angular-build:
-    '@angular-devkit/core': '22.2.7'
-    '@angular-devkit/schematics': '22.2.7'
-    '@angular/build': '22.2.7'
-    '@angular/cli': '22.2.7'
-    '@angular/compiler-cli': '22.2.6'
-    '@angular/language-service': '22.2.6'
-    '@schematics/angular': '22.2.7'
-    ng-packagr: '22.2.6'
+    '@angular-devkit/core': '22.3.0'
+    '@angular-devkit/schematics': '22.3.0'
+    '@angular/build': '22.3.0'
+    '@angular/cli': '22.3.0'
+    '@angular/compiler-cli': '22.3.0'
+    '@angular/language-service': '22.3.0'
+    '@schematics/angular': '22.3.0'
+    ng-packagr: '22.3.0'
   angular-eslint:
     '@angular-eslint/eslint-plugin': '22.6.0'
     '@angular-eslint/eslint-plugin-template': '22.6.0'
     '@angular-eslint/template-parser': '22.6.0'
   angular-material:
-    '@angular/material': '22.2.7'
+    '@angular/material': '22.3.0'
   ngrx:
     '@ngrx-toolkit/core': '22.0.1'
     '@ngrx/signals': '22.0.1'
@@ -216,3 +236,8 @@ peerDependencyRules:
     # @nx/js still declares verdaccio ^6. Verdaccio 7 runs the same CLI and
     # config for the local-registry target. Drop this once @nx/js accepts 7.
     '@nx/js>verdaccio': '7'
+    # @spartan-ng/cli brings the Angular 21 devkit, which asks for chokidar 5.
+    # The Angular 22.3 devkit needs chokidar 6, and the workspace resolves
+    # one chokidar. The peer is optional and only serves the devkit watch
+    # mode. Drop this rule once @spartan-ng/cli moves to the Angular 22 devkit.
+    '@angular-devkit/core@21>chokidar': '6'
