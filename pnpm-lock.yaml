@@ -304,8 +304,8 @@ overrides:
   minimatch@>=9.0.0 <11.0.1: ^11.0.1
   nx>minimatch: 10.2.5
   js-yaml@>=5.0.0 <5.4.1: ^5.4.1
-  '@oxc-parser/binding-wasm32-wasi@0.150.0>@emnapi/core': 2.0.0-beta.2
-  '@oxc-parser/binding-wasm32-wasi@0.150.0>@emnapi/runtime': 2.0.0-beta.2
+  '@oxc-parser/binding-wasm32-wasi>@emnapi/core': 2.0.0-beta.2
+  '@oxc-parser/binding-wasm32-wasi>@emnapi/runtime': 2.0.0-beta.2
 
 packageExtensionsChecksum: sha256-i+yJpcNsfdRDb+SETv37QK8OO8lebeJnmkXAH6qZWP0=
 
@@ -1691,9 +1691,6 @@ packages:
   '@emnapi/core@1.4.5':
     resolution: {integrity: sha512-XsLw1dEOpkSX/WucdqUhPWP7hDxSvZiY+fsUC14h+FtQ2Ifni4znbBt8punRX+Uj2JG/uDb8nEHVKvrVlvdZ5Q==}
 
-  '@emnapi/core@2.0.0-alpha.6':
-    resolution: {integrity: sha512-MNVvMV7WtEJMgqaWJMvCyupK7Oi8sZctUIgPRZTsiS3cVvefk8DXPflOU3MSBddtj/rrYHygpYgpHDgwXnI3+w==}
-
   '@emnapi/core@2.0.0-beta.2':
     resolution: {integrity: sha512-MzCVoWtcg4Pm2B3je5mMvYMvj3MmBKw+fU7vbsJc9/iT8ip6/eYIHo/Dsm/mr+wsHB6SEyJDuxB09Yy6r/8+4A==}
 
@@ -1702,9 +1699,6 @@ packages:
 
   '@emnapi/runtime@1.4.5':
     resolution: {integrity: sha512-++LApOtY0pEEz1zrd9vy1/zXVaVJJ/EbAF3u0fXIzPJEDtnITsBGbbK0EkM72amhl/R5b+5xx0Y/QhcVOpuulg==}
-
-  '@emnapi/runtime@2.0.0-alpha.6':
-    resolution: {integrity: sha512-5ZR49ZsZ3cLvu5lkrVj6CMpHRgZjYz7XSlqK23GYYpyEqp749RVuIH0bEUKaGNghMh2pXRhIC3cnVrH28Y1j1Q==}
 
   '@emnapi/runtime@2.0.0-beta.2':
     resolution: {integrity: sha512-JcrSPzPvZuNZvJqPTF9Fw25LbOJ8avzFVlaf2grmH4Cku0oGP47tRgqPZadcfj3YoZMHkFVnCYFbQM8I+i5QEw==}
@@ -9090,12 +9084,6 @@ snapshots:
       '@emnapi/wasi-threads': 1.0.4
       tslib: 2.9.1
 
-  '@emnapi/core@2.0.0-alpha.6':
-    dependencies:
-      '@emnapi/wasi-threads': 2.2.0
-      tslib: 2.9.1
-    optional: true
-
   '@emnapi/core@2.0.0-beta.2':
     dependencies:
       '@emnapi/wasi-threads': 2.2.0
@@ -9110,11 +9098,6 @@ snapshots:
   '@emnapi/runtime@1.4.5':
     dependencies:
       tslib: 2.9.1
-
-  '@emnapi/runtime@2.0.0-alpha.6':
-    dependencies:
-      tslib: 2.9.1
-    optional: true
 
   '@emnapi/runtime@2.0.0-beta.2':
     dependencies:
@@ -9587,13 +9570,6 @@ snapshots:
     dependencies:
       '@emnapi/core': 1.11.2
       '@emnapi/runtime': 1.11.2
-      '@tybys/wasm-util': 0.10.3
-    optional: true
-
-  '@napi-rs/wasm-runtime@1.2.6(@emnapi/core@2.0.0-alpha.6)(@emnapi/runtime@2.0.0-alpha.6)':
-    dependencies:
-      '@emnapi/core': 2.0.0-alpha.6
-      '@emnapi/runtime': 2.0.0-alpha.6
       '@tybys/wasm-util': 0.10.3
     optional: true
 
@@ -10086,9 +10062,9 @@ snapshots:
 
   '@oxc-parser/binding-wasm32-wasi@0.156.0':
     dependencies:
-      '@emnapi/core': 2.0.0-alpha.6
-      '@emnapi/runtime': 2.0.0-alpha.6
-      '@napi-rs/wasm-runtime': 1.2.6(@emnapi/core@2.0.0-alpha.6)(@emnapi/runtime@2.0.0-alpha.6)
+      '@emnapi/core': 2.0.0-beta.2
+      '@emnapi/runtime': 2.0.0-beta.2
+      '@napi-rs/wasm-runtime': 1.2.6(@emnapi/core@2.0.0-beta.2)(@emnapi/runtime@2.0.0-beta.2)
     optional: true
 
   '@oxc-parser/binding-win32-arm64-msvc@0.121.0':
