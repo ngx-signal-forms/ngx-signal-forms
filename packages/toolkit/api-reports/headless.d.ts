@@ -1,3 +1,6 @@
+/**
+ * Generated bundle index. Do not edit.
+ */
 import * as i0 from "@angular/core";
 import { Injector, Signal } from "@angular/core";
 import { FieldTree, ValidationError } from "@angular/forms/signals";

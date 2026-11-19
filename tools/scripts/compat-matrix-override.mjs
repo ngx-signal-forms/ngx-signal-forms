@@ -9,7 +9,8 @@
 // Usage: node compat-matrix-override.mjs "<pkg>@<spec>" ["<pkg>@<spec>" ...]
 // `<spec>` is an exact version ("6.3.0"), used as-is, or a semver range
 // (">=22.0.0 <23.0.0"), resolved to the highest published version in that
-// range via `npm view` before it is written to the override.
+// range via `npm view` before it is written to the override. A range cannot
+// name a prerelease; give a prerelease as an exact version.
 //
 // Prints each resolved "pkg=version" pair, one per line, and — when run in
 // a GitHub Actions job — appends `resolved=pkg1=version1,pkg2=version2` to
@@ -19,10 +20,18 @@ import { execFileSync } from 'node:child_process';
 import { appendFileSync, readFileSync, writeFileSync } from 'node:fs';
 
 const RANGE_CHARS = /[<>^~\s|]/;
+// A prerelease tag follows its version directly ("22.3.0-rc.0"). The hyphen of
+// a hyphen range has a space on each side ("22.0.0 - 22.3.0").
+const PRERELEASE_TAG = /\d-/u;
 
 function resolveVersion(pkg, spec) {
   if (!RANGE_CHARS.test(spec)) {
     return spec;
+  }
+  if (PRERELEASE_TAG.test(spec)) {
+    throw new Error(
+      `Cannot resolve the range "${spec}": it names a prerelease. Give an exact version for a prerelease.`,
+    );
   }
   const raw = execFileSync(
     'npm',
@@ -30,7 +39,17 @@ function resolveVersion(pkg, spec) {
     { encoding: 'utf8' },
   );
   const parsed = JSON.parse(raw);
-  return Array.isArray(parsed) ? parsed.at(-1) : parsed;
+  // `npm view` lists the versions in the order of their release, so a patch
+  // of an older line can come after a newer version.
+  return Array.isArray(parsed)
+    ? parsed.toSorted(compareReleaseVersions).at(-1)
+    : parsed;
+}
+
+// A range without a prerelease tag matches release versions only, and numeric
+// collation puts those in semver order ("22.10.0" after "22.3.0").
+function compareReleaseVersions(a, b) {
+  return a.localeCompare(b, 'en', { numeric: true });
 }
 
 const args = process.argv.slice(2);

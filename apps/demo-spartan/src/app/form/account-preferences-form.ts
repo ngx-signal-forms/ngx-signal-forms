@@ -233,7 +233,7 @@ export class AccountPreferencesForm {
     {
       submission: {
         ignoreValidators: 'all',
-        action: () => {
+        action: async () => {
           if (!hasOnlyWarnings(this.form().errorSummary())) {
             this.#onInvalid(this.form);
             return;

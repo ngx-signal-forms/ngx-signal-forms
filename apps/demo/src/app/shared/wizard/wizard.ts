@@ -277,7 +277,9 @@ export class WizardComponent {
    * like Enter in a single-page form. Steps have no submit button, so the
    * browser's implicit submission never fires on its own.
    */
-  protected onContentEnter(event: KeyboardEvent): void {
+  protected onContentEnter(event: Event): void {
+    // Angular types the event of a key-filtered binding as `Event`.
+    if (!(event instanceof KeyboardEvent)) return;
     const target = event.target;
     if (event.isComposing || !(target instanceof HTMLInputElement)) return;
     if (!TEXT_LIKE_INPUT_TYPES.has(target.type)) return;

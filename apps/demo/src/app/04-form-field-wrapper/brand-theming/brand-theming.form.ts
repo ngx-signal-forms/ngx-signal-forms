@@ -3,6 +3,9 @@ import {
   disabled,
   FormField,
   form,
+  metadata,
+  MIN,
+  MIN_NUMBER,
   minLength,
   pattern,
   required,
@@ -31,6 +34,11 @@ const brandThemingSchema = schema<BrandThemingModel>((path) => {
   pattern(path.workspaceSlug, /^[a-z0-9]+(?:-[a-z0-9]+)*$/, {
     message: 'Use lowercase letters, numbers, and hyphens only',
   });
+
+  // Gives the number input its `min` attribute without a validation rule.
+  // Angular does not allow that attribute next to `[formField]`.
+  metadata(path.monthlyBudget, MIN_NUMBER, () => 0);
+  metadata(path.monthlyBudget, MIN, () => MIN_NUMBER);
 
   // Non-blocking warning — never blocks submit, exercises the warning color.
   validate(path.monthlyBudget, (ctx) => {

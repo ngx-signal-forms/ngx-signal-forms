@@ -1,0 +1,37 @@
+<form [formRoot]="bookingForm" ngxSignalForm class="routed-steps">
+  <nav class="steps" aria-label="Booking steps">
+    <ol class="steps__list">
+      @for (step of steps(); track step.id) {
+      <li class="steps__item">
+        @if (step.reachable) {
+        <a
+          class="steps__step"
+          [routerLink]="step.id"
+          routerLinkActive="steps__step--current"
+          ariaCurrentWhenActive="step"
+        >
+          <span class="steps__number" aria-hidden="true"
+            >{{ step.number }}</span
+          >
+          <span class="sr-only">Step {{ step.number }}:</span>
+          {{ step.label }}
+        </a>
+        } @else {
+        <span class="steps__step steps__step--locked">
+          <span class="steps__number" aria-hidden="true"
+            >{{ step.number }}</span
+          >
+          <span class="sr-only">Step {{ step.number }}:</span>
+          {{ step.label }}
+          <span class="sr-only">(complete the earlier steps first)</span>
+        </span>
+        }
+      </li>
+      }
+    </ol>
+  </nav>
+
+  <div class="routed-steps__step">
+    <router-outlet />
+  </div>
+</form>

@@ -1,3 +1,6 @@
+/**
+ * Generated bundle index. Do not edit.
+ */
 import { FieldContext, ReadonlyFieldTree, SchemaPath, SchemaPathTree } from "@angular/forms/signals";
 import { SuiteResult } from "vest";
 /**

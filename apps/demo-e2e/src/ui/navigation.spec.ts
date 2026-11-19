@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
 
-import { DEMO_CATEGORIES } from '@ngx-signal-forms/demo-shared';
+import { DEMO_CATEGORIES, DEMO_PATHS } from '@ngx-signal-forms/demo-shared';
 test.describe('Demo Application - Navigation & Shell', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto(`/`);
@@ -129,5 +129,34 @@ test.describe('Demo Application - Route Handling', () => {
 
     await expect(page).toHaveURL(/\/second-miss$/u);
     await expect(page.locator('main code')).toHaveText('/second-miss');
+  });
+
+  test('should treat an unknown URL below an example as its own page', async ({
+    page,
+  }) => {
+    const unknownChild = `${DEMO_PATHS.autosave}/missing`;
+    const notFoundHeading = page.getByRole('heading', {
+      name: 'Page not found',
+      level: 1,
+    });
+
+    await test.step('A direct load keeps the title of the not-found page', async () => {
+      await page.goto(unknownChild);
+      await expect(notFoundHeading).toBeVisible();
+      await expect(page).toHaveTitle('Page not found · ngx-signal-forms');
+    });
+
+    await test.step('A move from the example counts as a page change', async () => {
+      await page.goto(DEMO_PATHS.autosave);
+      await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
+
+      await page.evaluate((url) => {
+        history.pushState({}, '', url);
+        dispatchEvent(new PopStateEvent('popstate'));
+      }, unknownChild);
+
+      await expect(notFoundHeading).toBeFocused();
+      await expect(page).toHaveTitle('Page not found · ngx-signal-forms');
+    });
   });
 });

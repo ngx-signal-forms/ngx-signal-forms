@@ -24,6 +24,8 @@ type LearningCardConfig = {
   };
 };
 
+let nextDemonstratedHeadingId = 0;
+
 /**
  * Reusable Educational Cards for Form Examples
  *
@@ -41,7 +43,5 @@ export class ExampleCardsComponent {
   demonstrated = input.required<DemonstratedCardConfig>();
   learning = input.required<LearningCardConfig>();
 
-  static #nextDemonstratedHeadingId = 0;
-
-  protected readonly demonstratedHeadingId = `example-cards-demonstrated-${++ExampleCardsComponent.#nextDemonstratedHeadingId}`;
+  protected readonly demonstratedHeadingId = `example-cards-demonstrated-${++nextDemonstratedHeadingId}`;
 }
