@@ -8,6 +8,9 @@
 // .d.ts changing. Snapshotted here so check-published-package.mjs still
 // catches it. See that script's header for the full explanation.
 // ---8<--- byte-identical snapshot of the built .d.ts below ---8<---
+/**
+ * Generated bundle index. Do not edit.
+ */
 import * as i0 from "@angular/core";
 import { ElementRef, EnvironmentProviders, InjectionToken, Injector, Provider, Signal, Type, WritableSignal } from "@angular/core";
 import { FieldState, FieldTree, FormRoot, LogicFn, NgValidationError, PathKind, SchemaPath, SchemaPathRules, ValidationError } from "@angular/forms/signals";
