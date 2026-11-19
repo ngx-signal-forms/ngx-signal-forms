@@ -5,13 +5,15 @@
       "source": "mindrally/skills",
       "sourceType": "github",
       "skillPath": "accessibility-a11y/SKILL.md",
-      "computedHash": "165361e8afe93bce6c7e85ca3a01d0c8d294fd38a1ed538048e683c8ab06dc8c"
+      "computedHash": "165361e8afe93bce6c7e85ca3a01d0c8d294fd38a1ed538048e683c8ab06dc8c",
+      "commit": "7682ca77710e0971eab4e0ae5dddfa281aea0ba5"
     },
     "angular-developer": {
       "source": "angular/skills",
       "sourceType": "github",
       "skillPath": "angular-developer/SKILL.md",
-      "computedHash": "50ac5be541125767b4864c31ecf2947558bf4a897b54cedd1d43e04b857f4e42"
+      "computedHash": "05d5488f770874f6f12e6d365611a6eae449f29481a52cd8a89929e448426c54",
+      "commit": "38b2fc9bb22a0f9ce2d31743ec1fc860faf66cf2"
     }
   }
 }
