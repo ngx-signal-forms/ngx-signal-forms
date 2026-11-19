@@ -1,7 +1,8 @@
 # Agent sandbox
 
-Facts an agent needs to run tasks in this repo from a sandboxed shell
-(Claude Code on the maintainer's machine). Each one cost earlier sessions
+Facts an agent needs to run tasks in this repo from a sandboxed shell.
+The sections after Environment describe Claude Code on the maintainer's
+machine. Each one cost earlier sessions
 retries.
 
 ## Environment
@@ -29,8 +30,36 @@ For Claude Code, add those roots to the sandbox settings in
 }
 ```
 
-For other agents, follow Nx's platform-specific sandbox guidance. Prefer a
-scoped socket allowlist; some sandboxes cannot scope socket access by path.
+Codex and the Copilot CLI read sandbox policy only from user-level files, so
+each developer sets it once:
+
+- Codex, in `~/.codex/config.toml`. Use absolute paths, because Codex does not
+  expand `~`. Codex cannot scope sockets by path, so `network_access = true`
+  also opens general network access.
+
+  ```toml
+  [sandbox_workspace_write]
+  network_access = true
+  writable_roots = ["/tmp/.nx", "/Users/<you>/.nx"]
+  ```
+
+- Copilot CLI, in `~/.copilot/settings.json`. Its sandbox is experimental:
+  start with `--experimental` and run `/sandbox enable`. It gates sockets on
+  the filesystem policy, so network settings do not help.
+
+  ```json
+  {
+    "sandbox": {
+      "enabled": true,
+      "userPolicy": {
+        "filesystem": { "readwritePaths": ["/tmp/.nx", "~/.nx"] }
+      }
+    }
+  }
+  ```
+
+For any other sandbox, allow the same two roots. See the
+[Nx sandbox guide](https://nx.dev/docs/kb/nx-sandbox-unix-sockets).
 
 Avoid setting `NX_SOCKET_DIR`: it replaces Nx's default socket roots. If an
 environment requires an override, use a private directory only your user can
