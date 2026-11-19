@@ -1,0 +1,14 @@
+{
+  "servers": {
+    "angular-cli": {
+      "type": "stdio",
+      "command": "pnpm",
+      "args": ["exec", "ng", "mcp"]
+    },
+    "playwright-test": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["playwright", "run-test-mcp-server"]
+    }
+  }
+}

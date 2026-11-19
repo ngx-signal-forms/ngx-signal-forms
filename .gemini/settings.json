@@ -1,0 +1,19 @@
+{
+  "context": {
+    "fileName": ["AGENTS.md"]
+  },
+  "mcpServers": {
+    "nx-mcp": {
+      "command": "pnpm",
+      "args": ["exec", "nx", "mcp"]
+    },
+    "angular-cli": {
+      "command": "pnpm",
+      "args": ["exec", "ng", "mcp"]
+    },
+    "playwright-test": {
+      "command": "npx",
+      "args": ["playwright", "run-test-mcp-server"]
+    }
+  }
+}

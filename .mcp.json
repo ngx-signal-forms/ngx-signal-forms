@@ -7,8 +7,8 @@
     },
     "angular-cli": {
       "type": "stdio",
-      "command": "npx",
-      "args": ["-y", "@angular/cli", "mcp"]
+      "command": "pnpm",
+      "args": ["exec", "ng", "mcp"]
     },
     "playwright-test": {
       "type": "stdio",
