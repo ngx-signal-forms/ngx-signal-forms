@@ -219,14 +219,16 @@ Behavior:
   show, so you can set the timing on the form or on this component. Without
   `ngxSignalForm`, auto-ARIA does not see a `strategy` on this component and
   follows the app config. Set the timing in the app config instead.
-- If no `fieldName` resolves, the component renders without ids and logs a
-  warning in development mode.
+- If no `fieldName` resolves, the component renders without ids and logs an
+  error in development mode.
 
-#### Errors and warnings without colour
+<a id="errors-and-warnings-without-colour"></a>
+
+#### Errors and warnings without color
 
 Each message starts with a visually hidden "Error:" or "Warning:" prefix. A
 screen reader reads "Error: Email is required". The difference does not rely on
-colour alone (WCAG 1.4.1).
+color alone (WCAG 1.4.1).
 
 - Change the text with `errorPrefixText` and `warningPrefixText` in
   `provideNgxSignalFormsConfig()`. Pass `''` to turn a prefix off.
@@ -236,7 +238,7 @@ colour alone (WCAG 1.4.1).
 
 To add a visible icon, set `--ngx-signal-form-error-icon` or
 `--ngx-signal-form-warning-icon`. See the
-[theming guide](../form-field/THEMING.md).
+[theming guide](../form-field/THEMING.md#error-and-warning-messages).
 
 ### NgxFormFieldErrorSummary
 
@@ -310,32 +312,32 @@ gets `{fieldName}-hint`. More hints for the same field get `{fieldName}-hint-2`,
 
 ### NgxFormFieldCharacterCount
 
-Shows "current/max" and changes colour as the value nears the limit.
+Shows "current/max" and changes color as the value nears the limit.
 
 ```html
 <ngx-form-field-character-count [formField]="form.bio" [maxLength]="500" />
 ```
 
-| Input                   | Type                                        | Default                    | Description                                                                                                   |
-| ----------------------- | ------------------------------------------- | -------------------------- | ------------------------------------------------------------------------------------------------------------- |
-| `formField`             | `FieldTree<CharacterCountValue>` (required) | —                          | The field to count. `CharacterCountValue` is `string \| string[]`, from `@ngx-signal-forms/toolkit/headless`. |
-| `maxLength`             | `number \| undefined`                       | from `maxLength` validator | The limit. Omit it to read the field's `maxLength` validator.                                                 |
-| `position`              | `'left' \| 'right'`                         | `'right'`                  | Alignment.                                                                                                    |
-| `showLimitColors`       | `boolean`                                   | `true`                     | Colour changes as the count nears the limit.                                                                  |
-| `liveAnnounce`          | `boolean`                                   | `false`                    | Polite announcement when the limit state changes.                                                             |
-| `announcementFormatter` | `NgxCharacterCountAnnouncementFormatter`    | English text               | Function that returns localized announcement text.                                                            |
-| `fieldName`             | `string \| undefined`                       | from the wrapper           | Field name for the limit id when no wrapper supplies one.                                                     |
+| Input                   | Type                                        | Default                    | Description                                                                                                                                 |
+| ----------------------- | ------------------------------------------- | -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| `formField`             | `FieldTree<CharacterCountValue>` (required) | —                          | The field to count. `CharacterCountValue` is `string \| readonly string[] \| null \| undefined`, from `@ngx-signal-forms/toolkit/headless`. |
+| `maxLength`             | `number \| undefined`                       | from `maxLength` validator | The limit. Omit it to read the field's `maxLength` validator.                                                                               |
+| `position`              | `'left' \| 'right'`                         | `'right'`                  | Alignment.                                                                                                                                  |
+| `showLimitColors`       | `boolean`                                   | `true`                     | Color changes as the count nears the limit.                                                                                                 |
+| `liveAnnounce`          | `boolean`                                   | `false`                    | Polite announcement when the limit state changes. Accepts a bare attribute.                                                                 |
+| `announcementFormatter` | `NgxCharacterCountAnnouncementFormatter`    | English text               | Function that returns localized announcement text.                                                                                          |
+| `fieldName`             | `string \| undefined`                       | from the wrapper           | Field name for the limit id when no wrapper supplies one.                                                                                   |
 
 Behavior:
 
 - Strings count characters. Arrays of strings count items. `null` and
   `undefined` count as `0`. Other values render `0` and log a warning in
   development mode.
-- The colour states are ok, warning (80%), danger (95%), and exceeded (over
-  100%). Change the colour thresholds with CSS; see
+- The color states are ok, warning (80%), danger (95%), and exceeded (over
+  100%). Change the color thresholds with CSS; see
   [character count tokens](../form-field/THEMING.md#character-count).
 - `[liveAnnounce]` announces only when the state changes, not on each key. It
-  always uses the 80% and 95% thresholds, also when CSS changes the colours or
+  always uses the 80% and 95% thresholds, also when CSS changes the colors or
   `showLimitColors` is `false`.
 - Inside a wrapper, the component also adds a hidden "Up to 500 characters"
   text to the control's `aria-describedby`. Change that text with
@@ -392,7 +394,8 @@ field". Place it once where it reads well.
 ```
 
 Outside an `ngxSignalForm` form, pass the tree:
-`<ngx-form-marking-legend [formTree]="userForm" />`.
+`<ngx-form-marking-legend [formTree]="userForm" />`. Omitting `formTree`
+outside `ngxSignalForm` logs an error in development mode.
 
 | Input            | Type               | Default              | Description                                          |
 | ---------------- | ------------------ | -------------------- | ---------------------------------------------------- |
