@@ -73,12 +73,12 @@ In RC.12, `ngx-form-field-notification` was folded into `ngx-form-field-error` w
 
 ### `*-padding-horizontal` shortcuts
 
-| Removed                                                 | Replacement                                                               |
-| ------------------------------------------------------- | ------------------------------------------------------------------------- |
-| `--ngx-signal-form-error-padding-horizontal`            | `--ngx-signal-form-feedback-padding-horizontal`                           |
-| `--ngx-signal-form-fieldset-message-padding-horizontal` | `--ngx-signal-form-fieldset-message-padding-inline-start` / `-inline-end` |
-| `--ngx-form-field-hint-padding-horizontal`              | `--ngx-form-field-hint-padding-inline-start` / `-inline-end`              |
-| `--ngx-form-field-char-count-padding-horizontal`        | `--ngx-form-field-char-count-padding-inline-start` / `-inline-end`        |
+| Removed                                                 | Replacement                                                                                                                                                                                     |
+| ------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `--ngx-signal-form-error-padding-horizontal`            | Inline errors keep `0` horizontal padding (see #787); add `margin-inline` or `padding-inline` on the `<ngx-form-field-error>` host or use `--ngx-signal-form-error-panel-padding` in panel mode |
+| `--ngx-signal-form-fieldset-message-padding-horizontal` | `--ngx-signal-form-fieldset-message-inset-inline-start` / `-inline-end` (or `--ngx-signal-form-fieldset-notification-inset-inline-*` for cards)                                                 |
+| `--ngx-form-field-hint-padding-horizontal`              | `--ngx-form-field-hint-padding-inline-start` / `-inline-end`                                                                                                                                    |
+| `--ngx-form-field-char-count-padding-horizontal`        | `--ngx-form-field-char-count-padding-inline-start` / `-inline-end`                                                                                                                              |
 
 ### `-override` escape hatches
 

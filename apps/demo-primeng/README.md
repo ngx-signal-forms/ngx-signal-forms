@@ -257,7 +257,10 @@ Signal Forms guidance explicitly supports custom `FormValueControl` adapters for
 third-party libraries in this state.
 
 Keep these thin `FormValueControl` shims until PrimeNG adds native Signal Forms
-bindings on its form components, then simplify or remove them.
+bindings on its form components. Before simplifying or removing any shim, verify
+that PrimeNG preserves the ARIA bridge on the inner focusable element
+(`aria-describedby`, `aria-invalid`, and `aria-required` where applicable) so
+error, warning, and hint associations still reach assistive technology.
 
 If you need to bridge tokens (e.g. mirror PrimeNG's `--p-form-field-invalid-border-color`
 into the toolkit's `--ngx-form-field-error-color`), do it in your app's

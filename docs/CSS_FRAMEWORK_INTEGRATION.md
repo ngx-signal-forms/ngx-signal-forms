@@ -81,13 +81,15 @@ If you use `ngx-form-field-wrapper`, map Bootstrap's CSS custom properties onto 
 ```css
 ngx-form-field-wrapper {
   --ngx-form-field-color-primary: var(--bs-primary, #0d6efd);
-  --ngx-form-field-color-border: var(--bs-border-color, #dee2e6);
+  /* Use a border color with >= 3:1 contrast against the field surface and page (Bootstrap's --bs-border-color is ~1.3:1 on white) */
+  --ngx-form-field-color-border: var(--bs-secondary-color, #6c757d);
   --ngx-form-field-color-text: var(--bs-body-color, #212529);
   --ngx-form-field-color-text-secondary: var(--bs-secondary-color, #6c757d);
   --ngx-form-field-color-surface: var(--bs-body-bg, #ffffff);
   --ngx-form-field-color-disabled: var(--bs-secondary-bg, #e9ecef);
   --ngx-form-field-color-error: var(--bs-form-invalid-color, #dc3545);
-  --ngx-form-field-color-warning: var(--bs-warning, #a16207);
+  /* Use a warning color with >= 3:1 contrast for focus outlines (Bootstrap's --bs-warning is ~1.63:1 on white) */
+  --ngx-form-field-color-warning: var(--bs-warning-text-emphasis, #664d03);
 
   --ngx-form-field-input-padding: 0.375rem 0.75rem;
   --ngx-form-field-radius: var(--bs-border-radius, 0.375rem);

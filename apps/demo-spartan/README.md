@@ -329,10 +329,10 @@ split, so they can rely on label-`for=` resolution (tier-2).
   provide a custom `ErrorStateMatcher`, or feed the wrapper's own
   strategy-aware `ariaInvalidValue` into the trigger instead — out of
   scope here since Brain's default already matches this demo's strategy.
-- Submission patterns (`submitWithWarnings`, async submission, server
-  errors). Kept out of this minimal demo because `apps/demo`'s
-  "Submission patterns" page covers those independently of the wrapper
-  choice.
+- Submission patterns (warning-tolerant submission with `hasOnlyWarnings()`,
+  async submission, server errors). Kept out of this minimal demo because
+  `apps/demo`'s "Submission patterns" and "Warning support" pages cover those
+  independently of the wrapper choice.
 - A floating-label appearance. Spartan's design language doesn't ship
   one; the wrapper sticks to the `hlm-form-field` vertical-stack default.
 - Theme switching UI. The `.dark` palette is wired in `styles.css`, but

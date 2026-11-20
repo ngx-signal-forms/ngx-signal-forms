@@ -578,7 +578,8 @@ Configure which marker text shows through `showMarkerWhen`, `requiredMarker`, an
 ```css
 ngx-form-field-wrapper {
   --ngx-form-field-color-primary: var(--bs-primary, #0d6efd);
-  --ngx-form-field-color-border: var(--bs-border-color, #dee2e6);
+  /* Keep enabled borders >= 3:1 against the surface and page (--bs-border-color is ~1.3:1 on white) */
+  --ngx-form-field-color-border: var(--bs-secondary-color, #6c757d);
   --ngx-form-field-color-text: var(--bs-body-color, #212529);
   --ngx-form-field-color-surface: var(--bs-body-bg, #ffffff);
 

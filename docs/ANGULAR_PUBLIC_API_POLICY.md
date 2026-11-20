@@ -57,7 +57,7 @@ These APIs belong to `@ngx-signal-forms/toolkit` and build on Angular's form eng
 
 The toolkit never provides an alternative API for something Angular already owns:
 
-- **Submit handling.** Angular's `submit()` and `FormRoot` own submission. The toolkit observes submit attempts for status tracking and does not replace Angular's action or validation gate.
+- **Submit handling.** Angular's `submit()` and `FormRoot` own submission. The toolkit observes submit attempts for status tracking and does not replace Angular's action or normal validation gate. The opt-in `submitWithWarnings()` helper is the one explicit exception: it checks for blocking errors itself and delegates to Angular `submit()` with `ignoreValidators: 'all'` so warning-only forms can submit.
 - **Field binding.** Angular's `[formField]` binds fields. The toolkit adds no replacement binding.
 - **Validation.** Angular's `schema()` and validators define rules. The toolkit adds only the `warn:` warning convention and message resolution on top.
 

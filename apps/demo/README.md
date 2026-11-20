@@ -78,7 +78,7 @@ pnpm nx run demo-e2e:e2e-toolkit
 pnpm nx run demo-e2e:e2e-demo-app
 ```
 
-Prefer `demo-e2e:e2e-toolkit` or `demo-e2e:e2e-demo-app` locally instead of plain `pnpm nx e2e demo-e2e`, because they clear port 4600 before starting Playwright.
+Use `demo-e2e:e2e-toolkit` for the toolkit forms suite or `demo-e2e:e2e-demo-app` for the demo UI suite. These targets do not clear port 4600; the Playwright config reuses an existing server on that port when one responds.
 
 ## Copy a working example
 
