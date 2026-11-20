@@ -74,6 +74,12 @@ test.describe('Form Field Wrapper - Brand Theming', () => {
     await expect(page.locator('#legacyWorkspaceId')).toBeDisabled();
   });
 
+  test('should keep the budget stepper from going below zero', async ({
+    page,
+  }) => {
+    await expect(page.locator('#monthlyBudget')).toHaveAttribute('min', '0');
+  });
+
   test('should apply the brand palette by default and revert on "Stock theme"', async ({
     page,
   }) => {

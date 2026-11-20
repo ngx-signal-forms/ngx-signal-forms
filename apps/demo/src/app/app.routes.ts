@@ -249,6 +249,11 @@ export const appRoutes: Routes = [
         title: getRouteTitle('/advanced-scenarios/single-model-wizard'),
       },
       {
+        path: 'routed-steps',
+        loadChildren: () =>
+          import('./05-advanced/routed-steps/routed-steps.routes'),
+      },
+      {
         path: 'async-validation',
         loadComponent: () =>
           import('./05-advanced/async-validation/async-validation.page').then(

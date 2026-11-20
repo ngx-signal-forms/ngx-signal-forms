@@ -58,28 +58,48 @@ test.describe('Labelless Form Fields', () => {
   });
 
   test('errors render wider than narrow inputs', async () => {
-    // Trigger the age error (below min).
-    await page.ageInput.fill('5');
-    await page.ageInput.blur();
+    const fields = page.narrowInputsSection.locator('ngx-form-field-wrapper');
+    const fullWidthField = fields.filter({
+      has: page.page.getByRole('textbox', { name: 'One-time passcode' }),
+    });
+    await expect(fullWidthField).toBeVisible();
+    const fullWidth = await fullWidthField.evaluate(
+      (element) => element.getBoundingClientRect().width,
+    );
 
-    const ageError = page.form.getByText('Must be 18 or older');
-    await expect(ageError).toBeVisible();
+    for (const { input, value, message } of [
+      { input: page.ageInput, value: '5', message: 'Must be 18 or older' },
+      {
+        input: page.zipInput,
+        value: 'abc',
+        message: 'Format: 12345 or 12345-6789',
+      },
+    ]) {
+      await input.fill(value);
+      await input.blur();
 
-    const { errorWidth, inputWidth, scrollWidth, clientWidth } =
-      await ageError.evaluate((el) => {
-        const input = document.querySelector('#age') as HTMLInputElement;
-        return {
-          errorWidth: el.getBoundingClientRect().width,
-          inputWidth: input.getBoundingClientRect().width,
-          scrollWidth: el.scrollWidth,
-          clientWidth: el.clientWidth,
-        };
-      });
+      const field = fields.filter({ has: input });
+      const error = field.getByText(message);
+      await expect(error).toBeVisible();
 
-    // Input constrained to 5ch (~50px). Error must be wider.
-    expect(errorWidth).toBeGreaterThan(inputWidth);
-    // And the error must not overflow its own box (no clipping).
-    expect(scrollWidth).toBeLessThanOrEqual(clientWidth);
+      const inputWidth = await input.evaluate(
+        (element) => element.getBoundingClientRect().width,
+      );
+      const fieldWidth = await field.evaluate(
+        (element) => element.getBoundingClientRect().width,
+      );
+      const { width, scrollWidth, clientWidth } = await error.evaluate(
+        (element) => ({
+          width: element.getBoundingClientRect().width,
+          scrollWidth: element.scrollWidth,
+          clientWidth: element.clientWidth,
+        }),
+      );
+
+      expect(fieldWidth, message).toBeLessThan(fullWidth);
+      expect(width, message).toBeGreaterThan(inputWidth);
+      expect(scrollWidth, message).toBeLessThanOrEqual(clientWidth);
+    }
   });
 
   test('provides a submit action for validating the labelless fields', async () => {

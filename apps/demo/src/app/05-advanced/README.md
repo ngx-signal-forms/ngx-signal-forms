@@ -1,6 +1,6 @@
 # Advanced scenarios
 
-Independent, real-world form patterns: app-wide configuration, declarative submission, async validation, server errors, store binding, autosave, i18n, and multi-step wizards.
+Independent, real-world form patterns: app-wide configuration, declarative submission, async validation, server errors, store binding, autosave, i18n, routed steps, and multi-step wizards.
 
 This folder also holds the source for the three `/validation/*` demos ([zod-validation](./zod-validation/README.md), [vest-validation](./vest-validation/README.md), and [zod-vest-validation](./zod-vest-validation/README.md)).
 
@@ -12,6 +12,7 @@ Prerequisites: familiarity with [02-toolkit-core](../02-toolkit-core/README.md) 
 - **[submission-patterns](./submission-patterns/README.md):** declarative `form(..., { submission })` with `[formRoot]`, `createOnInvalidHandler()`, submitting state, and `NgxFormFieldErrorSummary`.
 - **[advanced-wizard](./advanced-wizard/README.md):** multi-step wizard with one form per step, NgRx SignalStore draft/commit state, Zod schemas, and `@defer` lazy steps.
 - **[single-model-wizard](./single-model-wizard/README.md):** multi-step wizard backed by one shared `form()` model with per-step validation guards.
+- **[routed-steps](./routed-steps/README.md):** one `form()` above three step routes using `withErrorBoundaries()`, per-step `errorComponent`, `canActivate` step guards, and reload retry.
 - **[async-validation](./async-validation/README.md):** `validateHttp()` with automatic cancellation, request vs. blur debounce, `pending()` indicators, and request-failure warnings.
 - **[field-state-patterns](./field-state-patterns/README.md):** conditional `hidden()`, `disabled()`, and `readonly()` rules using Angular's `{ when }` syntax.
 - **[cross-field-validation](./cross-field-validation/README.md):** sibling-aware rules with `ctx.valueOf()` and field-level vs. group-level error placement.

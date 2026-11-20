@@ -52,6 +52,7 @@ Runnable examples showing Angular Signal Forms with `@ngx-signal-forms/toolkit`,
 | [submission-patterns](./src/app/05-advanced/submission-patterns/README.md)       | `/advanced-scenarios/submission-patterns`    | Declarative `submission`, `createOnInvalidHandler()`, and error summaries                              |
 | [advanced-wizard](./src/app/05-advanced/advanced-wizard/README.md)               | `/advanced-scenarios/advanced-wizard`        | Multi-step wizard with NgRx SignalStore, Zod, and lazy steps                                           |
 | [single-model-wizard](./src/app/05-advanced/single-model-wizard/README.md)       | `/advanced-scenarios/single-model-wizard`    | Multi-step wizard backed by one shared `form()` model                                                  |
+| [routed-steps](./src/app/05-advanced/routed-steps/README.md)                     | `/advanced-scenarios/routed-steps`           | Routed multi-step form with router error boundaries (`withErrorBoundaries()`)                          |
 | [async-validation](./src/app/05-advanced/async-validation/README.md)             | `/advanced-scenarios/async-validation`       | `validateHttp()` with debounce, cancellation, and `pending()` indicators                               |
 | [field-state-patterns](./src/app/05-advanced/field-state-patterns/README.md)     | `/advanced-scenarios/field-state-patterns`   | Conditional `hidden()`, `disabled()`, and `readonly()` rules                                           |
 | [cross-field-validation](./src/app/05-advanced/cross-field-validation/README.md) | `/advanced-scenarios/cross-field-validation` | Sibling-aware rules with `ctx.valueOf()` and group errors                                              |
@@ -87,7 +88,7 @@ Angular owns form state and submission. Toolkit directives and components add fe
 
 ## Technology stack
 
-- **Angular:** 22.2 (stable Signal Forms)
+- **Angular:** 22.3 (stable Signal Forms)
 - **TypeScript:** ~6.0 (strict mode)
 - **Toolkit:** `@ngx-signal-forms/toolkit`
 - **Styling:** Tailwind CSS 4

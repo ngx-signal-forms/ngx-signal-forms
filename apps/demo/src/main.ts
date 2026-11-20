@@ -11,6 +11,7 @@ import {
   withAutoCleanupInjectors,
   withComponentInputBinding,
   withEnabledBlockingInitialNavigation,
+  withErrorBoundaries,
   withViewTransitions,
 } from '@angular/router';
 import {
@@ -20,7 +21,7 @@ import {
 import { z } from 'zod';
 import { AppComponent } from './app/app';
 import { appRoutes } from './app/app.routes';
-import { DemoErrorHandler } from './app/ui/render-error';
+import { DemoErrorHandler, logRouteError } from './app/ui/render-error';
 
 // The production build's CSP blocks `eval`. Without `jitless`, Zod probes
 // `new Function` and the browser reports a CSP violation, even though Zod
@@ -80,6 +81,10 @@ void (async () => {
         withComponentInputBinding(),
         withAutoCleanupInjectors(),
         withViewTransitions({ skipInitialTransition: true }),
+        // A route with an `errorComponent` shows it in place of a routed
+        // component that throws. A route without one keeps the fallback of
+        // the app shell's `@boundary`.
+        withErrorBoundaries({ onError: logRouteError }),
       ),
     ],
   });

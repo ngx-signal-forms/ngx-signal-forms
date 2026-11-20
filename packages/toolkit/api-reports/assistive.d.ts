@@ -1,3 +1,6 @@
+/**
+ * Generated bundle index. Do not edit.
+ */
 import { FieldTree } from "@angular/forms/signals";
 import * as i1 from "@ngx-signal-forms/toolkit/headless";
 import { CharacterCountLimitState, CharacterCountValue, NgxHeadlessErrorState, NgxHeadlessErrorSummary } from "@ngx-signal-forms/toolkit/headless";

@@ -17,17 +17,6 @@ const createInjectorFromEnvProviders = (
 ) => createEnvironmentInjector(providers, parent);
 
 describe('provideNgxSignalFormControlPresets', () => {
-  it('should return environment providers', () => {
-    const providers = provideNgxSignalFormControlPresets({
-      slider: {
-        ariaMode: 'manual',
-      },
-    });
-
-    expect(providers).toBeDefined();
-    expect(typeof providers).toBe('object');
-  });
-
   it('should merge partial overrides with default presets', () => {
     const providers = provideNgxSignalFormControlPresets({
       slider: {
@@ -89,17 +78,6 @@ describe('provideNgxSignalFormControlPresets', () => {
 });
 
 describe('provideNgxSignalFormControlPresetsForComponent', () => {
-  it('should return providers array', () => {
-    const providers = provideNgxSignalFormControlPresetsForComponent({
-      composite: {
-        ariaMode: 'manual',
-      },
-    });
-
-    expect(Array.isArray(providers)).toBe(true);
-    expect(providers.length).toBeGreaterThan(0);
-  });
-
   it('should inherit parent preset overrides instead of resetting to defaults', () => {
     const parentInjector = createInjectorFromEnvProviders([
       provideNgxSignalFormControlPresets({

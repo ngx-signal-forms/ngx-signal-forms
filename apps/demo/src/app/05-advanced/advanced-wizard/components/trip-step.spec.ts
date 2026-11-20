@@ -7,27 +7,14 @@ import {
 } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { render, screen } from '@testing-library/angular';
-import { describe, expect, it, vi } from 'vitest';
+import { Temporal } from 'temporal-polyfill';
+import { describe, expect, it, onTestFinished, vi } from 'vitest';
 
 import { TripStepComponent } from './trip-step';
 import { WizardStore } from '../stores/wizard.store';
 
-/**
- * `validateAndFocus()` unifies on the toolkit's `submitWithWarnings()`
- * helper, mirroring `TravelerStepComponent` (see traveler-step.spec.ts
- * pattern if one exists) instead of hand-rolling `markAsTouched()` +
- * `.invalid()`. These specs pin the same observable contract the old
- * hand-rolled implementation had: an invalid destination blocks advancement,
- * marks the invalid field(s), and moves focus to the first one; a valid
- * destination advances; no destinations at all blocks advancement and moves
- * focus to the "Add Your First Destination" button.
- *
- * `validateAndFocus()` is invoked by the real parent (`WizardContainerComponent`)
- * from its own "Next" button handler, not from a control inside
- * `TripStepComponent` itself — so this host mirrors that real call site: a
- * button click drives the transition, and the (boolean) outcome is rendered
- * to the DOM instead of being read off the component instance.
- */
+// The wizard's Next button is outside the trip step. This host calls the
+// same validation method and shows whether the wizard can advance.
 @Component({
   template: `
     <ngx-trip-step />
@@ -95,6 +82,13 @@ describe('TripStepComponent validate-and-advance transition', () => {
   });
 
   it('advances when all destination fields are valid', async () => {
+    const today = vi
+      .spyOn(Temporal.Now, 'plainDateISO')
+      .mockReturnValue(Temporal.PlainDate.from('2026-12-31'));
+    onTestFinished(() => {
+      today.mockRestore();
+    });
+
     const { fixture } = await setup();
     const store = TestBed.inject(WizardStore);
     const destIdx = 0;

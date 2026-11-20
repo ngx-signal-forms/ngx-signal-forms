@@ -69,7 +69,10 @@
     "enableI18nLegacyMessageIdFormat": false,
     "strictInjectionParameters": true,
     "strictInputAccessModifiers": true,
+    "strictNgTemplateTypes": true,
     "strictTemplates": true,
+    "strictUnclaimedEventNames": true,
+    "strictUnknownElements": true,
     "typeCheckHostBindings": true,
     "extendedDiagnostics": {
       "checks": {
@@ -80,6 +83,7 @@
         "missingNgForOfLet": "error",
         "missingStructuralDirective": "error",
         "nullishCoalescingNotNullable": "error",
+        "numericCssPropertyRequiresUnit": "error",
         "optionalChainNotNullable": "error",
         "skipHydrationNotStatic": "error",
         "suffixNotSupported": "error",

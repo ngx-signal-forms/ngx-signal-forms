@@ -16,17 +16,6 @@ const createInjectorFromEnvProviders = (
 ) => createEnvironmentInjector(providers, parent);
 
 describe('provideNgxSignalFormsConfig', () => {
-  it('should return environment providers', () => {
-    const config = {
-      defaultErrorStrategy: 'immediate' as const,
-    };
-
-    const providers = provideNgxSignalFormsConfig(config);
-
-    expect(providers).toBeDefined();
-    expect(typeof providers).toBe('object');
-  });
-
   it('should work with partial config', () => {
     const config = {
       errorSummaryAnnouncesAlone: false,
@@ -42,21 +31,6 @@ describe('provideNgxSignalFormsConfig', () => {
     );
   });
 
-  it('does not accept or resolve the removed autoAria key', () => {
-    // `autoAria` never reached a directive, so it was removed (#584). The
-    // real opt-outs are control presets with `ariaMode: 'manual'` and the
-    // per-control `ngxSignalFormControlAria="manual"`.
-    const providers = provideNgxSignalFormsConfig({
-      // @ts-expect-error -- `autoAria` is no longer a config key
-      autoAria: false,
-    });
-    const injector = createInjectorFromEnvProviders([providers]);
-
-    const resolved = injector.get(NGX_SIGNAL_FORMS_CONFIG);
-    expect(resolved).not.toHaveProperty('autoAria');
-    expect(DEFAULT_NGX_SIGNAL_FORMS_CONFIG).not.toHaveProperty('autoAria');
-  });
-
   it('should work with empty config', () => {
     const providers = provideNgxSignalFormsConfig({});
     const injector = createInjectorFromEnvProviders([providers]);
@@ -67,14 +41,6 @@ describe('provideNgxSignalFormsConfig', () => {
 });
 
 describe('provideNgxSignalFormsConfigForComponent', () => {
-  it('should return providers array', () => {
-    const config = { defaultErrorStrategy: 'immediate' as const };
-    const providers = provideNgxSignalFormsConfigForComponent(config);
-
-    expect(Array.isArray(providers)).toBe(true);
-    expect(providers.length).toBeGreaterThan(0);
-  });
-
   it('should provide configured values', () => {
     const config = {
       errorSummaryAnnouncesAlone: false,

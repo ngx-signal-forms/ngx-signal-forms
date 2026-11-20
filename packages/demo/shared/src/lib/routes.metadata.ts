@@ -20,6 +20,7 @@ export const DEMO_PATHS = {
   submissionPatterns: '/advanced-scenarios/submission-patterns',
   advancedWizard: '/advanced-scenarios/advanced-wizard',
   singleModelWizard: '/advanced-scenarios/single-model-wizard',
+  routedSteps: '/advanced-scenarios/routed-steps',
   asyncValidation: '/advanced-scenarios/async-validation',
   fieldStatePatterns: '/advanced-scenarios/field-state-patterns',
   crossFieldValidation: '/advanced-scenarios/cross-field-validation',
@@ -176,6 +177,11 @@ export const DEMO_CATEGORIES = [
         hasControls: false,
       },
       {
+        path: '/advanced-scenarios/routed-steps',
+        label: 'Routed Steps (Error Boundaries)',
+        hasControls: true,
+      },
+      {
         path: '/advanced-scenarios/async-validation',
         label: 'Async Validation',
         hasControls: true,
@@ -223,4 +229,19 @@ export function getRouteTitle(path: string): string {
     if (link) return `${link.label} · ${SITE_NAME}`;
   }
   return SITE_NAME;
+}
+
+/**
+ * The example that owns a URL path: the path itself, or the longest
+ * registered example path above it. A child route of an example, such as a
+ * routed form step, belongs to that example. An unknown path returns
+ * unchanged.
+ */
+export function getExamplePath(path: string): string {
+  let owner = '';
+  for (const examplePath of Object.values(DEMO_PATHS)) {
+    const owns = path === examplePath || path.startsWith(`${examplePath}/`);
+    if (owns && examplePath.length > owner.length) owner = examplePath;
+  }
+  return owner || path;
 }

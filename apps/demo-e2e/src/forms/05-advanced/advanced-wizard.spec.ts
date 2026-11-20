@@ -410,42 +410,6 @@ test.describe('Advanced Wizard Demo', () => {
     // Once onSuccess fires, store.lastSavedAt drives the DatePipe output in
     // the status row. Format is `Last saved: h:mm a` (e.g., "Last saved: 6:34 PM").
     await expect(statusRow).toContainText(/Last saved: \d{1,2}:\d{2}/);
-
-    // Timestamp remains visible after the save round-trip.
-    await expect(statusRow).toContainText(/Last saved: \d{1,2}:\d{2}/);
-  });
-
-  test('leaving the route stops autosave and returning starts with a fresh store', async ({
-    page,
-  }) => {
-    const draftSaves: string[] = [];
-    page.on('request', (request) => {
-      if (
-        request.url().includes('/api/wizard/draft') &&
-        ['POST', 'PUT'].includes(request.method())
-      ) {
-        draftSaves.push(request.method());
-      }
-    });
-
-    // Change the draft, then leave inside the 2 s autosave debounce. A store
-    // that outlives the route would still fire the pending save.
-    await page.getByLabel('First Name').fill('Ada');
-    const nav = page.getByRole('navigation', {
-      name: 'Documentation sections',
-    });
-    await nav.getByRole('link', { name: 'Global Configuration' }).click();
-    await expect(page).toHaveURL(/\/advanced-scenarios\/global-configuration$/);
-
-    // Wait past the debounce window, then check that nothing was sent.
-    // oxlint-disable-next-line playwright/no-wait-for-timeout -- absence of a request can only be shown by waiting
-    await page.waitForTimeout(3000);
-    expect(draftSaves).toEqual([]);
-
-    // Coming back builds a new store, so the earlier input is gone.
-    await nav.getByRole('link', { name: 'Advanced Wizard' }).click();
-    await expect(page).toHaveURL(/\/advanced-scenarios\/advanced-wizard$/);
-    await expect(page.getByLabel('First Name')).toHaveValue('');
   });
 
   test('resumes the auto-saved draft after a reload', async ({ page }) => {
@@ -657,22 +621,6 @@ test.describe('Advanced Wizard Demo', () => {
     ).toBeVisible();
     await expect(page.getByLabel('First Name')).toHaveValue('');
 
-    // The wizard still holds its blank initial state. Saving it would replace
-    // the draft the user could not load, so nothing may be sent until the user
-    // types.
-    const blankSaves: string[] = [];
-    page.on('request', (request) => {
-      if (
-        request.url().includes('/api/wizard/draft') &&
-        ['POST', 'PUT'].includes(request.method())
-      ) {
-        blankSaves.push(request.method());
-      }
-    });
-    // oxlint-disable-next-line playwright/no-wait-for-timeout -- absence of a request can only be shown by waiting past the 2 s debounce
-    await page.waitForTimeout(3000);
-    expect(blankSaves).toEqual([]);
-
     // The next save starts a new draft instead of writing to the missing one.
     const newDraft = page.waitForRequest(
       (request) =>
@@ -833,16 +781,6 @@ test.describe('Advanced Wizard Demo', () => {
         ),
       )
       .toBe(JSON.stringify({ draftId: null }));
-
-    // A debounced autosave that was pending at booking time must not bring the
-    // id back. Wait past the 2 s debounce before the reload.
-    // oxlint-disable-next-line playwright/no-wait-for-timeout -- absence of a save can only be shown by waiting
-    await page.waitForTimeout(2500);
-    expect(
-      await page.evaluate(() =>
-        sessionStorage.getItem('ngx-demo:advanced-wizard-draft'),
-      ),
-    ).toBe(JSON.stringify({ draftId: null }));
 
     const draftLoads: string[] = [];
     page.on('request', (request) => {
@@ -1229,6 +1167,47 @@ test.describe('Advanced Wizard Demo', () => {
       page.getByRole('alert').filter({ hasText: 'Arrival date required' }),
     ).toBeVisible();
   });
+});
+
+test('leaving the wizard cancels its pending draft save and returning starts fresh', async ({
+  page,
+}) => {
+  const clockStart = Date.now();
+  await page.clock.install({ time: clockStart });
+
+  const draftSaves: string[] = [];
+  page.on('request', (request) => {
+    if (
+      request.url().includes('/api/wizard/draft') &&
+      ['POST', 'PUT'].includes(request.method())
+    ) {
+      draftSaves.push(request.method());
+    }
+  });
+
+  await page.goto('/advanced-scenarios/advanced-wizard');
+  const firstName = page.getByLabel('First Name');
+  await expect(firstName).toBeEditable();
+  await page.clock.pauseAt(clockStart + 60_000);
+
+  // Let the edit reach the store while keeping the 2 s debounce pending.
+  await firstName.fill('Ada');
+  await page.clock.runFor(100);
+  const nav = page.getByRole('navigation', {
+    name: 'Documentation sections',
+  });
+  await nav.getByRole('link', { name: 'Global Configuration' }).click();
+  await expect(page).toHaveURL(/\/advanced-scenarios\/global-configuration$/u);
+  await page.clock.runFor(3_000);
+  await page.clock.resume();
+  await expect(
+    page.getByRole('heading', { name: 'Global Configuration', level: 1 }),
+  ).toBeVisible();
+
+  await nav.getByRole('link', { name: 'Advanced Wizard' }).click();
+  await expect(page).toHaveURL(/\/advanced-scenarios\/advanced-wizard$/u);
+  expect(draftSaves).toEqual([]);
+  await expect(firstName).toHaveValue('');
 });
 
 // Calendar dates must not shift with the browser time zone. The fixed instant

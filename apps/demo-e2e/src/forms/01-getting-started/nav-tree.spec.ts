@@ -40,6 +40,21 @@ test.describe('Demo app navigation tree', () => {
           level: 1,
         }),
       ).toBeVisible();
+      const nav = page.getByRole('navigation', {
+        name: 'Documentation sections',
+      });
+      await expect(
+        nav.getByRole('link', { name: 'Global Configuration' }),
+      ).toHaveAttribute('aria-current', 'page');
+
+      await page.goBack();
+      await expect(page).toHaveURL(DEMO_PATHS.yourFirstForm);
+      await expect(
+        page.getByRole('heading', { name: 'Your First Form', level: 1 }),
+      ).toBeVisible();
+      await expect(
+        nav.getByRole('link', { name: 'Your First Form' }),
+      ).toHaveAttribute('aria-current', 'page');
     });
   });
 

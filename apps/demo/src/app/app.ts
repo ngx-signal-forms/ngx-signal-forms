@@ -23,7 +23,11 @@ import {
 import { Title } from '@angular/platform-browser';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { filter, map, of, pairwise, startWith, switchMap, timer } from 'rxjs';
-import { getRouteTitle, SITE_NAME } from '@ngx-signal-forms/demo-shared';
+import {
+  getExamplePath,
+  getRouteTitle,
+  SITE_NAME,
+} from '@ngx-signal-forms/demo-shared';
 import { NavTreeComponent } from './ui/nav-tree';
 import { RightRailComponent } from './ui/right-rail';
 import { NgxThemeSwitcherComponent } from './ui/theme-switcher/theme-switcher';
@@ -32,11 +36,6 @@ import {
   NgxResetOnNavigationDirective,
   PageErrorComponent,
 } from './ui/render-error';
-
-/** Strips the query string and fragment from a router URL. */
-function toPath(url: string): string {
-  return url.split(/[?#]/)[0] ?? url;
-}
 
 @Component({
   selector: 'ngx-root',
@@ -775,14 +774,31 @@ export class AppComponent {
     { initialValue: false },
   );
 
-  /** The URL path without its query string or fragment, so a query-only or
-   * fragment-only change does not count as a new page. */
+  /**
+   * The path of the page that the router shows, without the query string and
+   * fragment. A child route of an example, such as a routed form step, maps
+   * to the example, so a step change does not count as a new page.
+   *
+   * The not-found page keeps its own path. It can show for a URL below the
+   * path of an example, and it is not a part of that example.
+   */
+  #pagePath(): string {
+    const url = this.#router.url;
+    const path = url.split(/[?#]/u)[0] ?? url;
+    const activeRoute = this.#router.routerState.snapshot.root.firstChild;
+    return activeRoute?.routeConfig?.path === '**'
+      ? path
+      : getExamplePath(path);
+  }
+
+  /** The path of the current page. A change of only the query string, the
+   * fragment or a child route of the example does not count as a new page. */
   readonly #currentPath = toSignal(
     this.#router.events.pipe(
       filter((e) => e instanceof NavigationEnd),
-      map(() => toPath(this.#router.url)),
+      map(() => this.#pagePath()),
     ),
-    { initialValue: toPath(this.#router.url) },
+    { initialValue: this.#pagePath() },
   );
 
   // Named Angular effect fields are intentionally unread.
@@ -825,8 +841,8 @@ export class AppComponent {
   readonly #pageChange = toSignal(
     this.#router.events.pipe(
       filter((e) => e instanceof NavigationEnd),
-      map((e) => ({ id: e.id, path: toPath(e.urlAfterRedirects) })),
-      startWith({ id: 0, path: toPath(this.#router.url) }),
+      map((e) => ({ id: e.id, path: this.#pagePath() })),
+      startWith({ id: 0, path: this.#pagePath() }),
       pairwise(),
       // The initial navigation always has id 1. Blocking initial navigation
       // can complete before this subscription exists, so the id check covers

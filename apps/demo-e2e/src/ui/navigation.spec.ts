@@ -1,19 +1,6 @@
 import { expect, test } from '@playwright/test';
 
 import { DEMO_CATEGORIES, DEMO_PATHS } from '@ngx-signal-forms/demo-shared';
-/**
- * Demo Application UI Tests - Navigation & Application Shell
- *
- * These tests verify the demo application's navigation system and UI behavior.
- * They focus on the demo app's specific UI implementation, not the toolkit library.
- *
- * Verifies:
- * - Application loads successfully
- * - Navigation tree works correctly
- * - Theme switching functions
- * - Route handling is correct
- */
-
 test.describe('Demo Application - Navigation & Shell', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto(`/`);
@@ -76,187 +63,33 @@ test.describe('Demo Application - Navigation & Shell', () => {
       }
     });
   });
-
-  test('should navigate to each demo example', async ({ page }) => {
-    await test.step('Navigate through all demo examples', async () => {
-      const examples = Object.values(DEMO_PATHS);
-
-      for (const examplePath of examples) {
-        await page.goto(examplePath);
-        await page.waitForLoadState('domcontentloaded');
-
-        // Wait for main content and page heading to be visible
-        const main = page.locator('main').first();
-        await expect(main).toBeVisible({ timeout: 5000 });
-
-        const pageHeading = page.locator('main h1').first();
-        await expect(pageHeading).toBeVisible({ timeout: 5000 });
-      }
-    });
-  });
-
-  test('should update active state in navigation', async ({ page }) => {
-    await test.step('Navigate and verify active state updates', async () => {
-      await page.goto(`/getting-started/your-first-form`);
-      await page.waitForLoadState('domcontentloaded');
-
-      // Check for active class on navigation links
-      const activeLink = page
-        .locator('a.active, [aria-current="page"]')
-        .first();
-      await expect(activeLink).toBeVisible({ timeout: 2000 });
-
-      await page.goto(`/toolkit-core/error-display-modes`);
-      await page.waitForLoadState('domcontentloaded');
-
-      // Verify active state updated
-      const nextActiveLink = page
-        .locator('a.active, [aria-current="page"]')
-        .first();
-      await expect(nextActiveLink).toBeVisible({ timeout: 2000 });
-    });
-  });
-
-  test('should handle browser back button navigation', async ({ page }) => {
-    await test.step('Navigate, go back, and verify', async () => {
-      // Start from Toolkit Core error display modes page
-      await page.goto('/toolkit-core/error-display-modes');
-      await page.waitForLoadState('domcontentloaded');
-
-      const navTree = page.getByLabel('Documentation sections');
-      await expect(navTree).toBeVisible();
-
-      // Navigate to another page
-      await page.goto('/getting-started/your-first-form');
-      await page.waitForLoadState('domcontentloaded');
-
-      const firstPageUrl = page.url();
-      expect(firstPageUrl).toContain('/getting-started/your-first-form');
-
-      // Go back to previous page
-      await page.goBack();
-      await page.waitForLoadState('domcontentloaded');
-
-      const afterBackUrl = page.url();
-      expect(afterBackUrl).toContain('/toolkit-core/error-display-modes');
-    });
-  });
-
-  test('should load new page content after navigation', async ({ page }) => {
-    await test.step('Navigate between two pages and verify both render main content', async () => {
-      await page.goto(`/getting-started/your-first-form`);
-      await page.waitForLoadState('domcontentloaded');
-
-      await expect(page.getByRole('main')).toBeVisible();
-      await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
-
-      await page.goto(`/toolkit-core/error-display-modes`);
-      await page.waitForLoadState('domcontentloaded');
-
-      await expect(page.getByRole('main')).toBeVisible();
-      await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
-    });
-  });
 });
 
-// ============================================
-// Theme Switching Tests
-// ============================================
+test('activates the theme switcher by keyboard and remembers the selected theme', async ({
+  page,
+}) => {
+  await page.emulateMedia({ colorScheme: 'light' });
+  await page.goto('/');
 
-test.describe('Demo Application - Theme Switching', () => {
-  test.beforeEach(async ({ page }) => {
-    await page.goto(`/`);
-    await page.waitForLoadState('domcontentloaded');
-  });
+  const theme = page.getByRole('button', { name: /Change theme:/iu });
+  const root = page.locator('html');
 
-  test('should toggle between light and dark theme', async ({ page }) => {
-    await test.step('Find theme switcher and toggle', async () => {
-      const themeButton = page
-        .locator(
-          'button[aria-label*="theme"], button[aria-label*="Theme"], button[title*="theme"]',
-        )
-        .first();
+  await expect(theme).toHaveAccessibleName(/Change theme: system/iu);
+  await expect(root).toHaveCSS('color-scheme', 'light');
 
-      await expect(themeButton).toBeVisible();
+  await theme.focus();
+  await expect(theme).toBeFocused();
+  await page.keyboard.press('Enter');
+  await expect(theme).toHaveAccessibleName(/Change theme: light/iu);
 
-      await themeButton.click();
-      await page.waitForLoadState('domcontentloaded');
+  await theme.click();
+  await expect(theme).toHaveAccessibleName(/Change theme: dark/iu);
+  await expect(root).toHaveCSS('color-scheme', 'dark');
 
-      /// Verify theme switcher is functional (button click succeeds)
-      await expect(themeButton).toBeVisible();
-    });
-  });
-
-  test('should maintain theme across navigation', async ({ page }) => {
-    await test.step('Set theme and navigate, verify persistence', async () => {
-      await page.goto(`/toolkit-core/error-display-modes`);
-      await page.waitForLoadState('domcontentloaded');
-
-      /// Verify page loaded successfully (theme persists across navigation)
-      const heading = page.locator('h1').first();
-      await expect(heading).toBeVisible();
-    });
-  });
-
-  test('should have accessible theme switcher', async ({ page }) => {
-    await test.step('Verify theme button accessibility', async () => {
-      const themeButton = page
-        .locator('button[aria-label*="theme"], button[aria-label*="Theme"]')
-        .first();
-
-      await expect(themeButton).toBeVisible();
-
-      await themeButton.focus();
-      const focusedCount = await page.locator(':focus').count();
-      expect(focusedCount).toBeGreaterThan(0);
-
-      /// Verify keyboard activation works
-      await page.keyboard.press('Enter');
-      await page.waitForLoadState('domcontentloaded');
-
-      await expect(themeButton).toBeVisible();
-    });
-  });
-
-  test('should maintain proper contrast in both themes', async ({ page }) => {
-    await test.step('Verify readability in light mode', async () => {
-      const heading = page.locator('h1').first();
-      await expect(heading).toBeVisible();
-
-      const color = await heading.evaluate((el) => {
-        return window.getComputedStyle(el).color;
-      });
-
-      expect(color).toBeTruthy();
-      // Check that color is not transparent (should have RGB values)
-      expect(color).toMatch(/rgb/);
-    });
-
-    await test.step('Switch to dark mode and verify contrast', async () => {
-      const themeButton = page
-        .locator('button[aria-label*="theme"], button[aria-label*="Theme"]')
-        .first();
-
-      await themeButton.click();
-      await page.waitForLoadState('domcontentloaded');
-
-      const heading = page.locator('h1').first();
-      await expect(heading).toBeVisible();
-
-      const darkColor = await heading.evaluate((el) => {
-        return window.getComputedStyle(el).color;
-      });
-
-      expect(darkColor).toBeTruthy();
-      // Check that color is not transparent
-      expect(darkColor).toMatch(/rgb/);
-    });
-  });
+  await page.reload();
+  await expect(theme).toHaveAccessibleName(/Change theme: dark/iu);
+  await expect(root).toHaveCSS('color-scheme', 'dark');
 });
-
-// ============================================
-// Route Handling Tests
-// ============================================
 
 test.describe('Demo Application - Route Handling', () => {
   test('should handle invalid routes gracefully', async ({ page }) => {
@@ -298,15 +131,32 @@ test.describe('Demo Application - Route Handling', () => {
     await expect(page.locator('main code')).toHaveText('/second-miss');
   });
 
-  test('should preserve query parameters during navigation', async ({
+  test('should treat an unknown URL below an example as its own page', async ({
     page,
   }) => {
-    await test.step('Add query params and navigate', async () => {
-      await page.goto(`/?mode=immediate`);
-      await page.waitForLoadState('domcontentloaded');
+    const unknownChild = `${DEMO_PATHS.autosave}/missing`;
+    const notFoundHeading = page.getByRole('heading', {
+      name: 'Page not found',
+      level: 1,
+    });
 
-      const url = page.url();
-      expect(url).toContain('mode=immediate');
+    await test.step('A direct load keeps the title of the not-found page', async () => {
+      await page.goto(unknownChild);
+      await expect(notFoundHeading).toBeVisible();
+      await expect(page).toHaveTitle('Page not found · ngx-signal-forms');
+    });
+
+    await test.step('A move from the example counts as a page change', async () => {
+      await page.goto(DEMO_PATHS.autosave);
+      await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
+
+      await page.evaluate((url) => {
+        history.pushState({}, '', url);
+        dispatchEvent(new PopStateEvent('popstate'));
+      }, unknownChild);
+
+      await expect(notFoundHeading).toBeFocused();
+      await expect(page).toHaveTitle('Page not found · ngx-signal-forms');
     });
   });
 });

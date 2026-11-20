@@ -79,15 +79,27 @@ test.describe('Your First Form with Toolkit (POM Example)', () => {
     await expect(formPage.errorAlerts.first()).toBeVisible();
   });
 
-  test('should submit form with valid data', async () => {
-    await test.step('Fill form and submit', async () => {
-      await formPage.fillValidData();
-      await formPage.submit();
+  test('tabs through the form and submits valid data with Enter', async ({
+    page,
+  }) => {
+    await formPage.fillValidData();
+    await formPage.nameInput.focus();
 
-      /// After successful submission, form should reset
-      await expect(formPage.nameInput).toHaveValue('');
-      await expect(formPage.emailInput).toHaveValue('');
-    });
+    await page.keyboard.press('Tab');
+    await expect(formPage.emailInput).toBeFocused();
+    await page.keyboard.press('Tab');
+    await expect(formPage.messageInput).toBeFocused();
+    await page.keyboard.press('Tab');
+    await expect(formPage.submitButton).toBeFocused();
+    await page.keyboard.press('Shift+Tab');
+    await expect(formPage.messageInput).toBeFocused();
+    await page.keyboard.press('Tab');
+    await expect(formPage.submitButton).toBeFocused();
+
+    await page.keyboard.press('Enter');
+    await expect(formPage.nameInput).toHaveValue('');
+    await expect(formPage.emailInput).toHaveValue('');
+    await expect(formPage.messageInput).toHaveValue('');
   });
 
   test('should prevent submission with invalid data', async () => {

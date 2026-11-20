@@ -96,7 +96,7 @@ so it is intentionally not in the bundle. See
 
 ```text
 src/app/
-  form/                                form + validations + smoke spec
+  form/                                form + validations
   wrapper/
     index.ts                           provideNgxSpartanForms / ForComponent + NgxSpartanFormBundle
     spartan-form-field.ts              the wrapper component (BrnField host directive + inline BrnFieldA11yService factory)
@@ -363,13 +363,9 @@ pnpm nx serve demo-spartan
 #   aria-describedby="display-name-hint display-name-warning"
 ```
 
-The smoke spec
-([`account-preferences-form.spec.ts`](src/app/form/account-preferences-form.spec.ts))
-encodes the same expectations through `@testing-library/angular`. The
-single Playwright spec
-([`account-preferences.spec.ts`](../demo-spartan-e2e/src/account-preferences.spec.ts))
-re-runs the fill → blur → observe-error path through a Vite-compiled
-build.
+The [account preferences Playwright spec](../demo-spartan-e2e/src/account-preferences.spec.ts)
+checks the accessible hint before interaction, the error after blur, and a
+successful submission with a warning.
 
 ## Demo-internal notes
 

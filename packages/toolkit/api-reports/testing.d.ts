@@ -1,3 +1,6 @@
+/**
+ * Generated bundle index. Do not edit.
+ */
 import axe from "axe-core";
 /**
  * axe-core tag set that maps to **WCAG 2.2 Level AA** conformance.
