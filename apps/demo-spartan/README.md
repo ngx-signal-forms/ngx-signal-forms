@@ -68,7 +68,7 @@ own `FormField` directive — see
 ```
 
 ```ts
-import { NgxSpartanFormBundle } from './wrapper/spartan-form-field';
+import { NgxSpartanFormBundle } from './wrapper';
 
 @Component({
   imports: [
@@ -89,17 +89,19 @@ export class MyForm {
 `NgxSignalFormControl`. The error renderer
 (`NgxSpartanFormFieldError`) is mounted dynamically via
 `*ngComponentOutlet` and resolved through `NGX_FORM_FIELD_ERROR_RENDERER`,
-so it is intentionally not in the bundle — see
+so it is intentionally not in the bundle. See
 [Customising the error renderer](#customising-the-error-renderer) below.
 
 ## What's wired
 
 ```text
 src/app/
-  form/                                form + validations + smoke spec
+  form/                                form + validations
   wrapper/
+    index.ts                           provideNgxSpartanForms / ForComponent + NgxSpartanFormBundle
     spartan-form-field.ts              the wrapper component (BrnField host directive + inline BrnFieldA11yService factory)
-    spartan-form-field-error.ts        default error renderer (role="alert" + role="status"); resolves messages via `createErrorMessageSignal` so it inherits the toolkit's 3-tier cascade (validator message → `NGX_ERROR_MESSAGES` → default)
+    spartan-form-field-error.ts        default error renderer (role="alert" + role="status"); resolves messages via `createErrorMessageSignal`
+    spartan-form-field-hint.ts         hint renderer for projected field descriptions
 ```
 
 - A custom wrapper component (`spartan-form-field`) that **composes**
@@ -137,9 +139,10 @@ src/app/
 
 ## Customising the error renderer
 
-`NgxSpartanFormFieldError` is the default; consumers swap it via the
-toolkit's standard `provideFormFieldErrorRenderer` family — same pattern
-as the canonical wrapper, no Spartan-specific helper needed:
+`provideNgxSpartanForms()` (and `provideNgxSpartanFormsForComponent()`) in
+`src/app/wrapper/index.ts` register the default Spartan error and hint
+renderers (see `src/main.ts`). You can also override the error renderer directly
+via the toolkit's standard `provideFormFieldErrorRenderer` family:
 
 ```ts
 // Per app (environment scope)
@@ -184,7 +187,7 @@ and breaks both surfaces.
 The wrapper itself doesn't add a second `BrnFieldControl` — but that's
 not because `BrnFieldControl` is reactive-forms-only. **It isn't.**
 Angular signal forms' `FormField` directive provides an interop
-`NgControl` on every bound control, and Brain 1.0.4 detects it
+`NgControl` on every bound control, and `@spartan-ng/brain` (1.9.0) detects it
 (`createStateTracker()` picks its `SignalStateTracker` branch over the
 reactive-forms `ReactiveStateTracker`) and tracks it live — this is
 exactly why `data-touched` / `data-dirty` / `data-matches-spartan-invalid`
@@ -326,10 +329,10 @@ split, so they can rely on label-`for=` resolution (tier-2).
   provide a custom `ErrorStateMatcher`, or feed the wrapper's own
   strategy-aware `ariaInvalidValue` into the trigger instead — out of
   scope here since Brain's default already matches this demo's strategy.
-- Submission patterns (`submitWithWarnings`, async submission, server
-  errors). Out of scope per the PRD; the existing `apps/demo`
-  "Submission patterns" page covers those independently of the wrapper
-  choice.
+- Submission patterns (warning-tolerant submission with `hasOnlyWarnings()`,
+  async submission, server errors). Kept out of this minimal demo because
+  `apps/demo`'s "Submission patterns" and "Warning support" pages cover those
+  independently of the wrapper choice.
 - A floating-label appearance. Spartan's design language doesn't ship
   one; the wrapper sticks to the `hlm-form-field` vertical-stack default.
 - Theme switching UI. The `.dark` palette is wired in `styles.css`, but
@@ -383,9 +386,9 @@ ship; theme flipping uses the `.dark` variant.
 
 `@source '../../../packages/demo/spartan-ui'` is what makes Tailwind's JIT scan
 the vendored helm components for the utility classes embedded in their
-templates — Nx runs Vite with `cwd: apps/demo-spartan` (see
+templates. Nx runs Vite with `cwd: apps/demo-spartan` (see
 `project.json`'s `build`/`serve` options), so Tailwind's own auto-detection
-never reaches `libs/`. If this glob ever points at the wrong path (it's
+never reaches `packages/`. If this glob ever points at the wrong path (it is
 resolved relative to the stylesheet, not the repo root), helm components
 render structurally correct but completely unstyled — no build error, no
 failing test, just a silently unstyled `dist/` bundle. Verify after

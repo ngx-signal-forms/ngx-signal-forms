@@ -1,14 +1,14 @@
 ---
-title: 'Angular Public API Policy'
+title: 'Angular public API policy'
 ---
 
-This document defines the ownership boundary between Angular Signal Forms and `@ngx-signal-forms/toolkit`. The toolkit **enhances** Angular's form engine — it never replaces or reimplements it.
+This document defines the ownership boundary between Angular Signal Forms and `@ngx-signal-forms/toolkit`. The toolkit enhances Angular's form engine without replacing or reimplementing it.
 
-## Ownership Boundary
+## Ownership boundary
 
-### Angular Owns (Form Engine)
+### Angular owns (form engine)
 
-These APIs are part of Angular's `@angular/forms/signals` package. The toolkit consumes them but never reimplements them. Two entries (marked `*`) live in the separate `@angular/forms/signals/compat` subpath, not `@angular/forms/signals` itself:
+These APIs belong to `@angular/forms/signals` (entries marked `*` live in `@angular/forms/signals/compat`). The toolkit consumes them and never reimplements them:
 
 | API                        | Purpose                                             |
 | -------------------------- | --------------------------------------------------- |
@@ -21,68 +21,59 @@ These APIs are part of Angular's `@angular/forms/signals` package. The toolkit c
 | `errorSummary()`           | Aggregate all errors across nested field trees      |
 | `errors()`                 | Direct validation errors for a field                |
 | `formFieldBindings`        | Track bound FormField directives                    |
-| `provideSignalFormsConfig` | Configure status classes, submit behavior           |
+| `provideSignalFormsConfig` | Configure status classes and submit behavior        |
 | `NG_STATUS_CLASSES` *      | CSS class bindings for field states                 |
 | `FormValueControl<T>`      | Interface for custom value controls                 |
 | `FormCheckboxControl`      | Interface for checkbox-like controls                |
 | `FormUiControl`            | Interface for UI-only controls                      |
-| `compatForm()` *           | Bridge to existing reactive forms                   |
+| `compatForm()` *           | Bridge to existing Reactive Forms                   |
 | `FieldTree<T>`             | Reactive view of a data signal node                 |
 | `FieldState<T>`            | Runtime state interface (valid, touched, etc.)      |
 
 \* Imported from `@angular/forms/signals/compat`, not `@angular/forms/signals`.
 
-### Toolkit Owns (Enhancement Layer)
+### Toolkit owns (enhancement layer)
 
-These APIs are part of `@ngx-signal-forms/toolkit`. They build on top of Angular's form engine:
+These APIs belong to `@ngx-signal-forms/toolkit` and build on Angular's form engine:
 
-| Feature                   | Entry Point          | Purpose                                                                   |
-| ------------------------- | -------------------- | ------------------------------------------------------------------------- |
-| `ngxSignalForm` directive | `toolkit`            | Form-level context: error strategy, submitted status                      |
-| Auto-ARIA directive       | `toolkit`            | Automatic `aria-invalid`, `aria-describedby`                              |
-| Error display strategies  | `toolkit`            | `'on-touch'`, `'on-submit'`, `'immediate'`                                |
-| Error message registry    | `toolkit`            | App-wide registry via `provideErrorMessages()`                            |
-| `focusFirstInvalid()`     | `toolkit`            | Focus first invalid field via `errorSummary()`                            |
-| Submission helpers        | `toolkit`            | `createSubmittedStatusTracker()`                                          |
-| Headless error state      | `toolkit/headless`   | Strategy-aware error/warning signals                                      |
-| Headless error summary    | `toolkit/headless`   | Form-level error aggregation with focus                                   |
-| Headless fieldset         | `toolkit/headless`   | Grouped error aggregation                                                 |
-| Headless character count  | `toolkit/headless`   | Progressive character limits                                              |
-| Headless field name       | `toolkit/headless`   | ID generation for ARIA                                                    |
-| Styled error component    | `toolkit/assistive`  | WCAG-compliant error/warning display                                      |
-| Styled error summary      | `toolkit/assistive`  | Clickable form-level error list                                           |
-| Styled hints              | `toolkit/assistive`  | Helper text components                                                    |
-| Styled character count    | `toolkit/assistive`  | Visual character counter                                                  |
-| Form field wrapper        | `toolkit/form-field` | Complete field layout with label + feedback                               |
-| Form fieldset             | `toolkit/form-field` | Grouped field layout                                                      |
-| Warning convention        | `toolkit`            | Root warning helpers; implementation in `core/utilities/warning-error.ts` |
-| Vest integration          | `toolkit/vest`       | Vest v6+ validation suite adapter                                         |
+| Feature                       | Entry point          | Purpose                                                                                                                   |
+| ----------------------------- | -------------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| `ngxSignalForm` directive     | `toolkit`            | Form-level error/warning strategy and submitted status context                                                            |
+| Auto-ARIA and control kinds   | `toolkit`            | Automatic `aria-invalid`, `aria-required`, `aria-describedby`, and presets                                                |
+| Configuration and registries  | `toolkit`            | `provideNgxSignalFormsConfig()`, `provideErrorMessages()`, `provideFieldLabels()`                                         |
+| Focus and submission helpers  | `toolkit`            | `createOnInvalidHandler()`, `focusFirstInvalid()`, `createSubmittedStatusTracker()`, `hasSubmitted()`                     |
+| Warning convention            | `toolkit`            | `warningError()`, `splitByKind()`, `hasOnlyWarnings()`, `canSubmitWithWarnings()`, `submitWithWarnings()`                 |
+| Custom-wrapper primitives     | `toolkit`            | `createFieldPresentation()`, `NgxFieldIdentity`, `NgxFieldIdentityProvider`, renderer providers                           |
+| Standard Schema helper        | `toolkit`            | `requiredFromStandardSchema()`                                                                                            |
+| Form field wrapper & fieldset | `toolkit/form-field` | Styled field layout, fieldsets, and theming tokens                                                                        |
+| Assistive components          | `toolkit/assistive`  | `NgxFormFieldError`, `NgxFormFieldErrorSummary`, `NgxFormFieldHint`, `NgxFormFieldCharacterCount`, `NgxFormMarkingLegend` |
+| Headless directives & signals | `toolkit/headless`   | State-only directives, reactive primitives, and ARIA composition factories                                                |
+| Vest integration              | `toolkit/vest`       | Vest 6 validation suite adapter                                                                                           |
+| Accessibility test helpers    | `toolkit/testing`    | WCAG 2.2 AA axe-core helpers and `expectVisibleFocusIndicator()`                                                          |
 
-## Design Principles
+## Design principles
 
-### 1. Angular Public API Leads
+### 1. Angular public API leads
 
-The toolkit never provides an alternative API for something Angular already owns. For example:
+The toolkit never provides an alternative API for something Angular already owns:
 
-- **Submit handling**: Angular's `submit()` or `FormRoot` owns submission. The toolkit observes native submit attempts for status tracking; it does not replace Angular's action or validation gate.
-- **Field binding**: Angular's `[formField]` binds fields. The toolkit does not introduce a replacement binding.
-- **Validation**: Angular's `schema()` and validators define rules. The toolkit only adds the warning convention (`warn:` prefix) and message resolution on top.
+- **Submit handling.** Angular's `submit()` and `FormRoot` own submission. The toolkit observes submit attempts for status tracking and does not replace Angular's action or normal validation gate. The opt-in `submitWithWarnings()` helper is the one explicit exception: it checks for blocking errors itself and delegates to Angular `submit()` with `ignoreValidators: 'all'` so warning-only forms can submit.
+- **Field binding.** Angular's `[formField]` binds fields. The toolkit adds no replacement binding.
+- **Validation.** Angular's `schema()` and validators define rules. The toolkit adds only the `warn:` warning convention and message resolution on top.
 
-### 2. Enhance, Don't Replace
+### 2. Enhance, do not replace
 
-The toolkit's `ngxSignalForm` directive is additive — it requires Angular's `[formRoot]` to be present on the same `<form>`. Without `[formRoot]`, the toolkit directive has nothing to enhance.
+`ngxSignalForm` is additive and requires Angular's `[formRoot]` on the same `<form>`:
 
 ```html
-<!-- Angular owns the form, toolkit enhances it -->
 <form [formRoot]="myForm" ngxSignalForm errorStrategy="on-submit"></form>
 ```
 
-### 3. Standalone Components Work Without Toolkit Context
+### 3. Standalone components work without toolkit context
 
-Toolkit components (errors, hints, character counts) work without `ngxSignalForm`:
+Toolkit components (wrappers, errors, hints, character counts) work without `ngxSignalForm` and fall back to app config (default `'on-touch'`):
 
 ```html
-<!-- No ngxSignalForm - components fall back to defaults -->
 <form [formRoot]="myForm">
   <label for="email">Email</label>
   <input id="email" [formField]="myForm.email" />
@@ -90,34 +81,25 @@ Toolkit components (errors, hints, character counts) work without `ngxSignalForm
 </form>
 ```
 
-Form-level features like `'on-submit'` strategy and inherited submitted status require the `ngxSignalForm` enhancer.
+Form-level features such as `'on-submit'` timing and shared submitted status require `ngxSignalForm`.
 
-### 4. Duck-Typed Angular Integration
+### 4. Structural checks on public Angular contracts
 
-`focusBoundControl()` and `errorSummary()` are public Angular contracts.
-Some toolkit utilities use structural checks when accepting unknown state;
-that defensive implementation does not make these APIs internal. Check the
-installed public `FieldState` declaration when adding integrations.
+`focusBoundControl()` and `errorSummary()` are public Angular contracts. Some toolkit utilities use structural checks when accepting unknown state, which keeps them defensive against partial test doubles without relying on internal Angular APIs. Check the installed public `FieldState` declaration when adding integrations.
 
-## Angular Version Baseline
+## Angular version baseline
 
-Tracks the same Angular 22 baseline and stability contract as [Compatibility](./COMPATIBILITY.md#angular-signal-forms-status).
+Tracks the Angular 22 baseline and stability contract in [Compatibility](./COMPATIBILITY.md#angular-signal-forms-status).
 
 ## Internal `/core` secondary entry point
 
-`@ngx-signal-forms/toolkit/core` exists in the built `dist/` as an internal
-secondary entry point, not a supported consumer import. Toolkit sibling
-entries use its implementation at build time. The debugger is a separate,
-internal demo package, not a toolkit secondary entry point. Public tokens are
-explicitly re-exported from the toolkit root.
+`@ngx-signal-forms/toolkit/core` exists at build time so sibling entry points can share internal plumbing, and `packages/toolkit/scripts/strip-internal-exports.mjs` removes `./core` from the published `exports` map. Consumers cannot import `@ngx-signal-forms/toolkit/core`.
 
-The published `dist/packages/toolkit/package.json` `exports` map **omits `./core`** (a post-build script at `packages/toolkit/scripts/strip-internal-exports.mjs` strips it during the `toolkit:build` target and rewrites sibling bundles to use relative paths to the `/core` fesm file instead). Modern Node and TypeScript resolvers return `ERR_PACKAGE_PATH_NOT_EXPORTED` for `import from '@ngx-signal-forms/toolkit/core'`.
-
-The root `@ngx-signal-forms/toolkit` entry point enumerates its public re-exports explicitly in `packages/toolkit/index.ts` rather than using `export * from './core'`. That enumeration is the authoritative list of consumer-facing symbols — new `core/` exports that are meant to be public must be added to the list by hand; `@internal`-tagged symbols must stay out of it so they remain invisible in the published root `.d.ts`.
+`packages/toolkit/index.ts` enumerates every public root export explicitly rather than using `export * from './core'`. Add new public `core/` exports to that list by hand, and keep `@internal` symbols out of it. See [Package architecture](./PACKAGE_ARCHITECTURE.md) for the build and packaging details.
 
 ## Related
 
-- [Angular vs Toolkit](./ANGULAR_VS_TOOLKIT.md) — User-level overview of what the toolkit adds
-- [Package Architecture](./PACKAGE_ARCHITECTURE.md) — Entry point structure and dependency hierarchy
-- [Custom Controls](./CUSTOM_CONTROLS.md) — How custom controls interact with the toolkit
-- [Warnings Support](./WARNINGS_SUPPORT.md) — Warning convention plus error flow and message resolution (advanced section)
+- [Angular vs toolkit](./ANGULAR_VS_TOOLKIT.md): user-level overview of what the toolkit adds
+- [Package architecture](./PACKAGE_ARCHITECTURE.md): entry point structure and build pipeline
+- [Custom controls](./CUSTOM_CONTROLS.md): how custom controls interact with the toolkit
+- [Warnings support](./WARNINGS_SUPPORT.md): warning convention, error timing, and message resolution

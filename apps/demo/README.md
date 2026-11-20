@@ -1,223 +1,104 @@
-# @ngx-signal-forms/toolkit - Interactive Demo
+# `@ngx-signal-forms/toolkit` interactive demo
 
-> Consolidated examples demonstrating clean Angular Signal Forms + toolkit adoption patterns
+Runnable examples showing Angular Signal Forms with `@ngx-signal-forms/toolkit`, from a first form to custom wrappers, validation layering, and multi-step wizards.
 
-## 🎯 Demo Structure
+## Demo sections
 
-The live demo now follows a **consolidated learning path** focused on the examples we want developers to copy first:
+### 1. Getting started (`01-getting-started/`)
 
-```text
-📂 Live Demo Sections
-├─ Getting Started       ← Toolkit onboarding and first setup
-├─ Toolkit Core          ← Error strategies + warning behavior
-├─ Headless              ← Renderless grouping and utility patterns
-├─ Form Field Wrapper    ← Nested forms and custom control integration
-├─ Validation            ← Standard Schema baselines and layered policy rules
-└─ Advanced Scenarios    ← Configuration, submission, async, and orchestration
-```
+| Example                                                                   | Route                              | Covers                                                                                |
+| ------------------------------------------------------------------------- | ---------------------------------- | ------------------------------------------------------------------------------------- |
+| [your-first-form](./src/app/01-getting-started/your-first-form/README.md) | `/getting-started/your-first-form` | Smallest setup with `[formRoot]`, `ngxSignalForm`, auto-ARIA, and `NgxFormFieldError` |
 
-Archived exploratory examples still exist in the source tree for historical/reference purposes, but they are no longer part of the live route graph.
+### 2. Toolkit core (`02-toolkit-core/`)
 
-## 📚 Current Learning Path
+| Example                                                                        | Route                               | Covers                                                      |
+| ------------------------------------------------------------------------------ | ----------------------------------- | ----------------------------------------------------------- |
+| [error-display-modes](./src/app/02-toolkit-core/error-display-modes/README.md) | `/toolkit-core/error-display-modes` | `immediate`, `on-touch`, and `on-submit` timing strategies  |
+| [warning-support](./src/app/02-toolkit-core/warning-support/README.md)         | `/toolkit-core/warning-support`     | Non-blocking `warn:*` rules and warning-tolerant submission |
 
-### Level 1: Getting Started
+### 3. Headless (`03-headless/`)
 
-**Path:** `01-getting-started/`
+| Example                                                                      | Route                            | Covers                                                                      |
+| ---------------------------------------------------------------------------- | -------------------------------- | --------------------------------------------------------------------------- |
+| [fieldset-utilities](./src/app/03-headless/fieldset-utilities/README.md)     | `/headless/fieldset-utilities`   | Headless error summary, fieldset aggregation, and character-count utilities |
+| [error-message-signal](./src/app/03-headless/error-message-signal/README.md) | `/headless/error-message-signal` | `createErrorMessageSignal()` across all `includeWarnings` modes             |
 
-Start here for the recommended first toolkit example.
+### 4. Form field wrapper (`04-form-field-wrapper/`)
 
-- ✅ `[formRoot]` + `ngxSignalForm` in the smallest useful setup
-- ✅ Auto-ARIA and reusable error rendering
-- ✅ Deterministic control `id` guidance for field linking
-- ✅ Strategy toggle so you can compare timing behavior immediately
+| Example                                                                              | Route                                                                                         | Covers                                                                     |
+| ------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------- |
+| [complex-forms](./src/app/04-form-field-wrapper/complex-forms/README.md)             | `/form-field-wrapper/complex-forms`, `/form-field-wrapper/complex-forms/fieldset`             | Nested objects, dynamic arrays, grouped fieldsets, and mixed controls      |
+| [fieldset-appearance](./src/app/04-form-field-wrapper/fieldset-appearance/README.md) | `/form-field-wrapper/fieldset-appearance`, `/form-field-wrapper/fieldset-appearance/feedback` | Fieldset appearances, surface tones, feedback styles, and error placement  |
+| [custom-controls](./src/app/04-form-field-wrapper/custom-controls/README.md)         | `/form-field-wrapper/custom-controls`                                                         | `FormValueControl` controls, field-shaped comboboxes, sliders, and presets |
+| [labelless-fields](./src/app/04-form-field-wrapper/labelless-fields/README.md)       | `/form-field-wrapper/labelless-fields`                                                        | Wrappers without projected labels and `aria-label` guidance                |
+| [field-identity](./src/app/04-form-field-wrapper/field-identity/README.md)           | `/form-field-wrapper/field-identity`                                                          | Custom wrapper composing `NgxFieldIdentityProvider` inside collapsible UI  |
+| [field-marking](./src/app/04-form-field-wrapper/field-marking/README.md)             | `/form-field-wrapper/field-marking`                                                           | `showMarkerWhen`, custom markers, and `NgxFormMarkingLegend`               |
+| [brand-theming](./src/app/04-form-field-wrapper/brand-theming/README.md)             | `/form-field-wrapper/brand-theming`                                                           | Public CSS custom properties, light and dark themes, and contrast checks   |
 
-**Example:** [`your-first-form`](./src/app/01-getting-started/your-first-form/README.md) — contact form onboarding
+### 5. Validation (`/validation/*`, source in `05-advanced/`)
 
-### Level 2: Toolkit Core
+| Example                                                                    | Route                             | Covers                                                                 |
+| -------------------------------------------------------------------------- | --------------------------------- | ---------------------------------------------------------------------- |
+| [zod-validation](./src/app/05-advanced/zod-validation/README.md)           | `/validation/zod-validation`      | Standard Schema validation with Zod and `requiredFromStandardSchema()` |
+| [vest-validation](./src/app/05-advanced/vest-validation/README.md)         | `/validation/vest-validation`     | Vest 6 suites with blocking rules and warnings                         |
+| [zod-vest-validation](./src/app/05-advanced/zod-vest-validation/README.md) | `/validation/zod-vest-validation` | Layering Zod contract rules with Vest business policy                  |
 
-**Path:** `02-toolkit-core/`
+### 6. Advanced scenarios (`05-advanced/`)
 
-Focus on the two core behaviors most teams need first.
+| Example                                                                          | Route                                        | Covers                                                                                                 |
+| -------------------------------------------------------------------------------- | -------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
+| [global-configuration](./src/app/05-advanced/global-configuration/README.md)     | `/advanced-scenarios/global-configuration`   | `provideNgxSignalFormsConfig()`, `provideErrorMessages()`, `provideFieldLabels()`, and local overrides |
+| [submission-patterns](./src/app/05-advanced/submission-patterns/README.md)       | `/advanced-scenarios/submission-patterns`    | Declarative `submission`, `createOnInvalidHandler()`, and error summaries                              |
+| [advanced-wizard](./src/app/05-advanced/advanced-wizard/README.md)               | `/advanced-scenarios/advanced-wizard`        | Multi-step wizard with NgRx SignalStore, Zod, and lazy steps                                           |
+| [single-model-wizard](./src/app/05-advanced/single-model-wizard/README.md)       | `/advanced-scenarios/single-model-wizard`    | Multi-step wizard backed by one shared `form()` model                                                  |
+| [routed-steps](./src/app/05-advanced/routed-steps/README.md)                     | `/advanced-scenarios/routed-steps`           | Routed multi-step form with router error boundaries (`withErrorBoundaries()`)                          |
+| [async-validation](./src/app/05-advanced/async-validation/README.md)             | `/advanced-scenarios/async-validation`       | `validateHttp()` with debounce, cancellation, and `pending()` indicators                               |
+| [field-state-patterns](./src/app/05-advanced/field-state-patterns/README.md)     | `/advanced-scenarios/field-state-patterns`   | Conditional `hidden()`, `disabled()`, and `readonly()` rules                                           |
+| [cross-field-validation](./src/app/05-advanced/cross-field-validation/README.md) | `/advanced-scenarios/cross-field-validation` | Sibling-aware rules with `ctx.valueOf()` and group errors                                              |
+| [store-binding](./src/app/05-advanced/store-binding/README.md)                   | `/advanced-scenarios/store-binding`          | Two-way sync between a Signal Form and an NgRx SignalStore via `linkedSignal`                          |
+| [server-integration](./src/app/05-advanced/server-integration/README.md)         | `/advanced-scenarios/server-integration`     | `resource()` prefill, submit, server `TreeValidationResult`, and `reset()`                             |
+| [autosave](./src/app/05-advanced/autosave/README.md)                             | `/advanced-scenarios/autosave`               | Debounced field-level PATCH saves with `debounce()` and live status                                    |
+| [i18n](./src/app/05-advanced/i18n/README.md)                                     | `/advanced-scenarios/i18n`                   | Runtime language switching with `provideErrorMessages()` and `provideFieldLabels()`                    |
 
-| Example                                                                            | Focus                   | What You Learn                                  |
-| ---------------------------------------------------------------------------------- | ----------------------- | ----------------------------------------------- |
-| **[error-display-modes](./src/app/02-toolkit-core/error-display-modes/README.md)** | Error strategies        | `immediate`, `on-touch`, `on-submit`            |
-| **[warning-support](./src/app/02-toolkit-core/warning-support/README.md)**         | Non-blocking validation | Warnings vs errors and accessible announcements |
-
-### Level 3: Headless
-
-**Path:** `03-headless/`
-
-Renderless primitives for custom UI systems.
-
-- ✅ Headless error summary
-- ✅ Grouped fieldset state
-- ✅ Character count + utility helpers (`NgxHeadlessCharacterCount` + `NgxFormFieldCharacterCount`)
-- ✅ Explicit field naming and custom markup ownership
-- ✅ `errorMessage` signal for one-liner reactive error binding
-
-| Example                                                                          | Focus                     | What You Learn                                                 |
-| -------------------------------------------------------------------------------- | ------------------------- | -------------------------------------------------------------- |
-| **[fieldset-utilities](./src/app/03-headless/fieldset-utilities/README.md)**     | Headless grouping + chars | Error summary, fieldset aggregation, character-count helpers   |
-| **[error-message-signal](./src/app/03-headless/error-message-signal/README.md)** | Reactive error signal     | `errorMessage` signal for template-only reactive error display |
-
-### Level 4: Form Field Wrapper
-
-**Path:** `04-form-field-wrapper/`
-
-The batteries-included path for reusable field UI.
-
-| Example                                                                                  | Focus                     | What You Learn                                                                                   |
-| ---------------------------------------------------------------------------------------- | ------------------------- | ------------------------------------------------------------------------------------------------ |
-| **[complex-forms](./src/app/04-form-field-wrapper/complex-forms/README.md)**             | Nested objects + arrays   | Wrapper composition, grouped sections, long-form UX                                              |
-| **[fieldset-appearance](./src/app/04-form-field-wrapper/fieldset-appearance/README.md)** | Grouped feedback styling  | Fieldset appearance, tones, aggregation, placement                                               |
-| **[custom-controls](./src/app/04-form-field-wrapper/custom-controls/README.md)**         | FormValueControl patterns | Field-shaped combobox/select inherit the wrapper shell; sliders stay `plain`; `NgxFieldIdentity` |
-| **[labelless-fields](./src/app/04-form-field-wrapper/labelless-fields/README.md)**       | Label-free layouts        | Wrappers without projected labels; aria-label guidance                                           |
-| **[field-identity](./src/app/04-form-field-wrapper/field-identity/README.md)**           | Custom wrapper identity   | A wrapper declaring its own field name, and `aria-invalid` when a control loses its layout box   |
-| **[field-marking](./src/app/04-form-field-wrapper/field-marking/README.md)**             | Required/optional marking | `showMarkerWhen`, marker text, `NgxFormMarkingLegend`                                            |
-
-### Level 5: Validation
-
-**Routes:** `/validation/*`
-
-Focused validation strategy demos before you move into larger orchestration patterns.
-
-| Example                                                                        | Focus                | What You Learn                                              |
-| ------------------------------------------------------------------------------ | -------------------- | ----------------------------------------------------------- |
-| **[zod-validation](./src/app/05-advanced/zod-validation/README.md)**           | Standard Schema only | Pure Zod structural validation via `validateStandardSchema` |
-| **[vest-validation](./src/app/05-advanced/vest-validation/README.md)**         | Vest business policy | Blocking rules + warnings from one Vest suite               |
-| **[zod-vest-validation](./src/app/05-advanced/zod-vest-validation/README.md)** | Layered validation   | Contract validation + business policy together              |
-
-### Level 6: Advanced Scenarios
-
-**Routes:** `/advanced-scenarios/*`
-
-Production-ready patterns for real applications.
-
-| Example                                                                              | Focus                    | What You Learn                                         |
-| ------------------------------------------------------------------------------------ | ------------------------ | ------------------------------------------------------ |
-| **[global-configuration](./src/app/05-advanced/global-configuration/README.md)**     | App-level defaults       | `provideNgxSignalFormsConfig`, local overrides         |
-| **[submission-patterns](./src/app/05-advanced/submission-patterns/README.md)**       | Async submission UX      | Loading, server errors, error summary patterns         |
-| **[advanced-wizard](./src/app/05-advanced/advanced-wizard/README.md)**               | Multi-step orchestration | Wizard flow with NgRx Signal Store + Zod               |
-| **[async-validation](./src/app/05-advanced/async-validation/README.md)**             | Remote checks            | Pending states and async validation                    |
-| **[field-state-patterns](./src/app/05-advanced/field-state-patterns/README.md)**     | Dynamic field state      | `hidden`, `disabled`, and `readonly` workflow patterns |
-| **[cross-field-validation](./src/app/05-advanced/cross-field-validation/README.md)** | Dependent rules          | Sibling-aware validation logic                         |
-
-## Feature-to-Example Matrix
-
-- **Toolkit onboarding** → [`your-first-form`](./src/app/01-getting-started/your-first-form/README.md) — smallest recommended setup
-- **Error strategy modes** → [`error-display-modes`](./src/app/02-toolkit-core/error-display-modes/README.md) — compare timing behavior directly
-- **Warning support** → [`warning-support`](./src/app/02-toolkit-core/warning-support/README.md) — non-blocking validation semantics
-- **Headless grouped state + character count** → [`fieldset-utilities`](./src/app/03-headless/fieldset-utilities/README.md) — summary, fieldset aggregation, `NgxHeadlessCharacterCount`, assistive `NgxFormFieldCharacterCount`
-- **Reactive error signal** → [`error-message-signal`](./src/app/03-headless/error-message-signal/README.md) — `errorMessage` signal for template-only reactive error binding
-- **Wrapper long-form composition** → [`complex-forms`](./src/app/04-form-field-wrapper/complex-forms/README.md) — consolidated wrapper basics, grouped sections, nested arrays
-- **Fieldset presentation APIs** → [`fieldset-appearance`](./src/app/04-form-field-wrapper/fieldset-appearance/README.md) — grouped summary appearance, surfaced tones, and nested aggregation
-- **Custom control integration + NgxFieldIdentity** → [`custom-controls`](./src/app/04-form-field-wrapper/custom-controls/README.md) — field-shaped combobox/select inherit the wrapper shell; sliders stay `plain`; `NgxFieldIdentity` on the rating control
-- **Label-free field layouts** → [`labelless-fields`](./src/app/04-form-field-wrapper/labelless-fields/README.md) — wrappers without projected labels; aria-label guidance
-- **A field name that is not the control's `id`** → [`field-identity`](./src/app/04-form-field-wrapper/field-identity/README.md) — a custom wrapper composing `NgxFieldIdentityProvider`, inside collapsible UI
-- **Required / optional field marking** → [`field-marking`](./src/app/04-form-field-wrapper/field-marking/README.md) — `showMarkerWhen`, marker text, `NgxFormMarkingLegend`
-- **Standard Schema baseline** → [`zod-validation`](./src/app/05-advanced/zod-validation/README.md) — minimal contract validation with Zod
-- **Business validation with Vest** → [`vest-validation`](./src/app/05-advanced/vest-validation/README.md) — blocking + warning policy rules
-- **Contract + policy layering** → [`zod-vest-validation`](./src/app/05-advanced/zod-vest-validation/README.md) — Zod + Vest without duplicate UI plumbing
-- **Global toolkit defaults + provideErrorMessages / provideFieldLabels** → [`global-configuration`](./src/app/05-advanced/global-configuration/README.md) — app-level provider composition; custom error labels and field-label overrides via `provideErrorMessages`/`provideFieldLabels`; error summary with custom labels
-- **Async submit + server error UX** → [`submission-patterns`](./src/app/05-advanced/submission-patterns/README.md) — submission lifecycle; server errors returned as native `TreeValidationResult`
-- **Async remote validation** → [`async-validation`](./src/app/05-advanced/async-validation/README.md) — pending states; availability-check failures surfaced as non-blocking warnings
-- **Dynamic field state** → [`field-state-patterns`](./src/app/05-advanced/field-state-patterns/README.md) — `hidden()`, `disabled()`, and `readonly()` with Angular 22's `when()` syntax
-- **Cross-field constraints** → [`cross-field-validation`](./src/app/05-advanced/cross-field-validation/README.md) — dependent field rules
-- **Advanced multi-step orchestration** → [`advanced-wizard`](./src/app/05-advanced/advanced-wizard/README.md) — canonical wizard example
-
-## Quick Start
-
-### Run the Demo
+## Run the demo
 
 ```bash
-# Development server
+# Development server (http://localhost:4600)
 pnpm nx serve demo
 
 # Production build
 pnpm nx build demo
 
-# End-to-end demo validation
-pnpm nx e2e demo-e2e
+# Unit tests
+pnpm nx test demo
+
+# End-to-end tests
+pnpm nx run demo-e2e:e2e-toolkit
+pnpm nx run demo-e2e:e2e-demo-app
 ```
 
-> The plain `e2e` target has no port-preflight step and can hang locally on
-> port 4600 conflicts. For local runs prefer
-> `pnpm nx run demo-e2e:e2e-toolkit` or `pnpm nx run demo-e2e:e2e-demo-app`,
-> which clear the port before starting Playwright.
-
-### Navigate Examples
-
-1. Start at **Getting Started** for the toolkit-first baseline
-2. Use **Toolkit Core** to compare error timing and warning behavior
-3. Explore **Headless** for custom markup patterns
-4. Use **Form Field Wrapper** for production-ready field composition
-5. Visit **Validation** to compare Zod, Vest, and layered strategies directly
-6. Finish with **Advanced Scenarios** for submission, configuration, async state, and orchestration
+Use `demo-e2e:e2e-toolkit` for the toolkit forms suite or `demo-e2e:e2e-demo-app` for the demo UI suite. These targets do not clear port 4600; the Playwright config reuses an existing server on that port when one responds.
 
 ## Copy a working example
 
-Use the [tested root starter](../../README.md#quick-start) for a complete
-component with labels, imports, validation, and a submission action. For
-assistive-only rendering, read the
-[first form source](./src/app/01-getting-started/your-first-form/README.md).
+Use the [tested root starter](../../README.md#quick-start) for a complete component with labels, imports, validation, and a submission action. For assistive-only rendering without the wrapper, start from [your-first-form](./src/app/01-getting-started/your-first-form/README.md).
 
-Angular owns form state and submission. Toolkit directives and components
-add feedback, ARIA associations, and layout. They do not guarantee WCAG
-conformance: test the finished page with a keyboard and screen reader, and
-check contrast for each theme.
+Angular owns form state and submission. Toolkit directives and components add feedback, ARIA wiring, and layout. Always test your finished pages with a keyboard, screen reader, and contrast checks.
 
-## 🔧 Technology Stack
+## Technology stack
 
-- **Angular**: 22.0.x (Signal Forms stable API)
-- **TypeScript**: ~6.0.3 (strict mode)
-- **Toolkit**: @ngx-signal-forms/toolkit
-- **Styling**: Tailwind CSS 4.x
-- **Testing**: Vitest (unit), Playwright (E2E)
+- **Angular:** 22.3 (stable Signal Forms)
+- **TypeScript:** ~6.0 (strict mode)
+- **Toolkit:** `@ngx-signal-forms/toolkit`
+- **Styling:** Tailwind CSS 4
+- **Testing:** Vitest (unit), Playwright (E2E)
 
 ## Troubleshooting
 
-**Issue:** Type errors with Signal Forms
+- **Signal Forms type errors:** confirm Angular 22+ is installed, import from `@angular/forms/signals`, and run `pnpm nx build toolkit` if workspace types are stale.
+- **Toolkit directives have no effect:** import `NgxSignalFormToolkit` from `@ngx-signal-forms/toolkit` (and `NgxFormField` when using wrappers) in the component's `imports` array.
+- **ARIA attributes missing:** make sure each bound control has a stable `id` (or the wrapper has `fieldName`) and `NgxSignalFormAutoAria` is imported in the template that renders `[formField]`.
+- **"This page could not be shown":** the app shell wraps the routed page and right-rail controls in Angular `@boundary` blocks (developer preview in Angular 22.2). Open the browser console for the `DemoErrorHandler.onViewError` log. Errors thrown inside `effect()` bypass `@boundary` and go to the global `ErrorHandler`.
 
-- Ensure Angular 22+ is installed — Signal Forms reached stable in Angular 22
-- Verify the `@angular/forms/signals` import path (not `@angular/forms`)
-- Run `pnpm nx build toolkit` if the toolkit types are not resolving
-
-### Runtime Errors
-
-**Issue:** Form not working
-
-- Verify `[formField]` directive is used (not `formControlName`)
-- Check that `FormField` is imported from `@angular/forms/signals`
-- Ensure signal-based model: `signal<Model>({...})`
-
-**Issue:** Toolkit directives not working
-
-- Import `NgxSignalFormToolkit` bundle (recommended)
-- Or import individual directives from `@ngx-signal-forms/toolkit`
-- Verify toolkit is built: `pnpm nx build toolkit`
-
-**Issue:** A page shows "This page could not be shown"
-
-The page threw an error while it rendered. The app shell catches render errors
-with Angular's `@boundary` block (developer preview in Angular 22.2):
-
-- One boundary wraps the routed page. It shows a fallback with a **Try again**
-  button, and it resets on the next navigation, so other pages still work.
-- One boundary wraps the page's display controls in the right rail. Broken
-  controls show a small fallback in the rail. The page itself still renders.
-- `DemoErrorHandler.onViewError` logs each caught error with `console.error`.
-  Open the browser console to see the error and the component that threw it.
-
-A boundary does not catch errors thrown inside `effect()`. Those go to the
-global `ErrorHandler.handleError`, and the page does not show a fallback.
-
-### Accessibility Issues
-
-**Issue:** ARIA attributes not appearing
-
-- Auto-ARIA requires `NgxSignalFormAutoAria` (included in bundle)
-- Check `id` attribute is set on input elements
-- Verify toolkit directives are imported
-
-**Next:** Start with [`01-getting-started/your-first-form`](./src/app/01-getting-started/your-first-form/README.md) and then move through the consolidated sections! 🚀
+Start with [01-getting-started/your-first-form](./src/app/01-getting-started/your-first-form/README.md).

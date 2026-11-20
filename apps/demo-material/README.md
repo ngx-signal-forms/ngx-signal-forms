@@ -47,6 +47,7 @@ src/app/
     slot-directives.ts                *ngxMatErrorSlot / *ngxMatHintSlot
     feedback-directive.ts             *ngxMatFeedback for non-form-field controls
     material-error-renderer.ts        renderer with { message, severity } contract
+    material-hint-renderer.ts         renderer for projected <ngx-form-field-hint> (not <mat-hint *ngxMatHintSlot>)
     warning-aware-error-state-matcher.ts  ErrorStateMatcher that ignores warn:* kinds
     index.ts                          provideNgxMatForms + bundle exports
 ```

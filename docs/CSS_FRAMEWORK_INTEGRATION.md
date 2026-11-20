@@ -1,77 +1,43 @@
 ---
-title: 'CSS Framework Integration'
+title: 'CSS framework integration'
 sidebarTitle: 'CSS frameworks'
 ---
 
-> How to integrate `@ngx-signal-forms/toolkit` with Bootstrap, Tailwind CSS, and Angular Material
+Integrate `@ngx-signal-forms/toolkit` with Bootstrap, Tailwind CSS, or Angular Material while keeping invalid styling in sync with toolkit error timing.
 
-Angular propagates supported validator metadata to native constraints. Native
-validity still cannot represent all schema errors, server errors, or warnings.
-For toolkit timing, style the rendered ARIA state or use the same visibility
-predicate as the feedback.
+Use this guide when your app styles controls with an external CSS framework instead of relying on the default wrapper theme. If you are building a reusable wrapper for a full component library, also read [custom wrappers](./CUSTOM_WRAPPERS.md).
 
-**The toolkit's approach:** Uses ARIA attributes (`aria-invalid`, `aria-describedby`) for accessibility and styling via attribute selectors. If your CSS framework requires validation classes, use Angular's native `provideSignalFormsConfig`.
+## Why native `:invalid` and status classes drift
 
----
+Angular Signal Forms does not add status classes like `ng-invalid` by default unless you configure them with `provideSignalFormsConfig`. Even when enabled, `invalid()` flips immediately when a rule fails, while `on-touch` or `on-submit` timing hides the message until the user blurs or submits. Styling `invalid()` or native `:invalid` directly turns the field red before the user sees any message. Native validity also misses custom schema rules, server errors, and warnings.
 
-## The Problem
+## Recommended approach: style `aria-invalid`
 
-By default, Angular Signal Forms does **not** apply status classes like `ng-invalid` and `ng-valid` unless you configure them via `provideSignalFormsConfig` (or the `NG_STATUS_CLASSES` preset).
-See [Angular Forms Signals Migration Guide](https://angular.dev/guide/forms/signals/migration#automatic-status-classes) for details.
-When enabled, `invalid()` reflects validation errors immediately, so those classes apply as soon as validation fails:
-
-```console
-Default behavior (poor UX):
-┌─────────────────────────────┐
-│ Email [red border]          │  ← Field turns red immediately
-└─────────────────────────────┘
-                                 ← No error message yet (shows on blur)
-
-User thinks: "Why is this red? What did I do wrong?"
-```
-
-**Solution:** Either use ARIA attribute selectors (toolkit's approach) or configure classes to apply on-touch/on-submit.
-
----
-
-## Toolkit's ARIA-Based Approach (Recommended)
-
-The toolkit adds `aria-invalid="true"` for visible blocking errors under the
-resolved display strategy. Use CSS attribute selectors:
+`NgxSignalFormAutoAria` writes `aria-invalid="true"` on each control only while blocking errors are visible under the resolved display strategy. Style that attribute directly so visual borders and error messages stay in sync:
 
 ```css
-/* Style invalid fields using ARIA (works with any CSS framework) */
-input[aria-invalid='true'] {
+input[aria-invalid='true'],
+textarea[aria-invalid='true'],
+select[aria-invalid='true'] {
   border-color: #dc3545;
 }
 ```
 
-This aligns with the toolkit's `'on-touch'` error display strategy by default.
-
----
-
 ## Bootstrap 5.3
 
-Bootstrap uses `.is-invalid` and `.is-valid` classes for form validation styling.
+### Style controls with `aria-invalid`
 
-### Option A: ARIA Attribute Selectors (Recommended)
-
-Override Bootstrap's default styles to use ARIA attributes:
+Add one rule so Bootstrap's `.form-control` follows toolkit timing instead of `.is-invalid`:
 
 ```css
-/* Override Bootstrap to use ARIA-based validation */
 .form-control[aria-invalid='true'] {
   border-color: var(--bs-form-invalid-border-color);
 }
 ```
 
-### Using the Toolkit's Error Component
+### Use `NgxFormFieldError` in Bootstrap markup
 
-The Bootstrap and Tailwind templates below are rendering excerpts. Start with
-the [tested root component](../README.md#quick-start), name its form `userForm`,
-and replace its wrapper with the shown markup. Keep the model, validators, and
-submission action. Add `NgxFormFieldError` to that component's imports alongside
-Angular `FormField` and the root `NgxSignalFormToolkit` bundle:
+Start with the [quick start component](../README.md#quick-start), name its form `userForm`, and import `NgxFormFieldError` from `@ngx-signal-forms/toolkit/assistive` alongside `FormField` and `NgxSignalFormToolkit`:
 
 ```typescript
 import { NgxFormFieldError } from '@ngx-signal-forms/toolkit/assistive';
@@ -87,37 +53,12 @@ import { NgxFormFieldError } from '@ngx-signal-forms/toolkit/assistive';
       class="form-control"
       [formField]="userForm.email"
     />
-    <!-- Toolkit handles ARIA, visibility, and strategy -->
     <ngx-form-field-error [formField]="userForm.email" fieldName="email" />
   </div>
 </form>
 ```
 
-Use Bootstrap tokens via CSS custom properties (no component overrides):
-
-```scss
-/* Bootstrap theme mapping for toolkit form-field */
-ngx-form-field-wrapper {
-  --ngx-form-field-color-primary: var(--bs-primary, #0d6efd);
-  --ngx-form-field-color-border: var(--bs-border-color, #dee2e6);
-  --ngx-form-field-color-text: var(--bs-body-color, #212529);
-  --ngx-form-field-color-text-secondary: var(--bs-secondary-color, #6c757d);
-  --ngx-form-field-color-surface: var(--bs-body-bg, #ffffff);
-  --ngx-form-field-color-disabled: var(--bs-secondary-bg, #e9ecef);
-  --ngx-form-field-color-error: var(--bs-form-invalid-color, #dc3545);
-  --ngx-form-field-color-warning: var(--bs-warning, #ffc107);
-
-  /* Optional alignment tweaks to match Bootstrap spacing */
-  --ngx-form-field-input-padding: 0.375rem 0.75rem;
-  --ngx-form-field-radius: var(--bs-border-radius, 0.375rem);
-  --ngx-signal-form-error-font-size: 0.875rem;
-  --ngx-signal-form-error-margin-top: 0.25rem;
-}
-```
-
-### Floating Labels
-
-Bootstrap's floating labels work with the toolkit:
+Bootstrap floating labels follow the same pattern:
 
 ```html
 <div class="form-floating mb-3">
@@ -133,17 +74,33 @@ Bootstrap's floating labels work with the toolkit:
 </div>
 ```
 
----
+### Map Bootstrap tokens to `ngx-form-field-wrapper`
+
+If you use `ngx-form-field-wrapper`, map Bootstrap's CSS custom properties onto the wrapper's public tokens:
+
+```css
+ngx-form-field-wrapper {
+  --ngx-form-field-color-primary: var(--bs-primary, #0d6efd);
+  /* Use a border color with >= 3:1 contrast against the field surface and page (Bootstrap's --bs-border-color is ~1.3:1 on white) */
+  --ngx-form-field-color-border: var(--bs-secondary-color, #6c757d);
+  --ngx-form-field-color-text: var(--bs-body-color, #212529);
+  --ngx-form-field-color-text-secondary: var(--bs-secondary-color, #6c757d);
+  --ngx-form-field-color-surface: var(--bs-body-bg, #ffffff);
+  --ngx-form-field-color-disabled: var(--bs-secondary-bg, #e9ecef);
+  --ngx-form-field-color-error: var(--bs-form-invalid-color, #dc3545);
+  /* Use a warning color with >= 3:1 contrast for focus outlines (Bootstrap's --bs-warning is ~1.63:1 on white) */
+  --ngx-form-field-color-warning: var(--bs-warning-text-emphasis, #664d03);
+
+  --ngx-form-field-input-padding: 0.375rem 0.75rem;
+  --ngx-form-field-radius: var(--bs-border-radius, 0.375rem);
+  --ngx-signal-form-error-font-size: 0.875rem;
+  --ngx-signal-form-error-margin-top: 0.25rem;
+}
+```
 
 ## Tailwind CSS 4
 
-Tailwind uses utility classes and supports the `invalid:` and `user-invalid:` variants.
-
-### Toolkit-consistent Tailwind styling
-
-Tailwind's `aria-invalid:` variant follows the toolkit-written attribute.
-Native `user-invalid:` uses browser constraint validation and its own
-interaction policy; it is not equivalent to toolkit `on-touch`.
+Use Tailwind's `aria-invalid:` variant on inputs so borders follow toolkit timing. Style `ngx-form-field-error` colors and font size through its CSS custom properties rather than utility classes on the host, because the component sets color and font size on its inner elements:
 
 ```html
 <form [formRoot]="userForm" ngxSignalForm class="space-y-4">
@@ -160,7 +117,7 @@ interaction policy; it is not equivalent to toolkit `on-touch`.
     <ngx-form-field-error
       [formField]="userForm.email"
       fieldName="email"
-      class="mt-1 text-sm text-red-600"
+      class="mt-1 [--ngx-signal-form-error-color:var(--color-red-600)] [--ngx-signal-form-error-font-size:0.875rem]"
     />
   </div>
 
@@ -173,74 +130,36 @@ interaction policy; it is not equivalent to toolkit `on-touch`.
 </form>
 ```
 
-**Key variants:**
+Variant comparison:
 
-- `invalid:` — Styles when field is invalid (immediate)
-- `user-invalid:` uses native validity after browser-defined interaction, not toolkit timing
-- `focus:invalid:` — Styles when focused and invalid
-
----
+- `aria-invalid:` follows the toolkit's resolved error timing and includes schema and server errors (recommended).
+- `invalid:` applies immediately on native constraint failure, ignoring toolkit timing.
+- `user-invalid:` follows browser-defined interaction rules, not toolkit `on-touch` timing.
 
 ## Angular Material
 
-Angular Material uses `mat-form-field` with its own error handling via `ErrorStateMatcher`.
+Angular Material uses `mat-form-field` and `ErrorStateMatcher`. For Signal Forms controls, Material calls `ErrorStateMatcher.isSignalErrorState(field)` rather than the Reactive Forms `isErrorState` hook.
 
-### Signal Forms error matching
+Keep Material's error-state predicate and rendered message visibility aligned, and let Material remain the owner of `aria-describedby` by marking controls with `ngxSignalFormControlAria="manual"`. See the [Material reference wrapper](../apps/demo-material/README.md) (including `ngxMatErrorSlot` and `ngxMatHintSlot`) and [custom wrappers](./CUSTOM_WRAPPERS.md).
 
-For Signal Forms fields, Angular Material calls the public
-`ErrorStateMatcher.isSignalErrorState(field)` hook. Do not assume only the Reactive Forms `isErrorState` hook runs.
+## ARIA ownership and switches
 
-Align both Material's error-state predicate and the rendered message visibility.
-Status classes alone do not establish that contract. Use the maintained
-[Material wrapper](../apps/demo-material/README.md), which also keeps Material
-as the owner of `aria-describedby`. Its slot directives create embedded views;
-computing a message in a directive alone does not render it.
+`NgxSignalFormAutoAria` writes `aria-invalid` and `aria-describedby` on controls regardless of which CSS framework styles them. If a component library writes its own ARIA, add `ngxSignalFormControlAria="manual"` to the control so only one party owns those attributes.
 
-For a complete, tested reference implementation of this pattern — including
-warnings and grouped `mat-hint` output — see `apps/demo-material`'s
-`ngxMatErrorSlot` / `ngxMatHintSlot` directives
-(`apps/demo-material/src/app/wrapper/slot-directives.ts`).
+For switches, prefer a native `<input type="checkbox" role="switch">` styled with your framework, or leave library switches such as `mat-slide-toggle` in charge of their own ARIA. See [custom controls](./CUSTOM_CONTROLS.md).
 
----
+## Quick reference
 
-## ARIA Accessibility
+| Framework        | Recommended invalid hook   | Notes                                                        |
+| ---------------- | -------------------------- | ------------------------------------------------------------ |
+| Bootstrap 5.3    | `[aria-invalid='true']`    | Pair with `.form-control` or map `--bs-*` to wrapper CSS     |
+| Tailwind CSS 4   | `aria-invalid:*` variant   | Theme `ngx-form-field-error` with `--ngx-signal-form-*`      |
+| Angular Material | `isSignalErrorState`       | Keep Material in charge of `aria-describedby`                |
+| Default Angular  | `provideSignalFormsConfig` | Opt into custom status classes if your stylesheet needs them |
 
-The toolkit automatically manages ARIA attributes regardless of CSS framework:
+## Related documentation
 
-| Attribute          | Behavior                                                        |
-| ------------------ | --------------------------------------------------------------- |
-| `aria-invalid`     | Set to `"true"` when field is invalid AND errors should display |
-| `aria-describedby` | Links to error message element IDs                              |
-
-These associations support assistive technology. Test announcements with the
-target browser and screen reader; DOM attributes alone cannot prove them.
-
-If a library sets its own ARIA, as Angular Material does, add
-`ngxSignalFormControlAria="manual"` to the control. See
-[custom controls](./CUSTOM_CONTROLS.md) for who writes ARIA on which control.
-
-### Switches
-
-Style a switch as a native checkbox with `role="switch"` on the bound
-`<input>`. Keep library switch widgets, such as `mat-slide-toggle`, in charge
-of their own ARIA. See [custom controls](./CUSTOM_CONTROLS.md) for the switch
-pattern and library notes.
-
----
-
-## Quick Reference
-
-| Framework        | Invalid Class            | Valid Class     | Notes                                                      |
-| ---------------- | ------------------------ | --------------- | ---------------------------------------------------------- |
-| Bootstrap 5.3    | `is-invalid`             | `is-valid`      | Use with `.form-control`                                   |
-| Tailwind CSS 4   | `aria-invalid:*` variant | Separate policy | Follows toolkit-written invalid state                      |
-| Angular Material | Material error state     | Material policy | Use `isSignalErrorState` and matching message visibility   |
-| Default Angular  | configurable             | configurable    | Configure via `provideSignalFormsConfig({ classes: ... })` |
-
----
-
-## Related Documentation
-
-- [Angular Signal Forms Migration Guide - Status Classes](https://angular.dev/guide/forms/signals/migration#automatic-status-classes)
-- [Custom Form Status Classes in Angular Signal Forms](https://netbasal.medium.com/custom-form-status-classes-in-angular-signal-forms-388553becd68)
-- [Form Field Theming](../packages/toolkit/form-field/THEMING.md)
+- [Theming guide](../packages/toolkit/form-field/THEMING.md)
+- [Custom wrappers](./CUSTOM_WRAPPERS.md)
+- [Custom controls](./CUSTOM_CONTROLS.md)
+- [Angular Signal Forms migration guide: automatic status classes](https://angular.dev/guide/forms/signals/migration#automatic-status-classes)

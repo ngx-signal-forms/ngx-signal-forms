@@ -254,8 +254,8 @@ Signals: `shouldShowErrors()`, `shouldShowWarnings()`, `hasErrors()`,
 - Set `renders` when your template has no error element or no warning element.
   The control's `aria-describedby` then leaves out the id of the missing
   element. `aria-invalid` still follows the real error state.
-- With `errorsOverride`, `shouldShowErrors()` is always `true`. You decide when
-  to pass the list.
+- With `errorsOverride`, `shouldShowErrors()` and `shouldShowWarnings()` are
+  both unconditionally `true`. You decide when to pass the list.
 
 ### NgxHeadlessErrorSummary
 
@@ -289,15 +289,15 @@ Selector: `[ngxHeadlessFieldset]` · Export: `fieldset`
 
 The errors and warnings of a group of fields.
 
-| Input                 | Type                           | Default   | Description                                         |
-| --------------------- | ------------------------------ | --------- | --------------------------------------------------- |
-| `field`               | `FieldTree` (required)         | —         | The group.                                          |
-| `fields`              | `readonly FieldTree[] \| null` | `null`    | Fields to collect from. `[]` collects nothing.      |
-| `fieldsetId`          | `string`                       | generated | Base id for your group elements.                    |
-| `includeNestedErrors` | `boolean`                      | `false`   | Also collect errors of the fields inside the group. |
-| `strategy`            | `ErrorDisplayStrategy`         | inherited | When errors show.                                   |
-| `warningStrategy`     | `WarningDisplayStrategy`       | inherited | When warnings show. Falls back to `on-touch`.       |
-| `submittedStatus`     | `SubmittedStatus`              | inherited | Submission state for `on-submit`.                   |
+| Input                 | Type                           | Default   | Description                                                                   |
+| --------------------- | ------------------------------ | --------- | ----------------------------------------------------------------------------- |
+| `field`               | `FieldTree` (required)         | —         | The group.                                                                    |
+| `fields`              | `readonly FieldTree[] \| null` | `null`    | Fields to collect from. `[]` collects nothing.                                |
+| `fieldsetId`          | `string`                       | generated | Base id for your group elements.                                              |
+| `includeNestedErrors` | `boolean`                      | `false`   | Also collect errors of the fields inside the group. Accepts a bare attribute. |
+| `strategy`            | `ErrorDisplayStrategy`         | inherited | When errors show.                                                             |
+| `warningStrategy`     | `WarningDisplayStrategy`       | inherited | When warnings show. Falls back to `on-touch`.                                 |
+| `submittedStatus`     | `SubmittedStatus`              | inherited | Submission state for `on-submit`.                                             |
 
 Signals: `resolvedErrors()`, `resolvedWarnings()`, `aggregatedErrors()`,
 `aggregatedWarnings()`, `hasErrors()`, `hasWarnings()`, `shouldShowErrors()`,
@@ -373,7 +373,7 @@ Signals: `resolvedFieldName()`, `errorId()`, `warningId()`. All three are
 `null` when neither a `fieldName` nor an `id` is set. The directive then logs
 an error in development mode. Do not build ids from a `null` name.
 
-## Reactive Primitives
+## Reactive primitives
 
 Factory functions that return signals. Use them in a component class, a
 service, or a host directive.
@@ -416,19 +416,19 @@ Each entry is `{ kind, message, id, error }`:
 
 Options:
 
-| Option               | Default   | Description                                                                          |
-| -------------------- | --------- | ------------------------------------------------------------------------------------ |
-| `includeWarnings`    | `false`   | `false`: errors only. `true`: both. `'only'`: warnings only.                         |
-| `stripWarningPrefix` | `true`    | Removes `warn:` from the kind. Set `false` to keep it.                               |
-| `fieldName`          | —         | Base for the ids.                                                                    |
-| `errorMessages`      | injected  | A `Signal<ErrorMessageRegistry>`. Defaults to the `provideErrorMessages()` registry. |
-| `strategy`           | inherited | When errors show.                                                                    |
-| `warningStrategy`    | inherited | When warnings show. Falls back to `on-touch`.                                        |
-| `submittedStatus`    | inherited | Submission state for `on-submit`.                                                    |
-| `injector`           | —         | Needed outside an injection context.                                                 |
+| Option               | Default   | Description                                                                                                      |
+| -------------------- | --------- | ---------------------------------------------------------------------------------------------------------------- |
+| `includeWarnings`    | `false`   | `false`: errors only. `true`: both. `'only'`: warnings only.                                                     |
+| `stripWarningPrefix` | `true`    | Strips `warn:` from fallback default messages for unknown kinds. `entry.kind` always keeps the raw `error.kind`. |
+| `fieldName`          | —         | Base for the ids.                                                                                                |
+| `errorMessages`      | injected  | A `Signal<ErrorMessageRegistry>`. Defaults to the `provideErrorMessages()` registry.                             |
+| `strategy`           | inherited | When errors show.                                                                                                |
+| `warningStrategy`    | inherited | When warnings show. Falls back to `on-touch`.                                                                    |
+| `submittedStatus`    | inherited | Submission state for `on-submit`.                                                                                |
+| `injector`           | —         | Needed outside an injection context.                                                                             |
 
 A runnable demo is in
-[`apps/demo/src/app/03-headless/error-message-signal`](../../../apps/demo/src/app/03-headless/error-message-signal/).
+[`apps/demo/src/app/03-headless/error-message-signal`](../../../apps/demo/src/app/03-headless/error-message-signal/README.md).
 
 ### createErrorState / createCharacterCount / createFieldStateFlags
 
@@ -450,8 +450,10 @@ const flags = createFieldStateFlags(() => form.email());
 - `createErrorState()` also returns `shouldShowErrors()`,
   `shouldShowWarnings()`, `hasErrors()`, `hasWarnings()`, `errorId()`,
   `warningId()`, and `fieldName()`. It takes `strategy`, `warningStrategy`,
-  `submittedStatus`, and `injector` options.
-- Call these factories in an injection context, or pass `injector`.
+  `submittedStatus`, and `injector` options. Call it in an injection context,
+  or pass `injector`.
+- `createCharacterCount()` and `createFieldStateFlags()` need no injection
+  context.
 
 ### createFieldOptionalitySummary
 
