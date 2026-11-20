@@ -39,7 +39,7 @@ Notes:
 ## 2. `/core` is internal
 
 `@ngx-signal-forms/toolkit/core` is no longer in the published `exports` map.
-Import all core directives, providers, tokens, and utilities from the root entry
+Import public core directives, providers, tokens, and utilities from the root entry
 point `@ngx-signal-forms/toolkit`.
 
 ## 3. Removed APIs and replacements
