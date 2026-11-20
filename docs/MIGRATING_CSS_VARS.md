@@ -19,7 +19,7 @@ The current theming API lives in [`THEMING.md`](../packages/toolkit/form-field/T
 - **Shared feedback tier added.** `--ngx-signal-form-feedback-*` sets typography, spacing, and list styling across errors, warnings, hints, character counts, and fieldsets at once.
 - **`*-border` renamed to `*-border-color`** across error, warning, notification, and fieldset tokens.
 - **`*-list-style-type` and `*-list-style-position` combined into `*-list-style`** (accepts standard CSS `list-style` shorthand such as `disc outside` or `none`).
-- **`*-padding-horizontal` shortcuts removed** on error, hint, character count, and fieldset messages. Use `-padding-inline-start` / `-padding-inline-end` or `--ngx-signal-form-feedback-padding-horizontal`.
+- **`*-padding-horizontal` shortcuts removed.** Use `-padding-inline-start` / `-padding-inline-end` on hints and character counts (character counts also inherit `--ngx-signal-form-feedback-padding-horizontal`), `-inset-inline-start` / `-inset-inline-end` on fieldset messages and notifications, and host-level spacing or `--ngx-signal-form-error-panel-padding` on errors.
 - **`-override` escape hatches removed.** `--ngx-signal-form-error-font-size-override` and `--ngx-signal-form-error-line-height-override` are replaced by setting `--ngx-signal-form-error-font-size` and `--ngx-signal-form-error-line-height` directly.
 - **Legacy outline aliases removed.** Set the core `--ngx-form-field-*` tokens instead.
 
