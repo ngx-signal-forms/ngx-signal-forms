@@ -1,0 +1,57 @@
+name: Accessibility barrier
+description: Something in the toolkit, a demo or the docs is hard or impossible to use.
+labels: ['a11y', 'needs-triage']
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for the report. Only the first field is required. You do not have to tell us about a disability, and you do not have to send screenshots, recordings or code. See the [accessibility statement](https://github.com/ngx-signal-forms/ngx-signal-forms/blob/main/ACCESSIBILITY.md).
+  - type: textarea
+    id: barrier
+    attributes:
+      label: What went wrong
+      description: Tell us what you tried to do and what happened.
+    validations:
+      required: true
+  - type: input
+    id: location
+    attributes:
+      label: Where
+      description: The component, demo route or docs page, if you know it.
+    validations:
+      required: false
+  - type: input
+    id: environment
+    attributes:
+      label: Browser and operating system
+      placeholder: Firefox 145 on Windows 11
+    validations:
+      required: false
+  - type: input
+    id: assistive-technology
+    attributes:
+      label: Assistive technology
+      description: For example a screen reader, voice control, a magnifier or keyboard only. Add the version if you know it.
+    validations:
+      required: false
+  - type: dropdown
+    id: severity
+    attributes:
+      label: How much does this stop you?
+      description: Optional. A maintainer sets the final level. See [severity levels](https://github.com/ngx-signal-forms/ngx-signal-forms/blob/main/ACCESSIBILITY.md#severity-levels).
+      options:
+        - Not sure
+        - Critical. I cannot finish the task, and I found no workaround.
+        - Serious. I can finish the task only with a workaround or with help.
+        - Moderate. I can finish the task, but it takes extra effort.
+        - Minor. The problem is small.
+      default: 0
+    validations:
+      required: false
+  - type: textarea
+    id: details
+    attributes:
+      label: Anything else
+      description: Optional. A toolkit version, steps to reproduce, or a link.
+    validations:
+      required: false
