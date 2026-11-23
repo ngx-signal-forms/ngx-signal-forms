@@ -32,22 +32,35 @@ The rendered components in `/form-field` and `/assistive` do these things for
 you:
 
 - Auto-ARIA writes `aria-invalid`, `aria-required`, and `aria-describedby` on
-  each control. `aria-describedby` points only at messages that are on screen
+  each `[formField]` control. `aria-describedby` points only at messages that
+  are on screen
   ([domain invariants](docs/agents/domain-invariants.md#aria-and-field-identity)).
+  Auto-ARIA skips standard checkboxes and radios, because in a group the
+  wrapper puts this ARIA on the group container. To opt one in, add
+  `ngxSignalFormControl="checkbox"` or `ngxSignalFormControl="radio-group"`.
+  A checkbox with `role="switch"` is in by default
+  ([auto-ARIA eligibility](docs/CUSTOM_CONTROLS.md#inferred-kind-vs-auto-aria-eligibility)).
 - Message timing keeps an error hidden while the user types in a touched
   field. The toolkit checks the field again when focus moves or the form
   submits, so a screen reader announces the error once, not on each keystroke.
 - Errors render in a `role="alert"` region and warnings in a `role="status"`
   region. The regions stay mounted while empty, so the first announcement is
-  not lost.
+  not lost. One exception: when an error summary shows, the errors that a
+  submit reveals render outside the alert region, because the summary
+  announces them (see the summary below).
 - Each message starts with a visually hidden "Error:" or "Warning:" prefix,
   so colour is not the only cue
   ([`form-field-error.ts`](packages/toolkit/assistive/form-field-error.ts)).
 - After a failed submit, `focusFirstInvalid()` and `createOnInvalidHandler()`
   move focus to the first invalid field.
-- `NgxFormFieldErrorSummary` has a heading, takes focus after a failed submit,
-  and links to each invalid field. When a summary shows, it is the only thing
-  that announces, so the user does not hear every error twice
+- `NgxFormFieldErrorSummary` has a heading and links to each invalid field.
+  With the `on-submit` strategy, it takes focus after a failed submit.
+  `[autoFocus]="false"` turns this off. With `on-touch` or `immediate`, it
+  does not take focus, so the user is not moved while they fill in the form.
+  Inside a form with `ngxSignalForm`, a summary that shows is the only thing
+  that announces after a submit, so the user does not hear every error twice.
+  Without `ngxSignalForm`, or with `errorSummaryAnnouncesAlone: false`, each
+  field error announces too
   ([ADR-0012](docs/decisions/0012-error-summary-announces-alone.md)).
 - Hints stay visible while an error shows, so format instructions do not
   disappear when the user needs them
@@ -66,12 +79,14 @@ The toolkit supports the last two major versions of Chrome, Edge, Firefox,
 and Safari. Some CSS features need a newer version for full visual fidelity
 ([compatibility](docs/COMPATIBILITY.md#browser-support)).
 
-This is what CI tests on each pull request:
+This is what CI tests. On a pull request, CI runs only the projects that the
+change affects (`nx affected`). On `main`, it scans every demo app.
 
-| What                  | How                                                                                                                                  | Browsers          | A pull request fails when                               |
-| --------------------- | ------------------------------------------------------------------------------------------------------------------------------------ | ----------------- | ------------------------------------------------------- |
-| Toolkit components    | Vitest browser specs: axe-core with WCAG 2.2 AA rules, plus focus, accessible names, forced colours, reduced motion, and target size | Chromium          | any violation is found                                  |
-| Demo apps (four apps) | Playwright axe-core scan of every demo route as it loads                                                                             | Chromium, Firefox | a violation is found that is not in that app's baseline |
+| What                                 | How                                                                                                                                  | Browsers          | A pull request fails when                               |
+| ------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------ | ----------------- | ------------------------------------------------------- |
+| Toolkit components                   | Vitest browser specs: axe-core with WCAG 2.2 AA rules, plus focus, accessible names, forced colours, reduced motion, and target size | Chromium          | any violation is found                                  |
+| Main demo (`demo-e2e`)               | Playwright axe-core scan of every demo route as it loads                                                                             | Chromium, Firefox | a violation is found that is not in that app's baseline |
+| Material, PrimeNG, and Spartan demos | Playwright axe-core scan of the home route (`/`) only                                                                                | Chromium, Firefox | a violation is found that is not in that app's baseline |
 
 See [ADR-0004](docs/decisions/0004-wcag22-testing-strategy.md) and
 [ADR-0013](docs/decisions/0013-block-pr-on-new-demo-a11y-violations.md) for
@@ -117,6 +132,8 @@ What we do not test:
   and does not fill in or submit forms. The toolkit browser specs check error
   and warning states, but the demo pages in those states have no automated
   scan.
+- **Most themed demo pages have no scan.** The Material, PrimeNG, and Spartan
+  demos scan only their home route. Their other pages have no automated scan.
 - **Third-party controls.** The Angular Material, PrimeNG, and Spartan demos
   use those libraries' controls. Those libraries own the accessibility of
   their controls.
@@ -187,11 +204,14 @@ Code in `apps` and `packages` must meet WCAG 2.2 AA
 - Test focus, accessible names, computed styles, and media queries in a
   browser spec. jsdom has no accessibility tree
   ([testing guide](docs/TESTING.md#toolkit-specs-jsdom-or-browser)).
-- Run `pnpm nx run toolkit:test-browser` and
-  `pnpm nx run demo-e2e:a11y` before you open a pull request.
-- Do not add a violation to a demo baseline only to make CI pass. Use
-  `pnpm a11y:baseline`, and explain in the pull request why the violation is
-  acceptable.
+- Run `pnpm nx run toolkit:test-browser` and `pnpm a11y` before you open a
+  pull request. `pnpm a11y` scans all four demos. To scan only the demo you
+  changed, run `pnpm nx run <app>-e2e:a11y`, for example
+  `pnpm nx run demo-material-e2e:a11y`.
+- Do not add a violation to a demo baseline only to make CI pass. To accept
+  one, first scan that demo, then run `pnpm a11y:baseline`. The baseline
+  script writes only the demos that have scan results. Explain in the pull
+  request why the violation is acceptable.
 - Check by hand what axe-core cannot see. Write in the pull request what you
   checked, and with which browser and assistive technology.
 
