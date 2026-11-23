@@ -329,13 +329,17 @@ body {
 
 @media (max-width: 700px) {
   .app-shell {
-    padding-inline: 1rem;
+    padding-inline: min(1rem, 12px);
     padding-bottom: 3rem;
   }
 
   .demo-form {
-    padding: 1.25rem;
+    padding: 1.25rem min(1.25rem, 12px);
     border-radius: 22px;
+  }
+
+  .demo-form__collapsible {
+    padding-inline: min(1rem, 10px);
   }
 
   .demo-form__actions {

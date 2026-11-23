@@ -2253,6 +2253,51 @@ describe('form-field wrapper — additional variant coverage (#501)', () => {
 
     await expectNoA11yViolations(container);
   });
+
+  it('keeps default alert and status live regions mounted while empty before first interaction (WCAG 4.1.3)', async () => {
+    const TestComponent = defineFixtureComponent(
+      'ngx-test-a11y-wrapper-live-region-premounted',
+      `
+        <form [formRoot]="testForm" ngxSignalForm errorStrategy="on-touch">
+          <ngx-form-field-wrapper [formField]="testForm.name" fieldName="name">
+            <label for="premounted-name">Full name</label>
+            <input
+              id="premounted-name"
+              type="text"
+              [formField]="testForm.name"
+            />
+          </ngx-form-field-wrapper>
+        </form>
+      `,
+      () =>
+        form(signal({ name: '' }), (path) => {
+          required(path.name, { message: 'Name is required' });
+        }),
+    );
+
+    const { container } = await render(TestComponent);
+    await TestBed.inject(ApplicationRef).whenStable();
+
+    const alertBefore = container.querySelector('[role="alert"]');
+    const statusBefore = container.querySelector('[role="status"]');
+    expect(alertBefore).toBeTruthy();
+    expect(statusBefore).toBeTruthy();
+    expect(alertBefore?.textContent?.trim() ?? '').toBe('');
+    expect(statusBefore?.textContent?.trim() ?? '').toBe('');
+    expect(alertBefore?.getAttribute('id')).toBeNull();
+
+    // Blur reveals the error inside the same pre-mounted live region node.
+    await userEvent.click(page.getByRole('textbox', { name: 'Full name' }));
+    await userEvent.tab();
+    await TestBed.inject(ApplicationRef).whenStable();
+
+    const alertAfter = container.querySelector('[role="alert"]');
+    expect(alertAfter).toBe(alertBefore);
+    expect(alertAfter?.textContent).toContain('Name is required');
+    expect(alertAfter?.getAttribute('id')).toBe('name-error');
+
+    await expectNoA11yViolations(container);
+  });
 });
 
 /** Minimal mock field state, matching the plain-focus-indicator spec's own. */

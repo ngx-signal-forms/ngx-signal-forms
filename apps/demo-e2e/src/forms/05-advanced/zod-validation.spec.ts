@@ -1,6 +1,9 @@
 import { expect, test, type Page } from '@playwright/test';
 
-import { ROLE_ALERT_SELECTOR } from '../../fixtures/aria-selectors';
+import {
+  ROLE_ALERT_SELECTOR,
+  ROLE_STATUS_SELECTOR,
+} from '../../fixtures/aria-selectors';
 
 function fieldWrapper(page: Page, label: string) {
   return page.locator('ngx-form-field-wrapper', {
@@ -71,7 +74,7 @@ test.describe('Validation - Zod-Only Validation', () => {
 
     await page.getByRole('button', { name: 'Save baseline form' }).click();
 
-    await expect(page.getByRole('status')).toBeVisible();
+    await expect(page.locator(ROLE_STATUS_SELECTOR)).toBeVisible();
     await expect(page.locator(ROLE_ALERT_SELECTOR)).toHaveCount(0);
   });
 });

@@ -387,6 +387,34 @@ export type NgxCharacterCountAnnouncementFormatter = (
       white-space: nowrap;
       width: 1px;
     }
+
+    @media (prefers-reduced-motion: reduce) {
+      :host {
+        transition: none;
+      }
+    }
+
+    @media (prefers-contrast: more) {
+      :host {
+        font-weight: 500;
+      }
+
+      :host([data-limit-state='exceeded']) {
+        text-decoration: underline;
+      }
+    }
+
+    @media (forced-colors: active) {
+      :host {
+        color: CanvasText;
+      }
+
+      :host([data-limit-state='exceeded']) {
+        color: CanvasText;
+        font-weight: var(--ngx-form-field-char-count-weight-exceeded, 600);
+        text-decoration: underline;
+      }
+    }
   `,
   host: {
     '[attr.position]': 'position()',

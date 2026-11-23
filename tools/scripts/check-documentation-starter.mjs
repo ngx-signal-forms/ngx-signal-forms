@@ -110,7 +110,7 @@ try {
     fixture.detectChanges();
     assert.equal(fixture.componentInstance.savedEmail(), 'reader@example.com');
     assert.match(
-      fixture.nativeElement.querySelector('[role="status"]').textContent,
+      fixture.nativeElement.querySelector('p[role="status"]').textContent,
       /Saved: reader@example.com/,
     );
     console.log(

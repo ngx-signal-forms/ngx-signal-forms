@@ -24,7 +24,11 @@ import {
   type ErrorReadableState,
   type SubmittedStatus,
 } from '@ngx-signal-forms/toolkit';
-import { NGX_SIGNAL_FORM_CONTEXT } from '@ngx-signal-forms/toolkit/core';
+import {
+  NGX_SIGNAL_FORM_CONTEXT,
+  NGX_SIGNAL_FORM_FIELD_VISIBILITY_REGISTRY,
+  type NgxSignalFormFieldVisibilityDescriptor,
+} from '@ngx-signal-forms/toolkit/core';
 import { render, screen } from '@testing-library/angular';
 import { userEvent } from '@testing-library/user-event';
 import { describe, expect, it } from 'vitest';
@@ -625,6 +629,93 @@ describe('NgxHeadlessErrorState', () => {
       await render(TestComponent);
 
       expect(screen.getByTestId('no-errors')).toBeTruthy();
+    });
+
+    it('suppresses warning visibility in the registry when errorsOverride has both blocking errors and warnings', async () => {
+      const descriptors: NgxSignalFormFieldVisibilityDescriptor[] = [];
+
+      @Component({
+        selector: 'ngx-test-errors-override-precedence',
+        imports: [NgxHeadlessErrorState],
+        providers: [
+          {
+            provide: NGX_SIGNAL_FORM_FIELD_VISIBILITY_REGISTRY,
+            useValue: {
+              register: (
+                descriptor: NgxSignalFormFieldVisibilityDescriptor,
+              ) => {
+                descriptors.push(descriptor);
+                return () => undefined;
+              },
+              getForField: () => undefined,
+            },
+          },
+        ],
+        template: `
+          <div
+            ngxHeadlessErrorState
+            [errorsOverride]="mixed"
+            fieldName="password"
+          ></div>
+        `,
+      })
+      class TestComponent {
+        readonly mixed: Signal<readonly ValidationError[]> = computed(() => [
+          { kind: 'required', message: 'Password is required' },
+          warningError('weak', 'Consider a stronger password'),
+        ]);
+      }
+
+      await render(TestComponent);
+      await TestBed.inject(ApplicationRef).whenStable();
+
+      expect(descriptors).toHaveLength(1);
+      expect(descriptors[0]?.errorContainerVisible()).toBe(true);
+      expect(descriptors[0]?.warningContainerVisible()).toBe(false);
+    });
+
+    it('keeps warning visibility in the registry when renders="warnings" with mixed errorsOverride', async () => {
+      const descriptors: NgxSignalFormFieldVisibilityDescriptor[] = [];
+
+      @Component({
+        selector: 'ngx-test-errors-override-renders-warnings',
+        imports: [NgxHeadlessErrorState],
+        providers: [
+          {
+            provide: NGX_SIGNAL_FORM_FIELD_VISIBILITY_REGISTRY,
+            useValue: {
+              register: (
+                descriptor: NgxSignalFormFieldVisibilityDescriptor,
+              ) => {
+                descriptors.push(descriptor);
+                return () => undefined;
+              },
+              getForField: () => undefined,
+            },
+          },
+        ],
+        template: `
+          <div
+            ngxHeadlessErrorState
+            [errorsOverride]="mixed"
+            renders="warnings"
+            fieldName="password"
+          ></div>
+        `,
+      })
+      class TestComponent {
+        readonly mixed: Signal<readonly ValidationError[]> = computed(() => [
+          { kind: 'required', message: 'Password is required' },
+          warningError('weak', 'Consider a stronger password'),
+        ]);
+      }
+
+      await render(TestComponent);
+      await TestBed.inject(ApplicationRef).whenStable();
+
+      expect(descriptors).toHaveLength(1);
+      expect(descriptors[0]?.errorContainerVisible()).toBe(false);
+      expect(descriptors[0]?.warningContainerVisible()).toBe(true);
     });
   });
 

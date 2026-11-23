@@ -1853,6 +1853,8 @@ export declare class NgxFieldVisibilityRegistry {
  */
 export declare class NgxSubmitAnnouncements {
   #private;
+  /** Increments on each native submit attempt reported by `NgxSignalForm`. */
+  readonly submitCount: Signal<number>;
   /** True while at least one registered summary shows errors. */
   readonly summaryShowsErrors: Signal<boolean>;
   /**

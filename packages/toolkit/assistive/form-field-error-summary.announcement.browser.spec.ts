@@ -106,7 +106,11 @@ function elementMarkup(element: Element): string {
 
   for (const node of [clone, ...clone.querySelectorAll('*')]) {
     for (const name of node.getAttributeNames()) {
-      if (name.startsWith('_ngcontent-') || name.startsWith('_nghost-')) {
+      if (
+        name.startsWith('_ngcontent-') ||
+        name.startsWith('_nghost-') ||
+        (name === 'class' && node.getAttribute(name) === '')
+      ) {
         node.removeAttribute(name);
       }
     }

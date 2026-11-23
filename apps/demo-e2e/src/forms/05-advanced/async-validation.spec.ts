@@ -173,12 +173,12 @@ test.describe('Advanced Scenarios - Async Validation', () => {
     await usernameInput.fill('admin');
     await usernameInput.blur();
 
-    const errorAlert = page.locator('[role="alert"]', {
+    const errorAlert = page.locator(ROLE_ALERT_SELECTOR, {
       hasText: /already taken/i,
     });
     await expect(errorAlert).toBeVisible();
     await expect(usernameInput).toHaveAttribute('aria-invalid', 'true');
-    await expect(page.locator('[role="alert"]')).toContainText('already taken');
+    await expect(errorAlert).toContainText('already taken');
 
     // Reset clears the model and the field tree state.
     await resetButton.click();

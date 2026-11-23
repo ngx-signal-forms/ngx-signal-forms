@@ -1,5 +1,6 @@
 import { DEMO_PATHS } from '@ngx-signal-forms/demo-shared';
 import { Locator, Page } from '@playwright/test';
+import { ROLE_ALERT_SELECTOR } from '../fixtures/aria-selectors';
 import { BaseFormPage } from './base-form.page';
 /**
  * Page Object for "Form Field Wrapper - Complex Forms" demo
@@ -243,7 +244,7 @@ export class FormFieldWrapperComplexPage extends BaseFormPage {
    * Get aggregated error container for a fieldset by legend text
    */
   getFieldsetErrorsByLegend(legendText: string | RegExp): Locator {
-    return this.getFieldsetByLegend(legendText).locator('[role="alert"]');
+    return this.getFieldsetByLegend(legendText).locator(ROLE_ALERT_SELECTOR);
   }
 
   /**

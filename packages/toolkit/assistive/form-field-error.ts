@@ -482,13 +482,14 @@ export class NgxFormFieldError {
 
     // Dev-only: this hook exists purely to fire the "missing field name"
     // warning below. `devWarnOnce` no-ops in production anyway. Skip
-    // registering it at all in production. That way no instance carries a
-    // live, unphased `afterEveryRender` hook for its whole lifetime. Destroy
-    // the hook as soon as a name resolves or the one-shot warning has
+    // registering it at all in production, or when inside a parent
+    // `NGX_SIGNAL_FORM_FIELD_CONTEXT` (for example `NgxFormFieldWrapper`),
+    // where the wrapper itself owns and logs the missing-name diagnostic once.
+    // Destroy the hook as soon as a name resolves or the one-shot warning has
     // fired, instead of leaving it running on every later render. Uses the
     // same `isDevMode()` guard as `NgxFormMarkingLegend`
     // (`form-marking-legend.ts`).
-    if (isDevMode()) {
+    if (isDevMode() && !this.#fieldContext) {
       const missingNameHook = afterEveryRender(() => {
         if (this.#resolvedFieldName() !== null) {
           missingNameHook.destroy();

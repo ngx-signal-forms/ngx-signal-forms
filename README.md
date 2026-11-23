@@ -318,6 +318,8 @@ Build forms:
   invalid fields in Bootstrap, Tailwind CSS, and Angular Material.
 - [Testing form components](./docs/TESTING.md): check error text and ARIA
   in Vitest with Testing Library.
+- [Accessibility statement](./ACCESSIBILITY.md): what the toolkit does for
+  accessibility, what CI tests, known limitations, and how to report a barrier.
 - [Best practices](./docs/BEST_PRACTICES.md): what to do, what to avoid,
   and why.
 - [FAQ](./docs/FAQ.md): short answers to "how do I…" questions, with links

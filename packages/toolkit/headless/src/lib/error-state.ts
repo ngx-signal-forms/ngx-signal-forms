@@ -678,6 +678,7 @@ export class NgxHeadlessErrorState<
   readonly #warningContainerVisible = computed(
     () =>
       this.renders() !== 'errors' &&
+      !this.#errorContainerVisible() &&
       this.shouldShowWarnings() &&
       this.hasWarnings(),
   );

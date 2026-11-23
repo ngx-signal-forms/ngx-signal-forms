@@ -1,6 +1,7 @@
 import { isDevMode } from '@angular/core';
 import type { FieldState, FieldTree } from '@angular/forms/signals';
 import { isFieldStateInteractive } from './field-interactivity';
+import { isBlockingError } from './warning-error';
 
 /**
  * Focus the first **focusable** invalid field in a form after failed submission.
@@ -64,11 +65,17 @@ export function focusFirstInvalid(formTree: FieldTree<unknown>): boolean {
   const errors = formTree().errorSummary();
   if (!Array.isArray(errors) || errors.length === 0) return false;
 
+  // Skip non-blocking `warn:*` entries. Warnings do not block submission, so
+  // focus must land on the first blocking error — and a warning-only form
+  // returns `false` quietly without triggering the missing-binding diagnostic.
+  const blockingErrors = errors.filter((error) => isBlockingError(error));
+  if (blockingErrors.length === 0) return false;
+
   // `errorSummary()` is the framework's own flat traversal of the field tree:
   // every entry carries a `fieldTree` back-reference whose call yields the
   // owning `FieldState`. No bespoke walk or contract guard is needed — read
   // the native list and resolve each error's state directly.
-  for (const error of errors) {
+  for (const error of blockingErrors) {
     if (typeof error.fieldTree !== 'function') continue;
 
     // `error.fieldTree()` is typed non-null, but a malformed runtime payload

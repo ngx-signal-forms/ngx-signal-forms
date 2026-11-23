@@ -534,9 +534,8 @@ export declare class NgxFormFieldWrapper<TValue = unknown> {
   protected readonly presentation: import("@ngx-signal-forms/toolkit").FieldPresentation;
   /**
    * Whether to apply warning styling to the form field container.
-   * Warning styling is shown only when:
-   * 1. Field has warnings
-   * 2. Field has NO visible errors (errors take visual priority)
+   * Matches warning visibility timing (`warningStrategy`) and stays off while
+   * blocking errors are visible (errors take visual priority).
    */
   protected readonly showWarningState: import("@angular/core").Signal<boolean>;
   /**
