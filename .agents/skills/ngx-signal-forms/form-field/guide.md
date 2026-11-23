@@ -1,121 +1,65 @@
 # Toolkit Form Field
 
-Implements the `@ngx-signal-forms/toolkit/form-field` entry point.
+Covers `@ngx-signal-forms/toolkit/form-field` (`NgxFormFieldWrapper`, `NgxFormFieldset`, and the `NgxFormField` bundle).
+Use [api.md](../references/api.md) for exports and input signatures.
+Switch to [assistive/guide.md](../assistive/guide.md) when you own field layout, or [headless/guide.md](../headless/guide.md) when you own all markup.
 
-Use the [source index](../references/api.md) for public exports and component inputs.
+## Imports and setup
 
-## Principle
+- Import `NgxFormField` from `@ngx-signal-forms/toolkit/form-field`. It bundles `NgxSignalFormAutoAria`, `NgxSignalFormControl`, `NgxFormFieldWrapper`, `NgxFormFieldHint`, `NgxFormFieldCharacterCount`, `NgxFormFieldError`, and `NgxFormFieldset`.
+- `NgxFormField` omits `FormRoot` and `ngxSignalForm`. Import `FormRoot` from `@angular/forms/signals` for plain `'on-touch'` forms, or `NgxSignalFormToolkit` from `@ngx-signal-forms/toolkit` when the form uses `ngxSignalForm`.
 
-The form-field entry point provides a pre-styled field shell (label + control + feedback) that eliminates repeated layout boilerplate. Use it when the design wants consistent field presentation without custom markup. Use [headless](../headless/guide.md) when complete DOM control is needed.
+## Wrapper usage
 
-## Workflow
+- Give the bound control a stable `id`, or set `fieldName` on `ngx-form-field-wrapper`. Use explicit `fieldName` for nested or dynamically identified controls.
+- Omit `appearance` and `orientation` to inherit configured defaults (`'standard'` and `'vertical'`). Set shared defaults via `provideNgxSignalFormsConfig()` or `provideNgxSignalFormsConfigForComponent()` rather than repeating inputs on every wrapper.
+- `appearance="outline"` renders the label as a static caption inside the border. It does not float, so use a real placeholder or omit `placeholder` (no `placeholder=" "` trick).
+- `appearance="plain"` removes wrapper chrome while preserving labels, messages, and ARIA. It leaves projected control styles intact; if your app resets native controls, keep a visible border and keyboard focus indicator.
+- `errorPlacement` defaults to `'bottom'` on both `ngx-form-field-wrapper` and `ngx-form-fieldset`. Set `errorPlacement="top"` on a fieldset to place the group summary directly below `<legend>`.
+- Field marking uses `showMarkerWhen` (`'required' | 'optional' | 'none'`), `requiredMarker`, and `optionalMarker` globally or per wrapper. Markers render in all appearances without changing `aria-required`. Place `<ngx-form-marking-legend>` (from `/assistive`) once per form to explain the marker.
+- **Opt-in valid border (RC.17+):** `ngx-form-field-wrapper` adds `ngx-signal-form-field-wrapper--valid` to a touched, valid field with no warnings. Set `--ngx-form-field-valid-border-color` to display a success border on textual fields (unset by default; inactive during hover or focus). Pair color with text or an icon if success must be conveyed without color.
+- **Dark mode:** toolkit colors use CSS `light-dark()` and respond to `color-scheme` (`:root { color-scheme: light dark; }`, or `:root.dark { color-scheme: dark; }` for class toggles), not `.dark` selectors directly. See [THEMING.md](https://github.com/ngx-signal-forms/ngx-signal-forms/blob/main/packages/toolkit/form-field/THEMING.md#dark-mode).
 
-1. **Import using `NgxFormField` bundle** from `@ngx-signal-forms/toolkit/form-field`. Don't import from the root package.
+## Grouped controls and fieldsets
 
-2. **Wrap controls in `ngx-form-field-wrapper`:**
+- For a **selection group** (radio group or multi-checkbox group acting as one field), use `ngx-form-field-wrapper` with `<span ngxFormFieldLabel>` and `fieldName`, not `<label>` or `ngx-form-fieldset`.
+- For related fields with cross-field rules or section summaries, use `ngx-form-fieldset`:
+  - Pass the parent field tree to `[field]`.
+  - Default mode renders direct group-level errors while child wrappers show their own errors. Set `includeNestedErrors` when the fieldset should aggregate child errors too.
+  - Bind `fields` to restrict which fields count toward the summary (`fields=[]` collects nothing).
+  - Customize with `appearance="plain"`, `surfaceTone`, `validationSurface="always"`, `feedbackAppearance` (`'auto' | 'plain' | 'notification'`), `notificationTitle`, and `listStyle`.
 
-- Give the bound control a stable `id`, or set the wrapper's `fieldName` explicitly. Keep an accessible label association in either case.
-- For nested custom controls or dynamically identified inner controls, pass explicit `fieldName` on the wrapper instead of relying on implicit id discovery.
-- Omit `appearance` to inherit configuration, whose built-in default is `standard`. Use `outline` or `plain` only for an intentional exception; set shared defaults in a provider rather than on every wrapper.
-- `appearance="outline"` prints the label as a static caption inside the border. It does not float or animate, so it needs no `placeholder=" "` trick — write a real placeholder when the field wants one, or none at all.
+## Custom controls
 
-3. **Error placement:**
-   - Default for wrapper: `errorPlacement="bottom"`
-   - Default for fieldset: `errorPlacement="bottom"` — set `errorPlacement="top"` when the group summary should sit directly below the legend.
-   - Override per wrapper or per fieldset as needed — these are independent controls.
+Read [signal-forms.md#custom-controls](../references/signal-forms.md#custom-controls) and [core/guide.md#control-semantics-and-auto-aria](../core/guide.md#control-semantics-and-auto-aria) before wrapping a custom widget.
 
-4. **Field marking:** Use `showMarkerWhen` (`'required' | 'optional' | 'none'`), plus optional `requiredMarker` / `optionalMarker`, on the wrapper or globally via `provideNgxSignalFormsConfig({ showMarkerWhen: 'required' })`. Markers render in every appearance and don't affect `aria-required`. Add the form-level `<ngx-form-marking-legend>` (from `@ngx-signal-forms/toolkit/assistive`) once per form to explain what the marker means.
+- **Field-shaped widgets** (comboboxes, closed custom selects) join as `input-like` so the wrapper draws border, focus, and invalid state around a naked trigger. An inner `[role="combobox"][id]` infers `input-like`; a closed select without that role sets `ngxSignalFormControl="input-like"`. There is no `select` kind.
+- **Widget-shaped controls** (sliders, star ratings, composite widgets) use `appearance="plain"` and declare `ngxSignalFormControl` explicitly (for example `[ngxSignalFormControl]="{ kind: 'slider', layout: 'stacked', ariaMode: 'manual' }"`). Share repeated settings with `provideNgxSignalFormControlPresetsForComponent()`.
+- When using `ariaMode: 'manual'` or `ngxSignalFormControlAria="manual"`, compose `aria-describedby` with `buildAriaDescribedBy` from `@ngx-signal-forms/toolkit`:
 
-5. **Use `NgxFormFieldset` for grouped sections:**
-   - Pass the **parent field tree** to `[field]`.
-   - Default: child wrapper errors + group-level errors each show separately. Set `includeNestedErrors` to show all child errors in the group summary.
-   - Use `fields` input to restrict which fields count toward the group summary.
-   - Style the group shell with `appearance="plain"` (semantic-only grouping, no border/padding), `surfaceTone`, and `validationSurface="always"` (tint invalid/warning groups). Control the grouped feedback with `feedbackAppearance` (`'auto' | 'plain' | 'notification'`), `notificationTitle`, and `listStyle`. See `../references/api.md` for the full input table.
+```typescript
+readonly sliderDescribedBy = computed(() =>
+  buildAriaDescribedBy('rating', {
+    baseIds: ['rating-hint'],
+    showErrors: this.showErrors(),
+  }),
+);
+```
 
-6. **Use `form[formRoot]` for the baseline wrapper path; add `ngxSignalForm` when the form needs shared context.** Wrapper and fieldset components can render with the default `'on-touch'` fallback even without `ngxSignalForm`. Add `ngxSignalForm` when grouped sections, summaries, or custom wrapper integrations need inherited `'on-submit'`, `submittedStatus`, or injected form context.
+- For library switches that render `role="switch"` on a nested element (`mat-slide-toggle`, `p-toggleswitch`, Spartan switch), add `ngxSignalFormControl="switch"` and `ngxSignalFormControlAria="manual"` on the `[formField]` host, then bind ARIA on the inner switch.
 
-7. **Custom controls:** Read the bundled [Angular control contract](../references/signal-forms.md#custom-controls) before implementation. For an existing widget, also read [value transformation](../references/signal-forms.md#value-transformation) and the deeper [widget adapter guide](https://github.com/ngx-signal-forms/ngx-signal-forms/blob/main/docs/CUSTOM_CONTROLS.md#adapting-an-existing-third-party-widget). Give the actual control a stable ID and label; use explicit wrapper `fieldName` for nested widgets.
+## Basic usage
 
-- Field-shaped custom controls (combobox, closed select that should look like a text field) are `input-like`. Keep the trigger naked so the wrapper owns border, focus, and invalid. Inner `role="combobox"` with an `id` infers `input-like`. A closed select without that role sets `ngxSignalFormControl="input-like"` on the host. There is no `select` kind. See the Angular Aria Combobox and Select guides.
-- Use `appearance="plain"` for widget-style controls (sliders, star-rating, switch rows) where outlined or standard default field chrome would look wrong. Plain leaves projected control styles intact, including native text-control styling; if your app resets native controls, preserve a visible boundary and focus indicator. Do not restyle `composite` or `slider` as text fields.
-- Declare control semantics explicitly with `ngxSignalFormControl` on the bound host. Without it, the wrapper falls back to DOM heuristics that can produce the wrong layout or ARIA behavior:
-
-  ```html
-  <!-- Native switch: role="switch" is enough; the toolkit infers the switch kind -->
-  <input
-    id="emailUpdates"
-    type="checkbox"
-    role="switch"
-    [formField]="form.emailUpdates"
-  />
-
-  <!-- Switch host with no role="switch" of its own: declare the kind -->
-  <app-toggle
-    id="darkMode"
-    [formField]="form.darkMode"
-    ngxSignalFormControl="switch"
-  />
-
-  <!-- Native checkbox opt-in uses the group preset; switches use inline-control. -->
-  <input
-    id="agreeToTerms"
-    type="checkbox"
-    ngxSignalFormControl="checkbox"
-    [formField]="form.agreeToTerms"
-  />
-
-  <!-- Custom component: declare kind + layout; opt out of auto-ARIA when the
-       component manages its own describedby/invalid attributes.
-       NOTE: 'stacked' here is a CONTROL LAYOUT (NgxSignalFormControlLayout,
-       still valid). It is NOT the renamed 'standard' appearance. -->
-  <ngx-rating-control
-    id="rating"
-    [ngxSignalFormControl]="{ kind: 'slider', layout: 'stacked', ariaMode: 'manual' }"
-    [formField]="form.rating"
-  />
-  ```
-
-- `ariaMode: 'manual'` inside the `ngxSignalFormControl` config and the standalone `ngxSignalFormControlAria="manual"` attribute are equivalent — the config-object form is for declaring full semantics in one place, the standalone attribute for a one-off override when `kind`/`layout` already come from a preset or DOM heuristic (see the _Error Handling_ section below for an example).
-- For either form, assemble `aria-describedby` with `buildAriaDescribedBy` from `@ngx-signal-forms/toolkit` so the ID-naming conventions stay consistent:
-
-  ```typescript
-  import { computed } from '@angular/core';
-  import { buildAriaDescribedBy } from '@ngx-signal-forms/toolkit';
-  readonly sliderDescribedBy = computed(() =>
-    buildAriaDescribedBy('rating', {
-      baseIds: ['rating-hint'],
-      showErrors: this.showErrors(),
-    }),
-  );
-  ```
-
-- When many controls of the same kind share the same semantics, use `provideNgxSignalFormControlPresetsForComponent()` in the host component `providers` instead of repeating the directive object:
-
-  ```typescript
-  providers: [
-    ...provideNgxSignalFormControlPresetsForComponent({
-      slider: { layout: 'custom', ariaMode: 'manual' },
-    }),
-  ];
-  ```
-
-  Then use the shorter `ngxSignalFormControl="slider"` (or a minimal object) on each control — the preset fills in `layout` and `ariaMode` automatically.
-
-- For switch-style custom components that render their own `input[type="checkbox"][role="switch"]` internally, import `NgxSignalFormToolkit` in that child component's `imports`, since standalone imports do not cascade from the parent form.
-
-## Basic Usage
-
-This complete native form inherits appearance and default `on-touch` timing.
-Angular `FormRoot` owns submit and `novalidate`; no toolkit enhancer is needed.
+Inherits default appearance and `'on-touch'` timing with `FormRoot` alone:
 
 ```typescript
 import { Component, signal } from '@angular/core';
 import {
+  email,
   form,
   FormField,
   FormRoot,
   required,
-  email,
 } from '@angular/forms/signals';
 import { NgxFormField } from '@ngx-signal-forms/toolkit/form-field';
 
@@ -165,10 +109,19 @@ export class ProfileFormComponent {
 }
 ```
 
-## Grouped Fieldset
+### Submit-only variation
+
+Import `NgxSignalForm` (or `NgxSignalFormToolkit`) from `@ngx-signal-forms/toolkit` and add it to the `<form>` while keeping the same `submission.action`:
 
 ```html
-<!-- Group-level error summary (add errorPlacement="top" to move it above the fields) -->
+<form [formRoot]="profileForm" ngxSignalForm errorStrategy="on-submit">
+  <!-- Same labeled fields and submit button -->
+</form>
+```
+
+### Grouped fieldset
+
+```html
 <ngx-form-fieldset [field]="form.address" fieldsetId="address">
   <legend>Address</legend>
 
@@ -184,41 +137,11 @@ export class ProfileFormComponent {
 </ngx-form-fieldset>
 ```
 
-Use `includeNestedErrors` on the fieldset only when the overall summary must aggregate all child field errors into one list, e.g., for an accessibility-focused error summary at the top of the form.
-
-## Submit-only variation
-
-For the component above, add `NgxSignalForm` from the package root to its
-`imports` and change the form host to the following. Keep the same configured
-`submission.action`; do not add a second submit handler.
-
-```html
-<form [formRoot]="profileForm" ngxSignalForm errorStrategy="on-submit">
-  <!-- Keep the same labeled fields and submit button. -->
-</form>
-```
-
-This changes error timing only. Warnings keep their independent inherited
-timing unless `warningStrategy` is also set. For theme work, read the
-[theming guide](https://github.com/ngx-signal-forms/ngx-signal-forms/blob/main/packages/toolkit/form-field/THEMING.md) and
-[browser checks](../testing/guide.md#browser-state-checks).
-
 ## Done
 
-- The wrapper has a bound field, an accessible label, and stable message
-  identity. Shared appearance defaults are not repeated as field exceptions.
-- Feedback and ARIA agree before touch, after touch, and after submit under
-  the chosen error and warning strategies.
-- Custom editable controls pass model/widget round-trip, invalid-input, reset,
-  focus forwarding, and composite focus-exit checks.
-- Theme changes have browser evidence for supported themes, keyboard focus,
-  and live-region transitions as well as axe. Report unperformed checks.
+Verify the checks that apply to your change:
 
-## Error Handling
-
-- If wrapper errors don't appear: confirm the bound control has an `id` attribute matching the field, or add explicit `fieldName` when the control is nested.
-- If grouped summary duplicates child messages: remove `includeNestedErrors` or scope `fields` explicitly.
-- If a switch row collapses or inherits text-input styling: check the `[formField]` host itself. If the host is a native checkbox with `role="switch"`, or has `role="switch"`, the toolkit infers the switch kind and needs no attribute. Otherwise set `ngxSignalFormControl="switch"` on the host. Inference does not look at descendants, so `mat-slide-toggle`, `p-toggleswitch`, and a Spartan switch need the attribute, even though each renders an inner `role="switch"` element.
-- If a slider or composite control gets an outlined text-field shell: add `ngxSignalFormControl="slider"` (or `"composite"`) to the bound host so the wrapper picks up the correct layout. If a field-shaped combobox or closed select does **not** get the text-field shell, keep the trigger naked and join as `input-like` (combobox role + id, or explicit `ngxSignalFormControl="input-like"`). Do not add a `select` kind.
-- If auto-ARIA conflicts with a custom control's own ARIA attributes: add `ngxSignalFormControlAria="manual"` on the control host to suppress toolkit ARIA management. Use `buildAriaDescribedBy` to assemble the `aria-describedby` value manually.
-- For fully custom markup without wrapper assumptions, switch to [headless](../headless/guide.md).
+- Wrapped controls have a bound field, accessible label, and stable `id` or explicit `fieldName`; shared defaults come from config rather than repeated field overrides.
+- Visible messages and ARIA agree across initial, touched, editing, and submitted states for the chosen strategies.
+- Custom editable controls pass round-trip, invalid-input, reset, `focus(options)`, and composite focus-exit checks.
+- Theme changes are checked in a real browser across supported `color-scheme` modes (including keyboard focus and axe). Report unrun checks.

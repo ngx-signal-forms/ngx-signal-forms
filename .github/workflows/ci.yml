@@ -164,6 +164,12 @@ jobs:
       - name: Check docs for removed APIs
         run: pnpm exec nx run workspace:check-removed-symbols --outputStyle=static
 
+      # Same reasoning as the checks above. A docs or skill change can break a
+      # local link, GitHub main anchor, or peer version range inside the skill,
+      # so run on every PR.
+      - name: Check skill package
+        run: pnpm exec nx run workspace:check-skill-package --outputStyle=static
+
       # Same reasoning as the checks above. Building the Docs7 site fails on
       # a docs link to a missing file or anchor, so a broken link fails the
       # PR instead of shipping to the site.

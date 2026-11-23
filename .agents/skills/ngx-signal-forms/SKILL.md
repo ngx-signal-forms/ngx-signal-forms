@@ -1,78 +1,52 @@
 ---
 name: ngx-signal-forms
-description: Surface router for @ngx-signal-forms/toolkit. Use for toolkit forms, submission, validation choice, custom controls or widget adapters, custom wrappers, feedback, headless composition, theming, accessibility testing, Vest, repository-internal debugger, or migrations.
+description: '@ngx-signal-forms/toolkit for Angular Signal Forms. Use when working with [formField], [formRoot], ngxSignalForm, ngx-form-field-wrapper, ngx-form-fieldset, assistive errors, summaries, hints, character counts, headless composition, custom controls, custom wrappers, theming, validateVest, expectNoA11yViolations, or toolkit migrations.'
 ---
 
 # ngx-signal-forms toolkit
 
-One installable, model-invoked skill for `@ngx-signal-forms/toolkit`.
-Keep this directory intact when installing through skills.sh or ctx7; installers
-copy its guides and references with the root. Nested branches are plain guides,
-not independently discoverable skills. Load them only when their branch applies.
+Guidance for `@ngx-signal-forms/toolkit` on Angular Signal Forms.
+Bundled guides and the consumer's installed declarations cover the public contracts.
+Read [sources and version policy](references/sources.md) before choosing APIs when the installed version is uncertain.
 
-No Nx, Context7, Angular skill, or toolkit repository checkout is required.
-Bundled guidance and the consumer's installed declarations cover the essential
-contracts. Remote access is needed only for extra docs, source examples, and
-unbundled version-specific migration guides. Read the
-[source and version policy](references/sources.md) before choosing APIs.
+## Workflow
 
-## Surface routing
+1. Match the task to one or more branches in the routing table below.
+2. Read the listed guides and references in parallel before writing code.
+3. Implement or review the change following the invariants below and the branch guide.
+4. Verify the changed behavior with the consumer's existing checks and report what ran.
 
-Routing loop:
+## Task routing
 
-1. Identify the primary **surface** from the task, imports, selectors, and symbols.
-2. Read its bundled guide.
-3. Load the required task references below, then any additional surface the work touches.
-4. Implement or analyze the requested change. Check the selected surface's Done criteria and report evidence or unmet checks.
+Load only the branches that apply to the task:
 
-| Task                                                                    | Entry point                            | Guide to read                          |
-| ----------------------------------------------------------------------- | -------------------------------------- | -------------------------------------- |
-| Upgrade from beta or an earlier release candidate                       | Not an entry point                     | [Migrations](migrations/guide.md)      |
-| `[formRoot]`, error strategy, ARIA, submission, config, or presets      | `@ngx-signal-forms/toolkit`            | [Core](core/guide.md)                  |
-| Styled wrappers, fieldsets, field appearances, or custom-control layout | `@ngx-signal-forms/toolkit/form-field` | [Form-field](form-field/guide.md)      |
-| Standalone errors, notifications, hints, counters, or summaries         | `@ngx-signal-forms/toolkit/assistive`  | [Assistive](assistive/guide.md)        |
-| Full DOM control or custom wrapper ARIA/identity composition            | `…/headless` (+ root for identity)     | [Headless](headless/guide.md)          |
-| Vest suites or custom Vest validation flows                             | `@ngx-signal-forms/toolkit/vest`       | [Vest](vest/guide.md)                  |
-| axe-core WCAG assertions                                                | `@ngx-signal-forms/toolkit/testing`    | [Testing](testing/guide.md)            |
-| Repository-internal form inspection, not a published toolkit entry      | `@ngx-signal-forms/debugger`           | [Internal debugger](debugger/guide.md) |
+| Task branch                                                                   | Entry point                            | Read first                                                                                                                                                               |
+| ----------------------------------------------------------------------------- | -------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Form setup, `[formRoot]`, `ngxSignalForm`, timing, auto-ARIA, presets, config | `@ngx-signal-forms/toolkit`            | [Angular essentials](references/signal-forms.md), [Core](core/guide.md)                                                                                                  |
+| Async or warning-aware submission                                             | `@ngx-signal-forms/toolkit`            | [Angular submission](references/signal-forms.md#submission), [Core](core/guide.md#warning-helpers), [Testing](testing/guide.md)                                          |
+| Styled wrappers, fieldsets, appearances, or theming                           | `@ngx-signal-forms/toolkit/form-field` | [Angular essentials](references/signal-forms.md), [Form-field](form-field/guide.md)                                                                                      |
+| Standalone errors, panels, hints, character counts, summaries, or legends     | `@ngx-signal-forms/toolkit/assistive`  | [Assistive](assistive/guide.md)                                                                                                                                          |
+| Custom editable control or third-party widget adapter                         | `@ngx-signal-forms/toolkit`            | [Control contract](references/signal-forms.md#custom-controls), [Core](core/guide.md#control-semantics-and-auto-aria), [Form-field](form-field/guide.md#custom-controls) |
+| Custom wrapper, headless markup, renderer overrides, or manual ARIA           | `@ngx-signal-forms/toolkit/headless`   | [Headless](headless/guide.md), [Headless composition](references/headless-composition.md)                                                                                |
+| Choose Angular validators, Standard Schema, or Vest                           | `@ngx-signal-forms/toolkit/vest`       | [Validation choice](references/signal-forms.md#validation-choice), [Vest](vest/guide.md)                                                                                 |
+| Accessibility assertions, focus, visibility, or live-region checks            | `@ngx-signal-forms/toolkit/testing`    | [Testing](testing/guide.md)                                                                                                                                              |
+| Upgrade from beta or an earlier release candidate                             | Multiple                               | [Migrations](migrations/guide.md), [Pitfalls](references/pitfalls.md#removed-and-non-public-apis)                                                                        |
 
-## Required task references
+Additional lookups: [API source index](references/api.md), [common pitfalls](references/pitfalls.md), and [online example map](references/demo-map.md).
 
-Load only the branches that apply, but load them before choosing APIs:
+## Core invariants
 
-| Task branch                                                                      | Read                                                                                                                                                                                                  |
-| -------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Form, model, schema, validation, submission, or custom editable control          | [Bundled Angular essentials](references/signal-forms.md)                                                                                                                                              |
-| Choose Angular validators, Standard Schema, or Vest                              | [Validation choice](references/signal-forms.md#validation-choice); deeper [strategy doc](https://github.com/ngx-signal-forms/ngx-signal-forms/blob/main/docs/VALIDATION_STRATEGY.md) only if needed   |
-| Native form or styled field shell                                                | [Form-field](form-field/guide.md#basic-usage)                                                                                                                                                         |
-| Async submission                                                                 | [Angular submission](references/signal-forms.md#submission), [core](core/guide.md), and [testing](testing/guide.md#submission-checks)                                                                 |
-| Warning-aware submission                                                         | [Core warning contract](core/guide.md#warning-helpers), [event wiring](vest/guide.md#warnings-and-submission), and [testing](testing/guide.md)                                                        |
-| Custom editable control or existing widget adapter                               | [Control contract](references/signal-forms.md#custom-controls), [transformation](references/signal-forms.md#value-transformation), [form-field](form-field/guide.md), and [testing](testing/guide.md) |
-| Custom wrapper, renderer, or ARIA ownership                                      | [Headless](headless/guide.md), then the applicable [composition branch](references/headless-composition.md)                                                                                           |
-| Nested objects or dynamic arrays                                                 | [Schema and arrays](references/signal-forms.md#schemas-and-arrays); deeper [nested forms](https://github.com/ngx-signal-forms/ngx-signal-forms/blob/main/docs/COMPLEX_NESTED_FORMS.md) only if needed |
-| Theme, appearance, or CSS integration                                            | [Form-field](form-field/guide.md), [testing](testing/guide.md), and deeper [theming](https://github.com/ngx-signal-forms/ngx-signal-forms/blob/main/packages/toolkit/form-field/THEMING.md)           |
-| Visibility, collapsed controls, focus, live regions, or accessibility assertions | [Testing](testing/guide.md), including its browser-state checks                                                                                                                                       |
-| Upgrade an existing integration                                                  | [Migrations](migrations/guide.md) and every crossed version guide                                                                                                                                     |
-
-For exact exports and signatures use the [source index](references/api.md).
-For toolkit mistakes use [pitfalls](references/pitfalls.md); for online
-examples use the [demo map](references/demo-map.md). Controller evaluation
-cases live in the branch-only [evaluation reference](references/evaluation.md).
-
-## Non-Negotiable Rules
-
-1. `@angular/forms/signals` is always the source of truth — never replace `form()`, `[formField]`, or field state signals with toolkit abstractions.
-2. Always import from the correct secondary entry point. Do not import `NgxFormField` from the root package.
-3. Basic toolkit flows can use `form[formRoot]` alone — wrappers, assistive components, and auto-ARIA fall back to the configured `defaultErrorStrategy` (default `'on-touch'`). Add `ngxSignalForm` when you need `'on-submit'`, `submittedStatus`, shared form context, or a form-level strategy override.
-4. Do not manually add `aria-invalid`, `aria-required`, or toolkit-generated `aria-describedby` ids (`{fieldName}-error`, `{fieldName}-warning`, wrapper hint ids) to controls managed by `NgxSignalFormAutoAria` unless `ngxSignalFormControlAria="manual"` is explicitly set on that control. Your own description ids are allowed: auto-ARIA keeps authored `aria-describedby` ids and appends its managed ids after them. Without a wrapper, this is how a standalone hint's `id` or a character count's `{fieldName}-char-count-limit` reaches the control.
-5. Bound controls inside `ngx-form-field-wrapper` need a stable `id` unless the wrapper gets an explicit `fieldName`.
-6. Declare `ngxSignalFormControl` semantics when native inference does not cover the control or ownership policy. Standard checkboxes/radios require explicit opt-in. Native checkbox switches with `role="switch"` already infer their kind; custom switches still need the role on the actual interactive element.
-7. Angular standalone imports are template-local — if a child custom control renders the real `[formField]` element, import toolkit auto-ARIA in that child component too.
-8. For legacy symbols, use the [replacement table](references/pitfalls.md#removed--non-public-apis--never-use) and [migration workflow](migrations/guide.md). Confirm replacements against the published entry point, not the internal `/core` barrel.
+1. **Keep `@angular/forms/signals` as the source of truth.** Build forms with `form()`, `[formField]`, and field state signals, and layer toolkit features on top. Use `[formRoot]` with `submission.action` for standard submission, or a single native `(submit)` handler with `novalidate` when calling `submitWithWarnings()` (see [vest/guide.md](vest/guide.md#warnings-and-submission)).
+2. **Import from the owning secondary entry point.** Import wrappers from `/form-field`, standalone feedback from `/assistive`, headless primitives from `/headless`, Vest adapters from `/vest`, and a11y helpers from `/testing`. Confirm root exports against `@ngx-signal-forms/toolkit`, not the internal `/core` build entry.
+3. **Add `ngxSignalForm` when the form needs shared context.** Plain `form[formRoot]` forms already work with the configured `defaultErrorStrategy` (default `'on-touch'`). Add `ngxSignalForm` for `'on-submit'`, `submittedStatus`, form-level strategy overrides, or an error summary that announces alone.
+4. **Keep one ARIA writer per control.** Let `NgxSignalFormAutoAria` own `aria-invalid`, `aria-required`, and managed `aria-describedby` ids (`{fieldName}-error`, `{fieldName}-warning`, wrapper hints). Keep your own static description ids on the control; auto-ARIA preserves them and appends managed ids. Set `ngxSignalFormControlAria="manual"` when the control writes its own ARIA.
+5. **Give wrapped controls deterministic identity.** Put a stable `id` on each bound control inside `ngx-form-field-wrapper`, or pass an explicit `fieldName` on the wrapper.
+6. **Declare control semantics when native inference does not cover the host.** Opt native checkboxes and radios into auto-ARIA explicitly with `ngxSignalFormControl`, and declare custom hosts (`switch`, `slider`, `composite`, `input-like`). Native `input[type="checkbox"][role="switch"]` infers `switch` automatically.
+7. **Import directives in the component that renders `[formField]`.** Angular standalone imports are template-local. If a child custom control renders the real `[formField]` element, import the toolkit bundle or `NgxSignalFormAutoAria` in that child component too.
+8. **Time errors and warnings independently.** Warnings use the `warn:` kind prefix and their own `warningStrategy` cascade (`warningStrategy` -> form `warningStrategy` -> `defaultWarningStrategy` -> `'on-touch'`). Changing error timing leaves warning timing unchanged.
 
 ## Done
 
-The applicable task branches and surface criteria are covered. Report the
-changed behavior and actual verification evidence; name checks not run.
-For review-only requests, report findings without edits. Loading this router
-alone does not complete the task.
+Check the changed behavior against the selected branch guide's Done criteria.
+Report actual verification results and name any checks that did not run.
+For review-only requests, report findings without editing files.
