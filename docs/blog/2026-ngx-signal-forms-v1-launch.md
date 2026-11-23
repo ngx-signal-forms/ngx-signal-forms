@@ -1,100 +1,79 @@
 ---
-title: 'Accessible Angular Signal Forms, without the boilerplate — @ngx-signal-forms/toolkit v1.0.0'
+title: '@ngx-signal-forms/toolkit v1.0.0: Accessible Angular Signal Forms without the boilerplate'
 published: false
-description: 'Angular Signal Forms gives you the model, validation, and submission lifecycle. This toolkit adds everything Angular leaves to you: automatic ARIA wiring, error timing, non-blocking warnings, and a themable field wrapper.'
+description: 'Angular Signal Forms handles state, validation, and submission. @ngx-signal-forms/toolkit v1.0.0 adds automatic ARIA wiring, error and warning timing, focus management, and customizable field UI.'
 tags: 'angular, typescript, webdev, a11y'
 cover_image: ''
 canonical_url: ''
 ---
 
-## Hi, quick intro
+I maintain [`ngx-vest-forms`](https://www.npmjs.com/package/ngx-vest-forms), which Brecht Billiet originally created for Angular template-driven forms. When Angular started moving toward Signal Forms, we needed a similar developer experience at work: low boilerplate, strong accessibility defaults, and full control when a design system needs custom markup. I started building `@ngx-signal-forms/toolkit` on October 9, 2025, against Angular 21's early Signal Forms preview, and open sourced it from day one.
 
-I've been an Angular developer for a long time — long enough that "Angular" still means AngularJS in my muscle memory. I've built forms through every era of it: `ng-model`, template-driven, reactive, and all the `Validators` and `ControlValueAccessor` glue that came with each.
+Signal Forms is now stable in Angular 22, and today **`@ngx-signal-forms/toolkit` v1.0.0** is out.
 
-So when **Angular Signal Forms** landed and stabilized in Angular 22, I was genuinely excited. It's a great primitive. A `signal()` is your model, `form()` gives you reactive field state, and validation and submission are first-class. Cleanest form model Angular has ever shipped.
+## Why build a toolkit on top of Signal Forms?
 
-But if you've built production forms, you already know the catch: Signal Forms deliberately stops at the _behavior_. It hands you `invalid()`, `touched()`, `errors()`, and `pending()` and says _the rest is yours_ — which ARIA attributes to wire, when to show an error, how to render a warning that shouldn't block submit, how to keep it consistent across a whole app.
+Angular Signal Forms gives you a clean reactive primitive. A `signal()` holds your model, `form()` manages field state and validation, and `[formRoot]` handles submission.
 
-I wanted something that enhanced Signal Forms **without replacing it**, with **accessibility as the default instead of an afterthought**. I couldn't find one I liked, so I built it — and I've been tweaking and improving it since those first early Signal Forms releases.
-
-Today it hits **v1.0.0: `@ngx-signal-forms/toolkit`**.
-
----
-
-## The problem, in one field's worth of code
-
-Here's a single accessible email field in **plain Angular Signal Forms**. It works — it's also the code you'll copy onto every field and get subtly wrong on at least one:
+Angular intentionally stops before the UI layer. It gives you `invalid()`, `touched()`, and `errors()`, and leaves the rest to you. Without a toolkit, one accessible field looks like this:
 
 ```html
 <label for="email">Email</label>
 <input
   id="email"
-  [formField]="userForm.email"
-  [attr.aria-invalid]="userForm.email().invalid() ? 'true' : null"
+  type="email"
+  [formField]="contactForm.email"
+  [attr.aria-invalid]="contactForm.email().touched() && contactForm.email().invalid()"
   [attr.aria-describedby]="
-    userForm.email().invalid() &&
-    (userForm.email().touched() || userForm().touched())
-      ? 'email-error' : null
+    contactForm.email().touched() && contactForm.email().invalid()
+      ? 'email-error'
+      : null
   "
 />
-@if ( userForm.email().invalid() && (userForm.email().touched() ||
-userForm().touched()) ) {
-<span id="email-error" role="alert">
-  {{ userForm.email().errors()[0].message }}
-</span>
+@if (contactForm.email().touched() && contactForm.email().invalid()) {
+<div id="email-error" role="alert">
+  @for (error of contactForm.email().errors(); track error.kind) {
+  <p>{{ error.message }}</p>
+  }
+</div>
 }
 ```
 
-That's `aria-invalid`, `aria-describedby`, the "touched or submitted" timing, the `role="alert"` element, and the id wiring — for **one** field. Multiply across a form and never let a refactor break the id/`aria-describedby` link. This is exactly the repetitive, easy-to-break work that ends up shipping inaccessible forms.
-
-Same field, with the toolkit:
+Repeating that across dozens of fields is tedious and easy to break during a refactor. With `@ngx-signal-forms/toolkit`, the same field is:
 
 ```html
-<ngx-form-field-wrapper [formField]="userForm.email">
+<ngx-form-field-wrapper [formField]="contactForm.email">
   <label for="email">Email</label>
-  <input id="email" type="email" [formField]="userForm.email" />
+  <input id="email" type="email" [formField]="contactForm.email" />
 </ngx-form-field-wrapper>
 ```
 
-The wrapper handles ARIA, error timing, `role="alert"` for errors vs `role="status"` for warnings, hint projection, and character counts — automatically. And your `form()`, `[formRoot]`, and `[formField]` code didn't change. **The toolkit is additive.**
+Angular still owns the model, validation, field state, and submission. You keep using `form()`, `[formRoot]`, and `[formField]`. The toolkit adds the presentation and accessibility layer around them.
 
----
+You do not need this toolkit for a single small form without accessibility requirements. Because it is additive, you can adopt it later without rewriting your `form()` code. And as Angular Signal Forms adds features natively over time, the toolkit will deprecate overlapping helpers and provide migrations.
 
-## What it is (and isn't)
+## Ready out of the box, without boilerplate
 
-It's **not** a form library. Angular Signal Forms is the form library. The toolkit is the accessibility-and-presentation layer on top:
-
-| Angular Signal Forms owns                 | `@ngx-signal-forms/toolkit` adds                              |
-| ----------------------------------------- | ------------------------------------------------------------- |
-| `form()`, `schema()`, validators          | Strategy-aware error and warning display                      |
-| `[formRoot]`, `[formField]`               | Automatic `aria-invalid`, `aria-required`, `aria-describedby` |
-| Field state (`invalid()`, `touched()`, …) | Wrapper, fieldset, assistive, and headless surfaces           |
-| Model updates and submission lifecycle    | Focus helpers, warning helpers, app-wide config               |
-
-There's a one-line test for using it right: **if deleting a toolkit API would change the data you submit, you're on the wrong side of the boundary.** Angular stays the single source of truth. The toolkit only changes how a form _looks_ and how it _announces itself to assistive tech_ — never what it _does_.
-
-That boundary is also a promise about the future: **the moment a piece of functionality lands in Angular itself, I deprecate the toolkit's version and/or ship a migration for it.** The toolkit is meant to fill the gaps Angular leaves today, not to compete with Angular tomorrow. As Signal Forms grows, the toolkit shrinks toward it — on purpose.
-
----
-
-## 30-second quick start
+Install the package (no extra stylesheet import is needed):
 
 ```bash
 npm install @ngx-signal-forms/toolkit
 ```
 
+Here is a complete contact form:
+
 ```typescript
 import { Component, signal } from '@angular/core';
 import {
-  form,
-  schema,
-  required,
   email,
+  form,
   FormField,
+  maxLength,
+  required,
 } from '@angular/forms/signals';
 import {
-  NgxSignalFormToolkit,
   createOnInvalidHandler,
+  NgxSignalFormToolkit,
 } from '@ngx-signal-forms/toolkit';
 import { NgxFormField } from '@ngx-signal-forms/toolkit/form-field';
 
@@ -103,26 +82,58 @@ import { NgxFormField } from '@ngx-signal-forms/toolkit/form-field';
   imports: [FormField, NgxSignalFormToolkit, NgxFormField],
   template: `
     <form [formRoot]="contactForm">
-      <ngx-form-field-wrapper [formField]="contactForm.email">
-        <label for="email">Email</label>
-        <input id="email" type="email" [formField]="contactForm.email" />
+      <ngx-form-field-wrapper [formField]="contactForm.name">
+        <label for="contact-name">Name</label>
+        <input
+          id="contact-name"
+          autocomplete="name"
+          [formField]="contactForm.name"
+        />
       </ngx-form-field-wrapper>
-      <button type="submit">Send</button>
+
+      <ngx-form-field-wrapper [formField]="contactForm.email">
+        <label for="contact-email">Email</label>
+        <input
+          id="contact-email"
+          type="email"
+          autocomplete="email"
+          [formField]="contactForm.email"
+        />
+        <ngx-form-field-hint>We never share your email.</ngx-form-field-hint>
+      </ngx-form-field-wrapper>
+
+      <ngx-form-field-wrapper [formField]="contactForm.message">
+        <label for="contact-message">Message</label>
+        <textarea
+          id="contact-message"
+          rows="4"
+          [formField]="contactForm.message"
+        ></textarea>
+        <ngx-form-field-character-count [formField]="contactForm.message" />
+      </ngx-form-field-wrapper>
+
+      <button type="submit" [disabled]="contactForm().submitting()">
+        Send
+      </button>
     </form>
   `,
 })
 export class ContactComponent {
-  protected readonly model = signal({ email: '' });
-
-  protected readonly contactForm = form(
+  readonly model = signal({ name: '', email: '', message: '' });
+  readonly contactForm = form(
     this.model,
-    schema((path) => {
+    (path) => {
+      required(path.name, { message: 'Name is required' });
       required(path.email, { message: 'Email is required' });
-      email(path.email, { message: 'Invalid email format' });
-    }),
+      email(path.email, { message: 'Enter a valid email address' });
+      required(path.message, { message: 'Message is required' });
+      maxLength(path.message, 500, { message: 'Use 500 characters or fewer' });
+    },
     {
       submission: {
-        action: async () => console.log('Submit:', this.model()),
+        action: async (tree) => {
+          console.log('Saved:', tree().value());
+        },
         onInvalid: createOnInvalidHandler(),
       },
     },
@@ -130,182 +141,144 @@ export class ContactComponent {
 }
 ```
 
-From that markup you get, for free:
+Out of the box, that setup gives you:
 
-- ✅ `aria-invalid`, `aria-required`, `aria-describedby` wired automatically
-- ✅ Errors after blur or submit (default `on-touch`), with `role="alert"`
-- ✅ Warnings rendered as `role="status"`
-- ✅ Hints and character counts with proper ARIA association
-- ✅ First invalid field focused on failed submit
+- **Automatic ARIA wiring.** `aria-invalid`, `aria-required`, and `aria-describedby` stay in sync with visible errors, warnings, hints, and character counts. The character count reads its `500` limit straight from the `maxLength()` rule.
+- **Consistent message timing.** Pick `on-touch` (default), `on-submit`, or `immediate`. Under `on-touch`, a touched field hides its message while the user edits it and checks again on blur or submit, so screen readers announce errors once instead of on every keystroke. You only add the `ngxSignalForm` directive when you need `on-submit`, form-level timing, or an error summary.
+- **Focus on invalid submit.** `createOnInvalidHandler()` moves focus to the first invalid interactive field when submission fails.
+- **Non-blocking warnings.** Return `warningError()` from any validator to show advice with `role="status"` instead of a blocking `role="alert"`. Warnings have their own `warningStrategy`, so you can hold errors until submit while still showing warnings on blur.
 
-Notice there's no `ngxSignalForm` directive. You don't need it for the common path — plain `[formRoot]` and the default `on-touch` timing cover most forms. You add form-level context only when you want a different error strategy or submit-lifecycle tracking. Progressive complexity, not upfront ceremony.
-
----
-
-## Why accessibility is the headline
-
-Most form libraries treat accessibility as a bolt-on. I inverted that — the toolkit is designed around the **WCAG 2.2 AA** form patterns it can automate:
-
-- automatic `aria-invalid`, `aria-required`, `aria-describedby` on supported controls
-- `role="alert"` for blocking errors and `role="status"` for warnings, using each role's implicit live-region semantics (no redundant `aria-live` that some AT + browser combos double-announce)
-- `on-touch` timing by default, so screen-reader users aren't shouted at before they've typed a character
-- focus helpers (`focusFirstInvalid`, `createOnInvalidHandler`) so a failed submit lands on the first problem
-
-And it's not just a claim: **the toolkit's ARIA output is checked against the WCAG 2.2 AA axe-core ruleset on every change in the toolkit's Chromium-based Vitest browser a11y specs, while the demo apps also run cross-engine Chromium + Firefox scans with baseline tracking.** A regression in the accessibility mechanics the toolkit controls can't reach a release.
-
-One honest caveat: that covers the mechanics _the toolkit owns_. Full WCAG conformance is a property of your finished page — your labels, contrast, copy, and keyboard order still matter. Treat the automation as a verified head start, then audit the deployed form.
-
----
-
-## The features that made it worth building
-
-**Error timing, in plain English.** Pick one strategy and every wrapper, the auto-ARIA layer, and the assistive components obey it — no more hand-writing "touched OR submitted" per field:
-
-- `'immediate'` — as soon as a validator reports it
-- `'on-touch'` — after the field is touched or the form is submitted _(default)_
-- `'on-submit'` — hidden until a submit attempt
-
-**Warnings that don't block submit.** A warning is a non-blocking message — "this password is weak, but you can proceed." Angular treats every `ValidationError` as blocking, so the toolkit models warnings as a per-error `warn:` convention and gives you helpers to submit past them:
+Because Angular treats every validation error as blocking during `submit()`, you let warning-only forms submit by setting `ignoreValidators: 'all'` and guarding the action with `hasOnlyWarnings()`:
 
 ```typescript
-import { form, schema, minLength, validate } from '@angular/forms/signals';
-import { warningError, submitWithWarnings, canSubmitWithWarnings } from '@ngx-signal-forms/toolkit';
+import { form, minLength, validate } from '@angular/forms/signals';
+import {
+  createOnInvalidHandler,
+  hasOnlyWarnings,
+  warningError,
+} from '@ngx-signal-forms/toolkit';
 
-protected readonly signupForm = form(this.model, schema((path) => {
-  minLength(path.password, 8, { message: 'Minimum 8 characters' }); // blocking
-  validate(path.password, (ctx) =>
-    ctx.value().length < 12
-      ? warningError('weak', 'Consider 12+ characters for better security')
-      : null,
-  ); // non-blocking — renders role="status", submission passes through
-}));
+readonly #onInvalid = createOnInvalidHandler();
 
-protected readonly submit = () =>
-  submitWithWarnings(this.signupForm, async () => this.api.save(this.model()));
-
-protected readonly canSubmit = canSubmitWithWarnings(this.signupForm); // ignores warnings
+readonly signupForm = form(
+  this.model,
+  (path) => {
+    minLength(path.password, 8, { message: 'Use at least 8 characters' });
+    validate(path.password, ({ value }) =>
+      value().length < 12
+        ? warningError('short-password', 'Use 12 or more characters')
+        : null,
+    );
+  },
+  {
+    submission: {
+      ignoreValidators: 'all',
+      action: async (tree) => {
+        if (!hasOnlyWarnings(tree().errorSummary())) {
+          this.#onInvalid(tree);
+          return;
+        }
+        await this.api.save(tree().value());
+      },
+    },
+  },
+);
 ```
 
-`submitWithWarnings` touches all fields, yields one microtask so sync validation can settle, bails out if async validators are still pending, and guards against double-submit — the boilerplate you'd otherwise get wrong under a slow network.
+Always keep that `hasOnlyWarnings()` guard when using `ignoreValidators: 'all'`, and validate on the server too (pending async validators do not block this path).
 
-**One configuration cascade.** Every presentation setting — strategy, appearance, orientation, markers, presets, renderers — resolves through one precedence chain, most-specific wins:
+On accessibility: the toolkit automates the ARIA and live-region mechanics targeted at WCAG 2.2 AA and tests them with axe-core in Chromium browser specs on every change. Full WCAG conformance still belongs to your finished app: your labels, color contrast, copy, and keyboard order remain yours to test.
 
-```text
-field / component input
-  ?? form context (ngxSignalForm)
-  ?? component-scoped provider (…ForComponent)
-  ?? app-wide provider (provideNgxSignalForms…)
-  ?? built-in default
-```
+## Customize as far as you need
 
-Merging is per-key with nullish `??`, so you override the one key that differs and inherit the rest. Set org defaults once in `app.config.ts`, flip a single key for one feature area, keep field-level inputs for genuine one-offs.
+Zero-boilerplate defaults only stay useful if you can adapt them when your app outgrows them. Customization works in layers.
 
-**Validator-agnostic.** It doesn't lock you into one validation style — layer them:
+### 1. Theme with CSS custom properties and `light-dark()`
 
-```typescript
-form(model, (path) => {
-  required(path.email); // Angular — small local rules
-  validateStandardSchema(path, SignupSchema); // Zod / OpenAPI — contract & shape
-  validateVest(path, businessSuite, { includeWarnings: true }); // Vest — business policy
-});
-```
-
-Vest support lives behind an optional `/vest` entry point — you only pull it in if you want it.
-
----
-
-## Make it yours: theming, then your own wrappers
-
-Adopting the wrapper doesn't mean adopting my design taste. Styling is a graceful slope, and you get off wherever you want:
-
-**Start with theming.** The wrapper ships three appearances out of the box (`appearance="standard" | "outline" | "plain"`), and everything visual — colors, spacing, typography, borders, dark mode — is driven by **CSS custom properties**. No `::ng-deep`, no hacking internals, no rebuild to re-theme:
+`ngx-form-field-wrapper` ships three appearances (`standard`, `outline`, and `plain`) plus vertical and horizontal layouts. Visual tokens are standard CSS custom properties, so no `::ng-deep` is needed. Every default color uses CSS `light-dark()`, which means one `color-scheme` declaration switches the entire toolkit between light and dark mode:
 
 ```css
 :root {
-  --ngx-form-field-color-primary: #6da305; /* focus & active borders     */
-  --ngx-form-field-color-error: #d93025; /* invalid states + markers    */
-  --ngx-form-field-gap: 0.5rem; /* space between label & input */
-}
-
-/* Runtime theming — flip the whole toolkit to dark instantly */
-[data-theme='dark'] {
-  --ngx-form-field-color-border: #334155;
+  color-scheme: light dark;
+  --ngx-form-field-color-primary: #2563eb;
+  --ngx-form-field-color-error: #dc2626;
+  --ngx-form-field-color-warning: #b45309;
 }
 ```
 
-Because it's just custom properties, mapping your existing Bootstrap / Tailwind / Material tokens onto the toolkit is a handful of lines — e.g. `--ngx-form-field-color-primary: var(--bs-primary);`. The wrapper also exposes stable `data-*` hooks (control kind, layout, ARIA mode) so you can style by control type without coupling to internal markup.
+The wrapper also exposes `data-*` host attributes for control kind, layout, orientation, and ARIA mode when you want to target specific control types in CSS.
 
-**If theming isn't enough, build your own wrapper.** This is the part I'm proudest of: you can throw out my markup entirely and keep all the behavior. The `/headless` directives hand you the toolkit-managed _state_ — strategy-aware error visibility, error aggregation, focus behavior, character counts, ARIA id generation — with **zero markup opinions**, and the `/assistive` components give you ready-made, WCAG-compliant error, hint, counter, and summary pieces to drop into your own layout. Compose those two and a bespoke field wrapper that matches your design system exactly is a small, pleasant component — not a fork.
+### 2. Configure once at the right scope
 
-That's the whole ladder of ownership:
+Every presentation setting (error and warning timing, appearance, orientation, required/optional markers, error messages, field labels, control presets, and custom renderers) follows one cascade where the most specific level wins:
 
-- **`/form-field`** — the ready-made wrapper (the 90% path)
-- **`/assistive`** — standalone error, hint, counter, and summary components for when you already have a layout
-- **`/headless`** — renderless directives that give you toolkit-managed state while **you own every element and class**
-- **`/vest`** — the optional Vest adapter
-
----
-
-## Works with your component library
-
-Not "it should probably work" — three runnable reference wrappers ship in the repo, each with its own demo app **and** its own e2e suite:
-
-- **Angular Material** — wraps `<mat-form-field>`, letting Material keep its own `aria-describedby` ownership while the toolkit adds strategy, warnings, and centralized DI.
-- **Spartan** — wraps `BrnField` and bridges its a11y service.
-- **PrimeNG** — a projected-control wrapper for `pInputText` and friends.
-
-When a widget already manages its ARIA, you hand it ownership explicitly (`ngxSignalFormControlAria="manual"`) and the toolkit stays out of its way — because the golden rule of accessible forms is **one ARIA owner per attribute**.
-
----
-
-## Not a toy: examples and e2e tests
-
-Here's why this is a `1.0.0` and not a hopeful `0.x`.
-
-The repo ships **~20 runnable demo examples** covering the real cases: your-first-form, error-display modes, warnings, complex nested forms, custom controls, label-less fields, fieldset appearance, multi-step wizards, async validation, cross-field validation, field-state patterns, global configuration, submission patterns, and Zod / Vest / Zod+Vest. Every one is a live page you can open, read the source for, and copy.
-
-**And every example is written against the latest Angular v22 best practices** — standalone components, signal `input()`s, the new `@if`/`@for` control flow, `OnPush`, and `signal()`/`computed()` state throughout. No legacy patterns to unlearn.
-
-Behind the demos is a large **end-to-end suite** — the main demo app alone has dozens of Playwright specs, plus dedicated suites for the Material, Spartan, and PrimeNG integrations, on top of the cross-engine axe-core scans. When I say it works, there's a machine proving it on every commit.
-
-Browse them all: **[ngx-signal-forms.github.io/ngx-signal-forms](https://ngx-signal-forms.github.io/ngx-signal-forms/)**
-
----
-
-## Best practices, short version
-
-1. **Configure at the highest tier that's true.** App-wide defaults, `…ForComponent` for feature exceptions, field inputs only for one-offs. Don't repeat `appearance="outline"` on 40 wrappers.
-2. **Keep Angular as the single source of truth.** Warnings are for ignorable advice; anything that must hold before saving stays a blocking error.
-3. **Start native, zero API.** A stable `id` per control plus DOM inference and auto-ARIA cover native fields. Reach for explicit control APIs only where inference can't go — custom and third-party widgets.
-4. **Pick the right surface — and exactly one ARIA owner.** Never let two systems write the same `aria-*` attribute.
-5. **Layer validation deliberately.** Angular validators for local rules, Standard Schema for contracts, Vest for business policy — side by side in one schema.
-
----
-
-## Getting started
-
-```bash
-npm install @ngx-signal-forms/toolkit
+```text
+field input
+  -> form directive (ngxSignalForm)
+  -> component provider (provideNgxSignalFormsConfigForComponent)
+  -> app provider (provideNgxSignalFormsConfig)
+  -> built-in default
 ```
 
-Requirements: Angular `22.x`, TypeScript 6.0+, modern browsers. Signal Forms is stable as of Angular 22, and the toolkit's public API is stable as of this release.
+Overrides merge per key, so you configure defaults once in `app.config.ts` and only override the single key that differs in a feature or field.
 
-- 🚀 **[Live demo](https://ngx-signal-forms.github.io/ngx-signal-forms/)**
-- 📦 **[npm](https://www.npmjs.com/package/@ngx-signal-forms/toolkit)**
-- 📖 **[GitHub + full docs](https://github.com/ngx-signal-forms/ngx-signal-forms)**
+### 3. Pick your UI level or wrap your own design system
 
-**Building with an AI agent?** I maintain and ship an official **`ngx-signal-forms` skill** alongside the library, so your agent gets the real patterns — entry points, ARIA automation, the config cascade, and demo references — instead of guessing. Drop it in with:
+The package splits into six entry points so you only pull in what you use:
 
-```bash
-npx skills add https://github.com/ngx-signal-forms/ngx-signal-forms --skill ngx-signal-forms
+| Entry point                            | What it gives you                                                                                    |
+| -------------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| `@ngx-signal-forms/toolkit`            | Config, timing, auto-ARIA, focus, and warning helpers                                                |
+| `@ngx-signal-forms/toolkit/form-field` | Ready-made field wrapper and fieldset                                                                |
+| `@ngx-signal-forms/toolkit/assistive`  | Standalone error, hint, counter, legend, and summary components                                      |
+| `@ngx-signal-forms/toolkit/headless`   | Renderless state directives when you own all markup and CSS                                          |
+| `@ngx-signal-forms/toolkit/vest`       | Optional Vest 6 validator adapter                                                                    |
+| `@ngx-signal-forms/toolkit/testing`    | Optional WCAG 2.2 AA axe-core test helpers (`expectNoA11yViolations`, `expectVisibleFocusIndicator`) |
+
+If you already use a component library or an internal design system, you can build a thin wrapper on top of `createFieldPresentation()`, `/assistive`, or `/headless`. When a widget manages its own ARIA, set `ngxSignalFormControlAria="manual"` so only one party writes `aria-*` attributes.
+
+The repository includes three runnable reference wrappers with their own demo apps and Playwright test suites: **Angular Material**, **Spartan**, and **PrimeNG**.
+
+### 4. Layer any validator you like
+
+You are not locked into one validation library. Combine Angular validators, Standard Schema (such as Zod), and Vest 6 in the same form:
+
+```typescript
+form(model, (path) => {
+  required(path.email, { message: 'Email is required' });
+  validateStandardSchema(path, SignupSchema);
+  validateVest(path, businessSuite, { includeWarnings: true });
+});
 ```
 
----
+If you are coming from [`ngx-vest-forms`](https://www.npmjs.com/package/ngx-vest-forms), the `/vest` entry point maps your Vest 6 errors and `warn()` calls straight into Signal Forms and toolkit warnings. There is a step-by-step [migration guide from `ngx-vest-forms`](https://github.com/ngx-signal-forms/ngx-signal-forms/blob/main/docs/MIGRATING_FROM_NGX_VEST_FORMS.md) in the repo.
 
-## One last thing
+## Official AI agent skill
 
-Angular Signal Forms is the best form primitive the framework has ever had. It just, very intentionally, leaves the accessibility and presentation layer to you. After years of writing that layer by hand — and getting it wrong often enough to respect how hard it is — I wanted the accessible path to be the _default_ path, with Angular firmly in charge and real examples and tests behind it.
+If you build with an AI coding agent (Claude Code, Codex, GitHub Copilot, Gemini CLI, or others), the repository ships an official `ngx-signal-forms` skill you can install into your project:
 
-That's `@ngx-signal-forms/toolkit` v1.0.0. Give it a try, open an issue, tell me what breaks. I'd love for this to be the last time any of us hand-writes `aria-describedby` on an input.
+```bash
+# skills.sh
+npx skills add ngx-signal-forms/ngx-signal-forms --skill ngx-signal-forms
 
-If you build something with it, I'd genuinely love to hear about it in the comments. 🚀
+# Context7 (installs into .agents/skills/)
+npx ctx7 skills install /ngx-signal-forms/ngx-signal-forms ngx-signal-forms --universal
+```
+
+The skill is self-contained: it bundles focused guides for every entry point (`/form-field`, `/assistive`, `/headless`, `/vest`, and `/testing`), Angular Signal Forms essentials, validation choices, custom controls, theming, accessibility checks, and common pitfalls. Your agent does not need Nx, Context7, or a checkout of this repo to use it.
+
+In practice, it keeps your agent from guessing or hallucinating old patterns. It routes the agent to the right secondary entry point, enforces one ARIA owner per attribute, wires warning-aware submission and `on-touch` timing properly, and links straight to matching demo examples.
+
+## Examples, tests, and links
+
+The repository ships **27 runnable Angular 22 demo examples** (from your first form through wizards, routed steps, autosave, NgRx SignalStore binding, i18n, custom controls, and Zod + Vest validation) backed by **49 Playwright e2e spec files** across the four demo apps and Vitest browser accessibility tests.
+
+Requirements: Angular `22.x`, TypeScript 6+, and modern evergreen browsers. `vest` and `axe-core` are optional peer dependencies.
+
+- [Documentation](https://ngx-signal-forms-ngx-signal-forms.docs7.io/)
+- [Live demo](https://ngx-signal-forms.github.io/ngx-signal-forms/)
+- [npm (`@ngx-signal-forms/toolkit`)](https://www.npmjs.com/package/@ngx-signal-forms/toolkit)
+- [GitHub repository](https://github.com/ngx-signal-forms/ngx-signal-forms)
+- [`ngx-vest-forms` on npm](https://www.npmjs.com/package/ngx-vest-forms)
+
+Give v1.0.0 a try, explore the demo, and open an issue if something feels off or gets in your way.
