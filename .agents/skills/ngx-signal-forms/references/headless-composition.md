@@ -193,7 +193,12 @@ export class ManualEmailComponent {
 }
 ```
 
-When a third-party control library writes `aria-describedby` itself, compose `createAriaDescribedByBridge()` instead of adding a competing host binding. See [CUSTOM_WRAPPERS.md#composing-aria-primitives](https://github.com/ngx-signal-forms/ngx-signal-forms/blob/main/docs/CUSTOM_WRAPPERS.md#composing-aria-primitives).
+When a third-party design system writes `aria-describedby` itself, pick the pattern that matches how it writes the attribute (see [CUSTOM_WRAPPERS.md#design-systems-that-write-aria-describedby](https://github.com/ngx-signal-forms/ngx-signal-forms/blob/main/docs/CUSTOM_WRAPPERS.md#design-systems-that-write-aria-describedby)):
+
+- **Replaceable ARIA service (for example Spartan's `BrnFieldA11yService`):** replace that service on your wrapper with `createAriaDescribedByBridge()` so the toolkit supplies IDs and the design system writes them.
+- **Non-replaceable writer (for example Material's `mat-form-field`):** opt the control into manual ARIA mode (`ngxSignalFormControlAria="manual"` or `NGX_SIGNAL_FORM_ARIA_MODE: 'manual'`) and keep `createFieldPresentation()` / `createAriaInvalidSignal()` / `createAriaRequiredSignal()` in the wrapper.
+
+See [CUSTOM_WRAPPERS.md#composing-aria-primitives](https://github.com/ngx-signal-forms/ngx-signal-forms/blob/main/docs/CUSTOM_WRAPPERS.md#composing-aria-primitives) for the standalone ARIA factories.
 
 ## Control visibility
 

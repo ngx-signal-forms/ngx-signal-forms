@@ -36,7 +36,7 @@ Additional lookups: [API source index](references/api.md), [common pitfalls](ref
 
 ## Core invariants
 
-1. **Keep `@angular/forms/signals` as the source of truth.** Build forms with `form()`, `[formField]`, `[formRoot]`, and field state signals; layer toolkit features on top.
+1. **Keep `@angular/forms/signals` as the source of truth.** Build forms with `form()`, `[formField]`, and field state signals, and layer toolkit features on top. Use `[formRoot]` with `submission.action` for standard submission, or a single native `(submit)` handler with `novalidate` when calling `submitWithWarnings()` (see [vest/guide.md](vest/guide.md#warnings-and-submission)).
 2. **Import from the owning secondary entry point.** Import wrappers from `/form-field`, standalone feedback from `/assistive`, headless primitives from `/headless`, Vest adapters from `/vest`, and a11y helpers from `/testing`. Confirm root exports against `@ngx-signal-forms/toolkit`, not the internal `/core` build entry.
 3. **Add `ngxSignalForm` when the form needs shared context.** Plain `form[formRoot]` forms already work with the configured `defaultErrorStrategy` (default `'on-touch'`). Add `ngxSignalForm` for `'on-submit'`, `submittedStatus`, form-level strategy overrides, or an error summary that announces alone.
 4. **Keep one ARIA writer per control.** Let `NgxSignalFormAutoAria` own `aria-invalid`, `aria-required`, and managed `aria-describedby` ids (`{fieldName}-error`, `{fieldName}-warning`, wrapper hints). Keep your own static description ids on the control; auto-ARIA preserves them and appends managed ids. Set `ngxSignalFormControlAria="manual"` when the control writes its own ARIA.

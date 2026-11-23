@@ -18,7 +18,7 @@ Verify npm registry publication separately before updating dependency versions; 
 
 Load the [migration index](https://github.com/ngx-signal-forms/ngx-signal-forms/blob/main/docs/migrations/README.md) and **every** version hop between source and target, not only the final release guide:
 
-- From beta (`1.0.0-beta.10` through `rc.15`): start with the [cumulative beta-to-v1 guide](https://github.com/ngx-signal-forms/ngx-signal-forms/blob/main/docs/MIGRATING_BETA_TO_V1.md) and [CSS token migrations](https://github.com/ngx-signal-forms/ngx-signal-forms/blob/main/docs/MIGRATING_CSS_VARS.md), then apply each subsequent hop.
+- From beta (`1.0.0-beta.10` through `rc.15`): start with the [cumulative beta-to-v1 guide](https://github.com/ngx-signal-forms/ngx-signal-forms/blob/main/docs/MIGRATING_BETA_TO_V1.md) and [CSS token migrations](https://github.com/ngx-signal-forms/ngx-signal-forms/blob/main/docs/MIGRATING_CSS_VARS.md), then apply each subsequent hop up to the requested target. Both cumulative docs on `main` reflect current v1 release-candidate APIs (including RC.16 `color-scheme` and `light-dark()` dark mode and RC.16 token changes). When targeting an earlier release such as `rc.15`, apply only changes that exist at the target version and skip post-target RC.16+ steps.
 - Between release candidates (for example `rc.11` -> `rc.17`): read every intervening `docs/migrations/v1.0.0-rc.<n>.md` guide (including behavior-only hops such as [v1.0.0-rc.17.md](https://github.com/ngx-signal-forms/ngx-signal-forms/blob/main/docs/migrations/v1.0.0-rc.17.md)).
 - Check current public CSS tokens and `color-scheme` dark-mode rules in [THEMING.md](https://github.com/ngx-signal-forms/ngx-signal-forms/blob/main/packages/toolkit/form-field/THEMING.md).
 

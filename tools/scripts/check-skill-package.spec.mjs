@@ -95,11 +95,12 @@ void test('verifies GitHub main links, anchors, and peer ranges against the repo
         'axe-core': '>=4.13.0 <5',
       },
     }),
-    'docs/GUIDE.md': '# Guide\n## Real Section\n',
+    'docs/GUIDE.md': '# Guide\n## Real Section ##\n## C#\n',
     'apps/demo/example/README.md': '# Example\n',
     'skill/SKILL.md':
       header +
       '[Doc](https://github.com/ngx-signal-forms/ngx-signal-forms/blob/main/docs/GUIDE.md#real-section)\n' +
+      '[Query](https://github.com/ngx-signal-forms/ngx-signal-forms/blob/main/docs/GUIDE.md?plain=1#c)\n' +
       '[Dir](https://github.com/ngx-signal-forms/ngx-signal-forms/tree/main/apps/demo/example)\n' +
       'Requires `vest@>=6.3.0 <7.0.0` and `axe-core@>=4.13.0 <5`.\n',
   });

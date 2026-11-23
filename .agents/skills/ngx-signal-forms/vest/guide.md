@@ -157,7 +157,7 @@ export class WarningSignupComponent {
 }
 ```
 
-Alternatively, with `[formRoot]`, set `submission: { ignoreValidators: 'all', action }` and guard the action with `hasOnlyWarnings(tree().errorSummary())` (see [vest/README.md](https://github.com/ngx-signal-forms/ngx-signal-forms/blob/main/packages/toolkit/vest/README.md#quick-start)).
+Alternatively, with `[formRoot]`, set `submission: { ignoreValidators: 'all', action }` and guard the action with `hasOnlyWarnings(tree().errorSummary())` (see [vest/README.md](https://github.com/ngx-signal-forms/ngx-signal-forms/blob/main/packages/toolkit/vest/README.md#quick-start)). Because `ignoreValidators: 'all'` does not wait for pending async validators and `hasOnlyWarnings()` reads only settled errors, the action can run while a blocking async validator is still pending; validate the value on the server as well.
 For manual `'on-submit'` feedback with `submitWithWarnings()`, wire `createSubmittedStatusTracker(form, submitAttempted)` in an injection context.
 
 ## Done

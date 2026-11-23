@@ -5,7 +5,7 @@ import { dirname, join, relative, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const REPO_GITHUB_MAIN_RE =
-  /^https:\/\/github\.com\/ngx-signal-forms\/ngx-signal-forms\/(blob|tree)\/main\/([^#]+?)(?:#(.+))?$/u;
+  /^https:\/\/github\.com\/ngx-signal-forms\/ngx-signal-forms\/(blob|tree)\/main\/([^?#]+?)(?:\?[^#]*)?(?:#(.+))?$/u;
 
 function prose(markdown) {
   return markdown.replaceAll(
@@ -28,7 +28,9 @@ function stripTags(text) {
 function anchors(markdown) {
   const ids = new Set();
   const counts = new Map();
-  for (const [, heading] of markdown.matchAll(/^#{1,6}\s+(.+)$/gmu)) {
+  for (const [, heading] of markdown.matchAll(
+    /^#{1,6}\s+(.+?)(?:\s+#+)?\s*$/gmu,
+  )) {
     const slug = stripTags(heading.replaceAll(/\[([^\]]+)\]\([^)]*\)/gu, '$1'))
       .toLowerCase()
       .replaceAll(/[^\p{L}\p{N}\s_-]/gu, '')

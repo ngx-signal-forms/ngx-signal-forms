@@ -16,7 +16,7 @@ GitHub `blob/main/...` and `tree/main/...` links in this skill point to the late
 Treat them as mutable latest-source references, not proof of installed behavior or npm availability.
 
 For behavior-specific lookups, replace `main` with the installed toolkit's `v<version>` tag when that tag exists, then check the path and anchor.
-If no tag exists, compare any `main` finding against the installed declarations.
+If no tag exists, installed declarations confirm API shape only, not runtime behavior (for example, RC.17 changed `on-touch` edit-hiding without changing public signatures). Require version-specific behavioral evidence (such as the target release's migration guide or tests) before relying on a `main` behavior finding, or mark the behavior unverified.
 For migrations, read every crossed release guide rather than only the target release guide.
 Verify npm registry availability separately before updating a manifest or lockfile.
 
