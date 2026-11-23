@@ -378,8 +378,8 @@ validateVest(path, suite, {
 ```
 
 The callback can return one field name, an array of names, or `undefined`
-to run the whole suite. It must not return `false`: Vest cannot run zero
-tests, so the adapter throws. The adapter calls `suite.only(field).run(value)`.
+to run the whole suite. It must not return `false` or `[]`: Vest cannot run
+zero tests, so the adapter throws. The adapter calls `suite.only(field).run(value)`.
 If the suite has no `only` method, it calls `suite.run(value, field)` with
 the first field name.
 
@@ -476,7 +476,7 @@ does. Or use `submitWithWarnings()` from the root entry point. See
 - [Warnings, timing, and messages](../../../docs/WARNINGS_SUPPORT.md)
 - [Migrating from ngx-vest-forms](../../../docs/MIGRATING_FROM_NGX_VEST_FORMS.md)
 - [Vest 6 upgrade guide](https://vestjs.dev/docs/upgrade_guide)
-- Demos: [vest-validation](../../../apps/demo/src/app/05-advanced/vest-validation), [zod-vest-validation](../../../apps/demo/src/app/05-advanced/zod-vest-validation)
+- Demos: [vest-validation](../../../apps/demo/src/app/05-advanced/vest-validation/README.md), [zod-vest-validation](../../../apps/demo/src/app/05-advanced/zod-vest-validation/README.md)
 
 ## For maintainers
 
@@ -489,5 +489,6 @@ does. Or use `submitWithWarnings()` from the root entry point. See
 - `packages/toolkit/scripts/packaging.spec.ts` checks that the `vest` peer
   range stays below 7. Keep the "requires Vest 6" wording in
   [Install](#install) in step with that range.
-- The error `kind` format is `vest:<field>:<message>:<occurrence>`
-  (`vest-result-mapper.ts`). Only the prefixes are public.
+- The error `kind` format is `vest:<field>:<message>:<occurrence>` and warnings
+  use `warn:vest:<field>:<message>:<occurrence>` (`vest-result-mapper.ts`).
+  Only the prefixes are public.

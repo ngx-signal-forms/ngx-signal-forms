@@ -8,9 +8,17 @@ import {
 } from '@angular/forms/signals';
 import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit';
 import { render } from '@testing-library/angular';
-import { userEvent } from 'vitest/browser';
-import { describe, expect, it } from 'vitest';
+import { commands, userEvent } from 'vitest/browser';
+import { afterEach, describe, expect, it } from 'vitest';
 import { NgxFormFieldError } from './form-field-error';
+
+declare module 'vitest/browser' {
+  interface BrowserCommands {
+    emulateReducedMotion: (
+      reducedMotion: 'reduce' | 'no-preference' | null,
+    ) => Promise<void>;
+  }
+}
 
 /**
  * WCAG 4.1.3 (Status Messages) — the `role="alert"` live region must already
@@ -293,5 +301,44 @@ describe('NgxFormFieldError — theme defaults and token overrides', () => {
     await expect
       .poll(() => getComputedStyle(errorBox).backgroundColor)
       .toBe('rgb(7, 8, 9)');
+  });
+});
+
+describe('NgxFormFieldError — reduced motion', () => {
+  afterEach(async () => {
+    await commands.emulateReducedMotion(null);
+  });
+
+  it('preserves explicit animation opt-outs', async () => {
+    await commands.emulateReducedMotion('reduce');
+    const errors = signal([{ kind: 'required', message: 'Name is required' }]);
+    const { container } = await render(
+      `
+        <ngx-form-field-error
+          id="panel-errors"
+          [errors]="errors"
+          fieldName="name"
+          presentation="panel"
+        />
+        <ngx-form-field-error
+          id="inline-errors"
+          [errors]="errors"
+          fieldName="name"
+          style="--ngx-signal-form-error-animation: none"
+        />
+      `,
+      {
+        imports: [NgxFormFieldError],
+        componentProperties: { errors },
+      },
+    );
+
+    const errorBoxes = container.querySelectorAll<HTMLElement>(
+      '.ngx-form-field-error--error',
+    );
+    expect(errorBoxes).toHaveLength(2);
+    expect(
+      [...errorBoxes].map((element) => getComputedStyle(element).animationName),
+    ).toEqual(['none', 'none']);
   });
 });

@@ -1,6 +1,5 @@
 import { ApplicationRef, provideZonelessChangeDetection } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
-import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
 import { render, screen } from '@testing-library/angular';
 import userEvent from '@testing-library/user-event';
 import { provideNgxSignalFormsConfig } from '@ngx-signal-forms/toolkit';
@@ -37,7 +36,6 @@ async function renderProfileForm() {
   const result = await render(ProfileFormComponent, {
     providers: [
       provideZonelessChangeDetection(),
-      provideAnimationsAsync(),
       providePrimeNG({
         theme: {
           preset: Aura,

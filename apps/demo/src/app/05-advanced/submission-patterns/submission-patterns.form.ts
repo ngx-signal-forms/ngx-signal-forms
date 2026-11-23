@@ -77,7 +77,7 @@ import { BusyButtonDirective } from '../../shared/busy-button.directive';
                 <span
                   class="h-2 w-2 animate-pulse rounded-full bg-purple-600"
                 ></span>
-                Submitting...
+                Submitting…
               </span>
             }
             @case ('submitted') {
@@ -202,6 +202,10 @@ export class SubmissionStateIndicatorComponent {
           <input
             id="username"
             type="text"
+            autocomplete="username"
+            autocapitalize="none"
+            autocorrect="off"
+            spellcheck="false"
             [formField]="registrationForm.username"
             placeholder="Enter username"
           />
@@ -220,6 +224,7 @@ export class SubmissionStateIndicatorComponent {
           <input
             id="password"
             type="password"
+            autocomplete="new-password"
             [formField]="registrationForm.password"
             placeholder="Enter password"
           />
@@ -236,6 +241,7 @@ export class SubmissionStateIndicatorComponent {
           <input
             id="confirmPassword"
             type="password"
+            autocomplete="new-password"
             [formField]="registrationForm.confirmPassword"
             placeholder="Re-enter password"
           />
@@ -295,7 +301,7 @@ export class SubmissionStateIndicatorComponent {
           class="btn-primary"
         >
           @if (isFormSubmitting()) {
-            <span>Submitting...</span>
+            <span>Submitting…</span>
           } @else {
             <span>Create Account</span>
           }

@@ -40,7 +40,7 @@ export interface NgxFormFieldHintRendererOverride {
  * {@link NgxFormFieldHintRendererOverride}. Do not alias the public
  * interfaces to this type — that would change them from flat interfaces to
  * type aliases in the generated `.d.ts`, which is a visible (if harmless)
- * shape change this refactor must not introduce.
+ * shape change.
  *
  * @internal
  */
@@ -83,9 +83,7 @@ function createRendererFactory<TRenderer extends RendererOverride>(
  * Environment-scope + component-scope provider pair for a single renderer
  * token. Both `provideFormFieldErrorRenderer*` and
  * `provideFormFieldHintRenderer*` are thin wrappers around one instance of
- * this, parameterized by token — see the audit note on
- * `form-field-renderer.provider.ts` (C8) for why these four functions used
- * to be ~55 duplicated lines apiece.
+ * this, parameterized by token.
  *
  * @internal
  */

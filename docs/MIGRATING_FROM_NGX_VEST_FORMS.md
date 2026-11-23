@@ -111,9 +111,8 @@ If your suites use memoized tests:
 
 This is the key reason `@ngx-signal-forms/toolkit/vest` can exist as a clean Angular Signal Forms integration.
 
-Vest 6 implements the Standard Schema contract; Vest 5 does not.
-
-That is why upgrading to Vest 6 is not just a recommendation here — it is a hard prerequisite.
+Vest 6 implements the Standard Schema contract; Vest 5 does not. Upgrading to
+Vest 6 is a hard prerequisite.
 
 ## Quick mapping
 
@@ -248,36 +247,29 @@ export class SignupFormComponent {
 
 ### Consider a split migration: Zod/OpenAPI first, Vest for complex rules
 
-Yes — this is often one of the cleanest migration strategies.
+You do not need to choose only one validation tool or move every Vest rule at
+once. Combine Angular validators, Standard Schema, and Vest deliberately:
 
-Also remember that Angular Signal Forms validators still fit naturally in this stack.
-You do not need to choose between Angular validators, Zod, and Vest — it is usually better to combine them deliberately.
+1. Keep small local field rules in Angular validators.
+2. Move structural and API contract rules to **OpenAPI/Zod** through
+   `validateStandardSchema(...)`.
+3. Keep **Vest** for business-policy rules that are harder to express in a
+   schema.
 
-If your app already has an OpenAPI contract, generated schemas, or a natural place to introduce Zod, you do **not** need to move every old Vest rule into the new Signal Forms layer all at once.
-
-A pragmatic migration path is:
-
-1. move structural and contract rules to **OpenAPI/Zod** first
-2. register those rules through `validateStandardSchema(...)`
-3. keep **Vest** for business-policy rules that are harder to express declaratively
-
-That usually lets you reduce legacy `ngx-vest-forms` surface area faster while preserving the value of your existing Vest suites.
-
-That gives you a stable rule boundary during migration: keep small local field rules in Angular validators, move shared contract rules to Zod / OpenAPI Standard Schema when available, and keep complex business policy in Vest — replace simple template-driven validation first, then gradually shrink the old Vest surface instead of rewriting everything at once.
+This lets you shrink legacy `ngx-vest-forms` code gradually instead of rewriting
+every suite at once.
 
 See also:
 
 - [`apps/demo/src/app/05-advanced/zod-vest-validation/README.md`](../apps/demo/src/app/05-advanced/zod-vest-validation/README.md)
-- [Choosing a validation strategy](./VALIDATION_STRATEGY.md) — the full three-layer decision guide, recommended layering order, and a worked example
+- [Choosing a validation strategy](./VALIDATION_STRATEGY.md): the three-layer decision guide and worked example
 - [`packages/toolkit/vest/README.md`](../packages/toolkit/vest/README.md#when-to-use-vest)
 
 ### Remove framework-specific `field` plumbing first
 
 Many `ngx-vest-forms` suites carry a `field` parameter mainly to support focused field validation.
 
-For the first migration pass, prefer simplifying suites to plain Vest `create((data) => { ... })` callbacks unless you have a proven need for manual focus modifiers.
-
-That usually means deleting:
+For the first migration pass, simplify suites to plain Vest `create((data) => { ... })` callbacks unless you have a proven need for manual focus modifiers. Delete:
 
 - the extra `field?: string` parameter
 - `staticSuite(...)`-style integration scaffolding
@@ -285,11 +277,9 @@ That usually means deleting:
 
 If your old suite still calls `suite(data)` directly, uses `promisify`, or relies on `staticSuite`, update those Vest 5 patterns first before evaluating the Angular migration itself.
 
-Keep the business rules. Remove the adapter-era ceremony.
-
 ### Keep `warn()`, but update submit handling
 
-Vest `warn()` still maps well to the toolkit, but Angular Signal Forms treats all `ValidationError` objects — including toolkit-style warnings — as blocking during `submit()`. Use the toolkit's warning-aware submit helpers so warning-only forms can still submit.
+Vest `warn()` still maps well to the toolkit, but Angular Signal Forms treats all `ValidationError` objects, including toolkit warnings, as blocking during `submit()`. Use the toolkit's warning-aware submit helpers so warning-only forms can still submit.
 
 See also:
 
@@ -326,13 +316,13 @@ Do not assume the old manual trigger API has a direct equivalent in your new for
 
 ## Recommended migration order
 
-1. **Upgrade to Vest 6 first** — do this before migrating any form code
-2. **Move one form at a time** from `ngxVestForm` to Angular Signal Forms `form(...)`
-3. **Replace `ngModel` + `name` bindings** with `[formField]`
-4. **Move wrapper UI** from `ngx-control-wrapper` to toolkit wrappers or assistive components
-5. **Keep the Vest business rules**, but simplify old integration-only scaffolding first
-6. **Re-test warning-only submit behavior** using `hasOnlyWarnings(...)`
-7. **Review advanced cases separately**: `validationConfig`, `validateRootForm`, dynamic structure changes, arrays
+1. **Upgrade to Vest 6 first.** Do this before migrating any form code.
+2. **Move one form at a time** from `ngxVestForm` to Angular Signal Forms `form(...)`.
+3. **Replace `ngModel` and `name` bindings** with `[formField]`.
+4. **Move wrapper UI** from `ngx-control-wrapper` to toolkit wrappers or assistive components.
+5. **Keep the Vest business rules**, but simplify old integration-only scaffolding first.
+6. **Re-test warning-only submit behavior** using `hasOnlyWarnings(...)`.
+7. **Review advanced cases separately:** `validationConfig`, `validateRootForm`, dynamic structure changes, and arrays.
 
 ## Good candidates for migrating first
 
@@ -348,14 +338,4 @@ These map cleanly to the current toolkit Vest examples:
 - [`apps/demo/src/app/05-advanced/vest-validation/README.md`](../apps/demo/src/app/05-advanced/vest-validation/README.md)
 - [`apps/demo/src/app/05-advanced/zod-vest-validation/README.md`](../apps/demo/src/app/05-advanced/zod-vest-validation/README.md)
 
-If your current form mixes simple contract rules with a smaller number of complex policy checks, the **Zod + Vest** route is often the easiest migration path rather than trying to keep everything in Vest.
-
-## Suggested follow-up docs
-
-If migration demand grows, the next most valuable docs would be:
-
-1. a focused `ROOT_FORM` / form-level migration example
-2. a dynamic-structure migration example
-3. a complex cross-field dependency example that compares old `validationConfig` patterns with Signal Forms behavior
-
-Those three topics are where the remaining migration ambiguity lives.
+If your current form mixes simple contract rules with a smaller number of complex policy checks, the **Zod + Vest** route is often the easiest migration path rather than keeping everything in Vest.

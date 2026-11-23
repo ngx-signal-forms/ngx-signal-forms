@@ -5,7 +5,7 @@ title: 'Compatibility'
 This document describes the compatibility contract for
 `@ngx-signal-forms/toolkit`.
 
-Per-version changes ship as [GitHub Releases](https://github.com/ngx-signal-forms/ngx-signal-forms/releases) — the project keeps no separate `CHANGELOG.md`.
+Per-version changes ship as [GitHub Releases](https://github.com/ngx-signal-forms/ngx-signal-forms/releases). The project keeps no separate `CHANGELOG.md`.
 
 ## Current package contract
 
@@ -30,11 +30,11 @@ through an open peer range.
 
 ## Angular Signal Forms status
 
-Angular Signal Forms is **stable** as of Angular 22 — its core symbols carry
+Angular Signal Forms is **stable** as of Angular 22. Its core symbols carry
 `@publicApi 22.0` and follow Angular's normal semver guarantees within the major.
-(You may still see it called "experimental"; that reflected its pre-v22 preview,
-not the shipped v22 API — `form()`, validators, `markAsTouched()`, `submit()` —
-that the toolkit builds on.)
+Older posts may still call it "experimental", which reflected the pre-v22
+preview rather than the shipped v22 API (`form()`, validators, `markAsTouched()`,
+and `submit()`) that the toolkit builds on.
 
 That means:
 
@@ -89,28 +89,6 @@ version:
 | ---------------------- | -------------------------------------------------------------------- |
 | CI + Publish workflows | Node, from [`.node-version`](../.node-version) (currently `26.13.0`) |
 
-## Compatibility matrix
-
-A scheduled workflow (`.github/workflows/compat-matrix.yml`) tests the
-toolkit against the lowest and highest version of each declared Node,
-Angular and peer-dependency range, in 10 cells. It runs weekly, on
-`workflow_dispatch`, and on pull requests that change `packages/toolkit/**`,
-the root `package.json`, `pnpm-workspace.yaml`,
-`tools/scripts/compat-matrix-override.mjs`, or the workflow itself. Each
-cell that needs a non-default package version resolves it (an exact floor,
-or the highest version in a declared range, via `npm view`) and writes it
-into `pnpm-workspace.yaml`'s `overrides` map for that job only, using
-[`compat-matrix-override.mjs`](../tools/scripts/compat-matrix-override.mjs),
-then runs `toolkit:test` and `toolkit:test-browser`. Nothing is committed
-back to the repository.
-
-| Dimension | Versions tested                                                                   |
-| --------- | --------------------------------------------------------------------------------- |
-| Node      | `22.23.4`, `24.22.1`, `26.12.1` (each declared `engines` floor), `26.x` (current) |
-| Angular   | `22.0.0` (declared floor), latest `22.x`                                          |
-| axe-core  | `4.13.0` (declared floor), latest `<5`                                            |
-| vest      | `6.3.0` (declared floor), latest `<7.0.0`                                         |
-
 ## Browser support
 
 The toolkit targets the **last 2 major versions of the four main evergreen browsers**, matching Angular's own browser support policy. This is codified in [`.browserslistrc`](../.browserslistrc) at the repo root and consumed by ng-packagr (autoprefixer) during library builds.
@@ -125,3 +103,25 @@ The toolkit targets the **last 2 major versions of the four main evergreen brows
 The **runtime minimum** is the oldest version where all CSS features used by the toolkit resolve correctly. Older evergreen builds may render a flattened approximation: default colors resolve as if unset without `light-dark()`, and nested selectors, hover/invalid overrides, and the outline appearance degrade. See the [theming guide](../packages/toolkit/form-field/THEMING.md#browser-support) for the per-feature breakdown.
 
 The demo and end-to-end suite validate behavior through Playwright's Chromium project. Run `npx browserslist` in the repo root to see the current resolved browser list.
+
+## For maintainers
+
+A scheduled workflow (`.github/workflows/compat-matrix.yml`) tests the toolkit
+against the lowest and highest version of each declared Node, Angular, and
+peer-dependency range in 10 cells. It runs weekly, on `workflow_dispatch`, and
+on pull requests that change `packages/toolkit/**`, the root `package.json`,
+`pnpm-workspace.yaml`, `tools/scripts/compat-matrix-override.mjs`, or the
+workflow itself.
+
+Each cell resolves its target floor or highest compatible version via `npm view`,
+writes temporary overrides into `pnpm-workspace.yaml` with
+[`compat-matrix-override.mjs`](../tools/scripts/compat-matrix-override.mjs),
+and runs `toolkit:test` and `toolkit:test-browser`. Nothing is committed back
+to the repository.
+
+| Dimension | Versions tested                                                                   |
+| --------- | --------------------------------------------------------------------------------- |
+| Node      | `22.23.4`, `24.22.1`, `26.12.1` (each declared `engines` floor), `26.x` (current) |
+| Angular   | `22.0.0` (declared floor), latest `22.x`                                          |
+| axe-core  | `4.13.0` (declared floor), latest `<5`                                            |
+| vest      | `6.3.0` (declared floor), latest `<7.0.0`                                         |

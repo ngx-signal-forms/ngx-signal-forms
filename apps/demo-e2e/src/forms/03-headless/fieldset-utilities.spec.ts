@@ -317,6 +317,10 @@ test.describe('Headless - Fieldset + Utilities', () => {
         await expect(assistiveCounter).toBeVisible();
         // The assistive component renders currentLength/maxLength
         await expect(assistiveCounter).toContainText('195/200');
+
+        await notesInput.fill('x'.repeat(200));
+        await expect(headlessCounter).toContainText('200/200');
+        await expect(assistiveCounter).toContainText('200/200');
       });
     });
 
@@ -355,19 +359,6 @@ test.describe('Headless - Fieldset + Utilities', () => {
   });
 
   test.describe('Delivery Notes - Utility Functions', () => {
-    test('should update character count while typing', async ({ page }) => {
-      const notesInput = page.getByLabel('Notes');
-
-      await test.step('Initial count shows 0/200', async () => {
-        await expect(page.getByText(/0\s*\/\s*200/).first()).toBeVisible();
-      });
-
-      await test.step('Type some text', async () => {
-        await notesInput.fill('Hello world');
-        await expect(page.getByText(/11\s*\/\s*200/).first()).toBeVisible();
-      });
-    });
-
     test('should show short notes warning', async ({ page }) => {
       const notesInput = page.getByLabel('Notes');
 
@@ -391,19 +382,6 @@ test.describe('Headless - Fieldset + Utilities', () => {
             hasText: 'Consider adding more detail',
           }),
         ).toBeHidden();
-      });
-    });
-
-    test('should show character count at limit', async ({ page }) => {
-      const notesInput = page.getByLabel('Notes');
-      const maxText = 'x'.repeat(200);
-
-      await test.step('Fill to exactly 200 characters', async () => {
-        await notesInput.fill(maxText);
-      });
-
-      await test.step('Verify counter shows limit reached', async () => {
-        await expect(page.getByText(/200\s*\/\s*200/).first()).toBeVisible();
       });
     });
   });

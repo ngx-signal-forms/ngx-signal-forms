@@ -16,6 +16,10 @@ import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit';
       --_switch-height: 20px;
       --_switch-padding: 2px;
       --_switch-knob-size: 16px;
+      --_switch-knob-travel: calc(
+        var(--_switch-width) - var(--_switch-knob-size) -
+          (var(--_switch-padding) * 2)
+      );
       --_switch-track-off-bg: #8298b2;
       --_switch-track-off-bg-hover: #778aa2;
       --_switch-track-on-bg: #007bc7;
@@ -64,7 +68,7 @@ import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit';
       block-size: var(--_switch-knob-size);
       border-radius: var(--_switch-knob-radius);
       background-color: var(--_switch-knob-bg);
-      transition: transform 0.15s ease;
+      transition: transform 0.15s ease-out;
     }
 
     .ngx-switch-control__input:hover:not(:disabled) {
@@ -80,16 +84,20 @@ import { NgxSignalFormToolkit } from '@ngx-signal-forms/toolkit';
     }
 
     .ngx-switch-control__input:checked::before {
-      transform: translateX(
-        calc(
-          var(--_switch-width) - var(--_switch-knob-size) -
-            (var(--_switch-padding) * 2)
-        )
-      );
+      transform: translateX(var(--_switch-knob-travel));
     }
 
+    /* The knob starts at inline-start, so in RTL it travels left. */
+    .ngx-switch-control__input:checked:dir(rtl)::before {
+      transform: translateX(calc(var(--_switch-knob-travel) * -1));
+    }
+
+    /* Forced-colors mode drops box-shadow but paints the transparent
+       outline in a system color, so focus stays visible. */
     .ngx-switch-control__input:focus-visible {
       box-shadow: var(--_switch-focus-ring);
+      outline: 2px solid transparent;
+      outline-offset: 2px;
     }
 
     .ngx-switch-control__input[aria-invalid='true'] {

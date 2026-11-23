@@ -206,14 +206,17 @@ Always validate the submitted data on the server too.
 
 A strategy decides when feedback shows:
 
-| Value       | Feedback shows                                   |
-| ----------- | ------------------------------------------------ |
-| `immediate` | As soon as validation reports it                 |
-| `on-touch`  | After the user leaves the field, or after submit |
-| `on-submit` | After the first submit attempt                   |
+| Value       | Feedback shows                                                                     |
+| ----------- | ---------------------------------------------------------------------------------- |
+| `immediate` | As soon as validation reports it                                                   |
+| `on-touch`  | After the user leaves the field, or after submit. Hides again while the user types |
+| `on-submit` | After the first submit attempt                                                     |
 
-Errors and warnings each have their own strategy. They resolve separately, so a
-form can hold errors until submit and still show warnings early.
+With `on-touch`, typing into an already-touched field hides its errors (and
+`on-touch` warnings) until focus moves or the form submits. Screen readers then
+announce errors once after editing stops instead of on every keystroke. Errors
+and warnings each have their own strategy. They resolve separately, so a form
+can hold errors until submit and still show warnings early.
 
 For each field, the toolkit uses the first value it finds in this order:
 
@@ -272,7 +275,9 @@ The full list of configuration keys is in the
 Native `:user-invalid` uses the browser's own timing. It is not the same as
 `on-touch`, and it cannot see schema errors, server errors, or warnings.
 
-### When warnings appear — `warningStrategy`
+<a id="when-warnings-appear--warningstrategy"></a>
+
+### When warnings appear (`warningStrategy`)
 
 `warningStrategy` uses the same values and the same order as the error
 strategy, with a separate built-in default of `on-touch`.

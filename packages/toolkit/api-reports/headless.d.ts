@@ -1,3 +1,6 @@
+/**
+ * Generated bundle index. Do not edit.
+ */
 import * as i0 from "@angular/core";
 import { Injector, Signal } from "@angular/core";
 import { FieldTree, ValidationError } from "@angular/forms/signals";
@@ -896,12 +899,12 @@ interface ErrorSummarySignals {
  * content insertion into a *pre-existing* live region; mounting the
  * container and its content in the same tick risks the NVDA + Chrome
  * missed-first-announcement bug. Gate only the inner content on
- * `shouldShow()`/`hasErrors()`, not the container itself:
+ * `shouldShow()`, not the container itself:
  *
  * ```html
  * <div ngxHeadlessErrorSummary #summary="errorSummary" [formTree]="myForm">
  *   <ul role="alert">
- *     @if (summary.shouldShow() && summary.hasErrors()) {
+ *     @if (summary.shouldShow()) {
  *       @for (entry of summary.entries(); track entry.key) {
  *         <li>
  *           @if (entry.canFocus) {

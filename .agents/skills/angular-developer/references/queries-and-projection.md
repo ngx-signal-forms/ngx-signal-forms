@@ -11,7 +11,7 @@ View queries search the component's **own template**. They return readonly signa
 Use `viewChild` to find the first match. You can query by a template reference variable (string), a component or directive class, or an `InjectionToken`.
 
 ```ts
-import { Component, ElementRef, viewChild } from '@angular/core';
+import {Component, ElementRef, viewChild} from '@angular/core';
 
 @Component({
   selector: 'app-search-field',
@@ -42,8 +42,8 @@ export class SearchField {
 Use the `read` option to get something other than the default result from the matched element, such as its `ElementRef`, a directive on it, or the `TemplateRef` of an `<ng-template>`.
 
 ```ts
-import { Component, ElementRef, TemplateRef, viewChild } from '@angular/core';
-import { DatePicker } from './date-picker';
+import {Component, ElementRef, TemplateRef, viewChild} from '@angular/core';
+import {DatePicker} from './date-picker';
 
 @Component({
   selector: 'app-empty-state',
@@ -56,11 +56,9 @@ import { DatePicker } from './date-picker';
   `,
 })
 export class EmptyState {
-  readonly datePickerEl = viewChild(DatePicker, { read: ElementRef });
+  readonly datePickerEl = viewChild(DatePicker, {read: ElementRef});
   // No generic needed: the type comes from `read`
-  readonly template = viewChild.required('emptyTemplate', {
-    read: TemplateRef,
-  });
+  readonly template = viewChild.required('emptyTemplate', {read: TemplateRef});
 }
 ```
 
@@ -69,9 +67,9 @@ export class EmptyState {
 `viewChildren` returns a signal of a readonly array (`Signal<readonly T[]>`).
 
 ```ts
-import { Component, computed, input, viewChildren } from '@angular/core';
-import { Avatar } from './avatar';
-import { User } from './user.model';
+import {Component, computed, input, viewChildren} from '@angular/core';
+import {Avatar} from './avatar';
+import {User} from './user.model';
 
 @Component({
   selector: 'app-user-list',
@@ -100,8 +98,8 @@ Query results update when Angular creates or destroys views, for example when an
 Content queries search the content that a parent **projects** into the component. Use them when consumers provide the children, as in a tab group. A view query would not find projected children.
 
 ```ts
-import { Component, computed, contentChildren } from '@angular/core';
-import { Tab } from './tab';
+import {Component, computed, contentChildren} from '@angular/core';
+import {Tab} from './tab';
 
 @Component({
   selector: 'app-tab-group',
@@ -200,8 +198,8 @@ Since **Angular 18**, content placed inside `<ng-content>` renders when nothing 
 Do not put `<ng-content>` inside `@if`, `@for`, `@switch` or `<ng-template>`. The parent always instantiates projected content, even when the slot is not rendered. To render content lazily or several times, have the consumer pass an `<ng-template>`, query it and render it with `NgTemplateOutlet`, which must be added to the component's `imports`.
 
 ```ts
-import { Component, contentChild, signal, TemplateRef } from '@angular/core';
-import { NgTemplateOutlet } from '@angular/common';
+import {Component, contentChild, signal, TemplateRef} from '@angular/core';
+import {NgTemplateOutlet} from '@angular/common';
 
 @Component({
   selector: 'app-expandable',

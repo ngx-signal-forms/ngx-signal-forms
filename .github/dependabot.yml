@@ -54,7 +54,7 @@ updates:
         update-types: ['version-update:semver-major']
       - dependency-name: '@schematics/angular'
         update-types: ['version-update:semver-major']
-      # Hold ng-packagr at its current minor (22.2.x). An earlier minor bump
+      # Hold ng-packagr at its current minor (22.3.x). An earlier minor bump
       # broke the Nx `ng-packagr-lite` build of the Spartan helm library
       # (TS6059 rootDir on secondary entry points) and reformatted the toolkit
       # .d.ts output. Bump it by hand together with an Nx version that supports
@@ -108,7 +108,6 @@ updates:
           - '@types/*'
           - 'size-limit'
           - '@size-limit/*'
-          - 'autoprefixer'
           - 'postcss'
           - 'jsdom'
         update-types:

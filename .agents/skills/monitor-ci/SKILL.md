@@ -152,6 +152,7 @@ expected_commit_sha = null
 agent_triggered = false    # Set true after monitor takes an action that triggers new CI Attempt
 poll_count = 0
 wait_mode = false
+prev_status = null
 prev_cipe_status = null
 prev_sh_status = null
 prev_verification_status = null
@@ -178,6 +179,7 @@ node <skill_dir>/scripts/ci-poll-decide.mjs '<subagent_result_json>' <poll_count
   [--wait-mode] \
   [--prev-cipe-url <last_cipe_url>] \
   [--expected-sha <expected_commit_sha>] \
+  [--prev-status <prev_status>] \
   [--timeout <timeout_minutes>] \
   [--new-cipe-timeout <new_cipe_timeout_minutes>] \
   [--elapsed-seconds <seconds_since_start_time>] \
@@ -203,6 +205,7 @@ Parse the JSON output and update tracking state:
 - `prev_sh_status = subagent_result.selfHealingStatus`
 - `prev_verification_status = subagent_result.verificationStatus`
 - `prev_failure_classification = subagent_result.failureClassification`
+- `prev_status = output.action + ":" + (output.code || subagent_result.cipeStatus)`
 - `poll_count++`
 
 Based on `action`:
@@ -216,14 +219,13 @@ Based on `action`:
 
 When decision script returns `action == "done"`:
 
-1. Run cycle-check (Step 4) to update counters and classify the completed cycle.
-2. Check the returned `code` and look up its default behavior in the table above.
-3. If handling the code would start another remediation cycle and `limitReached`
-   is true, report the limit and stop before taking that action.
-4. Handle terminal statuses even when the cycle limit is reached.
-5. Check whether user instructions override the default, then execute the action.
-6. **If the action expects a new CI Attempt**, update tracking (see Step 3a).
-7. If the action results in looping, go to Step 2.
+1. Run cycle-check (Step 4) **before** handling the code
+2. Check the returned `code`
+3. Look up default behavior in the table above
+4. Check if user instructions override the default
+5. Execute the appropriate action
+6. **If action expects new CI Attempt**, update tracking (see Step 3a)
+7. If action results in looping, go to Step 2
 
 #### Tool calls for actions
 
@@ -253,7 +255,7 @@ The script returns `{ waitMode, pollCount, lastCipeUrl, expectedCommitSha, agent
 
 ### Step 4: Cycle Classification and Progress Tracking
 
-When the decision script returns `action == "done"`, run cycle-check:
+When the decision script returns `action == "done"`, run cycle-check **before** handling the code:
 
 ```bash
 node <skill_dir>/scripts/ci-state-update.mjs cycle-check \
@@ -265,20 +267,15 @@ node <skill_dir>/scripts/ci-state-update.mjs cycle-check \
 
 The script returns `{ cycleCount, agentTriggered, envRerunCount, approachingLimit, limitReached, message }`. Update tracking state from the output.
 
-- If `limitReached` and handling this code would start another remediation
-  cycle, print `message` and stop before that action.
-- Handle terminal results such as success, cancellation, timeout, and the
-  circuit breaker even when the cycle limit is reached.
-- If `approachingLimit` and handling this code could start another cycle, ask
-  the user whether to continue with 5 or 10 more cycles or stop monitoring.
-- If the previous cycle was NOT agent-triggered (the human pushed), log that
-  human-initiated push was detected.
+- If `limitReached` → the `--max-cycles` budget is exhausted. Print `message` and **stop monitoring** (do not handle the code or start another cycle). This is a hard stop, not advisory.
+- Else if `approachingLimit` → ask user whether to continue (with 5 or 10 more cycles) or stop monitoring
+- If previous cycle was NOT agent-triggered (human pushed), log that human-initiated push was detected
 
 #### Progress Tracking
 
-- `no_progress_count`, circuit breaker (13 polls), and backoff reset are handled by ci-poll-decide.mjs (progress = any change in cipeStatus, selfHealingStatus, verificationStatus, or failureClassification)
+- `no_progress_count`, circuit breaker (5 polls), and backoff reset are handled by ci-poll-decide.mjs (progress = any change in cipeStatus, selfHealingStatus, verificationStatus, or failureClassification)
 - `env_rerun_count` reset on non-environment status is handled by ci-state-update.mjs cycle-check
-- On a new CI Attempt detected (poll script returns `newCipeDetected`) → reset `local_verify_count = 0`. Keep `env_rerun_count` until a non-environment status resets it.
+- On new CI Attempt detected (poll script returns `newCipeDetected`) → reset `local_verify_count = 0`, `env_rerun_count = 0`
 
 ## Error Handling
 

@@ -4,19 +4,12 @@
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { AxeBuilder } from '@axe-core/playwright';
 import type { Page, TestInfo } from '@playwright/test';
-import {
-  WCAG_22_AA_TAGS,
-  type WCAG_22_AA_TAG,
-} from '@ngx-signal-forms/toolkit/testing';
+// The tag set lives in the toolkit's public testing entry point
+// (`packages/toolkit/testing/a11y.ts`) so component-level specs (hard fail)
+// and these app-level baseline scans can never drift apart.
+import { WCAG_22_AA_TAGS } from '@ngx-signal-forms/toolkit/testing';
 
 const WORKSPACE_ROOT = '.';
-
-// Re-exported so existing `@ngx-signal-forms/a11y-testing` consumers keep
-// working. The tag set itself lives in the toolkit's own public testing
-// entry point (`packages/toolkit/testing/a11y.ts`) so component-level specs
-// (hard fail) and these app-level baseline scans can never drift apart.
-export { WCAG_22_AA_TAGS };
-export type { WCAG_22_AA_TAG };
 
 /**
  * One axe violation, flattened to the fields the baseline diff cares about.

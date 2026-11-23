@@ -158,7 +158,11 @@ const FIELDSET_SURFACE_TONE_VALUES = [
     },
   ],
   imports: [NgComponentOutlet, NgTemplateOutlet, NgxFormFieldError],
-  styleUrls: ['../core/feedback-tokens.css', './form-fieldset.css'],
+  styleUrls: [
+    '../core/feedback-tokens.css',
+    '../core/motion-tokens.css',
+    './form-fieldset.css',
+  ],
   exportAs: 'ngxFormFieldset',
   // BEM classnames keep the legacy `ngx-signal-form-fieldset--*` prefix for
   // theming back-compat. The host's element selector uses the new short
@@ -512,10 +516,12 @@ export class NgxFormFieldset {
   });
 
   protected readonly legendLabelId = computed<string | null>(() => {
-    // Native `<fieldset>` auto-associates its first <legend>; explicit
-    // aria-labelledby would duplicate that relationship for AT.
+    // Native `<fieldset>` auto-associates its first <legend>; a managed
+    // aria-labelledby would duplicate that relationship for AT. An
+    // author-supplied value stays: without it, a legend-less native fieldset
+    // loses its accessible name.
     if (this.#isNativeFieldset) {
-      return null;
+      return this.#initialAriaLabelledby;
     }
     return this.#legendId() ?? this.#initialAriaLabelledby;
   });

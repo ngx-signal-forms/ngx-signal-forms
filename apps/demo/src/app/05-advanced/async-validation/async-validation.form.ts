@@ -156,6 +156,10 @@ const registrationSchema = schema<Registration>((path) => {
           <input
             id="username"
             type="text"
+            autocomplete="username"
+            autocapitalize="none"
+            autocorrect="off"
+            spellcheck="false"
             [formField]="regForm.username"
             placeholder="Try typing 'admin'"
           />
@@ -166,7 +170,7 @@ const registrationSchema = schema<Registration>((path) => {
               suffix
               class="animate-pulse text-sm text-gray-500 dark:text-gray-400"
             >
-              Checking...
+              Checking…
             </span>
           }
 
@@ -184,6 +188,10 @@ const registrationSchema = schema<Registration>((path) => {
           <input
             id="usernameOnBlur"
             type="text"
+            autocomplete="username"
+            autocapitalize="none"
+            autocorrect="off"
+            spellcheck="false"
             [formField]="regForm.usernameOnBlur"
             placeholder="Type, then tab away"
           />
@@ -193,7 +201,7 @@ const registrationSchema = schema<Registration>((path) => {
               suffix
               class="animate-pulse text-sm text-gray-500 dark:text-gray-400"
             >
-              Checking...
+              Checking…
             </span>
           }
 
@@ -209,9 +217,9 @@ const registrationSchema = schema<Registration>((path) => {
             [ngxBusy]="regForm().submitting() || regForm().pending()"
           >
             @if (regForm().submitting()) {
-              Registering...
+              Registering…
             } @else if (regForm().pending()) {
-              Validating...
+              Validating…
             } @else {
               Register
             }

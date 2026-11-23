@@ -122,7 +122,7 @@ export type NgxCharacterCountAnnouncementFormatter = (
  * }
  * ```
  *
- * Color States (aligned with Figma design tokens):
+ * Color States:
  * - **ok**: 0-80% of limit (text/secondary)
  * - **warning**: 80-95% of limit (amber)
  * - **danger**: 95-100% of limit (interaction/danger)
@@ -231,9 +231,9 @@ export type NgxCharacterCountAnnouncementFormatter = (
         var(--ngx-signal-form-feedback-font-size, 0.75rem)
       );
       line-height: var(--ngx-form-field-char-count-line-height, 1.25);
-      transition:
-        color 0.2s ease,
-        font-weight 0.2s ease;
+      /* Fixed-width digits keep the counter from shifting as the count changes. */
+      font-variant-numeric: tabular-nums;
+      transition: color 0.2s ease;
       white-space: nowrap;
       padding-inline-start: var(
         --ngx-form-field-char-count-padding-inline-start,

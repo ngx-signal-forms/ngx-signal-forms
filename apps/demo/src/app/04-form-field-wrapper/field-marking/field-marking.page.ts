@@ -56,7 +56,7 @@ const MODE_OPTIONS: readonly { value: FieldMarkingMode; label: string }[] = [
             @for (option of modeOptions; track option.value) {
               <button
                 type="button"
-                class="focus-visible:outline-border-focus rounded-full px-3 py-1.5 text-sm font-medium text-gray-600 transition-all hover:text-gray-900 focus-visible:outline-2 focus-visible:outline-offset-2 dark:text-gray-300 dark:hover:text-white"
+                class="focus-visible:outline-border-focus rounded-full px-3 py-1.5 text-sm font-medium text-gray-600 transition-colors hover:text-gray-900 focus-visible:outline-2 focus-visible:outline-offset-2 dark:text-gray-300 dark:hover:text-white"
                 [attr.aria-label]="'Mark ' + option.value"
                 [class.bg-selected]="mode() === option.value"
                 [class.shadow-sm]="mode() === option.value"

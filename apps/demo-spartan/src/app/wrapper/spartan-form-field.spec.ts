@@ -428,6 +428,7 @@ describe('NgxSpartanFormFieldError applies blocking-error precedence to the rend
     // Fix the blocking error ("Al" satisfies `required`) without clearing
     // the warning condition (2 chars is still under 5).
     await user.type(nicknameInput, 'Al');
+    await user.tab();
     await fixture.whenStable();
 
     expect(screen.queryByText(/nickname is required/i)).toBeNull();

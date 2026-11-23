@@ -26,6 +26,7 @@ continue with each published hop below.
 | `v1.0.0-rc.13`   | `v1.0.0-rc.14` | [Upgrade guide](./v1.0.0-rc.14.md)                  |
 | `v1.0.0-rc.14`   | `v1.0.0-rc.15` | [Upgrade guide](./v1.0.0-rc.15.md)                  |
 | `v1.0.0-rc.15`   | `v1.0.0-rc.16` | [Upgrade guide](./v1.0.0-rc.16.md)                  |
+| `v1.0.0-rc.16`   | `v1.0.0-rc.17` | [Upgrade guide](./v1.0.0-rc.17.md)                  |
 
 > **Add the guide before you cut the release, not after.** A guide written
 > against a version number that is never published strands its content: readers

@@ -49,7 +49,7 @@ describe('WizardContainerComponent draft resume', () => {
   it('disables the step buttons and shows a loading state while the draft loads', async () => {
     const { fixture, request } = await setup();
 
-    expect(screen.getByText('Loading saved draft...')).toBeInTheDocument();
+    expect(screen.getByText('Loading saved draft…')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Next' })).toHaveAttribute(
       'aria-disabled',
       'true',
@@ -62,7 +62,7 @@ describe('WizardContainerComponent draft resume', () => {
     });
     await fixture.whenStable();
 
-    expect(screen.queryByText('Loading saved draft...')).toBeNull();
+    expect(screen.queryByText('Loading saved draft…')).toBeNull();
     expect(screen.getByRole('button', { name: 'Next' })).not.toHaveAttribute(
       'aria-disabled',
     );

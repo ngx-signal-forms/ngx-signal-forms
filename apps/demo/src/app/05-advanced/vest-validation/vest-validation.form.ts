@@ -107,6 +107,7 @@ const vestValidationSchema: SchemaFn<Readonly<VestValidationModel>> = (
             <label for="vest-company-name">Company name</label>
             <input
               id="vest-company-name"
+              autocomplete="organization"
               type="text"
               [formField]="accountForm.companyName"
             />
@@ -142,6 +143,7 @@ const vestValidationSchema: SchemaFn<Readonly<VestValidationModel>> = (
             <label for="vest-work-email">Work email</label>
             <input
               id="vest-work-email"
+              autocomplete="email"
               type="email"
               [formField]="accountForm.workEmail"
               placeholder="team@example.com"
@@ -230,7 +232,7 @@ const vestValidationSchema: SchemaFn<Readonly<VestValidationModel>> = (
         <div class="flex gap-4">
           <button type="submit" class="btn-primary">
             @if (accountForm().submitting()) {
-              Saving...
+              Saving…
             } @else {
               Create account
             }

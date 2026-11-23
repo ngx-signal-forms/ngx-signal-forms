@@ -74,7 +74,8 @@ Before implementing or reviewing:
 - Angular changes: invoke `angular-developer`; for Signal Forms, also read its
   [Signal Forms reference](.agents/skills/angular-developer/references/signal-forms.md).
 - Accessibility work or changes to `apps` or `packages` TypeScript, HTML, or
-  SCSS: read the [a11y instructions](.github/instructions/a11y.instructions.md).
+  SCSS: invoke `accessibility-a11y`. Code must conform to
+  [WCAG 2.2 AA](https://www.w3.org/TR/WCAG22/).
 - Removing or renaming a public export: read
   [public export removal guidance](docs/CONTRIBUTING.md#removing-a-public-export).
 

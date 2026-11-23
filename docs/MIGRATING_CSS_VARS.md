@@ -1,63 +1,31 @@
 ---
-title: 'Migrating CSS custom properties to v1'
+title: 'Migrating CSS custom properties (rc.6 to v1)'
 sidebarTitle: 'CSS custom properties'
 ---
 
-This guide covers every breaking CSS custom property change that landed during
-the v1 release-candidate cycle. It is additive to
-[`MIGRATING_BETA_TO_V1.md`](./MIGRATING_BETA_TO_V1.md) — the component /
-directive / selector renames are documented there; this doc only covers the
-theming surface.
+This guide covers the breaking CSS custom property renames and removals made when upgrading from `1.0.0-rc.6` or earlier. Component and TypeScript renames are in [`MIGRATING_BETA_TO_V1.md`](./MIGRATING_BETA_TO_V1.md).
 
-If you are upgrading a theme that was built against `1.0.0-rc.6` or earlier,
-grep your stylesheets for the old names below and apply the corresponding
-rename or drop.
+For CSS default and token changes in later release candidates (including RC.12 panel tokens, RC.15 container-owned spacing, RC.16 `light-dark()` dark mode, and RC.17 animation defaults and valid borders), follow the versioned [release migration index](./migrations/README.md) in order.
 
-> **`v1.0.0-rc.12`**: `ngx-form-field-notification` was folded into
-> `ngx-form-field-error` as a `presentation="panel"` mode, and its
-> `--ngx-signal-form-notification-*` custom properties were renamed to
-> `--ngx-signal-form-error-panel-*` / `--ngx-signal-form-warning-panel-*`.
-> See [`docs/migrations/v1.0.0-rc.12.md`](./migrations/v1.0.0-rc.12.md) — the
-> table below still describes the earlier rc.6 → v1 rename and is unaffected.
+The current theming API lives in [`THEMING.md`](../packages/toolkit/form-field/THEMING.md).
 
-The toolkit's theming system is documented in full in
-[`packages/toolkit/form-field/THEMING.md`](../packages/toolkit/form-field/THEMING.md).
-That page also explains the two-prefix convention:
+## Prefix conventions
 
-- **`--ngx-form-field-*`** — wrapper-level chrome: layout, labels, inputs, state
-  borders, appearance-specific tokens.
-- **`--ngx-signal-form-*`** — cross-cutting feedback concerns: the shared
-  feedback tier, error messages, notification cards, fieldset grouped summaries.
+- **`--ngx-form-field-*`.** Wrapper layout, labels, inputs, state borders, and appearance tokens.
+- **`--ngx-signal-form-*`.** Shared feedback tier, error messages, panel cards, and fieldset grouped summaries.
 
-## What changed, at a glance
+## Summary of rc.6 to v1 changes
 
-- **New Tier 2 ("shared feedback") tokens** — a small token family that all
-  feedback components (`ngx-form-field-error` in inline or panel presentation,
-  `ngx-form-field-hint`, `ngx-form-field-character-count`) now cascade through.
-  Override one token to retune every feedback surface at once.
-- **`*-border` → `*-border-color`** across error, warning, notification, and
-  fieldset grouped messages. The old bare `-border` names were ambiguous
-  (border width vs. border color) and are removed.
-- **`*-list-style-type` + `*-list-style-position` → `*-list-style`**
-  shorthand. One token replaces two; accepts any valid CSS `list-style` value
-  (`disc outside`, `circle inside`, `none`, etc.).
-- **`*-padding-horizontal` shortcuts removed** on error, hint, character-count,
-  and fieldset message tier. Use the logical-property pair
-  (`*-padding-inline-start` / `*-padding-inline-end`) instead, or set the
-  shared `--ngx-signal-form-feedback-padding-horizontal` to tune every
-  feedback surface at once.
-- **`-override` escape hatches removed** —
-  `--ngx-signal-form-error-font-size-override` and
-  `--ngx-signal-form-error-line-height-override` were undocumented escape
-  hatches; the normal cascade already provides the same capability.
-- **Legacy outline aliases removed** — the `--ngx-form-field-outline-*`
-  family was a 1:1 backward-compat shim over the wrapper's core tokens.
-  Override the core `--ngx-form-field-*` tokens instead.
+- **Shared feedback tier added.** `--ngx-signal-form-feedback-*` sets typography, spacing, and list styling across errors, warnings, hints, character counts, and fieldsets at once.
+- **`*-border` renamed to `*-border-color`** across error, warning, notification, and fieldset tokens.
+- **`*-list-style-type` and `*-list-style-position` combined into `*-list-style`** (accepts standard CSS `list-style` shorthand such as `disc outside` or `none`).
+- **`*-padding-horizontal` shortcuts removed.** Use `-padding-inline-start` / `-padding-inline-end` on hints and character counts (character counts also inherit `--ngx-signal-form-feedback-padding-horizontal`), `-inset-inline-start` / `-inset-inline-end` on fieldset messages and notifications, and host-level spacing or `--ngx-signal-form-error-panel-padding` on errors.
+- **`-override` escape hatches removed.** `--ngx-signal-form-error-font-size-override` and `--ngx-signal-form-error-line-height-override` are replaced by setting `--ngx-signal-form-error-font-size` and `--ngx-signal-form-error-line-height` directly.
+- **Legacy outline aliases removed.** Set the core `--ngx-form-field-*` tokens instead.
 
-## 1. New: shared feedback tier
+## 1. Shared feedback tier
 
 ```css
-/* Typography + spacing for all feedback text in one place. */
 :root {
   --ngx-signal-form-feedback-font-size: 0.875rem;
   --ngx-signal-form-feedback-line-height: 1.25rem;
@@ -68,31 +36,23 @@ That page also explains the two-prefix convention:
 }
 ```
 
-Any of these overrides affects **every** feedback surface — error messages,
-warning messages, panel feedback, hints, character counts, and fieldset grouped
-summaries — unless a component-level override is set closer to the element
-(component-specific overrides still win).
+Component-level tokens still override the shared tier. Setting `--ngx-signal-form-error-font-size` affects inline errors only; use `--ngx-signal-form-error-panel-font-size` for `presentation="panel"`.
 
-Panel message typography used to cascade through
-`--ngx-signal-form-error-font-size`. It no longer does — setting
-`--ngx-signal-form-error-font-size` only affects inline error messages now.
-Override `--ngx-signal-form-feedback-font-size` to tune all feedback, or
-`--ngx-signal-form-error-panel-font-size` /
-`--ngx-signal-form-warning-panel-font-size` for panel-specific typography.
-
-## 2. Renames (same behavior, new names)
+## 2. Renames
 
 ### Error component (`ngx-form-field-error`)
 
-| Before (rc.6)                                           | After (v1)                                       |
+| Before (rc.6)                                           | After                                            |
 | ------------------------------------------------------- | ------------------------------------------------ |
 | `--ngx-signal-form-error-border`                        | `--ngx-signal-form-error-border-color`           |
 | `--ngx-signal-form-warning-border`                      | `--ngx-signal-form-warning-border-color`         |
 | `--ngx-signal-form-error-list-style-type` + `-position` | `--ngx-signal-form-error-list-style` (shorthand) |
 
-### Former notification component tokens (historical rc.6 names)
+### Former notification component tokens
 
-| Before (rc.6)                                                  | After (v1)                                              |
+In RC.12, `ngx-form-field-notification` was folded into `ngx-form-field-error` with `presentation="panel"`. See [`v1.0.0-rc.12.md`](./migrations/v1.0.0-rc.12.md).
+
+| Before (rc.6)                                                  | After                                                   |
 | -------------------------------------------------------------- | ------------------------------------------------------- |
 | `--ngx-signal-form-notification-error-border`                  | `--ngx-signal-form-error-panel-border-color`            |
 | `--ngx-signal-form-notification-warning-border`                | `--ngx-signal-form-warning-panel-border-color`          |
@@ -100,7 +60,7 @@ Override `--ngx-signal-form-feedback-font-size` to tune all feedback, or
 
 ### Fieldset component (`ngx-form-fieldset`)
 
-| Before (rc.6)                                                           | After (v1)                                                       |
+| Before (rc.6)                                                           | After                                                            |
 | ----------------------------------------------------------------------- | ---------------------------------------------------------------- |
 | `--ngx-signal-form-fieldset-error-border`                               | `--ngx-signal-form-fieldset-error-border-color`                  |
 | `--ngx-signal-form-fieldset-warning-border`                             | `--ngx-signal-form-fieldset-warning-border-color`                |
@@ -109,43 +69,22 @@ Override `--ngx-signal-form-feedback-font-size` to tune all feedback, or
 | `--ngx-signal-form-fieldset-message-list-style-type` + `-position`      | `--ngx-signal-form-fieldset-message-list-style` (shorthand)      |
 | `--ngx-signal-form-fieldset-notification-list-style-type` + `-position` | `--ngx-signal-form-fieldset-notification-list-style` (shorthand) |
 
-## 3. Removed (with replacements)
+## 3. Removed tokens and replacements
 
 ### `*-padding-horizontal` shortcuts
 
-Logical-property pairs (`-padding-inline-start` / `-padding-inline-end`) are
-now the canonical way to set asymmetric inline padding on feedback surfaces.
-The shared-feedback token covers the symmetric case.
-
-| Removed                                                 | Replacement                                                                                                                                                                   |
-| ------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `--ngx-signal-form-error-padding-horizontal`            | Set `--ngx-signal-form-feedback-padding-horizontal` (affects every feedback surface), or the `-padding-inline-start` / `-padding-inline-end` pair (error-specific asymmetry). |
-| `--ngx-signal-form-fieldset-message-padding-horizontal` | `--ngx-signal-form-fieldset-message-padding-inline-start` / `-inline-end` pair.                                                                                               |
-| `--ngx-form-field-hint-padding-horizontal`              | `--ngx-form-field-hint-padding-inline-start` / `-inline-end` pair.                                                                                                            |
-| `--ngx-form-field-char-count-padding-horizontal`        | `--ngx-form-field-char-count-padding-inline-start` / `-inline-end` pair.                                                                                                      |
+| Removed                                                 | Replacement                                                                                                                                                                                     |
+| ------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `--ngx-signal-form-error-padding-horizontal`            | Inline errors keep `0` horizontal padding (see #787); add `margin-inline` or `padding-inline` on the `<ngx-form-field-error>` host or use `--ngx-signal-form-error-panel-padding` in panel mode |
+| `--ngx-signal-form-fieldset-message-padding-horizontal` | `--ngx-signal-form-fieldset-message-inset-inline-start` / `-inline-end` (or `--ngx-signal-form-fieldset-notification-inset-inline-*` for cards)                                                 |
+| `--ngx-form-field-hint-padding-horizontal`              | `--ngx-form-field-hint-padding-inline-start` / `-inline-end`                                                                                                                                    |
+| `--ngx-form-field-char-count-padding-horizontal`        | `--ngx-form-field-char-count-padding-inline-start` / `-inline-end`                                                                                                                              |
 
 ### `-override` escape hatches
 
-```css
-/* Before (rc.6) */
---ngx-signal-form-error-font-size-override: 0.9rem;
+Removed: `--ngx-signal-form-error-font-size-override`, `--ngx-signal-form-error-line-height-override`. Set `--ngx-signal-form-error-font-size` and `--ngx-signal-form-error-line-height` directly.
 
-/* After (v1) — just use the explicit tier directly */
---ngx-signal-form-error-font-size: 0.9rem;
-```
-
-The `-override` variants were only useful for reaching past the feedback tier
-fallback. Setting the explicit component-level tier does the same thing with
-one fewer indirection.
-
-Removed: `--ngx-signal-form-error-font-size-override`,
-`--ngx-signal-form-error-line-height-override`.
-
-### Legacy outline aliases (`--ngx-form-field-outline-*`)
-
-These were 1:1 backward-compat shims that mapped to the wrapper's core
-pseudo-private tokens without adding any behavior. If you were setting any of
-them, switch to the underlying core token:
+### Legacy outline aliases
 
 | Removed                                       | Replacement                         |
 | --------------------------------------------- | ----------------------------------- |
@@ -156,70 +95,20 @@ them, switch to the underlying core token:
 | `--ngx-form-field-outline-focus-border-color` | `--ngx-form-field-focus-color`      |
 | `--ngx-form-field-outline-focus-box-shadow`   | `--ngx-form-field-focus-box-shadow` |
 
-## 4. Sanity-check grep
+## 4. Check your codebase
+
+Run this search to locate any remaining pre-v1 names:
 
 ```bash
-# Find every old name that was removed or renamed. Ripgrep's built-in `css`
-# type already covers `.scss`; globs pick up the rest.
 rg --type css --type ts --type html -g '*.scss' -- \
   '--ngx-signal-form-(error|warning|fieldset-(error|warning)|notification-(error|warning))-border:|-list-style-(type|position)|--ngx-signal-form-(error|fieldset-message)-padding-horizontal|--ngx-form-field-(hint|char-count)-padding-horizontal|font-size-override|line-height-override|--ngx-form-field-outline-(bg|border|border-radius|min-height|focus-border-color|focus-box-shadow)'
 ```
 
-Any hits in consumer code need the corresponding rename above.
+## 5. Later release candidates
 
-## 5. Why these changes
+Apply the per-version guides for any later release you cross:
 
-The toolkit crossed 200+ public CSS vars during the rc cycle, with three
-recurring sources of bloat:
-
-1. **Per-component duplication of message/list tokens** — every feedback
-   surface had its own copy of `-list-style-type`, `-list-style-position`,
-   `-padding-horizontal`, `-message-spacing`. Consolidating through the
-   shared feedback tier drops ~15 vars without losing flexibility.
-2. **Ambiguous `-border` naming** — the bare `-border` token was sometimes
-   the border color, sometimes a `1px solid <color>` shorthand. Consistently
-   using `-border-color` + `-border-width` + `-border-radius` as the three
-   canonical knobs removes ambiguity.
-3. **One-off escape hatches** — `-override` suffixes and `-horizontal`
-   shortcuts existed to paper over the cascade. The cascade now works
-   directly (explicit tier → feedback tier → internal default), so the
-   escape hatches are redundant.
-
-After the v1 cleanup the theming surface is ~120 tokens — in line with
-Shoelace, Primer, and other mature form-library APIs.
-
-## 6. RC.15: upgrade from RC.14
-
-`1.0.0-rc.15` changed three wrapper defaults. No token was renamed or
-removed. See [`docs/migrations/v1.0.0-rc.15.md`](./migrations/v1.0.0-rc.15.md)
-for the full before/after detail.
-
-- **`--ngx-form-field-margin`** default changed from `1rem` to `0`.
-  Spacing between fields is now container-owned. Give the parent layout a
-  `gap` instead of relying on the wrapper's own margin.
-- **Switch row column gap** default changed from `0.5rem` to `0.75rem`,
-  matching the checkbox row. It now resolves through the new public
-  `--ngx-form-field-selection-row-gap` token.
-- **Checkbox and switch row labels** now read the label tokens
-  (`--ngx-form-field-label-size`, `--ngx-form-field-label-line-height`,
-  `--ngx-form-field-label-color`) instead of the input tokens. A default
-  install renders these labels smaller and in the secondary text color.
-
-## 7. RC.16: upgrade from RC.15
-
-`1.0.0-rc.16` changes several wrapper and feedback color defaults: the
-border color, the warning and invalid box-shadow rings, and the dark-mode
-defaults. No token is renamed. See
-[`docs/migrations/v1.0.0-rc.16.md`](./migrations/v1.0.0-rc.16.md) for the
-full before/after detail. Check the installed version before applying this
-section.
-
-- `--ngx-form-field-border-color` defaults to a darker (light mode) or
-  lighter (dark mode) value for WCAG contrast.
-- `--ngx-form-field-warning-box-shadow` now defaults to `none`. The new
-  `--ngx-form-field-invalid-box-shadow` token also defaults to `none`.
-  `--ngx-form-field-state-ring-opacity` no longer affects either ring.
-- Dark-mode colors now follow `color-scheme` through `light-dark()`,
-  instead of a `.dark` class or the OS query. If your app relied on either
-  trigger, declare `color-scheme` explicitly (see the
-  [rc.16 guide](./migrations/v1.0.0-rc.16.md)).
+- [RC.12](./migrations/v1.0.0-rc.12.md): panel tokens replacing notification tokens
+- [RC.15](./migrations/v1.0.0-rc.15.md): container-owned spacing (`--ngx-form-field-margin: 0`), `--ngx-form-field-selection-row-gap`, checkbox/switch label tokens
+- [RC.16](./migrations/v1.0.0-rc.16.md): `light-dark()` / `color-scheme` dark mode, contrast-checked borders, focus outline tokens
+- [RC.17](./migrations/v1.0.0-rc.17.md): unset default animation tokens, opt-in `--ngx-form-field-valid-border-color`

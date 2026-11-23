@@ -63,7 +63,7 @@ function productionCsp(): Plugin {
   };
 }
 
-export default defineConfig({
+export default defineConfig(({ command }) => ({
   root: join(appDir, 'src'),
   publicDir: join(appDir, 'public'),
   cacheDir: '../../node_modules/.vite/apps/demo',
@@ -87,8 +87,12 @@ export default defineConfig({
   plugins: [
     analog({
       tsconfig: '../tsconfig.app.json',
+      // Analog skips type checking by default. A build turns it on, so
+      // TypeScript and template errors fail the build. The dev server keeps
+      // the fast path.
+      disableTypeChecking: command !== 'build',
     }),
     alignBaseHref(),
     productionCsp(),
   ],
-});
+}));

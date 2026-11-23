@@ -1,43 +1,25 @@
-# Toolkit Core
+# Toolkit core
 
-> **Deep Dive:** Core toolkit behavior — error timing and warning semantics.
+Covers the two core UX behaviors most teams configure first: when validation feedback appears and how non-blocking warnings work.
 
-## 🎯 Purpose
+## Demos in this section
 
-This section covers the two UX fundamentals every team meets first: **when** validation feedback appears, and **how** to offer non-blocking guidance without resorting to custom code.
+- **[error-display-modes](./error-display-modes/README.md):** switch a form between `immediate`, `on-touch`, and `on-submit`, with conditional required and custom checks.
+- **[warning-support](./warning-support/README.md):** `warn:*` advisory messages and declarative submission with `ignoreValidators: 'all'` plus `hasOnlyWarnings()`.
 
-**Adoption level:** 100% toolkit (core directives + assistive components).
+## Core concepts
 
-**Focus:** error display strategies and the `warn:*` convention.
+- **Error strategies.** `immediate`, `on-touch`, and `on-submit`. See the [toolkit README](../../../../../packages/toolkit/README.md) and [validation choices](../../../../../docs/VALIDATION_STRATEGY.md).
+- **Warnings.** Any `ValidationError` whose `kind` starts with `warn:` is non-blocking when paired with the toolkit's submit helpers. See [docs/WARNINGS_SUPPORT.md](../../../../../docs/WARNINGS_SUPPORT.md).
+- **Strategy inheritance.** `[errorStrategy]` on `<form ngxSignalForm>` propagates to descendant error and wrapper components via DI without prop drilling.
+- **Submit helpers.** `submitWithWarnings()` is available for imperative submission when declarative `{ submission }` options do not fit.
 
-## 📂 Demos in this section
+## When to use this section
 
-- **[error-display-modes](./error-display-modes/README.md)** — switch a single form between `immediate`, `on-touch`, and `on-submit`.
-  - Strategy inheritance and conditional required/custom checks for ratings 1–3. Maximum length remains unconditional.
-- **[warning-support](./warning-support/README.md)** — `warn:*` validation errors rendered as advisory guidance.
-  - Warning classification and declarative submission with `ignoreValidators: 'all'` plus a blocking-error guard.
+- You need to compare error timing modes or add non-blocking advisory rules.
+- Skip if default `on-touch` timing with blocking errors is all you need.
 
-## 🧠 Core concepts
+## Next steps
 
-- **Error strategies** — `immediate` / `on-touch` / `on-submit`. See [toolkit README — error strategies](../../../../../packages/toolkit/README.md) and the full [validation strategy guide](../../../../../docs/VALIDATION_STRATEGY.md).
-- **Warnings convention** — any `ValidationError` whose `kind` starts with `warn:` is treated as non-blocking. Background in [docs/WARNINGS_SUPPORT.md](../../../../../docs/WARNINGS_SUPPORT.md).
-- **Strategy inheritance** — `[errorStrategy]` on `<form>` propagates to every descendant error component via DI; no prop drilling.
-- **Submit helpers** — `submitWithWarnings()` is the supported escape hatch for manual submission when you can't use the declarative `{ submission }` option.
-
-## 🤔 When to use this section
-
-- Use when you need to reason about _when_ errors appear (quiet-until-submit vs. inline).
-- Use when some rules should guide instead of block (weak passwords, disposable emails, policy thresholds).
-- Skip when your form only needs the default `on-touch` strategy and has no advisory rules — [01-getting-started](../01-getting-started/README.md) already covers that case.
-
-## 📦 Consolidated from earlier demos
-
-Older standalone pages (accessibility comparison, field-state inspection) are not routed anymore. Their teaching goals are now covered by:
-
-- [your-first-form](../01-getting-started/your-first-form/README.md) — accessibility onboarding.
-- Debugger panels inside the active demos — runtime field state.
-
-## ➡️ Next steps
-
-- Continue to **[03-headless](../03-headless/README.md)** — renderless primitives for design systems that can't adopt the wrapper.
-- Or jump to **[04-form-field-wrapper](../04-form-field-wrapper/README.md)** for the batteries-included wrapper path.
+- Continue to [03-headless](../03-headless/README.md) for renderless primitives.
+- Or jump to [04-form-field-wrapper](../04-form-field-wrapper/README.md) for the styled wrapper.

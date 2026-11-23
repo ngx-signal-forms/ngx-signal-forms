@@ -8,12 +8,6 @@
         "command": "node --test tools/scripts/check-skill-package.spec.mjs && node tools/scripts/check-skill-package.mjs"
       }
     },
-    "check-monitor-ci-scripts": {
-      "executor": "nx:run-commands",
-      "options": {
-        "command": "node --test .agents/skills/monitor-ci/scripts/ci-monitor.spec.mjs"
-      }
-    },
     "check-changelog-renderer": {
       "executor": "nx:run-commands",
       "options": {

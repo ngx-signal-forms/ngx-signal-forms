@@ -45,10 +45,9 @@ specific.
   registered with the wrapper's hint renderer. This describes the current
   demo integration, not a promise about a future rendering mode.
 
-The wrapper composes the toolkit's headless primitives directly
-(`createFieldNameResolver`, `createAriaInvalidSignal`,
-`createAriaRequiredSignal`, `createErrorVisibility`,
-`createWarningVisibility`) so the seam never drifts from the canonical
+The wrapper composes `createFieldPresentation` alongside the toolkit's ARIA
+primitives (`createFieldNameResolver`, `createAriaInvalidSignal`,
+`createAriaRequiredSignal`) so the seam never drifts from the canonical
 `NgxFormFieldWrapper` as the toolkit evolves (ADR-0006). Hint descriptors
 and the error-renderer inputs map are each a single inline `computed()`
 (see `docs/CUSTOM_WRAPPERS.md`) rather than a shared helper.
@@ -60,7 +59,7 @@ and the error-renderer inputs map are each a single inline `computed()`
 bootstrapApplication(AppComponent, {
   providers: [
     provideNgxPrimeForms(),
-    // …PrimeNG / animations / signal-forms-config
+    // …PrimeNG / signal-forms-config
   ],
 });
 ```
@@ -120,11 +119,8 @@ tier-3 field-name resolution and the dev-mode missing-control assertion.
 
 ## Design-system version pin
 
-| Package            | Version pinned by this demo |
-| ------------------ | --------------------------- |
-| `primeng`          | `21.1.9`                    |
-| `@primeuix/themes` | `2.0.3`                     |
-| `primeicons`       | `7.0.0`                     |
+The `primeng:` pnpm catalog in `pnpm-workspace.yaml` pins `primeng`,
+`@primeuix/themes`, and `primeicons`. Read the versions there.
 
 The toolkit itself is unchanged — `packages/toolkit/package.json` declares
 no `primeng` / `primeicons` / `@primeuix/*` entries, and the
@@ -252,23 +248,19 @@ contrast threshold. `src/styles.css` darkens the primary button surface to
 emerald-700/800 (light scheme only) so the label clears AA. This is the sole
 token override; everything else is stock Aura.
 
-### Timing: ship now or wait for PrimeNG v22?
+### Compatibility shim status (PrimeNG 22)
 
-Current PrimeNG documentation shows first-class support for Angular's
-template-driven and reactive forms APIs (`ngModel`, `formControlName`), but
-not yet a native Angular Signal Forms surface. Angular's own Signal Forms
-guidance explicitly allows custom `FormValueControl` components as the bridge
-for third-party libraries that have not caught up yet.
+This workspace runs on PrimeNG 22, which supports Angular's
+template-driven and reactive forms APIs (`ngModel`, `formControlName`) but does
+not yet ship native Angular Signal Forms bindings on every component. Angular's
+Signal Forms guidance explicitly supports custom `FormValueControl` adapters for
+third-party libraries in this state.
 
-That makes this demo valid **today** as a documented compatibility reference:
-
-- keep it if the goal is "how to use `@ngx-signal-forms/toolkit` with
-  PrimeNG as it exists now"
-- revisit and simplify it once PrimeNG v22 support is actually adopted in
-  this workspace
-
-In other words: do **not** block the PrimeNG demo on v22, but do document it
-as a pre-v22 integration seam rather than the final long-term shape.
+Keep these thin `FormValueControl` shims until PrimeNG adds native Signal Forms
+bindings on its form components. Before simplifying or removing any shim, verify
+that PrimeNG preserves the ARIA bridge on the inner focusable element
+(`aria-describedby`, `aria-invalid`, and `aria-required` where applicable) so
+error, warning, and hint associations still reach assistive technology.
 
 If you need to bridge tokens (e.g. mirror PrimeNG's `--p-form-field-invalid-border-color`
 into the toolkit's `--ngx-form-field-error-color`), do it in your app's

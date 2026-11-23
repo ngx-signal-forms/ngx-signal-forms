@@ -1,0 +1,21 @@
+/* ============================================================================ */
+/* SHARED MOTION TOKENS (internal) */
+/* ============================================================================ */
+/* One source for the toolkit's transition timing, so components that sit     */
+/* next to each other (wrapper, error, fieldset) change state in step.        */
+/*                                                                              */
+/*   --_motion-duration-state / --_motion-easing-state                          */
+/*     Color, border and shadow changes on interaction.                         */
+/*   --_motion-duration-enter / --_motion-easing-enter                          */
+/*     Messages entering and the spacing that opens for them. The ease-out     */
+/*     curve starts fast so the feedback feels immediate.                       */
+/*                                                                              */
+/* Pseudo-private: consumers tune motion through each component's public       */
+/* animation/transition properties, not these tokens.                           */
+
+:host {
+  --_motion-duration-state: 150ms;
+  --_motion-easing-state: ease;
+  --_motion-duration-enter: 180ms;
+  --_motion-easing-enter: cubic-bezier(0.23, 1, 0.32, 1);
+}

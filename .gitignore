@@ -28,6 +28,7 @@ node_modules
 !.vscode/tasks.json
 !.vscode/launch.json
 !.vscode/extensions.json
+!.vscode/mcp.json
 
 # misc
 /.sass-cache
@@ -66,7 +67,7 @@ build.log
 .nx/polygraph
 .playwright-mcp/
 
-.nx/self-healing.claude/
+.nx/self-healing
 
 .nx/migrate-runs
 

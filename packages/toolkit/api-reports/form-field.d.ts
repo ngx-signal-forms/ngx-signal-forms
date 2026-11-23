@@ -1,3 +1,6 @@
+/**
+ * Generated bundle index. Do not edit.
+ */
 import { ErrorDisplayStrategy, FieldMarkingMode, FormFieldAppearance, FormFieldAppearanceInput, FormFieldOrientation, FormFieldOrientationInput, NgxSignalFormAutoAria, NgxSignalFormControl, NgxSignalFormHintDescriptor, ResolvedMarker, ResolvedNgxSignalFormControlSemantics, WarningDisplayStrategy } from "@ngx-signal-forms/toolkit";
 import * as i0 from "@angular/core";
 import { ElementRef, Type, WritableSignal } from "@angular/core";
@@ -536,6 +539,13 @@ export declare class NgxFormFieldWrapper<TValue = unknown> {
    * 2. Field has NO visible errors (errors take visual priority)
    */
   protected readonly showWarningState: import("@angular/core").Signal<boolean>;
+  /**
+   * Whether the field has been touched and holds a valid value with no
+   * warnings. Drives the opt-in `--ngx-form-field-valid-border-color` cue.
+   * Uses the field's own validity rather than native `:user-valid`, which
+   * does not see Signal Forms validators.
+   */
+  protected readonly showValidState: import("@angular/core").Signal<boolean>;
   protected readonly isTopPlacement: import("@angular/core").Signal<boolean>;
   /**
    * The whole selection-cluster ARIA contract (`role`, the visually-hidden

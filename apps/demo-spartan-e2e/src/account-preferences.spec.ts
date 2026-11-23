@@ -1,32 +1,5 @@
 import { expect, test } from '@playwright/test';
 
-/**
- * fill -> blur -> observe-error
- *
- * The single E2E spec for the Spartan reference. Covers the same surface as
- * the smoke spec but through the real Vite-compiled bundle, so any broken
- * provider wiring (renderer-token registration, hint-registry projection,
- * auto-ARIA selector matching against `[hlmInput]`) surfaces here.
- *
- * Pre-interaction `aria-invalid` IS asserted for both the text input and the
- * plan combobox (audit #148 finding 2). `BrnSelectTrigger` host-binds
- * `aria-invalid` off the raw, ungated `FieldState.invalid` — with `plan`
- * required and empty, that would fire `aria-invalid="true"` on first paint
- * regardless of the demo's `on-touch` default, on a form nobody has touched
- * yet. `HlmSelectTrigger` (`packages/demo/spartan-ui/select`) now gates its own
- * `aria-invalid` write off `BrnFieldControl.spartanInvalid()` — the same
- * touched-aware signal driving the destructive-ring styling — so both
- * controls agree on "no errors before touch".
- *
- * `aria-describedby` is the contract that the wrapper-scoped
- * `BrnFieldA11yService` factory in
- * {@link `apps/demo-spartan/src/app/wrapper/spartan-form-field.ts`}
- * mediates: Brain's `BrnFieldControlDescribedBy` host directive owns the
- * attribute on `[hlmInput]`, but the factory-installed bridge service feeds
- * it from the toolkit's composition so the toolkit-managed `<fieldName>-error`
- * id reaches the helm input host element. This spec asserts that contract
- * end-to-end (the smoke spec covers the same path through jsdom).
- */
 test.describe('Spartan account preferences form', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/');
@@ -84,6 +57,9 @@ test.describe('Spartan account preferences form', () => {
     page,
   }) => {
     const displayName = page.getByLabel('Display name');
+    await expect(displayName).toHaveAccessibleDescription(
+      /public name shown on your profile/iu,
+    );
 
     await test.step('Blur the empty field to trigger on-touch validation', async () => {
       await displayName.click();
@@ -246,11 +222,9 @@ test.describe('Spartan account preferences form', () => {
 
       await plan.press('Enter');
 
-      // BrnSelectValue's default itemToString renders the raw option value
-      // (not the item's projected "Enterprise" label content) when no
-      // custom itemToString is configured — the same value shown in the
-      // submitted JSON payload elsewhere in this spec.
-      await expect(plan).toHaveText('enterprise');
+      // The form passes `itemToString`, so the trigger shows the option
+      // label. Without it, BrnSelectValue falls back to the raw value.
+      await expect(plan).toHaveText('Enterprise');
       await expect(page.getByRole('option')).toHaveCount(0);
     });
   });

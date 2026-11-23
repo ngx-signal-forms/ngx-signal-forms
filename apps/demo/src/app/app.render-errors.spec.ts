@@ -1,4 +1,5 @@
 import { Component, ErrorHandler } from '@angular/core';
+import { provideRouter, withErrorBoundaries } from '@angular/router';
 import { render, screen, within } from '@testing-library/angular';
 import { userEvent } from '@testing-library/user-event';
 import {
@@ -12,7 +13,7 @@ import {
 } from 'vitest';
 
 import { AppComponent } from './app';
-import { DemoErrorHandler } from './ui/render-error';
+import { DemoErrorHandler, logRouteError } from './ui/render-error';
 import { NgxPageControlsDirective } from './ui/page-controls';
 
 /**
@@ -21,7 +22,7 @@ import { NgxPageControlsDirective } from './ui/page-controls';
  * demo until a reload: the visitor sees a fallback, and the next navigation
  * or "Try again" brings the page area back.
  *
- * These routes exist only in this spec. No production page throws.
+ * These routes exist only in this spec.
  */
 
 let pageShouldThrow = true;
@@ -101,9 +102,13 @@ describe('AppComponent render-error boundaries', () => {
 
   async function setup(initialRoute: string) {
     const result = await render(AppComponent, {
-      routes,
       initialRoute,
-      providers: [{ provide: ErrorHandler, useClass: DemoErrorHandler }],
+      providers: [
+        { provide: ErrorHandler, useClass: DemoErrorHandler },
+        // As in `main.ts`. These routes have no `errorComponent`, so the
+        // router must leave their errors to the shell's `@boundary`.
+        provideRouter(routes, withErrorBoundaries({ onError: logRouteError })),
+      ],
     });
     await result.fixture.whenStable();
     return result;

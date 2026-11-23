@@ -46,14 +46,14 @@ test.describe('Advanced - Submission Patterns', () => {
       });
 
       await test.step('Badge flips to Submitting while the action is pending', async () => {
-        await expect(page.stateBadge).toContainText('Submitting...');
+        await expect(page.stateBadge).toContainText('Submitting…');
         await expect(page.stateBadge).not.toContainText(
           'Unhandled submittedStatus',
         );
       });
 
       await test.step('Badge settles back to a valid state once the action resolves', async () => {
-        await expect(page.stateBadge).not.toContainText('Submitting...', {
+        await expect(page.stateBadge).not.toContainText('Submitting…', {
           timeout: 5000,
         });
         await expect(page.stateBadge).not.toContainText(

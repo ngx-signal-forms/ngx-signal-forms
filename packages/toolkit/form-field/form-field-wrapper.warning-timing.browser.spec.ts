@@ -168,26 +168,34 @@ describe('NgxFormFieldWrapper — warning display timing (issue #264)', () => {
     `,
     providers: [
       provideNgxSignalFormsConfigForComponent({
-        defaultWarningStrategy: 'immediate',
+        defaultWarningStrategy: 'on-touch',
       }),
     ],
   })
   class WarningsWithBlockingErrorsComponent {
-    // Field with both blocking errors and warnings
-    // Warnings should NOT show when there are blocking errors
+    // The required error blocks an empty value; a non-empty short value is
+    // acceptable but still deserves a warning.
     protected readonly field = form(signal({ confirm: '' }), (path) => {
       required(path.confirm, { message: 'Confirm is required' });
       validate(path.confirm, (ctx) => {
         const value = ctx.value();
-        // Return both a blocking error and a warning for short values
-        if (value && value.length > 0 && value.length < 8) {
-          // Return both blocking error and warning as an array
-          return [
-            { kind: 'too-short', message: 'Password too short' },
-            { kind: 'warn:weak-password', message: 'Consider 8+ characters' },
-          ];
+        if (!value) return null;
+
+        const messages = [];
+        if (value.startsWith('!')) {
+          messages.push({
+            kind: 'invalid-prefix',
+            message: 'Password cannot start with !',
+          });
         }
-        return null;
+        if (value.length < 8) {
+          messages.push({
+            kind: 'warn:weak-password',
+            message: 'Consider 8+ characters',
+          });
+        }
+
+        return messages.length > 0 ? messages : null;
       });
     });
   }
@@ -310,12 +318,40 @@ describe('NgxFormFieldWrapper — warning display timing (issue #264)', () => {
     const status = container.querySelector('[role="status"]');
     expect(status?.getAttribute('id')).not.toBe('confirm-warning');
 
-    // Now type a value that triggers a warning
-    await userEvent.type(input, 'abc');
+    // A value can carry both a blocking error and a warning.
+    await userEvent.type(input, '!');
 
-    // Required error is still present, so warning should still be hidden
-    expect(
-      container.querySelector('[role="status"]')?.getAttribute('id'),
-    ).not.toBe('confirm-warning');
+    // Neither the hidden error nor a warning should stand in while editing.
+    expect(container.textContent).not.toContain('Confirm is required');
+    expect(container.textContent).not.toContain('Password cannot start with !');
+    expect(container.textContent).not.toContain('Consider 8+ characters');
+
+    await userEvent.tab();
+    expect(container.querySelector('[role="alert"]')?.textContent).toContain(
+      'Password cannot start with !',
+    );
+    expect(container.textContent).not.toContain('Consider 8+ characters');
+
+    // Clear the blocking error while editing. Its warning stays quiet until
+    // the user commits the acceptable value.
+    await userEvent.clear(input);
+    await userEvent.type(input, 'abc');
+    expect(container.textContent).not.toContain('Password cannot start with !');
+    expect(container.textContent).not.toContain('Consider 8+ characters');
+
+    await userEvent.tab();
+    expect(container.querySelector('[role="status"]')?.textContent).toContain(
+      'Consider 8+ characters',
+    );
+
+    // A visible on-touch warning also waits while the user continues editing.
+    await userEvent.click(input);
+    await userEvent.type(input, 'd');
+
+    expect(container.textContent).not.toContain('Consider 8+ characters');
+    await userEvent.tab();
+    expect(container.querySelector('[role="status"]')?.textContent).toContain(
+      'Consider 8+ characters',
+    );
   });
 });

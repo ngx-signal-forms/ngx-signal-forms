@@ -100,13 +100,4 @@ export class ErrorDisplayModesPage extends ErrorStrategyFormPage {
   override get errorAlerts(): Locator {
     return super.errorAlerts.locator('visible=true');
   }
-
-  /**
-   * Get all text and email inputs for bulk operations
-   */
-  get textAndEmailInputs(): Locator {
-    return this.page.locator(
-      'form input[type="text"], form input[type="email"]',
-    );
-  }
 }

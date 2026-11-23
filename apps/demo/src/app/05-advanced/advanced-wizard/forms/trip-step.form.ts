@@ -3,6 +3,9 @@ import {
   applyEach,
   type FieldTree,
   form,
+  metadata,
+  MIN,
+  MIN_NUMBER,
   validateStandardSchema,
 } from '@angular/forms/signals';
 import { requiredFromStandardSchema } from '@ngx-signal-forms/toolkit';
@@ -90,6 +93,12 @@ export function createTripStepForm(store: InstanceType<typeof WizardStore>): {
         // Same reason as the destination fields above (WCAG 3.3.2).
         requiredFromStandardSchema(actPath.name, ActivitySchema);
         requiredFromStandardSchema(actPath.date, ActivitySchema);
+
+        // Zod already rejects a negative duration. The metadata gives the
+        // number input its `min` attribute without a second error message;
+        // Angular does not allow that attribute next to `[formField]`.
+        metadata(actPath.duration, MIN_NUMBER, () => 0);
+        metadata(actPath.duration, MIN, () => MIN_NUMBER);
 
         applyEach(actPath.requirements, (reqPath) => {
           validateStandardSchema(reqPath, RequirementSchema);

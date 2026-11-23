@@ -325,16 +325,7 @@ describe('NgxFormFieldCharacterCount', () => {
     });
   });
 
-  describe('CSS custom property contract (colorThresholds removed, #355)', () => {
-    // `colorThresholds` is gone — thresholds are CSS-only, driven by
-    // `--ngx-form-field-char-count-warning-threshold` /
-    // `-danger-threshold`, which default to 80/95 in the component's own
-    // styles (not asserted here — see the browser a11y spec for a real
-    // computed-style assertion, since jsdom doesn't evaluate CSS
-    // `color-mix()`/`clamp()`). This suite pins the piece jsdom *can*
-    // verify: the component publishes its percent-used as an inline custom
-    // property, which is the only input the CSS side needs.
-
+  describe('CSS custom property contract', () => {
     it('publishes --ngx-form-field-char-count-percent-used as an inline custom property', async () => {
       const { container } = await render(TestWrapperComponent, {
         componentInputs: { textModel: 'a'.repeat(42), maxLength: 100 },
@@ -382,37 +373,6 @@ describe('NgxFormFieldCharacterCount', () => {
         host.style.getPropertyValue('--ngx-form-field-char-count-percent-used'),
       ).toBe('0');
       expect(host).toHaveAttribute('data-limit-state', 'disabled');
-    });
-
-    it('has no colorThresholds input in the compiled component metadata', () => {
-      // Static metadata check, not an instantiation — inputs are declared
-      // on the compiled `ɵcmp.inputs` map regardless of injection context.
-      const inputs = (
-        NgxFormFieldCharacterCount as unknown as {
-          ɵcmp: { inputs: Record<string, unknown> };
-        }
-      ).ɵcmp.inputs;
-
-      expect(Object.keys(inputs)).not.toContain('colorThresholds');
-      // Sanity check the reflection itself still finds the inputs that do
-      // exist, so a broken lookup can't silently pass the assertion above.
-      expect(Object.keys(inputs)).toContain('formField');
-      expect(Object.keys(inputs)).toContain('maxLength');
-    });
-  });
-
-  describe('Limit state uses the fixed 80%/95% defaults (no colorThresholds input)', () => {
-    it('is not affected by an unrelated custom threshold-shaped input on the host (documentation only)', async () => {
-      // Documents that limit-state transitions (and therefore the
-      // liveAnnounce wording) always use the toolkit's fixed 80%/95%
-      // defaults now — there is no way to shift them per-instance anymore.
-      // See 'Limit state calculation' above for the exact 80/95 breakpoints.
-      const { container } = await render(TestWrapperComponent, {
-        componentInputs: { textModel: 'a'.repeat(80), maxLength: 100 },
-      });
-
-      const host = container.querySelector('ngx-form-field-character-count');
-      expect(host).toHaveAttribute('data-limit-state', 'warning');
     });
   });
 

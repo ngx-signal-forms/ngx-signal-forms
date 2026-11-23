@@ -80,6 +80,7 @@ const zodValidationSchema: SchemaFn<Readonly<ZodValidationModel>> = (
             <label for="zod-only-first-name">First name</label>
             <input
               id="zod-only-first-name"
+              autocomplete="given-name"
               type="text"
               [formField]="accountForm.firstName"
             />
@@ -93,6 +94,7 @@ const zodValidationSchema: SchemaFn<Readonly<ZodValidationModel>> = (
             <label for="zod-only-last-name">Last name</label>
             <input
               id="zod-only-last-name"
+              autocomplete="family-name"
               type="text"
               [formField]="accountForm.lastName"
             />
@@ -108,6 +110,7 @@ const zodValidationSchema: SchemaFn<Readonly<ZodValidationModel>> = (
             <label for="zod-only-email">Email</label>
             <input
               id="zod-only-email"
+              autocomplete="email"
               type="email"
               [formField]="accountForm.email"
               placeholder="name@example.com"
@@ -184,7 +187,7 @@ const zodValidationSchema: SchemaFn<Readonly<ZodValidationModel>> = (
         <div class="flex gap-4">
           <button type="submit" class="btn-primary">
             @if (accountForm().submitting()) {
-              Saving...
+              Saving…
             } @else {
               Save baseline form
             }

@@ -73,6 +73,11 @@ await user.click(nameInput);
 await user.tab();
 ```
 
+With `on-touch` timing, typing into an already-touched field hides its error
+until focus leaves or the form submits. After `await user.type(...)`, move
+focus away with `await user.tab()` (or submit the form) before asserting that
+an error is visible.
+
 ## Wait before you assert
 
 The toolkit writes ARIA attributes and error visibility after Angular renders,
@@ -204,14 +209,6 @@ await expect
 
 ### Run one spec
 
-Fieldset visual checks compare focused form, control-group, and notification
-screenshots in light and dark themes. Normal CI compares committed Linux
-baselines and never updates them. Use the **Update Snapshots** workflow on the
-feature branch with scope `playwright` and `playwright_filter` set to
-`src/forms/04-form-field-wrapper/fieldset-appearance.spec.ts` to regenerate
-only this suite. Review the image changes before merging. Local macOS
-screenshots use separate baselines; do not use them as Linux baselines.
-
 Put the file filter after `--`. Vitest does not know `--testFile`.
 
 Nx test targets run once by default. Add `--watch` after `--` for an
@@ -254,8 +251,12 @@ change can still select a build as a project-configuration change; use
   when their environment variables select different ports.
 - The main demo uses `serve-e2e` to keep port 4600 locally and port 4300 in
   CI (`PLAYWRIGHT_DEMO_PORT` overrides the CI port). The reference demos use
-  their existing `serve` targets. Servers stay in development mode to
-  preserve the tested behavior; this change does not switch to built-app tests.
+  their existing `serve` targets. Servers run in development mode.
+- Fieldset visual checks (`src/forms/04-form-field-wrapper/fieldset-appearance.spec.ts`)
+  compare light and dark Linux baselines in CI. To regenerate only those
+  baselines on a feature branch, run the **Update Snapshots** workflow with
+  scope `playwright` and `playwright_filter` set to that spec path. Do not copy
+  local macOS screenshots into Linux baselines.
 - `getReadyUrl()` resolves the server address. Set `BASE_URL` to test a
   deployed app without the inferred local server. Custom shard and a11y
   targets declare server dependencies explicitly because the Playwright

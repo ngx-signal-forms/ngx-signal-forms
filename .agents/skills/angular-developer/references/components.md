@@ -108,13 +108,23 @@ The `@for` block iterates over collections. The `track` expression is **required
 
 **Implicit Variables**: `$index`, `$count`, `$first`, `$last`, `$even`, `$odd`.
 
+### Avoiding expensive work in templates
+
+Template expressions are re-evaluated every time the component's template is checked, so avoid doing expensive work in them (e.g. building or filtering arrays, sorting, heavy formatting). Calling a cheap method is fine; the concern is expensive work repeated on every change detection cycle. A method that returns a new array or object also hands `@for` a new collection on every run.
+
+Reading a signal (`count()`, `items()`) is fine, and so is a trivial lookup. For anything expensive, derive the value once:
+
+- **`computed()`** for values derived from signals.
+- **A pure pipe** for formatting a value (see [pipes.md](pipes.md)).
+- **A child component** when each item needs its own derived state.
+
 ### Switching Content (`@switch`)
 
 The `@switch` block renders content based on a value. It uses strict equality (`===`) and has **no fallthrough**.
 
 ```html
-@switch (status()) { @case ('loading') { <app-spinner /> } @case ('error') {
-<app-error-msg /> } @case ('success') { <app-data-grid /> } @default {
+@switch (status()) { @case ('loading') { <app-spinner /> } @case ('error') { <app-error-msg /> }
+@case ('success') { <app-data-grid /> } @default {
 <p>Unknown status</p>
 } }
 ```
@@ -137,8 +147,8 @@ block across several matches.
 **Exhaustive Type Checking**: Use `@default never;` to ensure all cases of a union type are handled.
 
 ```html
-@switch (state) { @case ('on') { ... } @case ('off') { ... } @default never; //
-Errors if a new state like 'standby' is added }
+@switch (state) { @case ('on') { ... } @case ('off') { ... } @default never; // Errors if a new
+state like 'standby' is added }
 ```
 
 ### Arrow Functions in Template Expressions

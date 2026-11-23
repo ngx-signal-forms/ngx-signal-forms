@@ -766,6 +766,31 @@ describe('NgxFormFieldset', () => {
     expect(host).not.toHaveAttribute('aria-labelledby');
   });
 
+  it('keeps an author aria-labelledby on a native <fieldset> host without a legend', async () => {
+    const fieldset = createFieldsetState();
+
+    const { container } = await render(
+      `<h2 id="shipping-heading">Shipping Address</h2>
+      <fieldset
+        ngxFormFieldset
+        [field]="fieldset"
+        fieldsetId="native-labelled"
+        aria-labelledby="shipping-heading"
+      >
+        <div class="content">Projected</div>
+      </fieldset>`,
+      {
+        imports: [NgxFormFieldset],
+        componentProperties: { fieldset },
+      },
+    );
+
+    expect(container.querySelector('fieldset')).toHaveAttribute(
+      'aria-labelledby',
+      'shipping-heading',
+    );
+  });
+
   it('renders aggregated messages above content when errorPlacement is top', async () => {
     const fieldset = createFieldsetState({
       errors: () => [{ kind: 'required', message: 'Required' }],

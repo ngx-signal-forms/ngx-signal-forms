@@ -1,4 +1,5 @@
 import { computed, type Injector, type Signal } from '@angular/core';
+import { injectIsEditingField } from '../services/edited-control';
 import type {
   ErrorDisplayStrategy,
   NgxReactiveOrStatic,
@@ -94,6 +95,12 @@ export interface CreateErrorVisibilityOptions {
  * 3. Resolves the submission status: explicit opt → context → `undefined`.
  * 4. Evaluates the visibility timing predicate and returns a reactive
  *    `Signal<boolean>`.
+ *
+ * With `'on-touch'`, a field's error is hidden while the user edits one of
+ * its bound controls, and re-checked when focus leaves the control or the
+ * form is submitted. Refocusing a field without typing keeps its error
+ * visible. This keeps a touched field from announcing and animating its error
+ * on every keystroke.
  *
  * This is the single composition point for the visibility cascade. It owns
  * the reactive computed. It also owns the dev-mode warning for a missing
@@ -202,6 +209,7 @@ export function createErrorVisibility(
     };
 
     const warnOnce = createDevWarnOnce();
+    const isEditing = injectIsEditingField();
 
     return computed(() => {
       const fieldState = unwrapValue(field);
@@ -220,12 +228,17 @@ export function createErrorVisibility(
         );
       }
 
-      return shouldShowErrors(
+      const visible = shouldShowErrors(
         isInvalid,
         isTouched,
         concreteStrategy,
         resolvedStatus,
       );
+
+      // Only read the edited control when it can change the answer, so
+      // valid fields do not recompute on every keystroke elsewhere.
+      if (!visible) return false;
+      return !(concreteStrategy === 'on-touch' && isEditing(fieldState));
     });
   });
 }

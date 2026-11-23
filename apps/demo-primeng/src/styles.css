@@ -39,6 +39,28 @@
   --demo-shadow: 0 24px 80px rgb(15 23 42 / 0.18);
   --demo-summary-bg: #182132;
   --demo-summary-ink: #f8f4ed;
+  --demo-inset-bg: rgb(255 255 255 / 0.55);
+  --demo-status-bg: rgb(255 255 255 / 0.7);
+}
+
+/*
+ * PrimeNG runs in its system dark mode (`darkModeSelector: 'system'`), which
+ * turns labels and inputs light. The form card must follow, or white labels
+ * land on the cream paper. The page behind the card is dark in both schemes.
+ */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --demo-ink: #f1ede4;
+    --demo-muted: #b9c0cd;
+    --demo-paper: rgb(24 33 50 / 0.96);
+    --demo-paper-strong: rgb(31 41 59 / 0.98);
+    --demo-border: rgb(255 255 255 / 0.16);
+    --demo-accent: #f2a65a;
+    --demo-accent-soft: rgb(242 166 90 / 0.16);
+    --demo-shadow: 0 24px 80px rgb(0 0 0 / 0.4);
+    --demo-inset-bg: rgb(255 255 255 / 0.05);
+    --demo-status-bg: rgb(255 255 255 / 0.06);
+  }
 }
 
 html,
@@ -172,7 +194,7 @@ main.shell {
   padding: 1rem 1.1rem;
   border: 1px solid var(--demo-border);
   border-radius: 1rem;
-  background: rgb(255 255 255 / 0.55);
+  background: var(--demo-inset-bg);
 }
 
 .profile-form__collapsible-summary {
@@ -190,7 +212,7 @@ main.shell {
   border-radius: 1rem;
   background: linear-gradient(
     135deg,
-    rgb(255 255 255 / 0.7),
+    var(--demo-status-bg),
     var(--demo-accent-soft)
   );
 }

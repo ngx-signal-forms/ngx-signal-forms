@@ -1,37 +1,25 @@
 # Headless
 
-> **Bring your own markup:** Renderless primitives and utilities for custom UI systems.
+Renderless directives and signal factories for teams that own their own markup and design system.
 
-## 🎯 Purpose
+## Demos in this section
 
-This section is the escape hatch for teams that cannot adopt the `NgxFormField` wrapper — usually because they own a design system with its own markup and styling conventions. You get the toolkit's state, visibility rules, and aggregation logic as renderless directives and plain factory functions.
+- **[fieldset-utilities](./fieldset-utilities/README.md):** headless error summary, fieldset aggregation, and `createErrorState()` / `createCharacterCount()` / `createFieldStateFlags()` factories. For label providers, see [global-configuration](../05-advanced/global-configuration/README.md).
+- **[error-message-signal](./error-message-signal/README.md):** `createErrorMessageSignal()` across all three `includeWarnings` modes, with reactive error-message registries and `aria-describedby` wiring.
 
-The examples combine headless state with root and assistive imports, without the styled wrapper.
+## Core concepts
 
-**Focus:** renderless directives, composable state utilities, and custom error summaries.
+- **Renderless directives.** Headless directives expose reactive state through template exports while you own every DOM node. See the [headless README](../../../../../packages/toolkit/headless/README.md).
+- **State factories.** `createErrorState()`, `createCharacterCount()`, and `createFieldStateFlags()` return signals without rendering markup.
+- **Fieldset aggregation.** `NgxHeadlessFieldset` aggregates group errors for custom summary blocks.
+- **Field labels.** `provideFieldLabels()` customizes display names for error summaries and i18n.
 
-## 📂 Demos in this section
+## When to use this section
 
-- **[fieldset-utilities](./fieldset-utilities/README.md)** — headless fieldset grouping plus the `createErrorState` / `createCharacterCount` / `createFieldStateFlags` utilities applied to a delivery form.
-  - Headless summaries, fieldset aggregation, and custom UI from state factories. For label providers, see [global configuration](../05-advanced/global-configuration/README.md).
+- Your design system controls field markup and styling, so the built-in wrapper is not a fit.
+- Skip when the default wrapper layout fits; [04-form-field-wrapper](../04-form-field-wrapper/README.md) is faster to adopt.
 
-- **[error-message-signal](./error-message-signal/README.md)** — `createErrorMessageSignal` exercised across all three `includeWarnings` modes with reactive registry swapping and `aria-describedby` wiring.
-  - What you'll learn: flat `@for` iteration without an outer `@if` gate · blocking-only vs. all-errors vs. warnings-only views · stable per-error IDs for `aria-describedby` · reactive `errorMessages` signal override.
+## Next steps
 
-## 🧠 Core concepts
-
-- **Renderless directives** — headless directives expose state via template context; you own every DOM node. See [headless README](../../../../../packages/toolkit/headless/README.md).
-- **State utilities** — `createErrorState()`, `createCharacterCount()`, `createFieldStateFlags()` are plain factories you can call from any component or directive, with no rendering opinion.
-- **Fieldset aggregation** — the headless fieldset directive aggregates errors of every descendant field for a clickable summary or group-level UX.
-- **Field-label customization** — `provideFieldLabels()` resolves field names for summaries and error messages (useful for i18n).
-
-## 🤔 When to use this section
-
-- Use when your design system dictates markup and the wrapper is off the table.
-- Use when you need toolkit state (error visibility, aggregation, character counts) without any of its rendering.
-- Skip when the default wrapper layout is fine — [04-form-field-wrapper](../04-form-field-wrapper/README.md) is faster to adopt.
-
-## ➡️ Next steps
-
-- Continue to **[04-form-field-wrapper](../04-form-field-wrapper/README.md)** — to compare the wrapper path against the headless one.
-- Or jump to **[05-advanced](../05-advanced/README.md)** for production patterns like async validation and multi-step wizards.
+- Continue to [04-form-field-wrapper](../04-form-field-wrapper/README.md) to compare the styled wrapper path.
+- Or jump to [05-advanced](../05-advanced/README.md) for async validation, server errors, and wizards.

@@ -65,7 +65,7 @@ import { labellessFieldsSchema } from './labelless-fields.validations';
 
     .comparison-grid > p {
       font-size: 0.75rem;
-      color: rgb(0 0 0 / 0.6);
+      color: var(--color-text-muted);
       margin: 0;
     }
 

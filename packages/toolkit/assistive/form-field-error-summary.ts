@@ -135,12 +135,10 @@ export type NgxErrorSummaryHeadingLevel = 2 | 3 | 4 | 5 | 6;
     -->
     <div
       class="ngx-form-field-error-summary"
-      [class.ngx-form-field-error-summary--empty]="
-        !(summary.shouldShow() && summary.hasErrors())
-      "
+      [class.ngx-form-field-error-summary--empty]="!summary.shouldShow()"
       role="alert"
     >
-      @if (summary.shouldShow() && summary.hasErrors()) {
+      @if (summary.shouldShow()) {
         @if (summaryLabel()) {
           <ng-template #labelText>{{ summaryLabel() }}</ng-template>
           @switch (headingLevel()) {
@@ -348,7 +346,7 @@ export class NgxFormFieldErrorSummary {
   /**
    * The host's `aria-labelledby`, pointing at the label heading. `null`
    * whenever the heading is not actually in the DOM — either the summary
-   * itself is empty/hidden (`summary.shouldShow() && summary.hasErrors()`
+   * itself is empty/hidden (`summary.shouldShow()`
    * is `false`, e.g. before the first submit) or `summaryLabel` is empty.
    * The heading only renders inside that same visibility condition (see
    * the template), so this must match it exactly: pointing `aria-
@@ -356,9 +354,7 @@ export class NgxFormFieldErrorSummary {
    * reference.
    */
   protected readonly ariaLabelledBy = computed(() =>
-    this.summary.shouldShow() && this.summary.hasErrors() && this.summaryLabel()
-      ? this.headingId
-      : null,
+    this.summary.shouldShow() && this.summaryLabel() ? this.headingId : null,
   );
 
   /**
@@ -391,9 +387,7 @@ export class NgxFormFieldErrorSummary {
     });
     if (submitAnnouncements) {
       inject(DestroyRef).onDestroy(
-        submitAnnouncements.registerSummary(
-          computed(() => this.summary.shouldShow() && this.summary.hasErrors()),
-        ),
+        submitAnnouncements.registerSummary(this.summary.shouldShow),
       );
     }
 
@@ -411,7 +405,7 @@ export class NgxFormFieldErrorSummary {
       // `.focus()` on the host. No DOM writes that would invalidate other
       // components' layouts.
       read: () => {
-        const visible = this.summary.shouldShow() && this.summary.hasErrors();
+        const visible = this.summary.shouldShow();
 
         if (!visible) {
           hasFocused = false;

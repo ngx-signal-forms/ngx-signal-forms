@@ -1,6 +1,5 @@
 import { isDevMode, provideZonelessChangeDetection } from '@angular/core';
 import { bootstrapApplication } from '@angular/platform-browser';
-import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
 import { provideNgxSignalFormsConfig } from '@ngx-signal-forms/toolkit';
 import Aura from '@primeuix/themes/aura';
 import { providePrimeNG } from 'primeng/config';
@@ -21,7 +20,6 @@ void (async () => {
   await bootstrapApplication(AppComponent, {
     providers: [
       provideZonelessChangeDetection(),
-      provideAnimationsAsync(),
       providePrimeNG({
         theme: {
           preset: Aura,

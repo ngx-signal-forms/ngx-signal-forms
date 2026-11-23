@@ -32,7 +32,7 @@ export const ASYNC_VALIDATION_CONTENT = {
         title: 'Implementation',
         items: [
           '• Keep sync validators first so empty or malformed values never trigger network traffic',
-          '• Use <code>form.field().pending()</code> to show spinners or “checking...” copy while the request is in flight',
+          '• Use <code>form.field().pending()</code> to show spinners or “checking…” copy while the request is in flight',
           '• Use <code>form.field().getError(...)</code> when you need one specific async error without iterating over the full array',
           '• Map API responses to user-facing validation messages in <code>onSuccess</code> so server payloads stay decoupled from UI text',
         ],

@@ -37,8 +37,8 @@ export class LabellessFieldsPage extends BaseFormPage {
     });
 
     this.searchInput = this.form.locator('#searchQuery');
-    this.ageInput = this.form.locator('#age');
-    this.zipInput = this.form.locator('#zipCode');
+    this.ageInput = this.page.getByRole('spinbutton', { name: /^Age/u });
+    this.zipInput = this.page.getByRole('textbox', { name: 'Zip code' });
     this.comparisonLabelledWrapper = this.form
       .locator('ngx-form-field-wrapper')
       .filter({ has: this.page.locator('#comparisonLabelled') });

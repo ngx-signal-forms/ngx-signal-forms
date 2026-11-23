@@ -44,9 +44,13 @@ import {
 ## Quick start
 
 `expectNoA11yViolations` scans an element and its children. Without an
-argument, it scans `document.body`. Call it once per rendered fixture:
+argument, it scans `document.body`. It first waits for running finite
+animations on visible elements (up to 1,000 ms), so text that fades in is
+checked at its final contrast. Longer fades can still be sampled mid-animation.
+Call it once per rendered fixture:
 
 ```typescript
+import { render } from '@testing-library/angular';
 import { expectNoA11yViolations } from '@ngx-signal-forms/toolkit/testing';
 
 it('has no accessibility violations', async () => {
@@ -94,6 +98,7 @@ Use `createA11yValidator` when a fixture needs a smaller set of WCAG tags. The
 returned validator has the same call signature as `expectNoA11yViolations`:
 
 ```typescript
+import { render } from '@testing-library/angular';
 import { createA11yValidator } from '@ngx-signal-forms/toolkit/testing';
 
 const expectNoLevelAViolations = createA11yValidator({
@@ -135,9 +140,7 @@ Toolkit controls use a transparent background, so axe often cannot compute
 their contrast. That is why `'fail'` can report a false positive. Confirm a
 failure with a manual contrast check before you change your styles.
 
-## Utilities
-
-### `expectVisibleFocusIndicator(element)`
+## `expectVisibleFocusIndicator(element)`
 
 Asserts that `element` has keyboard focus, or contains the focused element,
 and shows a visible focus indicator. This checks WCAG 2.2 SC 2.4.7 (Focus

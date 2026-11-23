@@ -7,7 +7,7 @@ import { type UserWorkspaceConfig } from 'vitest/config';
 process.env['NX_DAEMON'] ??= 'false';
 
 export const toolkitSpecRoots =
-  '{src,core,form-field,headless,assistive,testing,vest,scripts}';
+  '{core,form-field,headless,assistive,testing,vest,scripts}';
 export const toolkitSpecFiles = `${toolkitSpecRoots}/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}`;
 export const toolkitBrowserSpecFiles = `${toolkitSpecRoots}/**/*.browser.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}`;
 
@@ -88,7 +88,4 @@ export const toolkitSharedConfig = {
     // merged settings live in `vitest.coverage.config.mts` at the workspace
     // root. See https://vitest.dev/guide/projects.html#unsupported-options
   } satisfies NonNullable<UserWorkspaceConfig['test']>,
-  define: {
-    'import.meta.vitest': true,
-  },
 } satisfies UserWorkspaceConfig;

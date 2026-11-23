@@ -162,30 +162,30 @@ nothing. The error strategies also read the form's `ngxSignalForm` setting.
 See [configuration](../README.md#configuration) and
 [timing precedence](../../../docs/WARNINGS_SUPPORT.md#timing-and-configuration).
 
-| Input             | Type                                                            | Default                             | Description                                                 |
-| ----------------- | --------------------------------------------------------------- | ----------------------------------- | ----------------------------------------------------------- |
-| `formField`       | `FieldTree`                                                     | Required                            | The field whose state the wrapper shows.                    |
-| `fieldName`       | `string`                                                        | The control's `id`                  | Name for the message ids. See [field name](#field-name).    |
-| `strategy`        | `'immediate' \| 'on-touch' \| 'on-submit' \| 'inherit' \| null` | Inherited, built-in `'on-touch'`    | When errors show. `null` and `'inherit'` both inherit.      |
-| `warningStrategy` | `'immediate' \| 'on-touch' \| 'on-submit' \| 'inherit'`         | Inherited, built-in `'on-touch'`    | When warnings show. Independent of `strategy`.              |
-| `errorPlacement`  | `'top' \| 'bottom'`                                             | `'bottom'`                          | Show messages above or below the control.                   |
-| `appearance`      | `'standard' \| 'outline' \| 'plain' \| 'inherit'`               | Inherited, built-in `'standard'`    | Field style. See [appearance](#appearance-and-orientation). |
-| `orientation`     | `'vertical' \| 'horizontal' \| 'inherit'`                       | Inherited, built-in `'vertical'`    | Label above or beside the control.                          |
-| `showMarkerWhen`  | `'required' \| 'optional' \| 'none'`                            | Inherited, built-in `'required'`    | Which fields get a marker.                                  |
-| `requiredMarker`  | `string`                                                        | Inherited, built-in `' *'`          | Marker text for required fields.                            |
-| `optionalMarker`  | `string`                                                        | Inherited, built-in `' (optional)'` | Marker text for optional fields.                            |
-| `hideHintOnError` | `boolean`                                                       | Inherited, built-in `false`         | Hide the hint while an error or warning shows.              |
+| Input             | Type                                                            | Default                             | Description                                                              |
+| ----------------- | --------------------------------------------------------------- | ----------------------------------- | ------------------------------------------------------------------------ |
+| `formField`       | `FieldTree`                                                     | Required                            | The field whose state the wrapper shows.                                 |
+| `fieldName`       | `string`                                                        | The control's `id`                  | Name for the message ids. See [field name](#field-name).                 |
+| `strategy`        | `'immediate' \| 'on-touch' \| 'on-submit' \| 'inherit' \| null` | Inherited, built-in `'on-touch'`    | When errors show. `null` and `'inherit'` both inherit.                   |
+| `warningStrategy` | `'immediate' \| 'on-touch' \| 'on-submit' \| 'inherit'`         | Inherited, built-in `'on-touch'`    | When warnings show. Independent of `strategy`.                           |
+| `errorPlacement`  | `'top' \| 'bottom'`                                             | `'bottom'`                          | Show messages above or below the control.                                |
+| `appearance`      | `'standard' \| 'outline' \| 'plain' \| 'inherit'`               | Inherited, built-in `'standard'`    | Field style. See [appearance](#appearance-and-orientation).              |
+| `orientation`     | `'vertical' \| 'horizontal' \| 'inherit'`                       | Inherited, built-in `'vertical'`    | Label above or beside the control.                                       |
+| `showMarkerWhen`  | `'required' \| 'optional' \| 'none'`                            | Inherited, built-in `'required'`    | Which fields get a marker.                                               |
+| `requiredMarker`  | `string`                                                        | Inherited, built-in `' *'`          | Marker text for required fields.                                         |
+| `optionalMarker`  | `string`                                                        | Inherited, built-in `' (optional)'` | Marker text for optional fields.                                         |
+| `hideHintOnError` | `boolean`                                                       | Inherited, built-in `false`         | Hide the hint while an error or warning shows. Accepts a bare attribute. |
 
 `hideHintOnError` only hides the hint visually. Screen readers still read it
 through `aria-describedby`.
 
 ### Appearance and orientation
 
-| Appearance | Look                                                                                                  | With `orientation="horizontal"` |
-| ---------- | ----------------------------------------------------------------------------------------------------- | ------------------------------- |
-| `standard` | Label above a bordered control.                                                                       | Label in a column to the left.  |
-| `outline`  | One border around label and control. The label sits inside it, above the control, and does not move.  | Stays vertical.                 |
-| `plain`    | No field border. Labels, messages, and ARIA still work. Good for custom controls with their own look. | Label in a column to the left.  |
+| Appearance | Look                                                                                                                        | With `orientation="horizontal"` |
+| ---------- | --------------------------------------------------------------------------------------------------------------------------- | ------------------------------- |
+| `standard` | Label above a bordered control.                                                                                             | Label in a column to the left.  |
+| `outline`  | One border around label and control. The label sits inside it, above the control, and does not move.                        | Stays vertical.                 |
+| `plain`    | No wrapper chrome. Labels, messages, and ARIA still work; projected controls keep their native or consumer-defined styling. | Label in a column to the left.  |
 
 Checkbox, switch, and radio-group controls keep their own inline layout and
 ignore `orientation`. Orientation changes one wrapper, not the layout of the
@@ -225,6 +225,11 @@ A widget such as a slider or a star rating declares its control kind on the
 its own ARIA. A control that should look like a text field, such as a
 combobox, keeps the default appearance and lets the wrapper draw the border.
 A native `input[type="checkbox"][role="switch"]` needs no extra attribute.
+
+In the `plain` appearance, the wrapper does not reset projected control
+styles. Native text controls keep their browser styling, and consumer styles
+can define their own border, padding, and background. If your app resets native
+control styles, keep a visible field boundary and keyboard focus indicator.
 [Custom controls](../../../docs/CUSTOM_CONTROLS.md) explains control kinds,
 when the toolkit writes ARIA on a control, and field-shaped versus
 widget-shaped controls.
@@ -295,26 +300,26 @@ fields have no wrapper. For radio and checkbox groups, use the
 [wrapper](#grouped-radio-and-checkbox-controls).
 
 ```html
-<ngx-form-fieldset [field]="form.passwords" fieldsetId="passwords">
+<ngx-form-fieldset [field]="signupForm.passwords" fieldsetId="passwords">
   <legend>Passwords</legend>
 
-  <ngx-form-field-wrapper [formField]="form.passwords.password">
+  <ngx-form-field-wrapper [formField]="signupForm.passwords.password">
     <label for="password">Password</label>
     <input
       id="password"
       type="password"
       autocomplete="new-password"
-      [formField]="form.passwords.password"
+      [formField]="signupForm.passwords.password"
     />
   </ngx-form-field-wrapper>
 
-  <ngx-form-field-wrapper [formField]="form.passwords.confirm">
+  <ngx-form-field-wrapper [formField]="signupForm.passwords.confirm">
     <label for="confirm-password">Confirm password</label>
     <input
       id="confirm-password"
       type="password"
       autocomplete="new-password"
-      [formField]="form.passwords.confirm"
+      [formField]="signupForm.passwords.confirm"
     />
   </ngx-form-field-wrapper>
 
@@ -345,7 +350,8 @@ const signupForm = form(model, (path) => {
 ```
 
 You can also put the directive on a native element:
-`<fieldset ngxFormFieldset [field]="form.address">`.
+`<fieldset ngxFormFieldset [field]="signupForm.passwords">`. Export name:
+`#group="ngxFormFieldset"`.
 
 While the group shows errors, the fieldset hides its warnings. Warnings use their own timing, as in the wrapper.
 
@@ -359,13 +365,13 @@ for more patterns.
 | Input                 | Type                                                                     | Default                          | Description                                                                                |
 | --------------------- | ------------------------------------------------------------------------ | -------------------------------- | ------------------------------------------------------------------------------------------ |
 | `field`               | `FieldTree`                                                              | Required                         | The group to validate.                                                                     |
-| `fields`              | `FieldTree[] \| null`                                                    | `null`                           | Collect messages from these fields instead of from `field`.                                |
+| `fields`              | `readonly FieldTree[] \| null`                                           | `null`                           | Collect messages from these fields instead of from `field`. `[]` collects nothing.         |
 | `fieldsetId`          | `string`                                                                 | Generated                        | Id used for the message ids.                                                               |
 | `strategy`            | `'immediate' \| 'on-touch' \| 'on-submit' \| 'inherit'`                  | Inherited, built-in `'on-touch'` | When errors show.                                                                          |
 | `warningStrategy`     | `'immediate' \| 'on-touch' \| 'on-submit' \| 'inherit'`                  | Inherited, built-in `'on-touch'` | When warnings show.                                                                        |
-| `submittedStatus`     | `'unsubmitted' \| 'submitting' \| 'submitted'`                           | From the form                    | Override the submit state used for `on-submit` timing.                                     |
-| `includeNestedErrors` | `boolean`                                                                | `false`                          | Also show the errors of nested fields.                                                     |
-| `showErrors`          | `boolean`                                                                | `true`                           | Set `false` to hide the fieldset messages.                                                 |
+| `submittedStatus`     | `'unsubmitted' \| 'submitting' \| 'submitted'`                           | From the form (`'unsubmitted'`)  | Override the submit state used for `on-submit` timing.                                     |
+| `includeNestedErrors` | `boolean`                                                                | `false`                          | Also show the errors of nested fields. Accepts a bare attribute.                           |
+| `showErrors`          | `boolean`                                                                | `true`                           | Set `false` to hide the fieldset messages. Accepts a bare attribute.                       |
 | `errorPlacement`      | `'top' \| 'bottom'`                                                      | `'bottom'`                       | Show messages after the legend or after the fields.                                        |
 | `appearance`          | `'outline' \| 'plain'`                                                   | `'outline'`                      | `outline` draws a border and padding. `plain` draws neither.                               |
 | `feedbackAppearance`  | `'auto' \| 'plain' \| 'notification'`                                    | `'auto'`                         | `notification` shows messages in a card. `plain` shows them as text. `auto` uses the card. |
@@ -373,6 +379,11 @@ for more patterns.
 | `listStyle`           | `'plain' \| 'bullets'`                                                   | `'bullets'`                      | Show several messages as a bulleted list or as plain lines.                                |
 | `surfaceTone`         | `'default' \| 'neutral' \| 'info' \| 'success' \| 'warning' \| 'danger'` | `'default'`                      | Background color of the fieldset content.                                                  |
 | `validationSurface`   | `'never' \| 'always'`                                                    | `'never'`                        | `always` tints the background when the group has an error or warning.                      |
+
+Companion union types are also exported from this entry point:
+`NgxFormFieldErrorPlacement`, `NgxFormFieldsetAppearance`,
+`NgxFormFieldsetFeedbackAppearance`, `NgxFormFieldsetSurfaceTone`, and
+`NgxFormFieldsetValidationSurface`.
 
 ## Error summary
 

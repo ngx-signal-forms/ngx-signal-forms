@@ -61,6 +61,7 @@ import { type Settings, SettingsStore } from './settings.store';
             <label for="store-binding-email">Email</label>
             <input
               id="store-binding-email"
+              autocomplete="email"
               type="email"
               [formField]="settingsForm.email"
             />

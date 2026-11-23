@@ -7,8 +7,17 @@ import {
   output,
   signal,
 } from '@angular/core';
-import type { FormValueControl, ValidationError } from '@angular/forms/signals';
-import { NgxFieldIdentity } from '@ngx-signal-forms/toolkit';
+import {
+  FORM_FIELD,
+  type FieldState,
+  type FormValueControl,
+  type ValidationError,
+} from '@angular/forms/signals';
+import {
+  createErrorVisibility,
+  NgxFieldIdentity,
+} from '@ngx-signal-forms/toolkit';
+import { createAriaInvalidSignal } from '@ngx-signal-forms/toolkit/headless';
 
 /**
  * Custom star rating control implementing Angular Signal Forms FormValueControl interface.
@@ -54,7 +63,7 @@ import { NgxFieldIdentity } from '@ngx-signal-forms/toolkit';
     '[attr.aria-valuenow]': 'currentValue()',
     '[attr.aria-valuetext]': 'valueText()',
     '[attr.aria-describedby]': 'resolvedDescribedBy()',
-    '[attr.aria-invalid]': 'invalid() ? "true" : "false"',
+    '[attr.aria-invalid]': 'ariaInvalid()',
     '[attr.aria-disabled]': 'disabled() ? "true" : "false"',
     '[attr.aria-required]': 'required() ? "true" : null',
     '[class.rating-control--disabled]': 'disabled()',
@@ -75,18 +84,17 @@ import { NgxFieldIdentity } from '@ngx-signal-forms/toolkit';
       outline: none;
       cursor: pointer;
       transition:
-        background-color 0.15s ease-in-out,
-        box-shadow 0.15s ease-in-out,
-        transform 0.15s ease-in-out;
+        background-color 0.15s ease,
+        box-shadow 0.15s ease;
     }
 
+    /* Forced-colors mode drops box-shadow but paints the transparent
+       outline in a system color, so focus stays visible. */
     :host(:focus-visible) {
       background-color: color-mix(in srgb, #fbbf24 10%, transparent);
       box-shadow: 0 0 0 3px color-mix(in srgb, #007bc7 55%, transparent);
-    }
-
-    :host([data-signal-field]:focus-visible) {
-      box-shadow: none;
+      outline: 2px solid transparent;
+      outline-offset: 2px;
     }
 
     :host(.rating-control--disabled) {
@@ -103,17 +111,20 @@ import { NgxFieldIdentity } from '@ngx-signal-forms/toolkit';
       font-size: 1.625rem;
       line-height: 1;
       transition:
-        transform 0.1s ease-in-out,
-        color 0.15s ease-in-out,
-        filter 0.15s ease-in-out;
+        transform 0.15s ease-out,
+        color 0.15s ease,
+        filter 0.15s ease;
       user-select: none;
     }
 
-    .star:hover:not(.star--disabled) {
-      transform: scale(1.14);
-      filter: drop-shadow(
-        0 0 0.35rem color-mix(in srgb, #fbbf24 35%, transparent)
-      );
+    /* Touch devices keep a tapped star in :hover, so only scale on real hover. */
+    @media (hover: hover) and (pointer: fine) {
+      .star:hover:not(.star--disabled) {
+        transform: scale(1.14);
+        filter: drop-shadow(
+          0 0 0.35rem color-mix(in srgb, #fbbf24 35%, transparent)
+        );
+      }
     }
 
     .star--filled {
@@ -161,6 +172,13 @@ export class RatingControlComponent implements FormValueControl<number> {
    * (outside a wrapper).
    */
   readonly #identity = inject(NgxFieldIdentity, { optional: true });
+
+  readonly #formField = inject(FORM_FIELD, { optional: true });
+
+  /** The bound field state. `null` until the `[formField]` binding resolves. */
+  readonly #fieldState = computed<FieldState<unknown> | null>(
+    () => this.#formField?.state() ?? null,
+  );
 
   /**
    * Optional aria-labelledby source for visible labels projected outside
@@ -237,6 +255,16 @@ export class RatingControlComponent implements FormValueControl<number> {
    * label linkage must pass `[labelledBy]` explicitly, matching the toolkit
    * README's canonical custom-control recipe.
    */
+  /**
+   * `aria-invalid` follows the error display strategy: `'true'` only while a
+   * blocking error is visible. Binding the raw `invalid()` flag would announce
+   * an invalid entry on a pristine field.
+   */
+  protected readonly ariaInvalid = createAriaInvalidSignal(
+    this.#fieldState,
+    createErrorVisibility(this.#fieldState),
+  );
+
   protected readonly resolvedLabelledBy = computed(
     () => this.labelledBy() ?? null,
   );

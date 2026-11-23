@@ -19,6 +19,26 @@ test.describe('Error Display Modes', () => {
     await expect(formPage.form).toBeVisible();
   });
 
+  test('renders visible field boundaries around native controls', async ({
+    page,
+  }) => {
+    for (const fieldId of [
+      'name',
+      'productUsed',
+      'overallRating',
+      'detailedFeedback',
+    ]) {
+      const field = page
+        .locator('ngx-form-field-wrapper')
+        .filter({ has: page.locator(`#${fieldId}`) })
+        .locator('.ngx-signal-form-field-wrapper__content');
+
+      await expect(field).toBeVisible();
+      await expect(field).toHaveCSS('border-top-style', 'solid');
+      await expect(field).not.toHaveCSS('border-top-width', '0px');
+    }
+  });
+
   test('should allow switching between all 3 modes', async () => {
     await test.step('Switch through all error display modes', async () => {
       const modes = ['immediate', 'onTouch', 'onSubmit'] as const;
@@ -59,63 +79,26 @@ test.describe('Error Display Modes', () => {
     await expect(formPage.nameInput).toHaveAttribute('aria-invalid', 'true');
   });
 
-  test('"on-submit" mode should hide errors until submit', async () => {
-    await test.step('Interact with form without errors appearing', async () => {
-      // Reload page to ensure clean state before switching mode
-      await formPage.page.reload();
-      await formPage.waitForReady();
-      await formPage.selectErrorMode('onSubmit');
-      await expect(formPage.errorModeRadios.onSubmit).toBeChecked();
+  test('on-submit reveals errors after submit', async () => {
+    await formPage.selectErrorMode('onSubmit');
 
-      await expect(formPage.errorAlerts).toHaveCount(0);
+    await formPage.nameInput.focus();
+    await formPage.nameInput.blur();
+    await formPage.emailInput.fill('not-an-email');
+    await formPage.emailInput.blur();
 
-      const inputs = formPage.textAndEmailInputs;
-      const count = await inputs.count();
+    const helpers = formPage.page.locator('ngx-error-display-helpers');
+    await expect(helpers).toContainText('Name errors visible: no');
+    await expect(helpers).toContainText('Email errors visible: no');
+    await expect(formPage.errorAlerts).toHaveCount(0);
 
-      for (let i = 0; i < count; i++) {
-        const input = inputs.nth(i);
-        await input.focus();
-        await input.blur();
-      }
+    await formPage.submit();
 
-      // With on-submit strategy, errors should still be hidden after blur
-      await expect(formPage.errorAlerts).toHaveCount(0);
-
-      await formPage.submit();
-
-      // After submit, the submission-error alert appears via computed signal.
-      // Playwright's auto-retrying assertion handles change detection timing
-      // directly - no blur nudge needed.
-      await expect(formPage.page.locator('#submission-error')).toBeVisible();
-    });
-  });
-
-  test('"on-submit" toggles error visibility synchronously on submit', async () => {
-    await test.step('Errors stay hidden until submit, then flip in one tick', async () => {
-      await formPage.selectErrorMode('onSubmit');
-
-      // Touch name + email with invalid values. On-submit must keep errors
-      // suppressed and helpers must report "no visible errors".
-      await formPage.nameInput.focus();
-      await formPage.nameInput.blur();
-      await formPage.emailInput.fill('not-an-email');
-      await formPage.emailInput.blur();
-
-      const helpers = formPage.page.locator('ngx-error-display-helpers');
-      await expect(helpers).toContainText('Name errors visible: no');
-      await expect(helpers).toContainText('Email errors visible: no');
-      await expect(formPage.errorAlerts).toHaveCount(0);
-
-      await formPage.submit();
-
-      // Single-tick flip: helpers report visible errors AND the submission
-      // alert appears without any extra focus/blur nudge.
-      await expect(helpers).toContainText('Name errors visible: yes');
-      await expect(helpers).toContainText('Email errors visible: yes');
-      await expect(formPage.page.locator('#submission-error')).toBeVisible();
-      await expect(formPage.nameInput).toHaveAttribute('aria-invalid', 'true');
-      await expect(formPage.emailInput).toHaveAttribute('aria-invalid', 'true');
-    });
+    await expect(helpers).toContainText('Name errors visible: yes');
+    await expect(helpers).toContainText('Email errors visible: yes');
+    await expect(formPage.page.locator('#submission-error')).toBeVisible();
+    await expect(formPage.nameInput).toHaveAttribute('aria-invalid', 'true');
+    await expect(formPage.emailInput).toHaveAttribute('aria-invalid', 'true');
   });
 
   test('stamps toolkit-managed aria-describedby pointing at the hint on initial load', async () => {

@@ -291,7 +291,11 @@ export type NgxFormFieldErrorPresentation = 'inline' | 'panel';
       }
     </ng-template>
   `,
-  styleUrls: ['../core/feedback-tokens.css', './form-field-error.css'],
+  styleUrls: [
+    '../core/feedback-tokens.css',
+    '../core/motion-tokens.css',
+    './form-field-error.css',
+  ],
 })
 export class NgxFormFieldError {
   /**

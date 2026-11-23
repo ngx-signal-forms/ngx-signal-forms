@@ -19,7 +19,7 @@ ESLint-specific guidance for `nx import`. For generic import issues (root deps, 
 }
 ```
 
-**Auto-installation**: `nx import` may detect ESLint config files and offer to install `@nx/eslint`. Review the package identity, version, source, and compatibility, then get explicit user approval before installing it. Do not auto-accept the offer. The install registers the plugin and updates `namedInputs.production` to exclude ESLint config files.
+**Auto-installation**: `nx import` auto-detects ESLint config files and offers to install `@nx/eslint`. Accept the offer — it registers the plugin and updates `namedInputs.production` to exclude ESLint config files.
 
 ---
 
@@ -72,7 +72,7 @@ When a project uses `eslint.config.cjs` (CJS flat config), `eslint .` lints the 
 module.exports = tseslint.config(
   {
     ignores: ['dist/**', 'node_modules/**', 'eslint.config.cjs'],
-  },
+  }
   // ...
 );
 ```
