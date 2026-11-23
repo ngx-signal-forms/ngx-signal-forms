@@ -359,7 +359,7 @@ export declare class NgxFormFieldCharacterCount {
   /**
    * Current limit state for display, accounting for disabled color progression.
    */
-  protected readonly displayLimitState: import("@angular/core").Signal<"disabled" | CharacterCountLimitState>;
+  protected readonly displayLimitState: import("@angular/core").Signal<CharacterCountLimitState | "disabled">;
   /**
    * Computed announcement text. Reads `#announceableState` as the
    * change-trigger and produces a string per limit state. Unlike the

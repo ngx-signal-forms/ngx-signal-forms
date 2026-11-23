@@ -8,6 +8,7 @@ import {
   required,
   schema,
   validate,
+  type FieldTree,
 } from '@angular/forms/signals';
 import { warningError, type SubmittedStatus } from '@ngx-signal-forms/toolkit';
 import { provideFieldLabels } from '@ngx-signal-forms/toolkit/core';
@@ -785,5 +786,66 @@ describe('NgxFormFieldErrorSummary', () => {
       ).toBeNull();
       expect(container.textContent).toContain('Something went wrong');
     });
+  });
+
+  it('focuses the summary when async validation finishes with errors after submit', async () => {
+    const pending = signal(true);
+    const errors = signal<readonly { kind: string; message: string }[]>([]);
+    const mockFormTree = (() => ({
+      errorSummary: () => errors(),
+      errors: () => errors(),
+      invalid: () => errors().length > 0,
+      touched: () => true,
+      pending: () => pending(),
+    })) as unknown as FieldTree<unknown>;
+
+    @Component({
+      selector: 'ngx-test-error-summary-async-pending',
+      imports: [NgxFormFieldErrorSummary],
+      template: `
+        <button id="before" type="button">Before</button>
+        <ngx-form-field-error-summary
+          [formTree]="mockFormTree"
+          strategy="on-submit"
+          [submittedStatus]="submittedStatus()"
+        />
+      `,
+    })
+    class TestComponent {
+      readonly mockFormTree = mockFormTree;
+      readonly submittedStatus = signal<SubmittedStatus>('unsubmitted');
+    }
+
+    const { container, fixture } = await render(TestComponent);
+    const before = container.querySelector<HTMLButtonElement>('#before');
+    const summaryHost = container.querySelector<HTMLElement>(
+      'ngx-form-field-error-summary',
+    );
+    assert(before && summaryHost, 'expected anchor button and summary host');
+    before.focus();
+
+    // Submit while async validation is still pending and no errors exist yet.
+    fixture.componentInstance.submittedStatus.set('submitted');
+    fixture.detectChanges();
+    await fixture.whenStable();
+    expect(document.activeElement).toBe(before);
+
+    // Async validator resolves with a blocking error: summary must focus now.
+    errors.set([{ kind: 'taken', message: 'Username is taken' }]);
+    pending.set(false);
+    fixture.detectChanges();
+    await fixture.whenStable();
+    expect(document.activeElement).toBe(summaryHost);
+
+    // Later edit clears and re-introduces an error while already submitted:
+    // focus must stay on the user's control instead of jumping back.
+    before.focus();
+    errors.set([]);
+    fixture.detectChanges();
+    await fixture.whenStable();
+    errors.set([{ kind: 'taken', message: 'Username is taken' }]);
+    fixture.detectChanges();
+    await fixture.whenStable();
+    expect(document.activeElement).toBe(before);
   });
 });

@@ -454,12 +454,14 @@ export class NgxFormFieldErrorSummary {
     /**
      * Track submit attempts and transitions into `'submitted'` so focus moves
      * to the summary on every failed submit (including repeated failed submits
-     * where errors stay visible, WCAG 2.4.3), and never steals focus while the
-     * user is typing and clears/re-invalidates a field after an earlier submit
+     * where errors stay visible, WCAG 2.4.3, and async validators that settle
+     * with errors right after submit), and never steals focus while the user
+     * is typing and clears/re-invalidates a field after an earlier submit
      * (WCAG 3.2.2).
      */
     let lastSubmitCount = 0;
     let wasSubmitted = false;
+    let awaitingSubmitErrors = false;
 
     afterRenderEffect({
       // `read` phase: we only need to inspect signals + (optionally) call
@@ -472,6 +474,9 @@ export class NgxFormFieldErrorSummary {
           formContext?.submittedStatus() ??
           'unsubmitted';
         const visible = this.summary.shouldShow();
+        const formState = this.summary.formTree()();
+        const pending =
+          typeof formState.pending === 'function' ? formState.pending() : false;
 
         const isSubmitted = status === 'submitted';
         const newSubmitAttempt = submitCount > lastSubmitCount;
@@ -480,8 +485,29 @@ export class NgxFormFieldErrorSummary {
         lastSubmitCount = submitCount;
         wasSubmitted = isSubmitted;
 
-        if (!visible) return;
-        if (!newSubmitAttempt && !enteredSubmitted) return;
+        let shouldFocus = false;
+        if (newSubmitAttempt || enteredSubmitted) {
+          if (visible) {
+            shouldFocus = true;
+            awaitingSubmitErrors = false;
+          } else {
+            // Keep focus armed only while async validation is still running
+            // for this submit. A synchronous valid submit disarms immediately
+            // so later edits never steal focus.
+            awaitingSubmitErrors = pending;
+          }
+        } else if (awaitingSubmitErrors) {
+          if (visible) {
+            shouldFocus = true;
+            awaitingSubmitErrors = false;
+          } else if (!pending || !isSubmitted) {
+            awaitingSubmitErrors = false;
+          }
+        } else if (!isSubmitted) {
+          awaitingSubmitErrors = false;
+        }
+
+        if (!shouldFocus) return;
 
         // `untracked` so reading these once-per-mount signals does not
         // cause the effect to retrigger every time the entry list, label,

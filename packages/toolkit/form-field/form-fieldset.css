@@ -619,6 +619,14 @@
     border: 2px solid CanvasText;
   }
 
+  /* `forced-color-adjust` is inherited; re-enable it for the projected legend
+   * and the field surface so nested labels and controls keep OS color
+   * correction. */
+  :host(:not([data-appearance='plain'])) .ngx-signal-form-fieldset__surface,
+  :host(:not([data-appearance='plain'])) ::ng-deep > legend {
+    forced-color-adjust: auto;
+  }
+
   :host(.ngx-signal-form-fieldset--invalid:not([data-appearance='plain'])) {
     border-color: Mark;
   }
@@ -626,11 +634,5 @@
   :host(.ngx-signal-form-fieldset--warning:not([data-appearance='plain'])) {
     border-style: dashed;
     border-color: CanvasText;
-  }
-
-  :host(.ngx-signal-form-fieldset--invalid) ::ng-deep > legend,
-  :host(.ngx-signal-form-fieldset--warning) ::ng-deep > legend {
-    color: CanvasText;
-    background: Canvas;
   }
 }

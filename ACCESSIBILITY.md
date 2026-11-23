@@ -210,9 +210,11 @@ Code in `apps` and `packages` must meet WCAG 2.2 AA
   changed, run `pnpm nx run <app>-e2e:a11y`, for example
   `pnpm nx run demo-material-e2e:a11y`.
 - Do not add a violation to a demo baseline only to make CI pass. To accept
-  one, first scan that demo, then run `pnpm a11y:baseline`. The baseline
-  script writes only the demos that have scan results. Explain in the pull
-  request why the violation is acceptable.
+  one for a single demo, clear `dist/.a11y` first (`rm -rf dist/.a11y`), scan
+  that demo, and then run `pnpm a11y:baseline`. `pnpm a11y:baseline` rewrites
+  the baseline for every demo that has results in `dist/.a11y/`, including
+  results left from earlier runs. Explain in the pull request why the
+  violation is acceptable.
 - Check by hand what axe-core cannot see. Write in the pull request what you
   checked, and with which browser and assistive technology.
 

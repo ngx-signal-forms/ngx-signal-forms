@@ -707,7 +707,8 @@
 @media (forced-colors: active) {
   /* Selection clusters rely on a tinted background for invalid/warning states
    * in normal mode. Forced colors strip author backgrounds, so add explicit
-   * system-color borders to keep the states distinct. */
+   * system-color borders to keep the states distinct while restoring
+   * forced-color adjustment on projected choices inside `__main`. */
   :host(
       .ngx-signal-form-field-wrapper--selection-cluster.ngx-signal-form-field-wrapper--invalid
     )
@@ -726,5 +727,15 @@
     background: Canvas;
     color: CanvasText;
     border: 2px dashed CanvasText;
+  }
+
+  :host(
+      .ngx-signal-form-field-wrapper--selection-cluster:is(
+        .ngx-signal-form-field-wrapper--invalid,
+        .ngx-signal-form-field-wrapper--warning
+      )
+    )
+    .ngx-signal-form-field-wrapper__main {
+    forced-color-adjust: auto;
   }
 }
