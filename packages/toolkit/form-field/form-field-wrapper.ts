@@ -374,8 +374,13 @@ const FIELD_BOX_INTERACTIVE_SELECTOR = [
         }
       </div>
 
-      @if (isTopPlacement() && presentation.renderMessageSlot()) {
-        <div class="ngx-signal-form-field-wrapper__messages">
+      @if (isTopPlacement() && mountErrorRenderer()) {
+        <div
+          class="ngx-signal-form-field-wrapper__messages"
+          [class.ngx-signal-form-field-wrapper__messages--empty]="
+            !presentation.showErrors() && !presentation.showWarnings()
+          "
+        >
           <ng-container
             *ngComponentOutlet="
               errorRendererComponent();
@@ -406,7 +411,7 @@ const FIELD_BOX_INTERACTIVE_SELECTOR = [
       <!-- Assistive row: fixed-height container prevents layout shift -->
       <div class="ngx-signal-form-field-wrapper__assistive">
         <div class="ngx-signal-form-field-wrapper__assistive-left">
-          @if (!isTopPlacement() && presentation.renderMessageSlot()) {
+          @if (!isTopPlacement() && mountErrorRenderer()) {
             <ng-container
               *ngComponentOutlet="
                 errorRendererComponent();
@@ -1124,13 +1129,30 @@ export class NgxFormFieldWrapper<TValue = unknown> {
   });
 
   /**
+   * Whether the wrapper should mount its error renderer.
+   *
+   * The default `NgxFormFieldError` keeps its `role="alert"` and
+   * `role="status"` live regions mounted while empty (WCAG 4.1.3), so it stays
+   * mounted whenever the field is visible (`!isFieldHidden()`). Custom
+   * `NGX_FORM_FIELD_ERROR_RENDERER` overrides keep gating on
+   * `presentation.renderMessageSlot()` so renderers that expect mount-on-demand
+   * do not paint empty chrome.
+   *
+   * @internal
+   */
+  protected readonly mountErrorRenderer = computed(
+    () =>
+      !this.isFieldHidden() &&
+      (!this.#errorRenderer || this.presentation.renderMessageSlot()),
+  );
+
+  /**
    * Whether to apply warning styling to the form field container.
-   * Warning styling is shown only when:
-   * 1. Field has warnings
-   * 2. Field has NO visible errors (errors take visual priority)
+   * Matches warning visibility timing (`warningStrategy`) and stays off while
+   * blocking errors are visible (errors take visual priority).
    */
   protected readonly showWarningState = computed(() => {
-    return this.presentation.hasWarnings() && !this.presentation.showErrors();
+    return this.presentation.showWarnings();
   });
 
   /**

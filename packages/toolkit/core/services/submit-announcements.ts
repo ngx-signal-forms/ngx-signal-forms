@@ -28,7 +28,11 @@ import {
 export class NgxSubmitAnnouncements {
   readonly #injector = inject(Injector);
   readonly #summaries = signal<readonly Signal<boolean>[]>([]);
+  readonly #submitCount = signal(0);
   #submitRenderPending = false;
+
+  /** Increments on each native submit attempt reported by `NgxSignalForm`. */
+  readonly submitCount = this.#submitCount.asReadonly();
 
   /** True while at least one registered summary shows errors. */
   readonly summaryShowsErrors = computed(() =>
@@ -47,6 +51,7 @@ export class NgxSubmitAnnouncements {
 
   /** Called by `NgxSignalForm` on every native submit of the form. */
   notifySubmitAttempt(): void {
+    this.#submitCount.update((count) => count + 1);
     this.#submitRenderPending = true;
     afterNextRender(
       () => {

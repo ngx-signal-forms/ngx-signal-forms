@@ -12,6 +12,7 @@ import {
 import {
   createUniqueId,
   devWarnOnce,
+  injectFormContext,
   NgxSubmitAnnouncements,
   type WarnOnceRef,
 } from '@ngx-signal-forms/toolkit/core';
@@ -208,6 +209,13 @@ export type NgxErrorSummaryHeadingLevel = 2 | 3 | 4 | 5 | 6;
       display: block;
     }
 
+    :host(:focus) {
+      outline: 2px solid
+        var(--ngx-error-summary-focus-color, light-dark(#2563eb, #60a5fa));
+      outline-offset: 2px;
+      border-radius: 0.375rem;
+    }
+
     /* Default colors are light-dark() pairs that follow the inherited
      * color-scheme (see THEMING.md, "Scenario C: Dark Mode"). Dark side, WCAG 1.4.3 on
      * the #450a0a summary background: label #fecaca 11.16:1, link #fca5a5
@@ -305,6 +313,57 @@ export type NgxErrorSummaryHeadingLevel = 2 | 3 | 4 | 5 | 6;
       padding-inline: var(--ngx-error-summary-link-padding-inline, 0.25rem);
       font-size: 0.875rem;
     }
+
+    @media (pointer: coarse) {
+      .ngx-form-field-error-summary__link {
+        min-block-size: var(--ngx-error-summary-link-min-target-size, 2.75rem);
+        min-inline-size: var(--ngx-error-summary-link-min-target-size, 2.75rem);
+      }
+    }
+
+    @media (prefers-contrast: more) {
+      .ngx-form-field-error-summary {
+        border-width: 3px;
+      }
+
+      .ngx-form-field-error-summary__link {
+        text-decoration-thickness: 2px;
+      }
+    }
+
+    @media (forced-colors: active) {
+      :host(:focus) {
+        outline: 2px solid Highlight;
+      }
+
+      .ngx-form-field-error-summary {
+        forced-color-adjust: none;
+        background: Canvas;
+        color: CanvasText;
+        border: 2px solid Mark;
+      }
+
+      .ngx-form-field-error-summary--empty {
+        border-width: 0;
+      }
+
+      .ngx-form-field-error-summary__label,
+      .ngx-form-field-error-summary__text {
+        color: CanvasText;
+      }
+
+      .ngx-form-field-error-summary__link {
+        color: LinkText;
+
+        &:hover {
+          color: LinkText;
+        }
+
+        &:focus-visible {
+          outline: 2px solid Highlight;
+        }
+      }
+    }
   `,
 })
 export class NgxFormFieldErrorSummary {
@@ -380,6 +439,7 @@ export class NgxFormFieldErrorSummary {
   readonly autoFocus = input(true);
 
   constructor() {
+    const formContext = injectFormContext();
     // Tell the field errors of this form that a summary speaks for them on
     // submit (ADR-0012). No channel outside a `[ngxSignalForm]` form.
     const submitAnnouncements = inject(NgxSubmitAnnouncements, {
@@ -392,31 +452,41 @@ export class NgxFormFieldErrorSummary {
     }
 
     /**
-     * Track whether we have already moved focus into the summary so that
-     * subsequent entry-list mutations (a new error appearing while the
-     * summary is visible, the user editing a field, etc.) do not steal
-     * focus from wherever the user currently is. We re-arm the latch when
-     * the summary disappears so the next "0 → N" transition focuses again.
+     * Track submit attempts and transitions into `'submitted'` so focus moves
+     * to the summary on every failed submit (including repeated failed submits
+     * where errors stay visible, WCAG 2.4.3), and never steals focus while the
+     * user is typing and clears/re-invalidates a field after an earlier submit
+     * (WCAG 3.2.2).
      */
-    let hasFocused = false;
+    let lastSubmitCount = 0;
+    let wasSubmitted = false;
 
     afterRenderEffect({
       // `read` phase: we only need to inspect signals + (optionally) call
       // `.focus()` on the host. No DOM writes that would invalidate other
       // components' layouts.
       read: () => {
+        const submitCount = submitAnnouncements?.submitCount() ?? 0;
+        const status =
+          this.summary.submittedStatus() ??
+          formContext?.submittedStatus() ??
+          'unsubmitted';
         const visible = this.summary.shouldShow();
 
-        if (!visible) {
-          hasFocused = false;
-          return;
-        }
+        const isSubmitted = status === 'submitted';
+        const newSubmitAttempt = submitCount > lastSubmitCount;
+        const enteredSubmitted = isSubmitted && !wasSubmitted;
+
+        lastSubmitCount = submitCount;
+        wasSubmitted = isSubmitted;
+
+        if (!visible) return;
+        if (!newSubmitAttempt && !enteredSubmitted) return;
 
         // `untracked` so reading these once-per-mount signals does not
         // cause the effect to retrigger every time the entry list, label,
-        // or focus flag changes after the initial focus has happened.
+        // or focus flag changes after focus has moved.
         untracked(() => {
-          if (hasFocused) return;
           if (!this.autoFocus()) return;
           // Only the resolved 'on-submit' strategy matches the documented
           // GOV.UK/WAI "arrive at the summary after a failed submit"
@@ -432,7 +502,6 @@ export class NgxFormFieldErrorSummary {
           if (typeof host.focus === 'function') {
             host.focus();
           }
-          hasFocused = true;
 
           // Dev-mode diagnostic: `focus()` is silent — if the host is
           // detached, `display: none`, covered by a modal/inert ancestor,

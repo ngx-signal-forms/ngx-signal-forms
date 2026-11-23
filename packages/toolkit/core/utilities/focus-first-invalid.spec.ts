@@ -280,6 +280,88 @@ describe('focusFirstInvalid', () => {
     });
   });
 
+  describe('Non-blocking warnings (#785)', () => {
+    it('skips warning-only fields and focuses the first field with a blocking error', () => {
+      const warningFocusSpy = vi.fn();
+      const blockingFocusSpy = vi.fn();
+
+      const mockField = createMockFieldWithErrors([
+        createMockError(
+          () => {
+            warningFocusSpy();
+          },
+          { kind: 'warn:weak-password', message: 'Consider a stronger value' },
+        ),
+        createMockError(() => {
+          blockingFocusSpy();
+        }),
+      ]);
+
+      const result = focusFirstInvalid(mockField);
+
+      expect(result).toBe(true);
+      expect(warningFocusSpy).not.toHaveBeenCalled();
+      expect(blockingFocusSpy).toHaveBeenCalledOnce();
+    });
+
+    it('returns false without a dev-mode warning when errorSummary contains only warnings', () => {
+      const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {
+        // suppress expected/unexpected dev diagnostics during assertion
+      });
+      const warningFocusSpy = vi.fn();
+
+      const mockField = createMockFieldWithErrors([
+        createMockError(
+          () => {
+            warningFocusSpy();
+          },
+          { kind: 'warn:weak-password', message: 'Consider a stronger value' },
+        ),
+      ]);
+
+      const result = focusFirstInvalid(mockField);
+
+      expect(result).toBe(false);
+      expect(warningFocusSpy).not.toHaveBeenCalled();
+      expect(warnSpy).not.toHaveBeenCalled();
+
+      warnSpy.mockRestore();
+    });
+
+    it('still focuses a field that has both a warning and a blocking error', () => {
+      const fieldFocusSpy = vi.fn();
+      const sharedTarget = createFocusTarget();
+      const sharedTree = createMockFieldTree({
+        errors: [],
+        focusBoundControl: (): void => {
+          fieldFocusSpy();
+          sharedTarget.focus();
+        },
+        invalid: true,
+        valid: false,
+        value: '',
+      });
+
+      const mockField = createMockFieldWithErrors([
+        {
+          kind: 'warn:weak-password',
+          message: 'Consider a stronger value',
+          fieldTree: sharedTree,
+        },
+        {
+          kind: 'required',
+          message: 'Password is required',
+          fieldTree: sharedTree,
+        },
+      ]);
+
+      const result = focusFirstInvalid(mockField);
+
+      expect(result).toBe(true);
+      expect(fieldFocusSpy).toHaveBeenCalledOnce();
+    });
+  });
+
   describe('Silent no-op focusBoundControl (unregistered custom control binding)', () => {
     it('skips a field whose focusBoundControl() call does not move focus and focuses the next native field', () => {
       const noopFocusSpy = vi.fn();
@@ -414,12 +496,14 @@ function createMockError(
     hidden?: boolean;
     disabled?: boolean;
     readonly?: boolean;
+    kind?: string;
+    message?: string;
   }> = {},
 ): ValidationError.WithFieldTree {
   const target = createFocusTarget();
   return {
-    kind: 'required',
-    message: 'Required',
+    kind: stateOverrides.kind ?? 'required',
+    message: stateOverrides.message ?? 'Required',
     fieldTree: createMockFieldTree({
       errors: [],
       focusBoundControl: (_options?: FocusOptions): void => {

@@ -738,7 +738,9 @@ describe('NgxSignalFormWrapperComponent', () => {
         !(messages instanceof HTMLElement) ||
         !(content instanceof HTMLElement)
       ) {
-        throw new Error('Expected messages and content containers to render.');
+        throw new TypeError(
+          'Expected messages and content containers to render.',
+        );
       }
 
       expect(
@@ -1995,7 +1997,9 @@ describe('NgxSignalFormWrapperComponent', () => {
       expect(label).toBeInstanceOf(HTMLLabelElement);
 
       if (!(label instanceof HTMLLabelElement)) {
-        throw new Error('Expected rendered label to be an HTMLLabelElement.');
+        throw new TypeError(
+          'Expected rendered label to be an HTMLLabelElement.',
+        );
       }
 
       expect(label.htmlFor).toBe('email');
@@ -2680,13 +2684,12 @@ describe('NgxSignalFormWrapperComponent', () => {
         },
       );
 
-      // Warning class is still applied based on field state, independent of touch
-      // Note: The error component uses strategy to control visibility, but
-      // the warning CSS class is applied based on hasWarnings && !hasErrors
+      // Default warningStrategy is 'on-touch', so an untouched field must not
+      // receive warning styling before the user has interacted with it.
       const formField = container.querySelector('ngx-form-field-wrapper');
       expect(
         formField?.classList.contains('ngx-signal-form-field-wrapper--warning'),
-      ).toBe(true);
+      ).toBe(false);
     });
 
     it('should handle edge case of error without kind property', async () => {
@@ -2854,9 +2857,15 @@ describe('NgxSignalFormWrapperComponent', () => {
           },
         );
 
-        // The strategy still resolves to 'unsubmitted' internally, so
-        // behavior is unchanged — only the dev diagnostic is new.
-        expect(container.querySelector('ngx-form-field-error')).toBeNull();
+        // The strategy still resolves to 'unsubmitted' internally, so the
+        // pre-mounted live region stays empty and unlinked — only the dev
+        // diagnostic is new.
+        const errorHost = container.querySelector('ngx-form-field-error');
+        expect(errorHost).toHaveClass('ngx-form-field-error-host--empty');
+        expect(
+          container.querySelector('[role="alert"]')?.textContent?.trim() ?? '',
+        ).toBe('');
+        expect(container.querySelector('[id="test-field-error"]')).toBeNull();
       });
     });
   });
@@ -3015,9 +3024,12 @@ describe('NgxSignalFormWrapperComponent', () => {
         },
       );
 
-      // Untouched: warningStrategy="on-touch" keeps the warning hidden, and
-      // no renderer should even mount (no errors, no visible warnings).
-      expect(container.querySelector('ngx-form-field-error')).toBeNull();
+      // Untouched: warningStrategy="on-touch" keeps the warning hidden while
+      // the default live region stays mounted and empty (WCAG 4.1.3).
+      const preMountedStatus = container.querySelector('[role="status"]');
+      expect(preMountedStatus).toBeTruthy();
+      expect(preMountedStatus?.textContent?.trim() ?? '').toBe('');
+      expect(preMountedStatus?.getAttribute('id')).toBeNull();
 
       untouchedWarningField.set({
         invalid: () => true,
@@ -3030,6 +3042,7 @@ describe('NgxSignalFormWrapperComponent', () => {
       await fixture.whenStable();
 
       const status = container.querySelector('[role="status"]');
+      expect(status).toBe(preMountedStatus);
       expect(status?.textContent).toContain('Consider 8+ characters');
     });
   });

@@ -10,6 +10,7 @@ import { userEvent } from 'vitest/browser';
 import { NgxFormFieldErrorSummary } from './form-field-error-summary';
 import {
   expectNoA11yViolations,
+  expectVisibleFocusIndicator,
   findAlertContaining,
 } from '../testing/a11y-internal';
 
@@ -359,18 +360,16 @@ describe('NgxFormFieldErrorSummary — heading, accessible name, and focus movem
   });
 
   /**
-   * The component's own doc comment on its focus latch (`form-field-error-
-   * summary.ts`): "We re-arm the latch when the summary disappears so the
-   * next '0 → N' transition focuses again." The spec above only ever
-   * proves the "not again while still visible" half; it never drives
-   * `hasErrors()` back to `false`, so it can't tell a working re-arm from a
-   * latch that never resets at all. This drives the full promised cycle:
-   * 0 errors → N errors (first focus) → back to 0 (latch re-arms) → N again
-   * (must focus a second time).
+   * WCAG 3.2.2 + 2.4.3 focus contract:
+   * 1. Clearing a field while editing after a prior submit must NOT steal
+   *    focus from the input back to the summary (WCAG 3.2.2).
+   * 2. Clicking Submit again while errors remain (or after errors return)
+   *    MUST move focus back to the summary host (WCAG 2.4.3), and the focused
+   *    host must render a visible focus indicator.
    */
-  it('re-focuses the summary host on a second 0 → N transition after all errors clear', async () => {
+  it('does not steal focus while editing after submit, and re-focuses on a repeat failed submit', async () => {
     @Component({
-      selector: 'ngx-test-a11y-summary-latch-rearm',
+      selector: 'ngx-test-a11y-summary-repeat-submit',
       imports: [
         FormField,
         NgxSignalFormToolkit,
@@ -379,14 +378,12 @@ describe('NgxFormFieldErrorSummary — heading, accessible name, and focus movem
       ],
       template: `
         <form [formRoot]="testForm" ngxSignalForm errorStrategy="on-submit">
-          <ngx-form-field-error-summary
-            [formTree]="testForm"
-            [submittedStatus]="submittedStatus()"
-          />
+          <ngx-form-field-error-summary [formTree]="testForm" />
           <ngx-form-field-wrapper [formField]="testForm.name" fieldName="name">
             <label for="name">Full name</label>
             <input id="name" type="text" [formField]="testForm.name" />
           </ngx-form-field-wrapper>
+          <button type="submit">Submit</button>
         </form>
       `,
     })
@@ -398,25 +395,28 @@ describe('NgxFormFieldErrorSummary — heading, accessible name, and focus movem
           required(path.name, { message: 'Name is required' });
         }),
       );
-      readonly submittedStatus = signal<SubmittedStatus>('unsubmitted');
     }
 
     const { container, fixture } = await render(TestComponent);
     await TestBed.inject(ApplicationRef).whenStable();
 
     const nameInput = container.querySelector<HTMLInputElement>('#name')!;
-    const summaryHost = container.querySelector(
+    const submitButton = container.querySelector<HTMLButtonElement>(
+      'button[type="submit"]',
+    )!;
+    const summaryHost = container.querySelector<HTMLElement>(
       'ngx-form-field-error-summary',
     )!;
 
-    // 0 → N (first appearance): focuses the summary.
-    fixture.componentInstance.submittedStatus.set('submitted');
-    fixture.detectChanges();
+    // First failed submit via keyboard: focuses the summary and paints a
+    // visible :focus-visible ring.
+    submitButton.focus();
+    await userEvent.keyboard('{Enter}');
     await fixture.whenStable();
     expect(document.activeElement).toBe(summaryHost);
+    expectVisibleFocusIndicator(summaryHost);
 
-    // N → 0: fixing the only invalid field clears `hasErrors()`, so the
-    // summary hides and the component's own doc says the latch re-arms.
+    // Fix the only invalid field: summary clears and focus stays in the input.
     await userEvent.type(nameInput, 'Ada');
     await fixture.whenStable();
     expect(
@@ -426,16 +426,21 @@ describe('NgxFormFieldErrorSummary — heading, accessible name, and focus movem
     ).toBe('');
     expect(document.activeElement).toBe(nameInput);
 
-    // 0 → N again: a re-armed latch must focus the summary a second time,
-    // exactly as it did on the first appearance.
+    // Clear the input while typing: error returns in the summary, but focus
+    // must NOT be stolen away from the input the user is editing (WCAG 3.2.2).
     await userEvent.clear(nameInput);
     await fixture.whenStable();
-
     expect(
       container
         .querySelector('ngx-form-field-error-summary [role="alert"]')
         ?.textContent?.trim(),
     ).toContain('Name is required');
+    expect(document.activeElement).toBe(nameInput);
+
+    // Second failed submit while the summary is already visible: focus MUST
+    // move back to the summary host (WCAG 2.4.3).
+    await userEvent.click(submitButton);
+    await fixture.whenStable();
     expect(document.activeElement).toBe(summaryHost);
   });
 

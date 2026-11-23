@@ -40,33 +40,43 @@ you:
   `ngxSignalFormControl="checkbox"` or `ngxSignalFormControl="radio-group"`.
   A checkbox with `role="switch"` is in by default
   ([auto-ARIA eligibility](docs/CUSTOM_CONTROLS.md#inferred-kind-vs-auto-aria-eligibility)).
-- Message timing keeps an error hidden while the user types in a touched
-  field. The toolkit checks the field again when focus moves or the form
-  submits, so a screen reader announces the error once, not on each keystroke.
+- Under the default `on-touch` strategy, message timing keeps an error or
+  warning hidden while the user types in a touched field. The toolkit checks
+  the field again when focus moves or the form submits, so a screen reader
+  announces the message once, not on each keystroke. (`immediate` and
+  `on-submit` do not hide messages while typing.)
 - Errors render in a `role="alert"` region and warnings in a `role="status"`
-  region. The regions stay mounted while empty, so the first announcement is
-  not lost. One exception: when an error summary shows, the errors that a
-  submit reveals render outside the alert region, because the summary
-  announces them (see the summary below).
+  region. The default `NgxFormFieldError` regions stay mounted while empty
+  (both standalone and inside `NgxFormFieldWrapper`), so the first
+  announcement is not lost. One exception: when an error summary shows, the
+  errors that a submit reveals render outside the alert region, because the
+  summary announces them (see the summary below).
 - Each message starts with a visually hidden "Error:" or "Warning:" prefix,
-  so colour is not the only cue
+  so screen readers can tell the two channels apart without relying on colour
   ([`form-field-error.ts`](packages/toolkit/assistive/form-field-error.ts)).
+  For sighted users, you can also enable visible channel icons with CSS
+  custom properties (`--ngx-signal-form-error-icon` and
+  `--ngx-signal-form-warning-icon`, off by default).
 - After a failed submit, `focusFirstInvalid()` and `createOnInvalidHandler()`
-  move focus to the first invalid field.
+  move focus to the first field with a blocking error, skipping non-blocking
+  warnings.
 - `NgxFormFieldErrorSummary` has a heading and links to each invalid field.
-  With the `on-submit` strategy, it takes focus after a failed submit.
-  `[autoFocus]="false"` turns this off. With `on-touch` or `immediate`, it
-  does not take focus, so the user is not moved while they fill in the form.
-  Inside a form with `ngxSignalForm`, a summary that shows is the only thing
-  that announces after a submit, so the user does not hear every error twice.
-  Without `ngxSignalForm`, or with `errorSummaryAnnouncesAlone: false`, each
-  field error announces too
+  With the `on-submit` strategy, it takes focus after each failed submit
+  without stealing focus while the user edits a field. `[autoFocus]="false"`
+  turns this off. With `on-touch` or `immediate`, it does not take focus, so
+  the user is not moved while they fill in the form. Inside a form with
+  `ngxSignalForm`, a summary that shows is the only thing that announces after
+  a submit, so the user does not hear every error twice. Without
+  `ngxSignalForm`, or with `errorSummaryAnnouncesAlone: false`, each field
+  error announces too
   ([ADR-0012](docs/decisions/0012-error-summary-announces-alone.md)).
 - Hints stay visible while an error shows, so format instructions do not
   disappear when the user needs them
   ([ADR-0015](docs/decisions/0015-hints-stay-visible-while-an-error-shows.md)).
-- The default styles give checkbox and radio rows a 32px target and error
-  summary links a 24px minimum target. They support `forced-colors`,
+- The default styles give checkbox and switch selection rows a 32px minimum
+  target (44px on coarse pointers), give error summary links a 24px minimum
+  target (44px on coarse pointers), and leave radio selection-group row
+  sizing to the consumer. They support `forced-colors`,
   `prefers-contrast: more`, `prefers-reduced-motion`, and light and dark
   colour schemes ([theming](packages/toolkit/form-field/THEMING.md)).
 
@@ -86,7 +96,7 @@ change affects (`nx affected`). On `main`, it scans every demo app.
 | ------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------ | ----------------- | ------------------------------------------------------- |
 | Toolkit components                   | Vitest browser specs: axe-core with WCAG 2.2 AA rules, plus focus, accessible names, forced colours, reduced motion, and target size | Chromium          | any violation is found                                  |
 | Main demo (`demo-e2e`)               | Playwright axe-core scan of every demo route as it loads                                                                             | Chromium, Firefox | a violation is found that is not in that app's baseline |
-| Material, PrimeNG, and Spartan demos | Playwright axe-core scan of the home route (`/`) only                                                                                | Chromium, Firefox | a violation is found that is not in that app's baseline |
+| Material, PrimeNG, and Spartan demos | Playwright axe-core scan of each single-page demo (`/`) as it loads                                                                  | Chromium, Firefox | a violation is found that is not in that app's baseline |
 
 See [ADR-0004](docs/decisions/0004-wcag22-testing-strategy.md) and
 [ADR-0013](docs/decisions/0013-block-pr-on-new-demo-a11y-violations.md) for
@@ -107,13 +117,6 @@ What we do not test:
 
 ## Known limitations
 
-- **Focus can land on a warning.** After a failed submit,
-  `focusFirstInvalid()` can focus a field that has only a warning, when that
-  field comes before a field with a blocking error. Keyboard and screen reader
-  users then land on a field that does not block the submit. Until the fix
-  ships, your app can focus the first blocking field itself and use
-  `isBlockingError()` to skip warnings. Tracked in
-  [#785](https://github.com/ngx-signal-forms/ngx-signal-forms/issues/785).
 - **No save-status announcement.** The toolkit has no component that
   announces autosave states such as "Saving" and "Saved". Your app must build
   its own live region. Keep it mounted, and change its text instead of
@@ -128,12 +131,10 @@ What we do not test:
 - **Older browsers get flatter styles.** Below the runtime minimum, default
   colours and the outline appearance degrade, and contrast can drop. Use a
   supported browser version.
-- **Demo scans check the first render only.** The demo scan loads each route
-  and does not fill in or submit forms. The toolkit browser specs check error
-  and warning states, but the demo pages in those states have no automated
-  scan.
-- **Most themed demo pages have no scan.** The Material, PrimeNG, and Spartan
-  demos scan only their home route. Their other pages have no automated scan.
+- **Demo scans check the first render only.** The demo scan loads each demo
+  route and does not fill in or submit forms. The toolkit browser specs check
+  error and warning states, but the examples in those states have no
+  automated scan.
 - **Third-party controls.** The Angular Material, PrimeNG, and Spartan demos
   use those libraries' controls. Those libraries own the accessibility of
   their controls.
@@ -168,7 +169,7 @@ issue form, but you do not have to.
 | Critical | `a11y:critical` | Cannot finish a core task, and has no workaround.        | A screen reader user cannot find out why the form did not submit.             |
 | Serious  | `a11y:serious`  | Can finish the task only with a workaround or with help. | After a failed submit, focus lands on a field that does not block the submit. |
 | Moderate | `a11y:moderate` | Can finish the task, but it takes extra effort.          | A screen reader reads the same error twice.                                   |
-| Minor    | `a11y:minor`    | Can finish the task. The problem is small and rare.      | A demo page reads out a decorative icon.                                      |
+| Minor    | `a11y:minor`    | Can finish the task. The problem is small and rare.      | A demo route reads out a decorative icon.                                     |
 
 The four names are the same as the axe-core impact levels, but they do not
 mean the same thing. axe-core rates a rule. We rate what happens to a person.
@@ -253,12 +254,13 @@ For documentation and demo content:
   alternative near it.
 - Give each table a header row.
 - Do not use colour as the only way to show meaning.
-- Check that demo pages work at 200% zoom and in a narrow window.
+- Check that demo routes work at 200% zoom and in a narrow window.
 
-Coding agents: [AGENTS.md](AGENTS.md) routes accessibility work to the
-`accessibility-a11y` and `ngx-signal-forms` skills. Follow them. Do not write
-that code conforms to WCAG, or that a manual test happened, unless a person
-did that test.
+Coding agents: [coding standards](CODING_STANDARDS.md#accessibility) routes
+accessibility work to the `accessibility-a11y` skill, and [AGENTS.md](AGENTS.md)
+routes toolkit-consumer and demo changes to `ngx-signal-forms`. Follow them.
+Do not write that code conforms to WCAG, or that a manual test happened,
+unless a person did that test.
 
 ## Ownership and maintenance
 
@@ -275,5 +277,8 @@ Last reviewed: 2026-11-23.
 
 ## Feedback
 
-To suggest a change to this statement or to our practices, open a pull
-request or an [accessibility issue](https://github.com/ngx-signal-forms/ngx-signal-forms/issues/new?template=accessibility.yml).
+To suggest a change to this statement or to our practices, open an
+[accessibility issue](https://github.com/ngx-signal-forms/ngx-signal-forms/issues/new?template=accessibility.yml)
+or start a
+[discussion](https://github.com/ngx-signal-forms/ngx-signal-forms/discussions)
+(see [contributing](docs/CONTRIBUTING.md#issues-and-pull-requests)).

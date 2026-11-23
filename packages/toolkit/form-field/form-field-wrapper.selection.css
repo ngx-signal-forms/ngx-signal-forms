@@ -86,7 +86,9 @@
 :host(
     .ngx-signal-form-field-wrapper--selection-cluster.ngx-signal-form-field-wrapper--messages-top
   )
-  .ngx-signal-form-field-wrapper__messages {
+  .ngx-signal-form-field-wrapper__messages:not(
+    .ngx-signal-form-field-wrapper__messages--empty
+  ) {
   margin-bottom: var(--_field-space-xs);
 }
 
@@ -699,5 +701,30 @@
     )
     .ngx-signal-form-field-wrapper__assistive {
     grid-row: 3;
+  }
+}
+
+@media (forced-colors: active) {
+  /* Selection clusters rely on a tinted background for invalid/warning states
+   * in normal mode. Forced colors strip author backgrounds, so add explicit
+   * system-color borders to keep the states distinct. */
+  :host(
+      .ngx-signal-form-field-wrapper--selection-cluster.ngx-signal-form-field-wrapper--invalid
+    )
+    .ngx-signal-form-field-wrapper__content {
+    forced-color-adjust: none;
+    background: Canvas;
+    color: CanvasText;
+    border: 2px solid Mark;
+  }
+
+  :host(
+      .ngx-signal-form-field-wrapper--selection-cluster.ngx-signal-form-field-wrapper--warning
+    )
+    .ngx-signal-form-field-wrapper__content {
+    forced-color-adjust: none;
+    background: Canvas;
+    color: CanvasText;
+    border: 2px dashed CanvasText;
   }
 }

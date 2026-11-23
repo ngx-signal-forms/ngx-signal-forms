@@ -602,3 +602,35 @@
     transition: none;
   }
 }
+
+@media (prefers-contrast: more) {
+  :host {
+    --_fieldset-border-width: var(--ngx-signal-form-fieldset-border-width, 2px);
+    --_fieldset-clr-border: light-dark(#1e293b, #f9fafb);
+    --_fieldset-clr-text-secondary: light-dark(#1e293b, #f9fafb);
+  }
+}
+
+@media (forced-colors: active) {
+  :host(:not([data-appearance='plain'])) {
+    forced-color-adjust: none;
+    background: Canvas;
+    color: CanvasText;
+    border: 2px solid CanvasText;
+  }
+
+  :host(.ngx-signal-form-fieldset--invalid:not([data-appearance='plain'])) {
+    border-color: Mark;
+  }
+
+  :host(.ngx-signal-form-fieldset--warning:not([data-appearance='plain'])) {
+    border-style: dashed;
+    border-color: CanvasText;
+  }
+
+  :host(.ngx-signal-form-fieldset--invalid) ::ng-deep > legend,
+  :host(.ngx-signal-form-fieldset--warning) ::ng-deep > legend {
+    color: CanvasText;
+    background: Canvas;
+  }
+}

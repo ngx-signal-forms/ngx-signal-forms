@@ -223,11 +223,15 @@ describe('NgxFormFieldWrapper — state focus outline contrast (#495)', () => {
     wrapper.style.setProperty('--ngx-form-field-warning-color', warningColor);
 
     const input = page.getByRole('textbox', { name: 'Username' });
+    // Touch and blur so the default on-touch warningStrategy reveals the warning.
     await userEvent.click(input.element());
+    await userEvent.tab();
 
     expect(
       wrapper.classList.contains('ngx-signal-form-field-wrapper--warning'),
     ).toBe(true);
+
+    await tabIntoInput(container);
     expect(document.activeElement).toBe(input.element());
 
     const styles = getComputedStyle(contentOf(container));
@@ -239,7 +243,10 @@ describe('NgxFormFieldWrapper — state focus outline contrast (#495)', () => {
   it('meets 3:1 outline contrast on a warning field with the default warning color', async () => {
     const { container } = await render(WarningFocusOutlineComponent);
 
-    await userEvent.click(page.getByRole('textbox', { name: 'Username' }));
+    const input = page.getByRole('textbox', { name: 'Username' });
+    await userEvent.click(input.element());
+    await userEvent.tab();
+    await tabIntoInput(container);
 
     const outline = getComputedStyle(contentOf(container));
     expect(outline.outlineStyle).not.toBe('none');

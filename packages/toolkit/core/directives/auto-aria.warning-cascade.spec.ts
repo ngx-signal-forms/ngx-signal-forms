@@ -227,8 +227,12 @@ describe('auto-aria: wrapper field-level strategy overrides', () => {
         .querySelector('input#password')
         ?.getAttribute('aria-describedby') ?? '';
 
-    expect(container.querySelector('[role="alert"]')).toBeNull();
-    expect(container.querySelector('[role="status"]')).toBeNull();
+    const alertRegion = container.querySelector('[role="alert"]');
+    const statusRegion = container.querySelector('[role="status"]');
+    expect(alertRegion?.textContent?.trim() ?? '').toBe('');
+    expect(alertRegion?.getAttribute('id')).toBeNull();
+    expect(statusRegion?.textContent?.trim() ?? '').toBe('');
+    expect(statusRegion?.getAttribute('id')).toBeNull();
     expect(describedBy).toBe('');
   });
 

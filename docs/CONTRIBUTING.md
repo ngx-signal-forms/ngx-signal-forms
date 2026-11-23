@@ -15,6 +15,8 @@ or ask for a feature, open an
 [issue](https://github.com/ngx-signal-forms/ngx-signal-forms/issues/new/choose).
 For questions and ideas, use
 [Discussions](https://github.com/ngx-signal-forms/ngx-signal-forms/discussions).
+To report an accessibility barrier, see the
+[accessibility statement](../ACCESSIBILITY.md).
 For a security problem, follow the [security policy](../SECURITY.md).
 
 ## Setup
@@ -82,6 +84,7 @@ Explain each topic in one file. Elsewhere, write one sentence and a link.
 | CSS tokens                                               | [`THEMING.md`](../packages/toolkit/form-field/THEMING.md)                                                                                          |
 | Bootstrap, Tailwind, Material CSS                        | [`CSS_FRAMEWORK_INTEGRATION.md`](./CSS_FRAMEWORK_INTEGRATION.md)                                                                                   |
 | Component tests                                          | [`TESTING.md`](./TESTING.md)                                                                                                                       |
+| Accessibility statement and barrier reporting            | [`ACCESSIBILITY.md`](../ACCESSIBILITY.md)                                                                                                          |
 | Migrating from Reactive Forms or `ngx-vest-forms`        | [`MIGRATING_FROM_REACTIVE_FORMS.md`](./MIGRATING_FROM_REACTIVE_FORMS.md), [`MIGRATING_FROM_NGX_VEST_FORMS.md`](./MIGRATING_FROM_NGX_VEST_FORMS.md) |
 | Changes between toolkit versions                         | [`migrations/`](./migrations/README.md)                                                                                                            |
 | Domain terms                                             | [`GLOSSARY.md`](../GLOSSARY.md)                                                                                                                    |
