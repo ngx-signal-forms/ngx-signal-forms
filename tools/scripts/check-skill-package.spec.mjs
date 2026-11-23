@@ -3,7 +3,10 @@ import { mkdtemp, mkdir, rm, symlink, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { test } from 'node:test';
-import { checkSkillPackage } from './check-skill-package.mjs';
+import {
+  checkRepoSkillLinks,
+  checkSkillPackage,
+} from './check-skill-package.mjs';
 
 const header =
   '---\nname: ngx-signal-forms\ndescription: Toolkit forms and wrappers.\n---\n';
@@ -82,4 +85,44 @@ void test('checks reference-style links and explicit HTML anchors', async (t) =>
     'guide.md': '# Guide\n<a id="custom"></a>\n',
   });
   assert.deepEqual(await checkSkillPackage(root), []);
+});
+
+void test('verifies GitHub main links, anchors, and peer ranges against the repo', async (t) => {
+  const repo = await fixture(t, {
+    'packages/toolkit/package.json': JSON.stringify({
+      peerDependencies: {
+        vest: '>=6.3.0 <7.0.0',
+        'axe-core': '>=4.13.0 <5',
+      },
+    }),
+    'docs/GUIDE.md': '# Guide\n## Real Section\n',
+    'apps/demo/example/README.md': '# Example\n',
+    'skill/SKILL.md':
+      header +
+      '[Doc](https://github.com/ngx-signal-forms/ngx-signal-forms/blob/main/docs/GUIDE.md#real-section)\n' +
+      '[Dir](https://github.com/ngx-signal-forms/ngx-signal-forms/tree/main/apps/demo/example)\n' +
+      'Requires `vest@>=6.3.0 <7.0.0` and `axe-core@>=4.13.0 <5`.\n',
+  });
+  assert.deepEqual(await checkRepoSkillLinks(join(repo, 'skill'), repo), []);
+});
+
+void test('rejects broken GitHub targets, missing anchors, and mismatched peer ranges', async (t) => {
+  const repo = await fixture(t, {
+    'packages/toolkit/package.json': JSON.stringify({
+      peerDependencies: {
+        vest: '>=6.3.0 <7.0.0',
+        'axe-core': '>=4.13.0 <5',
+      },
+    }),
+    'docs/GUIDE.md': '# Guide\n',
+    'skill/SKILL.md':
+      header +
+      '[Missing](https://github.com/ngx-signal-forms/ngx-signal-forms/blob/main/docs/NOPE.md)\n' +
+      '[BadAnchor](https://github.com/ngx-signal-forms/ngx-signal-forms/blob/main/docs/GUIDE.md#missing)\n' +
+      'Upgrade to `vest@^6.0.0`.\n',
+  });
+  const errors = await checkRepoSkillLinks(join(repo, 'skill'), repo);
+  assert.ok(errors.some((e) => e.startsWith('Missing GitHub target:')));
+  assert.ok(errors.some((e) => e.startsWith('Missing GitHub anchor:')));
+  assert.ok(errors.some((e) => e.startsWith('Peer range mismatch:')));
 });

@@ -70,13 +70,24 @@ Selector: `ngx-signal-form-debugger`
 The debugger renders whenever the supplied `formTree` is usable, which keeps the
 shipped demo page aligned with local development. If your application wants to
 hide the panel in production, add your own `@if (isDevMode())` guard around the
-component in the hosting template.
+component in the hosting template. A template guard prevents rendering, but does
+not guarantee bundle exclusion; keep debugger imports out of production entry
+paths when bundle size matters.
+
+Place the debugger inside `form[formRoot][ngxSignalForm]` when it should read
+submitted status from the enhancer context. A sibling debugger outside the form
+does not inherit that element-scoped context.
 
 ### NgxSignalFormDebuggerToolkit
 
 Bundle array (`as const`) containing `NgxSignalFormDebugger`,
 `NgxSignalFormDebuggerBadge`, and `NgxSignalFormDebuggerBadgeIcon`. Drop it into
 a component's `imports` to get the full debugger surface in one go.
+
+Use `NgxSignalFormDebuggerBadge` and `NgxSignalFormDebuggerBadgeIcon` directly
+for compact inline status chips without the full panel. Badge inputs: `variant`
+(`'solid' | 'outline' | 'ghost'`, default `'solid'`) and `appearance`
+(`'neutral' | 'info' | 'success' | 'warning' | 'danger'`, default `'neutral'`).
 
 ### What it shows
 

@@ -1,22 +1,22 @@
 # Toolkit Vest
 
-Implements the `@ngx-signal-forms/toolkit/vest` entry point.
+Covers `@ngx-signal-forms/toolkit/vest`.
+Requires optional peer `vest@>=6.3.0 <7.0.0` (Vest 5 and `<6.3.0` are unsupported).
 
-Requires `vest@>=6.3.0 <7.0.0`. Vest 5 and earlier, and `<6.3.0`, are not supported.
-
-## When to Use Vest vs Angular Validators
+## When to use Vest
 
 | Need                                                                      | Starting point                                                         |
 | ------------------------------------------------------------------------- | ---------------------------------------------------------------------- |
 | Field constraints, conditional or cross-field checks, async server checks | Angular validators, `validateTree`, `validateAsync`, or `validateHttp` |
-| An existing shared shape/API contract                                     | `validateStandardSchema()` with that schema                            |
-| Existing Vest suite or reusable policy rules maintained outside Angular   | Reuse Vest                                                             |
-| Many grouped business-policy rules that read more clearly as a suite      | Consider Vest for that readability benefit                             |
+| Shared data shape or API contract                                         | `validateStandardSchema()` with that schema                            |
+| Existing Vest suite or policy rules shared outside Angular                | Reuse Vest with `validateVest()`                                       |
+| Large grouped business-policy rules clearer as a suite                    | Consider Vest                                                          |
 
-Async work and cross-field dependencies alone are not reasons to add Vest.
-Before choosing a library, read the bundled [validation choice](../references/signal-forms.md#validation-choice).
+Async checks and cross-field rules alone are not reasons to add Vest.
+For blocking-only Vest 6 suites without warnings, `only()`, or teardown reset, Angular's `validateStandardSchema()` is enough.
+See [signal-forms.md#validation-choice](../references/signal-forms.md#validation-choice).
 
-## API
+## Public API
 
 ```typescript
 import {
@@ -27,168 +27,40 @@ import {
   validateVest,
   validateVestWarnings,
   type ValidateVestOptions,
-  type VestSuiteAdapter,
   type VestOnlyFieldSelector,
+  type VestSuiteAdapter,
 } from '@ngx-signal-forms/toolkit/vest';
 ```
 
-Use the exported kind prefixes when you need to detect Vest-origin errors in
-custom strategies, debugger filters, or tests — don't re-derive the string
-literals.
+- Use `VEST_ERROR_KIND_PREFIX` and `VEST_WARNING_KIND_PREFIX` to detect Vest-origin errors instead of hardcoding string literals.
+- Use `validateVest(path, suite, options?)` for blocking validation (plus optional warnings), and `validateVestWarnings(path, suite, options?)` for warning-only suites alongside Angular or Zod blocking rules.
+- Reach for `createVestAdapter()` only when a custom flow needs an isolated run cache. Use `sharedVestAdapter.runVestSuite()` inside a hand-rolled validator only to share execution with `validateVest()`.
+- When awaiting a manual run's outcome, always await `run.settled()`, not `run.runResult` (a newer run on the same suite can supersede `runResult` and leave its promise pending).
 
-Use `validateVest()` for ordinary blocking validation and
-`validateVestWarnings()` for advisory-only suites. Reach for
-`createVestAdapter()` only when a custom integration needs an isolated shared
-run cache or its own `register()` behavior. Use `sharedVestAdapter.runVestSuite()`
-inside a hand-rolled validator only when it must share the exact execution with
-`validateVest()`; pair an async-only custom flow with `validateVest()` or your
-own `validateAsync` phase. When awaiting a manual run's outcome, await the
-result's `settled()` — never `runResult`, which a later run on the same suite
-can supersede and leave pending forever. Follow the [source index](../references/api.md)
-to the adapter's declarations and canonical contracts.
+## `validateVest(path, suite, options?)`
 
-### `validateVest(path, suite, options?)`
+The bound path's value is the **suite input** (ADR-0008): `path` and `suite` must match in shape (root path for a model suite, or subtree path for a subtree suite). Mismatched shapes fail at compile time.
 
-First-class adapter for Vest suites. Maps blocking Vest failures to Angular `ValidationError`s and optionally maps Vest `warn()` messages to toolkit warning errors.
+| Option            | Default     | Behavior                                                                                                                                                                                                       |
+| ----------------- | ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `includeWarnings` | `false`     | Maps Vest `warn()` results to toolkit warnings (`warn:vest:*`).                                                                                                                                                |
+| `resetOnDestroy`  | `true`      | Calls `suite.reset()` via `DestroyRef.onDestroy()` when the registering context tears down. Pass `false` only to persist suite state across mounts.                                                            |
+| `only`            | `undefined` | `(ctx) => VestFieldExclusion`: returns a field name, array of names, or `undefined` (full suite). Prefers `suite.only(field).run(value)`. Returning `false` or `[]` throws because Vest cannot run zero tests. |
 
-```typescript
-import { signal } from '@angular/core';
-import { form } from '@angular/forms/signals';
-import { create, enforce, test, warn } from 'vest';
-import { validateVest } from '@ngx-signal-forms/toolkit/vest';
+### Focused runs and typed field names
 
-interface SignupModel {
-  email: string;
-  password: string;
-}
-
-const signupSuite = create((data: SignupModel) => {
-  test('email', 'Email is required', () => {
-    enforce(data.email).isNotBlank();
-  });
-  test('email', 'Invalid email format', () => {
-    enforce(data.email).matches(/^[^\s@]+@[^\s@]+\.[^\s@]+$/);
-  });
-  test('password', 'Password too short', () => {
-    enforce(data.password).longerThanOrEquals(8);
-  });
-  test(
-    'password',
-    'Consider using 12+ characters for stronger security',
-    () => {
-      warn();
-      enforce(data.password).longerThanOrEquals(12);
-    },
-  );
-});
-
-const signupModel = signal<SignupModel>({ email: '', password: '' });
-const signupForm = form(signupModel, (path) => {
-  validateVest(path, signupSuite, { includeWarnings: true });
-});
-```
-
-#### Options
-
-| Option            | Default | Purpose                                                                                                                                                                                                                                                                                                                                                                                         |
-| ----------------- | ------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `includeWarnings` | `false` | Surface `warn()` results as toolkit warnings (`kind` prefixed with `warn:vest:`).                                                                                                                                                                                                                                                                                                               |
-| `resetOnDestroy`  | `true`  | Call `suite.reset()` via `DestroyRef.onDestroy()` when the hosting injection context tears down. **Enabled by default** for module-scope suites — pass `{ resetOnDestroy: false }` to persist suite state across mounts. See _Suite lifecycle_ below.                                                                                                                                           |
-| `only`            | _none_  | `VestOnlyFieldSelector` — `(ctx) => VestFieldExclusion`: a field name, a list of field names, `undefined` for a whole-suite run, or `false` to focus nothing. Prefers `suite.only(field).run(value)`, falling back to `suite.run(value, fieldName)` (single field name only) when the suite exposes no `only`. `false` throws — Vest has no way to express "focus nothing" through either form. |
-
-A Vest registration's bound path value **is** the suite input (ADR-0008): `path` and `suite` must agree on shape. Bind the form root to a model-scoped suite (the common case), or bind a subtree to a suite authored for that subtree's value. Binding a suite to a path of a mismatched shape is a compile error.
-
-### Suite lifecycle
-
-Vest suites created with `create()` retain state across runs (last result,
-pending async tests, test memoization). The recommended Vest pattern is to
-declare suites at **module scope**:
-
-```typescript
-// signup.suite.ts — reused by every mount
-export const signupSuite = create((data: SignupModel) => {
-  /* ... */
-});
-```
-
-Without a teardown hook, state bleeds across component mounts — a second mount
-can see stale errors from a previous session, or async tests from an unmounted
-form can resolve into the new one. The adapter wires `suite.reset()` into
-`DestroyRef` **by default** (`resetOnDestroy: true`), so this is handled for you:
-
-```typescript
-validateVest(path, signupSuite); // resets suite state on teardown automatically
-```
-
-Pass `{ resetOnDestroy: false }` only when you deliberately want suite state to
-persist across mounts:
-
-```typescript
-validateVest(path, signupSuite, { resetOnDestroy: false });
-```
-
-**Concurrent mounts have limits.** Registrations against the same suite are
-reference-counted, so mounting a module-scope suite in two forms at once (a
-list/detail view, a wizard step beside a summary, two open tabs) does not reset
-one mount out from under the other — the suite only resets when the **last**
-surviving registration tears down. Concurrently-pending field trees that share
-one suite are isolated per run **for unfocused (whole-suite) runs only** — the
-coordinator detects two different field trees with an overlapping pending run
-against the same suite and defers the later one until the suite is idle. A
-**focused** (`only`) registration is never deferred: several `only`-focused
-registrations for different fields of the SAME form are the documented,
-intentional shared-suite pattern, but a focused registration racing an
-UNRELATED form's concurrently-mounted registration on the SAME suite is
-**unsupported** — give each independently-mounted form its own suite instance
-in that case.
-
-**SSR: do not share a suite (or `sharedVestAdapter`) across requests.** A
-Node SSR process serves several concurrent requests from ONE process, so a
-module-scope suite and the module-scope `sharedVestAdapter` singleton become
-one suite instance / one run cache shared across those requests — a
-per-request `resetOnDestroy` teardown then resets a suite another request is
-still mid-render on. Under SSR, create the suite (and, for isolation, an
-adapter via `createVestAdapter()`) per request instead, e.g. from a
-request-scoped provider.
-
-### Focused runs with `only`
-
-When the suite callback uses `only(fieldName)` (or `suite.only(field).run(...)`),
-pass a selector so the adapter threads the changed field through:
+Declare suites with `create<{ fields: 'email' | 'username' }>(...)` (Vest >=6.3.2 or schema-typed suites) so `validateVest` infers the field-name union for `only` and turns typos into compile errors:
 
 ```typescript
 import { create, enforce, only, test } from 'vest';
+import { validateVest } from '@ngx-signal-forms/toolkit/vest';
 
 interface Model {
   email: string;
   username: string;
-  // Declared as the exact field-name union so `ctx.value().lastTouched`
-  // below already returns `'email' | 'username' | undefined` — proving the
-  // `only` selector's narrowing, not just its shape.
   lastTouched?: 'email' | 'username';
 }
 
-const suite = create((data: Model, field?: string) => {
-  only(field);
-  test('email', 'Email is required', () => enforce(data.email).isNotBlank());
-  test('username', 'Username is required', () =>
-    enforce(data.username).isNotBlank(),
-  );
-});
-
-validateVest(path, suite, {
-  only: (ctx) => ctx.value().lastTouched,
-});
-```
-
-Default behavior (no `only` option) re-runs every test body on each change —
-correct but wasteful for large suites.
-
-Declare the suite with `create<{ fields: 'email' | 'username' }>(…)` (Vest
-≥6.3.2, or a schema-typed suite) to get a field-name union instead of a bare
-`string`:
-
-```typescript
 const typedSuite = create<{ fields: 'email' | 'username' }>(
   (data: Model, field?: string) => {
     only(field);
@@ -200,68 +72,36 @@ const typedSuite = create<{ fields: 'email' | 'username' }>(
 );
 
 validateVest(path, typedSuite, {
-  // Return type narrows to `VestFieldExclusion<'email' | 'username'>`.
   only: (ctx) => ctx.value().lastTouched,
 });
 ```
 
-`validateVest` infers that union from `suite` — no type argument to write —
-and narrows the `only` selector's accepted return value to it, so
-`only: () => 'emial'` (a typo) is a compile error instead of a focused run
-that silently executes zero tests and reports the field valid. A suite
-declared with plain `create(…)` (no `fields`, no schema) is unaffected and
-keeps accepting any `string`.
+Track the active field yourself (for example via a signal updated on `(focus)`) and return it from `only`.
 
-There is no automatic "focus the field this validator is bound to" option:
-`validateVest` binds to the root for a model-scoped suite (ADR-0008), so
-track which field is active yourself (`(focus)`/`(blur)`, or a signal your
-bindings already update) and read it from `only`, as in the example above.
+### Field-name resolution
 
-### `validateVestWarnings(path, suite)`
+Vest field names resolve relative to the bound path:
 
-Registers only Vest `warn()` guidance — useful when blocking validation already comes from Angular validators or Zod rather than the same Vest suite.
+- **Real child path** (for example `address.city`): attaches to that child field.
+- **Virtual Vest field name** (first segment does not match any child, such as `passwordMatch`): treated as a form-level error on the bound path without throwing.
+- **Invalid tail after a valid prefix** (such as `address.cityy` when `address` exists): throws in dev mode and logs `console.error()` in production while attaching to the bound field.
 
-```typescript
-form(model, (path) => {
-  required(path.password);
-  minLength(path.password, 8);
-  validateVestWarnings(path, passwordStrengthSuite); // warn() messages only
-});
-```
+## Suite lifecycle and async caveats
 
-## Vest + Zod Combination
+- **Module-scope suites:** `create()` retains state across runs. Default `resetOnDestroy: true` resets the suite when the last active registration tears down (registrations are reference-counted across concurrent mounts).
+- **Concurrent mounts:** overlapping unfocused (whole-suite) runs across different field trees are queued until the suite is idle. Focused `only` runs are not deferred; multiple focused registrations on the same form are supported, whereas separate forms racing with `only` on one suite need separate suite instances.
+- **SSR isolation:** create the suite and an isolated adapter (`createVestAdapter()`) per request (for example in a request-scoped provider). Sharing module-scope suites or `sharedVestAdapter` across SSR requests leaks and resets state across users.
+- **Async error handling:** if an async suite run rejects or throws, `validateVest` records `vest:internal-error` (using `error.message` in dev mode, and generic `'Validation could not be completed.'` in production to avoid leaking internal URLs). `validateVestWarnings` adds no error and logs in dev mode.
+- **Warnings with pending async tests:** Angular starts async validators only when sync errors are absent (and warnings count as errors there). While async tests are pending under `validateVest` with `includeWarnings: true`, sync warnings wait and emit with the settled async result. `validateVestWarnings` surfaces warnings immediately.
 
-Optional when both already serve distinct needs: reuse Zod for a shared contract
-and Vest for a readable business-policy suite. Assign each rule once:
+## Warnings and submission
 
-```typescript
-import { validateStandardSchema } from '@angular/forms/signals';
-import { validateVest } from '@ngx-signal-forms/toolkit/vest';
-import { UserSchema } from './user.schema'; // Zod schema
-import { userBusinessSuite } from './user.vest'; // Vest suite
-
-const userForm = form(userModel, (path) => {
-  validateStandardSchema(path, UserSchema); // structural rules
-  validateVest(path, userBusinessSuite, { includeWarnings: true }); // business rules
-});
-```
-
-## Warnings and Submission
-
-Vest `warn()` results map to toolkit `warn:vest:` errors with polite
-`role="status"` rendering. They still make Angular's field state invalid and
-block ordinary Angular submission. Use a warning-aware submit path when the
-user may proceed with warnings.
-
-This complete component owns the native submit event, so it uses `novalidate`
-and `preventDefault()` instead of `[formRoot]`. Do not attach both submission
-paths to the same form or call `submitWithWarnings()` from an already-running
-`submission.action`. The default `'on-touch'` feedback appears when the helper
-marks the fields touched, including on a refused attempt.
+Vest `warn()` results map to `warn:vest:*` errors with polite `role="status"` rendering, yet Angular still treats them as invalid.
+Use `submitWithWarnings()` with a single native `(submit)` handler (`novalidate` + `event.preventDefault()`, no `[formRoot]`):
 
 ```typescript
 import { Component, signal } from '@angular/core';
-import { form, FormField, required, minLength } from '@angular/forms/signals';
+import { form, FormField, minLength, required } from '@angular/forms/signals';
 import { create, enforce, test, warn } from 'vest';
 import {
   NgxSignalFormToolkit,
@@ -317,38 +157,13 @@ export class WarningSignupComponent {
 }
 ```
 
-`canSubmitWithWarnings(form)` returns a `Signal<boolean>`. Create it once in a
-field initializer and read that signal when you need an eligibility indicator.
-Keep the submit button enabled for invalid forms so an attempt can reveal
-feedback. Disable it during submission, as above.
-
-`hasOnlyWarnings([])` is `true`, meaning "no blocking errors". It also returns
-`true` for a warning-only list; a clean form is not a failing edge case.
-`submitWithWarnings()` checks the full error summary before delegating to
-Angular with `ignoreValidators: 'all'`. Do not use that bypass without the
-blocking-error gate. Pending validators do not block this helper.
-
-For a manual `'on-submit'` flow, create
-`createSubmittedStatusTracker(form, submitAttempted)` in an injection context.
-Set the writable `submitAttempted` signal for a refused invalid attempt and
-pass the returned status to feedback components. A refused call never flips
-Angular's `submitting()` signal.
-
-## Error Handling
-
-- If Vest warnings appear as blocking errors: ensure `{ includeWarnings: true }` is passed to `validateVest()` and that the suite uses `warn()` before `enforce()`.
-- If Vest results do not update: bind `validateVest` to the schema path whose value matches the suite input. The adapter supplies current values; do not pass a model snapshot in place of the path.
-- If Vest v5 is installed: upgrade to `vest@^6.0.0` — v6+ implements the Standard Schema interface required by this adapter.
-- If stale errors appear on a second mount of a form using a module-scope suite: the adapter clears suite state on teardown by default — confirm `resetOnDestroy` has not been set to `false`. (Conversely, if you _want_ suite state to persist across mounts, pass `{ resetOnDestroy: false }`.)
-- If detecting Vest-origin errors in a custom strategy or test: import `VEST_ERROR_KIND_PREFIX` / `VEST_WARNING_KIND_PREFIX` and match against `error.kind` instead of hard-coding the string.
-- If a form throws in dev mode ("Vest field name ... does not resolve"): a Vest `test`/`warn` field name has a valid prefix but an invalid tail (e.g. `test('address.cityy', …)` when the bound path only has `address.city`) — fix the field name so it names a real child of the bound path. A field name whose FIRST segment doesn't resolve (e.g. `test('passwordMatch', …)`) is a legitimate **virtual** Vest field name and does not throw. Read the "Vest field-name resolution" section in the [Vest README](https://github.com/ngx-signal-forms/ngx-signal-forms/blob/main/packages/toolkit/vest/README.md) and [pitfalls](../references/pitfalls.md).
+Alternatively, with `[formRoot]`, set `submission: { ignoreValidators: 'all', action }` and guard the action with `hasOnlyWarnings(tree().errorSummary())` (see [vest/README.md](https://github.com/ngx-signal-forms/ngx-signal-forms/blob/main/packages/toolkit/vest/README.md#quick-start)).
+For manual `'on-submit'` feedback with `submitWithWarnings()`, wire `createSubmittedStatusTracker(form, submitAttempted)` in an injection context.
 
 ## Done
 
-- The bound path value matches the suite input, and field names resolve or are
-  intentional virtual errors. The library choice has a reuse/readability reason.
-- Changed async flows handle supersession and await `settled()` for manual
-  outcomes. Teardown and concurrent mounts preserve the supported lifecycle;
-  SSR uses request-local suites and adapters.
-- Warnings render independently and the chosen submit path tests warning-only,
-  blocking, and pending states. Name lifecycle or browser checks not run.
+Verify the checks that apply to your change:
+
+- Bound path shape matches suite input, and field names resolve or are intentional virtual Vest field names.
+- Async flows handle supersession and await `settled()` for manual runs; SSR isolates suites and adapters per request.
+- Warning flows test warning-only, blocking, and pending states under the chosen submit path. Report any unrun checks.
