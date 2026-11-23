@@ -444,6 +444,100 @@ describe('NgxFormFieldErrorSummary — heading, accessible name, and focus movem
     expect(document.activeElement).toBe(summaryHost);
   });
 
+  it('focuses when pending async errors arrive after submit, but disarms if the user edits first', async () => {
+    const pending = signal(true);
+    const asyncError = signal<readonly { kind: string; message: string }[]>([]);
+
+    @Component({
+      selector: 'ngx-test-a11y-summary-async-pending-browser',
+      imports: [
+        FormField,
+        NgxSignalFormToolkit,
+        NgxFormField,
+        NgxFormFieldErrorSummary,
+      ],
+      template: `
+        <form [formRoot]="testForm" ngxSignalForm errorStrategy="on-submit">
+          <ngx-form-field-error-summary [formTree]="wrappedFormTree" />
+          <ngx-form-field-wrapper [formField]="testForm.name" fieldName="name">
+            <label for="async-name">Full name</label>
+            <input id="async-name" type="text" [formField]="testForm.name" />
+          </ngx-form-field-wrapper>
+          <button type="submit">Submit</button>
+        </form>
+      `,
+    })
+    class TestComponent {
+      readonly #model = signal({ name: 'Ada' });
+      readonly testForm = form(
+        this.#model,
+        schema((path) => {
+          required(path.name, { message: 'Name is required' });
+        }),
+      );
+
+      // Project the real Signal Forms root state so `value()` and `touched()`
+      // stay live while we deterministically hold `pending()` open across a
+      // submit and resolve an async error on demand.
+      readonly wrappedFormTree = (() => {
+        const state = this.testForm();
+        return {
+          errorSummary: () => [...state.errorSummary(), ...asyncError()],
+          errors: () => [...state.errors(), ...asyncError()],
+          invalid: () => state.invalid() || asyncError().length > 0,
+          touched: state.touched,
+          value: state.value,
+          pending: () => pending(),
+        };
+      }) as unknown as typeof this.testForm;
+    }
+
+    const { container, fixture } = await render(TestComponent);
+    await TestBed.inject(ApplicationRef).whenStable();
+
+    const nameInput = container.querySelector<HTMLInputElement>('#async-name')!;
+    const submitButton = container.querySelector<HTMLButtonElement>(
+      'button[type="submit"]',
+    )!;
+    const summaryHost = container.querySelector<HTMLElement>(
+      'ngx-form-field-error-summary',
+    )!;
+
+    // 1. Submit while async validation is pending and no errors exist yet.
+    await userEvent.click(submitButton);
+    await fixture.whenStable();
+    expect(document.activeElement).not.toBe(summaryHost);
+
+    // Async validation finishes with an error (no intervening edit):
+    // summary MUST receive focus.
+    asyncError.set([{ kind: 'taken', message: 'Name is already taken' }]);
+    pending.set(false);
+    fixture.detectChanges();
+    await fixture.whenStable();
+    expect(document.activeElement).toBe(summaryHost);
+
+    // 2. Start a second submit with async validation pending again, then let
+    // the user clear the required field before async validation finishes:
+    // the edit must disarm the pending focus intent so typing never loses focus.
+    asyncError.set([]);
+    pending.set(true);
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    await userEvent.click(submitButton);
+    await fixture.whenStable();
+
+    await userEvent.clear(nameInput);
+    await fixture.whenStable();
+
+    expect(
+      container
+        .querySelector('ngx-form-field-error-summary [role="alert"]')
+        ?.textContent?.trim(),
+    ).toContain('Name is required');
+    expect(document.activeElement).toBe(nameInput);
+  });
+
   /**
    * Browser twin of `form-field-error-summary.spec.ts`'s "focuses the bound
    * control when an entry is activated via keyboard" (issue #501). Native

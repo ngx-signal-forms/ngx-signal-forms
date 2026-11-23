@@ -462,6 +462,7 @@ export class NgxFormFieldErrorSummary {
     let lastSubmitCount = 0;
     let wasSubmitted = false;
     let awaitingSubmitErrors = false;
+    let armedFormValue: unknown;
 
     afterRenderEffect({
       // `read` phase: we only need to inspect signals + (optionally) call
@@ -477,6 +478,8 @@ export class NgxFormFieldErrorSummary {
         const formState = this.summary.formTree()();
         const pending =
           typeof formState.pending === 'function' ? formState.pending() : false;
+        const currentValue =
+          typeof formState.value === 'function' ? formState.value() : undefined;
 
         const isSubmitted = status === 'submitted';
         const newSubmitAttempt = submitCount > lastSubmitCount;
@@ -495,12 +498,17 @@ export class NgxFormFieldErrorSummary {
             // for this submit. A synchronous valid submit disarms immediately
             // so later edits never steal focus.
             awaitingSubmitErrors = pending;
+            armedFormValue = currentValue;
           }
         } else if (awaitingSubmitErrors) {
-          if (visible) {
+          if (!Object.is(currentValue, armedFormValue) || !isSubmitted) {
+            // Any user edit (or form reset) while async validation is pending
+            // cancels the pending submit focus so typing never loses focus.
+            awaitingSubmitErrors = false;
+          } else if (visible) {
             shouldFocus = true;
             awaitingSubmitErrors = false;
-          } else if (!pending || !isSubmitted) {
+          } else if (!pending) {
             awaitingSubmitErrors = false;
           }
         } else if (!isSubmitted) {
