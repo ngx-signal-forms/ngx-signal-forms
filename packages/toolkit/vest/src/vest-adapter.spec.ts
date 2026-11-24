@@ -483,12 +483,11 @@ describe('createVestAdapter', () => {
     }
 
     await expect(async () => {
-      const { fixture } = await render(TestComponent);
+      await render(TestComponent);
       // The sync `validateTree` pass reads the mis-resolved entry eagerly, so
       // the throw can surface either during initial render or the first
       // stability wait -- await both so either timing is caught.
       await TestBed.inject(ApplicationRef).whenStable();
-      void fixture;
     }).rejects.toThrow(
       /does not resolve against the validator's bound field tree/,
     );
@@ -592,9 +591,8 @@ describe('createVestAdapter', () => {
     }
 
     await expect(async () => {
-      const { fixture } = await render(TestComponent);
+      await render(TestComponent);
       await TestBed.inject(ApplicationRef).whenStable();
-      void fixture;
     }).rejects.toThrow(/probing segment "street" threw: .+/);
   });
 

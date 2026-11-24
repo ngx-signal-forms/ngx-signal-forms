@@ -1,8 +1,9 @@
 import { signal } from '@angular/core';
-import type {
-  AbstractControl,
-  FormGroupDirective,
-  NgForm,
+import {
+  FormControl,
+  type AbstractControl,
+  type FormGroupDirective,
+  type NgForm,
 } from '@angular/forms';
 import {
   form as createForm,
@@ -16,19 +17,19 @@ import { describe, expect, it } from 'vitest';
 import { NgxMatWarningAwareErrorStateMatcher } from './warning-aware-error-state-matcher';
 
 /**
- * Minimal shape the matcher actually reads off `control` / `form` — mirrors
- * what `InteropNgControl` (Angular Signal Forms' `NgControl` bridge) and
- * Material's `_ErrorStateTracker` pass at runtime, without depending on the
- * full `AbstractControl` class.
+ * A real `FormControl` with the two members the matcher reads off `control`:
+ * `errors` and `touched`.
  */
-function fakeControl(
-  overrides: Partial<Pick<AbstractControl, 'errors' | 'touched'>>,
-): AbstractControl {
-  return {
-    errors: null,
-    touched: false,
-    ...overrides,
-  } as AbstractControl;
+function fakeControl({
+  errors = null,
+  touched = false,
+}: Partial<Pick<AbstractControl, 'errors' | 'touched'>>): AbstractControl {
+  const control = new FormControl(null);
+  control.setErrors(errors);
+  if (touched) {
+    control.markAsTouched();
+  }
+  return control;
 }
 
 function createSignalField({
