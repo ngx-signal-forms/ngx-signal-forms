@@ -34,6 +34,10 @@ trustPolicyExclude:
   # The 6.x line is a 2023 backport that predates npm provenance, so it looks
   # like a downgrade next to 7.x. Reached only through @babel/core.
   - semver@6.3.1
+  # pnpm reports a high-risk trust downgrade, but every tsrs release since
+  # 2026-10-10 is published by GitHub Actions with a trusted publisher and
+  # SLSA provenance. Move this pin when the tsrs version changes.
+  - tsrs@7.1.0-beta.tsrs5
 # Transitive dependencies cannot come from git, tarball URLs or other
 # non-registry sources.
 blockExoticSubdeps: true
@@ -67,6 +71,19 @@ minimumReleaseAgeExclude:
   - '@angular/router@22.3.0'
   - '@schematics/angular@22.3.0'
   - 'ng-packagr@22.3.0'
+  # tsrs 7.1.0-beta.tsrs5, published on 2026-11-23. It is the first release
+  # with the `no-unsafe-class-instance-assignment` rule that oxlint 1.95.0
+  # sends. Remove these entries after 2026-11-25, when the age window has
+  # passed.
+  - 'tsrs@7.1.0-beta.tsrs5'
+  - '@tsrs/darwin-arm64@7.1.0-beta.tsrs5'
+  - '@tsrs/darwin-x64@7.1.0-beta.tsrs5'
+  - '@tsrs/linux-arm64-gnu@7.1.0-beta.tsrs5'
+  - '@tsrs/linux-arm64-musl@7.1.0-beta.tsrs5'
+  - '@tsrs/linux-x64-gnu@7.1.0-beta.tsrs5'
+  - '@tsrs/linux-x64-musl@7.1.0-beta.tsrs5'
+  - '@tsrs/win32-arm64@7.1.0-beta.tsrs5'
+  - '@tsrs/win32-x64@7.1.0-beta.tsrs5'
 # pnpm 12.3+ turns strict mode on whenever `minimumReleaseAge` is set. Strict
 # mode refuses `pnpm update --no-save`, which is what Dependabot runs, so every
 # Dependabot update fails (dependabot-core#16375). The two-day window still
@@ -193,11 +210,12 @@ catalogs:
     jiti: '2.7.0'
     lint-staged: '^17.6.0'
     oxfmt: '^0.76.0'
-    oxlint: '^1.91.0'
-    oxlint-tsgolint: '^7.0.2007'
+    oxlint: '^1.95.0'
+    oxlint-tsgolint: '^7.0.2008'
     publint: '^0.3.25'
     simple-git-hooks: '^2.14.0'
     size-limit: '14.3.0'
+    tsrs: '7.1.0-beta.tsrs5'
     typescript: 'npm:@typescript/typescript6@~6.0.2'
     # 7.x requires Node.js 24 or newer; used only by the local-registry target.
     verdaccio: '^7.0.2'

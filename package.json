@@ -108,6 +108,7 @@
     "size-limit": "catalog:tooling",
     "tailwindcss": "catalog:tailwind",
     "tslib": "catalog:utilities",
+    "tsrs": "catalog:tooling",
     "typescript": "catalog:tooling",
     "verdaccio": "catalog:tooling",
     "vest": "catalog:validation",

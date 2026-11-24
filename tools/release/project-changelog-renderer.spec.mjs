@@ -148,6 +148,7 @@ function createRenderer(
     isVersionPlans: false,
     changelogRenderOptions: {},
     conventionalCommitsConfig: { types: {} },
+    // oxlint-disable-next-line no-unsafe-class-instance-assignment -- test stub with only the two methods the renderer calls; no remote repo is needed.
     remoteReleaseClient: {
       getRemoteRepoData: () => null,
       formatReferences: () => '',

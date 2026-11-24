@@ -82,7 +82,7 @@ export function createMockFieldTree<TValue>(
     errorSummary: errorSignal,
     errors: errorSignal,
     formFieldBindings: signal(
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- test-only partial FormField shape; only `element` is read by production code.
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion, @typescript-eslint/no-unsafe-class-instance-assignment -- test-only partial FormField shape; only `element` is read by production code.
       formFieldBindings.map((element) => ({ element }) as FormField<unknown>),
     ),
     hidden: signal(hidden),

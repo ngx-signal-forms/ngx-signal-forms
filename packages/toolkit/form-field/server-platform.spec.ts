@@ -1,4 +1,4 @@
-import { Component, signal } from '@angular/core';
+import { Component, ElementRef, signal } from '@angular/core';
 import { FormField, form, required, schema } from '@angular/forms/signals';
 import { render } from '@testing-library/angular';
 import { afterEach, describe, expect, it, vi } from 'vitest';
@@ -77,7 +77,7 @@ describe('server platform (no DOM constructor globals)', () => {
     stubConstructorsAway();
 
     expect(findBoundControl(host)).toBe(input);
-    expect(requireHostElement({ nativeElement: host })).toBe(host);
+    expect(requireHostElement(new ElementRef(host))).toBe(host);
     expect(
       resolveBoundControlFromBindings(
         { formFieldBindings: () => [{ element: input }] } as never,
