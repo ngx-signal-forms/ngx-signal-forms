@@ -21,7 +21,7 @@ Add `ngxSignalForm` when you need `'on-submit'`, `submittedStatus`, form-level s
 
 Choose the strategy that fits the user flow:
 
-- `'on-touch'` (default): shows messages after user interaction. Under RC.17+, typing in a touched control hides its blocking error, `aria-invalid`, and any `'on-touch'` warning until focus leaves or a DOM `submit` event fires. Other warnings also wait while the field has a blocking error. A programmatic `submit()` without a DOM event leaves editing active; custom controls that emit no `input` event keep updating live.
+- `'on-touch'` (default): shows messages after user interaction. In v1.0.0, typing in a touched control hides its blocking error, `aria-invalid`, and any `'on-touch'` warning until focus leaves or a DOM `submit` event fires. Other warnings also wait while the field has a blocking error. A programmatic `submit()` without a DOM event leaves editing active. Custom controls that emit no `input` event keep updating live.
 - `'immediate'`: shows messages from first render.
 - `'on-submit'`: shows messages after a submit attempt. Inside `form[formRoot][ngxSignalForm]`, toolkit components inherit `submittedStatus`. Standalone callers of `createErrorVisibility()` outside `ngxSignalForm` must pass `submittedStatus` explicitly so errors can appear.
 

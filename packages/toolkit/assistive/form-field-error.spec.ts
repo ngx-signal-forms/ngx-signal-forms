@@ -1398,7 +1398,7 @@ describe('NgxFormFieldError', () => {
   });
 
   // Folded in from the deleted `NgxFormFieldNotification` (see
-  // docs/migrations/v1.0.0-rc.12.md). Tone routing, id generation, and
+  // docs/MIGRATING_BETA_TO_V1.md). Tone routing, id generation, and
   // message resolution for `[errors]`-bound usage are already covered by
   // the `error rendering` describe block above (`presentation` doesn't
   // change any of that — it only swaps the CSS treatment and adds the

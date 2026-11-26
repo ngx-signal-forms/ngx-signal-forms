@@ -50,13 +50,7 @@
             "group": "Toolkit releases",
             "pages": [
               "docs/migrations/README",
-              "docs/migrations/v1.0.0-rc.17",
-              "docs/migrations/v1.0.0-rc.16",
-              "docs/migrations/v1.0.0-rc.15",
-              "docs/migrations/v1.0.0-rc.14",
-              "docs/migrations/v1.0.0-rc.13",
-              "docs/migrations/v1.0.0-rc.12",
-              "docs/migrations/v1.0.0-rc.11",
+              "docs/migrations/v1.0.0",
               "docs/MIGRATING_BETA_TO_V1",
               "docs/MIGRATING_CSS_VARS"
             ]

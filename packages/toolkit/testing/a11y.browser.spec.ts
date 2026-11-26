@@ -225,7 +225,7 @@ describe('WCAG_22_AA_TAGS', () => {
  *
  * Fixtures render `NgxFormFieldError` — the post-rc.12 component
  * `NgxFormFieldNotification` was folded into (see
- * `docs/migrations/v1.0.0-rc.12.md`) — the same way the other standalone a11y
+ * `docs/MIGRATING_BETA_TO_V1.md`) — the same way the other standalone a11y
  * specs in `packages/toolkit/assistive` do, so this exercises real toolkit
  * markup rather than a synthetic fixture.
  */

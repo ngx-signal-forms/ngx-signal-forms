@@ -149,7 +149,7 @@ describe('NgxFormFieldError (standalone) — WCAG 2.2 AA conformance', () => {
  * `NgxFormFieldset`'s notification-appearance branch composes it: an
  * `[errors]`-bound card outside a wrapper. Formerly covered by the deleted
  * `NgxFormFieldNotification`'s own a11y spec (folded into this component;
- * see `docs/migrations/v1.0.0-rc.12.md`). Scanned empty (both live regions
+ * see `docs/MIGRATING_BETA_TO_V1.md`). Scanned empty (both live regions
  * must already exist per WCAG 4.1.3), with blocking errors (role="alert"),
  * and, separately, with only warnings (role="status").
  */

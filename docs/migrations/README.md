@@ -3,30 +3,11 @@ title: 'Versioned migration guides'
 sidebarTitle: 'Overview'
 ---
 
-Each guide covers one hop. Check the installed version before applying a
-hop.
+A toolkit release with breaking changes must add `v<version>.md` in this directory before release. The guide covers the upgrade from the preceding release.
 
-A toolkit release with breaking changes must add `v<version>.md` in this
-directory before it is released; the release fails without it. Other
-releases may add one. The guide is the authoritative upgrade path from the
-immediately preceding version to that release.
-
-For integrations starting at `1.0.0-beta.10`, use the
-[cumulative beta-to-v1 guide](../MIGRATING_BETA_TO_V1.md) through RC.15. It
-includes the earlier CSS-token mappings in the
-[CSS migration guide](../MIGRATING_CSS_VARS.md). For a target after RC.15,
-continue with each published hop below.
-
-| From             | To             | Guide                                               |
-| ---------------- | -------------- | --------------------------------------------------- |
-| `v1.0.0-beta.10` | `v1.0.0-rc.15` | [Cumulative beta guide](../MIGRATING_BETA_TO_V1.md) |
-| `v1.0.0-rc.10`   | `v1.0.0-rc.11` | [Upgrade guide](./v1.0.0-rc.11.md)                  |
-| `v1.0.0-rc.11`   | `v1.0.0-rc.12` | [Upgrade guide](./v1.0.0-rc.12.md)                  |
-| `v1.0.0-rc.12`   | `v1.0.0-rc.13` | [Upgrade guide](./v1.0.0-rc.13.md)                  |
-| `v1.0.0-rc.13`   | `v1.0.0-rc.14` | [Upgrade guide](./v1.0.0-rc.14.md)                  |
-| `v1.0.0-rc.14`   | `v1.0.0-rc.15` | [Upgrade guide](./v1.0.0-rc.15.md)                  |
-| `v1.0.0-rc.15`   | `v1.0.0-rc.16` | [Upgrade guide](./v1.0.0-rc.16.md)                  |
-| `v1.0.0-rc.16`   | `v1.0.0-rc.17` | [Upgrade guide](./v1.0.0-rc.17.md)                  |
+| From                                    | To       | Guide                        |
+| --------------------------------------- | -------- | ---------------------------- |
+| `v1.0.0-beta.10` or a release candidate | `v1.0.0` | [Upgrade guide](./v1.0.0.md) |
 
 > **Add the guide before you cut the release, not after.** A guide written
 > against a version number that is never published strands its content: readers

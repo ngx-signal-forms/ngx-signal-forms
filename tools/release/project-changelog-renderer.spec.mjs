@@ -204,9 +204,9 @@ const breakingFeat = {
   affectedProjects: '*',
 };
 
-// `docs/migrations/v9.9.9.md` does not exist; `v1.0.0-rc.15.md` does.
+// Use the stable guide to exercise a real release link.
 const versionWithoutGuide = '9.9.9';
-const versionWithGuide = '1.0.0-rc.15';
+const versionWithGuide = '1.0.0';
 
 void test('a release with a breaking change fails without a migration guide', async () => {
   const renderer = createRenderer([breakingFeat], {
@@ -232,5 +232,5 @@ void test('a release links its migration guide when one exists', async () => {
     version: versionWithGuide,
   });
   const notes = await renderer.render();
-  assert.match(notes, /docs\/migrations\/v1\.0\.0-rc\.15\.md/u);
+  assert.match(notes, /docs\/migrations\/v1\.0\.0\.md/u);
 });

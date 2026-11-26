@@ -14,12 +14,13 @@ Verify npm registry publication separately before updating dependency versions; 
 
 **Done:** installed version, target version, and registry availability are verified.
 
-### 2. Load every crossed release guide
+### 2. Load the guides for the upgrade path
 
-Load the [migration index](https://github.com/ngx-signal-forms/ngx-signal-forms/blob/main/docs/migrations/README.md) and **every** version hop between source and target, not only the final release guide:
+Start with the [migration index](https://github.com/ngx-signal-forms/ngx-signal-forms/blob/main/docs/migrations/README.md).
 
-- From beta (`1.0.0-beta.10` through `rc.15`): start with the [cumulative beta-to-v1 guide](https://github.com/ngx-signal-forms/ngx-signal-forms/blob/main/docs/MIGRATING_BETA_TO_V1.md) and [CSS token migrations](https://github.com/ngx-signal-forms/ngx-signal-forms/blob/main/docs/MIGRATING_CSS_VARS.md), then apply each subsequent hop up to the requested target. Both cumulative docs on `main` reflect current v1 release-candidate APIs (including RC.16 `color-scheme` and `light-dark()` dark mode and RC.16 token changes). When targeting an earlier release such as `rc.15`, apply only changes that exist at the target version and skip post-target RC.16+ steps.
-- Between release candidates (for example `rc.11` -> `rc.17`): read every intervening `docs/migrations/v1.0.0-rc.<n>.md` guide (including behavior-only hops such as [v1.0.0-rc.17.md](https://github.com/ngx-signal-forms/ngx-signal-forms/blob/main/docs/migrations/v1.0.0-rc.17.md)).
+- To v1.0.0 from beta.10 or a release candidate, follow the [v1.0.0 migration entry point](https://github.com/ngx-signal-forms/ngx-signal-forms/blob/main/docs/migrations/v1.0.0.md). It links to the cumulative guide and the direct path from rc.16.
+- To a release candidate, read the guides at the corresponding release tags. Apply each published hop from the installed version through the target.
+- For later releases, read every versioned guide between the installed version and the target.
 - Check current public CSS tokens and `color-scheme` dark-mode rules in [THEMING.md](https://github.com/ngx-signal-forms/ngx-signal-forms/blob/main/packages/toolkit/form-field/THEMING.md).
 
 **Done:** every crossed release guide is loaded and its required changes are listed.
