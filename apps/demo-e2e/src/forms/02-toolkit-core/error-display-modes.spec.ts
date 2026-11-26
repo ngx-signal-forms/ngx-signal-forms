@@ -111,7 +111,6 @@ test.describe('Error Display Modes', () => {
       company: 'company-hint',
       productUsed: 'product-hint',
       overallRating: 'rating-hint',
-      detailedFeedback: 'detailed-hint',
     };
 
     for (const [controlId, hintId] of Object.entries(controlHintIds)) {
@@ -121,6 +120,11 @@ test.describe('Error Display Modes', () => {
     }
 
     await expect(formPage.page.locator('#detailed-counter')).toBeVisible();
+    await expect(
+      formPage.page.locator('#detailedFeedback'),
+    ).toHaveAccessibleDescription(
+      'Any additional thoughts or suggestions Up to 1000 characters',
+    );
 
     // A dynamically-shown field (revealed once rating < 3) gets the same
     // toolkit-managed describedby wiring, not an author-owned id.
@@ -128,9 +132,8 @@ test.describe('Error Display Modes', () => {
     await formPage.ratingInput.blur();
     const improvement = formPage.page.locator('#improvementSuggestions');
     await expect(improvement).toBeVisible();
-    await expect(improvement).toHaveAttribute(
-      'aria-describedby',
-      'improvement-hint',
+    await expect(improvement).toHaveAccessibleDescription(
+      'Please help us understand what went wrong Up to 500 characters',
     );
     await expect(formPage.page.locator('#improvement-hint')).toBeVisible();
     await expect(formPage.page.locator('#improvement-counter')).toBeVisible();

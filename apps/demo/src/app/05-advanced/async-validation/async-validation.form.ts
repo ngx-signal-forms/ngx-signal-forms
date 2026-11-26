@@ -14,10 +14,12 @@ import {
   type FormFieldAppearance,
   type FormFieldOrientation,
   createOnInvalidHandler,
+  hasOnlyWarnings,
   NgxSignalFormToolkit,
   warningError,
 } from '@ngx-signal-forms/toolkit';
 import { NgxFormField } from '@ngx-signal-forms/toolkit/form-field';
+import { SubmitStatusComponent } from '../../ui/submit-status/submit-status';
 import { BusyButtonDirective } from '../../shared/busy-button.directive';
 
 interface Registration {
@@ -101,6 +103,7 @@ const registrationSchema = schema<Registration>((path) => {
     NgxSignalFormToolkit,
     NgxFormField,
     JsonPipe,
+    SubmitStatusComponent,
   ],
   template: `
     <div class="px-6 pt-0 pb-6">
@@ -134,9 +137,8 @@ const registrationSchema = schema<Registration>((path) => {
           </li>
           <li>
             <code>onError</code> returns a <code>warningError()</code> instead
-            of <code>null</code> — a network failure surfaces as a non-blocking
-            advisory (prefixed <code>warn:</code>) so submission is never
-            silently unblocked.
+            of <code>null</code>. A network failure produces a warning.
+            Submission can continue when no blocking errors remain.
           </li>
         </ul>
       </div>
@@ -225,7 +227,12 @@ const registrationSchema = schema<Registration>((path) => {
             }
           </button>
 
-          <button type="button" (click)="resetForm()" class="btn-secondary">
+          <button
+            type="button"
+            (click)="resetForm()"
+            [disabled]="regForm().submitting()"
+            class="btn-secondary"
+          >
             Reset
           </button>
 
@@ -261,6 +268,8 @@ const registrationSchema = schema<Registration>((path) => {
           }
         </div>
 
+        <ngx-submit-status [message]="successMessage()" />
+
         <!-- State Debugger -->
         <div
           class="mt-8 rounded bg-gray-100 p-4 font-mono text-xs dark:bg-gray-800"
@@ -291,16 +300,25 @@ export class AsyncValidationComponent {
   readonly orientation = input<FormFieldOrientation>('vertical');
 
   readonly #model = signal({ username: '', usernameOnBlur: '' });
+  readonly #onInvalid = createOnInvalidHandler();
+  protected readonly successMessage = signal('');
   readonly regForm = form(this.#model, registrationSchema, {
     submission: {
-      action: async (field) => {
+      ignoreValidators: 'all',
+      action: async (regForm) => {
+        this.successMessage.set('');
+        if (regForm().pending()) return;
+        if (!hasOnlyWarnings(regForm().errorSummary())) {
+          this.#onInvalid(regForm);
+          return;
+        }
+
         // Simulate actual registration delay
         await new Promise<void>((resolve) => {
           setTimeout(resolve, 1000);
         });
-        console.log('Registered:', field().value());
+        this.successMessage.set('Registration submitted.');
       },
-      onInvalid: createOnInvalidHandler(),
     },
   });
   protected readonly usernameTakenMessage = computed(
@@ -326,6 +344,7 @@ export class AsyncValidationComponent {
   protected resetForm(): void {
     this.regForm().reset();
     this.#model.set({ username: '', usernameOnBlur: '' });
+    this.successMessage.set('');
   }
 
   protected reloadUsernameValidation(): void {

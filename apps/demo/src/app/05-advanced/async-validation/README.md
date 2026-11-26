@@ -11,7 +11,7 @@ Validating against a server ("is this username taken?") is notoriously tricky: r
 - `NgxFormField` wrapper — picks up pending state and renders consistent feedback.
 - Suffix projection (`<span suffix>`) inside the wrapper — pattern for loading indicators next to the input.
 - `createOnInvalidHandler()` — focus-first-invalid on submit.
-- Declarative `submission` wiring — submit stays disabled while validation is `pending()`.
+- Declarative `submission` uses `ignoreValidators: 'all'` and `hasOnlyWarnings()` to permit warnings. The action checks `pending()` and sends blocking errors to `createOnInvalidHandler()`.
 
 ## Form model
 
@@ -27,7 +27,7 @@ Validating against a server ("is this username taken?") is notoriously tricky: r
 
 ### Warnings
 
-- Request errors emit `warn:availabilityUnknown`. Despite the current warning text saying submission can proceed, this demo uses ordinary Angular submission, which still blocks warning-only invalidity. See the [warning submission contract](../../../../../../docs/WARNINGS_SUPPORT.md#form-submission-behavior).
+- Request errors emit `warn:availabilityUnknown`. The submission action permits warnings when no blocking errors remain. It also checks `pending()` before it submits. See the [warning submission contract](../../../../../../docs/WARNINGS_SUPPORT.md#form-submission-behavior).
 
 ## Strong suites
 
@@ -47,7 +47,9 @@ Validating against a server ("is this username taken?") is notoriously tricky: r
 3. Watch the "Checking…" suffix appear while the simulated request is in flight.
 4. Leave the value as `admin` and wait — confirm the `usernameTaken` error renders once the response arrives.
 5. Change to a different value and confirm the error clears as the new validation succeeds.
-6. Click submit while validation is still pending — confirm the button stays disabled.
+6. Try to submit while validation is pending. Confirm the button blocks the action.
+7. Make the availability request fail. Submit with no blocking errors and confirm the status message appears.
+8. Submit with a required or taken username. Confirm the first invalid field receives focus.
 
 ## Related
 
