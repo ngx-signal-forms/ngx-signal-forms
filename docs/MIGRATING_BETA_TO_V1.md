@@ -217,7 +217,7 @@ Tests that type into a touched field and assert an error must move focus first, 
 ### Feedback motion
 
 - The inline error and warning slide-in now plays. Before, Angular's style encapsulation renamed the keyframes, and the default animation referenced them by their unscoped name, so messages appeared without animation. The slide-in runs for `180ms` with `cubic-bezier(0.23, 1, 0.32, 1)` and moves `0.25rem` without scaling.
-- `--ngx-signal-form-error-animation` and `--ngx-signal-form-fieldset-message-animation` are now unset by default. A custom value must reference keyframes from a global stylesheet.
+- Leave `--ngx-signal-form-error-animation` and `--ngx-signal-form-fieldset-message-animation` unset to use the built-in motion. A custom value must reference keyframes from a global stylesheet.
 - Under `prefers-reduced-motion: reduce`, messages fade in instead of appearing without any transition. Spatial movement stays off.
 - Fieldset message spacing no longer transitions under `prefers-reduced-motion: reduce`.
 - `expectNoA11yViolations` and `createA11yValidator` from `@ngx-signal-forms/toolkit/testing` now wait for running finite animations before the axe scan, so entry fades do not cause false color-contrast failures.
@@ -238,7 +238,11 @@ top-placed feedback adds `--ngx-signal-form-fieldset-message-margin-bottom`
 spacing only while it has visible messages. Fieldset legends inherit their
 font family unless you set `--ngx-signal-form-fieldset-legend-font-family`.
 
-The default panel border colors now derive from `--ngx-signal-form-error-panel-color` and `--ngx-signal-form-warning-panel-color`. Review themes that override the inline error or warning color. On coarse pointers, selection controls and error summary buttons use a 2.75rem default target size.
+On coarse pointers, selection controls and error summary buttons use a
+`2.75rem` default target size. The `--ngx-form-field-touch-target` and
+`--ngx-error-summary-link-min-target-size` overrides still apply. With
+`prefers-contrast: more`, wrappers and fieldsets default to a `2px` border
+and use higher-contrast border and secondary text colors.
 
 Set `--ngx-form-field-valid-border-color` to opt in to a valid border on touched, valid textual fields without warnings. The border does not apply on hover or focus. Pair color with text or an icon when users need a success cue.
 
