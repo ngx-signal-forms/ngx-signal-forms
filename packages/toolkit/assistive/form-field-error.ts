@@ -232,8 +232,7 @@ export type NgxFormFieldErrorPresentation = 'inline' | 'panel';
               >
                 <span class="ngx-form-field-error__prefix">{{
                   resolvedWarningPrefix()
-                }}</span
-                >{{ warning.message }}
+                }}</span>{{ warning.message }}
               </li>
             }
           </ul>
@@ -247,8 +246,7 @@ export type NgxFormFieldErrorPresentation = 'inline' | 'panel';
             >
               <span class="ngx-form-field-error__prefix">{{
                 resolvedWarningPrefix()
-              }}</span
-              >{{ warning.message }}
+              }}</span>{{ warning.message }}
             </p>
           }
         }
@@ -272,8 +270,7 @@ export type NgxFormFieldErrorPresentation = 'inline' | 'panel';
             >
               <span class="ngx-form-field-error__prefix">{{
                 resolvedErrorPrefix()
-              }}</span
-              >{{ error.message }}
+              }}</span>{{ error.message }}
             </li>
           }
         </ul>
@@ -284,8 +281,7 @@ export type NgxFormFieldErrorPresentation = 'inline' | 'panel';
           >
             <span class="ngx-form-field-error__prefix">{{
               resolvedErrorPrefix()
-            }}</span
-            >{{ error.message }}
+            }}</span>{{ error.message }}
           </p>
         }
       }
