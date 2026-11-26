@@ -121,6 +121,7 @@ jobs:
         uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
         with:
           node-version: ${{ matrix.node }}
+          check-latest: ${{ matrix.name == 'node-lts-26' }}
           cache: 'pnpm'
 
       - name: Set up Node (repo default)
