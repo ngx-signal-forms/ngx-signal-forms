@@ -49,6 +49,11 @@ jobs:
         with:
           mode: firewall
 
+      - name: Install pinned npm CLI
+        run: |
+          sfw npm install --global --ignore-scripts "npm@$(cat .npm-version)"
+          npm --version
+
       - run: sfw pnpm install --frozen-lockfile
 
       # `strictPeerDependencies` is off, so peer conflicts do not fail the

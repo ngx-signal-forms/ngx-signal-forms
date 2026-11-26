@@ -74,20 +74,19 @@ The axe-core integration is optional and only required when importing
 The toolkit's `engines.node` is `^22.23.4 || ^24.22.1 || >=26.12.1`. The
 22.x and 24.x floors are the first releases of their lines with the
 [October 2026 security fixes](https://nodejs.org/en/blog/vulnerability/october-2026-security-releases).
-The 26.x floor is `26.12.1`; Node.js 26.13.0 is a metadata-only LTS release,
-not the November 2026 security release.
+The 26.x floor is `26.12.1`. Use a current LTS patch release to get the
+latest security fixes.
 These floors are stricter than `@angular/core@22`'s own `engines` field.
 Raising a floor to a Node security release ships as a patch, without a
 migration guide, because the releases below the floor have known
 vulnerabilities. Consumers should use an active LTS Node version compatible
 with Angular 22 and their package manager/tooling stack.
 
-The repository currently validates and publishes with the following Node
-version:
-
-| Use case               | Version used in automation                                           |
-| ---------------------- | -------------------------------------------------------------------- |
-| CI + Publish workflows | Node, from [`.node-version`](../.node-version) (currently `26.13.0`) |
+| Use case                            | Version used in automation                                   |
+| ----------------------------------- | ------------------------------------------------------------ |
+| Repository Node                     | [`.node-version`](../.node-version), currently `26.13.1` LTS |
+| npm CLI for development and main CI | [`.npm-version`](../.npm-version), currently `12.2.3`        |
+| npm CLI for Publish                 | Node's bundled npm, currently `11.20.0`                      |
 
 ## Browser support
 
@@ -110,7 +109,7 @@ A scheduled workflow (`.github/workflows/compat-matrix.yml`) tests the toolkit
 against the lowest and highest version of each declared Node, Angular, and
 peer-dependency range in 10 cells. It runs weekly, on `workflow_dispatch`, and
 on pull requests that change `packages/toolkit/**`, the root `package.json`,
-`pnpm-workspace.yaml`, `tools/scripts/compat-matrix-override.mjs`, or the
+`pnpm-workspace.yaml`, `.node-version`, `tools/scripts/compat-matrix-override.mjs`, or the
 workflow itself.
 
 Each cell resolves its target floor or highest compatible version via `npm view`,
@@ -119,9 +118,9 @@ writes temporary overrides into `pnpm-workspace.yaml` with
 and runs `toolkit:test` and `toolkit:test-browser`. Nothing is committed back
 to the repository.
 
-| Dimension | Versions tested                                                                   |
-| --------- | --------------------------------------------------------------------------------- |
-| Node      | `22.23.4`, `24.22.1`, `26.12.1` (each declared `engines` floor), `26.x` (current) |
-| Angular   | `22.0.0` (declared floor), latest `22.x`                                          |
-| axe-core  | `4.13.0` (declared floor), latest `<5`                                            |
-| vest      | `6.3.0` (declared floor), latest `<7.0.0`                                         |
+| Dimension | Versions tested                                                                    |
+| --------- | ---------------------------------------------------------------------------------- |
+| Node      | `22.23.4`, `24.22.1`, `26.12.1` (each declared `engines` floor), latest `26.x` LTS |
+| Angular   | `22.0.0` (declared floor), latest `22.x`                                           |
+| axe-core  | `4.13.0` (declared floor), latest `<5`                                             |
+| vest      | `6.3.0` (declared floor), latest `<7.0.0`                                          |
