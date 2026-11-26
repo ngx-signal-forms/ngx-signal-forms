@@ -494,7 +494,7 @@ export class NgxFormFieldCharacterCount {
    *
    * @default true
    */
-  readonly showLimitColors = input(true);
+  readonly showLimitColors = input(true, { transform: booleanAttribute });
 
   /**
    * Enable polite live announcements when approaching or exceeding the limit.

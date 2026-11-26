@@ -233,7 +233,7 @@ export declare class NgxFormFieldCharacterCount {
    *
    * @default true
    */
-  readonly showLimitColors: import("@angular/core").InputSignal<boolean>;
+  readonly showLimitColors: import("@angular/core").InputSignalWithTransform<boolean, unknown>;
   /**
    * Enable polite live announcements when approaching or exceeding the limit.
    *
@@ -817,7 +817,7 @@ export declare class NgxFormFieldErrorSummary {
    *
    * @default true
    */
-  readonly autoFocus: import("@angular/core").InputSignal<boolean>;
+  readonly autoFocus: import("@angular/core").InputSignalWithTransform<boolean, unknown>;
   constructor();
   static ɵfac: i0.ɵɵFactoryDeclaration<NgxFormFieldErrorSummary, never>;
   static ɵcmp: i0.ɵɵComponentDeclaration<NgxFormFieldErrorSummary, "ngx-form-field-error-summary", never, {
