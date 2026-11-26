@@ -69,8 +69,11 @@ jobs:
             echo "No Nx Cloud token configured. Running without Nx Cloud."
           fi
 
-      - name: Build Demo
-        run: pnpm exec nx run demo:build --configuration=production --base=/ngx-signal-forms/
+      - name: Install Chromium
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: Build and test the production demo under the Pages base path
+        run: pnpm exec nx run demo-e2e:e2e-production
 
       - name: Create 404.html for SPA routing
         run: cp dist/apps/demo/index.html dist/apps/demo/404.html

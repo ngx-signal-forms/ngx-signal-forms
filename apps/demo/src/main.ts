@@ -28,23 +28,15 @@ import { DemoErrorHandler, logRouteError } from './app/ui/render-error';
 // catches the error and falls back.
 z.config({ jitless: true });
 
-// Enable MSW mocking in development
 async function enableMocking(): Promise<void> {
-  if (!isDevMode()) {
-    return;
-  }
-
   const { worker } = await import('./mocks/browser');
 
-  // Start the worker with service worker options
   await worker.start({
-    onUnhandledFrame: 'bypass', // Don't warn about unhandled requests
+    onUnhandledFrame: 'bypass',
     serviceWorker: {
-      url: '/mockServiceWorker.js',
+      url: `${import.meta.env.BASE_URL}mockServiceWorker.js`,
     },
   });
-
-  console.log('🔧 MSW: Mock Service Worker started');
 }
 
 // Wrap in async IIFE to support top-level await in all build targets
@@ -61,8 +53,12 @@ void (async () => {
     // Ignore if not available; production builds don't need it
   }
 
-  // Start MSW before bootstrapping the app
-  await enableMocking();
+  // GitHub Pages also needs the mock API. Start it before routes make requests.
+  try {
+    await enableMocking();
+  } catch (error) {
+    console.error('Could not start the demo mock API.', error);
+  }
 
   await bootstrapApplication(AppComponent, {
     providers: [
