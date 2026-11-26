@@ -43,8 +43,13 @@ name: Publish
 #     identical.
 #   - A published version has a defect: keep the tag. npm never reuses a
 #     version. Run `npm deprecate` on it and release a fix. Within 72 hours, a
-#     version with no dependents can be unpublished. Moving a dist-tag needs an
-#     authenticated `npm dist-tag add`.
+#     version with no dependents can be unpublished.
+#   - To roll back a dist-tag or fix a wrong tag, use an authenticated npm
+#     account with package write access. Check the target is already published,
+#     then run `npm dist-tag add @ngx-signal-forms/toolkit@<version> <dist-tag>`.
+#     Confirm the result with `npm dist-tag ls @ngx-signal-forms/toolkit`.
+#     Node 26.13.1 bundles npm 11.20.0. OIDC dist-tag changes require npm
+#     11.21.0 or later and the trusted publisher opt-in. See #663.
 #   - To re-run a publish by hand, dispatch on the tag, not on `main`. The
 #     `npm-publish` environment only accepts `v*` tags:
 #       gh workflow run publish.yml --ref <tag> -f ref=<tag>
@@ -461,10 +466,9 @@ jobs:
             exit 0
           fi
 
-          # The trusted publisher does not allow `npm dist-tag`, so this job
-          # cannot move a dist-tag either.
           echo "❌ $PACKAGE_NAME@$PACKAGE_VERSION is already on npm with different contents." >&2
           echo "npm never reuses a version. Release a new version instead." >&2
+          echo "To move a dist-tag, use the authenticated npm dist-tag command in the Publish workflow header." >&2
           exit 1
         # npm Trusted Publisher handles authentication automatically
 
