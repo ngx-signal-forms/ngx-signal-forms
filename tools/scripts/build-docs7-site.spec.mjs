@@ -15,7 +15,7 @@ function rewrite(
   const routes = new Map([
     ['README.md', 'README'],
     ['docs/GUIDE.md', 'docs/GUIDE'],
-    ['docs/migrations/v1.0.0-rc.16.md', 'docs/migrations/v1-0-0-rc-16'],
+    ['docs/migrations/v1.0.0.md', 'docs/migrations/v1-0-0'],
   ]);
   return rewriteLinks(markdown, { file, routes, ref: REF, kind });
 }
@@ -52,8 +52,8 @@ void test('a link to another page becomes its site route and keeps the anchor', 
 
 // Docs7 strips dots from URLs, so `v1.0.0-rc.16` would 404 under its own name.
 void test('a link to a page with dots in its name uses the dash route', () => {
-  const { markdown } = rewrite('[rc.16](./migrations/v1.0.0-rc.16.md)');
-  assert.equal(markdown, '[rc.16](/docs/migrations/v1-0-0-rc-16)');
+  const { markdown } = rewrite('[v1](./migrations/v1.0.0.md)');
+  assert.equal(markdown, '[v1](/docs/migrations/v1-0-0)');
 });
 
 // Source files are not on the site; the pinned GitHub URL is the only place

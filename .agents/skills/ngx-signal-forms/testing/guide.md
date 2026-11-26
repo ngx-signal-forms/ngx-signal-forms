@@ -29,7 +29,7 @@ import {
 - `expectVisibleFocusIndicator(element)`: throws unless `element` matches `:focus-visible` (when focused directly) or `:focus-within` (when an ancestor draws the ring) and renders a visible `outline` or `box-shadow`. Move focus with keyboard input (`await userEvent.tab()`) because `element.focus()` can miss `:focus-visible`. Measures presence only; verify 3:1 contrast (WCAG 1.4.11) separately.
 - `WCAG_22_AA_TAGS`: `['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa']`. Automated scanning cannot check non-automatable 2.2 Level A criteria (Consistent Help, Redundant Entry); verify those manually.
 
-## Testing rules for RC.17+ behavior
+## Testing message timing
 
 - **Drive controls through DOM events.** Click, type, and tab with `userEvent` rather than calling `model.set()` or `markAsTouched()` directly, so real focus, blur, and edit timing run.
 - **Blur or submit after typing under `'on-touch'`.** Typing into an already-touched control hides errors until focus moves (`await userEvent.tab()`) or a DOM `submit` event fires.

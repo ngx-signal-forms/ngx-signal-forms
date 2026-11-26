@@ -5,7 +5,7 @@ sidebarTitle: 'CSS custom properties'
 
 This guide covers the breaking CSS custom property renames and removals made when upgrading from `1.0.0-rc.6` or earlier. Component and TypeScript renames are in [`MIGRATING_BETA_TO_V1.md`](./MIGRATING_BETA_TO_V1.md).
 
-For CSS default and token changes in later release candidates (including RC.12 panel tokens, RC.15 container-owned spacing, RC.16 `light-dark()` dark mode, and RC.17 animation defaults and valid borders), follow the versioned [release migration index](./migrations/README.md) in order.
+For later CSS default and token changes, see [field spacing and selection rows](./MIGRATING_BETA_TO_V1.md#field-spacing-and-selection-rows) and [changes since rc.16](./MIGRATING_BETA_TO_V1.md#changes-since-rc16).
 
 The current theming API lives in [`THEMING.md`](../packages/toolkit/form-field/THEMING.md).
 
@@ -50,7 +50,7 @@ Component-level tokens still override the shared tier. Setting `--ngx-signal-for
 
 ### Former notification component tokens
 
-In RC.12, `ngx-form-field-notification` was folded into `ngx-form-field-error` with `presentation="panel"`. See [`v1.0.0-rc.12.md`](./migrations/v1.0.0-rc.12.md).
+In RC.12, `ngx-form-field-notification` was folded into `ngx-form-field-error` with `presentation="panel"`. See [notification migrations](./MIGRATING_BETA_TO_V1.md#notification-vest-and-testing-migrations).
 
 | Before (rc.6)                                                  | After                                                   |
 | -------------------------------------------------------------- | ------------------------------------------------------- |
@@ -104,11 +104,6 @@ rg --type css --type ts --type html -g '*.scss' -- \
   '--ngx-signal-form-(error|warning|fieldset-(error|warning)|notification-(error|warning))-border:|-list-style-(type|position)|--ngx-signal-form-(error|fieldset-message)-padding-horizontal|--ngx-form-field-(hint|char-count)-padding-horizontal|font-size-override|line-height-override|--ngx-form-field-outline-(bg|border|border-radius|min-height|focus-border-color|focus-box-shadow)'
 ```
 
-## 5. Later release candidates
+## 5. Later CSS changes
 
-Apply the per-version guides for any later release you cross:
-
-- [RC.12](./migrations/v1.0.0-rc.12.md): panel tokens replacing notification tokens
-- [RC.15](./migrations/v1.0.0-rc.15.md): container-owned spacing (`--ngx-form-field-margin: 0`), `--ngx-form-field-selection-row-gap`, checkbox/switch label tokens
-- [RC.16](./migrations/v1.0.0-rc.16.md): `light-dark()` / `color-scheme` dark mode, contrast-checked borders, focus outline tokens
-- [RC.17](./migrations/v1.0.0-rc.17.md): unset default animation tokens, opt-in `--ngx-form-field-valid-border-color`
+Review [field spacing and selection rows](./MIGRATING_BETA_TO_V1.md#field-spacing-and-selection-rows) and [changes since rc.16](./MIGRATING_BETA_TO_V1.md#changes-since-rc16).
