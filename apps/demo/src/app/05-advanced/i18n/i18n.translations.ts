@@ -64,9 +64,11 @@ export const UI_STRINGS: Record<
     reset: string;
     languageGroupLabel: string;
     summaryLabel: string;
+    confirmation: string;
   }
 > = {
   en: {
+    confirmation: 'Form submitted. The fields were reset.',
     submit: 'Submit',
     saving: 'Saving…',
     reset: 'Reset',
@@ -74,6 +76,7 @@ export const UI_STRINGS: Record<
     summaryLabel: 'Please fix the following errors before submitting:',
   },
   nl: {
+    confirmation: 'Het formulier is verzonden. De velden zijn gereset.',
     submit: 'Verzenden',
     saving: 'Bezig met opslaan…',
     reset: 'Resetten',
@@ -81,6 +84,7 @@ export const UI_STRINGS: Record<
     summaryLabel: 'Los de volgende fouten op voordat u verzendt:',
   },
   ja: {
+    confirmation: 'フォームを送信しました。入力欄をリセットしました。',
     submit: '送信',
     saving: '保存中...',
     reset: 'リセット',

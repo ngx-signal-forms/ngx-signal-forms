@@ -10,7 +10,8 @@ export const ASYNC_VALIDATION_CONTENT = {
           '• <strong>Availability checks:</strong> The demo username endpoint reports whether a value is still available',
           '• <strong>Typing debounce demo:</strong> <code>validateHttp(..., { debounce: 350 })</code> waits for typing to settle before hitting the server',
           "• <strong>Blur debounce demo:</strong> <code>debounce(field, 'blur')</code> defers model updates and async validation until focus leaves the field",
-          '• <strong>Pending state:</strong> Built-in <code>pending()</code> signal drives loading feedback without extra plumbing',
+          '• <strong>Pending state:</strong> <code>pending()</code> blocks submission until both checks finish',
+          '• <strong>Warnings:</strong> A failed availability check permits submission when no blocking errors remain',
         ],
       },
       {

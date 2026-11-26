@@ -31,10 +31,7 @@ import { SubmitStatusComponent } from '../../ui/submit-status/submit-status';
       [errorStrategy]="errorDisplayMode()"
       class="form-container"
     >
-      <ngx-form-field-wrapper
-        [formField]="passwordForm.username"
-        [strategy]="errorDisplayMode()"
-      >
+      <ngx-form-field-wrapper [formField]="passwordForm.username">
         <label for="username">Username</label>
         <input
           id="username"
@@ -45,10 +42,7 @@ import { SubmitStatusComponent } from '../../ui/submit-status/submit-status';
         />
       </ngx-form-field-wrapper>
 
-      <ngx-form-field-wrapper
-        [formField]="passwordForm.email"
-        [strategy]="errorDisplayMode()"
-      >
+      <ngx-form-field-wrapper [formField]="passwordForm.email">
         <label for="email">Email</label>
         <input
           id="email"
@@ -59,10 +53,7 @@ import { SubmitStatusComponent } from '../../ui/submit-status/submit-status';
         />
       </ngx-form-field-wrapper>
 
-      <ngx-form-field-wrapper
-        [formField]="passwordForm.password"
-        [strategy]="errorDisplayMode()"
-      >
+      <ngx-form-field-wrapper [formField]="passwordForm.password">
         <label for="password">Password</label>
         <input
           id="password"

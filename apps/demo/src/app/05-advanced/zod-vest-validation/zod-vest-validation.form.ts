@@ -310,12 +310,17 @@ export class ZodVestValidationComponent {
 
   protected readonly layeringCode = `form(model, (path) => {
   validateStandardSchema(path, zodVestAccountSchema);
+  requiredFromStandardSchema(path.firstName, zodVestAccountSchema);
+  requiredFromStandardSchema(path.lastName, zodVestAccountSchema);
+  requiredFromStandardSchema(path.email, zodVestAccountSchema);
+  requiredFromStandardSchema(path.password, zodVestAccountSchema);
+  requiredFromStandardSchema(path.accountType, zodVestAccountSchema);
+  requiredFromStandardSchema(path.country, zodVestAccountSchema);
   validateVest(path, zodVestBusinessSuite, {
     includeWarnings: true,
     resetOnDestroy: true,
   });
-    // Blocking errors and warn() guidance come from the same Vest run.
-  });`;
+});`;
 
   protected resetForm(): void {
     this.accountForm().reset();

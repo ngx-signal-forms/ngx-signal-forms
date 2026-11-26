@@ -10,7 +10,6 @@ import {
   type ResolvedErrorDisplayStrategy,
   type SubmittedStatus,
 } from '@ngx-signal-forms/toolkit';
-import { NgxFormFieldHint } from '@ngx-signal-forms/toolkit/assistive';
 import { NgxFormField } from '@ngx-signal-forms/toolkit/form-field';
 
 import {
@@ -147,9 +146,6 @@ export class ErrorDisplayHelpersComponent {
  *
  * Demonstrates different error display strategies with a realistic
  * product feedback form scenario.
- *
- * Note: Signal Forms doesn't support runtime error strategy changes,
- * so the strategy is set once via the form provider directive.
  */
 @Component({
   selector: 'ngx-error-display-modes-form',
@@ -160,7 +156,6 @@ export class ErrorDisplayHelpersComponent {
     FormField,
     NgxSignalFormToolkit,
     NgxFormField,
-    NgxFormFieldHint,
   ],
   template: `
     <!-- Product Feedback Form -->
@@ -300,15 +295,10 @@ export class ErrorDisplayHelpersComponent {
             <ngx-form-field-hint id="improvement-hint">
               Please help us understand what went wrong
             </ngx-form-field-hint>
-            <span
-              characterCount
+            <ngx-form-field-character-count
               id="improvement-counter"
-              class="text-xs text-gray-500 dark:text-gray-400"
-              [class.text-red-600]="improvementLength() > 500"
-              [class.dark:text-red-400]="improvementLength() > 500"
-            >
-              {{ improvementLength() }}/500
-            </span>
+              [formField]="productForm.improvementSuggestions"
+            />
           </ngx-form-field-wrapper>
         }
 
@@ -327,15 +317,10 @@ export class ErrorDisplayHelpersComponent {
           <ngx-form-field-hint id="detailed-hint">
             Any additional thoughts or suggestions
           </ngx-form-field-hint>
-          <span
-            characterCount
+          <ngx-form-field-character-count
             id="detailed-counter"
-            class="text-xs text-gray-500 dark:text-gray-400"
-            [class.text-red-600]="detailedLength() > 1000"
-            [class.dark:text-red-400]="detailedLength() > 1000"
-          >
-            {{ detailedLength() }}/1000
-          </span>
+            [formField]="productForm.detailedFeedback"
+          />
         </ngx-form-field-wrapper>
       </fieldset>
 
@@ -427,18 +412,6 @@ export class ErrorDisplayHelpersComponent {
           </div>
         </div>
 
-        @if (showPendingMessage()) {
-          <div
-            class="feedback-alert feedback-alert--pending"
-            role="status"
-            aria-live="polite"
-          >
-            <div class="text-sm font-medium text-blue-800 dark:text-blue-200">
-              Still validating… Please wait a moment.
-            </div>
-          </div>
-        }
-
         <button
           type="submit"
           class="btn-primary"
@@ -481,19 +454,4 @@ export class ErrorDisplayModesFormComponent {
     const rating = this.productForm.overallRating().value();
     return rating > 0 && rating <= 3;
   });
-
-  protected readonly improvementLength = computed(() => {
-    const current = this.productForm.improvementSuggestions().value();
-    return current.length;
-  });
-
-  protected readonly detailedLength = computed(() => {
-    const current = this.productForm.detailedFeedback().value();
-    return current.length;
-  });
-
-  /** Computed: show pending message during async validation */
-  protected readonly showPendingMessage = computed(() =>
-    this.productForm().submitting(),
-  );
 }

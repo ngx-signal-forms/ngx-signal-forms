@@ -1,4 +1,4 @@
-import { Component, inject, input, signal } from '@angular/core';
+import { Component, computed, inject, input, signal } from '@angular/core';
 import { FormField, form } from '@angular/forms/signals';
 import {
   type ResolvedErrorDisplayStrategy,
@@ -8,6 +8,7 @@ import {
   NgxSignalFormToolkit,
   provideErrorMessages,
   provideFieldLabels,
+  provideNgxSignalFormsConfigForComponent,
 } from '@ngx-signal-forms/toolkit';
 import { NgxFormFieldErrorSummary } from '@ngx-signal-forms/toolkit/assistive';
 import { NgxFormField } from '@ngx-signal-forms/toolkit/form-field';
@@ -40,6 +41,7 @@ import { SubmitStatusComponent } from '../../ui/submit-status/submit-status';
 
   providers: [
     I18nDemoLanguageService,
+    provideNgxSignalFormsConfigForComponent({ errorPrefixText: '' }),
 
     // Every entry is a function that reads `langService.lang()` — the
     // reactive dependency that makes a runtime language switch update
@@ -193,11 +195,11 @@ export class I18nDemoComponent {
   readonly demoForm = form(this.#model, i18nDemoSchema, {
     submission: {
       action: async () => {
-        this.successMessage.set('');
+        this.submitted.set(false);
         await new Promise<void>((resolve) => {
           setTimeout(resolve, 500);
         });
-        this.successMessage.set('Form submitted. The fields were reset.');
+        this.submitted.set(true);
         this.#model.set(createInitialI18nDemoModel());
         this.demoForm().reset();
       },
@@ -229,10 +231,13 @@ export class I18nDemoComponent {
     return UI_STRINGS[this.langService.lang()];
   }
 
-  protected readonly successMessage = signal('');
+  protected readonly submitted = signal(false);
+  protected readonly successMessage = computed(() =>
+    this.submitted() ? this.uiStrings().confirmation : '',
+  );
 
   protected resetForm(): void {
-    this.successMessage.set('');
+    this.submitted.set(false);
     this.demoForm().reset();
     this.#model.set(createInitialI18nDemoModel());
   }

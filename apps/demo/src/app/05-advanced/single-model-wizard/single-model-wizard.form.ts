@@ -229,7 +229,7 @@ export class SingleModelWizardComponent {
   }
 
   protected startNewOrder(): void {
-    this.#model.set(INITIAL_SINGLE_MODEL_WIZARD_VALUE);
+    this.wizardForm().reset(INITIAL_SINGLE_MODEL_WIZARD_VALUE);
     this.orderConfirmed.set(false);
     this.submitAttempted.set(false);
     this.currentStep.set('account');
