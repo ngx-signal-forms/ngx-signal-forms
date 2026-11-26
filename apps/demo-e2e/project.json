@@ -41,6 +41,17 @@
         "command": "bash -lc 'pnpm exec playwright test --config apps/demo-e2e/playwright.config.ts --project=chromium --shard=${SHARD_INDEX:-1}/${SHARD_TOTAL:-4}'"
       }
     },
+    "e2e-production": {
+      "executor": "nx:run-commands",
+      "outputs": ["{workspaceRoot}/dist/.playwright/apps/demo-e2e-production"],
+      "options": {
+        "commands": [
+          "pnpm exec nx run demo:build --configuration=production --base=/ngx-signal-forms/",
+          "pnpm exec playwright test --config apps/demo-e2e/playwright.production.config.ts"
+        ],
+        "parallel": false
+      }
+    },
     "a11y": {
       "executor": "nx:run-commands",
       "cache": true,

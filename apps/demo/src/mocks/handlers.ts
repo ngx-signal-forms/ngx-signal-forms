@@ -75,16 +75,19 @@ function generateConfirmationNumber(): string {
 // ══════════════════════════════════════════════════════════════════════════════
 
 export const asyncValidationHandlers = [
-  http.get('/fake-api/check-user/:username', async ({ params }) => {
-    await delay(450);
+  http.get(
+    `${import.meta.env.BASE_URL}fake-api/check-user/:username`,
+    async ({ params }) => {
+      await delay(450);
 
-    const { username } = params as { username: string };
+      const { username } = params as { username: string };
 
-    return HttpResponse.json({
-      username,
-      available: username.toLowerCase() !== 'admin',
-    });
-  }),
+      return HttpResponse.json({
+        username,
+        available: username.toLowerCase() !== 'admin',
+      });
+    },
+  ),
 ];
 
 // ══════════════════════════════════════════════════════════════════════════════
