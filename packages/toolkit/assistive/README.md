@@ -252,14 +252,14 @@ control.
 />
 ```
 
-| Input             | Type                    | Default                              | Description                                                       |
-| ----------------- | ----------------------- | ------------------------------------ | ----------------------------------------------------------------- |
-| `formTree`        | `FieldTree` (required)  | —                                    | The root form.                                                    |
-| `summaryLabel`    | `string`                | `'Please fix the following errors:'` | Heading text and accessible name of the summary.                  |
-| `headingLevel`    | `2 \| 3 \| 4 \| 5 \| 6` | `2`                                  | Renders the heading as a native `h2` to `h6`.                     |
-| `autoFocus`       | `boolean`               | `true`                               | Moves focus to the summary when it first shows under `on-submit`. |
-| `strategy`        | `ErrorDisplayStrategy`  | inherited                            | When the summary shows.                                           |
-| `submittedStatus` | `SubmittedStatus`       | inherited                            | Submission state for `on-submit`.                                 |
+| Input             | Type                    | Default                              | Description                                                                                                      |
+| ----------------- | ----------------------- | ------------------------------------ | ---------------------------------------------------------------------------------------------------------------- |
+| `formTree`        | `FieldTree` (required)  | —                                    | The root form.                                                                                                   |
+| `summaryLabel`    | `string`                | `'Please fix the following errors:'` | Heading text and accessible name of the summary.                                                                 |
+| `headingLevel`    | `2 \| 3 \| 4 \| 5 \| 6` | `2`                                  | Renders the heading as a native `h2` to `h6`.                                                                    |
+| `autoFocus`       | `boolean`               | `true`                               | Moves focus to the summary when it first shows under `on-submit`. Accepts a bare attribute or a boolean binding. |
+| `strategy`        | `ErrorDisplayStrategy`  | inherited                            | When the summary shows.                                                                                          |
+| `submittedStatus` | `SubmittedStatus`       | inherited                            | Submission state for `on-submit`.                                                                                |
 
 Behavior:
 
@@ -323,7 +323,7 @@ Shows "current/max" and changes color as the value nears the limit.
 | `formField`             | `FieldTree<CharacterCountValue>` (required) | —                          | The field to count. `CharacterCountValue` is `string \| readonly string[] \| null \| undefined`, from `@ngx-signal-forms/toolkit/headless`. |
 | `maxLength`             | `number \| undefined`                       | from `maxLength` validator | The limit. Omit it to read the field's `maxLength` validator.                                                                               |
 | `position`              | `'left' \| 'right'`                         | `'right'`                  | Alignment.                                                                                                                                  |
-| `showLimitColors`       | `boolean`                                   | `true`                     | Color changes as the count nears the limit.                                                                                                 |
+| `showLimitColors`       | `boolean`                                   | `true`                     | Color changes as the count nears the limit. Accepts a bare attribute or a boolean binding.                                                  |
 | `liveAnnounce`          | `boolean`                                   | `false`                    | Polite announcement when the limit state changes. Accepts a bare attribute.                                                                 |
 | `announcementFormatter` | `NgxCharacterCountAnnouncementFormatter`    | English text               | Function that returns localized announcement text.                                                                                          |
 | `fieldName`             | `string \| undefined`                       | from the wrapper           | Field name for the limit id when no wrapper supplies one.                                                                                   |

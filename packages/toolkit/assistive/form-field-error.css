@@ -126,9 +126,10 @@
   );
 }
 
-:host([data-presentation='inline']) .ngx-form-field-error {
-  padding-inline-start: 0;
-  padding-inline-end: 0;
+:host([data-presentation='inline'])
+  .ngx-form-field-error:not(.ngx-form-field-error--empty) {
+  padding-inline-start: var(--ngx-signal-form-error-padding-inline-start, 0);
+  padding-inline-end: var(--ngx-signal-form-error-padding-inline-end, 0);
 }
 
 .ngx-form-field-error--error {

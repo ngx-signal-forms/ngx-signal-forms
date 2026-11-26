@@ -1,6 +1,7 @@
 import { NgTemplateOutlet } from '@angular/common';
 import {
   afterRenderEffect,
+  booleanAttribute,
   Component,
   computed,
   DestroyRef,
@@ -436,7 +437,7 @@ export class NgxFormFieldErrorSummary {
    *
    * @default true
    */
-  readonly autoFocus = input(true);
+  readonly autoFocus = input(true, { transform: booleanAttribute });
 
   constructor() {
     const formContext = injectFormContext();

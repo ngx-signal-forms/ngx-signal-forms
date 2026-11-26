@@ -105,6 +105,8 @@
     --ngx-signal-form-fieldset-message-margin-bottom,
     var(--_fieldset-gap)
   );
+  --_fieldset-message-slot-margin-top: var(--_fieldset-message-margin-top);
+  --_fieldset-message-slot-margin-bottom: 0;
   --_fieldset-message-padding: var(
     --ngx-signal-form-fieldset-message-padding,
     var(--_fieldset-space-0)
@@ -223,7 +225,7 @@
   );
   --_fieldset-legend-family: var(
     --ngx-signal-form-fieldset-legend-font-family,
-    var(--typography-font-family, inherit)
+    inherit
   );
   --_fieldset-legend-line-height: var(
     --ngx-signal-form-fieldset-legend-line-height,
@@ -504,7 +506,8 @@
 }
 
 .ngx-signal-form-fieldset__messages {
-  margin-top: var(--_fieldset-message-margin-top);
+  margin-top: var(--_fieldset-message-slot-margin-top);
+  margin-bottom: var(--_fieldset-message-slot-margin-bottom);
   margin-inline-start: var(--_fieldset-current-message-inset-inline-start);
   margin-inline-end: var(--_fieldset-current-message-inset-inline-end);
   min-inline-size: 0;
@@ -584,15 +587,15 @@
  * `showMessages()` state and exposes it via `[data-has-messages]` so the CSS
  * can collapse symmetrically without inspecting child markup.
  */
-:host(:not([data-has-messages])) .ngx-signal-form-fieldset__messages {
-  margin-top: 0;
-  margin-bottom: 0;
+:host(:not([data-has-messages])) {
+  --_fieldset-message-slot-margin-top: 0;
 }
 
-:host(.ngx-signal-form-fieldset--messages-top)
-  .ngx-signal-form-fieldset__messages {
-  margin-top: 0;
-  margin-bottom: var(--_fieldset-message-margin-bottom);
+:host(.ngx-signal-form-fieldset--messages-top[data-has-messages]) {
+  --_fieldset-message-slot-margin-top: 0;
+  --_fieldset-message-slot-margin-bottom: var(
+    --_fieldset-message-margin-bottom
+  );
 }
 
 /* The spacing transition moves the content around the fieldset, so reduced

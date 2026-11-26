@@ -417,34 +417,34 @@ Validation tinting is opt-in via `validationSurface="always"` (default is `'neve
 
 Grouped messages inherit from `ngx-form-field-error` by default. Use these tokens to style fieldset messages separately from per-field errors:
 
-| Property                                                            | Default                                                                           | Description                                          |
-| :------------------------------------------------------------------ | :-------------------------------------------------------------------------------- | :--------------------------------------------------- |
-| `--ngx-signal-form-fieldset-message-margin-top`                     | `var(--ngx-signal-form-fieldset-gap)`                                             | Top margin above the message slot                    |
-| `--ngx-signal-form-fieldset-message-margin-bottom`                  | `var(--ngx-signal-form-fieldset-gap)`                                             | Bottom margin below the message slot                 |
-| `--ngx-signal-form-fieldset-message-inset-inline-start`             | `0`                                                                               | Start inset for plain grouped messages               |
-| `--ngx-signal-form-fieldset-message-inset-inline-end`               | `0`                                                                               | End inset for plain grouped messages                 |
-| `--ngx-signal-form-fieldset-message-padding`                        | `0`                                                                               | Padding for plain grouped messages                   |
-| `--ngx-signal-form-fieldset-message-padding-inline-start`           | `var(--ngx-signal-form-feedback-padding-horizontal)`                              | Reserved start padding alias (inline error uses `0`) |
-| `--ngx-signal-form-fieldset-message-padding-inline-end`             | `var(--ngx-signal-form-feedback-padding-horizontal)`                              | Reserved end padding alias (inline error uses `0`)   |
-| `--ngx-signal-form-fieldset-message-border-width`                   | `0`                                                                               | Border width for plain grouped messages              |
-| `--ngx-signal-form-fieldset-message-border-radius`                  | `0`                                                                               | Border radius for plain grouped messages             |
-| `--ngx-signal-form-fieldset-message-spacing`                        | `0.25rem`                                                                         | Gap between grouped messages                         |
-| `--ngx-signal-form-fieldset-message-list-style`                     | `var(--ngx-signal-form-feedback-list-style)`                                      | `list-style` shorthand for plain grouped lists       |
-| `--ngx-signal-form-fieldset-message-list-padding-inline-start`      | `var(--ngx-signal-form-feedback-list-indent)`                                     | List indent for plain grouped lists                  |
-| `--ngx-signal-form-fieldset-message-animation`                      | unset (built-in 180ms slide-in)                                                   | Custom global `animation` shorthand, or `none`       |
-| `--ngx-signal-form-fieldset-error-color`                            | `var(--ngx-signal-form-error-color)`                                              | Plain grouped error text color                       |
-| `--ngx-signal-form-fieldset-error-bg`                               | `var(--ngx-signal-form-error-bg)`                                                 | Plain grouped error background                       |
-| `--ngx-signal-form-fieldset-error-border-color`                     | `var(--ngx-signal-form-error-border-color)`                                       | Plain grouped error border color                     |
-| `--ngx-signal-form-fieldset-warning-color`                          | `var(--ngx-signal-form-warning-color)`                                            | Plain grouped warning text color                     |
-| `--ngx-signal-form-fieldset-warning-border-color`                   | `var(--ngx-signal-form-warning-border-color)`                                     | Plain grouped warning border color                   |
-| `--ngx-signal-form-fieldset-notification-inset-inline-start`        | `0`                                                                               | Start inset for notification cards                   |
-| `--ngx-signal-form-fieldset-notification-inset-inline-end`          | `0`                                                                               | End inset for notification cards                     |
-| `--ngx-signal-form-fieldset-notification-list-style`                | `var(--ngx-signal-form-feedback-list-style)`                                      | `list-style` shorthand for notification cards        |
-| `--ngx-signal-form-fieldset-notification-list-padding-inline-start` | `var(--ngx-signal-form-feedback-list-indent)`                                     | List indent for notification cards                   |
-| `--ngx-signal-form-fieldset-notification-error-bg`                  | `light-dark(#fdebeb, rgb(127 29 29 / 0.32))`                                      | Notification card error background                   |
-| `--ngx-signal-form-fieldset-notification-error-border-color`        | `color-mix(in srgb, var(--ngx-signal-form-error-panel-color) 50%, transparent)`   | Notification card error border color                 |
-| `--ngx-signal-form-fieldset-notification-warning-bg`                | `light-dark(color-mix(in srgb, #a16207 10%, white), rgb(120 53 15 / 0.28))`       | Notification card warning background                 |
-| `--ngx-signal-form-fieldset-notification-warning-border-color`      | `color-mix(in srgb, var(--ngx-signal-form-warning-panel-color) 50%, transparent)` | Notification card warning border color               |
+| Property                                                            | Default                                                                           | Description                                    |
+| :------------------------------------------------------------------ | :-------------------------------------------------------------------------------- | :--------------------------------------------- |
+| `--ngx-signal-form-fieldset-message-margin-top`                     | `var(--ngx-signal-form-fieldset-gap)`                                             | Top margin above the message slot              |
+| `--ngx-signal-form-fieldset-message-margin-bottom`                  | `var(--ngx-signal-form-fieldset-gap)`                                             | Bottom margin below the message slot           |
+| `--ngx-signal-form-fieldset-message-inset-inline-start`             | `0`                                                                               | Start inset for plain grouped messages         |
+| `--ngx-signal-form-fieldset-message-inset-inline-end`               | `0`                                                                               | End inset for plain grouped messages           |
+| `--ngx-signal-form-fieldset-message-padding`                        | `0`                                                                               | Padding for plain grouped messages             |
+| `--ngx-signal-form-fieldset-message-padding-inline-start`           | `var(--ngx-signal-form-feedback-padding-horizontal)`                              | Start padding for plain grouped messages       |
+| `--ngx-signal-form-fieldset-message-padding-inline-end`             | `var(--ngx-signal-form-feedback-padding-horizontal)`                              | End padding for plain grouped messages         |
+| `--ngx-signal-form-fieldset-message-border-width`                   | `0`                                                                               | Border width for plain grouped messages        |
+| `--ngx-signal-form-fieldset-message-border-radius`                  | `0`                                                                               | Border radius for plain grouped messages       |
+| `--ngx-signal-form-fieldset-message-spacing`                        | `0.25rem`                                                                         | Gap between grouped messages                   |
+| `--ngx-signal-form-fieldset-message-list-style`                     | `var(--ngx-signal-form-feedback-list-style)`                                      | `list-style` shorthand for plain grouped lists |
+| `--ngx-signal-form-fieldset-message-list-padding-inline-start`      | `var(--ngx-signal-form-feedback-list-indent)`                                     | List indent for plain grouped lists            |
+| `--ngx-signal-form-fieldset-message-animation`                      | unset (built-in 180ms slide-in)                                                   | Custom global `animation` shorthand, or `none` |
+| `--ngx-signal-form-fieldset-error-color`                            | `var(--ngx-signal-form-error-color)`                                              | Plain grouped error text color                 |
+| `--ngx-signal-form-fieldset-error-bg`                               | `var(--ngx-signal-form-error-bg)`                                                 | Plain grouped error background                 |
+| `--ngx-signal-form-fieldset-error-border-color`                     | `var(--ngx-signal-form-error-border-color)`                                       | Plain grouped error border color               |
+| `--ngx-signal-form-fieldset-warning-color`                          | `var(--ngx-signal-form-warning-color)`                                            | Plain grouped warning text color               |
+| `--ngx-signal-form-fieldset-warning-border-color`                   | `var(--ngx-signal-form-warning-border-color)`                                     | Plain grouped warning border color             |
+| `--ngx-signal-form-fieldset-notification-inset-inline-start`        | `0`                                                                               | Start inset for notification cards             |
+| `--ngx-signal-form-fieldset-notification-inset-inline-end`          | `0`                                                                               | End inset for notification cards               |
+| `--ngx-signal-form-fieldset-notification-list-style`                | `var(--ngx-signal-form-feedback-list-style)`                                      | `list-style` shorthand for notification cards  |
+| `--ngx-signal-form-fieldset-notification-list-padding-inline-start` | `var(--ngx-signal-form-feedback-list-indent)`                                     | List indent for notification cards             |
+| `--ngx-signal-form-fieldset-notification-error-bg`                  | `light-dark(#fdebeb, rgb(127 29 29 / 0.32))`                                      | Notification card error background             |
+| `--ngx-signal-form-fieldset-notification-error-border-color`        | `color-mix(in srgb, var(--ngx-signal-form-error-panel-color) 50%, transparent)`   | Notification card error border color           |
+| `--ngx-signal-form-fieldset-notification-warning-bg`                | `light-dark(color-mix(in srgb, #a16207 10%, white), rgb(120 53 15 / 0.28))`       | Notification card warning background           |
+| `--ngx-signal-form-fieldset-notification-warning-border-color`      | `color-mix(in srgb, var(--ngx-signal-form-warning-panel-color) 50%, transparent)` | Notification card warning border color         |
 
 Notification card text colors follow `--ngx-signal-form-error-panel-color` and `--ngx-signal-form-warning-panel-color`.
 
@@ -470,7 +470,7 @@ These components live in `@ngx-signal-forms/toolkit/assistive` and inherit from 
 | `--ngx-signal-form-error-message-spacing`           | `0.25rem`                                     | Space between multiple messages                |
 | `--ngx-signal-form-error-border-width`              | `0`                                           | Border width                                   |
 | `--ngx-signal-form-error-border-radius`             | `0`                                           | Border radius                                  |
-| `--ngx-signal-form-error-padding`                   | `0`                                           | Vertical padding (inline horizontal is `0`)    |
+| `--ngx-signal-form-error-padding`                   | `0`                                           | Vertical padding in inline mode                |
 | `--ngx-signal-form-error-animation`                 | unset (built-in 180ms slide-in)               | Custom global `animation` shorthand, or `none` |
 | `--ngx-signal-form-error-list-style`                | `var(--ngx-signal-form-feedback-list-style)`  | `list-style` shorthand for bulleted lists      |
 | `--ngx-signal-form-error-list-padding-inline-start` | `var(--ngx-signal-form-feedback-list-indent)` | Indent for bulleted lists                      |
@@ -481,7 +481,7 @@ Notes:
 
 - **Custom entry animation.** Because the built-in keyframes are encapsulated in the component, a custom `--ngx-signal-form-error-animation` value must reference keyframes defined in a global stylesheet. Set `none` to disable entry motion. Under `prefers-reduced-motion: reduce`, messages fade in without moving.
 - **Non-color cues.** Screen readers receive a visually hidden "Error:" or "Warning:" prefix (`errorPrefixText` / `warningPrefixText` in config). To add a decorative visual icon without doubling the announcement, include empty alt text in your value: `--ngx-signal-form-error-icon: '!' / '';`. See [Errors and warnings without color](../assistive/README.md#errors-and-warnings-without-color).
-- **Inline horizontal padding.** `presentation="inline"` fixes `padding-inline-start` and `padding-inline-end` to `0`, so `--ngx-signal-form-error-padding` only adds vertical padding in inline mode.
+- **Inline horizontal padding.** `presentation="inline"` uses contextual start and end padding. These values default to `0` outside a selection row or fieldset. `--ngx-signal-form-error-padding` adds vertical padding in inline mode.
 
 ### Grouped panel feedback
 
