@@ -34,7 +34,9 @@ older author spellings into this identity.
 Before choosing a toolkit spec environment, read
 [jsdom or browser](docs/TESTING.md#toolkit-specs-jsdom-or-browser).
 Before running one spec or timezone-sensitive tests, read
-[Run one spec](docs/TESTING.md#run-one-spec).
+[Run one spec](docs/TESTING.md#run-one-spec). After a change, iterate with
+[Run only affected tests](docs/TESTING.md#run-only-affected-tests), and run
+the whole suite once before you finish.
 
 - Test the user-visible contract, not only an internal state change. Use a
   fixture that follows the configuration under test, and assert both the

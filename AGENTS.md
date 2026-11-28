@@ -52,6 +52,19 @@ code only when that removes real complexity or a real defect.
   `@ngx-signal-forms/toolkit`. This rule alone does not require the skill for
   work only on the toolkit implementation or unrelated packages.
 
+## Test runs
+
+- After a change, run only the affected tests with Vitest's experimental
+  `--since-last-run` flag: `pnpm nx run-many -t test --skip-nx-cache -- --since-last-run`.
+  The first run per Vitest config runs everything and records the files each
+  test loaded; later runs run only tests whose files changed since their last
+  run, plus tests that failed. No Git needed, so it works in worktrees and
+  containers. Keep `--skip-nx-cache` before `--` so Nx does not replay a
+  cached full run instead of running Vitest. Details in
+  [Run only affected tests](docs/TESTING.md#run-only-affected-tests).
+- Before you finish, run the whole suite once without the flag:
+  `pnpm test:all`, plus `pnpm test:browser` for the toolkit browser specs.
+
 ## Action routes
 
 - Writing prose: read [Writing](CODING_STANDARDS.md#writing).

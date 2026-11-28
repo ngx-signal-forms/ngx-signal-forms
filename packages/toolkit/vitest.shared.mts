@@ -1,7 +1,7 @@
 /// <reference types='vitest' />
 
 import { resolve } from 'node:path';
-import angular from '@analogjs/vite-plugin-angular';
+import { angular } from '@analogjs/vite-plugin-angular';
 import { type UserWorkspaceConfig } from 'vitest/config';
 
 process.env['NX_DAEMON'] ??= 'false';
