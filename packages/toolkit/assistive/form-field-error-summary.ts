@@ -182,16 +182,14 @@ export type NgxErrorSummaryHeadingLevel = 2 | 3 | 4 | 5 | 6;
                 >
                   <span class="ngx-form-field-error-summary__field-name">{{
                     entry.fieldName
-                  }}</span
-                  >:
+                  }}</span>:
                   {{ entry.message }}
                 </button>
               } @else {
                 <span class="ngx-form-field-error-summary__text">
                   <span class="ngx-form-field-error-summary__field-name">{{
                     entry.fieldName
-                  }}</span
-                  >:
+                  }}</span>:
                   {{ entry.message }}
                 </span>
               }

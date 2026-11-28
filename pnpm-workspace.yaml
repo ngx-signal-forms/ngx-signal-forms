@@ -121,11 +121,11 @@ overrides:
   '@oxc-parser/binding-wasm32-wasi>@emnapi/runtime': '2.0.0-beta.2'
 catalogs:
   analogjs:
-    '@analogjs/vite-plugin-angular': '2.9.7'
-    '@analogjs/vitest-angular': '2.9.7'
+    '@analogjs/vite-plugin-angular': '3.0.0'
+    '@analogjs/vitest-angular': '3.0.0'
   axe:
-    '@axe-core/playwright': '^4.14.0'
-    axe-core: '^4.14.0'
+    '@axe-core/playwright': '^4.14.1'
+    axe-core: '^4.14.1'
   angular:
     '@angular/aria': '22.3.0'
     '@angular/cdk': '22.3.0'
@@ -145,24 +145,24 @@ catalogs:
     '@schematics/angular': '22.3.0'
     ng-packagr: '22.3.0'
   angular-eslint:
-    '@angular-eslint/eslint-plugin': '22.6.0'
-    '@angular-eslint/eslint-plugin-template': '22.6.0'
-    '@angular-eslint/template-parser': '22.6.0'
+    '@angular-eslint/eslint-plugin': '22.8.0'
+    '@angular-eslint/eslint-plugin-template': '22.8.0'
+    '@angular-eslint/template-parser': '22.8.0'
   angular-material:
     '@angular/material': '22.3.0'
   ngrx:
     '@ngrx-toolkit/core': '22.0.1'
     '@ngrx/signals': '22.0.1'
   nx:
-    '@nx/angular': '24.0.6'
-    '@nx/devkit': '24.0.6'
-    '@nx/eslint-plugin': '24.0.6'
-    '@nx/js': '24.0.6'
-    '@nx/oxlint': '24.0.6'
-    '@nx/playwright': '24.0.6'
-    '@nx/vitest': '24.0.6'
-    '@nx/workspace': '24.0.6'
-    nx: '24.0.6'
+    '@nx/angular': '24.0.7'
+    '@nx/devkit': '24.0.7'
+    '@nx/eslint-plugin': '24.0.7'
+    '@nx/js': '24.0.7'
+    '@nx/oxlint': '24.0.7'
+    '@nx/playwright': '24.0.7'
+    '@nx/vitest': '24.0.7'
+    '@nx/workspace': '24.0.7'
+    nx: '24.0.7'
   playwright:
     '@playwright/test': ^1.65.1
     eslint-plugin-playwright: '^2.12.2'
@@ -173,11 +173,11 @@ catalogs:
   spartan:
     '@ng-icons/core': '36.1.0'
     '@ng-icons/lucide': '36.1.0'
-    '@spartan-ng/brain': '1.9.0'
-    '@spartan-ng/cli': '1.9.0'
+    '@spartan-ng/brain': '1.10.1'
+    '@spartan-ng/cli': '1.10.1'
     class-variance-authority: '^0.7.1'
     clsx: '^2.1.1'
-    tailwind-merge: '^3.7.0'
+    tailwind-merge: '^3.7.1'
     tw-animate-css: '^1.4.0'
   swc:
     '@swc-node/register': '1.12.1'
@@ -191,25 +191,25 @@ catalogs:
     tailwindcss: '^4.3.5'
   testing:
     jsdom: '~31.0.1'
-    msw: '~3.0.5'
+    msw: '~3.0.8'
   testing-library:
     '@testing-library/angular': '^19.6.0'
     '@testing-library/dom': '^10.4.2'
-    '@testing-library/jest-dom': '^7.0.1'
-    '@testing-library/user-event': '^14.6.10'
+    '@testing-library/jest-dom': '^8.0.0'
+    '@testing-library/user-event': '^14.6.13'
   tooling:
     '@arethetypeswrong/cli': '^0.18.5'
     '@commitlint/cli': '^21.2.4'
     '@commitlint/config-conventional': '^21.2.4'
-    '@oxc-project/runtime': '^0.157.0'
+    '@oxc-project/runtime': '^0.160.0'
     # Keep the CLI and file plugin on the same release.
     '@size-limit/file': '14.3.0'
     '@typescript/native': 'npm:typescript@~7.0.2'
-    '@types/node': '26.6.6'
-    eslint: '^10.14.0'
+    '@types/node': '26.6.11'
+    eslint: '^10.15.0'
     jiti: '2.7.0'
-    lint-staged: '^17.6.0'
-    oxfmt: '^0.76.0'
+    lint-staged: '^17.6.2'
+    oxfmt: '^0.80.0'
     oxlint: '^1.95.0'
     oxlint-tsgolint: '^7.0.2008'
     publint: '^0.3.25'
@@ -219,7 +219,7 @@ catalogs:
     typescript: 'npm:@typescript/typescript6@~6.0.2'
     # 7.x requires Node.js 24 or newer; used only by the local-registry target.
     verdaccio: '^7.1.2'
-    vite: '^8.3.8'
+    vite: '^8.4.0'
   utilities:
     rxjs: '~7.8.2'
     temporal-polyfill: '1.0.8'
@@ -228,22 +228,32 @@ catalogs:
     vest: '6.3.4'
     zod: '^4.6.7'
   vitest:
-    '@vitest/browser-playwright': '~5.1.0'
-    '@vitest/coverage-v8': '~5.1.0'
-    '@vitest/ui': '~5.1.0'
-    vitest: '~5.1.0'
+    '@vitest/browser-playwright': '~5.1.2'
+    '@vitest/coverage-v8': '~5.1.2'
+    '@vitest/ui': '~5.1.2'
+    vitest: '~5.1.2'
 
 # With `virtualStoreType: global` a package resolves only what it declares.
 # `@analogjs/vitest-angular` imports `tslib`, `@angular/core` and
 # `@angular/platform-browser` from `setup-testbed.js` without declaring them,
 # and Vite's resolver rejects the imports. Peers make it share the workspace's
 # single Angular instance. Drop this entry once the package declares them.
+# `@analogjs/vite-plugin-angular` 3.x does the same for the Angular compiler
+# packages and `typescript`, which 2.x reached through declared peers.
 packageExtensions:
   '@analogjs/vitest-angular':
     peerDependencies:
       '@angular/core': '*'
       '@angular/platform-browser': '*'
       tslib: '*'
+  '@analogjs/vite-plugin-angular':
+    peerDependencies:
+      '@angular-devkit/architect': '*'
+      '@angular/compiler': '*'
+      '@angular/compiler-cli': '*'
+      '@angular/core': '*'
+      esbuild: '*'
+      typescript: '*'
 strictPeerDependencies: false
 # `pnpm peers check` runs in CI.
 # @vitest/mocker lists msw ^2.4.9 as its peer; the demo mocks run on MSW 3 and

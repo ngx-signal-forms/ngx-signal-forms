@@ -273,6 +273,45 @@ change can still select a build as a project-configuration change; use
 run it can pass the default timeout, so those blocks allow 30 seconds. If it
 still fails, run the spec alone before you debug it.
 
+### Run only affected tests
+
+Vitest 5.1 adds the experimental `--since-last-run` flag. The first run with
+the flag runs every test and records the files each test loaded, including
+dynamic imports, mocks, setup files, and snapshot files. Every later run
+checks the modification time of those files and runs only the tests whose
+files changed or were deleted since their last run. A test that failed in
+its last run also runs again until it passes. Git is not involved, so the
+flag works the same in a fresh container, a worktree, or a directory that is
+not a repository.
+
+```bash
+pnpm nx run-many -t test --skip-nx-cache -- --since-last-run
+```
+
+Keep `--skip-nx-cache` before the `--`: without it Nx may replay a cached
+full run instead of starting Vitest, which would not update the records.
+Per project:
+
+| Project          | Command                                                                |
+| ---------------- | ---------------------------------------------------------------------- |
+| Toolkit, jsdom   | `pnpm nx run toolkit:test --skip-nx-cache -- --since-last-run`         |
+| Toolkit, browser | `pnpm nx run toolkit:test-browser --skip-nx-cache -- --since-last-run` |
+| Demo             | `pnpm nx test demo --skip-nx-cache -- --since-last-run`                |
+
+Use the flag to iterate after each change. The records live in each config's
+`cacheDir`, so the first run after a checkout runs everything. Before you
+finish, run the whole suite once without the flag and with the Nx cache
+bypassed (`pnpm nx run-many -t test --skip-nx-cache`, plus
+`pnpm nx run toolkit:test-browser --skip-nx-cache`). Prefer
+`--changed <git-ref>` when you want Git-based selection instead;
+`--since-last-run` needs no commits and keeps working in containers.
+
+The flag tracks the files each test loads as modules. A file read through
+`fs`, such as `docs/COMPATIBILITY.md` read by `packaging.spec.ts`, is not
+recorded, and the Nx cache does not list it as an input either. After
+editing such a file, run the spec that reads it without the flag:
+`pnpm nx run toolkit:test --skip-nx-cache -- scripts/packaging.spec.ts`.
+
 ### Repeat a test to find a flake
 
 `--repeats=<n>` runs each selected test `n` more times, whatever the result.

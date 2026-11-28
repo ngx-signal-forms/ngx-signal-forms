@@ -1,7 +1,7 @@
 /// <reference types='vitest' />
 
 import { resolve } from 'node:path';
-import angular from '@analogjs/vite-plugin-angular';
+import { angular } from '@analogjs/vite-plugin-angular';
 import { defineConfig } from 'vitest/config';
 
 const toolkitRoot = resolve(import.meta.dirname, '../../packages/toolkit');
