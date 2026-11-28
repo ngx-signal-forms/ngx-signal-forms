@@ -211,7 +211,7 @@ catalogs:
     lint-staged: '^17.6.2'
     oxfmt: '^0.80.0'
     oxlint: '^1.95.0'
-    oxlint-tsgolint: '^7.0.2008'
+    oxlint-tsgolint: '^7.0.2009'
     publint: '^0.3.25'
     simple-git-hooks: '^2.14.0'
     size-limit: '14.3.0'
