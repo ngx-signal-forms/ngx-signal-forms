@@ -300,10 +300,17 @@ Per project:
 
 Use the flag to iterate after each change. The records live in each config's
 `cacheDir`, so the first run after a checkout runs everything. Before you
-finish, run the whole suite once without the flag (`pnpm test:all`, plus
-`pnpm test:browser`). Prefer `--changed <git-ref>` when you want Git-based
-selection instead; `--since-last-run` needs no commits and keeps working in
-containers.
+finish, run the whole suite once without the flag and with the Nx cache
+bypassed (`pnpm nx run-many -t test --skip-nx-cache`, plus
+`pnpm nx run toolkit:test-browser --skip-nx-cache`). Prefer
+`--changed <git-ref>` when you want Git-based selection instead;
+`--since-last-run` needs no commits and keeps working in containers.
+
+The flag tracks the files each test loads as modules. A file read through
+`fs`, such as `docs/COMPATIBILITY.md` read by `packaging.spec.ts`, is not
+recorded, and the Nx cache does not list it as an input either. After
+editing such a file, run the spec that reads it without the flag:
+`pnpm nx run toolkit:test --skip-nx-cache -- scripts/packaging.spec.ts`.
 
 ### Repeat a test to find a flake
 

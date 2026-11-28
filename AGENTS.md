@@ -62,8 +62,9 @@ code only when that removes real complexity or a real defect.
   containers. Keep `--skip-nx-cache` before `--` so Nx does not replay a
   cached full run instead of running Vitest. Details in
   [Run only affected tests](docs/TESTING.md#run-only-affected-tests).
-- Before you finish, run the whole suite once without the flag:
-  `pnpm test:all`, plus `pnpm test:browser` for the toolkit browser specs.
+- Before you finish, run the whole suite once without the flag and with the
+  Nx cache bypassed: `pnpm nx run-many -t test --skip-nx-cache`, plus
+  `pnpm nx run toolkit:test-browser --skip-nx-cache` for the browser specs.
 
 ## Action routes
 
